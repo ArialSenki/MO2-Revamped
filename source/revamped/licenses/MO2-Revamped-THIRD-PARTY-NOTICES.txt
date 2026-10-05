@@ -1,0 +1,32 @@
+MO2 Revamped third-party notices
+================================
+
+Mod Organizer 2
+---------------
+Mod Organizer 2 is copyright its contributors and distributed under GNU GPL
+version 3 or later. The full license is included as licenses/GPL-v3.0.txt.
+Project: https://github.com/ModOrganizer2/modorganizer
+
+USVFS
+-----
+USVFS is a component of Mod Organizer 2 and is distributed under GNU GPL
+version 3. The full license is included as licenses/GPL-v3.0.txt.
+Project and source: https://github.com/ModOrganizer2/usvfs
+
+YAFSML Elden Ring resolver adaptation
+-------------------------------------
+The Elden Ring native bridge contains an adaptation of the archive path
+resolver patch from YAFSML by Soar Qin (Copyright (c) 2024), used under the
+MIT License. The complete MIT notice is included as licenses/YAFSML-MIT.txt.
+Upstream source: https://github.com/soarqin/YAFSML/blob/master/src/modloader/patches/eldenring.c
+
+MinHook
+-------
+The Elden Ring native bridge includes MinHook under the BSD 2-Clause License.
+The complete notice is included as licenses/MinHook-BSD-2-Clause.txt.
+Project: https://github.com/TsudaKageyu/minhook
+
+Other bundled dependencies
+--------------------------
+MO2 dependency notices and license texts are preserved in this folder and in
+the corresponding plugin distribution metadata under plugins/*/lib/*.dist-info.

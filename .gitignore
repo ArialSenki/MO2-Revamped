@@ -1,0 +1,24 @@
+# Build and generated output
+**/build/
+**/build-*/
+**/cmake-build-*/
+**/out/
+**/obj/
+*.obj
+*.pdb
+*.ilk
+*.log
+*.pyc
+__pycache__/
+
+# Local MO2 data and user content
+/ModOrganizer.ini
+/profiles/
+/mods/
+/downloads/
+/overwrite/
+/webcache/
+/crashes/
+
+# Prebuilt bridge payload; build it from the native bridge source for a release.
+/source/revamped/plugins/basic_games/games/eldenring_mo2_bridge.dll
