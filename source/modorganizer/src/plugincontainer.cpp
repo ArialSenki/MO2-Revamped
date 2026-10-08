@@ -1228,7 +1228,7 @@ QString PluginContainer::fullDescription(unsigned int key) const
     for (const QString& plugin : m_FailedPlugins) {
       result += "<li>" + plugin + "</li>";
     }
-    result += "<ul>";
+    result += "</ul>";
     return result;
   } break;
   default: {

@@ -27,7 +27,6 @@ DisableProxyPluginDialog::DisableProxyPluginDialog(
                                  new QTableWidgetItem(required[i]->localizedName()));
     ui->requiredPlugins->setItem(i, 1,
                                  new QTableWidgetItem(required[i]->description()));
-    ui->requiredPlugins->setRowHeight(i, 9);
   }
   ui->requiredPlugins->verticalHeader()->setVisible(false);
   ui->requiredPlugins->sortByColumn(0, Qt::AscendingOrder);

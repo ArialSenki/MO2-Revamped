@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "organizercore.h"
 
 #include <QStyle>
+#include <QIcon>
 
 using namespace MOBase;
 
@@ -77,25 +78,16 @@ const std::deque<MOBase::log::Entry>& LogModel::entries() const
 
 void LogModel::onEntryAdded(MOBase::log::Entry e)
 {
-  bool full = false;
-  if (m_entries.size() > MaxLines) {
+  if (m_entries.size() >= MaxLines) {
+    beginRemoveRows(QModelIndex(), 0, 0);
     m_entries.pop_front();
-    full = true;
+    endRemoveRows();
   }
 
   const int row = static_cast<int>(m_entries.size());
-
-  if (!full) {
-    beginInsertRows(QModelIndex(), row, row + 1);
-  }
-
+  beginInsertRows(QModelIndex(), row, row);
   m_entries.emplace_back(std::move(e));
-
-  if (!full) {
-    endInsertRows();
-  } else {
-    emit dataChanged(createIndex(row, 0), createIndex(row + 1, columnCount({})));
-  }
+  endInsertRows();
 }
 
 QModelIndex LogModel::index(int row, int column, const QModelIndex&) const
@@ -151,15 +143,15 @@ QVariant LogModel::data(const QModelIndex& index, int role) const
     if (index.column() == 1) {
       switch (e.level) {
       case log::Warning:
-        return QIcon(":/MO/gui/warning");
+        return QIcon(":/MO/gui/mainwindow/status/warning.svg");
 
       case log::Error:
-        return QIcon(":/MO/gui/problem");
+        return QIcon(":/MO/gui/mainwindow/status/error.svg");
 
       case log::Debug:
-        return QIcon(":/MO/gui/debug");
+        return QIcon(":/MO/gui/mainwindow/status/debug.svg");
       case log::Info:
-        return QIcon(":/MO/gui/information");
+        return QIcon(":/MO/gui/mainwindow/status/info.svg");
       default:
         return {};
       }
@@ -259,20 +251,24 @@ QMenu* LogList::createMenu(QWidget* parent)
     copyToClipboard();
   });
   menu->addSeparator();
-  menu->addAction(tr("C&lear all"), [&] {
+  QAction* clearAction = menu->addAction(tr("C&lear all"), [&] {
     clear();
   });
-  menu->addAction(tr("&Open logs folder"), [&] {
+  clearAction->setIcon(QIcon(":/MO/gui/mainwindow/clear.svg"));
+  QAction* openLogsAction = menu->addAction(tr("&Open logs folder"), [&] {
     openLogsFolder();
   });
+  openLogsAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
 
   auto* levels = new QMenu(tr("&Level"));
+  levels->setIcon(QIcon(":/MO/gui/mainwindow/status/info.svg"));
   menu->addMenu(levels);
 
   auto* ag = new QActionGroup(menu);
 
-  auto addAction = [&](auto&& text, auto&& level) {
+  auto addAction = [&](auto&& text, auto&& level, const QString& iconPath) {
     auto* a = new QAction(text, ag);
+    a->setIcon(QIcon(iconPath));
 
     a->setCheckable(true);
     a->setChecked(log::getDefault().level() == level);
@@ -286,10 +282,11 @@ QMenu* LogList::createMenu(QWidget* parent)
     levels->addAction(a);
   };
 
-  addAction(tr("&Debug"), log::Debug);
-  addAction(tr("&Info"), log::Info);
-  addAction(tr("&Warnings"), log::Warning);
-  addAction(tr("&Errors"), log::Error);
+  addAction(tr("&Debug"), log::Debug, ":/MO/gui/mainwindow/status/debug.svg");
+  addAction(tr("&Info"), log::Info, ":/MO/gui/mainwindow/status/info.svg");
+  addAction(tr("&Warnings"), log::Warning,
+            ":/MO/gui/mainwindow/status/warning.svg");
+  addAction(tr("&Errors"), log::Error, ":/MO/gui/mainwindow/status/error.svg");
 
   return menu;
 }

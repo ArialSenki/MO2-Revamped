@@ -71,11 +71,9 @@ function setupTooptips() {
 
   tooltipWidget("modList", qsTr("This window shows all the mods that are installed. The column headers can be used for sorting. Only checked mods are active in the current profile."))
   tooltipWidget("profileBox", qsTr("Each profile is a separate set of enabled mods and ini settings."))
-  tooltipWidget("listOptionsBtn", qsTr("Perform various actions on your mod list, such as refreshing data and checking for mod updates."))
+  tooltipWidget("listOptionsBtn", qsTr("Open the gear menu to manage the mod list, refresh data, check for updates, and create, restore, or delete mod-list and plugin-order backups."))
   tooltipWidget("openFolderMenu", qsTr("Quick access to various directories, such as your MO2 mods, profiles, saves, and your active game location."))
-  tooltipWidget("restoreModsButton", qsTr("Restore a mod list backup."))
-  tooltipWidget("saveModsButton", qsTr("Create a backup of your current mod list."))
-  tooltipWidget("activeModsCounter", qsTr("Running counter of your active mods. Hover to see a more detailed breakdown."))
+  tooltipWidget("activeModsCounter", qsTr("Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type."))
   tooltipWidget("groupCombo", qsTr("The dropdown allows various ways of grouping the mods shown in the mod list."))
   tooltipWidget("displayCategoriesBtn", qsTr("Show/hide the category pane."))
   tooltipWidget("modFilterEdit", qsTr("Quickly filter the mod list as you type."))
@@ -98,14 +96,12 @@ function setupTooptips() {
   tooltipAction("actionEndorseMO", qsTr("See the status of and/or endorse MO2 on NexusMods."))
   tooltipAction("actionNotifications", qsTr("Notifications about the current setup."))
   tooltipAction("actionUpdate", qsTr("Activates if there is an update for MO. Please note that if, for any reason, MO can't communicate with NMM, this will not work either."))
-  tooltipAction("actionHelp", qsTr("Access more information about MO2, including these tutorials, a link to the development discord, information about the devs and dependencies."))
+  tooltipAction("actionHelp", qsTr("Open interface help, guided tours, MO2 Revamped project information, and support links."))
 
   switch (tutorialControl.getTabName("tabWidget")) {
     case "espTab":
       tooltipWidget("espList", qsTr("Plugins (esp/esm/esl files) of the mods in the current profile. They need to be checked to be loaded."))
       tooltipWidget("sortButton", qsTr("Automatically sort plugins using the bundled LOOT application."))
-      tooltipWidget("restoreButton", qsTr("Restore a backup of your plugin list order."))
-      tooltipWidget("saveButton", qsTr("Save a backup of your plugin list order."))
       tooltipWidget("activePluginsCounter", qsTr("Counter of your total active plugins. Hover to see a breakdown of plugin types."))
       tooltipWidget("espFilterEdit", qsTr("Quickly filter plugin list as you type."))
       break

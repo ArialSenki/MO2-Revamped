@@ -26,6 +26,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "categoriesdialog.h"
 #include "datatab.h"
 #include "downloadlist.h"
+#include "downloadlistview.h"
 #include "downloadstab.h"
 #include "editexecutablesdialog.h"
 #include "envshortcut.h"
@@ -67,6 +68,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "serverinfo.h"
 #include "settingsdialog.h"
 #include "shared/appconfig.h"
+#include "startupdiagnostics.h"
 #include "spawn.h"
 #include "statusbar.h"
 #include "tutorialmanager.h"
@@ -78,6 +80,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <taskprogressmanager.h>
 #include <usvfs.h>
 #include <utility.h>
+#include <vector>
 
 #include "directoryrefresher.h"
 #include "shared/directoryentry.h"
@@ -100,16 +103,21 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QDirIterator>
 #include <QDragEnterEvent>
 #include <QDropEvent>
-#include <QEasingCurve>
 #include <QEvent>
 #include <QFIleIconProvider>
 #include <QFileDialog>
+#include <QFile>
 #include <QFont>
+#include <QFrame>
 #include <QFuture>
+#include <QGridLayout>
+#include <QGroupBox>
 #include <QHash>
+#include <QHBoxLayout>
 #include <QIODevice>
 #include <QIcon>
 #include <QInputDialog>
@@ -119,6 +127,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValueRef>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListWidgetItem>
 #include <QMenu>
@@ -127,19 +136,24 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QModelIndex>
 #include <QNetworkProxyFactory>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPixmap>
 #include <QPoint>
 #include <QProcess>
 #include <QProgressDialog>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QRadioButton>
 #include <QRect>
 #include <QResizeEvent>
+#include <QRectF>
 #include <QScopedPointer>
 #include <QShortcut>
 #include <QSignalBlocker>
 #include <QSize>
 #include <QSizePolicy>
+#include <QTabWidget>
+#include <QTemporaryDir>
 #include <QTime>
 #include <QTimer>
 #include <QToolButton>
@@ -148,8 +162,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTreeWidget>
 #include <QTreeWidgetItemIterator>
 #include <QUrl>
-#include <QVariantAnimation>
 #include <QVariantList>
+#include <QVBoxLayout>
 #include <QVersionNumber>
 #include <QWebEngineProfile>
 #include <QWhatsThis>
@@ -200,6 +214,232 @@ QString UnmanagedModName()
 
 bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
 
+namespace {
+
+struct ProfileBackupSelection
+{
+  bool accepted = false;
+  bool modList = false;
+  bool pluginOrder = false;
+};
+
+bool showProfileBackupPrompt(QWidget* parent, const QString& windowTitle,
+                             const QString& headingText,
+                             const QString& descriptionText,
+                             const QString& primaryButtonText,
+                             const QString& cancelButtonText = QString())
+{
+  QDialog dialog(parent);
+  dialog.setObjectName(QStringLiteral("profileBackupPromptDialog"));
+  dialog.setWindowTitle(windowTitle);
+  if (parent != nullptr) {
+    dialog.setWindowIcon(parent->windowIcon());
+  }
+  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+  dialog.setMinimumWidth(460);
+  dialog.resize(540, cancelButtonText.isEmpty() ? 170 : 200);
+
+  auto* layout = new QVBoxLayout(&dialog);
+  layout->setContentsMargins(18, 14, 18, 12);
+  layout->setSpacing(5);
+
+  auto* heading = new QLabel(headingText, &dialog);
+  heading->setObjectName(QStringLiteral("profileBackupPromptTitle"));
+  QFont headingFont = heading->font();
+  if (headingFont.pointSize() > 0) {
+    headingFont.setPointSize(headingFont.pointSize() + 2);
+  }
+  headingFont.setBold(true);
+  heading->setFont(headingFont);
+  heading->setWordWrap(true);
+  layout->addWidget(heading);
+
+  auto* card = new QFrame(&dialog);
+  card->setObjectName(QStringLiteral("profileBackupPromptCard"));
+  card->setFrameShape(QFrame::StyledPanel);
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(10, 5, 10, 5);
+  cardLayout->setSpacing(0);
+
+  auto* description = new QLabel(descriptionText, card);
+  description->setObjectName(QStringLiteral("profileBackupPromptDescription"));
+  description->setWordWrap(true);
+  cardLayout->addWidget(description);
+  layout->addWidget(card);
+
+  auto* divider = new QFrame(&dialog);
+  divider->setObjectName(QStringLiteral("profileBackupPromptDivider"));
+  divider->setFrameShape(QFrame::HLine);
+  divider->setFrameShadow(QFrame::Plain);
+  layout->addWidget(divider);
+
+  auto* buttons = new QDialogButtonBox(&dialog);
+  buttons->setObjectName(QStringLiteral("profileBackupPromptButtons"));
+  auto* primaryButton =
+      buttons->addButton(primaryButtonText, QDialogButtonBox::AcceptRole);
+  primaryButton->setAutoDefault(false);
+  if (cancelButtonText.isEmpty()) {
+    primaryButton->setDefault(true);
+  } else {
+    auto* cancelButton =
+        buttons->addButton(cancelButtonText, QDialogButtonBox::RejectRole);
+    cancelButton->setDefault(true);
+  }
+  layout->addWidget(buttons);
+
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
+                   &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
+                   &QDialog::reject);
+  return dialog.exec() == QDialog::Accepted;
+}
+
+bool profileHasPluginOrderData(OrganizerCore& organizer)
+{
+  const auto* pluginList = organizer.pluginList();
+  return pluginList != nullptr && !pluginList->pluginNames().isEmpty();
+}
+
+ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
+                                                    bool includeModList,
+                                                    bool includePluginOrder,
+                                                    bool pluginOrderAvailable)
+{
+  QDialog dialog(parent);
+  dialog.setObjectName(QStringLiteral("profileBackupDialog"));
+  dialog.setWindowTitle(QObject::tr("Create profile backup"));
+  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+  dialog.setMinimumWidth(500);
+  dialog.resize(540, 320);
+
+  auto* layout = new QVBoxLayout(&dialog);
+  layout->setContentsMargins(22, 18, 22, 16);
+  layout->setSpacing(7);
+
+  auto* heading = new QLabel(QObject::tr("Back up this profile"), &dialog);
+  heading->setObjectName(QStringLiteral("profileBackupTitle"));
+  QFont headingFont = heading->font();
+  if (headingFont.pointSize() > 0) {
+    headingFont.setPointSize(headingFont.pointSize() + 2);
+  }
+  headingFont.setBold(true);
+  heading->setFont(headingFont);
+  layout->addWidget(heading);
+
+  auto* description = new QLabel(
+      QObject::tr("Choose which parts of the active profile to save. "
+                  "Each selected part gets a timestamped backup."),
+      &dialog);
+  description->setObjectName(QStringLiteral("profileBackupDescription"));
+  description->setWordWrap(true);
+  layout->addWidget(description);
+
+  auto* contentsHeading = new QLabel(QObject::tr("Backup contents"), &dialog);
+  contentsHeading->setObjectName(QStringLiteral("backupContentsHeading"));
+  QFont contentsHeadingFont = contentsHeading->font();
+  contentsHeadingFont.setBold(true);
+  contentsHeading->setFont(contentsHeadingFont);
+  layout->addWidget(contentsHeading);
+
+  auto* modListCard = new QFrame(&dialog);
+  modListCard->setObjectName(QStringLiteral("backupModListCard"));
+  modListCard->setFrameShape(QFrame::StyledPanel);
+  auto* modListCardLayout = new QVBoxLayout(modListCard);
+  modListCardLayout->setContentsMargins(10, 5, 10, 5);
+  modListCardLayout->setSpacing(1);
+
+  auto* modList = new QCheckBox(QObject::tr("Mod list"), modListCard);
+  modList->setObjectName(QStringLiteral("backupModList"));
+  modList->setChecked(includeModList);
+  auto* modListDetails = new QLabel(
+      QObject::tr("All installed mods, their enabled state, and priority."),
+      modListCard);
+  modListDetails->setObjectName(QStringLiteral("backupModListDetails"));
+  modListDetails->setIndent(22);
+  modListDetails->setWordWrap(true);
+  modListCardLayout->addWidget(modList);
+  modListCardLayout->addWidget(modListDetails);
+  layout->addWidget(modListCard);
+
+  auto* pluginOrderCard = new QFrame(&dialog);
+  pluginOrderCard->setObjectName(QStringLiteral("backupPluginOrderCard"));
+  pluginOrderCard->setFrameShape(QFrame::StyledPanel);
+  auto* pluginOrderCardLayout = new QVBoxLayout(pluginOrderCard);
+  pluginOrderCardLayout->setContentsMargins(10, 5, 10, 5);
+  pluginOrderCardLayout->setSpacing(1);
+
+  auto* pluginOrder = new QCheckBox(QObject::tr("Plugin order"), pluginOrderCard);
+  pluginOrder->setObjectName(QStringLiteral("backupPluginOrder"));
+  pluginOrder->setChecked(includePluginOrder && pluginOrderAvailable);
+  auto* pluginOrderDetails = new QLabel(
+      pluginOrderAvailable
+          ? QObject::tr("The plugin list, load order, and locked order.")
+          : QObject::tr("No ESP, ESM, or ESL plugins are present in this profile. "
+                        "Mod priority is included in the mod list backup."),
+      pluginOrderCard);
+  pluginOrderDetails->setObjectName(QStringLiteral("backupPluginOrderDetails"));
+  pluginOrderDetails->setIndent(22);
+  pluginOrderDetails->setWordWrap(true);
+  pluginOrder->setEnabled(pluginOrderAvailable);
+  pluginOrderCardLayout->addWidget(pluginOrder);
+  pluginOrderCardLayout->addWidget(pluginOrderDetails);
+  layout->addWidget(pluginOrderCard);
+
+  auto* buttons = new QDialogButtonBox(&dialog);
+  buttons->addButton(QDialogButtonBox::Cancel);
+  auto* createButton =
+      buttons->addButton(QObject::tr("Create backup"), QDialogButtonBox::AcceptRole);
+  createButton->setAutoDefault(false);
+  if (auto* cancelButton = buttons->button(QDialogButtonBox::Cancel)) {
+    cancelButton->setDefault(true);
+  }
+  createButton->setEnabled(modList->isChecked() ||
+                           (pluginOrderAvailable && pluginOrder->isChecked()));
+  layout->addSpacing(2);
+  layout->addWidget(buttons);
+
+  const auto updateCreateButton = [createButton, modList, pluginOrder,
+                                   pluginOrderAvailable] {
+    createButton->setEnabled(modList->isChecked() ||
+                             (pluginOrderAvailable && pluginOrder->isChecked()));
+  };
+  QObject::connect(modList, &QCheckBox::toggled, &dialog, updateCreateButton);
+  QObject::connect(pluginOrder, &QCheckBox::toggled, &dialog,
+                   updateCreateButton);
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
+                   &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
+                   &QDialog::reject);
+
+  ProfileBackupSelection selection;
+  selection.accepted = dialog.exec() == QDialog::Accepted;
+  selection.modList = selection.accepted && modList->isChecked();
+  selection.pluginOrder = selection.accepted && pluginOrderAvailable &&
+                          pluginOrder->isChecked();
+  return selection;
+}
+
+void resizeBackupSelectionDialog(SelectionDialog& dialog)
+{
+  if (auto* scrollArea =
+          dialog.findChild<QScrollArea*>(QStringLiteral("scrollArea"))) {
+    scrollArea->setMinimumHeight(0);
+  }
+
+  constexpr int maximumVisibleChoices = 4;
+  constexpr int baseHeight = 200;
+  constexpr int rowHeight = 76;
+  constexpr int maximumHeight = 460;
+  const int visibleChoices =
+      std::min(dialog.numChoices(), maximumVisibleChoices);
+
+  dialog.setMinimumSize(520, 250);
+  dialog.resize(600, std::min(maximumHeight,
+                              baseHeight + visibleChoices * rowHeight));
+}
+
+}  // namespace
+
 void setFilterShortcuts(QWidget* widget, QLineEdit* edit)
 {
   auto activate = [=] {
@@ -245,6 +485,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       m_LinkToolbar(nullptr), m_LinkDesktop(nullptr), m_LinkStartMenu(nullptr),
       m_NumberOfProblems(0), m_ProblemsCheckRequired(false)
 {
+  setStartupDiagnosticPhase("mainwindow.construct.begin");
+  writeStartupDiagnosticEvent("mainwindow.construct.begin");
+
   // Keep the slow native menu fade disabled while allowing lighter menu and
   // combo motion effects.
   QApplication::setEffectEnabled(Qt::UI_FadeMenu, false);
@@ -253,6 +496,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   QApplication::setEffectEnabled(Qt::UI_AnimateTooltip, false);
   QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
 
+  setStartupDiagnosticPhase("mainwindow.webengine.configure");
   QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(
       QWebEngineProfile::NoPersistentCookies);
   QWebEngineProfile::defaultProfile()->setHttpCacheMaximumSize(52428800);
@@ -264,50 +508,80 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   // above
   MOShared::SetThisThreadName("main");
 
+  setStartupDiagnosticPhase("mainwindow.setup_ui");
   ui->setupUi(this);
+  writeStartupDiagnosticEvent("mainwindow.setup_ui.complete");
+  // Revamped keeps the legacy menu commands on the toolbar buttons. Do not
+  // restore or show the upstream top menubar for new or existing profiles.
+  ui->menuBar->hide();
 
-  m_CategoryPaneAnimation = new QVariantAnimation(this);
-  m_CategoryPaneAnimation->setDuration(210);
-  m_CategoryPaneAnimation->setEasingCurve(QEasingCurve::OutCubic);
-  connect(m_CategoryPaneAnimation, &QVariantAnimation::valueChanged, this,
-          [this](const QVariant& value) {
-            const auto sizes = ui->categoriesSplitter->sizes();
-            if (sizes.size() != 2) {
-              return;
-            }
+  setStartupDiagnosticPhase("mainwindow.build_custom_ui");
+  m_FilterOptionsDialog = new QDialog(this);
+  m_FilterOptionsDialog->setObjectName(QStringLiteral("filterOptionsDialog"));
+  m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
+  m_FilterOptionsDialog->setMinimumSize(560, 500);
+  m_FilterOptionsDialog->resize(680, 680);
 
-            const int totalWidth = sizes[0] + sizes[1];
-            const int categoryWidth = qBound(0, value.toInt(), totalWidth);
-            ui->categoriesSplitter->setSizes(
-                {categoryWidth, totalWidth - categoryWidth});
-          });
-  connect(m_CategoryPaneAnimation, &QVariantAnimation::finished, this,
-          [this] {
-            auto* splitter = ui->categoriesSplitter;
-            if (m_CategoryPaneHiding) {
-              ui->categoriesGroup->hide();
-              const auto sizes = splitter->sizes();
-              if (sizes.size() == 2) {
-                splitter->setSizes({0, sizes[0] + sizes[1]});
-              }
-            } else {
-              const auto sizes = splitter->sizes();
-              if (sizes.size() == 2 && sizes[0] > 0) {
-                m_CategoryPaneExpandedWidth = sizes[0];
-              }
-            }
-            splitter->setCollapsible(0, false);
-          });
+  auto* filterDialogLayout = new QVBoxLayout(m_FilterOptionsDialog);
+  filterDialogLayout->setContentsMargins(20, 18, 20, 16);
+  filterDialogLayout->setSpacing(12);
+
+  m_FilterDialogTitle = new QLabel(tr("Filter options"), m_FilterOptionsDialog);
+  m_FilterDialogTitle->setObjectName(QStringLiteral("filterDialogTitle"));
+  auto filterTitleFont = m_FilterDialogTitle->font();
+  filterTitleFont.setBold(true);
+  filterTitleFont.setPointSize(filterTitleFont.pointSize() + 2);
+  m_FilterDialogTitle->setFont(filterTitleFont);
+  filterDialogLayout->addWidget(m_FilterDialogTitle);
+
+  m_FilterDialogDescription = new QLabel(m_FilterOptionsDialog);
+  m_FilterDialogDescription->setObjectName(
+      QStringLiteral("filterDialogDescription"));
+  m_FilterDialogDescription->setWordWrap(true);
+  filterDialogLayout->addWidget(m_FilterDialogDescription);
+
+  const int filterPaneIndex = ui->categoriesSplitter->indexOf(ui->categoriesGroup);
+  if (filterPaneIndex >= 0) {
+    auto* placeholder = new QWidget;
+    placeholder->setObjectName(QStringLiteral("filterOptionsPlaceholder"));
+    placeholder->hide();
+    ui->categoriesSplitter->replaceWidget(filterPaneIndex, placeholder);
+  }
+
+  ui->categoriesGroup->setTitle(QString());
+  ui->categoriesGroup->setMaximumWidth(QWIDGETSIZE_MAX);
+  ui->categoriesGroup->setParent(m_FilterOptionsDialog);
+  filterDialogLayout->addWidget(ui->categoriesGroup, 1);
+
+  auto* filterDialogButtons =
+      new QDialogButtonBox(QDialogButtonBox::Close, m_FilterOptionsDialog);
+  filterDialogButtons->setObjectName(QStringLiteral("filterDialogButtons"));
+  filterDialogLayout->addWidget(filterDialogButtons);
+  connect(filterDialogButtons, &QDialogButtonBox::rejected,
+          m_FilterOptionsDialog, &QDialog::reject);
+  connect(m_FilterOptionsDialog, &QDialog::finished, this, [this] {
+    if (ui->displayCategoriesBtn->isChecked()) {
+      ui->displayCategoriesBtn->setChecked(false);
+    }
+  });
+
+  ui->displayCategoriesBtn->setText(QString());
+  ui->displayCategoriesBtn->setIcon(
+      QIcon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")));
+  ui->displayCategoriesBtn->setIconSize(QSize(16, 16));
+  ui->displayCategoriesBtn->setMaximumWidth(30);
+  ui->displayCategoriesBtn->setMinimumWidth(28);
+  ui->displayCategoriesBtn->setToolTip(tr("Filter options"));
   ui->logDock->setMinimumHeight(175);
   ui->logList->setMinimumHeight(140);
   ui->startButton->setMinimumHeight(44);
   ui->startButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
   ui->startButton->setPopupMode(QToolButton::MenuButtonPopup);
   ui->startButton->setMenu(ui->menuRun);
-  // Shift only the icon and label within the main Run segment. Widen the menu
-  // segment slightly so its arrow sits less close to the right edge.
+  // Center the icon and label across the full split Run button. Its menu area
+  // is excluded from the label area, so account for half of that width here.
   ui->startButton->setStyleSheet(
-      "QToolButton#startButton { padding-left: 20px; }"
+      "QToolButton#startButton { padding-left: 43px; }"
       "QToolButton#startButton::menu-button { width: 34px; }");
   configureEldenRingHelp();
   languageChange(settings.interface().language());
@@ -344,10 +618,10 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   setupToolbar();
   toggleMO2EndorseState();
-  toggleUpdateAction();
 
   TaskProgressManager::instance().tryCreateTaskbar();
 
+  setStartupDiagnosticPhase("mainwindow.setup_mod_lists");
   setupModList();
   ui->espList->setup(m_OrganizerCore, this, ui);
   ui->bsaList->setLocalMoveOnly(true);
@@ -357,8 +631,14 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       settings.geometry().restoreState(ui->espList->header());
 
   // data tab
+  setStartupDiagnosticPhase("mainwindow.create_tabs");
+  setStartupDiagnosticPhase("mainwindow.create_tabs.data_tab.construct");
   m_DataTab.reset(new DataTab(m_OrganizerCore, m_PluginContainer, this, ui));
+  setStartupDiagnosticPhase("mainwindow.create_tabs.data_tab.construct.complete");
+  setStartupDiagnosticPhase("mainwindow.create_tabs.data_tab.restore_state");
   m_DataTab->restoreState(settings);
+  setStartupDiagnosticPhase(
+      "mainwindow.create_tabs.data_tab.restore_state.complete");
 
   connect(m_DataTab.get(), &DataTab::executablesChanged, [&] {
     refreshExecutablesList();
@@ -371,10 +651,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   connect(m_DataTab.get(), &DataTab::displayModInformation,
           [&](auto&& m, auto&& i, auto&& tab) {
             displayModInformation(m, i, tab);
-          });
+  });
 
   // downloads tab
+  setStartupDiagnosticPhase("mainwindow.create_tabs.downloads_tab.construct");
   m_DownloadsTab.reset(new DownloadsTab(m_OrganizerCore, ui));
+  setStartupDiagnosticPhase(
+      "mainwindow.create_tabs.downloads_tab.construct.complete");
 
   // saves tab
   m_SavesTab.reset(new SavesTab(this, m_OrganizerCore, ui));
@@ -389,6 +672,8 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   }
 
   settings.geometry().restoreState(ui->downloadView->header());
+  qobject_cast<DownloadListHeader*>(ui->downloadView->header())
+      ->ensureReadableSections();
   settings.geometry().restoreState(ui->savegameList->header());
 
   ui->splitter->setStretchFactor(0, 3);
@@ -396,17 +681,19 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   resizeLists(pluginListAdjusted);
 
-  m_LinkToolbar = new QAction(QIcon(":/MO/gui/link"), tr("Toolbar and Menu"), this);
-  m_LinkDesktop = new QAction(QIcon(":/MO/gui/link"), tr("Desktop"), this);
-  m_LinkStartMenu = new QAction(QIcon(":/MO/gui/link"), tr("Start Menu"), this);
+  m_LinkToolbar = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
+                              tr("Toolbar and Menu"), this);
+  m_LinkDesktop = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
+                              tr("Desktop"), this);
+  m_LinkStartMenu = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
+                                tr("Start Menu"), this);
   connect(m_LinkToolbar, &QAction::triggered, this, &MainWindow::linkToolbar);
   connect(m_LinkDesktop, &QAction::triggered, this, &MainWindow::linkDesktop);
   connect(m_LinkStartMenu, &QAction::triggered, this, &MainWindow::linkMenu);
   connect(ui->menuRun, &QMenu::aboutToShow, this,
           &MainWindow::updateShortcutActionIcons);
 
-  ui->listOptionsBtn->setMenu(
-      new ModListGlobalContextMenu(m_OrganizerCore, ui->modList, this));
+  ui->listOptionsBtn->setMenu(createModListOptionsMenu());
 
   ui->openFolderMenu->setMenu(openFolderMenu());
 
@@ -578,6 +865,8 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->modList->updateModCount();
   ui->espList->updatePluginCount();
   ui->statusBar->updateNormalMessage(m_OrganizerCore);
+  setStartupDiagnosticPhase("mainwindow.construct.complete");
+  writeStartupDiagnosticEvent("mainwindow.construct.complete");
 }
 
 void MainWindow::setupModList()
@@ -722,10 +1011,24 @@ void MainWindow::resizeLists(bool pluginListCustom)
 void MainWindow::allowListResize()
 {
   // allow resize on mod list
+  auto* modListHeader = ui->modList->header();
   for (int i = 0; i < ui->modList->header()->count(); ++i) {
-    ui->modList->header()->setSectionResizeMode(i, QHeaderView::Interactive);
+    modListHeader->setSectionResizeMode(i, QHeaderView::Interactive);
   }
-  ui->modList->header()->setStretchLastSection(true);
+  // Keep a balanced minimum width for the visible status columns while letting
+  // the mod name use the remaining space as the window changes size.
+  modListHeader->setStretchLastSection(false);
+  modListHeader->setSectionResizeMode(ModList::COL_NAME, QHeaderView::Stretch);
+  const auto ensureMinimumWidth = [modListHeader](int column, int minimumWidth) {
+    if (modListHeader->sectionSize(column) < minimumWidth) {
+      modListHeader->resizeSection(column, minimumWidth);
+    }
+  };
+  ensureMinimumWidth(ModList::COL_CONFLICTFLAGS, 150);
+  ensureMinimumWidth(ModList::COL_FLAGS, 130);
+  ensureMinimumWidth(ModList::COL_CATEGORY, 160);
+  ensureMinimumWidth(ModList::COL_VERSION, 160);
+  ensureMinimumWidth(ModList::COL_PRIORITY, 150);
 
   // allow resize on plugin list
   for (int i = 0; i < ui->espList->header()->count(); ++i) {
@@ -751,6 +1054,21 @@ void MainWindow::setupToolbar()
   setupActionMenu(ui->actionTool);
   setupActionMenu(ui->actionHelp);
   setupActionMenu(ui->actionEndorseMO);
+
+  // Keep the other right-side toolbar actions on the same visual baseline as
+  // Notifications. Equal top and bottom padding would leave their contents a
+  // little higher; this shifts icon and text down while preserving total height.
+  const auto alignWithNotifications = [this](QAction* action) {
+    if (auto* button = qobject_cast<QToolButton*>(
+            ui->toolBar->widgetForAction(action))) {
+      button->setStyleSheet(
+          QStringLiteral("QToolButton { padding-top: 7px; padding-bottom: 1px; "
+                         "margin-top: 3px; margin-bottom: -3px; }"));
+    }
+  };
+  alignWithNotifications(ui->actionEndorseMO);
+  alignWithNotifications(ui->actionUpdate);
+  alignWithNotifications(ui->actionHelp);
 
   createHelpMenu();
   createEndorseMenu();
@@ -840,7 +1158,6 @@ void MainWindow::updatePinnedExecutables()
 
 void MainWindow::updateToolbarMenu()
 {
-  ui->actionMainMenuToggle->setChecked(ui->menuBar->isVisible());
   ui->actionToolBarMainToggle->setChecked(ui->toolBar->isVisible());
   ui->actionStatusBarToggle->setChecked(ui->statusBar->isVisible());
 
@@ -881,11 +1198,6 @@ QMenu* MainWindow::createPopupMenu()
   updateViewMenu();
 
   return m;
-}
-
-void MainWindow::on_actionMainMenuToggle_triggered()
-{
-  ui->menuBar->setVisible(!ui->menuBar->isVisible());
 }
 
 void MainWindow::on_actionToolBarMainToggle_triggered()
@@ -938,6 +1250,10 @@ void MainWindow::setToolbarSize(const QSize& s)
   for (auto* tb : findChildren<QToolBar*>()) {
     tb->setIconSize(s);
   }
+
+  // Rebuild the notification badge at the new toolbar icon size so it keeps
+  // the same alignment and visual weight as the neighboring actions.
+  updateProblemsButton();
 }
 
 void MainWindow::setToolbarButtonStyle(Qt::ToolButtonStyle s)
@@ -977,7 +1293,7 @@ void MainWindow::scheduleCheckForProblems()
 void MainWindow::updateProblemsButton()
 {
   // if the current stylesheet doesn't provide an icon, this is used instead
-  const char* DefaultIconName = ":/MO/gui/warning";
+  const char* DefaultIconName = ":/MO/gui/mainwindow/notifications.svg";
 
   const std::size_t numProblems = m_NumberOfProblems;
 
@@ -986,35 +1302,62 @@ void MainWindow::updateProblemsButton()
                              ? QIcon(DefaultIconName)
                              : m_originalNotificationIcon;
 
-  // final icon
-  QIcon final;
-
   if (numProblems > 0) {
     ui->actionNotifications->setToolTip(tr("There are notifications to read"));
-
-    // will contain the original icon, plus a notification count; this also
-    // makes sure the pixmap is exactly 64x64 by requesting the icon that's
-    // as close to 64x64 as possible, and then scaling it up if it's too small
-    QPixmap merged = original.pixmap(64, 64).scaled(64, 64);
-
-    {
-      QPainter painter(&merged);
-
-      const std::string badgeName =
-          std::string(":/MO/gui/badge_") +
-          (numProblems < 10 ? std::to_string(static_cast<long long>(numProblems))
-                            : "more");
-
-      painter.drawPixmap(32, 32, 32, 32, QPixmap(badgeName.c_str()));
-    }
-
-    final = QIcon(merged);
   } else {
     ui->actionNotifications->setToolTip(tr("There are no notifications"));
-
-    // no change
-    final = original;
   }
+
+  // Keep the toolbar icon canvas identical with and without a badge. Swapping
+  // between the theme icon and a composed pixmap can change the button's size
+  // hint and make Notifications jump vertically when the last item is cleared.
+  const QSize iconCanvasSize = ui->toolBar->iconSize();
+  const int iconExtent = qMax(1, qMin(iconCanvasSize.width(),
+                                      iconCanvasSize.height()));
+  const qreal iconScale = static_cast<qreal>(iconExtent) / 64.0;
+  const int iconOffsetX = (iconCanvasSize.width() - iconExtent) / 2;
+  const int iconOffsetY = (iconCanvasSize.height() - iconExtent) / 2;
+  const int bellSize = qMax(1, qRound(54.0 * iconScale));
+
+  QPixmap merged(iconCanvasSize);
+  merged.fill(Qt::transparent);
+  const QPixmap bell = original.pixmap(QSize(bellSize, bellSize)).scaled(
+      bellSize, bellSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+  {
+    QPainter painter(&merged);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    painter.drawPixmap(iconOffsetX + qRound(5.0 * iconScale),
+                       iconOffsetY + qRound(5.0 * iconScale), bell);
+
+    if (numProblems > 0) {
+      const QString badgeText =
+          QString::number(static_cast<qulonglong>(numProblems));
+      const qreal badgeWidth =
+          qMax<qreal>(22.0, 12.0 + 6.0 * badgeText.size()) * iconScale;
+      const qreal badgeHeight = 22.0 * iconScale;
+      const qreal badgeRightInset = 4.0 * iconScale;
+      const qreal badgeBottom = iconOffsetY + iconExtent * 0.80;
+      const QRectF badgeRect(
+          iconOffsetX + iconExtent - badgeRightInset - badgeWidth,
+          badgeBottom - badgeHeight, badgeWidth, badgeHeight);
+
+      painter.setPen(QPen(QColor("#FFFFFF"), 1.5 * iconScale));
+      painter.setBrush(QColor("#F2C84B"));
+      painter.drawEllipse(badgeRect);
+
+      QFont badgeFont = painter.font();
+      badgeFont.setBold(true);
+      badgeFont.setPixelSize(
+          qMax(5, qRound((badgeText.size() > 2 ? 12.0 : 14.0) * iconScale)));
+      painter.setFont(badgeFont);
+      painter.setPen(QColor("#342B16"));
+      painter.drawText(badgeRect, Qt::AlignCenter, badgeText);
+    }
+  }
+
+  const QIcon final(merged);
 
   ui->actionNotifications->setEnabled(numProblems > 0);
 
@@ -1098,6 +1441,27 @@ void MainWindow::checkForProblemsImpl()
 
 void MainWindow::about()
 {
+  for (IPluginTool* tool : m_PluginContainer.plugins<IPluginTool>()) {
+    if (tool == nullptr || !m_PluginContainer.isEnabled(tool) ||
+        tool->displayName().compare(QStringLiteral("About MO2 Revamped"),
+                                    Qt::CaseInsensitive) != 0) {
+      continue;
+    }
+
+    tool->setParentWidget(this);
+    try {
+      tool->display();
+      return;
+    } catch (const std::exception& e) {
+      reportError(tr("Plugin \"%1\" failed: %2")
+                      .arg(tool->localizedName())
+                      .arg(e.what()));
+    } catch (...) {
+      reportError(tr("Plugin \"%1\" failed").arg(tool->localizedName()));
+    }
+    return;
+  }
+
   const auto* game = m_OrganizerCore.managedGame();
   const bool eldenRingEdition =
       game && game->gameShortName().compare("eldenring", Qt::CaseInsensitive) == 0;
@@ -1129,9 +1493,9 @@ void MainWindow::createHelpMenu()
 {
   //: Translation strings for tutorial names
   static std::map<QString, const char*> translate = {
-      {"First Steps", QT_TR_NOOP("First Steps")},
-      {"Conflict Resolution", QT_TR_NOOP("Conflict Resolution")},
-      {"Overview", QT_TR_NOOP("Overview")}};
+      {"First Steps", QT_TR_NOOP("Getting Started")},
+      {"Conflict Resolution", QT_TR_NOOP("Understanding Mod Conflicts")},
+      {"Overview", QT_TR_NOOP("Interface Overview")}};
 
   auto* menu = ui->actionHelp->menu();
   if (!menu) {
@@ -1142,81 +1506,111 @@ void MainWindow::createHelpMenu()
 
   menu->clear();
 
-  QAction* helpAction = new QAction(tr("Help on UI"), menu);
-  connect(helpAction, SIGNAL(triggered()), this, SLOT(helpTriggered()));
-  menu->addAction(helpAction);
-
   const auto* game = m_OrganizerCore.managedGame();
   const bool isEldenRing =
       game && game->gameShortName().compare("eldenring", Qt::CaseInsensitive) == 0;
+
+  menu->addSection(tr("Learn"));
+
   if (isEldenRing) {
-    menu->addAction(tr("Elden Ring Guide"), this, [this] {
-      showEldenRingGuide();
-    });
+    QAction* guideAction = new QAction(tr("Elden Ring Guide"), menu);
+    guideAction->setToolTip(
+        tr("Learn about profiles, archive layouts, native DLLs, and save profiles."));
+    connect(guideAction, &QAction::triggered, this,
+            [this] { showEldenRingGuide(); });
+    menu->addAction(guideAction);
   }
-
-  QAction* wikiAction = new QAction(tr("Documentation"), menu);
-  connect(wikiAction, SIGNAL(triggered()), this, SLOT(wikiTriggered()));
-  menu->addAction(wikiAction);
-
-  if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
-    QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
-    connect(gameSupportAction, SIGNAL(triggered()), this, SLOT(gameSupportTriggered()));
-    menu->addAction(gameSupportAction);
-  }
-
-  QAction* issueAction = new QAction(tr("Report Issue"), menu);
-  connect(issueAction, SIGNAL(triggered()), this, SLOT(issueTriggered()));
-  menu->addAction(issueAction);
-
-  QMenu* tutorialMenu = new QMenu(tr("Tutorials"), menu);
 
   typedef std::vector<std::pair<int, QAction*>> ActionList;
-
   ActionList tutorials;
-
   QDirIterator dirIter(QApplication::applicationDirPath() + "/tutorials",
                        QStringList("*.js"), QDir::Files);
   while (dirIter.hasNext()) {
     dirIter.next();
-    QString fileName = dirIter.fileName();
+    const QString fileName = dirIter.fileName();
+
+    // The generic tours include Bethesda-specific plugin and record-conflict
+    // guidance, while the Elden Ring tour is no longer offered from Help.
+    if (isEldenRing || fileName == "tutorial_eldenring_overview.js") {
+      continue;
+    }
 
     QFile file(dirIter.filePath());
     if (!file.open(QIODevice::ReadOnly)) {
       log::error("Failed to open {}", fileName);
       continue;
     }
-    QString firstLine = QString::fromUtf8(file.readLine());
-    if (firstLine.startsWith("//TL")) {
-      if ((isEldenRing && fileName == "tutorial_primer_main.js") ||
-          (!isEldenRing && fileName == "tutorial_eldenring_overview.js")) {
-        continue;
-      }
-      QStringList params = firstLine.mid(4).trimmed().split('#');
-      if (params.size() != 2) {
-        log::error("invalid header line for tutorial {}, expected 2 parameters",
-                   fileName);
-        continue;
-      }
-      QAction* tutAction = new QAction(tr(translate[params.at(0)]), tutorialMenu);
-      tutAction->setData(fileName);
-      tutorials.push_back(std::make_pair(params.at(1).toInt(), tutAction));
+    const QString firstLine = QString::fromUtf8(file.readLine());
+    if (!firstLine.startsWith("//TL")) {
+      continue;
     }
+
+    const QStringList params = firstLine.mid(4).trimmed().split('#');
+    if (params.size() != 2) {
+      log::error("invalid header line for tutorial {}, expected 2 parameters",
+                 fileName);
+      continue;
+    }
+
+    const auto translatedTitle = translate.find(params.at(0));
+    if (translatedTitle == translate.end()) {
+      continue;
+    }
+
+    QAction* tutorialAction =
+        new QAction(tr(translatedTitle->second), menu);
+    tutorialAction->setData(fileName);
+    tutorials.push_back(
+        std::make_pair(params.at(1).toInt(), tutorialAction));
   }
 
   std::sort(tutorials.begin(), tutorials.end(),
-            [](const ActionList::value_type& LHS, const ActionList::value_type& RHS) {
-              return LHS.first < RHS.first;
+            [](const ActionList::value_type& lhs,
+               const ActionList::value_type& rhs) {
+              return lhs.first < rhs.first;
             });
 
-  for (auto iter = tutorials.begin(); iter != tutorials.end(); ++iter) {
-    connect(iter->second, SIGNAL(triggered()), this, SLOT(tutorialTriggered()));
-    tutorialMenu->addAction(iter->second);
+  if (!tutorials.empty()) {
+    QMenu* tutorialMenu = new QMenu(tr("Guided Tours"), menu);
+    for (const auto& tutorial : tutorials) {
+      connect(tutorial.second, SIGNAL(triggered()), this,
+              SLOT(tutorialTriggered()));
+      tutorialMenu->addAction(tutorial.second);
+    }
+    menu->addMenu(tutorialMenu);
   }
 
-  menu->addMenu(tutorialMenu);
-  menu->addAction(tr("About"), this, SLOT(about()));
-  menu->addAction(tr("About Qt"), qApp, SLOT(aboutQt()));
+  menu->addSection(tr("Resources"));
+
+  QAction* repositoryAction = new QAction(tr("MO2 Revamped on GitHub"), menu);
+  repositoryAction->setToolTip(
+      tr("Open the project repository, source notes, and third-party notices."));
+  connect(repositoryAction, SIGNAL(triggered()), this,
+          SLOT(revampedRepositoryTriggered()));
+  menu->addAction(repositoryAction);
+
+  if (game && !game->getSupportURL().isEmpty()) {
+    QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
+    gameSupportAction->setToolTip(
+        tr("Open the game-specific modding reference provided by its MO2 plugin."));
+    connect(gameSupportAction, SIGNAL(triggered()), this, SLOT(gameSupportTriggered()));
+    menu->addAction(gameSupportAction);
+  }
+
+  menu->addSection(tr("Support"));
+
+  QAction* issueAction = new QAction(tr("Report a Problem"), menu);
+  issueAction->setToolTip(
+      tr("Open the MO2 Revamped issue tracker on GitHub."));
+  connect(issueAction, SIGNAL(triggered()), this, SLOT(issueTriggered()));
+  menu->addAction(issueAction);
+
+  menu->addSection(tr("About"));
+  QAction* revampedAboutAction =
+      menu->addAction(tr("About MO2 Revamped"), this, SLOT(about()));
+  revampedAboutAction->setObjectName(QStringLiteral("mo2RevampedAboutAction"));
+  revampedAboutAction->setToolTip(
+      tr("Show MO2 Revamped information, components, and credits."));
 }
 
 bool MainWindow::addProfile()
@@ -1600,7 +1994,10 @@ void MainWindow::updateToolMenu()
   // Remove disabled plugins:
   toolPlugins.erase(std::remove_if(std::begin(toolPlugins), std::end(toolPlugins),
                                    [&](auto* tool) {
-                                     if (!m_PluginContainer.isEnabled(tool)) {
+                                     if (!m_PluginContainer.isEnabled(tool) ||
+                                         tool->displayName().compare(
+                                             QStringLiteral("About MO2 Revamped"),
+                                             Qt::CaseInsensitive) == 0) {
                                        return true;
                                      }
 
@@ -1943,6 +2340,52 @@ void MainWindow::refreshExecutablesList()
 {
   QAbstractItemModel* model = ui->executablesListBox->model();
   const auto* managedGame = m_OrganizerCore.managedGame();
+  const QString interfaceStyle =
+      Settings::instance().interface().styleName().value_or(QString{});
+  const bool darkStyle =
+      interfaceStyle.contains(QStringLiteral("dark"), Qt::CaseInsensitive);
+
+  const auto roundedGameIcon = [darkStyle](const QIcon& sourceIcon) {
+    constexpr int iconPixels = 96;
+    constexpr qreal cornerRadius = 12.0;
+
+    QPixmap sourcePixmap = sourceIcon.pixmap(QSize(iconPixels, iconPixels));
+    if (sourcePixmap.isNull()) {
+      return sourceIcon;
+    }
+
+    sourcePixmap = sourcePixmap.scaled(
+        QSize(iconPixels, iconPixels), Qt::KeepAspectRatioByExpanding,
+        Qt::SmoothTransformation);
+    const QRect sourceRect((sourcePixmap.width() - iconPixels) / 2,
+                           (sourcePixmap.height() - iconPixels) / 2,
+                           iconPixels, iconPixels);
+
+    QPixmap roundedPixmap(iconPixels, iconPixels);
+    roundedPixmap.fill(Qt::transparent);
+
+    QPainter painter(&roundedPixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+    QPainterPath roundedShape;
+    roundedShape.addRoundedRect(QRectF(1.0, 1.0, iconPixels - 2.0,
+                                       iconPixels - 2.0),
+                                cornerRadius, cornerRadius);
+    painter.setClipPath(roundedShape);
+    painter.drawPixmap(QRect(0, 0, iconPixels, iconPixels), sourcePixmap,
+                       sourceRect);
+    painter.setClipping(false);
+    if (!darkStyle) {
+      painter.setPen(QPen(QColor("#D2E2EE"), 2.0));
+      painter.setBrush(Qt::NoBrush);
+      painter.drawPath(roundedShape);
+    }
+    painter.end();
+
+    roundedPixmap.setDevicePixelRatio(3.0);
+    return QIcon(roundedPixmap);
+  };
 
   auto add = [&](const QString& title, const QFileInfo& binary) {
     QIcon icon;
@@ -1953,8 +2396,13 @@ void MainWindow::refreshExecutablesList()
             return title.compare(executable.title(), Qt::CaseInsensitive) == 0;
           });
       if (gameExecutable != executables.end()) {
-        icon = managedGame->gameIcon();
+        icon = roundedGameIcon(managedGame->gameIcon());
       }
+    }
+
+    if (title.compare(QStringLiteral("Explore Virtual Folder"),
+                      Qt::CaseInsensitive) == 0) {
+      icon = QIcon(":/MO/gui/mainwindow/explore-virtual-folder.svg");
     }
 
     if (icon.isNull() && !binary.fileName().isEmpty()) {
@@ -2154,7 +2602,7 @@ void MainWindow::checkBSAList()
 
         if (item->checkState(0) == Qt::Unchecked) {
           if (defaultArchives.contains(filename)) {
-            item->setIcon(0, QIcon(":/MO/gui/warning"));
+            item->setIcon(0, QIcon(":/MO/gui/mainwindow/status/warning.svg"));
             item->setToolTip(
                 0, tr("This bsa is enabled in the ini file so it may be required!"));
             modWarning = true;
@@ -2167,7 +2615,7 @@ void MainWindow::checkBSAList()
       }
     }
     if (warning) {
-      ui->tabWidget->setTabIcon(1, QIcon(":/MO/gui/warning"));
+      ui->tabWidget->setTabIcon(1, QIcon(":/MO/gui/mainwindow/status/warning.svg"));
     } else {
       ui->tabWidget->setTabIcon(1, QIcon());
     }
@@ -2239,18 +2687,8 @@ void MainWindow::readSettings()
   s.geometry().restoreDocks(this);
   s.geometry().restoreToolbars(this);
   s.geometry().restoreState(ui->splitter);
-  s.geometry().restoreState(ui->categoriesSplitter);
-  auto categoryPaneSizes = ui->categoriesSplitter->sizes();
-  if (categoryPaneSizes.size() == 2 && categoryPaneSizes.at(0) == 500 &&
-      categoryPaneSizes.at(1) >= 20) {
-    categoryPaneSizes[0] = 520;
-    categoryPaneSizes[1] -= 20;
-    ui->categoriesSplitter->setSizes(categoryPaneSizes);
-  }
-  if (categoryPaneSizes.size() == 2 && categoryPaneSizes.at(0) > 0) {
-    m_CategoryPaneExpandedWidth = categoryPaneSizes.at(0);
-  }
-  s.geometry().restoreVisibility(ui->menuBar);
+  s.geometry().restoreGeometry(m_FilterOptionsDialog);
+  ui->menuBar->hide();
   s.geometry().restoreVisibility(ui->statusBar);
 
   FilterWidget::setOptions(s.interface().filterOptions());
@@ -2276,14 +2714,10 @@ void MainWindow::readSettings()
 
   ui->modList->restoreState(s);
 
+  ui->categoriesGroup->show();
   {
-    s.geometry().restoreVisibility(ui->categoriesGroup, false);
-    const auto v = ui->categoriesGroup->isVisible();
-    {
-      const QSignalBlocker blocker(ui->displayCategoriesBtn);
-      ui->displayCategoriesBtn->setChecked(v);
-    }
-    setCategoryListVisible(v, false);
+    const QSignalBlocker blocker(ui->displayCategoriesBtn);
+    ui->displayCategoriesBtn->setChecked(false);
   }
 
   if (s.network().useProxy()) {
@@ -2342,13 +2776,11 @@ void MainWindow::storeSettings()
   s.geometry().saveGeometry(this);
   s.geometry().saveDocks(this);
 
-  s.geometry().saveVisibility(ui->menuBar);
   s.geometry().saveVisibility(ui->statusBar);
   s.geometry().saveToolbars(this);
   s.geometry().saveState(ui->splitter);
-  s.geometry().saveState(ui->categoriesSplitter);
+  s.geometry().saveGeometry(m_FilterOptionsDialog);
   s.geometry().saveMainWindowMonitor(this);
-  s.geometry().saveVisibility(ui->categoriesGroup);
 
   s.geometry().saveState(ui->espList->header());
   s.geometry().saveState(ui->downloadView->header());
@@ -2457,10 +2889,12 @@ void MainWindow::configureEldenRingHelp()
       "profile and can provide virtual game files or native DLLs. Keep only one "
       "version of a mutually exclusive mod active."));
   ui->profileBox->setWhatsThis(tr(
-      "Choose the Elden Ring profile. Each profile can have its own active mods "
-      "and save isolation mode."));
+      "Choose a profile to switch its enabled mod list, plugin selection, and "
+      "plugin load order. Each profile keeps these lists separate for different mod setups or playthroughs."));
   ui->activeModsCounter->setWhatsThis(tr(
-      "Shows how many mods are active in the selected Elden Ring profile."));
+      "Shows how many active mods are visible in the mod list. Filtering the "
+      "list changes this count; hover over the counter to see the total and "
+      "visible counts by mod type."));
   ui->modFilterEdit->setWhatsThis(tr(
       "Filter the installed Elden Ring mods by name."));
   ui->dataTree->setWhatsThis(tr(
@@ -2470,11 +2904,12 @@ void MainWindow::configureEldenRingHelp()
       "organizes DLLs from recognized native-mod folders under Game/DLLs."));
   ui->savegameList->setWhatsThis(tr(
       "Browse the save files available to this Elden Ring profile. The profile "
-      "settings can isolate saves or share them with other profiles or the "
-      "instance."));
+      "settings can isolate saves to this profile, share a named save profile "
+      "within this MO2 instance, or use the global Steam save folder."));
   ui->downloadView->setWhatsThis(tr(
-      "Downloaded Elden Ring archives appear here. Double-click an archive to "
-      "install it, then choose the layout expected by the mod."));
+      "Downloaded archives for this instance appear here. Double-click an "
+      "archive to install it. To choose its priority, drag it from this list "
+      "onto the mod list while sorting by Priority."));
   ui->executablesListBox->setWhatsThis(tr(
       "Choose Elden Ring or another configured executable to launch through "
       "MO2's virtual file system."));
@@ -2490,41 +2925,199 @@ void MainWindow::configureEldenRingHelp()
       "Open MO2 settings. These settings belong to this MO2 installation and "
       "may be separate from settings in other instances."));
   ui->actionTool->setWhatsThis(tr(
-      "Open tools available in this Elden Ring MO2 instance."));
+      "Open tools available in this MO2 instance. Elden Ring tools include "
+      "Save Isolation for save routes and named saves, Startup Options for "
+      "launch and cleanup settings, and Native DLL Profile for native DLL "
+      "load order and optional initializers."));
   ui->actionHelp->setWhatsThis(tr(
-      "Open the Elden Ring guide, interface help, MO2 documentation, and "
-      "troubleshooting links."));
+      "Open interface help, the Elden Ring guide and tour, MO2 Revamped "
+      "project resources, and support links."));
+  ui->actionInstallMod->setWhatsThis(tr(
+      "Install a mod archive. For Elden Ring, keep the original archive paths "
+      "when the mod relies on its packaged folders; use standard MO2 layout "
+      "when the archive follows common MO2 or game-data paths."));
 }
 
 void MainWindow::showEldenRingGuide()
 {
-  QMessageBox::about(
-      this, tr("Elden Ring Guide"),
-      tr("<h3>Managing Elden Ring with this MO2 instance</h3>"
-         "<p><b>Mods and profiles:</b> Enable mods with their checkboxes. A "
-         "profile stores its own enabled mod list and Elden Ring save mode. "
-         "Avoid enabling two versions of the same mod at once.</p>"
-         "<p><b>Installing archives:</b> Use <i>Use standard MO2 layout</i> for "
-         "archives that need common package folders unwrapped. DLLs already at "
-         "the archive root stay beside their configuration and log files; DLLs "
-         "inside recognized native-mod folders are organized under "
-         "<code>Game/DLLs</code>. Choose <i>Keep original archive structure</i> "
-         "when the mod relies on its packaged subfolders.</p>"
-         "<p><b>Data:</b> This tab shows the virtual game directory and which "
-         "mod wins each file conflict. It does not copy files into the physical "
-         "game folder.</p>"
-         "<p><b>Saves:</b> Open Profiles to choose whether Elden Ring saves are "
-         "isolated per profile, shared within this instance, or use the global "
-         "game save folder.</p>"
-         "<p><b>Run:</b> The main button launches the selected program with the "
-         "active profile. The arrow opens shortcut options.</p>"
-         "<p><b>Other instances:</b> Manage Instances keeps separate games such "
-         "as Skyrim independent from this Elden Ring setup.</p>"));
+  QDialog guide(this);
+  guide.setObjectName(QStringLiteral("EldenRingGuideDialog"));
+  guide.setWindowTitle(tr("Elden Ring Guide"));
+  guide.setWindowIcon(windowIcon());
+  guide.setMinimumSize(760, 520);
+  guide.resize(900, 660);
+  guide.setWindowFlag(Qt::WindowType::WindowContextHelpButtonHint, false);
+
+  auto* layout = new QVBoxLayout(&guide);
+  layout->setContentsMargins(14, 12, 14, 12);
+  layout->setSpacing(10);
+
+  auto* header = new QHBoxLayout();
+  header->setSpacing(12);
+  auto* logo = new QLabel(&guide);
+  logo->setObjectName(QStringLiteral("eldenRingGuideLogo"));
+  logo->setFixedSize(72, 72);
+  logo->setAlignment(Qt::AlignmentFlag::AlignCenter);
+  const QString appDirectory = QApplication::applicationDirPath();
+  QPixmap logoPixmap(appDirectory + QStringLiteral("/resources/mo_icon.png"));
+  if (logoPixmap.isNull()) {
+    logoPixmap.load(appDirectory + QStringLiteral("/splash.png"));
+  }
+  if (!logoPixmap.isNull()) {
+    logo->setPixmap(logoPixmap.scaled(
+        logo->size(), Qt::AspectRatioMode::KeepAspectRatio,
+        Qt::TransformationMode::SmoothTransformation));
+  }
+  header->addWidget(logo);
+
+  QString activeGame = tr("Not detected");
+  if (const auto* game = m_OrganizerCore.managedGame()) {
+    activeGame = game->gameName();
+  }
+  QString activeProfile = tr("Not selected");
+  if (const auto* profile = m_OrganizerCore.currentProfile()) {
+    activeProfile = profile->name();
+  }
+  auto* heading = new QLabel(
+      tr("<h2>Using Elden Ring with MO2 Revamped</h2>"
+         "<p>A practical guide to profiles, archives, native DLLs, saves, "
+         "and launching the game.</p>"
+         "<p><b>Active game:</b> %1 &nbsp; <b>Active profile:</b> %2</p>")
+          .arg(activeGame.toHtmlEscaped())
+          .arg(activeProfile.toHtmlEscaped()),
+      &guide);
+  heading->setWordWrap(true);
+  header->addWidget(heading, 1);
+  layout->addLayout(header);
+
+  auto* tabs = new QTabWidget(&guide);
+  tabs->setObjectName(QStringLiteral("eldenRingGuideTabs"));
+
+  const auto makeCard = [](QWidget* parent, const QString& title,
+                           const QString& content) {
+    auto* card = new QGroupBox(title, parent);
+    auto* cardLayout = new QVBoxLayout(card);
+    cardLayout->setContentsMargins(10, 10, 10, 8);
+    cardLayout->setSpacing(4);
+    auto* text = new QLabel(content, card);
+    text->setWordWrap(true);
+    text->setTextFormat(Qt::TextFormat::RichText);
+    text->setAlignment(Qt::AlignmentFlag::AlignLeft |
+                       Qt::AlignmentFlag::AlignTop);
+    cardLayout->addWidget(text);
+    return card;
+  };
+
+  const auto addGuideTab = [&](const QString& tabTitle,
+                               const QString& pageTitle,
+                               const QString& pageDescription,
+                               const std::vector<std::pair<QString, QString>>& cards) {
+    auto* page = new QWidget(tabs);
+    auto* pageLayout = new QVBoxLayout(page);
+    pageLayout->setContentsMargins(14, 12, 14, 12);
+    pageLayout->setSpacing(8);
+
+    auto* intro = new QLabel(
+        QStringLiteral("<h3>%1</h3><p>%2</p>")
+            .arg(pageTitle, pageDescription),
+        page);
+    intro->setWordWrap(true);
+    pageLayout->addWidget(intro);
+
+    auto* grid = new QGridLayout();
+    grid->setHorizontalSpacing(10);
+    grid->setVerticalSpacing(8);
+    for (int index = 0; index < static_cast<int>(cards.size()); ++index) {
+      const int row = index / 2;
+      const int column = index % 2;
+      grid->addWidget(makeCard(page, cards[index].first, cards[index].second),
+                      row, column);
+    }
+    pageLayout->addLayout(grid, 1);
+    tabs->addTab(page, tabTitle);
+  };
+
+  addGuideTab(
+      tr("Profiles and archives"), tr("Profiles and installation"),
+      tr("Choose the active profile and understand how MO2 resolves files and "
+         "archive layouts."),
+      {{tr("Profiles"),
+        tr("<p>Enable mods with their checkboxes. Each profile keeps its own "
+           "enabled mod list and save settings.</p>")},
+       {tr("Mod priority"),
+        tr("<p>The left list controls file priority when mods provide the same "
+           "file. The <b>Data</b> tab shows which mod wins. Avoid enabling two "
+           "versions of the same mod at once.</p>")},
+       {tr("Keep original archive structure"),
+        tr("<p>Choose this when a mod expects its packaged paths to remain "
+           "intact. Revamped removes only redundant outer wrappers and keeps "
+           "the files inside their original folders, including DLL locations "
+           "and documentation.</p>")},
+       {tr("Standard MO2 layout"),
+        tr("<p>Choose this when an archive follows common MO2 or game-data "
+           "paths. Recognized native-mod DLLs and related files are routed to "
+           "this instance's game DLLs folder.</p>")}});
+
+  addGuideTab(
+      tr("Native DLLs and saves"), tr("Native DLLs and save profiles"),
+      tr("These tools keep their choices with the active MO2 profile."),
+      {{tr("DLL detection"),
+        tr("<p>Native DLL Profile lists DLL routes from enabled mods. MO2's "
+           "route index is used when available; older mods are scanned in "
+           "their native DLL folders. Detected paths are checked against MO2's "
+           "virtual file system.</p>")},
+       {tr("Load order and initializers"),
+        tr("<p>Associate detected DLLs with their MO2 mods and set their load "
+           "order for each profile. Enter the initializer export documented "
+           "by a mod only when it requires one. This profile does not enable "
+           "or disable the MO2 mod.</p>")},
+       {tr("Save routes"),
+        tr("<p>Save Isolation can keep saves per MO2 profile, share them among "
+           "profiles in this instance, or use the global Steam save folder. "
+           "The first two modes also support named save profiles while the "
+           "game still receives <code>ER0000.sl2</code>.</p>")},
+       {tr("Restart and online safety"),
+        tr("<p>Restart MO2 after changing a save route and before launching "
+           "the game. Routing only changes save files; it does not change Easy "
+           "Anti-Cheat or network mode, and does not make modded saves safe "
+           "for online play.</p>")}});
+
+  addGuideTab(
+      tr("Data and launch"), tr("Data, downloads, and launch"),
+      tr("MO2 presents a virtual game directory and launches programs through "
+         "the active profile."),
+      {{tr("Data"),
+        tr("<p><b>Data</b> shows the virtual game directory and the mod that "
+           "provides each file. It does not copy files into the physical game "
+           "folder.</p>")},
+       {tr("Downloads"),
+        tr("<p><b>Downloads</b> lists archives ready to install. Choose an "
+           "archive there or use <b>Install Mod</b> to browse for one.</p>")},
+       {tr("Run"),
+        tr("<p>The <b>Run</b> button starts the selected program with the "
+           "active profile. Its arrow opens shortcut options.</p>")},
+       {tr("More help"),
+        tr("<p>The <b>Help</b> menu offers this guide, the project repository, "
+           "a game support wiki when its MO2 plugin provides one, <i>Report a Problem</i>, and <i>About MO2 "
+           "Revamped</i>.</p>")}});
+
+  layout->addWidget(tabs, 1);
+
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::StandardButton::Close,
+                                       &guide);
+  connect(buttons, &QDialogButtonBox::rejected, &guide, &QDialog::reject);
+  connect(buttons, &QDialogButtonBox::accepted, &guide, &QDialog::accept);
+  if (auto* closeButton =
+          buttons->button(QDialogButtonBox::StandardButton::Close)) {
+    connect(closeButton, &QPushButton::clicked, &guide, &QDialog::accept);
+  }
+  layout->addWidget(buttons);
+  guide.exec();
 }
 
-void MainWindow::wikiTriggered()
+void MainWindow::revampedRepositoryTriggered()
 {
-  shell::Open(QUrl("https://modorganizer2.github.io/"));
+  shell::Open(QUrl("https://github.com/ArialSenki/MO2-Revamped"));
 }
 
 void MainWindow::gameSupportTriggered()
@@ -2534,7 +3127,7 @@ void MainWindow::gameSupportTriggered()
 
 void MainWindow::issueTriggered()
 {
-  shell::Open(QUrl("https://github.com/Modorganizer2/modorganizer/issues"));
+  shell::Open(QUrl("https://github.com/ArialSenki/MO2-Revamped/issues"));
 }
 
 void MainWindow::tutorialTriggered()
@@ -2843,34 +3436,64 @@ void MainWindow::openMyGamesFolder()
   shell::Explore(m_OrganizerCore.managedGame()->documentsDirectory());
 }
 
+QMenu* MainWindow::createModListOptionsMenu()
+{
+  if (m_OrganizerCore.gameFeatures().gameFeature<GamePlugins>()) {
+    return new ModListGlobalContextMenu(
+        m_OrganizerCore, ui->modList, this,
+        [this] { createModListBackup(); },
+        [this] { restoreModListBackup(); },
+        [this] { deleteProfileModListBackup(); },
+        [this] { createPluginOrderBackup(); },
+        [this] { restorePluginOrderBackup(); },
+        [this] { deleteProfileLoadOrderBackup(); });
+  }
+
+  return new ModListGlobalContextMenu(
+      m_OrganizerCore, ui->modList, this,
+      [this] { createModListBackup(); },
+      [this] { restoreModListBackup(); },
+      [this] { deleteProfileModListBackup(); });
+}
+
 QMenu* MainWindow::openFolderMenu()
 {
   QMenu* FolderMenu = new QMenu(this);
+  auto addFolderAction = [this, FolderMenu](const QString& text, const QString& icon,
+                                             const char* slot) {
+    QAction* action = FolderMenu->addAction(text, this, slot);
+    action->setIcon(QIcon(icon));
+  };
 
-  // game folders that are not necessarily MO-specific
-  FolderMenu->addAction(tr("Open Game folder"), this, SLOT(openGameFolder()));
-  FolderMenu->addAction(tr("Open MyGames folder"), this, SLOT(openMyGamesFolder()));
-  FolderMenu->addAction(tr("Open INIs folder"), this, SLOT(openIniFolder()));
+  FolderMenu->addSection(tr("Game folders"));
+  addFolderAction(tr("Game"), ":/MO/gui/mainwindow/files/game-data.svg",
+                  SLOT(openGameFolder()));
+  addFolderAction(tr("My Games"), ":/MO/gui/mainwindow/files/folder.svg",
+                  SLOT(openMyGamesFolder()));
+  addFolderAction(tr("INI files"), ":/MO/gui/mainwindow/files/config.svg",
+                  SLOT(openIniFolder()));
 
-  FolderMenu->addSeparator();
+  FolderMenu->addSection(tr("MO2 instance"));
+  addFolderAction(tr("Instance"), ":/MO/gui/mainwindow/instance.svg",
+                  SLOT(openInstanceFolder()));
+  addFolderAction(tr("Mods"), ":/MO/gui/contextmenu/all-mods.svg",
+                  SLOT(openModsFolder()));
+  addFolderAction(tr("Profile"), ":/MO/gui/mainwindow/profile.svg",
+                  SLOT(openProfileFolder()));
+  addFolderAction(tr("Downloads"), ":/MO/gui/mainwindow/install.svg",
+                  SLOT(openDownloadsFolder()));
 
-  // MO-specific folders that are related to modding the game
-  FolderMenu->addAction(tr("Open Instance folder"), this, SLOT(openInstanceFolder()));
-  FolderMenu->addAction(tr("Open Mods folder"), this, SLOT(openModsFolder()));
-  FolderMenu->addAction(tr("Open Profile folder"), this, SLOT(openProfileFolder()));
-  FolderMenu->addAction(tr("Open Downloads folder"), this, SLOT(openDownloadsFolder()));
-
-  FolderMenu->addSeparator();
-
-  // MO-specific folders that are not directly related to modding and are either
-  // in the installation folder or the instance
-  FolderMenu->addAction(tr("Open MO2 Install folder"), this, SLOT(openInstallFolder()));
-  FolderMenu->addAction(tr("Open MO2 Plugins folder"), this, SLOT(openPluginsFolder()));
-  FolderMenu->addAction(tr("Open MO2 Stylesheets folder"), this,
-                        SLOT(openStylesheetsFolder()));
-  FolderMenu->addAction(tr("Open MO2 Logs folder"), [=] {
+  FolderMenu->addSection(tr("MO2 installation"));
+  addFolderAction(tr("Program folder"), ":/MO/gui/mainwindow/files/folder.svg",
+                  SLOT(openInstallFolder()));
+  addFolderAction(tr("Plugins"), ":/MO/gui/mainwindow/status/plugin-flag.svg",
+                  SLOT(openPluginsFolder()));
+  addFolderAction(tr("Stylesheets"), ":/MO/gui/mainwindow/files/text.svg",
+                  SLOT(openStylesheetsFolder()));
+  QAction* logsAction = FolderMenu->addAction(tr("Logs"), [=] {
     ui->logList->openLogsFolder();
   });
+  logsAction->setIcon(QIcon(":/MO/gui/mainwindow/status/debug.svg"));
 
   return FolderMenu;
 }
@@ -2914,8 +3537,8 @@ void MainWindow::updateShortcutActionIcons()
   m_LinkDesktop->setEnabled(true);
   m_LinkStartMenu->setEnabled(true);
 
-  const QIcon addIcon(":/MO/gui/link");
-  const QIcon removeIcon(":/MO/gui/remove");
+  const QIcon addIcon(":/MO/gui/mainwindow/shortcut-add.svg");
+  const QIcon removeIcon(":/MO/gui/mainwindow/shortcut-remove.svg");
 
   env::Shortcut shortcut(*exe);
 
@@ -3035,8 +3658,6 @@ void MainWindow::on_actionSettings_triggered()
   toggleMO2EndorseState();
 
   if (oldCheckForUpdates != settings.checkForUpdates()) {
-    toggleUpdateAction();
-
     if (settings.checkForUpdates()) {
       m_OrganizerCore.checkForUpdates();
     }
@@ -3117,6 +3738,24 @@ void MainWindow::languageChange(const QString& newLanguage)
     installTranslator(QFileInfo(fileName).baseName());
   }
   ui->retranslateUi(this);
+  if (m_FilterOptionsDialog) {
+    m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
+    m_FilterDialogTitle->setText(tr("Filter options"));
+    m_FilterDialogDescription->setText(
+        ui->filters->headerItem()->toolTip(1));
+    ui->categoriesGroup->setTitle(QString());
+    ui->displayCategoriesBtn->setText(QString());
+    ui->displayCategoriesBtn->setIcon(
+        QIcon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")));
+    ui->displayCategoriesBtn->setIconSize(QSize(16, 16));
+    ui->displayCategoriesBtn->setToolTip(tr("Filter options"));
+
+    if (auto* buttons = m_FilterOptionsDialog->findChild<QDialogButtonBox*>()) {
+      if (auto* closeButton = buttons->button(QDialogButtonBox::Close)) {
+        closeButton->setText(tr("Close"));
+      }
+    }
+  }
   log::debug("loaded language {}", newLanguage);
 
   ui->profileBox->setItemText(0, QObject::tr("<Manage...>"));
@@ -3127,8 +3766,7 @@ void MainWindow::languageChange(const QString& newLanguage)
     m_DownloadsTab->update();
   }
 
-  ui->listOptionsBtn->setMenu(
-      new ModListGlobalContextMenu(m_OrganizerCore, ui->modList, this));
+  ui->listOptionsBtn->setMenu(createModListOptionsMenu());
   ui->openFolderMenu->setMenu(openFolderMenu());
 }
 
@@ -3147,7 +3785,11 @@ void MainWindow::originModified(int originID)
 void MainWindow::updateAvailable()
 {
   ui->actionUpdate->setEnabled(true);
-  ui->actionUpdate->setToolTip(tr("Update available"));
+  const QString updateHint =
+      tr("A newer MO2 Revamped release is available. Check MO2 Revamped on "
+         "GitHub for release details.");
+  ui->actionUpdate->setToolTip(updateHint);
+  ui->actionUpdate->setStatusTip(updateHint);
   ui->statusBar->setUpdateAvailable(true);
 }
 
@@ -3167,7 +3809,7 @@ void MainWindow::motdReceived(const QString& motd)
 
 void MainWindow::on_actionUpdate_triggered()
 {
-  m_OrganizerCore.startMOUpdate();
+  revampedRepositoryTriggered();
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -3251,12 +3893,6 @@ void MainWindow::toggleMO2EndorseState()
   ui->actionEndorseMO->menu()->setEnabled(enabled);
   ui->actionEndorseMO->setToolTip(text);
   ui->actionEndorseMO->setStatusTip(text);
-}
-
-void MainWindow::toggleUpdateAction()
-{
-  const auto& s = m_OrganizerCore.settings();
-  ui->actionUpdate->setVisible(s.checkForUpdates());
 }
 
 void MainWindow::updateSortButton()
@@ -3377,7 +4013,7 @@ void MainWindow::finishUpdateInfo(const NxmUpdateInfoData& data)
   }
 
   if (!data.finalMods.empty() && organizedGames.empty())
-    log::warn("{}", tr("All of your mods have been checked recently. We restrict "
+    log::info("{}", tr("All of your mods have been checked recently. We restrict "
                        "update checks to help preserve your available API requests."));
 
   for (const auto& game : organizedGames) {
@@ -3706,13 +4342,24 @@ void MainWindow::nxmGameInfoAvailable(QString gameName, QVariant, QVariant resul
   QVariantMap result          = resultData.toMap();
   QVariantList categories     = result["categories"].toList();
   CategoryFactory& catFactory = CategoryFactory::instance();
+  QStringList gameNames{gameName};
+  if (auto* game = Settings::instance().game().plugin()) {
+    gameNames << game->gameName() << game->gameShortName() << game->gameNexusName();
+  }
+
   catFactory.reset();
   for (auto category : categories) {
     auto catMap = category.toMap();
+    const QString categoryName = catMap["name"].toString();
+    const int categoryID       = catMap["category_id"].toInt();
+    if (CategoryFactory::isNexusGameRootCategory(categoryName, categoryID,
+                                                 gameNames)) {
+      continue;
+    }
+
     std::vector<CategoryFactory::NexusCategory> nexusCat;
-    nexusCat.push_back(CategoryFactory::NexusCategory(catMap["name"].toString(),
-                                                      catMap["category_id"].toInt()));
-    catFactory.addCategory(catMap["name"].toString(), nexusCat, 0);
+    nexusCat.push_back(CategoryFactory::NexusCategory(categoryName, categoryID));
+    catFactory.addCategory(categoryName, nexusCat, 0);
   }
 }
 
@@ -3854,9 +4501,11 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
 void MainWindow::on_bsaList_customContextMenuRequested(const QPoint& pos)
 {
   QMenu menu;
-  menu.addAction(tr("Extract..."), [=, item = ui->bsaList->itemAt(pos)]() {
+  QAction* extractAction = menu.addAction(
+      tr("Extract..."), [=, item = ui->bsaList->itemAt(pos)]() {
     extractBSATriggered(item);
   });
+  extractAction->setIcon(QIcon(":/MO/gui/contextmenu/export.svg"));
 
   menu.exec(ui->bsaList->viewport()->mapToGlobal(pos));
 }
@@ -3889,101 +4538,19 @@ void MainWindow::on_actionChange_Game_triggered()
   dlg.exec();
 }
 
-void MainWindow::setCategoryListVisible(bool visible, bool animated)
-{
-  auto* splitter = ui->categoriesSplitter;
-  auto* panel    = ui->categoriesGroup;
-  const auto currentSizes = splitter->sizes();
-  if (currentSizes.size() != 2) {
-    panel->setVisible(visible);
-    return;
-  }
-
-  const int currentWidth = currentSizes[0];
-  const bool animationRunning =
-      m_CategoryPaneAnimation &&
-      m_CategoryPaneAnimation->state() == QAbstractAnimation::Running;
-  if (m_CategoryPaneAnimation) {
-    m_CategoryPaneAnimation->stop();
-  }
-
-  ui->displayCategoriesBtn->setText(
-      ToQString(visible ? L"\u00ab" : L"\u00bb"));
-
-  if (!animated || !m_CategoryPaneAnimation) {
-    splitter->setCollapsible(0, false);
-    if (visible) {
-      panel->show();
-      const auto sizes = splitter->sizes();
-      if (sizes.size() == 2) {
-        const int totalWidth = sizes[0] + sizes[1];
-        int targetWidth = m_CategoryPaneExpandedWidth;
-        if (targetWidth <= 0) {
-          targetWidth = qMin(520, totalWidth);
-        }
-        targetWidth = qBound(0, targetWidth, totalWidth);
-        splitter->setSizes({targetWidth, totalWidth - targetWidth});
-        m_CategoryPaneExpandedWidth = targetWidth;
-      }
-    } else {
-      if (panel->isVisible() && currentWidth > 0) {
-        m_CategoryPaneExpandedWidth = currentWidth;
-      }
-      panel->hide();
-    }
-    return;
-  }
-
-  if (visible) {
-    if (panel->isVisible() && !animationRunning) {
-      splitter->setCollapsible(0, false);
-      return;
-    }
-
-    int startWidth = currentWidth;
-    int totalWidth = currentSizes[0] + currentSizes[1];
-    if (!panel->isVisible()) {
-      panel->show();
-      const auto sizes = splitter->sizes();
-      if (sizes.size() == 2) {
-        totalWidth = sizes[0] + sizes[1];
-      }
-      startWidth = 0;
-      splitter->setCollapsible(0, true);
-      splitter->setSizes({0, totalWidth});
-    } else {
-      splitter->setCollapsible(0, true);
-    }
-
-    int targetWidth = m_CategoryPaneExpandedWidth;
-    if (targetWidth <= 0) {
-      targetWidth = qMin(520, totalWidth);
-    }
-    targetWidth = qBound(0, targetWidth, qMin(520, totalWidth));
-    m_CategoryPaneHiding = false;
-    m_CategoryPaneAnimation->setStartValue(startWidth);
-    m_CategoryPaneAnimation->setEndValue(targetWidth);
-  } else {
-    if (!panel->isVisible() && !animationRunning) {
-      splitter->setCollapsible(0, false);
-      return;
-    }
-
-    if (currentWidth > 0 && !animationRunning) {
-      m_CategoryPaneExpandedWidth = currentWidth;
-    }
-    splitter->setCollapsible(0, true);
-    m_CategoryPaneHiding = true;
-    m_CategoryPaneAnimation->setStartValue(currentWidth);
-    m_CategoryPaneAnimation->setEndValue(0);
-  }
-
-  m_CategoryPaneAnimation->start();
-}
-
 void MainWindow::on_displayCategoriesBtn_toggled(bool checked)
 {
-  setCategoryListVisible(checked);
+  if (!m_FilterOptionsDialog) {
+    return;
+  }
+
+  if (checked) {
+    m_FilterOptionsDialog->show();
+    m_FilterOptionsDialog->raise();
+    m_FilterOptionsDialog->activateWindow();
+  } else {
+    m_FilterOptionsDialog->hide();
+  }
 }
 
 void MainWindow::removeFromToolbar(QAction* action)
@@ -4008,10 +4575,10 @@ void MainWindow::toolBar_customContextMenuRequested(const QPoint& point)
   if (action != nullptr) {
     if (action->objectName().startsWith("custom_")) {
       QMenu menu;
-      menu.addAction(tr("Remove '%1' from the toolbar").arg(action->text()),
-                     [&, action]() {
-                       removeFromToolbar(action);
-                     });
+      QAction* removeAction = menu.addAction(
+          tr("Remove '%1' from the toolbar").arg(action->text()),
+          [&, action]() { removeFromToolbar(action); });
+      removeAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
       menu.exec(ui->toolBar->mapToGlobal(point));
       return;
     }
@@ -4057,15 +4624,104 @@ bool MainWindow::createBackup(const QString& filePath, const QDateTime& time)
   }
 }
 
-void MainWindow::on_saveButton_clicked()
+void MainWindow::createProfileBackup(bool includeModList, bool includePluginOrder)
 {
-  m_OrganizerCore.savePluginList();
-  QDateTime now = QDateTime::currentDateTime();
-  if (createBackup(m_OrganizerCore.currentProfile()->getPluginsFileName(), now) &&
-      createBackup(m_OrganizerCore.currentProfile()->getLoadOrderFileName(), now) &&
-      createBackup(m_OrganizerCore.currentProfile()->getLockedOrderFileName(), now)) {
-    MessageDialog::showMessage(tr("Backup of load order created"), this);
+  if (!includeModList && !includePluginOrder) {
+    return;
   }
+
+  if (includePluginOrder && !profileHasPluginOrderData(m_OrganizerCore)) {
+    if (!includeModList) {
+      showProfileBackupPrompt(
+          this, tr("Plugin order unavailable"),
+          tr("There is no plugin order to back up."),
+          tr("This profile has no ESP, ESM, or ESL plugins. Mod priorities are "
+             "included in the mod list backup."),
+          tr("OK"));
+      return;
+    }
+    includePluginOrder = false;
+  }
+
+  const auto profile = m_OrganizerCore.currentProfile();
+  const QDateTime now = QDateTime::currentDateTime();
+  QStringList failedParts;
+
+  if (includeModList) {
+    profile->writeModlistNow(true);
+    if (!createBackup(profile->getModlistFileName(), now)) {
+      failedParts.append(tr("mod list"));
+    }
+  }
+
+  if (includePluginOrder) {
+    m_OrganizerCore.savePluginList();
+    const QStringList pluginOrderFiles{
+        profile->getPluginsFileName(), profile->getLoadOrderFileName(),
+        profile->getLockedOrderFileName()};
+    bool pluginOrderCreated = true;
+    for (const QString& filePath : pluginOrderFiles) {
+      if (!createBackup(filePath, now)) {
+        pluginOrderCreated = false;
+        break;
+      }
+    }
+    if (!pluginOrderCreated) {
+      failedParts.append(tr("plugin order"));
+    }
+  }
+
+  if (!failedParts.isEmpty()) {
+    QString message =
+        tr("MO2 could not create these backup parts: %1.")
+            .arg(failedParts.join(tr(", ")));
+    message += tr("\n\nAny parts that succeeded are still available to restore.");
+    if (includePluginOrder && failedParts.contains(tr("plugin order"))) {
+      message += tr(" An incomplete plugin-order backup cannot be restored.");
+    }
+    showProfileBackupPrompt(this, tr("Backup incomplete"),
+                            tr("The backup is incomplete."), message,
+                            tr("OK"));
+    return;
+  }
+
+  if (includeModList && includePluginOrder) {
+    showProfileBackupPrompt(
+        this, tr("Profile backup created"), tr("Backup created"),
+        tr("The selected parts of this profile were saved and are ready to "
+           "restore."),
+        tr("OK"));
+  } else if (includeModList) {
+    showProfileBackupPrompt(
+        this, tr("Backup of mod list created"), tr("Backup created"),
+        tr("The mod list backup is ready to restore."), tr("OK"));
+  } else {
+    showProfileBackupPrompt(
+        this, tr("Backup of load order created"), tr("Backup created"),
+        tr("The plugin-order backup is ready to restore."), tr("OK"));
+  }
+}
+
+void MainWindow::createPluginOrderBackup()
+{
+  const bool pluginOrderAvailable =
+      profileHasPluginOrderData(m_OrganizerCore);
+  if (!pluginOrderAvailable) {
+    showProfileBackupPrompt(
+        this, tr("Plugin order unavailable"),
+        tr("There is no plugin order to back up."),
+        tr("This profile has no ESP, ESM, or ESL plugins. Mod priorities are "
+           "included in the mod list backup."),
+        tr("OK"));
+    return;
+  }
+
+  const ProfileBackupSelection selection =
+      chooseProfileBackupContents(this, false, true, pluginOrderAvailable);
+  if (!selection.accepted) {
+    return;
+  }
+  createProfileBackup(selection.modList, selection.pluginOrder);
 }
 
 QString MainWindow::queryRestore(const QString& filePath)
@@ -4075,27 +4731,84 @@ QString MainWindow::queryRestore(const QString& filePath)
   QFileInfoList files = pluginFileInfo.absoluteDir().entryInfoList(
       QStringList(pattern), QDir::Files, QDir::Name);
 
-  SelectionDialog dialog(tr("Choose backup to restore"), this);
+  const bool isModListBackup =
+      pluginFileInfo.fileName() ==
+      QFileInfo(m_OrganizerCore.currentProfile()->getModlistFileName()).fileName();
+  const QString loadOrderFileName =
+      m_OrganizerCore.currentProfile()->getLoadOrderFileName();
+  const QString lockedOrderFileName =
+      m_OrganizerCore.currentProfile()->getLockedOrderFileName();
+  bool incompleteLoadOrderBackupFound = false;
+  const auto hasCompleteLoadOrderBackup = [&](const QString& suffix) {
+    const QDir backupDirectory(pluginFileInfo.absolutePath());
+    const QString loadOrderBackup = backupDirectory.filePath(
+        QFileInfo(loadOrderFileName).fileName() + "." + suffix);
+    const QString lockedOrderBackup = backupDirectory.filePath(
+        QFileInfo(lockedOrderFileName).fileName() + "." + suffix);
+    return QFileInfo(loadOrderBackup).isFile() &&
+           QFileInfo(lockedOrderBackup).isFile();
+  };
+  const QString dialogTitle = isModListBackup ? tr("Restore mod list backup")
+                                               : tr("Restore load order backup");
+  const QString dialogDescription =
+      isModListBackup
+          ? tr("Choose a saved mod list for this profile. Restoring it replaces "
+               "the current mod list; MO2 does not back up the current version "
+               "automatically.")
+          : tr("Choose a saved plugin load order for this profile. Restoring it "
+               "replaces the current plugin load order; MO2 does not back up the "
+               "current version automatically.");
+  const QString choiceDescription =
+      isModListBackup ? tr("Restore this saved mod list.")
+                      : tr("Restore this saved plugin load order.");
+  SelectionDialog dialog(
+      dialogDescription, this, QSize(28, 28));
+  dialog.setWindowTitle(dialogTitle);
+  if (auto* titleLabel = dialog.findChild<QLabel*>(QStringLiteral("titleLabel"))) {
+    titleLabel->setText(dialogTitle);
+  }
+
   QRegularExpression exp(QRegularExpression::anchoredPattern(pluginFileInfo.fileName() +
                                                              PATTERN_BACKUP_REGEX));
   QRegularExpression exp2(
       QRegularExpression::anchoredPattern(pluginFileInfo.fileName() + "\\.(.*)"));
+  const auto addBackupChoice = [&](const QString& suffix,
+                                   const QString& displayName) {
+    if (!isModListBackup && !hasCompleteLoadOrderBackup(suffix)) {
+      incompleteLoadOrderBackupFound = true;
+      return;
+    }
+    dialog.addChoice(QIcon(":/MO/gui/mainwindow/restore.svg"), displayName,
+                     choiceDescription, suffix);
+  };
   for (const QFileInfo& info : boost::adaptors::reverse(files)) {
     auto match  = exp.match(info.fileName());
     auto match2 = exp2.match(info.fileName());
     if (match.hasMatch()) {
       QDateTime time = QDateTime::fromString(match.captured(1), PATTERN_BACKUP_DATE);
-      dialog.addChoice(time.toString(), "", match.captured(1));
+      addBackupChoice(match.captured(1),
+                      tr("Backup from %1").arg(time.toString()));
     } else if (match2.hasMatch()) {
-      dialog.addChoice(match2.captured(1), "", match2.captured(1));
+      addBackupChoice(match2.captured(1), match2.captured(1));
     }
   }
 
   if (dialog.numChoices() == 0) {
-    QMessageBox::information(this, tr("No Backups"),
-                             tr("There are no backups to restore"));
+    const QString message =
+        incompleteLoadOrderBackupFound
+            ? tr("No complete plugin order backup is available. The saved "
+                 "plugin list, load order, and locked order must all be present.")
+            : tr("There are no backups to restore");
+    showProfileBackupPrompt(
+        this, tr("No Backups"),
+        incompleteLoadOrderBackupFound
+            ? tr("No complete plugin-order backup is available.")
+            : tr("There are no backups to restore."),
+        message, tr("OK"));
     return QString();
   }
+
+  resizeBackupSelectionDialog(dialog);
 
   if (dialog.exec() == QDialog::Accepted) {
     return dialog.getChoiceData().toString();
@@ -4104,48 +4817,385 @@ QString MainWindow::queryRestore(const QString& filePath)
   }
 }
 
-void MainWindow::on_restoreButton_clicked()
+void MainWindow::restorePluginOrderBackup()
 {
-  QString pluginName = m_OrganizerCore.currentProfile()->getPluginsFileName();
-  QString choice     = queryRestore(pluginName);
+  const QString pluginName =
+      m_OrganizerCore.currentProfile()->getPluginsFileName();
+  const QString choice = queryRestore(pluginName);
   if (!choice.isEmpty()) {
-    QString loadOrderName = m_OrganizerCore.currentProfile()->getLoadOrderFileName();
-    QString lockedName    = m_OrganizerCore.currentProfile()->getLockedOrderFileName();
-    if (!shellCopy(pluginName + "." + choice, pluginName, true, this) ||
-        !shellCopy(loadOrderName + "." + choice, loadOrderName, true, this) ||
-        !shellCopy(lockedName + "." + choice, lockedName, true, this)) {
+    const QString loadOrderName =
+        m_OrganizerCore.currentProfile()->getLoadOrderFileName();
+    const QString lockedName =
+        m_OrganizerCore.currentProfile()->getLockedOrderFileName();
+    const QStringList destinationFiles{pluginName, loadOrderName, lockedName};
+    const QStringList backupFiles{pluginName + "." + choice,
+                                  loadOrderName + "." + choice,
+                                  lockedName + "." + choice};
+    for (const QString& backupFile : backupFiles) {
+      if (!QFileInfo(backupFile).isFile()) {
+        showProfileBackupPrompt(
+            this, tr("Restore failed"),
+            tr("The plugin-order backup is incomplete or unavailable."),
+            tr("The selected backup is no longer available. No files were "
+               "restored."),
+            tr("OK"));
+        return;
+      }
+    }
+
+    const QString backupName = QFileInfo(pluginName).fileName() + "." + choice;
+    if (!showProfileBackupPrompt(
+            this, tr("Confirm restore"), tr("Restore this plugin order?"),
+            tr("This replaces the current plugin list and load order. MO2 does "
+               "not back up the current version automatically.\n\n%1")
+                .arg(backupName),
+            tr("Restore backup"), tr("Cancel"))) {
+      return;
+    }
+
+    struct RestoreEntry
+    {
+      QString destination;
+      QString stagedBackup;
+      QString stagedOriginal;
+      bool hadOriginal = false;
+    };
+
+    const QString profileDirectory = QFileInfo(pluginName).absolutePath();
+    QTemporaryDir stagingDirectory(
+        QDir(profileDirectory).filePath(".mo2-load-order-restore-XXXXXX"));
+    if (!stagingDirectory.isValid()) {
+      showProfileBackupPrompt(
+          this, tr("Restore failed"),
+          tr("MO2 could not prepare the restore."),
+          tr("Temporary recovery files could not be prepared. No files were "
+             "restored."),
+          tr("OK"));
+      return;
+    }
+
+    QList<RestoreEntry> entries;
+    entries.reserve(destinationFiles.size());
+    QString stagingError;
+    for (qsizetype index = 0; index < destinationFiles.size(); ++index) {
+      RestoreEntry entry;
+      entry.destination = destinationFiles.at(index);
+      entry.stagedBackup = stagingDirectory.filePath(
+          QStringLiteral("backup-%1").arg(index));
+      entry.stagedOriginal = stagingDirectory.filePath(
+          QStringLiteral("original-%1").arg(index));
+
+      if (!QFile::copy(backupFiles.at(index), entry.stagedBackup)) {
+        stagingError = tr("MO2 could not prepare the selected backup. "
+                          "No files were restored.");
+        break;
+      }
+
+      const QFileInfo destinationInfo(entry.destination);
+      if (destinationInfo.exists()) {
+        if (!destinationInfo.isFile()) {
+          stagingError = tr("A destination for the plugin order is not a file. "
+                            "No files were restored.");
+          break;
+        }
+        entry.hadOriginal = true;
+        if (!QFile::copy(entry.destination, entry.stagedOriginal)) {
+          stagingError =
+              tr("MO2 could not preserve the current plugin order before "
+                 "restoring. No files were restored.");
+          break;
+        }
+      }
+      entries.append(std::move(entry));
+    }
+
+    if (!stagingError.isEmpty()) {
+      showProfileBackupPrompt(this, tr("Restore failed"),
+                              tr("MO2 could not prepare the restore."),
+                              stagingError, tr("OK"));
+      return;
+    }
+
+    for (qsizetype index = 0; index < entries.size(); ++index) {
+      const RestoreEntry& entry = entries.at(index);
+      if (shellCopy(entry.stagedBackup, entry.destination, true, this)) {
+        continue;
+      }
 
       const auto e = GetLastError();
+      QStringList rollbackFailures;
+      for (qsizetype rollbackIndex = index + 1; rollbackIndex > 0;
+           --rollbackIndex) {
+        const RestoreEntry& rollbackEntry = entries.at(rollbackIndex - 1);
+        if (rollbackEntry.hadOriginal) {
+          if (!shellCopy(rollbackEntry.stagedOriginal,
+                         rollbackEntry.destination, true, this)) {
+            rollbackFailures.append(rollbackEntry.destination);
+          }
+        } else if (QFileInfo::exists(rollbackEntry.destination) &&
+                   !QFile::remove(rollbackEntry.destination)) {
+          rollbackFailures.append(rollbackEntry.destination);
+        }
+      }
 
-      QMessageBox::critical(this, tr("Restore failed"),
-                            tr("Failed to restore the backup. Errorcode: %1")
-                                .arg(QString::fromStdWString(formatSystemMessage(e))));
+      QString errorMessage =
+          tr("Failed to restore the plugin order backup. Errorcode: %1")
+              .arg(QString::fromStdWString(formatSystemMessage(e)));
+      if (rollbackFailures.isEmpty()) {
+        errorMessage +=
+            tr("\n\nMO2 restored the original files that were in place "
+               "before this operation.");
+      } else {
+        stagingDirectory.setAutoRemove(false);
+        errorMessage +=
+            tr("\n\nMO2 could not fully recover these files: %1\n"
+               "Recovery snapshots were kept at: %2")
+                .arg(rollbackFailures.join(", "), stagingDirectory.path());
+      }
+
+      showProfileBackupPrompt(
+          this, tr("Restore failed"),
+          tr("The plugin-order backup could not be restored."), errorMessage,
+          tr("OK"));
+      m_OrganizerCore.refreshESPList(true);
+      return;
     }
+
     m_OrganizerCore.refreshESPList(true);
   }
 }
 
-void MainWindow::on_saveModsButton_clicked()
+void MainWindow::createModListBackup()
 {
-  m_OrganizerCore.currentProfile()->writeModlistNow(true);
-  QDateTime now = QDateTime::currentDateTime();
-  if (createBackup(m_OrganizerCore.currentProfile()->getModlistFileName(), now)) {
-    MessageDialog::showMessage(tr("Backup of mod list created"), this);
+  const ProfileBackupSelection selection =
+      chooseProfileBackupContents(
+          this, true, false, profileHasPluginOrderData(m_OrganizerCore));
+  if (!selection.accepted) {
+    return;
   }
+  createProfileBackup(selection.modList, selection.pluginOrder);
 }
 
-void MainWindow::on_restoreModsButton_clicked()
+void MainWindow::restoreModListBackup()
 {
   QString modlistName = m_OrganizerCore.currentProfile()->getModlistFileName();
   QString choice      = queryRestore(modlistName);
   if (!choice.isEmpty()) {
+    const QString backupPath = modlistName + "." + choice;
+    const QString backupName = QFileInfo(backupPath).fileName();
+    if (!QFileInfo(backupPath).isFile()) {
+      showProfileBackupPrompt(this, tr("Restore failed"),
+                              tr("The selected backup is no longer available."),
+                              backupName, tr("OK"));
+      return;
+    }
+    if (!showProfileBackupPrompt(
+            this, tr("Confirm restore"), tr("Restore this mod list?"),
+            tr("This replaces the current mod list and does not create a "
+               "backup of it automatically.\n\n%1")
+                .arg(backupName),
+            tr("Restore backup"), tr("Cancel"))) {
+      return;
+    }
     if (!shellCopy(modlistName + "." + choice, modlistName, true, this)) {
       const auto e = GetLastError();
-      QMessageBox::critical(this, tr("Restore failed"),
-                            tr("Failed to restore the backup. Errorcode: %1")
-                                .arg(formatSystemMessage(e)));
+      showProfileBackupPrompt(
+          this, tr("Restore failed"), tr("The backup could not be restored."),
+          tr("Error code: %1").arg(formatSystemMessage(e)), tr("OK"));
     }
     m_OrganizerCore.refresh(false);
+  }
+}
+
+void MainWindow::deleteProfileModListBackup()
+{
+  const QString modlistPath =
+      m_OrganizerCore.currentProfile()->getModlistFileName();
+  const QFileInfo modlistInfo(modlistPath);
+  const QString pattern = modlistInfo.fileName() + ".*";
+  const QFileInfoList files = modlistInfo.absoluteDir().entryInfoList(
+      QStringList(pattern), QDir::Files, QDir::Name);
+
+  SelectionDialog dialog(
+      tr("Choose a saved mod list backup to delete. The current mod list will "
+         "not be changed."),
+      this, QSize(28, 28));
+  const QString dialogTitle = tr("Delete mod list backup");
+  dialog.setWindowTitle(dialogTitle);
+  if (auto* titleLabel = dialog.findChild<QLabel*>(QStringLiteral("titleLabel"))) {
+    titleLabel->setText(dialogTitle);
+  }
+
+  const QRegularExpression timestampPattern(
+      QRegularExpression::anchoredPattern(
+          QRegularExpression::escape(modlistInfo.fileName()) +
+          PATTERN_BACKUP_REGEX));
+  const QRegularExpression legacyPattern(
+      QRegularExpression::anchoredPattern(
+          QRegularExpression::escape(modlistInfo.fileName()) + "\\.(.*)"));
+
+  for (const QFileInfo& info : boost::adaptors::reverse(files)) {
+    const auto timestampMatch = timestampPattern.match(info.fileName());
+    const auto legacyMatch = legacyPattern.match(info.fileName());
+    if (timestampMatch.hasMatch()) {
+      const QDateTime time = QDateTime::fromString(
+          timestampMatch.captured(1), PATTERN_BACKUP_DATE);
+      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+                       tr("Backup from %1").arg(time.toString()),
+                       tr("Permanently delete this saved mod list backup."),
+                       info.absoluteFilePath());
+    } else if (legacyMatch.hasMatch()) {
+      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+                       legacyMatch.captured(1),
+                       tr("Permanently delete this saved mod list backup."),
+                       info.absoluteFilePath());
+    }
+  }
+
+  if (dialog.numChoices() == 0) {
+    showProfileBackupPrompt(this, tr("No Backups"),
+                            tr("There are no mod list backups to delete."),
+                            tr("This profile has no saved mod list backups."),
+                            tr("OK"));
+    return;
+  }
+
+  resizeBackupSelectionDialog(dialog);
+
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  const QString selectedPath = dialog.getChoiceData().toString();
+  const QFileInfo selectedInfo(selectedPath);
+  if (selectedPath.isEmpty() ||
+      selectedInfo.absolutePath() != modlistInfo.absolutePath() ||
+      !selectedInfo.fileName().startsWith(modlistInfo.fileName() + ".")) {
+    return;
+  }
+
+  if (!showProfileBackupPrompt(
+          this, tr("Delete mod list backup"), tr("Delete this backup?"),
+          tr("Permanently delete this saved mod list backup?\n\n%1")
+              .arg(selectedInfo.fileName()),
+          tr("Delete backup"), tr("Cancel"))) {
+    return;
+  }
+
+  if (!QFile::remove(selectedInfo.absoluteFilePath())) {
+    showProfileBackupPrompt(
+        this, tr("Delete failed"), tr("The backup could not be deleted."),
+        tr("Could not delete the selected mod list backup."), tr("OK"));
+  } else {
+    showProfileBackupPrompt(
+        this, tr("Mod list backup deleted"), tr("Backup deleted"),
+        tr("The mod list backup was permanently deleted."), tr("OK"));
+  }
+}
+
+void MainWindow::deleteProfileLoadOrderBackup()
+{
+  const QString pluginPath =
+      m_OrganizerCore.currentProfile()->getPluginsFileName();
+  const QFileInfo pluginInfo(pluginPath);
+  const QFileInfoList files = pluginInfo.absoluteDir().entryInfoList(
+      QStringList(pluginInfo.fileName() + ".*"), QDir::Files, QDir::Name);
+
+  SelectionDialog dialog(
+      tr("Choose a saved plugin load order to delete. The current load order "
+         "will not be changed."),
+      this, QSize(28, 28));
+  const QString dialogTitle = tr("Delete plugin order backup");
+  dialog.setWindowTitle(dialogTitle);
+  if (auto* titleLabel = dialog.findChild<QLabel*>(QStringLiteral("titleLabel"))) {
+    titleLabel->setText(dialogTitle);
+  }
+
+  const QRegularExpression timestampPattern(
+      QRegularExpression::anchoredPattern(
+          QRegularExpression::escape(pluginInfo.fileName()) +
+          PATTERN_BACKUP_REGEX));
+  const QRegularExpression legacyPattern(
+      QRegularExpression::anchoredPattern(
+          QRegularExpression::escape(pluginInfo.fileName()) + "\\.(.*)"));
+
+  for (const QFileInfo& info : boost::adaptors::reverse(files)) {
+    const auto timestampMatch = timestampPattern.match(info.fileName());
+    const auto legacyMatch = legacyPattern.match(info.fileName());
+    if (timestampMatch.hasMatch()) {
+      const QDateTime time = QDateTime::fromString(
+          timestampMatch.captured(1), PATTERN_BACKUP_DATE);
+      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+                       tr("Backup from %1").arg(time.toString()),
+                       tr("Permanently delete this saved plugin load order."),
+                       info.absoluteFilePath());
+    } else if (legacyMatch.hasMatch()) {
+      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+                       legacyMatch.captured(1),
+                       tr("Permanently delete this saved plugin load order."),
+                       info.absoluteFilePath());
+    }
+  }
+
+  if (dialog.numChoices() == 0) {
+    showProfileBackupPrompt(
+        this, tr("No Backups"),
+        tr("There are no plugin-order backups to delete."),
+        tr("This profile has no saved plugin-order backups."), tr("OK"));
+    return;
+  }
+
+  resizeBackupSelectionDialog(dialog);
+
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  const QString selectedPath = dialog.getChoiceData().toString();
+  const QFileInfo selectedInfo(selectedPath);
+  if (selectedPath.isEmpty() ||
+      selectedInfo.absolutePath() != pluginInfo.absolutePath() ||
+      !selectedInfo.fileName().startsWith(pluginInfo.fileName() + ".")) {
+    return;
+  }
+
+  const QString suffix = selectedInfo.fileName().mid(pluginInfo.fileName().size());
+  const QStringList backupPaths{
+      pluginPath + suffix,
+      m_OrganizerCore.currentProfile()->getLoadOrderFileName() + suffix,
+      m_OrganizerCore.currentProfile()->getLockedOrderFileName() + suffix};
+  if (!showProfileBackupPrompt(
+          this, tr("Delete plugin order backup"), tr("Delete this backup?"),
+          tr("Permanently delete this saved plugin-order backup?\n\n%1")
+              .arg(selectedInfo.fileName()),
+          tr("Delete backup"), tr("Cancel"))) {
+    return;
+  }
+
+  QStringList failedFiles;
+  bool removedAny = false;
+  for (const QString& path : backupPaths) {
+    if (!QFileInfo::exists(path)) {
+      continue;
+    }
+    if (QFile::remove(path)) {
+      removedAny = true;
+    } else {
+      failedFiles.append(QFileInfo(path).fileName());
+    }
+  }
+
+  if (!failedFiles.isEmpty()) {
+    showProfileBackupPrompt(
+        this, tr("Delete failed"),
+        tr("Some files could not be deleted."),
+        tr("The plugin-order backup is incomplete. These files remain:\n%1")
+            .arg(failedFiles.join("\n")),
+        tr("OK"));
+  } else if (removedAny) {
+    showProfileBackupPrompt(
+        this, tr("Plugin order backup deleted"), tr("Backup deleted"),
+        tr("The plugin-order backup was permanently deleted."), tr("OK"));
   }
 }
 
@@ -4257,24 +5307,4 @@ void MainWindow::dropEvent(QDropEvent* event)
     }
   }
   event->accept();
-}
-
-void MainWindow::keyReleaseEvent(QKeyEvent* event)
-{
-  // if the ui is locked, ignore the ALT key event
-  // alt-tabbing out of a game triggers this
-  auto& uilocker = UILocker::instance();
-  auto& settings = Settings::instance();
-  if (!uilocker.locked()) {
-    // if the menubar is hidden and showMenuBarOnAlt is true,
-    // pressing Alt will make it visible
-    if (event->key() == Qt::Key_Alt) {
-      bool showMenubarOnAlt = settings.interface().showMenubarOnAlt();
-      if (showMenubarOnAlt && !ui->menuBar->isVisible()) {
-        ui->menuBar->show();
-      }
-    }
-  }
-
-  QMainWindow::keyReleaseEvent(event);
 }

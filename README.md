@@ -20,6 +20,10 @@ or Bandai Namco Entertainment.
 | `licenses/` | Full license texts, component notices, and Python package license metadata |
 | `docs/` | Upstream provenance and build guidance |
 
+See the [historical changelog](docs/HISTORICAL-CHANGELOG.md) for the reviewed
+work to date and the [release audit](docs/RELEASE-AUDIT.md) for component
+versions, checks, and deferred upgrades.
+
 ## Revamped components
 
 - Elden Ring support and archive installation choices that preserve the mod's
@@ -36,8 +40,11 @@ for the upstream versions and revisions recorded for its components.
 
 Start with [the build notes](docs/BUILDING.md). Mod Organizer 2's development
 environment is normally prepared with the upstream `mob` project; USVFS and
-Revamped components have their own build requirements. A successful build has
-not been verified from a clean clone of this repository yet.
+Revamped components have their own build requirements.
+
+The application compiled from the current source tree with MSVC and Qt 6.7.1.
+A clean-clone build and a from-source rebuild of the complete bundled runtime
+are still separate tasks.
 
 ## Licensing and notices
 
@@ -48,8 +55,12 @@ files in [`licenses/`](licenses/) before redistributing a modified build.
 
 ## Releases and support
 
-This repository is for source and project documentation; it does not contain a
-published installer or promise a release schedule. Use GitHub Issues to report
-problems or suggest changes. When filing an issue, include the MO2 Revamped
-revision, the affected feature, and steps to reproduce it. Do not attach game
-saves, account credentials, or unrelated personal files.
+The v1.0.0 installers and checksums are published in [GitHub Releases](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0):
+
+- [General installer — Complete, Portable, and available setup options](https://github.com/ArialSenki/MO2-Revamped/releases/download/v1.0.0/MO2-Revamped-Setup-1.0.0.exe)
+- [Elden Ring isolated installer](https://github.com/ArialSenki/MO2-Revamped/releases/download/v1.0.0/MO2-Revamped-Elden-Ring-Isolated-Setup-1.0.0.exe)
+- [SHA-256 checksums](https://github.com/ArialSenki/MO2-Revamped/releases/download/v1.0.0/SHA256SUMS.txt)
+
+Use GitHub Issues to report problems or suggest changes. When filing an issue,
+include the MO2 Revamped revision, the affected feature, and steps to reproduce
+it. Do not attach game saves, account credentials, or unrelated personal files.

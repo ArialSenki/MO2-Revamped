@@ -6,14 +6,67 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>537</width>
-    <height>430</height>
+    <width>760</width>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Sync Overwrite</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>14</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
+   <property name="bottomMargin">
+    <number>14</number>
+   </property>
+   <item>
+    <widget class="QWidget" name="syncHeader">
+     <layout class="QVBoxLayout" name="syncHeaderLayout">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="syncPageTitle">
+        <property name="text">
+         <string>Sync Overwrite</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="syncPageSubtitle">
+        <property name="text">
+         <string>Choose which mod should own each file, or leave it in Overwrite.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QTreeWidget" name="syncTree">
      <property name="sortingEnabled">
@@ -24,14 +77,24 @@
      </attribute>
      <column>
       <property name="text">
-       <string>Name</string>
+       <string>File</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Sync To</string>
+       <string>Move to mod</string>
       </property>
      </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="syncFooterNote">
+     <property name="text">
+      <string>Press OK to move files to the selected mods while keeping their folder paths. Cancel leaves them in Overwrite.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>

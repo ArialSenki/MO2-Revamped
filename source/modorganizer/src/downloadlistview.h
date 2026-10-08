@@ -61,6 +61,7 @@ public:
       : QHeaderView(orientation, parent)
   {}
   void customResizeSections();
+  void ensureReadableSections();
 
 private:
   void mouseReleaseEvent(QMouseEvent* event) override;

@@ -2,7 +2,6 @@
 #define MODORGANIZER_CREATEINSTANCEDIALOGPAGES_INCLUDED
 
 #include "createinstancedialog.h"
-#include <filterwidget.h>
 
 #include <QCommandLinkButton>
 #include <QLabel>
@@ -174,6 +173,9 @@ public:
   //
   void portable();
 
+  // creates a dedicated copy of the MO2 application for one game
+  void isolated();
+
 private:
   CreateInstanceDialog::Types m_type;
 };
@@ -237,6 +239,8 @@ public:
   void warnUnrecognized(const QString& path);
 
 private:
+  void doActivated(bool firstTime) override;
+
   // a single game, with its button and custom directory, if any
   //
   struct Game
@@ -275,9 +279,8 @@ private:
 
   // current selection
   Game* m_selection;
-
-  // filter
-  MOBase::FilterWidget m_filter;
+  bool m_isolatedModeActive = false;
+  bool m_showAllGames = false;
 
   // returns a list of all the game plugins sorted with natsort
   //
@@ -316,10 +319,6 @@ private:
   // removes all buttons from the ui
   //
   void clearButtons();
-
-  // creates the "Browse" button
-  //
-  QCommandLinkButton* createCustomButton();
 
   // clears the button list and adds all the buttons to it, depending on
   // filtering and stuff

@@ -27,9 +27,17 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 #include <QItemDelegate>
 #include <QHeaderView>
+#include <QHash>
+#include <QIcon>
 #include <QLineEdit>
+#include <QListWidget>
+#include <QListWidgetItem>
 #include <QMenu>
 #include <QRegularExpressionValidator>
+#include <QSet>
+#include <QStyle>
+#include <QStyleOptionViewItem>
+#include <QVector>
 
 class NewIDValidator : public QIntValidator
 {
@@ -107,13 +115,19 @@ private:
 };
 
 CategoriesDialog::CategoriesDialog(QWidget* parent)
-    : TutorableDialog("Categories", parent), ui(new Ui::CategoriesDialog)
+    : TutorableDialog("Categories", parent), ui(new Ui::CategoriesDialog),
+      m_ContextRow(-1), m_HighestID(0)
 {
   ui->setupUi(this);
+  if (auto* game = Settings::instance().game().plugin()) {
+    setWindowTitle(tr("Manage Categories - %1").arg(game->gameName()));
+    ui->dialogHeading->setText(
+        tr("Organize categories for %1").arg(game->gameName()));
+  }
   ui->contentLayout->setStretch(0, 3);
   ui->contentLayout->setStretch(1, 2);
-  setMinimumSize(940, 520);
-  resize(1020, 580);
+  setMinimumSize(920, 540);
+  resize(1020, 620);
   setSizeGripEnabled(true);
   ui->categoriesTable->setMinimumWidth(500);
   ui->categoriesTable->setAlternatingRowColors(true);
@@ -127,13 +141,35 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
   ui->categoriesTable->horizontalHeader()->setSectionResizeMode(
       2, QHeaderView::ResizeToContents);
   ui->categoriesTable->horizontalHeader()->setStretchLastSection(true);
-  ui->groupBox->setMinimumWidth(300);
+  ui->nexusCategoriesCard->setMinimumWidth(300);
   ui->nexusCategoryList->setAlternatingRowColors(true);
   ui->nexusCategoryList->setUniformItemSizes(true);
-  ui->nexusCategoryList->setSpacing(2);
+  ui->nexusCategoryList->setSpacing(1);
+  ui->nexusRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
+  ui->nexusImportButton->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+  ui->addCategoryButton->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
+  ui->removeCategoryButton->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  ui->nexusRefresh->setToolTip(
+      tr("Load the latest category list for the active game from Nexus."));
+  ui->nexusImportButton->setToolTip(
+      tr("Add the categories currently listed here to your MO2 category list."));
   fillTable();
   connect(ui->categoriesTable, SIGNAL(cellChanged(int, int)), this,
           SLOT(cellChanged(int, int)));
+  ui->removeCategoryButton->setEnabled(false);
+  connect(ui->addCategoryButton, &QPushButton::clicked, this, [this]() {
+    m_ContextRow = ui->categoriesTable->rowCount();
+    addCategory_clicked();
+  });
+  connect(ui->removeCategoryButton, &QPushButton::clicked, this, [this]() {
+    m_ContextRow = ui->categoriesTable->currentRow();
+    removeCategory_clicked();
+  });
+  connect(ui->categoriesTable, &QTableWidget::itemSelectionChanged, this,
+          [this]() {
+            ui->removeCategoryButton->setEnabled(
+                !ui->categoriesTable->selectedItems().isEmpty());
+          });
   if (Settings::instance().nexus().categoryMappings()) {
     connect(ui->nexusRefresh, SIGNAL(clicked()), this, SLOT(nexusRefresh_clicked()));
     connect(ui->nexusImportButton, SIGNAL(clicked()), this,
@@ -141,6 +177,10 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
     ui->nexusCategoryList->setDisabled(false);
   } else {
     ui->nexusCategoryList->setDisabled(true);
+    ui->nexusStatus->setText(
+        tr("Nexus category mapping is disabled in Settings."));
+    ui->nexusRefresh->setDisabled(true);
+    ui->nexusImportButton->setDisabled(true);
   }
 }
 
@@ -157,40 +197,91 @@ int CategoriesDialog::exec()
 
 void CategoriesDialog::cellChanged(int row, int)
 {
-  int currentID = ui->categoriesTable->item(row, 0)->text().toInt();
-  if (currentID > m_HighestID) {
-    m_HighestID = currentID;
+  if (row >= 0 && row < ui->categoriesTable->rowCount()) {
+    refreshIDs();
   }
 }
 
 void CategoriesDialog::commitChanges()
 {
-  CategoryFactory& categories = CategoryFactory::instance();
-  categories.reset();
+  struct PendingCategory
+  {
+    int id;
+    QString name;
+    int parentID;
+    std::vector<CategoryFactory::NexusCategory> nexusCategories;
+  };
 
-  for (int i = 0; i < ui->categoriesTable->rowCount(); ++i) {
-    int index = ui->categoriesTable->verticalHeader()->logicalIndex(i);
-    QVariantList nexusData;
-    if (ui->categoriesTable->item(index, 3) != nullptr)
-      nexusData = ui->categoriesTable->item(index, 3)->data(Qt::UserRole).toList();
-    std::vector<CategoryFactory::NexusCategory> nexusCats;
-    for (auto nexusCat : nexusData) {
-      nexusCats.push_back(CategoryFactory::NexusCategory(
-          nexusCat.toList()[0].toString(), nexusCat.toList()[1].toInt()));
+  std::vector<PendingCategory> pendingCategories;
+  QTableWidget* table = ui->categoriesTable;
+  for (int visualRow = 0; visualRow < table->rowCount(); ++visualRow) {
+    const int row = table->verticalHeader()->logicalIndex(visualRow);
+    if (row < 0 || row >= table->rowCount()) {
+      continue;
     }
 
-    categories.addCategory(ui->categoriesTable->item(index, 0)->text().toInt(),
-                           ui->categoriesTable->item(index, 1)->text(), nexusCats,
-                           ui->categoriesTable->item(index, 2)->text().toInt());
+    const auto* idItem       = table->item(row, 0);
+    const auto* nameItem     = table->item(row, 1);
+    const auto* parentIDItem = table->item(row, 2);
+    if (!idItem || !nameItem || !parentIDItem) {
+      continue;
+    }
+
+    bool idValid = false;
+    const int id = idItem->text().toInt(&idValid);
+    if (!idValid || id <= 0) {
+      continue;
+    }
+
+    bool parentIDValid = false;
+    int parentID = parentIDItem->text().toInt(&parentIDValid);
+    if (!parentIDValid) {
+      parentID = 0;
+    }
+
+    PendingCategory pending{id, nameItem->text(), parentID, {}};
+    const auto* mappingItem = table->item(row, 3);
+    const QVariantList nexusData = mappingItem
+                                       ? mappingItem->data(Qt::UserRole).toList()
+                                       : QVariantList();
+    for (const QVariant& nexusEntry : nexusData) {
+      const QVariantList mapping = nexusEntry.toList();
+      if (mapping.size() < 2) {
+        continue;
+      }
+
+      const QString nexusName = mapping.at(0).toString().trimmed();
+      bool nexusIDValid = false;
+      const int nexusID = mapping.at(1).toInt(&nexusIDValid);
+      if (nexusName.isEmpty() || !nexusIDValid || nexusID <= 0) {
+        continue;
+      }
+      pending.nexusCategories.emplace_back(nexusName, nexusID);
+    }
+    pendingCategories.push_back(std::move(pending));
+  }
+
+  CategoryFactory& categories = CategoryFactory::instance();
+  categories.reset();
+  for (const auto& category : pendingCategories) {
+    categories.addCategory(category.id, category.name, category.nexusCategories,
+                           category.parentID);
   }
 
   categories.setParents();
 
   std::vector<CategoryFactory::NexusCategory> nexusCats;
   for (int i = 0; i < ui->nexusCategoryList->count(); ++i) {
-    nexusCats.push_back(CategoryFactory::NexusCategory(
-        ui->nexusCategoryList->item(i)->data(Qt::DisplayRole).toString(),
-        ui->nexusCategoryList->item(i)->data(Qt::UserRole).toInt()));
+    const auto* item = ui->nexusCategoryList->item(i);
+    if (!item) {
+      continue;
+    }
+    bool nexusIDValid = false;
+    const int nexusID = item->data(Qt::UserRole).toInt(&nexusIDValid);
+    const QString name = item->data(Qt::DisplayRole).toString().trimmed();
+    if (nexusIDValid && nexusID > 0 && !name.isEmpty()) {
+      nexusCats.emplace_back(name, nexusID);
+    }
   }
 
   categories.setNexusCategories(nexusCats);
@@ -201,8 +292,13 @@ void CategoriesDialog::commitChanges()
 void CategoriesDialog::refreshIDs()
 {
   m_HighestID = 0;
+  m_IDs.clear();
   for (int i = 0; i < ui->categoriesTable->rowCount(); ++i) {
-    int id = ui->categoriesTable->item(i, 0)->text().toInt();
+    const auto* idItem = ui->categoriesTable->item(i, 0);
+    if (!idItem) {
+      continue;
+    }
+    int id = idItem->text().toInt();
     if (id > m_HighestID) {
       m_HighestID = id;
     }
@@ -215,6 +311,12 @@ void CategoriesDialog::fillTable()
   CategoryFactory& categories = CategoryFactory::instance();
   QTableWidget* table         = ui->categoriesTable;
   QListWidget* list           = ui->nexusCategoryList;
+  const bool wasSorting       = table->isSortingEnabled();
+  table->setSortingEnabled(false);
+  QStringList gameNames;
+  if (auto* game = Settings::instance().game().plugin()) {
+    gameNames << game->gameName() << game->gameShortName() << game->gameNexusName();
+  }
 
   table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
   table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
@@ -230,20 +332,20 @@ void CategoriesDialog::fillTable()
       0, new ValidatingDelegate(this, new NewIDValidator(m_IDs)));
   table->setItemDelegateForColumn(
       2, new ValidatingDelegate(this, new ExistingIDValidator(m_IDs)));
-  table->setItemDelegateForColumn(
-      3, new ValidatingDelegate(this,
-                                new QRegularExpressionValidator(
-                                    QRegularExpression("([0-9]+)?(,[0-9]+)*"), this)));
 
-  int row = 0;
+  table->setRowCount(0);
+  list->clear();
+
+  QHash<int, int> tableRowsByCategoryID;
+  QHash<QString, int> localCategoryIDsByName;
+  QSet<QString> ambiguousLocalNames;
   for (const auto& category : categories.m_Categories) {
     if (category.ID() == 0) {
-      --row;
       continue;
     }
-    ++row;
+
+    const int row = table->rowCount();
     table->insertRow(row);
-    //    table->setVerticalHeaderItem(row, new QTableWidgetItem("  "));
 
     QScopedPointer<QTableWidgetItem> idItem(new QTableWidgetItem());
     idItem->setData(Qt::DisplayRole, category.ID());
@@ -256,49 +358,161 @@ void CategoriesDialog::fillTable()
     table->setItem(row, 0, idItem.take());
     table->setItem(row, 1, nameItem.take());
     table->setItem(row, 2, parentIDItem.take());
+    nexusCatItem->setFlags(nexusCatItem->flags() & ~Qt::ItemIsEditable);
     table->setItem(row, 3, nexusCatItem.take());
-  }
 
-  for (const auto& nexusCat : categories.m_NexusMap) {
-    QScopedPointer<QListWidgetItem> nexusItem(new QListWidgetItem());
-    nexusItem->setData(Qt::DisplayRole, nexusCat.second.name());
-    nexusItem->setData(Qt::UserRole, nexusCat.second.ID());
-    list->addItem(nexusItem.take());
-    auto item = table->item(categories.resolveNexusID(nexusCat.first) - 1, 3);
-    if (item != nullptr) {
-      auto itemData = item->data(Qt::UserRole).toList();
-      QVariantList newData;
-      newData.append(nexusCat.second.name());
-      newData.append(nexusCat.second.ID());
-      itemData.insert(itemData.length(), newData);
-      QStringList names;
-      for (auto cat : itemData) {
-        names.append(cat.toList()[0].toString());
+    tableRowsByCategoryID.insert(category.ID(), row);
+    const QString nameKey = category.name().trimmed().toCaseFolded();
+    if (!nameKey.isEmpty()) {
+      if (localCategoryIDsByName.contains(nameKey)) {
+        ambiguousLocalNames.insert(nameKey);
+      } else {
+        localCategoryIDsByName.insert(nameKey, category.ID());
       }
-      item->setData(Qt::UserRole, itemData);
-      item->setData(Qt::DisplayRole, names.join(", "));
     }
   }
 
+  // Old drag/drop data can contain a fake Nexus entry whose name is only the
+  // first character and whose ID is the second character's code point. Hide
+  // that entry in the editor even if the startup migration could not repair it.
+  QSet<int> staleLegacyIDs;
+  for (const auto& entry : categories.m_NexusMap) {
+    const CategoryFactory::NexusCategory& legacy = entry.second;
+    const QString legacyName                   = legacy.name().trimmed();
+    const int localCategoryID                  = legacy.categoryID();
+    if (localCategoryID <= 0 || !categories.categoryExists(localCategoryID) ||
+        legacyName.size() != 1 || entry.first <= 0 || entry.first > 0xFFFF) {
+      continue;
+    }
+
+    const QChar secondCharacter(static_cast<ushort>(entry.first));
+    if (!secondCharacter.isLetterOrNumber()) {
+      continue;
+    }
+
+    const QString expectedPrefix = legacyName + secondCharacter;
+    const QString localName =
+        categories.getCategoryNameByID(localCategoryID).trimmed();
+    int matchingFullNames = 0;
+    for (const auto& candidate : categories.m_NexusMap) {
+      if (candidate.first != entry.first &&
+          candidate.second.name().compare(localName, Qt::CaseInsensitive) == 0 &&
+          candidate.second.name().startsWith(expectedPrefix, Qt::CaseInsensitive)) {
+        ++matchingFullNames;
+      }
+    }
+    if (matchingFullNames == 1) {
+      staleLegacyIDs.insert(entry.first);
+    }
+  }
+
+  QVector<QVariantList> rowMappings(table->rowCount());
+  QVector<QSet<int>> rowMappingIDs(table->rowCount());
+  int displayedNexusCategories = 0;
+  for (const auto& nexusCat : categories.m_NexusMap) {
+    if (staleLegacyIDs.contains(nexusCat.first)) {
+      continue;
+    }
+    if (CategoryFactory::isNexusGameRootCategory(nexusCat.second.name(),
+                                                 nexusCat.second.ID(), gameNames)) {
+      continue;
+    }
+
+    QScopedPointer<QListWidgetItem> nexusItem(new QListWidgetItem());
+    nexusItem->setData(Qt::DisplayRole, nexusCat.second.name());
+    nexusItem->setData(Qt::UserRole, nexusCat.second.ID());
+    nexusItem->setData(
+        Qt::ToolTipRole,
+        tr("Nexus category ID: %1. Drag this entry onto a local category to map it.")
+            .arg(nexusCat.second.ID()));
+    list->addItem(nexusItem.take());
+
+    ++displayedNexusCategories;
+    const QString nameKey = nexusCat.second.name().trimmed().toCaseFolded();
+    int localCategoryID = -1;
+    if (!nameKey.isEmpty() && !ambiguousLocalNames.contains(nameKey) &&
+        localCategoryIDsByName.contains(nameKey)) {
+      // Prefer a unique full-name match. Besides filling missing assignments,
+      // this replaces legacy one-letter labels with the canonical Nexus name.
+      localCategoryID = localCategoryIDsByName.value(nameKey);
+    } else if (categories.categoryExists(nexusCat.second.categoryID())) {
+      localCategoryID = nexusCat.second.categoryID();
+    }
+
+    const auto rowIt = tableRowsByCategoryID.constFind(localCategoryID);
+    if (rowIt == tableRowsByCategoryID.cend()) {
+      continue;
+    }
+
+    const int row = rowIt.value();
+    if (rowMappingIDs[row].contains(nexusCat.second.ID())) {
+      continue;
+    }
+
+    QVariantList mapping;
+    mapping.append(nexusCat.second.name().trimmed());
+    mapping.append(nexusCat.second.ID());
+    rowMappings[row].append(QVariant::fromValue(mapping));
+    rowMappingIDs[row].insert(nexusCat.second.ID());
+  }
+
+  for (int row = 0; row < table->rowCount(); ++row) {
+    QStringList names;
+    for (const QVariant& entry : rowMappings[row]) {
+      const QVariantList mapping = entry.toList();
+      if (!mapping.isEmpty()) {
+        names.append(mapping.first().toString());
+      }
+    }
+
+    QTableWidgetItem* item = table->item(row, 3);
+    if (!item) {
+      item = new QTableWidgetItem();
+      table->setItem(row, 3, item);
+    }
+    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+    item->setData(Qt::UserRole, rowMappings[row]);
+    item->setText(names.join(", "));
+  }
+
+  ui->nexusStatus->setText(
+      displayedNexusCategories == 0
+          ? tr("No Nexus categories loaded. Refresh the list to fetch categories for this game.")
+          : tr("%1 Nexus categories available; full category names are shown in the mappings.")
+                .arg(displayedNexusCategories));
+
+  table->setSortingEnabled(wasSorting);
   refreshIDs();
 }
 
 void CategoriesDialog::addCategory_clicked()
 {
+  const bool wasSorting = ui->categoriesTable->isSortingEnabled();
+  ui->categoriesTable->setSortingEnabled(false);
   int row = m_ContextRow >= 0 ? m_ContextRow : 0;
   ui->categoriesTable->insertRow(row);
   ui->categoriesTable->setVerticalHeaderItem(row, new QTableWidgetItem("  "));
+  const int newID = ++m_HighestID;
+  m_IDs.insert(newID);
   ui->categoriesTable->setItem(row, 0,
-                               new QTableWidgetItem(QString::number(++m_HighestID)));
+                               new QTableWidgetItem(QString::number(newID)));
   ui->categoriesTable->setItem(row, 1, new QTableWidgetItem("new"));
   ui->categoriesTable->setItem(row, 2, new QTableWidgetItem("0"));
-  ui->categoriesTable->setItem(row, 3, new QTableWidgetItem(""));
+  auto* mappingItem = new QTableWidgetItem("");
+  mappingItem->setFlags(mappingItem->flags() & ~Qt::ItemIsEditable);
+  ui->categoriesTable->setItem(row, 3, mappingItem);
+  ui->categoriesTable->setSortingEnabled(wasSorting);
+  m_ContextRow = -1;
+  refreshIDs();
 }
 
 void CategoriesDialog::removeCategory_clicked()
 {
-  if (m_ContextRow >= 0)
+  if (m_ContextRow >= 0) {
     ui->categoriesTable->removeRow(m_ContextRow);
+    m_ContextRow = -1;
+    refreshIDs();
+  }
 }
 
 void CategoriesDialog::removeNexusMap_clicked()
@@ -311,38 +525,81 @@ void CategoriesDialog::removeNexusMap_clicked()
 
 void CategoriesDialog::nexusRefresh_clicked()
 {
+  ui->nexusStatus->setText(
+      tr("Loading the active game's categories from Nexus…"));
   CategoryFactory::instance().refreshNexusCategories(this);
 }
 
 void CategoriesDialog::nexusImport_clicked()
 {
+  if (ui->nexusCategoryList->count() == 0) {
+    MessageDialog::showMessage(
+        tr("The Nexus list is empty. Refresh it before importing categories."), this);
+    return;
+  }
+
   auto importDialog = CategoryImportDialog(this);
   if (importDialog.exec() && importDialog.strategy()) {
     refreshIDs();
     QTableWidget* table = ui->categoriesTable;
     QListWidget* list   = ui->nexusCategoryList;
+    const bool wasSorting = table->isSortingEnabled();
+    table->setSortingEnabled(false);
     if (importDialog.strategy() == CategoryImportDialog::Overwrite) {
       table->setRowCount(0);
       m_HighestID = 0;
+      m_IDs.clear();
     }
-    int row = 0;
+
+    const auto mappedRowForNexusID = [table](int nexusID) {
+      for (int row = 0; row < table->rowCount(); ++row) {
+        const auto* mappingItem = table->item(row, 3);
+        if (!mappingItem) {
+          continue;
+        }
+        for (const QVariant& entry : mappingItem->data(Qt::UserRole).toList()) {
+          const QVariantList mapping = entry.toList();
+          if (mapping.size() >= 2 && mapping[1].toInt() == nexusID) {
+            return row;
+          }
+        }
+      }
+      return -1;
+    };
+
     for (int i = 0; i < list->count(); ++i) {
       QString name = list->item(i)->data(Qt::DisplayRole).toString();
       int nexusID  = list->item(i)->data(Qt::UserRole).toInt();
-      QStringList nexusLabel;
       QVariantList nexusData;
-      nexusLabel.append(name);
       QVariantList data;
       data.append(QVariant(name));
       data.append(QVariant(nexusID));
-      nexusData.insert(nexusData.size(), data);
+      nexusData.append(QVariant::fromValue(data));
       QScopedPointer<QTableWidgetItem> nexusCatItem(
-          new QTableWidgetItem(nexusLabel.join(", ")));
+          new QTableWidgetItem(name));
       nexusCatItem->setData(Qt::UserRole, nexusData);
-      if (!table->findItems(name, Qt::MatchExactly).size()) {
-        row = table->rowCount();
-        table->insertRow(table->rowCount());
-        //    table->setVerticalHeaderItem(row, new QTableWidgetItem("  "));
+      nexusCatItem->setFlags(nexusCatItem->flags() & ~Qt::ItemIsEditable);
+
+      int existingRow = -1;
+      for (int row = 0; row < table->rowCount(); ++row) {
+        const auto* existingName = table->item(row, 1);
+        if (existingName &&
+            existingName->text().compare(name, Qt::CaseInsensitive) == 0) {
+          existingRow = row;
+          break;
+        }
+      }
+
+      const int mappedRow = mappedRowForNexusID(nexusID);
+      if (existingRow < 0 && mappedRow >= 0 && !importDialog.remap()) {
+        // Preserve a user's existing category mapping instead of creating a
+        // second local category that would silently take over the same Nexus ID.
+        continue;
+      }
+
+      if (existingRow < 0) {
+        const int row = table->rowCount();
+        table->insertRow(row);
 
         QScopedPointer<QTableWidgetItem> idItem(new QTableWidgetItem());
         idItem->setData(Qt::DisplayRole, ++m_HighestID);
@@ -354,23 +611,44 @@ void CategoriesDialog::nexusImport_clicked()
         table->setItem(row, 0, idItem.take());
         table->setItem(row, 1, nameItem.take());
         table->setItem(row, 2, parentIDItem.take());
-
         if (importDialog.assign()) {
           table->setItem(row, 3, nexusCatItem.take());
+        } else {
+          table->setItem(row, 3, new QTableWidgetItem());
         }
-      } else {
-        for (auto item : table->findItems(name, Qt::MatchContains | Qt::MatchWrap)) {
-          if (item->column() == 1 && item->text() == name && importDialog.remap()) {
-            table->setItem(item->row(), 3, nexusCatItem.take());
-          } else if (importDialog.remap()) {
-            QScopedPointer<QTableWidgetItem> blankItem(new QTableWidgetItem());
-            blankItem->setData(Qt::UserRole, QVariantList());
-            table->setItem(item->row(), 3, blankItem.get());
+      } else if (importDialog.assign()) {
+        if (importDialog.remap()) {
+          table->setItem(existingRow, 3, nexusCatItem.take());
+        } else if (mappedRow < 0 || mappedRow == existingRow) {
+          auto* mappingItem = table->item(existingRow, 3);
+          if (!mappingItem) {
+            mappingItem = new QTableWidgetItem();
+            table->setItem(existingRow, 3, mappingItem);
           }
+          QVariantList mappings = mappingItem->data(Qt::UserRole).toList();
+          bool alreadyMapped   = false;
+          QStringList names;
+          for (const QVariant& entry : mappings) {
+            const QVariantList mapping = entry.toList();
+            if (mapping.size() >= 2) {
+              names.append(mapping[0].toString());
+              alreadyMapped = alreadyMapped || mapping[1].toInt() == nexusID;
+            }
+          }
+          if (!alreadyMapped) {
+            mappings.append(QVariant::fromValue(data));
+            names.append(name);
+          }
+          mappingItem->setData(Qt::UserRole, mappings);
+          mappingItem->setData(Qt::DisplayRole, names.join(", "));
+          mappingItem->setFlags(mappingItem->flags() & ~Qt::ItemIsEditable);
         }
       }
     }
+    table->setSortingEnabled(wasSorting);
     refreshIDs();
+    ui->nexusStatus->setText(
+        tr("Category list updated. Review the MO2 categories, then choose OK to save."));
   }
 }
 
@@ -379,21 +657,264 @@ void CategoriesDialog::nxmGameInfoAvailable(QString gameName, QVariant,
 {
   QVariantMap result          = resultData.toMap();
   QVariantList categories     = result["categories"].toList();
-  CategoryFactory& catFactory = CategoryFactory::instance();
   QListWidget* list           = ui->nexusCategoryList;
-  list->clear();
+  QStringList gameNames{gameName};
+  QString gameDisplayName = gameName;
+  if (auto* game = Settings::instance().game().plugin()) {
+    gameNames << game->gameName() << game->gameShortName() << game->gameNexusName();
+    gameDisplayName = game->gameName();
+  }
+  std::vector<CategoryFactory::NexusCategory> refreshedCategories;
+  std::set<int> seenNexusIDs;
   for (const auto& category : categories) {
     auto catMap = category.toMap();
+    const QString categoryName = catMap["name"].toString();
+    const int categoryID       = catMap["category_id"].toInt();
+    if (CategoryFactory::isNexusGameRootCategory(categoryName, categoryID,
+                                                 gameNames)) {
+      continue;
+    }
+    if (categoryName.trimmed().isEmpty() || !seenNexusIDs.insert(categoryID).second) {
+      continue;
+    }
+    refreshedCategories.emplace_back(categoryName, categoryID);
+  }
+
+  if (refreshedCategories.empty()) {
+    ui->nexusStatus->setText(
+        tr("Nexus returned no valid categories. The current list and mappings were kept."));
+    return;
+  }
+
+  list->clear();
+  for (const auto& category : refreshedCategories) {
     QScopedPointer<QListWidgetItem> nexusItem(new QListWidgetItem());
-    nexusItem->setData(Qt::DisplayRole, catMap["name"].toString());
-    nexusItem->setData(Qt::UserRole, catMap["category_id"].toInt());
+    nexusItem->setData(Qt::DisplayRole, category.name());
+    nexusItem->setData(Qt::UserRole, category.ID());
+    nexusItem->setData(
+        Qt::ToolTipRole,
+        tr("Nexus category ID: %1. Drag this entry onto a local category to map it.")
+            .arg(category.ID()));
     list->addItem(nexusItem.take());
   }
+
+  QTableWidget* table       = ui->categoriesTable;
+  const bool wasSorting     = table->isSortingEnabled();
+  table->setSortingEnabled(false);
+
+  QHash<QString, int> localRows;
+  QSet<QString> ambiguousLocalNames;
+  for (int row = 0; row < table->rowCount(); ++row) {
+    const auto* idItem   = table->item(row, 0);
+    const auto* nameItem = table->item(row, 1);
+    if (!idItem || !nameItem || idItem->text().toInt() <= 0) {
+      continue;
+    }
+
+    const QString key = nameItem->text().trimmed().toCaseFolded();
+    if (key.isEmpty()) {
+      continue;
+    }
+    if (localRows.contains(key)) {
+      ambiguousLocalNames.insert(key);
+    } else {
+      localRows.insert(key, row);
+    }
+  }
+
+  QHash<QString, int> nexusNameCounts;
+  for (const auto& category : refreshedCategories) {
+    ++nexusNameCounts[category.name().trimmed().toCaseFolded()];
+  }
+
+  QSet<int> refreshedIDs;
+  for (const auto& category : refreshedCategories) {
+    refreshedIDs.insert(category.ID());
+  }
+
+  QHash<int, int> targetRows;
+  int preservedAssignments = 0;
+  int exactNameMappings    = 0;
+  for (const auto& category : refreshedCategories) {
+    const QString key = category.name().trimmed().toCaseFolded();
+    int idMatchRow    = -1;
+    int nameMatchRow  = -1;
+    int shortMatchRow = -1;
+
+    for (int row = 0; row < table->rowCount(); ++row) {
+      const auto* mappingItem = table->item(row, 3);
+      if (!mappingItem) {
+        continue;
+      }
+
+      const QString localName = table->item(row, 1)
+                                    ? table->item(row, 1)->text().trimmed()
+                                    : QString();
+      const bool localNameMatches =
+          localName.compare(category.name().trimmed(), Qt::CaseInsensitive) == 0;
+      for (const QVariant& entry : mappingItem->data(Qt::UserRole).toList()) {
+        const QVariantList mapping = entry.toList();
+        if (mapping.size() < 2) {
+          continue;
+        }
+
+        bool idValid      = false;
+        const int nexusID = mapping.at(1).toInt(&idValid);
+        const QString name = mapping.at(0).toString().trimmed();
+        if (idValid && nexusID == category.ID()) {
+          idMatchRow = (localNameMatches || idMatchRow < 0) ? row : idMatchRow;
+        } else if (nexusNameCounts.value(key) == 1 &&
+                   name.compare(category.name().trimmed(),
+                                Qt::CaseInsensitive) == 0) {
+          nameMatchRow =
+              (localNameMatches || nameMatchRow < 0) ? row : nameMatchRow;
+        } else if (nexusNameCounts.value(key) == 1 && localNameMatches &&
+                   name.size() == 1 &&
+                   name.compare(category.name().left(1),
+                                Qt::CaseInsensitive) == 0) {
+          shortMatchRow = row;
+        }
+      }
+    }
+
+    // Prefer a unique exact local-name match over a saved Nexus ID. Older
+    // drag/drop mappings can contain a stale or truncated label while their ID
+    // still looks valid; trusting that ID first can keep the bad row assignment.
+    int targetRow = -1;
+    const bool hasUniqueLocalName =
+        !key.isEmpty() && nexusNameCounts.value(key) == 1 &&
+        !ambiguousLocalNames.contains(key) && localRows.contains(key);
+    if (hasUniqueLocalName) {
+      targetRow = localRows.value(key);
+      if (idMatchRow >= 0 || nameMatchRow >= 0 || shortMatchRow >= 0) {
+        ++preservedAssignments;
+      } else {
+        ++exactNameMappings;
+      }
+    } else if (idMatchRow >= 0) {
+      targetRow = idMatchRow;
+      ++preservedAssignments;
+    } else if (nameMatchRow >= 0) {
+      targetRow = nameMatchRow;
+      ++preservedAssignments;
+    } else if (shortMatchRow >= 0) {
+      targetRow = shortMatchRow;
+      ++preservedAssignments;
+    }
+
+    if (targetRow >= 0) {
+      targetRows.insert(category.ID(), targetRow);
+    }
+  }
+
+  QVector<QVariantList> rowMappings(table->rowCount());
+  for (int row = 0; row < table->rowCount(); ++row) {
+    const auto* mappingItem = table->item(row, 3);
+    if (!mappingItem) {
+      continue;
+    }
+
+    const QString localName = table->item(row, 1)
+                                  ? table->item(row, 1)->text().trimmed()
+                                  : QString();
+    for (const QVariant& entry : mappingItem->data(Qt::UserRole).toList()) {
+      QVariantList mapping = entry.toList();
+      if (mapping.size() < 2) {
+        continue;
+      }
+
+      bool idValid      = false;
+      const int nexusID = mapping.at(1).toInt(&idValid);
+      const QString name = mapping.at(0).toString().trimmed();
+      bool belongsToRefreshedCategory = idValid && refreshedIDs.contains(nexusID);
+      for (const auto& category : refreshedCategories) {
+        const QString key = category.name().trimmed().toCaseFolded();
+        if (nexusNameCounts.value(key) != 1) {
+          continue;
+        }
+
+        const bool fullNameMatch =
+            name.compare(category.name().trimmed(), Qt::CaseInsensitive) == 0;
+        const bool truncatedNameMatch =
+            !localName.isEmpty() &&
+            localName.compare(category.name().trimmed(), Qt::CaseInsensitive) == 0 &&
+            name.size() == 1 &&
+            name.compare(category.name().left(1), Qt::CaseInsensitive) == 0;
+        belongsToRefreshedCategory =
+            belongsToRefreshedCategory || fullNameMatch || truncatedNameMatch;
+      }
+
+      if (belongsToRefreshedCategory || !idValid || nexusID <= 0 || name.isEmpty()) {
+        continue;
+      }
+
+      bool alreadyKept = false;
+      for (const QVariant& kept : rowMappings[row]) {
+        const QVariantList keptMapping = kept.toList();
+        if (keptMapping.size() >= 2 && keptMapping.at(1).toInt() == nexusID) {
+          alreadyKept = true;
+          break;
+        }
+      }
+      if (!alreadyKept) {
+        rowMappings[row].append(QVariant::fromValue(mapping));
+      }
+    }
+  }
+
+  for (const auto& category : refreshedCategories) {
+    const auto target = targetRows.constFind(category.ID());
+    if (target == targetRows.cend()) {
+      continue;
+    }
+
+    QVariantList mapping;
+    mapping.append(category.name().trimmed());
+    mapping.append(category.ID());
+    rowMappings[target.value()].append(QVariant::fromValue(mapping));
+  }
+
+  for (int row = 0; row < table->rowCount(); ++row) {
+    QStringList displayNames;
+    QSet<int> displayedIDs;
+    for (const QVariant& entry : rowMappings[row]) {
+      const QVariantList mapping = entry.toList();
+      if (mapping.size() >= 2) {
+        bool idValid = false;
+        const int nexusID = mapping.at(1).toInt(&idValid);
+        const QString name = mapping.at(0).toString().trimmed();
+        if (idValid && nexusID > 0 && !displayedIDs.contains(nexusID) &&
+            !name.isEmpty()) {
+          displayNames.append(name);
+          displayedIDs.insert(nexusID);
+        }
+      }
+    }
+
+    // Replace the item so Qt cannot retain a stale edit/display value from a
+    // legacy mapping cell after the canonical Nexus names have been rebuilt.
+    auto* mappingItem = new QTableWidgetItem(displayNames.join(", "));
+    mappingItem->setData(Qt::UserRole, rowMappings[row]);
+    mappingItem->setFlags(mappingItem->flags() & ~Qt::ItemIsEditable);
+    table->setItem(row, 3, mappingItem);
+  }
+
+  table->setSortingEnabled(wasSorting);
+  table->viewport()->update();
+
+  ui->nexusStatus->setText(
+      tr("Loaded %1 Nexus categories for %2. Kept %3 existing assignments and added %4 exact-name mappings.")
+          .arg(refreshedCategories.size())
+          .arg(gameDisplayName)
+          .arg(preservedAssignments)
+          .arg(exactNameMappings));
 }
 
 void CategoriesDialog::nxmRequestFailed(QString, int, int, QVariant, int, int errorCode,
                                         const QString& errorMessage)
 {
+  ui->nexusStatus->setText(
+      tr("Could not refresh the Nexus list. Check your connection and Nexus access."));
   MessageDialog::showMessage(
       tr("Error %1: Request to Nexus failed: %2").arg(errorCode).arg(errorMessage),
       this);
@@ -403,10 +924,16 @@ void CategoriesDialog::on_categoriesTable_customContextMenuRequested(const QPoin
 {
   m_ContextRow = ui->categoriesTable->rowAt(pos.y());
   QMenu menu;
-  menu.addAction(tr("Add"), this, SLOT(addCategory_clicked()));
-  menu.addAction(tr("Remove"), this, SLOT(removeCategory_clicked()));
+  QAction* addAction = menu.addAction(tr("Add"), this, SLOT(addCategory_clicked()));
+  addAction->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
+  QAction* removeAction =
+      menu.addAction(tr("Remove"), this, SLOT(removeCategory_clicked()));
+  removeAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
   if (Settings::instance().nexus().categoryMappings()) {
-    menu.addAction(tr("Remove Nexus Mapping(s)"), this, SLOT(removeNexusMap_clicked()));
+    QAction* removeMappingAction = menu.addAction(
+        tr("Remove Nexus Mapping(s)"), this, SLOT(removeNexusMap_clicked()));
+    removeMappingAction->setIcon(
+        QIcon(":/MO/gui/contextmenu/remap-category.svg"));
   }
 
   menu.exec(ui->categoriesTable->mapToGlobal(pos));

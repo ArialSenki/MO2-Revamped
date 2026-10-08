@@ -339,13 +339,15 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     }
     return result;
   } else if (role == Qt::DecorationRole) {
-    if (column == COL_VERSION) {
+    if (column == COL_NAME && modInfo->isOverwrite()) {
+      return QIcon(":/MO/gui/mainwindow/files/folder.svg");
+    } else if (column == COL_VERSION) {
       if (modInfo->updateAvailable()) {
-        return QIcon(":/MO/gui/update_available");
+        return QIcon(":/MO/gui/mainwindow/status/update.svg");
       } else if (modInfo->downgradeAvailable()) {
-        return QIcon(":/MO/gui/warning");
+        return QIcon(":/MO/gui/mainwindow/status/warning.svg");
       } else if (modInfo->version().scheme() == VersionInfo::SCHEME_DATE) {
-        return QIcon(":/MO/gui/version_date");
+        return QIcon(":/MO/gui/mainwindow/status/version.svg");
       }
     }
     return QVariant();

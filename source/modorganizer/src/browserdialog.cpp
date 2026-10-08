@@ -31,14 +31,20 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QDir>
 #include <QInputDialog>
-#include <QKeyEvent>
+#include <QKeySequence>
 #include <QMenu>
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
+#include <QShortcut>
 #include <QWebEngineHistory>
 #include <QWebEngineSettings>
 
 using namespace MOBase;
+
+namespace
+{
+constexpr auto LoadProgressProperty = "mo2BrowserLoadProgress";
+}
 
 BrowserDialog::BrowserDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::BrowserDialog),
@@ -57,11 +63,15 @@ BrowserDialog::BrowserDialog(QWidget* parent)
 
   m_Tabs = this->findChild<QTabWidget*>("browserTabWidget");
 
-  installEventFilter(this);
-
   connect(m_Tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(tabCloseRequested(int)));
 
   ui->urlEdit->setVisible(false);
+
+  auto* toggleAddressBar = new QShortcut(QKeySequence(QStringLiteral("Ctrl+U")), this);
+  toggleAddressBar->setContext(Qt::WindowShortcut);
+  connect(toggleAddressBar, &QShortcut::activated, this, [this] {
+    ui->urlEdit->setVisible(!ui->urlEdit->isVisible());
+  });
 }
 
 BrowserDialog::~BrowserDialog()
@@ -84,6 +94,8 @@ void BrowserDialog::initTab(BrowserView* newView)
   connect(newView, SIGNAL(titleChanged(QString)), this, SLOT(titleChanged(QString)));
   connect(newView, SIGNAL(initTab(BrowserView*)), this, SLOT(initTab(BrowserView*)));
   connect(newView, SIGNAL(startFind()), this, SLOT(startSearch()));
+  connect(newView, SIGNAL(findAgain()), this,
+          SLOT(on_searchEdit_returnPressed()));
   connect(newView, SIGNAL(urlChanged(QUrl)), this, SLOT(urlChanged(QUrl)));
   connect(newView, SIGNAL(openUrlInNewTab(QUrl)), this, SLOT(openInNewTab(QUrl)));
   connect(newView, SIGNAL(downloadRequested(QNetworkRequest)), this,
@@ -91,8 +103,7 @@ void BrowserDialog::initTab(BrowserView* newView)
   connect(newView, SIGNAL(unsupportedContent(QNetworkReply*)), this,
           SLOT(unsupportedContent(QNetworkReply*)));
 
-  ui->backBtn->setEnabled(false);
-  ui->fwdBtn->setEnabled(false);
+  newView->setProperty(LoadProgressProperty, -1);
   m_Tabs->addTab(newView, tr("new"));
   newView->settings()->setAttribute(QWebEngineSettings::PluginsEnabled, true);
   newView->settings()->setAttribute(QWebEngineSettings::AutoLoadImages, true);
@@ -112,11 +123,12 @@ BrowserView* BrowserDialog::getCurrentView()
 
 void BrowserDialog::urlChanged(const QUrl& url)
 {
-  BrowserView* currentView = getCurrentView();
-  if (currentView != nullptr) {
-    ui->backBtn->setEnabled(currentView->history()->canGoBack());
-    ui->fwdBtn->setEnabled(currentView->history()->canGoForward());
+  auto* view = qobject_cast<BrowserView*>(sender());
+  if (view == nullptr || view != getCurrentView()) {
+    return;
   }
+  ui->backBtn->setEnabled(view->history()->canGoBack());
+  ui->fwdBtn->setEnabled(view->history()->canGoForward());
   ui->urlEdit->setText(url.toString());
 }
 
@@ -146,6 +158,15 @@ void BrowserDialog::maximizeWidth()
 
 void BrowserDialog::progress(int value)
 {
+  auto* view = qobject_cast<BrowserView*>(sender());
+  if (view == nullptr) {
+    return;
+  }
+  view->setProperty(LoadProgressProperty, value);
+  if (view != getCurrentView()) {
+    return;
+  }
+
   ui->loadProgress->setValue(value);
   if (value == 100) {
     maximizeWidth();
@@ -241,15 +262,15 @@ void BrowserDialog::on_fwdBtn_clicked()
 void BrowserDialog::startSearch()
 {
   ui->searchEdit->setFocus();
+  ui->searchEdit->selectAll();
 }
 
 void BrowserDialog::on_searchEdit_returnPressed()
 {
-  //  BrowserView *currentView = getCurrentView();
-  //  if (currentView != nullptr) {
-  //    currentView->findText(ui->searchEdit->text(),
-  //    QWebEnginePage::FindWrapsAroundDocument);
-  //  }
+  BrowserView* currentView = getCurrentView();
+  if (currentView != nullptr) {
+    currentView->findText(ui->searchEdit->text());
+  }
 }
 
 void BrowserDialog::on_refreshBtn_clicked()
@@ -264,6 +285,18 @@ void BrowserDialog::on_browserTabWidget_currentChanged(int index)
   if (currentView != nullptr) {
     ui->backBtn->setEnabled(currentView->history()->canGoBack());
     ui->fwdBtn->setEnabled(currentView->history()->canGoForward());
+    ui->urlEdit->setText(currentView->url().toString());
+
+    const int progress = currentView->property(LoadProgressProperty).toInt();
+    const bool isLoading = progress >= 0 && progress < 100;
+    ui->loadProgress->setValue(isLoading ? progress : 0);
+    ui->loadProgress->setVisible(isLoading);
+  } else {
+    ui->backBtn->setEnabled(false);
+    ui->fwdBtn->setEnabled(false);
+    ui->urlEdit->clear();
+    ui->loadProgress->setValue(0);
+    ui->loadProgress->setVisible(false);
   }
 }
 
@@ -273,17 +306,4 @@ void BrowserDialog::on_urlEdit_returnPressed()
   if (currentView != nullptr) {
     currentView->setUrl(QUrl(ui->urlEdit->text()));
   }
-}
-
-bool BrowserDialog::eventFilter(QObject* object, QEvent* event)
-{
-  if (event->type() == QEvent::KeyPress) {
-    QKeyEvent* keyEvent = reinterpret_cast<QKeyEvent*>(event);
-    if ((keyEvent->modifiers() & Qt::ControlModifier) &&
-        (keyEvent->key() == Qt::Key_U)) {
-      ui->urlEdit->setVisible(!ui->urlEdit->isVisible());
-      return true;
-    }
-  }
-  return QDialog::eventFilter(object, event);
 }

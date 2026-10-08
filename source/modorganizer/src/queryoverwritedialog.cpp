@@ -28,7 +28,7 @@ QueryOverwriteDialog::QueryOverwriteDialog(QWidget* parent, Backup b)
   ui->setupUi(this);
   ui->backupBox->setChecked(b == BACKUP_YES);
   QIcon icon = QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion);
-  ui->iconLabel->setPixmap(icon.pixmap(128));
+  ui->iconLabel->setPixmap(icon.pixmap(72));
 }
 
 QueryOverwriteDialog::~QueryOverwriteDialog()

@@ -3,10 +3,12 @@
 #include "filetreeitem.h"
 #include "filetreemodel.h"
 #include "organizercore.h"
+#include "startupdiagnostics.h"
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
 #include <log.h>
+#include <QIcon>
 #include <widgetutility.h>
 
 using namespace MOShared;
@@ -46,6 +48,12 @@ public:
   MenuItem& caption(const QString& s)
   {
     m_action->setText(s);
+    return *this;
+  }
+
+  MenuItem& icon(const QString& path)
+  {
+    m_action->setIcon(QIcon(path));
     return *this;
   }
 
@@ -119,10 +127,14 @@ private:
 FileTree::FileTree(OrganizerCore& core, PluginContainer& pc, QTreeView* tree)
     : m_core(core), m_plugins(pc), m_tree(tree), m_model(new FileTreeModel(core))
 {
+  setStartupDiagnosticPhase("file_tree.sort_by_column");
   m_tree->sortByColumn(0, Qt::AscendingOrder);
+  setStartupDiagnosticPhase("file_tree.set_model");
   m_tree->setModel(m_model);
+  setStartupDiagnosticPhase("file_tree.resize_header");
   m_tree->header()->resizeSection(0, 200);
 
+  setStartupDiagnosticPhase("file_tree.set_customizable_columns");
   MOBase::setCustomizableColumns(m_tree);
 
   connect(m_tree, &QTreeView::customContextMenuRequested, [&](auto pos) {
@@ -649,6 +661,7 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
   const QFileInfo target(QString::fromStdWString(file.getFullPath()));
 
   MenuItem(tr("&Add as Executable"))
+      .icon(":/MO/gui/mainwindow/files/executable.svg")
       .callback([&] {
         addAsExecutable();
       })
@@ -658,6 +671,7 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
       .addTo(menu);
 
   MenuItem(tr("Reveal in E&xplorer"))
+      .icon(":/MO/gui/contextmenu/explorer.svg")
       .callback([&] {
         exploreOrigin();
       })
@@ -667,6 +681,7 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
       .addTo(menu);
 
   MenuItem(tr("Open &Mod Info"))
+      .icon(":/MO/gui/contextmenu/information.svg")
       .callback([&] {
         openModInfo();
       })
@@ -677,6 +692,7 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
 
   if (isHidden(file)) {
     MenuItem(tr("&Un-Hide"))
+        .icon(":/MO/gui/contextmenu/visibility-show.svg")
         .callback([&] {
           unhide();
         })
@@ -686,6 +702,7 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
         .addTo(menu);
   } else {
     MenuItem(tr("&Hide"))
+        .icon(":/MO/gui/contextmenu/visibility-hide.svg")
         .callback([&] {
           hide();
         })
@@ -706,6 +723,7 @@ void FileTree::addOpenMenus(QMenu& menu, const MOShared::FileEntry& file)
 
   if (getFileExecutionType(target) == FileExecutionTypes::Executable) {
     openMenu.caption(tr("&Execute"))
+        .icon(":/MO/gui/mainwindow/files/executable.svg")
         .callback([&] {
           open();
         })
@@ -714,6 +732,7 @@ void FileTree::addOpenMenus(QMenu& menu, const MOShared::FileEntry& file)
         .enabled(!file.isFromArchive());
 
     openHookedMenu.caption(tr("Execute with &VFS"))
+        .icon(":/MO/gui/mainwindow/explore-virtual-folder.svg")
         .callback([&] {
           openHooked();
         })
@@ -722,6 +741,7 @@ void FileTree::addOpenMenus(QMenu& menu, const MOShared::FileEntry& file)
         .enabled(!file.isFromArchive());
   } else {
     openMenu.caption(tr("&Open"))
+        .icon(":/MO/gui/mainwindow/files/file.svg")
         .callback([&] {
           open();
         })
@@ -730,6 +750,7 @@ void FileTree::addOpenMenus(QMenu& menu, const MOShared::FileEntry& file)
         .enabled(!file.isFromArchive());
 
     openHookedMenu.caption(tr("Open with &VFS"))
+        .icon(":/MO/gui/mainwindow/explore-virtual-folder.svg")
         .callback([&] {
           openHooked();
         })
@@ -780,6 +801,7 @@ void FileTree::addCommonMenus(QMenu& menu)
   menu.addSeparator();
 
   MenuItem(tr("&Save Tree to Text File..."))
+      .icon(":/MO/gui/contextmenu/export.svg")
       .callback([&] {
         dumpToFile();
       })
@@ -787,6 +809,7 @@ void FileTree::addCommonMenus(QMenu& menu)
       .addTo(menu);
 
   MenuItem(tr("&Refresh"))
+      .icon(":/MO/gui/mainwindow/refresh.svg")
       .callback([&] {
         refresh();
       })
@@ -794,12 +817,14 @@ void FileTree::addCommonMenus(QMenu& menu)
       .addTo(menu);
 
   MenuItem(tr("Ex&pand All"))
+      .icon(":/MO/gui/contextmenu/expand.svg")
       .callback([&] {
         expandAll();
       })
       .addTo(menu);
 
   MenuItem(tr("&Collapse All"))
+      .icon(":/MO/gui/contextmenu/collapse.svg")
       .callback([&] {
         collapseAll();
       })

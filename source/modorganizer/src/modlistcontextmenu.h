@@ -2,6 +2,7 @@
 #define MODLISTCONTEXTMENU_H
 
 #include <vector>
+#include <functional>
 
 #include <QMenu>
 #include <QModelIndex>
@@ -20,6 +21,22 @@ class ModListGlobalContextMenu : public QMenu
 public:
   ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
                            QWidget* parent = nullptr);
+  ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
+                           QWidget* parent,
+                           std::function<void()> profileBackupRemoval);
+  ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
+                           QWidget* parent,
+                           std::function<void()> profileBackupCreation,
+                           std::function<void()> profileBackupRestoration,
+                           std::function<void()> profileBackupRemoval);
+  ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
+                           QWidget* parent,
+                           std::function<void()> profileBackupCreation,
+                           std::function<void()> profileBackupRestoration,
+                           std::function<void()> profileBackupRemoval,
+                           std::function<void()> loadOrderBackupCreation,
+                           std::function<void()> loadOrderBackupRestoration,
+                           std::function<void()> loadOrderBackupRemoval);
 
 protected:
   friend class ModListContextMenu;
@@ -30,6 +47,30 @@ protected:
   // creates a "All mods" context menu for the given index (can be invalid).
   ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
                            const QModelIndex& index, QWidget* parent = nullptr);
+  ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
+                           const QModelIndex& index, QWidget* parent,
+                           std::function<void()> profileBackupRemoval);
+  ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
+                           const QModelIndex& index, QWidget* parent,
+                           std::function<void()> profileBackupCreation,
+                           std::function<void()> profileBackupRestoration,
+                           std::function<void()> profileBackupRemoval);
+  ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
+                           const QModelIndex& index, QWidget* parent,
+                           std::function<void()> profileBackupCreation,
+                           std::function<void()> profileBackupRestoration,
+                           std::function<void()> profileBackupRemoval,
+                           std::function<void()> loadOrderBackupCreation,
+                           std::function<void()> loadOrderBackupRestoration,
+                           std::function<void()> loadOrderBackupRemoval);
+
+private:
+  std::function<void()> m_ProfileBackupCreation;
+  std::function<void()> m_ProfileBackupRestoration;
+  std::function<void()> m_ProfileBackupRemoval;
+  std::function<void()> m_LoadOrderBackupCreation;
+  std::function<void()> m_LoadOrderBackupRestoration;
+  std::function<void()> m_LoadOrderBackupRemoval;
 };
 
 class ModListChangeCategoryMenu : public QMenu

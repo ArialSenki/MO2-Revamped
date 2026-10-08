@@ -48,7 +48,8 @@ public:
   {
     NoType = 0,
     Global,
-    Portable
+    Portable,
+    Isolated
   };
 
   // all the paths required by the instance, some may be empty, such as

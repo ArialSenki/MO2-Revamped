@@ -236,6 +236,8 @@ void PluginsSettingsTab::filterPluginList()
   // Unselect item if hidden:
   if (firstNotHidden) {
     ui->pluginDescription->setVisible(true);
+    ui->pluginSettingsTitle->setVisible(true);
+    ui->pluginSettingsDescription->setVisible(true);
     ui->pluginSettingsList->setVisible(true);
     ui->noPluginLabel->setVisible(false);
     if (selectedItems.isEmpty()) {
@@ -245,6 +247,8 @@ void PluginsSettingsTab::filterPluginList()
     }
   } else {
     ui->pluginDescription->setVisible(false);
+    ui->pluginSettingsTitle->setVisible(false);
+    ui->pluginSettingsDescription->setVisible(false);
     ui->pluginSettingsList->setVisible(false);
     ui->noPluginLabel->setVisible(true);
   }

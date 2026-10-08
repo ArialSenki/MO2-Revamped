@@ -40,7 +40,8 @@ bool PreviewGenerator::previewSupported(const QString& fileExtension,
 {
   auto& previews = m_PluginContainer.plugins<IPluginPreview>();
   for (auto* preview : previews) {
-    if (preview->supportedExtensions().contains(fileExtension)) {
+    if (m_PluginContainer.isEnabled(preview) &&
+        preview->supportedExtensions().contains(fileExtension)) {
       if (!isArchive)
         return true;
       if (preview->supportsArchives())

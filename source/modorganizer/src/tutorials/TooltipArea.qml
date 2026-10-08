@@ -36,7 +36,7 @@ Rectangle {
       tooltip.text = tooltipText
     }
 
-    onPressed: {
+    onPressed: function(mouse) {
       wasLocked = tutToplevel.backgroundEnabled()
       if (wasLocked && clickable) {
         tutorialControl.simulateClick(mouseX + parent.x, mouseY + parent.y)

@@ -39,8 +39,8 @@ Rectangle  {
 
   TutorialDescription {
     id: tutDescription
-    innerWidth: maxWidth
-    anchors.bottomMargin: offsetBottom
+    innerWidth: tutToplevel.maxWidth
+    anchors.bottomMargin: tutToplevel.offsetBottom
     onClicked: {
       Logic.clickNext()
     }
@@ -49,7 +49,7 @@ Rectangle  {
   TutorialCanceller {
     id: tutorialCanceller
     innerWidth: 200
-    anchors.bottomMargin: offsetBottom - 30
+    anchors.bottomMargin: tutToplevel.offsetBottom - 30
     onClicked: {
       Logic.cancelTutorial()
     }
@@ -66,7 +66,7 @@ Rectangle  {
     target: manager
     function onTabChanged(index)
     {
-      tabChanged(index)
+      tutToplevel.tabChanged(index)
     }
   }
 

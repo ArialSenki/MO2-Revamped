@@ -6,35 +6,142 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>436</width>
-    <height>129</height>
+    <width>500</width>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Create Profile</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="spacing">
+    <number>9</number>
+   </property>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>14</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
+   <property name="bottomMargin">
+    <number>14</number>
+   </property>
    <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Please enter a name for the new profile</string>
-     </property>
+    <widget class="QWidget" name="profileHeader">
+     <layout class="QVBoxLayout" name="profileHeaderLayout">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="profilePageTitle">
+        <property name="text">
+         <string>Create a profile</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="profilePageSubtitle">
+        <property name="text">
+         <string>Name this profile and choose which game settings it uses.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="nameEdit"/>
+    <layout class="QVBoxLayout" name="nameLayout">
+     <property name="spacing">
+      <number>5</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="profileNameLabel">
+       <property name="text">
+        <string>Profile name</string>
+       </property>
+       <property name="buddy">
+        <cstring>nameEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="nameEdit">
+       <property name="placeholderText">
+        <string>For example: Default, Challenge Run, or Mod Test</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="defaultSettingsBox">
-     <property name="toolTip">
-      <string>If checked, the new profile will use the default game INI settings.</string>
+    <widget class="QFrame" name="profileSettingsCard">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="whatsThis">
-      <string>If checked, the new profile will use the default game INI settings instead of the &quot;global&quot; settings. Global settings are the settings you configure when running the game launcher directly, without MO.</string>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
      </property>
-     <property name="text">
-      <string>Default Game INI Settings</string>
-     </property>
+     <layout class="QVBoxLayout" name="profileSettingsLayout">
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <property name="leftMargin">
+       <number>12</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>12</number>
+      </property>
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <item>
+       <widget class="QCheckBox" name="defaultSettingsBox">
+        <property name="toolTip">
+         <string>If checked, the new profile will use the game's default INI settings instead of global settings.</string>
+        </property>
+        <property name="whatsThis">
+         <string>If checked, the new profile will use the default game INI settings instead of the global settings. Global settings are the settings you configure when running the game launcher directly, without MO.</string>
+        </property>
+        <property name="text">
+         <string>Use the game's default INI settings</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="defaultSettingsDescription">
+        <property name="text">
+         <string>Uses the game's default settings instead of the global settings configured by its launcher outside MO2.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="indent">
+         <number>24</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>

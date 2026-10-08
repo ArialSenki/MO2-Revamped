@@ -485,16 +485,6 @@ void ModListView::onModInstalled(const QString& modName)
 void ModListView::onModFilterActive(bool filterActive)
 {
   ui.clearFilters->setVisible(filterActive);
-  if (filterActive) {
-    setStyleSheet("QTreeView { border: 2px ridge #f00; }");
-    ui.counter->setStyleSheet("QLCDNumber { border: 2px ridge #f00; }");
-  } else if (ui.groupBy->currentIndex() != GroupBy::NONE) {
-    setStyleSheet("QTreeView { border: 2px ridge #337733; }");
-    ui.counter->setStyleSheet("");
-  } else {
-    setStyleSheet("");
-    ui.counter->setStyleSheet("");
-  }
 }
 
 ModListView::ModCounters ModListView::counters() const

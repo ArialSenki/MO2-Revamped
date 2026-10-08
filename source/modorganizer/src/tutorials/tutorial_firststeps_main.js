@@ -45,7 +45,7 @@ function getTutorialSteps()
         unhighlight()
         tutorial.text = qsTr("Finally, there are tooltips and extra information available all across Mod Organizer. If "
                            + "there is a control you don't understand, please try hovering over it for a short "
-                           + "description. Alternatively, you can use \"Help on UI\" from the Help menu to click on "
+                           + "description. Alternatively, you can use \"Interface Help\" from the Help menu to click on "
                            + "some controls and get a comprehensive explanation.")
         waitForClick()
     },

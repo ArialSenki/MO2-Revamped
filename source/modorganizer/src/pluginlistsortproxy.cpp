@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QApplication>
 #include <QCheckBox>
 #include <QMenu>
+#include <QRegularExpression>
 #include <QTreeView>
 #include <QWidgetAction>
 
@@ -51,7 +52,9 @@ void PluginListSortProxy::updateFilter(const QString& filter)
 
     if (!m_CurrentFilter.isEmpty()) {
       QString filterCopy = m_CurrentFilter;
-      filterCopy.replace("||", ";").replace("OR", ";").replace("|", ";");
+      filterCopy.replace("||", ";")
+          .replace(QRegularExpression(QStringLiteral("\\s+OR\\s+")), ";")
+          .replace("|", ";");
 
       const auto orSegments = filterCopy.split(";", Qt::SkipEmptyParts);
       m_FilterSegments.reserve(static_cast<std::size_t>(orSegments.size()));

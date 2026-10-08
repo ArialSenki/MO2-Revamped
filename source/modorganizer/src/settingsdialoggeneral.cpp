@@ -6,8 +6,19 @@
 #include <questionboxmemory.h>
 #include <utility.h>
 #include <algorithm>
+#include <QDockWidget>
+#include <QMainWindow>
+#include <QStatusBar>
+#include <QToolBar>
 
 using namespace MOBase;
+
+namespace
+{
+const QSize SmallToolbarIconSize(24, 24);
+const QSize MediumToolbarIconSize(32, 32);
+const QSize LargeToolbarIconSize(42, 36);
+}  // namespace
 
 GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     : SettingsTab(s, d)
@@ -37,9 +48,77 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   ui->centerDialogs->setChecked(settings().geometry().centerDialogs());
   ui->changeGameConfirmation->setChecked(
       settings().interface().showChangeGameConfirmation());
-  ui->showMenubarOnAlt->setChecked(settings().interface().showMenubarOnAlt());
   ui->doubleClickPreviews->setChecked(
       settings().interface().doubleClicksOpenPreviews());
+
+  // The legacy View > Toolbars controls now live with the other interface
+  // preferences. Read the live widgets so existing toolbar settings carry over.
+  auto* mainWindow = qobject_cast<QMainWindow*>(d.parentWidget());
+  auto* mainToolbar =
+      mainWindow ? mainWindow->findChild<QToolBar*>(QStringLiteral("toolBar"))
+                 : nullptr;
+  ui->toolbarIconSizeCombo->addItem(QObject::tr("Small"),
+                                    QVariant::fromValue(SmallToolbarIconSize));
+  ui->toolbarIconSizeCombo->addItem(QObject::tr("Medium"),
+                                    QVariant::fromValue(MediumToolbarIconSize));
+  ui->toolbarIconSizeCombo->addItem(QObject::tr("Large"),
+                                    QVariant::fromValue(LargeToolbarIconSize));
+  ui->toolbarIconSizeCombo->setMinimumWidth(170);
+  ui->toolbarButtonStyleCombo->addItem(
+      QObject::tr("Icons only"), static_cast<int>(Qt::ToolButtonIconOnly));
+  ui->toolbarButtonStyleCombo->addItem(
+      QObject::tr("Text only"), static_cast<int>(Qt::ToolButtonTextOnly));
+  ui->toolbarButtonStyleCombo->addItem(
+      QObject::tr("Icons and text"),
+      static_cast<int>(Qt::ToolButtonTextUnderIcon));
+  ui->toolbarButtonStyleCombo->setMinimumWidth(190);
+
+  if (mainWindow) {
+    if (mainToolbar) {
+      int sizeIndex = ui->toolbarIconSizeCombo->findData(
+          QVariant::fromValue(mainToolbar->iconSize()));
+      if (sizeIndex < 0) {
+        const QSize currentSize = mainToolbar->iconSize();
+        ui->toolbarIconSizeCombo->addItem(
+            QObject::tr("Current (%1 × %2)")
+                .arg(currentSize.width())
+                .arg(currentSize.height()),
+            QVariant::fromValue(currentSize));
+        sizeIndex = ui->toolbarIconSizeCombo->count() - 1;
+      }
+      ui->toolbarIconSizeCombo->setCurrentIndex(sizeIndex);
+      int styleIndex = ui->toolbarButtonStyleCombo->findData(
+          static_cast<int>(mainToolbar->toolButtonStyle()));
+      if (styleIndex < 0) {
+        ui->toolbarButtonStyleCombo->addItem(
+            QObject::tr("Current custom style"),
+            static_cast<int>(mainToolbar->toolButtonStyle()));
+        styleIndex = ui->toolbarButtonStyleCombo->count() - 1;
+      }
+      ui->toolbarButtonStyleCombo->setCurrentIndex(styleIndex);
+      ui->mainToolbarVisibleBox->setChecked(mainToolbar->isVisible());
+    } else {
+      ui->toolbarIconSizeCombo->setEnabled(false);
+      ui->toolbarButtonStyleCombo->setEnabled(false);
+      ui->mainToolbarVisibleBox->setEnabled(false);
+    }
+
+    if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
+            QStringLiteral("statusBar"))) {
+      ui->statusBarVisibleBox->setChecked(statusBar->isVisible());
+    } else {
+      ui->statusBarVisibleBox->setEnabled(false);
+    }
+
+    if (auto* logDock = mainWindow->findChild<QDockWidget*>(
+            QStringLiteral("logDock"))) {
+      ui->logPanelVisibleBox->setChecked(logDock->isVisible());
+    } else {
+      ui->logPanelVisibleBox->setEnabled(false);
+    }
+  } else {
+    ui->toolbarViewGroup->setEnabled(false);
+  }
 
   QObject::connect(ui->categoriesBtn, &QPushButton::clicked, [&] {
     onEditCategories();
@@ -82,9 +161,41 @@ void GeneralSettingsTab::update()
   settings().geometry().setCenterDialogs(ui->centerDialogs->isChecked());
   settings().interface().setShowChangeGameConfirmation(
       ui->changeGameConfirmation->isChecked());
-  settings().interface().setShowMenubarOnAlt(ui->showMenubarOnAlt->isChecked());
   settings().interface().setDoubleClicksOpenPreviews(
       ui->doubleClickPreviews->isChecked());
+
+  if (auto* mainWindow = qobject_cast<QMainWindow*>(dialog().parentWidget())) {
+    const QVariant iconSizeData = ui->toolbarIconSizeCombo->currentData();
+    const QVariant buttonStyleData = ui->toolbarButtonStyleCombo->currentData();
+    if (iconSizeData.isValid() && buttonStyleData.isValid()) {
+      const QSize iconSize = iconSizeData.toSize();
+      const auto buttonStyle = static_cast<Qt::ToolButtonStyle>(
+          buttonStyleData.toInt());
+      for (auto* toolbar : mainWindow->findChildren<QToolBar*>()) {
+        toolbar->setIconSize(iconSize);
+        toolbar->setToolButtonStyle(buttonStyle);
+      }
+    }
+
+    if (auto* mainToolbar = mainWindow->findChild<QToolBar*>(
+            QStringLiteral("toolBar"))) {
+      mainToolbar->setVisible(ui->mainToolbarVisibleBox->isChecked());
+    }
+    if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
+            QStringLiteral("statusBar"))) {
+      statusBar->setVisible(ui->statusBarVisibleBox->isChecked());
+      settings().geometry().saveVisibility(statusBar);
+    }
+    if (auto* logDock = mainWindow->findChild<QDockWidget*>(
+            QStringLiteral("logDock"))) {
+      logDock->setVisible(ui->logPanelVisibleBox->isChecked());
+    }
+
+    // These are the same persisted geometry settings used by MO2's original
+    // View menu, so existing user preferences remain in effect.
+    settings().geometry().saveToolbars(mainWindow);
+    settings().geometry().saveDocks(mainWindow);
+  }
 }
 
 void GeneralSettingsTab::addLanguages()

@@ -7,9 +7,10 @@
 using namespace MOBase;
 
 ForcedLoadDialogWidget::ForcedLoadDialogWidget(const IPluginGame* game, QWidget* parent)
-    : QWidget(parent), ui(new Ui::ForcedLoadDialogWidget), m_GamePlugin(game)
+    : QWidget(parent), ui(new Ui::ForcedLoadDialogWidget), m_Forced(false), m_GamePlugin(game)
 {
   ui->setupUi(this);
+  setMinimumHeight(42);
 }
 
 ForcedLoadDialogWidget::~ForcedLoadDialogWidget()

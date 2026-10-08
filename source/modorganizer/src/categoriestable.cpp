@@ -19,59 +19,130 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "categoriestable.h"
 
+#include <QDropEvent>
+#include <QListWidget>
+#include <QSet>
+
 CategoriesTable::CategoriesTable(QWidget* parent) : QTableWidget(parent) {}
 
-bool CategoriesTable::dropMimeData(int row, int column, const QMimeData* data,
-                                   Qt::DropAction action)
+void CategoriesTable::dropEvent(QDropEvent* event)
 {
-  if (row == -1)
-    return false;
-
-  if (action == Qt::IgnoreAction)
-    return true;
-
-  if (!data->hasFormat("application/x-qabstractitemmodeldatalist"))
-    return false;
-
-  QByteArray encoded = data->data("application/x-qabstractitemmodeldatalist");
-  QDataStream stream(&encoded, QIODevice::ReadOnly);
-
-  while (!stream.atEnd()) {
-    int curRow, curCol;
-    QMap<int, QVariant> roleDataMap;
-    stream >> curRow >> curCol >> roleDataMap;
-
-    for (auto item : findItems(roleDataMap.value(Qt::DisplayRole).toString(),
-                               Qt::MatchContains | Qt::MatchWrap)) {
-      if (item->column() != 3)
-        continue;
-      QVariantList newData;
-      for (auto nexData : item->data(Qt::UserRole).toList()) {
-        if (nexData.toList()[1].toInt() != roleDataMap.value(Qt::UserRole)) {
-          newData.insert(newData.length(), nexData);
-        }
-      }
-      QStringList names;
-      for (auto nexData : newData) {
-        names.append(nexData.toList()[0].toString());
-      }
-      item->setData(Qt::DisplayRole, names.join(", "));
-      item->setData(Qt::UserRole, newData);
-    }
-
-    auto nexusItem = item(row, 3);
-    auto itemData  = nexusItem->data(Qt::UserRole).toList();
-    QVariantList newData;
-    newData.append(roleDataMap.value(Qt::DisplayRole).toString());
-    newData.append(roleDataMap.value(Qt::UserRole).toInt());
-    itemData.insert(itemData.length(), newData);
-    QStringList names;
-    for (auto cat : itemData) {
-      names.append(cat.toList()[0].toString());
-    }
-    nexusItem->setData(Qt::UserRole, itemData);
-    nexusItem->setData(Qt::DisplayRole, names.join(", "));
+  QWidget* sourceWidget = qobject_cast<QWidget*>(event->source());
+  while (sourceWidget && !qobject_cast<QListWidget*>(sourceWidget)) {
+    sourceWidget = sourceWidget->parentWidget();
+  }
+  auto* source = qobject_cast<QListWidget*>(sourceWidget);
+  if (!source || source->objectName() != QStringLiteral("nexusCategoryList")) {
+    event->ignore();
+    return;
   }
 
-  return true;
+  const int row = rowAt(event->position().toPoint().y());
+  if (row < 0 || row >= rowCount()) {
+    event->ignore();
+    return;
+  }
+
+  QVariantList draggedMappings;
+  QSet<int> draggedIDs;
+  for (const QListWidgetItem* draggedItem : source->selectedItems()) {
+    if (!draggedItem) {
+      continue;
+    }
+
+    const QString name = draggedItem->data(Qt::DisplayRole).toString().trimmed();
+    bool idValid       = false;
+    const int nexusID  = draggedItem->data(Qt::UserRole).toInt(&idValid);
+    if (!idValid || nexusID <= 0 || name.isEmpty() || draggedIDs.contains(nexusID)) {
+      continue;
+    }
+
+    QVariantList mapping;
+    mapping.append(name);
+    mapping.append(nexusID);
+    draggedMappings.append(QVariant::fromValue(mapping));
+    draggedIDs.insert(nexusID);
+  }
+
+  if (draggedMappings.isEmpty()) {
+    event->ignore();
+    return;
+  }
+
+  const bool wasSorting = isSortingEnabled();
+  setSortingEnabled(false);
+
+  for (int tableRow = 0; tableRow < rowCount(); ++tableRow) {
+    auto* mappingItem = item(tableRow, 3);
+    if (!mappingItem) {
+      continue;
+    }
+
+    QVariantList keptMappings;
+    QStringList names;
+    for (const QVariant& entry : mappingItem->data(Qt::UserRole).toList()) {
+      const QVariantList mapping = entry.toList();
+      if (mapping.size() < 2) {
+        continue;
+      }
+
+      bool idValid         = false;
+      const int existingID = mapping.at(1).toInt(&idValid);
+      const QString name   = mapping.at(0).toString().trimmed();
+      if (!idValid || existingID <= 0 || name.isEmpty() ||
+          draggedIDs.contains(existingID)) {
+        continue;
+      }
+
+      keptMappings.append(QVariant::fromValue(mapping));
+      names.append(name);
+    }
+
+    mappingItem->setData(Qt::UserRole, keptMappings);
+    mappingItem->setData(Qt::DisplayRole, names.join(", "));
+  }
+
+  auto* targetItem = item(row, 3);
+  if (!targetItem) {
+    targetItem = new QTableWidgetItem();
+    setItem(row, 3, targetItem);
+  }
+
+  QVariantList mappings = targetItem->data(Qt::UserRole).toList();
+  QSet<int> targetIDs;
+  QStringList names;
+  for (const QVariant& entry : mappings) {
+    const QVariantList mapping = entry.toList();
+    if (mapping.size() < 2) {
+      continue;
+    }
+    bool idValid         = false;
+    const int nexusID    = mapping.at(1).toInt(&idValid);
+    const QString name   = mapping.at(0).toString().trimmed();
+    if (!idValid || nexusID <= 0 || name.isEmpty() || targetIDs.contains(nexusID)) {
+      continue;
+    }
+    targetIDs.insert(nexusID);
+    names.append(name);
+  }
+
+  for (const QVariant& entry : draggedMappings) {
+    const QVariantList mapping = entry.toList();
+    const int nexusID          = mapping.at(1).toInt();
+    if (targetIDs.contains(nexusID)) {
+      continue;
+    }
+    targetIDs.insert(nexusID);
+    mappings.append(entry);
+    names.append(mapping.at(0).toString());
+  }
+
+  targetItem->setData(Qt::UserRole, mappings);
+  targetItem->setData(Qt::DisplayRole, names.join(", "));
+  setSortingEnabled(wasSorting);
+
+  if (event->possibleActions() & Qt::CopyAction) {
+    event->setDropAction(Qt::CopyAction);
+  }
+  event->accept();
 }

@@ -1,5 +1,3 @@
-import QtQuick 2.7
-
 TutorialOverlay {
     id: tutorial
     offsetBottom: 40

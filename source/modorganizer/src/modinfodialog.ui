@@ -15,6 +15,44 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QWidget" name="modInfoHeader">
+     <layout class="QVBoxLayout" name="modInfoHeaderLayout">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>12</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>12</number>
+      </property>
+      <property name="bottomMargin">
+       <number>8</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="modInfoPageTitle">
+        <property name="text">
+         <string>Text Files</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="modInfoPageSubtitle">
+        <property name="text">
+         <string>Review documentation and other text files included with this mod.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="tabShape">
       <enum>QTabWidget::Rounded</enum>
@@ -1334,7 +1372,7 @@ p, li { white-space: pre-wrap; }
           <enum>Qt::CustomContextMenu</enum>
          </property>
          <property name="toolTip">
-          <string>A directory view of this mod</string>
+          <string>Preview appears only for file types supported by an enabled MO2 preview plugin. Open/Execute uses the app associated with the file type in Windows.</string>
          </property>
          <property name="whatsThis">
           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -1342,7 +1380,8 @@ p, li { white-space: pre-wrap; }
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;This is a modifiable directory view of the mod directory. You can move around files using drag &amp;amp; drop and rename them (double click).&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Changes happen immediately on disc, so do&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt; be careful&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Changes happen immediately on disc, so do&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt; be careful&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Preview appears only when an enabled MO2 preview plugin supports that file type. Open/Execute uses the app Windows associates with the file type. If no app is associated, choose a compatible app in Windows; the mod file stays unchanged.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="dragDropMode">
           <enum>QAbstractItemView::InternalMove</enum>

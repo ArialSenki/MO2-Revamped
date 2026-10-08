@@ -6,16 +6,46 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>631</width>
-    <height>578</height>
+   <width>760</width>
+   <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Text output</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QTextEdit" name="textEdit">
+ <layout class="QVBoxLayout" name="verticalLayout">
+  <property name="leftMargin"><number>18</number></property>
+  <property name="topMargin"><number>18</number></property>
+  <property name="rightMargin"><number>18</number></property>
+  <property name="bottomMargin"><number>18</number></property>
+  <property name="spacing"><number>12</number></property>
+  <item>
+   <widget class="QFrame" name="saveTextHeaderCard">
+    <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+    <property name="frameShadow"><enum>QFrame::Plain</enum></property>
+    <layout class="QVBoxLayout" name="saveTextHeaderLayout">
+     <property name="leftMargin"><number>14</number></property>
+     <property name="topMargin"><number>11</number></property>
+     <property name="rightMargin"><number>14</number></property>
+     <property name="bottomMargin"><number>11</number></property>
+     <property name="spacing"><number>4</number></property>
+     <item>
+      <widget class="QLabel" name="saveTextHeading">
+       <property name="text"><string>Review or export this text</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="saveTextDescription">
+       <property name="wordWrap"><bool>true</bool></property>
+       <property name="text"><string>Copy the contents to the clipboard or save them as a TXT or CSV file.</string></property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </item>
+  <item>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="minimumSize"><size><width>0</width><height>300</height></size></property>
      <property name="lineWrapMode">
       <enum>QTextEdit::NoWrap</enum>
      </property>
@@ -29,14 +59,14 @@
      <item>
       <widget class="QPushButton" name="clipboardBtn">
        <property name="text">
-        <string>Copy To Clipboard</string>
+       <string>Copy text</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="saveAsBtn">
        <property name="text">
-        <string>Save As...</string>
+       <string>Save to file...</string>
        </property>
       </widget>
      </item>

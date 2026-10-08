@@ -5,6 +5,7 @@
 #include "plugincontainer.h"
 #include "settings.h"
 #include "ui_mainwindow.h"
+#include <QHeaderView>
 #include <utility.h>
 
 using namespace MOBase;
@@ -35,7 +36,11 @@ public:
       : QTreeWidgetItem({"", name}), m_list(list), m_state(Inactive)
   {
     setTextAlignment(0, Qt::AlignCenter);
-    setData(0, Qt::ToolTipRole, name);
+    setData(0, Qt::ToolTipRole,
+            QStringLiteral("%1\n%2")
+                .arg(name,
+                     QObject::tr("Left-click cycles through off, include, and exclude. "
+                                 "Right-click reverses; Space advances.")));
     setData(0, TypeRole, type);
     setData(0, IDRole, id);
     setData(0, Qt::DecorationRole, QIcon(":/MO/gui/unchecked-checkbox"));
@@ -213,6 +218,17 @@ FilterList::FilterList(Ui::MainWindow* ui, OrganizerCore& core,
     onOptionsChanged();
   });
 
+  ui->filtersClear->setText(tr("Clear filters"));
+  ui->filtersClear->setToolTip(tr("Remove every active filter."));
+  ui->filtersEdit->setText(tr("Manage categories"));
+  ui->filtersEdit->setToolTip(
+      tr("Create, rename, organize, and map categories for this game."));
+  ui->filtersAnd->setText(tr("All"));
+  ui->filtersAnd->setToolTip(tr("Show mods that match every active filter."));
+  ui->filtersOr->setText(tr("Any"));
+  ui->filtersOr->setToolTip(
+      tr("Show mods that match at least one active filter."));
+
   connect(ui->filtersSeparators, qOverload<int>(&QComboBox::currentIndexChanged), [&] {
     onOptionsChanged();
   });
@@ -220,17 +236,25 @@ FilterList::FilterList(Ui::MainWindow* ui, OrganizerCore& core,
   ui->filters->header()->setMinimumSectionSize(0);
   // The first column contains a full checkbox-state icon. Leave enough room
   // for the icon and its padding so it cannot collide with the filter text.
+  ui->filters->header()->setSectionResizeMode(0, QHeaderView::Fixed);
+  ui->filters->header()->setSectionResizeMode(1, QHeaderView::Stretch);
   ui->filters->setIndentation(0);
   ui->filters->header()->resizeSection(0, 32);
-  ui->categoriesSplitter->setCollapsible(0, false);
-  ui->categoriesSplitter->setCollapsible(1, false);
 
-  ui->filtersSeparators->addItem(tr("Filter separators"),
+  ui->filtersSeparators->addItem(tr("Follow filters"),
                                  ModListSortProxy::SeparatorFilter);
-  ui->filtersSeparators->addItem(tr("Show separators"),
+  ui->filtersSeparators->setItemData(
+      0, tr("Show separators only when they match the active filters."),
+      Qt::ToolTipRole);
+  ui->filtersSeparators->addItem(tr("Always show separators"),
                                  ModListSortProxy::SeparatorShow);
-  ui->filtersSeparators->addItem(tr("Hide separators"),
+  ui->filtersSeparators->setItemData(
+      1, tr("Keep separators visible even when they do not match the filters."),
+      Qt::ToolTipRole);
+  ui->filtersSeparators->addItem(tr("Always hide separators"),
                                  ModListSortProxy::SeparatorHide);
+  ui->filtersSeparators->setItemData(
+      2, tr("Hide all separators from the mod list."), Qt::ToolTipRole);
 }
 
 void FilterList::restoreState(const Settings& s)

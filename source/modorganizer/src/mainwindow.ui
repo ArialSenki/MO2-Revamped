@@ -105,15 +105,15 @@
             <string/>
            </property>
            <property name="toolTip">
-            <string>State of the filter, can either be Disabled, Enabled or Inverted.</string>
+            <string>Filter state: off, included, or excluded.</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string notr="true">Filter</string>
+           <string notr="true">Filter criteria</string>
            </property>
            <property name="toolTip">
-            <string>Filter to apply to the modlist.</string>
+            <string>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</string>
            </property>
           </column>
          </widget>
@@ -136,14 +136,20 @@
            <item>
             <widget class="QPushButton" name="filtersClear">
              <property name="text">
-              <string>Clear</string>
+              <string>Clear filters</string>
+             </property>
+             <property name="toolTip">
+              <string>Remove every active filter.</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="filtersEdit">
              <property name="text">
-              <string>Edit...</string>
+              <string>Manage categories</string>
+             </property>
+             <property name="toolTip">
+              <string>Create, rename, organize, and map categories for this game.</string>
              </property>
             </widget>
            </item>
@@ -174,10 +180,10 @@
            <item>
             <widget class="QRadioButton" name="filtersAnd">
              <property name="toolTip">
-              <string>Display mods that match all selected categories.</string>
+              <string>Show mods that match every active filter.</string>
              </property>
              <property name="text">
-              <string>And</string>
+              <string>All</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -187,10 +193,10 @@
            <item>
             <widget class="QRadioButton" name="filtersOr">
              <property name="toolTip">
-              <string>Display mods that match at least one of the selected categories</string>
+              <string>Show mods that match at least one active filter.</string>
              </property>
              <property name="text">
-              <string>Or</string>
+              <string>Any</string>
              </property>
             </widget>
            </item>
@@ -204,9 +210,9 @@
              </property>
              <property name="toolTip">
               <string>
-                              Filter: only show the separators that match the current filters
-                              Show: always show separators
-                              Hide: never show separators
+                              Follow filters: only show separators that match the current filters
+                              Always show: keep separators visible
+                              Always hide: never show separators
                             </string>
              </property>
             </widget>
@@ -252,7 +258,7 @@
            <item>
             <widget class="QComboBox" name="profileBox">
              <property name="toolTip">
-              <string>Pick a module collection</string>
+              <string>Select a profile</string>
              </property>
              <property name="whatsThis">
               <string>
@@ -260,8 +266,8 @@
                               &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
                               p, li { white-space: pre-wrap; }
                               &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Create profiles here. Each profile contains its own list of active mods and esps. This way you can quickly switch between setups for different playthroughs.&lt;/span&gt;&lt;/p&gt;
-                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Please note that right now your esp load order is not kept separate for different profiles.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Choose a profile to switch its enabled mod list, plugin selection, and plugin load order.&lt;/span&gt;&lt;/p&gt;
+                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Each profile keeps these lists separate for different mod setups or playthroughs.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                             </string>
              </property>
             </widget>
@@ -288,17 +294,17 @@
               </size>
              </property>
              <property name="toolTip">
-              <string>Open list options...</string>
+              <string>List and profile backup actions...</string>
              </property>
              <property name="whatsThis">
-              <string>Refresh list. This is usually not necessary unless you modified data outside the program.</string>
+              <string>Install or create mods and separators, enable or disable all or matching mods, check for updates, assign categories, refresh or export the mod list, and create, restore, or delete mod-list and plugin-order backups for this profile.</string>
              </property>
              <property name="text">
               <string/>
              </property>
              <property name="icon">
               <iconset resource="resources.qrc">
-               <normaloff>:/MO/gui/settings</normaloff>:/MO/gui/settings</iconset>
+                <normaloff>:/MO/gui/mainwindow/settings.svg</normaloff>:/MO/gui/mainwindow/settings.svg</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -311,42 +317,14 @@
            <item>
             <widget class="QPushButton" name="openFolderMenu">
              <property name="toolTip">
-              <string>Show Open Folders menu...</string>
+              <string>Choose a game or MO2 folder to open...</string>
              </property>
              <property name="text">
               <string/>
              </property>
              <property name="icon">
               <iconset resource="resources.qrc">
-               <normaloff>:/MO/gui/open_folder</normaloff>:/MO/gui/open_folder</iconset>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="restoreModsButton">
-             <property name="toolTip">
-              <string>Restore Backup...</string>
-             </property>
-             <property name="text">
-              <string notr="true"/>
-             </property>
-             <property name="icon">
-              <iconset resource="resources.qrc">
-               <normaloff>:/MO/gui/restore</normaloff>:/MO/gui/restore</iconset>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="saveModsButton">
-             <property name="toolTip">
-              <string>Create Backup</string>
-             </property>
-             <property name="text">
-              <string notr="true"/>
-             </property>
-             <property name="icon">
-              <iconset resource="resources.qrc">
-               <normaloff>:/MO/gui/backup</normaloff>:/MO/gui/backup</iconset>
+                <normaloff>:/MO/gui/contextmenu/explorer.svg</normaloff>:/MO/gui/contextmenu/explorer.svg</iconset>
              </property>
             </widget>
            </item>
@@ -366,7 +344,7 @@
               </size>
              </property>
              <property name="whatsThis">
-              <string>This provides statistics about the mod list.  The total number of active mod is normally displayed.  Other statistics may be accessed with the tooltip of this counter.</string>
+              <string>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type.</string>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Sunken</enum>
@@ -481,7 +459,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Filter</string>
+              <string>Filters</string>
              </property>
             </widget>
            </item>
@@ -527,15 +505,18 @@
              <property name="layoutDirection">
               <enum>Qt::RightToLeft</enum>
              </property>
-             <property name="styleSheet">
-              <string notr="true">border:1px solid #ff0000;</string>
-             </property>
              <property name="text">
-              <string>Clear all Filters</string>
+              <string>Clear filters</string>
+             </property>
+             <property name="toolTip">
+              <string>Clear the text filter and selected filter criteria.</string>
+             </property>
+             <property name="whatsThis">
+              <string>Clear the text filter and selected filter criteria. Grouping is unchanged.</string>
              </property>
              <property name="icon">
               <iconset resource="resources.qrc">
-               <normaloff>:/MO/gui/edit_clear</normaloff>:/MO/gui/edit_clear</iconset>
+                <normaloff>:/MO/gui/mainwindow/clear.svg</normaloff>:/MO/gui/mainwindow/clear.svg</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -555,6 +536,12 @@
              </property>
              <property name="focusPolicy">
               <enum>Qt::ClickFocus</enum>
+             </property>
+             <property name="toolTip">
+              <string>Group the mod list by category or Nexus ID.</string>
+             </property>
+             <property name="whatsThis">
+              <string>Choose No groups, Categories, or Nexus IDs to organize the mod list.</string>
              </property>
              <item>
               <property name="text">
@@ -581,8 +568,14 @@
                <height>0</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>Filter mods by text. Separate alternatives with a semicolon, |, or OR surrounded by spaces (for example, name OR name).</string>
+             </property>
+             <property name="whatsThis">
+              <string>Filter mods by text. Separate alternatives with a semicolon, |, or OR surrounded by spaces (for example, name OR name).</string>
+             </property>
              <property name="placeholderText">
-              <string>Filter</string>
+              <string>Search mods...</string>
              </property>
             </widget>
            </item>
@@ -702,12 +695,12 @@
                 </property>
                 <property name="icon">
                  <iconset resource="resources.qrc">
-                  <normaloff>:/MO/gui/run</normaloff>:/MO/gui/run</iconset>
+                  <normaloff>:/MO/gui/mainwindow/run.svg</normaloff>:/MO/gui/mainwindow/run.svg</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
-                  <width>36</width>
-                  <height>36</height>
+                  <width>24</width>
+                  <height>24</height>
                  </size>
                 </property>
                </widget>
@@ -781,7 +774,7 @@
                  </property>
                  <property name="icon">
                   <iconset resource="resources.qrc">
-                   <normaloff>:/MO/gui/sort</normaloff>:/MO/gui/sort</iconset>
+                    <normaloff>:/MO/gui/mainwindow/sort.svg</normaloff>:/MO/gui/mainwindow/sort.svg</iconset>
                  </property>
                 </widget>
                </item>
@@ -797,46 +790,6 @@
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="restoreButton">
-                 <property name="toolTip">
-                  <string>Restore a backup.</string>
-                 </property>
-                 <property name="whatsThis">
-                  <string>Restore a backup.</string>
-                 </property>
-                 <property name="text">
-                  <string notr="true"/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="resources.qrc">
-                   <normaloff>:/MO/gui/restore</normaloff>:/MO/gui/restore</iconset>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>16</width>
-                   <height>16</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="saveButton">
-                 <property name="toolTip">
-                  <string>Create a backup.</string>
-                 </property>
-                 <property name="whatsThis">
-                  <string>Create a backup.</string>
-                 </property>
-                 <property name="text">
-                  <string notr="true"/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="resources.qrc">
-                   <normaloff>:/MO/gui/backup</normaloff>:/MO/gui/backup</iconset>
-                 </property>
-                </widget>
                </item>
                <item>
                 <widget class="QLabel" name="activePluginsLabel">
@@ -948,10 +901,10 @@
                <item>
                 <widget class="MOBase::LineEditClear" name="espFilterEdit">
                  <property name="toolTip">
-                  <string>Filter the list of plugins.</string>
+                  <string>Filter plugins by name. Separate alternatives with a semicolon, |, or OR surrounded by spaces.</string>
                  </property>
                  <property name="whatsThis">
-                  <string>Filter the list of plugins.</string>
+                  <string>Filter plugins by name. Separate alternatives with a semicolon, |, or OR surrounded by spaces.</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -1056,17 +1009,17 @@
                <item>
                 <widget class="QPushButton" name="dataTabRefresh">
                  <property name="toolTip">
-                  <string>Refresh the data structure.</string>
+                  <string>Refresh the virtual Data tree.</string>
                  </property>
                  <property name="whatsThis">
-                  <string>Refresh the data structure.</string>
+                  <string>Refresh the virtual Data tree. Hold Shift while clicking to clear it first and rebuild it from scratch.</string>
                  </property>
                  <property name="text">
                   <string>Refresh</string>
                  </property>
                  <property name="icon">
                   <iconset resource="resources.qrc">
-                   <normaloff>:/MO/gui/resources/view-refresh.png</normaloff>:/MO/gui/resources/view-refresh.png</iconset>
+                    <normaloff>:/MO/gui/mainwindow/refresh.svg</normaloff>:/MO/gui/mainwindow/refresh.svg</iconset>
                  </property>
                 </widget>
                </item>
@@ -1093,7 +1046,7 @@
                   <enum>Qt::CustomContextMenu</enum>
                  </property>
                  <property name="whatsThis">
-                  <string>This is an overview of your data directory as visible to the game (and tools). </string>
+                  <string>The Data tree shows the virtual game directory MO2 exposes to the selected game. Files stay in their source mods or archives; MO2 does not copy them into the physical game folder. The Mod column identifies the winning source. Conflicts only filters to files with alternatives, and Show archive files includes entries provided by archives. Right-click a file for the preview, open, Explorer, and Mod Info actions available for it.</string>
                  </property>
                  <property name="alternatingRowColors">
                   <bool>true</bool>
@@ -1132,16 +1085,16 @@
                <item>
                 <widget class="QCheckBox" name="dataTabShowFromArchives">
                  <property name="toolTip">
-                  <string>Filter the list so that files from archives are shown.</string>
+                  <string>Include files from archives in the Data tree alongside loose files.</string>
                  </property>
                  <property name="statusTip">
                   <string/>
                  </property>
                  <property name="whatsThis">
-                  <string>Filter the list so that files from archives are shown.</string>
+                  <string>Include files from archives in the Data tree alongside loose files.</string>
                  </property>
                  <property name="text">
-                  <string>Archives</string>
+                  <string>Show archive files</string>
                  </property>
                 </widget>
                </item>
@@ -1187,9 +1140,9 @@
                                   &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
                                   p, li { white-space: pre-wrap; }
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-                                  &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;This is a list of all save games for this game. Hover over a list entry to get detailed information about the save including a list of esps/esms that were used at the time this save was created but aren't active now.&lt;/span&gt;&lt;/p&gt;
+                                  &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;/p&gt;
-                                  &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;If you click &amp;quot;Fix Mods...&amp;quot; in the context menu, MO will try to activate all mods and esps to fix those missing esps. It will not disable anything!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Profiles &amp;gt; Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </string>
                </property>
                <property name="sizeAdjustPolicy">
@@ -1274,7 +1227,7 @@
                  </property>
                  <property name="icon">
                   <iconset resource="resources.qrc">
-                   <normaloff>:/MO/gui/resources/view-refresh.png</normaloff>:/MO/gui/resources/view-refresh.png</iconset>
+                    <normaloff>:/MO/gui/mainwindow/refresh.svg</normaloff>:/MO/gui/mainwindow/refresh.svg</iconset>
                  </property>
                 </widget>
                </item>
@@ -1313,7 +1266,7 @@
                   <string/>
                  </property>
                  <property name="whatsThis">
-                  <string>This is a list of mods you downloaded from Nexus. Double click one to install it. You can also drag an archive into here.</string>
+                  <string>Downloaded archives for this instance appear here. Double-click an archive to install it. To choose its priority, drag it from this list onto the mod list while sorting by Priority.</string>
                  </property>
                  <property name="dragEnabled">
                   <bool>true</bool>
@@ -1488,7 +1441,6 @@
      <property name="title">
       <string>&amp;Toolbars</string>
      </property>
-     <addaction name="actionMainMenuToggle"/>
      <addaction name="actionToolBarMainToggle"/>
      <addaction name="actionStatusBarToggle"/>
      <addaction name="separator"/>
@@ -1584,7 +1536,7 @@
   <action name="actionInstallMod">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/resources/system-installer.png</normaloff>:/MO/gui/resources/system-installer.png</iconset>
+     <normaloff>:/MO/gui/mainwindow/install.svg</normaloff>:/MO/gui/mainwindow/install.svg</iconset>
    </property>
    <property name="text">
     <string>Install &amp;Mod...</string>
@@ -1605,7 +1557,7 @@
   <action name="actionAdd_Profile">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/profiles</normaloff>:/MO/gui/profiles</iconset>
+     <normaloff>:/MO/gui/mainwindow/profile.svg</normaloff>:/MO/gui/mainwindow/profile.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Profiles...</string>
@@ -1626,7 +1578,7 @@
   <action name="actionModify_Executables">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/icon_executable</normaloff>:/MO/gui/icon_executable</iconset>
+     <normaloff>:/MO/gui/mainwindow/executables.svg</normaloff>:/MO/gui/mainwindow/executables.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Executables...</string>
@@ -1647,7 +1599,7 @@
   <action name="actionTool">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/plugins</normaloff>:/MO/gui/plugins</iconset>
+     <normaloff>:/MO/gui/mainwindow/tools.svg</normaloff>:/MO/gui/mainwindow/tools.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Tool Plugins</string>
@@ -1665,7 +1617,7 @@
   <action name="actionSettings">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/settings</normaloff>:/MO/gui/settings</iconset>
+     <normaloff>:/MO/gui/mainwindow/settings.svg</normaloff>:/MO/gui/mainwindow/settings.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Settings...</string>
@@ -1686,7 +1638,7 @@
   <action name="actionNexus">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/resources/internet-web-browser.png</normaloff>:/MO/gui/resources/internet-web-browser.png</iconset>
+     <normaloff>:/MO/gui/contextmenu/visit.svg</normaloff>:/MO/gui/contextmenu/visit.svg</iconset>
    </property>
    <property name="text">
     <string>Visit &amp;Nexus</string>
@@ -1707,7 +1659,7 @@
   <action name="actionModPage">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/resources/internet-web-browser.png</normaloff>:/MO/gui/resources/internet-web-browser.png</iconset>
+     <normaloff>:/MO/gui/mainwindow/mod-page.svg</normaloff>:/MO/gui/mainwindow/mod-page.svg</iconset>
    </property>
    <property name="text">
     <string>Browse Mod Page</string>
@@ -1727,29 +1679,29 @@
   </action>
   <action name="actionUpdate">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/update</normaloff>:/MO/gui/update</iconset>
+     <normaloff>:/MO/gui/mainwindow/github-updates.svg</normaloff>:/MO/gui/mainwindow/github-updates.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Update Mod Organizer</string>
+    <string>MO2 Revamped on &amp;GitHub</string>
    </property>
    <property name="iconText">
-    <string>&amp;Update Mod Organizer</string>
+     <string>Revamped Updates</string>
    </property>
    <property name="toolTip">
-    <string>Mod Organizer is up-to-date</string>
+    <string>Open the MO2 Revamped GitHub repository for project updates</string>
    </property>
    <property name="statusTip">
-    <string>Mod Organizer is up-to-date</string>
+    <string>Open the MO2 Revamped GitHub repository for project updates</string>
    </property>
   </action>
   <action name="actionNotifications">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/warning</normaloff>:/MO/gui/warning</iconset>
+     <normaloff>:/MO/gui/mainwindow/notifications.svg</normaloff>:/MO/gui/mainwindow/notifications.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Notifications...</string>
@@ -1767,7 +1719,7 @@
   <action name="actionHelp">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/help</normaloff>:/MO/gui/help</iconset>
+     <normaloff>:/MO/gui/mainwindow/help.svg</normaloff>:/MO/gui/mainwindow/help.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Help</string>
@@ -1788,7 +1740,7 @@
   <action name="actionEndorseMO">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/icon_favorite</normaloff>:/MO/gui/icon_favorite</iconset>
+     <normaloff>:/MO/gui/contextmenu/endorse.svg</normaloff>:/MO/gui/contextmenu/endorse.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Endorse ModOrganizer</string>
@@ -1806,7 +1758,7 @@
   <action name="actionChange_Game">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/instance_switch</normaloff>:/MO/gui/instance_switch</iconset>
+     <normaloff>:/MO/gui/mainwindow/instance.svg</normaloff>:/MO/gui/mainwindow/instance.svg</iconset>
    </property>
    <property name="text">
     <string>Manage Instan&amp;ces...</string>
@@ -1891,14 +1843,6 @@
     <string>M&amp;edium Icons</string>
    </property>
   </action>
-  <action name="actionMainMenuToggle">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Menu</string>
-   </property>
-  </action>
   <action name="actionStatusBarToggle">
    <property name="checkable">
     <bool>true</bool>
@@ -1918,7 +1862,7 @@
   <action name="action_Refresh">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/MO/gui/resources/view-refresh.png</normaloff>:/MO/gui/resources/view-refresh.png</iconset>
+      <normaloff>:/MO/gui/mainwindow/refresh.svg</normaloff>:/MO/gui/mainwindow/refresh.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Refresh</string>

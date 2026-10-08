@@ -102,7 +102,7 @@ void SelfUpdater::testForUpdate(const Settings& settings)
   // directly
   try {
     m_GitHub.releases(
-        GitHub::Repository("Modorganizer2", "modorganizer"),
+        GitHub::Repository("ArialSenki", "MO2-Revamped"),
         [this](const QJsonArray& releases) {
           if (releases.isEmpty()) {
             // error message already logged

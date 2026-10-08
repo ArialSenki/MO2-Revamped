@@ -1,9 +1,21 @@
 #include "modlistviewactions.h"
 
+#include <QButtonGroup>
+#include <QCheckBox>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QFont>
+#include <QFrame>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
 #include <QInputDialog>
 #include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QVBoxLayout>
+#include <QWidget>
 
 #include "filesystemutilities.h"
 #include <log.h>
@@ -33,6 +45,217 @@
 
 using namespace MOBase;
 using namespace MOShared;
+
+namespace {
+
+QFrame* createGearActionCard(QWidget* parent, const QString& objectName)
+{
+  auto* card = new QFrame(parent);
+  card->setObjectName(objectName);
+  card->setFrameShape(QFrame::StyledPanel);
+  return card;
+}
+
+QFrame* createGearActionDivider(QWidget* parent)
+{
+  auto* divider = new QFrame(parent);
+  divider->setObjectName(QStringLiteral("gearActionDivider"));
+  divider->setFrameShape(QFrame::NoFrame);
+  divider->setFixedHeight(1);
+  return divider;
+}
+
+QString promptForModListName(QWidget* parent, const QString& windowTitle,
+                             const QString& heading,
+                             const QString& description,
+                             const QString& placeholder,
+                             const QString& acceptText, bool* accepted)
+{
+  QDialog dialog(parent);
+  dialog.setObjectName(QStringLiteral("modListNameDialog"));
+  dialog.setWindowTitle(windowTitle);
+  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+  dialog.setMinimumWidth(440);
+
+  auto* layout = new QVBoxLayout(&dialog);
+  layout->setContentsMargins(22, 20, 22, 16);
+  layout->setSpacing(10);
+
+  auto* title = new QLabel(heading, &dialog);
+  title->setObjectName(QStringLiteral("modListNameTitle"));
+  QFont titleFont = title->font();
+  if (titleFont.pointSize() > 0) {
+    titleFont.setPointSize(titleFont.pointSize() + 2);
+  }
+  titleFont.setBold(true);
+  title->setFont(titleFont);
+  layout->addWidget(title);
+
+  auto* details = new QLabel(description, &dialog);
+  details->setObjectName(QStringLiteral("modListNameDescription"));
+  details->setWordWrap(true);
+
+  auto* nameEdit = new QLineEdit(&dialog);
+  nameEdit->setObjectName(QStringLiteral("modListNameEdit"));
+  nameEdit->setClearButtonEnabled(true);
+  nameEdit->setPlaceholderText(placeholder);
+  nameEdit->setMinimumHeight(36);
+
+  auto* card = createGearActionCard(&dialog, QStringLiteral("gearActionCard"));
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(10, 8, 10, 8);
+  cardLayout->setSpacing(6);
+  cardLayout->addWidget(details);
+  cardLayout->addWidget(nameEdit);
+  layout->addWidget(card);
+  layout->addWidget(createGearActionDivider(&dialog));
+
+  auto* buttons = new QDialogButtonBox(&dialog);
+  buttons->addButton(QDialogButtonBox::Cancel);
+  auto* acceptButton = buttons->addButton(acceptText, QDialogButtonBox::AcceptRole);
+  acceptButton->setDefault(true);
+  acceptButton->setEnabled(false);
+  layout->addWidget(buttons);
+
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
+                   &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
+                   &QDialog::reject);
+  QObject::connect(nameEdit, &QLineEdit::textChanged, &dialog,
+                   [acceptButton](const QString& text) {
+                     QString validName = text;
+                     acceptButton->setEnabled(fixDirectoryName(validName) &&
+                                              !validName.isEmpty());
+                   });
+
+  nameEdit->setFocus(Qt::OtherFocusReason);
+  const bool didAccept = dialog.exec() == QDialog::Accepted;
+  if (accepted != nullptr) {
+    *accepted = didAccept;
+  }
+  return nameEdit->text();
+}
+
+bool confirmBulkModToggle(QWidget* parent, const QString& windowTitle,
+                          const QString& heading, const QString& description,
+                          const QString& acceptText)
+{
+  QDialog dialog(parent);
+  dialog.setObjectName(QStringLiteral("bulkModToggleDialog"));
+  dialog.setWindowTitle(windowTitle);
+  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+  dialog.setMinimumWidth(440);
+
+  auto* layout = new QVBoxLayout(&dialog);
+  layout->setContentsMargins(22, 18, 22, 16);
+  layout->setSpacing(8);
+
+  auto* title = new QLabel(heading, &dialog);
+  title->setObjectName(QStringLiteral("bulkModToggleTitle"));
+  QFont titleFont = title->font();
+  if (titleFont.pointSize() > 0) {
+    titleFont.setPointSize(titleFont.pointSize() + 2);
+  }
+  titleFont.setBold(true);
+  title->setFont(titleFont);
+  layout->addWidget(title);
+
+  auto* details = new QLabel(description, &dialog);
+  details->setObjectName(QStringLiteral("bulkModToggleDescription"));
+  details->setWordWrap(true);
+
+  auto* card = createGearActionCard(&dialog, QStringLiteral("gearActionCard"));
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(10, 5, 10, 5);
+  cardLayout->addWidget(details);
+  layout->addWidget(card);
+  layout->addWidget(createGearActionDivider(&dialog));
+
+  auto* buttons = new QDialogButtonBox(&dialog);
+  buttons->addButton(QDialogButtonBox::Cancel);
+  auto* acceptButton = buttons->addButton(acceptText, QDialogButtonBox::AcceptRole);
+  acceptButton->setAutoDefault(false);
+  if (auto* cancelButton = buttons->button(QDialogButtonBox::Cancel)) {
+    cancelButton->setDefault(true);
+  }
+  layout->addWidget(buttons);
+
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
+                   &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
+                   &QDialog::reject);
+
+  return dialog.exec() == QDialog::Accepted;
+}
+
+bool confirmCategoryAssignment(QWidget* parent, bool* hideWarning)
+{
+  QDialog dialog(parent);
+  dialog.setObjectName(QStringLiteral("assignCategoriesDialog"));
+  dialog.setWindowTitle(QObject::tr("Auto assign categories"));
+  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+  dialog.setMinimumWidth(480);
+  dialog.resize(520, 205);
+
+  auto* layout = new QVBoxLayout(&dialog);
+  layout->setContentsMargins(16, 12, 16, 12);
+  layout->setSpacing(6);
+
+  auto* title = new QLabel(QObject::tr("Assign Nexus categories"), &dialog);
+  title->setObjectName(QStringLiteral("assignCategoriesTitle"));
+  QFont titleFont = title->font();
+  if (titleFont.pointSize() > 0) {
+    titleFont.setPointSize(titleFont.pointSize() + 2);
+  }
+  titleFont.setBold(true);
+  title->setFont(titleFont);
+  layout->addWidget(title);
+
+  auto* details = new QLabel(
+      QObject::tr("For mods with a valid Nexus category mapping, MO2 replaces "
+                  "their existing categories with the mapped category. "
+                  "This applies to the full mod list."),
+      &dialog);
+  details->setObjectName(QStringLiteral("assignCategoriesDescription"));
+  details->setWordWrap(true);
+
+  auto* hideWarningBox =
+      new QCheckBox(QObject::tr("Don't show this again"), &dialog);
+  hideWarningBox->setObjectName(QStringLiteral("hideAssignCategoriesWarning"));
+
+  auto* card = createGearActionCard(&dialog, QStringLiteral("gearActionCard"));
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(10, 8, 10, 8);
+  cardLayout->setSpacing(8);
+  cardLayout->addWidget(details);
+  cardLayout->addWidget(hideWarningBox);
+  layout->addWidget(card);
+  layout->addWidget(createGearActionDivider(&dialog));
+
+  auto* buttons = new QDialogButtonBox(&dialog);
+  buttons->addButton(QDialogButtonBox::Cancel);
+  auto* assignButton =
+      buttons->addButton(QObject::tr("Assign categories"),
+                         QDialogButtonBox::AcceptRole);
+  assignButton->setAutoDefault(false);
+  if (auto* cancelButton = buttons->button(QDialogButtonBox::Cancel)) {
+    cancelButton->setDefault(true);
+  }
+  layout->addWidget(buttons);
+
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
+                   &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
+                   &QDialog::reject);
+
+  const bool accepted = dialog.exec() == QDialog::Accepted;
+  if (hideWarning != nullptr) {
+    *hideWarning = hideWarningBox->isChecked();
+  }
+  return accepted;
+}
+
+}  // namespace
 
 ModListViewActions::ModListViewActions(OrganizerCore& core, FilterList& filters,
                                        CategoryFactory& categoryFactory,
@@ -116,11 +339,13 @@ void ModListViewActions::createEmptyMod(const QModelIndex& index) const
   name.setFilter(&fixDirectoryName);
 
   while (name->isEmpty()) {
-    bool ok;
-    name.update(QInputDialog::getText(m_parent, tr("Create Mod..."),
-                                      tr("This will create an empty mod.\n"
-                                         "Please enter a name:"),
-                                      QLineEdit::Normal, "", &ok),
+    bool ok = false;
+    name.update(promptForModListName(
+                    m_parent, tr("Create empty mod"),
+                    tr("Create an empty mod"),
+                    tr("Create an empty mod in this instance."),
+                    tr("Enter a mod name"), tr("Create mod"),
+                    &ok),
                 GUESS_USER);
     if (!ok) {
       return;
@@ -154,11 +379,13 @@ void ModListViewActions::createSeparator(const QModelIndex& index) const
   GuessedValue<QString> name;
   name.setFilter(&fixDirectoryName);
   while (name->isEmpty()) {
-    bool ok;
-    name.update(QInputDialog::getText(m_parent, tr("Create Separator..."),
-                                      tr("This will create a new separator.\n"
-                                         "Please enter a name:"),
-                                      QLineEdit::Normal, "", &ok),
+    bool ok = false;
+    name.update(promptForModListName(
+                    m_parent, tr("Create separator"),
+                    tr("Create a separator"),
+                    tr("Separators help organize the mod list and do not "
+                       "contain files."),
+                    tr("Enter a separator name"), tr("Create separator"), &ok),
                 GUESS_USER);
     if (!ok) {
       return;
@@ -210,12 +437,31 @@ void ModListViewActions::setAllMatchingModsEnabled(bool enabled) const
   const auto count    = enabled ? counters.visible.regular - counters.visible.active
                                 : counters.visible.active;
 
+  // Avoid opening a confirmation dialog when the action cannot change anything.
+  if (count <= 0) {
+    return;
+  }
+
+  const bool filterActive = m_view->isFilterActive();
+  const QString windowTitle = enabled ? tr("Enable mods") : tr("Disable mods");
+  const QString heading = enabled ? tr("Enable %n mod(s)?", nullptr, count)
+                                  : tr("Disable %n mod(s)?", nullptr, count);
+  const QString description = enabled
+                                  ? (filterActive
+                                         ? tr("This will enable disabled mods that "
+                                              "match the current filter.")
+                                         : tr("This will enable all disabled mods in "
+                                              "the current profile."))
+                                  : (filterActive
+                                         ? tr("This will disable active mods that "
+                                              "match the current filter.")
+                                         : tr("This will disable all active mods in "
+                                              "the current profile."));
+  const QString acceptText = enabled ? tr("Enable mods") : tr("Disable mods");
+
   // retrieve visible mods from the model view
   const auto allIndex = m_view->indexViewToModel(flatIndex(m_view->model()));
-  const QString message =
-      enabled ? tr("Really enable %1 mod(s)?") : tr("Really disable %1 mod(s)?");
-  if (QMessageBox::question(m_parent, tr("Confirm"), message.arg(count),
-                            QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+  if (confirmBulkModToggle(m_parent, windowTitle, heading, description, acceptText)) {
     m_core.modList()->setActive(allIndex, enabled);
   }
 }
@@ -263,19 +509,14 @@ void ModListViewActions::checkModsForUpdates() const
 void ModListViewActions::assignCategories() const
 {
   if (!GlobalSettings::hideAssignCategoriesQuestion()) {
-    QMessageBox warning;
-    warning.setWindowTitle(tr("Are you sure?"));
-    warning.setText(
-        tr("This action will remove any existing categories on any mod with a valid "
-           "Nexus category mapping. Are you certain you want to proceed?"));
-    warning.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    QCheckBox dontShow(tr("&Don't show this again"));
-    warning.setCheckBox(&dontShow);
-    auto result = warning.exec();
-    if (dontShow.isChecked())
+    bool hideWarning = false;
+    const bool accepted = confirmCategoryAssignment(m_parent, &hideWarning);
+    if (hideWarning) {
       GlobalSettings::setHideAssignCategoriesQuestion(true);
-    if (result == QMessageBox::Cancel)
+    }
+    if (!accepted) {
       return;
+    }
   }
   for (auto mod : m_core.modList()->allMods()) {
     ModInfo::Ptr modInfo = ModInfo::getByName(mod);
@@ -335,81 +576,116 @@ void ModListViewActions::checkModsForUpdates(const QModelIndexList& indices) con
 void ModListViewActions::exportModListCSV() const
 {
   QDialog selection(m_parent);
-  QGridLayout* grid = new QGridLayout;
-  selection.setWindowTitle(tr("Export to csv"));
+  selection.setObjectName(QStringLiteral("ExportModListDialog"));
+  selection.setWindowTitle(tr("Export mod list"));
+  selection.setMinimumSize(680, 470);
+  selection.resize(760, 560);
 
-  QLabel* csvDescription = new QLabel();
-  csvDescription->setText(
-      tr("CSV (Comma Separated Values) is a format that can be imported in programs "
-         "like Excel to create a spreadsheet.\nYou can also use online editors and "
-         "converters instead."));
-  grid->addWidget(csvDescription);
+  auto* rootLayout = new QVBoxLayout(&selection);
+  rootLayout->setContentsMargins(22, 18, 22, 18);
+  rootLayout->setSpacing(14);
 
-  QGroupBox* groupBoxRows = new QGroupBox(tr("Select what mods you want export:"));
-  QRadioButton* all       = new QRadioButton(tr("All installed mods"));
-  QRadioButton* active =
-      new QRadioButton(tr("Only active (checked) mods from your current profile"));
-  QRadioButton* visible =
-      new QRadioButton(tr("All currently visible mods in the mod list"));
+  auto* header = new QWidget(&selection);
+  header->setObjectName(QStringLiteral("exportHeader"));
+  auto* headerLayout = new QVBoxLayout(header);
+  headerLayout->setContentsMargins(0, 0, 0, 0);
+  headerLayout->setSpacing(4);
 
-  QVBoxLayout* vbox = new QVBoxLayout;
-  vbox->addWidget(all);
-  vbox->addWidget(active);
-  vbox->addWidget(visible);
-  vbox->addStretch(1);
-  groupBoxRows->setLayout(vbox);
+  auto* heading = new QLabel(tr("Export mod list"), header);
+  heading->setObjectName(QStringLiteral("exportTitle"));
+  auto* csvDescription = new QLabel(
+      tr("Choose which mods and columns to include. The CSV file can be opened "
+         "in spreadsheet tools such as Excel or in online editors."),
+      header);
+  csvDescription->setObjectName(QStringLiteral("exportDescription"));
+  csvDescription->setWordWrap(true);
+  headerLayout->addWidget(heading);
+  headerLayout->addWidget(csvDescription);
+  rootLayout->addWidget(header);
 
-  grid->addWidget(groupBoxRows);
+  auto* optionsLayout = new QHBoxLayout;
+  optionsLayout->setSpacing(14);
 
-  QButtonGroup* buttonGroupRows = new QButtonGroup();
+  auto* groupBoxRows = new QGroupBox(tr("Mod rows"), &selection);
+  groupBoxRows->setObjectName(QStringLiteral("exportRowsGroup"));
+  auto* all = new QRadioButton(tr("All installed mods"), groupBoxRows);
+  all->setObjectName(QStringLiteral("exportAllRows"));
+  auto* active = new QRadioButton(
+      tr("Active (checked) mods from the current profile"), groupBoxRows);
+  active->setObjectName(QStringLiteral("exportActiveRows"));
+  auto* visible = new QRadioButton(tr("Currently visible mods"), groupBoxRows);
+  visible->setObjectName(QStringLiteral("exportVisibleRows"));
+
+  auto* rowsLayout = new QVBoxLayout(groupBoxRows);
+  rowsLayout->setContentsMargins(12, 14, 12, 12);
+  rowsLayout->setSpacing(8);
+  rowsLayout->addWidget(all);
+  rowsLayout->addWidget(active);
+  rowsLayout->addWidget(visible);
+  rowsLayout->addStretch(1);
+
+  auto* buttonGroupRows = new QButtonGroup(&selection);
   buttonGroupRows->addButton(all, 0);
   buttonGroupRows->addButton(active, 1);
   buttonGroupRows->addButton(visible, 2);
   buttonGroupRows->button(0)->setChecked(true);
 
-  QGroupBox* groupBoxColumns = new QGroupBox(tr("Choose what Columns to export:"));
-  groupBoxColumns->setFlat(true);
+  auto* groupBoxColumns = new QGroupBox(tr("CSV columns"), &selection);
+  groupBoxColumns->setObjectName(QStringLiteral("exportColumnsGroup"));
 
-  QCheckBox* mod_Priority = new QCheckBox(tr("Mod_Priority"));
+  auto* mod_Priority = new QCheckBox(tr("Priority"), groupBoxColumns);
+  mod_Priority->setObjectName(QStringLiteral("exportPriority"));
   mod_Priority->setChecked(true);
-  QCheckBox* mod_Name = new QCheckBox(tr("Mod_Name"));
+  auto* mod_Name = new QCheckBox(tr("Mod name"), groupBoxColumns);
+  mod_Name->setObjectName(QStringLiteral("exportModName"));
   mod_Name->setChecked(true);
-  QCheckBox* mod_Note   = new QCheckBox(tr("Notes_column"));
-  QCheckBox* mod_Status = new QCheckBox(tr("Mod_Status"));
+  auto* mod_Note = new QCheckBox(tr("Notes"), groupBoxColumns);
+  mod_Note->setObjectName(QStringLiteral("exportNotes"));
+  auto* mod_Status = new QCheckBox(tr("Status"), groupBoxColumns);
+  mod_Status->setObjectName(QStringLiteral("exportStatus"));
   mod_Status->setChecked(true);
-  QCheckBox* primary_Category   = new QCheckBox(tr("Primary_Category"));
-  QCheckBox* nexus_ID           = new QCheckBox(tr("Nexus_ID"));
-  QCheckBox* mod_Nexus_URL      = new QCheckBox(tr("Mod_Nexus_URL"));
-  QCheckBox* mod_Version        = new QCheckBox(tr("Mod_Version"));
-  QCheckBox* install_Date       = new QCheckBox(tr("Install_Date"));
-  QCheckBox* download_File_Name = new QCheckBox(tr("Download_File_Name"));
+  auto* primary_Category = new QCheckBox(tr("Primary category"), groupBoxColumns);
+  primary_Category->setObjectName(QStringLiteral("exportPrimaryCategory"));
+  auto* nexus_ID = new QCheckBox(tr("Nexus ID"), groupBoxColumns);
+  nexus_ID->setObjectName(QStringLiteral("exportNexusId"));
+  auto* mod_Nexus_URL = new QCheckBox(tr("Nexus URL"), groupBoxColumns);
+  mod_Nexus_URL->setObjectName(QStringLiteral("exportNexusUrl"));
+  auto* mod_Version = new QCheckBox(tr("Version"), groupBoxColumns);
+  mod_Version->setObjectName(QStringLiteral("exportVersion"));
+  auto* install_Date = new QCheckBox(tr("Install date"), groupBoxColumns);
+  install_Date->setObjectName(QStringLiteral("exportInstallDate"));
+  auto* download_File_Name = new QCheckBox(tr("Download file name"), groupBoxColumns);
+  download_File_Name->setObjectName(QStringLiteral("exportDownloadFileName"));
 
-  QVBoxLayout* vbox1 = new QVBoxLayout;
-  vbox1->addWidget(mod_Priority);
-  vbox1->addWidget(mod_Name);
-  vbox1->addWidget(mod_Status);
-  vbox1->addWidget(mod_Note);
-  vbox1->addWidget(primary_Category);
-  vbox1->addWidget(nexus_ID);
-  vbox1->addWidget(mod_Nexus_URL);
-  vbox1->addWidget(mod_Version);
-  vbox1->addWidget(install_Date);
-  vbox1->addWidget(download_File_Name);
-  groupBoxColumns->setLayout(vbox1);
+  auto* columnsLayout = new QGridLayout(groupBoxColumns);
+  columnsLayout->setContentsMargins(12, 14, 12, 12);
+  columnsLayout->setHorizontalSpacing(14);
+  columnsLayout->setVerticalSpacing(6);
+  columnsLayout->addWidget(mod_Priority, 0, 0);
+  columnsLayout->addWidget(mod_Name, 0, 1);
+  columnsLayout->addWidget(mod_Status, 1, 0);
+  columnsLayout->addWidget(mod_Note, 1, 1);
+  columnsLayout->addWidget(primary_Category, 2, 0);
+  columnsLayout->addWidget(nexus_ID, 2, 1);
+  columnsLayout->addWidget(mod_Nexus_URL, 3, 0);
+  columnsLayout->addWidget(mod_Version, 3, 1);
+  columnsLayout->addWidget(install_Date, 4, 0);
+  columnsLayout->addWidget(download_File_Name, 4, 1);
+  columnsLayout->setColumnStretch(0, 1);
+  columnsLayout->setColumnStretch(1, 1);
 
-  grid->addWidget(groupBoxColumns);
+  optionsLayout->addWidget(groupBoxRows, 1);
+  optionsLayout->addWidget(groupBoxColumns, 2);
+  rootLayout->addLayout(optionsLayout, 1);
+  rootLayout->addWidget(createGearActionDivider(&selection));
 
-  QPushButton* ok     = new QPushButton("Ok");
-  QPushButton* cancel = new QPushButton("Cancel");
-  QDialogButtonBox* buttons =
-      new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
+  auto* buttons =
+      new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                           &selection);
+  buttons->button(QDialogButtonBox::Ok)->setText(tr("Export"));
   connect(buttons, SIGNAL(accepted()), &selection, SLOT(accept()));
   connect(buttons, SIGNAL(rejected()), &selection, SLOT(reject()));
-
-  grid->addWidget(buttons);
-
-  selection.setLayout(grid);
+  rootLayout->addWidget(buttons);
 
   if (selection.exec() == QDialog::Accepted) {
 

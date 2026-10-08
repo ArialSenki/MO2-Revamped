@@ -13,12 +13,20 @@
 #include <utility.h>
 
 #include <QFileInfo>
+#include <QCheckBox>
+#include <QAbstractItemView>
+#include <QDialogButtonBox>
+#include <QFrame>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
+#include <QPushButton>
 #include <QSize>
 #include <QSizePolicy>
+#include <QVBoxLayout>
 
 using namespace MOBase;
 
@@ -83,31 +91,61 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
                         const QString& oldName = {})
 {
   QDialog dlg(parent);
+  dlg.setObjectName(QStringLiteral("InstanceNameDialog"));
   dlg.setWindowTitle(title);
+  dlg.setMinimumWidth(460);
 
   auto* ly = new QVBoxLayout(&dlg);
+  ly->setContentsMargins(22, 18, 22, 18);
+  ly->setSpacing(14);
 
-  auto* bb = new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
+  auto* header = new QWidget(&dlg);
+  header->setObjectName(QStringLiteral("instanceNameHeader"));
+  auto* headerLayout = new QVBoxLayout(header);
+  headerLayout->setContentsMargins(0, 0, 0, 0);
+  headerLayout->setSpacing(4);
 
-  auto* text = new QLineEdit(oldName);
+  auto* heading = new QLabel(title, header);
+  heading->setObjectName(QStringLiteral("instanceNameHeading"));
+  auto* description = new QLabel(
+      moreText.isEmpty()
+          ? QObject::tr("Choose a clear folder name for this instance.")
+          : moreText,
+      header);
+  description->setObjectName(QStringLiteral("instanceNameDescription"));
+  description->setWordWrap(true);
+  headerLayout->addWidget(heading);
+  headerLayout->addWidget(description);
+  ly->addWidget(header);
+
+  auto* nameCard = new QGroupBox(QObject::tr("Instance name"), &dlg);
+  nameCard->setObjectName(QStringLiteral("instanceNameCard"));
+  auto* nameLayout = new QVBoxLayout(nameCard);
+  nameLayout->setContentsMargins(12, 14, 12, 12);
+  nameLayout->setSpacing(7);
+
+  auto* bb = new QDialogButtonBox(
+      QDialogButtonBox::Cancel | QDialogButtonBox::Ok, &dlg);
+  bb->setObjectName(QStringLiteral("instanceNameButtons"));
+  bb->button(QDialogButtonBox::Ok)->setText(QObject::tr("Rename"));
+
+  auto* text = new QLineEdit(oldName, nameCard);
+  text->setObjectName(QStringLiteral("instanceNameEdit"));
+  text->setPlaceholderText(QObject::tr("Enter an instance name"));
   text->selectAll();
 
-  auto* error = new QLabel;
-
-  if (!moreText.isEmpty()) {
-    auto* lb = new QLabel(moreText);
-    lb->setWordWrap(true);
-    ly->addWidget(lb);
-    ly->addSpacing(10);
-  }
-
-  auto* lb = new QLabel(label);
+  auto* lb = new QLabel(label, nameCard);
+  lb->setObjectName(QStringLiteral("instanceNameLabel"));
   lb->setWordWrap(true);
-  ly->addWidget(lb);
+  auto* error = new QLabel(nameCard);
+  error->setObjectName(QStringLiteral("instanceNameValidation"));
+  error->setWordWrap(true);
 
-  ly->addWidget(text);
-  ly->addWidget(error);
-  ly->addStretch();
+  nameLayout->addWidget(lb);
+  nameLayout->addWidget(text);
+  nameLayout->addWidget(error);
+  ly->addWidget(nameCard);
+  ly->addStretch(1);
   ly->addWidget(bb);
 
   auto check = [&] {
@@ -127,7 +165,7 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
       }
     }
 
-    error->setVisible(!okay);
+    error->setVisible(!error->text().isEmpty());
     bb->button(QDialogButtonBox::Ok)->setEnabled(okay);
   };
 
@@ -143,12 +181,83 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
 
   check();
 
-  dlg.resize({400, 120});
+  dlg.resize({520, 250});
   if (dlg.exec() != QDialog::Accepted) {
     return {};
   }
 
   return MOBase::sanitizeFileName(text->text());
+}
+
+void showInstanceExample(QWidget* parent)
+{
+  QDialog dlg(parent);
+  dlg.setObjectName(QStringLiteral("InstanceHelpDialog"));
+  dlg.setWindowTitle(QObject::tr("About instances"));
+  dlg.setMinimumWidth(540);
+  dlg.resize(580, 410);
+
+  auto* layout = new QVBoxLayout(&dlg);
+  layout->setContentsMargins(20, 18, 20, 18);
+  layout->setSpacing(12);
+
+  auto* header = new QFrame(&dlg);
+  header->setObjectName(QStringLiteral("instanceHelpHeaderPanel"));
+  auto* headerLayout = new QVBoxLayout(header);
+  headerLayout->setContentsMargins(16, 14, 16, 14);
+  headerLayout->setSpacing(5);
+
+  auto* heading = new QLabel(QObject::tr("An instance is its own MO2 workspace."), header);
+  heading->setObjectName(QStringLiteral("instanceHelpHeading"));
+  auto* description = new QLabel(
+      QObject::tr("Each instance keeps its profiles, mods, downloads and settings together. "
+                  "Use separate instances when you want independent setups."),
+      header);
+  description->setObjectName(QStringLiteral("instanceHelpDescription"));
+  description->setWordWrap(true);
+  headerLayout->addWidget(heading);
+  headerLayout->addWidget(description);
+  layout->addWidget(header);
+
+  auto addExample = [&](const QString& game, const QString& detail) {
+    auto* card = new QFrame(&dlg);
+    card->setObjectName(QStringLiteral("instanceHelpExampleCard"));
+    auto* cardLayout = new QVBoxLayout(card);
+    cardLayout->setContentsMargins(14, 10, 14, 10);
+    cardLayout->setSpacing(3);
+
+    auto* gameLabel = new QLabel(game, card);
+    gameLabel->setObjectName(QStringLiteral("instanceHelpGame"));
+    auto* detailLabel = new QLabel(detail, card);
+    detailLabel->setObjectName(QStringLiteral("instanceHelpExampleText"));
+    detailLabel->setWordWrap(true);
+    cardLayout->addWidget(gameLabel);
+    cardLayout->addWidget(detailLabel);
+    layout->addWidget(card);
+  };
+
+  addExample(QObject::tr("Elden Ring"),
+             QObject::tr("Keep Elden Ring profiles, mods, downloads and settings in this instance."));
+  addExample(QObject::tr("Skyrim Special Edition"),
+             QObject::tr("Manage Skyrim separately, without mixing its setup with Elden Ring."));
+
+  auto* footer = new QLabel(
+      QObject::tr("Choose the instance you want to manage from this window."), &dlg);
+  footer->setObjectName(QStringLiteral("instanceHelpFooter"));
+  footer->setWordWrap(true);
+  layout->addWidget(footer);
+  layout->addStretch(1);
+
+  auto* closeButton = new QPushButton(QObject::tr("Close"), &dlg);
+  closeButton->setObjectName(QStringLiteral("instanceHelpCloseButton"));
+  closeButton->setDefault(true);
+  auto* buttonLayout = new QHBoxLayout;
+  buttonLayout->addStretch(1);
+  buttonLayout->addWidget(closeButton);
+  layout->addLayout(buttonLayout);
+
+  QObject::connect(closeButton, &QPushButton::clicked, &dlg, &QDialog::accept);
+  dlg.exec();
 }
 
 InstanceManagerDialog::~InstanceManagerDialog() = default;
@@ -175,37 +284,38 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
   ui->list->setIconSize(QSize(36, 36));
   ui->list->setSpacing(4);
   ui->list->setMinimumWidth(225);
+  ui->horizontalLayout_2->setContentsMargins(12, 8, 12, 8);
+  ui->horizontalLayout_2->setSpacing(12);
+  ui->verticalLayout->setContentsMargins(12, 12, 12, 12);
+  ui->verticalLayout->setSpacing(10);
+  ui->verticalLayout_2->setContentsMargins(16, 14, 16, 16);
+  ui->verticalLayout_2->setSpacing(10);
   ui->openINI->setToolTip(
       tr("Open this instance's ModOrganizer.ini with the associated editor."));
   ui->switchToInstance->setToolTip(
       tr("Restart Mod Organizer and open the selected instance."));
-  ui->list->setStyleSheet(
-      QStringLiteral("QListView::item:selected { "
-                     "background-color: palette(button); "
-                     "color: palette(text); "
-                     "border: 1px solid palette(mid); }"));
-  ui->detailsHeading->setAlignment(Qt::AlignHCenter);
-  ui->selectionHint->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-  ui->instanceStatus->setAlignment(Qt::AlignHCenter);
-  ui->widget_7->setMaximumWidth(580);
-  ui->widget_9->setMaximumWidth(580);
-  ui->widget_7->setMinimumWidth(520);
+  ui->detailsHeading->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  ui->selectionHint->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  ui->instanceStatus->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  ui->instanceStatus->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+  ui->widget_7->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  ui->widget_9->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   for (QLineEdit* field : ui->widget_7->findChildren<QLineEdit*>()) {
     field->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   }
   if (auto* detailsLayout = qobject_cast<QGridLayout*>(ui->widget_7->layout())) {
-    detailsLayout->setContentsMargins(10, 6, 10, 6);
-    detailsLayout->setHorizontalSpacing(14);
-    detailsLayout->setVerticalSpacing(10);
+    detailsLayout->setContentsMargins(0, 8, 0, 8);
+    detailsLayout->setHorizontalSpacing(12);
+    detailsLayout->setVerticalSpacing(9);
+    detailsLayout->setColumnMinimumWidth(0, 100);
+    detailsLayout->setColumnStretch(1, 1);
   }
   for (QLabel* label : ui->widget_7->findChildren<QLabel*>()) {
-    label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
   }
   if (auto* actionLayout = qobject_cast<QHBoxLayout*>(ui->widget_9->layout())) {
-    actionLayout->insertStretch(0, 1);
+    actionLayout->setSpacing(8);
   }
-  ui->verticalLayout_2->setAlignment(ui->widget_7, Qt::AlignHCenter);
-  ui->verticalLayout_2->setAlignment(ui->widget_9, Qt::AlignHCenter);
 
   if (InstanceManager::singleton().isEldenRingOnlyPortableMode()) {
     ui->createNew->setVisible(false);
@@ -219,6 +329,11 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
 
   connect(ui->createNew, &QPushButton::clicked, [&] {
     createNew();
+  });
+  ui->instanceHelpButton->setToolTip(
+      tr("See a local example of how separate MO2 instances work."));
+  connect(ui->instanceHelpButton, &QPushButton::clicked, this, [this] {
+    showInstanceExample(this);
   });
 
   connect(ui->list->selectionModel(), &QItemSelectionModel::selectionChanged, [&] {
@@ -480,18 +595,82 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
     return true;
   }
 
-  MOBase::TaskDialog dlg(this);
+  QDialog dlg(this);
+  dlg.setObjectName(QStringLiteral("SwitchInstanceDialog"));
+  dlg.setWindowTitle(tr("Switching instances"));
+  dlg.setMinimumWidth(540);
+  dlg.resize(580, 290);
 
-  const auto r = dlg.title(tr("Switching instances"))
-                     .main(tr("Mod Organizer must restart to manage the instance '%1'.")
-                               .arg(to.displayName()))
-                     .content(tr("This confirmation can be disabled in the settings."))
-                     .icon(QMessageBox::Question)
-                     .button({tr("Restart Mod Organizer"), QMessageBox::Ok})
-                     .button({tr("Cancel"), QMessageBox::Cancel})
-                     .exec();
+  auto* layout = new QVBoxLayout(&dlg);
+  layout->setContentsMargins(20, 18, 20, 18);
+  layout->setSpacing(12);
 
-  return (r == QMessageBox::Ok);
+  auto* header = new QFrame(&dlg);
+  header->setObjectName(QStringLiteral("switchInstanceHeader"));
+  auto* headerLayout = new QHBoxLayout(header);
+  headerLayout->setContentsMargins(14, 13, 16, 13);
+  headerLayout->setSpacing(12);
+
+  auto* badge = new QFrame(header);
+  badge->setObjectName(QStringLiteral("switchInstanceBadge"));
+  badge->setFixedSize(42, 42);
+  auto* badgeLayout = new QVBoxLayout(badge);
+  badgeLayout->setContentsMargins(0, 0, 0, 0);
+  auto* mark = new QLabel(QStringLiteral("i"), badge);
+  mark->setObjectName(QStringLiteral("switchInstanceMark"));
+  mark->setAlignment(Qt::AlignCenter);
+  badgeLayout->addWidget(mark);
+
+  auto* headerText = new QWidget(header);
+  headerText->setObjectName(QStringLiteral("switchInstanceHeaderText"));
+  auto* headerTextLayout = new QVBoxLayout(headerText);
+  headerTextLayout->setContentsMargins(0, 0, 0, 0);
+  headerTextLayout->setSpacing(4);
+
+  auto* heading = new QLabel(
+      tr("Mod Organizer must restart to manage the instance '%1'.")
+          .arg(to.displayName()),
+      headerText);
+  heading->setObjectName(QStringLiteral("switchInstanceHeading"));
+  heading->setWordWrap(true);
+  auto* description = new QLabel(
+      tr("The selected instance will open after Mod Organizer restarts."),
+      headerText);
+  description->setObjectName(QStringLiteral("switchInstanceDescription"));
+  description->setWordWrap(true);
+  headerTextLayout->addWidget(heading);
+  headerTextLayout->addWidget(description);
+  headerLayout->addWidget(badge);
+  headerLayout->addWidget(headerText, 1);
+  layout->addWidget(header);
+
+  auto* settingsHint = new QFrame(&dlg);
+  settingsHint->setObjectName(QStringLiteral("switchInstanceSettingsHint"));
+  auto* settingsLayout = new QHBoxLayout(settingsHint);
+  settingsLayout->setContentsMargins(12, 9, 12, 9);
+  auto* settingsText = new QLabel(
+      tr("You can turn off this confirmation in Settings."), settingsHint);
+  settingsText->setObjectName(QStringLiteral("switchInstanceSettingsText"));
+  settingsText->setWordWrap(true);
+  settingsLayout->addWidget(settingsText);
+  layout->addWidget(settingsHint);
+  layout->addStretch(1);
+
+  auto* buttonLayout = new QHBoxLayout;
+  buttonLayout->setSpacing(8);
+  buttonLayout->addStretch(1);
+  auto* cancelButton = new QPushButton(tr("Cancel"), &dlg);
+  cancelButton->setObjectName(QStringLiteral("switchInstanceCancelButton"));
+  auto* restartButton = new QPushButton(tr("Restart Mod Organizer"), &dlg);
+  restartButton->setObjectName(QStringLiteral("switchInstanceRestartButton"));
+  restartButton->setDefault(true);
+  buttonLayout->addWidget(cancelButton);
+  buttonLayout->addWidget(restartButton);
+  layout->addLayout(buttonLayout);
+
+  connect(cancelButton, &QPushButton::clicked, &dlg, &QDialog::reject);
+  connect(restartButton, &QPushButton::clicked, &dlg, &QDialog::accept);
+  return (dlg.exec() == QDialog::Accepted);
 }
 
 void InstanceManagerDialog::rename()
@@ -604,51 +783,136 @@ void InstanceManagerDialog::deleteInstance()
     return;
   }
 
-  // creating dialog
-
   const auto Recycle = QMessageBox::Save;
   const auto Delete  = QMessageBox::Yes;
   const auto Cancel  = QMessageBox::Cancel;
 
   const auto files = i->objectsForDeletion();
 
-  MOBase::TaskDialog dlg(this);
+  QDialog dlg(this);
+  dlg.setObjectName(QStringLiteral("DeleteInstanceDialog"));
+  dlg.setWindowTitle(tr("Deleting instance"));
+  dlg.setMinimumSize(650, 450);
+  dlg.resize(720, 500);
 
-  dlg.title(tr("Deleting instance"))
-      .main(tr("These files and folders will be deleted"))
-      .content(tr("All checked items will be deleted."))
-      .icon(QMessageBox::Warning)
-      .button({tr("Move to the recycle bin"), Recycle})
-      .button({tr("Delete permanently"), Delete})
-      .button({tr("Cancel"), Cancel});
+  auto* dialogLayout = new QVBoxLayout(&dlg);
+  dialogLayout->setContentsMargins(20, 18, 20, 18);
+  dialogLayout->setSpacing(12);
 
-  auto* list = new QListWidget();
-  list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+  auto* header = new QFrame(&dlg);
+  header->setObjectName(QStringLiteral("deleteInstanceHeader"));
+  auto* headerLayout = new QHBoxLayout(header);
+  headerLayout->setContentsMargins(14, 13, 16, 13);
+  headerLayout->setSpacing(12);
+
+  auto* warningBadge = new QFrame(header);
+  warningBadge->setObjectName(QStringLiteral("deleteWarningBadge"));
+  warningBadge->setFixedSize(42, 42);
+  auto* badgeLayout = new QVBoxLayout(warningBadge);
+  badgeLayout->setContentsMargins(0, 0, 0, 0);
+  auto* warningMark = new QLabel(QStringLiteral("!"), warningBadge);
+  warningMark->setObjectName(QStringLiteral("deleteWarningMark"));
+  warningMark->setAlignment(Qt::AlignCenter);
+  badgeLayout->addWidget(warningMark);
+
+  auto* headerText = new QWidget(header);
+  headerText->setObjectName(QStringLiteral("deleteInstanceHeaderText"));
+  auto* headerTextLayout = new QVBoxLayout(headerText);
+  headerTextLayout->setContentsMargins(0, 0, 0, 0);
+  headerTextLayout->setSpacing(3);
+  auto* heading = new QLabel(tr("These files and folders will be deleted"), headerText);
+  heading->setObjectName(QStringLiteral("deleteInstanceHeading"));
+  auto* description = new QLabel(
+      tr("Only checked paths will be removed. Required items stay selected."),
+      headerText);
+  description->setObjectName(QStringLiteral("deleteInstanceDescription"));
+  description->setWordWrap(true);
+  headerTextLayout->addWidget(heading);
+  headerTextLayout->addWidget(description);
+  headerLayout->addWidget(warningBadge);
+  headerLayout->addWidget(headerText, 1);
+  dialogLayout->addWidget(header);
+
+  auto* listCard = new QFrame(&dlg);
+  listCard->setObjectName(QStringLiteral("deleteInstanceListCard"));
+  auto* listLayout = new QVBoxLayout(listCard);
+  listLayout->setContentsMargins(12, 10, 12, 12);
+  listLayout->setSpacing(7);
+
+  auto* listHeader = new QHBoxLayout;
+  auto* listTitle = new QLabel(tr("Items to remove"), listCard);
+  listTitle->setObjectName(QStringLiteral("deleteInstanceListTitle"));
+  const auto itemCountValue = static_cast<qulonglong>(files.size());
+  const auto itemCountText =
+      itemCountValue == 1 ? tr("%1 item").arg(itemCountValue)
+                          : tr("%1 items").arg(itemCountValue);
+  auto* itemCount = new QLabel(itemCountText, listCard);
+  itemCount->setObjectName(QStringLiteral("deleteInstanceItemCount"));
+  listHeader->addWidget(listTitle);
+  listHeader->addStretch(1);
+  listHeader->addWidget(itemCount);
+  listLayout->addLayout(listHeader);
+
+  auto* list = new QListWidget(listCard);
+  list->setObjectName(QStringLiteral("deleteInstancePaths"));
+  list->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   list->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  list->setMaximumHeight(160);
+  list->setAlternatingRowColors(true);
+  list->setSelectionMode(QAbstractItemView::NoSelection);
+  list->setMinimumHeight(145);
+  list->setMaximumHeight(250);
 
-  // filling the list
   for (const auto& f : files) {
-    auto* item = new QListWidgetItem(f.path);
+    auto* item = new QListWidgetItem(list);
+    item->setData(Qt::UserRole, f.path);
 
-    if (f.mandatoryDelete) {
-      // disable, cannot uncheck mandatory items
-      item->setFlags(item->flags() & (~Qt::ItemIsEnabled));
-
-      // checked by default
-      item->setCheckState(Qt::Checked);
-    } else {
-      item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-
-      // unchecked by default
-      item->setCheckState(Qt::Unchecked);
-    }
-
-    list->addItem(item);
+    auto* pathCheck = new QCheckBox(f.path, list);
+    pathCheck->setObjectName(QStringLiteral("deleteInstancePathCheck"));
+    pathCheck->setToolTip(f.path);
+    pathCheck->setChecked(f.mandatoryDelete);
+    pathCheck->setEnabled(!f.mandatoryDelete);
+    pathCheck->setMinimumHeight(32);
+    item->setSizeHint(pathCheck->sizeHint());
+    list->setItemWidget(item, pathCheck);
   }
 
-  dlg.addContent(list);
-  dlg.setWidth(600);
+  if (list->count() == 0) {
+    auto* emptyItem = new QListWidgetItem(tr("No files or folders were found."));
+    emptyItem->setFlags(emptyItem->flags() & (~Qt::ItemIsEnabled));
+    list->addItem(emptyItem);
+  }
+
+  listLayout->addWidget(list, 1);
+  dialogLayout->addWidget(listCard, 1);
+
+  auto* actionHint = new QLabel(tr("Choose how MO2 should remove the checked items."), &dlg);
+  actionHint->setObjectName(QStringLiteral("deleteInstanceActionHint"));
+  dialogLayout->addWidget(actionHint);
+
+  auto* buttonLayout = new QHBoxLayout;
+  buttonLayout->setSpacing(8);
+  auto* cancelButton = new QPushButton(tr("Cancel"), &dlg);
+  cancelButton->setObjectName(QStringLiteral("deleteInstanceCancelButton"));
+  cancelButton->setDefault(true);
+  auto* permanentButton = new QPushButton(tr("Delete permanently"), &dlg);
+  permanentButton->setObjectName(QStringLiteral("deleteInstancePermanentButton"));
+  auto* recycleButton = new QPushButton(tr("Move to the recycle bin"), &dlg);
+  recycleButton->setObjectName(QStringLiteral("deleteInstanceRecycleButton"));
+  buttonLayout->addWidget(cancelButton);
+  buttonLayout->addStretch(1);
+  buttonLayout->addWidget(permanentButton);
+  buttonLayout->addWidget(recycleButton);
+  dialogLayout->addLayout(buttonLayout);
+
+  connect(cancelButton, &QPushButton::clicked, &dlg, [&dlg, Cancel] {
+    dlg.done(Cancel);
+  });
+  connect(permanentButton, &QPushButton::clicked, &dlg, [&dlg, Delete] {
+    dlg.done(Delete);
+  });
+  connect(recycleButton, &QPushButton::clicked, &dlg, [&dlg, Recycle] {
+    dlg.done(Recycle);
+  });
 
   const auto r = dlg.exec();
 
@@ -660,8 +924,9 @@ void InstanceManagerDialog::deleteInstance()
   QStringList selected;
 
   for (int i = 0; i < list->count(); ++i) {
-    if (list->item(i)->checkState() == Qt::Checked) {
-      selected.append(list->item(i)->text());
+    auto* pathCheck = qobject_cast<QCheckBox*>(list->itemWidget(list->item(i)));
+    if (pathCheck && pathCheck->isChecked()) {
+      selected.append(list->item(i)->data(Qt::UserRole).toString());
     }
   }
 

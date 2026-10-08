@@ -4,7 +4,10 @@
 #include "messagedialog.h"
 #include "organizercore.h"
 #include "settings.h"
+#include "startupdiagnostics.h"
 #include "ui_mainwindow.h"
+#include <QHeaderView>
+#include <QSettings>
 #include <log.h>
 #include <report.h>
 
@@ -25,17 +28,26 @@ DataTab::DataTab(OrganizerCore& core, PluginContainer& pc, QWidget* parent,
          mwui->dataTabShowFromArchives},
       m_needUpdate(true)
 {
+  setStartupDiagnosticPhase("data_tab.file_tree.construct");
   m_filetree.reset(new FileTree(core, m_pluginContainer, ui.tree));
+  setStartupDiagnosticPhase("data_tab.file_tree.construct.complete");
+  setStartupDiagnosticPhase("data_tab.filter.set_source_sort");
   m_filter.setUseSourceSort(true);
+  setStartupDiagnosticPhase("data_tab.filter.set_filter_column");
   m_filter.setFilterColumn(FileTreeModel::FileName);
+  setStartupDiagnosticPhase("data_tab.filter.set_edit");
   m_filter.setEdit(mwui->dataTabFilter);
+  setStartupDiagnosticPhase("data_tab.filter.set_list");
   m_filter.setList(mwui->dataTree);
+  setStartupDiagnosticPhase("data_tab.filter.set_update_delay");
   m_filter.setUpdateDelay(true);
 
   if (auto* m = m_filter.proxyModel()) {
+    setStartupDiagnosticPhase("data_tab.filter.configure_proxy");
     m->setDynamicSortFilter(false);
   }
 
+  setStartupDiagnosticPhase("data_tab.connect_signals");
   connect(&m_filter, &FilterWidget::aboutToChange, [&] {
     ensureFullyLoaded();
   });
@@ -68,9 +80,38 @@ void DataTab::saveState(Settings& s) const
   s.widgets().saveChecked(ui.archives);
 }
 
-void DataTab::restoreState(const Settings& s)
+void DataTab::restoreState(Settings& s)
 {
-  s.geometry().restoreState(ui.tree->header());
+  auto* header = ui.tree->header();
+  s.geometry().restoreState(header);
+
+  // Let the primary file-name column use the remaining space. Keep the other
+  // columns interactive and preserve their saved widths.
+  header->setStretchLastSection(false);
+  for (int column = 0; column < header->count(); ++column) {
+    header->setSectionResizeMode(column, QHeaderView::Interactive);
+  }
+
+  // Existing layouts may have saved the Date modified section while it was
+  // stretching to fill the tree. Normalize that width once; later user sizing
+  // is restored normally.
+  QSettings layoutSettings(s.filename(), QSettings::IniFormat);
+  constexpr auto layoutMigratedKey =
+      "Settings/data_tree_column_layout_migrated";
+  if (!layoutSettings.value(layoutMigratedKey, false).toBool()) {
+    constexpr int minimumDateWidth = 145;
+    constexpr int maximumDateWidth = 230;
+    constexpr int preferredDateWidth = 170;
+    const int dateWidth = header->sectionSize(FileTreeModel::LastModified);
+    if (!header->isSectionHidden(FileTreeModel::LastModified) &&
+        (dateWidth < minimumDateWidth || dateWidth > maximumDateWidth)) {
+      header->resizeSection(FileTreeModel::LastModified, preferredDateWidth);
+    }
+    layoutSettings.setValue(layoutMigratedKey, true);
+    layoutSettings.sync();
+  }
+
+  header->setSectionResizeMode(FileTreeModel::FileName, QHeaderView::Stretch);
 
   // prior to 2.3, the list was not sortable, and this remembered in the
   // widget state, for whatever reason

@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include <QGraphicsDropShadowEffect>
 #include <QMenuBar>
+#include <QPointer>
 #include <QStatusBar>
 
 class UILockerInterface
@@ -23,7 +24,10 @@ public:
   ~UILockerInterface()
   {
     if (m_topLevel) {
-      delete m_topLevel.data();
+      // Unlock and Cancel can destroy this interface from a button callback.
+      // Hide now and let Qt delete the widget after it finishes the click.
+      m_topLevel->hide();
+      m_topLevel->deleteLater();
     }
   }
 
@@ -122,8 +126,8 @@ private:
   };
 
   std::unique_ptr<QTimer> m_timer;
-  QWidget* m_mainUI;
-  QWidget* m_target;
+  QPointer<QWidget> m_mainUI;
+  QPointer<QWidget> m_target;
   QPointer<QWidget> m_topLevel;
   QLabel* m_message;
   QLabel* m_info;
@@ -158,7 +162,7 @@ private:
     // find a modal dialog
     QWidget* w = QApplication::activeModalWidget();
 
-    while (w && w != m_mainUI) {
+    while (w && w != m_mainUI.data()) {
       if (isValidTarget(w)) {
         return w;
       }
@@ -171,7 +175,7 @@ private:
       const auto topLevels = QApplication::topLevelWidgets();
 
       for (auto* w : topLevels) {
-        if (w && w->parentWidget() == m_mainUI) {
+        if (w && w->parentWidget() == m_mainUI.data()) {
           if (isValidTarget(w)) {
             return w;
           }
@@ -179,7 +183,7 @@ private:
       }
     }
 
-    return m_mainUI;
+    return m_mainUI.data();
   }
 
   QWidget* createTransparentWidget(QWidget* parent = nullptr)
@@ -201,14 +205,18 @@ private:
     }
 
     m_topLevel = createTransparentWidget(mainUI);
+    m_topLevel->setObjectName(QStringLiteral("uiLockerOverlay"));
     m_topLevel->setWindowFlags(m_topLevel->windowFlags() & Qt::FramelessWindowHint);
     m_topLevel->setGeometry(mainUI->rect());
 
     m_filter.reset(new Filter);
-    m_filter->resized = [=] {
-      m_topLevel->setGeometry(mainUI->rect());
+    const QPointer<QWidget> target(mainUI);
+    m_filter->resized = [this, target] {
+      if (target && m_topLevel) {
+        m_topLevel->setGeometry(target->rect());
+      }
     };
-    m_filter->closed = [=] {
+    m_filter->closed = [this] {
       checkTarget();
     };
 
@@ -225,6 +233,7 @@ private:
     }
 
     m_topLevel = new QDialog;
+    m_topLevel->setObjectName(QStringLiteral("UILockerDialog"));
 
     return createFrame();
   }
@@ -232,7 +241,10 @@ private:
   QFrame* createFrame()
   {
     auto* frame = new QFrame;
+    frame->setObjectName(QStringLiteral("uiLockerCard"));
     auto* ly    = new QVBoxLayout(frame);
+    ly->setContentsMargins(20, 18, 20, 18);
+    ly->setSpacing(10);
 
     if (hasMainUI()) {
       frame->setFrameStyle(QFrame::StyledPanel);
@@ -244,8 +256,6 @@ private:
       shadow->setOffset(0);
       shadow->setColor(QColor(0, 0, 0, 100));
       frame->setGraphicsEffect(shadow);
-    } else {
-      ly->setContentsMargins(0, 0, 0, 0);
     }
 
     auto* grid = new QGridLayout(m_topLevel.data());
@@ -270,19 +280,26 @@ private:
   void createMessageLabel()
   {
     m_message = new QLabel;
+    m_message->setObjectName(QStringLiteral("uiLockerMessage"));
     m_message->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
+    m_message->setWordWrap(true);
   }
 
   void createInfoLabel()
   {
     m_info = new QLabel(" ");
+    m_info->setObjectName(QStringLiteral("uiLockerInfo"));
     m_info->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
+    m_info->setWordWrap(true);
   }
 
   void createButtonsPanel()
   {
     m_buttons = new QWidget;
-    m_buttons->setLayout(new QHBoxLayout);
+    m_buttons->setObjectName(QStringLiteral("uiLockerActions"));
+    auto* layout = new QHBoxLayout(m_buttons);
+    layout->setContentsMargins(0, 2, 0, 0);
+    layout->setSpacing(8);
   }
 
   void updateMessage(UILocker::Reasons reason)

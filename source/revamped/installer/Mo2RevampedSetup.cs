@@ -107,6 +107,11 @@ namespace Mo2RevampedSetup
 #if UNINSTALLER_STUB
                 string target = uninstallRequest ? args[1] : Path.GetDirectoryName(Application.ExecutablePath);
                 Application.Run(new CompactSetupForm(SetupMode.Uninstall, target, true));
+#elif ELDENRING_ONLY_INSTALLER
+                if (uninstallRequest)
+                    Application.Run(new CompactSetupForm(SetupMode.Uninstall, args[1], true));
+                else
+                    Application.Run(new CompactSetupForm(SetupMode.EldenRingPortable, null, false));
 #else
                 Application.Run(new CompactSetupForm(uninstallRequest ? SetupMode.Uninstall : (SetupMode?)null,
                     uninstallRequest ? args[1] : null, uninstallRequest));
@@ -155,7 +160,7 @@ namespace Mo2RevampedSetup
                 lock (Sync) CurrentLog = Path.Combine(root, "setup-" + suffix + ".log");
 
                 Info("Installer session started.");
-                Info("Product: MO2 Revamped setup r15; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
+                Info("Product: MO2 Revamped setup 1.0.0; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
                     "; OS: " + Environment.OSVersion.VersionString +
                     "; .NET: " + Environment.Version +
                     "; 64-bit process: " + Environment.Is64BitProcess + ".");
@@ -291,6 +296,7 @@ namespace Mo2RevampedSetup
         private const string UninstallKeyRoot = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
 #endif
         private const string PayloadZipResource = "Mo2RevampedSetup.payload.zip";
+        private const string EldenRingPayloadZipResource = "Mo2RevampedSetup.eldenring-payload.zip";
         private const string PayloadManifestResource = "Mo2RevampedSetup.payload-manifest.json";
         private const string EldenRingPayloadManifestResource = "Mo2RevampedSetup.eldenring-payload-manifest.json";
         private static readonly JavaScriptSerializer Json = CreateJsonSerializer();
@@ -305,6 +311,14 @@ namespace Mo2RevampedSetup
 
         public static OperationResult Execute(SetupRequest request, BackgroundWorker worker)
         {
+#if ELDENRING_ONLY_INSTALLER
+            if (request.Mode != SetupMode.EldenRingPortable && request.Mode != SetupMode.Update &&
+                request.Mode != SetupMode.Restore && request.Mode != SetupMode.Uninstall)
+                throw new InvalidOperationException("Este instalador solo administra la edición portable aislada de Elden Ring.");
+            if (request.Mode != SetupMode.EldenRingPortable &&
+                !File.Exists(Path.Combine(Path.GetFullPath(request.TargetDirectory), "eldenring-only.portable")))
+                throw new InvalidOperationException("El instalador de Elden Ring solo puede actualizar, restaurar o quitar una instalación marcada como aislada para Elden Ring.");
+#endif
             if (request.Mode == SetupMode.Restore || request.Mode == SetupMode.Uninstall)
                 return ReverseInstall(request, worker);
             if (IsMo2Running(request.TargetDirectory))
@@ -1152,7 +1166,8 @@ namespace Mo2RevampedSetup
         private static PayloadBundle ValidatePayload(PayloadManifest manifest, BackgroundWorker worker, bool eldenRingOnly)
         {
             Dictionary<string, ZipArchiveEntry> entries = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(PayloadZipResource);
+            string payloadResource = eldenRingOnly ? EldenRingPayloadZipResource : PayloadZipResource;
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(payloadResource);
             if (stream == null) throw new InvalidOperationException("Falta el paquete de archivos integrado en el instalador.");
             ZipArchive archive = null;
             try
@@ -1165,8 +1180,7 @@ namespace Mo2RevampedSetup
                         throw new InvalidOperationException("El paquete contiene una ruta duplicada o no válida.");
                     entries.Add(path, entry);
                 }
-                if ((!eldenRingOnly && entries.Count != manifest.Files.Count) ||
-                    (eldenRingOnly && entries.Count < manifest.Files.Count))
+                if (entries.Count != manifest.Files.Count)
                     throw new InvalidOperationException("El manifiesto y el contenido del paquete no coinciden.");
                 int index = 0;
                 foreach (PayloadFile file in manifest.Files)
@@ -1952,7 +1966,7 @@ namespace Mo2RevampedSetup
                 string uninstaller = Path.Combine(normalizedTarget, UninstallerFileName);
                 string folderName = new DirectoryInfo(normalizedTarget).Name;
                 key.SetValue("DisplayName", "Mod Organizer 2: Revamped (" + folderName + ")", RegistryValueKind.String);
-                key.SetValue("DisplayVersion", FileVersionInfo.GetVersionInfo(executable).FileVersion ?? packageVersion, RegistryValueKind.String);
+                key.SetValue("DisplayVersion", packageVersion, RegistryValueKind.String);
                 key.SetValue("Publisher", "ArialSenki", RegistryValueKind.String);
                 key.SetValue("InstallLocation", normalizedTarget, RegistryValueKind.String);
                 key.SetValue("DisplayIcon", executable + ",0", RegistryValueKind.String);

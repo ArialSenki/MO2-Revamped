@@ -168,8 +168,14 @@ int checkBlocked()
   int n = 0;
 
   for (const auto& d : dirs) {
-    const auto path = QDir(appDir + "/" + d).canonicalPath();
-    n += checkBlockedFiles(path);
+    const QDir directory(QDir(appDir).filePath(d));
+    if (d != "." && !directory.exists()) {
+      log::debug("  optional executable directory '{}' not found; skipping",
+                 directory.absolutePath());
+      continue;
+    }
+
+    n += checkBlockedFiles(directory);
   }
 
   return n;

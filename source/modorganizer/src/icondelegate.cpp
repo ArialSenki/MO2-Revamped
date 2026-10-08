@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "icondelegate.h"
+#include <algorithm>
 #include <QDebug>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -44,18 +45,25 @@ IconDelegate::IconDelegate(QTreeView* view, int column, int compactSize)
 void IconDelegate::paintIcons(QPainter* painter, const QStyleOptionViewItem& option,
                               const QModelIndex& index, const QList<QString>& icons)
 {
-  int x = 4;
+  const int iconCount = static_cast<int>(icons.size());
+  if (iconCount == 0) {
+    return;
+  }
+
+  constexpr int spacing = 4;
   painter->save();
 
-  int iconWidth = icons.size() > 0 ? ((option.rect.width() / icons.size()) - 4) : 16;
-  iconWidth     = std::min(16, iconWidth);
+  int iconWidth = std::min(16, (option.rect.width() / iconCount) - spacing);
+  iconWidth     = std::max(1, iconWidth);
+  const int groupWidth = iconCount * iconWidth + (iconCount - 1) * spacing;
+  int x = std::max(0, (option.rect.width() - groupWidth) / 2);
 
   const int margin = (option.rect.height() - iconWidth) / 2;
 
   painter->translate(option.rect.topLeft());
   for (const QString& iconId : icons) {
     if (iconId.isEmpty()) {
-      x += iconWidth + 4;
+      x += iconWidth + spacing;
       continue;
     }
     QPixmap icon;
@@ -68,7 +76,7 @@ void IconDelegate::paintIcons(QPainter* painter, const QStyleOptionViewItem& opt
       QPixmapCache::insert(fullIconId, icon);
     }
     painter->drawPixmap(x, margin, iconWidth, iconWidth, icon);
-    x += iconWidth + 4;
+    x += iconWidth + spacing;
   }
 
   painter->restore();

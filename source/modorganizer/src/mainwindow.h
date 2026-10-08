@@ -42,7 +42,8 @@ class DataTab;
 class DownloadsTab;
 class SavesTab;
 class BrowserDialog;
-class QVariantAnimation;
+class QDialog;
+class QLabel;
 
 class PluginListSortProxy;
 namespace BSA
@@ -178,7 +179,6 @@ protected:
   void resizeEvent(QResizeEvent* event) override;
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dropEvent(QDropEvent* event) override;
-  void keyReleaseEvent(QKeyEvent* event) override;
 
 private slots:
   void on_actionChange_Game_triggered();
@@ -230,8 +230,6 @@ private:
   // Performs checks, sets the m_NumberOfProblems and signals checkForProblemsDone().
   void checkForProblemsImpl();
 
-  void setCategoryListVisible(bool visible, bool animated = true);
-
   bool errorReported(QString& logFile);
 
   static void setupNetworkProxy(bool activate);
@@ -239,13 +237,20 @@ private:
 
   bool createBackup(const QString& filePath, const QDateTime& time);
   QString queryRestore(const QString& filePath);
+  void createProfileBackup(bool includeModList, bool includePluginOrder);
+  void createPluginOrderBackup();
+  void restorePluginOrderBackup();
+  void createModListBackup();
+  void restoreModListBackup();
+  void deleteProfileModListBackup();
+  void deleteProfileLoadOrderBackup();
 
+  QMenu* createModListOptionsMenu();
   QMenu* openFolderMenu();
 
   void dropLocalFile(const QUrl& url, const QString& outputDir, bool move);
 
   void toggleMO2EndorseState();
-  void toggleUpdateAction();
 
   void updateSortButton();
 
@@ -268,9 +273,9 @@ private:
   bool m_WasVisible;
   bool m_FirstPaint;
   bool m_ToolMenuDirty;
-  QVariantAnimation* m_CategoryPaneAnimation = nullptr;
-  int m_CategoryPaneExpandedWidth = 0;
-  bool m_CategoryPaneHiding = false;
+  QDialog* m_FilterOptionsDialog = nullptr;
+  QLabel* m_FilterDialogTitle = nullptr;
+  QLabel* m_FilterDialogDescription = nullptr;
 
   // last separator on the toolbar, used to add spacer for right-alignment and
   // as an insert point for executables
@@ -339,7 +344,7 @@ private slots:
   // main window actions
   void helpTriggered();
   void issueTriggered();
-  void wikiTriggered();
+  void revampedRepositoryTriggered();
   void gameSupportTriggered();
   void tutorialTriggered();
   void extractBSATriggered(QTreeWidgetItem* item);
@@ -454,7 +459,6 @@ private slots:  // ui slots
   void on_actionSettings_triggered();
   void on_actionUpdate_triggered();
   void on_actionExit_triggered();
-  void on_actionMainMenuToggle_triggered();
   void on_actionToolBarMainToggle_triggered();
   void on_actionStatusBarToggle_triggered();
   void on_actionToolBarSmallIcons_triggered();
@@ -476,10 +480,6 @@ private slots:  // ui slots
   void on_showHiddenBox_toggled(bool checked);
   void on_bsaList_itemChanged(QTreeWidgetItem* item, int column);
 
-  void on_saveButton_clicked();
-  void on_restoreButton_clicked();
-  void on_restoreModsButton_clicked();
-  void on_saveModsButton_clicked();
   void on_managedArchiveLabel_linkHovered(const QString& link);
 
   void onPluginRegistrationChanged();

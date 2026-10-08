@@ -10,16 +10,122 @@
 #include <utility.h>
 
 #include <QLayout>
+#include <QBoxLayout>
 #include <QCommandLinkButton>
+#include <QAbstractScrollArea>
+#include <QCoreApplication>
+#include <QDesktopServices>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QLabel>
+#include <QSet>
 #include <QSize>
 #include <QSizePolicy>
+#include <QStackedWidget>
+#include <QTextOption>
+#include <QUrl>
 #include <QWidget>
 
 using namespace MOBase;
 
 class Failed
 {};
+
+namespace {
+
+void compactVerticalSpacers(QLayout* layout)
+{
+  if (layout == nullptr) {
+    return;
+  }
+
+  for (int i = 0; i < layout->count(); ++i) {
+    QLayoutItem* item = layout->itemAt(i);
+    if (QSpacerItem* spacer = item->spacerItem()) {
+      if (spacer->expandingDirections().testFlag(Qt::Vertical)) {
+        const QSize hint = spacer->sizeHint();
+        spacer->changeSize(hint.width(), qMin(hint.height(), 10),
+                           QSizePolicy::Minimum, QSizePolicy::Fixed);
+      }
+      continue;
+    }
+
+    if (item->layout() != nullptr) {
+      compactVerticalSpacers(item->layout());
+    } else if (QWidget* child = item->widget();
+               child != nullptr && child->layout() != nullptr) {
+      compactVerticalSpacers(child->layout());
+    }
+  }
+
+  layout->invalidate();
+}
+
+bool copyIsolatedApplication(const QString& sourcePath,
+                             const QString& destinationPath,
+                             const std::function<void(QString)>& log)
+{
+  const QSet<QString> excludedDirectories = {
+      QStringLiteral(".git"),           QStringLiteral("__pycache__"),
+      QStringLiteral("crashdumps"),     QStringLiteral("downloads"),
+      QStringLiteral("globalinstances"), QStringLiteral("isolatedinstances"),
+      QStringLiteral("logs"),           QStringLiteral("mods"),
+      QStringLiteral("overwrite"),      QStringLiteral("profiles"),
+      QStringLiteral("portableinstances"), QStringLiteral("webcache")};
+  const QSet<QString> excludedFiles = {
+      QStringLiteral("modorganizer.ini"), QStringLiteral("portable.txt"),
+      QStringLiteral("eldenring-only.portable"), QStringLiteral("unins000.exe"),
+      QStringLiteral("unins000.dat")};
+
+  std::function<bool(const QDir&, const QDir&, bool)> copyDirectory;
+  copyDirectory = [&](const QDir& source, const QDir& destination,
+                      bool topLevel) {
+    const auto entries = source.entryInfoList(
+        QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System,
+        QDir::Name | QDir::IgnoreCase);
+
+    for (const QFileInfo& entry : entries) {
+      if (entry.isSymLink()) {
+        continue;
+      }
+
+      const QString key = entry.fileName().toCaseFolded();
+      if (topLevel && entry.isDir() && excludedDirectories.contains(key)) {
+        continue;
+      }
+      if (entry.isFile() && excludedFiles.contains(key)) {
+        continue;
+      }
+
+      const QString destinationEntry = destination.filePath(entry.fileName());
+      if (entry.isDir()) {
+        if (!destination.mkpath(entry.fileName()) ||
+            !copyDirectory(QDir(entry.absoluteFilePath()),
+                           QDir(destinationEntry), false)) {
+          return false;
+        }
+      } else if (!entry.isFile() ||
+                 !QFile::copy(entry.absoluteFilePath(), destinationEntry)) {
+        log(QObject::tr("Could not copy %1 to the isolated MO2 folder.")
+                .arg(entry.absoluteFilePath()));
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  return copyDirectory(QDir(sourcePath), QDir(destinationPath), true);
+}
+
+bool createMarkerFile(const QString& directory, const QString& name)
+{
+  QFile marker(QDir(directory).filePath(name));
+  return marker.open(QIODevice::WriteOnly | QIODevice::Truncate);
+}
+
+}  // namespace
 
 // create() will create all the directories in `target`; if any path component
 // fails to create, it will throw Failed
@@ -111,7 +217,8 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   using namespace cid;
 
   ui->setupUi(this);
-  setMinimumSize(760, 500);
+  setMinimumSize(760, 480);
+  resize(820, 520);
   m_originalNext = ui->next->text();
 
   m_pages.push_back(std::make_unique<IntroPage>(*this));
@@ -124,33 +231,147 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   m_pages.push_back(std::make_unique<NexusPage>(*this));
   m_pages.push_back(std::make_unique<ConfirmationPage>(*this));
 
-  ui->title->setAlignment(Qt::AlignHCenter);
-  ui->stepIndicator->setAlignment(Qt::AlignHCenter);
+  ui->verticalLayout_15->setContentsMargins(12, 10, 12, 10);
+  ui->verticalLayout_15->setSpacing(8);
+  ui->horizontalLayout_15->setSpacing(12);
+  ui->horizontalLayout->setContentsMargins(12, 8, 12, 8);
+  ui->horizontalLayout->setSpacing(8);
+  ui->title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  ui->stepIndicator->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  ui->stepProgress->setTextVisible(false);
+  ui->stepProgress->setRange(0, 9);
+  ui->stepProgress->setValue(1);
+  ui->stepProgress->setFixedHeight(5);
+  ui->back->setMinimumHeight(34);
+  ui->next->setMinimumHeight(34);
+  ui->cancel->setMinimumHeight(34);
+  ui->verticalLayout_23->setContentsMargins(12, 12, 12, 12);
+  ui->verticalLayout_23->setSpacing(10);
+  ui->horizontalLayout_5->setContentsMargins(10, 6, 10, 6);
+  ui->horizontalLayout_5->setSpacing(8);
+  ui->review->setMinimumHeight(280);
+  ui->review->setMaximumHeight(320);
+  ui->review->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  ui->review->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+  ui->creationLog->setMinimumHeight(72);
+  ui->creationLog->setMaximumHeight(128);
+  ui->creationLog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  ui->creationLog->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+  ui->creationLog->hide();
+  ui->launch->setMinimumHeight(34);
+  ui->launch->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+  if (QBoxLayout* nameCardLayout =
+          qobject_cast<QBoxLayout*>(ui->widget_9->layout())) {
+    nameCardLayout->setSpacing(8);
+    if (ui->verticalSpacer_2 != nullptr) {
+      nameCardLayout->removeItem(ui->verticalSpacer_2);
+      delete ui->verticalSpacer_2;
+      ui->verticalSpacer_2 = nullptr;
+    }
+  }
 
-  // Give each page a roomy, centered content column. The shared width keeps
-  // cards, save options, and path controls aligned from step to step.
-  constexpr int pageContentWidth = 680;
-  const QString choiceButtonStyle =
-      QStringLiteral("QCommandLinkButton:checked { "
-                     "background-color: palette(alternate-base); "
-                     "color: palette(text); "
-                     "border: 1px solid palette(mid); }");
+  // Keep each step on the same responsive content grid. The page can grow
+  // with the window, which gives game paths and advanced directory fields
+  // enough room without centering controls in a narrow fixed-width column.
   for (int i = 0; i < ui->pages->count(); ++i) {
     QWidget* page = ui->pages->widget(i);
     if (QLayout* pageLayout = page->layout()) {
-      pageLayout->setContentsMargins(20, 18, 20, 18);
-      pageLayout->setSpacing(16);
+      pageLayout->setContentsMargins(20, 16, 20, 16);
+      pageLayout->setSpacing(14);
+      compactVerticalSpacers(pageLayout);
+      const bool compactContentPage = page == ui->page_6 || page == ui->page_8;
+      const auto hasVisibleChoice = [page](const char* objectName) {
+        const auto* choice = page->findChild<QCommandLinkButton*>(
+            QString::fromLatin1(objectName));
+        return choice != nullptr && !choice->isHidden();
+      };
+      const bool fillTypeChoices =
+          page == ui->page_2 && hasVisibleChoice("createGlobal") &&
+          hasVisibleChoice("createPortable") &&
+          hasVisibleChoice("createIsolated");
+      bool pageHasScrollableContent = false;
       for (int itemIndex = 0; itemIndex < pageLayout->count(); ++itemIndex) {
         if (QWidget* content = pageLayout->itemAt(itemIndex)->widget()) {
-          content->setMaximumWidth(pageContentWidth);
+          content->setMaximumWidth(QWIDGETSIZE_MAX);
+          content->setMinimumWidth(0);
+          const bool hasScrollArea =
+              content->findChild<QAbstractScrollArea*>() != nullptr ||
+              content->findChild<QStackedWidget*>() != nullptr;
+          const bool hasScrollableContent = hasScrollArea && !compactContentPage;
+          const bool fillsTypeCard =
+              fillTypeChoices && content->objectName() == QStringLiteral("widget_3");
+          const bool expandsContent = hasScrollableContent || fillsTypeCard;
+          pageHasScrollableContent |= hasScrollableContent;
+          content->setSizePolicy(
+              QSizePolicy::Expanding,
+              expandsContent ? QSizePolicy::Expanding : QSizePolicy::Maximum);
+          if (expandsContent) {
+            if (QBoxLayout* boxLayout = qobject_cast<QBoxLayout*>(pageLayout)) {
+              boxLayout->setStretch(itemIndex, 1);
+            }
+          }
           if (content->layout() != nullptr) {
-            content->setMinimumWidth(pageContentWidth);
-            content->setSizePolicy(QSizePolicy::Expanding,
-                                   QSizePolicy::Preferred);
+            compactVerticalSpacers(content->layout());
             content->layout()->setSpacing(
                 qMax(content->layout()->spacing(), 12));
           }
-          pageLayout->setAlignment(content, Qt::AlignHCenter);
+          // Keep scrollable panels stretched with the current page. AlignTop
+          // overrides an expanding size policy and leaves the game list
+          // compressed at the top of the wizard.
+          if (!expandsContent) {
+            pageLayout->setAlignment(content, Qt::AlignTop);
+          }
+        }
+      }
+      if (fillTypeChoices) {
+        // This panel contains only the three storage choices. Remove the old
+        // helper and trailing spacer, and undo the generic page spacing so
+        // the last card meets the panel's bottom edge.
+        ui->portableExistsLabel->hide();
+        if (QBoxLayout* panelLayout =
+                qobject_cast<QBoxLayout*>(ui->widget_3->layout())) {
+          panelLayout->removeWidget(ui->portableExistsLabel);
+          if (ui->verticalSpacer != nullptr) {
+            panelLayout->removeItem(ui->verticalSpacer);
+            delete ui->verticalSpacer;
+            ui->verticalSpacer = nullptr;
+          }
+          panelLayout->setContentsMargins(0, 0, 0, 0);
+          panelLayout->setSpacing(0);
+          panelLayout->invalidate();
+        }
+
+        QWidget* choices = page->findChild<QWidget*>(QStringLiteral("widget_15"));
+        if (choices != nullptr) {
+          choices->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+          if (QBoxLayout* optionsLayout =
+                  qobject_cast<QBoxLayout*>(ui->widget_3->layout())) {
+            const int choicesIndex = optionsLayout->indexOf(choices);
+            if (choicesIndex >= 0) {
+              optionsLayout->setStretch(choicesIndex, 1);
+            }
+          }
+          if (QBoxLayout* choicesLayout =
+                  qobject_cast<QBoxLayout*>(choices->layout())) {
+            choicesLayout->setContentsMargins(0, 0, 0, 0);
+            for (const auto* objectName : {"createGlobal", "createPortable",
+                                           "createIsolated"}) {
+              if (QCommandLinkButton* choice = page->findChild<QCommandLinkButton*>(
+                      QString::fromLatin1(objectName))) {
+                choice->setSizePolicy(QSizePolicy::Expanding,
+                                      QSizePolicy::Expanding);
+                const int choiceIndex = choicesLayout->indexOf(choice);
+                if (choiceIndex >= 0) {
+                  choicesLayout->setStretch(choiceIndex, 1);
+                }
+              }
+            }
+          }
+        }
+      }
+      if (!pageHasScrollableContent && !fillTypeChoices) {
+        if (QBoxLayout* boxLayout = qobject_cast<QBoxLayout*>(pageLayout)) {
+          boxLayout->addStretch(1);
         }
       }
     }
@@ -158,24 +379,15 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
     for (QLabel* heading : page->findChildren<QLabel*>()) {
       if (heading->text().trimmed().startsWith(QStringLiteral("<h3"),
                                                 Qt::CaseInsensitive)) {
-        heading->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        heading->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
       }
     }
 
-    // Short instructions read better centered above their controls, while
-    // explanatory copy inside panels remains left aligned for readability.
     for (const auto* objectName : {"label_15", "portableExistsLabel",
                                    "gameSelectionHint", "label_14",
                                    "label_18", "label_17"}) {
       if (QLabel* label = page->findChild<QLabel*>(QString::fromLatin1(objectName))) {
-        label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-      }
-    }
-
-    for (QCommandLinkButton* button :
-         page->findChildren<QCommandLinkButton*>()) {
-      if (button->isCheckable()) {
-        button->setStyleSheet(choiceButtonStyle);
+        label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
       }
     }
   }
@@ -193,8 +405,8 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   }
 
   // Pages can reveal game-specific controls after they are constructed.
-  // Reserve the largest page size once so the dialog does not grow or shrink
-  // as the user moves through the wizard.
+  // Keep enough width for the widest page. Short steps retain the compact
+  // dialog height; scrollable pages can use the available vertical space.
   QSize largestPageSize;
   for (int i = 0; i < ui->pages->count(); ++i) {
     QWidget* page = ui->pages->widget(i);
@@ -206,13 +418,9 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
                           .expandedTo(page->sizeHint());
   }
   if (largestPageSize.isValid()) {
-    ui->pages->setMinimumSize(largestPageSize);
-    ui->pages->setMaximumHeight(largestPageSize.height());
-    ui->pages->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    adjustSize();
-    // The dialog layout can still request a wider window when a page fills in
-    // game-specific heading text. Lock the outer frame as well as the stack.
-    setFixedSize(size());
+    ui->pages->setMinimumWidth(largestPageSize.width());
+    ui->pages->setMinimumHeight(0);
+    ui->pages->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   }
 
   ui->next->setFocus();
@@ -408,7 +616,28 @@ void CreateInstanceDialog::finish()
 
     // creating all these directories; if any of them fail, this throws and
     // any newly created directory will be deleted in DirectoryCreator's dtor
+    if (ci.type == Isolated && QFileInfo::exists(ci.dataPath)) {
+      logCreation(tr("The isolated MO2 folder already exists: %1")
+                      .arg(ci.dataPath));
+      throw Failed();
+    }
+
     dirs.push_back(createDir(ci.dataPath));
+    if (ci.type == Isolated) {
+      logCreation(tr("Copying MO2 application files into %1...").arg(ci.dataPath));
+      if (!copyIsolatedApplication(QCoreApplication::applicationDirPath(),
+                                   ci.dataPath, logger)) {
+        logCreation(tr("The isolated copy could not be completed."));
+        throw Failed();
+      }
+      if (!createMarkerFile(ci.dataPath, QStringLiteral("portable.txt")) ||
+          !createMarkerFile(ci.dataPath,
+                            QStringLiteral("eldenring-only.portable"))) {
+        logCreation(tr("Could not initialize the isolated MO2 copy."));
+        throw Failed();
+      }
+      logCreation(tr("MO2 application files copied."));
+    }
     dirs.push_back(createDir(ci.paths.base));
     dirs.push_back(createDir(PathSettings::resolve(ci.paths.downloads, ci.paths.base)));
     dirs.push_back(createDir(PathSettings::resolve(ci.paths.mods, ci.paths.base)));
@@ -494,12 +723,19 @@ void CreateInstanceDialog::finish()
 
     // launch the new instance
     if (ui->launch->isChecked()) {
-      InstanceManager::singleton().setCurrentInstance(
-          Instance(ci.dataPath, ci.type == Portable));
+      if (ci.type == Isolated) {
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(ci.dataPath))) {
+          logCreation(tr("Could not open the isolated copy folder: %1")
+                          .arg(ci.dataPath));
+        }
+      } else {
+        InstanceManager::singleton().setCurrentInstance(
+            Instance(ci.dataPath, ci.type == Portable));
 
-      if (mustRestart) {
-        ExitModOrganizer(Exit::Restart);
-        m_switching = true;
+        if (mustRestart) {
+          ExitModOrganizer(Exit::Restart);
+          m_switching = true;
+        }
       }
     }
 
@@ -512,6 +748,10 @@ void CreateInstanceDialog::finish()
 
 void CreateInstanceDialog::logCreation(const QString& s)
 {
+  if (ui->creationLog->isHidden()) {
+    ui->creationLog->show();
+    ui->widget_19->updateGeometry();
+  }
   ui->creationLog->insertPlainText(s + "\n");
 }
 
@@ -549,6 +789,8 @@ void CreateInstanceDialog::updateNavigation()
     }
   }
   ui->stepIndicator->setText(tr("Step %1 of %2").arg(step).arg(steps));
+  ui->stepProgress->setRange(0, qMax(steps, 1));
+  ui->stepProgress->setValue(step);
 
   ui->next->setEnabled(canNext());
   ui->back->setEnabled(canBack());
@@ -609,6 +851,9 @@ CreateInstanceDialog::CreationInfo CreateInstanceDialog::rawCreationInfo() const
     ci.dataPath = ci.instanceName.isEmpty()
                       ? instances.portablePath()
                       : instances.portableInstancePath(ci.instanceName);
+  } else if (ci.type == Isolated) {
+    ci.dataPath =
+        InstanceManager::singleton().isolatedInstancePath(ci.instanceName);
   } else {
     ci.dataPath = InstanceManager::singleton().instancePath(ci.instanceName);
   }

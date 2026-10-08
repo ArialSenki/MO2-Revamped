@@ -6,6 +6,7 @@
 #include "multiprocess.h"
 #include "organizercore.h"
 #include "shared/util.h"
+#include "startupdiagnostics.h"
 #include "thread_utils.h"
 #include <log.h>
 #include <report.h>
@@ -28,11 +29,38 @@ constexpr DWORD kStatusHeapCorruption     = 0xC0000374;
 constexpr DWORD kStatusStackBufferOverrun = 0xC0000409;
 constexpr size_t kDiagnosticPathCapacity  = 1024;
 constexpr int kFreshProcessRestartExitCode = 0x4D4F3252;
+constexpr const char* kExceptionParameterNames[] = {
+    "exception_parameter_0",  "exception_parameter_1",
+    "exception_parameter_2",  "exception_parameter_3",
+    "exception_parameter_4",  "exception_parameter_5",
+    "exception_parameter_6",  "exception_parameter_7",
+    "exception_parameter_8",  "exception_parameter_9",
+    "exception_parameter_10", "exception_parameter_11",
+    "exception_parameter_12", "exception_parameter_13",
+    "exception_parameter_14"};
 
 wchar_t g_memoryDiagnosticPath[kDiagnosticPathCapacity] = {};
+wchar_t g_startupDiagnosticPath[kDiagnosticPathCapacity] = {};
 volatile LONG g_memoryDiagnosticWriteLock                 = 0;
+volatile LONG g_startupDiagnosticWriteLock                = 0;
 volatile LONG g_memoryDiagnosticHandlersInstalled         = 0;
 volatile LONG g_memoryFirstChanceCount                     = 0;
+volatile LONG g_revampedDiagnosticsEnabled                 = 0;
+PVOID volatile g_currentStartupPhase = const_cast<char*>("process.start");
+
+bool diagnosticsEnabled() noexcept
+{
+  return InterlockedCompareExchange(&g_revampedDiagnosticsEnabled, 0, 0) != 0;
+}
+
+void configureDiagnosticsFromEnvironment() noexcept
+{
+  wchar_t value[2] = {};
+  const DWORD length = GetEnvironmentVariableW(
+      L"MO2_REVAMPED_DIAGNOSTICS", value, static_cast<DWORD>(std::size(value)));
+  InterlockedExchange(&g_revampedDiagnosticsEnabled,
+                      length == 1 && value[0] == L'1' ? 1 : 0);
+}
 
 void appendText(char* buffer, size_t capacity, size_t& length,
                 const char* text) noexcept
@@ -64,6 +92,34 @@ void appendHex(char* buffer, size_t capacity, size_t& length,
   for (int shift = 60; shift >= 0 && length < capacity; shift -= 4) {
     buffer[length++] = digits[(value >> shift) & 0x0F];
   }
+}
+
+void appendTimestamp(char* buffer, size_t capacity, size_t& length) noexcept
+{
+  SYSTEMTIME time = {};
+  GetSystemTime(&time);
+  appendText(buffer, capacity, length, "utc=");
+  appendUnsigned(buffer, capacity, length, time.wYear);
+  appendText(buffer, capacity, length, "-");
+  if (time.wMonth < 10) appendText(buffer, capacity, length, "0");
+  appendUnsigned(buffer, capacity, length, time.wMonth);
+  appendText(buffer, capacity, length, "-");
+  if (time.wDay < 10) appendText(buffer, capacity, length, "0");
+  appendUnsigned(buffer, capacity, length, time.wDay);
+  appendText(buffer, capacity, length, "T");
+  if (time.wHour < 10) appendText(buffer, capacity, length, "0");
+  appendUnsigned(buffer, capacity, length, time.wHour);
+  appendText(buffer, capacity, length, ":");
+  if (time.wMinute < 10) appendText(buffer, capacity, length, "0");
+  appendUnsigned(buffer, capacity, length, time.wMinute);
+  appendText(buffer, capacity, length, ":");
+  if (time.wSecond < 10) appendText(buffer, capacity, length, "0");
+  appendUnsigned(buffer, capacity, length, time.wSecond);
+  appendText(buffer, capacity, length, ".");
+  if (time.wMilliseconds < 100) appendText(buffer, capacity, length, "0");
+  if (time.wMilliseconds < 10) appendText(buffer, capacity, length, "0");
+  appendUnsigned(buffer, capacity, length, time.wMilliseconds);
+  appendText(buffer, capacity, length, "Z\r\n");
 }
 
 void appendHexField(char* buffer, size_t capacity, size_t& length,
@@ -136,7 +192,7 @@ void prepareMemoryDiagnosticPath() noexcept
          executablePath[directoryLength - 1] != L'/') {
     --directoryLength;
   }
-  if (directoryLength == 0 || directoryLength + 31 >= std::size(executablePath)) {
+  if (directoryLength == 0 || directoryLength + 32 >= std::size(executablePath)) {
     return;
   }
 
@@ -147,15 +203,22 @@ void prepareMemoryDiagnosticPath() noexcept
              sizeof(logDirectory));
   CreateDirectoryW(executablePath, nullptr);
 
-  const wchar_t logFile[] = L"\\memory_diagnostics.log";
+  const wchar_t memoryLogFile[] = L"\\memory_diagnostics.log";
+  const wchar_t startupLogFile[] = L"\\startup_diagnostics.log";
   const size_t currentLength = directoryLength + logDirectoryLength;
-  if (currentLength + std::size(logFile) >= std::size(g_memoryDiagnosticPath)) {
+  if (currentLength + std::size(memoryLogFile) >= std::size(g_memoryDiagnosticPath) ||
+      currentLength + std::size(startupLogFile) >= std::size(g_startupDiagnosticPath)) {
     return;
   }
 
   CopyMemory(g_memoryDiagnosticPath, executablePath,
              currentLength * sizeof(wchar_t));
-  CopyMemory(g_memoryDiagnosticPath + currentLength, logFile, sizeof(logFile));
+  CopyMemory(g_memoryDiagnosticPath + currentLength, memoryLogFile,
+             sizeof(memoryLogFile));
+  CopyMemory(g_startupDiagnosticPath, executablePath,
+             currentLength * sizeof(wchar_t));
+  CopyMemory(g_startupDiagnosticPath + currentLength, startupLogFile,
+             sizeof(startupLogFile));
 }
 
 HANDLE openMemoryDiagnosticLog() noexcept
@@ -182,42 +245,57 @@ HANDLE openMemoryDiagnosticLog() noexcept
                      nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
+HANDLE openStartupDiagnosticLog() noexcept
+{
+  if (g_startupDiagnosticPath[0] != L'\0') {
+    HANDLE file = CreateFileW(g_startupDiagnosticPath, FILE_APPEND_DATA,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                              nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file != INVALID_HANDLE_VALUE) {
+      return file;
+    }
+  }
+
+  wchar_t temporaryPath[kDiagnosticPathCapacity] = {};
+  const DWORD pathLength = GetTempPathW(
+      static_cast<DWORD>(std::size(temporaryPath)), temporaryPath);
+  const wchar_t fileName[] = L"ModOrganizer-startup_diagnostics.log";
+  if (pathLength == 0 || pathLength + std::size(fileName) >= std::size(temporaryPath)) {
+    return INVALID_HANDLE_VALUE;
+  }
+  CopyMemory(temporaryPath + pathLength, fileName, sizeof(fileName));
+  return CreateFileW(temporaryPath, FILE_APPEND_DATA,
+                     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                     nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
 void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
                            const char* stage) noexcept
 {
+  if (!diagnosticsEnabled()) {
+    return;
+  }
+
   if (InterlockedCompareExchange(&g_memoryDiagnosticWriteLock, 1, 0) != 0) {
     return;
   }
 
-  char line[4096] = {};
+  char line[8192] = {};
   size_t length   = 0;
-  SYSTEMTIME time = {};
-  GetSystemTime(&time);
-  appendText(line, sizeof(line), length, "utc=");
-  appendUnsigned(line, sizeof(line), length, time.wYear);
-  appendText(line, sizeof(line), length, "-");
-  if (time.wMonth < 10) appendText(line, sizeof(line), length, "0");
-  appendUnsigned(line, sizeof(line), length, time.wMonth);
-  appendText(line, sizeof(line), length, "-");
-  if (time.wDay < 10) appendText(line, sizeof(line), length, "0");
-  appendUnsigned(line, sizeof(line), length, time.wDay);
-  appendText(line, sizeof(line), length, "T");
-  if (time.wHour < 10) appendText(line, sizeof(line), length, "0");
-  appendUnsigned(line, sizeof(line), length, time.wHour);
-  appendText(line, sizeof(line), length, ":");
-  if (time.wMinute < 10) appendText(line, sizeof(line), length, "0");
-  appendUnsigned(line, sizeof(line), length, time.wMinute);
-  appendText(line, sizeof(line), length, ":");
-  if (time.wSecond < 10) appendText(line, sizeof(line), length, "0");
-  appendUnsigned(line, sizeof(line), length, time.wSecond);
-  appendText(line, sizeof(line), length, ".");
-  if (time.wMilliseconds < 100) appendText(line, sizeof(line), length, "0");
-  if (time.wMilliseconds < 10) appendText(line, sizeof(line), length, "0");
-  appendUnsigned(line, sizeof(line), length, time.wMilliseconds);
-  appendText(line, sizeof(line), length, "Z\r\nstage=");
+  appendTimestamp(line, sizeof(line), length);
+  appendText(line, sizeof(line), length, "record=exception\r\nstage=");
   appendText(line, sizeof(line), length, stage);
   appendText(line, sizeof(line), length, "\r\n");
+  appendText(line, sizeof(line), length, "startup_phase=");
+  const auto* phase = static_cast<const char*>(
+      InterlockedCompareExchangePointer(&g_currentStartupPhase, nullptr, nullptr));
+  appendText(line, sizeof(line), length,
+             phase != nullptr ? phase : "unknown");
+  appendText(line, sizeof(line), length, "\r\n");
+  appendDecimalField(line, sizeof(line), length, "process_id", GetCurrentProcessId());
   appendDecimalField(line, sizeof(line), length, "thread_id", GetCurrentThreadId());
+  appendDecimalField(line, sizeof(line), length, "first_chance_exception_count",
+                     InterlockedCompareExchange(&g_memoryFirstChanceCount, 0, 0));
 
   const EXCEPTION_RECORD* record =
       exceptionInfo != nullptr ? exceptionInfo->ExceptionRecord : nullptr;
@@ -239,6 +317,17 @@ void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
       appendHexField(line, sizeof(line), length, "access_address",
                      record->ExceptionInformation[1]);
     }
+    const ULONG parameterCount =
+        (record->NumberParameters < std::size(kExceptionParameterNames))
+            ? record->NumberParameters
+            : static_cast<ULONG>(std::size(kExceptionParameterNames));
+    appendDecimalField(line, sizeof(line), length, "exception_parameter_count",
+                       parameterCount);
+    for (ULONG index = 0; index < parameterCount; ++index) {
+      appendHexField(line, sizeof(line), length,
+                     kExceptionParameterNames[index],
+                     record->ExceptionInformation[index]);
+    }
   }
 
   if (context != nullptr) {
@@ -246,6 +335,21 @@ void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
     appendHexField(line, sizeof(line), length, "instruction_pointer", context->Rip);
     appendHexField(line, sizeof(line), length, "stack_pointer", context->Rsp);
     appendHexField(line, sizeof(line), length, "frame_pointer", context->Rbp);
+    appendHexField(line, sizeof(line), length, "rax", context->Rax);
+    appendHexField(line, sizeof(line), length, "rbx", context->Rbx);
+    appendHexField(line, sizeof(line), length, "rcx", context->Rcx);
+    appendHexField(line, sizeof(line), length, "rdx", context->Rdx);
+    appendHexField(line, sizeof(line), length, "rsi", context->Rsi);
+    appendHexField(line, sizeof(line), length, "rdi", context->Rdi);
+    appendHexField(line, sizeof(line), length, "r8", context->R8);
+    appendHexField(line, sizeof(line), length, "r9", context->R9);
+    appendHexField(line, sizeof(line), length, "r10", context->R10);
+    appendHexField(line, sizeof(line), length, "r11", context->R11);
+    appendHexField(line, sizeof(line), length, "r12", context->R12);
+    appendHexField(line, sizeof(line), length, "r13", context->R13);
+    appendHexField(line, sizeof(line), length, "r14", context->R14);
+    appendHexField(line, sizeof(line), length, "r15", context->R15);
+    appendHexField(line, sizeof(line), length, "eflags", context->EFlags);
 #elif defined(_M_IX86)
     appendHexField(line, sizeof(line), length, "instruction_pointer", context->Eip);
     appendHexField(line, sizeof(line), length, "stack_pointer", context->Esp);
@@ -260,6 +364,14 @@ void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
     WriteFile(file, line, static_cast<DWORD>(length), &written, nullptr);
     FlushFileBuffers(file);
     CloseHandle(file);
+  }
+
+  const HANDLE startupFile = openStartupDiagnosticLog();
+  if (startupFile != INVALID_HANDLE_VALUE) {
+    DWORD written = 0;
+    WriteFile(startupFile, line, static_cast<DWORD>(length), &written, nullptr);
+    FlushFileBuffers(startupFile);
+    CloseHandle(startupFile);
   }
 
   InterlockedExchange(&g_memoryDiagnosticWriteLock, 0);
@@ -316,10 +428,64 @@ LONG CALLBACK onFirstChanceMemoryException(_EXCEPTION_POINTERS* exceptionInfo)
 
 }  // namespace
 
+void setStartupDiagnosticPhase(const char* phase) noexcept
+{
+  if (diagnosticsEnabled() && phase != nullptr && phase[0] != '\0') {
+    InterlockedExchangePointer(&g_currentStartupPhase,
+                               const_cast<char*>(phase));
+    writeStartupDiagnosticEvent("phase.enter");
+  }
+}
+
+void writeStartupDiagnosticEvent(const char* event) noexcept
+{
+  if (!diagnosticsEnabled()) {
+    return;
+  }
+
+  if (InterlockedCompareExchange(&g_startupDiagnosticWriteLock, 1, 0) != 0) {
+    return;
+  }
+
+  char line[1024] = {};
+  size_t length   = 0;
+  appendTimestamp(line, sizeof(line), length);
+  appendText(line, sizeof(line), length, "record=event\r\nevent=");
+  appendText(line, sizeof(line), length,
+             event != nullptr ? event : "unknown");
+  appendText(line, sizeof(line), length, "\r\nstartup_phase=");
+  const auto* phase = static_cast<const char*>(
+      InterlockedCompareExchangePointer(&g_currentStartupPhase, nullptr, nullptr));
+  appendText(line, sizeof(line), length,
+             phase != nullptr ? phase : "unknown");
+  appendText(line, sizeof(line), length, "\r\n");
+  appendDecimalField(line, sizeof(line), length, "process_id", GetCurrentProcessId());
+  appendDecimalField(line, sizeof(line), length, "thread_id", GetCurrentThreadId());
+  appendText(line, sizeof(line), length, "\r\n");
+
+  const HANDLE file = openStartupDiagnosticLog();
+  if (file != INVALID_HANDLE_VALUE) {
+    DWORD written = 0;
+    WriteFile(file, line, static_cast<DWORD>(length), &written, nullptr);
+    FlushFileBuffers(file);
+    CloseHandle(file);
+  }
+
+  InterlockedExchange(&g_startupDiagnosticWriteLock, 0);
+}
+
 int run(int argc, char* argv[]);
 
 int main(int argc, char* argv[])
 {
+  MOShared::SetThisThreadName("main");
+  configureDiagnosticsFromEnvironment();
+  if (diagnosticsEnabled()) {
+    setExceptionHandlers();
+  }
+  setStartupDiagnosticPhase("process.main.entry");
+  writeStartupDiagnosticEvent("process.start");
+
   const int r = run(argc, argv);
 
   if (r == kFreshProcessRestartExitCode) {
@@ -339,28 +505,38 @@ int main(int argc, char* argv[])
 int run(int argc, char* argv[])
 {
   MOShared::SetThisThreadName("main");
-  setExceptionHandlers();
+  setStartupDiagnosticPhase("startup.command_line");
+  writeStartupDiagnosticEvent("startup.run.begin");
 
   cl::CommandLine cl;
+  setStartupDiagnosticPhase("startup.command_line.process");
   if (auto r = cl.process(GetCommandLineW())) {
+    setStartupDiagnosticPhase("startup.command_line.exit");
+    writeStartupDiagnosticEvent("startup.command_line.early_exit");
     return *r;
   }
 
+  setStartupDiagnosticPhase("startup.logging.initialize");
   initLogging();
 
   // must be after logging
   TimeThis tt("main() multiprocess");
 
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);
+  writeStartupDiagnosticEvent("startup.qapplication.ready");
 
   // check if the command line wants to run something right now
   if (auto r = cl.runPostApplication(app)) {
+    setStartupDiagnosticPhase("startup.post_application.exit");
+    writeStartupDiagnosticEvent("startup.post_application.early_exit");
     return *r;
   }
 
   // check if there's another process running
   MOMultiProcess multiProcess(cl.multiple());
+  writeStartupDiagnosticEvent("startup.instance_lock.ready");
 
   if (multiProcess.ephemeral()) {
     // this is not the primary process
@@ -380,13 +556,17 @@ int run(int argc, char* argv[])
 
   // check if the command line wants to run something right now
   if (auto r = cl.runPostMultiProcess(multiProcess)) {
+    setStartupDiagnosticPhase("startup.post_instance.exit");
+    writeStartupDiagnosticEvent("startup.post_instance.early_exit");
     return *r;
   }
 
   tt.stop();
 
   // stuff that's done only once, even if MO restarts in the loop below
+  setStartupDiagnosticPhase("application.first_time_setup");
   app.firstTimeSetup(multiProcess);
+  writeStartupDiagnosticEvent("application.first_time_setup.complete");
 
   // force the "Select instance" dialog on startup, only for first loop or when
   // the current instance cannot be used
@@ -408,12 +588,17 @@ int run(int argc, char* argv[])
 
       // set up plugins, OrganizerCore, etc.
       {
+        setStartupDiagnosticPhase("application.setup");
+        writeStartupDiagnosticEvent("application.setup.begin");
         const auto r = app.setup(multiProcess, pick);
+        writeStartupDiagnosticEvent("application.setup.returned");
         pick         = false;
 
         if (r == RestartExitCode || r == ReselectExitCode) {
           // resets things when MO is "restarted"
           app.resetForRestart();
+          setStartupDiagnosticPhase("application.restart.reset");
+          writeStartupDiagnosticEvent("application.restart.reset.complete");
 
           // don't reprocess command line
           cl.clear();
@@ -431,11 +616,15 @@ int run(int argc, char* argv[])
 
       // check if the command line wants to run something right now
       if (auto r = cl.runPostOrganizer(app.core())) {
+        setStartupDiagnosticPhase("application.post_organizer.exit");
+        writeStartupDiagnosticEvent("application.post_organizer.early_exit");
         return *r;
       }
 
       // run the main window
+      setStartupDiagnosticPhase("application.run");
       const auto r = app.run(multiProcess);
+      writeStartupDiagnosticEvent("application.run.returned");
 
       if (r == RestartExitCode) {
         // Qt can leave the existing event loop in a quit state after a restart.
@@ -445,8 +634,14 @@ int run(int argc, char* argv[])
 
       return r;
     } catch (const std::exception& e) {
+      setStartupDiagnosticPhase("startup.std_exception");
+      writeStartupDiagnosticEvent("startup.std_exception");
       reportError(e.what());
       return 1;
+    } catch (...) {
+      setStartupDiagnosticPhase("startup.unknown_exception");
+      writeStartupDiagnosticEvent("startup.unknown_exception");
+      throw;
     }
   }
 }
@@ -492,6 +687,10 @@ void onTerminate() noexcept
 
 void setExceptionHandlers()
 {
+  if (!diagnosticsEnabled()) {
+    return;
+  }
+
   if (InterlockedCompareExchange(&g_memoryDiagnosticHandlersInstalled, 1, 0) == 0) {
     prepareMemoryDiagnosticPath();
     AddVectoredExceptionHandler(1, onFirstChanceMemoryException);

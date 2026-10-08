@@ -7,6 +7,7 @@ PreviewDialog::PreviewDialog(const QString& fileName, QWidget* parent)
     : QDialog(parent), ui(new Ui::PreviewDialog)
 {
   ui->setupUi(this);
+  resize(880, 700);
   ui->nameLabel->setText(QFileInfo(fileName).fileName());
   ui->nextButton->setEnabled(false);
   ui->previousButton->setEnabled(false);

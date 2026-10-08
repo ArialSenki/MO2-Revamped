@@ -1,13 +1,19 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$ZigPath
+    [string]$ZigPath,
+    [string]$OutputPath = (Join-Path $PSScriptRoot 'eldenring_mo2_bridge.dll')
 )
 
 $ErrorActionPreference = 'Stop'
 $pluginDirectory = $PSScriptRoot
+$repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\..\..'))
 $source = Join-Path $pluginDirectory 'eldenring_mo2_bridge.cpp'
 $vendor = Join-Path $pluginDirectory 'vendor\minhook'
-$output = Join-Path $pluginDirectory 'eldenring_mo2_bridge.dll'
+$output = [System.IO.Path]::GetFullPath($OutputPath)
+$outputDirectory = [System.IO.Path]::GetDirectoryName($output)
+if (-not [string]::IsNullOrWhiteSpace($outputDirectory)) {
+    New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
+}
 
 if (-not (Test-Path -LiteralPath $ZigPath -PathType Leaf)) {
     throw "Zig compiler not found: $ZigPath"
@@ -35,6 +41,8 @@ try {
     & $ZigPath c++ `
         -target x86_64-windows-gnu `
         -O2 `
+        "-ffile-prefix-map=$repoRoot=." `
+        '-Wl,--strip-debug' `
         -shared `
         -o $buildOutput `
         $source `

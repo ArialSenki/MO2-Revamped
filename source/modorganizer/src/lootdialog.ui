@@ -2,182 +2,83 @@
 <ui version="4.0">
  <class>LootDialog</class>
  <widget class="QDialog" name="LootDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>457</width>
-    <height>600</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>LOOT</string>
-  </property>
+  <property name="geometry"><rect><x>0</x><y>0</y><width>760</width><height>560</height></rect></property>
+  <property name="minimumSize"><size><width>680</width><height>500</height></size></property>
+  <property name="windowTitle"><string>LOOT</string></property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing"><number>12</number></property>
+   <property name="leftMargin"><number>18</number></property>
+   <property name="topMargin"><number>18</number></property>
+   <property name="rightMargin"><number>18</number></property>
+   <property name="bottomMargin"><number>14</number></property>
    <item>
-    <widget class="QWidget" name="widget" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,0">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
+    <widget class="QWidget" name="headerPanel" native="true">
+     <layout class="QVBoxLayout" name="headerLayout">
+      <property name="spacing"><number>4</number></property>
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <item><widget class="QLabel" name="titleLabel"><property name="font"><font><pointsize>16</pointsize><weight>600</weight><bold>true</bold></font></property><property name="text"><string>LOOT plugin sorting</string></property></widget></item>
+      <item><widget class="QLabel" name="subtitleLabel"><property name="text"><string>Review the sorting progress and LOOT's results. Sorting can change your plugin order.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="progressPanel" native="true">
+     <layout class="QVBoxLayout" name="progressLayout">
+      <property name="spacing"><number>7</number></property>
+      <property name="leftMargin"><number>12</number></property>
+      <property name="topMargin"><number>10</number></property>
+      <property name="rightMargin"><number>12</number></property>
+      <property name="bottomMargin"><number>10</number></property>
+      <item><widget class="QLabel" name="progressText"><property name="font"><font><weight>600</weight><bold>true</bold></font></property><property name="text"><string>Preparing LOOT...</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+      <item><widget class="QProgressBar" name="progressBar"><property name="minimumSize"><size><width>0</width><height>10</height></size></property><property name="value"><number>0</number></property><property name="textVisible"><bool>false</bool></property></widget></item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+     <property name="frameShadow"><enum>QFrame::Plain</enum></property>
+     <layout class="QVBoxLayout" name="reportLayout">
+      <property name="leftMargin"><number>1</number></property>
+      <property name="topMargin"><number>1</number></property>
+      <property name="rightMargin"><number>1</number></property>
+      <property name="bottomMargin"><number>1</number></property>
       <item>
-       <widget class="QWidget" name="widget_2" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,1">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="progressText">
-           <property name="text">
-            <string>Progress</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QProgressBar" name="progressBar">
-           <property name="value">
-            <number>24</number>
-           </property>
-           <property name="textVisible">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QFrame" name="frame">
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_6">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QWebEngineView" name="report">
-              <property name="url">
-               <url>
-                <string>about:blank</string>
-               </url>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QWebEngineView" name="report">
+        <property name="url"><url><string>about:blank</string></url></property>
        </widget>
       </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="detailsContainer" native="true">
+     <layout class="QVBoxLayout" name="detailsContainerLayout">
+      <property name="spacing"><number>8</number></property>
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <item><widget class="QToolButton" name="details"><property name="text"><string>Technical details</string></property><property name="toolButtonStyle"><enum>Qt::ToolButtonTextBesideIcon</enum></property></widget></item>
       <item>
-       <widget class="QWidget" name="widget_3" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
+       <widget class="QWidget" name="detailsPanel" native="true">
+        <layout class="QVBoxLayout" name="detailsLayout">
+         <property name="spacing"><number>8</number></property>
+         <property name="leftMargin"><number>12</number></property>
+         <property name="topMargin"><number>10</number></property>
+         <property name="rightMargin"><number>12</number></property>
+         <property name="bottomMargin"><number>10</number></property>
          <item>
-          <widget class="QToolButton" name="details">
-           <property name="text">
-            <string>Details</string>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="reportActionsLayout">
+           <item><widget class="QLabel" name="detailsDescription"><property name="text"><string>Open the machine-readable report or inspect the diagnostic output.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+           <item><spacer name="horizontalSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>32</width><height>20</height></size></property></spacer></item>
+           <item><widget class="QPushButton" name="openJsonReport"><property name="text"><string>Open JSON report</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
+          </layout>
          </item>
-         <item>
-          <widget class="QWidget" name="detailsPanel" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_3">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QWidget" name="widget_5" native="true">
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QPushButton" name="openJsonReport">
-                 <property name="text">
-                  <string>Open JSON report</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPlainTextEdit" name="output"/>
-            </item>
-           </layout>
-          </widget>
-         </item>
+         <item><widget class="QPlainTextEdit" name="output"><property name="readOnly"><bool>true</bool></property><property name="placeholderText"><string>LOOT diagnostic output appears here.</string></property></widget></item>
         </layout>
        </widget>
       </item>
@@ -186,56 +87,18 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttons">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
-     </property>
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set>QDialogButtonBox::Close</set></property>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>QWebEngineView</class>
-   <extends>QWidget</extends>
-   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
-  </customwidget>
+  <customwidget><class>QWebEngineView</class><extends>QWidget</extends><header location="global">QtWebEngineWidgets/QWebEngineView</header></customwidget>
  </customwidgets>
  <resources/>
  <connections>
-  <connection>
-   <sender>buttons</sender>
-   <signal>accepted()</signal>
-   <receiver>LootDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttons</sender>
-   <signal>rejected()</signal>
-   <receiver>LootDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
+  <connection><sender>buttons</sender><signal>accepted()</signal><receiver>LootDialog</receiver><slot>accept()</slot><hints><hint type="sourcelabel"><x>248</x><y>254</y></hint><hint type="destinationlabel"><x>157</x><y>274</y></hint></hints></connection>
+  <connection><sender>buttons</sender><signal>rejected()</signal><receiver>LootDialog</receiver><slot>reject()</slot><hints><hint type="sourcelabel"><x>316</x><y>260</y></hint><hint type="destinationlabel"><x>286</x><y>274</y></hint></hints></connection>
  </connections>
 </ui>

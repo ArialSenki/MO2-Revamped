@@ -296,6 +296,10 @@ public:
   // root for additional, separately named portable data sets
   QString portableInstancesRootPath() const;
 
+  // root and path for a full, single-game MO2 copy
+  QString isolatedInstancesRootPath() const;
+  QString isolatedInstancePath(const QString& name) const;
+
   // returns the storage path for a named portable instance
   QString portableInstancePath(const QString& name) const;
 

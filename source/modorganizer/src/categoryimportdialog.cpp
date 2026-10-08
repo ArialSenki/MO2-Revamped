@@ -9,6 +9,8 @@ CategoryImportDialog::CategoryImportDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::CategoryImportDialog)
 {
   ui->setupUi(this);
+  setMinimumSize(580, 240);
+  resize(620, 250);
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
           &CategoryImportDialog::accepted);
   connect(ui->buttonBox, &QDialogButtonBox::rejected, this,
@@ -56,20 +58,19 @@ bool CategoryImportDialog::remap()
 
 void CategoryImportDialog::on_strategyClicked(QAbstractButton* button)
 {
-  if (button == ui->replaceOption) {
+  const bool canUpdateMappings =
+      button == ui->mergeOption && ui->assignOption->isChecked();
+  ui->remapOption->setEnabled(canUpdateMappings);
+  if (!canUpdateMappings) {
     ui->remapOption->setChecked(false);
-    ui->remapOption->setDisabled(true);
-  } else {
-    ui->remapOption->setEnabled(true);
   }
 }
 
 void CategoryImportDialog::on_assignOptionClicked(bool checked)
 {
-  if (checked && strategy() == ImportStrategy::Merge) {
-    ui->remapOption->setEnabled(true);
-  } else {
+  const bool canUpdateMappings = checked && strategy() == ImportStrategy::Merge;
+  ui->remapOption->setEnabled(canUpdateMappings);
+  if (!canUpdateMappings) {
     ui->remapOption->setChecked(false);
-    ui->remapOption->setDisabled(true);
   }
 }

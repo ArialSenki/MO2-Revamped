@@ -2,7 +2,6 @@
 #define MODORGANIZER_FILETREEMODEL_INCLUDED
 
 #include "filetreeitem.h"
-#include "iconfetcher.h"
 #include "shared/fileregisterfwd.h"
 #include <unordered_set>
 
@@ -85,9 +84,6 @@ private:
   bool m_enabled;
   mutable FileTreeItem::Ptr m_root;
   Flags m_flags;
-  mutable IconFetcher m_iconFetcher;
-  mutable std::vector<QModelIndex> m_iconPending;
-  mutable QTimer m_iconPendingTimer;
   SortInfo m_sort;
   bool m_fullyLoaded;
   bool m_sortingEnabled;
@@ -156,14 +152,11 @@ private:
   std::wstring makeModName(const MOShared::FileEntry& file, int originID) const;
 
   void ensureLoaded(FileTreeItem* item) const;
-  void updatePendingIcons();
-  void removePendingIcons(const QModelIndex& parent, int first, int last);
-
   bool shouldShowFile(const MOShared::FileEntry& file) const;
   bool shouldShowFolder(const MOShared::DirectoryEntry& dir,
                         const FileTreeItem* item) const;
   QString makeTooltip(const FileTreeItem& item) const;
-  QVariant makeIcon(const FileTreeItem& item, const QModelIndex& index) const;
+  QVariant makeIcon(const FileTreeItem& item) const;
 
   QModelIndex indexFromItem(FileTreeItem& item, int col = 0) const;
   void recursiveFetchMore(const QModelIndex& m);

@@ -55,6 +55,8 @@ MessageDialog::MessageDialog(const QString& text, QWidget* reference)
 
   ui->message->setText(restrictedText);
   this->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+  this->setAttribute(Qt::WA_TranslucentBackground);
+  this->setMinimumWidth(280);
   this->setFocusPolicy(Qt::NoFocus);
   this->setAttribute(Qt::WA_ShowWithoutActivating);
   QTimer::singleShot(1000 + (text.length() * 40), this, SLOT(hide()));

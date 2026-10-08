@@ -6,16 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>522</width>
-    <height>417</height>
+   <width>700</width>
+   <height>510</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size><width>620</width><height>430</height></size>
   </property>
   <property name="windowTitle">
    <string>Really disable plugin?</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QWidget" name="horizontalWidget" native="true">
+ <layout class="QVBoxLayout" name="verticalLayout">
+  <property name="leftMargin"><number>18</number></property>
+  <property name="topMargin"><number>18</number></property>
+  <property name="rightMargin"><number>18</number></property>
+  <property name="bottomMargin"><number>18</number></property>
+  <property name="spacing"><number>12</number></property>
+  <item>
+    <widget class="QFrame" name="dependencyHeaderCard">
+     <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+     <property name="frameShadow"><enum>QFrame::Plain</enum></property>
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -23,8 +33,15 @@
       </size>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="leftMargin"><number>14</number></property>
+      <property name="topMargin"><number>14</number></property>
+      <property name="rightMargin"><number>14</number></property>
+      <property name="bottomMargin"><number>14</number></property>
+      <property name="spacing"><number>12</number></property>
       <item>
-       <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="label_2">
+        <property name="minimumSize"><size><width>42</width><height>42</height></size></property>
+        <property name="maximumSize"><size><width>42</width><height>42</height></size></property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -40,6 +57,7 @@
         <property name="pixmap">
          <pixmap resource="resources.qrc">:/MO/gui/remove</pixmap>
         </property>
+        <property name="scaledContents"><bool>true</bool></property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>
@@ -62,7 +80,8 @@
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="topLabel">
+      <widget class="QLabel" name="topLabel">
+        <property name="wordWrap"><bool>true</bool></property>
         <property name="text">
          <string>Disabling the '%1' plugin will prevent the following plugins from working:</string>
         </property>
@@ -72,7 +91,8 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableWidget" name="requiredPlugins">
+   <widget class="QTableWidget" name="requiredPlugins">
+     <property name="minimumSize"><size><width>0</width><height>220</height></size></property>
      <property name="columnCount">
       <number>2</number>
      </property>
@@ -92,10 +112,27 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Do you want to continue? You will need to restart Mod Organizer for the change to take effect.</string>
-     </property>
+    <widget class="QFrame" name="restartNoticeCard">
+     <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+     <property name="frameShadow"><enum>QFrame::Plain</enum></property>
+     <layout class="QHBoxLayout" name="restartNoticeLayout">
+      <property name="leftMargin"><number>14</number></property>
+      <property name="topMargin"><number>10</number></property>
+      <property name="rightMargin"><number>14</number></property>
+      <property name="bottomMargin"><number>10</number></property>
+      <property name="spacing"><number>12</number></property>
+      <item>
+       <widget class="QLabel" name="restartNoticeHeading">
+        <property name="text"><string>Restart required</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="wordWrap"><bool>true</bool></property>
+        <property name="text"><string>Mod Organizer must restart before this plugin change takes effect.</string></property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -106,7 +143,8 @@
        <height>0</height>
       </size>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="spacing"><number>10</number></property>
       <item>
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
@@ -121,15 +159,15 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="yesBtn">
+      <widget class="QPushButton" name="yesBtn">
         <property name="minimumSize">
          <size>
-          <width>80</width>
-          <height>0</height>
+          <width>140</width>
+          <height>36</height>
          </size>
         </property>
         <property name="text">
-         <string>Yes</string>
+         <string>Disable plugin</string>
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
@@ -138,7 +176,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="noBtn">
+      <widget class="QPushButton" name="noBtn">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -147,12 +185,12 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>80</width>
-          <height>0</height>
+          <width>160</width>
+          <height>36</height>
          </size>
         </property>
         <property name="text">
-         <string>No</string>
+         <string>Keep plugin enabled</string>
         </property>
         <property name="default">
          <bool>true</bool>

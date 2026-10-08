@@ -2,20 +2,27 @@
 #include "downloadlist.h"
 #include "downloadlistview.h"
 #include "organizercore.h"
+#include "startupdiagnostics.h"
 #include "ui_mainwindow.h"
 
 DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
     : m_core(core), ui{mwui->btnRefreshDownloads, mwui->downloadView,
                        mwui->showHiddenBox, mwui->downloadFilterEdit}
 {
+  setStartupDiagnosticPhase("downloads_tab.construct.create_model");
   DownloadList* sourceModel = new DownloadList(m_core, ui.list);
 
+  setStartupDiagnosticPhase("downloads_tab.construct.set_model");
   ui.list->setModel(sourceModel);
+  setStartupDiagnosticPhase("downloads_tab.construct.set_manager");
   ui.list->setManager(m_core.downloadManager());
+  setStartupDiagnosticPhase("downloads_tab.construct.set_delegate");
   ui.list->setItemDelegate(
       new DownloadProgressDelegate(m_core.downloadManager(), ui.list));
 
+  setStartupDiagnosticPhase("downloads_tab.update.begin");
   update();
+  setStartupDiagnosticPhase("downloads_tab.update.complete");
 
   m_filter.setEdit(ui.filter);
   m_filter.setList(ui.list);
@@ -68,9 +75,15 @@ void DownloadsTab::update()
     ui.list->setStyleSheet("DownloadListView::item { padding: 16px 4px; }");
   }
 
+  setStartupDiagnosticPhase("downloads_tab.update.style_unpolish");
   ui.list->style()->unpolish(ui.list);
+  setStartupDiagnosticPhase("downloads_tab.update.style_polish");
   ui.list->style()->polish(ui.list);
-  qobject_cast<DownloadListHeader*>(ui.list->header())->customResizeSections();
+  setStartupDiagnosticPhase("downloads_tab.update.resize_sections");
+  auto* downloadHeader = qobject_cast<DownloadListHeader*>(ui.list->header());
+  downloadHeader->customResizeSections();
+  downloadHeader->ensureReadableSections();
+  setStartupDiagnosticPhase("downloads_tab.update.resize_sections.complete");
 
   m_core.downloadManager()->refreshList();
 }

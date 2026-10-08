@@ -4,6 +4,8 @@
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
 #include "shared/util.h"
+#include <QFileInfo>
+#include <QIcon>
 #include <log.h>
 #include <moassert.h>
 
@@ -139,8 +141,6 @@ public:
 
       m_model->endRemoveRows();
 
-      m_model->removePendingIcons(parentIndex, m_first, last);
-
       // adjust current row to account for those that were just removed
       m_current -= (m_current - m_first);
 
@@ -193,9 +193,6 @@ FileTreeModel::FileTreeModel(OrganizerCore& core, QObject* parent)
   });
   connect(&m_sortTimer, &QTimer::timeout, [&] {
     sortItems();
-  });
-  connect(&m_iconPendingTimer, &QTimer::timeout, [&] {
-    updatePendingIcons();
   });
 }
 
@@ -413,7 +410,7 @@ QVariant FileTreeModel::data(const QModelIndex& index, int role) const
   case Qt::DecorationRole: {
     if (index.column() == 0) {
       if (auto* item = itemFromIndex(index)) {
-        return makeIcon(*item, index);
+        return makeIcon(*item);
       }
     }
 
@@ -1171,50 +1168,63 @@ QString FileTreeModel::makeTooltip(const FileTreeItem& item) const
   return s;
 }
 
-QVariant FileTreeModel::makeIcon(const FileTreeItem& item,
-                                 const QModelIndex& index) const
+QVariant FileTreeModel::makeIcon(const FileTreeItem& item) const
 {
+  static const QIcon folderIcon(":/MO/gui/mainwindow/files/folder.svg");
+  static const QIcon fileIcon(":/MO/gui/mainwindow/files/file.svg");
+  static const QIcon executableIcon(":/MO/gui/mainwindow/files/executable.svg");
+  static const QIcon libraryIcon(":/MO/gui/mainwindow/files/library.svg");
+  static const QIcon gameDataIcon(":/MO/gui/mainwindow/files/game-data.svg");
+  static const QIcon archiveIcon(":/MO/gui/mainwindow/files/archive.svg");
+  static const QIcon configIcon(":/MO/gui/mainwindow/files/config.svg");
+  static const QIcon scriptIcon(":/MO/gui/mainwindow/files/script.svg");
+  static const QIcon imageIcon(":/MO/gui/mainwindow/files/image.svg");
+  static const QIcon saveIcon(":/MO/gui/mainwindow/files/save.svg");
+  static const QIcon textIcon(":/MO/gui/mainwindow/files/text.svg");
+
   if (item.isDirectory()) {
-    return m_iconFetcher.genericDirectoryIcon();
+    return folderIcon;
   }
 
-  auto v = m_iconFetcher.icon(item.realPath());
-  if (!v.isNull()) {
-    return v;
+  const QString extension = QFileInfo(item.filename()).suffix().toLower();
+  if (extension == "exe" || extension == "com") {
+    return executableIcon;
+  }
+  if (extension == "dll" || extension == "so" || extension == "dylib") {
+    return libraryIcon;
+  }
+  if (extension == "bdt" || extension == "bhd" || extension == "bin" ||
+      extension == "dat") {
+    return gameDataIcon;
+  }
+  if (extension == "dcx" || extension == "bnd" || extension == "zip" ||
+      extension == "7z" || extension == "rar" || extension == "tar" ||
+      extension == "gz" || extension == "xz" || extension == "bsa" ||
+      extension == "ba2" || extension == "pak") {
+    return archiveIcon;
+  }
+  if (extension == "ini" || extension == "json" || extension == "xml" ||
+      extension == "toml" || extension == "yaml" || extension == "yml" ||
+      extension == "cfg" || extension == "conf") {
+    return configIcon;
+  }
+  if (extension == "hks" || extension == "lua" || extension == "py" ||
+      extension == "js" || extension == "bat" || extension == "cmd" ||
+      extension == "ps1") {
+    return scriptIcon;
+  }
+  if (extension == "png" || extension == "jpg" || extension == "jpeg" ||
+      extension == "dds" || extension == "tga" || extension == "bmp" ||
+      extension == "gif" || extension == "webp") {
+    return imageIcon;
+  }
+  if (extension == "sl2" || extension == "co2" || extension == "bak") {
+    return saveIcon;
+  }
+  if (extension == "txt" || extension == "md" || extension == "log" ||
+      extension == "csv") {
+    return textIcon;
   }
 
-  m_iconPending.push_back(index);
-  m_iconPendingTimer.start(std::chrono::milliseconds(1));
-
-  return m_iconFetcher.genericFileIcon();
-}
-
-void FileTreeModel::updatePendingIcons()
-{
-  std::vector<QModelIndex> v(std::move(m_iconPending));
-  m_iconPending.clear();
-
-  for (auto&& index : v) {
-    emit dataChanged(index, index, {Qt::DecorationRole});
-  }
-
-  if (m_iconPending.empty()) {
-    m_iconPendingTimer.stop();
-  }
-}
-
-void FileTreeModel::removePendingIcons(const QModelIndex& parent, int first, int last)
-{
-  auto itor = m_iconPending.begin();
-
-  while (itor != m_iconPending.end()) {
-    if (itor->parent() == parent) {
-      if (itor->row() >= first && itor->row() <= last) {
-        itor = m_iconPending.erase(itor);
-        continue;
-      }
-    }
-
-    ++itor;
-  }
+  return fileIcon;
 }

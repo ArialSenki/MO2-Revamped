@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define CATEGORIES_H
 
 #include <QString>
+#include <QStringList>
 #include <functional>
 #include <map>
 #include <vector>
@@ -133,6 +134,12 @@ public:
   void saveCategories();
 
   void setNexusCategories(const std::vector<CategoryFactory::NexusCategory>& nexusCats);
+
+  /**
+   * @brief identify invalid or game-root entries returned with Nexus categories
+   */
+  static bool isNexusGameRootCategory(const QString& name, int nexusID,
+                                      const QStringList& gameNames);
 
   void refreshNexusCategories(CategoriesDialog* dialog);
 

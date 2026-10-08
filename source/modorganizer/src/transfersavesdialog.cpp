@@ -37,6 +37,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStringList>
+#include <QUuid>
 #include <QtDebug>
 
 using namespace MOBase;
@@ -118,7 +119,7 @@ void TransferSavesDialog::on_moveToLocalBtn_clicked()
           character, MOVE_SAVES TO_PROFILE, m_GamePlugin->savesDirectory(),
           m_GlobalSaves[character], m_Profile.savePath(),
           [this](const QString& source, const QString& destination) -> bool {
-            return shellMove(source, destination, this);
+            return shellMove(source, destination, true, this);
           },
           "Failed to move {} to {}")) {
     refreshGlobalSaves();
@@ -135,7 +136,7 @@ void TransferSavesDialog::on_copyToLocalBtn_clicked()
           character, COPY_SAVES TO_PROFILE, m_GamePlugin->savesDirectory(),
           m_GlobalSaves[character], m_Profile.savePath(),
           [this](const QString& source, const QString& destination) -> bool {
-            return shellCopy(source, destination, this);
+            return shellCopy(source, destination, true, this);
           },
           "Failed to copy {} to {}")) {
     refreshLocalSaves();
@@ -150,7 +151,7 @@ void TransferSavesDialog::on_moveToGlobalBtn_clicked()
           character, MOVE_SAVES TO_GLOBAL, m_Profile.savePath(),
           m_LocalSaves[character], m_GamePlugin->savesDirectory().absolutePath(),
           [this](const QString& source, const QString& destination) -> bool {
-            return shellMove(source, destination, this);
+            return shellMove(source, destination, true, this);
           },
           "Failed to move {} to {}")) {
     refreshGlobalSaves();
@@ -167,7 +168,7 @@ void TransferSavesDialog::on_copyToGlobalBtn_clicked()
           character, COPY_SAVES TO_GLOBAL, m_Profile.savePath(),
           m_LocalSaves[character], m_GamePlugin->savesDirectory().absolutePath(),
           [this](const QString& source, const QString& destination) -> bool {
-            return shellCopy(source, destination, this);
+            return shellCopy(source, destination, true, this);
           },
           "Failed to copy {} to {}")) {
     refreshGlobalSaves();
@@ -260,17 +261,46 @@ bool TransferSavesDialog::transferCharacters(
       QString destinationFile(
           destination.absoluteFilePath(sourceDirectory.relativeFilePath(source)));
 
-      // If the file is already there, let them skip (or not).
+      // If the file is already there, let them skip (or not). Preserve it
+      // beside the destination until the new transfer succeeds so a failed
+      // copy or move cannot destroy the previous save.
+      QString backupFile;
       if (QFile::exists(destinationFile)) {
         if (!testOverwrite(overwriteMode, destinationFile)) {
           continue;
         }
-        // OK, they want to remove it.
-        QFile::remove(destinationFile);
+
+        backupFile = destinationFile + ".mo2-transfer-backup-" +
+                     QUuid::createUuid().toString(QUuid::WithoutBraces);
+        if (QFile::exists(backupFile) ||
+            !QFile::rename(destinationFile, backupFile)) {
+          log::error("Failed to preserve existing save before transfer: {}",
+                     destinationFile);
+          continue;
+        }
       }
 
       if (!method(sourceFile.absoluteFilePath(), destinationFile)) {
+        if (!backupFile.isEmpty()) {
+          if (QFile::exists(destinationFile) && !QFile::remove(destinationFile)) {
+            log::error(
+                "Failed to remove incomplete transfer {}; previous save is preserved at {}",
+                destinationFile, backupFile);
+          } else if (!QFile::rename(backupFile, destinationFile)) {
+            log::error("Failed to restore previous save {}; backup remains at {}",
+                       destinationFile, backupFile);
+          }
+        } else if (QFile::exists(destinationFile) &&
+                   !QFile::remove(destinationFile)) {
+          log::error("Failed to remove incomplete transfer: {}", destinationFile);
+        }
         log::error(errmsg, sourceFile.absoluteFilePath(), std::move(destinationFile));
+        continue;
+      }
+
+      if (!backupFile.isEmpty() && !QFile::remove(backupFile)) {
+        log::error("Transfer succeeded but could not remove save backup: {}",
+                   backupFile);
       }
     }
   }

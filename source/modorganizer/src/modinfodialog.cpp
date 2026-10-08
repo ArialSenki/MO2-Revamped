@@ -176,8 +176,8 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
 
   // All nine information tabs should remain readable without Qt's tiny
   // tab-scrolling buttons clipping the first and last labels.
-  setMinimumSize(930, 600);
-  resize(960, 640);
+  setMinimumSize(960, 620);
+  resize(1060, 700);
   ui->tabWidget->tabBar()->setUsesScrollButtons(false);
   ui->tabWidget->tabBar()->setElideMode(Qt::ElideNone);
 
@@ -379,6 +379,8 @@ void ModInfoDialog::update(bool firstTime)
     switchToTab(m_initialTab);
     m_initialTab = ModInfoTabIDs::None;
   }
+
+  updatePageHeader();
 
   if (ui->tabWidget->currentIndex() == oldTab) {
     if (auto* tabInfo = currentTab()) {
@@ -759,10 +761,63 @@ void ModInfoDialog::onTabSelectionChanged()
     return;
   }
 
+  updatePageHeader();
+
   // this will call firstActivation() on the tab if needed
   if (auto* tabInfo = currentTab()) {
     tabInfo->tab->activated();
   }
+}
+
+void ModInfoDialog::updatePageHeader()
+{
+  const auto* tabInfo = currentTab();
+  if (!tabInfo) {
+    ui->modInfoPageTitle->setText(tr("Mod information"));
+    ui->modInfoPageSubtitle->setText(
+        tr("Inspect this mod's contents, metadata, and file conflicts."));
+    return;
+  }
+
+  ui->modInfoPageTitle->setText(
+      ui->tabWidget->tabText(ui->tabWidget->currentIndex()));
+
+  QString subtitle;
+  switch (tabInfo->tab->tabID()) {
+  case ModInfoTabIDs::TextFiles:
+    subtitle = tr("Review documentation and other text files included with this mod.");
+    break;
+  case ModInfoTabIDs::IniFiles:
+    subtitle = tr("Inspect and edit configuration files provided by the mod.");
+    break;
+  case ModInfoTabIDs::Images:
+    subtitle = tr("Browse the images and previews packaged with the mod.");
+    break;
+  case ModInfoTabIDs::Esps:
+    subtitle = tr("Choose which optional ESP, ESM, and ESL files are active. "
+                   "Mods without optional plugins leave this list empty.");
+    break;
+  case ModInfoTabIDs::Conflicts:
+    subtitle = tr("See which files this mod wins, loses, or shares with other mods.");
+    break;
+  case ModInfoTabIDs::Categories:
+    subtitle = tr("Organize the mod and choose its primary category.");
+    break;
+  case ModInfoTabIDs::Nexus:
+    subtitle = tr("Review Nexus metadata, refresh details, and open the mod page.");
+    break;
+  case ModInfoTabIDs::Notes:
+    subtitle = tr("Add notes and a color marker to recognize this mod in your list.");
+    break;
+  case ModInfoTabIDs::Filetree:
+    subtitle = tr("Inspect the mod's folder structure and manage its files.");
+    break;
+  case ModInfoTabIDs::None:
+    subtitle = tr("Inspect this mod's contents, metadata, and file conflicts.");
+    break;
+  }
+
+  ui->modInfoPageSubtitle->setText(subtitle);
 }
 
 void ModInfoDialog::onTabMoved()

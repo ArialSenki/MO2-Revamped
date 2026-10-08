@@ -9,6 +9,9 @@
 
 using namespace MOBase;
 
+class QLabel;
+class QWidget;
+
 class ImagesTab;
 
 namespace ImagesTabHelpers
@@ -333,6 +336,9 @@ private:
   using Geometry      = ImagesTabHelpers::Geometry;
 
   ScalableImage* m_image;
+  QWidget* m_emptyStatePage;
+  QLabel* m_emptyStateTitle;
+  QLabel* m_emptyStateDescription;
   std::vector<QString> m_supportedFormats;
   Files m_files;
   FilterWidget m_filter;
@@ -372,6 +378,7 @@ private:
   void paintThumbnailText(const PaintContext& cx);
 
   void checkFiltering();
+  void updateEmptyState();
   void switchToAll();
   void switchToFiltered();
   void updateScrollbar();

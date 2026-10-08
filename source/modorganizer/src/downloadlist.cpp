@@ -229,7 +229,7 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
     if (!pendingDownload &&
         m_manager.getState(index.row()) >= DownloadManager::STATE_READY &&
         m_manager.isInfoIncomplete(index.row()))
-      return QIcon(":/MO/gui/warning_16");
+      return QIcon(":/MO/gui/mainwindow/status/warning.svg");
   } else if (role == Qt::TextAlignmentRole) {
     if (index.column() == COL_SIZE)
       return QVariant(Qt::AlignVCenter | Qt::AlignRight);

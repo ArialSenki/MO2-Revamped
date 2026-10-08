@@ -20,6 +20,9 @@ from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFileDialog,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMenu,
@@ -179,6 +182,18 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         browser.anchorClicked.connect(QDesktopServices.openUrl)
         return browser
 
+    @staticmethod
+    def _about_feature(title: str, description: str, parent: QWidget) -> QGroupBox:
+        card = QGroupBox(title, parent)
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(10, 10, 10, 8)
+        card_layout.setSpacing(4)
+
+        text = QLabel(description, card)
+        text.setWordWrap(True)
+        card_layout.addWidget(text)
+        return card
+
     def _show_about(self, parent) -> None:
         dialog = QDialog(parent)
         dialog.setWindowTitle("About MO2 Revamped")
@@ -223,93 +238,263 @@ class Mo2RevampedInfo(mobase.IPluginTool):
 
         tabs = QTabWidget(dialog)
         tabs.setObjectName("mo2RevampedAboutTabs")
-        tabs.addTab(
-            self._browser(
-                "<h3>Qué aporta Revamped</h3>"
-                "<p>Revamped conserva el flujo de trabajo de Mod Organizer 2 y "
-                "añade mejoras centradas en claridad, instalación de mods y uso "
-                "aislado para Elden Ring.</p>"
-                "<ul>"
-                "<li>Temas MO2 Classic Refined claro y oscuro.</li>"
-                "<li>Instalador de archivos con detección de rutas de Elden Ring, "
-                "carpetas de mods anidadas y complementos nativos.</li>"
-                "<li>Opciones de inicio y aislamiento de partidas por perfil.</li>"
-                "<li>Instalación portable exclusiva para Elden Ring.</li>"
-                "</ul>"
-                "<p>Las funciones que dependen del juego solo se activan en una "
-                "instancia de Elden Ring.</p>",
-                dialog,
-            ),
-            "Revamped",
+        overview_page = QWidget(dialog)
+        overview_layout = QVBoxLayout(overview_page)
+        overview_layout.setContentsMargins(14, 12, 14, 12)
+        overview_layout.setSpacing(10)
+
+        overview_intro = QLabel(
+            "<h3>Qué aporta Revamped</h3>"
+            "<p>Conserva el flujo de Mod Organizer 2 y añade herramientas para "
+            "instalar mods, separar configuraciones y reconocer mejor cada entorno.</p>",
+            overview_page,
         )
-        tabs.addTab(
-            self._browser(
-                "<h3>Componentes incluidos</h3>"
-                "<ul>"
-                "<li><b>Mod Organizer 2:</b> 2.5.2, última versión estable publicada del proyecto base.</li>"
-                "<li><b>Qt y PyQt:</b> 6.7.1, versiones fijadas por MO2 2.5.2.</li>"
-                "<li><b>Python:</b> 3.12.3, incluido por MO2 2.5.2.</li>"
-                "<li><b>USVFS:</b> 0.5.7.2, actualización mantenida para este paquete.</li>"
-                "<li><b>Complemento Elden Ring:</b> 0.5.0-alpha.70; puente nativo 0.5.0-alpha.30.</li>"
-                "<li><b>Instalador de archivos Elden Ring:</b> alpha.70.</li>"
-                "<li><b>Aislamiento de partidas:</b> alpha.64; opciones de inicio: 0.5.0.57.</li>"
-                "<li><b>Temas incluidos:</b> MO2 Classic Refined - Light y MO2 Classic Refined - Dark.</li>"
-                "</ul>"
-                "<p>La publicación base consultada ofrece MO2 2.5.2. Qt/PyQt y Python "
-                "se mantienen en las versiones fijadas por esa compilación para "
-                "conservar compatibilidad binaria; se actualizarán junto con MO2 "
-                "cuando su distribución oficial cambie esas dependencias.</p>",
-                dialog,
+        overview_intro.setWordWrap(True)
+        overview_layout.addWidget(overview_intro)
+
+        feature_grid = QGridLayout()
+        feature_grid.setHorizontalSpacing(10)
+        feature_grid.setVerticalSpacing(8)
+        feature_grid.addWidget(
+            self._about_feature(
+                "Instalación de mods",
+                "Detecta rutas de Elden Ring y reconoce carpetas anidadas para "
+                "instalar mods y complementos nativos.",
+                overview_page,
             ),
-            "Componentes",
+            0,
+            0,
         )
-        tabs.addTab(
-            self._browser(
-                "<h3>Créditos y licencias</h3>"
-                "<p><b>MO2 Revamped:</b> ArialSenki.</p>"
-                "<p>Basado en el proyecto Mod Organizer 2 y sus contribuciones. "
-                "Revamped es una edición comunitaria independiente y no una "
-                "publicación oficial del equipo de MO2.</p>"
-                "<p>Se conservan los avisos de autoría y licencias de MO2 y de "
-                "las dependencias. Consulta la carpeta <code>licenses</code> "
-                "incluida junto al programa.</p>"
-                "<p><a href=\"https://github.com/ModOrganizer2/modorganizer\">"
-                "Proyecto original y código fuente de Mod Organizer 2</a></p>"
-                "<p><a href=\"https://github.com/ModOrganizer2/usvfs\">"
-                "Código fuente de USVFS</a></p>",
-                dialog,
+        feature_grid.addWidget(
+            self._about_feature(
+                "Perfiles y partidas",
+                "Organiza perfiles y, para Elden Ring, permite enrutar los "
+                "guardados por perfil.",
+                overview_page,
             ),
-            "Créditos y licencias",
+            0,
+            1,
         )
+        feature_grid.addWidget(
+            self._about_feature(
+                "Instancias independientes",
+                "Elige instalaciones globales o portables. También puedes crear "
+                "una copia aislada de MO2 para Elden Ring.",
+                overview_page,
+            ),
+            1,
+            0,
+        )
+        feature_grid.addWidget(
+            self._about_feature(
+                "Interfaz y diagnóstico",
+                "Incluye los temas MO2 Classic Refined claro y oscuro, además de "
+                "herramientas para preparar informes de diagnóstico.",
+                overview_page,
+            ),
+            1,
+            1,
+        )
+        overview_layout.addLayout(feature_grid, 1)
+
+        compatibility_note = QLabel(
+            "Las funciones específicas de Elden Ring se activan únicamente en "
+            "una instancia de ese juego.",
+            overview_page,
+        )
+        compatibility_note.setWordWrap(True)
+        overview_layout.addWidget(compatibility_note)
+        tabs.addTab(overview_page, "Revamped")
+        components_page = QWidget(dialog)
+        components_layout = QVBoxLayout(components_page)
+        components_layout.setContentsMargins(14, 12, 14, 12)
+        components_layout.setSpacing(10)
+
+        components_intro = QLabel(
+            "<h3>Componentes incluidos</h3>"
+            "<p>Resumen de las versiones y herramientas que forman parte de esta copia.</p>",
+            components_page,
+        )
+        components_intro.setWordWrap(True)
+        components_layout.addWidget(components_intro)
+
+        components_grid = QGridLayout()
+        components_grid.setHorizontalSpacing(10)
+        components_grid.setVerticalSpacing(8)
+        components_grid.addWidget(
+            self._about_feature(
+                "Base de MO2",
+                "Mod Organizer 2 · 2.5.2\nQt y PyQt · 6.7.1\nPython · 3.12.15\nOpenSSL · 3.5.9",
+                components_page,
+            ),
+            0,
+            0,
+        )
+        components_grid.addWidget(
+            self._about_feature(
+                "Sistema de archivos virtual",
+                "USVFS · 0.5.7.2\nPermite desplegar mods virtualmente sin modificar "
+                "los archivos originales del juego.",
+                components_page,
+            ),
+            0,
+            1,
+        )
+        components_grid.addWidget(
+            self._about_feature(
+                "Herramientas Elden Ring",
+                "Complemento · 0.5.0-alpha.75\nPuente nativo · 0.5.0-alpha.33\n"
+                "Instalador de archivos · alpha.72",
+                components_page,
+            ),
+            1,
+            0,
+        )
+        components_grid.addWidget(
+            self._about_feature(
+                "Perfiles e interfaz",
+                "Aislamiento de partidas · alpha.68\nOpciones de inicio · 0.5.0.64\n"
+                "MO2 Classic Refined · Light y Dark",
+                components_page,
+            ),
+            1,
+            1,
+        )
+        components_layout.addLayout(components_grid, 1)
+
+        component_versions_note = QLabel(
+            "Son las versiones incluidas en esta compilación; no indican "
+            "necesariamente las versiones más recientes disponibles.",
+            components_page,
+        )
+        component_versions_note.setWordWrap(True)
+        components_layout.addWidget(component_versions_note)
+        tabs.addTab(components_page, "Componentes")
+        credits_page = QWidget(dialog)
+        credits_layout = QVBoxLayout(credits_page)
+        credits_layout.setContentsMargins(14, 12, 14, 12)
+        credits_layout.setSpacing(10)
+
+        credits_intro = QLabel(
+            "<h3>Créditos y licencias</h3>"
+            "<p>Información sobre esta edición comunitaria, el proyecto base y sus avisos legales.</p>",
+            credits_page,
+        )
+        credits_intro.setWordWrap(True)
+        credits_layout.addWidget(credits_intro)
+
+        credits_grid = QGridLayout()
+        credits_grid.setHorizontalSpacing(10)
+        credits_grid.setVerticalSpacing(8)
+        credits_grid.addWidget(
+            self._about_feature(
+                "Autoría de Revamped",
+                "MO2 Revamped · ArialSenki\nEdición comunitaria independiente.",
+                credits_page,
+            ),
+            0,
+            0,
+        )
+        credits_grid.addWidget(
+            self._about_feature(
+                "Proyecto base",
+                "Basado en Mod Organizer 2 y sus contribuciones. Revamped no es "
+                "una publicación oficial del equipo de MO2.",
+                credits_page,
+            ),
+            0,
+            1,
+        )
+        credits_layout.addLayout(credits_grid)
+
+        license_group = QGroupBox("Licencias y código fuente", credits_page)
+        license_layout = QVBoxLayout(license_group)
+        license_layout.setContentsMargins(10, 10, 10, 8)
+        license_layout.setSpacing(4)
+        license_note = QLabel(
+            "Se conservan los avisos de autoría y las licencias de MO2 y sus dependencias. "
+            "Consulta la carpeta licenses junto al programa.",
+            license_group,
+        )
+        license_note.setWordWrap(True)
+        license_layout.addWidget(license_note)
+        source_links = self._browser(
+            "<p><a href=\"https://github.com/ModOrganizer2/modorganizer\">"
+            "Proyecto original y código fuente de Mod Organizer 2</a><br/>"
+            "<a href=\"https://github.com/ModOrganizer2/usvfs\">"
+            "Código fuente de USVFS</a></p>",
+            license_group,
+        )
+        source_links.setFrameShape(QFrame.Shape.NoFrame)
+        source_links.setStyleSheet("background: transparent;")
+        source_links.setFixedHeight(58)
+        license_layout.addWidget(source_links)
+        credits_layout.addWidget(license_group)
+        credits_layout.addStretch(1)
+        tabs.addTab(credits_page, "Créditos y licencias")
 
         diagnostics_page = QWidget(dialog)
         diagnostics_layout = QVBoxLayout(diagnostics_page)
-        diagnostics_layout.addWidget(
-            self._browser(
-                "<h3>Informes para corregir errores</h3>"
-                "<p>El informe reúne el registro principal de MO2, los registros "
-                "recientes de USVFS y los registros actual y anterior del puente "
-                "de Elden Ring, cuando estén disponibles. Añade versiones del "
-                "programa, sistema, juego e instancia.</p>"
-                "<p>El archivo no incluye mods, descargas, partidas, claves de "
-                "Nexus ni volcados de memoria. Los registros pueden contener "
-                "rutas de Windows y nombres de perfiles; revísalos antes de "
-                "compartirlos.</p>"
-                "<p>Si MO2 no llega a abrir, adjunta el último registro del "
-                "instalador que aparece en su mensaje de error. Para un cierre "
-                "inesperado, conserva también el archivo de <code>crashDumps</code> "
-                "por si hace falta analizarlo.</p>",
+        diagnostics_layout.setContentsMargins(14, 12, 14, 12)
+        diagnostics_layout.setSpacing(10)
+
+        diagnostics_intro = QLabel(
+            "<h3>Informes para corregir errores</h3>"
+            "<p>El informe reúne los registros necesarios para ayudar a localizar problemas de MO2 Revamped.</p>",
+            diagnostics_page,
+        )
+        diagnostics_intro.setWordWrap(True)
+        diagnostics_layout.addWidget(diagnostics_intro)
+
+        diagnostics_grid = QGridLayout()
+        diagnostics_grid.setHorizontalSpacing(10)
+        diagnostics_grid.setVerticalSpacing(8)
+        diagnostics_grid.addWidget(
+            self._about_feature(
+                "Contenido del informe",
+                "Incluye el registro principal de MO2, registros recientes de USVFS y "
+                "los registros actual y anterior del puente de Elden Ring cuando "
+                "están disponibles, junto con versiones del programa, sistema, juego e instancia.",
+                diagnostics_page,
+            ),
+            0,
+            0,
+        )
+        diagnostics_grid.addWidget(
+            self._about_feature(
+                "Privacidad",
+                "No incluye mods, descargas, partidas, claves de Nexus ni volcados de memoria. "
+                "Los registros pueden contener rutas de Windows y nombres de perfiles; revísalos "
+                "antes de compartirlos.",
+                diagnostics_page,
+            ),
+            0,
+            1,
+        )
+        diagnostics_grid.addWidget(
+            self._about_feature(
+                "Si MO2 no inicia",
+                "Adjunta el último registro del instalador que aparece en su mensaje de error. "
+                "Si MO2 se cierra inesperadamente, conserva también el archivo de crashDumps.",
                 diagnostics_page,
             ),
             1,
+            0,
+            1,
+            2,
         )
+        diagnostics_layout.addLayout(diagnostics_grid, 1)
+
         create_report_button = QPushButton(
-            "Create MO2 Revamped bug report…", diagnostics_page
+            "Crear informe de errores de MO2 Revamped…", diagnostics_page
         )
         create_report_button.clicked.connect(
             lambda _checked=False: self._create_diagnostics_bundle(dialog)
         )
-        diagnostics_layout.addWidget(create_report_button)
+        report_button_row = QHBoxLayout()
+        report_button_row.addStretch(1)
+        report_button_row.addWidget(create_report_button)
+        diagnostics_layout.addLayout(report_button_row)
         tabs.addTab(diagnostics_page, "Diagnóstico")
         layout.addWidget(tabs, 1)
 
@@ -372,18 +557,23 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             qt_version = QtCore.qVersion()
         except Exception:
             qt_version = "Unavailable"
+        try:
+            import ssl
+            openssl_version = ssl.OPENSSL_VERSION
+        except Exception:
+            openssl_version = "Unavailable"
 
         return "\n".join(
             (
                 "MO2 Revamped diagnostic report",
                 f"Created UTC: {datetime.now(timezone.utc).isoformat()}",
-                "Package: MO2 Revamped r15",
+                "Package: MO2 Revamped 1.0.0 (based on MO2 2.5.2)",
                 "Base: Mod Organizer 2.5.2",
-                "MO2 source revision: v2.5.2-2-gaaad42f plus the source changes in the attached release archive",
                 "USVFS: 0.5.7.2",
                 f"Windows: {platform.platform()}",
                 f"Architecture: {platform.machine()}",
                 f"Python: {sys.version.replace(os.linesep, ' ')}",
+                f"OpenSSL: {openssl_version}",
                 f"Qt: {qt_version}",
                 f"PyQt: {pyqt_version}",
                 f"Application directory: {app_dir}",
@@ -396,11 +586,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 f"Game data directory: {game_data_path}",
                 f"Active profile: {profile_name}",
                 f"Profile directory: {profile_path}",
-                "Elden Ring game plugin: 0.5.0-alpha.70",
-                "Native bridge: 0.5.0-alpha.30",
-                "Archive layout installer: alpha.70",
-                "Save isolation: alpha.64",
-                "Startup options: 0.5.0.57",
+                "Elden Ring game plugin: 0.5.0-alpha.75",
+                "Native bridge: 0.5.0-alpha.33",
+                "Archive layout installer: alpha.72",
+                "Save isolation: alpha.68",
+                "Startup options: 0.5.0.64",
                 "",
                 "Review this report and the included logs before sharing; paths and profile names may identify your Windows account.",
             )

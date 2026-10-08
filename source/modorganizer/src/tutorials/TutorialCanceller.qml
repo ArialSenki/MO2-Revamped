@@ -2,6 +2,7 @@ import QtQuick 2.7
 
 // rectangle for description texts
 Rectangle {
+    id: cancellerPanel
     property alias text: textBox.text
     property alias cancelVisible: cancelIcon.visible
     property int innerWidth;
@@ -28,11 +29,12 @@ Rectangle {
         source: "qrc:/MO/gui/multiply_red"
 
         SequentialAnimation on opacity {
-            loops: Animation.Infinite
+            loops: 2
+            running: cancelIcon.visible
 
-            PauseAnimation { duration: 500 }
-            PropertyAnimation { easing.type: Easing.InOutSine; duration: 400; to: 0.0 }
-            PropertyAnimation { easing.type: Easing.OutInSine; duration: 400; to: 1.0 }
+            PauseAnimation { duration: 350 }
+            NumberAnimation { easing.type: Easing.InOutSine; duration: 450; to: 0.84 }
+            NumberAnimation { easing.type: Easing.InOutSine; duration: 550; to: 1.0 }
         }
     }
 
@@ -41,7 +43,7 @@ Rectangle {
         text: qsTr("Exit Tutorial")
         font.pointSize: 12
         font.bold: false
-        width: innerWidth
+        width: cancellerPanel.innerWidth
         font.family: "Courier"
         wrapMode: Text.WordWrap
         anchors.centerIn: parent

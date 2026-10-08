@@ -19,13 +19,16 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "downloadlistview.h"
 #include "downloadlist.h"
+#include "startupdiagnostics.h"
 #include <QApplication>
 #include <QCheckBox>
 #include <QHeaderView>
+#include <QIcon>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QStyle>
 #include <QSortFilterProxyModel>
 #include <QWidgetAction>
 #include <log.h>
@@ -89,23 +92,70 @@ void DownloadListHeader::customResizeSections()
   if (sectionSize(rightVisible) == minimumSectionSize()) {
     for (int idx = rightVisible; idx >= 0; idx--) {
       if (!isSectionHidden(idx)) {
-        if (length() != width())
+        if (length() != width()) {
+          setStartupDiagnosticPhase(
+              "download_list_header.resize_section.right_to_left");
           resizeSection(idx, std::max(sectionSize(idx) + width() - length(),
                                       minimumSectionSize()));
-        else
+        } else {
           break;
+        }
       }
     }
   } else {
     for (int idx = 0; idx <= rightVisible; idx++) {
       if (!isSectionHidden(idx)) {
-        if (length() != width())
+        if (length() != width()) {
+          setStartupDiagnosticPhase(
+              "download_list_header.resize_section.left_to_right");
           resizeSection(idx, std::max(sectionSize(idx) + width() - length(),
                                       minimumSectionSize()));
-        else
+        } else {
           break;
+        }
       }
     }
+  }
+}
+
+void DownloadListHeader::ensureReadableSections()
+{
+  constexpr int statusTargetWidth   = 120;
+  constexpr int filetimeTargetWidth = 155;
+  constexpr int minimumNameWidth    = 240;
+
+  const int statusGrowth = isSectionHidden(DownloadList::COL_STATUS)
+                               ? 0
+                               : std::max(0, statusTargetWidth -
+                                                sectionSize(DownloadList::COL_STATUS));
+  const int filetimeGrowth =
+      isSectionHidden(DownloadList::COL_FILETIME)
+          ? 0
+          : std::max(0, filetimeTargetWidth -
+                            sectionSize(DownloadList::COL_FILETIME));
+  const int availableNameWidth =
+      std::max(0, sectionSize(DownloadList::COL_NAME) - minimumNameWidth);
+
+  int remainingGrowth = std::min(statusGrowth + filetimeGrowth, availableNameWidth);
+  const int appliedStatusGrowth = std::min(statusGrowth, remainingGrowth);
+  remainingGrowth -= appliedStatusGrowth;
+  const int appliedFiletimeGrowth = std::min(filetimeGrowth, remainingGrowth);
+  const int totalGrowth = appliedStatusGrowth + appliedFiletimeGrowth;
+
+  if (totalGrowth == 0) {
+    return;
+  }
+
+  resizeSection(DownloadList::COL_NAME,
+                sectionSize(DownloadList::COL_NAME) - totalGrowth);
+  if (appliedStatusGrowth > 0) {
+    resizeSection(DownloadList::COL_STATUS,
+                  sectionSize(DownloadList::COL_STATUS) + appliedStatusGrowth);
+  }
+  if (appliedFiletimeGrowth > 0) {
+    resizeSection(DownloadList::COL_FILETIME,
+                  sectionSize(DownloadList::COL_FILETIME) +
+                      appliedFiletimeGrowth);
   }
 }
 
@@ -205,12 +255,14 @@ void DownloadListView::onHeaderCustomContextMenu(const QPoint& point)
   }
 
   qobject_cast<DownloadListHeader*>(header())->customResizeSections();
+  qobject_cast<DownloadListHeader*>(header())->ensureReadableSections();
 }
 
 void DownloadListView::resizeEvent(QResizeEvent* event)
 {
   QTreeView::resizeEvent(event);
   qobject_cast<DownloadListHeader*>(header())->customResizeSections();
+  qobject_cast<DownloadListHeader*>(header())->ensureReadableSections();
 }
 
 void DownloadListView::onCustomContextMenu(const QPoint& point)
@@ -218,6 +270,16 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
   QMenu menu(this);
   QModelIndex index = indexAt(point);
   bool hidden       = false;
+  bool hasDownloadActions = false;
+
+  const auto addAction = [&menu](const QString& text, const QString& iconPath,
+                                 auto callback) {
+    QAction* action = menu.addAction(text, callback);
+    if (!iconPath.isEmpty()) {
+      action->setIcon(QIcon(iconPath));
+    }
+    return action;
+  };
 
   try {
     if (index.row() >= 0) {
@@ -228,94 +290,110 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       hidden = m_Manager->isHidden(row);
 
       if (state >= DownloadManager::STATE_READY) {
-        menu.addAction(tr("Install"), [=] {
+        menu.addSection(tr("Selected download"));
+        hasDownloadActions = true;
+        addAction(tr("Install"), ":/MO/gui/mainwindow/install.svg", [=] {
           issueInstall(row);
         });
         if (m_Manager->isInfoIncomplete(row))
-          menu.addAction(tr("Query Info"), [=] {
+          addAction(tr("Query Info"), ":/MO/gui/contextmenu/information.svg", [=] {
             issueQueryInfoMd5(row);
           });
         else
-          menu.addAction(tr("Visit on Nexus"), [=] {
+          addAction(tr("Visit on Nexus"), ":/MO/gui/contextmenu/visit.svg", [=] {
             issueVisitOnNexus(row);
           });
-        menu.addAction(tr("Open File"), [=] {
+        addAction(tr("Open File"), ":/MO/gui/mainwindow/files/archive.svg", [=] {
           issueOpenFile(row);
         });
-        menu.addAction(tr("Open Meta File"), [=] {
+        addAction(tr("Open Meta File"), ":/MO/gui/contextmenu/information.svg", [=] {
           issueOpenMetaFile(row);
         });
-        menu.addAction(tr("Reveal in Explorer"), [=] {
+        addAction(tr("Reveal in Explorer"), ":/MO/gui/contextmenu/explorer.svg", [=] {
           issueOpenInDownloadsFolder(row);
         });
 
         menu.addSeparator();
 
-        menu.addAction(tr("Delete..."), [=] {
+        addAction(tr("Delete..."), ":/MO/gui/contextmenu/remove.svg", [=] {
           issueDelete(row);
         });
         if (hidden)
-          menu.addAction(tr("Un-Hide"), [=] {
+          addAction(tr("Un-Hide"), ":/MO/gui/contextmenu/visibility-show.svg", [=] {
             issueRestoreToView(row);
           });
         else
-          menu.addAction(tr("Hide"), [=] {
+          addAction(tr("Hide"), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
             issueRemoveFromView(row);
           });
       } else if (state == DownloadManager::STATE_DOWNLOADING) {
-        menu.addAction(tr("Cancel"), [=] {
+        menu.addSection(tr("Selected download"));
+        hasDownloadActions = true;
+        QAction* cancelAction = addAction(tr("Cancel"), {}, [=] {
           issueCancel(row);
         });
-        menu.addAction(tr("Pause"), [=] {
+        cancelAction->setIcon(QApplication::style()->standardIcon(
+            QStyle::SP_MediaStop));
+        QAction* pauseAction = addAction(tr("Pause"), {}, [=] {
           issuePause(row);
         });
-        menu.addAction(tr("Reveal in Explorer"), [=] {
+        pauseAction->setIcon(QApplication::style()->standardIcon(
+            QStyle::SP_MediaPause));
+        addAction(tr("Reveal in Explorer"), ":/MO/gui/contextmenu/explorer.svg", [=] {
           issueOpenInDownloadsFolder(row);
         });
       } else if ((state == DownloadManager::STATE_PAUSED) ||
                  (state == DownloadManager::STATE_ERROR) ||
                  (state == DownloadManager::STATE_PAUSING)) {
-        menu.addAction(tr("Delete..."), [=] {
+        menu.addSection(tr("Selected download"));
+        hasDownloadActions = true;
+        addAction(tr("Delete..."), ":/MO/gui/contextmenu/remove.svg", [=] {
           issueDelete(row);
         });
-        menu.addAction(tr("Resume"), [=] {
+        QAction* resumeAction = addAction(tr("Resume"), {}, [=] {
           issueResume(row);
         });
-        menu.addAction(tr("Reveal in Explorer"), [=] {
+        resumeAction->setIcon(QApplication::style()->standardIcon(
+            QStyle::SP_MediaPlay));
+        addAction(tr("Reveal in Explorer"), ":/MO/gui/contextmenu/explorer.svg", [=] {
           issueOpenInDownloadsFolder(row);
         });
       }
-
-      menu.addSeparator();
     }
   } catch (std::exception&) {
     // this happens when the download index is not found, ignore it and don't
     // display download-specific actions
   }
 
-  menu.addAction(tr("Delete Installed Downloads..."), [=] {
+  if (hasDownloadActions) {
+    menu.addSeparator();
+  }
+  menu.addSection(tr("Download cleanup"));
+  addAction(tr("Delete Installed Downloads..."),
+            ":/MO/gui/contextmenu/remove.svg", [=] {
     issueDeleteCompleted();
   });
-  menu.addAction(tr("Delete Uninstalled Downloads..."), [=] {
+  addAction(tr("Delete Uninstalled Downloads..."),
+            ":/MO/gui/contextmenu/remove.svg", [=] {
     issueDeleteUninstalled();
   });
-  menu.addAction(tr("Delete All Downloads..."), [=] {
+  addAction(tr("Delete All Downloads..."), ":/MO/gui/contextmenu/remove.svg", [=] {
     issueDeleteAll();
   });
 
-  menu.addSeparator();
+  menu.addSection(tr("Visibility"));
   if (!hidden) {
-    menu.addAction(tr("Hide Installed..."), [=] {
+    addAction(tr("Hide Installed..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
       issueRemoveFromViewCompleted();
     });
-    menu.addAction(tr("Hide Uninstalled..."), [=] {
+    addAction(tr("Hide Uninstalled..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
       issueRemoveFromViewUninstalled();
     });
-    menu.addAction(tr("Hide All..."), [=] {
+    addAction(tr("Hide All..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
       issueRemoveFromViewAll();
     });
   } else {
-    menu.addAction(tr("Un-Hide All..."), [=] {
+    addAction(tr("Un-Hide All..."), ":/MO/gui/contextmenu/visibility-show.svg", [=] {
       issueRestoreToViewAll();
     });
   }

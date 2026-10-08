@@ -240,6 +240,10 @@ private:
   //
   void onTabSelectionChanged();
 
+  // updates the large page title and short explanation for the selected tab
+  //
+  void updatePageHeader();
+
   // called when the user re-orders tabs; sets the correct TabInfo::realPos for
   // all tabs
   //

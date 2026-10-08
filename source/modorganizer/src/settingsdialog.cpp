@@ -31,8 +31,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractItemView>
 #include <QColor>
 #include <QComboBox>
-#include <QDebug>
-#include <QElapsedTimer>
 #include <QFrame>
 #include <QPalette>
 #include <QTimer>
@@ -70,15 +68,18 @@ void configureSettingsComboPopups(QWidget* root, bool lightStyle)
 
     popupView->setPalette(popupPalette);
     popupView->viewport()->setPalette(popupPalette);
-    popupView->setAutoFillBackground(true);
-    popupView->viewport()->setAutoFillBackground(true);
+    // Let the rounded popup frame provide the background. An opaque view or
+    // viewport paints a rectangular layer over its rounded corners.
+    popupView->setAutoFillBackground(false);
+    popupView->viewport()->setAutoFillBackground(false);
     popupView->setFrameShape(QFrame::NoFrame);
     popupView->setStyleSheet(
-        "QAbstractItemView { color: #293847; background-color: #FFFFFF; "
-        "border: none; outline: none; selection-background-color: #D7EAF9; "
+        "QAbstractItemView { color: #293847; background-color: transparent; "
+        "border: none; border-radius: 7px; padding: 3px; outline: none; "
+        "selection-background-color: #D7EAF9; "
         "selection-color: #183E5F; } "
         "QAbstractItemView::item { color: #293847; background-color: "
-        "#FFFFFF; min-height: 22px; padding: 4px 8px; border: none; } "
+        "transparent; min-height: 22px; padding: 4px 8px; border: none; } "
         "QAbstractItemView::item:hover { background-color: #F0F6FB; "
         "color: #183E5F; } "
         "QAbstractItemView::item:selected { background-color: #D7EAF9; "
@@ -93,7 +94,7 @@ void configureSettingsComboPopups(QWidget* root, bool lightStyle)
       popupFrame->setAttribute(Qt::WA_StyledBackground, true);
       popupFrame->setStyleSheet(
           "QFrame { color: #293847; background-color: #FFFFFF; "
-          "border: 1px solid #C7D3DD; }");
+          "border: 1px solid #C7D3DD; border-radius: 8px; }");
     }
   }
 }
@@ -105,13 +106,7 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
     : TutorableDialog("SettingsDialog", parent), ui(new Ui::SettingsDialog),
       m_settings(settings), m_exit(Exit::None), m_pluginContainer(pluginContainer)
 {
-  QElapsedTimer dialogInitializationTimer;
-  dialogInitializationTimer.start();
-  QElapsedTimer uiSetupTimer;
-  uiSetupTimer.start();
   ui->setupUi(this);
-  qInfo().noquote() << "[MO2 PerfProbe] Settings UI setup:" << uiSetupTimer.elapsed()
-                    << "ms";
 
   // Build a page the first time it is opened. The Plugins page enumerates
   // every installed plugin and resolves its settings and descriptions, which
@@ -144,8 +139,6 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
     });
   });
   initializeTab(ui->tabWidget->currentIndex());
-  qInfo().noquote() << "[MO2 PerfProbe] Settings dialog prepared:"
-                    << dialogInitializationTimer.elapsed() << "ms";
 }
 
 void SettingsDialog::initializeTab(int index)
@@ -154,19 +147,11 @@ void SettingsDialog::initializeTab(int index)
     return;
   }
 
-  QElapsedTimer pageInitializationTimer;
-  pageInitializationTimer.start();
   m_tabs[index] = m_tabFactories[index]();
-  const qint64 pageBuildMs = pageInitializationTimer.elapsed();
   const QString activeStyle = m_settings.interface().styleName().value_or("");
-  QElapsedTimer popupStyleTimer;
-  popupStyleTimer.start();
   configureSettingsComboPopups(
       ui->tabWidget->widget(index),
       activeStyle.compare("Light.qss", Qt::CaseInsensitive) == 0);
-  qInfo().noquote() << "[MO2 PerfProbe] Settings page"
-                    << ui->tabWidget->tabText(index) << ": build=" << pageBuildMs
-                    << "ms; popup-style=" << popupStyleTimer.elapsed() << "ms";
 }
 
 PluginContainer* SettingsDialog::pluginContainer()

@@ -21,7 +21,7 @@
     </message>
     <message>
         <location filename="aboutdialog.ui" line="163"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code can be found at &lt;a href=&quot;https://github.com/ModOrganizer2/modorganizer&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href=&quot;https://github.com/ArialSenki/MO2-Revamped&quot;&gt;MO2 Revamped on GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2740,8 +2740,18 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="518"/>
-        <source>All checked items will be deleted.</source>
+        <location filename="instancemanagerdialog.cpp" line="826"/>
+        <source>Only checked paths will be removed. Required items stay selected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="instancemanagerdialog.cpp" line="847"/>
+        <source>%1 item</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="instancemanagerdialog.cpp" line="848"/>
+        <source>%1 items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3116,7 +3126,7 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
     </message>
     <message>
         <location filename="mainwindow.ui" line="255"/>
-        <source>Pick a module collection</source>
+        <source>Select a profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3126,34 +3136,34 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
                               &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
                               p, li { white-space: pre-wrap; }
                               &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Create profiles here. Each profile contains its own list of active mods and esps. This way you can quickly switch between setups for different playthroughs.&lt;/span&gt;&lt;/p&gt;
-                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Please note that right now your esp load order is not kept separate for different profiles.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Choose a profile to switch its enabled mod list, plugin selection, and plugin load order.&lt;/span&gt;&lt;/p&gt;
+                              &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Each profile keeps these lists separate for different mod setups or playthroughs.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                             </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="291"/>
-        <source>Open list options...</source>
+        <source>Mod list actions...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="294"/>
-        <source>Refresh list. This is usually not necessary unless you modified data outside the program.</source>
+        <source>Install or create mods and separators, enable or disable all or matching mods, check for updates, assign categories, refresh the list, or export it to CSV.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="314"/>
-        <source>Show Open Folders menu...</source>
+        <source>Choose a game or MO2 folder to open...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="328"/>
-        <source>Restore Backup...</source>
+        <source>Restore mod list backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="342"/>
-        <source>Create Backup</source>
+        <source>Back up this profile's mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3164,7 +3174,7 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
     </message>
     <message>
         <location filename="mainwindow.ui" line="369"/>
-        <source>This provides statistics about the mod list.  The total number of active mod is normally displayed.  Other statistics may be accessed with the tooltip of this counter.</source>
+        <source>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3342,9 +3352,13 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1097"/>
-        <location filename="mainwindow.ui" line="1100"/>
-        <source>Refresh the data structure.</source>
+        <location filename="mainwindow.ui" line="1012"/>
+        <source>Refresh the virtual Data tree.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="1015"/>
+        <source>Refresh the virtual Data tree. Hold Shift while clicking to clear it first and rebuild it from scratch.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3422,8 +3436,9 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1351"/>
-        <source>This is a list of mods you downloaded from Nexus. Double click one to install it. You can also drag an archive into here.</source>
+        <location filename="mainwindow.ui" line="1269"/>
+        <location filename="mainwindow.cpp" line="2595"/>
+        <source>Downloaded archives for this instance appear here. Double-click an archive to install it. To choose its priority, drag it from this list onto the mod list while sorting by Priority.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6077,7 +6092,7 @@ Continue?</source>
     </message>
     <message>
         <location filename="organizercore.cpp" line="1881"/>
-        <source>&lt;a href=&quot;%1&quot;&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to &quot;Script Extender&quot;, in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or manually removing the file, otherwise the game is likely to crash and burn.</source>
+        <source>&lt;a href=&quot;%1&quot;&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the Mod Organizer 1 load mechanism to &quot;Script Extender&quot;, in which case you must remove this file either by changing the load mechanism in Mod Organizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8667,7 +8682,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="savestab.cpp" line="250"/>
-        <source>Fix enabled mods...</source>
+        <source>Restore required plugins...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="252"/>
+        <source>Choose installed mods to activate the plugins required by this save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -8819,12 +8839,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="settingsdialog.ui" line="181"/>
         <location filename="settingsdialog.ui" line="184"/>
-        <source>Check for Mod Organizer updates on Github on startup.</source>
+        <source>Check for MO2 Revamped updates on GitHub on startup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="187"/>
-        <source>Check for updates</source>
+        <source>Check for MO2 Revamped updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10323,7 +10343,7 @@ Please open the &quot;Nexus&quot; tab.</source>
     </message>
     <message>
         <location filename="tutorials/tutorial_primer_main.js" line="78"/>
-        <source>Running counter of your active mods. Hover to see a more detailed breakdown.</source>
+        <source>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

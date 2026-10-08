@@ -3,120 +3,87 @@
  <class>CategoryImportDialog</class>
  <widget class="QDialog" name="CategoryImportDialog">
   <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>400</width>
-    <height>193</height>
-   </rect>
+    <rect><x>0</x><y>0</y><width>620</width><height>250</height></rect>
   </property>
-  <property name="windowTitle">
-   <string>Nexus Category Import</string>
-  </property>
+  <property name="windowTitle"><string>Import Nexus categories</string></property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin"><number>16</number></property>
+   <property name="topMargin"><number>14</number></property>
+   <property name="rightMargin"><number>16</number></property>
+   <property name="bottomMargin"><number>14</number></property>
+   <property name="spacing"><number>12</number></property>
    <item>
-    <widget class="QLabel" name="label">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>&lt;h3&gt;How do you want to import the categories?&lt;/h3&gt;</string>
-     </property>
-    </widget>
+    <layout class="QVBoxLayout" name="introLayout">
+     <property name="spacing"><number>3</number></property>
+     <item>
+      <widget class="QLabel" name="dialogHeading">
+       <property name="text"><string>Bring Nexus categories into MO2</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="dialogDescription">
+       <property name="text"><string>Choose how the categories currently shown in the Nexus list should update your local list.</string></property>
+       <property name="wordWrap"><bool>true</bool></property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="optionsLayout">
+     <property name="spacing"><number>12</number></property>
      <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Import Strategy</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+      <widget class="QGroupBox" name="strategyBox">
+       <property name="title"><string>MO2 category list</string></property>
+       <layout class="QVBoxLayout" name="strategyLayout">
+        <property name="spacing"><number>8</number></property>
         <item>
          <widget class="QRadioButton" name="mergeOption">
-          <property name="text">
-           <string>Merge</string>
-          </property>
-          <attribute name="buttonGroup">
-           <string notr="true">strategyGroup</string>
-          </attribute>
+          <property name="toolTip"><string>Add categories that are missing and keep the categories you already have.</string></property>
+          <property name="text"><string>Add missing categories</string></property>
+          <property name="checked"><bool>true</bool></property>
+          <attribute name="buttonGroup"><string notr="true">strategyGroup</string></attribute>
          </widget>
         </item>
         <item>
          <widget class="QRadioButton" name="replaceOption">
-          <property name="text">
-           <string>Replace</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-          <attribute name="buttonGroup">
-           <string notr="true">strategyGroup</string>
-          </attribute>
+          <property name="toolTip"><string>Replace your existing MO2 category list with the categories shown in the Nexus list.</string></property>
+          <property name="text"><string>Replace existing categories</string></property>
+          <property name="checked"><bool>false</bool></property>
+          <attribute name="buttonGroup"><string notr="true">strategyGroup</string></attribute>
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
+         <spacer name="strategySpacer">
+          <property name="orientation"><enum>Qt::Vertical</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
          </spacer>
         </item>
        </layout>
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="title">
-        <string>Options</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
+      <widget class="QGroupBox" name="mappingBox">
+       <property name="title"><string>Nexus mappings</string></property>
+       <layout class="QVBoxLayout" name="mappingLayout">
+        <property name="spacing"><number>8</number></property>
         <item>
          <widget class="QCheckBox" name="assignOption">
-          <property name="text">
-           <string>Assign nexus mappings</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
+          <property name="toolTip"><string>For categories with matching names, add the Nexus ID while keeping existing mappings.</string></property>
+          <property name="text"><string>Link matching categories to Nexus IDs</string></property>
+          <property name="checked"><bool>true</bool></property>
          </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="remapOption">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Remap existing mappings</string>
-          </property>
+          <property name="enabled"><bool>false</bool></property>
+          <property name="toolTip"><string>Replace prior Nexus mappings on matching MO2 categories with the imported IDs.</string></property>
+          <property name="text"><string>Replace existing mappings</string></property>
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
+         <spacer name="mappingSpacer">
+          <property name="orientation"><enum>Qt::Vertical</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
          </spacer>
         </item>
        </layout>
@@ -126,19 +93,13 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set></property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="strategyGroup"/>
- </buttongroups>
+ <buttongroups><buttongroup name="strategyGroup"/></buttongroups>
 </ui>

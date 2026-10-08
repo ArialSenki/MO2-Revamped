@@ -1913,9 +1913,8 @@ QString OrganizerCore::fullDescription(unsigned int key) const
               "This is most likely a leftover of setting the ModOrganizer 1 load "
               "mechanism to \"Script Extender\", "
               "in which case you must remove this file either by changing the load "
-              "mechanism in ModOrganizer 1 or "
-              "manually removing the file, otherwise the game is likely to crash and "
-              "burn.")
+              "mechanism in ModOrganizer 1 or by manually removing the file. "
+              "Otherwise, the game may fail to start or crash.")
         .arg(oldMO1HookDll());
     break;
   }

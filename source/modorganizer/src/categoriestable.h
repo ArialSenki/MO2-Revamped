@@ -23,6 +23,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTableWidget>
 #include <log.h>
 
+class QDropEvent;
+
 class CategoriesTable : public QTableWidget
 {
   Q_OBJECT
@@ -30,8 +32,7 @@ public:
   CategoriesTable(QWidget* parent = 0);
 
 protected:
-  virtual bool dropMimeData(int row, int column, const QMimeData* data,
-                            Qt::DropAction action);
+  void dropEvent(QDropEvent* event) override;
 };
 
 #endif  // CATEGORIESTABLE_H

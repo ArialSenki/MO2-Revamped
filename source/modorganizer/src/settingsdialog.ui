@@ -65,6 +65,23 @@
             <number>0</number>
            </property>
            <item>
+            <widget class="QLabel" name="generalPageTitle">
+             <property name="text">
+              <string>General preferences</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="generalPageSubtitle">
+             <property name="text">
+              <string>Set defaults for the interface, downloads, updates, profiles, and workspace panels.</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="groupBox_61">
              <property name="title">
               <string>Language</string>
@@ -178,13 +195,13 @@
               <item>
                <widget class="QCheckBox" name="checkForUpdates">
                 <property name="toolTip">
-                 <string>Check for Mod Organizer updates on Github on startup.</string>
+                 <string>Check for MO2 Revamped updates on GitHub on startup.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Check for Mod Organizer updates on Github on startup.</string>
+                 <string>Check for MO2 Revamped updates on GitHub on startup.</string>
                 </property>
                 <property name="text">
-                 <string>Check for updates</string>
+                 <string>Check for MO2 Revamped updates</string>
                 </property>
                </widget>
               </item>
@@ -273,25 +290,89 @@
                </widget>
               </item>
               <item>
-               <widget class="QCheckBox" name="showMenubarOnAlt">
-                <property name="toolTip">
-                 <string>Show the menubar when the Alt key is pressed</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Show the menubar when the Alt key is pressed</string>
-                </property>
-                <property name="text">
-                 <string>Show menubar when pressing Alt</string>
-                </property>
-               </widget>
-              </item>
-              <item>
                <widget class="QCheckBox" name="doubleClickPreviews">
                 <property name="toolTip">
                  <string>Whether double-clicking on a file opens the preview window or launches the program associated with it. This applies to the Data tab as well as the Conflicts and Filetree tabs in the mod info window.</string>
                 </property>
                 <property name="text">
                  <string>Open previews on double-click</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+           </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="toolbarViewGroup">
+             <property name="title">
+              <string>Toolbar and panels</string>
+             </property>
+             <layout class="QGridLayout" name="toolbarViewLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="toolbarSizeLabel">
+                <property name="text">
+                 <string>Toolbar icon size</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="toolbarIconSizeCombo">
+                <property name="toolTip">
+                 <string>Choose the size of toolbar icons.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="toolbarStyleLabel">
+                <property name="text">
+                 <string>Toolbar button style</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QComboBox" name="toolbarButtonStyleCombo">
+                <property name="toolTip">
+                 <string>Choose whether toolbar buttons show icons, text, or both.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" colspan="2">
+               <widget class="QLabel" name="toolbarViewDescription">
+                <property name="text">
+                 <string>Set the toolbar appearance and choose which workspace panels stay visible.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <widget class="QCheckBox" name="mainToolbarVisibleBox">
+                <property name="toolTip">
+                 <string>Show or hide the main toolbar.</string>
+                </property>
+                <property name="text">
+                 <string>Show main toolbar</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0" colspan="2">
+               <widget class="QCheckBox" name="statusBarVisibleBox">
+                <property name="toolTip">
+                 <string>Show or hide the status bar at the bottom of the main window.</string>
+                </property>
+                <property name="text">
+                 <string>Show status bar</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0" colspan="2">
+               <widget class="QCheckBox" name="logPanelVisibleBox">
+                <property name="toolTip">
+                 <string>Show or hide the log panel.</string>
+                </property>
+                <property name="text">
+                 <string>Show log panel</string>
                 </property>
                </widget>
               </item>
@@ -380,15 +461,32 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="themeTab">
       <attribute name="title">
        <string>Theme</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_20">
+      <layout class="QVBoxLayout" name="verticalLayout_20" stretch="0,0,0,1">
        <item>
-        <widget class="QGroupBox" name="groupBox_11">
+        <widget class="QLabel" name="themePageTitle">
+         <property name="text">
+          <string>Appearance</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="themePageSubtitle">
+         <property name="text">
+          <string>Choose Light or Dark, then customize the highlights used for mod conflicts and selected plugins.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="themeStyleGroup">
          <property name="title">
-          <string>Style</string>
+          <string>Interface theme</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -415,8 +513,11 @@
           </item>
           <item>
            <widget class="QPushButton" name="exploreStyles">
+            <property name="toolTip">
+             <string>Open the folder containing MO2's theme files.</string>
+            </property>
             <property name="text">
-             <string>Explore...</string>
+             <string>Open theme folder</string>
             </property>
            </widget>
           </item>
@@ -437,13 +538,23 @@
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_18">
+        <layout class="QVBoxLayout" name="verticalLayout_18" stretch="1">
          <item>
-          <widget class="QGroupBox" name="ModlistGroupBox">
+          <widget class="QGroupBox" name="themeColorsGroup">
            <property name="title">
-            <string>Colors</string>
+            <string>Mod and plugin highlight colors</string>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_13">
+           <layout class="QVBoxLayout" name="verticalLayout_13" stretch="0,1,0">
+            <item>
+             <widget class="QLabel" name="themeColorDescription">
+              <property name="text">
+               <string>Activate a row (double-click it or press Enter) to edit its highlight color and transparency.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="ColorTable" name="colorTable">
               <property name="editTriggers">
@@ -493,13 +604,13 @@
                <item>
                 <widget class="QPushButton" name="resetColorsBtn">
                  <property name="toolTip">
-                  <string>Reset all colors to their default value.</string>
+                  <string>Restore all highlight colors to their default values.</string>
                  </property>
                  <property name="whatsThis">
-                  <string>Reset all colors to their default value.</string>
+                  <string>Restore all highlight colors to their default values.</string>
                  </property>
                  <property name="text">
-                  <string>Reset Colors</string>
+                  <string>Restore default colors</string>
                  </property>
                 </widget>
                </item>
@@ -522,8 +633,25 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
-        <widget class="QWidget" name="widget_11" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_21">
+        <widget class="QLabel" name="modListPageTitle">
+         <property name="text">
+          <string>Mod list behavior</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="modListPageSubtitle">
+         <property name="text">
+          <string>Choose what the list displays and how MO2 handles sorting, installing, and drag-and-drop.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+       <widget class="QWidget" name="widget_11" native="true">
+         <layout class="QHBoxLayout" name="modListOptionGroupsLayout">
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -536,81 +664,128 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <property name="spacing">
+           <number>12</number>
+          </property>
           <item>
-           <widget class="QCheckBox" name="colorSeparatorsBox">
-            <property name="toolTip">
-             <string>Colors set on separators will also be shown in the mod list scrollbar at the location of the separator. This can be useful for quickly navigating to a specific separator.</string>
+           <widget class="QGroupBox" name="modListDisplayGroup">
+            <property name="title">
+             <string>Display and filters</string>
             </property>
-            <property name="whatsThis">
-             <string>Colors set on separators will also be shown in the mod list scrollbar at the location of the separator. This can be useful for quickly navigating to a specific separator.</string>
-            </property>
-            <property name="text">
-             <string>Show mod list separator colors on the scrollbar</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="displayForeignBox">
-            <property name="toolTip">
-             <string>Disable this to no longer display mods installed outside MO in the mod list (left pane). Assets from those mods will then be treated as having lowest mod priority together with the original game content.</string>
-            </property>
-            <property name="whatsThis">
-             <string>By default Mod Organizer will display esp+bsa bundles installed with foreign tools as mods (left pane). This allows you to control their priority in relation to other mods. This is particularly useful if you also use Steam Workshop to install mods.
+            <layout class="QVBoxLayout" name="modListDisplayLayout">
+             <property name="spacing">
+              <number>4</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="modListDisplayDescription">
+               <property name="text">
+                <string>Choose what appears in the list and what MO2 remembers.</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="colorSeparatorsBox">
+               <property name="toolTip">
+                <string>Show separator colors on the mod list scrollbar so you can quickly locate a separator.</string>
+               </property>
+               <property name="whatsThis">
+                <string>Show separator colors on the mod list scrollbar so you can quickly locate a separator.</string>
+               </property>
+               <property name="text">
+                <string>Show separator colors in scrollbar</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="displayForeignBox">
+               <property name="toolTip">
+                <string>Show mods installed by other tools in the left pane so their priority can be managed alongside MO2 mods.</string>
+               </property>
+               <property name="whatsThis">
+                <string>By default Mod Organizer will display esp+bsa bundles installed with foreign tools as mods (left pane). This allows you to control their priority in relation to other mods. This is particularly useful if you also use Steam Workshop to install mods.
 However, if you installed loose file mods outside MO which conflict with BSAs also installed outside MO those conflicts can't be resolved correctly.
 
 If you disable this feature, MO will only display official DLCs this way. Please note that plugins (esps, esms, and esls) displayed in the right pane are completely unaffected by this feature.</string>
-            </property>
-            <property name="text">
-             <string>Display mods installed outside MO</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
+               </property>
+               <property name="text">
+                <string>Display mods installed outside MO2</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="saveFiltersBox">
+               <property name="toolTip">
+                <string>Save the current filters when closing MO2 and restore them on startup.</string>
+               </property>
+               <property name="whatsThis">
+                <string>Save the current filters when closing MO2 and restore them on startup.</string>
+               </property>
+               <property name="text">
+                <string>Remember filters after restart</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="saveFiltersBox">
-            <property name="toolTip">
-             <string>Save the current filters when closing MO2 and restore them on startup.</string>
+           <widget class="QGroupBox" name="modListWorkflowGroup">
+            <property name="title">
+             <string>Installation and drag</string>
             </property>
-            <property name="whatsThis">
-             <string>Save the current filters when closing MO2 and restore them on startup.</string>
-            </property>
-            <property name="text">
-             <string>Remember selected filters after restarting MO</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkUpdateInstallBox">
-            <property name="toolTip">
-             <string>Check if updates are available for mods after installing them.</string>
-            </property>
-            <property name="whatsThis">
-             <string>Check if updates are available for mods after installing them.</string>
-            </property>
-            <property name="text">
-             <string>Check for updates when installing mods</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="autoCollapseDelayBox">
-            <property name="toolTip">
-             <string>Automatically collapse separators, categories or nexus ids after a delay when hovering them during drag.</string>
-            </property>
-            <property name="whatsThis">
-             <string>Automatically collapse separators, categories or nexus ids after a delay when hovering them during drag.</string>
-            </property>
-            <property name="text">
-             <string>Automatically collapse items during drag on hover</string>
-            </property>
+            <layout class="QVBoxLayout" name="modListWorkflowLayout">
+             <property name="spacing">
+              <number>4</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="modListWorkflowDescription">
+               <property name="text">
+                <string>Set how MO2 checks new installs and helps organize items while dragging.</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkUpdateInstallBox">
+               <property name="toolTip">
+                <string>Check whether updates are available for a mod after it is installed.</string>
+               </property>
+               <property name="whatsThis">
+                <string>Check whether updates are available for a mod after it is installed.</string>
+               </property>
+               <property name="text">
+                <string>Check for updates after installing</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="autoCollapseDelayBox">
+               <property name="toolTip">
+                <string>Collapse separators, categories or Nexus IDs after hovering over them briefly during drag-and-drop.</string>
+               </property>
+               <property name="whatsThis">
+                <string>Collapse separators, categories or Nexus IDs after hovering over them briefly during drag-and-drop.</string>
+               </property>
+               <property name="text">
+                <string>Auto-collapse items while dragging</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -648,6 +823,16 @@ If you disable this feature, MO will only display official DLCs this way. Please
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_17">
           <item>
+           <widget class="QLabel" name="collapsibleSeparatorsDescription">
+            <property name="text">
+             <string>Choose when separators fold and which details remain visible.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QGridLayout" name="gridLayout_9">
             <property name="verticalSpacing">
              <number>9</number>
@@ -655,13 +840,13 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <item row="5" column="1">
              <widget class="QCheckBox" name="collapsibleSeparatorsHighlightToBox">
               <property name="toolTip">
-               <string>Highlight collapsed separators based on conflicts and plugins from mods inside them.</string>
+               <string>Color each collapsed separator using the conflict state of the mods inside it.</string>
               </property>
               <property name="whatsThis">
-               <string>Highlight collapsed separators based on conflicts and plugins from mods inside them.</string>
+               <string>Color each collapsed separator using the conflict state of the mods inside it.</string>
               </property>
               <property name="text">
-               <string>on separators</string>
+               <string>Color separator from contents</string>
               </property>
               <property name="checked">
                <bool>true</bool>
@@ -676,22 +861,22 @@ If you disable this feature, MO will only display official DLCs this way. Please
              </widget>
             </item>
             <item row="5" column="0">
-             <widget class="QLabel" name="label_34">
-              <property name="text">
-               <string>Show conflicts and plugins </string>
+              <widget class="QLabel" name="collapsibleSeparatorsHighlightLabel">
+               <property name="text">
+               <string>Conflict and plugin highlights</string>
               </property>
              </widget>
             </item>
             <item row="5" column="2">
              <widget class="QCheckBox" name="collapsibleSeparatorsHighlightFromBox">
               <property name="toolTip">
-               <string>When selecting a collapsed separator, highlight conflicting mods and plugins from mods inside the separator.</string>
+               <string>When you select a collapsed separator, highlight its contained mods and their plugins.</string>
               </property>
               <property name="whatsThis">
-               <string>When selecting a collapsed separator, highlight conflicting mods and plugins from mods inside the separator.</string>
+               <string>When you select a collapsed separator, highlight its contained mods and their plugins.</string>
               </property>
               <property name="text">
-               <string>from separators</string>
+               <string>Highlight contents when selected</string>
               </property>
               <property name="checked">
                <bool>true</bool>
@@ -701,7 +886,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <item row="1" column="1">
              <widget class="QCheckBox" name="collapsibleSeparatorsAscBox">
               <property name="text">
-               <string>ascending priority</string>
+               <string>Ascending priority</string>
               </property>
               <property name="checked">
                <bool>true</bool>
@@ -711,14 +896,14 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <item row="1" column="2">
              <widget class="QCheckBox" name="collapsibleSeparatorsDscBox">
               <property name="text">
-               <string>descending  priority</string>
+               <string>Descending priority</string>
               </property>
              </widget>
             </item>
             <item row="8" column="0">
-             <widget class="QLabel" name="label_35">
+             <widget class="QLabel" name="collapsibleSeparatorsIconsLabel">
               <property name="text">
-               <string>Show icons on separators</string>
+               <string>Show status icons</string>
               </property>
              </widget>
             </item>
@@ -740,7 +925,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                <item>
                 <widget class="QCheckBox" name="collapsibleSeparatorsIconsConflictsBox">
                  <property name="text">
-                  <string>conflicts</string>
+                  <string>Conflicts</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -750,7 +935,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                <item>
                 <widget class="QCheckBox" name="collapsibleSeparatorsIconsFlagsBox">
                  <property name="text">
-                  <string>flags</string>
+                  <string>Flags</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -760,7 +945,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                <item>
                 <widget class="QCheckBox" name="collapsibleSeparatorsIconsContentsBox">
                  <property name="text">
-                  <string>content</string>
+                  <string>Contents</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -770,7 +955,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                <item>
                 <widget class="QCheckBox" name="collapsibleSeparatorsIconsVersionBox">
                  <property name="text">
-                  <string>version</string>
+                  <string>Version</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -804,7 +989,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
              <string>Do not share the collapse/expanded state of separators between profiles.</string>
             </property>
             <property name="text">
-             <string>Profile-specific collapse states for separators</string>
+             <string>Keep separator collapse state per profile</string>
             </property>
            </widget>
           </item>
@@ -831,6 +1016,23 @@ If you disable this feature, MO will only display official DLCs this way. Please
        <string>Paths</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QLabel" name="pathsPageTitle">
+         <property name="text">
+          <string>Storage paths</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="pathsPageSubtitle">
+         <property name="text">
+          <string>Choose where this instance keeps its downloads, mods, profiles, and temporary files.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="6" column="2">
@@ -907,12 +1109,12 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
+         <size>
+          <width>20</width>
+          <height>14</height>
+         </size>
+         </property>
+        </spacer>
          </item>
          <item row="5" column="0">
           <widget class="QLabel" name="label_22">
@@ -977,12 +1179,12 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
+         <size>
+          <width>20</width>
+          <height>14</height>
+         </size>
+         </property>
+        </spacer>
          </item>
          <item row="11" column="0">
           <widget class="QLabel" name="label_29">
@@ -1081,12 +1283,29 @@ If you disable this feature, MO will only display official DLCs this way. Please
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_17">
-             <item>
-              <widget class="QGroupBox" name="groupBox_2">
-               <property name="title">
-                <string>Nexus Account</string>
+            <item>
+             <widget class="QLabel" name="nexusPageTitle">
+              <property name="text">
+               <string>Nexus integration</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="nexusPageDescription">
+              <property name="text">
+               <string>Link your Nexus account, choose MO2 features, and set download server priority.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_17">
+              <item>
+               <widget class="QGroupBox" name="nexusAccountGroup">
+                <property name="title">
+                 <string>Linked account</string>
                </property>
                <layout class="QFormLayout" name="formLayout">
                 <property name="horizontalSpacing">
@@ -1141,9 +1360,9 @@ If you disable this feature, MO will only display official DLCs this way. Please
               </widget>
              </item>
              <item>
-              <widget class="QGroupBox" name="groupBox_3">
-               <property name="title">
-                <string>Statistics</string>
+               <widget class="QGroupBox" name="nexusUsageGroup">
+                <property name="title">
+                 <string>API request usage</string>
                </property>
                <layout class="QFormLayout" name="formLayout_3">
                 <property name="horizontalSpacing">
@@ -1183,13 +1402,13 @@ If you disable this feature, MO will only display official DLCs this way. Please
             </layout>
            </item>
            <item>
-            <widget class="QGroupBox" name="nexusBox">
+            <widget class="QGroupBox" name="nexusConnectionGroup">
              <property name="title">
-              <string>Nexus Connection</string>
+              <string>Account connection</string>
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_15">
               <item>
-               <widget class="QWidget" name="widget_9" native="true">
+                <widget class="QWidget" name="nexusConnectionActions">
                 <layout class="QVBoxLayout" name="verticalLayout_28">
                  <property name="leftMargin">
                   <number>0</number>
@@ -1202,18 +1421,31 @@ If you disable this feature, MO will only display official DLCs this way. Please
                  </property>
                  <property name="bottomMargin">
                   <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QPushButton" name="nexusConnect">
-                   <property name="text">
-                    <string>Connect to Nexus</string>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="nexusConnectionDescription">
+                    <property name="text">
+                     <string>Sign in through Nexus or enter an API key manually. Connection messages appear beside these actions.</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="nexusConnect">
+                    <property name="toolTip">
+                     <string>Start or cancel Nexus account authorization.</string>
+                    </property>
+                    <property name="text">
+                     <string>Connect to Nexus</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="nexusManualKey">
-                   <property name="toolTip">
-                    <string>Manually enter the API key and try to login</string>
+                   <widget class="QPushButton" name="nexusManualKey">
+                    <property name="toolTip">
+                     <string>Open the dialog to enter and validate a Nexus API key.</string>
                    </property>
                    <property name="text">
                     <string>Enter API Key Manually</string>
@@ -1251,7 +1483,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                </widget>
               </item>
               <item>
-               <widget class="QWidget" name="widget_15" native="true">
+                <widget class="QWidget" name="nexusActivityPanel">
                 <layout class="QVBoxLayout" name="verticalLayout_29">
                  <property name="leftMargin">
                   <number>0</number>
@@ -1264,9 +1496,16 @@ If you disable this feature, MO will only display official DLCs this way. Please
                  </property>
                  <property name="bottomMargin">
                   <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QListWidget" name="nexusLog">
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="nexusActivityTitle">
+                    <property name="text">
+                     <string>Connection activity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QListWidget" name="nexusLog">
                    <property name="sizeAdjustPolicy">
                     <enum>QAbstractScrollArea::AdjustToContents</enum>
                    </property>
@@ -1279,27 +1518,9 @@ If you disable this feature, MO will only display official DLCs this way. Please
             </widget>
            </item>
            <item>
-            <widget class="QWidget" name="widget_6" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_5">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="settingsBox">
+            <widget class="QGroupBox" name="nexusOptionsGroup">
              <property name="title">
-              <string>Options</string>
+              <string>MO2 integration and tools</string>
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_10">
               <property name="leftMargin">
@@ -1315,7 +1536,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                <number>9</number>
               </property>
               <item>
-               <widget class="QWidget" name="widget_16" native="true">
+                <widget class="QWidget" name="nexusFeatureOptions">
                 <layout class="QVBoxLayout" name="verticalLayout_30">
                  <property name="leftMargin">
                   <number>0</number>
@@ -1328,11 +1549,24 @@ If you disable this feature, MO will only display official DLCs this way. Please
                  </property>
                  <property name="bottomMargin">
                   <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QCheckBox" name="endorsementBox">
-                   <property name="text">
-                    <string>Endorsement Integration</string>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="nexusFeaturesDescription">
+                    <property name="text">
+                     <string>Choose which Nexus actions and category mappings MO2 uses.</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="endorsementBox">
+                    <property name="toolTip">
+                     <string>Show endorsement actions and status for mods linked to Nexus.</string>
+                    </property>
+                    <property name="text">
+                     <string>Enable endorsement actions</string>
                    </property>
                    <property name="checked">
                     <bool>true</bool>
@@ -1340,9 +1574,12 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="trackedBox">
-                   <property name="text">
-                    <string>Tracked Integration</string>
+                   <widget class="QCheckBox" name="trackedBox">
+                    <property name="toolTip">
+                     <string>Show track or untrack actions and tracking status for mods linked to Nexus.</string>
+                    </property>
+                    <property name="text">
+                     <string>Enable tracked-mod actions</string>
                    </property>
                    <property name="checked">
                     <bool>true</bool>
@@ -1350,9 +1587,12 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="categoryMappingsBox">
-                   <property name="text">
-                    <string>Use Nexus category mappings</string>
+                   <widget class="QCheckBox" name="categoryMappingsBox">
+                    <property name="toolTip">
+                     <string>Use Nexus category mappings when assigning or importing mod categories.</string>
+                    </property>
+                    <property name="text">
+                     <string>Use Nexus category mappings</string>
                    </property>
                    <property name="checked">
                     <bool>true</bool>
@@ -1360,15 +1600,15 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="hideAPICounterBox">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;By default, a counter is displayed in the bottom right corner.  This informs the user of their remaining API requests.  The Nexus API becomes unusable once these API requests run out.  Checking this option will hide that counter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="whatsThis">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;By default, a counter is displayed in the bottom right corner.  This informs the user of their remaining API requests.  The Nexus API becomes unusable once these API requests run out.  Checking this option will hide that counter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>Hide API Request Counter</string>
+                   <widget class="QCheckBox" name="hideAPICounterBox">
+                    <property name="toolTip">
+                     <string>Hide the remaining Nexus API request count in MO2's status bar. This does not change the available request limit.</string>
+                    </property>
+                    <property name="whatsThis">
+                     <string>Hide the remaining Nexus API request count in MO2's status bar. This does not change the available request limit.</string>
+                    </property>
+                    <property name="text">
+                     <string>Hide API request counter</string>
                    </property>
                   </widget>
                  </item>
@@ -1376,7 +1616,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                </widget>
               </item>
               <item>
-               <widget class="QWidget" name="widget_17" native="true">
+                <widget class="QWidget" name="nexusIntegrationTools">
                 <layout class="QVBoxLayout" name="verticalLayout_31">
                  <property name="leftMargin">
                   <number>0</number>
@@ -1389,21 +1629,34 @@ If you disable this feature, MO will only display official DLCs this way. Please
                  </property>
                  <property name="bottomMargin">
                   <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QPushButton" name="associateButton">
-                   <property name="text">
-                    <string>Associate with &quot;Download with manager&quot; links</string>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="nexusToolsDescription">
+                    <property name="text">
+                     <string>Register MO2 for Nexus download links or clear cached Nexus data.</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="associateButton">
+                    <property name="toolTip">
+                     <string>Register this MO2 instance to handle Nexus Download with manager links.</string>
+                    </property>
+                    <property name="text">
+                     <string>Register MO2 for Nexus download links</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="clearCacheButton">
-                   <property name="toolTip">
-                    <string>Remove cache and cookies.</string>
+                   <widget class="QPushButton" name="clearCacheButton">
+                    <property name="toolTip">
+                     <string>Clear the MO2 cache folder and the Nexus API cache.</string>
                    </property>
-                   <property name="text">
-                    <string>Clear Cache</string>
+                    <property name="text">
+                     <string>Clear Nexus cache</string>
                    </property>
                   </widget>
                  </item>
@@ -1414,9 +1667,9 @@ If you disable this feature, MO will only display official DLCs this way. Please
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="serversBox">
+            <widget class="QGroupBox" name="nexusServersGroup">
              <property name="title">
-              <string>Servers</string>
+              <string>Download server priority</string>
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="0,0">
               <property name="spacing">
@@ -1439,12 +1692,15 @@ If you disable this feature, MO will only display official DLCs this way. Please
                 <item>
                  <widget class="QLabel" name="label_18">
                   <property name="text">
-                   <string>Known Servers (updated on download)</string>
+                    <string>Available servers</string>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QListWidget" name="knownServersList">
+                  <property name="toolTip">
+                   <string>Servers MO2 has learned from Nexus downloads. Drag one into the preferred list to use it.</string>
+                  </property>
                   <property name="dragDropMode">
                    <enum>QAbstractItemView::DragDrop</enum>
                   </property>
@@ -1460,12 +1716,15 @@ If you disable this feature, MO will only display official DLCs this way. Please
                 <item>
                  <widget class="QLabel" name="label_21">
                   <property name="text">
-                   <string>Preferred Servers (Drag &amp; Drop)</string>
+                    <string>Preferred order (top has priority)</string>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QListWidget" name="preferredServersList">
+                  <property name="toolTip">
+                   <string>MO2 tries these servers in order. Drag items to change their priority.</string>
+                  </property>
                   <property name="dragDropMode">
                    <enum>QAbstractItemView::DragDrop</enum>
                   </property>
@@ -1486,16 +1745,48 @@ If you disable this feature, MO will only display official DLCs this way. Please
       </layout>
      </widget>
      <widget class="QWidget" name="pluginsTab">
-      <attribute name="title">
-       <string>Plugins</string>
+     <attribute name="title">
+      <string>Plugins</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_9">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <property name="spacing">
+        <number>8</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="pluginPageTitle">
+         <property name="text">
+          <string>Plugin management</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="pluginPageSubtitle">
+         <property name="text">
+          <string>Browse installed plugins and their options. Select a plugin to review its details; dependent plugins appear beneath their parent.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QSplitter" name="splitter">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
-         <widget class="QWidget" name="widget" native="true">
+         <widget class="QWidget" name="widget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -1514,9 +1805,9 @@ If you disable this feature, MO will only display official DLCs this way. Please
            </property>
            <property name="bottomMargin">
             <number>0</number>
-           </property>
-           <item>
-            <widget class="QSplitter" name="splitter_2">
+             </property>
+             <item>
+              <widget class="QSplitter" name="splitter_2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -1524,46 +1815,46 @@ If you disable this feature, MO will only display official DLCs this way. Please
               </sizepolicy>
              </property>
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <widget class="QWidget" name="widget1" native="true">
-              <layout class="QVBoxLayout" name="verticalLayout_15">
-               <property name="leftMargin">
-                <number>0</number>
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <widget class="QGroupBox" name="pluginBrowserGroup">
+               <property name="title">
+                <string>Installed plugins</string>
                </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QTreeWidget" name="pluginsList">
-                 <column>
+               <layout class="QVBoxLayout" name="verticalLayout_15">
+                <item>
+                 <widget class="QLabel" name="pluginBrowserDescription">
                   <property name="text">
-                   <string notr="true">1</string>
+                   <string>Plugins are grouped by the MO2 interface they implement.</string>
                   </property>
-                 </column>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_4">
-                 <item>
-                  <widget class="QLineEdit" name="pluginFilterEdit">
-                   <property name="placeholderText">
-                    <string/>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="pluginFilterEdit">
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Search plugins...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTreeWidget" name="pluginsList">
+                  <column>
+                   <property name="text">
+                    <string notr="true">1</string>
                    </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="pluginWidget" native="true">
-              <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,1,0">
+                  </column>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="pluginWidget">
+               <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1">
                <property name="leftMargin">
                 <number>0</number>
                </property>
@@ -1577,7 +1868,13 @@ If you disable this feature, MO will only display official DLCs this way. Please
                 <number>0</number>
                </property>
                <item>
-                <widget class="QWidget" name="pluginDescription" native="true">
+                <widget class="QGroupBox" name="pluginDetailsGroup">
+                 <property name="title">
+                  <string>Plugin details and options</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="pluginDetailsLayout">
+                  <item>
+                   <widget class="QWidget" name="pluginDescription">
                  <layout class="QFormLayout" name="pluginDescriptionLayout">
                   <property name="labelAlignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -1588,7 +1885,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_13">
                     <property name="text">
-                     <string>Author:</string>
+                     <string>Author</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -1608,7 +1905,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   <item row="1" column="0">
                    <widget class="QLabel" name="label_15">
                     <property name="text">
-                     <string>Version:</string>
+                     <string>Version</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -1628,7 +1925,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   <item row="2" column="0">
                    <widget class="QLabel" name="label_14">
                     <property name="text">
-                     <string>Description:</string>
+                     <string>Description</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -1651,15 +1948,32 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   <item row="3" column="0">
                    <widget class="QCheckBox" name="enabledCheckbox">
                     <property name="text">
-                     <string>Enabled</string>
+                     <string>Enable plugin</string>
                     </property>
                    </widget>
                   </item>
                  </layout>
                 </widget>
-               </item>
-               <item>
-                <widget class="QTreeWidget" name="pluginSettingsList">
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="pluginSettingsTitle">
+                    <property name="text">
+                     <string>Plugin-specific options</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="pluginSettingsDescription">
+                    <property name="text">
+                     <string>Double-click a value to edit it. Boolean options can be changed with one click; hover over a value to see its description when available.</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QTreeWidget" name="pluginSettingsList">
                  <property name="indentation">
                   <number>0</number>
                  </property>
@@ -1673,7 +1987,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   <bool>false</bool>
                  </property>
                  <attribute name="headerVisible">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </attribute>
                  <attribute name="headerDefaultSectionSize">
                   <number>170</number>
@@ -1688,16 +2002,19 @@ If you disable this feature, MO will only display official DLCs this way. Please
                    <string>Value</string>
                   </property>
                  </column>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="noPluginLabel">
-                 <property name="text">
-                  <string>No plugin found.</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="noPluginLabel">
+                    <property name="text">
+                     <string>No plugins match this search.</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
@@ -1713,10 +2030,20 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <verstretch>1</verstretch>
            </sizepolicy>
           </property>
-          <property name="title">
-           <string>Blacklisted Plugins (use &lt;del&gt; to remove):</string>
+         <property name="title">
+          <string>Plugin blacklist</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_16">
+           <item>
+            <widget class="QLabel" name="pluginBlacklistDescription">
+             <property name="text">
+              <string>Blacklisted plugins are skipped when MO2 starts. Select an entry and press Delete to remove it from this list.</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QListWidget" name="pluginBlacklist"/>
            </item>
@@ -1731,6 +2058,23 @@ If you disable this feature, MO will only display official DLCs this way. Please
        <string>Workarounds</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="workaroundPageTitle">
+         <property name="text">
+          <string>Compatibility and advanced options</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="workaroundPageSubtitle">
+         <property name="text">
+          <string>Optional compatibility, network, and maintenance controls. Change these only when needed; hover over an option for details.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QScrollArea" name="workaroundScrollArea">
          <property name="styleSheet">
@@ -1758,7 +2102,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
           <property name="autoFillBackground">
            <bool>false</bool>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_6">
+          <layout class="QGridLayout" name="workaroundsLayout">
            <property name="leftMargin">
             <number>0</number>
            </property>
@@ -1771,10 +2115,10 @@ If you disable this feature, MO will only display official DLCs this way. Please
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
+           <item row="0" column="0">
             <widget class="QGroupBox" name="workaroundsOptionsBox">
              <property name="title">
-              <string>Options</string>
+              <string>MO2 behavior and archive handling</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_23">
               <property name="leftMargin">
@@ -1788,18 +2132,27 @@ If you disable this feature, MO will only display official DLCs this way. Please
               </property>
               <property name="bottomMargin">
                <number>9</number>
-              </property>
+             </property>
+              <item>
+               <widget class="QLabel" name="workaroundsBehaviorDescription">
+                <property name="text">
+                 <string>Adjust how MO2 treats core game files, archives, and the interface while an executable runs.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
               <item>
                <widget class="QCheckBox" name="forceEnableBox">
                 <property name="toolTip">
-                 <string>If checked, files (i.e. esps, esms and bsas) belonging to the core game can not be disabled in the UI. (default: on)</string>
+                 <string>Prevent core game files such as plugins and archives from being disabled in the UI. Disable this only for total conversions; required game files may otherwise be missing.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>If checked, files (i.e. esps, esms and bsas) belonging to the core game can not be disabled in the UI. (default: on)
-Uncheck this if you want to use Mod Organizer with total conversions (like Nehrim) but be aware that the game will crash if required files are not enabled.</string>
+                 <string>Prevent core game files from being disabled in the UI. For a total conversion, you may need to disable this option, but the game can fail to start if required files are not enabled.</string>
                 </property>
                 <property name="text">
-                 <string>Force-enable game files</string>
+                 <string>Keep core game files enabled</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -1809,13 +2162,13 @@ Uncheck this if you want to use Mod Organizer with total conversions (like Nehri
               <item>
                <widget class="QCheckBox" name="enableArchiveParsingBox">
                 <property name="toolTip">
-                 <string>Enable parsing of Archives. This is an Experimental Feature. Has negative effects on performance and known incorrectness.</string>
+                 <string>Inspect archive contents to calculate file conflicts. This experimental scan can slow down conflict checks and may report incorrect results; it does not load archives into the game.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;By default, MO will parse archive files (BSA, BA2) to calculate conflicts between the contents of the archive files and other loose files. This process has a noticeable cost in performance.&lt;/p&gt;&lt;p&gt;This feature should not be confused with the archive management feature offered by MO1. MO2 will only show conflicts with archives and will NOT load them into the game or program.&lt;/p&gt;&lt;p&gt;If you disable this feature, MO will only display conflicts between loose files.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>Archive parsing compares files inside supported archives with other files to display conflicts. It has a performance cost and does not extract or load archives into the game.</string>
                 </property>
                 <property name="text">
-                 <string>Enable archives parsing (experimental)</string>
+                 <string>Check archive contents for conflicts (experimental)</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -1825,13 +2178,13 @@ Uncheck this if you want to use Mod Organizer with total conversions (like Nehri
               <item>
                <widget class="QCheckBox" name="lockGUIBox">
                 <property name="toolTip">
-                 <string>Disable this to prevent the GUI from being locked when running an executable.  This may result in abnormal behavior.</string>
+                 <string>Keep MO2's interface locked while a launched executable is running. Disabling the lock can cause abnormal behavior.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Disable this to prevent the GUI from being locked when running an executable.  This may result in abnormal behavior.</string>
+                 <string>Keep the MO2 interface unavailable while a launched executable runs. Disabling the lock can cause abnormal behavior.</string>
                 </property>
                 <property name="text">
-                 <string>Lock GUI when running executable</string>
+                 <string>Keep MO2 locked while a program runs</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -1841,108 +2194,133 @@ Uncheck this if you want to use Mod Organizer with total conversions (like Nehri
              </layout>
             </widget>
            </item>
-           <item>
-            <widget class="QGroupBox" name="groupBox_12">
+           <item row="1" column="0">
+            <widget class="QGroupBox" name="steamSettingsGroup">
              <property name="title">
-              <string>Steam</string>
+              <string>Steam launch settings</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_7">
-              <item row="1" column="1">
-               <widget class="QLineEdit" name="steamUserEdit"/>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLabel" name="label_20">
+              <item row="0" column="0" colspan="4">
+               <widget class="QLabel" name="steamSettingsDescription">
                 <property name="text">
-                 <string>Password</string>
+                 <string>Set an App ID override or optional Steam login details when a game's launch setup requires them.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
-              <item row="1" column="3">
+              <item row="2" column="1" colspan="3">
+               <widget class="QLineEdit" name="steamUserEdit">
+                <property name="toolTip">
+                 <string>Optional Steam username for launch configurations that use MO2's Steam login settings.</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Optional</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1" colspan="3">
                <widget class="QLineEdit" name="steamPassEdit">
+                <property name="toolTip">
+                 <string>Optional Steam password. It remains masked while entered.</string>
+                </property>
                 <property name="echoMode">
                  <enum>QLineEdit::Password</enum>
+                </property>
+                <property name="placeholderText">
+                 <string>Optional</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string>Steam username</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_20">
+                <property name="text">
+                 <string>Steam password</string>
                 </property>
                </widget>
               </item>
               <item row="1" column="0">
-               <widget class="QLabel" name="label_19">
-                <property name="text">
-                 <string>Username</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
                <widget class="QLabel" name="label_4">
                 <property name="text">
-                 <string>Steam App ID</string>
+                 <string>App ID override</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
+              <item row="1" column="1" colspan="3">
                <widget class="QLineEdit" name="appIDEdit">
                 <property name="toolTip">
-                 <string>The Steam AppID for your game</string>
+                 <string>Optional override for direct Steam launch. Leave empty to use the game's default Steam App ID.</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Leave empty to use the game default</string>
                 </property>
                 <property name="whatsThis">
-                 <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;The Steam App ID is required to directly start some games. For Skyrim, if this is not set or wrong, the &amp;quot;Mod Organizer&amp;quot; load mechanism may not work properly.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;The preset for this is the App ID of the &amp;quot;regular&amp;quot; version so in most cases, you should be set.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;If you think you have a different version (GotY or something), follow these steps to get to the id:&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;1. Navigate to the game library in steam&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;2. right-click on the game you need the id for and choose &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;Create desktop shortcut&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;3. right-click on the newly created shortcut on your desktop and select &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;Properties&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;4. in the URL-field you should see something like this: &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-style:italic;&quot;&gt;steam://rungameid/22380&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;22380 is the id you're looking for.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>Leave empty to use the Steam App ID supplied by the selected game plugin. Enter an override only when the game uses a different launch entry.</string>
                 </property>
                </widget>
               </item>
              </layout>
             </widget>
            </item>
-           <item>
-            <widget class="QGroupBox" name="groupBox">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>100</height>
-              </size>
-             </property>
+           <item row="0" column="1">
+           <widget class="QGroupBox" name="networkSettingsGroup">
              <property name="title">
-              <string>Network</string>
+              <string>Network and browser</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_22">
               <item>
+               <widget class="QLabel" name="networkSettingsDescription">
+                <property name="text">
+                 <string>Set MO2's connection mode, proxy, and browser used for web links.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QCheckBox" name="offlineBox">
+                <property name="toolTip">
+                 <string>Disable automatic online features. Actions you start yourself, such as opening a link or checking for updates, remain available.</string>
+                </property>
                 <property name="statusTip">
                  <string>Disable automatic internet features</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Disable automatic internet features. This does not affect features that are explicitly invoked by the user (like checking mods for updates, endorsing, opening the web browser)</string>
+                 <string>Disable automatic internet features. This does not affect features that you explicitly start, such as checking mods for updates, endorsing, or opening the web browser.</string>
                 </property>
                 <property name="text">
-                 <string>Offline Mode</string>
+                 <string>Use offline mode</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QCheckBox" name="proxyBox">
+                <property name="toolTip">
+                 <string>Use the system-wide HTTP proxy for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</string>
+                </property>
                 <property name="statusTip">
                  <string>Use a proxy for network connections.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Use a proxy for network connections. This uses the system-wide settings which can be configured in Internet Explorer. Please note that MO will start up a few seconds slower on some systems when using a proxy.</string>
+                 <string>Use the system-wide proxy settings for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</string>
                 </property>
                 <property name="text">
-                 <string>Use System HTTP Proxy</string>
+                 <string>Use system HTTP proxy</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QWidget" name="widget_7" native="true">
-                <layout class="QHBoxLayout" name="horizontalLayout_9">
+               <widget class="QWidget" name="customBrowserRow">
+                <layout class="QHBoxLayout" name="customBrowserLayout">
                  <property name="leftMargin">
                   <number>0</number>
                  </property>
@@ -1958,36 +2336,39 @@ p, li { white-space: pre-wrap; }
                  <item>
                   <widget class="QCheckBox" name="useCustomBrowser">
                    <property name="toolTip">
-                    <string>Use &quot;%1&quot; as a placeholder for the URL.</string>
+                    <string>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</string>
                    </property>
                    <property name="statusTip">
-                    <string>Use &quot;%1&quot; as a placeholder for the URL.</string>
+                    <string>Use %1 as the URL placeholder in the browser command.</string>
                    </property>
                    <property name="whatsThis">
-                    <string>Use &quot;%1&quot; as a placeholder for the URL.</string>
+                    <string>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</string>
                    </property>
                    <property name="text">
-                    <string>Custom browser</string>
+                    <string>Use custom browser</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QLineEdit" name="browserCommand">
                    <property name="toolTip">
-                    <string>Use &quot;%1&quot; as a placeholder for the URL.</string>
+                    <string>Browser command with %1 in place of the target URL.</string>
                    </property>
                    <property name="statusTip">
-                    <string>Use &quot;%1&quot; as a placeholder for the URL.</string>
+                    <string>Use %1 as the URL placeholder in the browser command.</string>
                    </property>
                    <property name="whatsThis">
-                    <string>Use &quot;%1&quot; as a placeholder for the URL.</string>
+                    <string>Browser command with %1 in place of the target URL.</string>
+                   </property>
+                   <property name="placeholderText">
+                    <string>Browser command (%1 = URL)</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QToolButton" name="browseCustomBrowser">
                    <property name="text">
-                    <string>...</string>
+                    <string>Browse</string>
                    </property>
                   </widget>
                  </item>
@@ -1995,11 +2376,27 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
              </layout>
-            </widget>
+           </widget>
            </item>
-           <item>
-            <widget class="QWidget" name="widget_12" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout">
+           <item row="2" column="0" colspan="2">
+            <widget class="QGroupBox" name="maintenanceActionsGroup">
+             <property name="title">
+              <string>Maintenance tools</string>
+             </property>
+             <layout class="QVBoxLayout" name="maintenanceToolsLayout">
+              <item>
+               <widget class="QLabel" name="maintenanceToolsDescription">
+                <property name="text">
+                 <string>Run occasional repair actions for MO2 windows or supported game archives.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="maintenanceActionsRow">
+                <layout class="QHBoxLayout" name="maintenanceActionsLayout">
               <property name="leftMargin">
                <number>0</number>
               </property>
@@ -2015,32 +2412,26 @@ p, li { white-space: pre-wrap; }
               <item>
                <widget class="QPushButton" name="resetGeometryBtn">
                 <property name="toolTip">
-                 <string>Resets the window geometries for all windows.  This can be useful if a window becomes too small or too large, if a column becomes too thin or too wide, and in similar situations.</string>
+                 <string>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Resets the window geometries for all windows.  This can be useful if a window becomes too small or too large, if a column becomes too thin or too wide, and in similar situations.</string>
+                 <string>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</string>
                 </property>
                 <property name="text">
-                 <string>Reset Window Geometries</string>
+                 <string>Reset window geometry</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="bsaDateBtn">
                 <property name="toolTip">
-                 <string>
-                          For Skyrim, this can be used instead of Archive Invalidation. It should make AI redundant for all Profiles.
-                          For the other games this is not a sufficient replacement for AI!
-                        </string>
+                 <string>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>
-                          For Skyrim, this can be used instead of Archive Invalidation. It should make AI redundant for all Profiles.
-                          For the other games this is not a sufficient replacement for AI!
-                        </string>
+                 <string>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</string>
                 </property>
                 <property name="text">
-                 <string>Back-date BSAs</string>
+                 <string>Back-date BSA archives</string>
                 </property>
                 <property name="icon">
                  <iconset>
@@ -2049,7 +2440,7 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer">
+               <spacer name="maintenanceHorizontalSpacer">
                 <property name="orientation">
                  <enum>Qt::Orientation::Horizontal</enum>
                 </property>
@@ -2061,12 +2452,31 @@ p, li { white-space: pre-wrap; }
                 </property>
                </spacer>
               </item>
+                </layout>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
-           <item>
-            <widget class="QWidget" name="widget_usvfs" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout">
+           <item row="1" column="1">
+            <widget class="QGroupBox" name="virtualFilesystemGroup">
+             <property name="title">
+              <string>Virtual file system exclusions</string>
+             </property>
+             <layout class="QVBoxLayout" name="virtualFilesystemLayout">
+              <item>
+               <widget class="QLabel" name="virtualFilesystemDescription">
+                <property name="text">
+                 <string>Exclude specific programs, file endings, or folders from MO2's virtual file system.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="virtualFilesystemActionsRow">
+                <layout class="QHBoxLayout" name="virtualFilesystemActionsLayout">
               <property name="leftMargin">
                <number>0</number>
               </property>
@@ -2082,17 +2492,13 @@ p, li { white-space: pre-wrap; }
               <item>
                <widget class="QPushButton" name="execBlacklistBtn">
                 <property name="toolTip">
-                 <string>Add executables to the blacklist to prevent them from
-accessing the virtual file system. This is useful to prevent
-unintended programs from being hooked. Hooking unintended
-programs may affect the execution of these programs or the
-programs you are intentionally running.</string>
+                 <string>Edit the executables that must not see MO2's virtual files. Use this to keep unrelated programs from being hooked.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Add executables to the blacklist to prevent them from accessing the virtual file system.  This is useful to prevent unintended programs from being hooked.  Hooking unintended programs may affect the execution of these programs or the programs you are intentionally running.</string>
+                 <string>Executables on this list and programs they start cannot access MO2's virtual files.</string>
                 </property>
                 <property name="text">
-                 <string>Executables Blacklist</string>
+                 <string>Executables</string>
                 </property>
                 <property name="autoDefault">
                  <bool>false</bool>
@@ -2102,13 +2508,13 @@ programs you are intentionally running.</string>
               <item>
                <widget class="QPushButton" name="skipFileSuffixBtn">
                 <property name="toolTip">
-                 <string>Files to skip or ignore from the virtual file system.</string>
+                 <string>Edit filename endings that MO2 should skip in the virtual file system. A suffix is the end of a filename, not necessarily its extension.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Files to skip or ignore from the virtual file system.</string>
+                 <string>Files whose names end with a listed suffix are skipped by the virtual file system.</string>
                 </property>
                 <property name="text">
-                 <string>Skip File Suffixes</string>
+                 <string>File suffixes</string>
                 </property>
                 <property name="autoDefault">
                  <bool>false</bool>
@@ -2118,13 +2524,13 @@ programs you are intentionally running.</string>
               <item>
                <widget class="QPushButton" name="skipDirectoriesBtn">
                 <property name="toolTip">
-                 <string>Directories to skip or ignore from the virtual file system.</string>
+                 <string>Edit directories that MO2 should skip in the virtual file system.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Directories to skip or ignore from the virtual file system.</string>
+                 <string>Directories on this list are skipped by the virtual file system.</string>
                 </property>
                 <property name="text">
-                 <string>Skip Directories</string>
+                 <string>Directories</string>
                 </property>
                 <property name="autoDefault">
                  <bool>false</bool>
@@ -2132,7 +2538,7 @@ programs you are intentionally running.</string>
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer">
+               <spacer name="virtualFilesystemHorizontalSpacer">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -2144,34 +2550,14 @@ programs you are intentionally running.</string>
                 </property>
                </spacer>
               </item>
+                </layout>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
-           <item>
-            <spacer name="verticalSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
          </widget>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>These are workarounds for problems with Mod Organizer. Please make sure you read the help text before changing anything here.</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
         </widget>
        </item>
       </layout>
@@ -2185,10 +2571,62 @@ programs you are intentionally running.</string>
         <number>12</number>
        </property>
        <item>
-        <widget class="QGroupBox" name="groupBox_4">
-         <property name="title">
-          <string>Logs and Crashes</string>
+        <widget class="QLabel" name="diagnosticsPageTitle">
+         <property name="text">
+          <string>Logs and crash reports</string>
          </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="diagnosticsPageSubtitle">
+         <property name="text">
+          <string>Choose how much troubleshooting information MO2 and LOOT collect. The recommended levels are suitable for everyday use.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="diagnosticsCardsLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="horizontalSpacing">
+          <number>12</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>8</number>
+         </property>
+         <item row="0" column="0" colspan="2">
+        <widget class="QGroupBox" name="diagnosticsLogGroup">
+         <property name="title">
+          <string>MO2 logging and crash dumps</string>
+         </property>
+         <layout class="QVBoxLayout" name="diagnosticsLogLayout">
+          <property name="spacing">
+           <number>7</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="diagnosticsLogDescription">
+            <property name="text">
+             <string>Set the detail in ModOrganizer.log and choose whether crashes from injected programs create a dump file.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
          <layout class="QFormLayout" name="formLayout_4">
           <property name="fieldGrowthPolicy">
            <enum>QFormLayout::ExpandingFieldsGrow</enum>
@@ -2196,7 +2634,7 @@ programs you are intentionally running.</string>
           <item row="0" column="0">
            <widget class="QLabel" name="label_12">
             <property name="text">
-             <string>Log Level</string>
+             <string>MO2 log detail</string>
             </property>
            </widget>
           </item>
@@ -2215,20 +2653,18 @@ programs you are intentionally running.</string>
              </size>
             </property>
             <property name="toolTip">
-             <string>Decides the amount of data printed to &quot;ModOrganizer.log&quot;</string>
+             <string>Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; Debug can help troubleshoot issues.</string>
             </property>
             <property name="whatsThis">
              <string>
-                                    Decides the amount of data printed to &quot;ModOrganizer.log&quot;.
-                                    &quot;Debug&quot; produces very useful information for finding problems. There is usually no noteworthy performance impact but the file may become rather large. If this is a problem you may prefer the &quot;Info&quot; level for regular use. On the &quot;Error&quot; level the log file usually remains empty.
-                                </string>
+Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</string>
             </property>
            </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_27">
             <property name="text">
-             <string>Crash Dumps</string>
+             <string>Crash dump detail</string>
             </property>
            </widget>
           </item>
@@ -2247,47 +2683,55 @@ programs you are intentionally running.</string>
              </size>
             </property>
             <property name="toolTip">
-             <string>Decides which type of crash dumps are collected when injected processes crash.</string>
+             <string>Choose the amount of process data saved when an injected program crashes. Mini is recommended for routine troubleshooting.</string>
             </property>
             <property name="whatsThis">
-             <string>
-                                    Decides which type of crash dumps are collected when injected processes crash.
-                                    &quot;None&quot; Disables the generation of crash dumps by MO.
-                                    &quot;Mini&quot; Default level which generates small dumps (only stack traces).
-                                    &quot;Data&quot; Much larger dumps with additional information which may be need (also data segments).
-                                    &quot;Full&quot; Even larger dumps with a full memory dump of the process.
-                                </string>
+             <string>None disables dump collection. Mini stores a compact report; Data and Full include progressively more process memory and can use substantially more disk space.</string>
             </property>
            </widget>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_28">
             <property name="text">
-             <string>Max Dumps To Keep</string>
+             <string>Maximum dumps to keep</string>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
            <widget class="QSpinBox" name="dumpsMaxEdit">
             <property name="toolTip">
-             <string>Maximum number of crash dumps to keep on disk. Use 0 for unlimited.</string>
+             <string>Limit how many crash dumps remain on disk. Set to 0 to keep every dump.</string>
             </property>
             <property name="whatsThis">
-             <string>
-                                    Maximum number of crash dumps to keep on disk. Use 0 for unlimited.
-                                    Set &quot;Crash Dumps&quot; above to None to disable crash dump collection.
-                                </string>
+             <string>Limit how many crash dumps remain on disk. Set to 0 for unlimited retention. Choose None for Crash dump detail to disable collection.</string>
             </property>
            </widget>
           </item>
          </layout>
+          </item>
+         </layout>
         </widget>
        </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_7">
+         <item row="1" column="0">
+        <widget class="QGroupBox" name="diagnosticsLootGroup">
          <property name="title">
-          <string>Integrated LOOT</string>
+          <string>LOOT diagnostics</string>
          </property>
+         <layout class="QVBoxLayout" name="diagnosticsLootLayout">
+          <property name="spacing">
+           <number>7</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="diagnosticsLootDescription">
+            <property name="text">
+             <string>Control the detail recorded by the integrated LOOT sorting service. Increase it only when troubleshooting LOOT.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
          <layout class="QFormLayout" name="formLayout_2">
           <property name="fieldGrowthPolicy">
            <enum>QFormLayout::ExpandingFieldsGrow</enum>
@@ -2295,7 +2739,7 @@ programs you are intentionally running.</string>
           <item row="0" column="0">
            <widget class="QLabel" name="label_32">
             <property name="text">
-             <string>LOOT Log Level</string>
+             <string>LOOT log detail</string>
             </property>
            </widget>
           </item>
@@ -2316,28 +2760,46 @@ programs you are intentionally running.</string>
            </widget>
           </item>
          </layout>
+          </item>
+         </layout>
         </widget>
        </item>
-       <item>
-        <widget class="LinkLabel" name="diagnosticsExplainedLabel">
-         <property name="toolTip">
-          <string>Click a link to open the location</string>
-         </property>
-         <property name="text">
-          <string>
-                            Logs and crash dumps are stored under your current instance in the &lt;a href=&quot;LOGS_FULL_PATH&quot;&gt;LOGS_DIR&lt;/a&gt;
-                            and &lt;a href=&quot;DUMPS_FULL_PATH&quot;&gt;DUMPS_DIR&lt;/a&gt; folders.
-                            Sending logs and/or crash dumps to the developers can help investigate issues.
-                            It is recommended to compress large log and dmp files before sending.
-                        </string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="openExternalLinks">
-          <bool>true</bool>
-         </property>
-        </widget>
+         <item row="1" column="1">
+          <widget class="QGroupBox" name="diagnosticsFilesGroup">
+           <property name="title">
+            <string>Diagnostic file locations</string>
+           </property>
+           <layout class="QVBoxLayout" name="diagnosticsFilesLayout">
+            <item>
+             <widget class="QLabel" name="diagnosticsFilesDescription">
+              <property name="text">
+               <string>These folders belong to the active MO2 instance. Select a path to open it in your file manager.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="LinkLabel" name="diagnosticsExplainedLabel">
+              <property name="toolTip">
+               <string>Open the selected diagnostic folder</string>
+              </property>
+              <property name="text">
+               <string>MO2 logs: &lt;a href=&quot;LOGS_FULL_PATH&quot;&gt;LOGS_DIR&lt;/a&gt;&lt;br/&gt;Crash dumps: &lt;a href=&quot;DUMPS_FULL_PATH&quot;&gt;DUMPS_DIR&lt;/a&gt;</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+         </widget>
+        </item>
+         </layout>
        </item>
        <item>
         <spacer name="verticalSpacer_10">
@@ -2350,7 +2812,7 @@ programs you are intentionally running.</string>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>232</height>
+           <height>80</height>
           </size>
          </property>
         </spacer>

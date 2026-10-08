@@ -2,6 +2,8 @@
 #include "env.h"
 #include <log.h>
 #include <utility.h>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace env
 {
@@ -528,15 +530,38 @@ std::vector<Process> getRunningProcesses()
   return v;
 }
 
-void findChildren(Process& parent, const std::vector<Process>& processes)
-{
-  for (auto&& p : processes) {
-    if (p.ppid() == parent.pid()) {
-      Process child = p;
-      findChildren(child, processes);
+using ProcessChildren = std::unordered_map<DWORD, std::vector<std::size_t>>;
 
-      parent.addChild(child);
+ProcessChildren indexChildren(const std::vector<Process>& processes)
+{
+  ProcessChildren childrenByParent;
+  childrenByParent.reserve(processes.size());
+
+  for (std::size_t index = 0; index < processes.size(); ++index) {
+    childrenByParent[processes[index].ppid()].push_back(index);
+  }
+
+  return childrenByParent;
+}
+
+void findChildren(Process& parent, const std::vector<Process>& processes,
+                  const ProcessChildren& childrenByParent,
+                  std::unordered_set<DWORD>& visited)
+{
+  const auto children = childrenByParent.find(parent.pid());
+  if (children == childrenByParent.end()) {
+    return;
+  }
+
+  for (const auto index : children->second) {
+    const auto& process = processes[index];
+    if (!visited.insert(process.pid()).second) {
+      continue;
     }
+
+    Process child = process;
+    findChildren(child, processes, childrenByParent, visited);
+    parent.addChild(std::move(child));
   }
 }
 
@@ -545,15 +570,22 @@ Process getProcessTreeFromProcess(HANDLE h)
   Process root;
 
   const auto parentPID = ::GetProcessId(h);
-  const auto v         = getRunningProcesses();
+  const auto processes = getRunningProcesses();
+  const auto childrenByParent = indexChildren(processes);
+  std::optional<std::size_t> rootIndex;
 
-  for (auto&& p : v) {
-    if (p.pid() == parentPID) {
-      Process child = p;
-      findChildren(child, v);
-      root.addChild(child);
-      break;
+  for (std::size_t index = 0; index < processes.size(); ++index) {
+    const auto& process = processes[index];
+    if (process.pid() == parentPID) {
+      rootIndex = index;
     }
+  }
+
+  if (rootIndex) {
+    Process child = processes[*rootIndex];
+    std::unordered_set<DWORD> visited{parentPID};
+    findChildren(child, processes, childrenByParent, visited);
+    root.addChild(std::move(child));
   }
 
   return root;
@@ -611,26 +643,6 @@ std::vector<DWORD> processesInJob(HANDLE h)
   return {};
 }
 
-void findChildProcesses(Process& parent, std::vector<Process>& processes)
-{
-  // find all processes that are direct children of `parent`
-  auto itor = processes.begin();
-
-  while (itor != processes.end()) {
-    if (itor->ppid() == parent.pid()) {
-      parent.addChild(*itor);
-      itor = processes.erase(itor);
-    } else {
-      ++itor;
-    }
-  }
-
-  // find all processes that are direct children of `parent`'s children
-  for (auto&& c : parent.children()) {
-    findChildProcesses(c, processes);
-  }
-}
-
 Process getProcessTreeFromJob(HANDLE h)
 {
   const auto ids = processesInJob(h);
@@ -638,69 +650,44 @@ Process getProcessTreeFromJob(HANDLE h)
     return {};
   }
 
-  std::vector<Process> ps;
+  std::unordered_set<DWORD> jobProcessIds(ids.begin(), ids.end());
+  std::vector<Process> processes;
+  processes.reserve(ids.size());
 
   forEachRunningProcess([&](auto&& entry) {
-    for (auto&& id : ids) {
-      if (entry.th32ProcessID == id) {
-        ps.push_back(Process(entry.th32ProcessID, entry.th32ParentProcessID,
-                             QString::fromStdWString(entry.szExeFile)));
-
-        break;
-      }
+    if (jobProcessIds.find(entry.th32ProcessID) != jobProcessIds.end()) {
+      processes.push_back(Process(entry.th32ProcessID, entry.th32ParentProcessID,
+                                  QString::fromStdWString(entry.szExeFile)));
     }
 
     return true;
   });
 
+  if (processes.empty()) {
+    return {};
+  }
+
+  const auto childrenByParent = indexChildren(processes);
+  std::unordered_set<DWORD> processIds;
+  processIds.reserve(processes.size());
+  for (const auto& process : processes) {
+    processIds.insert(process.pid());
+  }
+
   Process root;
+  std::unordered_set<DWORD> visited;
+  visited.reserve(processes.size());
 
-  {
-    // getting processes whose parent is not in the list
-    for (auto&& possibleRoot : ps) {
-      const auto ppid = possibleRoot.ppid();
-      bool found      = false;
-
-      for (auto&& p : ps) {
-        if (p.pid() == ppid) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        // this is a root process
-        root.addChild(possibleRoot);
-      }
+  for (std::size_t index = 0; index < processes.size(); ++index) {
+    const auto& process = processes[index];
+    if (processIds.find(process.ppid()) != processIds.end()) {
+      continue;
     }
 
-    // removing root processes from the list
-    auto newEnd = std::remove_if(ps.begin(), ps.end(), [&](auto&& p) {
-      for (auto&& rp : root.children()) {
-        if (rp.pid() == p.pid()) {
-          return true;
-        }
-      }
-
-      return false;
-    });
-
-    ps.erase(newEnd, ps.end());
-  }
-
-  // at this point, `processes` should only contain processes that are direct
-  // or indirect children of the ones in `root`
-
-  if (ps.empty()) {
-    // and that's all there is
-    return root;
-  }
-
-  {
-    // recursively find children
-    for (auto&& r : root.children()) {
-      findChildProcesses(r, ps);
-    }
+    Process child = process;
+    visited.insert(child.pid());
+    findChildren(child, processes, childrenByParent, visited);
+    root.addChild(std::move(child));
   }
 
   return root;

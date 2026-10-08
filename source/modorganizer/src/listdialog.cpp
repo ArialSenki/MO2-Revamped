@@ -23,6 +23,7 @@ ListDialog::ListDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::ListDialog), m_Choices()
 {
   ui->setupUi(this);
+  resize(420, 540);
   ui->filterEdit->setFocus();
   connect(ui->choiceList, &QListWidget::itemDoubleClicked, this, &QDialog::accept);
 }
@@ -71,9 +72,4 @@ void ListDialog::on_filterEdit_textChanged(QString filter)
     ui->choiceList->setCurrentItem(item);
   }
 
-  if (!filter.isEmpty()) {
-    ui->choiceList->setStyleSheet("QListWidget { border: 2px ridge #f00; }");
-  } else {
-    ui->choiceList->setStyleSheet("");
-  }
 }

@@ -240,6 +240,12 @@ QComboBox QAbstractItemView::item:hover {
     color: #183E5F;
 }
 
+/* Make the hovered profile option visible before the click. */
+QComboBox#profileBox QAbstractItemView::item:hover {
+    background-color: #D7EAF9;
+    color: #183E5F;
+}
+
 QComboBox QAbstractItemView::item:selected {
     background-color: #D7EAF9;
     color: #183E5F;
@@ -277,13 +283,17 @@ QTreeView#modList::item:selected,
 QTreeView#modList::item:focus,
 QTreeView#modList::item:selected:focus,
 QTreeView#modList::item:hover:selected {
-    padding: 3px 8px 3px 10px;
+    padding: 2px 8px 2px 10px;
     margin: 0px;
     border: none;
 }
 
-/* The inline mod-name editor must fit inside the existing row height. */
-QTreeView#modList QLineEdit {
+/* Inline text editors must fit inside their existing item row. */
+QTreeView#modList QLineEdit,
+QTreeView#espList QLineEdit,
+QTreeView#filetree QLineEdit,
+QTreeView#filesView QLineEdit,
+QTreeWidget#pluginSettingsList QLineEdit {
     min-height: 16px;
     max-height: 22px;
     padding: 0px 5px;
@@ -382,6 +392,10 @@ QListWidget::item:selected, QTableView::item:selected, QTableWidget::item:select
     background-color: transparent;
     color: #293847;
 }
+/* Keep hover feedback clear while preserving alternating mod-list bands. */
+QTreeView#modList::item:hover:!selected {
+    background-color: rgba(75, 146, 198, 16%);
+}
 
 QComboBox QAbstractItemView::item:selected {
     background-color: #D7EAF9;
@@ -397,6 +411,19 @@ QHeaderView::section {
     padding: 6px 8px;
     color: #3A5267;
     font-weight: 600;
+}
+
+/* Give the mod-list sort direction a clear, restrained accent. */
+QTreeView#modList QHeaderView::up-arrow {
+    image: url(./mo2-classic-refined-light/sort-up-light.svg);
+    width: 10px;
+    height: 8px;
+}
+
+QTreeView#modList QHeaderView::down-arrow {
+    image: url(./mo2-classic-refined-light/sort-down-light.svg);
+    width: 10px;
+    height: 8px;
 }
 
 QTabWidget::pane {
@@ -445,18 +472,20 @@ QGroupBox::title {
 QMenu {
     background-color: #FFFFFF;
     border: 1px solid #C7D3DD;
-    border-radius: 3px;
-    padding: 3px;
+    border-radius: 8px;
+    padding: 5px;
 }
 
 QMenu::item {
-    border-radius: 2px;
+    background-color: transparent;
+    border-radius: 4px;
     padding: 5px 24px 5px 9px;
 }
 
 QMenu::item:selected {
     background-color: #EAF2F8;
     color: #183E5F;
+    border-radius: 4px;
 }
 
 QMenu::separator {
@@ -467,9 +496,10 @@ QMenu::separator {
 
 QToolTip {
     color: #293847;
-    background-color: #FFFBEA;
-    border: 1px solid #D5C98A;
-    padding: 4px 6px;
+    background-color: #F8FBFD;
+    border: 1px solid #B8CBDA;
+    border-radius: 12px;
+    padding: 6px 9px;
 }
 
 QScrollBar:vertical {
@@ -775,12 +805,16 @@ QDateEdit, QTimeEdit, QDateTimeEdit, QAbstractSpinBox {
     border-radius: 6px;
 }
 
-QMenu, QComboBox QFrame, QToolTip {
+QMenu, QComboBox QFrame {
     border-radius: 8px;
 }
 
-QMenuBar::item, QMenu::item {
+QMenuBar::item {
     border-radius: 5px;
+}
+
+QMenu::item {
+    border-radius: 4px;
 }
 
 QTabBar::tab {
@@ -870,4 +904,3056 @@ QPushButton#manageOverwriteButton, QPushButton#fixButton {
 
 QPushButton#manageOverwriteButton:hover, QPushButton#fixButton:hover {
     background-color: #D4E8F5;
+}
+
+/* Refined filter sidebar and category management dialogs. */
+QGroupBox#categoriesGroup {
+    background-color: #F2F5F8;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 9px;
+    padding-top: 7px;
+}
+
+QGroupBox#categoriesGroup::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+}
+
+QTreeWidget#filters {
+    color: #293847;
+    background-color: #FFFFFF;
+    alternate-background-color: #F5F8FB;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+    padding: 2px;
+}
+
+QPushButton#filtersClear, QPushButton#filtersEdit,
+QComboBox#filtersSeparators {
+    min-height: 28px;
+}
+
+QDialog#CategoriesDialog QLabel#dialogHeading,
+QDialog#CategoryImportDialog QLabel#dialogHeading {
+    color: #1D3F5B;
+    font-size: 12pt;
+    font-weight: 600;
+}
+
+QDialog#CategoriesDialog QLabel#dialogDescription,
+QDialog#CategoriesDialog QLabel#nexusInstructions,
+QDialog#CategoriesDialog QLabel#nexusStatus,
+QDialog#CategoryImportDialog QLabel#dialogDescription {
+    color: #566B7C;
+}
+
+QDialog#CategoriesDialog QGroupBox#localCategoriesCard,
+QDialog#CategoriesDialog QGroupBox#nexusCategoriesCard,
+QDialog#CategoryImportDialog QGroupBox#strategyBox,
+QDialog#CategoryImportDialog QGroupBox#mappingBox {
+    background-color: #F7FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding-top: 8px;
+}
+
+QDialog#CategoriesDialog QGroupBox#localCategoriesCard::title,
+QDialog#CategoriesDialog QGroupBox#nexusCategoriesCard::title,
+QDialog#CategoryImportDialog QGroupBox#strategyBox::title,
+QDialog#CategoryImportDialog QGroupBox#mappingBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+}
+
+QDialog#CategoriesDialog QTableWidget#categoriesTable,
+QDialog#CategoriesDialog QListWidget#nexusCategoryList {
+    color: #293847;
+    background-color: #FFFFFF;
+    alternate-background-color: #F5F8FB;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+}
+
+QDialog#CategoriesDialog QHeaderView::section {
+    color: #293847;
+    background-color: #EAF0F5;
+    border: none;
+    border-bottom: 1px solid #D5DEE7;
+    padding: 6px 8px;
+}
+
+QDialog#CategoriesDialog QListWidget#nexusCategoryList::item {
+    padding: 5px 7px;
+    border: none;
+}
+
+QDialog#CategoriesDialog QPushButton#nexusImportButton,
+QDialog#CategoriesDialog QPushButton#nexusRefresh {
+    min-height: 30px;
+}
+
+QDialog#CategoryImportDialog QRadioButton,
+QDialog#CategoryImportDialog QCheckBox {
+    min-height: 28px;
+}
+
+/* Keep combo-box popups on one rounded surface; the inner viewport must not
+   paint a rectangular background over the rounded frame. */
+QComboBox QFrame {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #C7D3DD;
+    border-radius: 8px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: 3px;
+}
+
+QComboBox QAbstractItemView::item {
+    background-color: transparent;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #F0F6FB;
+    color: #183E5F;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: #D7EAF9;
+    color: #183E5F;
+}
+
+/* MO2 Revamped: Settings > General */
+QDialog#SettingsDialog QWidget#generalTab QScrollArea#generalScrollArea {
+    background-color: transparent;
+    border: none;
+}
+QDialog#SettingsDialog QWidget#generalTab QGroupBox {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 5px 8px 4px;
+}
+QDialog#SettingsDialog QWidget#generalTab QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#generalTab QCheckBox {
+    min-height: 25px;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+QDialog#SettingsDialog QWidget#generalTab QCheckBox:hover {
+    background-color: #EAF2F8;
+}
+QDialog#SettingsDialog QWidget#generalTab QPushButton {
+    min-height: 30px;
+    padding: 4px 11px;
+    border-radius: 6px;
+}
+QDialog#SettingsDialog QWidget#generalTab QPushButton:hover {
+    border-color: #8AAEC8;
+    background-color: #E8F2F8;
+}
+QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription {
+    color: #6F8190;
+    font-size: 9pt;
+}
+
+/* MO2 Revamped: Settings > Paths */
+QDialog#SettingsDialog QWidget#pathsTab QLabel {
+    color: #536779;
+    padding: 2px 3px;
+}
+QDialog#SettingsDialog QWidget#pathsTab QLabel#label_25,
+QDialog#SettingsDialog QWidget#pathsTab QLabel#label_29 {
+    color: #29435B;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#pathsTab QLabel#label_26,
+QDialog#SettingsDialog QWidget#pathsTab QLabel#label_23 {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#SettingsDialog QWidget#pathsTab QLineEdit {
+    min-height: 25px;
+    padding: 3px 8px;
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #C7D3DD;
+    border-radius: 5px;
+    selection-background-color: #B8D9F2;
+}
+QDialog#SettingsDialog QWidget#pathsTab QLineEdit:focus {
+    border-color: #6E9FC3;
+    background-color: #FCFEFF;
+}
+QDialog#SettingsDialog QWidget#pathsTab QLineEdit[readOnly="true"] {
+    color: #5C6F7F;
+    background-color: #F0F3F6;
+}
+QDialog#SettingsDialog QWidget#pathsTab QPushButton {
+    min-width: 30px;
+    min-height: 29px;
+    padding: 2px 7px;
+    border-radius: 5px;
+}
+QDialog#SettingsDialog QWidget#pathsTab QPushButton:hover {
+    border-color: #8AAEC8;
+    background-color: #E8F2F8;
+}
+
+/* MO2 Revamped: Settings > Mod List */
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListDisplayGroup,
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListWorkflowGroup,
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#collapsibleSeparatorsWidget {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 5px 8px 4px;
+}
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListDisplayGroup::title,
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListWorkflowGroup::title,
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#collapsibleSeparatorsWidget::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListDisplayDescription,
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListWorkflowDescription,
+QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsDescription {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsHighlightLabel,
+QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsIconsLabel,
+QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsLabel {
+    color: #29435B;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#uiTab QCheckBox {
+    min-height: 25px;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+QDialog#SettingsDialog QWidget#uiTab QCheckBox:hover {
+    background-color: #EAF2F8;
+}
+
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#collapsibleSeparatorsWidget QWidget#widget_4 {
+    background-color: #FFFFFF;
+    border: none;
+}
+
+/* MO2 Revamped: Settings > Theme */
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeStyleGroup,
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeColorsGroup {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 6px 9px 6px;
+}
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeStyleGroup::title,
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeColorsGroup::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#themeTab QLabel#themePageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#themeTab QLabel#themePageSubtitle,
+QDialog#SettingsDialog QWidget#themeTab QLabel#themeColorDescription {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+QDialog#SettingsDialog QWidget#themeTab QPushButton#exploreStyles,
+QDialog#SettingsDialog QWidget#themeTab QPushButton#resetColorsBtn {
+    min-height: 29px;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+
+/* MO2 Revamped: Settings > Nexus */
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusAccountGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusUsageGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusConnectionGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusOptionsGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusServersGroup {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 6px 9px 6px;
+}
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusAccountGroup::title,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusUsageGroup::title,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusConnectionGroup::title,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusOptionsGroup::title,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusServersGroup::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusPageDescription,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusConnectionDescription,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusFeaturesDescription,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusToolsDescription {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusActivityTitle {
+    color: #29435B;
+    font-weight: 600;
+    padding: 1px 3px;
+}
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusConnectionActions,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusActivityPanel,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusFeatureOptions,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusIntegrationTools {
+    background-color: transparent;
+    border: none;
+}
+QDialog#SettingsDialog QWidget#nexusTab QListWidget#nexusLog,
+QDialog#SettingsDialog QWidget#nexusTab QListWidget#knownServersList,
+QDialog#SettingsDialog QWidget#nexusTab QListWidget#preferredServersList {
+    color: #293847;
+    background-color: #F2F5F8;
+    border: 1px solid #CFDAE4;
+    border-radius: 5px;
+    padding: 3px;
+    selection-background-color: #D5E8F6;
+}
+QDialog#SettingsDialog QWidget#nexusTab QCheckBox {
+    min-height: 25px;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+QDialog#SettingsDialog QWidget#nexusTab QCheckBox:hover {
+    background-color: #EAF2F8;
+}
+QDialog#SettingsDialog QWidget#nexusTab QPushButton {
+    min-height: 29px;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+
+/* MO2 Revamped: Settings > Plugins */
+QDialog#SettingsDialog QWidget#pluginsTab QGroupBox#pluginBrowserGroup,
+QDialog#SettingsDialog QWidget#pluginsTab QGroupBox#pluginDetailsGroup,
+QDialog#SettingsDialog QWidget#pluginsTab QGroupBox#verticalGroupBox {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 6px 9px 6px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QGroupBox#pluginBrowserGroup::title,
+QDialog#SettingsDialog QWidget#pluginsTab QGroupBox#pluginDetailsGroup::title,
+QDialog#SettingsDialog QWidget#pluginsTab QGroupBox#verticalGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginPageSubtitle,
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginBrowserDescription,
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSettingsDescription,
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginBlacklistDescription {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSettingsTitle {
+    color: #29435B;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
+    color: #293847;
+    background-color: #F5F8FB;
+    border: 1px solid #D6E0E8;
+    border-radius: 5px;
+    padding: 3px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel {
+    background-color: transparent;
+    border: none;
+    padding: 2px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QCheckBox {
+    min-height: 25px;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QCheckBox:hover {
+    background-color: #EAF2F8;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QLineEdit#pluginFilterEdit {
+    min-height: 25px;
+    padding: 3px 8px;
+    color: #293847;
+    background-color: #F7F9FB;
+    border: 1px solid #CFDAE4;
+    border-radius: 5px;
+    selection-background-color: #B8D9F2;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QLineEdit#pluginFilterEdit:focus {
+    border-color: #6E9FC3;
+    background-color: #FFFFFF;
+}
+
+/* MO2 Revamped: Settings > Workarounds */
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundPageSubtitle,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundsBehaviorDescription,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#steamSettingsDescription,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#networkSettingsDescription,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#maintenanceToolsDescription,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#virtualFilesystemDescription {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#workaroundsOptionsBox,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#steamSettingsGroup,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#networkSettingsGroup,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#maintenanceActionsGroup,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#virtualFilesystemGroup {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 6px 9px 6px;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#workaroundsOptionsBox::title,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#steamSettingsGroup::title,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#networkSettingsGroup::title,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#maintenanceActionsGroup::title,
+QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#virtualFilesystemGroup::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#label_4,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#label_19,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#label_20 {
+    color: #29435B;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QLineEdit {
+    min-height: 25px;
+    padding: 3px 8px;
+    color: #293847;
+    background-color: #F7F9FB;
+    border: 1px solid #CFDAE4;
+    border-radius: 5px;
+    selection-background-color: #B8D9F2;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QLineEdit:focus {
+    border-color: #6E9FC3;
+    background-color: #FFFFFF;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QCheckBox {
+    min-height: 25px;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QCheckBox:hover {
+    background-color: #EAF2F8;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QPushButton,
+QDialog#SettingsDialog QWidget#workaroundTab QToolButton#browseCustomBrowser {
+    min-height: 29px;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QPushButton:hover,
+QDialog#SettingsDialog QWidget#workaroundTab QToolButton#browseCustomBrowser:hover {
+    border-color: #8AAEC8;
+    background-color: #E8F2F8;
+}
+QDialog#SettingsDialog QWidget#workaroundTab QWidget#customBrowserRow,
+QDialog#SettingsDialog QWidget#workaroundTab QWidget#maintenanceActionsRow,
+QDialog#SettingsDialog QWidget#workaroundTab QWidget#virtualFilesystemActionsRow {
+    background-color: transparent;
+    border: none;
+}
+
+/* MO2 Revamped: Settings > Diagnostics */
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsPageSubtitle,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsLogDescription,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsLootDescription,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsFilesDescription {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsLogGroup,
+QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsLootGroup,
+QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsFilesGroup {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFDAE4;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding: 6px 9px 6px;
+}
+QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsLogGroup::title,
+QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsLootGroup::title,
+QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsFilesGroup::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #29435B;
+    background-color: #F2F5F8;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#label_12,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#label_27,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#label_28,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#label_32 {
+    color: #29435B;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#diagnosticsTab QComboBox,
+QDialog#SettingsDialog QWidget#diagnosticsTab QSpinBox {
+    min-height: 28px;
+    padding: 2px 7px;
+    border-radius: 5px;
+}
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsExplainedLabel {
+    color: #293847;
+    padding: 2px 4px;
+}
+QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageTitle,
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListPageTitle,
+QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 2px 3px 0;
+}
+QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageSubtitle,
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListPageSubtitle,
+QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageSubtitle {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 1px 4px 3px;
+}
+
+QDialog#ModInfoDialog QLabel#modInfoPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 1px 2px 0;
+}
+QDialog#ModInfoDialog QLabel#modInfoPageSubtitle {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 0 3px 1px;
+}
+QDialog#ModInfoDialog QToolButton#openInExplorer {
+    color: #29435B;
+    background-color: #F6F9FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 6px;
+    padding: 4px 10px;
+    min-height: 26px;
+    text-align: left;
+}
+QDialog#ModInfoDialog QToolButton#openInExplorer:hover {
+    background-color: #EAF2F8;
+    border-color: #AFC7D8;
+}
+QDialog#ModInfoDialog QToolButton#openInExplorer:pressed {
+    background-color: #DCEAF3;
+}
+
+QDialog#ProfilesDialog QLabel#profilesPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 1px 2px 0;
+}
+QDialog#ProfilesDialog QLabel#profilesPageSubtitle {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 0 3px 1px;
+}
+QDialog#ProfilesDialog QWidget#eldenRingSaveModeOptionCard {
+    color: #293847;
+    background-color: #F7FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 6px;
+}
+QDialog#ProfilesDialog QWidget#eldenRingSaveModeOptionCard QRadioButton,
+QDialog#ProfilesDialog QWidget#eldenRingSaveModeOptionCard QLabel {
+    background-color: transparent;
+}
+
+/* MO2 Revamped: mod overwrite choices */
+QDialog#QueryOverwriteDialog QLabel#overwritePageTitle,
+QDialog#SyncOverwriteDialog QLabel#syncPageTitle {
+    color: #29435B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 1px 2px 0;
+}
+QDialog#QueryOverwriteDialog QLabel#overwritePageSubtitle,
+QDialog#SyncOverwriteDialog QLabel#syncPageSubtitle {
+    color: #6F8190;
+    font-size: 9pt;
+    padding: 0 3px 1px;
+}
+QDialog#QueryOverwriteDialog QFrame#frame_2,
+QDialog#QueryOverwriteDialog QFrame#backupCard {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#QueryOverwriteDialog QTextBrowser#textBrowser {
+    color: #293847;
+    background-color: transparent;
+    border: none;
+}
+QDialog#QueryOverwriteDialog QLabel#backupDescription,
+QDialog#SyncOverwriteDialog QLabel#syncFooterNote {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#QueryOverwriteDialog QPushButton#replaceBtn {
+    color: #873C3C;
+    border-color: #C99A9A;
+}
+QDialog#QueryOverwriteDialog QPushButton#replaceBtn:hover {
+    background-color: #F8EAEA;
+    border-color: #B87878;
+}
+QDialog#SyncOverwriteDialog QTreeWidget#syncTree {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#SyncOverwriteDialog QTreeWidget#syncTree QComboBox {
+    min-height: 18px;
+    padding: 1px 6px;
+}
+
+/* MO2 Revamped: profile creation */
+QDialog#ProfileInputDialog QLabel#profilePageTitle {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 1px 2px 0;
+}
+QDialog#ProfileInputDialog QLabel#profilePageSubtitle,
+QDialog#ProfileInputDialog QLabel#defaultSettingsDescription {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#ProfileInputDialog QLabel#profileNameLabel {
+    color: #293847;
+    font-weight: 600;
+}
+QDialog#ProfileInputDialog QFrame#profileSettingsCard {
+    color: #293847;
+    background-color: #F4F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#ProfileInputDialog QFrame#profileSettingsCard QCheckBox {
+    background-color: transparent;
+    border: none;
+}
+
+/* MO2 Revamped: Elden Ring save transfer */
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferTitle {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+    padding: 1px 2px 0;
+}
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferSubtitle {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferSectionHeading,
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferListHeading {
+    color: #293847;
+    font-weight: 600;
+}
+QDialog#EldenRingSaveTransferDialog QFrame#saveTransferRouteCard,
+QDialog#EldenRingSaveTransferDialog QFrame#saveTransferPathCard,
+QDialog#EldenRingSaveTransferDialog QFrame#saveTransferStatusCard {
+    color: #293847;
+    background-color: #F4F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferSourcePath,
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferDestinationPath,
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferStatus {
+    background-color: transparent;
+    border: none;
+}
+QDialog#EldenRingSaveTransferDialog QLabel#saveTransferStatus {
+    color: #455E70;
+}
+QDialog#EldenRingSaveTransferDialog QListWidget#saveTransferList {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+    padding: 3px;
+}
+QDialog#EldenRingSaveTransferDialog QPushButton#saveTransferCopyButton {
+    color: #1D3F5B;
+    background-color: #EAF2F8;
+    border-color: #9BB7CE;
+}
+QDialog#EldenRingSaveTransferDialog QPushButton#saveTransferCopyButton:hover {
+    background-color: #DDEAF4;
+}
+QDialog#EldenRingSaveTransferDialog QPushButton#saveTransferCopyButton:disabled {
+    color: #8794A0;
+    background-color: #EEF1F4;
+    border-color: #DEE4EA;
+}
+
+/* MO2 Revamped: Instance Manager */
+QDialog#InstanceManagerDialog QWidget#widget_8 {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 9px;
+}
+QDialog#InstanceManagerDialog QWidget#widget_2,
+QDialog#InstanceManagerDialog QWidget#widget_3 {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 9px;
+}
+QDialog#InstanceManagerDialog QWidget#widget_7,
+QDialog#InstanceManagerDialog QWidget#widget_9 {
+    background-color: transparent;
+    border: none;
+}
+QDialog#InstanceManagerDialog QWidget#widget_9 {
+    border-top: 1px solid #D5DEE7;
+    padding-top: 10px;
+}
+QDialog#InstanceManagerDialog QLabel#instancesHeading,
+QDialog#InstanceManagerDialog QLabel#detailsHeading {
+    color: #233F58;
+    font-size: 12pt;
+    font-weight: 600;
+    padding: 0;
+}
+QDialog#InstanceManagerDialog QLabel#managerSummary,
+QDialog#InstanceManagerDialog QLabel#selectionHint {
+    color: #66798B;
+}
+QDialog#InstanceManagerDialog QLabel#selectionHint {
+    padding-bottom: 2px;
+}
+QDialog#InstanceManagerDialog QPushButton#instanceHelpButton {
+    color: #285D7F;
+    background-color: #EAF2F8;
+    border: 1px solid #C4D9E8;
+    border-radius: 6px;
+    font-weight: 600;
+    min-height: 28px;
+    padding: 4px 11px;
+}
+QDialog#InstanceManagerDialog QPushButton#instanceHelpButton:hover {
+    background-color: #DCECF6;
+    border-color: #9BBED5;
+}
+QDialog#InstanceManagerDialog QPushButton#instanceHelpButton:pressed {
+    background-color: #D1E4F1;
+}
+QDialog#InstanceManagerDialog QLabel#instanceStatus {
+    color: #285D7F;
+    font-weight: 600;
+    background-color: #E9F3F9;
+    border: 1px solid #C4D9E8;
+    border-radius: 6px;
+    padding: 5px 9px;
+}
+QDialog#InstanceManagerDialog QListView#list {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    padding: 3px;
+}
+QDialog#InstanceManagerDialog QListView#list::item {
+    padding: 5px 7px;
+    border-radius: 5px;
+}
+QDialog#InstanceManagerDialog QListView#list::item:hover {
+    background-color: #F0F6FA;
+}
+QDialog#InstanceManagerDialog QListView#list::item:selected {
+    color: #214866;
+    background-color: #DCECF6;
+    border: 1px solid #83B4D1;
+}
+QDialog#InstanceManagerDialog QLineEdit#filter {
+    min-height: 28px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+QDialog#InstanceManagerDialog QPushButton {
+    min-height: 31px;
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+QDialog#InstanceManagerDialog QPushButton#createNew,
+QDialog#InstanceManagerDialog QPushButton#switchToInstance {
+    color: #FFFFFF;
+    background-color: #2E719A;
+    border: 1px solid #2E719A;
+    font-weight: 600;
+}
+QDialog#InstanceManagerDialog QPushButton#createNew:hover,
+QDialog#InstanceManagerDialog QPushButton#switchToInstance:hover {
+    background-color: #3A83AD;
+    border-color: #3A83AD;
+}
+QDialog#InstanceManagerDialog QPushButton#createNew:pressed,
+QDialog#InstanceManagerDialog QPushButton#switchToInstance:pressed {
+    background-color: #285E80;
+}
+QDialog#InstanceManagerDialog QPushButton#createNew:disabled,
+QDialog#InstanceManagerDialog QPushButton#switchToInstance:disabled {
+    color: #77828C;
+    background-color: #E9EEF3;
+    border-color: #D5DEE7;
+}
+QDialog#InstanceManagerDialog QPushButton#deleteInstance {
+    color: #8F3D36;
+    background-color: #FFF8F7;
+    border: 1px solid #E3B3AD;
+}
+QDialog#InstanceManagerDialog QPushButton#deleteInstance:hover {
+    color: #7C302A;
+    background-color: #FBE8E5;
+    border-color: #CC7D73;
+}
+QDialog#InstanceManagerDialog QPushButton#deleteInstance:pressed {
+    background-color: #F4D8D4;
+}
+QDialog#InstanceManagerDialog QPushButton#deleteInstance:disabled {
+    color: #A99A98;
+    background-color: #F2EEEE;
+    border-color: #DED6D4;
+}
+QDialog#InstanceManagerDialog QSplitter#splitter::handle {
+    background-color: #D5DEE7;
+    width: 3px;
+    margin: 8px 0;
+}
+
+/* MO2 Revamped: Create Instance wizard */
+QDialog#CreateInstanceDialog QWidget#widget,
+QDialog#CreateInstanceDialog QWidget#widget_2,
+QDialog#CreateInstanceDialog QWidget#widget_7,
+QDialog#CreateInstanceDialog QWidget#widget_15,
+QDialog#CreateInstanceDialog QWidget#widget_5,
+QDialog#CreateInstanceDialog QWidget#widget_23,
+QDialog#CreateInstanceDialog QWidget#widget_21,
+QDialog#CreateInstanceDialog QWidget#widget_16,
+QDialog#CreateInstanceDialog QWidget#widget_8,
+QDialog#CreateInstanceDialog QWidget#widget_24,
+QDialog#CreateInstanceDialog QWidget#widget_10,
+QDialog#CreateInstanceDialog QWidget#widget_14,
+QDialog#CreateInstanceDialog QWidget#widget_4,
+QDialog#CreateInstanceDialog QWidget#nexusBox_2,
+QDialog#CreateInstanceDialog QWidget#widget_22,
+QDialog#CreateInstanceDialog QWidget#widget_18,
+QDialog#CreateInstanceDialog QWidget#widget_20 {
+    background-color: transparent;
+    border: none;
+}
+QDialog#CreateInstanceDialog QStackedWidget#pages {
+    background-color: #F4F6F8;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#CreateInstanceDialog QWidget#widget_3,
+QDialog#CreateInstanceDialog QWidget#widget_6,
+QDialog#CreateInstanceDialog QWidget#widget_17,
+QDialog#CreateInstanceDialog QWidget#widget_9,
+QDialog#CreateInstanceDialog QWidget#widget_25,
+QDialog#CreateInstanceDialog QWidget#widget_13,
+QDialog#CreateInstanceDialog QWidget#nexusBox,
+QDialog#CreateInstanceDialog QWidget#widget_19 {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#CreateInstanceDialog QWidget#widget_11,
+QDialog#CreateInstanceDialog QWidget#widget_12,
+QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveIsolationGroup {
+    color: #293847;
+    background-color: #F5F8FB;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+}
+QDialog#CreateInstanceDialog QStackedWidget#pathPages,
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_2,
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 {
+    background-color: transparent;
+    border: none;
+}
+QDialog#CreateInstanceDialog QLabel#title {
+    color: #233F58;
+    font-size: 16pt;
+    font-weight: 600;
+    padding: 0;
+}
+QDialog#CreateInstanceDialog QLabel#stepIndicator {
+    color: #285D7F;
+    background-color: #E9F3F9;
+    border: 1px solid #C4D9E8;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 5px 11px;
+}
+QDialog#CreateInstanceDialog QLabel#label_15,
+QDialog#CreateInstanceDialog QLabel#label_2,
+QDialog#CreateInstanceDialog QLabel#label_3,
+QDialog#CreateInstanceDialog QLabel#label_4,
+QDialog#CreateInstanceDialog QLabel#instanceNameLabel,
+QDialog#CreateInstanceDialog QLabel#profileSettingsLabel,
+QDialog#CreateInstanceDialog QLabel#label_5,
+QDialog#CreateInstanceDialog QLabel#label_7,
+QDialog#CreateInstanceDialog QLabel#label_16 {
+    color: #233F58;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#CreateInstanceDialog QLabel#label_14,
+QDialog#CreateInstanceDialog QLabel#gameSelectionHint,
+QDialog#CreateInstanceDialog QLabel#label_18,
+QDialog#CreateInstanceDialog QLabel#label_17,
+QDialog#CreateInstanceDialog QLabel#pathsLabel,
+QDialog#CreateInstanceDialog QLabel#portableExistsLabel,
+QDialog#CreateInstanceDialog QLabel#label_19,
+QDialog#CreateInstanceDialog QLabel#label_11 {
+    color: #66798B;
+}
+QDialog#CreateInstanceDialog QLabel#instanceNamePath {
+    color: #285D7F;
+    background-color: #E9F3F9;
+    border: 1px solid #C4D9E8;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+QDialog#CreateInstanceDialog QLabel#instanceNameExists,
+QDialog#CreateInstanceDialog QLabel#locationExists,
+QDialog#CreateInstanceDialog QLabel#advancedDirExists {
+    color: #755C21;
+    background-color: #FBF5E5;
+    border: 1px solid #E6D8AF;
+    border-radius: 6px;
+    padding: 7px 9px;
+}
+QDialog#CreateInstanceDialog QLabel#instanceNameInvalid,
+QDialog#CreateInstanceDialog QLabel#locationInvalid,
+QDialog#CreateInstanceDialog QLabel#advancedDirInvalid {
+    color: #8F3D36;
+    background-color: #FFF3F1;
+    border: 1px solid #E3B3AD;
+    border-radius: 6px;
+    padding: 7px 9px;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton {
+    color: #233F58;
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    padding: 10px 12px;
+    text-align: left;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton:hover {
+    background-color: #F3F7FA;
+    border-color: #AFC5D6;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton:checked {
+    color: #214866;
+    background-color: #E5F0F7;
+    border: 1px solid #83B4D1;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton:focus {
+    border: 1px solid #5F98BE;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton:disabled {
+    color: #8995A0;
+    background-color: #F5F7F9;
+    border-color: #E0E5EA;
+}
+QDialog#CreateInstanceDialog QLineEdit,
+QDialog#CreateInstanceDialog QPlainTextEdit,
+QDialog#CreateInstanceDialog QTextEdit,
+QDialog#CreateInstanceDialog QListWidget#nexusLog {
+    color: #293847;
+    background-color: #F7F9FB;
+    border: 1px solid #CFDAE4;
+    border-radius: 6px;
+    selection-background-color: #D5E8F6;
+}
+QDialog#CreateInstanceDialog QLineEdit {
+    min-height: 28px;
+    padding: 4px 8px;
+}
+QDialog#CreateInstanceDialog QLineEdit:focus,
+QDialog#CreateInstanceDialog QPlainTextEdit:focus,
+QDialog#CreateInstanceDialog QTextEdit:focus {
+    border-color: #6E9FC3;
+    background-color: #FFFFFF;
+}
+QDialog#CreateInstanceDialog QToolButton {
+    min-width: 32px;
+    min-height: 30px;
+    color: #36546A;
+    background-color: #F1F5F8;
+    border: 1px solid #CFDAE4;
+    border-radius: 5px;
+}
+QDialog#CreateInstanceDialog QToolButton:hover {
+    background-color: #E6F0F6;
+    border-color: #8AAEC8;
+}
+QDialog#CreateInstanceDialog QCheckBox {
+    min-height: 27px;
+    border-radius: 4px;
+    padding: 2px 5px;
+}
+QDialog#CreateInstanceDialog QCheckBox:hover {
+    background-color: #F0F6FA;
+}
+QDialog#CreateInstanceDialog QComboBox {
+    min-height: 29px;
+    padding: 3px 8px;
+    border-radius: 5px;
+}
+QDialog#CreateInstanceDialog QPushButton {
+    min-height: 31px;
+    padding: 4px 11px;
+    border-radius: 6px;
+}
+QDialog#CreateInstanceDialog QPushButton#next,
+QDialog#CreateInstanceDialog QPushButton#nexusConnect {
+    color: #FFFFFF;
+    background-color: #2E719A;
+    border: 1px solid #2E719A;
+    font-weight: 600;
+}
+QDialog#CreateInstanceDialog QPushButton#next:hover,
+QDialog#CreateInstanceDialog QPushButton#nexusConnect:hover {
+    background-color: #3A83AD;
+    border-color: #3A83AD;
+}
+QDialog#CreateInstanceDialog QPushButton#next:pressed,
+QDialog#CreateInstanceDialog QPushButton#nexusConnect:pressed {
+    background-color: #285E80;
+}
+QDialog#CreateInstanceDialog QPushButton#next:disabled {
+    color: #77828C;
+    background-color: #E9EEF3;
+    border-color: #D5DEE7;
+}
+QDialog#CreateInstanceDialog QListWidget#nexusLog {
+    border-radius: 7px;
+    padding: 4px;
+}
+QDialog#CreateInstanceDialog QWidget#widget_2 {
+    border-top: 1px solid #D5DEE7;
+    padding-top: 8px;
+}
+
+QDialog#NexusManualKeyDialog QWidget#widget,
+QDialog#NexusManualKeyDialog QWidget#widget_2,
+QDialog#NexusManualKeyDialog QWidget#widget_4,
+QDialog#NexusManualKeyDialog QWidget#widget_5 {
+    background-color: transparent;
+    border: none;
+}
+QDialog#NexusManualKeyDialog QWidget#widget_3 {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#NexusManualKeyDialog QPlainTextEdit#key {
+    color: #293847;
+    background-color: #F7F9FB;
+    border: 1px solid #CFDAE4;
+    border-radius: 6px;
+    padding: 7px;
+    selection-background-color: #D5E8F6;
+}
+QDialog#NexusManualKeyDialog QLabel#label,
+QDialog#NexusManualKeyDialog QLabel#label_2 {
+    color: #233F58;
+    font-weight: 600;
+}
+QDialog#NexusManualKeyDialog QPushButton {
+    min-height: 31px;
+    padding: 4px 11px;
+    border-radius: 6px;
+}
+QDialog#NexusManualKeyDialog QPushButton#openBrowser {
+    color: #FFFFFF;
+    background-color: #2E719A;
+    border-color: #2E719A;
+    font-weight: 600;
+}
+
+/* MO2 Revamped: Create Instance wizard, unified layout pass */
+QDialog#CreateInstanceDialog QWidget#widget {
+    padding-bottom: 2px;
+}
+QDialog#CreateInstanceDialog QProgressBar#stepProgress {
+    background-color: #E2E8ED;
+    border: none;
+    border-radius: 2px;
+    max-height: 5px;
+}
+QDialog#CreateInstanceDialog QProgressBar#stepProgress::chunk {
+    background-color: #3D87B4;
+    border-radius: 2px;
+}
+QDialog#CreateInstanceDialog QLabel#typeSelectionHint {
+    color: #66798B;
+    padding-left: 2px;
+}
+QDialog#CreateInstanceDialog QWidget#widget_3,
+QDialog#CreateInstanceDialog QWidget#widget_6,
+QDialog#CreateInstanceDialog QWidget#widget_17,
+QDialog#CreateInstanceDialog QWidget#widget_9,
+QDialog#CreateInstanceDialog QWidget#widget_25,
+QDialog#CreateInstanceDialog QWidget#widget_13,
+QDialog#CreateInstanceDialog QWidget#nexusBox,
+QDialog#CreateInstanceDialog QWidget#widget_19 {
+    padding: 11px;
+}
+QDialog#CreateInstanceDialog QWidget#widget_11,
+QDialog#CreateInstanceDialog QWidget#widget_12 {
+    padding: 9px;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton#createGlobal,
+QDialog#CreateInstanceDialog QCommandLinkButton#createPortable,
+QDialog#CreateInstanceDialog QCommandLinkButton#createIsolated {
+    min-height: 78px;
+    padding: 10px 14px;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
+    min-height: 66px;
+    padding: 7px 12px;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton#createGlobal:hover,
+QDialog#CreateInstanceDialog QCommandLinkButton#createPortable:hover,
+QDialog#CreateInstanceDialog QCommandLinkButton#createIsolated:hover,
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:hover {
+    background-color: #F3F7FA;
+    border-color: #AFC5D6;
+}
+QDialog#CreateInstanceDialog QPushButton#browseGameFolderButton {
+    color: #285D7F;
+    background-color: #E9F3F9;
+    border: 1px solid #C4D9E8;
+    border-radius: 6px;
+    font-weight: 600;
+    min-height: 30px;
+    padding: 6px 11px;
+}
+QDialog#CreateInstanceDialog QPushButton#browseGameFolderButton:hover {
+    background-color: #DDECF5;
+    border-color: #8AAEC8;
+}
+QDialog#CreateInstanceDialog QPushButton#back {
+    color: #36546A;
+    background-color: #F1F5F8;
+    border: 1px solid #CFDAE4;
+}
+QDialog#CreateInstanceDialog QPushButton#back:hover {
+    background-color: #E6F0F6;
+    border-color: #8AAEC8;
+}
+QDialog#CreateInstanceDialog QPushButton#back:disabled {
+    color: #8794A0;
+    background-color: #EEF1F4;
+    border-color: #DEE4EA;
+}
+QDialog#CreateInstanceDialog QPushButton#cancel {
+    color: #536A7D;
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+QDialog#CreateInstanceDialog QPushButton#cancel:hover {
+    color: #233F58;
+    background-color: #F1F5F8;
+    border-color: #CFDAE4;
+}
+QDialog#CreateInstanceDialog QWidget#widget_2 {
+    padding-top: 10px;
+}
+
+/* Keep wizard option indicators aligned with their labels. */
+QDialog#CreateInstanceDialog QCheckBox,
+QDialog#CreateInstanceDialog QRadioButton {
+    min-height: 26px;
+    padding: 0;
+    spacing: 8px;
+}
+QDialog#CreateInstanceDialog QCheckBox::indicator,
+QDialog#CreateInstanceDialog QRadioButton::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+/* MO2 Revamped message, announcement, and update dialogs. */
+QDialog#MessageDialog {
+    background-color: transparent;
+}
+
+QFrame#messageCard {
+    color: #1D3F5B;
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-left: 3px solid #2879B2;
+    border-radius: 8px;
+}
+
+QLabel#message {
+    color: #1D3F5B;
+    background-color: transparent;
+}
+
+QDialog#MotDDialog QFrame#motdHeaderPanel,
+QDialog#UpdateDialog QFrame#updateHeaderPanel {
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-radius: 8px;
+}
+
+QDialog#MotDDialog QFrame#motdContentCard {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 8px;
+}
+
+QDialog#MotDDialog QLabel#dialogHeading,
+QDialog#UpdateDialog QLabel#dialogHeading {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+
+QDialog#MotDDialog QLabel#dialogDescription,
+QDialog#UpdateDialog QLabel#updateLabel {
+    color: #5B6C7A;
+}
+
+QDialog#MotDDialog QTextBrowser#motdView,
+QDialog#UpdateDialog QWebEngineView#detailsWebView {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 6px;
+}
+
+QDialog#UpdateDialog QToolButton#detailsButton {
+    color: #2879B2;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 7px 9px;
+}
+
+QDialog#UpdateDialog QToolButton#detailsButton:hover {
+    background-color: #EAF2F8;
+    border-color: #CFDDE8;
+    border-radius: 5px;
+}
+
+QDialog#UpdateDialog QPushButton#installButton {
+    color: #FFFFFF;
+    background-color: #2879B2;
+    border: 1px solid #398DC6;
+    font-weight: 600;
+    padding: 7px 14px;
+}
+
+QDialog#UpdateDialog QPushButton#installButton:hover {
+    background-color: #328BC7;
+}
+
+QDialog#UpdateDialog QPushButton#cancelButton,
+QDialog#MotDDialog QPushButton#okButton {
+    padding: 7px 14px;
+}
+
+/* MO2 Revamped utility dialogs. */
+QDialog#ActivateModsDialog QFrame#activateHeaderCard,
+QDialog#DisableProxyPluginDialog QFrame#dependencyHeaderCard,
+QDialog#DisableProxyPluginDialog QFrame#restartNoticeCard,
+QDialog#SaveTextAsDialog QFrame#saveTextHeaderCard {
+    color: #1D3F5B;
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-radius: 8px;
+}
+
+QDialog#ActivateModsDialog QLabel#dialogHeading,
+QDialog#SaveTextAsDialog QLabel#saveTextHeading,
+QDialog#DisableProxyPluginDialog QLabel#restartNoticeHeading {
+    color: #1D3F5B;
+    font-size: 14pt;
+    font-weight: 600;
+}
+
+QDialog#ActivateModsDialog QLabel#dialogDescription,
+QDialog#SaveTextAsDialog QLabel#saveTextDescription,
+QDialog#DisableProxyPluginDialog QLabel#label {
+    color: #5B6C7A;
+}
+
+QDialog#DisableProxyPluginDialog QLabel#topLabel {
+    color: #1D3F5B;
+    font-size: 12pt;
+    font-weight: 600;
+}
+
+QDialog#ActivateModsDialog QTableWidget#modsTable,
+QDialog#DisableProxyPluginDialog QTableWidget#requiredPlugins,
+QDialog#SaveTextAsDialog QTextEdit#textEdit {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 6px;
+    selection-background-color: #B9D9EE;
+    selection-color: #1D3F5B;
+}
+
+QDialog#ActivateModsDialog QHeaderView::section,
+QDialog#DisableProxyPluginDialog QHeaderView::section {
+    color: #29465D;
+    background-color: #EAF0F5;
+    border: 0;
+    border-bottom: 1px solid #CFD9E1;
+    padding: 7px 9px;
+    font-weight: 600;
+}
+
+QDialog#ActivateModsDialog QTableWidget::item,
+QDialog#DisableProxyPluginDialog QTableWidget::item {
+    padding: 5px 7px;
+}
+
+QDialog#DisableProxyPluginDialog QFrame#restartNoticeCard {
+    background-color: #FBF5EA;
+    border-color: #E7D6B7;
+}
+
+QDialog#DisableProxyPluginDialog QLabel#restartNoticeHeading {
+    color: #87622A;
+    font-size: 10pt;
+}
+
+QDialog#DisableProxyPluginDialog QPushButton#yesBtn {
+    color: #773838;
+    background-color: #F9EDED;
+    border: 1px solid #E3BABA;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+QDialog#DisableProxyPluginDialog QPushButton#yesBtn:hover {
+    background-color: #F4DDDD;
+    border-color: #D99C9C;
+}
+
+QDialog#ActivateModsDialog QPushButton,
+QDialog#DisableProxyPluginDialog QPushButton,
+QDialog#SaveTextAsDialog QPushButton {
+    min-height: 30px;
+    padding: 5px 12px;
+}
+
+/* MO2 Revamped: Nexus browser and sign-in flow. */
+QDialog#BrowserDialog QWidget#headerPanel,
+QDialog#BrowserDialog QWidget#toolBar {
+    background-color: transparent;
+    border: none;
+}
+
+QDialog#BrowserDialog QLabel#titleLabel,
+QDialog#CredentialsDialog QLabel#titleLabel,
+QDialog#ValidationProgressDialog QLabel#titleLabel {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+
+QDialog#BrowserDialog QLabel#subtitleLabel,
+QDialog#CredentialsDialog QLabel#label_3,
+QDialog#ValidationProgressDialog QLabel#helpLabel {
+    color: #5B6C7A;
+}
+
+QDialog#BrowserDialog QPushButton#backBtn,
+QDialog#BrowserDialog QPushButton#fwdBtn,
+QDialog#BrowserDialog QPushButton#refreshBtn {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 3px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+}
+
+QDialog#BrowserDialog QPushButton#backBtn:hover,
+QDialog#BrowserDialog QPushButton#fwdBtn:hover,
+QDialog#BrowserDialog QPushButton#refreshBtn:hover {
+    background-color: #EAF2F8;
+    border-color: #CFDDE8;
+}
+QDialog#BrowserDialog QPushButton#backBtn:disabled,
+QDialog#BrowserDialog QPushButton#fwdBtn:disabled {
+    color: #8794A0;
+    background-color: #EEF1F4;
+    border-color: #DEE4EA;
+}
+
+QDialog#BrowserDialog QLineEdit#urlEdit,
+QDialog#BrowserDialog QLineEdit#searchEdit {
+    min-height: 28px;
+    padding: 3px 8px;
+    border-radius: 5px;
+}
+
+QDialog#BrowserDialog QTabWidget#browserTabWidget::pane {
+    border: 1px solid #CFD9E1;
+    border-radius: 6px;
+    top: -1px;
+}
+
+QDialog#BrowserDialog QTabBar::tab {
+    min-height: 25px;
+    padding: 4px 11px;
+    margin-right: 3px;
+    border: 1px solid transparent;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+QDialog#BrowserDialog QTabBar::tab:selected {
+    color: #1D3F5B;
+    background-color: #FFFFFF;
+    border-color: #CFD9E1;
+    border-bottom-color: #FFFFFF;
+}
+
+QDialog#BrowserDialog QProgressBar#loadProgress {
+    background-color: #E2E8ED;
+    border: none;
+    border-radius: 3px;
+}
+
+QDialog#BrowserDialog QProgressBar#loadProgress::chunk,
+QDialog#ValidationProgressDialog QProgressBar#progress::chunk {
+    background-color: #3D87B4;
+    border-radius: 3px;
+}
+
+QDialog#CredentialsDialog QFrame#credentialsHeaderPanel,
+QDialog#ValidationProgressDialog QFrame#validationHeaderPanel {
+    color: #1D3F5B;
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-radius: 8px;
+}
+
+QDialog#CredentialsDialog QGroupBox#credentialsGroup,
+QDialog#ValidationProgressDialog QFrame#validationStatusPanel {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+QDialog#CredentialsDialog QGroupBox#credentialsGroup {
+    color: #1D3F5B;
+    font-weight: 600;
+}
+
+QDialog#CredentialsDialog QGroupBox#credentialsGroup::title {
+    subcontrol-origin: margin;
+    left: 11px;
+    padding: 0 4px;
+}
+
+QDialog#CredentialsDialog QLineEdit#usernameEdit,
+QDialog#CredentialsDialog QLineEdit#passwordEdit {
+    min-height: 30px;
+}
+
+QDialog#CredentialsDialog QCheckBox {
+    min-height: 26px;
+    spacing: 7px;
+}
+
+QDialog#CredentialsDialog QDialogButtonBox QPushButton,
+QDialog#ValidationProgressDialog QPushButton {
+    min-height: 30px;
+    padding: 4px 13px;
+}
+
+QDialog#ValidationProgressDialog QLabel#label {
+    color: #1D3F5B;
+    font-weight: 600;
+}
+
+QDialog#ValidationProgressDialog QProgressBar#progress {
+    background-color: #F4F7F9;
+    border: 1px solid #CFD9E1;
+    border-radius: 4px;
+}
+
+QDialog#NexusManualKeyDialog QGroupBox#keyInstructions,
+QDialog#NexusManualKeyDialog QGroupBox#keyEntry {
+    color: #1D3F5B;
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+    margin-top: 8px;
+    padding-top: 8px;
+    font-weight: 600;
+}
+
+QDialog#NexusManualKeyDialog QGroupBox#keyInstructions::title,
+QDialog#NexusManualKeyDialog QGroupBox#keyEntry::title {
+    subcontrol-origin: margin;
+    left: 11px;
+    padding: 0 4px;
+}
+
+QDialog#NexusManualKeyDialog QFrame#keySecurityNotice {
+    color: #87622A;
+    background-color: #FBF5EA;
+    border: 1px solid #E7D6B7;
+    border-radius: 6px;
+}
+
+QDialog#NexusManualKeyDialog QFrame#keySecurityNotice QLabel#label_3 {
+    color: #87622A;
+    background-color: transparent;
+}
+
+QDialog#NexusManualKeyDialog QPushButton#openBrowser {
+    min-height: 31px;
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+
+/* MO2 Revamped: LOOT, library rules, file preview, and choice dialogs. */
+QDialog#LootDialog QWidget#headerPanel,
+QDialog#ForcedLoadDialog QWidget#headerPanel,
+QDialog#SelectionDialog QWidget#headerPanel,
+QDialog#ListDialog QWidget#headerPanel {
+    background-color: transparent;
+    border: none;
+}
+
+QDialog#LootDialog QLabel#titleLabel,
+QDialog#ForcedLoadDialog QLabel#titleLabel,
+QDialog#SelectionDialog QLabel#titleLabel,
+QDialog#ListDialog QLabel#titleLabel,
+QDialog#PreviewDialog QLabel#nameLabel {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+
+QDialog#LootDialog QLabel#subtitleLabel,
+QDialog#ForcedLoadDialog QLabel#subtitleLabel,
+QDialog#SelectionDialog QLabel#descriptionLabel,
+QDialog#ListDialog QLabel#subtitleLabel,
+QDialog#PreviewDialog QLabel#modLabel {
+    color: #5B6C7A;
+}
+
+QDialog#LootDialog QWidget#progressPanel,
+QDialog#ForcedLoadDialog QGroupBox#rulesGroup,
+QDialog#ListDialog QGroupBox#choicesGroup {
+    color: #1D3F5B;
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+QDialog#LootDialog QLabel#progressText {
+    color: #1D3F5B;
+}
+
+QDialog#LootDialog QProgressBar#progressBar {
+    background-color: #F4F7F9;
+    border: 1px solid #CFD9E1;
+    border-radius: 4px;
+}
+
+QDialog#LootDialog QProgressBar#progressBar::chunk {
+    background-color: #3D87B4;
+    border-radius: 3px;
+}
+
+QDialog#LootDialog QFrame#frame,
+QDialog#PreviewDialog QFrame#previewFrame {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+
+QDialog#LootDialog QWebEngineView#report {
+    background-color: #FFFFFF;
+    border: none;
+}
+
+QDialog#LootDialog QWidget#detailsPanel {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+
+QDialog#LootDialog QLabel#detailsDescription {
+    color: #5B6C7A;
+}
+
+QDialog#LootDialog QPlainTextEdit#output {
+    color: #293847;
+    background-color: #F7F9FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 5px;
+    padding: 7px;
+}
+
+QDialog#LootDialog QToolButton#details,
+QDialog#UpdateDialog QToolButton#detailsButton {
+    min-height: 30px;
+    padding: 4px 8px;
+}
+
+QDialog#ForcedLoadDialog QGroupBox#rulesGroup::title,
+QDialog#ListDialog QGroupBox#choicesGroup::title {
+    subcontrol-origin: margin;
+    left: 11px;
+    padding: 0 4px;
+    font-weight: 600;
+}
+
+QDialog#ForcedLoadDialog QTableWidget#tableWidget {
+    color: #293847;
+    background-color: #FFFFFF;
+    alternate-background-color: #F5F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 5px;
+    gridline-color: #E4EAF0;
+    selection-background-color: #D7EAF9;
+    selection-color: #183E5F;
+}
+
+QDialog#ForcedLoadDialog QWidget#ForcedLoadDialogWidget {
+    background-color: transparent;
+}
+
+QDialog#ForcedLoadDialog QLineEdit#processEdit,
+QDialog#ForcedLoadDialog QLineEdit#libraryPathEdit {
+    min-height: 27px;
+    padding: 3px 7px;
+}
+
+QDialog#ForcedLoadDialog QPushButton#processBrowseButton,
+QDialog#ForcedLoadDialog QPushButton#libraryPathBrowseButton {
+    min-height: 27px;
+    padding: 2px 6px;
+}
+
+QDialog#PreviewDialog QPushButton#previousButton,
+QDialog#PreviewDialog QPushButton#nextButton {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 3px;
+    border-radius: 5px;
+}
+
+QDialog#PreviewDialog QPushButton#previousButton:hover,
+QDialog#PreviewDialog QPushButton#nextButton:hover {
+    background-color: #EAF2F8;
+    border-color: #CFDDE8;
+}
+QDialog#PreviewDialog QPushButton#previousButton:disabled,
+QDialog#PreviewDialog QPushButton#nextButton:disabled {
+    color: #8794A0;
+    background-color: #EEF1F4;
+    border-color: #DEE4EA;
+}
+
+QDialog#SelectionDialog QScrollArea#scrollArea,
+QDialog#SelectionDialog QWidget#scrollAreaWidgetContents {
+    background-color: transparent;
+    border: none;
+}
+
+QDialog#SelectionDialog QDialogButtonBox#buttonBox QPushButton {
+    min-height: 36px;
+    padding: 6px 12px;
+    text-align: left;
+}
+
+QDialog#SelectionDialog QPushButton#cancelButton,
+QDialog#ListDialog QDialogButtonBox QPushButton,
+QDialog#LootDialog QDialogButtonBox QPushButton,
+QDialog#ForcedLoadDialog QDialogButtonBox QPushButton,
+QDialog#PreviewDialog QPushButton#closeButton {
+    min-height: 30px;
+    padding: 4px 13px;
+}
+
+QDialog#ListDialog QLineEdit#filterEdit {
+    min-height: 28px;
+}
+
+QDialog#ListDialog QListWidget#choiceList {
+    color: #293847;
+    background-color: #FFFFFF;
+    alternate-background-color: #F5F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 5px;
+    selection-background-color: #D7EAF9;
+    selection-color: #183E5F;
+}
+
+/* MO2 Revamped: Elden Ring startup options */
+QDialog#EldenRingStartupOptionsDialog QFrame#startupHeaderPanel {
+    color: #293847;
+    background-color: #F4F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#EldenRingStartupOptionsDialog QLabel#startupPageTitle {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+QDialog#EldenRingStartupOptionsDialog QLabel#startupPageSubtitle,
+QDialog#EldenRingStartupOptionsDialog QLabel#profileNote,
+QDialog#EldenRingStartupOptionsDialog QLabel#cleanupNote {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#EldenRingStartupOptionsDialog QLabel#activeProfileName {
+    color: #293847;
+    font-weight: 600;
+}
+QDialog#EldenRingStartupOptionsDialog QLabel#startupCompatibilityNote {
+    color: #455E70;
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+QDialog#EldenRingStartupOptionsDialog QCheckBox#clearOverwriteAfterGame {
+    color: #8A4B08;
+    font-weight: 600;
+}
+QDialog#EldenRingStartupOptionsDialog QDialogButtonBox#dialogButtons QPushButton {
+    min-height: 32px;
+    padding: 5px 13px;
+}
+
+/* MO2 Revamped: Elden Ring native DLL profile */
+QDialog#EldenRingNativeProfileDialog QFrame#nativeHeaderPanel {
+    color: #293847;
+    background-color: #F4F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#EldenRingNativeProfileDialog QLabel#nativePageTitle {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+QDialog#EldenRingNativeProfileDialog QLabel#nativePageSubtitle,
+QDialog#EldenRingNativeProfileDialog QLabel#nativeSectionNote,
+QDialog#EldenRingNativeProfileDialog QLabel#nativeFooterNote {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#EldenRingNativeProfileDialog QFrame#nativeProfilePanel {
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-radius: 5px;
+}
+QDialog#EldenRingNativeProfileDialog QLabel#nativeProfileCaption {
+    color: #6F8190;
+    font-size: 8pt;
+    font-weight: 600;
+}
+QDialog#EldenRingNativeProfileDialog QLabel#nativeProfileName {
+    color: #293847;
+    font-weight: 600;
+}
+QDialog#EldenRingNativeProfileDialog QFrame#nativeFooterPanel {
+    background-color: #F4F8FB;
+    border: 1px solid #D9E1E8;
+    border-radius: 5px;
+}
+QDialog#EldenRingNativeProfileDialog QGroupBox#detectedDllCard,
+QDialog#EldenRingNativeProfileDialog QGroupBox#nativeLoadOrderCard {
+    margin-top: 8px;
+    padding-top: 4px;
+}
+QDialog#EldenRingNativeProfileDialog QGroupBox#detectedDllCard::title,
+QDialog#EldenRingNativeProfileDialog QGroupBox#nativeLoadOrderCard::title {
+    color: #1D3F5B;
+    font-weight: 600;
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+}
+QDialog#EldenRingNativeProfileDialog QLabel#detectedDllStatus {
+    color: #455E70;
+    background-color: #F1F6FA;
+    border: 1px solid #D8E3EB;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+QDialog#EldenRingNativeProfileDialog QTreeWidget#detectedDllTree,
+QDialog#EldenRingNativeProfileDialog QTableWidget#nativeLoadOrderTable {
+    border: 1px solid #CFD9E1;
+    border-radius: 5px;
+}
+QDialog#EldenRingNativeProfileDialog QTableWidget#nativeLoadOrderTable QLineEdit {
+    min-height: 16px;
+    max-height: 22px;
+    padding: 0px 5px;
+    margin: 0px;
+}
+QDialog#EldenRingNativeProfileDialog QLabel#nativeTableEmptyState {
+    color: #6F8190;
+    background-color: transparent;
+    border: none;
+    font-size: 10pt;
+    padding: 18px;
+}
+QDialog#EldenRingNativeProfileDialog QHeaderView::section {
+    padding: 6px 7px;
+    font-weight: 600;
+}
+QDialog#EldenRingNativeProfileDialog QPushButton#addDetectedDllsButton,
+QDialog#EldenRingNativeProfileDialog QPushButton#removeNativeEntryButton,
+QDialog#EldenRingNativeProfileDialog QPushButton#moveNativeEntryUpButton,
+QDialog#EldenRingNativeProfileDialog QPushButton#moveNativeEntryDownButton,
+QDialog#EldenRingNativeProfileDialog QPushButton#detectNativeExportsButton,
+QDialog#EldenRingNativeProfileDialog QDialogButtonBox#nativeDialogButtons QPushButton {
+    min-height: 30px;
+    padding: 4px 11px;
+}
+
+/* MO2 Revamped: Elden Ring create/import save profile */
+QDialog#EldenRingCreateSaveProfileDialog QFrame#saveProfileHeader {
+    color: #293847;
+    background-color: #F4F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileTitle {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileSubtitle,
+QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileSourceNote,
+QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileLocationCaption {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#EldenRingCreateSaveProfileDialog QGroupBox#saveProfileDetailsCard,
+QDialog#EldenRingCreateSaveProfileDialog QGroupBox#saveProfileStartingSaveCard {
+    margin-top: 8px;
+    padding-top: 4px;
+}
+QDialog#EldenRingCreateSaveProfileDialog QGroupBox#saveProfileDetailsCard::title,
+QDialog#EldenRingCreateSaveProfileDialog QGroupBox#saveProfileStartingSaveCard::title {
+    color: #1D3F5B;
+    font-weight: 600;
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+}
+QDialog#EldenRingCreateSaveProfileDialog QLineEdit#saveProfileNameEdit,
+QDialog#EldenRingCreateSaveProfileDialog QComboBox#saveProfileSourceCombo {
+    min-height: 30px;
+    padding: 3px 7px;
+}
+QDialog#EldenRingCreateSaveProfileDialog QFrame#saveProfileLocationCard {
+    background-color: #F4F8FB;
+    border: 1px solid #D9E1E8;
+    border-radius: 5px;
+}
+QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileLocationPath {
+    color: #455E70;
+}
+QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileStatus {
+    color: #8A4B08;
+}
+QDialog#EldenRingCreateSaveProfileDialog QDialogButtonBox#saveProfileButtons QPushButton {
+    min-height: 32px;
+    padding: 5px 13px;
+}
+/* MO2 Revamped: Elden Ring save routing */
+QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationHeaderPanel {
+    color: #293847;
+    background-color: #F4F8FB;
+    border: 1px solid #CFD9E1;
+    border-radius: 7px;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageTitle {
+    color: #1D3F5B;
+    font-size: 15pt;
+    font-weight: 600;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageSubtitle,
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSectionNote,
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSafetyNote {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#EldenRingSaveIsolationDialog QScrollArea#saveIsolationBody,
+QDialog#EldenRingSaveIsolationDialog QWidget#saveIsolationContent {
+    background-color: transparent;
+    border: none;
+}
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationProfileCard,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationModeCard,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationGameProfileCard,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationRoutingCard,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationActionsCard {
+    color: #293847;
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 8px;
+    padding: 12px 10px 10px;
+}
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationProfileCard::title,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationModeCard::title,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationGameProfileCard::title,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationRoutingCard::title,
+QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationActionsCard::title {
+    color: #1D3F5B;
+    font-weight: 600;
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationProfileName {
+    color: #293847;
+    font-weight: 600;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationProfilePath,
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSelectedPath {
+    color: #455E70;
+}
+QDialog#EldenRingSaveIsolationDialog QComboBox#saveIsolationModeCombo,
+QDialog#EldenRingSaveIsolationDialog QComboBox#saveIsolationGameProfileCombo {
+    min-height: 30px;
+    padding: 3px 7px;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationModeDescription {
+    color: #455E70;
+    padding: 2px 1px 0;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationRoutingStatus {
+    color: #455E70;
+    background-color: #EAF2F8;
+    border: 1px solid #CFDDE8;
+    border-radius: 5px;
+    padding: 7px 9px;
+}
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationMo2SaveState {
+    color: #6F8190;
+    font-size: 9pt;
+}
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationOpenSelectedButton,
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationOpenGlobalButton,
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationCopyDiagnosticsButton,
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationCreateProfileButton,
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationTransferButton {
+    min-height: 30px;
+    padding: 4px 10px;
+}
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationTransferButton {
+    color: #1D3F5B;
+    background-color: #EAF2F8;
+    border-color: #9BB7CE;
+}
+QDialog#EldenRingSaveIsolationDialog QPushButton#saveIsolationTransferButton:hover {
+    background-color: #DDEAF4;
+}
+QDialog#EldenRingSaveIsolationDialog QDialogButtonBox#saveIsolationDialogButtons QPushButton {
+    min-height: 32px;
+    padding: 5px 13px;
+}
+/* MO2 Revamped: shared task prompts from the pinned MO2 2.5.2 UIBase */
+QDialog#TaskDialog QWidget#topPanel {
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+}
+QDialog#TaskDialog QLabel#main {
+    color: #1D3F5B;
+    font-size: 14pt;
+    font-weight: 600;
+}
+QDialog#TaskDialog QLabel#content {
+    color: #455E70;
+}
+QDialog#TaskDialog QCommandLinkButton {
+    color: #293847;
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 6px;
+    min-height: 48px;
+    padding: 7px 10px;
+    text-align: left;
+}
+QDialog#TaskDialog QCommandLinkButton:hover {
+    background-color: #EEF5FA;
+    border-color: #AFC6D8;
+}
+QDialog#TaskDialog QCommandLinkButton:focus {
+    border-color: #5A99C4;
+}
+QDialog#TaskDialog QWidget#rememberPanel {
+    background-color: #EFF5F9;
+    border: 1px solid #D5E0E8;
+    border-radius: 6px;
+    padding: 3px;
+}
+QDialog#TaskDialog QWidget#rememberPanel QComboBox {
+    min-height: 28px;
+    padding: 3px 7px;
+}
+QDialog#TaskDialog QWidget#detailsPanel {
+    background-color: #F2F5F8;
+    border-top: 1px solid #D5DEE7;
+}
+QDialog#TaskDialog QToolButton#detailsExpander {
+    color: #315D7D;
+    font-weight: 600;
+    padding: 5px 3px;
+}
+QDialog#TaskDialog QPlainTextEdit#details {
+    color: #394B5A;
+    background-color: #FAFCFD;
+    border: 1px solid #D5DEE7;
+    border-radius: 4px;
+    padding: 5px;
+}
+/* MO2 Revamped: native save transfer for non-Elden Ring games */
+QDialog#TransferSavesDialog QLabel#transferSavePageTitle {
+    color: #1D3F5B;
+    font-size: 16pt;
+    font-weight: 600;
+}
+QDialog#TransferSavesDialog QLabel#transferSavePageSubtitle,
+QDialog#TransferSavesDialog QLabel#globalCharactersDescription,
+QDialog#TransferSavesDialog QLabel#profileCharactersDescription,
+QDialog#TransferSavesDialog QLabel#globalSavesHeading,
+QDialog#TransferSavesDialog QLabel#profileSavesHeading,
+QDialog#TransferSavesDialog QLabel#transferSaveSafetyNote {
+    color: #6F8190;
+}
+QDialog#TransferSavesDialog QLabel#label,
+QDialog#TransferSavesDialog QLabel#label_2 {
+    color: #1D3F5B;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#TransferSavesDialog QGroupBox#globalSavesPanel,
+QDialog#TransferSavesDialog QGroupBox#profileSavesPanel {
+    color: #293847;
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 0;
+}
+QDialog#TransferSavesDialog QWidget#transferActionsPanel {
+    background-color: #F4F7FA;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+}
+QDialog#TransferSavesDialog QLabel#globalToProfileHeading,
+QDialog#TransferSavesDialog QLabel#profileToGlobalHeading {
+    color: #52738C;
+    font-size: 8pt;
+    font-weight: 600;
+}
+QDialog#TransferSavesDialog QListWidget#globalCharacterList,
+QDialog#TransferSavesDialog QListWidget#globalSavesList,
+QDialog#TransferSavesDialog QListWidget#localCharacterList,
+QDialog#TransferSavesDialog QListWidget#localSavesList {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+    padding: 3px;
+}
+QDialog#TransferSavesDialog QPushButton#moveToLocalBtn,
+QDialog#TransferSavesDialog QPushButton#moveToGlobalBtn,
+QDialog#TransferSavesDialog QPushButton#copyToLocalBtn,
+QDialog#TransferSavesDialog QPushButton#copyToGlobalBtn {
+    min-height: 34px;
+    padding: 4px 8px;
+}
+QDialog#TransferSavesDialog QPushButton#moveToLocalBtn,
+QDialog#TransferSavesDialog QPushButton#moveToGlobalBtn {
+    color: #68450F;
+    background-color: #FFF5E8;
+    border-color: #D8B876;
+}
+QDialog#TransferSavesDialog QPushButton#moveToLocalBtn:hover,
+QDialog#TransferSavesDialog QPushButton#moveToGlobalBtn:hover {
+    background-color: #FCEBD2;
+}
+QDialog#TransferSavesDialog QPushButton#moveToLocalBtn:disabled,
+QDialog#TransferSavesDialog QPushButton#moveToGlobalBtn:disabled {
+    color: #8794A0;
+    background-color: #EEF1F4;
+    border-color: #DEE4EA;
+}
+QDialog#TransferSavesDialog QPushButton#doneButton {
+    min-height: 34px;
+    padding: 5px 14px;
+}
+/* MO2 Revamped: upstream About, software credits, and legal text */
+QDialog#AboutDialog QFrame#aboutHeaderCard {
+    color: #293847;
+    background-color: #E9F1F6;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#AboutDialog QLabel#nameLabel {
+    color: #1D3F5B;
+}
+QDialog#AboutDialog QLabel#aboutPageHeading {
+    color: #1D3F5B;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#AboutDialog QLabel#aboutSummary {
+    color: #657B8D;
+}
+QDialog#AboutDialog QLabel#revisionLabel,
+QDialog#AboutDialog QLabel#usvfsLabel {
+    color: #6F8190;
+}
+QDialog#AboutDialog QLabel#label_3 {
+    color: #1D3F5B;
+    font-weight: 600;
+}
+QDialog#AboutDialog QLabel#copyrightText {
+    color: #455E70;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+QDialog#AboutDialog QTabWidget#tabWidget::pane {
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 6px;
+    top: -1px;
+}
+QDialog#AboutDialog QTabWidget#tabWidget QTabBar::tab {
+    min-width: 92px;
+    padding: 7px 12px;
+}
+QDialog#AboutDialog QListWidget#creditsList,
+QDialog#AboutDialog QListWidget#listWidget,
+QDialog#AboutDialog QListWidget#listWidget_2,
+QDialog#AboutDialog QListWidget#listWidget_3,
+QDialog#AboutDialog QListWidget#listWidget_4 {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+    padding: 3px;
+}
+QDialog#AboutDialog QTextBrowser#licenseText {
+    color: #394B5A;
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+    padding: 5px;
+}
+QDialog#AboutDialog QGroupBox {
+    background-color: #F8FAFC;
+    border-color: #D5DEE7;
+    border-radius: 6px;
+}
+/* MO2 Revamped: consistent standard confirmations and status messages */
+QMessageBox QLabel {
+    color: #293847;
+    background-color: transparent;
+}
+QMessageBox QDialogButtonBox {
+    background-color: transparent;
+    border: none;
+}
+QMessageBox QDialogButtonBox QPushButton {
+    min-width: 82px;
+    min-height: 30px;
+    padding: 5px 12px;
+    border-radius: 4px;
+}
+QMessageBox QTextEdit,
+QMessageBox QPlainTextEdit {
+    color: #394B5A;
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+}
+QMessageBox QCheckBox {
+    spacing: 8px;
+}
+
+/* MO2 Revamped: dynamically constructed utility dialogs */
+QDialog#ExportModListDialog,
+QDialog#InstanceNameDialog,
+QDialog#UILockerDialog {
+    background-color: #F2F5F8;
+}
+QDialog#ExportModListDialog QLabel#exportTitle,
+QDialog#InstanceNameDialog QLabel#instanceNameHeading {
+    color: #1D3F5B;
+    font-size: 16pt;
+    font-weight: 600;
+}
+QDialog#ExportModListDialog QLabel#exportDescription,
+QDialog#InstanceNameDialog QLabel#instanceNameDescription {
+    color: #566B7C;
+}
+QDialog#ExportModListDialog QGroupBox#exportRowsGroup,
+QDialog#ExportModListDialog QGroupBox#exportColumnsGroup,
+QDialog#InstanceNameDialog QGroupBox#instanceNameCard {
+    background-color: #F7FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding-top: 8px;
+}
+QDialog#ExportModListDialog QGroupBox#exportRowsGroup::title,
+QDialog#ExportModListDialog QGroupBox#exportColumnsGroup::title,
+QDialog#InstanceNameDialog QGroupBox#instanceNameCard::title {
+    color: #1D3F5B;
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+}
+QDialog#ExportModListDialog QRadioButton,
+QDialog#ExportModListDialog QCheckBox {
+    spacing: 8px;
+    padding: 3px 1px;
+}
+QDialog#ExportModListDialog QDialogButtonBox,
+QDialog#InstanceNameDialog QDialogButtonBox {
+    background-color: transparent;
+    border: none;
+}
+QDialog#ExportModListDialog QDialogButtonBox QPushButton,
+QDialog#InstanceNameDialog QDialogButtonBox QPushButton {
+    min-width: 90px;
+    min-height: 32px;
+    padding: 5px 12px;
+}
+QDialog#InstanceNameDialog QLineEdit#instanceNameEdit {
+    min-height: 30px;
+    padding: 4px 8px;
+}
+QDialog#InstanceNameDialog QLabel#instanceNameValidation {
+    color: #B6463B;
+    padding-left: 2px;
+}
+QFrame#uiLockerCard {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 9px;
+}
+QLabel#uiLockerMessage {
+    color: #1D3F5B;
+    font-size: 14pt;
+    font-weight: 600;
+}
+QLabel#uiLockerInfo {
+    color: #566B7C;
+}
+QWidget#uiLockerActions {
+    background-color: transparent;
+}
+/* Standard Qt prompts and utility dialogs share the same refined surfaces. */
+QInputDialog, QColorDialog, QErrorMessage, QFileDialog, QWizard, QWizardPage,
+QProgressDialog {
+    color: #293847;
+    background-color: #F2F5F8;
+}
+QInputDialog QLabel, QColorDialog QLabel, QErrorMessage QLabel,
+QFileDialog QLabel, QWizard QLabel, QWizardPage QLabel, QProgressDialog QLabel {
+    color: #293847;
+    background-color: transparent;
+}
+QInputDialog QLineEdit, QInputDialog QPlainTextEdit, QInputDialog QTextEdit,
+QInputDialog QComboBox, QInputDialog QSpinBox, QInputDialog QDoubleSpinBox {
+    color: #293847;
+    background-color: #F7F9FB;
+    border: 1px solid #CFDAE4;
+    border-radius: 6px;
+    padding: 5px 8px;
+    selection-background-color: #D5E8F6;
+}
+QInputDialog QLineEdit:focus, QInputDialog QPlainTextEdit:focus,
+QInputDialog QTextEdit:focus, QInputDialog QComboBox:focus,
+QInputDialog QSpinBox:focus, QInputDialog QDoubleSpinBox:focus {
+    border-color: #6E9FC3;
+    background-color: #FFFFFF;
+}
+QInputDialog QDialogButtonBox, QColorDialog QDialogButtonBox,
+QFileDialog QDialogButtonBox, QProgressDialog QDialogButtonBox {
+    background-color: transparent;
+}
+
+/* Wizard refinements: one surface per page, content-sized paths and review. */
+QDialog#CreateInstanceDialog QWidget#widget_11,
+QDialog#CreateInstanceDialog QWidget#widget_12 {
+    color: #293847;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+}
+QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveModeCard {
+    color: #293847;
+    background-color: transparent;
+    border: none;
+    margin-top: 14px;
+    padding: 2px 0 0 0;
+}
+QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveModeCard::title {
+    color: #233F58;
+    subcontrol-origin: margin;
+    left: 0;
+    padding: 0 4px;
+    font-weight: 600;
+}
+QDialog#CreateInstanceDialog QTextEdit#review,
+QDialog#CreateInstanceDialog QTextEdit#creationLog {
+    padding: 8px 10px;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar:vertical {
+    width: 8px;
+    margin: 2px 1px;
+    background-color: transparent;
+    border: none;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar::handle:vertical {
+    min-height: 28px;
+    background-color: #B8C7D3;
+    border-radius: 4px;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar::handle:vertical:hover {
+    background-color: #8DA9BD;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar::add-line:vertical,
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar::sub-line:vertical {
+    height: 0;
+    border: none;
+    background-color: transparent;
+}
+QDialog#CreateInstanceDialog QWidget#widget_19 {
+    padding: 0;
+}
+QDialog#CreateInstanceDialog QWidget#widget_20 {
+    color: #285D7F;
+    background-color: #F0F6FA;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+}
+QDialog#CreateInstanceDialog QTextEdit#review {
+    font-size: 10pt;
+}
+QDialog#CreateInstanceDialog QCheckBox#launch {
+    color: #285D7F;
+    background-color: transparent;
+    border: none;
+    font-weight: 600;
+}
+QDialog#CreateInstanceDialog QWidget#page_2 QWidget#widget_3 {
+    padding: 11px 11px 0px 11px;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#qt_scrollarea_viewport,
+QDialog#CreateInstanceDialog QWidget#games {
+    background-color: #FFFFFF;
+    border: none;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
+    min-height: 78px;
+    padding: 18px 12px 8px 12px;
+}
+QDialog#CreateInstanceDialog QWidget#page_5 QWidget#widget_9 {
+    padding: 10px 11px 2px 11px;
+}
+QDialog#CreateInstanceDialog QLabel#instanceNameContext {
+    color: #566B7C;
+    background-color: #F0F6FA;
+    border: 1px solid #D5DEE7;
+    border-radius: 6px;
+    padding: 7px 9px;
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveModeCard {
+    color: #293847;
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 8px;
+    padding: 0;
+}
+QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveModeCard::title {
+    color: #1D3F5B;
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+    font-weight: 600;
+}
+QDialog#CreateInstanceDialog QLabel#eldenRingWizardScopeNote {
+    color: #566B7C;
+    background-color: #F4F8FB;
+    border: 1px solid #D5DEE7;
+    border-radius: 5px;
+    padding: 5px 7px;
+}
+QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_description {
+    color: #455E70;
+    padding: 2px 1px 0;
+}
+QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_status,
+QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceSaveStatus {
+    color: #6F8190;
+    padding: 2px 1px 0;
+}
+QDialog#CreateInstanceDialog QLabel#eldenRingStartingSaveHeading {
+    color: #1D3F5B;
+    font-weight: 600;
+    border-top: 1px solid #D5DEE7;
+    padding-top: 8px;
+    margin-top: 3px;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 {
+    background-color: #FFFFFF;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#qt_scrollarea_viewport,
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#games {
+    background-color: #FFFFFF;
+    border: none;
+}
+QDialog#CreateInstanceDialog QWidget#widget_13 QStackedWidget#pathPages QWidget#page_6_simple QWidget#widget_11,
+QDialog#CreateInstanceDialog QWidget#widget_13 QStackedWidget#pathPages QWidget#page_6_advanced QWidget#widget_12 {
+    color: #293847;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+QDialog#CreateInstanceDialog QLabel#label_6,
+QDialog#CreateInstanceDialog QLabel#label_8,
+QDialog#CreateInstanceDialog QLabel#label_9,
+QDialog#CreateInstanceDialog QLabel#label_10,
+QDialog#CreateInstanceDialog QLabel#label_12,
+QDialog#CreateInstanceDialog QLabel#label_13 {
+    color: #293847;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Keep both path layouts on the same surface as their host card. */
+QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_simple,
+QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_advanced,
+QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_simple QWidget#widget_11,
+QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_advanced QWidget#widget_12 {
+    background-color: #FFFFFF;
+    border: none;
+}
+
+/* The filter list is hosted in its own dialog while keeping the same controls. */
+QDialog#filterOptionsDialog {
+    color: #293847;
+    background-color: #F2F5F8;
+}
+QDialog#filterOptionsDialog QLabel#filterDialogTitle {
+    color: #1D3F5B;
+    font-size: 14pt;
+    font-weight: 600;
+    padding: 0;
+}
+QDialog#filterOptionsDialog QLabel#filterDialogDescription {
+    color: #566B7C;
+    padding: 0;
+}
+QDialog#filterOptionsDialog QGroupBox#categoriesGroup {
+    color: #293847;
+    background-color: #F8FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin: 0;
+    padding: 0;
+}
+QDialog#filterOptionsDialog QDialogButtonBox#filterDialogButtons {
+    background-color: transparent;
+    border: none;
+}
+QDialog#filterOptionsDialog QDialogButtonBox#filterDialogButtons QPushButton {
+    min-width: 82px;
+    min-height: 32px;
+    padding: 5px 13px;
+}
+
+/* MO2 Revamped: local instance guide and deletion review */
+QDialog#InstanceHelpDialog QFrame#instanceHelpHeaderPanel,
+QDialog#InstanceHelpDialog QFrame#instanceHelpExampleCard,
+QDialog#DeleteInstanceDialog QFrame#deleteInstanceHeader,
+QDialog#DeleteInstanceDialog QFrame#deleteInstanceListCard {
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 8px;
+}
+QDialog#InstanceHelpDialog QFrame#instanceHelpHeaderPanel {
+    background-color: #EAF2F8;
+}
+QDialog#DeleteInstanceDialog QFrame#deleteInstanceHeader {
+    background-color: #FDF7F6;
+    border-color: #E8D1CE;
+}
+QDialog#InstanceHelpDialog QLabel#instanceHelpHeading,
+QDialog#DeleteInstanceDialog QLabel#deleteInstanceHeading {
+    color: #233F58;
+    font-size: 14pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QDialog#InstanceHelpDialog QLabel#instanceHelpDescription,
+QDialog#InstanceHelpDialog QLabel#instanceHelpExampleText,
+QDialog#InstanceHelpDialog QLabel#instanceHelpFooter,
+QDialog#DeleteInstanceDialog QLabel#deleteInstanceDescription,
+QDialog#DeleteInstanceDialog QLabel#deleteInstanceActionHint {
+    color: #5B6C7A;
+    background-color: transparent;
+}
+QDialog#InstanceHelpDialog QLabel#instanceHelpGame,
+QDialog#DeleteInstanceDialog QLabel#deleteInstanceListTitle {
+    color: #293847;
+    font-weight: 600;
+    background-color: transparent;
+}
+QDialog#DeleteInstanceDialog QLabel#deleteInstanceItemCount {
+    color: #5B6C7A;
+    background-color: #F2F5F8;
+    border: 1px solid #D5DEE7;
+    border-radius: 10px;
+    padding: 3px 8px;
+}
+QDialog#DeleteInstanceDialog QFrame#deleteWarningBadge {
+    background-color: #FBEAE7;
+    border: 1px solid #E3B3AD;
+    border-radius: 21px;
+}
+QDialog#DeleteInstanceDialog QLabel#deleteWarningMark {
+    color: #9B463D;
+    font-size: 20pt;
+    font-weight: 700;
+    background-color: transparent;
+}
+QDialog#DeleteInstanceDialog QWidget#deleteInstanceHeaderText {
+    background-color: transparent;
+    border: none;
+}
+QDialog#DeleteInstanceDialog QListWidget#deleteInstancePaths {
+    color: #293847;
+    background-color: #FFFFFF;
+    alternate-background-color: #F6F9FB;
+    border: 1px solid #D5DEE7;
+    border-radius: 6px;
+    padding: 4px;
+}
+QDialog#DeleteInstanceDialog QListWidget#deleteInstancePaths::item {
+    padding: 4px 6px;
+    border-bottom: 1px solid #E7EDF2;
+}
+QDialog#DeleteInstanceDialog QCheckBox#deleteInstancePathCheck {
+    color: #30495D;
+    background-color: transparent;
+    min-height: 30px;
+    spacing: 9px;
+    padding: 3px 5px;
+}
+QDialog#InstanceHelpDialog QPushButton#instanceHelpCloseButton,
+QDialog#DeleteInstanceDialog QPushButton#deleteInstanceCancelButton,
+QDialog#DeleteInstanceDialog QPushButton#deleteInstancePermanentButton,
+QDialog#DeleteInstanceDialog QPushButton#deleteInstanceRecycleButton {
+    min-height: 34px;
+    min-width: 92px;
+    padding: 5px 13px;
+    border-radius: 6px;
+}
+QDialog#DeleteInstanceDialog QPushButton#deleteInstancePermanentButton {
+    color: #8F3D36;
+    background-color: #FFF8F7;
+    border: 1px solid #E3B3AD;
+    font-weight: 600;
+}
+QDialog#DeleteInstanceDialog QPushButton#deleteInstancePermanentButton:hover {
+    color: #7C302A;
+    background-color: #FBE8E5;
+    border-color: #CC7D73;
+}
+QDialog#DeleteInstanceDialog QPushButton#deleteInstancePermanentButton:pressed {
+    background-color: #F4D8D4;
+}
+QDialog#DeleteInstanceDialog QPushButton#deleteInstanceRecycleButton {
+    color: #FFFFFF;
+    background-color: #2E719A;
+    border: 1px solid #2E719A;
+    font-weight: 600;
+}
+QDialog#DeleteInstanceDialog QPushButton#deleteInstanceRecycleButton:hover {
+    background-color: #3A83AD;
+    border-color: #3A83AD;
+}
+QDialog#DeleteInstanceDialog QPushButton#deleteInstanceRecycleButton:pressed {
+    background-color: #285E80;
+}
+
+/* MO2 Revamped: instance switch confirmation */
+QDialog#SwitchInstanceDialog QFrame#switchInstanceHeader {
+    background-color: #EAF2F8;
+    border: 1px solid #C4D9E8;
+    border-radius: 8px;
+}
+QDialog#SwitchInstanceDialog QFrame#switchInstanceBadge {
+    background-color: #D8EAF5;
+    border: 1px solid #B6D0E2;
+    border-radius: 21px;
+}
+QDialog#SwitchInstanceDialog QLabel#switchInstanceMark {
+    color: #2E719A;
+    font-size: 20pt;
+    font-weight: 700;
+    background-color: transparent;
+}
+QDialog#SwitchInstanceDialog QWidget#switchInstanceHeaderText {
+    background-color: transparent;
+    border: none;
+}
+QDialog#SwitchInstanceDialog QLabel#switchInstanceHeading {
+    color: #233F58;
+    font-size: 14pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QDialog#SwitchInstanceDialog QLabel#switchInstanceDescription,
+QDialog#SwitchInstanceDialog QLabel#switchInstanceSettingsText {
+    color: #5B6C7A;
+    background-color: transparent;
+}
+QDialog#SwitchInstanceDialog QFrame#switchInstanceSettingsHint {
+    background-color: #F2F8FC;
+    border: 1px solid #CFDDE8;
+    border-radius: 7px;
+}
+QDialog#SwitchInstanceDialog QPushButton#switchInstanceCancelButton,
+QDialog#SwitchInstanceDialog QPushButton#switchInstanceRestartButton {
+    min-height: 34px;
+    min-width: 100px;
+    padding: 5px 14px;
+    border-radius: 6px;
+}
+QDialog#SwitchInstanceDialog QPushButton#switchInstanceRestartButton {
+    color: #FFFFFF;
+    background-color: #2E719A;
+    border: 1px solid #2E719A;
+    font-weight: 600;
+}
+QDialog#SwitchInstanceDialog QPushButton#switchInstanceRestartButton:hover {
+    background-color: #3A83AD;
+    border-color: #3A83AD;
+}
+QDialog#SwitchInstanceDialog QPushButton#switchInstanceRestartButton:pressed {
+    background-color: #285E80;
+}
+
+/* Hide the obsolete external help link on the instance setup intro page. */
+QDialog#CreateInstanceDialog QWidget#page_1 QLabel#label_19,
+QDialog#CreateInstanceDialog QWidget#page_1 LinkLabel#label_19 {
+    min-height: 0px;
+    max-height: 0px;
+    margin: 0px;
+    padding: 0px;
+    border: none;
+}
+
+/* Keep the full instance wizard window the same size on every step. */
+QDialog#CreateInstanceDialog {
+    min-width: 820px;
+    max-width: 820px;
+    min-height: 735px;
+    max-height: 735px;
+}
+
+/* MO2 Revamped: executable editor */
+QDialog#EditExecutablesDialog {
+    color: #293847;
+    background-color: #F2F5F8;
+}
+QDialog#EditExecutablesDialog QWidget#widget_2,
+QDialog#EditExecutablesDialog QWidget#widget {
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#EditExecutablesDialog QLabel#label_6 {
+    color: #1D3F5B;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#EditExecutablesDialog QListWidget#list {
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #CFD9E1;
+    border-radius: 6px;
+    outline: none;
+    padding: 3px;
+}
+QDialog#EditExecutablesDialog QListWidget#list::item {
+    min-height: 25px;
+    padding: 4px 7px;
+    border-radius: 4px;
+}
+QDialog#EditExecutablesDialog QListWidget#list::item:hover {
+    background-color: #F0F6FA;
+}
+QDialog#EditExecutablesDialog QListWidget#list::item:selected {
+    color: #1D3F5B;
+    background-color: #DDEBF5;
+}
+QDialog#EditExecutablesDialog QToolButton#add,
+QDialog#EditExecutablesDialog QToolButton#remove,
+QDialog#EditExecutablesDialog QToolButton#up,
+QDialog#EditExecutablesDialog QToolButton#down,
+QDialog#EditExecutablesDialog QToolButton#reset {
+    min-height: 29px;
+    min-width: 29px;
+    padding: 3px 6px;
+    color: #30495D;
+    background-color: #F7FAFC;
+    border: 1px solid #CFD9E1;
+    border-radius: 5px;
+}
+QDialog#EditExecutablesDialog QToolButton#add {
+    color: #1E4A68;
+    background-color: #E3F0F8;
+    border-color: #B3CADB;
+    font-weight: 600;
+}
+QDialog#EditExecutablesDialog QToolButton#add:hover,
+QDialog#EditExecutablesDialog QToolButton#remove:hover,
+QDialog#EditExecutablesDialog QToolButton#up:hover,
+QDialog#EditExecutablesDialog QToolButton#down:hover,
+QDialog#EditExecutablesDialog QToolButton#reset:hover {
+    background-color: #DCEAF3;
+    border-color: #AFC7D8;
+}
+QDialog#EditExecutablesDialog QToolButton#remove:hover {
+    color: #8F3D36;
+    background-color: #FBE8E5;
+    border-color: #CC7D73;
+}
+QDialog#EditExecutablesDialog QLabel#label_3,
+QDialog#EditExecutablesDialog QLabel#label,
+QDialog#EditExecutablesDialog QLabel#label_4,
+QDialog#EditExecutablesDialog QLabel#label_2 {
+    color: #405A6B;
+    font-weight: 600;
+}
+QDialog#EditExecutablesDialog QLineEdit#title,
+QDialog#EditExecutablesDialog QLineEdit#binary,
+QDialog#EditExecutablesDialog QLineEdit#workingDirectory,
+QDialog#EditExecutablesDialog QLineEdit#arguments,
+QDialog#EditExecutablesDialog QLineEdit#steamAppID,
+QDialog#EditExecutablesDialog QComboBox#mods {
+    min-height: 29px;
+    padding: 4px 8px;
+    color: #293847;
+    background-color: #FFFFFF;
+    border: 1px solid #C9D6E1;
+    border-radius: 5px;
+    selection-background-color: #3E8DB8;
+}
+QDialog#EditExecutablesDialog QLineEdit#title:focus,
+QDialog#EditExecutablesDialog QLineEdit#binary:focus,
+QDialog#EditExecutablesDialog QLineEdit#workingDirectory:focus,
+QDialog#EditExecutablesDialog QLineEdit#arguments:focus,
+QDialog#EditExecutablesDialog QLineEdit#steamAppID:focus,
+QDialog#EditExecutablesDialog QComboBox#mods:focus {
+    border: 1px solid #4E9BC6;
+}
+QDialog#EditExecutablesDialog QLineEdit#steamAppID:disabled,
+QDialog#EditExecutablesDialog QComboBox#mods:disabled {
+    color: #8796A3;
+    background-color: #F1F4F6;
+}
+QDialog#EditExecutablesDialog QPushButton#browseBinary,
+QDialog#EditExecutablesDialog QPushButton#browseWorkingDirectory,
+QDialog#EditExecutablesDialog QPushButton#configureLibraries {
+    min-height: 29px;
+    padding: 4px 9px;
+    border-radius: 5px;
+}
+QDialog#EditExecutablesDialog QCheckBox#overwriteSteamAppID,
+QDialog#EditExecutablesDialog QCheckBox#createFilesInMod,
+QDialog#EditExecutablesDialog QCheckBox#forceLoadLibraries,
+QDialog#EditExecutablesDialog QCheckBox#useApplicationIcon,
+QDialog#EditExecutablesDialog QCheckBox#hide {
+    color: #30495D;
+    spacing: 8px;
+    background-color: transparent;
+}
+QDialog#EditExecutablesDialog QLabel#label_5 {
+    color: #738392;
+    font-size: 9pt;
+}
+QDialog#EditExecutablesDialog QSplitter#splitter::handle:horizontal {
+    width: 9px;
+    background-color: transparent;
+}
+QDialog#EditExecutablesDialog QDialogButtonBox#buttons {
+    background-color: transparent;
+    border: none;
+}
+QDialog#EditExecutablesDialog QDialogButtonBox#buttons QPushButton {
+    min-width: 76px;
+    min-height: 31px;
+    padding: 4px 12px;
+    border-radius: 5px;
+}
+
+/* Executable editor: grouped layout and clearer hierarchy */
+QDialog#EditExecutablesDialog QFrame#headerCard {
+    color: #293847;
+    background-color: #E9F1F6;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#EditExecutablesDialog QLabel#dialogHeading,
+QDialog#EditExecutablesDialog QLabel#detailsHeading {
+    color: #1D3F5B;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#EditExecutablesDialog QLabel#detailsHeading {
+    font-size: 11pt;
+}
+QDialog#EditExecutablesDialog QLabel#dialogDescription,
+QDialog#EditExecutablesDialog QLabel#detailsHint,
+QDialog#EditExecutablesDialog QLabel#executableHint {
+    color: #657B8D;
+    font-size: 9pt;
+}
+QDialog#EditExecutablesDialog QGroupBox#launchGroup,
+QDialog#EditExecutablesDialog QGroupBox#optionsGroup {
+    color: #30495D;
+    background-color: #FFFFFF;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+    margin-top: 10px;
+    padding-top: 8px;
+}
+QDialog#EditExecutablesDialog QGroupBox#launchGroup::title,
+QDialog#EditExecutablesDialog QGroupBox#optionsGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 11px;
+    padding: 0 5px;
+    color: #1D3F5B;
+    background-color: #FFFFFF;
+    font-weight: 600;
+}
+QDialog#EditExecutablesDialog QScrollArea#detailScroll,
+QDialog#EditExecutablesDialog QWidget#detailContent {
+    background-color: transparent;
+    border: none;
+}
+QDialog#EditExecutablesDialog QLabel#steamAppIdLabel {
+    color: #405A6B;
+    font-weight: 600;
+}
+QDialog#EditExecutablesDialog QToolButton#add,
+QDialog#EditExecutablesDialog QToolButton#remove,
+QDialog#EditExecutablesDialog QToolButton#up,
+QDialog#EditExecutablesDialog QToolButton#down,
+QDialog#EditExecutablesDialog QToolButton#reset {
+    min-width: 0px;
+    min-height: 30px;
+    padding: 4px 7px;
+}
+
+/* MO2 Revamped: framed gear-action dialogs */
+QDialog#modListNameDialog QFrame#gearActionCard,
+QDialog#bulkModToggleDialog QFrame#gearActionCard,
+QDialog#assignCategoriesDialog QFrame#gearActionCard {
+    color: #293847;
+    background-color: #F7FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+}
+QDialog#modListNameDialog QFrame#gearActionCard QLabel,
+QDialog#bulkModToggleDialog QFrame#gearActionCard QLabel,
+QDialog#assignCategoriesDialog QFrame#gearActionCard QLabel,
+QDialog#assignCategoriesDialog QFrame#gearActionCard QCheckBox {
+    background-color: transparent;
+}
+QDialog#modListNameDialog QFrame#gearActionDivider,
+QDialog#bulkModToggleDialog QFrame#gearActionDivider,
+QDialog#assignCategoriesDialog QFrame#gearActionDivider,
+QDialog#ExportModListDialog QFrame#gearActionDivider {
+    background-color: #D5DEE7;
+    border: none;
+    max-height: 1px;
+}
+
+/* MO2 Revamped: profile backup cards and separators */
+QDialog#profileBackupPromptDialog QLabel#profileBackupPromptTitle,
+QDialog#profileBackupDialog QLabel#backupContentsHeading {
+    color: #1D3F5B;
+}
+QDialog#profileBackupPromptDialog QLabel#profileBackupPromptDescription,
+QDialog#profileBackupDialog QLabel#backupModListDetails,
+QDialog#profileBackupDialog QLabel#backupPluginOrderDetails {
+    color: #566B7C;
+    background-color: transparent;
+}
+QDialog#profileBackupPromptDialog QFrame#profileBackupPromptCard,
+QDialog#profileBackupDialog QFrame#backupModListCard,
+QDialog#profileBackupDialog QFrame#backupPluginOrderCard {
+    color: #293847;
+    background-color: #F7FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 7px;
+}
+QDialog#profileBackupPromptDialog QFrame#profileBackupPromptDivider {
+    color: #D5DEE7;
+    background-color: #D5DEE7;
+    border: none;
+    max-height: 1px;
+}
+QDialog#profileBackupDialog QLabel#backupContentsHeading {
+    font-weight: 600;
+}
+QDialog#profileBackupDialog QFrame#backupModListCard QCheckBox,
+QDialog#profileBackupDialog QFrame#backupPluginOrderCard QCheckBox {
+    background-color: transparent;
+}
+
+/* Mod Info empty states */
+QDialog#ModInfoDialog QFrame#modInfoEmptyStateCard {
+    background-color: #F7FAFC;
+    border: 1px solid #D5DEE7;
+    border-radius: 8px;
+}
+QDialog#ModInfoDialog QLabel#modInfoEmptyStateTitle {
+    color: #29435B;
+    font-size: 12pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QDialog#ModInfoDialog QLabel#modInfoEmptyStateDescription,
+QDialog#ModInfoDialog QLabel#modInfoEmptyListState {
+    color: #6F8190;
+    background-color: transparent;
+    padding: 6px;
 }

@@ -3,6 +3,9 @@
 #include "ui_modinfodialog.h"
 #include "utility.h"
 #include <log.h>
+#include <QFrame>
+#include <QLabel>
+#include <QVBoxLayout>
 
 using namespace MOBase;
 using namespace ImagesTabHelpers;
@@ -33,6 +36,9 @@ QString dimensionString(const QSize& s)
 
 ImagesTab::ImagesTab(ModInfoDialogTabContext cx)
     : ModInfoDialogTab(std::move(cx)), m_image(new ScalableImage),
+      m_emptyStatePage(new QWidget(ui->imagesImage)),
+      m_emptyStateTitle(new QLabel(m_emptyStatePage)),
+      m_emptyStateDescription(new QLabel(m_emptyStatePage)),
       m_ddsAvailable(false), m_ddsEnabled(false)
 {
   getSupportedFormats();
@@ -40,6 +46,33 @@ ImagesTab::ImagesTab(ModInfoDialogTabContext cx)
   auto* ly = new QVBoxLayout(ui->imagesImage);
   ly->setContentsMargins({0, 0, 0, 0});
   ly->addWidget(m_image);
+
+  auto* emptyPageLayout = new QVBoxLayout(m_emptyStatePage);
+  emptyPageLayout->setContentsMargins(14, 14, 14, 14);
+  emptyPageLayout->addStretch();
+
+  auto* emptyCard = new QFrame(m_emptyStatePage);
+  emptyCard->setObjectName("modInfoEmptyStateCard");
+  emptyCard->setMinimumWidth(300);
+  emptyCard->setMaximumWidth(480);
+
+  auto* emptyCardLayout = new QVBoxLayout(emptyCard);
+  emptyCardLayout->setContentsMargins(18, 14, 18, 14);
+  emptyCardLayout->setSpacing(5);
+
+  m_emptyStateTitle->setObjectName("modInfoEmptyStateTitle");
+  m_emptyStateTitle->setAlignment(Qt::AlignCenter);
+  emptyCardLayout->addWidget(m_emptyStateTitle);
+
+  m_emptyStateDescription->setObjectName("modInfoEmptyStateDescription");
+  m_emptyStateDescription->setAlignment(Qt::AlignCenter);
+  m_emptyStateDescription->setWordWrap(true);
+  emptyCardLayout->addWidget(m_emptyStateDescription);
+
+  emptyPageLayout->addWidget(emptyCard, 0, Qt::AlignHCenter);
+  emptyPageLayout->addStretch();
+  ly->addWidget(m_emptyStatePage);
+  m_emptyStatePage->hide();
 
   delete ui->imagesThumbnails->layout();
 
@@ -106,6 +139,7 @@ void ImagesTab::clear()
   m_files.clear();
   ui->imagesScrollerVBar->setValue(0);
   select(BadIndex);
+  updateEmptyState();
   setHasData(false);
 }
 
@@ -133,6 +167,7 @@ void ImagesTab::update()
     ensureVisible(m_files.selectedIndex(), Visibility::Partial);
   }
 
+  updateEmptyState();
   ui->imagesThumbnails->update();
 
   setHasData(m_files.size() > 0);
@@ -163,6 +198,24 @@ void ImagesTab::checkFiltering()
     // filtering is needed
     switchToFiltered();
   }
+}
+
+void ImagesTab::updateEmptyState()
+{
+  const bool noImages = m_files.empty();
+  m_image->setVisible(!noImages);
+  m_emptyStatePage->setVisible(noImages);
+
+  if (!noImages) {
+    return;
+  }
+
+  const bool noFilterMatches = m_files.isFiltered() && !m_files.allFiles().empty();
+  m_emptyStateTitle->setText(noFilterMatches ? tr("No matching images")
+                                             : tr("No images to display"));
+  m_emptyStateDescription->setText(
+      noFilterMatches ? tr("No images match the current filters.")
+                      : tr("This mod contains no supported images."));
 }
 
 void ImagesTab::switchToAll()
@@ -402,6 +455,10 @@ void ImagesTab::paintThumbnailsArea(QPaintEvent* e)
 
   cx.painter.fillRect(ui->imagesThumbnails->rect(),
                       ui->imagesThumbnails->palette().color(QPalette::Window));
+
+  if (m_files.empty()) {
+    return;
+  }
 
   const auto visible = cx.geo.fullyVisibleCount() + 1;
   const auto first   = ui->imagesScrollerVBar->value();

@@ -150,12 +150,19 @@ namespace Mo2RevampedSetup
                 Width = 690,
                 Font = new Font("Segoe UI", 9F)
             };
+#if ELDENRING_ONLY_INSTALLER
+            ActionBox.Items.Add(new ModeChoice(SetupMode.EldenRingPortable, "Instalación portable solo para Elden Ring", "Instala una edición reducida y aislada, en una carpeta propia, con soporte únicamente para Elden Ring."));
+            ActionBox.Items.Add(new ModeChoice(SetupMode.Update, "Actualizar esta edición aislada de Elden Ring", "Solo actualiza una instalación portable marcada como aislada para Elden Ring."));
+            ActionBox.Items.Add(new ModeChoice(SetupMode.Restore, "Restaurar la versión anterior de Elden Ring", "Recupera la copia de seguridad de esta instalación aislada de Elden Ring."));
+            ActionBox.Items.Add(new ModeChoice(SetupMode.Uninstall, "Desinstalar esta edición aislada de Elden Ring", "Quita únicamente una instalación marcada como aislada para Elden Ring."));
+#else
             ActionBox.Items.Add(new ModeChoice(SetupMode.Fresh, "Instalación nueva", "Instala MO2 Revamped en una carpeta vacía. Elige una instancia portable o estándar."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.EldenRingPortable, "Instalación portable solo para Elden Ring", "Instala una edición reducida y aislada, en una carpeta propia, con soporte únicamente para Elden Ring."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Update, "Actualizar MO2 existente", "Reemplaza los archivos del programa compatibles y guarda los originales para poder restaurarlos."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Migrate, "Convertir o copiar datos", "Crea una instalación portable nueva y copia solo las categorías seleccionadas. El origen queda intacto."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Restore, "Restaurar MO2 anterior", "Revierte una actualización y recupera los archivos previos de MO2. Requiere una copia de seguridad."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Uninstall, "Desinstalar MO2 Revamped", "Permite quitar MO2 Revamped o la versión original de MO2. Elige si conservar los datos o borrar también toda la carpeta seleccionada."));
+#endif
             ActionDescription = NewLabel("", false);
             ActionDescription.Location = new Point(15, 54);
             ActionDescription.Size = new Size(700, 34);
@@ -222,7 +229,11 @@ namespace Mo2RevampedSetup
             root.Controls.Add(footer, 0, 2);
 
             ActionBox.SelectedIndexChanged += delegate { UpdateView(); };
-            if (fixedMode.HasValue) ActionBox.SelectedIndex = FindModeIndex(fixedMode.Value);
+            if (fixedMode.HasValue)
+            {
+                ActionBox.SelectedIndex = FindModeIndex(fixedMode.Value);
+                ActionBox.Enabled = false;
+            }
             else ActionBox.SelectedIndex = 0;
             if (UninstallerOnly)
             {
@@ -573,7 +584,7 @@ namespace Mo2RevampedSetup
                     note.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
                     OptionsGroup.Controls.Add(note);
                     ForceCloseCheck = NewCheck("Forzar el cierre de MO2 en esta carpeta si sigue abierto", false, 14, 61);
-                    RemoveAllContentsCheck = NewCheck("Borrar todos los datos y la carpeta seleccionada", true, 14, 86);
+                    RemoveAllContentsCheck = NewCheck("Borrar todos los datos y la carpeta seleccionada", false, 14, 86);
                     OptionsGroup.Controls.Add(ForceCloseCheck);
                     OptionsGroup.Controls.Add(RemoveAllContentsCheck);
                     UpdateUninstallOptionsAvailability();

@@ -30,6 +30,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCheckBox>
 #include <QDebug>
 #include <QMenu>
+#include <QRegularExpression>
 #include <QMimeData>
 #include <QTreeView>
 #include <QWidgetAction>
@@ -246,7 +247,9 @@ void ModListSortProxy::updateFilter(const QString& filter)
 
   if (!m_Filter.isEmpty()) {
     QString filterCopy = m_Filter;
-    filterCopy.replace("||", ";").replace("OR", ";").replace("|", ";");
+    filterCopy.replace("||", ";")
+        .replace(QRegularExpression(QStringLiteral("\\s+OR\\s+")), ";")
+        .replace("|", ";");
 
     const auto orSegments = filterCopy.split(";", Qt::SkipEmptyParts);
     m_FilterSegments.reserve(static_cast<std::size_t>(orSegments.size()));

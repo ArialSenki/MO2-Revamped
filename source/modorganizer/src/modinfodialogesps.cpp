@@ -4,8 +4,62 @@
 #include "ui_modinfodialog.h"
 #include <log.h>
 #include <report.h>
+#include <QAbstractItemModel>
+#include <QEvent>
+#include <QLabel>
+#include <QListView>
 
 using namespace MOBase;
+
+namespace
+{
+
+class EmptyListStateOverlay : public QObject
+{
+public:
+  EmptyListStateOverlay(QListView* view, QString message)
+      : QObject(view), m_view(view), m_label(new QLabel(view->viewport()))
+  {
+    m_label->setObjectName("modInfoEmptyListState");
+    m_label->setAlignment(Qt::AlignCenter);
+    m_label->setWordWrap(true);
+    m_label->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_label->setText(std::move(message));
+
+    view->viewport()->installEventFilter(this);
+    if (auto* model = view->model()) {
+      connect(model, &QAbstractItemModel::modelReset, this, [this] { refresh(); });
+      connect(model, &QAbstractItemModel::rowsInserted, this, [this] { refresh(); });
+      connect(model, &QAbstractItemModel::rowsRemoved, this, [this] { refresh(); });
+    }
+
+    refresh();
+  }
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (watched == m_view->viewport() && event->type() == QEvent::Resize) {
+      m_label->setGeometry(m_view->viewport()->rect());
+    }
+
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QListView* m_view;
+  QLabel* m_label;
+
+  void refresh()
+  {
+    m_label->setGeometry(m_view->viewport()->rect());
+    const auto* model = m_view->model();
+    m_label->setVisible(!model || model->rowCount() == 0);
+    m_label->raise();
+  }
+};
+
+}  // namespace
 
 class ESPItem
 {
@@ -198,6 +252,11 @@ ESPsTab::ESPsTab(ModInfoDialogTabContext cx)
 {
   ui->inactiveESPList->setModel(m_inactiveModel);
   ui->activeESPList->setModel(m_activeModel);
+
+  new EmptyListStateOverlay(ui->inactiveESPList,
+                            tr("No optional plugins in this mod."));
+  new EmptyListStateOverlay(ui->activeESPList,
+                            tr("No plugin files are available."));
 
   QObject::connect(ui->activateESP, &QToolButton::clicked, [&] {
     onActivate();

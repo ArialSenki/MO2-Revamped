@@ -6,16 +6,46 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>562</height>
+   <width>720</width>
+   <height>520</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Activate Mods</string>
+   <string>Activate required mods</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QTableWidget" name="modsTable">
+ <layout class="QVBoxLayout" name="verticalLayout">
+  <property name="leftMargin"><number>18</number></property>
+  <property name="topMargin"><number>18</number></property>
+  <property name="rightMargin"><number>18</number></property>
+  <property name="bottomMargin"><number>18</number></property>
+  <property name="spacing"><number>12</number></property>
+  <item>
+   <widget class="QFrame" name="activateHeaderCard">
+    <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+    <property name="frameShadow"><enum>QFrame::Plain</enum></property>
+    <layout class="QVBoxLayout" name="activateHeaderLayout">
+     <property name="leftMargin"><number>14</number></property>
+     <property name="topMargin"><number>12</number></property>
+     <property name="rightMargin"><number>14</number></property>
+     <property name="bottomMargin"><number>12</number></property>
+     <property name="spacing"><number>4</number></property>
+     <item>
+      <widget class="QLabel" name="dialogHeading">
+       <property name="text"><string>Restore this save's required plugins</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="dialogDescription">
+       <property name="wordWrap"><bool>true</bool></property>
+       <property name="text"><string>Choose an installed mod for each missing plugin. Confirming activates the selected mods and any plugins that have become available.</string></property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </item>
+  <item>
+   <widget class="QTableWidget" name="modsTable">
+    <property name="minimumSize"><size><width>0</width><height>250</height></size></property>
      <property name="toolTip">
       <string>This is a list of esps, esms, and esls that were active when the save game was created.</string>
      </property>
@@ -34,12 +64,12 @@ p, li { white-space: pre-wrap; }
      </property>
      <column>
       <property name="text">
-       <string>Missing ESP</string>
+       <string>Missing plugin</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Mod</string>
+       <string>Mod to enable</string>
       </property>
      </column>
     </widget>

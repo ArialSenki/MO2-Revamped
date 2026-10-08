@@ -2,185 +2,412 @@
 <ui version="4.0">
  <class>TransferSavesDialog</class>
  <widget class="QDialog" name="TransferSavesDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>882</width>
-    <height>528</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Transfer Save Games</string>
-  </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Global Characters</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListWidget" name="globalCharacterList">
-       <property name="toolTip">
-        <string>This is a list of characters in the global location.</string>
-       </property>
-       <property name="whatsThis">
-        <string>This is a list of characters in the global location.
-
-On Windows Vista/Windows 7:
-  C:\Users\[UserName]\Documents\My Games\Skyrim\Saves
-
-On Windows XP:
-  C:\Documents and Settings\[UserName]\My Documents\My Games\Skyrim\Saves
-</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListWidget" name="globalSavesList">
-       <property name="whatsThis">
-        <string>This is a list of save games for the selected character in the global location.
-
-On Windows Vista/Windows 7:
-  C:\Users\[UserName]\Documents\My Games\Skyrim\Saves
-
-On Windows XP:
-  C:\Documents and Settings[UserName]\My Documents\My Games\Skyrim\Saves
-
-</string>
-       </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::NoSelection</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
-     <item>
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Minimum</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="moveToLocalBtn">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Move -&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="copyToLocalBtn">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Copy -&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Minimum</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="moveToGlobalBtn">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>&lt;- Move</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="copyToGlobalBtn">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>&lt;- Copy</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Expanding</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>100</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="doneButton">
-       <property name="text">
-        <string>Done</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Profile Characters</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListWidget" name="localCharacterList"/>
-     </item>
-     <item>
-      <widget class="QListWidget" name="localSavesList">
-       <property name="selectionMode">
-        <enum>QAbstractItemView::NoSelection</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-  </layout>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1080</width>
+     <height>700</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>900</width>
+     <height>580</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Transfer Save Games</string>
+   </property>
+   <layout class="QVBoxLayout" name="transferSavesMainLayout">
+    <property name="leftMargin">
+     <number>18</number>
+    </property>
+    <property name="topMargin">
+     <number>16</number>
+    </property>
+    <property name="rightMargin">
+     <number>18</number>
+    </property>
+    <property name="bottomMargin">
+     <number>16</number>
+    </property>
+    <property name="spacing">
+     <number>12</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="transferSavePageTitle">
+      <property name="text">
+       <string>Transfer save games</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="transferSavePageSubtitle">
+      <property name="text">
+       <string>Copy or move characters between the game's shared save location and the selected MO2 profile.</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="transferSavesWorkspaceLayout" stretch="1,0,1">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <item>
+       <widget class="QGroupBox" name="globalSavesPanel">
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QVBoxLayout" name="globalSavesLayout">
+         <property name="leftMargin">
+          <number>12</number>
+         </property>
+         <property name="topMargin">
+          <number>12</number>
+         </property>
+         <property name="rightMargin">
+          <number>12</number>
+         </property>
+         <property name="bottomMargin">
+          <number>12</number>
+         </property>
+         <property name="spacing">
+          <number>7</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Global saves</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="globalCharactersDescription">
+           <property name="text">
+            <string>Characters in the game's shared save location.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListWidget" name="globalCharacterList">
+           <property name="toolTip">
+            <string>Select a character to see its save files.</string>
+           </property>
+           <property name="whatsThis">
+            <string>Characters with save files in the shared save location for this game. Select one to see its files.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>120</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="globalSavesHeading">
+           <property name="text">
+            <string>Save files for the selected character</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListWidget" name="globalSavesList">
+           <property name="toolTip">
+            <string>Save files for the character selected above.</string>
+           </property>
+           <property name="whatsThis">
+            <string>Files associated with the selected character in the shared save location.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>160</height>
+            </size>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::NoSelection</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="transferActionsPanel" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>168</width>
+          <height>0</height>
+         </size>
+        </property>
+        <layout class="QVBoxLayout" name="transferActionsLayout">
+         <property name="leftMargin">
+          <number>8</number>
+         </property>
+         <property name="topMargin">
+          <number>8</number>
+         </property>
+         <property name="rightMargin">
+          <number>8</number>
+         </property>
+         <property name="bottomMargin">
+          <number>8</number>
+         </property>
+         <property name="spacing">
+          <number>7</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="globalToProfileHeading">
+           <property name="text">
+            <string>GLOBAL TO PROFILE</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="moveToLocalBtn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Move to Profile →</string>
+           </property>
+           <property name="toolTip">
+            <string>Move this character's saves into the selected profile.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>36</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="copyToLocalBtn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Copy to Profile →</string>
+           </property>
+           <property name="toolTip">
+            <string>Copy this character's saves into the selected profile and keep the originals.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>36</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="transferDirectionSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>24</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="profileToGlobalHeading">
+           <property name="text">
+            <string>PROFILE TO GLOBAL</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="copyToGlobalBtn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>← Copy to Global</string>
+           </property>
+           <property name="toolTip">
+            <string>Copy this character's saves to the shared game save location and keep the originals. This can affect the game's save numbering; existing files trigger an overwrite prompt.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>36</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="moveToGlobalBtn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>← Move to Global</string>
+           </property>
+           <property name="toolTip">
+            <string>Move this character's saves to the shared game save location. This can affect the game's save numbering; existing files trigger an overwrite prompt.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>36</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="profileSavesPanel">
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QVBoxLayout" name="profileSavesLayout">
+         <property name="leftMargin">
+          <number>12</number>
+         </property>
+         <property name="topMargin">
+          <number>12</number>
+         </property>
+         <property name="rightMargin">
+          <number>12</number>
+         </property>
+         <property name="bottomMargin">
+          <number>12</number>
+         </property>
+         <property name="spacing">
+          <number>7</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Profile saves</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="profileCharactersDescription">
+           <property name="text">
+            <string>Characters saved for the active MO2 profile.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListWidget" name="localCharacterList">
+           <property name="toolTip">
+            <string>Select a character to see its save files.</string>
+           </property>
+           <property name="whatsThis">
+            <string>Characters with save files in the active MO2 profile. Select one to see its files.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>120</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="profileSavesHeading">
+           <property name="text">
+            <string>Save files for the selected character</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListWidget" name="localSavesList">
+           <property name="toolTip">
+            <string>Save files for the character selected above.</string>
+           </property>
+           <property name="whatsThis">
+            <string>Files associated with the selected character in the active MO2 profile.</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>160</height>
+            </size>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::NoSelection</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="transferSavesFooterLayout">
+      <item>
+       <widget class="QLabel" name="transferSaveSafetyNote">
+        <property name="text">
+         <string>Copy keeps the original saves. Move relocates them; existing files trigger an overwrite prompt.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="footerSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>30</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="doneButton">
+        <property name="text">
+         <string>Close</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>92</width>
+          <height>34</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
  </widget>
  <resources/>
  <connections/>

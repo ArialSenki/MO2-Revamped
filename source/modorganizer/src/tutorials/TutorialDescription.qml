@@ -2,6 +2,7 @@ import QtQuick 2.7
 
 // rectangle for description texts
 Rectangle {
+    id: descriptionPanel
     property alias text: textBox.text
     property alias continueVisible: continueIcon.visible
     property int innerWidth;
@@ -28,11 +29,12 @@ Rectangle {
         source: "qrc:/MO/gui/next"
 
         SequentialAnimation on opacity {
-            loops: Animation.Infinite
+            loops: 2
+            running: continueIcon.visible
 
-            PauseAnimation { duration: 500 }
-            PropertyAnimation { easing.type: Easing.InOutSine; duration: 400; to: 0.0 }
-            PropertyAnimation { easing.type: Easing.OutInSine; duration: 400; to: 1.0 }
+            PauseAnimation { duration: 350 }
+            NumberAnimation { easing.type: Easing.InOutSine; duration: 450; to: 0.84 }
+            NumberAnimation { easing.type: Easing.InOutSine; duration: 550; to: 1.0 }
         }
     }
 
@@ -41,7 +43,7 @@ Rectangle {
         text: ""
         font.pointSize: 12
         font.bold: false
-        width: innerWidth
+        width: descriptionPanel.innerWidth
         font.family: "Courier"
         wrapMode: Text.WordWrap
         anchors.centerIn: parent

@@ -1527,42 +1527,42 @@ QVariant PluginList::iconData(const QModelIndex& modelIndex) const
   }
 
   if (isProblematic(esp, info)) {
-    result.append(":/MO/gui/warning");
+    result.append(":/MO/gui/mainwindow/status/warning.svg");
   }
 
   if (m_LockedOrder.find(esp.name) != m_LockedOrder.end()) {
-    result.append(":/MO/gui/locked");
+    result.append(":/MO/gui/mainwindow/status/locked.svg");
   }
 
   if (hasInfo(esp, info)) {
-    result.append(":/MO/gui/information");
+    result.append(":/MO/gui/mainwindow/status/info.svg");
   }
 
   if (esp.hasIni) {
-    result.append(":/MO/gui/attachment");
+    result.append(":/MO/gui/mainwindow/status/attachment.svg");
   }
 
   if (!esp.archives.empty()) {
-    result.append(":/MO/gui/archive_conflict_neutral");
+    result.append(":/MO/gui/mainwindow/status/archive-neutral.svg");
   }
 
   if (esp.isLightFlagged && !esp.hasLightExtension) {
-    result.append(":/MO/gui/awaiting");
+    result.append(":/MO/gui/mainwindow/status/awaiting.svg");
   }
 
   if (esp.isMediumFlagged) {
-    result.append(":/MO/gui/run");
+    result.append(":/MO/gui/mainwindow/status/plugin-flag.svg");
     if (esp.isLightFlagged) {
-      result.append(":/MO/gui/warning");
+      result.append(":/MO/gui/mainwindow/status/warning.svg");
     }
   }
 
   if (esp.hasNoRecords) {
-    result.append(":/MO/gui/unchecked-checkbox");
+    result.append(":/MO/gui/mainwindow/status/no-records.svg");
   }
 
   if (info && !info->loot.dirty.empty()) {
-    result.append(":/MO/gui/edit_clear");
+    result.append(":/MO/gui/mainwindow/status/cleanup.svg");
   }
 
   return result;

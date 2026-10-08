@@ -61,7 +61,6 @@ public:
    **/
   void openUrl(const QUrl& url);
 
-  virtual bool eventFilter(QObject* object, QEvent* event);
 signals:
 
   /**

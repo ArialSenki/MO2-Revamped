@@ -45,17 +45,17 @@ QString ModFlagIconDelegate::getFlagIcon(ModInfo::EFlag flag)
 {
   switch (flag) {
   case ModInfo::FLAG_BACKUP:
-    return QStringLiteral(":/MO/gui/emblem_backup");
+    return QStringLiteral(":/MO/gui/mainwindow/status/backup.svg");
   case ModInfo::FLAG_INVALID:
-    return QStringLiteral(":/MO/gui/problem");
+    return QStringLiteral(":/MO/gui/mainwindow/status/error.svg");
   case ModInfo::FLAG_NOTENDORSED:
-    return QStringLiteral(":/MO/gui/emblem_notendorsed");
+    return QStringLiteral(":/MO/gui/mainwindow/status/not-endorsed.svg");
   case ModInfo::FLAG_NOTES:
-    return QStringLiteral(":/MO/gui/emblem_notes");
+    return QStringLiteral(":/MO/gui/mainwindow/status/notes.svg");
   case ModInfo::FLAG_HIDDEN_FILES:
-    return QStringLiteral(":/MO/gui/emblem_hidden_files");
+    return QStringLiteral(":/MO/gui/mainwindow/status/hidden-files.svg");
   case ModInfo::FLAG_ALTERNATE_GAME:
-    return QStringLiteral(":/MO/gui/alternate_game");
+    return QStringLiteral(":/MO/gui/mainwindow/status/alternate-game.svg");
   case ModInfo::FLAG_FOREIGN:
     return QString();
   case ModInfo::FLAG_SEPARATOR:
@@ -65,7 +65,7 @@ QString ModFlagIconDelegate::getFlagIcon(ModInfo::EFlag flag)
   case ModInfo::FLAG_PLUGIN_SELECTED:
     return QString();
   case ModInfo::FLAG_TRACKED:
-    return QStringLiteral(":/MO/gui/tracked");
+    return QStringLiteral(":/MO/gui/mainwindow/status/tracked.svg");
   default:
     log::warn("ModInfo flag {} has no defined icon", flag);
     return QString();

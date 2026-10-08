@@ -192,6 +192,29 @@ bool read_cpu0_affinity_setting(DWORD* delay_seconds) {
   return true;
 }
 
+void apply_process_priority_setting() {
+  wchar_t config_path[MAX_PATH] = {};
+  const DWORD length = GetEnvironmentVariableW(
+      L"ELDENRING_MO2_PROFILE_CONFIG", config_path, MAX_PATH);
+  if (length == 0 || length >= MAX_PATH ||
+      GetFileAttributesW(config_path) == INVALID_FILE_ATTRIBUTES ||
+      GetPrivateProfileIntW(L"Performance", L"process_priority", 0,
+                            config_path) != 1) {
+    return;
+  }
+
+  const DWORD previous_priority = GetPriorityClass(GetCurrentProcess());
+  if (previous_priority == ABOVE_NORMAL_PRIORITY_CLASS) {
+    log_line("Process priority already is Above normal.");
+    return;
+  }
+  if (!SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS)) {
+    log_line("Could not set Elden Ring process priority to Above normal.");
+    return;
+  }
+  log_line("Profile option applied: Elden Ring process priority is Above normal.");
+}
+
 bool is_process_top_level_window(HWND window) {
   if (window == nullptr || !IsWindow(window)) {
     return false;
@@ -1516,7 +1539,7 @@ void inspect_loaded_mods() {
 DWORD WINAPI bridge_worker(void*) {
   open_log();
   log_line("MO2 native bridge started.");
-  log_line("MO2 native bridge version: 0.5.0-alpha.32.");
+  log_line("MO2 native bridge version: 0.5.0-alpha.33.");
   read_native_initializer_requests();
   install_startup_window_hooks();
   wchar_t executable_path[MAX_PATH] = {};
@@ -1533,6 +1556,7 @@ DWORD WINAPI bridge_worker(void*) {
   if (working_directory_length > 0 && working_directory_length < MAX_PATH) {
     log_line("MO2 bridge working directory:", working_directory);
   }
+  apply_process_priority_setting();
   schedule_cpu0_affinity_adjustment();
   install_loose_asset_hook();
 

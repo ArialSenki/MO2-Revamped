@@ -94,23 +94,23 @@ QString ModConflictIconDelegate::getFlagIcon(ModInfo::EConflictFlag flag)
 {
   switch (flag) {
   case ModInfo::FLAG_CONFLICT_MIXED:
-    return QStringLiteral(":/MO/gui/emblem_conflict_mixed");
+    return QStringLiteral(":/MO/gui/mainwindow/status/conflict-mixed.svg");
   case ModInfo::FLAG_CONFLICT_OVERWRITE:
-    return QStringLiteral(":/MO/gui/emblem_conflict_overwrite");
+    return QStringLiteral(":/MO/gui/mainwindow/status/conflict-overwrite.svg");
   case ModInfo::FLAG_CONFLICT_OVERWRITTEN:
-    return QStringLiteral(":/MO/gui/emblem_conflict_overwritten");
+    return QStringLiteral(":/MO/gui/mainwindow/status/conflict-overwritten.svg");
   case ModInfo::FLAG_CONFLICT_REDUNDANT:
-    return QStringLiteral(":/MO/gui/emblem_conflict_redundant");
+    return QStringLiteral(":/MO/gui/mainwindow/status/conflict-redundant.svg");
   case ModInfo::FLAG_ARCHIVE_LOOSE_CONFLICT_OVERWRITE:
-    return QStringLiteral(":/MO/gui/archive_loose_conflict_overwrite");
+    return QStringLiteral(":/MO/gui/mainwindow/status/loose-overwrite.svg");
   case ModInfo::FLAG_ARCHIVE_LOOSE_CONFLICT_OVERWRITTEN:
-    return QStringLiteral(":/MO/gui/archive_loose_conflict_overwritten");
+    return QStringLiteral(":/MO/gui/mainwindow/status/loose-overwritten.svg");
   case ModInfo::FLAG_ARCHIVE_CONFLICT_MIXED:
-    return QStringLiteral(":/MO/gui/archive_conflict_mixed");
+    return QStringLiteral(":/MO/gui/mainwindow/status/archive-mixed.svg");
   case ModInfo::FLAG_ARCHIVE_CONFLICT_OVERWRITE:
-    return QStringLiteral(":/MO/gui/archive_conflict_winner");
+    return QStringLiteral(":/MO/gui/mainwindow/status/archive-winner.svg");
   case ModInfo::FLAG_ARCHIVE_CONFLICT_OVERWRITTEN:
-    return QStringLiteral(":/MO/gui/archive_conflict_loser");
+    return QStringLiteral(":/MO/gui/mainwindow/status/archive-loser.svg");
   case ModInfo::FLAG_OVERWRITE_CONFLICT:
     return QString();
   default:

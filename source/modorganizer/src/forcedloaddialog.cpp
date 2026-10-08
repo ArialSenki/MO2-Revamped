@@ -12,6 +12,7 @@ ForcedLoadDialog::ForcedLoadDialog(const IPluginGame* game, QWidget* parent)
     : QDialog(parent), ui(new Ui::ForcedLoadDialog), m_GamePlugin(game)
 {
   ui->setupUi(this);
+  resize(860, 520);
 }
 
 ForcedLoadDialog::~ForcedLoadDialog()

@@ -5,6 +5,7 @@
 
 #include "organizercore.h"
 #include "pluginlistview.h"
+#include <QIcon>
 
 using namespace MOBase;
 
@@ -21,30 +22,34 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
   }
 
   if (!m_selected.isEmpty()) {
-    addAction(tr("Enable selected"), [=]() {
+    QAction* enableSelectedAction = addAction(tr("Enable selected"), [=]() {
       m_core.pluginList()->setEnabled(m_selected, true);
     });
-    addAction(tr("Disable selected"), [=]() {
+    enableSelectedAction->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+    QAction* disableSelectedAction = addAction(tr("Disable selected"), [=]() {
       m_core.pluginList()->setEnabled(m_selected, false);
     });
+    disableSelectedAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
 
     addSeparator();
   }
 
-  addAction(tr("Enable all"), [=]() {
+  QAction* enableAllAction = addAction(tr("Enable all"), [=]() {
     if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
                               tr("Really enable all plugins?"),
                               QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
       m_core.pluginList()->setEnabledAll(true);
     }
   });
-  addAction(tr("Disable all"), [=]() {
+  enableAllAction->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+  QAction* disableAllAction = addAction(tr("Disable all"), [=]() {
     if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
                               tr("Really disable all plugins?"),
                               QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
       m_core.pluginList()->setEnabledAll(false);
     }
   });
+  disableAllAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
 
   if (!m_selected.isEmpty()) {
     addSeparator();
@@ -65,14 +70,16 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
     }
 
     if (hasLocked) {
-      addAction(tr("Unlock load order"), [=]() {
+      QAction* unlockAction = addAction(tr("Unlock load order"), [=]() {
         setESPLock(m_selected, false);
       });
+      unlockAction->setIcon(QIcon(":/MO/gui/contextmenu/unlock.svg"));
     }
     if (hasUnlocked) {
-      addAction(tr("Lock load order"), [=]() {
+      QAction* lockAction = addAction(tr("Lock load order"), [=]() {
         setESPLock(m_selected, true);
       });
+      lockAction->setIcon(QIcon(":/MO/gui/mainwindow/status/locked.svg"));
     }
   }
 
@@ -83,9 +90,10 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
         ModInfo::getIndex(m_core.pluginList()->origin(m_index.data().toString()));
     // this is to avoid showing the option on game files like skyrim.esm
     if (modInfoIndex != UINT_MAX) {
-      addAction(tr("Open Origin in Explorer"), [=]() {
+      QAction* openOriginAction = addAction(tr("Open Origin in Explorer"), [=]() {
         openOriginExplorer(m_selected);
       });
+      openOriginAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
       ModInfo::Ptr modInfo              = ModInfo::getByIndex(modInfoIndex);
       std::vector<ModInfo::EFlag> flags = modInfo->getFlags();
 
@@ -93,6 +101,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
         QAction* infoAction = addAction(tr("Open Origin Info..."), [=]() {
           openOriginInformation(index);
         });
+        infoAction->setIcon(QIcon(":/MO/gui/contextmenu/information.svg"));
         setDefaultAction(infoAction);
       }
     }

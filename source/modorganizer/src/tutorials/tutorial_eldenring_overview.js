@@ -1,4 +1,4 @@
-//TL Overview#5
+//TL Elden Ring Interface Tour#5
 
 var tooltips = []
 
@@ -48,11 +48,9 @@ function setupTooltips() {
 
   tooltipWidget("modList", qsTr("Installed Elden Ring mods are listed here. Checked mods are active in this profile; their files are combined in the virtual game directory."))
   tooltipWidget("profileBox", qsTr("Profiles keep separate enabled mod lists. Elden Ring save isolation is configured from the Profiles window."))
-  tooltipWidget("listOptionsBtn", qsTr("Refresh the mod list or manage mod-list backups and updates."))
+  tooltipWidget("listOptionsBtn", qsTr("Open the gear menu to manage the mod list, refresh data, check for updates, and create, restore, or delete mod-list and plugin-order backups for this profile."))
   tooltipWidget("openFolderMenu", qsTr("Open the folders used by this MO2 instance, including its mods, profiles, downloads, and the Elden Ring game folder."))
-  tooltipWidget("restoreModsButton", qsTr("Restore a saved backup of this profile's mod list."))
-  tooltipWidget("saveModsButton", qsTr("Create a backup of this profile's mod list."))
-  tooltipWidget("activeModsCounter", qsTr("Shows how many mods are enabled in the current Elden Ring profile."))
+  tooltipWidget("activeModsCounter", qsTr("Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type."))
   tooltipWidget("groupCombo", qsTr("Group the installed mods by category or another available grouping."))
   tooltipWidget("displayCategoriesBtn", qsTr("Show or hide the category and filter panel."))
   tooltipWidget("modFilterEdit", qsTr("Filter installed mods by name."))
@@ -70,9 +68,9 @@ function setupTooltips() {
   tooltipAction("actionAdd_Profile", qsTr("Create, copy, rename, or manage profiles and their Elden Ring save settings."))
   tooltipAction("action_Refresh", qsTr("Refresh the active profile and virtual game file list."))
   tooltipAction("actionModify_Executables", qsTr("Add or edit programs that can be launched through this MO2 instance."))
-  tooltipAction("actionTool", qsTr("Open the tools enabled for this game instance."))
+  tooltipAction("actionTool", qsTr("Open this instance's tools. The Native DLL Profile tool detects native DLLs and configures their order and optional initializer for each MO2 profile."))
   tooltipAction("actionSettings", qsTr("Change settings for this MO2 installation."))
-  tooltipAction("actionHelp", qsTr("Open interface help, this Elden Ring overview, MO2 documentation, and support links."))
+  tooltipAction("actionHelp", qsTr("Open interface help, the Elden Ring guide, the MO2 Revamped repository, and game support links."))
 
   switch (tutorialControl.getTabName("tabWidget")) {
     case "dataTab":

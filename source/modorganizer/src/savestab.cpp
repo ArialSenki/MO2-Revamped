@@ -4,6 +4,7 @@
 #include "ui_mainwindow.h"
 #include <iplugingame.h>
 #include <isavegameinfowidget.h>
+#include <QIcon>
 #include <QTimer>
 
 using namespace MOBase;
@@ -263,7 +264,10 @@ void SavesTab::onContextMenu(const QPoint& pos)
 
   auto info = m_core.gameFeatures().gameFeature<SaveGameInfo>();
   if (info != nullptr) {
-    QAction* action = menu.addAction(tr("Fix enabled mods..."));
+    QAction* action = menu.addAction(tr("Restore required plugins..."));
+    action->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+    action->setToolTip(
+        tr("Choose installed mods to activate the plugins required by this save."));
     action->setEnabled(false);
     if (selection->selectedRows().count() == 1) {
       auto& save = m_SaveGames[selection->selectedRows()[0].row()];
@@ -279,13 +283,15 @@ void SavesTab::onContextMenu(const QPoint& pos)
 
   QString deleteMenuLabel =
       tr("Delete %n save(s)", "", selection->selectedRows().count());
-  menu.addAction(deleteMenuLabel, [&] {
+  QAction* deleteAction = menu.addAction(deleteMenuLabel, [&] {
     deleteSavegame();
   });
+  deleteAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
 
-  menu.addAction(tr("Open in Explorer..."), [&] {
+  QAction* openFolderAction = menu.addAction(tr("Open in Explorer..."), [&] {
     openInExplorer();
   });
+  openFolderAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
 
   menu.exec(ui.list->viewport()->mapToGlobal(pos));
 }

@@ -28,6 +28,7 @@ SelectionDialog::SelectionDialog(const QString& description, QWidget* parent,
       m_ValidateByData(false), m_IconSize(iconSize)
 {
   ui->setupUi(this);
+  resize(680, 460);
 
   ui->descriptionLabel->setText(description);
 }
@@ -42,6 +43,9 @@ void SelectionDialog::addChoice(const QString& buttonText, const QString& descri
 {
   QAbstractButton* button =
       new QCommandLinkButton(buttonText, description, ui->buttonBox);
+  button->setMinimumHeight(68);
+  button->setToolTip(description);
+  button->setAccessibleDescription(description);
   if (m_IconSize.isValid()) {
     button->setIconSize(m_IconSize);
   }
@@ -56,6 +60,9 @@ void SelectionDialog::addChoice(const QIcon& icon, const QString& buttonText,
 {
   QAbstractButton* button =
       new QCommandLinkButton(buttonText, description, ui->buttonBox);
+  button->setMinimumHeight(68);
+  button->setToolTip(description);
+  button->setAccessibleDescription(description);
   if (m_IconSize.isValid()) {
     button->setIconSize(m_IconSize);
   }

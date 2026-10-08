@@ -31,20 +31,27 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "settings.h"
 #include "shared/appconfig.h"
 #include "shared/util.h"
+#include "startupdiagnostics.h"
 #include "thread_utils.h"
 #include "tutorialmanager.h"
 #include <QAbstractItemView>
 #include <QColor>
 #include <QDebug>
+#include <QEvent>
 #include <QFile>
 #include <QFileInfo>
 #include <QMainWindow>
+#include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPalette>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPointer>
+#include <QRectF>
+#include <QRegion>
 #include <QStyle>
+#include <QStyleHintReturnMask>
 #include <QVariant>
 #include <QProxyStyle>
 #include <QRegularExpression>
@@ -336,6 +343,12 @@ public:
                 const QWidget* widget = nullptr,
                 QStyleHintReturn* returnData = nullptr) const override
   {
+    // Let Windows 11 DWM round menus natively. Use the Qt region mask only
+    // when the native small-radius popup treatment is unavailable.
+    if (hint == SH_Menu_Mask) {
+      return 0;
+    }
+
     // Use a regular, control-anchored list popup for every combo box. Some
     // platform styles replace it with a scrolling menu and ignore
     // maxVisibleItems(), which can make the list jump or display only a few
@@ -461,6 +474,8 @@ void MOApplication::firstTimeSetup(MOMultiProcess& multiProcess)
 int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
 {
   TimeThis tt("MOApplication setup()");
+  setStartupDiagnosticPhase("application.setup.resolve_instance");
+  writeStartupDiagnosticEvent("application.setup.resolve_instance.begin");
 
   // makes plugin data path available to plugins, see
   // IOrganizer::getPluginDataPath()
@@ -469,19 +484,24 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   // figuring out the current instance
   m_instance = getCurrentInstance(forceSelect);
   if (!m_instance) {
+    writeStartupDiagnosticEvent("application.setup.no_instance_selected");
     return 1;
   }
+  writeStartupDiagnosticEvent("application.setup.instance_selected");
 
   // first time the data path is available, set the global property and log
   // directory, then log a bunch of debug stuff
   const QString dataPath = m_instance->directory();
   setProperty("dataPath", dataPath);
 
+  setStartupDiagnosticPhase("application.setup.log_directory");
   if (!setLogDirectory(dataPath)) {
+    writeStartupDiagnosticEvent("application.setup.log_directory.failed");
     reportError(tr("Failed to create log folder."));
     InstanceManager::singleton().clearCurrentInstance();
     return 1;
   }
+  writeStartupDiagnosticEvent("application.setup.log_directory.ready");
 
   log::debug("command line: '{}'", QString::fromWCharArray(GetCommandLineW()));
 
@@ -504,6 +524,8 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   }
 
   // loading settings
+  setStartupDiagnosticPhase("application.setup.settings");
+  writeStartupDiagnosticEvent("application.setup.settings.begin");
   m_settings.reset(new Settings(m_instance->iniPath(), true));
   const QString configuredStyle =
       m_settings->interface().styleName().value_or(QString());
@@ -542,10 +564,12 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   log::debug("using ini at '{}'", m_settings->filename());
 
   OrganizerCore::setGlobalCoreDumpType(m_settings->diagnostics().coreDumpType());
+  writeStartupDiagnosticEvent("application.setup.settings.ready");
 
   tt.start("MOApplication::doOneRun() log and checks");
 
   // logging and checking
+  setStartupDiagnosticPhase("application.setup.environment_checks");
   env::Environment env;
   env.dump(*m_settings);
   m_settings->dump();
@@ -565,32 +589,41 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
              sslVersion);
 
   // nexus interface
+  setStartupDiagnosticPhase("application.setup.nexus");
   tt.start("MOApplication::doOneRun() NexusInterface");
   log::debug("initializing nexus interface");
   m_nexus.reset(new NexusInterface(m_settings.get()));
 
   // organizer core
+  setStartupDiagnosticPhase("application.setup.organizer_core");
   tt.start("MOApplication::doOneRun() OrganizerCore");
   log::debug("initializing core");
 
   m_core.reset(new OrganizerCore(*m_settings));
   if (!m_core->bootstrap()) {
+    writeStartupDiagnosticEvent("application.setup.organizer_core.bootstrap_failed");
     reportError(tr("Failed to set up data paths."));
     InstanceManager::singleton().clearCurrentInstance();
     return 1;
   }
+  writeStartupDiagnosticEvent("application.setup.organizer_core.ready");
 
   // plugins
+  setStartupDiagnosticPhase("application.setup.plugins");
   tt.start("MOApplication::doOneRun() plugins");
   log::debug("initializing plugins");
 
   m_plugins = std::make_unique<PluginContainer>(m_core.get());
   m_plugins->loadPlugins();
+  writeStartupDiagnosticEvent("application.setup.plugins.loaded");
 
   // instance
+  setStartupDiagnosticPhase("application.setup.instance_loop");
   if (auto r = setupInstanceLoop(*m_instance, *m_plugins)) {
+    writeStartupDiagnosticEvent("application.setup.instance_loop.exit");
     return *r;
   }
+  writeStartupDiagnosticEvent("application.setup.instance_loop.complete");
 
   if (m_instance->isPortable()) {
     log::debug("this is a portable instance");
@@ -601,8 +634,10 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   sanity::checkPaths(*m_instance->gamePlugin(), *m_settings);
 
   // setting up organizer core
+  setStartupDiagnosticPhase("application.setup.game_plugin");
   m_core->setManagedGame(m_instance->gamePlugin());
   m_core->createDefaultProfile();
+  writeStartupDiagnosticEvent("application.setup.game_plugin.ready");
 
   log::info("using game plugin '{}' ('{}', variant {}, steam id '{}') at {}",
             m_instance->gamePlugin()->gameName(),
@@ -614,38 +649,49 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
             m_instance->gamePlugin()->gameDirectory().absolutePath());
 
   CategoryFactory::instance().loadCategories();
+  setStartupDiagnosticPhase("application.setup.populate_ui_data");
   m_core->updateExecutablesList();
   m_core->updateModInfoFromDisc();
   m_core->setCurrentProfile(m_instance->profileName());
+  setStartupDiagnosticPhase("application.setup.complete");
+  writeStartupDiagnosticEvent("application.setup.complete");
 
   return 0;
 }
 
 int MOApplication::run(MOMultiProcess& multiProcess)
 {
+  setStartupDiagnosticPhase("application.run.begin");
+  writeStartupDiagnosticEvent("application.run.begin");
   // checking command line
   TimeThis tt("MOApplication::run()");
 
   // show splash
+  setStartupDiagnosticPhase("application.run.splash");
   tt.start("MOApplication::doOneRun() splash");
 
   MOSplash splash(*m_settings, m_instance->directory(), m_instance->gamePlugin());
+  writeStartupDiagnosticEvent("application.run.splash.ready");
 
   tt.start("MOApplication::doOneRun() finishing");
 
   // start an api check
+  setStartupDiagnosticPhase("application.run.nexus_api_check");
   QString apiKey;
   if (GlobalSettings::nexusApiKey(apiKey)) {
     m_nexus->getAccessManager()->apiCheck(apiKey);
   }
 
   // tutorials
+  setStartupDiagnosticPhase("application.run.tutorials");
   log::debug("initializing tutorials");
   TutorialManager::init(qApp->applicationDirPath() + "/" +
                             QString::fromStdWString(AppConfig::tutorialsPath()) + "/",
                         m_core.get());
+  writeStartupDiagnosticEvent("application.run.tutorials.ready");
 
   // styling
+  setStartupDiagnosticPhase("application.run.style");
   if (!setStyleFile(m_settings->interface().styleName().value_or(""))) {
     // disable invalid stylesheet
     m_settings->interface().setStyleName("");
@@ -654,11 +700,15 @@ int MOApplication::run(MOMultiProcess& multiProcess)
   int res = 1;
 
   {
+    setStartupDiagnosticPhase("application.run.main_window.construct");
+    writeStartupDiagnosticEvent("application.run.main_window.construct.begin");
     tt.start("MOApplication::doOneRun() MainWindow setup");
     MainWindow mainWindow(*m_settings, *m_core, *m_plugins);
+    writeStartupDiagnosticEvent("application.run.main_window.construct.complete");
 
     // the nexus interface can show dialogs, make sure they're parented to the
     // main window
+    setStartupDiagnosticPhase("application.run.main_window.prepare");
     m_nexus->getAccessManager()->setTopLevelWidget(&mainWindow);
 
     connect(
@@ -709,16 +759,22 @@ int MOApplication::run(MOMultiProcess& multiProcess)
     }
 
     log::debug("displaying main window");
+    setStartupDiagnosticPhase("application.run.main_window.show");
     installItemViewSelectionHighlightFilter(&mainWindow);
     mainWindow.show();
     mainWindow.activateWindow();
     applyNativeTitleBarTheme(
         &mainWindow, m_settings->interface().styleName().value_or(QString()));
     splash.close();
+    writeStartupDiagnosticEvent("application.run.main_window.visible");
 
     tt.stop();
 
+    setStartupDiagnosticPhase("application.run.event_loop");
+    writeStartupDiagnosticEvent("application.run.event_loop.begin");
     res = exec();
+    setStartupDiagnosticPhase("application.run.shutdown");
+    writeStartupDiagnosticEvent("application.run.event_loop.returned");
     mainWindow.close();
 
     // main window is about to be destroyed
@@ -728,6 +784,8 @@ int MOApplication::run(MOMultiProcess& multiProcess)
   // reset geometry if the flag was set from the settings dialog
   m_settings->geometry().resetIfNeeded();
 
+  setStartupDiagnosticPhase("application.run.complete");
+  writeStartupDiagnosticEvent("application.run.complete");
   return res;
 }
 
@@ -1039,6 +1097,37 @@ bool MOApplication::setStyleFile(const QString& styleName)
 
 bool MOApplication::notify(QObject* receiver, QEvent* event)
 {
+  if (event->type() == QEvent::Show) {
+    // Qt implements menus, combo-box lists, completers, and tooltips as
+    // separate top-level windows. Apply rounded native corners to both popup
+    // pickers and tooltips so their outer shadows follow the rounded surface.
+    if (auto* popup = qobject_cast<QWidget*>(receiver);
+        popup != nullptr && popup->isWindow() &&
+        (popup->windowType() == Qt::Popup ||
+         popup->windowType() == Qt::ToolTip)) {
+      const bool isToolTip = popup->windowType() == Qt::ToolTip;
+      const qreal cornerRadius = isToolTip ? 12.0 : 8.0;
+      bool useRoundedRegionFallback = true;
+#ifdef Q_OS_WIN
+      const HWND handle = reinterpret_cast<HWND>(popup->winId());
+      const DWM_WINDOW_CORNER_PREFERENCE preference = DWMWCP_ROUNDSMALL;
+      const HRESULT result = DwmSetWindowAttribute(
+          handle, DWMWA_WINDOW_CORNER_PREFERENCE, &preference,
+          sizeof(preference));
+      useRoundedRegionFallback = FAILED(result);
+#endif
+
+      if (useRoundedRegionFallback) {
+        QPainterPath roundedPopup;
+        roundedPopup.addRoundedRect(QRectF(popup->rect()), cornerRadius,
+                                    cornerRadius);
+        popup->setMask(QRegion(roundedPopup.toFillPolygon().toPolygon()));
+      } else {
+        popup->clearMask();
+      }
+    }
+  }
+
   try {
     return QApplication::notify(receiver, event);
   } catch (const std::exception& e) {

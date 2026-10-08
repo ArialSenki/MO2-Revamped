@@ -218,7 +218,7 @@ void LootDialog::createUI()
 
   m_report.setText(tr("Running LOOT..."));
 
-  resize(650, 450);
+  resize(760, 560);
   setSizeGripEnabled(true);
 }
 

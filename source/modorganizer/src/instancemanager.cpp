@@ -833,6 +833,17 @@ QString InstanceManager::portableInstancePath(const QString& name) const
       .filePath(MOBase::sanitizeFileName(name));
 }
 
+QString InstanceManager::isolatedInstancesRootPath() const
+{
+  return QDir(portablePath()).filePath("IsolatedInstances");
+}
+
+QString InstanceManager::isolatedInstancePath(const QString& name) const
+{
+  return QDir(isolatedInstancesRootPath())
+      .filePath(MOBase::sanitizeFileName(name));
+}
+
 std::vector<QString> InstanceManager::portableInstancePaths() const
 {
   std::vector<QString> paths;

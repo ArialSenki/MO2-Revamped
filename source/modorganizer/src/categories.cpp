@@ -28,6 +28,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFile>
 #include <QList>
 #include <QObject>
+#include <QRegularExpression>
+#include <set>
+#include <utility>
 
 #include "nexusinterface.h"
 
@@ -116,13 +119,14 @@ void CategoryFactory::loadCategories()
         QList<QByteArray> nexCells = nexLine.split('|');
         if (nexCells.count() == 3) {
           std::vector<NexusCategory> nexusCats;
-          QString nexName = nexCells[1];
+          QString nexName = QString::fromUtf8(nexCells[1].constData(),
+                                              nexCells[1].size()).trimmed();
           bool ok         = false;
-          int nexID       = nexCells[2].toInt(&ok);
+          int nexID       = nexCells[2].trimmed().toInt(&ok);
           if (!ok) {
             log::error(tr("invalid nexus ID {}"), nexCells[2].constData());
           }
-          int catID = nexCells[0].toInt(&ok);
+          int catID = nexCells[0].trimmed().toInt(&ok);
           if (!ok) {
             log::error(tr("invalid category id {}"), nexCells[0].constData());
           }
@@ -136,6 +140,68 @@ void CategoryFactory::loadCategories()
     }
     nexusMapFile.close();
   }
+
+  // Older category drag-and-drop handlers could persist a Nexus name as its
+  // first character and the second character's code point as the Nexus ID.
+  // When the saved map also contains the full Nexus category, repair the
+  // assignment only if the local category name confirms the match uniquely.
+  std::vector<std::pair<int, NexusCategory>> repairedMappings;
+  std::vector<int> truncatedNexusIDs;
+  for (const auto& entry : m_NexusMap) {
+    const int truncatedID              = entry.first;
+    const NexusCategory& truncated     = entry.second;
+    const QString truncatedName        = truncated.name().trimmed();
+    const int localCategoryID          = truncated.categoryID();
+    if (localCategoryID <= 0 || !categoryExists(localCategoryID) ||
+        truncatedName.size() != 1 || truncatedID <= 0 || truncatedID > 0xFFFF) {
+      continue;
+    }
+
+    const QChar secondCharacter(static_cast<ushort>(truncatedID));
+    if (!secondCharacter.isLetterOrNumber()) {
+      continue;
+    }
+
+    const QString expectedPrefix = truncatedName + secondCharacter;
+    const QString localCategoryName = getCategoryNameByID(localCategoryID).trimmed();
+    int matchingNexusID = -1;
+    int matchingCount   = 0;
+    for (const auto& candidate : m_NexusMap) {
+      if (candidate.first == truncatedID ||
+          (candidate.second.categoryID() > 0 &&
+           candidate.second.categoryID() != localCategoryID) ||
+          !candidate.second.name().startsWith(expectedPrefix,
+                                               Qt::CaseInsensitive) ||
+          candidate.second.name().compare(localCategoryName,
+                                           Qt::CaseInsensitive) != 0) {
+        continue;
+      }
+      matchingNexusID = candidate.first;
+      ++matchingCount;
+    }
+
+    if (matchingCount != 1 || matchingNexusID <= 0) {
+      continue;
+    }
+
+    NexusCategory corrected = m_NexusMap.at(matchingNexusID);
+    corrected.setCategoryID(localCategoryID);
+    repairedMappings.emplace_back(matchingNexusID, corrected);
+    truncatedNexusIDs.push_back(truncatedID);
+  }
+
+  for (const auto& repaired : repairedMappings) {
+    m_NexusMap.insert_or_assign(repaired.first, repaired.second);
+  }
+  for (const int truncatedID : truncatedNexusIDs) {
+    m_NexusMap.erase(truncatedID);
+  }
+  if (!repairedMappings.empty()) {
+    log::info("Repaired {} truncated Nexus category mappings from saved category names",
+              repairedMappings.size());
+    saveCategories();
+  }
+
   std::sort(m_Categories.begin(), m_Categories.end());
   setParents();
   if (needLoad)
@@ -274,11 +340,95 @@ void CategoryFactory::addCategory(int id, const QString& name,
 void CategoryFactory::setNexusCategories(
     const std::vector<CategoryFactory::NexusCategory>& nexusCats)
 {
-  for (const auto& nexusCat : nexusCats) {
-    m_NexusMap.emplace(nexusCat.ID(), nexusCat);
+  std::map<int, NexusCategory> refreshed;
+  std::set<int> repairedLegacyIDs;
+
+  // Discard stale assignments produced by the old drag/drop path, which saved
+  // the first character of a Nexus name and the second character's code point
+  // as its ID. The actual Nexus category is unambiguous when its full name also
+  // matches the assigned local category.
+  for (const auto& existing : m_NexusMap) {
+    const NexusCategory& legacy = existing.second;
+    const QString legacyName    = legacy.name().trimmed();
+    const int localCategoryID   = legacy.categoryID();
+    if (localCategoryID <= 0 || !categoryExists(localCategoryID) ||
+        legacyName.size() != 1 || existing.first <= 0 || existing.first > 0xFFFF) {
+      continue;
+    }
+
+    const QChar secondCharacter(static_cast<ushort>(existing.first));
+    if (!secondCharacter.isLetterOrNumber()) {
+      continue;
+    }
+
+    const QString expectedPrefix = legacyName + secondCharacter;
+    const QString localName      = getCategoryNameByID(localCategoryID).trimmed();
+    int matchCount               = 0;
+    for (const auto& candidate : nexusCats) {
+      if (candidate.ID() != existing.first &&
+          candidate.name().startsWith(expectedPrefix, Qt::CaseInsensitive) &&
+          candidate.name().compare(localName, Qt::CaseInsensitive) == 0) {
+        ++matchCount;
+      }
+    }
+    if (matchCount == 1) {
+      repairedLegacyIDs.insert(existing.first);
+    }
   }
 
+  for (const auto& nexusCat : nexusCats) {
+    NexusCategory current = nexusCat;
+    const auto existing   = m_NexusMap.find(nexusCat.ID());
+    const int exactLocalCategoryID = getCategoryID(nexusCat.name());
+    if (exactLocalCategoryID > 0) {
+      current.setCategoryID(exactLocalCategoryID);
+    } else if (existing != m_NexusMap.end() && existing->second.categoryID() >= 0) {
+      current.setCategoryID(existing->second.categoryID());
+    }
+    refreshed.insert_or_assign(current.ID(), current);
+  }
+
+  // Keep assignments that are not present in the latest response. Nexus can
+  // return an incomplete or empty list, and refreshing must not silently erase
+  // a user's local-to-Nexus category mappings.
+  for (const auto& existing : m_NexusMap) {
+    if (existing.second.categoryID() > 0 &&
+        refreshed.find(existing.first) == refreshed.end() &&
+        repairedLegacyIDs.find(existing.first) == repairedLegacyIDs.end()) {
+      refreshed.emplace(existing.first, existing.second);
+    }
+  }
+
+  m_NexusMap = std::move(refreshed);
   saveCategories();
+}
+
+bool CategoryFactory::isNexusGameRootCategory(const QString& name, int nexusID,
+                                              const QStringList& gameNames)
+{
+  if (nexusID <= 0) {
+    return true;
+  }
+
+  const auto normalize = [](QString value) {
+    value = value.toCaseFolded();
+    value.remove(QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}]")));
+    return value;
+  };
+
+  const QString normalizedName = normalize(name);
+  if (normalizedName.isEmpty()) {
+    return true;
+  }
+
+  for (const QString& gameName : gameNames) {
+    const QString normalizedGameName = normalize(gameName);
+    if (!normalizedGameName.isEmpty() && normalizedName == normalizedGameName) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void CategoryFactory::refreshNexusCategories(CategoriesDialog* dialog)

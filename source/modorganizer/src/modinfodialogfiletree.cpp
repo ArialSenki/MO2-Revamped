@@ -7,6 +7,7 @@
 #include <log.h>
 #include <report.h>
 #include <utility.h>
+#include <QIcon>
 
 using namespace MOBase;
 namespace shell = MOBase::shell;
@@ -33,6 +34,15 @@ FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
   m_actions.del       = new QAction(tr("&Delete"), ui->filetree);
   m_actions.hide      = new QAction(tr("&Hide"), ui->filetree);
   m_actions.unhide    = new QAction(tr("&Unhide"), ui->filetree);
+
+  m_actions.newFolder->setIcon(QIcon(":/MO/gui/mainwindow/files/folder.svg"));
+  m_actions.runHooked->setIcon(
+      QIcon(":/MO/gui/mainwindow/explore-virtual-folder.svg"));
+  m_actions.explore->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
+  m_actions.rename->setIcon(QIcon(":/MO/gui/contextmenu/rename.svg"));
+  m_actions.del->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  m_actions.hide->setIcon(QIcon(":/MO/gui/contextmenu/visibility-hide.svg"));
+  m_actions.unhide->setIcon(QIcon(":/MO/gui/contextmenu/visibility-show.svg"));
 
   connect(m_actions.newFolder, &QAction::triggered, [&] {
     onCreateDirectory();
@@ -498,9 +508,11 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
 
   if (enableRun) {
     m_actions.open->setText(tr("&Execute"));
+    m_actions.open->setIcon(QIcon(":/MO/gui/mainwindow/files/executable.svg"));
     m_actions.runHooked->setText(tr("Execute with &VFS"));
   } else if (enableOpen) {
     m_actions.open->setText(tr("&Open"));
+    m_actions.open->setIcon(QIcon(":/MO/gui/mainwindow/files/file.svg"));
     m_actions.runHooked->setText(tr("Open with &VFS"));
   }
 

@@ -24,8 +24,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "organizercore.h"
 #include "spawn.h"
 #include "ui_editexecutablesdialog.h"
+#include <QIcon>
 
+#include <QGuiApplication>
 #include <QMessageBox>
+#include <QScreen>
 #include <Shellapi.h>
 #include <algorithm>
 #include <utility.h>
@@ -57,7 +60,14 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
       m_executablesList(*oc.executablesList()), m_settingUI(false)
 {
   ui->setupUi(this);
-  ui->splitter->setSizes({200, 1});
+  ui->add->setIcon(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"));
+  ui->add->setIconSize(QSize(16, 16));
+  ui->browseBinary->setIcon(QIcon(":/MO/gui/mainwindow/files/executable.svg"));
+  ui->browseWorkingDirectory->setIcon(
+      QIcon(":/MO/gui/mainwindow/files/folder.svg"));
+  ui->configureLibraries->setIcon(
+      QIcon(":/MO/gui/mainwindow/files/library.svg"));
+  ui->splitter->setSizes({265, 1});
   ui->splitter->setStretchFactor(0, 0);
   ui->splitter->setStretchFactor(1, 1);
 
@@ -131,6 +141,26 @@ EditExecutablesDialog::~EditExecutablesDialog() = default;
 int EditExecutablesDialog::exec()
 {
   GeometrySaver gs(Settings::instance(), this);
+
+  auto* targetScreen = screen();
+  if (!targetScreen) {
+    targetScreen = QGuiApplication::primaryScreen();
+  }
+
+  if (targetScreen) {
+    const auto available = targetScreen->availableGeometry();
+    const QSize maxReasonableSize(
+        std::min(1280, std::max(800, available.width() - 64)),
+        std::min(900, std::max(580, available.height() - 80)));
+
+    if (width() > maxReasonableSize.width() ||
+        height() > maxReasonableSize.height()) {
+      const QSize compactSize = QSize(920, 700).boundedTo(maxReasonableSize);
+      resize(compactSize);
+      QDialog::move(available.center() - rect().center());
+    }
+  }
+
   return QDialog::exec();
 }
 

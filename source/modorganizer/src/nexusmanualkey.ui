@@ -6,176 +6,125 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>452</width>
-    <height>236</height>
+    <width>540</width>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Manual Nexus API Key</string>
+   <string>Connect to Nexus Mods</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="spacing">
+    <number>12</number>
+   </property>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>16</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
+   <property name="bottomMargin">
+    <number>14</number>
+   </property>
    <item>
-    <widget class="QWidget" name="widget" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
-      <property name="leftMargin">
-       <number>0</number>
+    <widget class="QWidget" name="headerPanel" native="true">
+     <layout class="QVBoxLayout" name="headerLayout">
+      <property name="spacing">
+       <number>4</number>
       </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
       <item>
-       <widget class="QWidget" name="widget_2" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>1. Get your personal API key</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="openBrowser">
-           <property name="text">
-            <string>Open Browser</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QLabel" name="titleLabel">
+        <property name="font">
+         <font><pointsize>16</pointsize><weight>600</weight><bold>true</bold></font>
+        </property>
+        <property name="text"><string>Connect to Nexus Mods</string></property>
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="widget_3" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QWidget" name="widget_4" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>2. Enter your personal API key</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>115</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="paste">
-              <property name="text">
-               <string>Paste</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="clear">
-              <property name="text">
-               <string>Clear</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPlainTextEdit" name="key">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>1</width>
-             <height>1</height>
-            </size>
-           </property>
-           <property name="placeholderText">
-            <string>Enter API key here</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QLabel" name="subtitleLabel">
+        <property name="text"><string>Enter your personal API key to connect MO2 to your Nexus account.</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="keyInstructions">
+     <property name="title"><string>Get your API key</string></property>
+     <layout class="QVBoxLayout" name="instructionsLayout">
+      <property name="spacing"><number>8</number></property>
+      <property name="leftMargin"><number>12</number></property>
+      <property name="topMargin"><number>12</number></property>
+      <property name="rightMargin"><number>12</number></property>
+      <property name="bottomMargin"><number>12</number></property>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text"><string>Open your Nexus account page and copy your Personal API Key.</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="widget_5" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_5">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>&lt;b&gt;Sharing this key with anyone could get your Nexus account banned. You can always revoke this key from your account on the Nexus website.&lt;/b&gt;</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QPushButton" name="openBrowser">
+        <property name="text"><string>Open Nexus API page</string></property>
+        <property name="autoDefault"><bool>false</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="keyEntry">
+     <property name="title"><string>Enter your personal API key</string></property>
+     <layout class="QVBoxLayout" name="keyLayout">
+      <property name="spacing"><number>8</number></property>
+      <property name="leftMargin"><number>12</number></property>
+      <property name="topMargin"><number>12</number></property>
+      <property name="rightMargin"><number>12</number></property>
+      <property name="bottomMargin"><number>12</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="keyActionsLayout">
+        <property name="spacing"><number>8</number></property>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text"><string>API key</string></property>
+         </widget>
+        </item>
+        <item><spacer name="keyActionsSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item>
+        <item><widget class="QPushButton" name="paste"><property name="text"><string>Paste</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
+        <item><widget class="QPushButton" name="clear"><property name="text"><string>Clear</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QPlainTextEdit" name="key">
+        <property name="sizePolicy"><sizepolicy hsizetype="Ignored" vsizetype="Expanding"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
+        <property name="minimumSize"><size><width>1</width><height>76</height></size></property>
+        <property name="maximumSize"><size><width>16777215</width><height>110</height></size></property>
+        <property name="placeholderText"><string>Paste or enter your API key</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="keySecurityNotice">
+     <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+     <layout class="QVBoxLayout" name="securityLayout">
+      <property name="leftMargin"><number>12</number></property>
+      <property name="topMargin"><number>9</number></property>
+      <property name="rightMargin"><number>12</number></property>
+      <property name="bottomMargin"><number>9</number></property>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text"><string>&lt;b&gt;Keep this key private.&lt;/b&gt; Sharing it can put your Nexus account at risk. You can revoke it from your Nexus account.</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
        </widget>
       </item>
      </layout>
@@ -183,12 +132,8 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set></property>
     </widget>
    </item>
   </layout>
@@ -196,36 +141,12 @@
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>NexusManualKeyDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
+   <sender>buttonBox</sender><signal>accepted()</signal><receiver>NexusManualKeyDialog</receiver><slot>accept()</slot>
+   <hints><hint type="sourcelabel"><x>248</x><y>254</y></hint><hint type="destinationlabel"><x>157</x><y>274</y></hint></hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>NexusManualKeyDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
+   <sender>buttonBox</sender><signal>rejected()</signal><receiver>NexusManualKeyDialog</receiver><slot>reject()</slot>
+   <hints><hint type="sourcelabel"><x>316</x><y>260</y></hint><hint type="destinationlabel"><x>286</x><y>274</y></hint></hints>
   </connection>
  </connections>
 </ui>

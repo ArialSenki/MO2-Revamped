@@ -22,3 +22,7 @@ __pycache__/
 
 # Prebuilt bridge payload; build it from the native bridge source for a release.
 /source/revamped/plugins/basic_games/games/eldenring_mo2_bridge.dll
+
+# Local rollback snapshots and build/release scratch material
+/work/
+/source/modorganizer/work/

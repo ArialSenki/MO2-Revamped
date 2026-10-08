@@ -1347,8 +1347,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.74"
-    NativeBridgeVersion = "0.5.0-alpha.32"
+    Version = "0.5.0-alpha.75"
+    NativeBridgeVersion = "0.5.0-alpha.33"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -2048,13 +2048,15 @@ class EldenRingMo2Game(BasicGame):
             f"profile saves='{profile_save_dir}'; "
             f"game save root='{game_save_dir}'."
         )
-        (
-            start_minimized,
-            black_startup_background,
-            exclude_cpu0,
-            clear_overwrite_after_game,
-            clear_overwrite_logs_before_game,
-        ) = self._read_profile_launch_settings(profile_config)
+        (
+            start_minimized,
+            black_startup_background,
+            exclude_cpu0,
+            clear_overwrite_after_game,
+            clear_overwrite_logs_before_game,
+            process_priority,
+            bridge_log_history,
+        ) = self._read_profile_launch_settings(profile_config)
 
         if save_mode != EldenRingLocalSavegames.GlobalShared:
             if not self._recover_stale_global_save_quarantines():
@@ -2093,16 +2095,19 @@ class EldenRingMo2Game(BasicGame):
         )
         qInfo(
             "Elden Ring MO2: experimental options for profile "
-            f"'{profile.name()}' ({settings_file_state}): "
-            f"start minimized={'on' if start_minimized else 'off'}, "
-            "black background="
-            f"{'on' if black_startup_background else 'off'}, "
-            f"exclude CPU 0={'on' if exclude_cpu0 else 'off'}, "
-            "clear old Overwrite logs="
-            f"{'on' if clear_overwrite_logs_before_game else 'off'}, "
-            "clear Overwrite after exit="
-            f"{'on' if clear_overwrite_after_game else 'off'}."
-        )
+            f"'{profile.name()}' ({settings_file_state}): "
+            f"start minimized={'on' if start_minimized else 'off'}, "
+            "black background="
+            f"{'on' if black_startup_background else 'off'}, "
+            f"exclude CPU 0={'on' if exclude_cpu0 else 'off'}, "
+            "process priority="
+            f"{'above normal' if process_priority == 1 else 'system default'}, "
+            "clear old Overwrite logs="
+            f"{'on' if clear_overwrite_logs_before_game else 'off'}, "
+            "clear Overwrite after exit="
+            f"{'on' if clear_overwrite_after_game else 'off'}, "
+            f"previous bridge sessions={bridge_log_history}."
+        )
 
         initializer_entries = (
             [
@@ -2118,26 +2123,46 @@ class EldenRingMo2Game(BasicGame):
             self._clear_overwrite_logs_before_game()
         if clear_overwrite_after_game:
             self._arm_overwrite_cleanup()
-        self._preserve_previous_bridge_log()
+        self._preserve_previous_bridge_log(bridge_log_history)
         return True
 
     @staticmethod
-    def _preserve_previous_bridge_log() -> None:
+    def _preserve_previous_bridge_log(previous_sessions: int = 1) -> None:
         log_directory = Path(tempfile.gettempdir())
         current_log = log_directory / "EldenRingMO2Bridge.log"
-        previous_log = log_directory / "EldenRingMO2Bridge.previous.log"
-        temporary_log = log_directory / ".EldenRingMO2Bridge.previous.tmp"
+        if previous_sessions not in (1, 3, 5):
+            previous_sessions = 1
+
+        def previous_log_path(index: int) -> Path:
+            suffix = "previous.log" if index == 1 else f"previous-{index}.log"
+            return log_directory / f"EldenRingMO2Bridge.{suffix}"
+
+        temporary_paths: list[Path] = []
         try:
             if not current_log.is_file():
                 qInfo(
                     "Elden Ring MO2: no existing bridge log to preserve before launch."
                 )
                 return
+
+            for index in range(previous_sessions, 1, -1):
+                source = previous_log_path(index - 1)
+                if not source.is_file():
+                    continue
+                destination = previous_log_path(index)
+                temporary_log = log_directory / f".{destination.name}.tmp"
+                temporary_paths.append(temporary_log)
+                shutil.copyfile(source, temporary_log)
+                os.replace(temporary_log, destination)
+
+            previous_log = previous_log_path(1)
+            temporary_log = log_directory / f".{previous_log.name}.tmp"
+            temporary_paths.append(temporary_log)
             shutil.copyfile(current_log, temporary_log)
             os.replace(temporary_log, previous_log)
             qInfo(
-                "Elden Ring MO2: preserved the last bridge session as "
-                f"'{previous_log}' before launch."
+                f"Elden Ring MO2: rotated bridge logs, keeping up to "
+                f"{previous_sessions} previous session(s)."
             )
         except OSError as error:
             qCritical(
@@ -2145,10 +2170,11 @@ class EldenRingMo2Game(BasicGame):
                 f"the game will still start: {error}"
             )
         finally:
-            try:
-                temporary_log.unlink(missing_ok=True)
-            except OSError:
-                pass
+            for temporary_log in temporary_paths:
+                try:
+                    temporary_log.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     def _finish_profile_launch(self, app_path: str, _exit_code: int) -> None:
         qInfo(
@@ -2193,7 +2219,7 @@ class EldenRingMo2Game(BasicGame):
 
     def _read_profile_launch_settings(
         self, path: Path
-    ) -> tuple[bool, bool, bool, bool, bool]:
+    ) -> tuple[bool, bool, bool, bool, bool, int, int]:
         config = configparser.ConfigParser()
         try:
             config.read(path, encoding="utf-8")
@@ -2218,22 +2244,34 @@ class EldenRingMo2Game(BasicGame):
             clear_overwrite_after_game = config.getboolean(
                 "Cleanup", "clear_overwrite_after_game", fallback=False
             )
-            clear_overwrite_logs_before_game = config.getboolean(
-                "Cleanup", "clear_overwrite_logs_before_game", fallback=False
-            )
-            return (
-                start_minimized,
-                black_startup_background,
-                exclude_cpu0,
-                clear_overwrite_after_game,
-                clear_overwrite_logs_before_game,
-            )
+            clear_overwrite_logs_before_game = config.getboolean(
+                "Cleanup", "clear_overwrite_logs_before_game", fallback=False
+            )
+            process_priority = config.getint(
+                "Performance", "process_priority", fallback=0
+            )
+            if process_priority not in (0, 1):
+                process_priority = 0
+            bridge_log_history = config.getint(
+                "Diagnostics", "previous_bridge_sessions", fallback=1
+            )
+            if bridge_log_history not in (1, 3, 5):
+                bridge_log_history = 1
+            return (
+                start_minimized,
+                black_startup_background,
+                exclude_cpu0,
+                clear_overwrite_after_game,
+                clear_overwrite_logs_before_game,
+                process_priority,
+                bridge_log_history,
+            )
         except (OSError, UnicodeError, configparser.Error, ValueError) as error:
             qCritical(
                 f"Elden Ring MO2: could not read profile launch settings "
                 f"{path.name}: {error}. Using safe defaults."
             )
-            return False, False, False, False, False
+            return False, False, False, False, False, 0, 1
 
     def _resolve_revamped_native_profile(self, profile) -> dict | None:
         """Resolve Revamped's ordered native list against installed mod routes."""
@@ -2962,24 +3000,30 @@ class EldenRingMo2Game(BasicGame):
                 start_minimized,
                 black_startup_background,
                 exclude_cpu0,
-                _clear_overwrite_after_game,
-                _clear_overwrite_logs_before_game,
-            ) = self._read_profile_launch_settings(profile_config)
-            bridge_startup_options = (
-                start_minimized or black_startup_background or exclude_cpu0
-            )
+                _clear_overwrite_after_game,
+                _clear_overwrite_logs_before_game,
+                _process_priority,
+                bridge_log_history,
+            ) = self._read_profile_launch_settings(profile_config)
+            bridge_startup_options = (
+                start_minimized
+                or black_startup_background
+                or exclude_cpu0
+                or _process_priority == 1
+                or bridge_log_history > 1
+            )
 
         if not active_mods and not bridge_startup_options:
-            qInfo(
-                "Elden Ring MO2: no active mods or bridge-dependent profile "
-                "startup options; no native or asset bridge needed."
+            qInfo(
+                "Elden Ring MO2: no active mods or bridge-dependent profile "
+                "options; no native or asset bridge needed."
             )
             return []
         if not active_mods:
-            qInfo(
-                "Elden Ring MO2: no active mods; loading the native bridge "
-                "because profile startup options are enabled."
-            )
+            qInfo(
+                "Elden Ring MO2: no active mods; loading the native bridge "
+                "because bridge-dependent profile options are enabled."
+            )
 
         native_loading = bool(
             self._organizer.pluginSetting(self.name(), self.NativeDllSetting)
