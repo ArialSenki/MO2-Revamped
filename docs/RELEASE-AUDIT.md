@@ -78,9 +78,9 @@ framework or ABI migration.
 - OpenSSL 3.5.9's CLI and default provider loaded from the staged runtime. A
   TLS 1.3 connection to Nexus Mods completed with hostname and certificate
   verification. The full upstream OpenSSL test suite was not run.
-- The Python 3.12.15 runtime and OpenSSL 3.5.9 extensions passed 1,267 upstream
-  SSL, tarfile, ZIP, and urllib tests; 73 were skipped by the Windows test
-  environment. The embedded `pythoncore.zip` was rebuilt from the 3.12.15
+- The Python 3.12.15 runtime and OpenSSL 3.5.9 extensions completed a run of
+  1,267 upstream SSL, tarfile, ZIP, and urllib tests: 1,194 passed and 73 were
+  skipped by the Windows test environment. The embedded `pythoncore.zip` was rebuilt from the 3.12.15
   standard library and exercised without a source-tree fallback. A verified
   HTTPS request to python.org returned HTTP 200.
 - The general package includes Complete/Portable and supported maintenance
