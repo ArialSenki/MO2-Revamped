@@ -14,7 +14,7 @@ or Bandai Namco Entertainment.
 | Path | Contents |
 | --- | --- |
 | `source/modorganizer/` | Mod Organizer 2 application source |
-| `source/mo2-python-plugins/` | MO2 Python plugins included in the source snapshot |
+| `source/mo2-python-plugins/` | Baseline MO2 Python plugin sources; Revamped plugins are maintained and packaged from `source/revamped/plugins/` |
 | `source/revamped/` | Revamped plugins, Elden Ring native bridge source, installer source, and Light/Dark themes |
 | `source/usvfs/` | USVFS v0.5.7.2 source |
 | `licenses/` | Full license texts, component notices, and Python package license metadata |
@@ -31,7 +31,15 @@ versions, checks, and deferred upgrades.
 - Profile-aware native DLL ordering and startup options through the Revamped
   native bridge.
 - Separate Elden Ring save routes for MO2 instances and profiles.
-- Revamped Light and Dark interface themes and installer sources.
+- Revamped Light, Dark Blue, and Dark Black interface themes and the Qt-based
+  installer source.
+
+Complete Standard stores its global instances and preferences under the
+MO2 Revamped folder in Windows Local AppData. Complete Portable and Elden Ring
+Isolated keep their MO2 data beside their own installation. None of these
+editions reads the original MO2 global instance folder. The optional Steam
+save route still uses Elden Ring's own Windows save directory. Data migration
+only reads a source folder that the user selects manually.
 
 The source tree is a consolidated snapshot. See [upstream provenance](docs/UPSTREAMS.md)
 for the upstream versions and revisions recorded for its components.

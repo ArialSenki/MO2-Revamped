@@ -1,10 +1,30 @@
 #include "forcedloaddialogwidget.h"
 #include "executableinfo.h"
 #include "ui_forcedloaddialogwidget.h"
+
+#include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QStringList>
 #include <log.h>
 
 using namespace MOBase;
+
+namespace
+{
+QString browseForExistingFile(QWidget* parent, const QString& caption,
+                              const QString& directory, const QString& filter,
+                              const QString& objectName)
+{
+  QFileDialog dialog(parent, caption, directory, filter);
+  dialog.setObjectName(objectName);
+  dialog.setFileMode(QFileDialog::ExistingFile);
+  dialog.setOption(QFileDialog::ReadOnly);
+  dialog.setOption(QFileDialog::DontUseNativeDialog);
+  return dialog.exec() == QDialog::Accepted ? dialog.selectedFiles().value(0)
+                                            : QString();
+}
+}  // namespace
 
 ForcedLoadDialogWidget::ForcedLoadDialogWidget(const IPluginGame* game, QWidget* parent)
     : QWidget(parent), ui(new Ui::ForcedLoadDialogWidget), m_Forced(false), m_GamePlugin(game)
@@ -71,9 +91,9 @@ void ForcedLoadDialogWidget::on_libraryPathBrowseButton_clicked()
 {
   QDir gameDir(m_GamePlugin->gameDirectory());
   QString startPath = gameDir.absolutePath();
-  QString result    = QFileDialog::getOpenFileName(
-      nullptr, "Select a library...", startPath, "Dynamic link library (*.dll)",
-      nullptr, QFileDialog::ReadOnly);
+  QString result = browseForExistingFile(
+      this, tr("Select a library"), startPath,
+      tr("Dynamic link libraries (*.dll)"), "forcedLibraryFilePicker");
   if (!result.isEmpty()) {
     QFileInfo fileInfo(result);
     QString relativePath = gameDir.relativeFilePath(fileInfo.filePath());
@@ -94,9 +114,9 @@ void ForcedLoadDialogWidget::on_processBrowseButton_clicked()
 {
   QDir gameDir(m_GamePlugin->gameDirectory());
   QString startPath = gameDir.absolutePath();
-  QString result    = QFileDialog::getOpenFileName(nullptr, "Select a process...",
-                                                   startPath, "Executable (*.exe)",
-                                                   nullptr, QFileDialog::ReadOnly);
+  QString result = browseForExistingFile(
+      this, tr("Select a process"), startPath,
+      tr("Executable files (*.exe)"), "forcedProcessFilePicker");
   if (!result.isEmpty()) {
     QFileInfo fileInfo(result);
     QString fileName = fileInfo.fileName();

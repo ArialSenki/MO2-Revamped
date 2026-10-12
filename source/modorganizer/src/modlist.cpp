@@ -1,3 +1,4 @@
+#include "revampedtheme.h"
 /*
 Copyright (C) 2012 Sebastian Herbord. All rights reserved.
 
@@ -355,9 +356,9 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     if (column == COL_NAME) {
       int highlight = modInfo->getHighlight();
       if (highlight & ModInfo::HIGHLIGHT_IMPORTANT) {
-        return QBrush(Qt::darkRed);
+        return QBrush(MOBase::RevampedTheme::isBlack() ? QColor("#F0A0A0") : QColor(Qt::darkRed));
       } else if (highlight & ModInfo::HIGHLIGHT_INVALID) {
-        return QBrush(Qt::darkGray);
+        return QBrush(MOBase::RevampedTheme::isBlack() ? QColor("#A6A6A6") : QColor(Qt::darkGray));
       }
     } else if (column == COL_VERSION) {
       if (!modInfo->newestVersion().isValid()) {

@@ -531,14 +531,18 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     ) -> Optional[tuple[bool, bool, bool, bool, str]]:
         dialog = QtWidgets.QDialog(self._parentWidget())
         dialog.setWindowTitle(self.tr("Elden Ring archive layout"))
+        dialog.setObjectName("EldenRingArchiveLayoutDialog")
         dialog.setSizeGripEnabled(True)
+        dialog.setModal(True)
 
         layout = QtWidgets.QVBoxLayout(dialog)
-        layout.setContentsMargins(14, 12, 14, 10)
-        layout.setSpacing(6)
+        layout.setObjectName("archiveDialogLayout")
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(10)
         layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetNoConstraint)
 
         scroll_area = QtWidgets.QScrollArea(dialog)
+        scroll_area.setObjectName("archiveContentScrollArea")
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         scroll_area.setHorizontalScrollBarPolicy(
@@ -546,21 +550,78 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
         scroll_area.setMinimumSize(0, 0)
         content = QtWidgets.QWidget(scroll_area)
+        content.setObjectName("archiveDialogContent")
         content_layout = QtWidgets.QVBoxLayout(content)
         content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(7)
+        content_layout.setSpacing(10)
         scroll_area.setWidget(content)
         layout.addWidget(scroll_area, 1)
 
-        prompt = QtWidgets.QLabel(
-            self.tr("Choose how to install this mod.")
-        )
-        prompt.setWordWrap(True)
-        content_layout.addWidget(prompt)
+        header = QtWidgets.QFrame(content)
+        header.setObjectName("archiveHeaderPanel")
+        header.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        header_layout = QtWidgets.QHBoxLayout(header)
+        header_layout.setContentsMargins(14, 12, 16, 12)
+        header_layout.setSpacing(12)
 
-        mod_name_layout = QtWidgets.QHBoxLayout()
-        mod_name_label = QtWidgets.QLabel(self.tr("Mod name:"))
+        header_badge = QtWidgets.QLabel("ER", header)
+        header_badge.setObjectName("archiveHeaderBadge")
+        header_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header_badge.setFixedSize(42, 42)
+        header_icon = dialog.windowIcon()
+        if not header_icon.isNull():
+            header_badge.setText("")
+            header_badge.setPixmap(header_icon.pixmap(26, 26))
+        header_layout.addWidget(
+            header_badge, 0, Qt.AlignmentFlag.AlignVCenter
+        )
+
+        header_text = QtWidgets.QVBoxLayout()
+        header_text.setContentsMargins(0, 0, 0, 0)
+        header_text.setSpacing(3)
+        heading = QtWidgets.QLabel(
+            self.tr("Choose how to install this mod."), header
+        )
+        heading.setObjectName("archivePageTitle")
+        heading.setWordWrap(True)
+        header_text.addWidget(heading)
+        subtitle = QtWidgets.QLabel(
+            self.tr(
+                "Review the archive and choose how its files should be arranged."
+            ),
+            header,
+        )
+        subtitle.setObjectName("archivePageSubtitle")
+        subtitle.setWordWrap(True)
+        header_text.addWidget(subtitle)
+        header_layout.addLayout(header_text, 1)
+        content_layout.addWidget(header)
+
+        def add_section_card(
+            object_name: str, title: str
+        ) -> tuple[QtWidgets.QFrame, QtWidgets.QVBoxLayout]:
+            card = QtWidgets.QFrame(content)
+            card.setObjectName(object_name)
+            card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            card_layout = QtWidgets.QVBoxLayout(card)
+            card_layout.setContentsMargins(12, 10, 12, 10)
+            card_layout.setSpacing(7)
+            section_title = QtWidgets.QLabel(self.tr(title), card)
+            section_title.setObjectName("archiveSectionTitle")
+            card_layout.addWidget(section_title)
+            return card, card_layout
+
+        name_card = QtWidgets.QFrame(content)
+        name_card.setObjectName("archiveNameCard")
+        name_card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        name_card_layout = QtWidgets.QHBoxLayout(name_card)
+        name_card_layout.setContentsMargins(12, 9, 12, 9)
+        name_card_layout.setSpacing(10)
+
+        mod_name_label = QtWidgets.QLabel(self.tr("Mod name:"), name_card)
+        mod_name_label.setObjectName("archiveFieldLabel")
         mod_name_edit = QtWidgets.QLineEdit(mod_name)
+        mod_name_edit.setObjectName("archiveModNameEdit")
         mod_name_edit.setClearButtonEnabled(True)
         mod_name_edit.setToolTip(
             self.tr(
@@ -569,9 +630,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
         )
         mod_name_label.setBuddy(mod_name_edit)
-        mod_name_layout.addWidget(mod_name_label)
-        mod_name_layout.addWidget(mod_name_edit, 1)
-        content_layout.addLayout(mod_name_layout)
+        name_card_layout.addWidget(mod_name_label)
+        name_card_layout.addWidget(mod_name_edit, 1)
+        content_layout.addWidget(name_card)
 
         selected: dict[str, Optional[tuple[bool, bool, bool, bool, str]]] = {
             "choice": None
@@ -592,16 +653,17 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
             dialog.accept()
 
-        filters_group = QtWidgets.QGroupBox(self.tr("Text files"))
-        filters_layout = QtWidgets.QVBoxLayout(filters_group)
-        filters_layout.setContentsMargins(10, 7, 10, 7)
-        filters_layout.setSpacing(4)
+        filters_card, filters_layout = add_section_card(
+            "archiveTextFilesCard", "Text files"
+        )
         filters_label = QtWidgets.QLabel(
             self.tr(
                 "Text-file exclusions apply only to standard layout. Keep original "
                 "always installs every archive file; choices are remembered for reinstall."
-            )
+            ),
+            filters_card,
         )
+        filters_label.setObjectName("archiveSectionDescription")
         filters_label.setWordWrap(True)
         filters_label.setToolTip(
             self.tr(
@@ -611,31 +673,41 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
         )
         filters_layout.addWidget(filters_label)
-        omit_txt_box = QtWidgets.QCheckBox(self.tr("Skip .txt files"))
+        filter_options = QtWidgets.QHBoxLayout()
+        filter_options.setContentsMargins(0, 0, 0, 0)
+        filter_options.setSpacing(16)
+        omit_txt_box = QtWidgets.QCheckBox(
+            self.tr("Skip .txt files"), filters_card
+        )
+        omit_txt_box.setObjectName("archiveSkipTxtCheck")
         omit_txt_box.setChecked(self._default_omit_txt)
         omit_txt_box.setToolTip(
             self.tr("Skips every .txt file in this archive before installation.")
         )
-        filters_layout.addWidget(omit_txt_box)
-        omit_md_box = QtWidgets.QCheckBox(self.tr("Skip .md files"))
+        filter_options.addWidget(omit_txt_box)
+        omit_md_box = QtWidgets.QCheckBox(
+            self.tr("Skip .md files"), filters_card
+        )
+        omit_md_box.setObjectName("archiveSkipMarkdownCheck")
         omit_md_box.setChecked(self._default_omit_md)
         omit_md_box.setToolTip(
             self.tr(
                 "Skips every Markdown .md file in this archive before installation."
             )
         )
-        filters_layout.addWidget(omit_md_box)
-        content_layout.addWidget(filters_group)
+        filter_options.addWidget(omit_md_box)
+        filter_options.addStretch(1)
+        filters_layout.addLayout(filter_options)
+        content_layout.addWidget(filters_card)
 
-        routes_group = QtWidgets.QGroupBox(
-            self.tr("Elden Ring package paths")
+        routes_card, routes_layout = add_section_card(
+            "archivePackagePathsCard", "Elden Ring package paths"
         )
-        routes_layout = QtWidgets.QVBoxLayout(routes_group)
-        routes_layout.setContentsMargins(10, 7, 10, 7)
-        routes_layout.setSpacing(3)
         mod_engine_paths_box = QtWidgets.QCheckBox(
-            self.tr("Recognize Mod Engine 2 paths (standard layout only)")
+            self.tr("Recognize Mod Engine 2 paths (standard layout only)"),
+            routes_card,
         )
+        mod_engine_paths_box.setObjectName("archiveModEnginePathsCheck")
         mod_engine_paths_box.setChecked(
             self._default_recognize_mod_engine_paths
         )
@@ -644,8 +716,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             self.tr(
                 "With standard layout, maps Mod Engine 2 menu files and external "
                 "DLLs to MO2's game folders. Keep original leaves every path in place."
-            )
+            ),
+            routes_card,
         )
+        routes_description.setObjectName("archiveSectionDescription")
         routes_description.setWordWrap(True)
         routes_description.setToolTip(
             self.tr(
@@ -655,17 +729,20 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
         )
         routes_layout.addWidget(routes_description)
-        content_layout.addWidget(routes_group)
+        content_layout.addWidget(routes_card)
 
         preview_button = QtWidgets.QPushButton(
-            self.tr("Show archive contents")
+            self.tr("Show archive contents"), content
         )
+        preview_button.setObjectName("archivePreviewButton")
         preview_button.setCheckable(True)
-        preview_button.setMinimumHeight(28)
+        preview_button.setMinimumHeight(34)
         content_layout.addWidget(preview_button)
-        preview_note = QtWidgets.QLabel()
+        preview_note = QtWidgets.QLabel(content)
+        preview_note.setObjectName("archivePreviewNote")
         preview_note.setWordWrap(True)
-        preview_tree = QtWidgets.QTreeWidget()
+        preview_tree = QtWidgets.QTreeWidget(content)
+        preview_tree.setObjectName("archivePreviewTree")
         preview_tree.setHeaderLabels(
             [self.tr("Original archive path"), self.tr("Type")]
         )
@@ -757,26 +834,51 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             details: str,
             preserve: bool,
         ) -> QtWidgets.QPushButton:
-            group = QtWidgets.QGroupBox(self.tr(title))
-            group_layout = QtWidgets.QHBoxLayout(group)
-            group_layout.setContentsMargins(10, 7, 10, 7)
-            group_layout.setSpacing(12)
+            card = QtWidgets.QFrame(content)
+            card.setObjectName("archiveLayoutChoiceCard")
+            card.setProperty(
+                "preferredChoice",
+                preserve == self._default_preserve,
+            )
+            card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            group_layout = QtWidgets.QVBoxLayout(card)
+            group_layout.setContentsMargins(13, 12, 13, 12)
+            group_layout.setSpacing(8)
 
-            description_label = QtWidgets.QLabel(self.tr(description))
+            title_label = QtWidgets.QLabel(self.tr(title), card)
+            title_label.setObjectName("archiveLayoutChoiceTitle")
+            title_label.setWordWrap(True)
+            group_layout.addWidget(title_label)
+
+            description_label = QtWidgets.QLabel(self.tr(description), card)
+            description_label.setObjectName("archiveLayoutChoiceDescription")
             description_label.setWordWrap(True)
             description_label.setToolTip(self.tr(details))
-            group_layout.addWidget(description_label, 1)
+            # Let the card size itself to its contents. A stretch factor here
+            # makes the description absorb the dialog's spare height and
+            # pushes the action button to the bottom of an oversized card.
+            group_layout.addWidget(description_label)
 
-            choose_button = QtWidgets.QPushButton(self.tr("Choose this layout"))
-            choose_button.setMinimumSize(150, 30)
+            choose_button = QtWidgets.QPushButton(
+                self.tr("Choose this layout"), card
+            )
+            choose_button.setObjectName("archiveLayoutChoiceButton")
+            choose_button.setMinimumHeight(34)
+            choose_button.setProperty(
+                "preferredChoice",
+                preserve == self._default_preserve,
+            )
             choose_button.clicked.connect(
                 lambda _checked=False, value=preserve: choose_layout(value)
             )
-            group_layout.addWidget(
-                choose_button, 0, Qt.AlignmentFlag.AlignVCenter
-            )
-            content_layout.addWidget(group)
+            group_layout.addWidget(choose_button)
+            layout_choices.addWidget(card, 1)
             return choose_button
+
+        layout_choices = QtWidgets.QHBoxLayout()
+        layout_choices.setContentsMargins(0, 0, 0, 0)
+        layout_choices.setSpacing(10)
+        content_layout.addLayout(layout_choices)
 
         preserve_button = add_layout_option(
             "Keep original archive structure",
@@ -806,8 +908,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             self.tr(
                 "Shown for each supported install; existing mods reopen with "
                 "their previous choices."
-            )
+            ),
+            content,
         )
+        default_label.setObjectName("archiveFooterNote")
         default_label.setWordWrap(True)
         default_label.setToolTip(
             self.tr(
@@ -819,8 +923,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         content_layout.addWidget(default_label)
 
         buttons = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel, dialog
         )
+        buttons.setObjectName("archiveDialogButtons")
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
 
@@ -840,13 +945,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             available = screen.availableGeometry()
             max_width = max(320, available.width() - 32)
             max_height = max(320, available.height() - 16)
-            min_width = min(820, max_width)
-            min_height = min(420, max_height)
+            min_width = min(880, max_width)
+            min_height = min(560, max_height)
             dialog.setMinimumSize(min_width, min_height)
             dialog.setMaximumSize(max_width, max_height)
             size_hint = dialog.sizeHint().expandedTo(dialog.minimumSizeHint())
             initial_width = min(
-                max(min_width, 860, size_hint.width()), max_width
+                max(min_width, 920, size_hint.width()), max_width
             )
             dialog.resize(initial_width, min_height)
             content_layout.activate()

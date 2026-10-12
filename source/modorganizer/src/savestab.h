@@ -63,6 +63,7 @@ private:
   void refreshSavesIfOpen();
   void refreshSaveListNow();
   void openInExplorer();
+  void startMonitorSaves(const QDir& savesDir);
 };
 
 #endif  // MODORGANIZER_SAVESTAB_INCLUDED

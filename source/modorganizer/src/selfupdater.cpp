@@ -29,7 +29,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugincontainer.h"
 #include "settings.h"
 #include "shared/util.h"
-#include "updatedialog.h"
 #include "utility.h"
 #include <report.h>
 #include <versioninfo.h>
@@ -69,7 +68,7 @@ using namespace MOBase;
 using namespace MOShared;
 
 SelfUpdater::SelfUpdater(NexusInterface* nexusInterface)
-    : m_Parent(nullptr), m_Interface(nexusInterface), m_Reply(nullptr), m_Attempts(3)
+    : m_Parent(nullptr), m_Interface(nexusInterface)
 {
   m_MOVersion = createVersionInfo();
 }
@@ -109,8 +108,9 @@ void SelfUpdater::testForUpdate(const Settings& settings)
             return;
           }
 
-          // We store all releases:
-          CandidatesMap mreleases;
+          // Releases ordered from newest to oldest. Updates are installed with
+          // the MO2 Revamped setup, so only the newest version is needed here.
+          std::map<VersionInfo, QJsonObject, std::greater<>> mreleases;
           for (const QJsonValue& releaseVal : releases) {
             QJsonObject release = releaseVal.toObject();
             if (!release["draft"].toBool() && (Settings::instance().usePrereleases() ||
@@ -123,15 +123,6 @@ void SelfUpdater::testForUpdate(const Settings& settings)
           if (!mreleases.empty()) {
             auto lastKey = mreleases.begin()->first;
             if (lastKey > this->m_MOVersion) {
-
-              // Fill m_UpdateCandidates with version strictly greater than the
-              // current version:
-              m_UpdateCandidates.clear();
-              for (auto p : mreleases) {
-                if (p.first > this->m_MOVersion) {
-                  m_UpdateCandidates.insert(p);
-                }
-              }
               log::info("update available: {} -> {}",
                         this->m_MOVersion.displayString(3), lastKey.displayString(3));
               emit updateAvailable();
@@ -148,203 +139,4 @@ void SelfUpdater::testForUpdate(const Settings& settings)
   catch (...) {
     log::debug("Unable to connect to github.com to check version");
   }
-}
-
-void SelfUpdater::startUpdate()
-{
-  // the button can't be pressed if there isn't an update candidate
-  Q_ASSERT(!m_UpdateCandidates.empty());
-
-  auto latestRelease = m_UpdateCandidates.begin()->second;
-
-  UpdateDialog dialog(m_Parent);
-  dialog.setVersions(MOShared::createVersionInfo().displayString(3),
-                     latestRelease["tag_name"].toString());
-
-  // We concatenate release details. We only include pre-release if those are
-  // the latest release:
-  QString details;
-  bool includePreRelease = true;
-  for (auto& p : m_UpdateCandidates) {
-    auto& release = p.second;
-
-    // Ignore details for pre-release after a release has been found:
-    if (release["prerelease"].toBool() && !includePreRelease) {
-      continue;
-    }
-
-    // Stop including pre-release as soon as we find a non-prerelease:
-    if (!release["prerelease"].toBool()) {
-      includePreRelease = false;
-    }
-
-    details += "\n## " + release["name"].toString() + "\n---\n";
-    details += release["body"].toString();
-  }
-
-  // Need to call setDetailedText to create the QTextEdit and then be able to retrieve
-  // it:
-  dialog.setChangeLogs(details);
-
-  int res = dialog.exec();
-
-  if (dialog.result() == QDialog::Accepted) {
-    bool found = false;
-    for (const QJsonValue& assetVal : latestRelease["assets"].toArray()) {
-      QJsonObject asset = assetVal.toObject();
-      if (asset["content_type"].toString() == "application/x-msdownload") {
-        openOutputFile(asset["name"].toString());
-        download(asset["browser_download_url"].toString());
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      QMessageBox::warning(
-          m_Parent, tr("Download failed"),
-          tr("Failed to find correct download, please try again later."));
-    }
-  }
-}
-
-void SelfUpdater::showProgress()
-{
-  if (m_Progress == nullptr) {
-    m_Progress = new QProgressDialog(m_Parent, Qt::Dialog);
-    connect(m_Progress, SIGNAL(canceled()), this, SLOT(downloadCancel()));
-  }
-  m_Progress->setModal(true);
-  m_Progress->show();
-  m_Progress->setValue(0);
-  m_Progress->setWindowTitle(tr("Update"));
-  m_Progress->setLabelText(tr("Download in progress"));
-}
-
-void SelfUpdater::closeProgress()
-{
-  if (m_Progress != nullptr) {
-    m_Progress->hide();
-    m_Progress->deleteLater();
-    m_Progress = nullptr;
-  }
-}
-
-void SelfUpdater::openOutputFile(const QString& fileName)
-{
-  QString outputPath =
-      QDir::fromNativeSeparators(qApp->property("dataPath").toString()) + "/" +
-      fileName;
-  log::debug("downloading to {}", outputPath);
-  m_UpdateFile.setFileName(outputPath);
-  m_UpdateFile.open(QIODevice::WriteOnly);
-}
-
-void SelfUpdater::download(const QString& downloadLink)
-{
-  QNetworkAccessManager* accessManager = m_Interface->getAccessManager();
-  QUrl dlUrl(downloadLink);
-  QNetworkRequest request(dlUrl);
-  m_Canceled = false;
-  m_Reply    = accessManager->get(request);
-  showProgress();
-
-  connect(m_Reply, SIGNAL(downloadProgress(qint64, qint64)), this,
-          SLOT(downloadProgress(qint64, qint64)));
-  connect(m_Reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
-  connect(m_Reply, SIGNAL(readyRead()), this, SLOT(downloadReadyRead()));
-}
-
-void SelfUpdater::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
-{
-  if (m_Reply != nullptr) {
-    if (m_Canceled) {
-      m_Reply->abort();
-    } else {
-      if (bytesTotal != 0) {
-        if (m_Progress != nullptr) {
-          m_Progress->setValue((bytesReceived * 100) / bytesTotal);
-        }
-      }
-    }
-  }
-}
-
-void SelfUpdater::downloadReadyRead()
-{
-  if (m_Reply != nullptr) {
-    m_UpdateFile.write(m_Reply->readAll());
-  }
-}
-
-void SelfUpdater::downloadFinished()
-{
-  int error = QNetworkReply::NoError;
-
-  if (m_Reply != nullptr) {
-    if (m_Reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 302) {
-      QUrl url =
-          m_Reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-      m_UpdateFile.reset();
-      download(url.toString());
-      return;
-    }
-    m_UpdateFile.write(m_Reply->readAll());
-
-    error = m_Reply->error();
-
-    if (m_Reply->header(QNetworkRequest::ContentTypeHeader)
-            .toString()
-            .startsWith("text", Qt::CaseInsensitive)) {
-      m_Canceled = true;
-    }
-
-    closeProgress();
-
-    m_Reply->close();
-    m_Reply->deleteLater();
-    m_Reply = nullptr;
-  }
-
-  m_UpdateFile.close();
-
-  if ((m_UpdateFile.size() == 0) || (error != QNetworkReply::NoError) || m_Canceled) {
-    if (!m_Canceled) {
-      reportError(tr("Download failed: %1").arg(error));
-    }
-    m_UpdateFile.remove();
-    return;
-  }
-
-  log::debug("download: {}", m_UpdateFile.fileName());
-
-  try {
-    installUpdate();
-  } catch (const std::exception& e) {
-    reportError(tr("Failed to install update: %1").arg(e.what()));
-  }
-}
-
-void SelfUpdater::downloadCancel()
-{
-  m_Canceled = true;
-}
-
-void SelfUpdater::installUpdate()
-{
-  const QString parameters = "/DIR=\"" + qApp->applicationDirPath() + "\" ";
-  const auto r             = shell::Execute(m_UpdateFile.fileName(), parameters);
-
-  if (r.success()) {
-    QCoreApplication::quit();
-  } else {
-    reportError(
-        tr("Failed to start %1: %2").arg(m_UpdateFile.fileName()).arg(r.toString()));
-  }
-
-  m_UpdateFile.remove();
-}
-
-void SelfUpdater::report7ZipError(QString const& errorMessage)
-{
-  QMessageBox::critical(m_Parent, tr("Error"), errorMessage);
 }

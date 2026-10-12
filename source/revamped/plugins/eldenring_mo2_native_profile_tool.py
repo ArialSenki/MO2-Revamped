@@ -10,28 +10,66 @@ import struct
 import tempfile
 
 import mobase
-from PyQt6.QtCore import QEvent, Qt
+from PyQt6.QtCore import QCoreApplication, QEvent, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QToolTip,
     QAbstractItemView,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFrame,
-    QGroupBox,
     QHBoxLayout,
     QHeaderView,
-    QInputDialog,
     QLabel,
     QTreeWidget,
     QTreeWidgetItem,
-    QMessageBox,
     QPushButton,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
 )
+
+
+# MO2 installs translations/revamped_<language>.qm; the source text is English.
+_TR_CONTEXT = "EldenRingNativeProfile"
+
+
+def _tr(text: str) -> str:
+    return QCoreApplication.translate(_TR_CONTEXT, text)
+
+
+def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
+                        fallback: str = "•") -> QLabel:
+    icon = QLabel(parent)
+    icon.setObjectName(object_name)
+    icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    icon.setFixedSize(size, size)
+    pixmap = QIcon(icon_path).pixmap(max(12, size // 2), max(12, size // 2))
+    if pixmap.isNull():
+        icon.setText(fallback)
+    else:
+        icon.setPixmap(pixmap)
+    return icon
+
+
+def _add_circular_heading(layout, parent, text: str, title_object_name: str,
+                          icon_path: str, icon_object_name: str,
+                          size: int = 26, fallback: str = "•") -> QLabel:
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(8)
+    row.addWidget(
+        _make_circular_icon(parent, icon_object_name, icon_path, size, fallback),
+        0,
+        Qt.AlignmentFlag.AlignVCenter,
+    )
+    heading = QLabel(text, parent)
+    heading.setObjectName(title_object_name)
+    row.addWidget(heading, 1, Qt.AlignmentFlag.AlignVCenter)
+    layout.addLayout(row)
+    return heading
 
 
 class NativeProfileTable(QTableWidget):
@@ -125,8 +163,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
     def description(self) -> str:
         return (
-            "Detect installed Elden Ring native DLLs and manage their load "
-            "order and optional initializer exports for each MO2 profile."
+            _tr("Detect installed Elden Ring native DLLs and manage their load "
+            "order and optional initializer exports for each MO2 profile.")
         )
 
     def version(self) -> mobase.VersionInfo:
@@ -142,12 +180,12 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         return True
 
     def displayName(self) -> str:
-        return "Native DLL Profile"
+        return _tr("Native DLL Profile")
 
     def tooltip(self) -> str:
         return (
-            "Detect installed native DLLs and set their order and optional "
-            "initializer for the active MO2 profile."
+            _tr("Detect installed native DLLs and set their order and optional "
+            "initializer for the active MO2 profile.")
         )
 
     def icon(self) -> QIcon:
@@ -166,10 +204,11 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         profile = self.__organizer.profile()
         if profile is None:
-            QMessageBox.warning(
+            self._show_notice(
                 self.__parent_widget,
-                "No active Elden Ring profile",
-                "Select an Elden Ring profile in MO2 before editing native DLL settings.",
+                _tr("No active Elden Ring profile"),
+                _tr("Select an Elden Ring profile in MO2 before editing native DLL settings."),
+                "warning",
             )
             return
 
@@ -186,68 +225,97 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             TypeError,
             ValueError,
         ) as error:
-            QMessageBox.critical(
+            self._show_notice(
                 self.__parent_widget,
-                "Could not read native DLL profile",
-                f"MO2 could not inspect the active profile or installed mods.\n\n{error}",
+                _tr("Could not read native DLL profile"),
+                _tr("MO2 could not inspect the active profile or installed mods.\n\n{error}").format(error=error),
+                "error",
             )
             return
 
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingNativeProfileDialog")
-        dialog.setWindowTitle("Elden Ring native DLL profile")
+        dialog.setWindowTitle(_tr("Elden Ring native DLL profile"))
         dialog.setMinimumSize(900, 560)
-        dialog.resize(1080, 660)
+        dialog.resize(1080, 680)
         dialog.setSizeGripEnabled(True)
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(18, 16, 18, 14)
-        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(9)
 
         header_panel = QFrame(dialog)
         header_panel.setObjectName("nativeHeaderPanel")
         header_layout = QVBoxLayout(header_panel)
-        header_layout.setContentsMargins(14, 10, 14, 10)
+        header_layout.setContentsMargins(15, 11, 15, 11)
         header_layout.setSpacing(3)
-        heading = QLabel("Native DLL profile", header_panel)
-        heading.setObjectName("nativePageTitle")
+        _add_circular_heading(
+            header_layout,
+            header_panel,
+            _tr("Native DLL profile"),
+            "nativePageTitle",
+            ":/MO/gui/mainwindow/files/library.svg",
+            "nativeHeaderIcon",
+            30,
+            "D",
+        )
         subtitle = QLabel(
-            "Choose which installed native DLLs load for the active MO2 profile, "
-            "and set their order or optional initializer exports.",
+            _tr("Choose the native DLLs for this MO2 profile, set their load order, "
+            "and select optional initializer exports."),
             header_panel,
         )
         subtitle.setObjectName("nativePageSubtitle")
         subtitle.setWordWrap(True)
-        header_layout.addWidget(heading)
         header_layout.addWidget(subtitle)
         layout.addWidget(header_panel)
 
         profile_panel = QFrame(dialog)
         profile_panel.setObjectName("nativeProfilePanel")
         profile_layout = QHBoxLayout(profile_panel)
-        profile_layout.setContentsMargins(12, 7, 12, 7)
-        profile_layout.setSpacing(8)
-        profile_caption = QLabel("ACTIVE PROFILE", profile_panel)
+        profile_layout.setContentsMargins(12, 8, 12, 8)
+        profile_layout.setSpacing(10)
+        profile_layout.addWidget(
+            _make_circular_icon(
+                profile_panel,
+                "nativeProfileIcon",
+                ":/MO/gui/mainwindow/profile.svg",
+                24,
+                "P",
+            )
+        )
+        profile_caption = QLabel(_tr("Active profile"), profile_panel)
         profile_caption.setObjectName("nativeProfileCaption")
         profile_name = QLabel(profile.name(), profile_panel)
         profile_name.setObjectName("nativeProfileName")
         profile_name.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         profile_layout.addWidget(profile_caption)
         profile_layout.addWidget(profile_name, 1)
+        profile_metrics = QLabel(profile_panel)
+        profile_metrics.setObjectName("nativeProfileMetrics")
+        profile_layout.addWidget(profile_metrics)
         layout.addWidget(profile_panel)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, dialog)
         splitter.setObjectName("nativeProfileSplitter")
         splitter.setChildrenCollapsible(False)
-        splitter.setHandleWidth(8)
-        detected_group = QGroupBox("Detected DLLs by MO2 mod", splitter)
+        splitter.setHandleWidth(7)
+        detected_group = QFrame(splitter)
         detected_group.setObjectName("detectedDllCard")
         detected_layout = QVBoxLayout(detected_group)
-        detected_layout.setContentsMargins(14, 12, 14, 12)
-        detected_layout.setSpacing(8)
+        detected_layout.setContentsMargins(12, 11, 12, 12)
+        detected_layout.setSpacing(7)
+        _add_circular_heading(
+            detected_layout,
+            detected_group,
+            _tr("Detected DLLs"),
+            "nativePanelTitle",
+            ":/MO/gui/mainwindow/files/library.svg",
+            "nativeDetectedIcon",
+            26,
+            "D",
+        )
         detected_note = QLabel(
-            "MO2's installed route index is used when available; older mods are "
-            "scanned in their native DLL folders. Detection is limited to enabled "
-            "mods and checked against MO2's virtual file system."
+            _tr("Found in enabled MO2 mods and verified against the virtual file system."),
+            detected_group,
         )
         detected_note.setObjectName("nativeSectionNote")
         detected_note.setWordWrap(True)
@@ -266,36 +334,51 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         detected_status.setObjectName("detectedDllStatus")
         detected_status.setWordWrap(True)
         detected_layout.addWidget(detected_status)
-        add_button = QPushButton("Add selected DLLs to profile", detected_group)
+        add_button = QPushButton(_tr("Add selected DLLs"), detected_group)
         add_button.setObjectName("addDetectedDllsButton")
+        add_button.setEnabled(False)
+        add_button.setToolTip(
+            _tr("Add the selected DLL routes to this profile. Existing entries are skipped.")
+        )
         detected_layout.addWidget(add_button)
 
-        profile_group = QGroupBox("Profile load order and initializers", splitter)
+        profile_group = QFrame(splitter)
         profile_group.setObjectName("nativeLoadOrderCard")
         profile_layout = QVBoxLayout(profile_group)
-        profile_layout.setContentsMargins(14, 12, 14, 12)
-        profile_layout.setSpacing(8)
+        profile_layout.setContentsMargins(12, 11, 12, 12)
+        profile_layout.setSpacing(7)
+        _add_circular_heading(
+            profile_layout,
+            profile_group,
+            _tr("Profile load order"),
+            "nativePanelTitle",
+            ":/MO/gui/mainwindow/executables.svg",
+            "nativeLoadOrderIcon",
+            26,
+            "↕",
+        )
         profile_note = QLabel(
-            "Entries load in the order shown. An initializer is optional and must "
-            "be a named export from that DLL. This does not enable or disable the mod."
+            _tr("Enabled entries load in the order shown. Initializers are optional "
+            "named exports and do not change whether a mod is enabled."),
+            profile_group,
         )
         profile_note.setObjectName("nativeSectionNote")
         profile_note.setWordWrap(True)
         profile_layout.addWidget(profile_note)
         if candidates:
             empty_table_message = (
-                "No DLLs are assigned to this profile yet.\n"
-                "Select detected DLLs on the left and add them to set their load order."
+                _tr("No DLLs are assigned to this profile yet.\n"
+                "Select detected DLLs on the left and add them to set their load order.")
             )
         else:
             empty_table_message = (
-                "No DLLs are assigned to this profile yet.\n"
-                "Detected DLLs from enabled mods will appear in the left panel."
+                _tr("No DLLs are assigned to this profile yet.\n"
+                "Detected DLLs from enabled mods will appear in the left panel.")
             )
         table = NativeProfileTable(empty_table_message, profile_group)
         table.setObjectName("nativeLoadOrderTable")
         table.setHorizontalHeaderLabels(
-            ["Enabled", "MO2 mod", "Installed DLL route", "Initializer export"]
+            [_tr("Enabled"), _tr("MO2 mod"), _tr("Installed DLL route"), _tr("Initializer export")]
         )
         table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -323,16 +406,25 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         row_buttons = QHBoxLayout()
         row_buttons.setSpacing(7)
-        remove_button = QPushButton("Remove entry", profile_group)
+        remove_button = QPushButton(_tr("Remove entry"), profile_group)
         remove_button.setObjectName("removeNativeEntryButton")
-        up_button = QPushButton("Move up", profile_group)
+        remove_button.setEnabled(False)
+        remove_button.setToolTip(
+            _tr("Remove the selected route from this profile. The MO2 mod stays installed.")
+        )
+        up_button = QPushButton(_tr("Move up"), profile_group)
         up_button.setObjectName("moveNativeEntryUpButton")
-        down_button = QPushButton("Move down", profile_group)
+        up_button.setEnabled(False)
+        down_button = QPushButton(_tr("Move down"), profile_group)
         down_button.setObjectName("moveNativeEntryDownButton")
-        exports_button = QPushButton("Detect exports…", profile_group)
+        down_button.setEnabled(False)
+        exports_button = QPushButton(_tr("Detect exports…"), profile_group)
         exports_button.setObjectName("detectNativeExportsButton")
+        exports_button.setEnabled(False)
+        exports_button.setToolTip(
+            _tr("Read the selected DLL's named exports and choose an initializer.")
+        )
         row_buttons.addWidget(remove_button)
-        row_buttons.addStretch(1)
         row_buttons.addWidget(up_button)
         row_buttons.addWidget(down_button)
         row_buttons.addStretch(1)
@@ -342,8 +434,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         splitter.addWidget(detected_group)
         splitter.addWidget(profile_group)
         splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 2)
-        splitter.setSizes([350, 690])
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([370, 680])
         layout.addWidget(splitter, 1)
 
         footer_panel = QFrame(dialog)
@@ -351,8 +443,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         footer_layout = QHBoxLayout(footer_panel)
         footer_layout.setContentsMargins(12, 7, 12, 7)
         footer = QLabel(
-            "Entries are saved in this profile's eldenring_mo2_startup.ini. "
-            "Startup, performance, and cleanup settings in that file are preserved.",
+            _tr("Entries are saved in this profile's eldenring_mo2_startup.ini. "
+            "Startup, performance, and cleanup settings in that file are preserved."),
             footer_panel,
         )
         footer.setObjectName("nativeFooterNote")
@@ -365,34 +457,81 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             parent=dialog,
         )
         buttons.setObjectName("nativeDialogButtons")
+        save_button = buttons.button(QDialogButtonBox.StandardButton.Save)
+        cancel_button = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        if save_button is not None:
+            save_button.setObjectName("nativeSaveButton")
+            save_button.setDefault(True)
+        if cancel_button is not None:
+            cancel_button.setObjectName("nativeCancelButton")
         layout.addWidget(buttons)
 
         self._populate_detected_tree(detected_tree, candidates)
         mod_count = len({str(candidate["mod"]).casefold() for candidate in candidates})
         detected_status.setText(
-            f"{len(candidates)} winning native DLL route(s) across "
-            f"{mod_count} MO2 mod(s). Select a mod group or individual DLLs."
+            _tr("{routes} routes · {mods} enabled mod(s).").format(routes=len(candidates), mods=mod_count)
             if candidates
-            else "No native DLL routes were detected in enabled mods."
+            else _tr("No native DLL routes found in enabled mods.")
         )
         self._populate_profile_table(table, entries)
-        add_button.clicked.connect(
-            lambda _checked=False: self._add_selected_candidates(
-                detected_tree, table
+
+        def update_controls(*_args) -> None:
+            selected_row = table.currentRow()
+            valid_row = 0 <= selected_row < table.rowCount()
+            remove_button.setEnabled(valid_row)
+            up_button.setEnabled(valid_row and selected_row > 0)
+            down_button.setEnabled(
+                valid_row and selected_row < table.rowCount() - 1
             )
-        )
-        remove_button.clicked.connect(
-            lambda _checked=False: self._remove_selected_entry(table)
-        )
-        up_button.clicked.connect(
-            lambda _checked=False: self._move_selected_entry(table, -1)
-        )
-        down_button.clicked.connect(
-            lambda _checked=False: self._move_selected_entry(table, 1)
-        )
-        exports_button.clicked.connect(
-            lambda _checked=False: self._choose_initializer_export(table)
-        )
+            exports_button.setEnabled(valid_row)
+            add_button.setEnabled(bool(detected_tree.selectedItems()))
+
+        def update_profile_metrics(*_args) -> None:
+            current_entries = self._entries_from_table(table)
+            enabled_count = sum(entry["enabled"] for entry in current_entries)
+            initializer_count = sum(bool(entry["initializer"]) for entry in current_entries)
+            profile_metrics.setText(
+                _tr("{configured} configured · {enabled} enabled · {initializers} initializer(s)").format(
+                    configured=len(current_entries),
+                    enabled=enabled_count,
+                    initializers=initializer_count,
+                )
+            )
+
+        def add_selected(_checked=False) -> None:
+            self._add_selected_candidates(detected_tree, table)
+            update_controls()
+            update_profile_metrics()
+
+        def remove_selected(_checked=False) -> None:
+            self._remove_selected_entry(table)
+            update_controls()
+            update_profile_metrics()
+
+        def move_selected_up(_checked=False) -> None:
+            self._move_selected_entry(table, -1)
+            update_controls()
+
+        def move_selected_down(_checked=False) -> None:
+            self._move_selected_entry(table, 1)
+            update_controls()
+
+        def choose_exports(_checked=False) -> None:
+            self._choose_initializer_export(table)
+            update_profile_metrics()
+
+        add_button.clicked.connect(add_selected)
+        remove_button.clicked.connect(remove_selected)
+        up_button.clicked.connect(move_selected_up)
+        down_button.clicked.connect(move_selected_down)
+        exports_button.clicked.connect(choose_exports)
+        detected_tree.itemSelectionChanged.connect(update_controls)
+        table.itemSelectionChanged.connect(update_controls)
+        table.itemChanged.connect(update_profile_metrics)
+        table.model().rowsInserted.connect(update_profile_metrics)
+        table.model().rowsRemoved.connect(update_profile_metrics)
+        update_controls()
+        update_profile_metrics()
         buttons.accepted.connect(
             lambda: self._save_and_close(dialog, profile_root, table)
         )
@@ -400,6 +539,54 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         layout.activate()
         dialog.ensurePolished()
+        dialog.exec()
+
+    @staticmethod
+    def _show_notice(parent, title: str, message: str, kind: str = "info") -> None:
+        dialog = QDialog(parent)
+        dialog.setObjectName("NativeProfileNoticeDialog")
+        dialog.setWindowTitle(title)
+        dialog.setMinimumWidth(440)
+        dialog.setMaximumWidth(640)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(12)
+
+        header = QFrame(dialog)
+        header.setObjectName("nativeNoticeHeader")
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(12, 10, 12, 10)
+        header_layout.setSpacing(10)
+        icon_text = {"info": "i", "warning": "!", "error": "×", "success": "✓"}.get(
+            kind, "i"
+        )
+        icon = QLabel(icon_text, header)
+        icon.setObjectName("nativeNoticeIcon")
+        icon.setProperty("noticeKind", kind)
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setFixedSize(28, 28)
+        heading = QLabel(title, header)
+        heading.setObjectName("nativeNoticeTitle")
+        heading.setWordWrap(True)
+        header_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
+        header_layout.addWidget(heading, 1)
+        layout.addWidget(header)
+
+        body = QLabel(message, dialog)
+        body.setObjectName("nativeNoticeMessage")
+        body.setWordWrap(True)
+        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(body)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, parent=dialog)
+        buttons.setObjectName("nativeNoticeButtons")
+        ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        if ok_button is not None:
+            ok_button.setObjectName("nativeNoticeOkButton")
+            ok_button.setDefault(True)
+        buttons.accepted.connect(dialog.accept)
+        layout.addWidget(buttons)
+        dialog.adjustSize()
         dialog.exec()
 
     def _read_profile_entries(self, config_path: Path) -> list[dict]:
@@ -421,10 +608,10 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 or not raw_index.isdecimal()
                 or prefix not in supported
             ):
-                raise ValueError(f"Unsupported native profile setting '{key}'.")
+                raise ValueError(_tr("Unsupported native profile setting '{key}'.").format(key=key))
             index = int(raw_index)
             if index <= 0:
-                raise ValueError("Native DLL entry numbers must be greater than zero.")
+                raise ValueError(_tr("Native DLL entry numbers must be greater than zero."))
             entry = entries_by_index.setdefault(index, {})
             if prefix == "native":
                 entry["path"] = value.strip()
@@ -434,7 +621,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 entry["initializer"] = value.strip()
             else:
                 if value.strip().casefold() not in {"true", "false"}:
-                    raise ValueError(f"'{key}' must be true or false.")
+                    raise ValueError(_tr("'{key}' must be true or false.").format(key=key))
                 entry[prefix] = value.strip().casefold() == "true"
 
         profile_entries = []
@@ -444,7 +631,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             route = entry.get("path", "")
             if not mod_name or not route:
                 raise ValueError(
-                    f"Native DLL entry {index} needs both a mod and a DLL path."
+                    _tr("Native DLL entry {index} needs both a mod and a DLL path.").format(index=index)
                 )
             profile_entries.append(
                 {
@@ -624,12 +811,21 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         for key, group in groups.items():
             count = group_counts[key]
-            suffix = "DLL" if count == 1 else "DLLs"
-            group.setText(0, f"{group_names[key]} ({count} {suffix})")
+            group.setText(
+                0,
+                (_tr("{group} ({count} DLL)") if count == 1 else _tr("{group} ({count} DLLs)")).format(
+                    group=group_names[key], count=count
+                ),
+            )
             group.setToolTip(
                 0,
-                f"{group_names[key]} contributes {count} detected native {suffix}. "
-                "Select this group and choose Add selected DLLs to add all of them.",
+                (
+                    _tr("{group} contributes {count} detected native DLL. "
+                        "Select this group and choose Add selected DLLs to add all of them.")
+                    if count == 1
+                    else _tr("{group} contributes {count} detected native DLLs. "
+                             "Select this group and choose Add selected DLLs to add all of them.")
+                ).format(group=group_names[key], count=count),
             )
             group.setExpanded(True)
 
@@ -754,53 +950,118 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
     def _choose_initializer_export(self, table: QTableWidget) -> None:
         row = table.currentRow()
+        parent = table.window()
         if row < 0:
-            QMessageBox.information(
-                self.__parent_widget,
-                "Select a DLL",
-                "Select a profile entry before detecting exported functions.",
+            self._show_notice(
+                parent,
+                _tr("Select a DLL"),
+                _tr("Select a profile entry before detecting exported functions."),
+                "info",
             )
             return
         entries = self._entries_from_table(table)
         entry = entries[row]
         physical_path = self._physical_dll_path(entry["mod"], entry["path"])
         if physical_path is None:
-            QMessageBox.warning(
-                self.__parent_widget,
-                "DLL not found",
-                "MO2 could not resolve this DLL inside its installed mod folder.",
+            self._show_notice(
+                parent,
+                _tr("DLL not found"),
+                _tr("MO2 could not resolve this DLL inside its installed mod folder."),
+                "warning",
             )
             return
         try:
             exports = self._read_pe_exports(physical_path)
         except (OSError, ValueError, struct.error) as error:
-            QMessageBox.warning(
-                self.__parent_widget,
-                "Could not read DLL exports",
-                f"The DLL export table could not be read. The file was not loaded.\n\n{error}",
+            self._show_notice(
+                parent,
+                _tr("Could not read DLL exports"),
+                _tr("The DLL export table could not be read. The file was not loaded.\n\n{error}").format(error=error),
+                "warning",
             )
             return
         if not exports:
-            QMessageBox.information(
-                self.__parent_widget,
-                "No initializer exports detected",
-                "No named functions suitable for an initializer were found in this DLL.",
+            self._show_notice(
+                parent,
+                _tr("No initializer exports detected"),
+                _tr("No named functions suitable for an initializer were found in this DLL."),
+                "info",
             )
             return
         current = entry.get("initializer", "")
         choices = list(exports)
         if current and current not in choices:
             choices.insert(0, current)
-        selected, accepted = QInputDialog.getItem(
-            self.__parent_widget,
-            "Choose an exported initializer",
-            "This function will be called by the native bridge when Elden Ring starts:",
-            choices,
-            max(0, choices.index(current)) if current in choices else 0,
-            False,
+
+        dialog = QDialog(parent)
+        dialog.setObjectName("NativeProfileExportDialog")
+        dialog.setWindowTitle(_tr("Choose an initializer export"))
+        dialog.setMinimumWidth(540)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(11)
+
+        header = QFrame(dialog)
+        header.setObjectName("nativeExportHeader")
+        header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(13, 10, 13, 10)
+        header_layout.setSpacing(3)
+        _add_circular_heading(
+            header_layout,
+            header,
+            _tr("Choose an initializer export"),
+            "nativeExportTitle",
+            ":/MO/gui/mainwindow/files/executable.svg",
+            "nativeExportIcon",
+            30,
+            "E",
         )
-        if accepted:
-            entries[row]["initializer"] = selected.strip()
+        description = QLabel(
+            _tr("The selected function will be called by the native bridge when "
+            "Elden Ring starts. The DLL itself is never loaded by this selector."),
+            header,
+        )
+        description.setObjectName("nativeExportDescription")
+        description.setWordWrap(True)
+        header_layout.addWidget(description)
+        layout.addWidget(header)
+
+        route = QLabel(f"{entry['mod']}  ·  {entry['path']}", dialog)
+        route.setObjectName("nativeExportRoute")
+        route.setWordWrap(True)
+        route.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(route)
+
+        export_label = QLabel(_tr("Available named exports"), dialog)
+        export_label.setObjectName("nativeExportCaption")
+        layout.addWidget(export_label)
+        export_combo = QComboBox(dialog)
+        export_combo.setObjectName("nativeExportCombo")
+        export_combo.addItems(choices)
+        if current in choices:
+            export_combo.setCurrentIndex(choices.index(current))
+        layout.addWidget(export_combo)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel,
+            parent=dialog,
+        )
+        buttons.setObjectName("nativeExportButtons")
+        use_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        cancel_button = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        if use_button is not None:
+            use_button.setText(_tr("Use export"))
+            use_button.setObjectName("nativeExportUseButton")
+            use_button.setDefault(True)
+        if cancel_button is not None:
+            cancel_button.setObjectName("nativeExportCancelButton")
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            entries[row]["initializer"] = export_combo.currentText().strip()
             self._populate_profile_table(table, entries)
             table.selectRow(row)
 
@@ -834,39 +1095,39 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         with path.open("rb") as stream:
             def read_at(offset: int, size: int) -> bytes:
                 if offset < 0 or size < 0 or size > 4 * 1024 * 1024:
-                    raise ValueError("The DLL export table contains an invalid size or offset.")
+                    raise ValueError(_tr("The DLL export table contains an invalid size or offset."))
                 if offset + size > file_size:
-                    raise ValueError("The DLL export table points outside the file.")
+                    raise ValueError(_tr("The DLL export table points outside the file."))
                 stream.seek(offset)
                 data = stream.read(size)
                 if len(data) != size:
-                    raise ValueError("The DLL ended while reading its export table.")
+                    raise ValueError(_tr("The DLL ended while reading its export table."))
                 return data
 
             dos_header = read_at(0, 64)
             if dos_header[:2] != b"MZ":
-                raise ValueError("This file does not have a Windows PE header.")
+                raise ValueError(_tr("This file does not have a Windows PE header."))
             pe_offset = struct.unpack_from("<I", dos_header, 0x3C)[0]
             coff_header = read_at(pe_offset, 24)
             if coff_header[:4] != b"PE\0\0":
-                raise ValueError("This file does not have a valid PE signature.")
+                raise ValueError(_tr("This file does not have a valid PE signature."))
             section_count = struct.unpack_from("<H", coff_header, 6)[0]
             optional_size = struct.unpack_from("<H", coff_header, 20)[0]
             if not 0 < section_count <= 96:
-                raise ValueError("The DLL has an unsupported PE section count.")
+                raise ValueError(_tr("The DLL has an unsupported PE section count."))
             optional_offset = pe_offset + 24
             optional_header = read_at(optional_offset, optional_size)
             if len(optional_header) < 64:
-                raise ValueError("The DLL optional header is incomplete.")
+                raise ValueError(_tr("The DLL optional header is incomplete."))
             magic = struct.unpack_from("<H", optional_header, 0)[0]
             if magic == 0x10B:
                 directory_offset = 96
             elif magic == 0x20B:
                 directory_offset = 112
             else:
-                raise ValueError("The DLL uses an unsupported PE optional-header format.")
+                raise ValueError(_tr("The DLL uses an unsupported PE optional-header format."))
             if len(optional_header) < directory_offset + 8:
-                raise ValueError("The DLL does not include an export data directory.")
+                raise ValueError(_tr("The DLL does not include an export data directory."))
             export_rva, export_size = struct.unpack_from(
                 "<II", optional_header, directory_offset
             )
@@ -895,7 +1156,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                         offset = raw_offset + delta
                         read_at(offset, size)
                         return offset
-                raise ValueError("The DLL export directory references an unmapped PE address.")
+                raise ValueError(_tr("The DLL export directory references an unmapped PE address."))
 
             export_offset = rva_to_offset(export_rva, 40)
             export_directory = read_at(export_offset, 40)
@@ -904,7 +1165,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             names_rva = struct.unpack_from("<I", export_directory, 32)[0]
             ordinals_rva = struct.unpack_from("<I", export_directory, 36)[0]
             if number_of_names > 16384:
-                raise ValueError("The DLL export-name count is outside the supported range.")
+                raise ValueError(_tr("The DLL export-name count is outside the supported range."))
             if not number_of_names or not names_rva or not ordinals_rva:
                 return []
             names_offset = rva_to_offset(names_rva, number_of_names * 4)
@@ -936,27 +1197,30 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         seen = set()
         for index, entry in enumerate(entries, start=1):
             if not entry["mod"] or not entry["path"]:
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Incomplete native DLL entry",
-                    f"Entry {index} needs both a mod name and a DLL path.",
+                    _tr("Incomplete native DLL entry"),
+                    _tr("Entry {index} needs both a mod name and a DLL path.").format(index=index),
+                    "warning",
                 )
                 return
             route = self._normalize_native_route(entry["path"])
             if route is None:
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Invalid DLL path",
-                    f"'{entry['path']}' is not a supported relative Elden Ring DLL path.",
+                    _tr("Invalid DLL path"),
+                    _tr("'{path}' is not a supported relative Elden Ring DLL path.").format(path=entry["path"]),
+                    "warning",
                 )
                 return
             entry["path"] = route
             key = (entry["mod"].casefold(), route.casefold())
             if key in seen:
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Duplicate DLL entry",
-                    f"'{entry['path']}' from '{entry['mod']}' appears more than once.",
+                    _tr("Duplicate DLL entry"),
+                    _tr("'{path}' from '{mod}' appears more than once.").format(path=entry["path"], mod=entry["mod"]),
+                    "warning",
                 )
                 return
             seen.add(key)
@@ -964,10 +1228,11 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             if initializer and (
                 not initializer.isascii() or not initializer.isidentifier()
             ):
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Invalid initializer name",
-                    f"'{initializer}' is not a valid exported function name.",
+                    _tr("Invalid initializer name"),
+                    _tr("'{name}' is not a valid exported function name.").format(name=initializer),
+                    "warning",
                 )
                 return
             if entry["enabled"] and initializer:
@@ -976,18 +1241,22 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                     try:
                         exports = self._read_pe_exports(physical_path)
                     except (OSError, ValueError, struct.error) as error:
-                        QMessageBox.warning(
+                        self._show_notice(
                             dialog,
-                            "Could not verify initializer export",
-                            f"The export table for '{route}' could not be read.\n\n{error}",
+                            _tr("Could not verify initializer export"),
+                            _tr("The export table for '{route}' could not be read.\n\n{error}").format(route=route, error=error),
+                            "warning",
                         )
                         return
                     if initializer not in exports:
-                        QMessageBox.warning(
+                        self._show_notice(
                             dialog,
-                            "Initializer export not found",
-                            f"'{initializer}' is not a named export of '{route}'. "
-                            "Choose one of the detected exports or clear the initializer.",
+                            _tr("Initializer export not found"),
+                            _tr("'{name}' is not a named export of '{route}'. "
+                                "Choose one of the detected exports or clear the initializer.").format(
+                                name=initializer, route=route
+                            ),
+                            "warning",
                         )
                         return
 
@@ -1039,18 +1308,23 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 if os.path.exists(temporary_name):
                     os.unlink(temporary_name)
         except (OSError, UnicodeError, configparser.Error, ValueError) as error:
-            QMessageBox.critical(
+            self._show_notice(
                 dialog,
-                "Could not save native DLL profile",
-                f"MO2 could not save this profile's native DLL settings.\n\n{error}",
+                _tr("Could not save native DLL profile"),
+                _tr("MO2 could not save this profile's native DLL settings.\n\n{error}").format(error=error),
+                "error",
             )
             return
 
-        QMessageBox.information(
+        self._show_notice(
             dialog,
-            "Native DLL profile saved",
-            f"Saved {len(entries)} ordered DLL entr{'y' if len(entries) == 1 else 'ies'} "
-            f"for the MO2 profile file '{self.ConfigFilename}'.",
+            _tr("Native DLL profile saved"),
+            (
+                _tr("Saved {count} ordered DLL entry for the MO2 profile file '{file}'.")
+                if len(entries) == 1
+                else _tr("Saved {count} ordered DLL entries for the MO2 profile file '{file}'.")
+            ).format(count=len(entries), file=self.ConfigFilename),
+            "success",
         )
         dialog.accept()
 

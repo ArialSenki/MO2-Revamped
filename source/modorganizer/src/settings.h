@@ -504,7 +504,7 @@ public:
   bool endorsementIntegration() const;
   void setEndorsementIntegration(bool b) const;
 
-  // returns the endorsement state of MO itself
+  // returns the endorsement state of MO2 Revamped
   //
   EndorsementState endorsementState() const;
   void setEndorsementState(EndorsementState s);
@@ -806,11 +806,6 @@ public:
   QStringList skipDirectories() const;
   void setSkipDirectories(const QStringList& s);
 
-  // ? looks obsolete, only used by dead code
-  //
-  unsigned int motdHash() const;
-  void setMotdHash(unsigned int hash);
-
   // whether archives should be parsed to show conflicts and contents
   //
   bool archiveParsing() const;
@@ -927,14 +922,11 @@ private:
   DiagnosticsSettings m_Diagnostics;
 };
 
-// manages global settings in the registry
+// manages Revamped-wide settings in an installation-specific INI file
 //
 class GlobalSettings
 {
 public:
-  // migrates the old settings from the Tannin key to the new one
-  static void updateRegistryKey();
-
   static QString currentInstance();
   static void setCurrentInstance(const QString& s);
   static std::optional<QString> currentInstanceForInstallation(
@@ -944,6 +936,11 @@ public:
 
   static bool hideCreateInstanceIntro();
   static void setHideCreateInstanceIntro(bool b);
+
+  // last interface language chosen in any instance; used for the dialogs shown
+  // before an instance is loaded, empty if none was chosen yet
+  static QString language();
+  static void setLanguage(const QString& language);
 
   static bool hideTutorialQuestion();
   static void setHideTutorialQuestion(bool b);

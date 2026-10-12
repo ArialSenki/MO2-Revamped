@@ -1,19 +1,59 @@
 #include "settingsdialogtheme.h"
 #include "categoriesdialog.h"
+#include "circularuihelpers.h"
 #include "colortable.h"
 #include "modlist.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
+#include <QBoxLayout>
 #include <QCoreApplication>
 #include <QDir>
+#include <QHBoxLayout>
+#include <QLayoutItem>
 #include <QStringList>
 #include <questionboxmemory.h>
 #include <utility.h>
 
 using namespace MOBase;
 
+namespace
+{
+
+void stackThemeStyleControls(QGroupBox* group)
+{
+  auto* layout = group ? qobject_cast<QBoxLayout*>(group->layout()) : nullptr;
+  if (!layout || layout->direction() != QBoxLayout::LeftToRight) {
+    return;
+  }
+
+  auto* controlsRow = new QHBoxLayout;
+  controlsRow->setContentsMargins(0, 0, 0, 0);
+  controlsRow->setSpacing(layout->spacing());
+  while (QLayoutItem* item = layout->takeAt(0)) {
+    controlsRow->addItem(item);
+  }
+
+  layout->setDirection(QBoxLayout::TopToBottom);
+  layout->addLayout(controlsRow);
+}
+
+}  // namespace
+
 ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab(s, d)
 {
+  CircularUi::addIconToHeading(
+      ui->themePageTitle, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("themePageIcon"), 36, QStringLiteral("T"));
+  stackThemeStyleControls(ui->themeStyleGroup);
+  CircularUi::addGroupHeading(
+      ui->themeStyleGroup, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("themeStyleIcon"), 26,
+      QStringLiteral("themeSectionTitle"), QStringLiteral("I"));
+  CircularUi::addGroupHeading(
+      ui->themeColorsGroup, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("themeColorsIcon"), 26,
+      QStringLiteral("themeSectionTitle"), QStringLiteral("C"));
+
   // style
   addStyles();
   selectStyle();
@@ -52,7 +92,8 @@ void ThemeSettingsTab::addStyles()
       QCoreApplication::applicationDirPath() + "/" +
       QString::fromStdWString(AppConfig::stylesheetsPath()));
   const QStringList allowedStyles = {QStringLiteral("Light.qss"),
-                                     QStringLiteral("dark.qss")};
+                                     QStringLiteral("dark.qss"),
+                                     QStringLiteral("dark-black.qss")};
 
   for (const QString& fileName : allowedStyles) {
     if (!styleDirectory.exists(fileName)) {
@@ -60,8 +101,9 @@ void ThemeSettingsTab::addStyles()
     }
 
     const QString displayName =
-        fileName == QStringLiteral("Light.qss") ? QStringLiteral("Light")
-                                                 : QStringLiteral("Dark");
+        fileName == QStringLiteral("Light.qss") ? QObject::tr("Light")
+        : fileName == QStringLiteral("dark-black.qss") ? QObject::tr("Dark Black")
+                                                       : QObject::tr("Dark Blue");
     ui->styleBox->addItem(displayName, fileName);
   }
 }

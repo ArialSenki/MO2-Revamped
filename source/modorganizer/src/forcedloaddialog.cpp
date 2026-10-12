@@ -3,15 +3,60 @@
 
 #include "forcedloaddialogwidget.h"
 
+#include <QHBoxLayout>
+#include <QGroupBox>
+#include <QIcon>
 #include <QComboBox>
 #include <QLabel>
+#include <QPixmap>
+#include <QVBoxLayout>
 
 using namespace MOBase;
+
+namespace
+{
+void addRulesGroupHeading(QGroupBox* group)
+{
+  if (group == nullptr) {
+    return;
+  }
+
+  auto* layout = qobject_cast<QVBoxLayout*>(group->layout());
+  if (layout == nullptr) {
+    return;
+  }
+
+  const QString title = group->title();
+  group->setTitle(QString());
+
+  auto* row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(8);
+
+  auto* icon = new QLabel(group);
+  icon->setObjectName(QStringLiteral("rulesSectionIcon"));
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(26, 26);
+  const QPixmap pixmap = QIcon(QStringLiteral(":/MO/gui/mainwindow/files/library.svg"))
+                             .pixmap(18, 18);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+
+  auto* heading = new QLabel(title, group);
+  heading->setObjectName(QStringLiteral("rulesSectionTitle"));
+  row->addWidget(icon, 0, Qt::AlignVCenter);
+  row->addWidget(heading, 0, Qt::AlignVCenter);
+  row->addStretch(1);
+  layout->insertLayout(0, row);
+}
+}  // namespace
 
 ForcedLoadDialog::ForcedLoadDialog(const IPluginGame* game, QWidget* parent)
     : QDialog(parent), ui(new Ui::ForcedLoadDialog), m_GamePlugin(game)
 {
   ui->setupUi(this);
+  addRulesGroupHeading(ui->rulesGroup);
   resize(860, 520);
 }
 

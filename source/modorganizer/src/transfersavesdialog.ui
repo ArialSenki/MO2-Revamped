@@ -21,16 +21,16 @@
    </property>
    <layout class="QVBoxLayout" name="transferSavesMainLayout">
     <property name="leftMargin">
-     <number>18</number>
+     <number>16</number>
     </property>
     <property name="topMargin">
      <number>16</number>
     </property>
     <property name="rightMargin">
-     <number>18</number>
+     <number>16</number>
     </property>
     <property name="bottomMargin">
-     <number>16</number>
+     <number>14</number>
     </property>
     <property name="spacing">
      <number>12</number>

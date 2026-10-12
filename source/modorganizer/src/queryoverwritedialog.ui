@@ -15,13 +15,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0">
    <property name="spacing">
-    <number>11</number>
+    <number>12</number>
    </property>
    <property name="leftMargin">
     <number>16</number>
    </property>
    <property name="topMargin">
-    <number>14</number>
+    <number>16</number>
    </property>
    <property name="rightMargin">
     <number>16</number>

@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define FILEDIALOGMEMORY_H
 
 #include <QFileDialog>
+#include <QSize>
 #include <QString>
 #include <map>
 
@@ -39,7 +40,9 @@ public:
                                  const QString& dir           = QString(),
                                  const QString& filter        = QString(),
                                  QString* selectedFilter      = 0,
-                                 QFileDialog::Options options = QFileDialog::Option(0));
+                                 QFileDialog::Options options = QFileDialog::Option(0),
+                                 QSize dialogSize = QSize(),
+                                 bool preferRecentDirectory = false);
 
   static QString
   getExistingDirectory(const QString& dirID, QWidget* parent = 0,

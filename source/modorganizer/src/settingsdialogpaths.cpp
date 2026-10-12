@@ -1,11 +1,118 @@
 #include "settingsdialogpaths.h"
+#include "circularuihelpers.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
 #include <iplugingame.h>
 
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QIcon>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QSize>
+#include <QVBoxLayout>
+
+namespace
+{
+
+void addPathRow(QGridLayout* layout, int row, QLabel* label, QLineEdit* edit,
+                QPushButton* browseButton)
+{
+  label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  label->setMinimumWidth(128);
+  browseButton->setText(QObject::tr("Browse"));
+  browseButton->setMinimumWidth(108);
+  browseButton->setMinimumHeight(34);
+  browseButton->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
+  browseButton->setIconSize(QSize(16, 16));
+
+  layout->addWidget(label, row, 0);
+  layout->addWidget(edit, row, 1);
+  layout->addWidget(browseButton, row, 2);
+}
+
+}  // namespace
+
 PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
     : SettingsTab(s, d), m_gameDir(settings().game().plugin()->gameDirectory())
 {
+  MOBase::CircularUi::addIconToHeading(
+      ui->pathsPageTitle, ":/MO/gui/mainwindow/files/folder.svg",
+      QStringLiteral("pathsPageIcon"), 36, QStringLiteral("P"));
+
+  // Reuse the existing path controls and signal handlers, but group them into
+  // the same compact cards used by the other redesigned Settings pages.
+  QVBoxLayout* pageLayout = qobject_cast<QVBoxLayout*>(ui->pathsTab->layout());
+  if (pageLayout) {
+    pageLayout->setContentsMargins(8, 8, 8, 8);
+    pageLayout->setSpacing(10);
+    pageLayout->removeItem(ui->gridLayout_2);
+    delete ui->gridLayout_2;
+    pageLayout->removeWidget(ui->label_23);
+
+    const int spacerIndex = pageLayout->indexOf(ui->verticalSpacer_6);
+    if (spacerIndex >= 0) {
+      delete pageLayout->takeAt(spacerIndex);
+    }
+
+    auto* storageGroup = new QGroupBox(QObject::tr("Instance storage"),
+                                       ui->pathsTab);
+    storageGroup->setObjectName(QStringLiteral("pathsStorageGroup"));
+    auto* storageLayout = new QGridLayout(storageGroup);
+    storageLayout->setContentsMargins(10, 10, 10, 10);
+    storageLayout->setHorizontalSpacing(12);
+    storageLayout->setVerticalSpacing(8);
+
+    addPathRow(storageLayout, 0, ui->label_25, ui->baseDirEdit,
+               ui->browseBaseDirBtn);
+    addPathRow(storageLayout, 1, ui->label_7, ui->downloadDirEdit,
+               ui->browseDownloadDirBtn);
+    addPathRow(storageLayout, 2, ui->label_8, ui->modDirEdit,
+               ui->browseModDirBtn);
+    addPathRow(storageLayout, 3, ui->label_9, ui->cacheDirEdit,
+               ui->browseCacheDirBtn);
+    addPathRow(storageLayout, 4, ui->label_22, ui->profilesDirEdit,
+               ui->browseProfilesDirBtn);
+    addPathRow(storageLayout, 5, ui->label_24, ui->overwriteDirEdit,
+               ui->browseOverwriteDirBtn);
+    ui->label_26->setObjectName(QStringLiteral("pathsBaseDirHint"));
+    ui->label_26->setWordWrap(true);
+    ui->label_26->setContentsMargins(4, 0, 4, 0);
+    storageLayout->addWidget(ui->label_26, 6, 0, 1, 3);
+    storageLayout->setColumnStretch(1, 1);
+    MOBase::CircularUi::addGroupHeading(
+        storageGroup, ":/MO/gui/mainwindow/files/folder.svg",
+        QStringLiteral("pathsStorageIcon"), 26,
+        QStringLiteral("pathsSectionTitle"), QStringLiteral("S"));
+
+    auto* gameGroup = new QGroupBox(QObject::tr("Managed game"), ui->pathsTab);
+    gameGroup->setObjectName(QStringLiteral("pathsGameGroup"));
+    auto* gameLayout = new QGridLayout(gameGroup);
+    gameLayout->setContentsMargins(10, 10, 10, 10);
+    gameLayout->setHorizontalSpacing(12);
+    gameLayout->setVerticalSpacing(8);
+    ui->label_29->setText(QObject::tr("Executable"));
+    addPathRow(gameLayout, 0, ui->label_29, ui->managedGameDirEdit,
+               ui->browseGameDirBtn);
+    ui->browseGameDirBtn->setIcon(
+        QIcon(QStringLiteral(":/MO/gui/mainwindow/files/executable.svg")));
+    gameLayout->setColumnStretch(1, 1);
+    MOBase::CircularUi::addGroupHeading(
+        gameGroup, ":/MO/gui/mainwindow/files/executable.svg",
+        QStringLiteral("pathsGameIcon"), 26,
+        QStringLiteral("pathsSectionTitle"), QStringLiteral("G"));
+
+    ui->label_23->setObjectName(QStringLiteral("pathsWritableHint"));
+    ui->label_23->setText(QObject::tr("All directories must be writable."));
+    ui->label_23->setContentsMargins(4, 0, 4, 0);
+
+    pageLayout->addWidget(storageGroup);
+    pageLayout->addWidget(gameGroup);
+    pageLayout->addWidget(ui->label_23);
+    pageLayout->addStretch(1);
+  }
+
   ui->baseDirEdit->setText(settings().paths().base());
 
   ui->managedGameDirEdit->setText(QDir::toNativeSeparators(

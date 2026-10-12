@@ -20,7 +20,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "util.h"
 #include "../env.h"
 #include "../mainwindow.h"
+#include "appconfig.h"
 #include "windows_error.h"
+#include <QApplication>
+#include <QRegularExpression>
+#include <QTranslator>
 #include <log.h>
 #include <usvfs.h>
 #include <usvfs_version.h>
@@ -400,6 +404,57 @@ bool ModOrganizerExiting()
 void ResetExitFlag()
 {
   g_exiting = false;
+}
+
+static QString g_restartExecutable;
+
+void SetRestartExecutable(const QString& path)
+{
+  g_restartExecutable = path;
+}
+
+QString RestartExecutable()
+{
+  return g_restartExecutable;
+}
+
+static std::vector<QTranslator*> g_translators;
+static QString g_language;
+
+void InstallLanguageTranslator(const QString& name)
+{
+  auto* translator     = new QTranslator(qApp);
+  const QString file   = name + "_" + g_language;
+  if (!translator->load(file, qApp->applicationDirPath() + "/translations")) {
+    // English needs no translation files
+    if (!g_language.contains(QRegularExpression("^(EN|en)([_-].*)?$"))) {
+      log::debug("localization file {} not found", file);
+    }
+  }
+
+  qApp->installTranslator(translator);
+  g_translators.push_back(translator);
+}
+
+void InstallLanguageTranslators(const QString& language)
+{
+  // Translators left from a previous language would still answer for strings
+  // the new language does not translate, so remove every one first.
+  for (QTranslator* translator : g_translators) {
+    qApp->removeTranslator(translator);
+    translator->deleteLater();
+  }
+  g_translators.clear();
+
+  g_language = language;
+  qApp->setProperty("mo2Language", language);
+
+  // Qt searches the most recently installed translator first, so the Revamped
+  // file can supply strings that MO2's own files do not translate.
+  InstallLanguageTranslator("qt");
+  InstallLanguageTranslator("qtbase");
+  InstallLanguageTranslator(QString::fromStdWString(AppConfig::translationPrefix()));
+  InstallLanguageTranslator("revamped");
 }
 
 bool isNxmLink(const QString& link)

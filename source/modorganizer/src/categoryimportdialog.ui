@@ -8,7 +8,7 @@
   <property name="windowTitle"><string>Import Nexus categories</string></property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin"><number>16</number></property>
-   <property name="topMargin"><number>14</number></property>
+   <property name="topMargin"><number>16</number></property>
    <property name="rightMargin"><number>16</number></property>
    <property name="bottomMargin"><number>14</number></property>
    <property name="spacing"><number>12</number></property>

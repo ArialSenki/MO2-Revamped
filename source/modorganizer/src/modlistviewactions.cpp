@@ -4,6 +4,7 @@
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QFileDialog>
 #include <QFont>
 #include <QFrame>
 #include <QGridLayout>
@@ -14,6 +15,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QStandardPaths>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -78,7 +80,7 @@ QString promptForModListName(QWidget* parent, const QString& windowTitle,
   dialog.setMinimumWidth(440);
 
   auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(22, 20, 22, 16);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(10);
 
   auto* title = new QLabel(heading, &dialog);
@@ -147,7 +149,7 @@ bool confirmBulkModToggle(QWidget* parent, const QString& windowTitle,
   dialog.setMinimumWidth(440);
 
   auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(22, 18, 22, 16);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(8);
 
   auto* title = new QLabel(heading, &dialog);
@@ -319,8 +321,10 @@ void ModListViewActions::installMod(const QString& archivePath,
       }
 
       path = FileDialogMemory::getOpenFileName(
-          "installMod", m_parent, tr("Choose Mod"), QString(),
-          tr("Mod Archive").append(QString(" (%1)").arg(extensions.join(" "))));
+          "installMod", m_parent, tr("Choose Mod"),
+          QStandardPaths::writableLocation(QStandardPaths::DownloadLocation),
+          tr("Mod Archive").append(QString(" (%1)").arg(extensions.join(" "))),
+          nullptr, QFileDialog::DontUseNativeDialog, QSize(900, 650), true);
     }
 
     if (path.isEmpty()) {
@@ -582,7 +586,7 @@ void ModListViewActions::exportModListCSV() const
   selection.resize(760, 560);
 
   auto* rootLayout = new QVBoxLayout(&selection);
-  rootLayout->setContentsMargins(22, 18, 22, 18);
+  rootLayout->setContentsMargins(16, 16, 16, 14);
   rootLayout->setSpacing(14);
 
   auto* header = new QWidget(&selection);

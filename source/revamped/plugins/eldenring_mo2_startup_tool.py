@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 
 import mobase
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QCoreApplication, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -16,7 +16,6 @@ from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFrame,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -26,6 +25,46 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+
+# MO2 installs translations/revamped_<language>.qm; the source text is English.
+_TR_CONTEXT = "EldenRingStartupOptions"
+
+
+def _tr(text: str) -> str:
+    return QCoreApplication.translate(_TR_CONTEXT, text)
+
+
+def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
+                        fallback: str = "•") -> QLabel:
+    icon = QLabel(parent)
+    icon.setObjectName(object_name)
+    icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    icon.setFixedSize(size, size)
+    pixmap = QIcon(icon_path).pixmap(max(12, size // 2), max(12, size // 2))
+    if pixmap.isNull():
+        icon.setText(fallback)
+    else:
+        icon.setPixmap(pixmap)
+    return icon
+
+
+def _add_circular_heading(layout, parent, text: str, title_object_name: str,
+                          icon_path: str, icon_object_name: str,
+                          size: int = 26, fallback: str = "•") -> QLabel:
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(8)
+    row.addWidget(
+        _make_circular_icon(parent, icon_object_name, icon_path, size, fallback),
+        0,
+        Qt.AlignmentFlag.AlignVCenter,
+    )
+    heading = QLabel(text, parent)
+    heading.setObjectName(title_object_name)
+    row.addWidget(heading, 1, Qt.AlignmentFlag.AlignVCenter)
+    layout.addLayout(row)
+    return heading
 
 
 class EldenRingMo2StartupTool(mobase.IPluginTool):
@@ -53,7 +92,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return "ArialSenki"
 
     def description(self) -> str:
-        return "Per-profile Elden Ring startup, cleanup, and performance options."
+        return _tr("Per-profile Elden Ring startup, cleanup, and performance options.")
 
     def version(self) -> mobase.VersionInfo:
         return mobase.VersionInfo(0, 5, 0, 64)
@@ -68,10 +107,10 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return True
 
     def displayName(self) -> str:
-        return "Startup Options"
+        return _tr("Startup Options")
 
     def tooltip(self) -> str:
-        return "Startup, cleanup, and performance options for the active Elden Ring profile."
+        return _tr("Startup, cleanup, and performance options for the active Elden Ring profile.")
 
     def icon(self) -> QIcon:
         return QIcon()
@@ -91,8 +130,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         if profile is None:
             QMessageBox.warning(
                 self.__parent_widget,
-                "No active Elden Ring profile",
-                "Select an Elden Ring profile in MO2 before changing startup options.",
+                _tr("No active Elden Ring profile"),
+                _tr("Select an Elden Ring profile in MO2 before changing startup options."),
             )
             return
 
@@ -115,6 +154,9 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 )
             black_startup_background = config.getboolean(
                 "Startup", "black_startup_background", fallback=False
+            )
+            skip_intro_logos = config.getboolean(
+                "Startup", "skip_intro_logos", fallback=False
             )
             exclude_cpu0 = config.getboolean(
                 "Performance", "exclude_cpu0_after_start", fallback=False
@@ -145,12 +187,13 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         except (OSError, UnicodeError, configparser.Error, ValueError) as error:
             QMessageBox.warning(
                 self.__parent_widget,
-                "Could not read profile options",
-                f"The profile settings file could not be read. Defaults will be shown.\n\n{error}",
+                _tr("Could not read profile options"),
+                _tr("The profile settings file could not be read. Defaults will be shown.\n\n{error}").format(error=error),
             )
             config = configparser.ConfigParser()
             start_minimized = False
             black_startup_background = False
+            skip_intro_logos = False
             exclude_cpu0 = False
             process_priority = 0
             bridge_log_history = 1
@@ -160,7 +203,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
 
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingStartupOptionsDialog")
-        dialog.setWindowTitle("Elden Ring startup options")
+        dialog.setWindowTitle(_tr("Elden Ring startup options"))
         screen = dialog.screen()
         available_geometry = (
             screen.availableGeometry() if screen is not None else None
@@ -172,7 +215,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         dialog.setMinimumWidth(min(760, preferred_dialog_width))
         dialog.setSizeGripEnabled(True)
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(20, 18, 20, 16)
+        layout.setContentsMargins(16, 16, 16, 14)
         layout.setSpacing(12)
 
         def compact_note(label: QLabel) -> None:
@@ -189,18 +232,25 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         header_panel.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
-        header_layout = QHBoxLayout(header_panel)
-        header_layout.setContentsMargins(14, 8, 14, 8)
-        header_layout.setSpacing(14)
-        header_title = QLabel("Elden Ring startup options", header_panel)
-        header_title.setObjectName("startupPageTitle")
+        header_layout = QVBoxLayout(header_panel)
+        header_layout.setContentsMargins(14, 10, 14, 10)
+        header_layout.setSpacing(3)
+        _add_circular_heading(
+            header_layout,
+            header_panel,
+            _tr("Elden Ring startup options"),
+            "startupPageTitle",
+            ":/MO/gui/mainwindow/executables.svg",
+            "startupHeaderIcon",
+            30,
+            "S",
+        )
         header_subtitle = QLabel(
-            "Configure launch behavior for the active MO2 profile.", header_panel
+            _tr("Configure launch behavior for the active MO2 profile."), header_panel
         )
         header_subtitle.setObjectName("startupPageSubtitle")
         header_subtitle.setWordWrap(True)
-        header_layout.addWidget(header_title)
-        header_layout.addWidget(header_subtitle, 1)
+        header_layout.addWidget(header_subtitle)
         layout.addWidget(header_panel, 0)
 
         def add_option(
@@ -212,24 +262,38 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             detail.setContentsMargins(24, 0, 4, 4)
             section_layout.addWidget(detail)
 
-        profile_group = QGroupBox("Active profile")
+        profile_group = QFrame(dialog)
         profile_group.setObjectName("profileCard")
         profile_group.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
-        profile_layout = QHBoxLayout(profile_group)
-        profile_layout.setContentsMargins(14, 8, 14, 8)
-        profile_layout.setSpacing(16)
-        profile_label = QLabel(f"MO2 profile: {profile.name()}")
+        profile_layout = QVBoxLayout(profile_group)
+        profile_layout.setContentsMargins(13, 10, 13, 10)
+        profile_layout.setSpacing(7)
+        _add_circular_heading(
+            profile_layout,
+            profile_group,
+            _tr("Active profile"),
+            "startupCardTitle",
+            ":/MO/gui/mainwindow/profile.svg",
+            "startupProfileIcon",
+            26,
+            "P",
+        )
+        profile_details = QHBoxLayout()
+        profile_details.setContentsMargins(0, 0, 0, 0)
+        profile_details.setSpacing(16)
+        profile_label = QLabel(_tr("MO2 profile: {profile}").format(profile=profile.name()))
         profile_label.setObjectName("activeProfileName")
-        profile_layout.addWidget(profile_label)
+        profile_details.addWidget(profile_label)
         profile_note = QLabel(
-            "Options are stored per profile and apply to Elden Ring launched "
-            "through MO2. Character save files are not changed."
+            _tr("Options are stored per profile and apply to Elden Ring launched "
+            "through MO2. Character save files are not changed.")
         )
         profile_note.setObjectName("profileNote")
         profile_note.setWordWrap(True)
-        profile_layout.addWidget(profile_note, 1)
+        profile_details.addWidget(profile_note, 1)
+        profile_layout.addLayout(profile_details)
 
         options_scroll = QScrollArea(dialog)
         options_scroll.setObjectName("startupOptionsScrollArea")
@@ -250,73 +314,103 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         right_options_column = QVBoxLayout()
         right_options_column.setSpacing(12)
 
-        startup_group = QGroupBox("Launch behavior")
+        startup_group = QFrame(options_content)
         startup_group.setObjectName("startupCard")
         startup_group.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
         )
         startup_layout = QVBoxLayout(startup_group)
-        startup_layout.setContentsMargins(14, 12, 14, 12)
+        startup_layout.setContentsMargins(13, 11, 13, 11)
         startup_layout.setSpacing(6)
-        minimized_box = QCheckBox("Start Elden Ring minimized")
+        _add_circular_heading(
+            startup_layout,
+            startup_group,
+            _tr("Launch behavior"),
+            "startupCardTitle",
+            ":/MO/gui/mainwindow/files/executable.svg",
+            "startupLaunchIcon",
+            26,
+            "L",
+        )
+        minimized_box = QCheckBox(_tr("Start Elden Ring minimized"))
         minimized_box.setChecked(start_minimized)
         add_option(
             startup_layout,
             minimized_box,
-            "Defers the first window display and starts Elden Ring minimized. "
-            "Use Alt+Tab, Win+Tab, or the game's main taskbar icon to restore it.",
+            _tr("Defers the first window display and starts Elden Ring minimized. "
+            "Use Alt+Tab, Win+Tab, or the game's main taskbar icon to restore it."),
         )
         options_note = QLabel(
-            "Window behavior depends on Windows and the game's display mode. "
-            "The taskbar thumbnail may leave the game behind other windows."
+            _tr("Window behavior depends on Windows and the game's display mode. "
+            "The taskbar thumbnail may leave the game behind other windows.")
         )
         options_note.setObjectName("startupCompatibilityNote")
         compact_note(options_note)
         options_note.setContentsMargins(24, 4, 4, 4)
         startup_layout.addWidget(options_note)
-        black_background_box = QCheckBox("Use a black startup background")
+        black_background_box = QCheckBox(_tr("Use a black startup background"))
         black_background_box.setChecked(black_startup_background)
         add_option(
             startup_layout,
             black_background_box,
-            "Sets the Windows window-class background to black before the first "
+            _tr("Sets the Windows window-class background to black before the first "
             "visible display. This covers a blank client area; it cannot cover "
-            "game-rendered frames, videos, or graphics-mode transitions.",
+            "game-rendered frames, videos, or graphics-mode transitions."),
+        )
+        skip_logos_box = QCheckBox(_tr("Skip the intro logo screens"))
+        skip_logos_box.setChecked(skip_intro_logos)
+        add_option(
+            startup_layout,
+            skip_logos_box,
+            _tr("Goes straight to the title screen. If the game version is not "
+            "recognized, the logos play normally. To avoid the online connection "
+            "messages, set Launch Setting to Play Offline in the game's "
+            "System > Network options."),
         )
         left_options_column.addWidget(startup_group)
 
-        cleanup_group = QGroupBox("Overwrite cleanup")
+        cleanup_group = QFrame(options_content)
         cleanup_group.setObjectName("cleanupCard")
         cleanup_group.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
         )
         cleanup_layout = QVBoxLayout(cleanup_group)
-        cleanup_layout.setContentsMargins(14, 12, 14, 12)
+        cleanup_layout.setContentsMargins(13, 11, 13, 11)
         cleanup_layout.setSpacing(6)
+        _add_circular_heading(
+            cleanup_layout,
+            cleanup_group,
+            _tr("Overwrite cleanup"),
+            "startupCardTitle",
+            ":/MO/gui/mainwindow/status/cleanup.svg",
+            "startupCleanupIcon",
+            26,
+            "C",
+        )
         clear_overwrite_logs_box = QCheckBox(
-            "Clear previous mod logs before launch"
+            _tr("Clear previous mod logs before launch")
         )
         clear_overwrite_logs_box.setObjectName("clearOverwriteLogsBeforeLaunch")
         clear_overwrite_logs_box.setChecked(clear_overwrite_logs_before_game)
         add_option(
             cleanup_layout,
             clear_overwrite_logs_box,
-            "At launch, removes existing .log files from Overwrite and its "
+            _tr("At launch, removes existing .log files from Overwrite and its "
             "subfolders. Other files are kept, and logs created during the "
-            "new session remain available.",
+            "new session remain available."),
         )
         clear_overwrite_box = QCheckBox(
-            "Delete all Overwrite contents after the game closes"
+            _tr("Delete all Overwrite contents after the game closes")
         )
         clear_overwrite_box.setObjectName("clearOverwriteAfterGame")
         clear_overwrite_box.setChecked(clear_overwrite_after_game)
         add_option(
             cleanup_layout,
             clear_overwrite_box,
-            "After eldenring.exe exits, removes all files and subfolders in "
+            _tr("After eldenring.exe exits, removes all files and subfolders in "
             "Overwrite, including new logs and output from other mods or tools. "
             "The Overwrite folder itself remains. Enable only if you do not "
-            "need any of its contents.",
+            "need any of its contents."),
         )
 
         def update_overwrite_cleanup_controls() -> None:
@@ -333,42 +427,52 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         clear_overwrite_logs_box.toggled.connect(update_overwrite_cleanup_controls)
         update_overwrite_cleanup_controls()
         cleanup_note = QLabel(
-            "Only one cleanup option can be active at a time. Both are off by default."
+            _tr("Only one cleanup option can be active at a time. Both are off by default.")
         )
         cleanup_note.setObjectName("cleanupNote")
         compact_note(cleanup_note)
         cleanup_layout.addWidget(cleanup_note)
         right_options_column.addWidget(cleanup_group)
 
-        performance_group = QGroupBox("Performance")
+        performance_group = QFrame(options_content)
         performance_group.setObjectName("performanceCard")
         performance_group.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
         )
         performance_layout = QVBoxLayout(performance_group)
-        performance_layout.setContentsMargins(14, 12, 14, 12)
+        performance_layout.setContentsMargins(13, 11, 13, 11)
         performance_layout.setSpacing(6)
-        cpu0_box = QCheckBox("Exclude logical CPU 0 after startup")
+        _add_circular_heading(
+            performance_layout,
+            performance_group,
+            _tr("Performance"),
+            "startupCardTitle",
+            ":/MO/gui/mainwindow/settings.svg",
+            "startupPerformanceIcon",
+            26,
+            "P",
+        )
+        cpu0_box = QCheckBox(_tr("Exclude logical CPU 0 after startup"))
         cpu0_box.setChecked(exclude_cpu0)
         add_option(
             performance_layout,
             cpu0_box,
-            "After the selected delay from bridge loading, excludes logical "
+            _tr("After the selected delay from bridge loading, excludes logical "
             "processor 0 from Elden Ring's current process affinity. This can "
             "help or hurt performance depending on the CPU and system; compare "
-            "with the option off if you notice stutter.",
+            "with the option off if you notice stutter."),
         )
         delay_row = QHBoxLayout()
-        delay_row.addWidget(QLabel("Delay after bridge loads:"))
+        delay_row.addWidget(QLabel(_tr("Delay after bridge loads:")))
         delay_combo = QComboBox()
         for seconds in self.Cpu0DelayChoices:
-            delay_combo.addItem(f"{seconds} seconds", seconds)
+            delay_combo.addItem(_tr("{count} seconds").format(count=seconds), seconds)
         delay_index = delay_combo.findData(cpu0_delay)
         delay_combo.setCurrentIndex(delay_index if delay_index >= 0 else 1)
         delay_combo.setEnabled(exclude_cpu0)
         cpu0_box.toggled.connect(delay_combo.setEnabled)
         delay_row.addWidget(delay_combo)
-        task_manager_button = QPushButton("Open Task Manager")
+        task_manager_button = QPushButton(_tr("Open Task Manager"))
         task_manager_button.setObjectName("openTaskManager")
         task_manager_button.setMinimumHeight(30)
         task_manager_button.clicked.connect(
@@ -378,21 +482,21 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         delay_row.addStretch(1)
         performance_layout.addLayout(delay_row)
         priority_row = QHBoxLayout()
-        priority_row.addWidget(QLabel("Process priority:"))
+        priority_row.addWidget(QLabel(_tr("Process priority:")))
         priority_combo = QComboBox()
-        priority_combo.addItem("System default", 0)
-        priority_combo.addItem("Above normal", 1)
+        priority_combo.addItem(_tr("System default"), 0)
+        priority_combo.addItem(_tr("Above normal"), 1)
         priority_index = priority_combo.findData(process_priority)
         priority_combo.setCurrentIndex(priority_index if priority_index >= 0 else 0)
         priority_combo.setToolTip(
-            "Only affects Elden Ring launched through MO2; resets when the game closes."
+            _tr("Only affects Elden Ring launched through MO2; resets when the game closes.")
         )
         priority_row.addWidget(priority_combo)
         priority_row.addStretch(1)
         performance_layout.addLayout(priority_row)
         priority_note = QLabel(
-            "Above normal may not improve performance and can make other apps "
-            "less responsive while Elden Ring is running."
+            _tr("Above normal may not improve performance and can make other apps "
+            "less responsive while Elden Ring is running.")
         )
         compact_note(priority_note)
         priority_note.setContentsMargins(24, 0, 4, 4)
@@ -400,14 +504,14 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         logical_processors = os.cpu_count()
         if logical_processors is None:
             processor_note_text = (
-                "The affinity change applies only to Elden Ring and resets when "
-                "the game closes."
+                _tr("The affinity change applies only to Elden Ring and resets when "
+                "the game closes.")
             )
         else:
             processor_note_text = (
-                f"Windows reports {logical_processors} logical processors. "
+                _tr("Windows reports {count} logical processors. "
                 "The affinity change applies only to Elden Ring and resets "
-                "when the game closes."
+                "when the game closes.").format(count=logical_processors)
             )
         processor_note = QLabel(processor_note_text)
         compact_note(processor_note)
@@ -415,27 +519,39 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         performance_layout.addWidget(processor_note)
         left_options_column.addWidget(performance_group)
 
-        bridge_group = QGroupBox("Bridge logs")
+        bridge_group = QFrame(options_content)
         bridge_group.setObjectName("bridgeLogCard")
         bridge_group.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
         )
         bridge_layout = QVBoxLayout(bridge_group)
-        bridge_layout.setContentsMargins(14, 12, 14, 12)
+        bridge_layout.setContentsMargins(13, 11, 13, 11)
         bridge_layout.setSpacing(8)
+        _add_circular_heading(
+            bridge_layout,
+            bridge_group,
+            _tr("Bridge logs"),
+            "startupCardTitle",
+            ":/MO/gui/mainwindow/files/text.svg",
+            "startupBridgeIcon",
+            26,
+            "B",
+        )
         bridge_note = QLabel(
-            "Choose how many previous bridge sessions to rotate. Older copies "
+            _tr("Choose how many previous bridge sessions to rotate. Older copies "
             "stay in the log folder; the current log is recreated when the "
-            "bridge loads."
+            "bridge loads.")
         )
         compact_note(bridge_note)
         bridge_layout.addWidget(bridge_note)
         history_row = QHBoxLayout()
-        history_row.addWidget(QLabel("Previous sessions to keep:"))
+        history_row.addWidget(QLabel(_tr("Previous sessions to keep:")))
         bridge_history_combo = QComboBox()
         for sessions in self.BridgeLogHistoryChoices:
             bridge_history_combo.addItem(
-                f"{sessions} sessions" if sessions > 1 else "1 session",
+                _tr("{count} sessions").format(count=sessions)
+                if sessions > 1
+                else _tr("1 session"),
                 sessions,
             )
         history_index = bridge_history_combo.findData(bridge_log_history)
@@ -446,13 +562,13 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         history_row.addStretch(1)
         bridge_layout.addLayout(history_row)
         bridge_buttons = QHBoxLayout()
-        log_button = QPushButton("Open last bridge log")
+        log_button = QPushButton(_tr("Open last bridge log"))
         log_button.setObjectName("openCurrentBridgeLog")
         log_button.setMinimumHeight(34)
         log_button.clicked.connect(
             lambda _checked=False: self._open_latest_bridge_log()
         )
-        previous_log_button = QPushButton("Open previous bridge log")
+        previous_log_button = QPushButton(_tr("Open previous bridge log"))
         previous_log_button.setObjectName("openPreviousBridgeLog")
         previous_log_button.setMinimumHeight(34)
         previous_log_button.clicked.connect(
@@ -461,7 +577,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         bridge_buttons.addWidget(log_button)
         bridge_buttons.addWidget(previous_log_button)
         bridge_layout.addLayout(bridge_buttons)
-        log_folder_button = QPushButton("Open log folder")
+        log_folder_button = QPushButton(_tr("Open log folder"))
         log_folder_button.setObjectName("openBridgeLogFolder")
         log_folder_button.setMinimumHeight(34)
         log_folder_button.clicked.connect(
@@ -514,6 +630,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             "black_startup_background": (
                 "1" if black_background_box.isChecked() else "0"
             ),
+            "skip_intro_logos": "1" if skip_logos_box.isChecked() else "0",
         })
         config["Startup"].pop("prevent_focus_steal", None)
         config["Startup"].pop("start_in_background", None)
@@ -551,15 +668,15 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         except OSError as error:
             QMessageBox.critical(
                 self.__parent_widget,
-                "Could not save profile options",
-                f"MO2 could not save the settings for this profile.\n\n{error}",
+                _tr("Could not save profile options"),
+                _tr("MO2 could not save the settings for this profile.\n\n{error}").format(error=error),
             )
             return
 
         QMessageBox.information(
             self.__parent_widget,
-            "Elden Ring startup options saved",
-            f"The options were saved for profile '{profile.name()}'.",
+            _tr("Elden Ring startup options saved"),
+            _tr("The options were saved for profile '{profile}'.").format(profile=profile.name()),
         )
 
     def _open_latest_bridge_log(self) -> None:
@@ -567,8 +684,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         if not log_path.is_file():
             QMessageBox.information(
                 self.__parent_widget,
-                "Bridge log not found",
-                "Start Elden Ring through MO2 once; the bridge creates its log when it loads.",
+                _tr("Bridge log not found"),
+                _tr("Start Elden Ring through MO2 once; the bridge creates its log when it loads."),
             )
             return
         try:
@@ -576,8 +693,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         except OSError as error:
             QMessageBox.warning(
                 self.__parent_widget,
-                "Could not open bridge log",
-                f"MO2 could not open the log file.\n\n{error}",
+                _tr("Could not open bridge log"),
+                _tr("MO2 could not open the log file.\n\n{error}").format(error=error),
             )
 
     def _open_previous_bridge_log(self) -> None:
@@ -585,9 +702,9 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         if not log_path.is_file():
             QMessageBox.information(
                 self.__parent_widget,
-                "Previous bridge log not found",
-                "MO2 creates this copy before the next Elden Ring launch, "
-                "when a current bridge log is available.",
+                _tr("Previous bridge log not found"),
+                _tr("MO2 creates this copy before the next Elden Ring launch, "
+                "when a current bridge log is available."),
             )
             return
         try:
@@ -595,8 +712,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         except OSError as error:
             QMessageBox.warning(
                 self.__parent_widget,
-                "Could not open previous bridge log",
-                f"MO2 could not open the log file.\n\n{error}",
+                _tr("Could not open previous bridge log"),
+                _tr("MO2 could not open the log file.\n\n{error}").format(error=error),
             )
 
     def _open_bridge_log_folder(self) -> None:
@@ -606,8 +723,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         except OSError as error:
             QMessageBox.warning(
                 self.__parent_widget,
-                "Could not open bridge log folder",
-                f"MO2 could not open the log folder.\n\n{error}",
+                _tr("Could not open bridge log folder"),
+                _tr("MO2 could not open the log folder.\n\n{error}").format(error=error),
             )
 
     def _open_task_manager(self) -> None:
@@ -616,8 +733,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         if not task_manager.is_file():
             QMessageBox.information(
                 self.__parent_widget,
-                "Task Manager not found",
-                "Windows Task Manager could not be found on this system.",
+                _tr("Task Manager not found"),
+                _tr("Windows Task Manager could not be found on this system."),
             )
             return
         try:
@@ -625,8 +742,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         except OSError as error:
             QMessageBox.warning(
                 self.__parent_widget,
-                "Could not open Task Manager",
-                f"MO2 could not open Task Manager.\n\n{error}",
+                _tr("Could not open Task Manager"),
+                _tr("MO2 could not open Task Manager.\n\n{error}").format(error=error),
             )
 
 

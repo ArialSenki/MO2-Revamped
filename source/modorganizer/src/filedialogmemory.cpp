@@ -37,19 +37,46 @@ QString FileDialogMemory::getOpenFileName(const QString& dirID, QWidget* parent,
                                           const QString& caption, const QString& dir,
                                           const QString& filter,
                                           QString* selectedFilter,
-                                          QFileDialog::Options options)
+                                          QFileDialog::Options options,
+                                          QSize dialogSize,
+                                          bool preferRecentDirectory)
 {
   QString currentDir = dir;
 
-  if (currentDir.isEmpty()) {
+  if (currentDir.isEmpty() || preferRecentDirectory) {
     auto itor = g_Cache.find(dirID);
     if (itor != g_Cache.end()) {
       currentDir = itor->second;
     }
   }
 
-  QString result = QFileDialog::getOpenFileName(parent, caption, currentDir, filter,
-                                                selectedFilter, options);
+  QString result;
+  if (dialogSize.isValid()) {
+    QFileDialog dialog(parent);
+    dialog.setOptions(options);
+    dialog.setWindowTitle(caption);
+    dialog.setDirectory(currentDir);
+    if (!filter.isEmpty()) {
+      dialog.setNameFilter(filter);
+    }
+    if (selectedFilter != nullptr && !selectedFilter->isEmpty()) {
+      dialog.selectNameFilter(*selectedFilter);
+    }
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setMinimumSize(dialogSize);
+    dialog.resize(dialogSize);
+
+    if (dialog.exec() == QDialog::Accepted) {
+      result = dialog.selectedFiles().value(0);
+      if (selectedFilter != nullptr) {
+        *selectedFilter = dialog.selectedNameFilter();
+      }
+    }
+  } else {
+    result = QFileDialog::getOpenFileName(parent, caption, currentDir, filter,
+                                          selectedFilter, options);
+  }
 
   if (!result.isNull()) {
     g_Cache[dirID] = QFileInfo(result).path();

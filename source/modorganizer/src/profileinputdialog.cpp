@@ -21,10 +21,68 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "filesystemutilities.h"
 #include "ui_profileinputdialog.h"
 
+#include <QDialogButtonBox>
+#include <QLineEdit>
+#include <QPushButton>
+
 ProfileInputDialog::ProfileInputDialog(QWidget* parent)
+    : ProfileInputDialog(parent, Purpose::Create, QString())
+{}
+
+ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
+                                       const QString& initialName)
     : QDialog(parent), ui(new Ui::ProfileInputDialog)
 {
   ui->setupUi(this);
+  setWindowTitle(tr("MO2 Revamped"));
+  setMinimumWidth(520);
+  ui->nameEdit->setClearButtonEnabled(true);
+
+  if (purpose == Purpose::Copy || purpose == Purpose::Rename) {
+    ui->profileSettingsCard->hide();
+    ui->defaultSettingsBox->setChecked(false);
+    ui->profileNameLabel->setText(tr("Profile name"));
+    ui->nameEdit->setText(purpose == Purpose::Rename ? initialName : QString());
+    ui->nameEdit->setPlaceholderText(tr("For example: Challenge Run or Mod Test"));
+    ui->profilePageTitle->setText(
+        purpose == Purpose::Copy ? tr("Name the copy")
+                                 : tr("Set a new profile name"));
+    ui->profilePageSubtitle->setText(
+        purpose == Purpose::Copy
+            ? tr("It keeps the selected profile's mods and settings.")
+            : tr("The profile's mods and settings will stay unchanged."));
+
+    adjustSize();
+    if (purpose == Purpose::Rename) {
+      ui->nameEdit->selectAll();
+    }
+  }
+
+  if (QPushButton* acceptButton =
+          ui->buttonBox->button(QDialogButtonBox::Ok)) {
+    acceptButton->setObjectName("profileAcceptButton");
+    switch (purpose) {
+    case Purpose::Create:
+      acceptButton->setText(tr("Create"));
+      break;
+    case Purpose::Copy:
+      acceptButton->setText(tr("Copy"));
+      break;
+    case Purpose::Rename:
+      acceptButton->setText(tr("Rename"));
+      break;
+    }
+    acceptButton->setDefault(true);
+  }
+  if (QPushButton* cancelButton =
+          ui->buttonBox->button(QDialogButtonBox::Cancel)) {
+    cancelButton->setObjectName("profileCancelButton");
+  }
+
+  connect(ui->nameEdit, &QLineEdit::textChanged, this,
+          [this]() { updateAcceptState(); });
+  ui->nameEdit->setFocus(Qt::OtherFocusReason);
+  updateAcceptState();
 }
 
 ProfileInputDialog::~ProfileInputDialog()
@@ -42,4 +100,16 @@ QString ProfileInputDialog::getName() const
 bool ProfileInputDialog::getPreferDefaultSettings() const
 {
   return ui->defaultSettingsBox->checkState() == Qt::Checked;
+}
+
+void ProfileInputDialog::updateAcceptState()
+{
+  const QString name = ui->nameEdit->text();
+  QString normalizedName = name;
+  const bool valid = MOBase::fixDirectoryName(normalizedName) &&
+                     !normalizedName.isEmpty();
+  if (QPushButton* acceptButton =
+          ui->buttonBox->button(QDialogButtonBox::Ok)) {
+    acceptButton->setEnabled(valid);
+  }
 }

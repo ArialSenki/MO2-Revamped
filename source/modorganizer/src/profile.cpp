@@ -147,15 +147,41 @@ Profile::Profile(const QDir& directory, IPluginGame const* gamePlugin,
 
   m_Settings =
       new QSettings(directory.absoluteFilePath("settings.ini"), QSettings::IniFormat);
+
+  const bool isEldenRing = EldenRingSaveSettings::supports(gamePlugin);
+  const bool hasEldenRingSaveMode =
+      isEldenRing &&
+      EldenRingSaveSettings::hasProfileMode(directory.absolutePath());
+  if (hasEldenRingSaveMode) {
+    // A saved Elden Ring route is authoritative. Sync MO2's LocalSaves flag
+    // before findProfileSettings() can rename the profile's existing saves.
+    const QVariant storedLocalSaves = setting("", "LocalSaves");
+    const bool fallbackLocalSaves =
+        storedLocalSaves.isValid() ? storedLocalSaves.toBool()
+                                   : Settings::instance().profileLocalSaves();
+    const QString fallbackMode =
+        fallbackLocalSaves ? EldenRingSaveSettings::ProfileIsolated
+                           : EldenRingSaveSettings::GlobalShared;
+    const QString savedMode = EldenRingSaveSettings::readProfileMode(
+        directory.absolutePath(), fallbackMode);
+    const bool routeUsesLocalSaves =
+        savedMode != QLatin1String(EldenRingSaveSettings::GlobalShared);
+    if (!storedLocalSaves.isValid() ||
+        storedLocalSaves.toBool() != routeUsesLocalSaves) {
+      storeSetting("", "LocalSaves", routeUsesLocalSaves);
+    }
+  }
+
   findProfileSettings();
 
-  if (EldenRingSaveSettings::supports(gamePlugin) &&
-      !EldenRingSaveSettings::hasProfileMode(directory.absolutePath())) {
-    // Preserve the existing MO2 save setting when upgrading older profiles.
+  if (isEldenRing && !hasEldenRingSaveMode) {
+    // Older profiles have no explicit route yet. Preserve the result of MO2's
+    // existing LocalSaves migration as their initial Elden Ring mode.
     const QString legacyMode =
         localSavesEnabled() ? EldenRingSaveSettings::ProfileIsolated
                             : EldenRingSaveSettings::GlobalShared;
-    if (!EldenRingSaveSettings::writeProfileMode(directory.absolutePath(), legacyMode)) {
+    if (!EldenRingSaveSettings::writeProfileMode(directory.absolutePath(),
+                                                 legacyMode)) {
       log::warn("failed to initialize Elden Ring save mode for profile '{}'",
                 directory.dirName());
     }

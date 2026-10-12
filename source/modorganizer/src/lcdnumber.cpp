@@ -17,10 +17,53 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "lcdnumber.h"
 
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QLayout>
 #include <QTimer>
 #include <QToolTip>
 
 LCDNumber::LCDNumber(QWidget* parent) : QLCDNumber(parent) {}
+
+void LCDNumber::useFrame()
+{
+  QWidget* parent = parentWidget();
+  if (parent == nullptr || parent->layout() == nullptr ||
+      parent->property("lcdFrame").toBool()) {
+    return;
+  }
+
+  auto* frame = new QFrame(parent);
+  frame->setObjectName(objectName() + QStringLiteral("Frame"));
+  frame->setProperty("lcdFrame", true);
+  frame->setSizePolicy(sizePolicy());
+  frame->setToolTip(toolTip());
+
+  // replaceWidget() searches nested layouts as well
+  if (parent->layout()->replaceWidget(this, frame) == nullptr) {
+    delete frame;
+    return;
+  }
+
+  auto* layout = new QHBoxLayout(frame);
+  layout->setContentsMargins(7, 3, 7, 3);
+  layout->setSpacing(0);
+  layout->addWidget(this);
+
+  setFrameShape(QFrame::NoFrame);
+  setMinimumHeight(qMax(0, minimumHeight() - 6));
+}
+
+void LCDNumber::useFrames(QWidget* root)
+{
+  if (root == nullptr) {
+    return;
+  }
+
+  for (LCDNumber* lcd : root->findChildren<LCDNumber*>()) {
+    lcd->useFrame();
+  }
+}
 
 void LCDNumber::mousePressEvent(QMouseEvent* event)
 {

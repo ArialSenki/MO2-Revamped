@@ -44,6 +44,8 @@ private:
   void on_skipFileSuffixBtn_clicked();
   void on_skipDirectoriesBtn_clicked();
   void on_resetGeometryBtn_clicked();
+  void updateCustomBrowser();
+  void browseCustomBrowser();
 };
 
 #endif  // SETTINGSDIALOGWORKAROUNDS_H

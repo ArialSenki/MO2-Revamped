@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "mainwindow.h"
+#include "menuutils.h"
 #include "ui_mainwindow.h"
 
 #include "aboutdialog.h"
@@ -34,6 +35,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "executableinfo.h"
 #include "executableslist.h"
 #include "filedialogmemory.h"
+#include "gameiconutils.h"
 #include "filterlist.h"
 #include "guessedvalue.h"
 #include "imodinterface.h"
@@ -50,7 +52,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modlist.h"
 #include "modlistcontextmenu.h"
 #include "modlistviewactions.h"
-#include "motddialog.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "organizercore.h"
@@ -60,6 +61,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "previewgenerator.h"
 #include "problemsdialog.h"
 #include "profile.h"
+#include "revampedprompts.h"
+#include "revampedtheme.h"
 #include "profilesdialog.h"
 #include "report.h"
 #include "savegameinfo.h"
@@ -86,6 +89,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
+#include "shared/util.h"
 
 #include <QAbstractItemDelegate>
 #include <QAction>
@@ -106,6 +110,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDir>
 #include <QDirIterator>
 #include <QDragEnterEvent>
+#include <QDockWidget>
 #include <QDropEvent>
 #include <QEvent>
 #include <QFIleIconProvider>
@@ -113,6 +118,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFile>
 #include <QFont>
 #include <QFrame>
+#include <QFontMetrics>
 #include <QFuture>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -128,6 +134,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QJsonObject>
 #include <QJsonValueRef>
 #include <QLabel>
+#include <QLayout>
 #include <QLineEdit>
 #include <QListWidgetItem>
 #include <QMenu>
@@ -137,10 +144,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QNetworkProxyFactory>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPaintEvent>
 #include <QPixmap>
 #include <QPoint>
 #include <QProcess>
 #include <QProgressDialog>
+#include <QPointer>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QRadioButton>
@@ -160,6 +169,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QToolTip>
 #include <QTranslator>
 #include <QTreeWidget>
+#include <QTreeView>
 #include <QTreeWidgetItemIterator>
 #include <QUrl>
 #include <QVariantList>
@@ -184,6 +194,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <exception>
 #include <algorithm>
+#include <iterator>
 #include <functional>
 #include <limits.h>
 #include <map>
@@ -216,6 +227,538 @@ bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
 
 namespace {
 
+constexpr int kRevampedNexusModId = 11290;
+
+class LogDockControlButton final : public QToolButton
+{
+public:
+  enum class Glyph
+  {
+    Close,
+    Float
+  };
+
+  explicit LogDockControlButton(Glyph glyph, QWidget* parent = nullptr)
+      : QToolButton(parent), m_Glyph(glyph)
+  {
+    setObjectName(glyph == Glyph::Close
+                      ? QStringLiteral("logDockCloseButton")
+                      : QStringLiteral("logDockFloatButton"));
+    setFixedSize(24, 24);
+    setAutoRaise(false);
+    setFocusPolicy(Qt::NoFocus);
+    setMouseTracking(true);
+  }
+
+  void setFloating(bool floating)
+  {
+    if (m_Floating == floating) {
+      return;
+    }
+
+    m_Floating = floating;
+    update();
+  }
+
+protected:
+  void paintEvent(QPaintEvent* event) override
+  {
+    QToolButton::paintEvent(event);
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    const QColor accent = palette().color(QPalette::ButtonText);
+    const QColor hoverSurface = RevampedTheme::isBlack()
+                                    ? QColor(51, 51, 51)
+                                    : (accent.lightness() > 128
+                                           ? QColor(48, 58, 65)
+                                           : QColor(237, 244, 249));
+    if (underMouse() || isDown()) {
+      QColor fill = isDown() ? accent : hoverSurface;
+      fill.setAlpha(isDown() ? 42 : 255);
+      QColor outline = accent;
+      outline.setAlpha(isDown() ? 105 : 25);
+      painter.setPen(QPen(outline, 0.9));
+      painter.setBrush(fill);
+      painter.drawEllipse(QRectF(rect()).adjusted(3.0, 3.0, -3.0, -3.0));
+    }
+
+    QPen pen(accent);
+    pen.setWidthF(1.65);
+    pen.setCapStyle(Qt::RoundCap);
+    pen.setJoinStyle(Qt::RoundJoin);
+    painter.setPen(pen);
+    painter.setBrush(Qt::NoBrush);
+
+    const qreal centerX = width() / 2.0;
+    const qreal centerY = height() / 2.0;
+    painter.translate(centerX, centerY);
+    painter.scale(0.82, 0.82);
+    painter.translate(-centerX, -centerY);
+    if (m_Glyph == Glyph::Close) {
+      painter.drawLine(QPointF(centerX - 4.0, centerY - 4.0),
+                       QPointF(centerX + 4.0, centerY + 4.0));
+      painter.drawLine(QPointF(centerX + 4.0, centerY - 4.0),
+                       QPointF(centerX - 4.0, centerY + 4.0));
+      return;
+    }
+
+    if (m_Floating) {
+      const QRectF backWindow(centerX - 1.0, centerY - 7.0, 8.0, 7.5);
+      const QRectF frontWindow(centerX - 7.0, centerY - 1.5, 12.0, 9.5);
+      painter.drawRoundedRect(backWindow, 1.3, 1.3);
+      painter.drawLine(backWindow.left() + 1.0, backWindow.top() + 2.4,
+                       backWindow.right() - 1.0, backWindow.top() + 2.4);
+      painter.drawRoundedRect(frontWindow, 1.5, 1.5);
+      painter.drawLine(frontWindow.left() + 1.0, frontWindow.top() + 2.8,
+                       frontWindow.right() - 1.0, frontWindow.top() + 2.8);
+    } else {
+      const QRectF window(centerX - 7.0, centerY - 2.5, 12.0, 10.0);
+      painter.drawRoundedRect(window, 1.5, 1.5);
+      painter.drawLine(window.left() + 1.0, window.top() + 2.8,
+                       window.right() - 1.0, window.top() + 2.8);
+      painter.drawLine(QPointF(centerX - 1.0, centerY + 3.0),
+                       QPointF(centerX + 6.0, centerY - 4.0));
+      painter.drawLine(QPointF(centerX + 2.5, centerY - 4.0),
+                       QPointF(centerX + 6.0, centerY - 4.0));
+      painter.drawLine(QPointF(centerX + 6.0, centerY - 4.0),
+                       QPointF(centerX + 6.0, centerY - 0.5));
+    }
+  }
+
+private:
+  Glyph m_Glyph;
+  bool m_Floating = false;
+};
+
+class LogDockTitleBar final : public QWidget
+{
+public:
+  explicit LogDockTitleBar(QDockWidget* dock)
+      : QWidget(dock), m_Title(new QLabel(dock->windowTitle(), this)),
+        m_FloatButton(new LogDockControlButton(
+            LogDockControlButton::Glyph::Float, this))
+  {
+    setObjectName(QStringLiteral("logDockTitleBar"));
+    setAttribute(Qt::WA_StyledBackground, true);
+
+    m_Title->setObjectName(QStringLiteral("logDockTitleLabel"));
+    m_Title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_Title->setContentsMargins(0, 0, 0, 0);
+    m_Title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+
+    auto* layout = new QHBoxLayout(this);
+    layout->setContentsMargins(10, 0, 8, 0);
+    layout->setSpacing(5);
+    layout->addWidget(m_Title, 1);
+    layout->addWidget(m_FloatButton, 0, Qt::AlignVCenter);
+
+    auto* closeButton =
+        new LogDockControlButton(LogDockControlButton::Glyph::Close, this);
+    layout->addWidget(closeButton, 0, Qt::AlignVCenter);
+
+    closeButton->setToolTip(QObject::tr("Close log panel"));
+    closeButton->setAccessibleName(QObject::tr("Close log panel"));
+    m_FloatButton->setToolTip(QObject::tr("Float log panel"));
+    m_FloatButton->setAccessibleName(QObject::tr("Float log panel"));
+
+    connect(closeButton, &QToolButton::clicked, dock,
+            [dock] { dock->hide(); });
+    connect(m_FloatButton, &QToolButton::clicked, dock, [dock] {
+      dock->setFloating(!dock->isFloating());
+    });
+    connect(dock, &QDockWidget::windowTitleChanged, m_Title,
+            &QLabel::setText);
+    connect(dock, &QDockWidget::topLevelChanged, this,
+            [this](bool floating) { updateFloatControl(floating); });
+    updateFloatControl(dock->isFloating());
+  }
+
+  QSize sizeHint() const override { return QSize(180, 34); }
+  QSize minimumSizeHint() const override { return QSize(82, 34); }
+
+private:
+  void updateFloatControl(bool floating)
+  {
+    if (m_FloatButton == nullptr) {
+      return;
+    }
+
+    m_FloatButton->setFloating(floating);
+    const QString action = floating ? QObject::tr("Dock log panel")
+                                    : QObject::tr("Float log panel");
+    m_FloatButton->setToolTip(action);
+    m_FloatButton->setAccessibleName(action);
+  }
+
+  QLabel* m_Title;
+  LogDockControlButton* m_FloatButton;
+};
+
+class ResponsiveColumnSizer final : public QObject
+{
+public:
+  explicit ResponsiveColumnSizer(QTreeView* view, QObject* parent)
+      : QObject(parent), m_view(view), m_header(view ? view->header() : nullptr)
+  {
+    if (m_view == nullptr || m_header == nullptr) {
+      return;
+    }
+
+    m_header->setStretchLastSection(false);
+    for (int column = 0; column < m_header->count(); ++column) {
+      m_header->setSectionResizeMode(column, QHeaderView::Interactive);
+    }
+
+    m_view->installEventFilter(this);
+    m_view->viewport()->installEventFilter(this);
+    m_header->installEventFilter(this);
+    m_header->viewport()->installEventFilter(this);
+    if (m_view->objectName() != QStringLiteral("modList")) {
+      connect(m_header, &QHeaderView::geometriesChanged, this, [this] {
+        if (!m_adjusting && !m_mouseInteraction) {
+          queueResize();
+        }
+      });
+    }
+
+    captureWidths();
+    ensureModNameResponsiveWeight();
+    queueResize();
+  }
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (m_view == nullptr || m_header == nullptr) {
+      return QObject::eventFilter(watched, event);
+    }
+
+    if ((watched == m_view || watched == m_view->viewport()) &&
+        event->type() == QEvent::Resize) {
+      queueResize();
+    } else if ((watched == m_header || watched == m_header->viewport()) &&
+               event->type() == QEvent::MouseButtonPress) {
+      m_mouseInteraction = true;
+    } else if ((watched == m_header || watched == m_header->viewport()) &&
+               event->type() == QEvent::MouseButtonRelease &&
+               m_mouseInteraction) {
+      QTimer::singleShot(0, this, [this] {
+        m_mouseInteraction = false;
+        captureWidths();
+        if (m_view == nullptr ||
+            m_view->objectName() != QStringLiteral("modList")) {
+          queueResize();
+        }
+      });
+    }
+
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  int minimumWidth(int column) const
+  {
+    QString caption;
+    if (m_header->model() != nullptr) {
+      caption = m_header->model()
+                    ->headerData(column, Qt::Horizontal, Qt::DisplayRole)
+                    .toString()
+                    .trimmed();
+    }
+    const int naturalMinimum =
+        std::max(72, m_header->fontMetrics().horizontalAdvance(caption) + 28);
+
+    const QString objectName = m_view->objectName();
+    if (objectName == QStringLiteral("modList")) {
+      // Keep the mod name and status columns readable when the window narrows;
+      // the remaining width is distributed proportionally by resizeColumns().
+      constexpr int widths[] = {120, 150, 130, 105, 160, 90,
+                                105, 160, 130, 150, 140};
+      if (column >= 0 && column < static_cast<int>(std::size(widths))) {
+        return std::max(widths[column], naturalMinimum);
+      }
+    } else if (objectName == QStringLiteral("dataTree")) {
+      constexpr int widths[] = {220, 120, 90, 90, 145};
+      if (column >= 0 && column < static_cast<int>(std::size(widths))) {
+        return std::max(widths[column], naturalMinimum);
+      }
+    } else if (objectName == QStringLiteral("savegameList")) {
+      constexpr int widths[] = {200, 160};
+      if (column >= 0 && column < static_cast<int>(std::size(widths))) {
+        return std::max(widths[column], naturalMinimum);
+      }
+    } else if (objectName == QStringLiteral("downloadView")) {
+      constexpr int widths[] = {240, 115, 90, 150, 130, 95, 80, 125};
+      if (column >= 0 && column < static_cast<int>(std::size(widths))) {
+        return std::max(widths[column], naturalMinimum);
+      }
+    }
+
+    return naturalMinimum;
+  }
+
+  void captureWidths()
+  {
+    if (m_header == nullptr || m_adjusting) {
+      return;
+    }
+
+    m_weights.resize(m_header->count());
+    for (int column = 0; column < m_header->count(); ++column) {
+      m_weights[column] = std::max(1, m_header->sectionSize(column));
+    }
+  }
+
+  void ensureModNameResponsiveWeight()
+  {
+    if (m_view == nullptr || m_header == nullptr ||
+        m_view->objectName() != QStringLiteral("modList") ||
+        m_weights.size() != static_cast<std::size_t>(m_header->count()) ||
+        ModList::COL_NAME >= m_header->count()) {
+      return;
+    }
+
+    double otherVisibleWeights = 0.0;
+    for (int column = 0; column < m_header->count(); ++column) {
+      if (column != ModList::COL_NAME && !m_header->isSectionHidden(column)) {
+        otherVisibleWeights += m_weights[column];
+      }
+    }
+
+    // The name column is the main flexible column in this list. Its saved
+    // width can be zero or tiny before the first layout, which makes it look
+    // fixed when the window is resized. Give it at least half the visible
+    // width budget; later manual header resizing can still change the ratio.
+    if (otherVisibleWeights > m_weights[ModList::COL_NAME]) {
+      m_weights[ModList::COL_NAME] = otherVisibleWeights;
+    }
+  }
+
+  void queueResize()
+  {
+    if (m_view == nullptr || m_header == nullptr || m_mouseInteraction ||
+        m_updateQueued) {
+      return;
+    }
+
+    m_updateQueued = true;
+    QTimer::singleShot(0, this, [this] {
+      m_updateQueued = false;
+      if (!m_mouseInteraction) {
+        resizeColumns();
+      }
+    });
+  }
+
+  void resizeColumns()
+  {
+    if (m_view == nullptr || m_header == nullptr || m_adjusting) {
+      return;
+    }
+
+    const int availableWidth = m_view->viewport()->width();
+    if (availableWidth <= 0 || m_header->count() <= 0) {
+      return;
+    }
+    if (m_weights.size() != static_cast<std::size_t>(m_header->count())) {
+      captureWidths();
+    }
+
+    std::vector<int> visibleColumns;
+    int minimumTotal = 0;
+    for (int column = 0; column < m_header->count(); ++column) {
+      if (!m_header->isSectionHidden(column)) {
+        visibleColumns.push_back(column);
+        minimumTotal += minimumWidth(column);
+      }
+    }
+    if (visibleColumns.empty()) {
+      return;
+    }
+
+    const int targetWidth = std::max(availableWidth, minimumTotal);
+    if (m_view->objectName() == QStringLiteral("downloadView")) {
+      const auto policy = targetWidth > availableWidth
+                              ? Qt::ScrollBarAsNeeded
+                              : Qt::ScrollBarAlwaysOff;
+      if (m_view->horizontalScrollBarPolicy() != policy) {
+        m_view->setHorizontalScrollBarPolicy(policy);
+      }
+    }
+
+    std::vector<int> widths(m_header->count(), 0);
+    std::vector<int> active = visibleColumns;
+    int remainingWidth = targetWidth;
+
+    while (!active.empty()) {
+      double totalWeight = 0.0;
+      for (const int column : active) {
+        totalWeight += m_weights[column];
+      }
+      if (totalWeight <= 0.0) {
+        totalWeight = static_cast<double>(active.size());
+      }
+
+      bool fixedMinimum = false;
+      for (auto it = active.begin(); it != active.end(); ++it) {
+        const int column = *it;
+        const double weight = m_weights[column] > 0.0 ? m_weights[column] : 1.0;
+        const int proposed = static_cast<int>(remainingWidth * weight / totalWeight);
+        const int minimum = minimumWidth(column);
+        if (proposed < minimum) {
+          widths[column] = minimum;
+          remainingWidth -= minimum;
+          active.erase(it);
+          fixedMinimum = true;
+          break;
+        }
+      }
+      if (fixedMinimum) {
+        continue;
+      }
+
+      int assignedWidth = 0;
+      for (const int column : active) {
+        const double weight = m_weights[column] > 0.0 ? m_weights[column] : 1.0;
+        widths[column] = static_cast<int>(remainingWidth * weight / totalWeight);
+        assignedWidth += widths[column];
+      }
+      int sparePixels = remainingWidth - assignedWidth;
+      for (const int column : active) {
+        if (sparePixels <= 0) {
+          break;
+        }
+        ++widths[column];
+        --sparePixels;
+      }
+      break;
+    }
+
+    m_adjusting = true;
+    for (const int column : visibleColumns) {
+      m_header->resizeSection(column, widths[column]);
+    }
+    m_adjusting = false;
+  }
+
+  QPointer<QTreeView> m_view;
+  QPointer<QHeaderView> m_header;
+  std::vector<double> m_weights;
+  bool m_adjusting       = false;
+  bool m_mouseInteraction = false;
+  bool m_updateQueued   = false;
+};
+
+QIcon makeEndorsementMenuIcon(const QString& resourcePath)
+{
+  const QString styleName =
+      Settings::instance().interface().styleName().value_or(QString{});
+  const bool darkTheme = styleName.contains(QStringLiteral("dark"),
+                                            Qt::CaseInsensitive);
+  const QColor badgeColor = RevampedTheme::accent(
+      darkTheme ? QColor("#293F50") : QColor("#DCEAF4"));
+  const QColor borderColor = RevampedTheme::accent(
+      darkTheme ? QColor("#4D697E") : QColor("#C7D9E6"));
+
+  QPixmap badge(48, 48);
+  badge.fill(Qt::transparent);
+
+  QPainter painter(&badge);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::SmoothPixmapTransform);
+  painter.setPen(QPen(borderColor, 2.0));
+  painter.setBrush(badgeColor);
+  painter.drawEllipse(QRectF(2.0, 2.0, 44.0, 44.0));
+
+  const QPixmap glyph = QIcon(resourcePath).pixmap(QSize(28, 28));
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(Qt::NoBrush);
+  painter.drawPixmap(QRect(10, 10, 28, 28), glyph);
+  return QIcon(badge);
+}
+
+bool askNexusEndorsement(QWidget* parent, const QString& windowTitle,
+                         const QString& headingText,
+                         const QString& descriptionText,
+                         const QString& confirmText, const QString& cancelText,
+                         const QIcon& promptIcon)
+{
+  QDialog dialog(parent);
+  dialog.setObjectName(QStringLiteral("revampedEndorsementDialog"));
+  dialog.setWindowTitle(windowTitle);
+  if (parent != nullptr) {
+    dialog.setWindowIcon(parent->windowIcon());
+  }
+  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+  dialog.setMinimumWidth(440);
+  dialog.resize(520, 205);
+
+  auto* layout = new QVBoxLayout(&dialog);
+  layout->setContentsMargins(16, 16, 16, 14);
+  layout->setSpacing(7);
+
+  auto* header = new QWidget(&dialog);
+  header->setObjectName(QStringLiteral("revampedEndorsementHeader"));
+  auto* headerLayout = new QHBoxLayout(header);
+  headerLayout->setContentsMargins(0, 0, 0, 0);
+  headerLayout->setSpacing(10);
+
+  auto* icon = new QLabel(header);
+  icon->setObjectName(QStringLiteral("revampedEndorsementIcon"));
+  icon->setFixedSize(42, 42);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setPixmap(promptIcon.pixmap(QSize(22, 22)));
+  headerLayout->addWidget(icon);
+
+  auto* heading = new QLabel(headingText, header);
+  heading->setObjectName(QStringLiteral("revampedEndorsementTitle"));
+  QFont headingFont = heading->font();
+  if (headingFont.pointSize() > 0) {
+    headingFont.setPointSize(headingFont.pointSize() + 2);
+  }
+  headingFont.setBold(true);
+  heading->setFont(headingFont);
+  heading->setWordWrap(true);
+  headerLayout->addWidget(heading, 1);
+  layout->addWidget(header);
+
+  auto* card = new QFrame(&dialog);
+  card->setObjectName(QStringLiteral("revampedEndorsementCard"));
+  card->setFrameShape(QFrame::StyledPanel);
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(10, 7, 10, 7);
+  auto* description = new QLabel(descriptionText, card);
+  description->setObjectName(QStringLiteral("revampedEndorsementDescription"));
+  description->setWordWrap(true);
+  cardLayout->addWidget(description);
+  layout->addWidget(card);
+
+  auto* divider = new QFrame(&dialog);
+  divider->setObjectName(QStringLiteral("revampedEndorsementDivider"));
+  divider->setFrameShape(QFrame::HLine);
+  divider->setFrameShadow(QFrame::Plain);
+  layout->addWidget(divider);
+
+  auto* buttons = new QDialogButtonBox(&dialog);
+  buttons->setObjectName(QStringLiteral("revampedEndorsementButtons"));
+  auto* confirmButton = buttons->addButton(
+      confirmText, QDialogButtonBox::AcceptRole);
+  confirmButton->setObjectName(QStringLiteral("revampedEndorsementConfirmButton"));
+  confirmButton->setAutoDefault(false);
+  auto* cancelButton =
+      buttons->addButton(cancelText, QDialogButtonBox::RejectRole);
+  cancelButton->setAutoDefault(false);
+  cancelButton->setDefault(true);
+  layout->addWidget(buttons);
+
+  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
+                   &QDialog::accept);
+  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
+                   &QDialog::reject);
+  return dialog.exec() == QDialog::Accepted;
+}
+
 struct ProfileBackupSelection
 {
   bool accepted = false;
@@ -240,7 +783,7 @@ bool showProfileBackupPrompt(QWidget* parent, const QString& windowTitle,
   dialog.resize(540, cancelButtonText.isEmpty() ? 170 : 200);
 
   auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(18, 14, 18, 12);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(5);
 
   auto* heading = new QLabel(headingText, &dialog);
@@ -313,7 +856,7 @@ ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
   dialog.resize(540, 320);
 
   auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(22, 18, 22, 16);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(7);
 
   auto* heading = new QLabel(QObject::tr("Back up this profile"), &dialog);
@@ -510,6 +1053,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   setStartupDiagnosticPhase("mainwindow.setup_ui");
   ui->setupUi(this);
+  LCDNumber::useFrames(this);
+  ui->logDock->setTitleBarWidget(new LogDockTitleBar(ui->logDock));
+  // This button is a custom QToolButton subclass with its own arrow hit area.
+  // Wire the main button explicitly so the Run action remains independent of
+  // the menu popup and does not rely on Designer's auto-connect lookup.
+  connect(ui->startButton, &QToolButton::clicked, this,
+          &MainWindow::launchSelectedExecutable);
   writeStartupDiagnosticEvent("mainwindow.setup_ui.complete");
   // Revamped keeps the legacy menu commands on the toolbar buttons. Do not
   // restore or show the upstream top menubar for new or existing profiles.
@@ -519,26 +1069,51 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   m_FilterOptionsDialog = new QDialog(this);
   m_FilterOptionsDialog->setObjectName(QStringLiteral("filterOptionsDialog"));
   m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
-  m_FilterOptionsDialog->setMinimumSize(560, 500);
-  m_FilterOptionsDialog->resize(680, 680);
+  m_FilterOptionsDialog->setMinimumSize(700, 560);
+  m_FilterOptionsDialog->resize(780, 740);
+  m_FilterOptionsDialog->setSizeGripEnabled(true);
 
   auto* filterDialogLayout = new QVBoxLayout(m_FilterOptionsDialog);
-  filterDialogLayout->setContentsMargins(20, 18, 20, 16);
+  filterDialogLayout->setContentsMargins(16, 16, 16, 14);
   filterDialogLayout->setSpacing(12);
 
-  m_FilterDialogTitle = new QLabel(tr("Filter options"), m_FilterOptionsDialog);
+  auto* filterDialogHeader = new QFrame(m_FilterOptionsDialog);
+  filterDialogHeader->setObjectName(QStringLiteral("filterDialogHeaderPanel"));
+  auto* filterDialogHeaderLayout = new QHBoxLayout(filterDialogHeader);
+  filterDialogHeaderLayout->setContentsMargins(12, 11, 14, 11);
+  filterDialogHeaderLayout->setSpacing(12);
+
+  auto* filterDialogIcon = new QLabel(filterDialogHeader);
+  filterDialogIcon->setObjectName(QStringLiteral("filterDialogIconBadge"));
+  filterDialogIcon->setFixedSize(42, 42);
+  filterDialogIcon->setAlignment(Qt::AlignCenter);
+  filterDialogIcon->setPixmap(
+      QIcon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")).pixmap(20, 20));
+  filterDialogHeaderLayout->addWidget(filterDialogIcon, 0, Qt::AlignVCenter);
+
+  auto* filterDialogHeaderText = new QWidget(filterDialogHeader);
+  filterDialogHeaderText->setObjectName(
+      QStringLiteral("filterDialogHeaderText"));
+  auto* filterDialogHeaderTextLayout =
+      new QVBoxLayout(filterDialogHeaderText);
+  filterDialogHeaderTextLayout->setContentsMargins(0, 0, 0, 0);
+  filterDialogHeaderTextLayout->setSpacing(3);
+
+  m_FilterDialogTitle = new QLabel(tr("Filter options"), filterDialogHeaderText);
   m_FilterDialogTitle->setObjectName(QStringLiteral("filterDialogTitle"));
   auto filterTitleFont = m_FilterDialogTitle->font();
   filterTitleFont.setBold(true);
   filterTitleFont.setPointSize(filterTitleFont.pointSize() + 2);
   m_FilterDialogTitle->setFont(filterTitleFont);
-  filterDialogLayout->addWidget(m_FilterDialogTitle);
+  filterDialogHeaderTextLayout->addWidget(m_FilterDialogTitle);
 
-  m_FilterDialogDescription = new QLabel(m_FilterOptionsDialog);
+  m_FilterDialogDescription = new QLabel(filterDialogHeaderText);
   m_FilterDialogDescription->setObjectName(
       QStringLiteral("filterDialogDescription"));
   m_FilterDialogDescription->setWordWrap(true);
-  filterDialogLayout->addWidget(m_FilterDialogDescription);
+  filterDialogHeaderTextLayout->addWidget(m_FilterDialogDescription);
+  filterDialogHeaderLayout->addWidget(filterDialogHeaderText, 1);
+  filterDialogLayout->addWidget(filterDialogHeader);
 
   const int filterPaneIndex = ui->categoriesSplitter->indexOf(ui->categoriesGroup);
   if (filterPaneIndex >= 0) {
@@ -551,6 +1126,111 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->categoriesGroup->setTitle(QString());
   ui->categoriesGroup->setMaximumWidth(QWIDGETSIZE_MAX);
   ui->categoriesGroup->setParent(m_FilterOptionsDialog);
+
+  // Recompose the existing filter widgets into clear criteria, actions, and
+  // behavior panels. The original widgets and signal connections stay intact.
+  auto* filterGroupLayout =
+      qobject_cast<QVBoxLayout*>(ui->categoriesGroup->layout());
+  while (auto* item = filterGroupLayout->takeAt(0)) {
+    delete item;
+  }
+  filterGroupLayout->setContentsMargins(0, 0, 0, 0);
+  filterGroupLayout->setSpacing(12);
+
+  auto* filterCriteriaCard = new QFrame(ui->categoriesGroup);
+  filterCriteriaCard->setObjectName(QStringLiteral("filterCriteriaCard"));
+  auto* filterCriteriaLayout = new QVBoxLayout(filterCriteriaCard);
+  filterCriteriaLayout->setContentsMargins(12, 10, 12, 11);
+  filterCriteriaLayout->setSpacing(8);
+
+  auto* filterCriteriaHeading =
+      new QLabel(tr("Available criteria"), filterCriteriaCard);
+  filterCriteriaHeading->setObjectName(
+      QStringLiteral("filterCriteriaHeading"));
+  filterCriteriaLayout->addWidget(filterCriteriaHeading);
+  ui->filters->setParent(filterCriteriaCard);
+  filterCriteriaLayout->addWidget(ui->filters, 1);
+  filterGroupLayout->addWidget(filterCriteriaCard, 1);
+
+  auto* filterControlsRow = new QWidget(ui->categoriesGroup);
+  filterControlsRow->setObjectName(QStringLiteral("filterControlsRow"));
+  auto* filterControlsLayout = new QHBoxLayout(filterControlsRow);
+  filterControlsLayout->setContentsMargins(0, 0, 0, 0);
+  filterControlsLayout->setSpacing(12);
+
+  auto* filterActionsCard = new QFrame(filterControlsRow);
+  filterActionsCard->setObjectName(QStringLiteral("filterActionsCard"));
+  auto* filterActionsLayout = new QVBoxLayout(filterActionsCard);
+  filterActionsLayout->setContentsMargins(12, 9, 12, 10);
+  filterActionsLayout->setSpacing(7);
+  auto* filterActionsHeading = new QLabel(tr("Filter actions"), filterActionsCard);
+  filterActionsHeading->setObjectName(QStringLiteral("filterActionsHeading"));
+  filterActionsLayout->addWidget(filterActionsHeading);
+  ui->widget_2->setObjectName(QStringLiteral("filterActionButtonsContainer"));
+  if (auto* actionButtonsLayout =
+          qobject_cast<QHBoxLayout*>(ui->widget_2->layout())) {
+    actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
+    actionButtonsLayout->setSpacing(8);
+  }
+  ui->filtersClear->setIcon(QIcon(QStringLiteral(":/MO/gui/edit_clear")));
+  ui->filtersEdit->setIcon(
+      QIcon(QStringLiteral(":/MO/gui/contextmenu/categories.svg")));
+  ui->filtersClear->setIconSize(QSize(16, 16));
+  ui->filtersEdit->setIconSize(QSize(16, 16));
+  filterActionsLayout->addWidget(ui->widget_2);
+  filterControlsLayout->addWidget(filterActionsCard, 1);
+
+  auto* filterBehaviorCard = new QFrame(filterControlsRow);
+  filterBehaviorCard->setObjectName(QStringLiteral("filterBehaviorCard"));
+  auto* filterBehaviorLayout = new QVBoxLayout(filterBehaviorCard);
+  filterBehaviorLayout->setContentsMargins(12, 9, 12, 10);
+  filterBehaviorLayout->setSpacing(7);
+  auto* filterBehaviorHeading =
+      new QLabel(tr("Filter behavior"), filterBehaviorCard);
+  filterBehaviorHeading->setObjectName(
+      QStringLiteral("filterBehaviorHeading"));
+  filterBehaviorLayout->addWidget(filterBehaviorHeading);
+
+  ui->widget->setObjectName(QStringLiteral("filterBehaviorControls"));
+  if (auto* oldBehaviorLayout = ui->widget->layout()) {
+    while (auto* item = oldBehaviorLayout->takeAt(0)) {
+      delete item;
+    }
+    delete oldBehaviorLayout;
+  }
+  auto* behaviorControlsLayout = new QVBoxLayout(ui->widget);
+  behaviorControlsLayout->setContentsMargins(0, 0, 0, 0);
+  behaviorControlsLayout->setSpacing(6);
+
+  auto* matchRow = new QWidget(ui->widget);
+  matchRow->setObjectName(QStringLiteral("filterMatchRow"));
+  auto* matchLayout = new QHBoxLayout(matchRow);
+  matchLayout->setContentsMargins(0, 0, 0, 0);
+  matchLayout->setSpacing(8);
+  auto* matchLabel = new QLabel(tr("Match"), matchRow);
+  matchLabel->setObjectName(QStringLiteral("filterMatchLabel"));
+  matchLabel->setMinimumWidth(76);
+  matchLayout->addWidget(matchLabel);
+  matchLayout->addWidget(ui->filtersAnd);
+  matchLayout->addWidget(ui->filtersOr);
+  matchLayout->addStretch(1);
+  behaviorControlsLayout->addWidget(matchRow);
+
+  auto* separatorsRow = new QWidget(ui->widget);
+  separatorsRow->setObjectName(QStringLiteral("filterSeparatorsRow"));
+  auto* separatorsLayout = new QHBoxLayout(separatorsRow);
+  separatorsLayout->setContentsMargins(0, 0, 0, 0);
+  separatorsLayout->setSpacing(8);
+  auto* separatorsLabel = new QLabel(tr("Separators"), separatorsRow);
+  separatorsLabel->setObjectName(QStringLiteral("filterSeparatorsLabel"));
+  separatorsLabel->setMinimumWidth(76);
+  separatorsLayout->addWidget(separatorsLabel);
+  separatorsLayout->addWidget(ui->filtersSeparators, 1);
+  behaviorControlsLayout->addWidget(separatorsRow);
+  filterBehaviorLayout->addWidget(ui->widget);
+  filterControlsLayout->addWidget(filterBehaviorCard, 1);
+  filterGroupLayout->addWidget(filterControlsRow);
+
   filterDialogLayout->addWidget(ui->categoriesGroup, 1);
 
   auto* filterDialogButtons =
@@ -581,8 +1261,11 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   // Center the icon and label across the full split Run button. Its menu area
   // is excluded from the label area, so account for half of that width here.
   ui->startButton->setStyleSheet(
-      "QToolButton#startButton { padding-left: 43px; }"
-      "QToolButton#startButton::menu-button { width: 34px; }");
+      QStringLiteral("QToolButton#startButton { padding-left: 43px; }"
+                     "QToolButton#startButton::menu-button { width: %1px; }"
+                     "QToolButton#startButton[menuButtonActive=\"true\"]::menu-button { "
+                     "background-color: rgba(0, 0, 0, 38); }")
+          .arg(RunMenuToolButton::menuButtonWidth()));
   configureEldenRingHelp();
   languageChange(settings.interface().language());
   ui->statusBar->setup(ui, settings);
@@ -617,7 +1300,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->logList->setCore(m_OrganizerCore);
 
   setupToolbar();
-  toggleMO2EndorseState();
+  toggleRevampedEndorseState();
 
   TaskProgressManager::instance().tryCreateTaskbar();
 
@@ -681,6 +1364,10 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   resizeLists(pluginListAdjusted);
 
+  new ResponsiveColumnSizer(ui->dataTree, this);
+  new ResponsiveColumnSizer(ui->savegameList, this);
+  new ResponsiveColumnSizer(ui->downloadView, this);
+
   m_LinkToolbar = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
                               tr("Toolbar and Menu"), this);
   m_LinkDesktop = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
@@ -696,6 +1383,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->listOptionsBtn->setMenu(createModListOptionsMenu());
 
   ui->openFolderMenu->setMenu(openFolderMenu());
+  ui->openFolderMenu->setIconSize(QSize(16, 16));
 
   // don't allow mouse wheel to switch grouping, too many people accidentally
   // turn on grouping and then don't understand what happened
@@ -724,11 +1412,8 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   connect(&m_OrganizerCore.settings(), SIGNAL(styleChanged(QString)), this,
           SIGNAL(styleChanged(QString)));
 
-  connect(m_OrganizerCore.updater(), SIGNAL(restart()), this, SLOT(close()));
   connect(m_OrganizerCore.updater(), SIGNAL(updateAvailable()), this,
           SLOT(updateAvailable()));
-  connect(m_OrganizerCore.updater(), SIGNAL(motdAvailable(QString)), this,
-          SLOT(motdReceived(QString)));
   connect(&m_OrganizerCore, &OrganizerCore::refreshTriggered, this, [this]() {
     updateSortButton();
   });
@@ -807,8 +1492,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   FileDialogMemory::restore(settings);
 
   fixCategories();
-
-  m_StartTime = QTime::currentTime();
 
   m_Tutorial.expose("modList", m_OrganizerCore.modList());
   m_Tutorial.expose("espList", m_OrganizerCore.pluginList());
@@ -1010,26 +1693,6 @@ void MainWindow::resizeLists(bool pluginListCustom)
 
 void MainWindow::allowListResize()
 {
-  // allow resize on mod list
-  auto* modListHeader = ui->modList->header();
-  for (int i = 0; i < ui->modList->header()->count(); ++i) {
-    modListHeader->setSectionResizeMode(i, QHeaderView::Interactive);
-  }
-  // Keep a balanced minimum width for the visible status columns while letting
-  // the mod name use the remaining space as the window changes size.
-  modListHeader->setStretchLastSection(false);
-  modListHeader->setSectionResizeMode(ModList::COL_NAME, QHeaderView::Stretch);
-  const auto ensureMinimumWidth = [modListHeader](int column, int minimumWidth) {
-    if (modListHeader->sectionSize(column) < minimumWidth) {
-      modListHeader->resizeSection(column, minimumWidth);
-    }
-  };
-  ensureMinimumWidth(ModList::COL_CONFLICTFLAGS, 150);
-  ensureMinimumWidth(ModList::COL_FLAGS, 130);
-  ensureMinimumWidth(ModList::COL_CATEGORY, 160);
-  ensureMinimumWidth(ModList::COL_VERSION, 160);
-  ensureMinimumWidth(ModList::COL_PRIORITY, 150);
-
   // allow resize on plugin list
   for (int i = 0; i < ui->espList->header()->count(); ++i) {
     ui->espList->header()->setSectionResizeMode(i, QHeaderView::Interactive);
@@ -1037,9 +1700,16 @@ void MainWindow::allowListResize()
   ui->espList->header()->setStretchLastSection(true);
 }
 
-void MainWindow::updateStyle(const QString&)
+void MainWindow::updateStyle(const QString& fileName)
 {
+  qApp->setProperty("revampedDarkBlack", QFileInfo(fileName).fileName().compare("dark-black.qss", Qt::CaseInsensitive) == 0);
+  refreshExecutablesList();
   resetActionIcons();
+  createEndorseMenu();
+  toggleRevampedEndorseState();
+  if (m_toolbarButtonGeometryInitialized) {
+    stabilizeToolbarButtonGeometry(false);
+  }
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -1054,21 +1724,6 @@ void MainWindow::setupToolbar()
   setupActionMenu(ui->actionTool);
   setupActionMenu(ui->actionHelp);
   setupActionMenu(ui->actionEndorseMO);
-
-  // Keep the other right-side toolbar actions on the same visual baseline as
-  // Notifications. Equal top and bottom padding would leave their contents a
-  // little higher; this shifts icon and text down while preserving total height.
-  const auto alignWithNotifications = [this](QAction* action) {
-    if (auto* button = qobject_cast<QToolButton*>(
-            ui->toolBar->widgetForAction(action))) {
-      button->setStyleSheet(
-          QStringLiteral("QToolButton { padding-top: 7px; padding-bottom: 1px; "
-                         "margin-top: 3px; margin-bottom: -3px; }"));
-    }
-  };
-  alignWithNotifications(ui->actionEndorseMO);
-  alignWithNotifications(ui->actionUpdate);
-  alignWithNotifications(ui->actionHelp);
 
   createHelpMenu();
   createEndorseMenu();
@@ -1154,6 +1809,9 @@ void MainWindow::updatePinnedExecutables()
   // pinned to the toolbar.
   ui->menuRun->menuAction()->setVisible(hasLinks || getSelectedExecutable());
   updateShortcutActionIcons();
+  if (m_toolbarButtonGeometryInitialized) {
+    stabilizeToolbarButtonGeometry(false);
+  }
 }
 
 void MainWindow::updateToolbarMenu()
@@ -1247,9 +1905,20 @@ void MainWindow::on_actionViewLog_triggered()
 
 void MainWindow::setToolbarSize(const QSize& s)
 {
+  for (auto* action : ui->toolBar->actions()) {
+    if (auto* button = qobject_cast<QToolButton*>(
+            ui->toolBar->widgetForAction(action))) {
+      button->setMinimumSize(0, 0);
+      button->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+      button->setProperty("mo2RevampedToolbarButtonSize", QVariant());
+    }
+  }
+
   for (auto* tb : findChildren<QToolBar*>()) {
     tb->setIconSize(s);
   }
+
+  stabilizeToolbarButtonGeometry(true);
 
   // Rebuild the notification badge at the new toolbar icon size so it keeps
   // the same alignment and visual weight as the neighboring actions.
@@ -1258,8 +1927,60 @@ void MainWindow::setToolbarSize(const QSize& s)
 
 void MainWindow::setToolbarButtonStyle(Qt::ToolButtonStyle s)
 {
+  for (auto* action : ui->toolBar->actions()) {
+    if (auto* button = qobject_cast<QToolButton*>(
+            ui->toolBar->widgetForAction(action))) {
+      button->setMinimumSize(0, 0);
+      button->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+      button->setProperty("mo2RevampedToolbarButtonSize", QVariant());
+    }
+  }
+
   for (auto* tb : findChildren<QToolBar*>()) {
     tb->setToolButtonStyle(s);
+  }
+
+  stabilizeToolbarButtonGeometry(true);
+}
+
+void MainWindow::stabilizeToolbarButtonGeometry(bool recapture)
+{
+  constexpr auto SizeProperty = "mo2RevampedToolbarButtonSize";
+
+  auto* toolbarLayout = ui->toolBar->layout();
+  if (recapture) {
+    // Capture the active theme's geometry after the initial stylesheet has
+    // been applied. MainWindow is constructed before MOApplication selects it.
+    m_toolbarContentsMargins = ui->toolBar->contentsMargins();
+    m_toolbarLayoutSpacing = toolbarLayout ? toolbarLayout->spacing() : -1;
+  } else {
+    // Reapplying a stylesheet can reset the toolbar layout even when both
+    // themes use the same metrics. Restore the geometry captured at startup.
+    ui->toolBar->setContentsMargins(m_toolbarContentsMargins);
+    if (toolbarLayout) {
+      toolbarLayout->setSpacing(m_toolbarLayoutSpacing);
+    }
+  }
+
+  for (auto* action : ui->toolBar->actions()) {
+    auto* button = qobject_cast<QToolButton*>(
+        ui->toolBar->widgetForAction(action));
+    if (!button) {
+      continue;
+    }
+
+    QSize stableSize = button->property(SizeProperty).toSize();
+    if (recapture || !stableSize.isValid()) {
+      button->setMinimumSize(0, 0);
+      button->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+      stableSize = button->sizeHint();
+      if (!stableSize.isValid()) {
+        continue;
+      }
+      button->setProperty(SizeProperty, stableSize);
+    }
+
+    button->setFixedSize(stableSize);
   }
 }
 
@@ -1377,37 +2098,6 @@ void MainWindow::updateProblemsButton()
   }
 }
 
-bool MainWindow::errorReported(QString& logFile)
-{
-  QDir dir(qApp->property("dataPath").toString() + "/" +
-           QString::fromStdWString(AppConfig::logPath()));
-  QFileInfoList files =
-      dir.entryInfoList(QStringList("ModOrganizer_??_??_??_??_??.log"), QDir::Files,
-                        QDir::Name | QDir::Reversed);
-
-  if (files.count() > 0) {
-    logFile = files.at(0).absoluteFilePath();
-    QFile file(logFile);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      char buffer[1024];
-      int line = 0;
-      while (!file.atEnd()) {
-        file.readLine(buffer, 1024);
-        if (strncmp(buffer, "ERROR", 5) == 0) {
-          return true;
-        }
-
-        // prevent this function from taking forever
-        if (line++ >= 50000) {
-          break;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
 QFuture<void> MainWindow::checkForProblemsAsync()
 {
   return QtConcurrent::run([this]() {
@@ -1442,9 +2132,10 @@ void MainWindow::checkForProblemsImpl()
 void MainWindow::about()
 {
   for (IPluginTool* tool : m_PluginContainer.plugins<IPluginTool>()) {
+    // name() is not translated, unlike displayName()
     if (tool == nullptr || !m_PluginContainer.isEnabled(tool) ||
-        tool->displayName().compare(QStringLiteral("About MO2 Revamped"),
-                                    Qt::CaseInsensitive) != 0) {
+        tool->name().compare(QStringLiteral("MO2 Revamped Information"),
+                             Qt::CaseInsensitive) != 0) {
       continue;
     }
 
@@ -1478,13 +2169,28 @@ void MainWindow::createEndorseMenu()
     return;
   }
 
+  menu->setObjectName(QStringLiteral("revampedEndorseMenu"));
+  menu->setToolTipsVisible(true);
   menu->clear();
-
-  QAction* endorseAction = new QAction(tr("Endorse"), menu);
+  // Menus start without a section: the theme draws sections as plain dividers
+  // (no title), so a leading one only adds a stray line above the first item.
+  QAction* endorseAction = new QAction(
+      makeEndorsementMenuIcon(
+          QStringLiteral(":/MO/gui/contextmenu/endorse.svg")),
+      tr("Endorse MO2 Revamped"), menu);
+  endorseAction->setObjectName(QStringLiteral("revampedEndorseAction"));
+  endorseAction->setToolTip(
+      tr("Record your endorsement for MO2 Revamped on Nexus Mods."));
   connect(endorseAction, SIGNAL(triggered()), this, SLOT(actionEndorseMO()));
   menu->addAction(endorseAction);
 
-  QAction* wontEndorseAction = new QAction(tr("Won't Endorse"), menu);
+  QAction* wontEndorseAction = new QAction(
+      makeEndorsementMenuIcon(
+          QStringLiteral(":/MO/gui/contextmenu/wont-endorse.svg")),
+      tr("Won't Endorse"), menu);
+  wontEndorseAction->setObjectName(QStringLiteral("revampedWontEndorseAction"));
+  wontEndorseAction->setToolTip(
+      tr("Record that you do not endorse this listing."));
   connect(wontEndorseAction, SIGNAL(triggered()), this, SLOT(actionWontEndorseMO()));
   menu->addAction(wontEndorseAction);
 }
@@ -1504,16 +2210,18 @@ void MainWindow::createHelpMenu()
     return;
   }
 
+  menu->setObjectName(QStringLiteral("revampedHelpMenu"));
+  menu->setToolTipsVisible(true);
   menu->clear();
 
   const auto* game = m_OrganizerCore.managedGame();
   const bool isEldenRing =
       game && game->gameShortName().compare("eldenring", Qt::CaseInsensitive) == 0;
 
-  menu->addSection(tr("Learn"));
-
   if (isEldenRing) {
     QAction* guideAction = new QAction(tr("Elden Ring Guide"), menu);
+    guideAction->setObjectName(QStringLiteral("eldenRingGuideAction"));
+    guideAction->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
     guideAction->setToolTip(
         tr("Learn about profiles, archive layouts, native DLLs, and save profiles."));
     connect(guideAction, &QAction::triggered, this,
@@ -1572,6 +2280,8 @@ void MainWindow::createHelpMenu()
 
   if (!tutorials.empty()) {
     QMenu* tutorialMenu = new QMenu(tr("Guided Tours"), menu);
+    tutorialMenu->setObjectName(QStringLiteral("revampedGuidedToursMenu"));
+    tutorialMenu->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
     for (const auto& tutorial : tutorials) {
       connect(tutorial.second, SIGNAL(triggered()), this,
               SLOT(tutorialTriggered()));
@@ -1580,9 +2290,12 @@ void MainWindow::createHelpMenu()
     menu->addMenu(tutorialMenu);
   }
 
-  menu->addSection(tr("Resources"));
+  addMenuSection(menu, tr("Resources"));
 
   QAction* repositoryAction = new QAction(tr("MO2 Revamped on GitHub"), menu);
+  repositoryAction->setObjectName(QStringLiteral("revampedRepositoryAction"));
+  repositoryAction->setIcon(
+      QIcon(QStringLiteral(":/MO/gui/mainwindow/github-updates.svg")));
   repositoryAction->setToolTip(
       tr("Open the project repository, source notes, and third-party notices."));
   connect(repositoryAction, SIGNAL(triggered()), this,
@@ -1591,24 +2304,32 @@ void MainWindow::createHelpMenu()
 
   if (game && !game->getSupportURL().isEmpty()) {
     QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
+    gameSupportAction->setObjectName(QStringLiteral("gameSupportWikiAction"));
+    gameSupportAction->setIcon(
+        QIcon(QStringLiteral(":/MO/gui/mainwindow/mod-page.svg")));
     gameSupportAction->setToolTip(
         tr("Open the game-specific modding reference provided by its MO2 plugin."));
     connect(gameSupportAction, SIGNAL(triggered()), this, SLOT(gameSupportTriggered()));
     menu->addAction(gameSupportAction);
   }
 
-  menu->addSection(tr("Support"));
+  addMenuSection(menu, tr("Support"));
 
   QAction* issueAction = new QAction(tr("Report a Problem"), menu);
+  issueAction->setObjectName(QStringLiteral("revampedIssueAction"));
+  issueAction->setIcon(
+      QIcon(QStringLiteral(":/MO/gui/mainwindow/status/warning.svg")));
   issueAction->setToolTip(
       tr("Open the MO2 Revamped issue tracker on GitHub."));
   connect(issueAction, SIGNAL(triggered()), this, SLOT(issueTriggered()));
   menu->addAction(issueAction);
 
-  menu->addSection(tr("About"));
+  addMenuSection(menu, tr("About"));
   QAction* revampedAboutAction =
       menu->addAction(tr("About MO2 Revamped"), this, SLOT(about()));
   revampedAboutAction->setObjectName(QStringLiteral("mo2RevampedAboutAction"));
+  revampedAboutAction->setIcon(
+      QIcon(QStringLiteral(":/MO/gui/mainwindow/status/about-revamped.svg")));
   revampedAboutAction->setToolTip(
       tr("Show MO2 Revamped information, components, and credits."));
 }
@@ -1657,30 +2378,6 @@ void MainWindow::hookUpWindowTutorials()
   }
 }
 
-bool MainWindow::shouldStartTutorial() const
-{
-  if (GlobalSettings::hideTutorialQuestion()) {
-    return false;
-  }
-
-  QMessageBox dlg(
-      QMessageBox::Question, tr("Show tutorial?"),
-      tr("You are starting Mod Organizer for the first time. "
-         "Do you want to show a tutorial of its basic features? If you choose "
-         "no you can always start the tutorial from the \"Help\" menu."),
-      QMessageBox::Yes | QMessageBox::No);
-
-  dlg.setCheckBox(new QCheckBox(tr("Never ask to show tutorials")));
-
-  const auto r = dlg.exec();
-
-  if (dlg.checkBox()->isChecked()) {
-    GlobalSettings::setHideTutorialQuestion(true);
-  }
-
-  return (r == QMessageBox::Yes);
-}
-
 void MainWindow::showEvent(QShowEvent* event)
 {
   QMainWindow::showEvent(event);
@@ -1688,6 +2385,10 @@ void MainWindow::showEvent(QShowEvent* event)
   if (!m_WasVisible) {
     ui->modList->refreshFilters();
     readSettings();
+    // readSettings() restores the mod-list header state. Install its
+    // responsive sizing after that restore so the saved state cannot put the
+    // Mod Name section back into a non-interactive resize mode.
+    new ResponsiveColumnSizer(ui->modList, this);
 
     // this needs to be connected here instead of in the constructor because the
     // actual changing of the stylesheet is done by MOApplication, which
@@ -1699,60 +2400,53 @@ void MainWindow::showEvent(QShowEvent* event)
     // stylesheet has already been set correctly
     connect(this, SIGNAL(styleChanged(QString)), this, SLOT(updateStyle(QString)));
 
+    // Let the first stylesheet/layout pass finish before capturing geometry.
+    // The application stylesheet is selected after construction, and Qt may
+    // still be polishing toolbar buttons during this show event.
+    QTimer::singleShot(0, this, [this] {
+      resetActionIcons();
+      if (auto* toolbarLayout = ui->toolBar->layout()) {
+        toolbarLayout->activate();
+      }
+      stabilizeToolbarButtonGeometry(true);
+      m_toolbarButtonGeometryInitialized = true;
+    });
+
     // only the first time the window becomes visible
     m_Tutorial.registerControl();
 
     hookUpWindowTutorials();
 
     if (m_OrganizerCore.settings().firstStart()) {
-      QString firstStepsTutorial = ToQString(AppConfig::firstStepsTutorial());
-      if (TutorialManager::instance().hasTutorial(firstStepsTutorial)) {
-        if (shouldStartTutorial()) {
-          TutorialManager::instance().activateTutorial("MainWindow",
-                                                       firstStepsTutorial);
-        }
-      } else {
-        log::error("{} missing", firstStepsTutorial);
-        QPoint pos = ui->toolBar->mapToGlobal(QPoint());
-        pos.rx() += ui->toolBar->width() / 2;
-        pos.ry() += ui->toolBar->height();
-        QWhatsThis::showText(pos,
-                             QObject::tr("Please use \"Help\" from the toolbar to get "
-                                         "usage instructions to all elements"));
-      }
-
       if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
-        QMessageBox::information(this, tr("Game Support Wiki"),
-                                 tr("Do you know how to mod this game? Do you need to "
-                                    "learn? There's a game support wiki available! "
-                                    "Click OK to open the wiki. In the future, you can "
-                                    "access this link from the \"Help\" menu."),
-                                 QMessageBox::Ok);
-        gameSupportTriggered();
+        // Let the user decline instead of always opening a browser on first start.
+        if (QMessageBox::question(
+                this, tr("Game Support Wiki"),
+                tr("A game support wiki is available for this game. Open it now? "
+                   "You can also open it later from the \"Help\" menu."),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::Yes) == QMessageBox::Yes) {
+          gameSupportTriggered();
+        }
       }
 
-      QMessageBox newCatDialog;
-      newCatDialog.setWindowTitle(tr("Category Setup"));
-      newCatDialog.setText(
-          tr("Please choose how to handle the default category setup.\n\n"
-             "If you've already connected to Nexus, you can automatically import Nexus "
+      const auto categoryChoice = RevampedPrompts::chooseCategorySetup(
+          this, tr("Category Setup"),
+          tr("Please choose how to handle the default category setup."),
+          tr("If you've already connected to Nexus, you can automatically import Nexus "
              "categories for this game (if applicable). Otherwise, use the old Mod "
              "Organizer default category structure, or leave the categories blank (for "
-             "manual setup)."));
-      QPushButton importBtn(tr("&Import Nexus Categories"));
-      QPushButton defaultBtn(tr("Use &Old Category Defaults"));
-      QPushButton cancelBtn(tr("Do &Nothing"));
-      if (NexusInterface::instance().getAccessManager()->validated()) {
-        newCatDialog.addButton(&importBtn, QMessageBox::ButtonRole::AcceptRole);
-      }
-      newCatDialog.addButton(&defaultBtn, QMessageBox::ButtonRole::AcceptRole);
-      newCatDialog.addButton(&cancelBtn, QMessageBox::ButtonRole::RejectRole);
-      newCatDialog.exec();
-      if (newCatDialog.clickedButton() == &importBtn) {
+             "manual setup)."),
+          NexusInterface::instance().getAccessManager()->validated(),
+          tr("&Import Nexus Categories"), tr("Use &Old Category Defaults"),
+          tr("Do &Nothing"));
+      if (categoryChoice == RevampedPrompts::CategorySetupChoice::ImportNexus) {
         importCategories(false);
-      } else if (newCatDialog.clickedButton() == &cancelBtn) {
+      } else if (categoryChoice ==
+                 RevampedPrompts::CategorySetupChoice::DoNothing) {
         m_CategoryFactory.reset();
-      } else if (newCatDialog.clickedButton() == &defaultBtn) {
+      } else if (categoryChoice ==
+                 RevampedPrompts::CategorySetupChoice::OldDefaults) {
         m_CategoryFactory.loadCategories();
       }
       m_CategoryFactory.saveCategories();
@@ -1842,6 +2536,16 @@ void MainWindow::paintEvent(QPaintEvent* event)
 void MainWindow::onBeforeClose()
 {
   storeSettings();
+}
+
+void MainWindow::requestRestartFromPlugin()
+{
+  if (!ExitModOrganizer(Exit::Restart)) {
+    QMessageBox::information(
+        this, tr("Restart not started"),
+        tr("The save route remains saved, but Mod Organizer could not restart "
+           "right now. Restart Mod Organizer manually before launching Elden Ring."));
+  }
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -1994,9 +2698,10 @@ void MainWindow::updateToolMenu()
   // Remove disabled plugins:
   toolPlugins.erase(std::remove_if(std::begin(toolPlugins), std::end(toolPlugins),
                                    [&](auto* tool) {
+                                     // compare name(), which is not translated
                                      if (!m_PluginContainer.isEnabled(tool) ||
-                                         tool->displayName().compare(
-                                             QStringLiteral("About MO2 Revamped"),
+                                         tool->name().compare(
+                                             QStringLiteral("MO2 Revamped Information"),
                                              Qt::CaseInsensitive) == 0) {
                                        return true;
                                      }
@@ -2010,7 +2715,7 @@ void MainWindow::updateToolMenu()
                                      }
 
                                      const QString name =
-                                         tool->displayName().toCaseFolded();
+                                         tool->name().toCaseFolded();
                                      return name.contains("bsa packer") ||
                                             name.contains("ini editor");
                                    }),
@@ -2082,8 +2787,9 @@ bool MainWindow::registerNexusPage(const QString& gameName)
     return false;
 
   // Create an action
-  QAction* action = new QAction(plugin->gameIcon(),
-                                QObject::tr("Visit %1 on Nexus").arg(gameName), this);
+  QAction* action = new QAction(
+      plugin->gameIcon(),
+      QObject::tr("Visit %1 on Nexus").arg(gameName), this);
 
   // Bind the action
   connect(
@@ -2340,52 +3046,6 @@ void MainWindow::refreshExecutablesList()
 {
   QAbstractItemModel* model = ui->executablesListBox->model();
   const auto* managedGame = m_OrganizerCore.managedGame();
-  const QString interfaceStyle =
-      Settings::instance().interface().styleName().value_or(QString{});
-  const bool darkStyle =
-      interfaceStyle.contains(QStringLiteral("dark"), Qt::CaseInsensitive);
-
-  const auto roundedGameIcon = [darkStyle](const QIcon& sourceIcon) {
-    constexpr int iconPixels = 96;
-    constexpr qreal cornerRadius = 12.0;
-
-    QPixmap sourcePixmap = sourceIcon.pixmap(QSize(iconPixels, iconPixels));
-    if (sourcePixmap.isNull()) {
-      return sourceIcon;
-    }
-
-    sourcePixmap = sourcePixmap.scaled(
-        QSize(iconPixels, iconPixels), Qt::KeepAspectRatioByExpanding,
-        Qt::SmoothTransformation);
-    const QRect sourceRect((sourcePixmap.width() - iconPixels) / 2,
-                           (sourcePixmap.height() - iconPixels) / 2,
-                           iconPixels, iconPixels);
-
-    QPixmap roundedPixmap(iconPixels, iconPixels);
-    roundedPixmap.fill(Qt::transparent);
-
-    QPainter painter(&roundedPixmap);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::SmoothPixmapTransform);
-
-    QPainterPath roundedShape;
-    roundedShape.addRoundedRect(QRectF(1.0, 1.0, iconPixels - 2.0,
-                                       iconPixels - 2.0),
-                                cornerRadius, cornerRadius);
-    painter.setClipPath(roundedShape);
-    painter.drawPixmap(QRect(0, 0, iconPixels, iconPixels), sourcePixmap,
-                       sourceRect);
-    painter.setClipping(false);
-    if (!darkStyle) {
-      painter.setPen(QPen(QColor("#D2E2EE"), 2.0));
-      painter.setBrush(Qt::NoBrush);
-      painter.drawPath(roundedShape);
-    }
-    painter.end();
-
-    roundedPixmap.setDevicePixelRatio(3.0);
-    return QIcon(roundedPixmap);
-  };
 
   auto add = [&](const QString& title, const QFileInfo& binary) {
     QIcon icon;
@@ -2396,7 +3056,7 @@ void MainWindow::refreshExecutablesList()
             return title.compare(executable.title(), Qt::CaseInsensitive) == 0;
           });
       if (gameExecutable != executables.end()) {
-        icon = roundedGameIcon(managedGame->gameIcon());
+        icon = MOBase::makeRunStyleGameIcon(managedGame->gameIcon(), this);
       }
     }
 
@@ -2814,7 +3474,7 @@ void MainWindow::on_tabWidget_currentChanged(int index)
   }
 }
 
-void MainWindow::on_startButton_clicked()
+void MainWindow::launchSelectedExecutable()
 {
   const Executable* selectedExecutable = getSelectedExecutable();
   if (!selectedExecutable) {
@@ -2872,11 +3532,6 @@ void MainWindow::on_executablesListBox_currentIndexChanged(int index)
   }
 }
 
-void MainWindow::helpTriggered()
-{
-  QWhatsThis::enterWhatsThisMode();
-}
-
 void MainWindow::configureEldenRingHelp()
 {
   const auto* game = m_OrganizerCore.managedGame();
@@ -2903,9 +3558,10 @@ void MainWindow::configureEldenRingHelp()
       "a file. Standard archive layout keeps top-level DLLs at the game root and "
       "organizes DLLs from recognized native-mod folders under Game/DLLs."));
   ui->savegameList->setWhatsThis(tr(
-      "Browse the save files available to this Elden Ring profile. The profile "
-      "settings can isolate saves to this profile, share a named save profile "
-      "within this MO2 instance, or use the global Steam save folder."));
+      "Browse the save files available to this Elden Ring profile. Configure "
+      "its route in Tools > Elden Ring Save Isolation to keep saves separate "
+      "per MO2 profile, share a named save profile in this instance, or use "
+      "the global Steam save folder."));
   ui->downloadView->setWhatsThis(tr(
       "Downloaded archives for this instance appear here. Double-click an "
       "archive to install it. To choose its priority, drag it from this list "
@@ -2952,11 +3608,14 @@ void MainWindow::showEldenRingGuide()
   layout->setContentsMargins(14, 12, 14, 12);
   layout->setSpacing(10);
 
-  auto* header = new QHBoxLayout();
+  auto* headerPanel = new QFrame(&guide);
+  headerPanel->setObjectName(QStringLiteral("eldenRingGuideHeader"));
+  auto* header = new QHBoxLayout(headerPanel);
+  header->setContentsMargins(12, 10, 14, 10);
   header->setSpacing(12);
-  auto* logo = new QLabel(&guide);
+  auto* logo = new QLabel(headerPanel);
   logo->setObjectName(QStringLiteral("eldenRingGuideLogo"));
-  logo->setFixedSize(72, 72);
+  logo->setFixedSize(54, 54);
   logo->setAlignment(Qt::AlignmentFlag::AlignCenter);
   const QString appDirectory = QApplication::applicationDirPath();
   QPixmap logoPixmap(appDirectory + QStringLiteral("/resources/mo_icon.png"));
@@ -2965,7 +3624,7 @@ void MainWindow::showEldenRingGuide()
   }
   if (!logoPixmap.isNull()) {
     logo->setPixmap(logoPixmap.scaled(
-        logo->size(), Qt::AspectRatioMode::KeepAspectRatio,
+        QSize(34, 34), Qt::AspectRatioMode::KeepAspectRatio,
         Qt::TransformationMode::SmoothTransformation));
   }
   header->addWidget(logo);
@@ -2978,32 +3637,51 @@ void MainWindow::showEldenRingGuide()
   if (const auto* profile = m_OrganizerCore.currentProfile()) {
     activeProfile = profile->name();
   }
-  auto* heading = new QLabel(
-      tr("<h2>Using Elden Ring with MO2 Revamped</h2>"
-         "<p>A practical guide to profiles, archives, native DLLs, saves, "
-         "and launching the game.</p>"
-         "<p><b>Active game:</b> %1 &nbsp; <b>Active profile:</b> %2</p>")
-          .arg(activeGame.toHtmlEscaped())
-          .arg(activeProfile.toHtmlEscaped()),
-      &guide);
-  heading->setWordWrap(true);
-  header->addWidget(heading, 1);
-  layout->addLayout(header);
+  auto* headingText = new QWidget(headerPanel);
+  headingText->setObjectName(QStringLiteral("eldenRingGuideHeaderText"));
+  auto* headingLayout = new QVBoxLayout(headingText);
+  headingLayout->setContentsMargins(0, 0, 0, 0);
+  headingLayout->setSpacing(3);
+  auto* heading = new QLabel(tr("Elden Ring Guide"), headingText);
+  heading->setObjectName(QStringLiteral("eldenRingGuideTitle"));
+  auto* subtitle = new QLabel(
+      tr("Profiles, archives, native DLLs, saves, and launching the game."),
+      headingText);
+  subtitle->setObjectName(QStringLiteral("eldenRingGuideSubtitle"));
+  subtitle->setWordWrap(true);
+  auto* context = new QLabel(
+      tr("Current game: %1  ·  Active profile: %2")
+          .arg(activeGame, activeProfile),
+      headingText);
+  context->setObjectName(QStringLiteral("eldenRingGuideContext"));
+  context->setWordWrap(true);
+  headingLayout->addWidget(heading);
+  headingLayout->addWidget(subtitle);
+  headingLayout->addWidget(context);
+  header->addWidget(headingText, 1);
+  layout->addWidget(headerPanel);
 
   auto* tabs = new QTabWidget(&guide);
   tabs->setObjectName(QStringLiteral("eldenRingGuideTabs"));
 
   const auto makeCard = [](QWidget* parent, const QString& title,
                            const QString& content) {
-    auto* card = new QGroupBox(title, parent);
+    auto* card = new QFrame(parent);
+    card->setObjectName(QStringLiteral("eldenRingGuideCard"));
     auto* cardLayout = new QVBoxLayout(card);
-    cardLayout->setContentsMargins(10, 10, 10, 8);
-    cardLayout->setSpacing(4);
+    cardLayout->setContentsMargins(12, 10, 12, 10);
+    cardLayout->setSpacing(6);
+    auto* titleLabel = new QLabel(title, card);
+    titleLabel->setObjectName(QStringLiteral("eldenRingGuideCardTitle"));
+    titleLabel->setWordWrap(true);
     auto* text = new QLabel(content, card);
+    text->setObjectName(QStringLiteral("eldenRingGuideCardText"));
     text->setWordWrap(true);
     text->setTextFormat(Qt::TextFormat::RichText);
     text->setAlignment(Qt::AlignmentFlag::AlignLeft |
                        Qt::AlignmentFlag::AlignTop);
+    text->setMargin(0);
+    cardLayout->addWidget(titleLabel);
     cardLayout->addWidget(text);
     return card;
   };
@@ -3017,16 +3695,28 @@ void MainWindow::showEldenRingGuide()
     pageLayout->setContentsMargins(14, 12, 14, 12);
     pageLayout->setSpacing(8);
 
-    auto* intro = new QLabel(
-        QStringLiteral("<h3>%1</h3><p>%2</p>")
-            .arg(pageTitle, pageDescription),
-        page);
-    intro->setWordWrap(true);
+    auto* intro = new QFrame(page);
+    intro->setObjectName(QStringLiteral("eldenRingGuidePageIntro"));
+    auto* introLayout = new QVBoxLayout(intro);
+    introLayout->setContentsMargins(12, 9, 12, 9);
+    introLayout->setSpacing(3);
+    auto* introHeading = new QLabel(pageTitle, intro);
+    introHeading->setObjectName(QStringLiteral("eldenRingGuidePageTitle"));
+    auto* introDescription = new QLabel(pageDescription, intro);
+    introDescription->setObjectName(
+        QStringLiteral("eldenRingGuidePageDescription"));
+    introDescription->setWordWrap(true);
+    introLayout->addWidget(introHeading);
+    introLayout->addWidget(introDescription);
     pageLayout->addWidget(intro);
 
     auto* grid = new QGridLayout();
     grid->setHorizontalSpacing(10);
     grid->setVerticalSpacing(8);
+    grid->setColumnStretch(0, 1);
+    grid->setColumnStretch(1, 1);
+    grid->setRowStretch(0, 1);
+    grid->setRowStretch(1, 1);
     for (int index = 0; index < static_cast<int>(cards.size()); ++index) {
       const int row = index / 2;
       const int column = index % 2;
@@ -3043,7 +3733,8 @@ void MainWindow::showEldenRingGuide()
          "archive layouts."),
       {{tr("Profiles"),
         tr("<p>Enable mods with their checkboxes. Each profile keeps its own "
-           "enabled mod list and save settings.</p>")},
+           "enabled mod list. Configure Elden Ring save routes in "
+           "<b>Tools &gt; Elden Ring Save Isolation</b>.</p>")},
        {tr("Mod priority"),
         tr("<p>The left list controls file priority when mods provide the same "
            "file. The <b>Data</b> tab shows which mod wins. Avoid enabling two "
@@ -3077,10 +3768,12 @@ void MainWindow::showEldenRingGuide()
            "The first two modes also support named save profiles while the "
            "game still receives <code>ER0000.sl2</code>.</p>")},
        {tr("Restart and online safety"),
-        tr("<p>Restart MO2 after changing a save route and before launching "
-           "the game. Routing only changes save files; it does not change Easy "
-           "Anti-Cheat or network mode, and does not make modded saves safe "
-           "for online play.</p>")}});
+        tr("<p>Changes between profile-isolated and instance-shared saves "
+           "take effect on the next game launch without restarting MO2. "
+           "Restart MO2 only when switching to or from the global Steam save. "
+           "Routing only changes save files; it does not change Easy Anti-Cheat "
+           "or network mode, and does not make modded saves safe for online "
+           "play.</p>")}});
 
   addGuideTab(
       tr("Data and launch"), tr("Data, downloads, and launch"),
@@ -3438,8 +4131,9 @@ void MainWindow::openMyGamesFolder()
 
 QMenu* MainWindow::createModListOptionsMenu()
 {
+  QMenu* menu = nullptr;
   if (m_OrganizerCore.gameFeatures().gameFeature<GamePlugins>()) {
-    return new ModListGlobalContextMenu(
+    menu = new ModListGlobalContextMenu(
         m_OrganizerCore, ui->modList, this,
         [this] { createModListBackup(); },
         [this] { restoreModListBackup(); },
@@ -3447,53 +4141,115 @@ QMenu* MainWindow::createModListOptionsMenu()
         [this] { createPluginOrderBackup(); },
         [this] { restorePluginOrderBackup(); },
         [this] { deleteProfileLoadOrderBackup(); });
+  } else {
+    menu = new ModListGlobalContextMenu(
+        m_OrganizerCore, ui->modList, this,
+        [this] { createModListBackup(); },
+        [this] { restoreModListBackup(); },
+        [this] { deleteProfileModListBackup(); });
   }
 
-  return new ModListGlobalContextMenu(
-      m_OrganizerCore, ui->modList, this,
-      [this] { createModListBackup(); },
-      [this] { restoreModListBackup(); },
-      [this] { deleteProfileModListBackup(); });
+  menu->setObjectName(QStringLiteral("modListOptionsMenu"));
+  return menu;
 }
 
 QMenu* MainWindow::openFolderMenu()
 {
   QMenu* FolderMenu = new QMenu(this);
+  FolderMenu->setObjectName(QStringLiteral("openFolderMenuPopup"));
   auto addFolderAction = [this, FolderMenu](const QString& text, const QString& icon,
-                                             const char* slot) {
+                                             const char* slot, const QString& route) {
     QAction* action = FolderMenu->addAction(text, this, slot);
     action->setIcon(QIcon(icon));
+    action->setProperty("folderRoute", route);
   };
 
-  FolderMenu->addSection(tr("Game folders"));
-  addFolderAction(tr("Game"), ":/MO/gui/mainwindow/files/game-data.svg",
-                  SLOT(openGameFolder()));
+ addFolderAction(tr("Game"), ":/MO/gui/mainwindow/files/game-data.svg",
+                  SLOT(openGameFolder()), QStringLiteral("game"));
   addFolderAction(tr("My Games"), ":/MO/gui/mainwindow/files/folder.svg",
-                  SLOT(openMyGamesFolder()));
+                  SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
   addFolderAction(tr("INI files"), ":/MO/gui/mainwindow/files/config.svg",
-                  SLOT(openIniFolder()));
+                  SLOT(openIniFolder()), QStringLiteral("ini"));
 
-  FolderMenu->addSection(tr("MO2 instance"));
+  addMenuSection(FolderMenu, tr("MO2 instance"));
   addFolderAction(tr("Instance"), ":/MO/gui/mainwindow/instance.svg",
-                  SLOT(openInstanceFolder()));
+                  SLOT(openInstanceFolder()), QStringLiteral("instance"));
   addFolderAction(tr("Mods"), ":/MO/gui/contextmenu/all-mods.svg",
-                  SLOT(openModsFolder()));
+                  SLOT(openModsFolder()), QStringLiteral("mods"));
   addFolderAction(tr("Profile"), ":/MO/gui/mainwindow/profile.svg",
-                  SLOT(openProfileFolder()));
+                  SLOT(openProfileFolder()), QStringLiteral("profile"));
   addFolderAction(tr("Downloads"), ":/MO/gui/mainwindow/install.svg",
-                  SLOT(openDownloadsFolder()));
+                  SLOT(openDownloadsFolder()), QStringLiteral("downloads"));
 
-  FolderMenu->addSection(tr("MO2 installation"));
+  addMenuSection(FolderMenu, tr("MO2 installation"));
   addFolderAction(tr("Program folder"), ":/MO/gui/mainwindow/files/folder.svg",
-                  SLOT(openInstallFolder()));
+                  SLOT(openInstallFolder()), QStringLiteral("program"));
   addFolderAction(tr("Plugins"), ":/MO/gui/mainwindow/status/plugin-flag.svg",
-                  SLOT(openPluginsFolder()));
+                  SLOT(openPluginsFolder()), QStringLiteral("plugins"));
   addFolderAction(tr("Stylesheets"), ":/MO/gui/mainwindow/files/text.svg",
-                  SLOT(openStylesheetsFolder()));
+                  SLOT(openStylesheetsFolder()), QStringLiteral("stylesheets"));
   QAction* logsAction = FolderMenu->addAction(tr("Logs"), [=] {
     ui->logList->openLogsFolder();
   });
   logsAction->setIcon(QIcon(":/MO/gui/mainwindow/status/debug.svg"));
+  logsAction->setProperty("folderRoute", QStringLiteral("logs"));
+
+  connect(FolderMenu, &QMenu::aboutToShow, this, [this, FolderMenu] {
+    const QString dataPath = qApp->property("dataPath").toString();
+    const QString appPath = QCoreApplication::applicationDirPath();
+
+    for (QAction* action : FolderMenu->actions()) {
+      const QString route = action->property("folderRoute").toString();
+      if (route.isEmpty()) {
+        continue;
+      }
+
+      QString path;
+      QString description;
+      if (route == QLatin1String("game")) {
+        path = m_OrganizerCore.managedGame()->gameDirectory().absolutePath();
+        description = tr("Open the active game's installation folder.");
+      } else if (route == QLatin1String("myGames")) {
+        path = m_OrganizerCore.managedGame()->documentsDirectory().absolutePath();
+        description = tr("Open the game's documents folder.");
+      } else if (route == QLatin1String("ini")) {
+        const auto* profile = m_OrganizerCore.currentProfile();
+        path = profile->localSettingsEnabled()
+                   ? profile->absolutePath()
+                   : m_OrganizerCore.managedGame()->documentsDirectory().absolutePath();
+        description = tr("Open the INI folder used by the active profile.");
+      } else if (route == QLatin1String("instance")) {
+        path = dataPath;
+        description = tr("Open this MO2 instance's data folder.");
+      } else if (route == QLatin1String("mods")) {
+        path = m_OrganizerCore.settings().paths().mods();
+        description = tr("Open this instance's managed mods folder.");
+      } else if (route == QLatin1String("profile")) {
+        path = m_OrganizerCore.currentProfile()->absolutePath();
+        description = tr("Open the selected profile's folder.");
+      } else if (route == QLatin1String("downloads")) {
+        path = m_OrganizerCore.settings().paths().downloads();
+        description = tr("Open this instance's downloaded archives folder.");
+      } else if (route == QLatin1String("program")) {
+        path = appPath;
+        description = tr("Open the MO2 program folder.");
+      } else if (route == QLatin1String("plugins")) {
+        path = appPath + "/" + ToQString(AppConfig::pluginPath());
+        description = tr("Open the MO2 plugins folder.");
+      } else if (route == QLatin1String("stylesheets")) {
+        path = appPath + "/" + ToQString(AppConfig::stylesheetsPath());
+        description = tr("Open the installed stylesheets folder.");
+      } else if (route == QLatin1String("logs")) {
+        path = dataPath + "/" + QString::fromStdWString(AppConfig::logPath());
+        description = tr("Open this MO2 instance's logs folder.");
+      }
+
+      if (!path.isEmpty()) {
+        path = QDir::toNativeSeparators(QDir::cleanPath(path));
+        action->setToolTip(tr("%1\n%2").arg(description, path));
+      }
+    }
+  });
 
   return FolderMenu;
 }
@@ -3565,6 +4321,7 @@ void MainWindow::on_actionSettings_triggered()
   DownloadManager* dlManager    = m_OrganizerCore.downloadManager();
   const bool oldCheckForUpdates = settings.checkForUpdates();
   const int oldMaxDumps         = settings.diagnostics().maxCoreDumps();
+  const QString oldLanguage     = settings.interface().language();
 
   SettingsDialog dialog(&m_PluginContainer, settings, this);
   dialog.exec();
@@ -3575,11 +4332,30 @@ void MainWindow::on_actionSettings_triggered()
     e |= Exit::Restart;
   }
 
+  // The main window is retranslated immediately, but plugins, docks and
+  // models built at startup keep their text until MO2 starts again.
+  if (!e.testFlag(Exit::Restart) && oldLanguage != settings.interface().language()) {
+    const auto r = MOBase::RevampedPrompts::choose(
+        this, tr("Language changed"), tr("Restart to apply the language everywhere"),
+        tr("MO2 Revamped restarts so every window, menu and plugin uses "
+           "the new language.") +
+            QStringLiteral("\n\n") +
+            tr("Some text stays in the previous language until "
+               "MO2 Revamped restarts."),
+        {{tr("Restart now"), QMessageBox::Yes, true},
+         {tr("Later"), QMessageBox::No}},
+        QMessageBox::No);
+
+    if (r == QMessageBox::Yes) {
+      ExitModOrganizer(Exit::Restart);
+    }
+  }
+
   if (e.testFlag(Exit::Restart)) {
     const auto r =
         MOBase::TaskDialog(this)
             .title(tr("Restart Mod Organizer"))
-            .main("Restart Mod Organizer")
+            .main(tr("Restart Mod Organizer"))
             .content(tr("Mod Organizer must restart to finish configuration changes"))
             .icon(QMessageBox::Question)
             .button({tr("Restart"), QMessageBox::Yes})
@@ -3655,7 +4431,7 @@ void MainWindow::on_actionSettings_triggered()
     m_OrganizerCore.cycleDiagnostics();
   }
 
-  toggleMO2EndorseState();
+  toggleRevampedEndorseState();
 
   if (oldCheckForUpdates != settings.checkForUpdates()) {
     if (settings.checkForUpdates()) {
@@ -3708,32 +4484,18 @@ void MainWindow::on_actionNexus_triggered()
 
 void MainWindow::installTranslator(const QString& name)
 {
-  QTranslator* translator = new QTranslator(this);
-  QString fileName        = name + "_" + m_CurrentLanguage;
-  if (!translator->load(fileName, qApp->applicationDirPath() + "/translations")) {
-    if (m_CurrentLanguage.contains(QRegularExpression("^.*_(EN|en)(-.*)?$"))) {
-      log::debug("localization file %s not found", fileName);
-    }  // we don't actually expect localization files for English (en, en-us, en-uk, and
-       // any variation thereof)
-  }
-
-  qApp->installTranslator(translator);
-  m_Translators.push_back(translator);
+  InstallLanguageTranslator(name);
 }
 
 void MainWindow::languageChange(const QString& newLanguage)
 {
   m_ToolMenuDirty = true;
-  for (QTranslator* trans : m_Translators) {
-    qApp->removeTranslator(trans);
-  }
-  m_Translators.clear();
-
   m_CurrentLanguage = newLanguage;
 
-  installTranslator("qt");
-  installTranslator("qtbase");
-  installTranslator(ToQString(AppConfig::translationPrefix()));
+  // Also remembered globally so the instance dialogs shown before an
+  // instance is loaded use the same language.
+  GlobalSettings::setLanguage(newLanguage);
+  InstallLanguageTranslators(newLanguage);
   for (const QString& fileName : m_PluginContainer.pluginFileNames()) {
     installTranslator(QFileInfo(fileName).baseName());
   }
@@ -3743,6 +4505,26 @@ void MainWindow::languageChange(const QString& newLanguage)
     m_FilterDialogTitle->setText(tr("Filter options"));
     m_FilterDialogDescription->setText(
         ui->filters->headerItem()->toolTip(1));
+    if (auto* label =
+            m_FilterOptionsDialog->findChild<QLabel*>("filterCriteriaHeading")) {
+      label->setText(tr("Available criteria"));
+    }
+    if (auto* label =
+            m_FilterOptionsDialog->findChild<QLabel*>("filterActionsHeading")) {
+      label->setText(tr("Filter actions"));
+    }
+    if (auto* label = m_FilterOptionsDialog->findChild<QLabel*>(
+            "filterBehaviorHeading")) {
+      label->setText(tr("Filter behavior"));
+    }
+    if (auto* label =
+            m_FilterOptionsDialog->findChild<QLabel*>("filterMatchLabel")) {
+      label->setText(tr("Match"));
+    }
+    if (auto* label = m_FilterOptionsDialog->findChild<QLabel*>(
+            "filterSeparatorsLabel")) {
+      label->setText(tr("Separators"));
+    }
     ui->categoriesGroup->setTitle(QString());
     ui->displayCategoriesBtn->setText(QString());
     ui->displayCategoriesBtn->setIcon(
@@ -3793,20 +4575,6 @@ void MainWindow::updateAvailable()
   ui->statusBar->setUpdateAvailable(true);
 }
 
-void MainWindow::motdReceived(const QString& motd)
-{
-  // don't show motd after 5 seconds, may be annoying. Hopefully the user's
-  // internet connection is faster next time
-  if (m_StartTime.secsTo(QTime::currentTime()) < 5) {
-    uint hash = qHash(motd);
-    if (hash != m_OrganizerCore.settings().motdHash()) {
-      MotDDialog dialog(motd);
-      dialog.exec();
-      m_OrganizerCore.settings().setMotdHash(hash);
-    }
-  }
-}
-
 void MainWindow::on_actionUpdate_triggered()
 {
   revampedRepositoryTriggered();
@@ -3819,19 +4587,13 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::actionEndorseMO()
 {
-  // Normally this would be the managed game but MO2 is only uploaded to the Skyrim SE
-  // site right now
-  IPluginGame* game = m_OrganizerCore.getGame("skyrimse");
-  if (!game)
-    return;
-
-  if (QMessageBox::question(
-          this, tr("Endorse Mod Organizer"),
-          tr("Do you want to endorse Mod Organizer on %1 now?")
-              .arg(NexusInterface::instance().getGameURL(game->gameShortName())),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+  if (askNexusEndorsement(
+          this, tr("Endorse MO2 Revamped"), tr("Support MO2 Revamped"),
+          tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
+          tr("Endorse"), tr("Cancel"),
+          QIcon(QStringLiteral(":/MO/gui/contextmenu/endorse.svg")))) {
     NexusInterface::instance().requestToggleEndorsement(
-        game->gameShortName(), game->nexusModOrganizerID(),
+        QStringLiteral("eldenring"), kRevampedNexusModId,
         m_OrganizerCore.getVersion().canonicalString(), true, this, QVariant(),
         QString());
   }
@@ -3839,27 +4601,19 @@ void MainWindow::actionEndorseMO()
 
 void MainWindow::actionWontEndorseMO()
 {
-  // Normally this would be the managed game but MO2 is only uploaded to the Skyrim SE
-  // site right now
-  IPluginGame* game = m_OrganizerCore.getGame("skyrimse");
-  if (!game)
-    return;
-
-  if (QMessageBox::question(
-          this, tr("Abstain from Endorsing Mod Organizer"),
-          tr("Are you sure you want to abstain from endorsing Mod Organizer 2?\n"
-             "You will have to visit the mod page on the %1 Nexus site to change your "
-             "mind.")
-              .arg(NexusInterface::instance().getGameURL(game->gameShortName())),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+  if (askNexusEndorsement(
+          this, tr("Endorsement preference"), tr("Don't endorse MO2 Revamped"),
+          tr("This will record your choice not to endorse the listing on Nexus Mods."),
+          tr("Won't Endorse"), tr("Cancel"),
+          QIcon(QStringLiteral(":/MO/gui/contextmenu/wont-endorse.svg")))) {
     NexusInterface::instance().requestToggleEndorsement(
-        game->gameShortName(), game->nexusModOrganizerID(),
+        QStringLiteral("eldenring"), kRevampedNexusModId,
         m_OrganizerCore.getVersion().canonicalString(), false, this, QVariant(),
         QString());
   }
 }
 
-void MainWindow::toggleMO2EndorseState()
+void MainWindow::toggleRevampedEndorseState()
 {
   const auto& s = m_OrganizerCore.settings();
 
@@ -3875,12 +4629,12 @@ void MainWindow::toggleMO2EndorseState()
 
   switch (s.nexus().endorsementState()) {
   case EndorsementState::Accepted: {
-    text = tr("Thank you for endorsing MO2! :)");
+    text = tr("Thank you for endorsing MO2 Revamped! :)");
     break;
   }
 
   case EndorsementState::Refused: {
-    text = tr("Please reconsider endorsing MO2 on Nexus!");
+    text = tr("You chose not to endorse MO2 Revamped on Nexus Mods.");
     break;
   }
 
@@ -3914,19 +4668,33 @@ void MainWindow::nxmEndorsementsAvailable(QVariant userData, QVariant resultData
   std::multimap<QString, std::pair<int, QString>> sorted;
   QStringList games = m_OrganizerCore.managedGame()->validShortNames();
   games += m_OrganizerCore.managedGame()->gameShortName();
-  bool searchedMO2NexusGame = false;
+  const bool endorsementIntegration =
+      m_OrganizerCore.settings().nexus().endorsementIntegration();
+  if (endorsementIntegration) {
+    m_OrganizerCore.settings().nexus().setEndorsementState(
+        EndorsementState::NoDecision);
+  }
+
   for (auto endorsementData : data) {
     QVariantMap endorsement      = endorsementData.toMap();
-    std::pair<int, QString> data = std::make_pair<int, QString>(
-        endorsement["mod_id"].toInt(), endorsement["status"].toString());
-    sorted.insert(std::pair<QString, std::pair<int, QString>>(
-        endorsement["domain_name"].toString(), data));
+    const QString domainName     = endorsement["domain_name"].toString();
+    const int modId              = endorsement["mod_id"].toInt();
+    const QString status         = endorsement["status"].toString();
+    sorted.emplace(domainName, std::make_pair(modId, status));
+
+    if (endorsementIntegration &&
+        domainName.compare(QStringLiteral("eldenring"), Qt::CaseInsensitive) == 0 &&
+        modId == kRevampedNexusModId) {
+      m_OrganizerCore.settings().nexus().setEndorsementState(
+          endorsementStateFromString(status));
+    }
   }
+
   for (auto game : games) {
     IPluginGame* gamePlugin = m_OrganizerCore.getGame(game);
-    if (gamePlugin != nullptr &&
-        gamePlugin->gameShortName().compare("SkyrimSE", Qt::CaseInsensitive) == 0)
-      searchedMO2NexusGame = true;
+    if (gamePlugin == nullptr) {
+      continue;
+    }
     auto iter = sorted.equal_range(gamePlugin->gameNexusName());
     for (auto result = iter.first; result != iter.second; ++result) {
       std::vector<ModInfo::Ptr> modsList =
@@ -3941,33 +4709,10 @@ void MainWindow::nxmEndorsementsAvailable(QVariant userData, QVariant resultData
           mod->setIsEndorsed(false);
       }
 
-      if (Settings::instance().nexus().endorsementIntegration()) {
-        if (result->first == "skyrimspecialedition" &&
-            result->second.first == gamePlugin->nexusModOrganizerID()) {
-          m_OrganizerCore.settings().nexus().setEndorsementState(
-              endorsementStateFromString(result->second.second));
-
-          toggleMO2EndorseState();
-        }
-      }
     }
   }
 
-  if (!searchedMO2NexusGame && Settings::instance().nexus().endorsementIntegration()) {
-    auto gamePlugin = m_OrganizerCore.getGame("SkyrimSE");
-    if (gamePlugin) {
-      auto iter = sorted.equal_range(gamePlugin->gameNexusName());
-      for (auto result = iter.first; result != iter.second; ++result) {
-        if (result->second.first == gamePlugin->nexusModOrganizerID()) {
-          m_OrganizerCore.settings().nexus().setEndorsementState(
-              endorsementStateFromString(result->second.second));
-
-          toggleMO2EndorseState();
-          break;
-        }
-      }
-    }
-  }
+  toggleRevampedEndorseState();
 }
 
 void MainWindow::nxmUpdateInfoAvailable(QString gameName, QVariant userData,
@@ -4251,7 +4996,7 @@ void MainWindow::nxmEndorsementToggled(QString, int, QVariant, QVariant resultDa
   case EndorsementState::Refused: {
     // don't spam message boxes if the user doesn't want to endorse
     log::info(
-        "Mod Organizer will not be endorsed and will no longer ask you to endorse.");
+        "MO2 Revamped will not be endorsed and will no longer ask you to endorse.");
     break;
   }
 
@@ -4262,7 +5007,7 @@ void MainWindow::nxmEndorsementToggled(QString, int, QVariant, QVariant resultDa
   }
 
   m_OrganizerCore.settings().nexus().setEndorsementState(s);
-  toggleMO2EndorseState();
+  toggleRevampedEndorseState();
 
   if (!disconnect(sender(),
                   SIGNAL(nxmEndorsementToggled(QString, int, QVariant, QVariant, int)),

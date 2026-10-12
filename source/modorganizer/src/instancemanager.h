@@ -288,6 +288,9 @@ public:
   // True only for the portable edition limited to Elden Ring.
   bool isEldenRingOnlyPortableMode() const;
 
+  // True when this installation stores its instance data beside the program.
+  bool isPortableMode() const;
+
   // whether a portable instance exists; this basically checks for an INI in
   // the application directory
   //
@@ -319,8 +322,8 @@ public:
   //
   QString portablePath() const;
 
-  // returns the absolute path to the directory that contains global instances
-  // (typically AppData/Local/ModOrganizer)
+  // returns the absolute path to this Revamped installation's global instances
+  // (never the original MO2 AppData/Local/ModOrganizer directory)
   //
   QString globalInstancesRootPath() const;
 

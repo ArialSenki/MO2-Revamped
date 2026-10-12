@@ -1,6 +1,7 @@
 #include "createinstancedialogpages.h"
 #include "eldenringsavesettings.h"
 #include "filesystemutilities.h"
+#include "gameiconutils.h"
 #include "instancemanager.h"
 #include "plugincontainer.h"
 #include "settings.h"
@@ -68,11 +69,13 @@ QIcon makeWizardIcon(const QWidget* widget, WizardIcon type)
   const QColor accent = widget->palette().color(QPalette::Highlight);
   const QColor ink = widget->palette().color(QPalette::Text);
   const QColor surface = widget->palette().color(QPalette::Base);
-  QColor tint = accent;
-  tint.setAlpha(28);
-  painter.setPen(Qt::NoPen);
-  painter.setBrush(tint);
-  painter.drawRoundedRect(QRectF(1, 1, 38, 38), 10, 10);
+  if (type != WizardIcon::Browse) {
+    QColor tint = accent;
+    tint.setAlpha(28);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(tint);
+    painter.drawEllipse(QRectF(1, 1, 38, 38));
+  }
 
   const QPen outline(accent, 2.1, Qt::SolidLine, Qt::RoundCap,
                      Qt::RoundJoin);
@@ -136,10 +139,11 @@ QIcon makeWizardIcon(const QWidget* widget, WizardIcon type)
     break;
   }
   case WizardIcon::Browse: {
+    const QPen browsePen(ink, 2.4, Qt::SolidLine, Qt::RoundCap,
+                        Qt::RoundJoin);
+    painter.setPen(browsePen);
+    painter.setBrush(Qt::NoBrush);
     drawFolder();
-    painter.setPen(QPen(accent, 2.3, Qt::SolidLine, Qt::RoundCap,
-                        Qt::RoundJoin));
-    painter.setBrush(surface);
     painter.drawEllipse(QRectF(22, 21, 9, 9));
     painter.drawLine(QPointF(29, 29), QPointF(34, 34));
     break;
@@ -538,9 +542,17 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
   ui->createGlobal->setIconSize(QSize(34, 34));
   ui->createPortable->setIconSize(QSize(34, 34));
   ui->createIsolated->setIconSize(QSize(34, 34));
-  ui->createGlobal->setMinimumHeight(80);
-  ui->createPortable->setMinimumHeight(80);
-  ui->createIsolated->setMinimumHeight(80);
+  ui->createGlobal->setMinimumHeight(54);
+  ui->createPortable->setMinimumHeight(54);
+  ui->createIsolated->setMinimumHeight(54);
+  ui->createGlobal->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  ui->createPortable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  ui->createIsolated->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  ui->widget_15->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  if (auto* choicesLayout =
+          qobject_cast<QVBoxLayout*>(ui->widget_15->layout())) {
+    choicesLayout->setSpacing(0);
+  }
 
   QObject::connect(ui->createGlobal, &QAbstractButton::clicked, [&] {
     global();
@@ -672,7 +684,7 @@ void GamePage::doActivated(bool firstTime)
       toolbarLayout->setContentsMargins(0, 0, 0, 0);
       toolbarLayout->setSpacing(10);
     }
-    ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     ui->scrollArea_3->viewport()->setAttribute(Qt::WA_StyledBackground, true);
     if (ui->games != nullptr) {
       ui->games->setAttribute(Qt::WA_StyledBackground, true);
@@ -690,7 +702,7 @@ void GamePage::doActivated(bool firstTime)
       ui->browseGameFolderButton->setAutoDefault(false);
       ui->browseGameFolderButton->setIcon(
           makeWizardIcon(ui->browseGameFolderButton, WizardIcon::Browse));
-      ui->browseGameFolderButton->setIconSize(QSize(20, 20));
+      ui->browseGameFolderButton->setIconSize(QSize(24, 24));
       ui->browseGameFolderButton->setMinimumHeight(34);
       QObject::connect(ui->browseGameFolderButton, &QPushButton::clicked,
                        &m_dlg, [this] { selectCustom(); });
@@ -1021,7 +1033,7 @@ void GamePage::createGameButton(Game* g)
   g->button->setObjectName(QStringLiteral("gameChoice"));
   g->button->setCheckable(true);
   g->button->setAutoDefault(false);
-  g->button->setMinimumHeight(78);
+  g->button->setMinimumHeight(50);
   g->button->setIconSize(QSize(32, 32));
 
   updateButton(g);
@@ -1061,6 +1073,8 @@ void GamePage::updateButton(Game* g)
   if (gameIcon.isNull()) {
     gameIcon = makeWizardIcon(g->button, WizardIcon::Edition);
   }
+  gameIcon = MOBase::makeRunStyleGameIcon(gameIcon, g->button,
+                                          g->button->iconSize());
   g->button->setIcon(gameIcon);
 
   if (g->installed) {
@@ -1433,6 +1447,11 @@ NamePage::NamePage(CreateInstanceDialog& dlg)
     : Page(dlg), m_modified(false), m_okay(false),
       m_exists(ui->instanceNameExists), m_invalid(ui->instanceNameInvalid)
 {
+  // Dynamic names and folder paths can exceed the wizard's fixed width.
+  // Wrap validation text so it stays inside the warning card.
+  ui->instanceNameExists->setWordWrap(true);
+  ui->instanceNameInvalid->setWordWrap(true);
+
   QObject::connect(ui->instanceName, &QLineEdit::textEdited, [&] {
     onChanged();
   });
@@ -1471,7 +1490,9 @@ void NamePage::doActivated(bool)
   }
 
   const auto type = m_dlg.rawCreationInfo().type;
-  ui->instanceNameContext->setVisible(true);
+  // The heading and live folder preview already explain the name's purpose.
+  // Keep the extra paragraph hidden so this step stays focused and compact.
+  ui->instanceNameContext->setVisible(false);
   if (type == CreateInstanceDialog::Isolated) {
     ui->instanceNameLabel->setText(
         QCoreApplication::translate(
@@ -1612,18 +1633,19 @@ ProfilePage::ProfilePage(CreateInstanceDialog& dlg)
       m_defaultHeading(ui->profileSettingsLabel->text())
 {
   m_eldenRingSaveGroup->setObjectName(QStringLiteral("eldenRingSaveIsolationGroup"));
-  m_eldenRingSaveGroup->setTitle(
-      QCoreApplication::translate("cid::ProfilePage", "Elden Ring Save Isolation"));
+  m_eldenRingSaveGroup->setTitle(QString());
   m_eldenRingSaveGroup->setVisible(false);
 
   auto* groupLayout = new QVBoxLayout(m_eldenRingSaveGroup);
-  groupLayout->setContentsMargins(14, 12, 14, 12);
-  groupLayout->setSpacing(8);
+  groupLayout->setContentsMargins(0, 0, 0, 0);
+  groupLayout->setSpacing(6);
 
   m_eldenRingSaveScope->setText(QCoreApplication::translate(
       "cid::ProfilePage",
       "This choice applies only to Elden Ring profiles in the instance being created."));
   m_eldenRingSaveScope->setWordWrap(true);
+  m_eldenRingSaveScope->setStyleSheet(
+      QStringLiteral("QLabel { background-color: transparent; border: none; padding: 0; }"));
   groupLayout->addWidget(m_eldenRingSaveScope);
 
   m_eldenRingSaveMode->addItem(
@@ -1643,10 +1665,10 @@ ProfilePage::ProfilePage(CreateInstanceDialog& dlg)
   groupLayout->addWidget(m_eldenRingSaveMode);
 
   m_eldenRingSaveDescription->setWordWrap(true);
-  // The descriptions for the three modes have different lengths. Reserve
-  // enough lines so changing the mode cannot resize the wizard page.
+  // Keep room for translated descriptions without reserving a tall block on
+  // the save setup page.
   m_eldenRingSaveDescription->setMinimumHeight(
-      m_eldenRingSaveDescription->fontMetrics().lineSpacing() * 4);
+      m_eldenRingSaveDescription->fontMetrics().lineSpacing() * 3);
   groupLayout->addWidget(m_eldenRingSaveDescription);
 
   if (auto* pageLayout = qobject_cast<QVBoxLayout*>(ui->widget_25->layout())) {
@@ -1662,9 +1684,9 @@ ProfilePage::ProfilePage(CreateInstanceDialog& dlg)
   m_eldenRingSaveDescription->setText(EldenRingSaveSettings::modeDescription(
       m_eldenRingSaveMode->currentData().toString()));
 
-  // The save-isolation plugin provides the visible Elden Ring controls. Keep
-  // this native group hidden as a model for its selected mode; showing both
-  // groups briefly creates the legacy panel overlay during page changes.
+  // The plugin replaces this native fallback when it successfully injects
+  // its richer save controls. If the plugin is unavailable (including during
+  // first-time instance creation), ProfilePage::doActivated shows this group.
   m_eldenRingSaveGroup->hide();
 
   // The heading also changes for Elden Ring; preserve its larger height in
@@ -1722,15 +1744,12 @@ void ProfilePage::doActivated(bool firstTime)
 
   if (auto* contentLayout =
           qobject_cast<QVBoxLayout*>(ui->widget_25->layout())) {
-    const int margin = isEldenRing ? 0 : 9;
-    contentLayout->setContentsMargins(margin, margin, margin, margin);
-    contentLayout->setSpacing(isEldenRing ? 0 : -1);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    contentLayout->setSpacing(6);
     if (contentLayout->count() > 0) {
       if (auto* spacer = contentLayout->itemAt(contentLayout->count() - 1)
                              ->spacerItem()) {
-        spacer->changeSize(
-            20, isEldenRing ? 0 : 40, QSizePolicy::Minimum,
-            isEldenRing ? QSizePolicy::Fixed : QSizePolicy::Expanding);
+        spacer->changeSize(20, 8, QSizePolicy::Minimum, QSizePolicy::Fixed);
       }
     }
     contentLayout->invalidate();
@@ -1746,15 +1765,17 @@ void ProfilePage::doActivated(bool firstTime)
   if (auto* pageLayout = qobject_cast<QVBoxLayout*>(ui->page->layout())) {
     ui->widget_25->setSizePolicy(
         QSizePolicy::Expanding,
-        isEldenRing ? QSizePolicy::Maximum : QSizePolicy::Preferred);
-    pageLayout->setAlignment(
-        ui->widget_25,
-        isEldenRing ? Qt::Alignment(Qt::AlignTop) : Qt::Alignment());
+        QSizePolicy::Maximum);
+    pageLayout->setAlignment(ui->widget_25, Qt::AlignTop);
     pageLayout->invalidate();
     pageLayout->activate();
   }
 
-  m_eldenRingSaveGroup->hide();
+  const bool pluginOwnsSaveControls =
+      m_eldenRingSaveGroup
+          ->property("_eldenRingSaveUiPluginControlsActive")
+          .toBool();
+  m_eldenRingSaveGroup->setVisible(isEldenRing && !pluginOwnsSaveControls);
   ui->profileInisCheckbox->setVisible(!isEldenRing);
   ui->profileSavesCheckbox->setVisible(!isEldenRing);
   ui->archiveInvalidationCheckbox->setVisible(!isEldenRing);
@@ -1780,6 +1801,13 @@ PathsPage::PathsPage(CreateInstanceDialog& dlg)
       m_advancedExists(ui->advancedDirExists),
       m_advancedInvalid(ui->advancedDirInvalid), m_okay(false)
 {
+  // These labels display user-selected paths and must remain readable at the
+  // wizard's fixed width, including when the path is long.
+  ui->locationExists->setWordWrap(true);
+  ui->locationInvalid->setWordWrap(true);
+  ui->advancedDirExists->setWordWrap(true);
+  ui->advancedDirInvalid->setWordWrap(true);
+
   auto setEdit = [&](QLineEdit* e) {
     QObject::connect(e, &QLineEdit::textEdited, [&] {
       onChanged();
@@ -1819,6 +1847,23 @@ PathsPage::PathsPage(CreateInstanceDialog& dlg)
     panelLayout->setContentsMargins(14, 12, 14, 12);
     panelLayout->setSpacing(0);
   }
+
+  // Keep the advanced-path toggle outside the bordered path card so it reads
+  // as a simple option instead of a nested panel.
+  if (auto* cardLayout = qobject_cast<QVBoxLayout*>(ui->widget_13->layout())) {
+    if (auto* pageLayout = qobject_cast<QVBoxLayout*>(ui->page_6->layout())) {
+      cardLayout->removeWidget(ui->widget_14);
+      ui->widget_14->setParent(ui->page_6);
+      pageLayout->addWidget(ui->widget_14);
+    }
+  }
+  ui->widget_14->setObjectName(QStringLiteral("advancedPathToggleRow"));
+  if (auto* toggleLayout =
+          qobject_cast<QHBoxLayout*>(ui->widget_14->layout())) {
+    toggleLayout->setContentsMargins(0, 6, 2, 0);
+    toggleLayout->setSpacing(0);
+  }
+  ui->advancedPathOptions->setCursor(Qt::PointingHandCursor);
 
   QLabel* pathLabels[] = {ui->label_6, ui->label_8, ui->label_9,
                           ui->label_10, ui->label_12, ui->label_13};
@@ -2114,7 +2159,11 @@ bool NexusPage::doSkip() const
   return m_skip;
 }
 
-ConfirmationPage::ConfirmationPage(CreateInstanceDialog& dlg) : Page(dlg) {}
+ConfirmationPage::ConfirmationPage(CreateInstanceDialog& dlg) : Page(dlg)
+{
+  // The isolated-copy instructions are longer than the default sentence.
+  ui->label_17->setWordWrap(true);
+}
 
 void ConfirmationPage::doActivated(bool)
 {
@@ -2125,8 +2174,8 @@ void ConfirmationPage::doActivated(bool)
 
   if (m_dlg.rawCreationInfo().type == CreateInstanceDialog::Isolated) {
     ui->label_17->setText(QObject::tr(
-        "MO2 will copy its application files into a separate folder for this game. Close the current MO2 before starting the new copy."));
-    ui->launch->setText(QObject::tr("Open the isolated copy's folder after setup"));
+        "MO2 will copy its application files into a separate folder for this game. If you start the copy after setup, this MO2 closes first."));
+    ui->launch->setText(QObject::tr("Start the isolated copy after setup"));
   } else {
     ui->label_17->setText(QObject::tr(
         "The instance is ready to be created. Review the details, then select Finish."));

@@ -1,3 +1,4 @@
+#include "revampedtheme.h"
 /*
 Copyright (C) 2012 Sebastian Herbord. All rights reserved.
 
@@ -197,15 +198,15 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
     }
   } else if (role == Qt::ForegroundRole && index.column() == COL_STATUS) {
     if (pendingDownload) {
-      return QColor(Qt::darkBlue);
+      return MOBase::RevampedTheme::isBlack() ? QColor("#D0D0D0") : QColor(Qt::darkBlue);
     } else {
       DownloadManager::DownloadState state = m_manager.getState(index.row());
       if (state == DownloadManager::STATE_READY)
-        return QColor(Qt::darkGreen);
+        return MOBase::RevampedTheme::isBlack() ? QColor("#9BCB9B") : QColor(Qt::darkGreen);
       else if (state == DownloadManager::STATE_UNINSTALLED)
-        return QColor(Qt::darkYellow);
+        return MOBase::RevampedTheme::isBlack() ? QColor("#D9C48A") : QColor(Qt::darkYellow);
       else if (state == DownloadManager::STATE_PAUSED)
-        return QColor(Qt::darkRed);
+        return MOBase::RevampedTheme::isBlack() ? QColor("#F0A0A0") : QColor(Qt::darkRed);
     }
   } else if (role == Qt::ToolTipRole) {
     if (pendingDownload) {

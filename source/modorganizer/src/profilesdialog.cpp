@@ -36,15 +36,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QDir>
 #include <QDirIterator>
-#include <QComboBox>
-#include <QGroupBox>
-#include <QInputDialog>
+#include <QAbstractButton>
+#include <QBoxLayout>
+#include <QHBoxLayout>
+#include <QIcon>
 #include <QLabel>
-#include <QLineEdit>
 #include <QListWidgetItem>
 #include <QMessageBox>
-#include <QPushButton>
-#include <QVBoxLayout>
+#include <QPixmap>
 #include <QWhatsThis>
 
 #include <Windows.h>
@@ -56,110 +55,106 @@ using namespace MOShared;
 
 Q_DECLARE_METATYPE(Profile::Ptr)
 
+namespace
+{
+void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
+                            const QString& iconPath,
+                            const QString& iconObjectName, int size)
+{
+  if (layout == nullptr || heading == nullptr) {
+    return;
+  }
+
+  const int index = layout->indexOf(heading);
+  if (index < 0) {
+    return;
+  }
+
+  layout->removeWidget(heading);
+  auto* row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(8);
+
+  auto* icon = new QLabel(heading->parentWidget());
+  icon->setObjectName(iconObjectName);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(size, size);
+  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+
+  row->addWidget(icon, 0, Qt::AlignVCenter);
+  row->addWidget(heading, 1, Qt::AlignVCenter);
+  layout->insertLayout(index, row);
+}
+
+void styleProfilePrompt(QMessageBox& prompt,
+                        QMessageBox::StandardButton confirmButton = QMessageBox::No,
+                        bool destructive = false)
+{
+  prompt.setObjectName("revampedProfileActionPrompt");
+  prompt.setWindowTitle("MO2 Revamped");
+  prompt.setTextFormat(Qt::PlainText);
+
+  if (QLabel* label = prompt.findChild<QLabel*>("qt_msgbox_label")) {
+    label->setWordWrap(true);
+  }
+  if (QLabel* label = prompt.findChild<QLabel*>("qt_msgbox_informativelabel")) {
+    label->setWordWrap(true);
+  }
+
+  if (QAbstractButton* button = prompt.button(confirmButton)) {
+    button->setObjectName(destructive ? "profileDestructiveButton"
+                                      : "profilePromptConfirmButton");
+  }
+  if (QAbstractButton* button = prompt.button(QMessageBox::No)) {
+    button->setObjectName("profileCancelButton");
+  }
+  if (QAbstractButton* button = prompt.button(QMessageBox::Cancel)) {
+    button->setObjectName("profileCancelButton");
+  }
+}
+
+void showProfileNotice(QWidget* parent, QMessageBox::Icon icon,
+                       const QString& heading, const QString& details)
+{
+  QMessageBox prompt(icon, "MO2 Revamped", heading, QMessageBox::Ok, parent);
+  prompt.setInformativeText(details);
+  styleProfilePrompt(prompt, QMessageBox::Ok);
+  prompt.exec();
+}
+}  // namespace
+
 ProfilesDialog::ProfilesDialog(const QString& profileName, OrganizerCore& organizer,
                                QWidget* parent)
     : TutorableDialog("Profiles", parent), ui(new Ui::ProfilesDialog),
       m_GameFeatures(organizer.gameFeatures()), m_FailState(false),
-      m_Game(organizer.managedGame()),
-      m_IsEldenRing(EldenRingSaveSettings::supports(m_Game)), m_ActiveProfileName("")
+      m_Game(organizer.managedGame()), m_ActiveProfileName("")
 {
   ui->setupUi(this);
+  addCircularHeadingIcon(ui->profilesHeaderLayout, ui->profilesPageTitle,
+                         ":/MO/gui/mainwindow/profile.svg",
+                         "profilesHeaderIcon", 32);
+  addCircularHeadingIcon(ui->profilesActionsLayout, ui->profilesSectionTitle,
+                         ":/MO/gui/mainwindow/profile.svg",
+                         "profilesSectionIcon", 24);
+  addCircularHeadingIcon(ui->profileOptionsPanelLayout,
+                         ui->profileOptionsTitle,
+                         ":/MO/gui/mainwindow/settings.svg",
+                         "profileOptionsIcon", 22);
 
-  if (m_IsEldenRing) {
+  if (EldenRingSaveSettings::supports(m_Game)) {
+    ui->profileOptionsPanel->hide();
+    ui->profilesPageSubtitle->setText(
+        tr("Elden Ring save routing is managed in Tools > Elden Ring Save Isolation."));
     ui->localSavesBox->hide();
+    // Elden Ring routes saves through its dedicated Tools dialog. Keep the
+    // legacy transfer action available for games that still use MO2's native
+    // profile-local save handling, but do not show it for Elden Ring.
+    ui->transferButton->hide();
     ui->localIniFilesBox->hide();
     ui->invalidationBox->hide();
-
-    QWidget* profileOptions = ui->profilesList->parentWidget();
-    auto* profileLayout = qobject_cast<QVBoxLayout*>(profileOptions->layout());
-    if (profileLayout != nullptr) {
-      m_eldenRingSaveGroup = new QGroupBox(tr("Elden Ring Save Isolation"),
-                                           profileOptions);
-      m_eldenRingSaveGroup->setObjectName(
-          QStringLiteral("eldenRingSaveIsolationGroup"));
-      auto* saveLayout = new QVBoxLayout(m_eldenRingSaveGroup);
-      saveLayout->setContentsMargins(14, 12, 14, 12);
-      saveLayout->setSpacing(8);
-
-      m_eldenRingProfileLabel = new QLabel(m_eldenRingSaveGroup);
-      m_eldenRingProfileLabel->setWordWrap(true);
-      saveLayout->addWidget(m_eldenRingProfileLabel);
-
-      m_eldenRingSaveScope = new QLabel(
-          tr("The save mode applies to the selected profile in this Elden Ring "
-             "instance. Other game instances keep their own MO2 settings."),
-          m_eldenRingSaveGroup);
-      m_eldenRingSaveScope->setWordWrap(true);
-      saveLayout->addWidget(m_eldenRingSaveScope);
-
-      m_eldenRingSaveMode = new QComboBox(m_eldenRingSaveGroup);
-      m_eldenRingSaveMode->addItem(
-          EldenRingSaveSettings::modeName(EldenRingSaveSettings::ProfileIsolated),
-          QString::fromLatin1(EldenRingSaveSettings::ProfileIsolated));
-      m_eldenRingSaveMode->addItem(
-          EldenRingSaveSettings::modeName(EldenRingSaveSettings::InstanceShared),
-          QString::fromLatin1(EldenRingSaveSettings::InstanceShared));
-      m_eldenRingSaveMode->addItem(
-          EldenRingSaveSettings::modeName(EldenRingSaveSettings::GlobalShared),
-          QString::fromLatin1(EldenRingSaveSettings::GlobalShared));
-      saveLayout->addWidget(m_eldenRingSaveMode);
-
-      m_eldenRingSaveDescription = new QLabel(m_eldenRingSaveGroup);
-      m_eldenRingSaveDescription->setWordWrap(true);
-      saveLayout->addWidget(m_eldenRingSaveDescription);
-
-      m_eldenRingSaveStatus = new QLabel(m_eldenRingSaveGroup);
-      m_eldenRingSaveStatus->setWordWrap(true);
-      saveLayout->addWidget(m_eldenRingSaveStatus);
-
-      m_eldenRingSaveModeSaveButton =
-          new QPushButton(tr("Save mode"), m_eldenRingSaveGroup);
-      saveLayout->addWidget(m_eldenRingSaveModeSaveButton);
-
-      profileLayout->insertWidget(1, m_eldenRingSaveGroup);
-      connect(m_eldenRingSaveModeSaveButton, &QPushButton::clicked, this,
-              &ProfilesDialog::saveEldenRingSaveMode);
-      connect(m_eldenRingSaveMode,
-              qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
-                const QString mode = m_eldenRingSaveMode->currentData().toString();
-                m_eldenRingSaveDescription->setText(
-                    EldenRingSaveSettings::modeDescription(mode));
-
-                QListWidgetItem* item = ui->profilesList->currentItem();
-                Profile::Ptr profile = item == nullptr
-                                           ? Profile::Ptr()
-                                           : item->data(Qt::UserRole)
-                                                 .value<Profile::Ptr>();
-                if (profile) {
-                  const QString savedMode = EldenRingSaveSettings::readProfileMode(
-                      profile->absolutePath(),
-                      profile->localSavesEnabled()
-                          ? QString::fromLatin1(EldenRingSaveSettings::ProfileIsolated)
-                          : QString::fromLatin1(EldenRingSaveSettings::GlobalShared));
-                  const bool expectsLocalSaves =
-                      mode != QLatin1String(EldenRingSaveSettings::GlobalShared);
-                  const bool localSavesMatch =
-                      profile->localSavesEnabled() == expectsLocalSaves;
-                  if (mode != savedMode) {
-                    m_eldenRingSaveStatus->setText(
-                        tr("Pending change: %1. Select Save mode to apply it.")
-                            .arg(EldenRingSaveSettings::modeName(mode)));
-                  } else if (!localSavesMatch) {
-                    m_eldenRingSaveStatus->setText(
-                        tr("MO2's save setting does not match this mode. Select "
-                           "Save mode to synchronize it."));
-                  } else {
-                    m_eldenRingSaveStatus->setText(
-                        tr("Current mode: %1")
-                            .arg(EldenRingSaveSettings::modeName(savedMode)));
-                  }
-                  m_eldenRingSaveModeSaveButton->setEnabled(
-                      mode != savedMode || !localSavesMatch);
-                }
-              });
-
-      resize(760, 500);
-    }
   }
 
   QDir profilesDir(Settings::instance().paths().profiles());
@@ -313,53 +308,66 @@ void ProfilesDialog::on_addProfileButton_clicked()
 
 void ProfilesDialog::on_copyProfileButton_clicked()
 {
-  bool okClicked;
-  QString name = QInputDialog::getText(this, tr("Name"),
-                                       tr("Please enter a name for the new profile"),
-                                       QLineEdit::Normal, QString(), &okClicked);
-  if (okClicked) {
-    if (fixDirectoryName(name)) {
-      try {
-        const Profile::Ptr currentProfile =
-            ui->profilesList->currentItem()->data(Qt::UserRole).value<Profile::Ptr>();
-        createProfile(name, *currentProfile);
-      } catch (const std::exception& e) {
-        reportError(tr("failed to copy profile: %1").arg(e.what()));
-      }
-    } else {
-      QMessageBox::warning(this, tr("Invalid name"), tr("Invalid profile name"));
-    }
+  ProfileInputDialog dialog(this, ProfileInputDialog::Purpose::Copy);
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  QString name = dialog.getName();
+  if (!fixDirectoryName(name) || name.isEmpty()) {
+    showProfileNotice(this, QMessageBox::Warning, tr("Invalid profile name"),
+                      tr("Choose a valid name for this profile."));
+    return;
+  }
+
+  try {
+    const Profile::Ptr currentProfile =
+        ui->profilesList->currentItem()->data(Qt::UserRole).value<Profile::Ptr>();
+    createProfile(name, *currentProfile);
+  } catch (const std::exception& e) {
+    reportError(tr("failed to copy profile: %1").arg(e.what()));
   }
 }
 
 void ProfilesDialog::on_removeProfileButton_clicked()
 {
+  QListWidgetItem* selectedItem = ui->profilesList->currentItem();
   Profile::Ptr profileToDelete =
-      ui->profilesList->currentItem()->data(Qt::UserRole).value<Profile::Ptr>();
-  if (profileToDelete->name() == m_ActiveProfileName) {
-    QMessageBox::warning(this, tr("Deleting active profile"),
-                         tr("Unable to delete active profile.  Please change to a "
-                            "different profile first."));
+      selectedItem->data(Qt::UserRole).value<Profile::Ptr>();
+  const QString profileName =
+      profileToDelete ? profileToDelete->name() : selectedItem->text();
+  if (profileToDelete && profileName == m_ActiveProfileName) {
+    showProfileNotice(this, QMessageBox::Warning,
+                      tr("This profile is currently active"),
+                      tr("Switch to another profile before removing it."));
     return;
   }
 
-  QMessageBox confirmBox(QMessageBox::Question, tr("Confirm"),
-                         tr("Are you sure you want to remove this profile (including "
-                            "profile-specific save games, if any)?"),
+  QMessageBox confirmBox(QMessageBox::Warning, "MO2 Revamped",
+                         tr("Remove profile \"%1\"?").arg(profileName),
                          QMessageBox::Yes | QMessageBox::No, this);
+  confirmBox.setDefaultButton(QMessageBox::No);
+  confirmBox.setEscapeButton(QMessageBox::No);
+  confirmBox.setInformativeText(
+      tr("This removes the profile, including any profile-specific save games. "
+         "This action cannot be undone."));
+  styleProfilePrompt(confirmBox, QMessageBox::Yes, true);
 
   if (confirmBox.exec() == QMessageBox::Yes) {
     QString profilePath;
     if (profileToDelete.get() == nullptr) {
       profilePath = Settings::instance().paths().profiles() + "/" +
-                    ui->profilesList->currentItem()->text();
-      if (QMessageBox::question(
-              this, tr("Profile broken"),
-              tr("This profile you're about to delete seems to be broken or the path "
-                 "is invalid. "
-                 "I'm about to delete the following folder: \"%1\". Proceed?")
-                  .arg(profilePath),
-              QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) {
+                    profileName;
+      QMessageBox brokenProfileBox(
+          QMessageBox::Warning, "MO2 Revamped",
+          tr("This profile appears to be broken."),
+          QMessageBox::Yes | QMessageBox::No, this);
+      brokenProfileBox.setDefaultButton(QMessageBox::No);
+      brokenProfileBox.setEscapeButton(QMessageBox::No);
+      brokenProfileBox.setInformativeText(
+          tr("The folder below will be deleted:\n%1\n\nProceed?").arg(profilePath));
+      styleProfilePrompt(brokenProfileBox, QMessageBox::Yes, true);
+      if (brokenProfileBox.exec() != QMessageBox::Yes) {
         return;
       }
     } else {
@@ -367,7 +375,7 @@ void ProfilesDialog::on_removeProfileButton_clicked()
       // we have to get rid of the it before deleting the directory
       profilePath = profileToDelete->absolutePath();
     }
-    QListWidgetItem* item = ui->profilesList->takeItem(ui->profilesList->currentRow());
+    QListWidgetItem* item = ui->profilesList->takeItem(ui->profilesList->row(selectedItem));
     if (item != nullptr) {
       delete item;
     }
@@ -379,7 +387,7 @@ void ProfilesDialog::on_removeProfileButton_clicked()
       }
     }
 
-    emit profileRemoved(profileToDelete->name());
+    emit profileRemoved(profileName);
   }
 }
 
@@ -389,23 +397,23 @@ void ProfilesDialog::on_renameButton_clicked()
       ui->profilesList->currentItem()->data(Qt::UserRole).value<Profile::Ptr>();
 
   if (currentProfile->name() == m_ActiveProfileName) {
-    QMessageBox::warning(this, tr("Renaming active profile"),
-                         tr("The active profile cannot be renamed. Please change to a "
-                            "different profile first."));
+    showProfileNotice(this, QMessageBox::Warning,
+                      tr("This profile is currently active"),
+                      tr("Switch to another profile before renaming it."));
     return;
   }
 
-  bool valid = false;
-  QString name;
+  ProfileInputDialog dialog(this, ProfileInputDialog::Purpose::Rename,
+                            currentProfile->name());
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
 
-  while (!valid) {
-    bool ok = false;
-    name    = QInputDialog::getText(this, tr("Rename Profile"), tr("New Name"),
-                                    QLineEdit::Normal, currentProfile->name(), &ok);
-    valid   = fixDirectoryName(name);
-    if (!ok) {
-      return;
-    }
+  QString name = dialog.getName();
+  if (!fixDirectoryName(name) || name.isEmpty()) {
+    showProfileNotice(this, QMessageBox::Warning, tr("Invalid profile name"),
+                      tr("Choose a valid name for this profile."));
+    return;
   }
 
   ui->profilesList->currentItem()->setText(name);
@@ -475,9 +483,6 @@ void ProfilesDialog::on_profilesList_currentItemChanged(QListWidgetItem* current
       ui->localIniFilesBox->setChecked(currentProfile->localSettingsEnabled());
       ui->localIniFilesBox->blockSignals(false);
 
-      if (m_IsEldenRing) {
-        updateEldenRingSaveSettings(currentProfile.get());
-      }
     } catch (const std::exception& E) {
       reportError(
           tr("failed to determine if invalidation is active: %1").arg(E.what()));
@@ -491,113 +496,7 @@ void ProfilesDialog::on_profilesList_currentItemChanged(QListWidgetItem* current
     ui->copyProfileButton->setEnabled(false);
     ui->removeProfileButton->setEnabled(false);
     ui->renameButton->setEnabled(false);
-    if (m_IsEldenRing) {
-      updateEldenRingSaveSettings(nullptr);
-    }
   }
-}
-
-void ProfilesDialog::updateEldenRingSaveSettings(Profile* profile)
-{
-  if (!m_IsEldenRing || m_eldenRingSaveMode == nullptr) {
-    return;
-  }
-
-  const bool hasProfile = profile != nullptr;
-  m_eldenRingSaveMode->setEnabled(hasProfile);
-  m_eldenRingSaveModeSaveButton->setEnabled(false);
-
-  if (!hasProfile) {
-    m_eldenRingProfileLabel->setText(tr("Select a profile to configure its saves."));
-    m_eldenRingSaveDescription->clear();
-    m_eldenRingSaveStatus->clear();
-    return;
-  }
-
-  const QString fallback =
-      profile->localSavesEnabled()
-          ? QString::fromLatin1(EldenRingSaveSettings::ProfileIsolated)
-          : QString::fromLatin1(EldenRingSaveSettings::GlobalShared);
-  const QString mode = EldenRingSaveSettings::readProfileMode(
-      profile->absolutePath(), fallback);
-
-  m_eldenRingProfileLabel->setText(tr("<b>Profile:</b> %1").arg(profile->name()));
-  m_eldenRingSaveMode->blockSignals(true);
-  m_eldenRingSaveMode->setCurrentIndex(m_eldenRingSaveMode->findData(mode));
-  m_eldenRingSaveMode->blockSignals(false);
-  m_eldenRingSaveDescription->setText(
-      EldenRingSaveSettings::modeDescription(mode));
-  const bool expectsLocalSaves =
-      mode != QLatin1String(EldenRingSaveSettings::GlobalShared);
-  const bool localSavesMatch = profile->localSavesEnabled() == expectsLocalSaves;
-  m_eldenRingSaveStatus->setText(
-      localSavesMatch
-          ? tr("Current mode: %1").arg(EldenRingSaveSettings::modeName(mode))
-          : tr("MO2's save setting does not match this mode. Select Save mode to "
-               "synchronize it."));
-  m_eldenRingSaveModeSaveButton->setEnabled(!localSavesMatch);
-
-  // MO2's built-in transfer dialog addresses the profile's own saves folder.
-  // It does not address the instance-shared folder used by the shared mode.
-  ui->transferButton->setEnabled(
-      mode == QLatin1String(EldenRingSaveSettings::ProfileIsolated));
-}
-
-void ProfilesDialog::saveEldenRingSaveMode()
-{
-  QListWidgetItem* item = ui->profilesList->currentItem();
-  if (item == nullptr) {
-    return;
-  }
-
-  const Profile::Ptr profile = item->data(Qt::UserRole).value<Profile::Ptr>();
-  if (!profile) {
-    return;
-  }
-
-  const QString mode =
-      EldenRingSaveSettings::normalizeMode(m_eldenRingSaveMode->currentData().toString(),
-                                           QString());
-  if (mode.isEmpty()) {
-    return;
-  }
-
-  const bool useLocalSaves =
-      mode != QLatin1String(EldenRingSaveSettings::GlobalShared);
-  if (!useLocalSaves) {
-    const auto result = QMessageBox::warning(
-        this, tr("Use the global Elden Ring save?"),
-        tr("This mode shares the global save folder with Steam and other MO2 "
-           "instances using the same path. Modded play can change the vanilla "
-           "character. Continue?"),
-        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-    if (result != QMessageBox::Yes) {
-      updateEldenRingSaveSettings(profile.get());
-      return;
-    }
-  } else {
-    QDir profileDirectory(profile->absolutePath());
-    if (!profileDirectory.exists("saves") && !profileDirectory.mkpath("saves")) {
-      QMessageBox::warning(this, tr("Could not create the save folder"),
-                           profileDirectory.filePath("saves"));
-      return;
-    }
-  }
-
-  if (!EldenRingSaveSettings::writeProfileMode(profile->absolutePath(), mode)) {
-    QMessageBox::warning(this, tr("Could not save Elden Ring save mode"),
-                         tr("MO2 could not write the save mode for this profile."));
-    updateEldenRingSaveSettings(profile.get());
-    return;
-  }
-
-  // Update MO2's own local-save flag while preserving any existing profile saves.
-  profile->storeSetting("", "LocalSaves", useLocalSaves);
-  updateEldenRingSaveSettings(profile.get());
-  m_eldenRingSaveStatus->setText(
-      tr("Saved. If this is the active profile, switch to another profile and "
-         "back, or restart MO2, before launching Elden Ring so the save route "
-         "is reloaded."));
 }
 
 void ProfilesDialog::on_profilesList_itemActivated(QListWidgetItem* item)
@@ -607,11 +506,19 @@ void ProfilesDialog::on_profilesList_itemActivated(QListWidgetItem* item)
 
 void ProfilesDialog::on_localSavesBox_stateChanged(int state)
 {
-  Profile::Ptr currentProfile =
-      ui->profilesList->currentItem()->data(Qt::UserRole).value<Profile::Ptr>();
+  QListWidgetItem* item = ui->profilesList->currentItem();
+  if (item == nullptr) {
+    return;
+  }
 
-  if (currentProfile->enableLocalSaves(state == Qt::Checked)) {
-    ui->transferButton->setEnabled(state == Qt::Checked);
+  Profile::Ptr currentProfile = item->data(Qt::UserRole).value<Profile::Ptr>();
+  if (!currentProfile) {
+    return;
+  }
+
+  const bool enable = state == Qt::Checked;
+  if (currentProfile->enableLocalSaves(enable)) {
+    ui->transferButton->setEnabled(enable);
   } else {
     // revert checkbox-state
     ui->localSavesBox->setChecked(state != Qt::Checked);
@@ -620,8 +527,19 @@ void ProfilesDialog::on_localSavesBox_stateChanged(int state)
 
 void ProfilesDialog::on_transferButton_clicked()
 {
+  if (EldenRingSaveSettings::supports(m_Game)) {
+    return;
+  }
+
+  const QListWidgetItem* currentItem = ui->profilesList->currentItem();
+  if (currentItem == nullptr) {
+    return;
+  }
   const Profile::Ptr currentProfile =
-      ui->profilesList->currentItem()->data(Qt::UserRole).value<Profile::Ptr>();
+      currentItem->data(Qt::UserRole).value<Profile::Ptr>();
+  if (!currentProfile) {
+    return;
+  }
   TransferSavesDialog transferDialog(*currentProfile, m_Game, this);
   transferDialog.exec();
 }

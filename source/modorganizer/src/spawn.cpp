@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "envsecurity.h"
 #include "envwindows.h"
 #include "report.h"
+#include "revampedprompts.h"
 #include "settings.h"
 #include "settingsdialogworkarounds.h"
 #include "shared/appconfig.h"
@@ -214,12 +215,9 @@ void spawnFailed(QWidget* parent, const SpawnParameters& sp, DWORD code)
 
   const auto mainText = QObject::tr("Cannot start %1").arg(sp.binary.fileName());
 
-  MOBase::TaskDialog(parent, title)
-      .main(mainText)
-      .content(makeContent(sp, code))
-      .details(details)
-      .icon(QMessageBox::Critical)
-      .exec();
+  MOBase::RevampedPrompts::showError(parent, title, mainText, makeContent(sp, code),
+                                     details, QObject::tr("Details"),
+                                     QObject::tr("Close"));
 }
 
 void helperFailed(QWidget* parent, DWORD code, const QString& why,
@@ -238,12 +236,9 @@ void helperFailed(QWidget* parent, DWORD code, const QString& why,
 
   const auto mainText = QObject::tr("Cannot start %1").arg(sp.binary.fileName());
 
-  MOBase::TaskDialog(parent, title)
-      .main(mainText)
-      .content(makeContent(sp, code))
-      .details(details)
-      .icon(QMessageBox::Critical)
-      .exec();
+  MOBase::RevampedPrompts::showError(parent, title, mainText, makeContent(sp, code),
+                                     details, QObject::tr("Details"),
+                                     QObject::tr("Close"));
 }
 
 bool confirmRestartAsAdmin(QWidget* parent, const SpawnParameters& sp)

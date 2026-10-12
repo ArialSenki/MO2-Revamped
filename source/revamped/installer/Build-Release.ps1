@@ -11,17 +11,20 @@ param(
     [string]$PythonRuntimeDirectory,
     [Parameter(Mandatory = $true)]
     [string]$OutputDirectory,
+    [Parameter(Mandatory = $true)]
+    [string]$QtSdkDirectory,
     [string]$CscPath = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 )
 
 $ErrorActionPreference = 'Stop'
-$version = '1.0.0'
+$version = '1.0.1'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
 $runtimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory).TrimEnd('\')
 $organizerPath = [System.IO.Path]::GetFullPath($OrganizerExecutable)
 $openSslRuntimeRoot = [System.IO.Path]::GetFullPath($OpenSslRuntimeDirectory).TrimEnd('\')
 $pythonRuntimeRoot = [System.IO.Path]::GetFullPath($PythonRuntimeDirectory).TrimEnd('\')
 $outputRoot = [System.IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
+$qtSdkRoot = [System.IO.Path]::GetFullPath($QtSdkDirectory).TrimEnd('\')
 
 foreach ($path in @($runtimeRoot, $organizerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $CscPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf) -and
@@ -75,6 +78,8 @@ $sourceDir = Join-Path $repoRoot 'source\revamped\installer'
 $sourceFiles = @(
     (Join-Path $sourceDir 'AssemblyInfo.cs'),
     (Join-Path $sourceDir 'Mo2RevampedSetup.cs'),
+    (Join-Path $sourceDir 'InstallerText.cs'),
+    (Join-Path $sourceDir 'InstallerBackend.cs'),
     (Join-Path $sourceDir 'CompactSetupForm.cs')
 )
 $iconPath = Join-Path $runtimeRoot 'MO2-Revamped.ico'
@@ -128,10 +133,72 @@ function Invoke-SetupCompile {
         $arguments += '/define:' + [string]::Join(';', $Defines)
     }
     $arguments += $Resources
+    if (-not (Test-Path -LiteralPath $script:qtRuntimeZip -PathType Leaf)) {
+        throw "The Qt installer runtime archive was not built: $script:qtRuntimeZip"
+    }
+    $arguments += "/resource:$script:qtRuntimeZip,Mo2RevampedSetup.qt-runtime.zip"
     $arguments += $sourceFiles
     Invoke-Compiler -Arguments $arguments
     if (-not (Test-Path -LiteralPath $OutputPath -PathType Leaf)) {
         throw "The compiler did not create the expected executable: $OutputPath"
+    }
+}
+
+function Build-QtInstallerRuntime {
+    $qtPrefix = Join-Path $qtSdkRoot '6.10.3\mingw_64'
+    $qtBin = Join-Path $qtPrefix 'bin'
+    $mingwBin = Join-Path $qtSdkRoot 'Tools\mingw1310_64\bin'
+    $cmake = Join-Path $qtSdkRoot 'Tools\CMake_64\bin\cmake.exe'
+    $ninja = Join-Path $qtSdkRoot 'Tools\Ninja\ninja.exe'
+    $compiler = Join-Path $mingwBin 'g++.exe'
+    $windeployqt = Join-Path $qtBin 'windeployqt.exe'
+    foreach ($tool in @($qtPrefix, $cmake, $ninja, $compiler, $windeployqt)) {
+        if (-not (Test-Path -LiteralPath $tool)) { throw "The Qt 6.10.3 MinGW kit is incomplete: $tool" }
+    }
+
+    $buildPath = Join-Path $buildRoot 'qt-installer'
+    $deployPath = Join-Path $buildRoot 'qt-installer-runtime'
+    $qtSource = Join-Path $sourceDir 'qtui'
+    $oldPath = $env:PATH
+    try {
+        $env:PATH = "$mingwBin;$qtBin;$env:PATH"
+        & $cmake -S $qtSource -B $buildPath -G Ninja `
+            "-DCMAKE_PREFIX_PATH=$qtPrefix" `
+            "-DCMAKE_MAKE_PROGRAM=$ninja" `
+            "-DCMAKE_CXX_COMPILER=$compiler" `
+            '-DCMAKE_BUILD_TYPE=Release'
+        if ($LASTEXITCODE -ne 0) { throw 'CMake configuration for the Qt installer failed.' }
+        & $cmake --build $buildPath --config Release
+        if ($LASTEXITCODE -ne 0) { throw 'Building the Qt installer interface failed.' }
+
+        $qtExecutable = Join-Path $buildPath 'MO2RevampedSetupQt.exe'
+        if (-not (Test-Path -LiteralPath $qtExecutable -PathType Leaf)) { throw "The Qt installer executable was not created: $qtExecutable" }
+        New-Item -ItemType Directory -Force -Path $deployPath | Out-Null
+        & $windeployqt --release --no-translations --compiler-runtime --dir $deployPath $qtExecutable
+        if ($LASTEXITCODE -ne 0) { throw 'Deploying the Qt installer runtime failed.' }
+        Copy-Item -LiteralPath $qtExecutable -Destination (Join-Path $deployPath 'MO2RevampedSetupQt.exe') -Force
+
+        foreach ($required in @('MO2RevampedSetupQt.exe', 'Qt6Core.dll', 'Qt6Gui.dll', 'Qt6Widgets.dll', 'platforms\qwindows.dll', 'libstdc++-6.dll', 'libgcc_s_seh-1.dll', 'libwinpthread-1.dll')) {
+            $candidate = Join-Path $deployPath $required
+            if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw "The deployed Qt installer is missing a runtime file: $candidate" }
+        }
+        $script:qtRuntimeZip = Join-Path $workRoot 'qt-installer-runtime.zip'
+        if (Test-Path -LiteralPath $script:qtRuntimeZip) { Remove-Item -LiteralPath $script:qtRuntimeZip -Force }
+        $stream = [IO.File]::Create($script:qtRuntimeZip)
+        $archive = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create, $false)
+        try {
+            foreach ($file in Get-ChildItem -LiteralPath $deployPath -File -Recurse -Force | Sort-Object FullName) {
+                $relative = $file.FullName.Substring($deployPath.Length).TrimStart('\')
+                $entry = $archive.CreateEntry($relative.Replace('\', '/'), [IO.Compression.CompressionLevel]::Optimal)
+                $entry.LastWriteTime = [DateTimeOffset]::new(1980, 1, 1, 0, 0, 0, [TimeSpan]::Zero)
+                $input = [IO.File]::OpenRead($file.FullName)
+                $output = $entry.Open()
+                try { $input.CopyTo($output) } finally { $output.Dispose(); $input.Dispose() }
+            }
+        } finally { $archive.Dispose() }
+        Write-Host "Qt installer UI and runtime bundled: $script:qtRuntimeZip"
+    } finally {
+        $env:PATH = $oldPath
     }
 }
 
@@ -141,17 +208,23 @@ function Test-ExcludedRuntimeFile {
     $parts = $normalized -split '\\'
     $excludedDirectories = @(
         'profiles', 'mods', 'downloads', 'overwrite', 'logs', 'crashdumps',
-        'webcache', 'portableinstances', '_revampedupdatebackups', 'crashes',
+        'webcache', 'portableinstances', 'globalinstances', '_revampedupdatebackups', 'crashes',
         'diagnostics', '__pycache__', 'work', 'build'
     )
     foreach ($part in $parts[0..([Math]::Max(0, $parts.Length - 2))]) {
         if ($excludedDirectories -contains $part.ToLowerInvariant()) { return $true }
     }
     $leaf = $parts[$parts.Length - 1]
-    if ($parts.Length -eq 1 -and $leaf -match '^(ModOrganizer\.ini|MO2-Revamped\.ini|categories\.dat|nexuscatmap\.dat|portable\.txt|eldenring-only\.portable|unins000\.exe|MO2ForkUninstaller\.exe)$') {
+    if ($parts.Length -eq 1 -and $leaf -match '^(ModOrganizer\.ini|MO2-Revamped\.ini|MO2-Revamped\.install|MO2-Revamped-Global\.ini|EldenRingOnly\.ini|categories\.dat|nexuscatmap\.dat|portable\.txt|eldenring-only\.portable|unins000\.exe|MO2ForkUninstaller\.exe)$') {
         return $true
     }
     if ($normalized -match '^stylesheets\\\+(dark|light)\.qss$') {
+        return $true
+    }
+    if ($normalized -match '^plugins\\plugin_python\\data\\settings\.json$') {
+        return $true
+    }
+    if ($normalized -match '(^|\\)psutil\\tests(\\|$)') {
         return $true
     }
     return [System.IO.Path]::GetExtension($leaf).ToLowerInvariant() -in @(
@@ -189,6 +262,13 @@ function Copy-RevampedSources {
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
     }
+    $saveIsolationSource = Join-Path $pluginSource 'eldenring_mo2_save_isolation.py'
+    $saveIsolationStage = Join-Path $pluginDestination 'eldenring_mo2_save_isolation.py'
+    $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
+    $saveIsolationStageHash = (Get-FileHash -LiteralPath $saveIsolationStage -Algorithm SHA256).Hash
+    if ($saveIsolationSourceHash -ine $saveIsolationStageHash) {
+        throw 'The Complete stage does not contain the maintained Save Isolation source.'
+    }
     $bridgeDestination = Join-Path $pluginDestination 'basic_games\games\eldenring_mo2_bridge.dll'
     New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($bridgeDestination)) | Out-Null
     Copy-Item -LiteralPath $BridgePath -Destination $bridgeDestination -Force
@@ -203,6 +283,7 @@ function Copy-RevampedSources {
             switch -CaseSensitive ($file.Name) {
                 'MO2 Classic Refined - Light.qss' { $relative = 'Light.qss' }
                 'MO2 Classic Refined - Dark.qss' { $relative = 'dark.qss' }
+                'MO2 Classic Refined - Dark Black.qss' { $relative = 'dark-black.qss' }
                 default { throw "Unexpected Revamped theme stylesheet: $($file.Name)" }
             }
         }
@@ -213,7 +294,8 @@ function Copy-RevampedSources {
 
     foreach ($theme in @(
         @{ Source = 'MO2 Classic Refined - Light.qss'; Destination = 'Light.qss' },
-        @{ Source = 'MO2 Classic Refined - Dark.qss'; Destination = 'dark.qss' }
+        @{ Source = 'MO2 Classic Refined - Dark.qss'; Destination = 'dark.qss' },
+        @{ Source = 'MO2 Classic Refined - Dark Black.qss'; Destination = 'dark-black.qss' }
     )) {
         $source = Join-Path $themeSource $theme.Source
         $destination = Join-Path $themeDestination $theme.Destination
@@ -224,8 +306,44 @@ function Copy-RevampedSources {
         }
     }
 
+    # Tutorials are loaded from disk at runtime rather than compiled into the
+    # executable. Overlay the maintained source tree so rebuilt installers do
+    # not silently ship stale tutorial text from an older runtime snapshot.
+    $tutorialSource = Join-Path $repoRoot 'source\modorganizer\src\tutorials'
+    $tutorialDestination = Join-Path $DestinationRoot 'tutorials'
+    foreach ($file in Get-ChildItem -LiteralPath $tutorialSource -File -Recurse -Force) {
+        if ($file.Extension -notin @('.js', '.qml')) { continue }
+        $relative = $file.FullName.Substring($tutorialSource.Length).TrimStart('\')
+        $destination = Join-Path $tutorialDestination $relative
+        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
+    }
+
+    # MO2's own translation files do not cover the Revamped additions or the
+    # Revamped plugins; MO2 installs translations/revamped_<language>.qm next
+    # to organizer_<language>.qm.
+    $translationSource = Join-Path $repoRoot 'source\revamped\translations'
+    $translationDestination = Join-Path $DestinationRoot 'translations'
+    $lrelease = Join-Path $qtSdkRoot '6.10.3\mingw_64\bin\lrelease.exe'
+    if (-not (Test-Path -LiteralPath $lrelease -PathType Leaf)) {
+        throw "Qt lrelease was not found: $lrelease"
+    }
+    New-Item -ItemType Directory -Force -Path $translationDestination | Out-Null
+    $translationFiles = @(Get-ChildItem -LiteralPath $translationSource -Filter 'revamped_*.ts' -File)
+    if ($translationFiles.Count -eq 0) {
+        throw "No Revamped translation sources were found in $translationSource"
+    }
+    foreach ($file in $translationFiles) {
+        $qm = Join-Path $translationDestination ($file.BaseName + '.qm')
+        & $lrelease -silent $file.FullName -qm $qm
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $qm -PathType Leaf)) {
+            throw "Compiling the Revamped translation failed: $($file.Name)"
+        }
+    }
+
     Copy-Item -LiteralPath $organizerPath -Destination (Join-Path $DestinationRoot 'ModOrganizer.exe') -Force
     [IO.File]::WriteAllText((Join-Path $DestinationRoot 'MO2-Revamped.ini'), "[Settings]`r`nlanguage=en_US`r`n", [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $DestinationRoot 'MO2-Revamped.install'), "MO2-REVAMPED-INSTALLATION-MARKER`r`n", [Text.UTF8Encoding]::new($false))
 }
 
 function Copy-OpenSslRuntime {
@@ -254,6 +372,7 @@ function Copy-OpenSslRuntime {
             throw "OpenSSL staging verification failed for $destination; found '$version'."
         }
     }
+
 }
 
 function Copy-PythonRuntime {
@@ -272,17 +391,23 @@ function Copy-PythonRuntime {
     if (-not (Test-Path -LiteralPath $pluginRoot -PathType Container)) {
         throw "The MO2 Python plugin directory was not found: $pluginRoot"
     }
-    $required = @('dlls/python312.dll', 'libs/pythoncore.zip', 'libs/_ssl.pyd', 'libs/_hashlib.pyd')
+    $requiredOverlayFiles = @(
+        'dlls/python312.dll', 'libs/pythoncore.zip', 'libs/_ssl.pyd', 'libs/_hashlib.pyd'
+    )
     $manifestNames = @($manifest.files.PSObject.Properties.Name)
-    foreach ($name in $required) {
+    foreach ($name in $requiredOverlayFiles) {
         if ($manifestNames -notcontains $name) {
             throw "The Python runtime overlay is missing a required file: $name"
         }
     }
+    $moBaseModule = Join-Path $pluginRoot 'libs\mobase.cp312-win_amd64.pyd'
+    if (-not (Test-Path -LiteralPath $moBaseModule -PathType Leaf)) {
+        throw "The MO2 Python plugin module was not found in the base runtime: $moBaseModule"
+    }
 
     foreach ($property in $manifest.files.PSObject.Properties) {
         $relative = $property.Name.Replace('/', '\')
-        if ($relative -notmatch '^(dlls\\python312\.dll|dlls\\libffi-8\.dll|libs\\pythoncore\.zip|libs\\[A-Za-z0-9_]+\.pyd)$') {
+        if ($relative -notmatch '^(dlls\\python312\.dll|dlls\\libffi-8\.dll|libs\\pythoncore\.zip|libs\\[A-Za-z0-9_]+(?:\.[A-Za-z0-9_-]+)*\.pyd)$') {
             throw "Unexpected file in the Python runtime overlay manifest: $relative"
         }
         $source = Join-Path $RuntimeSource $relative
@@ -304,6 +429,51 @@ function Copy-PythonRuntime {
     }
 }
 
+function Test-FileContainsPathNeedle {
+    param(
+        [string]$Path,
+        [string[]]$Needles,
+        [int]$ChunkSize = 1048576
+    )
+
+    $lowerNeedles = @()
+    $maxNeedleLength = 0
+    foreach ($needle in $Needles) {
+        if (-not $needle) { continue }
+        $lowerNeedles += $needle.ToLowerInvariant()
+        $maxNeedleLength = [Math]::Max($maxNeedleLength, $needle.Length)
+    }
+    if ($lowerNeedles.Count -eq 0) { return $false }
+
+    $overlapLength = [Math]::Max(0, $maxNeedleLength - 1)
+    $buffer = [Array]::CreateInstance([char], $ChunkSize)
+    foreach ($encoding in @([Text.Encoding]::ASCII, [Text.Encoding]::Unicode)) {
+        $stream = [IO.File]::OpenRead($Path)
+        try {
+            $reader = [IO.StreamReader]::new($stream, $encoding, $false, $ChunkSize, $true)
+            try {
+                $carry = ''
+                while (($read = $reader.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                    $segment = $carry + [string]::new($buffer, 0, $read)
+                    $folded = $segment.ToLowerInvariant()
+                    foreach ($needle in $lowerNeedles) {
+                        if ($folded.IndexOf($needle, [StringComparison]::Ordinal) -ge 0) {
+                            return $true
+                        }
+                    }
+                    $carryStart = [Math]::Max(0, $segment.Length - $overlapLength)
+                    $carry = $segment.Substring($carryStart)
+                }
+            } finally {
+                $reader.Dispose()
+            }
+        } finally {
+            $stream.Dispose()
+        }
+    }
+    return $false
+}
+
 function Test-NoLocalBuildPaths {
     param([string[]]$StagePaths)
     $needles = @($env:USERPROFILE, $repoRoot) |
@@ -314,19 +484,33 @@ function Test-NoLocalBuildPaths {
             $normalized.Replace('\', '/')
         } |
         Select-Object -Unique
+    $repoLeaf = [IO.Path]::GetFileName($repoRoot.TrimEnd('\', '/'))
+    if ($repoLeaf) {
+        $needles += $repoLeaf
+        $needles = @($needles | Select-Object -Unique)
+    }
     if ($needles.Count -eq 0) { return }
 
     foreach ($stagePath in $StagePaths) {
         foreach ($file in Get-ChildItem -LiteralPath $stagePath -File -Recurse -Force) {
-            $bytes = [IO.File]::ReadAllBytes($file.FullName)
-            $ascii = [Text.Encoding]::ASCII.GetString($bytes)
-            $unicode = [Text.Encoding]::Unicode.GetString($bytes)
-            foreach ($needle in $needles) {
-                if ($ascii.IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
-                    $unicode.IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                    $relative = $file.FullName.Substring($stagePath.Length).TrimStart('\')
-                    throw "A release payload contains a local build path in '$relative'. Rebuild the affected binary with source-path mapping."
+            $containsNeedle = $false
+            if ($file.Length -gt 4194304) {
+                $containsNeedle = Test-FileContainsPathNeedle -Path $file.FullName -Needles $needles
+            } else {
+                $bytes = [IO.File]::ReadAllBytes($file.FullName)
+                $ascii = [Text.Encoding]::ASCII.GetString($bytes)
+                $unicode = [Text.Encoding]::Unicode.GetString($bytes)
+                foreach ($needle in $needles) {
+                    if ($ascii.IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+                        $unicode.IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                        $containsNeedle = $true
+                        break
+                    }
                 }
+            }
+            if ($containsNeedle) {
+                $relative = $file.FullName.Substring($stagePath.Length).TrimStart('\')
+                throw "A release payload contains a local build path in '$relative'. Rebuild the affected binary with source-path mapping."
             }
         }
     }
@@ -356,7 +540,7 @@ function Copy-EldenRingPlugins {
         } elseif ($allowedDirectories -icontains $parts[0]) {
             $include = $true
             if ($parts[0] -ieq 'basic_games' -and $parts.Length -ge 3 -and $parts[1] -ieq 'games') {
-                $include = $allowedGameFiles -icontains $parts[$parts.Length - 1]
+                $include = $parts.Length -eq 3 -and $allowedGameFiles -icontains $parts[2]
             } elseif ($parts[0] -ieq 'data') {
                 $include = $parts.Length -ge 2 -and $parts[1] -ieq 'DDS'
             }
@@ -365,6 +549,13 @@ function Copy-EldenRingPlugins {
         $destination = Join-Path $targetPlugins $relative
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
+    }
+    $saveIsolationSource = Join-Path $sourcePlugins 'eldenring_mo2_save_isolation.py'
+    $saveIsolationTarget = Join-Path $targetPlugins 'eldenring_mo2_save_isolation.py'
+    $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
+    $saveIsolationTargetHash = (Get-FileHash -LiteralPath $saveIsolationTarget -Algorithm SHA256).Hash
+    if ($saveIsolationSourceHash -ine $saveIsolationTargetHash) {
+        throw 'The Isolated stage does not match Complete for Save Isolation.'
     }
     foreach ($required in @(
         'eldenring_mo2_native_profile_tool.py', 'eldenring_mo2_save_isolation.py',
@@ -378,9 +569,63 @@ function Copy-EldenRingPlugins {
             throw "The isolated Elden Ring payload is missing a required plugin file: $required"
         }
     }
-    foreach ($unwanted in @('pyCfg.py', 'data\settings.json', 'data\pyCfgDialog.py', 'installer_omod\installer_omod.dll')) {
+    foreach ($unwanted in @(
+        'pyCfg.py', 'data\settings.json', 'data\pyCfgDialog.py',
+        'installer_omod\installer_omod.dll', 'basic_games\lib\psutil\tests'
+    )) {
         if (Test-Path -LiteralPath (Join-Path $targetPlugins $unwanted)) {
             throw "The Elden Ring-only payload includes an unrelated or user-specific plugin file: $unwanted"
+        }
+    }
+    $gameDirectory = Join-Path $targetPlugins 'basic_games\games'
+    $nestedGameFiles = @(
+        Get-ChildItem -LiteralPath $gameDirectory -File -Recurse -Force |
+            Where-Object { $_.DirectoryName -ine $gameDirectory }
+    )
+    if ($nestedGameFiles.Count -gt 0) {
+        $names = $nestedGameFiles | ForEach-Object { $_.FullName.Substring($gameDirectory.Length).TrimStart('\') }
+        throw "The Elden Ring-only payload includes nested files for another game: $([string]::Join(', ', $names))"
+    }
+}
+
+function Test-IsolatedCoreParity {
+    param([string]$CompleteStage, [string]$IsolatedStage)
+    $excludedRelativePaths = @('unins000.exe')
+    $completeCore = @{}
+    $isolatedCore = @{}
+    foreach ($file in Get-ChildItem -LiteralPath $CompleteStage -File -Recurse -Force) {
+        $relative = $file.FullName.Substring($CompleteStage.Length).TrimStart('\')
+        if ($relative.StartsWith('plugins\', [StringComparison]::OrdinalIgnoreCase) -or
+            $excludedRelativePaths -icontains $relative) { continue }
+        $completeCore[$relative] = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+    }
+    foreach ($file in Get-ChildItem -LiteralPath $IsolatedStage -File -Recurse -Force) {
+        $relative = $file.FullName.Substring($IsolatedStage.Length).TrimStart('\')
+        if ($relative.StartsWith('plugins\', [StringComparison]::OrdinalIgnoreCase) -or
+            $excludedRelativePaths -icontains $relative) { continue }
+        $isolatedCore[$relative] = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+    }
+    $completePaths = @($completeCore.Keys | Sort-Object)
+    $isolatedPaths = @($isolatedCore.Keys | Sort-Object)
+    if ([string]::Join("`n", $completePaths) -cne [string]::Join("`n", $isolatedPaths)) {
+        throw 'The Complete and Isolated stages do not contain the same non-plugin core files.'
+    }
+    foreach ($relative in $completePaths) {
+        if ($completeCore[$relative] -ine $isolatedCore[$relative]) {
+            throw "Complete and Isolated core payloads differ at '$relative'."
+        }
+    }
+
+    foreach ($file in Get-ChildItem -LiteralPath (Join-Path $IsolatedStage 'plugins') -File -Recurse -Force) {
+        $relative = $file.FullName.Substring($IsolatedStage.Length).TrimStart('\')
+        $completeFile = Join-Path $CompleteStage $relative
+        if (-not (Test-Path -LiteralPath $completeFile -PathType Leaf)) {
+            throw "Isolated includes a plugin file absent from Complete: $relative"
+        }
+        $completeHash = (Get-FileHash -LiteralPath $completeFile -Algorithm SHA256).Hash
+        $isolatedHash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+        if ($completeHash -ine $isolatedHash) {
+            throw "Complete and Isolated plugin versions differ at '$relative'."
         }
     }
 }
@@ -463,6 +708,7 @@ function Test-EmbeddedResources {
 }
 
 $bridgePath = Join-Path $buildRoot 'eldenring_mo2_bridge.dll'
+Build-QtInstallerRuntime
 $bridgeBuildScript = Join-Path $repoRoot 'source\revamped\plugins\basic_games\games\build_bridge.ps1'
 & $bridgeBuildScript -ZigPath $ZigPath -OutputPath $bridgePath
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $bridgePath -PathType Leaf)) {
@@ -473,6 +719,8 @@ $generalUninstallerStub = Join-Path $buildRoot 'unins000-general.exe'
 $eldenRingUninstallerStub = Join-Path $buildRoot 'unins000-eldenring.exe'
 Invoke-SetupCompile -OutputPath $generalUninstallerStub -Defines @('UNINSTALLER_STUB') -Resources @()
 Invoke-SetupCompile -OutputPath $eldenRingUninstallerStub -Defines @('UNINSTALLER_STUB', 'ELDENRING_ONLY_INSTALLER') -Resources @()
+Test-EmbeddedResources -InstallerPath $generalUninstallerStub -ExpectedResources @('Mo2RevampedSetup.qt-runtime.zip')
+Test-EmbeddedResources -InstallerPath $eldenRingUninstallerStub -ExpectedResources @('Mo2RevampedSetup.qt-runtime.zip')
 
 $fullStage = Join-Path $stageRoot 'complete'
 $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
@@ -486,11 +734,12 @@ Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStag
 New-Item -ItemType Directory -Force -Path $isolatedStage | Out-Null
 Copy-RuntimeTree -SourceRoot $fullStage -DestinationRoot $isolatedStage -SkipPlugins
 Copy-EldenRingPlugins -SourceRoot $fullStage -DestinationRoot $isolatedStage
-foreach ($rootFile in @('ModOrganizer.exe', 'MO2-Revamped.ini')) {
+foreach ($rootFile in @('ModOrganizer.exe', 'MO2-Revamped.ini', 'MO2-Revamped.install')) {
     Copy-Item -LiteralPath (Join-Path $fullStage $rootFile) -Destination (Join-Path $isolatedStage $rootFile) -Force
 }
 Copy-Item -LiteralPath $eldenRingUninstallerStub -Destination (Join-Path $isolatedStage 'unins000.exe') -Force
 
+Test-IsolatedCoreParity -CompleteStage $fullStage -IsolatedStage $isolatedStage
 Test-NoLocalBuildPaths -StagePaths @($fullStage, $isolatedStage)
 
 $fullZip = Join-Path $workRoot 'complete-payload.zip'
@@ -512,26 +761,22 @@ $generalResources = @(
 Invoke-SetupCompile -OutputPath $generalInstaller -Defines @() -Resources $generalResources
 Test-EmbeddedResources -InstallerPath $generalInstaller -ExpectedResources @(
     'Mo2RevampedSetup.payload.zip', 'Mo2RevampedSetup.payload-manifest.json',
-    'Mo2RevampedSetup.eldenring-payload.zip', 'Mo2RevampedSetup.eldenring-payload-manifest.json'
-)
-
-$isolatedInstaller = Join-Path $releaseRoot "MO2-Revamped-Elden-Ring-Isolated-Setup-$version.exe"
-$isolatedResources = @(
-    "/resource:$erZip,Mo2RevampedSetup.eldenring-payload.zip",
-    "/resource:$erManifest,Mo2RevampedSetup.eldenring-payload-manifest.json"
-)
-Invoke-SetupCompile -OutputPath $isolatedInstaller -Defines @('ELDENRING_ONLY_INSTALLER') -Resources $isolatedResources
-Test-EmbeddedResources -InstallerPath $isolatedInstaller -ExpectedResources @(
-    'Mo2RevampedSetup.eldenring-payload.zip', 'Mo2RevampedSetup.eldenring-payload-manifest.json'
+    'Mo2RevampedSetup.eldenring-payload.zip', 'Mo2RevampedSetup.eldenring-payload-manifest.json',
+    'Mo2RevampedSetup.qt-runtime.zip'
 )
 
 Copy-Item -LiteralPath (Join-Path $repoRoot 'CHANGELOG.md') -Destination $releaseRoot -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot 'LICENSE') -Destination $releaseRoot -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot 'THIRD-PARTY-NOTICES.md') -Destination $releaseRoot -Force
+$releaseLicenseDirectory = Join-Path $releaseRoot 'licenses'
+New-Item -ItemType Directory -Force -Path $releaseLicenseDirectory | Out-Null
+foreach ($license in @('LGPL-v3.0.txt', 'GCC-RUNTIME-LIBRARY-EXCEPTION.txt', 'MinGW-Winpthreads-BSD.txt')) {
+    Copy-Item -LiteralPath (Join-Path $repoRoot ('licenses\' + $license)) -Destination $releaseLicenseDirectory -Force
+}
 foreach ($document in @('HISTORICAL-CHANGELOG.md', 'RELEASE-AUDIT.md', 'UPSTREAMS.md')) {
     Copy-Item -LiteralPath (Join-Path $repoRoot ('docs\' + $document)) -Destination $releaseRoot -Force
 }
-$checksumLines = foreach ($file in @($generalInstaller, $isolatedInstaller)) {
+$checksumLines = foreach ($file in @($generalInstaller)) {
     $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
     "$hash  $([IO.Path]::GetFileName($file))"
 }

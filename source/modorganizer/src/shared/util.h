@@ -84,6 +84,21 @@ bool ModOrganizerExiting();
 bool ModOrganizerCanCloseNow();
 void ResetExitFlag();
 
+// When set, a restart starts this ModOrganizer.exe in a fresh process instead
+// of the current one; used to hand off to a newly created isolated copy, which
+// cannot start while this process holds the single-instance lock.
+void SetRestartExecutable(const QString& path);
+QString RestartExecutable();
+
+// Replaces every translator installed through these functions with the ones
+// for `language`: Qt, MO2 ("organizer") and the MO2 Revamped additions
+// ("revamped"). The language is also published as the "mo2Language" property
+// of the application object so Python plugins can follow it.
+void InstallLanguageTranslators(const QString& language);
+
+// Installs translations/<name>_<language>.qm for the current language, if any.
+void InstallLanguageTranslator(const QString& name);
+
 bool isNxmLink(const QString& link);
 
 #endif  // UTIL_H

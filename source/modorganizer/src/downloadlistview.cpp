@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "downloadlistview.h"
+#include "menuutils.h"
 #include "downloadlist.h"
 #include "startupdiagnostics.h"
 #include <QApplication>
@@ -290,7 +291,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       hidden = m_Manager->isHidden(row);
 
       if (state >= DownloadManager::STATE_READY) {
-        menu.addSection(tr("Selected download"));
+        addMenuSection(&menu, tr("Selected download"));
         hasDownloadActions = true;
         addAction(tr("Install"), ":/MO/gui/mainwindow/install.svg", [=] {
           issueInstall(row);
@@ -327,7 +328,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
             issueRemoveFromView(row);
           });
       } else if (state == DownloadManager::STATE_DOWNLOADING) {
-        menu.addSection(tr("Selected download"));
+        addMenuSection(&menu, tr("Selected download"));
         hasDownloadActions = true;
         QAction* cancelAction = addAction(tr("Cancel"), {}, [=] {
           issueCancel(row);
@@ -345,7 +346,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       } else if ((state == DownloadManager::STATE_PAUSED) ||
                  (state == DownloadManager::STATE_ERROR) ||
                  (state == DownloadManager::STATE_PAUSING)) {
-        menu.addSection(tr("Selected download"));
+        addMenuSection(&menu, tr("Selected download"));
         hasDownloadActions = true;
         addAction(tr("Delete..."), ":/MO/gui/contextmenu/remove.svg", [=] {
           issueDelete(row);
@@ -368,7 +369,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
   if (hasDownloadActions) {
     menu.addSeparator();
   }
-  menu.addSection(tr("Download cleanup"));
+  addMenuSection(&menu, tr("Download cleanup"));
   addAction(tr("Delete Installed Downloads..."),
             ":/MO/gui/contextmenu/remove.svg", [=] {
     issueDeleteCompleted();
@@ -381,7 +382,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
     issueDeleteAll();
   });
 
-  menu.addSection(tr("Visibility"));
+  addMenuSection(&menu, tr("Visibility"));
   if (!hidden) {
     addAction(tr("Hide Installed..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
       issueRemoveFromViewCompleted();

@@ -20,6 +20,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "categoriesdialog.h"
 #include "categories.h"
 #include "categoryimportdialog.h"
+#include "circularuihelpers.h"
 #include "messagedialog.h"
 #include "nexusinterface.h"
 #include "settings.h"
@@ -124,24 +125,34 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
     ui->dialogHeading->setText(
         tr("Organize categories for %1").arg(game->gameName()));
   }
+  MOBase::CircularUi::addIconToHeading(
+      ui->dialogHeading, ":/MO/gui/contextmenu/categories.svg",
+      QStringLiteral("categoriesHeaderIcon"), 34, QStringLiteral("C"));
+  MOBase::CircularUi::addGroupHeading(
+      ui->localCategoriesCard, ":/MO/gui/contextmenu/categories.svg",
+      QStringLiteral("localCategoriesIcon"), 26,
+      QStringLiteral("categoryCardTitle"), QStringLiteral("M"));
+  MOBase::CircularUi::addGroupHeading(
+      ui->nexusCategoriesCard, ":/MO/gui/mainwindow/mod-page.svg",
+      QStringLiteral("nexusCategoriesIcon"), 26,
+      QStringLiteral("categoryCardTitle"), QStringLiteral("N"));
   ui->contentLayout->setStretch(0, 3);
   ui->contentLayout->setStretch(1, 2);
-  setMinimumSize(920, 540);
-  resize(1020, 620);
+  setMinimumSize(960, 600);
+  resize(1080, 700);
   setSizeGripEnabled(true);
-  ui->categoriesTable->setMinimumWidth(500);
+  ui->categoriesTable->setMinimumWidth(520);
   ui->categoriesTable->setAlternatingRowColors(true);
   ui->categoriesTable->setShowGrid(false);
   ui->categoriesTable->verticalHeader()->hide();
   ui->categoriesTable->verticalHeader()->setDefaultSectionSize(30);
-  ui->categoriesTable->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::ResizeToContents);
-  ui->categoriesTable->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::ResizeToContents);
-  ui->categoriesTable->horizontalHeader()->setSectionResizeMode(
-      2, QHeaderView::ResizeToContents);
-  ui->categoriesTable->horizontalHeader()->setStretchLastSection(true);
-  ui->nexusCategoriesCard->setMinimumWidth(300);
+  auto* categoriesHeader = ui->categoriesTable->horizontalHeader();
+  categoriesHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+  categoriesHeader->setSectionResizeMode(1, QHeaderView::Stretch);
+  categoriesHeader->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+  categoriesHeader->setSectionResizeMode(3, QHeaderView::Stretch);
+  categoriesHeader->setStretchLastSection(false);
+  ui->nexusCategoriesCard->setMinimumWidth(320);
   ui->nexusCategoryList->setAlternatingRowColors(true);
   ui->nexusCategoryList->setUniformItemSizes(true);
   ui->nexusCategoryList->setSpacing(1);
@@ -149,6 +160,10 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
   ui->nexusImportButton->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
   ui->addCategoryButton->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
   ui->removeCategoryButton->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  ui->nexusRefresh->setIconSize(QSize(16, 16));
+  ui->nexusImportButton->setIconSize(QSize(16, 16));
+  ui->addCategoryButton->setIconSize(QSize(16, 16));
+  ui->removeCategoryButton->setIconSize(QSize(16, 16));
   ui->nexusRefresh->setToolTip(
       tr("Load the latest category list for the active game from Nexus."));
   ui->nexusImportButton->setToolTip(

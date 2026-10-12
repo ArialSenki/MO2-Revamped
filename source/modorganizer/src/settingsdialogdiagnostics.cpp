@@ -1,14 +1,88 @@
 #include "settingsdialogdiagnostics.h"
+#include "circularuihelpers.h"
 #include "organizercore.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
 #include <log.h>
+
+#include <QFormLayout>
+#include <QGridLayout>
+#include <QSizePolicy>
+#include <QVBoxLayout>
 
 using namespace MOBase;
 
 DiagnosticsSettingsTab::DiagnosticsSettingsTab(Settings& s, SettingsDialog& d)
     : SettingsTab(s, d)
 {
+  MOBase::CircularUi::addIconToHeading(
+      ui->diagnosticsPageTitle, ":/MO/gui/mainwindow/files/text.svg",
+      QStringLiteral("diagnosticsPageIcon"), 36, QStringLiteral("D"));
+  MOBase::CircularUi::addGroupHeading(
+      ui->diagnosticsLogGroup, ":/MO/gui/mainwindow/files/text.svg",
+      QStringLiteral("diagnosticsLogIcon"), 26,
+      QStringLiteral("diagnosticsSectionTitle"), QStringLiteral("L"));
+  MOBase::CircularUi::addGroupHeading(
+      ui->diagnosticsLootGroup, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("diagnosticsLootIcon"), 26,
+      QStringLiteral("diagnosticsSectionTitle"), QStringLiteral("L"));
+  MOBase::CircularUi::addGroupHeading(
+      ui->diagnosticsFilesGroup, ":/MO/gui/mainwindow/files/folder.svg",
+      QStringLiteral("diagnosticsFilesIcon"), 26,
+      QStringLiteral("diagnosticsSectionTitle"), QStringLiteral("F"));
+
+  ui->diagnosticsCardsLayout->setContentsMargins(0, 0, 0, 0);
+  ui->diagnosticsCardsLayout->setHorizontalSpacing(12);
+  ui->diagnosticsCardsLayout->setVerticalSpacing(12);
+  ui->diagnosticsCardsLayout->setAlignment(Qt::AlignTop);
+
+  // Keep the three cards in two compact columns. The log controls need a full
+  // column, while the file locations and LOOT settings fit naturally beside it.
+  const auto cards = {ui->diagnosticsLogGroup, ui->diagnosticsLootGroup,
+                      ui->diagnosticsFilesGroup};
+  for (QGroupBox* card : cards) {
+    ui->diagnosticsCardsLayout->removeWidget(card);
+    QSizePolicy policy = card->sizePolicy();
+    policy.setVerticalPolicy(QSizePolicy::Maximum);
+    card->setSizePolicy(policy);
+  }
+
+  auto* mo2Column = new QVBoxLayout;
+  mo2Column->setContentsMargins(0, 0, 0, 0);
+  mo2Column->setSpacing(12);
+  mo2Column->addWidget(ui->diagnosticsLogGroup, 0, Qt::AlignTop);
+  mo2Column->addStretch(1);
+
+  auto* supportColumn = new QVBoxLayout;
+  supportColumn->setContentsMargins(0, 0, 0, 0);
+  supportColumn->setSpacing(12);
+  supportColumn->addWidget(ui->diagnosticsFilesGroup, 0, Qt::AlignTop);
+  supportColumn->addWidget(ui->diagnosticsLootGroup, 0, Qt::AlignTop);
+  supportColumn->addStretch(1);
+
+  ui->diagnosticsCardsLayout->addLayout(mo2Column, 0, 0);
+  ui->diagnosticsCardsLayout->addLayout(supportColumn, 0, 1);
+  ui->diagnosticsCardsLayout->setColumnStretch(0, 1);
+  ui->diagnosticsCardsLayout->setColumnStretch(1, 1);
+
+  ui->diagnosticsLogLayout->setContentsMargins(9, 8, 9, 9);
+  ui->diagnosticsLogLayout->setSpacing(5);
+  ui->diagnosticsLootLayout->setContentsMargins(9, 8, 9, 9);
+  ui->diagnosticsLootLayout->setSpacing(5);
+  ui->diagnosticsFilesLayout->setContentsMargins(9, 8, 9, 9);
+  ui->diagnosticsFilesLayout->setSpacing(5);
+
+  for (QFormLayout* form : {ui->formLayout_4, ui->formLayout_2}) {
+    form->setHorizontalSpacing(12);
+    form->setVerticalSpacing(7);
+    form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  }
+
+  ui->label_12->setObjectName(QStringLiteral("diagnosticsFieldLabel"));
+  ui->label_27->setObjectName(QStringLiteral("diagnosticsFieldLabel"));
+  ui->label_28->setObjectName(QStringLiteral("diagnosticsFieldLabel"));
+  ui->label_32->setObjectName(QStringLiteral("diagnosticsFieldLabel"));
+
   setLogLevel();
   setLootLogLevel();
   setCrashDumpTypesBox();

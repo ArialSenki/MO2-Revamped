@@ -26,3 +26,5 @@ __pycache__/
 # Local rollback snapshots and build/release scratch material
 /work/
 /source/modorganizer/work/
+
+/backup-*/

@@ -1,5 +1,6 @@
 #include "settingsdialoggeneral.h"
 #include "categoriesdialog.h"
+#include "circularuihelpers.h"
 #include "colortable.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
@@ -7,9 +8,15 @@
 #include <utility.h>
 #include <algorithm>
 #include <QDockWidget>
+#include <QIcon>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLayout>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QVBoxLayout>
 
 using namespace MOBase;
 
@@ -23,9 +30,64 @@ const QSize LargeToolbarIconSize(42, 36);
 GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     : SettingsTab(s, d)
 {
+  CircularUi::addIconToHeading(
+      ui->generalPageTitle, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("generalPageIcon"), 36, QStringLiteral("G"));
+  CircularUi::addGroupHeading(
+      ui->groupBox_61, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("generalLanguageIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("L"));
+  CircularUi::addGroupHeading(
+      ui->groupBox_5, ":/MO/gui/mainwindow/files/archive.svg",
+      QStringLiteral("generalDownloadsIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("D"));
+  CircularUi::addGroupHeading(
+      ui->groupBox_6, ":/MO/gui/mainwindow/github-updates.svg",
+      QStringLiteral("generalUpdatesIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("U"));
+  CircularUi::addGroupHeading(
+      ui->groupBox_8, ":/MO/gui/mainwindow/profile.svg",
+      QStringLiteral("generalProfileDefaultsIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("P"));
+  CircularUi::addGroupHeading(
+      ui->groupBox_9, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("generalMiscIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("M"));
+  CircularUi::addGroupHeading(
+      ui->toolbarViewGroup, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("generalToolbarIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("T"));
+
+  // Keep the two General-page actions in a card that matches the settings
+  // sections above, while retaining the same buttons and click behavior.
+  ui->widget_10->setObjectName(QStringLiteral("generalActionsCard"));
+  if (QLayout* oldLayout = ui->widget_10->layout()) {
+    while (QLayoutItem* item = oldLayout->takeAt(0)) {
+      delete item;
+    }
+    delete oldLayout;
+  }
+  auto* actionsLayout = new QVBoxLayout(ui->widget_10);
+  actionsLayout->setContentsMargins(10, 8, 10, 8);
+  actionsLayout->setSpacing(7);
+  auto* actionsHeading = new QLabel(
+      QObject::tr("Categories and dialog choices"), ui->widget_10);
+  actionsHeading->setObjectName(QStringLiteral("generalSectionTitle"));
+  actionsLayout->addLayout(CircularUi::createHeadingRow(
+      ui->widget_10, actionsHeading, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("generalActionsIcon"), 26, QStringLiteral("A")));
+  auto* actionButtonsLayout = new QHBoxLayout;
+  actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
+  actionButtonsLayout->setSpacing(8);
+  actionButtonsLayout->addWidget(ui->resetDialogsButton);
+  actionButtonsLayout->addWidget(ui->categoriesBtn);
+  actionButtonsLayout->addStretch(1);
+  actionsLayout->addLayout(actionButtonsLayout);
+
   // language
   ui->languageBox->setMinimumWidth(180);
   ui->languageBox->setMinimumHeight(28);
+  ui->languageBox->setMaxVisibleItems(8);
   addLanguages();
   selectLanguage();
 
@@ -223,9 +285,14 @@ void GeneralSettingsTab::addLanguages()
     const QString languageCode = match.captured(1);
     const QLocale locale(languageCode);
 
-    QString languageString = QString("%1 (%2)")
-                                 .arg(locale.nativeLanguageName())
-                                 .arg(locale.nativeCountryName());
+    // Some native names already include the territory ("español de España"),
+    // so only append it when it adds information.
+    QString languageString = locale.nativeLanguageName();
+    const QString territory = locale.nativeTerritoryName();
+    if (!territory.isEmpty() &&
+        !languageString.contains(territory, Qt::CaseInsensitive)) {
+      languageString += QString(" (%1)").arg(territory);
+    }
 
     if (locale.language() == QLocale::Chinese) {
       if (languageCode == "zh_TW") {
@@ -293,12 +360,16 @@ void GeneralSettingsTab::onEditCategories()
 
 void GeneralSettingsTab::onResetDialogs()
 {
-  const auto r = QMessageBox::question(
-      parentWidget(), QObject::tr("Confirm?"),
-      QObject::tr(
-          "This will reset all the choices you made to dialogs and make them all "
-          "visible again. Continue?"),
-      QMessageBox::Yes | QMessageBox::No);
+  QMessageBox prompt(parentWidget());
+  prompt.setObjectName(QStringLiteral("GeneralResetDialogsConfirmDialog"));
+  prompt.setWindowTitle(QObject::tr("Confirm?"));
+  prompt.setText(QObject::tr(
+      "This will reset all the choices you made to dialogs and make them all "
+      "visible again. Continue?"));
+  prompt.setIconPixmap(
+      QIcon(QStringLiteral(":/MO/gui/mainwindow/help.svg")).pixmap(28, 28));
+  prompt.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+  const auto r = prompt.exec();
 
   if (r == QMessageBox::Yes) {
     resetDialogs();

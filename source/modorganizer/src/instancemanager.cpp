@@ -639,11 +639,7 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
 }
 
 InstanceManager::InstanceManager()
-{
-  if (!isEldenRingOnlyPortableMode()) {
-    GlobalSettings::updateRegistryKey();
-  }
-}
+{}
 
 InstanceManager& InstanceManager::singleton()
 {
@@ -774,8 +770,18 @@ QString InstanceManager::instancePath(const QString& instanceName) const
 
 QString InstanceManager::globalInstancesRootPath() const
 {
+  if (isPortableMode()) {
+    return QDir::fromNativeSeparators(
+        QDir(portablePath()).filePath("GlobalInstances"));
+  }
+
+  // GenericDataLocation resolves to the user's LocalAppData root on Windows.
+  // Keep Revamped's standard instances in a separate product directory rather
+  // than sharing AppLocalDataLocation/ModOrganizer with upstream MO2.
+  const QString localDataRoot =
+      QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
   return QDir::fromNativeSeparators(
-      QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
+      QDir(localDataRoot).filePath("MO2 Revamped/Instances"));
 }
 
 QString InstanceManager::iniPath(const QString& instanceDir) const
@@ -884,6 +890,14 @@ bool InstanceManager::isEldenRingOnlyPortableMode() const
 {
   return QFileInfo(QDir(portablePath()).filePath("eldenring-only.portable"))
       .isFile();
+}
+
+bool InstanceManager::isPortableMode() const
+{
+  const QDir applicationDirectory(portablePath());
+  return isEldenRingOnlyPortableMode() ||
+         QFileInfo(applicationDirectory.filePath("portable.txt")).isFile() ||
+         portableInstanceExists();
 }
 
 MOBase::IPluginGame*

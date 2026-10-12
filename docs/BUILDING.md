@@ -8,16 +8,20 @@ successfully. This does not yet prove that a fresh clone can recreate the full
 runtime: MO2 runtime DLLs, plugin binaries, Qt/Python distributions, and other
 redistributable files are supplied separately from the source tree.
 
-For release builds, map the developer checkout root to `.` in the C and C++
-Release flags with MSVC `/pathmap` and `/experimental:deterministic`. The
-GitHub++ static library must also undefine `QT_MESSAGELOGCONTEXT` in Release
-with `/UQT_MESSAGELOGCONTEXT`; otherwise Qt embeds its absolute source filename
-in diagnostic context. The Elden Ring bridge build applies Zig's
+For release builds, the Organizer target maps `%USERPROFILE%` to the neutral
+`MO2_USER` prefix in MSVC Release builds with `/pathmap` and
+`/experimental:deterministic`. Separately built MSVC libraries that include Qt
+message context need the same mapping before they are linked. The GitHub++
+static library is built separately from the Organizer target; rebuild it with
+the mapping and link that candidate library into the Organizer executable. The
+release builder rejects a payload that still contains the current profile or
+repository root. The Elden Ring bridge build applies Zig's
 `-ffile-prefix-map` and strips linked debug metadata, including paths from Zig's
 bundled unwind library. The release builder checks staged payloads and installer
 binaries for local profile and checkout paths before producing the installers.
-It maps the reviewed Light and Dark styles to `stylesheets/Light.qss` and
-`stylesheets/dark.qss`, which are the names the application loads.
+It maps the reviewed Light, Dark Blue, and Dark Black styles to
+`stylesheets/Light.qss`, `stylesheets/dark.qss`, and
+`stylesheets/dark-black.qss`, which are the names the application loads.
 
 ## Mod Organizer 2
 
@@ -65,8 +69,12 @@ unchanged; the resulting manifest is calculated after this metadata cleanup.
 The release builder requires a complete MO2 runtime directory, the newly
 compiled `ModOrganizer.exe`, Zig 0.13.0, the verified OpenSSL 3.5.9 runtime,
 and this Python overlay. It checks the overlay hashes and versions, then
-creates two single-file installers and their checksums in a new or empty
-output directory. Example:
+creates one general single-file installer and its checksum in a new or empty
+output directory. The installer embeds both the Elden Ring Isolated payload
+used for new installations and the Complete payload used to maintain existing
+standard and portable installations. It also compiles
+`source/revamped/translations/revamped_*.ts` into the payloads with the Qt
+SDK's `lrelease`. Example:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release.ps1 `
@@ -78,18 +86,46 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
   -OutputDirectory C:\path\to\new-release-directory
 ```
 
+Revamped plugin sources are overlaid from `source/revamped/plugins/` onto the
+Complete runtime before packaging. This is the maintained release copy; older
+Elden Ring Save Isolation code in a baseline runtime must not be packaged in
+its place. The builder compares the staged Save Isolation hash with that
+maintained source for both Complete and Isolated payloads.
+
 The source repository does not contain the Complete runtime or user content.
 The builder deliberately excludes profiles, mods, downloads, overwrite files,
 logs, caches, user settings, and build work. It verifies each archive against
 a sorted SHA-256 manifest and checks that the intended payload resources are
-embedded in the two installer executables.
+embedded in the single setup executable.
+
+## MO2 data locations
+
+The current general setup creates an Elden Ring Isolated installation. Existing
+Complete Standard and Complete Portable installations continue to use their
+own data locations when maintained by the general installer. Complete
+Standard stores global instances under
+`%LOCALAPPDATA%\MO2 Revamped\Instances` and global preferences in
+`%LOCALAPPDATA%\MO2 Revamped\MO2-Revamped-Global.ini`. Complete Portable stores
+instances and preferences beneath its own installation. Elden Ring Isolated
+keeps its settings and files beside its own installation and does not enumerate
+global instances. None of these paths use the original
+`%LOCALAPPDATA%\ModOrganizer` store. The optional Steam save route remains in
+`%APPDATA%\EldenRing`, which is the game's own save location.
+
+The migration action reads only the source directory that the user selects;
+it does not scan the original MO2 AppData folder. Release assembly starts from
+the Complete stage and checks that Isolated has identical non-plugin core files
+and matching hashes for every plugin it shares with Complete.
 
 ## Release contents
 
-The general installer provides fresh Complete/Portable setup, an Elden Ring
-isolated portable option, supported update/migrate/restore flows, and
-uninstall. The separate Elden Ring installer contains only the Elden Ring
-isolated portable setup and its corresponding maintenance flows.
+The general installer provides a fresh Elden Ring Isolated setup plus update,
+restore, and uninstall tasks. The Standard multi-instance setup and the
+data-copy task, which installs the Complete payload, are shown as coming soon
+until support for other instances is extended; the Complete payload stays
+embedded so existing standard and portable installations can still be updated,
+restored, and uninstalled. The release builder emits no separate
+Elden-Ring-only setup executable.
 
 For package version decisions and evidence boundaries, see
 [`RELEASE-AUDIT.md`](RELEASE-AUDIT.md). For license requirements, read

@@ -1,3 +1,4 @@
+#include "revampedtheme.h"
 /*
 Copyright (C) 2012 Sebastian Herbord. All rights reserved.
 
@@ -1282,7 +1283,7 @@ QVariant PluginList::foregroundData(const QModelIndex& modelIndex) const
   }
 
   if ((modelIndex.column() == COL_NAME) && m_ESPs[index].forceDisabled) {
-    return QBrush(Qt::darkRed);
+    return QBrush(MOBase::RevampedTheme::isBlack() ? QColor("#F0A0A0") : QColor(Qt::darkRed));
   }
 
   return {};

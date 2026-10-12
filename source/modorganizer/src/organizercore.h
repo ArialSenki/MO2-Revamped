@@ -252,8 +252,6 @@ public:
   void updateModInfoFromDisc();
 
   void checkForUpdates();
-  void startMOUpdate();
-
   Settings& settings();
   SelfUpdater* updater() { return &m_Updater; }
   InstallationManager* installationManager();
@@ -324,9 +322,6 @@ public:
   bool previewFileWithAlternatives(QWidget* parent, QString filename,
                                    int selectedOrigin = -1);
   bool previewFile(QWidget* parent, const QString& originName, const QString& path);
-
-  void loginSuccessfulUpdate(bool necessary);
-  void loginFailedUpdate(const QString& message);
 
   static bool createAndMakeWritable(const QString& path);
   bool checkPathSymlinks();

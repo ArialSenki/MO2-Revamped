@@ -2641,16 +2641,6 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.ui" line="312"/>
-        <source>Convert to portable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="instancemanagerdialog.ui" line="319"/>
-        <source>Convert to global</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="instancemanagerdialog.ui" line="326"/>
         <source>Open INI</source>
         <translation type="unfinished"></translation>
@@ -3668,14 +3658,14 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
     <message>
         <location filename="mainwindow.ui" line="1826"/>
         <location filename="mainwindow.ui" line="1829"/>
-        <source>&amp;Endorse ModOrganizer</source>
+        <source>&amp;Endorse MO2 Revamped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1832"/>
         <location filename="mainwindow.ui" line="1835"/>
         <location filename="mainwindow.cpp" line="2958"/>
-        <source>Endorse Mod Organizer</source>
+        <source>Endorse MO2 Revamped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4097,28 +4087,62 @@ As a final option, you can disable Nexus category mapping altogether, which can 
     </message>
     <message>
         <location filename="mainwindow.cpp" line="2959"/>
-        <source>Do you want to endorse Mod Organizer on %1 now?</source>
+        <source>Support MO2 Revamped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="2978"/>
-        <source>Abstain from Endorsing Mod Organizer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2979"/>
-        <source>Are you sure you want to abstain from endorsing Mod Organizer 2?
-You will have to visit the mod page on the %1 Nexus site to change your mind.</source>
+        <source>This will submit your endorsement to the MO2 Revamped listing on Nexus Mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="3007"/>
-        <source>Thank you for endorsing MO2! :)</source>
+        <source>Endorsement preference</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3008"/>
+        <source>Don't endorse MO2 Revamped</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3009"/>
+        <source>This will record your choice not to endorse the listing on Nexus Mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3010"/>
+        <source>Won't Endorse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3011"/>
+        <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="3012"/>
-        <source>Please reconsider endorsing MO2 on Nexus!</source>
+        <source>Nexus endorsement</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3013"/>
+        <source>Record your endorsement for MO2 Revamped on Nexus Mods.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3014"/>
+        <source>Record that you do not endorse this listing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3015"/>
+        <source>Thank you for endorsing MO2 Revamped! :)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3012"/>
+        <source>You chose not to endorse MO2 Revamped on Nexus Mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6121,19 +6145,6 @@ Continue?</source>
     <message>
         <location filename="modinfodialogconflictsmodels.cpp" line="295"/>
         <source>Overwritten Mods</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>OverwriteFileSystemModel</name>
-    <message>
-        <location filename="overwriteinfodialog.h" line="51"/>
-        <source>Overwrites</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="overwriteinfodialog.h" line="64"/>
-        <source>not implemented</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -1,4 +1,5 @@
 #include "categoryimportdialog.h"
+#include "circularuihelpers.h"
 #include "ui_categoryimportdialog.h"
 
 #include "organizercore.h"
@@ -9,6 +10,18 @@ CategoryImportDialog::CategoryImportDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::CategoryImportDialog)
 {
   ui->setupUi(this);
+  CircularUi::addIconToHeading(
+      ui->dialogHeading, ":/MO/gui/contextmenu/categories.svg",
+      QStringLiteral("categoryImportHeaderIcon"), 34,
+      QStringLiteral("C"));
+  CircularUi::addGroupHeading(
+      ui->strategyBox, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("categoryImportStrategyIcon"), 26,
+      QStringLiteral("categoryImportSectionTitle"), QStringLiteral("S"));
+  CircularUi::addGroupHeading(
+      ui->mappingBox, ":/MO/gui/mainwindow/github-updates.svg",
+      QStringLiteral("categoryImportMappingsIcon"), 26,
+      QStringLiteral("categoryImportSectionTitle"), QStringLiteral("N"));
   setMinimumSize(580, 240);
   resize(620, 250);
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,

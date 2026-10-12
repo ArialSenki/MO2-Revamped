@@ -32,6 +32,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QStandardPaths>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -361,16 +362,6 @@ QStringList Settings::skipDirectories() const
 void Settings::setSkipDirectories(const QStringList& s)
 {
   set(m_Settings, "Settings", "skip_directories", s);
-}
-
-void Settings::setMotdHash(uint hash)
-{
-  set(m_Settings, "General", "motd_hash", hash);
-}
-
-unsigned int Settings::motdHash() const
-{
-  return get<unsigned int>(m_Settings, "General", "motd_hash", 0);
 }
 
 bool Settings::archiveParsing() const
@@ -1959,7 +1950,7 @@ void NexusSettings::setEndorsementIntegration(bool b) const
 EndorsementState NexusSettings::endorsementState() const
 {
   return endorsementStateFromString(
-      get<QString>(m_Settings, "General", "endorse_state", ""));
+      get<QString>(m_Settings, "General", "revamped_endorse_state", ""));
 }
 
 void NexusSettings::setEndorsementState(EndorsementState s)
@@ -1967,9 +1958,9 @@ void NexusSettings::setEndorsementState(EndorsementState s)
   const auto v = toString(s);
 
   if (v.isEmpty()) {
-    remove(m_Settings, "General", "endorse_state");
+    remove(m_Settings, "General", "revamped_endorse_state");
   } else {
-    set(m_Settings, "General", "endorse_state", v);
+    set(m_Settings, "General", "revamped_endorse_state", v);
   }
 }
 
@@ -2309,16 +2300,22 @@ QString InterfaceSettings::language()
   QString result = get<QString>(m_Settings, "Settings", "language", "");
 
   if (result.isEmpty()) {
-    QStringList languagePreferences = QLocale::system().uiLanguages();
-
-    if (languagePreferences.length() > 0) {
-      // the users most favoritest language
-      result = languagePreferences.at(0);
-    } else {
-      // fallback system locale
-      result = QLocale::system().name();
-    }
+    // A new instance has no language yet; keep the one the instance dialogs
+    // were shown in instead of switching back to English.
+    result = GlobalSettings::language();
   }
+
+  if (result.isEmpty()) {
+    // The system default used to be QLocale::uiLanguages(), which returns
+    // BCP 47 tags such as "es-ES". Translation files are named "organizer_es",
+    // and QTranslator only strips "_" suffixes, so nothing loaded: the UI stayed
+    // English while Settings showed the system language as selected. Use the
+    // language that is actually displayed until the user picks another one.
+    result = QStringLiteral("en_US");
+  }
+
+  // Accept BCP 47 tags written by older versions or edited by hand.
+  result.replace('-', '_');
 
   return result;
 }
@@ -2434,23 +2431,6 @@ void DiagnosticsSettings::setSpawnDelay(std::chrono::seconds t)
   set(m_Settings, "Settings", "spawn_delay", t.count());
 }
 
-void GlobalSettings::updateRegistryKey()
-{
-  const QString OldOrganization  = "Tannin";
-  const QString OldApplication   = "Mod Organizer";
-  const QString OldInstanceValue = "CurrentInstance";
-
-  const QString OldRootKey = "Software\\" + OldOrganization;
-
-  if (env::registryValueExists(OldRootKey + "\\" + OldApplication, OldInstanceValue)) {
-    QSettings old(OldOrganization, OldApplication);
-    setCurrentInstance(old.value(OldInstanceValue).toString());
-    old.remove(OldInstanceValue);
-  }
-
-  env::deleteRegistryKeyIfEmpty(OldRootKey);
-}
-
 QString GlobalSettings::currentInstance()
 {
   return settings().value("CurrentInstance", "").toString();
@@ -2484,18 +2464,28 @@ void GlobalSettings::setCurrentInstanceForInstallation(
 QSettings GlobalSettings::settings()
 {
   const QString applicationDirectory = QCoreApplication::applicationDirPath();
+  const QDir localDirectory(applicationDirectory);
   const QString isolatedMarker =
-      QDir(applicationDirectory).filePath("eldenring-only.portable");
+      localDirectory.filePath("eldenring-only.portable");
   if (QFileInfo::exists(isolatedMarker)) {
     return QSettings(
-        QDir(applicationDirectory).filePath("EldenRingOnly.ini"),
+        localDirectory.filePath("EldenRingOnly.ini"),
         QSettings::IniFormat);
   }
 
-  const QString Organization = "Mod Organizer Team";
-  const QString Application  = "Mod Organizer";
+  const bool portable =
+      QFileInfo::exists(localDirectory.filePath("portable.txt")) ||
+      QFileInfo::exists(localDirectory.filePath("ModOrganizer.ini"));
+  const QString settingsDirectory = portable
+      ? applicationDirectory
+      : QDir(QStandardPaths::writableLocation(
+                 QStandardPaths::GenericDataLocation))
+            .filePath("MO2 Revamped");
+  const QString settingsPath =
+      QDir(settingsDirectory).filePath("MO2-Revamped-Global.ini");
 
-  return QSettings(Organization, Application);
+  QDir().mkpath(settingsDirectory);
+  return QSettings(settingsPath, QSettings::IniFormat);
 }
 
 bool GlobalSettings::hideCreateInstanceIntro()
@@ -2506,6 +2496,16 @@ bool GlobalSettings::hideCreateInstanceIntro()
 void GlobalSettings::setHideCreateInstanceIntro(bool b)
 {
   settings().setValue("HideCreateInstanceIntro", b);
+}
+
+QString GlobalSettings::language()
+{
+  return settings().value("Language", QString()).toString();
+}
+
+void GlobalSettings::setLanguage(const QString& language)
+{
+  settings().setValue("Language", language);
 }
 
 bool GlobalSettings::hideTutorialQuestion()

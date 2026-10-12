@@ -5,6 +5,8 @@
 #include "settings.h"
 #include "ui_mainwindow.h"
 
+#include <QStyle>
+
 StatusBar::StatusBar(QWidget* parent)
     : QStatusBar(parent), ui(nullptr), m_normal(new QLabel),
       m_progress(new QProgressBar), m_progressSpacer1(new QWidget),
@@ -82,13 +84,11 @@ void StatusBar::setNotifications(bool hasNotifications)
 void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
 {
   QString text;
-  QString textColor;
-  QString backgroundColor;
+  QString apiState;
 
   if (user.type() == APIUserAccountTypes::None) {
-    text            = "API: not logged in";
-    textColor       = "";
-    backgroundColor = "";
+    text     = "API: not logged in";
+    apiState = QStringLiteral("offline");
   } else {
     text = QString("API: Queued: %1 | Daily: %2 | Hourly: %3")
                .arg(stats.requestsQueued)
@@ -96,38 +96,20 @@ void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
                .arg(user.limits().remainingHourlyRequests);
 
     if (user.remainingRequests() > 500) {
-      textColor       = "white";
-      backgroundColor = "darkgreen";
+      apiState = QStringLiteral("healthy");
     } else if (user.remainingRequests() > 200) {
-      textColor       = "black";
-      backgroundColor = "rgb(226, 192, 0)";  // yellow
+      apiState = QStringLiteral("warning");
     } else {
-      textColor       = "white";
-      backgroundColor = "darkred";
+      apiState = QStringLiteral("low");
     }
   }
 
   m_api->setText(text);
-
-  QString ss(R"(
-    QLabel
-    {
-      padding-left: 0.1em;
-      padding-right: 0.1em;
-      padding-top: 0;
-      padding-bottom: 0;)");
-
-  if (!textColor.isEmpty()) {
-    ss += QString("\ncolor: %1;").arg(textColor);
+  if (m_api->property("apiState").toString() != apiState) {
+    m_api->setProperty("apiState", apiState);
+    m_api->style()->unpolish(m_api);
+    m_api->style()->polish(m_api);
   }
-
-  if (!backgroundColor.isEmpty()) {
-    ss += QString("\nbackground-color: %2;").arg(backgroundColor);
-  }
-
-  ss += "\n}";
-
-  m_api->setStyleSheet(ss);
   m_api->setAutoFillBackground(true);
 }
 

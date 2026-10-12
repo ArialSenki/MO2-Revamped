@@ -1,4 +1,5 @@
 #include "settingsdialogplugins.h"
+#include "circularuihelpers.h"
 #include "noeditdelegate.h"
 #include "ui_settingsdialog.h"
 #include <iplugin.h>
@@ -9,9 +10,12 @@
 
 #include <QAbstractItemView>
 #include <QComboBox>
+#include <QHeaderView>
 #include <QMetaType>
 #include <QMouseEvent>
 #include <QPointer>
+#include <QSizePolicy>
+#include <QSplitter>
 #include <QStyledItemDelegate>
 #include <QTimer>
 #include <QTreeWidget>
@@ -80,8 +84,67 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
                                        SettingsDialog& d)
     : SettingsTab(s, d), m_pluginContainer(pluginContainer)
 {
+  CircularUi::addIconToHeading(
+      ui->pluginPageTitle, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("pluginPageIcon"), 36, QStringLiteral("P"));
+  CircularUi::addGroupHeading(
+      ui->pluginBrowserGroup, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("pluginBrowserIcon"), 26,
+      QStringLiteral("pluginSectionTitle"), QStringLiteral("P"));
+  CircularUi::addGroupHeading(
+      ui->pluginDetailsGroup, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("pluginDetailsIcon"), 26,
+      QStringLiteral("pluginSectionTitle"), QStringLiteral("D"));
+  CircularUi::addIconToHeading(
+      ui->pluginSettingsTitle, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("pluginOptionsIcon"), 26, QStringLiteral("O"));
+  CircularUi::addGroupHeading(
+      ui->verticalGroupBox, ":/MO/gui/mainwindow/clear.svg",
+      QStringLiteral("pluginBlacklistIcon"), 26,
+      QStringLiteral("pluginSectionTitle"), QStringLiteral("B"));
+
   ui->pluginSettingsList->setAlternatingRowColors(true);
-  ui->pluginSettingsList->setStyleSheet("QTreeWidget::item {padding-right: 10px;}");
+  ui->pluginsList->setAlternatingRowColors(true);
+  ui->pluginBlacklist->setAlternatingRowColors(true);
+  ui->pluginSettingsList->header()->setStretchLastSection(true);
+  // Keep descriptive labels at their natural height. QLabel defaults to a
+  // vertically preferred policy, which lets long, empty plugin panes stretch
+  // the labels and push the filter and settings controls far apart.
+  const auto keepNaturalHeight = [](QWidget* widget) {
+    QSizePolicy policy = widget->sizePolicy();
+    policy.setVerticalPolicy(QSizePolicy::Maximum);
+    widget->setSizePolicy(policy);
+    widget->setMinimumHeight(0);
+  };
+  keepNaturalHeight(ui->pluginBrowserDescription);
+  keepNaturalHeight(ui->pluginDescription);
+  keepNaturalHeight(ui->pluginSettingsTitle);
+  keepNaturalHeight(ui->pluginSettingsDescription);
+  keepNaturalHeight(ui->pluginBlacklistDescription);
+  ui->verticalLayout_9->setContentsMargins(8, 6, 8, 8);
+  ui->verticalLayout_9->setSpacing(8);
+  ui->pluginsList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  ui->pluginSettingsList->setSizePolicy(QSizePolicy::Expanding,
+                                        QSizePolicy::Expanding);
+  ui->pluginBlacklist->setSizePolicy(QSizePolicy::Expanding,
+                                     QSizePolicy::Expanding);
+  ui->splitter->setHandleWidth(7);
+  ui->splitter->setStretchFactor(0, 4);
+  ui->splitter->setStretchFactor(1, 1);
+  ui->splitter_2->setHandleWidth(7);
+  ui->splitter_2->setStretchFactor(0, 2);
+  ui->splitter_2->setStretchFactor(1, 3);
+  ui->verticalLayout_15->setContentsMargins(8, 6, 8, 8);
+  ui->verticalLayout_15->setSpacing(8);
+  ui->pluginDetailsLayout->setContentsMargins(8, 6, 8, 8);
+  ui->pluginDetailsLayout->setSpacing(8);
+  ui->verticalLayout_16->setContentsMargins(8, 6, 8, 8);
+  ui->verticalLayout_16->setSpacing(8);
+  ui->pluginFilterEdit->setMinimumHeight(32);
+  ui->pluginFilterEdit->setSizePolicy(QSizePolicy::Expanding,
+                                      QSizePolicy::Maximum);
+  ui->pluginDescriptionLayout->setVerticalSpacing(4);
+  ui->pluginDescriptionLayout->setHorizontalSpacing(12);
   ui->pluginSettingsList->setEditTriggers(QAbstractItemView::DoubleClicked |
                                           QAbstractItemView::EditKeyPressed);
   ui->pluginSettingsList->viewport()->installEventFilter(
@@ -94,7 +157,10 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
   pluginInterfaces.sort(Qt::CaseInsensitive);
   std::map<QString, QTreeWidgetItem*> topItems;
   for (QString interfaceName : pluginInterfaces) {
-    auto* item = new QTreeWidgetItem(ui->pluginsList, {interfaceName});
+    // the names are QT_TR_NOOP() keys; translate them for display only
+    auto* item = new QTreeWidgetItem(
+        ui->pluginsList, {QCoreApplication::translate("PluginTypeName",
+                                                      interfaceName.toUtf8().constData())});
     item->setFlags(item->flags() & ~Qt::ItemIsSelectable);
     auto font = item->font(0);
     font.setBold(true);
@@ -372,6 +438,8 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
   ui->authorLabel->setText(plugin->author());
   ui->versionLabel->setText(plugin->version().canonicalString());
   ui->descriptionLabel->setText(plugin->description());
+  ui->pluginDescription->updateGeometry();
+  ui->pluginSettingsDescription->updateGeometry();
 
   // Checkbox, do not show for children or game plugins, disable
   // if the plugin cannot be enabled.

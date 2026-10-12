@@ -27,9 +27,31 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QIcon>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QVariant>
 #include <Shlwapi.h>
 
 using namespace MOBase;
+
+namespace
+{
+class CenteredOverwriteFileSystemModel final : public QFileSystemModel
+{
+public:
+  explicit CenteredOverwriteFileSystemModel(QObject* parent = nullptr)
+      : QFileSystemModel(parent)
+  {}
+
+  QVariant headerData(int section, Qt::Orientation orientation,
+                      int role = Qt::DisplayRole) const override
+  {
+    if (orientation == Qt::Horizontal && role == Qt::TextAlignmentRole) {
+      return static_cast<int>(Qt::AlignHCenter | Qt::AlignVCenter);
+    }
+
+    return QFileSystemModel::headerData(section, orientation, role);
+  }
+};
+}  // namespace
 
 OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
     : QDialog(parent), ui(new Ui::OverwriteInfoDialog), m_FileSystemModel(nullptr),
@@ -39,7 +61,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
 
   this->setWindowModality(Qt::NonModal);
 
-  m_FileSystemModel = new OverwriteFileSystemModel(this);
+  m_FileSystemModel = new CenteredOverwriteFileSystemModel(this);
   m_FileSystemModel->setIconProvider(mo2FolderIconProvider());
   m_FileSystemModel->setReadOnly(false);
   setModInfo(modInfo);
@@ -86,7 +108,6 @@ void OverwriteInfoDialog::showEvent(QShowEvent* e)
   if (!s.geometry().restoreState(ui->filesView->header())) {
     ui->filesView->sortByColumn(0, Qt::AscendingOrder);
   }
-
   QDialog::showEvent(e);
 }
 

@@ -63,8 +63,6 @@ private:
   void associate();
 
   void updateNexusData();
-  void updateCustomBrowser();
-  void browseCustomBrowser();
 };
 
 #endif  // SETTINGSDIALOGNEXUS_H

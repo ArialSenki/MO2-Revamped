@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define PROFILEINPUTDIALOG_H
 
 #include <QDialog>
+#include <QString>
 
 namespace Ui
 {
@@ -32,13 +33,24 @@ class ProfileInputDialog : public QDialog
   Q_OBJECT
 
 public:
-  explicit ProfileInputDialog(QWidget* parent = 0);
+  enum class Purpose
+  {
+    Create,
+    Copy,
+    Rename,
+  };
+
+  explicit ProfileInputDialog(QWidget* parent = nullptr);
+  ProfileInputDialog(QWidget* parent, Purpose purpose,
+                     const QString& initialName = QString());
   ~ProfileInputDialog();
 
   QString getName() const;
   bool getPreferDefaultSettings() const;
 
 private:
+  void updateAcceptState();
+
   Ui::ProfileInputDialog* ui;
 };
 

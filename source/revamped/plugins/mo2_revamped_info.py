@@ -13,7 +13,7 @@ from pathlib import Path
 
 import mobase
 from PyQt6 import QtCore
-from PyQt6.QtCore import Qt, qCritical
+from PyQt6.QtCore import QCoreApplication, Qt, qCritical
 from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -22,7 +22,6 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMenu,
@@ -33,6 +32,13 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+# MO2 installs translations/revamped_<language>.qm; the source text is English.
+_TR_CONTEXT = "Mo2RevampedInfo"
+
+
+def _tr(text: str) -> str:
+    return QCoreApplication.translate(_TR_CONTEXT, text)
 
 
 class Mo2RevampedInfo(mobase.IPluginTool):
@@ -60,7 +66,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         return "ArialSenki"
 
     def description(self) -> str:
-        return "About, credits, component versions, and clearer help for MO2 Revamped."
+        return _tr("About, credits, component versions, and clearer help for MO2 Revamped.")
 
     def version(self) -> mobase.VersionInfo:
         return mobase.VersionInfo(1, 0, 0, 0)
@@ -75,10 +81,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         return True
 
     def displayName(self) -> str:
-        return "About MO2 Revamped"
+        return _tr("About MO2 Revamped")
 
     def tooltip(self) -> str:
-        return "View MO2 Revamped features, component versions, credits, and licenses."
+        return _tr("View MO2 Revamped features, component versions, credits, and licenses.")
 
     def icon(self) -> QIcon:
         return QIcon()
@@ -94,23 +100,23 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         for object_name, tooltip, whats_this in (
             (
                 "actionNexus",
-                "Nexus Mods: abre el sitio web para explorar mods del juego activo.",
-                "Abre Nexus Mods en el navegador. El contenido depende del juego activo y de tu cuenta.",
+                _tr("Nexus Mods: open the website to browse mods for the active game."),
+                _tr("Opens Nexus Mods in your browser. The content depends on the active game and your account."),
             ),
             (
                 "actionNotifications",
-                "Avisos de MO2: consulta errores detectados y recomendaciones de configuración.",
-                "Abre los avisos de MO2. El icono puede resaltarse cuando hay problemas que conviene revisar.",
+                _tr("MO2 notifications: review detected errors and setup recommendations."),
+                _tr("Opens MO2 notifications. The icon can be highlighted when there are problems worth reviewing."),
             ),
             (
                 "actionEndorseMO",
-                "Apoya el proyecto original de Mod Organizer en Nexus Mods.",
-                "Esta acción abre la página de Mod Organizer para respaldar el proyecto original.",
+                _tr("Support MO2 Revamped on Nexus Mods."),
+                _tr("Opens the options to endorse or not endorse MO2 Revamped on its Nexus Mods page."),
             ),
             (
                 "actionHelp",
-                "Ayuda de MO2: guías y accesos de soporte. Usa «About MO2 Revamped» para ver esta edición, sus componentes y créditos.",
-                "Abre las opciones de ayuda. «About MO2 Revamped» describe esta edición, sus funciones, componentes y licencias.",
+                _tr("MO2 help: guides and support links. Use \"About MO2 Revamped\" to see this edition, its components and credits."),
+                _tr("Opens the help options. \"About MO2 Revamped\" describes this edition, its features, components and licenses."),
             ),
         ):
             action = main_window.findChild(QAction, object_name)
@@ -133,10 +139,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 diagnostics_found = True
         if not about_found:
             help_menu.addSeparator()
-            self._about_action = QAction("About MO2 Revamped…", main_window)
+            self._about_action = QAction(_tr("About MO2 Revamped…"), main_window)
             self._about_action.setObjectName("mo2RevampedAboutAction")
             self._about_action.setToolTip(
-                "Información de MO2 Revamped, funciones, componentes y créditos."
+                _tr("MO2 Revamped information, features, components and credits.")
             )
             self._about_action.triggered.connect(
                 lambda _checked=False: self._show_about(main_window)
@@ -144,11 +150,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             help_menu.addAction(self._about_action)
         if not diagnostics_found:
             self._diagnostics_action = QAction(
-                "Create MO2 Revamped bug report…", main_window
+                _tr("Create MO2 Revamped bug report…"), main_window
             )
             self._diagnostics_action.setObjectName("mo2RevampedDiagnosticsAction")
             self._diagnostics_action.setToolTip(
-                "Guarda un informe con los registros de MO2, USVFS y el puente de Elden Ring."
+                _tr("Saves a report with the MO2, USVFS and Elden Ring bridge logs.")
             )
             self._diagnostics_action.triggered.connect(
                 lambda _checked=False: self._create_diagnostics_bundle(main_window)
@@ -156,8 +162,8 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             help_menu.addAction(self._diagnostics_action)
 
     def _context_text(self) -> str:
-        game_name = "No detectado"
-        profile_name = "No seleccionado"
+        game_name = _tr("Not detected")
+        profile_name = _tr("Not selected")
         try:
             game = self._organizer.managedGame()
             if game is not None:
@@ -170,7 +176,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 profile_name = profile.name()
         except Exception:
             pass
-        return f"Juego activo: {game_name}<br>Perfil activo: {profile_name}"
+        return _tr("Active game: {game}<br>Active profile: {profile}").format(
+            game=game_name, profile=profile_name
+        )
 
     @staticmethod
     def _browser(html: str, parent) -> QTextBrowser:
@@ -183,83 +191,143 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         return browser
 
     @staticmethod
-    def _about_feature(title: str, description: str, parent: QWidget) -> QGroupBox:
-        card = QGroupBox(title, parent)
+    def _about_page_intro(title: str, description: str, parent: QWidget) -> QFrame:
+        intro = QFrame(parent)
+        intro.setObjectName("mo2RevampedAboutPageIntro")
+        intro_layout = QVBoxLayout(intro)
+        intro_layout.setContentsMargins(14, 10, 14, 10)
+        intro_layout.setSpacing(3)
+
+        heading = QLabel(title, intro)
+        heading.setObjectName("mo2RevampedAboutPageTitle")
+        intro_layout.addWidget(heading)
+
+        text = QLabel(description, intro)
+        text.setObjectName("mo2RevampedAboutPageDescription")
+        text.setWordWrap(True)
+        intro_layout.addWidget(text)
+        return intro
+
+    @staticmethod
+    def _about_feature(title: str, description: str, parent: QWidget) -> QFrame:
+        card = QFrame(parent)
+        card.setObjectName("mo2RevampedAboutFeatureCard")
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(10, 10, 10, 8)
-        card_layout.setSpacing(4)
+        card_layout.setContentsMargins(13, 11, 13, 11)
+        card_layout.setSpacing(5)
+
+        heading = QLabel(title, card)
+        heading.setObjectName("mo2RevampedAboutFeatureTitle")
+        heading.setWordWrap(True)
+        card_layout.addWidget(heading)
 
         text = QLabel(description, card)
+        text.setObjectName("mo2RevampedAboutFeatureText")
         text.setWordWrap(True)
-        card_layout.addWidget(text)
+        card_layout.addWidget(text, 1)
         return card
 
     def _show_about(self, parent) -> None:
         dialog = QDialog(parent)
-        dialog.setWindowTitle("About MO2 Revamped")
-        dialog.setMinimumSize(720, 510)
-        dialog.resize(790, 560)
+        dialog.setObjectName("MO2RevampedAboutDialog")
+        dialog.setWindowTitle(_tr("About MO2 Revamped"))
+        dialog.setMinimumSize(820, 620)
+        dialog.resize(920, 700)
         dialog.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
 
         layout = QVBoxLayout(dialog)
-        header = QHBoxLayout()
-        logo = QLabel(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(12)
+
+        header_card = QFrame(dialog)
+        header_card.setObjectName("mo2RevampedAboutHeaderCard")
+        header_layout = QHBoxLayout(header_card)
+        header_layout.setContentsMargins(14, 12, 16, 12)
+        header_layout.setSpacing(14)
+
+        logo = QLabel(header_card)
         logo.setObjectName("mo2RevampedAboutLogo")
-        logo.setFixedSize(72, 72)
+        logo.setFixedSize(62, 62)
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         try:
-            import os
-
             app_dir = QApplication.applicationDirPath()
             pixmap = QPixmap(os.path.join(app_dir, "resources", "mo_icon.png"))
             if pixmap.isNull():
                 pixmap = QPixmap(os.path.join(app_dir, "splash.png"))
             if not pixmap.isNull():
                 logo.setPixmap(pixmap.scaled(
-                    logo.size(),
+                    42,
+                    42,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 ))
         except Exception:
             pass
-        header.addWidget(logo)
+        header_layout.addWidget(logo)
 
-        title = QLabel(
-            "<h2>Mod Organizer 2: Revamped</h2>"
-            "<p>Una edición comunitaria con mejoras de interfaz y herramientas "
-            "especializadas para Elden Ring.</p>"
-            "<p><b>Edición:</b> Revamped · <b>Autor:</b> ArialSenki</p>"
-            f"<p>{self._context_text()}</p>",
-            dialog,
+        header_text = QWidget(header_card)
+        header_text.setObjectName("mo2RevampedAboutHeaderText")
+        header_text_layout = QVBoxLayout(header_text)
+        header_text_layout.setContentsMargins(0, 0, 0, 0)
+        header_text_layout.setSpacing(3)
+
+        title = QLabel("Mod Organizer 2: Revamped", header_text)
+        title.setObjectName("mo2RevampedAboutHeaderTitle")
+        header_text_layout.addWidget(title)
+
+        subtitle = QLabel(
+            _tr("A community edition with interface improvements and tools "
+                "specialized for Elden Ring."),
+            header_text,
         )
-        title.setWordWrap(True)
-        header.addWidget(title, 1)
-        layout.addLayout(header)
+        subtitle.setObjectName("mo2RevampedAboutHeaderSubtitle")
+        subtitle.setWordWrap(True)
+        header_text_layout.addWidget(subtitle)
+
+        metadata = QHBoxLayout()
+        metadata.setContentsMargins(0, 2, 0, 0)
+        metadata.setSpacing(14)
+        edition = QLabel(_tr("Revamped edition  ·  ArialSenki"), header_text)
+        edition.setObjectName("mo2RevampedAboutHeaderMeta")
+        metadata.addWidget(edition)
+
+        context = QLabel(
+            self._context_text().replace("<br>", "  ·  "), header_text
+        )
+        context.setObjectName("mo2RevampedAboutHeaderContext")
+        context.setTextFormat(Qt.TextFormat.PlainText)
+        context.setWordWrap(True)
+        metadata.addWidget(context, 1)
+        header_text_layout.addLayout(metadata)
+        header_layout.addWidget(header_text, 1)
+        layout.addWidget(header_card)
 
         tabs = QTabWidget(dialog)
         tabs.setObjectName("mo2RevampedAboutTabs")
         overview_page = QWidget(dialog)
+        overview_page.setObjectName("mo2RevampedAboutOverviewPage")
         overview_layout = QVBoxLayout(overview_page)
-        overview_layout.setContentsMargins(14, 12, 14, 12)
-        overview_layout.setSpacing(10)
+        overview_layout.setContentsMargins(14, 14, 14, 12)
+        overview_layout.setSpacing(11)
 
-        overview_intro = QLabel(
-            "<h3>Qué aporta Revamped</h3>"
-            "<p>Conserva el flujo de Mod Organizer 2 y añade herramientas para "
-            "instalar mods, separar configuraciones y reconocer mejor cada entorno.</p>",
-            overview_page,
+        overview_layout.addWidget(
+            self._about_page_intro(
+                _tr("What Revamped adds"),
+                _tr("Keeps the Mod Organizer 2 workflow and adds tools to install "
+                    "mods, separate setups and recognize each environment more easily."),
+                overview_page,
+            )
         )
-        overview_intro.setWordWrap(True)
-        overview_layout.addWidget(overview_intro)
 
         feature_grid = QGridLayout()
+        feature_grid.setContentsMargins(0, 0, 0, 0)
         feature_grid.setHorizontalSpacing(10)
-        feature_grid.setVerticalSpacing(8)
+        feature_grid.setVerticalSpacing(10)
         feature_grid.addWidget(
             self._about_feature(
-                "Instalación de mods",
-                "Detecta rutas de Elden Ring y reconoce carpetas anidadas para "
-                "instalar mods y complementos nativos.",
+                _tr("Mod installation"),
+                _tr("Detects Elden Ring paths and recognizes nested folders to "
+                    "install mods and native add-ons."),
                 overview_page,
             ),
             0,
@@ -267,9 +335,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         feature_grid.addWidget(
             self._about_feature(
-                "Perfiles y partidas",
-                "Organiza perfiles y, para Elden Ring, permite enrutar los "
-                "guardados por perfil.",
+                _tr("Profiles and saves"),
+                _tr("Organizes profiles and, for Elden Ring, can route saves per "
+                    "profile."),
                 overview_page,
             ),
             0,
@@ -277,9 +345,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         feature_grid.addWidget(
             self._about_feature(
-                "Instancias independientes",
-                "Elige instalaciones globales o portables. También puedes crear "
-                "una copia aislada de MO2 para Elden Ring.",
+                _tr("Independent instances"),
+                _tr("Choose global or portable setups. You can also create an "
+                    "isolated MO2 copy for Elden Ring."),
                 overview_page,
             ),
             1,
@@ -287,9 +355,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         feature_grid.addWidget(
             self._about_feature(
-                "Interfaz y diagnóstico",
-                "Incluye los temas MO2 Classic Refined claro y oscuro, además de "
-                "herramientas para preparar informes de diagnóstico.",
+                _tr("Interface and diagnostics"),
+                _tr("Includes the light and dark MO2 Classic Refined themes, plus "
+                    "tools to prepare diagnostic reports."),
                 overview_page,
             ),
             1,
@@ -298,33 +366,36 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         overview_layout.addLayout(feature_grid, 1)
 
         compatibility_note = QLabel(
-            "Las funciones específicas de Elden Ring se activan únicamente en "
-            "una instancia de ese juego.",
+            _tr("Elden Ring-specific features are only enabled in an instance "
+                "for that game."),
             overview_page,
         )
+        compatibility_note.setObjectName("mo2RevampedAboutCompatibilityNote")
         compatibility_note.setWordWrap(True)
         overview_layout.addWidget(compatibility_note)
-        tabs.addTab(overview_page, "Revamped")
+        tabs.addTab(overview_page, _tr("Revamped"))
         components_page = QWidget(dialog)
+        components_page.setObjectName("mo2RevampedAboutComponentsPage")
         components_layout = QVBoxLayout(components_page)
-        components_layout.setContentsMargins(14, 12, 14, 12)
-        components_layout.setSpacing(10)
+        components_layout.setContentsMargins(14, 14, 14, 12)
+        components_layout.setSpacing(11)
 
-        components_intro = QLabel(
-            "<h3>Componentes incluidos</h3>"
-            "<p>Resumen de las versiones y herramientas que forman parte de esta copia.</p>",
-            components_page,
+        components_layout.addWidget(
+            self._about_page_intro(
+                _tr("Included components"),
+                _tr("Versions and tools that are part of this copy of MO2 Revamped."),
+                components_page,
+            )
         )
-        components_intro.setWordWrap(True)
-        components_layout.addWidget(components_intro)
 
         components_grid = QGridLayout()
+        components_grid.setContentsMargins(0, 0, 0, 0)
         components_grid.setHorizontalSpacing(10)
-        components_grid.setVerticalSpacing(8)
+        components_grid.setVerticalSpacing(10)
         components_grid.addWidget(
             self._about_feature(
-                "Base de MO2",
-                "Mod Organizer 2 · 2.5.2\nQt y PyQt · 6.7.1\nPython · 3.12.15\nOpenSSL · 3.5.9",
+                _tr("MO2 base"),
+                _tr("Mod Organizer 2 · 2.5.2\nQt and PyQt · 6.7.1\nPython · 3.12.15\nOpenSSL · 3.5.9"),
                 components_page,
             ),
             0,
@@ -332,9 +403,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         components_grid.addWidget(
             self._about_feature(
-                "Sistema de archivos virtual",
-                "USVFS · 0.5.7.2\nPermite desplegar mods virtualmente sin modificar "
-                "los archivos originales del juego.",
+                _tr("Virtual file system"),
+                "USVFS · 0.5.7.2\n"
+                + _tr("Deploys mods virtually without changing the game's "
+                      "original files."),
                 components_page,
             ),
             0,
@@ -342,9 +414,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         components_grid.addWidget(
             self._about_feature(
-                "Herramientas Elden Ring",
-                "Complemento · 0.5.0-alpha.75\nPuente nativo · 0.5.0-alpha.33\n"
-                "Instalador de archivos · alpha.72",
+                _tr("Elden Ring tools"),
+                _tr("Game plugin · {plugin}\nNative bridge · {bridge}\n"
+                    "Archive installer · {installer}").format(
+                    plugin="0.5.0-alpha.75", bridge="0.5.0-alpha.35", installer="alpha.72"
+                ),
                 components_page,
             ),
             1,
@@ -352,9 +426,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         components_grid.addWidget(
             self._about_feature(
-                "Perfiles e interfaz",
-                "Aislamiento de partidas · alpha.68\nOpciones de inicio · 0.5.0.64\n"
-                "MO2 Classic Refined · Light y Dark",
+                _tr("Profiles and interface"),
+                _tr("Save isolation · {saves}\nStartup options · {startup}\n"
+                    "MO2 Classic Refined · Light and Dark").format(
+                    saves="alpha.76", startup="0.5.0.64"
+                ),
                 components_page,
             ),
             1,
@@ -363,33 +439,36 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         components_layout.addLayout(components_grid, 1)
 
         component_versions_note = QLabel(
-            "Son las versiones incluidas en esta compilación; no indican "
-            "necesariamente las versiones más recientes disponibles.",
+            _tr("These are the versions included in this build; they are not "
+                "necessarily the latest versions available."),
             components_page,
         )
+        component_versions_note.setObjectName("mo2RevampedAboutVersionsNote")
         component_versions_note.setWordWrap(True)
         components_layout.addWidget(component_versions_note)
-        tabs.addTab(components_page, "Componentes")
+        tabs.addTab(components_page, _tr("Components"))
         credits_page = QWidget(dialog)
+        credits_page.setObjectName("mo2RevampedAboutCreditsPage")
         credits_layout = QVBoxLayout(credits_page)
-        credits_layout.setContentsMargins(14, 12, 14, 12)
-        credits_layout.setSpacing(10)
+        credits_layout.setContentsMargins(14, 14, 14, 12)
+        credits_layout.setSpacing(11)
 
-        credits_intro = QLabel(
-            "<h3>Créditos y licencias</h3>"
-            "<p>Información sobre esta edición comunitaria, el proyecto base y sus avisos legales.</p>",
-            credits_page,
+        credits_layout.addWidget(
+            self._about_page_intro(
+                _tr("Credits and licenses"),
+                _tr("Information about this community edition, the base project and its legal notices."),
+                credits_page,
+            )
         )
-        credits_intro.setWordWrap(True)
-        credits_layout.addWidget(credits_intro)
 
         credits_grid = QGridLayout()
+        credits_grid.setContentsMargins(0, 0, 0, 0)
         credits_grid.setHorizontalSpacing(10)
-        credits_grid.setVerticalSpacing(8)
+        credits_grid.setVerticalSpacing(10)
         credits_grid.addWidget(
             self._about_feature(
-                "Autoría de Revamped",
-                "MO2 Revamped · ArialSenki\nEdición comunitaria independiente.",
+                _tr("Revamped authorship"),
+                "MO2 Revamped · ArialSenki\n" + _tr("Independent community edition."),
                 credits_page,
             ),
             0,
@@ -397,9 +476,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         credits_grid.addWidget(
             self._about_feature(
-                "Proyecto base",
-                "Basado en Mod Organizer 2 y sus contribuciones. Revamped no es "
-                "una publicación oficial del equipo de MO2.",
+                _tr("Base project"),
+                _tr("Based on Mod Organizer 2 and its contributions. Revamped is not "
+                    "an official release from the MO2 team."),
                 credits_page,
             ),
             0,
@@ -407,54 +486,61 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         credits_layout.addLayout(credits_grid)
 
-        license_group = QGroupBox("Licencias y código fuente", credits_page)
-        license_layout = QVBoxLayout(license_group)
-        license_layout.setContentsMargins(10, 10, 10, 8)
-        license_layout.setSpacing(4)
+        license_card = QFrame(credits_page)
+        license_card.setObjectName("mo2RevampedAboutLicenseCard")
+        license_layout = QVBoxLayout(license_card)
+        license_layout.setContentsMargins(13, 11, 13, 10)
+        license_layout.setSpacing(5)
+        license_title = QLabel(_tr("Licenses and source code"), license_card)
+        license_title.setObjectName("mo2RevampedAboutLicenseTitle")
+        license_layout.addWidget(license_title)
         license_note = QLabel(
-            "Se conservan los avisos de autoría y las licencias de MO2 y sus dependencias. "
-            "Consulta la carpeta licenses junto al programa.",
-            license_group,
+            _tr("The authorship notices and licenses of MO2 and its dependencies are "
+                "kept. See the licenses folder next to the program."),
+            license_card,
         )
+        license_note.setObjectName("mo2RevampedAboutLicenseText")
         license_note.setWordWrap(True)
         license_layout.addWidget(license_note)
         source_links = self._browser(
             "<p><a href=\"https://github.com/ModOrganizer2/modorganizer\">"
-            "Proyecto original y código fuente de Mod Organizer 2</a><br/>"
-            "<a href=\"https://github.com/ModOrganizer2/usvfs\">"
-            "Código fuente de USVFS</a></p>",
-            license_group,
+            + _tr("Original Mod Organizer 2 project and source code")
+            + "</a><br/><a href=\"https://github.com/ModOrganizer2/usvfs\">"
+            + _tr("USVFS source code")
+            + "</a></p>",
+            license_card,
         )
+        source_links.setObjectName("mo2RevampedAboutSourceLinks")
         source_links.setFrameShape(QFrame.Shape.NoFrame)
-        source_links.setStyleSheet("background: transparent;")
-        source_links.setFixedHeight(58)
+        source_links.setMinimumHeight(58)
         license_layout.addWidget(source_links)
-        credits_layout.addWidget(license_group)
-        credits_layout.addStretch(1)
-        tabs.addTab(credits_page, "Créditos y licencias")
+        credits_layout.addWidget(license_card, 1)
+        tabs.addTab(credits_page, _tr("Credits and licenses"))
 
         diagnostics_page = QWidget(dialog)
+        diagnostics_page.setObjectName("mo2RevampedAboutDiagnosticsPage")
         diagnostics_layout = QVBoxLayout(diagnostics_page)
-        diagnostics_layout.setContentsMargins(14, 12, 14, 12)
-        diagnostics_layout.setSpacing(10)
+        diagnostics_layout.setContentsMargins(14, 14, 14, 12)
+        diagnostics_layout.setSpacing(11)
 
-        diagnostics_intro = QLabel(
-            "<h3>Informes para corregir errores</h3>"
-            "<p>El informe reúne los registros necesarios para ayudar a localizar problemas de MO2 Revamped.</p>",
-            diagnostics_page,
+        diagnostics_layout.addWidget(
+            self._about_page_intro(
+                _tr("Bug reports"),
+                _tr("Collects the logs needed to help locate MO2 Revamped problems."),
+                diagnostics_page,
+            )
         )
-        diagnostics_intro.setWordWrap(True)
-        diagnostics_layout.addWidget(diagnostics_intro)
 
         diagnostics_grid = QGridLayout()
+        diagnostics_grid.setContentsMargins(0, 0, 0, 0)
         diagnostics_grid.setHorizontalSpacing(10)
-        diagnostics_grid.setVerticalSpacing(8)
+        diagnostics_grid.setVerticalSpacing(10)
         diagnostics_grid.addWidget(
             self._about_feature(
-                "Contenido del informe",
-                "Incluye el registro principal de MO2, registros recientes de USVFS y "
-                "los registros actual y anterior del puente de Elden Ring cuando "
-                "están disponibles, junto con versiones del programa, sistema, juego e instancia.",
+                _tr("Report contents"),
+                _tr("Includes the main MO2 log, recent USVFS logs and the current and "
+                    "previous Elden Ring bridge logs when available, along with program, "
+                    "system, game and instance versions."),
                 diagnostics_page,
             ),
             0,
@@ -462,10 +548,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         diagnostics_grid.addWidget(
             self._about_feature(
-                "Privacidad",
-                "No incluye mods, descargas, partidas, claves de Nexus ni volcados de memoria. "
-                "Los registros pueden contener rutas de Windows y nombres de perfiles; revísalos "
-                "antes de compartirlos.",
+                _tr("Privacy"),
+                _tr("Mods, downloads, saves, Nexus keys and memory dumps are not included. "
+                    "Logs can contain Windows paths and profile names; review them "
+                    "before sharing."),
                 diagnostics_page,
             ),
             0,
@@ -473,9 +559,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         diagnostics_grid.addWidget(
             self._about_feature(
-                "Si MO2 no inicia",
-                "Adjunta el último registro del instalador que aparece en su mensaje de error. "
-                "Si MO2 se cierra inesperadamente, conserva también el archivo de crashDumps.",
+                _tr("If MO2 does not start"),
+                _tr("Attach the latest installer log shown in its error message. "
+                    "If MO2 closes unexpectedly, also keep the file from crashDumps."),
                 diagnostics_page,
             ),
             1,
@@ -486,16 +572,18 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         diagnostics_layout.addLayout(diagnostics_grid, 1)
 
         create_report_button = QPushButton(
-            "Crear informe de errores de MO2 Revamped…", diagnostics_page
+            _tr("Create MO2 Revamped bug report…"), diagnostics_page
         )
+        create_report_button.setObjectName("mo2RevampedAboutDiagnosticsButton")
         create_report_button.clicked.connect(
             lambda _checked=False: self._create_diagnostics_bundle(dialog)
         )
         report_button_row = QHBoxLayout()
+        report_button_row.setContentsMargins(0, 0, 0, 0)
         report_button_row.addStretch(1)
         report_button_row.addWidget(create_report_button)
         diagnostics_layout.addLayout(report_button_row)
-        tabs.addTab(diagnostics_page, "Diagnóstico")
+        tabs.addTab(diagnostics_page, _tr("Diagnostics"))
         layout.addWidget(tabs, 1)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, dialog)
@@ -567,7 +655,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             (
                 "MO2 Revamped diagnostic report",
                 f"Created UTC: {datetime.now(timezone.utc).isoformat()}",
-                "Package: MO2 Revamped 1.0.0 (based on MO2 2.5.2)",
+                "Package: MO2 Revamped 1.0.1 (based on MO2 2.5.2)",
                 "Base: Mod Organizer 2.5.2",
                 "USVFS: 0.5.7.2",
                 f"Windows: {platform.platform()}",
@@ -587,9 +675,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 f"Active profile: {profile_name}",
                 f"Profile directory: {profile_path}",
                 "Elden Ring game plugin: 0.5.0-alpha.75",
-                "Native bridge: 0.5.0-alpha.33",
+                "Native bridge: 0.5.0-alpha.35",
                 "Archive layout installer: alpha.72",
-                "Save isolation: alpha.68",
+                "Save isolation: alpha.76",
                 "Startup options: 0.5.0.64",
                 "",
                 "Review this report and the included logs before sharing; paths and profile names may identify your Windows account.",
@@ -637,30 +725,89 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 candidates.append((archive_name, path))
         return candidates
 
+    @staticmethod
+    def _show_report_notice(
+        parent, object_name: str, title: str, heading: str, details: str
+    ) -> None:
+        message = QMessageBox(parent)
+        message.setObjectName(object_name)
+        message.setOption(QMessageBox.Option.DontUseNativeDialog, True)
+        message.setWindowTitle(title)
+        message.setIcon(QMessageBox.Icon.NoIcon)
+        message.setText(heading)
+        message.setInformativeText(details)
+        message.setStandardButtons(QMessageBox.StandardButton.Ok)
+        message.setDefaultButton(QMessageBox.StandardButton.Ok)
+        message.setEscapeButton(QMessageBox.StandardButton.Ok)
+        accept_button = message.button(QMessageBox.StandardButton.Ok)
+        if accept_button is not None:
+            accept_button.setText(_tr("OK"))
+            accept_button.setObjectName("mo2RevampedReportAcceptButton")
+        for label_name in ("qt_msgbox_label", "qt_msgbox_informativelabel"):
+            label = message.findChild(QLabel, label_name)
+            if label is not None:
+                label.setWordWrap(True)
+        message.exec()
+
     def _create_diagnostics_bundle(self, parent) -> None:
-        response = QMessageBox.warning(
-            parent,
-            "Review before sharing",
-            "The report contains MO2, USVFS and Elden Ring bridge logs. They can "
-            "include Windows paths and profile names. Review the ZIP before "
-            "sending it. It does not include mods, downloads, saves, Nexus keys "
-            "or memory dumps.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel,
+        confirmation = QMessageBox(parent)
+        confirmation.setObjectName("MO2RevampedReportConfirmDialog")
+        confirmation.setOption(QMessageBox.Option.DontUseNativeDialog, True)
+        confirmation.setWindowTitle(_tr("Create bug report"))
+        confirmation.setIcon(QMessageBox.Icon.NoIcon)
+        confirmation.setText(_tr("Review the report before sharing it"))
+        confirmation.setInformativeText(
+            _tr("Includes MO2, USVFS and Elden Ring bridge logs. They can contain "
+                "Windows paths and profile names. The ZIP does not include mods, "
+                "downloads, saves, Nexus keys or memory dumps.")
         )
-        if response != QMessageBox.StandardButton.Yes:
+        create_button = confirmation.addButton(
+            _tr("Create report"), QMessageBox.ButtonRole.AcceptRole
+        )
+        create_button.setObjectName("mo2RevampedReportCreateButton")
+        cancel_button = confirmation.addButton(
+            _tr("Cancel"), QMessageBox.ButtonRole.RejectRole
+        )
+        cancel_button.setObjectName("mo2RevampedReportCancelButton")
+        confirmation.setDefaultButton(cancel_button)
+        confirmation.setEscapeButton(cancel_button)
+        for label_name in ("qt_msgbox_label", "qt_msgbox_informativelabel"):
+            label = confirmation.findChild(QLabel, label_name)
+            if label is not None:
+                label.setWordWrap(True)
+        confirmation.exec()
+        if confirmation.clickedButton() is not create_button:
             return
 
         filename = "MO2-Revamped-Diagnostics-" + datetime.now().strftime(
             "%Y%m%d-%H%M%S"
         ) + ".zip"
         initial_path = Path.home() / "Desktop" / filename
-        destination, _ = QFileDialog.getSaveFileName(
-            parent,
-            "Save MO2 Revamped diagnostic report",
-            str(initial_path),
-            "ZIP archive (*.zip)",
-        )
+        save_dialog = QFileDialog(parent)
+        save_dialog.setObjectName("MO2RevampedReportSaveDialog")
+        save_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        save_dialog.setWindowTitle(_tr("Save MO2 Revamped report"))
+        save_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        save_dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        save_dialog.setNameFilters([_tr("ZIP archive (*.zip)")])
+        save_dialog.setDefaultSuffix("zip")
+        save_dialog.setDirectory(str(initial_path.parent))
+        save_dialog.selectFile(initial_path.name)
+        save_label = _tr("Save")
+        save_dialog.setLabelText(QFileDialog.DialogLabel.LookIn, _tr("Save in:"))
+        save_dialog.setLabelText(QFileDialog.DialogLabel.FileName, _tr("File name:"))
+        save_dialog.setLabelText(QFileDialog.DialogLabel.FileType, _tr("File type:"))
+        save_dialog.setLabelText(QFileDialog.DialogLabel.Accept, save_label)
+        save_dialog.setLabelText(QFileDialog.DialogLabel.Reject, _tr("Cancel"))
+        for button in save_dialog.findChildren(QPushButton):
+            if button.text().replace("&", "") == save_label:
+                button.setObjectName("mo2RevampedReportSaveButton")
+        save_dialog.setMinimumSize(760, 500)
+        save_dialog.resize(860, 560)
+        if save_dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected_files = save_dialog.selectedFiles()
+        destination = selected_files[0] if selected_files else ""
         if not destination:
             return
         if not destination.casefold().endswith(".zip"):
@@ -705,21 +852,27 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                         "collection-errors.txt",
                         "\n".join(collection_errors),
                     )
-            QMessageBox.information(
+            self._show_report_notice(
                 parent,
-                "Diagnostic report created",
-                f"Saved the report to:\n{destination}\n\n"
-                "Review its contents and remove any private paths before sharing.",
+                "MO2RevampedReportSuccessDialog",
+                _tr("Report created"),
+                _tr("The report was saved"),
+                _tr("Location:\n{path}\n\n"
+                    "Review the ZIP and remove private paths before sharing it.").format(
+                    path=destination
+                ),
             )
         except Exception as error:
             qCritical(
                 "MO2 Revamped: could not create diagnostic report.\n"
                 + traceback.format_exc()
             )
-            QMessageBox.critical(
+            self._show_report_notice(
                 parent,
-                "Could not create diagnostic report",
-                f"{error}\n\nSee the MO2 log for details.",
+                "MO2RevampedReportErrorDialog",
+                _tr("Could not create the report"),
+                _tr("MO2 Revamped could not save the bug report"),
+                _tr("{error}\n\nCheck the MO2 log for details.").format(error=error),
             )
 
 

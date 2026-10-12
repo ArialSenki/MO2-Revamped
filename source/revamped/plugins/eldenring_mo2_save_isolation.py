@@ -14,31 +14,70 @@ import traceback
 import uuid
 
 import mobase
-from PyQt6.QtCore import QEvent, QObject, QUrl, Qt, QTimer, qInfo
+from PyQt6.QtCore import QCoreApplication, QEvent, QMetaObject, QObject, QTimer, QUrl, Qt, qInfo
 from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
-    QButtonGroup,
     QComboBox,
     QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFrame,
     QGroupBox,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QMessageBox,
     QCommandLinkButton,
     QPushButton,
-    QRadioButton,
     QScrollArea,
     QSizePolicy,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
+
+
+# MO2 installs translations/revamped_<language>.qm; the source text is English.
+_TR_CONTEXT = "EldenRingSaveIsolation"
+
+
+def _tr(text: str) -> str:
+    return QCoreApplication.translate(_TR_CONTEXT, text)
+
+
+def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
+                        fallback: str = "•") -> QLabel:
+    icon = QLabel(parent)
+    icon.setObjectName(object_name)
+    icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    icon.setFixedSize(size, size)
+    pixmap = QIcon(icon_path).pixmap(max(12, size // 2), max(12, size // 2))
+    if pixmap.isNull():
+        icon.setText(fallback)
+    else:
+        icon.setPixmap(pixmap)
+    return icon
+
+
+def _add_circular_heading(layout, parent, text: str, title_object_name: str,
+                          icon_path: str, icon_object_name: str,
+                          size: int = 26, fallback: str = "•") -> QLabel:
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(8)
+    row.addWidget(
+        _make_circular_icon(parent, icon_object_name, icon_path, size, fallback),
+        0,
+        Qt.AlignmentFlag.AlignVCenter,
+    )
+    heading = QLabel(text, parent)
+    heading.setObjectName(title_object_name)
+    row.addWidget(heading, 1, Qt.AlignmentFlag.AlignVCenter)
+    layout.addLayout(row)
+    return heading
 
 
 class _Mo2DialogShowEventFilter(QObject):
@@ -57,12 +96,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     ProfileIsolated = "profile"
     InstanceShared = "instance_shared"
     GlobalShared = "global"
-    DialogUiIntegrationSetting = "Enable Elden Ring save dialog integration"
-    DialogUiIntegrationMigrationKey = "save dialog integration alpha.62 default migration"
-    ProfilesDialogCardName = "eldenRingSaveIsolationCard"
-    ProfilesDialogFooterName = "eldenRingSaveIsolationFooter"
-    SafeTransferButtonName = "eldenRingSafeSaveTransferButton"
-    ProfilesPanelDesign = "below"
     CreateInstanceCardName = "eldenRingSaveModeCard"
     PendingModesFilename = "pending_instance_modes.json"
     CreateInstanceSaveCopyCheckboxName = "eldenRingCreateInstanceSaveCopy"
@@ -74,20 +107,20 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     SaveProfilesDirectoryName = "save_profiles"
     ProfileSaveProfileKey = "profile_save_profile"
     InstanceSaveProfileKey = "instance_save_profile"
-    ProfilesSaveProfileComboName = "eldenRingSaveProfileSelector"
-    ProfilesSaveProfileCreateButtonName = "eldenRingCreateSaveProfile"
 
-    ModeDescriptions = {
-        ProfileIsolated: "Separate saves for each MO2 profile. Recommended for modded play.",
-        InstanceShared: "Share modded saves across profiles in this MO2 instance.",
-        GlobalShared: "Use the Steam save in Roaming. This shares saves outside MO2.",
-    }
+    @staticmethod
+    def mode_description(mode) -> str:
+        # Translated on each call: the translator is not loaded yet when the class is defined.
+        return {
+            EldenRingMo2SaveIsolation.ProfileIsolated: _tr("Separate saves for each MO2 profile. Recommended for modded play."),
+            EldenRingMo2SaveIsolation.InstanceShared: _tr("Share modded saves across profiles in this MO2 instance."),
+            EldenRingMo2SaveIsolation.GlobalShared: _tr("Use the Steam save in Roaming. This shares saves outside MO2."),
+        }.get(mode, "")
 
     def __init__(self):
         super().__init__()
         self.__organizer = None
         self.__parent_widget = None
-        self.__ui_timer = None
         self.__ui_event_filter = None
         self.__refreshing_dialogs = False
         self.__pending_error_reported = set()
@@ -97,52 +130,46 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self.__organizer = organizer
         # Plugin init is called while MO2 is discovering plugins, including in
-        # non-Elden-Ring instances. Defer all UI hooks and settings migration
-        # until the managed game is known, and leave them dormant elsewhere.
+        # non-Elden-Ring instances. Defer UI hooks until the managed game is
+        # known. Profile changes are event-driven so queued choices can be
+        # applied without polling the widget tree.
         organizer.onUserInterfaceInitialized(self._initialize_for_managed_game)
+        organizer.onProfileChanged(self._on_profile_changed)
         return True
+
+    def _on_profile_changed(self, _old_profile, _new_profile) -> None:
+        if self._active_instance_is_elden_ring():
+            QTimer.singleShot(0, self._apply_pending_mode_to_active_profile)
 
     def _initialize_for_managed_game(self, _main_window) -> None:
         if not self._active_instance_is_elden_ring():
             return
 
-        self._migrate_dialog_integration_default()
         application = QApplication.instance()
         if application is not None:
             self.__ui_event_filter = _Mo2DialogShowEventFilter(self, application)
             application.installEventFilter(self.__ui_event_filter)
-            self.__ui_timer = QTimer(application)
-            self.__ui_timer.setInterval(400)
-            self.__ui_timer.timeout.connect(self._refresh_mo2_dialogs)
-            self.__ui_timer.start()
-        qInfo("Elden Ring MO2: save isolation alpha.68 initialized.")
+            # Handle any dialogs already visible when the plugin finishes loading.
+            QTimer.singleShot(0, self._refresh_mo2_dialogs)
+        qInfo("Elden Ring MO2: save isolation alpha.77 initialized.")
 
-    def _migrate_dialog_integration_default(self) -> None:
-        """Enable the redesigned Elden Ring dialogs once for existing installs.
-
-        MO2 persists plugin settings, so changing the default alone does not
-        update users who previously saved the old default-off value. The
-        migration marker preserves a later user opt-out across restarts.
-        """
-        try:
-            if self.__organizer.persistent(
-                self.name(), self.DialogUiIntegrationMigrationKey, False
-            ):
-                return
-            self.__organizer.setPluginSetting(
-                self.name(), self.DialogUiIntegrationSetting, True
-            )
-            self.__organizer.setPersistent(
-                self.name(), self.DialogUiIntegrationMigrationKey, True
-            )
+    def _request_mo2_restart(self) -> None:
+        main_window = self.__parent_widget
+        if main_window is None or not QMetaObject.invokeMethod(
+            main_window,
+            "requestRestartFromPlugin",
+            Qt.ConnectionType.QueuedConnection,
+        ):
             qInfo(
-                "Elden Ring MO2 Save Isolation: enabled the Elden Ring save "
-                "dialog integration once for this existing MO2 instance."
+                "Elden Ring MO2 Save Isolation: MO2 restart request was not "
+                "accepted; the saved route needs a manual restart."
             )
-        except Exception as error:
-            qInfo(
-                "Elden Ring MO2 Save Isolation: could not migrate the saved "
-                f"dialog integration setting: {error}"
+            self._show_notice(
+                main_window,
+                _tr("Restart unavailable"),
+                _tr("The save route is saved, but MO2 could not start its restart. "
+                "Restart MO2 manually before launching Elden Ring."),
+                "warning",
             )
 
     def _handle_dialog_show_event(self, watched, event) -> bool:
@@ -151,7 +178,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             and isinstance(watched, QDialog)
             and not self.__refreshing_dialogs
         ):
-            self._refresh_mo2_dialogs(watched)
+            # Run after Qt has completed this dialog's first layout pass. The
+            # event already identifies the dialog, so avoid rescanning every
+            # top-level widget after each dialog opens.
+            QTimer.singleShot(
+                0, lambda target=watched: self._refresh_mo2_dialogs(target)
+            )
         return False
 
     def name(self) -> str:
@@ -165,37 +197,27 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
     def description(self) -> str:
         return (
-            "Choose Elden Ring save routes and named game save profiles, inspect "
-            "the active save path, and import or transfer .sl2 saves."
+            _tr("Choose Elden Ring save routes and named game save profiles, inspect "
+            "the active save path, and import or transfer .sl2 saves.")
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 68)
+        return mobase.VersionInfo(0, 5, 0, 77)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING"})]
 
     def settings(self) -> list[mobase.PluginSetting]:
-        return [
-            mobase.PluginSetting(
-                self.DialogUiIntegrationSetting,
-                (
-                    "Show Elden Ring save modes in MO2 2.5.2's instance and "
-                    "profile dialogs. Other games keep their native controls. "
-                    "Enabled by default; disable to restore MO2's native controls."
-                ),
-                True,
-            )
-        ]
+        return []
 
     def enabledByDefault(self) -> bool:
         return True
 
     def displayName(self) -> str:
-        return "Save Isolation"
+        return _tr("Save Isolation")
 
     def tooltip(self) -> str:
-        return "Select the Elden Ring save route and named game save for this profile."
+        return _tr("Select the Elden Ring save route and named game save for this profile.")
 
     def icon(self) -> QIcon:
         return QIcon()
@@ -203,256 +225,179 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def setParentWidget(self, widget) -> None:
         self.__parent_widget = widget
 
+    def _show_notice(
+        self, parent, title: str, message: str, kind: str = "info"
+    ) -> None:
+        dialog = QDialog(parent or self.__parent_widget)
+        dialog.setObjectName("EldenRingSaveIsolationNoticeDialog")
+        dialog.setWindowTitle(title)
+        dialog.setMinimumWidth(440)
+        dialog.setMaximumWidth(660)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(12)
+
+        header = QFrame(dialog)
+        header.setObjectName("saveIsolationPromptHeader")
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(12, 10, 12, 10)
+        header_layout.setSpacing(10)
+        icon_text = {
+            "info": "i",
+            "warning": "!",
+            "error": "×",
+            "success": "✓",
+        }.get(kind, "i")
+        icon = QLabel(icon_text, header)
+        icon.setObjectName("saveIsolationPromptIcon")
+        icon.setProperty("promptKind", kind)
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setFixedSize(28, 28)
+        heading = QLabel(title, header)
+        heading.setObjectName("saveIsolationPromptTitle")
+        heading.setWordWrap(True)
+        header_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
+        header_layout.addWidget(heading, 1)
+        layout.addWidget(header)
+
+        body = QLabel(message, dialog)
+        body.setObjectName("saveIsolationPromptMessage")
+        body.setWordWrap(True)
+        body.setTextFormat(Qt.TextFormat.PlainText)
+        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(body)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, parent=dialog)
+        buttons.setObjectName("saveIsolationPromptButtons")
+        ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        if ok_button is not None:
+            ok_button.setObjectName("saveIsolationPromptOkButton")
+            ok_button.setDefault(True)
+        buttons.accepted.connect(dialog.accept)
+        layout.addWidget(buttons)
+        dialog.adjustSize()
+        dialog.exec()
+
+    def _ask_confirmation(
+        self,
+        parent,
+        title: str,
+        message: str,
+        accept_text: str,
+        reject_text: str,
+        kind: str = "warning",
+        default_accept: bool = True,
+    ) -> bool:
+        dialog = QDialog(parent or self.__parent_widget)
+        dialog.setObjectName("EldenRingSaveIsolationConfirmDialog")
+        dialog.setWindowTitle(title)
+        dialog.setMinimumWidth(500)
+        dialog.setMaximumWidth(720)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(12)
+
+        header = QFrame(dialog)
+        header.setObjectName("saveIsolationPromptHeader")
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(12, 10, 12, 10)
+        header_layout.setSpacing(10)
+        icon_text = {"info": "i", "warning": "!", "error": "×"}.get(kind, "!")
+        icon = QLabel(icon_text, header)
+        icon.setObjectName("saveIsolationPromptIcon")
+        icon.setProperty("promptKind", kind)
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setFixedSize(28, 28)
+        heading = QLabel(title, header)
+        heading.setObjectName("saveIsolationPromptTitle")
+        heading.setWordWrap(True)
+        header_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
+        header_layout.addWidget(heading, 1)
+        layout.addWidget(header)
+
+        body = QLabel(message, dialog)
+        body.setObjectName("saveIsolationPromptMessage")
+        body.setWordWrap(True)
+        body.setTextFormat(Qt.TextFormat.PlainText)
+        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(body)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.NoButton, parent=dialog
+        )
+        buttons.setObjectName("saveIsolationConfirmButtons")
+        accept_button = buttons.addButton(
+            accept_text, QDialogButtonBox.ButtonRole.AcceptRole
+        )
+        accept_button.setObjectName("saveIsolationConfirmAcceptButton")
+        accept_button.setDefault(default_accept)
+        reject_button = buttons.addButton(
+            reject_text, QDialogButtonBox.ButtonRole.RejectRole
+        )
+        reject_button.setObjectName("saveIsolationConfirmRejectButton")
+        reject_button.setDefault(not default_accept)
+        reject_button.setAutoDefault(False)
+        accept_button.clicked.connect(dialog.accept)
+        reject_button.clicked.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.adjustSize()
+        return dialog.exec() == QDialog.DialogCode.Accepted
+
     def _dialog_ui_enabled(self) -> bool:
-        try:
-            return bool(
-                self.__organizer.pluginSetting(
-                    self.name(), self.DialogUiIntegrationSetting
-                )
-            )
-        except Exception:
-            return False
+        return self._active_instance_is_elden_ring()
 
     @staticmethod
     def _dialog_mode_card(
         parent,
         object_name: str,
-        include_apply: bool = False,
-        profile_options: tuple[QCheckBox, ...] = (),
-        compact: bool = False,
-        title: str = "Elden Ring profile options",
+        title: str = _tr("Elden Ring profile options"),
     ):
-        card = QWidget(parent) if compact else QGroupBox(title, parent)
+        card = QGroupBox(title, parent)
         card.setObjectName(object_name)
         layout = QVBoxLayout(card)
-        if compact:
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(8)
-            card.setSizePolicy(
-                QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
-            )
-            card.setMinimumWidth(380)
-            card.setMaximumWidth(440)
-        else:
-            layout.setContentsMargins(12, 10, 12, 10)
-            layout.setSpacing(7)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(7)
 
         mode_combo = QComboBox(card)
         mode_combo.setObjectName(f"{object_name}_mode")
         mode_combo.setMaxVisibleItems(8)
         mode_combo.view().setMinimumWidth(max(320, mode_combo.width()))
-        if not compact:
-            selection_row = QHBoxLayout()
-            selection_row.setSpacing(8)
-            selection_row.addWidget(QLabel("Save mode", card))
-            mode_combo.setMinimumContentsLength(24)
-            mode_combo.setSizeAdjustPolicy(
-                QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
-            )
-            selection_row.addWidget(mode_combo, 1)
-            layout.addLayout(selection_row)
-        else:
-            # Keep one mode model for the existing profile/save callbacks, but
-            # present the choices as the same readable radio rows used by the
-            # Create Instance wizard.
-            mode_combo.hide()
-            heading = QLabel("Elden Ring save isolation", card)
-            heading.setObjectName(f"{object_name}_heading")
-            heading.setStyleSheet("font-weight: 600;")
-            layout.addWidget(heading)
+        selection_row = QHBoxLayout()
+        selection_row.setSpacing(8)
+        selection_row.addWidget(QLabel(_tr("Save mode"), card))
+        mode_combo.setMinimumContentsLength(24)
+        mode_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        selection_row.addWidget(mode_combo, 1)
+        layout.addLayout(selection_row)
 
         choices = (
-            (EldenRingMo2SaveIsolation.ProfileIsolated, "Separate saves per MO2 profile"),
-            (EldenRingMo2SaveIsolation.InstanceShared, "Share modded saves in this instance"),
-            (EldenRingMo2SaveIsolation.GlobalShared, "Use the global Steam save"),
+            (EldenRingMo2SaveIsolation.ProfileIsolated, _tr("Separate saves per MO2 profile")),
+            (EldenRingMo2SaveIsolation.InstanceShared, _tr("Share modded saves in this instance")),
+            (EldenRingMo2SaveIsolation.GlobalShared, _tr("Use the global Steam save")),
         )
-        radio_group = None
-        radio_buttons = {}
-        if compact:
-            radio_group = QButtonGroup(card)
-            radio_group.setExclusive(True)
         for mode, title in choices:
             mode_combo.addItem(title, mode)
-            if compact:
-                option = QWidget(card)
-                option_layout = QVBoxLayout(option)
-                option_layout.setContentsMargins(0, 0, 0, 0)
-                option_layout.setSpacing(2)
-                radio = QRadioButton(title, option)
-                radio.setProperty("eldenRingSaveMode", mode)
-                radio_group.addButton(radio)
-                radio_buttons[mode] = radio
-                option_layout.addWidget(radio)
-                description = QLabel(
-                    EldenRingMo2SaveIsolation.ModeDescriptions[mode], option
-                )
-                description.setWordWrap(True)
-                description.setContentsMargins(22, 0, 0, 0)
-                option_layout.addWidget(description)
-                layout.addWidget(option)
-
-                def select_mode(checked: bool, selected_mode=mode) -> None:
-                    if checked:
-                        mode_combo.setCurrentIndex(mode_combo.findData(selected_mode))
-
-                radio.toggled.connect(select_mode)
 
         detail = QLabel(card)
         detail.setObjectName(f"{object_name}_description")
         detail.setWordWrap(True)
-        detail.setContentsMargins(0 if compact else 4, 0, 0 if compact else 4, 0)
-        if compact:
-            # The radio rows each show their own explanation, so this former
-            # single active-mode label is intentionally hidden.
-            detail.hide()
-        else:
-            layout.addWidget(detail)
-
-        for checkbox in profile_options:
-            old_parent = checkbox.parentWidget()
-            old_layout = old_parent.layout() if old_parent is not None else None
-            if old_layout is not None:
-                old_layout.removeWidget(checkbox)
-            checkbox.setParent(card)
-            checkbox.show()
-            layout.addWidget(checkbox)
+        detail.setContentsMargins(4, 0, 4, 0)
+        layout.addWidget(detail)
 
         status = QLabel(card)
         status.setObjectName(f"{object_name}_status")
         status.setWordWrap(True)
         layout.addWidget(status)
 
-        apply_button = None
-        if include_apply:
-            button_row = QHBoxLayout()
-            button_row.addStretch(1)
-            apply_button = QPushButton("Apply to selected profile", card)
-            apply_button.setObjectName(f"{object_name}_apply")
-            button_row.addWidget(apply_button)
-            layout.addLayout(button_row)
-
         def update_description(index: int) -> None:
             mode = mode_combo.itemData(index)
-            if not compact:
-                detail.setText(
-                    EldenRingMo2SaveIsolation.ModeDescriptions.get(mode, "")
-                )
+            detail.setText(EldenRingMo2SaveIsolation.mode_description(mode))
 
         mode_combo.currentIndexChanged.connect(update_description)
         update_description(mode_combo.currentIndex())
-        if compact and mode_combo.currentData() in radio_buttons:
-            radio_buttons[mode_combo.currentData()].setChecked(True)
-        return card, mode_combo, detail, status, apply_button
-
-    def _profiles_full_width_panel(self, parent):
-        """Build the full-width save route and named game save selector."""
-        card = QWidget(parent)
-        card.setObjectName(self.ProfilesDialogCardName)
-        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
-        card.setMinimumWidth(820)
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(0, 4, 0, 0)
-        layout.setSpacing(6)
-
-        heading = QLabel("Elden Ring save isolation", card)
-        heading.setObjectName(f"{self.ProfilesDialogCardName}_heading")
-        heading.setStyleSheet("font-weight: 600;")
-        layout.addWidget(heading)
-
-        mode_combo = QComboBox(card)
-        mode_combo.setObjectName(f"{self.ProfilesDialogCardName}_mode")
-        mode_combo.hide()
-        radio_group = QButtonGroup(card)
-        radio_group.setExclusive(True)
-        options_row = QHBoxLayout()
-        options_row.setSpacing(12)
-        choices = (
-            (self.ProfileIsolated, "Separate per profile"),
-            (self.InstanceShared, "Share within this instance"),
-            (self.GlobalShared, "Use global Steam save"),
-        )
-        for mode, title in choices:
-            mode_combo.addItem(title, mode)
-            option = QWidget(card)
-            option.setObjectName("eldenRingSaveModeOptionCard")
-            option.setSizePolicy(
-                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
-            )
-            option_layout = QVBoxLayout(option)
-            option_layout.setContentsMargins(9, 7, 9, 7)
-            option_layout.setSpacing(4)
-            radio = QRadioButton(title, option)
-            radio.setProperty("eldenRingSaveMode", mode)
-            radio_group.addButton(radio)
-            option_layout.addWidget(radio)
-            description = QLabel(self.ModeDescriptions[mode], option)
-            description.setWordWrap(True)
-            description.setContentsMargins(22, 0, 0, 0)
-            option_layout.addWidget(description)
-            options_row.addWidget(option, 1)
-            radio.toggled.connect(
-                lambda checked, selected_mode=mode: checked
-                and mode_combo.setCurrentIndex(mode_combo.findData(selected_mode))
-            )
-        layout.addLayout(options_row)
-
-        save_profile_heading = QLabel("Game save profile", card)
-        save_profile_heading.setStyleSheet("font-weight: 600;")
-        layout.addWidget(save_profile_heading)
-        save_profile_row = QHBoxLayout()
-        save_profile_combo = QComboBox(card)
-        save_profile_combo.setObjectName(self.ProfilesSaveProfileComboName)
-        save_profile_combo.setMinimumContentsLength(30)
-        save_profile_combo.setSizeAdjustPolicy(
-            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
-        )
-        save_profile_combo.setMaxVisibleItems(10)
-        create_save_profile_button = QPushButton("Create or import…", card)
-        create_save_profile_button.setObjectName(
-            self.ProfilesSaveProfileCreateButtonName
-        )
-        apply_button = QPushButton("Apply to selected profile", card)
-        apply_button.setObjectName(f"{self.ProfilesDialogCardName}_apply")
-        save_profile_row.addWidget(save_profile_combo, 1)
-        save_profile_row.addWidget(create_save_profile_button)
-        save_profile_row.addWidget(apply_button)
-        layout.addLayout(save_profile_row)
-        route_note = QLabel(
-            "Each choice keeps its own save. MO2 gives Elden Ring the selected file "
-            "as ER0000.sl2. Apply saves the route and choice for this profile; restart "
-            "MO2 before launching after a change.",
-            card,
-        )
-        route_note.setObjectName(f"{self.ProfilesDialogCardName}_mode_note")
-        route_note.setWordWrap(True)
-        layout.addWidget(route_note)
-
-        status = QLabel(card)
-        status.setObjectName(f"{self.ProfilesDialogCardName}_status")
-        status.setWordWrap(True)
-        layout.addWidget(status)
-        status.hide()
-
-        detail = QLabel(card)
-        detail.setObjectName(f"{self.ProfilesDialogCardName}_description")
-        detail.hide()
-        mode_combo.currentIndexChanged.connect(
-            lambda index: detail.setText(
-                self.ModeDescriptions.get(mode_combo.itemData(index), "")
-            )
-        )
-        first_radio = radio_group.buttons()[0] if radio_group.buttons() else None
-        if first_radio is not None:
-            first_radio.setChecked(True)
-        return (
-            card,
-            mode_combo,
-            detail,
-            status,
-            apply_button,
-            save_profile_combo,
-            create_save_profile_button,
-        )
+        return card, mode_combo, detail, status, None
 
     @staticmethod
     def _select_dialog_mode(mode_combo, mode: str) -> None:
@@ -462,31 +407,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         mode_combo.blockSignals(True)
         mode_combo.setCurrentIndex(index)
         mode_combo.blockSignals(False)
-        for radio in mode_combo.parentWidget().findChildren(QRadioButton):
-            if radio.property("eldenRingSaveMode") is not None:
-                radio.blockSignals(True)
-                radio.setChecked(radio.property("eldenRingSaveMode") == mode_combo.currentData())
-                radio.blockSignals(False)
         detail = mode_combo.parentWidget().findChild(
             QLabel, f"{mode_combo.objectName().removesuffix('_mode')}_description"
         )
         if detail is not None:
             detail.setText(
-                EldenRingMo2SaveIsolation.ModeDescriptions.get(
-                    mode_combo.currentData(), ""
-                )
+                EldenRingMo2SaveIsolation.mode_description(mode_combo.currentData())
             )
-
-    @staticmethod
-    def _selected_dialog_mode(mode_combo) -> str:
-        mode = mode_combo.currentData()
-        if mode not in {
-            EldenRingMo2SaveIsolation.ProfileIsolated,
-            EldenRingMo2SaveIsolation.InstanceShared,
-            EldenRingMo2SaveIsolation.GlobalShared,
-        }:
-            return EldenRingMo2SaveIsolation.ProfileIsolated
-        return mode
 
     @staticmethod
     def _hide_native_checkbox(checkbox) -> None:
@@ -506,42 +433,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         checkbox.setChecked(checked)
         cls._hide_native_checkbox(checkbox)
 
-    @staticmethod
-    def _profiles_dialog_layouts(dialog):
-        """Return MO2's profile row and its profile/action columns."""
-        row_layout = dialog.findChild(QHBoxLayout, "horizontalLayout_3")
-        if row_layout is None or row_layout.count() < 2:
-            return None, None, None
-        profile_column = row_layout.itemAt(0).layout()
-        actions_column = next(
-            (
-                row_layout.itemAt(index).layout()
-                for index in range(1, row_layout.count())
-                if row_layout.itemAt(index).layout() is not None
-            ),
-            None,
-        )
-        profile_list = dialog.findChild(QListWidget, "profilesList")
-        if (
-            profile_column is None
-            or actions_column is None
-            or profile_list is None
-            or profile_column.indexOf(profile_list) < 0
-        ):
-            return None, None, None
-        return row_layout, profile_column, actions_column
-
-    @staticmethod
-    def _insert_profiles_panel_below_row(dialog, root_layout, row_layout, panel) -> bool:
-        """Place the save panel after MO2's profile row, allowing a page header."""
-        row_host = row_layout.parentWidget()
-        row_index = root_layout.indexOf(row_host) if row_host is not None else -1
-        if row_index < 0:
-            return False
-        if root_layout.indexOf(panel) < 0:
-            root_layout.insertWidget(row_index + 1, panel)
-        return True
-
     def _hide_create_instance_options(
         self, dialog, save_checkbox, selected_mode: str
     ) -> None:
@@ -554,90 +445,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         self._set_create_checkbox(
             dialog.findChild(QCheckBox, "archiveInvalidationCheckbox"), False
         )
-
-    def _install_safe_transfer_button(self, dialog, actions_column) -> None:
-        native_button = dialog.findChild(QPushButton, "transferButton")
-        profile_list = dialog.findChild(QListWidget, "profilesList")
-        if native_button is None or actions_column is None:
-            return
-
-        if native_button.property("_eldenRingOriginalTransferVisible") is None:
-            native_button.setProperty(
-                "_eldenRingOriginalTransferVisible", not native_button.isHidden()
-            )
-            native_button.setProperty(
-                "_eldenRingOriginalTransferEnabled", native_button.isEnabled()
-            )
-
-        safe_button = dialog.findChild(QPushButton, self.SafeTransferButtonName)
-        if safe_button is None:
-            safe_button = QPushButton(native_button.text(), dialog)
-            safe_button.setObjectName(self.SafeTransferButtonName)
-            safe_button.setToolTip(
-                "Choose one Elden Ring save file and its source and destination "
-                "routes."
-            )
-            safe_button.clicked.connect(
-                lambda _checked=False, target=dialog: self._open_safe_transfer_from_profiles(
-                    target
-                )
-            )
-
-        native_index = actions_column.indexOf(native_button)
-        if actions_column.indexOf(safe_button) < 0:
-            if native_index >= 0:
-                actions_column.insertWidget(native_index, safe_button)
-            else:
-                actions_column.addWidget(safe_button)
-        if profile_list is not None and not safe_button.property(
-            "_eldenRingTransferSelectionSync"
-        ):
-            safe_button.setProperty("_eldenRingTransferSelectionSync", True)
-            def sync_transfer_enabled(_current=None, _previous=None) -> None:
-                safe_button.setEnabled(profile_list.currentItem() is not None)
-            profile_list.currentItemChanged.connect(sync_transfer_enabled)
-        if actions_column.indexOf(safe_button) < 0:
-            qInfo(
-                "Elden Ring MO2 Save Isolation: could not place the route-aware "
-                "Transfer Saves button; MO2's native action remains available."
-            )
-            return
-        safe_button.setEnabled(
-            profile_list is None or profile_list.currentItem() is not None
-        )
-        safe_button.show()
-        if safe_button.isHidden():
-            qInfo(
-                "Elden Ring MO2 Save Isolation: route-aware Transfer Saves "
-                "button did not become visible; MO2's native action remains available."
-            )
-            return
-        native_button.hide()
-        if not dialog.property("_eldenRingSafeTransferIntegrated"):
-            dialog.setProperty("_eldenRingSafeTransferIntegrated", True)
-            qInfo(
-                "Elden Ring MO2 Save Isolation: replaced MO2's native "
-                "Transfer Saves action with the route-aware save-copy dialog."
-            )
-
-    def _open_safe_transfer_from_profiles(self, dialog) -> None:
-        profile_list = dialog.findChild(QListWidget, "profilesList")
-        active_profile = self.__organizer.profile()
-        selected_item = profile_list.currentItem() if profile_list is not None else None
-        if selected_item is None:
-            QMessageBox.warning(
-                dialog,
-                "Select a profile",
-                "Select the MO2 profile whose save routes you want to manage.",
-            )
-            return
-
-        if active_profile is None:
-            QMessageBox.warning(dialog, "No active profile", "MO2 has no active profile.")
-            return
-
-        selected_path = Path(active_profile.absolutePath()).parent / selected_item.text()
-        self._display_transfer_dialog(selected_path, selected_item.text(), dialog)
 
     @staticmethod
     def _profile_route_id(profile_directory: Path) -> str:
@@ -674,7 +481,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             profile_route = cls._profile_route_id(profile_directory)
             routes.append(
                 (
-                    f"MO2 profile saves — {profile_directory.name} (standard)",
+                    _tr("MO2 profile saves — {profile} (standard)").format(profile=profile_directory.name),
                     profile_route,
                     profile_directory / "saves",
                 )
@@ -684,7 +491,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             ):
                 routes.append(
                     (
-                        f"MO2 game save profile — {profile_directory.name}: {profile_name}",
+                        _tr("MO2 game save profile — {profile}: {save}").format(profile=profile_directory.name, save=profile_name),
                         f"{profile_route}:save:{profile_id}",
                         profile_directory / cls.SaveProfilesDirectoryName / profile_id,
                     )
@@ -693,7 +500,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         shared_root = profiles_root.parent / "Elden Ring Shared Saves"
         routes.append(
             (
-                "Shared saves for this MO2 instance (standard)",
+                _tr("Shared saves for this MO2 instance (standard)"),
                 cls.InstanceShared,
                 shared_root,
             )
@@ -703,14 +510,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         ):
             routes.append(
                 (
-                    f"Shared game save profile — {profile_name}",
+                    _tr("Shared game save profile — {save}").format(save=profile_name),
                     f"{cls.InstanceShared}:save:{profile_id}",
                     shared_root / cls.SaveProfilesDirectoryName / profile_id,
                 )
             )
         routes.append(
             (
-                "Global Elden Ring / Steam saves",
+                _tr("Global Elden Ring / Steam saves"),
                 cls.GlobalShared,
                 cls._global_save_directory(),
             )
@@ -764,89 +571,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             saves.sort(key=lambda path: str(path).casefold())
         return saves
 
-    @classmethod
-    def _configured_instance_profiles_root(cls, ini_path: Path) -> Path | None:
-        """Resolve an instance's profiles folder from its ModOrganizer.ini."""
-        config = configparser.ConfigParser(interpolation=None)
-        try:
-            config.read(ini_path, encoding="utf-8")
-            base_text = config.get(
-                "Settings", "base_directory", fallback=str(ini_path.parent)
-            ).strip()
-            base_text = base_text.replace("%BASE_DIR%", str(ini_path.parent))
-            base_path = Path(os.path.expandvars(base_text))
-            if not base_path.is_absolute():
-                base_path = ini_path.parent / base_path
-
-            profiles_text = config.get(
-                "Settings", "profiles_directory", fallback="%BASE_DIR%/profiles"
-            ).strip()
-            profiles_text = profiles_text.replace("%BASE_DIR%", str(base_path))
-            profiles_path = Path(os.path.expandvars(profiles_text))
-            if not profiles_path.is_absolute():
-                profiles_path = base_path / profiles_path
-            return profiles_path
-        except (OSError, UnicodeError, configparser.Error, ValueError):
-            return None
-
     def _create_instance_save_sources(self) -> list[tuple[str, Path, str]]:
-        """Find individual Elden Ring saves in Steam and known MO2 instances.
-
-        MO2 has a standard global-instance directory and a portable-instance
-        marker in the current application directory. The active profile's
-        configured profile root is included too, covering custom roots for the
-        instance that is currently running.
-        """
+        """Find Elden Ring saves in Steam and this MO2 instance only."""
         discovered_roots: list[tuple[str, Path]] = []
-        instance_ini_paths: dict[str, Path] = {}
-
-        local_app_data = os.environ.get("LOCALAPPDATA")
-        if not local_app_data:
-            local_app_data = str(Path.home() / "AppData" / "Local")
-        global_instances_root = Path(local_app_data) / "ModOrganizer"
-        try:
-            for instance_directory in global_instances_root.iterdir():
-                if not instance_directory.is_dir():
-                    continue
-                ini_path = instance_directory / "ModOrganizer.ini"
-                if ini_path.is_file():
-                    instance_ini_paths[self._normalized_path(ini_path)] = ini_path
-        except OSError:
-            pass
-
-        try:
-            mo2_directory = Path(__file__).resolve().parents[1]
-            portable_ini = mo2_directory / "ModOrganizer.ini"
-            if portable_ini.is_file():
-                instance_ini_paths[self._normalized_path(portable_ini)] = portable_ini
-        except (OSError, RuntimeError, IndexError):
-            pass
-
-        for ini_path in instance_ini_paths.values():
-            config = configparser.ConfigParser(interpolation=None)
-            try:
-                config.read(ini_path, encoding="utf-8")
-                game_name = config.get("General", "gameName", fallback="")
-            except (OSError, UnicodeError, configparser.Error, ValueError):
-                continue
-            if "elden ring" not in game_name.casefold():
-                continue
-            profiles_root = self._configured_instance_profiles_root(ini_path)
-            if profiles_root is None or not profiles_root.is_dir():
-                continue
-            discovered_roots.append((ini_path.parent.name, profiles_root))
 
         try:
             active_profile = self.__organizer.profile()
             if active_profile is not None and self._active_instance_is_elden_ring():
                 active_profiles_root = Path(active_profile.absolutePath()).parent
-                if all(
-                    self._normalized_path(active_profiles_root)
-                    != self._normalized_path(root)
-                    for _name, root in discovered_roots
-                ):
+                if active_profiles_root.is_dir():
                     discovered_roots.append(
-                        ("Current MO2 instance", active_profiles_root)
+                        (_tr("Current MO2 instance"), active_profiles_root)
                     )
         except (AttributeError, OSError, RuntimeError):
             pass
@@ -894,7 +629,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             for profile_directory in profile_directories:
                 display_profile = f"{profile_directory.name} ({display_instance})"
                 add_save_files(
-                    f"MO2 — {display_profile} / standard saves",
+                    _tr("MO2 — {profile} / standard saves").format(profile=display_profile),
                     profile_directory / "saves",
                 )
                 for profile_id, profile_name in self._read_named_save_profiles(
@@ -907,12 +642,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             shared_profile_directory = profiles_root / "__EldenRingSharedSaves__"
             shared_root = profiles_root.parent / "Elden Ring Shared Saves"
-            add_save_files(f"MO2 — {display_instance} / shared saves", shared_root)
+            add_save_files(_tr("MO2 — {instance} / shared saves").format(instance=display_instance), shared_root)
             for profile_id, profile_name in self._read_named_save_profiles(
                 shared_profile_directory, self.InstanceShared
             ):
                 add_save_files(
-                    f"MO2 — {display_instance} / shared / {profile_name}",
+                    _tr("MO2 — {instance} / shared / {save}").format(
+                        instance=display_instance, save=profile_name
+                    ),
                     shared_root / self.SaveProfilesDirectoryName / profile_id,
                 )
 
@@ -964,15 +701,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_combo.setEnabled(found_saves > 0 and copy_checkbox.isChecked())
         if found_saves:
             status_label.setText(
-                f"{found_saves} .sl2 save(s) found. The selected file will be "
+                _tr("{count} .sl2 save(s) found. The selected file will be "
                 "copied after the new instance opens. Existing destination files "
-                "are never replaced."
+                "are never replaced.").format(count=found_saves)
             )
         else:
             copy_checkbox.setChecked(False)
             status_label.setText(
-                "No .sl2 saves were found in Steam or the detected Elden Ring "
-                "MO2 profiles."
+                _tr("No .sl2 saves were found in Steam or the detected Elden Ring "
+                "MO2 profiles.")
             )
         self._sync_create_instance_game_save_profile_controls(dialog)
 
@@ -1030,11 +767,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if copy_checkbox is not None:
             if checkbox.isChecked():
                 copy_checkbox.setText(
-                    "Copy an existing .sl2 save into this named profile"
+                    _tr("Copy an existing .sl2 save into this named profile")
                 )
             else:
                 copy_checkbox.setText(
-                    "Copy an existing .sl2 save into the new instance"
+                    _tr("Copy an existing .sl2 save into the new instance")
                 )
             copy_checkbox.setEnabled(
                 source_combo is not None and source_combo.count() > 0
@@ -1047,37 +784,41 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if note is not None:
             if not supports_named_profiles:
                 note.setText(
-                    "Named game save profiles require profile-isolated or "
-                    "instance-shared saves. Global mode uses the Steam save folder."
+                    _tr("Named game save profiles require profile-isolated or "
+                    "instance-shared saves. Global mode uses the Steam save folder.")
                 )
             elif checkbox.isChecked():
                 note.setText(
-                    "This name appears in MO2's Profiles section. If you choose "
-                    "a starting save below, it will be copied into this profile. "
-                    "Elden Ring loads the selected file as ER0000.sl2."
+                    _tr("This name appears in Tools > Elden Ring Save Isolation. If "
+                    "you choose a starting save below, it will be copied into "
+                    "this named save profile. "
+                    "Elden Ring loads the selected file as ER0000.sl2.")
                 )
             else:
                 note.setText(
-                    "Optional. Leave this unchecked to use standard saves. "
-                    "You can create named game save profiles later in Profiles."
+                    _tr("Optional. Leave this unchecked to use standard saves. "
+                    "You can create named game save profiles later from Tools > "
+                    "Elden Ring Save Isolation.")
                 )
 
         if status_label is not None and source_combo is not None:
             if source_combo.count():
                 destination = (
-                    "the named game save profile"
+                    _tr("the named game save profile")
                     if checkbox.isChecked()
-                    else "the new instance's standard save folder"
+                    else _tr("the new instance's standard save folder")
                 )
                 status_label.setText(
-                    f"{source_combo.count()} .sl2 save(s) found. The selected file "
-                    f"will be copied to {destination} after the new instance opens. "
-                    "Existing destination files are never replaced."
+                    _tr("{count} .sl2 save(s) found. The selected file "
+                    "will be copied to {destination} after the new instance opens. "
+                    "Existing destination files are never replaced.").format(
+                        count=source_combo.count(), destination=destination
+                    )
                 )
             else:
                 status_label.setText(
-                    "No .sl2 saves were found in Steam or the detected Elden Ring "
-                    "MO2 profiles."
+                    _tr("No .sl2 saves were found in Steam or the detected Elden Ring "
+                    "MO2 profiles.")
                 )
 
     @staticmethod
@@ -1098,26 +839,34 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     ) -> None:
         dialog = QDialog(parent or self.__parent_widget)
         dialog.setObjectName("EldenRingSaveTransferDialog")
-        dialog.setWindowTitle("Elden Ring Save Transfer")
-        dialog.setMinimumSize(760, 500)
-        dialog.resize(820, 560)
+        dialog.setWindowTitle(_tr("Elden Ring Save Transfer"))
+        dialog.setMinimumSize(780, 520)
+        dialog.resize(900, 600)
         dialog.setSizeGripEnabled(True)
 
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(18, 16, 18, 14)
-        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(9)
 
-        header = QWidget(dialog)
+        header = QFrame(dialog)
+        header.setObjectName("saveTransferHeader")
         header_layout = QVBoxLayout(header)
-        header_layout.setContentsMargins(2, 0, 2, 0)
-        header_layout.setSpacing(2)
-        heading = QLabel("Transfer an Elden Ring save", header)
-        heading.setObjectName("saveTransferTitle")
-        header_layout.addWidget(heading)
+        header_layout.setContentsMargins(13, 10, 13, 10)
+        header_layout.setSpacing(3)
+        _add_circular_heading(
+            header_layout,
+            header,
+            _tr("Transfer an Elden Ring save"),
+            "saveTransferTitle",
+            ":/MO/gui/mainwindow/files/save.svg",
+            "saveTransferHeaderIcon",
+            30,
+            "S",
+        )
         intro = QLabel(
-            "Copy one .sl2 save between storage routes. "
-            f"The selected MO2 profile is {profile_name}. Its account folder is preserved, "
-            "and the copy is named ER0000.sl2 at the destination.",
+            _tr("Copy one .sl2 save between storage routes. "
+            "The selected MO2 profile is {profile}. Its account folder is preserved, "
+            "and the copy is named ER0000.sl2 at the destination.").format(profile=profile_name),
             header,
         )
         intro.setObjectName("saveTransferSubtitle")
@@ -1134,13 +883,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         route_layout = QVBoxLayout(route_card)
         route_layout.setContentsMargins(12, 9, 12, 10)
         route_layout.setSpacing(7)
-        route_heading = QLabel("Save routes", route_card)
+        route_heading = QLabel(_tr("Save routes"), route_card)
         route_heading.setObjectName("saveTransferSectionHeading")
         route_layout.addWidget(route_heading)
 
         source_row = QHBoxLayout()
         source_row.setSpacing(10)
-        source_row.addWidget(QLabel("Copy from:", route_card))
+        source_row.addWidget(QLabel(_tr("Copy from:"), route_card))
         source_combo = QComboBox(route_card)
         source_combo.setObjectName("saveTransferSourceRoute")
         for label, route_id, _path in routes:
@@ -1150,10 +899,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         destination_row = QHBoxLayout()
         destination_row.setSpacing(10)
-        destination_row.addWidget(QLabel("Copy to:", route_card))
+        destination_row.addWidget(QLabel(_tr("Copy to:"), route_card))
         destination_combo = QComboBox(route_card)
         destination_combo.setObjectName("saveTransferDestinationRoute")
-        destination_combo.addItem("Choose a destination…", "")
+        destination_combo.addItem(_tr("Choose a destination…"), "")
         for label, route_id, _path in routes:
             destination_combo.addItem(label, route_id)
         destination_row.addWidget(destination_combo, 1)
@@ -1174,7 +923,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         path_layout.addWidget(source_folder_label)
         destination_folder_label = QLabel(
-            "Destination folder: choose a route above.", path_card
+            _tr("Destination folder: choose a route above."), path_card
         )
         destination_folder_label.setObjectName("saveTransferDestinationPath")
         destination_folder_label.setWordWrap(True)
@@ -1184,7 +933,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         path_layout.addWidget(destination_folder_label)
         layout.addWidget(path_card)
 
-        list_heading = QLabel("Save files in the selected source", dialog)
+        list_heading = QLabel(_tr("Save files in the selected source"), dialog)
         list_heading.setObjectName("saveTransferListHeading")
         layout.addWidget(list_heading)
 
@@ -1207,9 +956,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         button_row = QHBoxLayout()
         button_row.addStretch(1)
-        copy_button = QPushButton("Copy selected save")
+        copy_button = QPushButton(_tr("Copy selected save"))
         copy_button.setObjectName("saveTransferCopyButton")
-        close_button = QPushButton("Close")
+        close_button = QPushButton(_tr("Close"))
         close_button.setObjectName("saveTransferCloseButton")
         button_row.addWidget(copy_button)
         button_row.addWidget(close_button)
@@ -1246,11 +995,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             destination_id = destination_combo.currentData()
             source_root = route_paths.get(source_id, Path())
             destination_root = route_paths.get(destination_id)
-            source_folder_label.setText(f"Source folder: {source_root}")
+            source_folder_label.setText(_tr("Source folder: {path}").format(path=source_root))
             destination_folder_label.setText(
-                f"Destination folder: {destination_root}"
+                _tr("Destination folder: {path}").format(path=destination_root)
                 if destination_root is not None
-                else "Destination folder: choose a route above."
+                else _tr("Destination folder: choose a route above.")
             )
 
             save_list.clear()
@@ -1276,13 +1025,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             if same_route:
                 status_label.setText(
-                    "Source and destination are the same folder. Nothing will be copied."
+                    _tr("Source and destination are the same folder. Nothing will be copied.")
                 )
             elif not files:
-                status_label.setText("No .sl2 save files were found in this source folder.")
+                status_label.setText(_tr("No .sl2 save files were found in this source folder."))
             else:
                 status_label.setText(
-                    f"{len(files)} save file(s) found. Select exactly one file to copy."
+                    _tr("{count} save file(s) found. Select exactly one file to copy.").format(count=len(files))
                 )
             copy_button.setEnabled(transfer_is_available())
 
@@ -1297,7 +1046,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             source_path = Path(item.data(Qt.ItemDataRole.UserRole))
             if source_path.suffix.casefold() != ".sl2" or self._is_reparse_point(source_path):
-                QMessageBox.warning(dialog, "Invalid save file", "Choose a normal .sl2 save file.")
+                self._show_notice(
+                    dialog,
+                    _tr("Invalid save file"),
+                    _tr("Choose a regular .sl2 save file."),
+                    "warning",
+                )
                 return
             try:
                 source_root_resolved = source_root.resolve()
@@ -1305,55 +1059,69 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 relative_path = source_path_resolved.relative_to(source_root_resolved)
                 destination_root_resolved = destination_root.resolve()
             except (OSError, ValueError) as error:
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Save path could not be resolved",
-                    f"The selected save is no longer inside its source folder. Nothing was copied.\n\n{error}",
+                    _tr("Save path could not be resolved"),
+                    _tr("The selected save is no longer inside its source folder. Nothing was copied.\n\n{error}").format(error=error),
+                    "warning",
                 )
                 return
 
             destination_relative_path = relative_path.parent / "ER0000.sl2"
             destination_path = destination_root_resolved / destination_relative_path
             if source_path_resolved == destination_path.resolve():
-                QMessageBox.information(
-                    dialog, "Same save file", "Source and destination point to the same file. Nothing was copied."
+                self._show_notice(
+                    dialog,
+                    _tr("Same save file"),
+                    _tr("Source and destination point to the same file. Nothing was copied."),
+                    "info",
                 )
                 return
             if destination_path.exists():
                 if not destination_path.is_file() or self._is_reparse_point(destination_path):
-                    QMessageBox.warning(
+                    self._show_notice(
                         dialog,
-                        "Destination is not a save file",
-                        f"The destination cannot be replaced safely:\n\n{destination_path}",
+                        _tr("Destination is not a save file"),
+                        _tr("The destination cannot be replaced safely:\n\n{path}").format(path=destination_path),
+                        "warning",
                     )
                     return
                 try:
                     if self._same_file_contents(source_path_resolved, destination_path):
-                        QMessageBox.information(
+                        self._show_notice(
                             dialog,
-                            "Save already matches",
-                            "The destination already contains an identical save. No second copy was made.",
+                            _tr("Save already matches"),
+                            _tr("The destination already contains an identical save. No second copy was made."),
+                            "info",
                         )
                         return
                 except OSError as error:
-                    QMessageBox.warning(dialog, "Could not compare saves", str(error))
+                    self._show_notice(
+                        dialog, _tr("Could not compare saves"), str(error), "warning"
+                    )
                     return
                 prompt = (
-                    "The destination already has a different save. Replace that file?"
+                    _tr("The destination already has a different save. Replace that file?")
                 )
             else:
                 prompt = (
-                    "Copy this one save file to the selected route? Any missing ID folder will be created."
+                    _tr("Copy this one save file to the selected route? Any missing ID folder will be created.")
                 )
-            answer = QMessageBox.question(
+            accepted = self._ask_confirmation(
                 dialog,
-                "Copy one save file",
-                f"{prompt}\n\nFrom:\n{source_path_resolved}\n\nTo:\n{destination_path}\n\n"
-                "Close Elden Ring before copying. This operation copies only the selected .sl2 file.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
+                _tr("Copy one save file"),
+                _tr("{prompt}\n\nFrom:\n{source}\n\n"
+                "To:\n{destination}\n\n"
+                "Close Elden Ring before copying. This operation copies only "
+                "the selected .sl2 file.").format(
+                    prompt=prompt, source=source_path_resolved, destination=destination_path
+                ),
+                _tr("Replace save") if destination_path.exists() else _tr("Copy save"),
+                _tr("Cancel"),
+                "warning",
+                default_accept=False,
             )
-            if answer != QMessageBox.StandardButton.Yes:
+            if not accepted:
                 return
 
             temporary_path = None
@@ -1402,14 +1170,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         backup_path = None
                     except OSError as restore_error:
                         recovery_note = (
-                            "\n\nThe previous destination is preserved at:\n"
-                            f"{backup_path}\n\nRestore error: {restore_error}"
+                            _tr("\n\nThe previous destination is preserved at:\n"
+                            "{path}\n\nRestore error: {error}").format(path=backup_path, error=restore_error)
                         )
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Save copy failed",
-                    f"The selected file could not be copied.\n\n{error}"
-                    f"{recovery_note}",
+                    _tr("Save copy failed"),
+                    _tr("The selected file could not be copied.\n\n{error}").format(error=error)
+                    + recovery_note,
+                    "warning",
                 )
                 return
             finally:
@@ -1420,14 +1189,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         pass
 
             backup_note = (
-                f"\n\nThe previous destination was moved to:\n{backup_path}"
+                _tr("\n\nThe previous destination was moved to:\n{path}").format(path=backup_path)
                 if backup_path is not None
                 else ""
             )
-            QMessageBox.information(
+            self._show_notice(
                 dialog,
-                "Save copied",
-                f"Copied and prepared the game save:\n{destination_path}{backup_note}",
+                _tr("Save copied"),
+                _tr("Copied and prepared the game save:\n{path}").format(path=destination_path) + backup_note,
+                "success",
             )
             refresh_transfer_choices()
 
@@ -1441,182 +1211,36 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         refresh_transfer_choices()
         dialog.exec()
 
+    def _set_native_save_group_plugin_owned(
+        self, dialog, plugin_controls_active: bool
+    ) -> None:
+        # The native group is part of MO2's new-instance wizard. Profiles no
+        # longer has a save-mode panel; all post-creation routing lives in Tools.
+        native_save_group = dialog.findChild(QGroupBox, "eldenRingSaveIsolationGroup")
+        if native_save_group is not None:
+            native_save_group.setProperty(
+                "_eldenRingSaveUiPluginControlsActive",
+                bool(plugin_controls_active),
+            )
+            native_save_group.setVisible(not plugin_controls_active)
+
     def _restore_native_dialog(self, dialog) -> None:
-        profile_card = dialog.findChild(QWidget, self.ProfilesDialogCardName)
-        if profile_card is not None:
-            profile_list = dialog.findChild(QListWidget, "profilesList")
-            row_layout, profile_column, actions_column = (
-                self._profiles_dialog_layouts(dialog)
-            )
-            root_layout = dialog.findChild(QVBoxLayout, "verticalLayout_3")
-            card_placement = dialog.property("_eldenRingSaveUiCardPlacement")
-            native_transfer = dialog.findChild(QPushButton, "transferButton")
-            safe_transfer = dialog.findChild(
-                QPushButton, self.SafeTransferButtonName
-            )
-            if safe_transfer is not None:
-                safe_transfer.hide()
-            if native_transfer is not None:
-                original_visible = native_transfer.property(
-                    "_eldenRingOriginalTransferVisible"
-                )
-                original_enabled = native_transfer.property(
-                    "_eldenRingOriginalTransferEnabled"
-                )
-                if original_enabled is not None:
-                    native_transfer.setEnabled(bool(original_enabled))
-                if original_visible is not None:
-                    native_transfer.setVisible(bool(original_visible))
-                native_transfer.setProperty(
-                    "_eldenRingOriginalTransferVisible", None
-                )
-                native_transfer.setProperty(
-                    "_eldenRingOriginalTransferEnabled", None
-                )
-            dialog.setProperty("_eldenRingSafeTransferIntegrated", False)
-            if profile_column is not None and profile_list is not None:
-                local_saves = dialog.findChild(QCheckBox, "localSavesBox")
-                insert_at = profile_column.indexOf(local_saves) + 1 if local_saves else 1
-                for object_name in ("localIniFilesBox", "invalidationBox"):
-                    checkbox = dialog.findChild(QCheckBox, object_name)
-                    if checkbox is not None and checkbox.parentWidget() is profile_card:
-                        profile_card.layout().removeWidget(checkbox)
-                        checkbox.setParent(profile_list.parentWidget())
-                        profile_column.insertWidget(insert_at, checkbox)
-                        checkbox.show()
-                        insert_at += 1
+        self._set_native_save_group_plugin_owned(dialog, False)
 
-            if card_placement == "row" and row_layout is not None:
-                row_layout.removeWidget(profile_card)
-                for index in range(row_layout.count()):
-                    if row_layout.itemAt(index).spacerItem() is not None:
-                        row_layout.takeAt(index)
-                        break
-                original_left_stretch = dialog.property(
-                    "_eldenRingSaveUiOriginalLeftStretch"
-                )
-                original_action_stretch = dialog.property(
-                    "_eldenRingSaveUiOriginalActionStretch"
-                )
-                if original_left_stretch is not None:
-                    row_layout.setStretch(0, int(original_left_stretch))
-                if original_action_stretch is not None:
-                    row_layout.setStretch(1, int(original_action_stretch))
-            elif card_placement == "below" and root_layout is not None:
-                root_layout.removeWidget(profile_card)
-
-            footer_layout = dialog.findChild(QHBoxLayout, "horizontalLayout")
-            footer = dialog.findChild(QWidget, self.ProfilesDialogFooterName)
-            if footer_layout is not None and footer is not None:
-                footer_layout.removeWidget(footer)
-                footer.hide()
-            if footer_layout is not None:
-                for object_name, property_name in (
-                    (
-                        "select",
-                        "_eldenRingSaveUiOriginalSelectButtonAlignment",
-                    ),
-                    (
-                        "close",
-                        "_eldenRingSaveUiOriginalCloseButtonAlignment",
-                    ),
-                ):
-                    button = dialog.findChild(QPushButton, object_name)
-                    alignment = dialog.property(property_name)
-                    if button is not None and alignment is not None:
-                        footer_layout.setAlignment(
-                            button, Qt.AlignmentFlag(int(alignment))
-                        )
-
-            profile_card.hide()
-            if profile_list is not None:
-                original_min_width = dialog.property(
-                    "_eldenRingSaveUiOriginalProfileMinWidth"
-                )
-                if original_min_width is not None:
-                    profile_list.setMinimumWidth(int(original_min_width))
-                original_list_max_width = dialog.property(
-                    "_eldenRingSaveUiOriginalProfileListMaxWidth"
-                )
-                if original_list_max_width is not None:
-                    profile_list.setMaximumWidth(int(original_list_max_width))
-                for size_kind in ("MinimumHeight", "MaximumHeight"):
-                    original = dialog.property(
-                        f"_eldenRingSaveUiOriginalProfile{size_kind}"
-                    )
-                    if original is not None:
-                        getattr(profile_list, f"set{size_kind}")(int(original))
-                original_alignment = dialog.property(
-                    "_eldenRingSaveUiOriginalProfileListAlignment"
-                )
-                if original_alignment is not None and profile_column is not None:
-                    profile_column.setAlignment(
-                        profile_list, Qt.AlignmentFlag(int(original_alignment))
-                    )
-            original_column_spacing = dialog.property(
-                "_eldenRingSaveUiOriginalProfileColumnSpacing"
+        native_transfer = dialog.findChild(QPushButton, "transferButton")
+        if native_transfer is not None:
+            original_visible = native_transfer.property(
+                "_eldenRingOriginalTransferVisible"
             )
-            if profile_column is not None and original_column_spacing is not None:
-                profile_column.setSpacing(int(original_column_spacing))
-            original_spacer_index = dialog.property(
-                "_eldenRingSaveUiOriginalActionSpacerIndex"
+            original_enabled = native_transfer.property(
+                "_eldenRingOriginalTransferEnabled"
             )
-            if actions_column is not None and original_spacer_index is not None:
-                spacer_item = actions_column.itemAt(int(original_spacer_index))
-                spacer = spacer_item.spacerItem() if spacer_item is not None else None
-                original_values = (
-                    dialog.property("_eldenRingSaveUiOriginalSpacerWidth"),
-                    dialog.property("_eldenRingSaveUiOriginalSpacerHeight"),
-                    dialog.property("_eldenRingSaveUiOriginalSpacerHPolicy"),
-                    dialog.property("_eldenRingSaveUiOriginalSpacerVPolicy"),
-                )
-                if spacer is not None and all(value is not None for value in original_values):
-                    spacer.changeSize(
-                        int(original_values[0]),
-                        int(original_values[1]),
-                        QSizePolicy.Policy(int(original_values[2])),
-                        QSizePolicy.Policy(int(original_values[3])),
-                    )
-                    actions_column.invalidate()
-            original_row_spacing = dialog.property(
-                "_eldenRingSaveUiOriginalProfileRowSpacing"
-            )
-            if row_layout is not None and original_row_spacing is not None:
-                row_layout.setSpacing(int(original_row_spacing))
-            original_width = dialog.property("_eldenRingSaveUiOriginalWidth")
-            original_height = dialog.property("_eldenRingSaveUiOriginalHeight")
-            if original_width and original_height:
-                if dialog.layout() is not None:
-                    dialog.layout().activate()
-                dialog.resize(int(original_width), int(original_height))
-            for property_name in (
-                "_eldenRingSaveUiOriginalProfileMinWidth",
-                "_eldenRingSaveUiOriginalProfileListMaxWidth",
-                "_eldenRingSaveUiOriginalProfileMinimumHeight",
-                "_eldenRingSaveUiOriginalProfileMaximumHeight",
-                "_eldenRingSaveUiOriginalProfileColumnSpacing",
-                "_eldenRingSaveUiOriginalProfileListAlignment",
-                "_eldenRingSaveUiOriginalSelectButtonAlignment",
-                "_eldenRingSaveUiOriginalCloseButtonAlignment",
-                "_eldenRingSaveUiOriginalActionSpacerIndex",
-                "_eldenRingSaveUiOriginalSpacerWidth",
-                "_eldenRingSaveUiOriginalSpacerHeight",
-                "_eldenRingSaveUiOriginalSpacerHPolicy",
-                "_eldenRingSaveUiOriginalSpacerVPolicy",
-                "_eldenRingSaveUiOriginalProfileRowSpacing",
-                "_eldenRingSaveUiOriginalLeftStretch",
-                "_eldenRingSaveUiOriginalActionStretch",
-                "_eldenRingSaveUiProfileSpacerInserted",
-                "_eldenRingSaveUiCardPlacement",
-                "_eldenRingSaveUiOriginalWidth",
-                "_eldenRingSaveUiOriginalHeight",
-            ):
-                dialog.setProperty(property_name, None)
-
-        create_card = dialog.findChild(QGroupBox, self.CreateInstanceCardName)
-        if create_card is not None:
-            create_card.hide()
-
+            if original_enabled is not None:
+                native_transfer.setEnabled(bool(original_enabled))
+            if original_visible is not None:
+                native_transfer.setVisible(bool(original_visible))
+            native_transfer.setProperty("_eldenRingOriginalTransferVisible", None)
+            native_transfer.setProperty("_eldenRingOriginalTransferEnabled", None)
         for object_name in (
             "localSavesBox",
             "localIniFilesBox",
@@ -1701,13 +1325,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         card, mode_combo, _detail, status, _ = self._dialog_mode_card(
             container,
             self.CreateInstanceCardName,
-            title="Elden Ring Save Isolation",
+            title="",
         )
         card.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
         )
         if card.layout() is not None:
-            card.layout().setContentsMargins(10, 6, 10, 4)
+            card.layout().setContentsMargins(0, 0, 0, 0)
             card.layout().setSpacing(5)
         insertion_index = layout.indexOf(save_checkbox)
         if insertion_index < 0:
@@ -1716,7 +1340,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             layout.insertWidget(insertion_index, card)
 
         scope = QLabel(
-            "Applies only to Elden Ring profiles in this new instance.", card
+            _tr("Applies only to Elden Ring profiles in this new instance."), card
         )
         scope.setObjectName("eldenRingWizardScopeNote")
         scope.setWordWrap(True)
@@ -1728,33 +1352,36 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             dialog, save_checkbox, self.ProfileIsolated
         )
         status.setText(
-            "Saved for the new instance's Default profile. Restart MO2 before launch."
+            _tr("Saved for the new instance's Default profile. Local routes apply when "
+            "that instance starts; restart MO2 only when switching to or from the "
+            "global Steam save.")
         )
 
-        game_save_profile_heading = QLabel("Game save profile", card)
+        game_save_profile_heading = QLabel(_tr("Game save profile"), card)
         game_save_profile_heading.setObjectName("eldenRingWizardGameSaveProfileHeading")
         game_save_profile_heading.setStyleSheet("font-weight: 600;")
         card.layout().addWidget(game_save_profile_heading)
 
         game_save_profile_row = QHBoxLayout()
         game_save_profile_checkbox = QCheckBox(
-            "Create a named game save profile", card
+            _tr("Create a named game save profile"), card
         )
         game_save_profile_checkbox.setObjectName(
             self.CreateInstanceGameSaveProfileCheckboxName
         )
         game_save_profile_checkbox.setToolTip(
-            "Create a separate named save choice that will appear in MO2's Profiles section."
+            _tr("Create a separate named save choice managed in Tools > "
+            "Elden Ring Save Isolation.")
         )
         game_save_profile_name = QLineEdit(card)
         game_save_profile_name.setObjectName(
             self.CreateInstanceGameSaveProfileNameEditName
         )
-        game_save_profile_name.setPlaceholderText("For example: Main playthrough")
+        game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
         game_save_profile_name.setToolTip(
-            "This name distinguishes the Elden Ring save profile in MO2. "
-            "The game loads the selected file as ER0000.sl2."
+            _tr("This name distinguishes the Elden Ring save profile in MO2. "
+            "The game loads the selected file as ER0000.sl2.")
         )
         game_save_profile_name.setEnabled(False)
         game_save_profile_row.addWidget(game_save_profile_checkbox)
@@ -1768,17 +1395,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_note.setWordWrap(True)
         card.layout().addWidget(game_save_profile_note)
 
-        starting_save_heading = QLabel("Optional starting save", card)
+        starting_save_heading = QLabel(_tr("Optional starting save"), card)
         starting_save_heading.setObjectName("eldenRingStartingSaveHeading")
         card.layout().addWidget(starting_save_heading)
 
         copy_checkbox = QCheckBox(
-            "Copy an existing .sl2 save into the new instance", card
+            _tr("Copy an existing .sl2 save into the new instance"), card
         )
         copy_checkbox.setObjectName(self.CreateInstanceSaveCopyCheckboxName)
         copy_checkbox.setToolTip(
-            "Choose a save from Steam or a detected Elden Ring MO2 profile. "
-            "The file is copied as ER0000.sl2 after the new instance is opened."
+            _tr("Choose a save from Steam or a detected Elden Ring MO2 profile. "
+            "The file is copied as ER0000.sl2 after the new instance is opened.")
         )
         card.layout().addWidget(copy_checkbox)
 
@@ -1791,9 +1418,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_combo.setMinimumContentsLength(28)
         source_combo.setMaxVisibleItems(8)
         source_combo.view().setMinimumWidth(max(360, source_combo.width()))
-        refresh_button = QPushButton("Refresh saves", card)
+        refresh_button = QPushButton(_tr("Refresh saves"), card)
         refresh_button.setToolTip(
-            "Search Steam and detected Elden Ring MO2 profiles again."
+            _tr("Search Steam and detected Elden Ring MO2 profiles again.")
         )
         source_row.addWidget(source_combo, 1)
         source_row.addWidget(refresh_button)
@@ -1829,16 +1456,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         def choose_mode(mode: str) -> None:
             previous_mode = dialog.property("_eldenRingSaveMode")
             if mode == self.GlobalShared and previous_mode != self.GlobalShared:
-                answer = QMessageBox.warning(
+                confirmed = self._ask_confirmation(
                     dialog,
-                    "Use the global Steam save?",
-                    "This mode shares the save with Steam and every Elden Ring "
+                    _tr("Use the global Steam save?"),
+                    _tr("This mode shares the save with Steam and every Elden Ring "
                     "instance using the global path. Modded play can change the "
-                    "vanilla character. Continue?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No,
+                    "vanilla character. Continue?"),
+                    _tr("Use global save"),
+                    _tr("Keep current mode"),
+                    default_accept=False,
                 )
-                if answer != QMessageBox.StandardButton.Yes:
+                if not confirmed:
                     self._select_dialog_mode(mode_combo, previous_mode)
                     return
             self._hide_create_instance_options(dialog, save_checkbox, mode)
@@ -1869,12 +1497,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 lambda target=dialog: self._queue_created_instance_mode(target)
             )
 
-    @staticmethod
-    def _sync_native_create_instance_mode(dialog, mode: str) -> None:
+    def _sync_native_create_instance_mode(self, dialog, mode: str) -> None:
         """Keep the fork's profile settings in step with the visible plugin card."""
-        native_group = dialog.findChild(QGroupBox, "eldenRingSaveIsolationGroup")
-        if native_group is not None:
-            native_group.hide()
+        self._set_native_save_group_plugin_owned(dialog, True)
 
         native_combo = dialog.findChild(QComboBox, "eldenRingSaveMode")
         if native_combo is None:
@@ -1895,7 +1520,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if profiles_edit is None:
             qInfo(
                 "Elden Ring MO2 Save Isolation: could not read the new instance's "
-                "profiles path; configure its mode in the Profiles dialog."
+                "profiles path; configure its mode in Tools > Elden Ring "
+                "Save Isolation."
             )
             return
 
@@ -1910,7 +1536,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if not profiles_path.is_absolute():
             qInfo(
                 "Elden Ring MO2 Save Isolation: the new instance's profile path "
-                "could not be resolved; configure its mode in the Profiles dialog."
+                "could not be resolved; configure its mode in Tools > Elden Ring "
+                "Save Isolation."
             )
             return
 
@@ -2022,622 +1649,51 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
 
     @staticmethod
-    def _remember_profiles_dialog_layout(
-        dialog, row_layout, profile_list, profile_column, actions_column
-    ) -> None:
-        if dialog.property("_eldenRingSaveUiOriginalWidth") is not None:
-            return
-        dialog.setProperty("_eldenRingSaveUiOriginalWidth", dialog.width())
-        dialog.setProperty("_eldenRingSaveUiOriginalHeight", dialog.height())
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileRowSpacing", row_layout.spacing()
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalLeftStretch", row_layout.stretch(0)
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalActionStretch", row_layout.stretch(1)
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileMinWidth", profile_list.minimumWidth()
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileListMaxWidth",
-            profile_list.maximumWidth(),
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileMinimumHeight",
-            profile_list.minimumHeight(),
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileMaximumHeight",
-            profile_list.maximumHeight(),
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileColumnSpacing",
-            profile_column.spacing(),
-        )
-        profile_list_index = profile_column.indexOf(profile_list)
-        profile_list_item = (
-            profile_column.itemAt(profile_list_index)
-            if profile_list_index >= 0
-            else None
-        )
-        alignment = (
-            profile_list_item.alignment()
-            if profile_list_item is not None
-            else Qt.AlignmentFlag(0)
-        )
-        dialog.setProperty(
-            "_eldenRingSaveUiOriginalProfileListAlignment",
-            int(alignment.value),
-        )
-        footer_layout = dialog.findChild(QHBoxLayout, "horizontalLayout")
-        if footer_layout is not None:
-            for object_name, property_name in (
-                (
-                    "select",
-                    "_eldenRingSaveUiOriginalSelectButtonAlignment",
-                ),
-                (
-                    "close",
-                    "_eldenRingSaveUiOriginalCloseButtonAlignment",
-                ),
-            ):
-                button = dialog.findChild(QPushButton, object_name)
-                index = footer_layout.indexOf(button) if button is not None else -1
-                item = footer_layout.itemAt(index) if index >= 0 else None
-                button_alignment = (
-                    item.alignment()
-                    if item is not None
-                    else Qt.AlignmentFlag(0)
-                )
-                dialog.setProperty(property_name, int(button_alignment.value))
-        for index in range(actions_column.count() - 1, -1, -1):
-            item = actions_column.itemAt(index)
-            spacer = item.spacerItem() if item is not None else None
-            if spacer is None:
-                continue
-            size = spacer.sizeHint()
-            policy = spacer.sizePolicy()
-            dialog.setProperty("_eldenRingSaveUiOriginalActionSpacerIndex", index)
-            dialog.setProperty("_eldenRingSaveUiOriginalSpacerWidth", size.width())
-            dialog.setProperty("_eldenRingSaveUiOriginalSpacerHeight", size.height())
-            dialog.setProperty(
-                "_eldenRingSaveUiOriginalSpacerHPolicy",
-                int(policy.horizontalPolicy().value),
-            )
-            dialog.setProperty(
-                "_eldenRingSaveUiOriginalSpacerVPolicy",
-                int(policy.verticalPolicy().value),
-            )
-            break
-
-    @staticmethod
-    def _apply_profiles_dialog_layout(
-        dialog, row_layout, profile_list, profile_column, actions_column
-    ) -> None:
-        header = dialog.findChild(QWidget, "profilesHeader")
-        if header is not None:
-            header.setSizePolicy(
-                QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
-            )
-            header_layout = header.layout()
-            if header_layout is not None:
-                header_layout.setContentsMargins(12, 4, 12, 4)
-                header_layout.setSpacing(2)
-        for object_name in ("profilesPageTitle", "profilesPageSubtitle"):
-            label = dialog.findChild(QLabel, object_name)
-            if label is not None:
-                label.setSizePolicy(
-                    QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-                )
-
-        row_host = row_layout.parentWidget()
-        if row_host is not None:
-            row_host.setSizePolicy(
-                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
-            )
-        footer_host = dialog.findChild(QWidget, "widget_2")
-        if footer_host is not None:
-            footer_host.setSizePolicy(
-                QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
-            )
-
-        if EldenRingMo2SaveIsolation.ProfilesPanelDesign == "below":
-            action_buttons = [
-                actions_column.itemAt(index).widget()
-                for index in range(actions_column.count())
-                if actions_column.itemAt(index) is not None
-                and actions_column.itemAt(index).widget() is not None
-                and not actions_column.itemAt(index).widget().isHidden()
-            ]
-            action_spacing = max(0, actions_column.spacing())
-            margins = actions_column.contentsMargins()
-            list_height = (
-                sum(button.sizeHint().height() for button in action_buttons)
-                + action_spacing * max(0, len(action_buttons) - 1)
-                + margins.top()
-                + margins.bottom()
-            )
-            for index in range(actions_column.count()):
-                item = actions_column.itemAt(index)
-                spacer = item.spacerItem() if item is not None else None
-                if spacer is not None:
-                    spacer_policy = spacer.sizePolicy()
-                    spacer.changeSize(
-                        0,
-                        0,
-                        spacer_policy.horizontalPolicy(),
-                        QSizePolicy.Policy.Fixed,
-                    )
-            actions_column.invalidate()
-            profile_column.setSpacing(0)
-            profile_column.setAlignment(profile_list, Qt.AlignmentFlag.AlignTop)
-            profile_list.setFixedHeight(max(100, list_height))
-            root_layout = dialog.findChild(QVBoxLayout, "verticalLayout_3")
-            if root_layout is not None:
-                root_layout.activate()
-        else:
-            if not dialog.property("_eldenRingSaveUiProfileSpacerInserted"):
-                row_layout.insertStretch(2, 1)
-                dialog.setProperty("_eldenRingSaveUiProfileSpacerInserted", True)
-            # MO2's row contains two nested layouts: profiles/settings first,
-            # actions second. The center panel is inserted between them; only
-            # the spacer absorbs extra width.
-            row_layout.setStretch(0, 0)
-            row_layout.setStretch(1, 0)
-            row_layout.setStretch(2, 1)
-            row_layout.setStretch(3, 0)
-            profile_list.setMinimumWidth(240)
-            profile_list.setMaximumWidth(280)
-            row_layout.setSpacing(14)
-
-        if dialog.layout() is not None:
-            dialog.layout().activate()
-
-        # This method can run from QDialog's Show event. Resizing there races
-        # the native window's first layout pass and asks Windows for a height
-        # that its window procedure immediately clamps, producing
-        # QWindowsWindow::setGeometry warnings. Measure and size the completed
-        # layout on the next event-loop turn instead.
-        if not dialog.property("_eldenRingSaveUiProfilesResizePending"):
-            dialog.setProperty("_eldenRingSaveUiProfilesResizePending", True)
-            QTimer.singleShot(
-                0,
-                lambda dialog=dialog: EldenRingMo2SaveIsolation._finish_profiles_dialog_layout(
-                    dialog
-                ),
-            )
-
-    @staticmethod
-    def _finish_profiles_dialog_layout(dialog) -> None:
-        try:
-            dialog.setProperty("_eldenRingSaveUiProfilesResizePending", False)
-            if not dialog.property("_eldenRingSaveUiInjected"):
-                return
-            if dialog.layout() is not None:
-                dialog.layout().activate()
-            minimum_size = dialog.minimumSizeHint()
-            preferred_size = dialog.sizeHint()
-            screen = dialog.screen()
-            target_width = max(
-                1020, minimum_size.width(), preferred_size.width()
-            )
-            minimum_height = (
-                410
-                if EldenRingMo2SaveIsolation.ProfilesPanelDesign == "below"
-                else 420
-            )
-            target_height = max(
-                minimum_height, minimum_size.height(), preferred_size.height()
-            )
-            if screen is not None:
-                available = screen.availableGeometry()
-                target_width = min(
-                    target_width, max(minimum_size.width(), available.width() - 80)
-                )
-                target_height = min(
-                    target_height,
-                    max(minimum_height, available.height() - 80),
-                )
-            if (
-                not dialog.isMaximized()
-                and (dialog.width(), dialog.height())
-                != (target_width, target_height)
-            ):
-                dialog.resize(target_width, target_height)
-        except RuntimeError:
-            # The dialog may have been closed before the queued resize runs.
-            return
-
-    def _inject_profiles_dialog(self, dialog, profile_list, local_saves_checkbox) -> None:
-        existing_card = dialog.findChild(QWidget, self.ProfilesDialogCardName)
-        row_layout, profile_column, actions_column = (
-            self._profiles_dialog_layouts(dialog)
-        )
-        if row_layout is None or profile_column is None or actions_column is None:
-            qInfo(
-                "Elden Ring MO2 Save Isolation: MO2's profile/action columns were "
-                "not recognized; native profile settings were left unchanged."
-            )
-            return
-        self._install_safe_transfer_button(dialog, actions_column)
-        if existing_card is not None:
-            if dialog.property("_eldenRingSaveUiInjected"):
-                existing_card.show()
-                self._hide_native_checkbox(local_saves_checkbox)
-                self._hide_native_checkbox(
-                    dialog.findChild(QCheckBox, "localIniFilesBox")
-                )
-                self._hide_native_checkbox(
-                    dialog.findChild(QCheckBox, "invalidationBox")
-                )
-                return
-            existing_card.show()
-            self._remember_profiles_dialog_layout(
-                dialog, row_layout, profile_list, profile_column, actions_column
-            )
-            if self.ProfilesPanelDesign == "below":
-                root_layout = dialog.findChild(QVBoxLayout, "verticalLayout_3")
-                if root_layout is None:
-                    return
-                if not self._insert_profiles_panel_below_row(
-                    dialog, root_layout, row_layout, existing_card
-                ):
-                    qInfo(
-                        "Elden Ring MO2 Save Isolation: the profile row could not "
-                        "be located for save-panel placement."
-                    )
-                    return
-                dialog.setProperty("_eldenRingSaveUiCardPlacement", "below")
-            else:
-                if row_layout.indexOf(existing_card) < 0:
-                    row_layout.insertWidget(
-                        1, existing_card, 0, Qt.AlignmentFlag.AlignTop
-                    )
-                dialog.setProperty("_eldenRingSaveUiCardPlacement", "row")
-            self._apply_profiles_dialog_layout(
-                dialog, row_layout, profile_list, profile_column, actions_column
-            )
-            self._hide_native_checkbox(local_saves_checkbox)
-            self._hide_native_checkbox(
-                dialog.findChild(QCheckBox, "localIniFilesBox")
-            )
-            self._hide_native_checkbox(
-                dialog.findChild(QCheckBox, "invalidationBox")
-            )
-            dialog.setProperty("_eldenRingSaveUiInjected", True)
-            return
-
-        self._remember_profiles_dialog_layout(
-            dialog, row_layout, profile_list, profile_column, actions_column
-        )
-
-        profile_options = ()
-        save_profile_combo = None
-        create_save_profile_button = None
-        if self.ProfilesPanelDesign == "below":
-            root_layout = dialog.findChild(QVBoxLayout, "verticalLayout_3")
-            if root_layout is None:
-                qInfo(
-                    "Elden Ring MO2 Save Isolation: the Profiles dialog's main "
-                    "layout was not recognized; native settings were left intact."
-                )
-                return
-            (
-                card,
-                mode_combo,
-                _detail,
-                status,
-                apply_button,
-                save_profile_combo,
-                create_save_profile_button,
-            ) = self._profiles_full_width_panel(dialog)
-            if not self._insert_profiles_panel_below_row(
-                dialog, root_layout, row_layout, card
-            ):
-                card.deleteLater()
-                qInfo(
-                    "Elden Ring MO2 Save Isolation: the profile row could not "
-                    "be located for save-panel placement; native settings were "
-                    "left unchanged."
-                )
-                return
-            dialog.setProperty("_eldenRingSaveUiCardPlacement", "below")
-        else:
-            card, mode_combo, _detail, status, apply_button = self._dialog_mode_card(
-                dialog,
-                self.ProfilesDialogCardName,
-                include_apply=True,
-                profile_options=profile_options,
-                compact=True,
-            )
-            row_layout.insertWidget(1, card, 0, Qt.AlignmentFlag.AlignTop)
-            dialog.setProperty("_eldenRingSaveUiCardPlacement", "row")
-        self._apply_profiles_dialog_layout(
-            dialog, row_layout, profile_list, profile_column, actions_column
-        )
-        self._hide_native_checkbox(local_saves_checkbox)
-        self._hide_native_checkbox(dialog.findChild(QCheckBox, "localIniFilesBox"))
-        self._hide_native_checkbox(dialog.findChild(QCheckBox, "invalidationBox"))
-
-        dialog.setProperty("_eldenRingSaveUiInjected", True)
-        dialog.setProperty("_eldenRingSaveUiProfileKey", "")
-
-        def selected_profile_directory() -> Path | None:
-            item = profile_list.currentItem()
-            active_profile = self.__organizer.profile()
-            if item is None or active_profile is None:
-                return None
-            profile_name = item.text().strip()
-            if not profile_name:
-                return None
-            return Path(active_profile.absolutePath()).parent / profile_name
-
-        def refresh_selection() -> None:
-            directory = selected_profile_directory()
-            if directory is None:
-                status.setText("Select a profile to view its Elden Ring save settings.")
-                status.show()
-                apply_button.setEnabled(False)
-                if create_save_profile_button is not None:
-                    create_save_profile_button.setEnabled(False)
-                return
-
-            profile_key = self._normalized_path(directory)
-            if dialog.property("_eldenRingSaveUiProfileKey") != profile_key:
-                current_mode = self._read_mode_directory(directory)
-                self._select_dialog_mode(mode_combo, current_mode)
-                dialog.setProperty("_eldenRingSaveUiProfileKey", profile_key)
-                dialog.setProperty("_eldenRingSaveUiAppliedMode", current_mode)
-
-            current_mode = self._selected_dialog_mode(mode_combo)
-            route_key = f"{profile_key}|{current_mode}"
-            if save_profile_combo is not None and dialog.property(
-                "_eldenRingSaveUiSaveProfileRouteKey"
-            ) != route_key:
-                selected_id = self._read_save_profile_id_directory(
-                    directory, current_mode
-                )
-                self._populate_save_profile_combo(
-                    save_profile_combo, directory, current_mode, selected_id
-                )
-                dialog.setProperty("_eldenRingSaveUiSaveProfileRouteKey", route_key)
-
-            target_local_saves = current_mode != self.GlobalShared
-            local_saves_state = local_saves_checkbox.isChecked()
-            applied_mode = dialog.property("_eldenRingSaveUiAppliedMode")
-            selected_save_id = (
-                str(save_profile_combo.currentData() or "")
-                if save_profile_combo is not None
-                else ""
-            )
-            saved_save_id = self._read_save_profile_id_directory(
-                directory, current_mode
-            )
-            save_profile_changed = (
-                current_mode != self.GlobalShared
-                and selected_save_id != saved_save_id
-            )
-            missing_save_profile = bool(
-                save_profile_combo is not None
-                and save_profile_combo.property("_eldenRingMissingSaveProfile")
-            )
-            if create_save_profile_button is not None:
-                create_save_profile_button.setEnabled(
-                    current_mode in {self.ProfileIsolated, self.InstanceShared}
-                )
-            if missing_save_profile:
-                status.setText(
-                    "The saved game profile is unavailable. Choose an existing profile "
-                    "or the standard saves before applying."
-                )
-                status.show()
-            elif (
-                current_mode == applied_mode
-                and local_saves_state == target_local_saves
-                and not save_profile_changed
-            ):
-                status.clear()
-                status.hide()
-            else:
-                status.setText(
-                    "Unsaved changes. Apply the save route and selected game save profile."
-                )
-                status.show()
-            apply_button.setEnabled(True)
-
-        def create_save_profile_for_selection() -> None:
-            directory = selected_profile_directory()
-            item = profile_list.currentItem()
-            mode = self._selected_dialog_mode(mode_combo)
-            if directory is None or item is None or save_profile_combo is None:
-                return
-            if mode == self.GlobalShared:
-                QMessageBox.information(
-                    dialog,
-                    "Global Steam save selected",
-                    "Named game save profiles are available with profile-isolated "
-                    "or instance-shared saves.",
-                )
-                return
-            profile_id = self._display_create_save_profile_dialog(
-                directory, mode, dialog
-            )
-            if profile_id is None:
-                return
-            self._populate_save_profile_combo(
-                save_profile_combo, directory, mode, profile_id
-            )
-            dialog.setProperty(
-                "_eldenRingSaveUiSaveProfileRouteKey",
-                f"{self._normalized_path(directory)}|{mode}",
-            )
-            status.setText(
-                f"Created '{save_profile_combo.currentText()}'. Apply to select it for "
-                f"MO2 profile '{item.text()}'."
-            )
-            status.show()
-            refresh_selection()
-
-        def apply_selected_mode() -> None:
-            directory = selected_profile_directory()
-            item = profile_list.currentItem()
-            if directory is None or item is None:
-                return
-
-            mode = self._selected_dialog_mode(mode_combo)
-            previous_mode = self._read_mode_directory(directory)
-            previous_save_id = self._read_save_profile_id_directory(
-                directory, previous_mode
-            )
-            selected_save_id = (
-                str(save_profile_combo.currentData() or "")
-                if save_profile_combo is not None
-                else ""
-            )
-            if mode != self.GlobalShared:
-                available_ids = {
-                    profile_id
-                    for profile_id, _name in self._read_named_save_profiles(
-                        directory, mode
-                    )
-                }
-                if (
-                    save_profile_combo is not None
-                    and save_profile_combo.property("_eldenRingMissingSaveProfile")
-                ) or (selected_save_id and selected_save_id not in available_ids):
-                    QMessageBox.warning(
-                        dialog,
-                        "Save profile unavailable",
-                        "Choose an available named save profile before applying.",
-                    )
-                    refresh_selection()
-                    return
-
-            if mode == self.GlobalShared and previous_mode != self.GlobalShared:
-                answer = QMessageBox.warning(
-                    dialog,
-                    "Use the global Steam save?",
-                    "This shares saves with Steam and other Elden Ring instances "
-                    "using the global path. Modded play can change the vanilla "
-                    "character. Continue?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No,
-                )
-                if answer != QMessageBox.StandardButton.Yes:
-                    self._select_dialog_mode(mode_combo, previous_mode)
-                    refresh_selection()
-                    return
-
-            should_enable_local_saves = mode != self.GlobalShared
-            try:
-                self._save_mode_directory(
-                    directory,
-                    mode,
-                    selected_save_id if mode != self.GlobalShared else None,
-                )
-            except (OSError, UnicodeError, configparser.Error, ValueError) as error:
-                self._select_dialog_mode(mode_combo, previous_mode)
-                status.setText(f"Could not save the selected route: {error}")
-                status.show()
-                QMessageBox.warning(dialog, "Could not save route", str(error))
-                return
-
-            if local_saves_checkbox.isChecked() != should_enable_local_saves:
-                local_saves_checkbox.click()
-
-            if local_saves_checkbox.isChecked() != should_enable_local_saves:
-                rollback_succeeded = True
-                try:
-                    self._save_mode_directory(
-                        directory, previous_mode, previous_save_id
-                    )
-                except (OSError, UnicodeError, configparser.Error, ValueError) as error:
-                    rollback_succeeded = False
-                    qInfo(
-                        "Elden Ring MO2 Save Isolation: could not restore the "
-                        f"previous save route after MO2 rejected the change: {error}"
-                    )
-                self._select_dialog_mode(mode_combo, previous_mode)
-                dialog.setProperty("_eldenRingSaveUiProfileKey", "")
-                if rollback_succeeded:
-                    status.setText(
-                        "MO2 did not change its save setting. The previous route "
-                        "and named save selection were restored."
-                    )
-                else:
-                    status.setText(
-                        "MO2 did not change its save setting, and the previous "
-                        "route could not be restored. Do not launch until you check "
-                        "Elden Ring / Save Isolation."
-                    )
-                status.show()
-                return
-
-            dialog.setProperty(
-                "_eldenRingSaveUiProfileKey", self._normalized_path(directory)
-            )
-            dialog.setProperty("_eldenRingSaveUiAppliedMode", mode)
-            dialog.setProperty(
-                "_eldenRingSaveUiSaveProfileRouteKey",
-                f"{self._normalized_path(directory)}|{mode}",
-            )
-            selected_name = (
-                save_profile_combo.currentText()
-                if save_profile_combo is not None
-                else "standard saves"
-            )
-            status.setText(
-                f"'{selected_name}' saved for '{item.text()}'. Restart MO2 before "
-                "launching Elden Ring."
-            )
-            status.show()
-            qInfo(
-                "Elden Ring MO2 Save Isolation: saved route "
-                f"'{mode}' and save profile '{selected_save_id or 'default'}' "
-                f"for profile '{item.text()}'."
-            )
-        if apply_button is not None:
-            apply_button.clicked.connect(apply_selected_mode)
-
-        def refresh_after_selection(*_args) -> None:
-            QTimer.singleShot(0, refresh_selection)
-
-        profile_list.currentItemChanged.connect(refresh_after_selection)
-        mode_combo.currentIndexChanged.connect(lambda _index: refresh_selection())
-        if save_profile_combo is not None:
-            save_profile_combo.currentIndexChanged.connect(lambda _index: refresh_selection())
-        if create_save_profile_button is not None:
-            create_save_profile_button.clicked.connect(create_save_profile_for_selection)
-        refresh_selection()
-        qInfo(
-            "Elden Ring MO2 Save Isolation: integrated a full-width save section "
-            "below MO2's profile list and action columns."
-        )
-
-    @staticmethod
     def _normalized_path(path: Path) -> str:
         try:
             return os.path.normcase(os.path.normpath(str(path.resolve())))
         except (OSError, RuntimeError):
             return os.path.normcase(os.path.abspath(str(path)))
 
-    @classmethod
-    def _pending_modes_path(cls) -> Path:
-        local_app_data = os.environ.get("LOCALAPPDATA")
-        if not local_app_data:
-            local_app_data = str(Path.home() / "AppData" / "Local")
+    def _pending_modes_path(
+        self, profile_directory: Path | None = None
+    ) -> Path:
+        """Store queued choices beside the profile they will configure."""
+        if profile_directory is not None:
+            profiles_root = profile_directory.parent
+        else:
+            try:
+                active_profile = self.__organizer.profile()
+                if active_profile is not None:
+                    profiles_root = Path(active_profile.absolutePath()).parent
+                else:
+                    profiles_root = None
+            except (AttributeError, OSError, RuntimeError, TypeError):
+                profiles_root = None
+
+        if profiles_root is not None:
+            return (
+                profiles_root
+                / "EldenRingMO2SaveIsolation"
+                / self.PendingModesFilename
+            )
+
+        # Startup can briefly run before MO2 exposes its active profile. Use
+        # the plugin's own installation directory as a local fallback.
+        try:
+            mo2_directory = Path(__file__).resolve().parents[1]
+        except (OSError, RuntimeError, IndexError):
+            mo2_directory = Path(__file__).parent
         return (
-            Path(local_app_data)
-            / "ModOrganizer"
+            mo2_directory
             / "EldenRingMO2SaveIsolation"
-            / cls.PendingModesFilename
+            / self.PendingModesFilename
         )
 
-    def _read_pending_modes(self) -> list[dict[str, str]]:
-        pending_path = self._pending_modes_path()
+    def _read_pending_modes(
+        self, profile_directory: Path | None = None
+    ) -> list[dict[str, str]]:
+        pending_path = self._pending_modes_path(profile_directory)
         try:
             data = json.loads(pending_path.read_text(encoding="utf-8"))
         except FileNotFoundError:
@@ -2654,8 +1710,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             and item.get("mode") in {self.ProfileIsolated, self.InstanceShared, self.GlobalShared}
         ]
 
-    def _write_pending_modes(self, entries: list[dict[str, str]]) -> None:
-        pending_path = self._pending_modes_path()
+    def _write_pending_modes(
+        self,
+        entries: list[dict[str, str]],
+        profile_directory: Path | None = None,
+    ) -> None:
+        pending_path = self._pending_modes_path(profile_directory)
         pending_path.parent.mkdir(parents=True, exist_ok=True)
         temporary_path = None
         try:
@@ -2685,11 +1745,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_name: str | None = None,
     ) -> None:
         if mode not in {self.ProfileIsolated, self.InstanceShared, self.GlobalShared}:
-            raise ValueError("Unknown Elden Ring save mode.")
+            raise ValueError(_tr("Unknown Elden Ring save mode."))
         key = self._normalized_path(profile_directory)
         entries = [
             item
-            for item in self._read_pending_modes()
+            for item in self._read_pending_modes(profile_directory)
             if self._normalized_path(Path(item["profile_path"])) != key
         ]
         entry = {"profile_path": str(profile_directory), "mode": mode}
@@ -2701,7 +1761,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 game_save_profile_name
             )
         entries.append(entry)
-        self._write_pending_modes(entries)
+        self._write_pending_modes(entries, profile_directory)
 
     @classmethod
     def _queued_save_source_root(cls, pending_item: dict[str, str]) -> Path:
@@ -2713,25 +1773,25 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             or ".." in relative_path.parts
             or relative_path.suffix.casefold() != ".sl2"
         ):
-            raise ValueError("The queued save's relative path is invalid.")
+            raise ValueError(_tr("The queued save's relative path is invalid."))
         if (
             source_path.suffix.casefold() != ".sl2"
             or cls._is_reparse_point(source_path)
             or not source_path.is_file()
         ):
             raise FileNotFoundError(
-                f"The selected .sl2 save is no longer available: {source_path}"
+                _tr("The selected .sl2 save is no longer available: {path}").format(path=source_path)
             )
         resolved_source = source_path.resolve(strict=True)
         if len(relative_path.parts) > len(resolved_source.parts) - 1:
-            raise ValueError("The queued save's source folder could not be resolved.")
+            raise ValueError(_tr("The queued save's source folder could not be resolved."))
         source_root = resolved_source.parents[len(relative_path.parts) - 1]
         try:
             actual_relative_path = resolved_source.relative_to(source_root)
         except ValueError as error:
-            raise ValueError("The queued save is outside its source folder.") from error
+            raise ValueError(_tr("The queued save is outside its source folder.")) from error
         if actual_relative_path.as_posix().casefold() != relative_path.as_posix().casefold():
-            raise ValueError("The queued save's source path no longer matches.")
+            raise ValueError(_tr("The queued save's source path no longer matches."))
         return source_root
 
     def _copy_queued_save_to_profile(
@@ -2744,14 +1804,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             or ".." in relative_path.parts
             or relative_path.suffix.casefold() != ".sl2"
         ):
-            raise ValueError("The queued save's relative path is invalid.")
+            raise ValueError(_tr("The queued save's relative path is invalid."))
         if (
             source_path.suffix.casefold() != ".sl2"
             or self._is_reparse_point(source_path)
             or not source_path.is_file()
         ):
             raise FileNotFoundError(
-                f"The selected .sl2 save is no longer available: {source_path}"
+                _tr("The selected .sl2 save is no longer available: {path}").format(path=source_path)
             )
         source_path = source_path.resolve(strict=True)
 
@@ -2771,22 +1831,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 or not destination_path.is_file()
             ):
                 raise FileExistsError(
-                    f"The destination exists and is not a regular save file: "
-                    f"{destination_path}"
+                    _tr("The destination exists and is not a regular save file: "
+                    "{path}").format(path=destination_path)
                 )
             if self._same_file_contents(source_path, destination_path):
                 return "identical"
             raise FileExistsError(
-                f"A different save already exists at the destination; it was "
-                f"left unchanged: {destination_path}"
+                _tr("A different save already exists at the destination; it was "
+                "left unchanged: {path}").format(path=destination_path)
             )
 
         parent_path = destination_path.parent
         while parent_path == destination_root or destination_root in parent_path.parents:
             if os.path.lexists(parent_path) and self._is_reparse_point(parent_path):
                 raise OSError(
-                    f"The destination save folder contains a link or reparse point: "
-                    f"{parent_path}"
+                    _tr("The destination save folder contains a link or reparse point: "
+                    "{path}").format(path=parent_path)
                 )
             if parent_path == destination_root:
                 break
@@ -2818,8 +1878,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 ):
                     return "identical"
                 raise FileExistsError(
-                    f"A save appeared at the destination during copying and was "
-                    f"left unchanged: {destination_path}"
+                    _tr("A save appeared at the destination during copying and was "
+                    "left unchanged: {path}").format(path=destination_path)
                 )
         finally:
             if temporary_path is not None:
@@ -2834,8 +1894,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if profile is None:
             return
 
-        active_path = self._normalized_path(Path(profile.absolutePath()))
-        pending = self._read_pending_modes()
+        profile_directory = Path(profile.absolutePath())
+        active_path = self._normalized_path(profile_directory)
+        pending = self._read_pending_modes(profile_directory)
         remaining = []
         changed = False
         for item in pending:
@@ -2846,7 +1907,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 changed = True
                 continue
             try:
-                profile_directory = Path(profile.absolutePath())
                 mode = item["mode"]
                 save_profile_name = self._validated_save_profile_name(
                     item.get("game_save_profile_name", "")
@@ -2959,7 +2019,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if active_path in self.__pending_cleanup_failed_paths:
                 return
             try:
-                self._write_pending_modes(remaining)
+                self._write_pending_modes(remaining, profile_directory)
             except (OSError, UnicodeError, ValueError) as error:
                 self.__pending_cleanup_failed_paths.add(active_path)
                 qInfo(
@@ -2982,6 +2042,30 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     0, lambda: self._sync_create_instance_dialog(target)
                 )
             )
+
+    def _refresh_create_instance_page(self, dialog) -> None:
+        try:
+            if not dialog.isVisible():
+                return
+        except RuntimeError:
+            return
+        # MO2 populates the game cards when their stacked page is activated.
+        # Reattach to those newly created buttons, then synchronize the save
+        # controls after the page's activation has finished.
+        self._watch_create_game_buttons(dialog)
+        self._sync_create_instance_dialog(dialog)
+
+    def _watch_create_instance_pages(self, dialog) -> None:
+        pages = dialog.findChild(QStackedWidget, "pages")
+        if pages is None or dialog.property("_eldenRingSaveUiPageWatchConnected"):
+            return
+        dialog.setProperty("_eldenRingSaveUiPageWatchConnected", True)
+        pages.currentChanged.connect(
+            lambda _index, target=dialog: QTimer.singleShot(
+                0,
+                lambda target=target: self._refresh_create_instance_page(target),
+            )
+        )
 
     def _sync_profile_input_dialog(self, dialog) -> bool:
         default_ini_checkbox = dialog.findChild(QCheckBox, "defaultSettingsBox")
@@ -3031,6 +2115,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _refresh_mo2_dialogs(self, preferred_dialog=None) -> None:
         if self.__refreshing_dialogs:
             return
+        if preferred_dialog is not None:
+            try:
+                if not preferred_dialog.isVisible():
+                    return
+            except RuntimeError:
+                # The dialog may have closed before the queued layout refresh.
+                return
         self.__refreshing_dialogs = True
         try:
             if preferred_dialog is None:
@@ -3059,13 +2150,32 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if profile_list is not None and local_saves_checkbox is not None:
                     if enabled and self._active_instance_is_elden_ring():
                         if not dialog.property("_eldenRingSaveUiInjected"):
-                            self._inject_profiles_dialog(
-                                dialog, profile_list, local_saves_checkbox
+                            native_transfer = dialog.findChild(
+                                QPushButton, "transferButton"
                             )
+                            if native_transfer is not None:
+                                native_transfer.setProperty(
+                                    "_eldenRingOriginalTransferVisible",
+                                    not native_transfer.isHidden(),
+                                )
+                                native_transfer.setProperty(
+                                    "_eldenRingOriginalTransferEnabled",
+                                    native_transfer.isEnabled(),
+                                )
+                                native_transfer.hide()
+                            for checkbox in (
+                                local_saves_checkbox,
+                                dialog.findChild(QCheckBox, "localIniFilesBox"),
+                                dialog.findChild(QCheckBox, "invalidationBox"),
+                            ):
+                                self._hide_native_checkbox(checkbox)
+                            dialog.setProperty("_eldenRingSaveUiInjected", True)
+                            dialog.setProperty("_eldenRingSaveUiProfilesToolOnly", True)
                     elif dialog.property("_eldenRingSaveUiInjected"):
                         self._restore_native_dialog(dialog)
                     continue
 
+                self._watch_create_instance_pages(dialog)
                 self._watch_create_game_buttons(dialog)
                 save_checkbox = dialog.findChild(QCheckBox, "profileSavesCheckbox")
                 if save_checkbox is None:
@@ -3119,13 +2229,31 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return cls._read_mode_directory(cls._profile_directory(profile))
 
     @classmethod
-    def _read_mode_directory(cls, profile_directory: Path) -> str:
-        config_path = profile_directory / cls.ConfigFilename
+    def _read_save_config_directory(
+        cls, profile_directory: Path
+    ) -> configparser.ConfigParser:
         config = configparser.ConfigParser(interpolation=None)
+        config_path = profile_directory / cls.ConfigFilename
         try:
-            config.read(config_path, encoding="utf-8")
+            with config_path.open("r", encoding="utf-8") as stream:
+                config.read_file(stream)
+        except FileNotFoundError:
+            # A profile can be created before its first save-route setting.
+            # Preserve that case while allowing permission and parse failures
+            # to reach the caller instead of treating an existing INI as empty.
+            pass
+        return config
+
+    @classmethod
+    def _read_mode_directory(cls, profile_directory: Path) -> str:
+        try:
+            config = cls._read_save_config_directory(profile_directory)
             mode = config.get("Saves", "mode", fallback=cls.ProfileIsolated)
-        except (OSError, UnicodeError, configparser.Error, ValueError):
+        except (OSError, UnicodeError, configparser.Error, ValueError) as error:
+            qInfo(
+                "Elden Ring MO2 Save Isolation: could not read the saved route "
+                f"for '{profile_directory}'; using profile mode: {error}"
+            )
             mode = cls.ProfileIsolated
         allowed = {cls.ProfileIsolated, cls.InstanceShared, cls.GlobalShared}
         return mode if mode in allowed else cls.ProfileIsolated
@@ -3142,18 +2270,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         save_profile_id: str | None = None,
     ) -> None:
         if mode not in {cls.ProfileIsolated, cls.InstanceShared, cls.GlobalShared}:
-            raise ValueError("Unknown Elden Ring save mode.")
+            raise ValueError(_tr("Unknown Elden Ring save mode."))
         if not profile_directory.is_dir():
             raise FileNotFoundError(
-                f"The selected MO2 profile folder was not found:\n{profile_directory}"
+                _tr("The selected MO2 profile folder was not found:\n{path}").format(path=profile_directory)
             )
 
-        config = configparser.ConfigParser(interpolation=None)
+        config = cls._read_save_config_directory(profile_directory)
         config_path = profile_directory / cls.ConfigFilename
-        try:
-            config.read(config_path, encoding="utf-8")
-        except (OSError, UnicodeError, configparser.Error, ValueError):
-            raise
         if not config.has_section("Saves"):
             config.add_section("Saves")
         config.set("Saves", "mode", mode)
@@ -3162,7 +2286,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if key is not None:
                 normalized_id = cls._valid_save_profile_id(save_profile_id)
                 if save_profile_id and not normalized_id:
-                    raise ValueError("The selected named save profile is invalid.")
+                    raise ValueError(_tr("The selected named save profile is invalid."))
                 config.set("Saves", key, normalized_id)
 
         temporary_path = None
@@ -3206,9 +2330,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         key = cls._save_profile_key(mode)
         if key is None:
             return ""
-        config = configparser.ConfigParser(interpolation=None)
         try:
-            config.read(profile_directory / cls.ConfigFilename, encoding="utf-8")
+            config = cls._read_save_config_directory(profile_directory)
             value = config.get("Saves", key, fallback="")
         except (OSError, UnicodeError, configparser.Error, ValueError):
             return ""
@@ -3264,12 +2387,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     @staticmethod
     def _validated_save_profile_name(name: str) -> str:
         if not isinstance(name, str):
-            raise ValueError("Enter a name for this game save profile.")
+            raise ValueError(_tr("Enter a name for this game save profile."))
         cleaned = name.strip()
         if not cleaned or len(cleaned) > 64:
-            raise ValueError("Use a name between 1 and 64 characters.")
+            raise ValueError(_tr("Use a name between 1 and 64 characters."))
         if any(ord(character) < 32 or ord(character) == 127 for character in cleaned):
-            raise ValueError("The name cannot contain control characters.")
+            raise ValueError(_tr("The name cannot contain control characters."))
         return cleaned
 
     @classmethod
@@ -3308,34 +2431,40 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     ) -> None:
         combo.blockSignals(True)
         combo.clear()
-        default_label = (
-            "Standard saves for this MO2 profile"
-            if mode == cls.ProfileIsolated
-            else "Default saves shared in this MO2 instance"
-        )
+        if mode == cls.ProfileIsolated:
+            default_label = _tr("Standard saves for this MO2 profile")
+        elif mode == cls.InstanceShared:
+            default_label = _tr("Default saves shared in this MO2 instance")
+        else:
+            default_label = _tr("Not used with global Steam saves")
         combo.addItem(default_label, "")
         profiles = cls._read_named_save_profiles(profile_directory, mode)
         for profile_id, name in profiles:
             combo.addItem(name, profile_id)
         normalized_id = cls._valid_save_profile_id(selected_id)
         index = combo.findData(normalized_id)
+        missing_profile_id = ""
         if normalized_id and index < 0:
             index = combo.count()
-            combo.addItem(f"Missing save profile ({normalized_id[:8]})", normalized_id)
+            combo.addItem(_tr("Missing save profile ({id})").format(id=normalized_id[:8]), normalized_id)
             combo.setItemData(
                 index,
-                "This saved selection has no matching profile folder. Choose an available profile.",
+                _tr("This saved selection has no matching profile folder. Choose an available profile."),
                 Qt.ItemDataRole.ToolTipRole,
             )
+            missing_profile_id = normalized_id
         combo.setCurrentIndex(max(0, index))
-        combo.setProperty("_eldenRingMissingSaveProfile", bool(normalized_id and not profiles and index > 0))
-        if normalized_id and index > 0:
-            combo.setProperty(
-                "_eldenRingMissingSaveProfile",
-                not any(profile_id == normalized_id for profile_id, _name in profiles),
-            )
+        combo.setProperty("_eldenRingMissingSaveProfileId", missing_profile_id)
+        combo.setProperty("_eldenRingMissingSaveProfile", bool(missing_profile_id))
         combo.blockSignals(False)
         combo.setEnabled(mode in {cls.ProfileIsolated, cls.InstanceShared})
+
+    @staticmethod
+    def _is_missing_save_profile_selection(combo: QComboBox, selected_id: str) -> bool:
+        missing_profile_id = str(
+            combo.property("_eldenRingMissingSaveProfileId") or ""
+        )
+        return bool(missing_profile_id and selected_id == missing_profile_id)
 
     def _create_named_save_profile(
         self,
@@ -3348,7 +2477,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         clean_name = self._validated_save_profile_name(name)
         root = self._save_profiles_root_directory(profile_directory, mode)
         if root is None:
-            raise ValueError("Named save profiles are unavailable in global Steam mode.")
+            raise ValueError(_tr("Named save profiles are unavailable in global Steam mode."))
         existing_names = {
             existing_name.casefold()
             for _profile_id, existing_name in self._read_named_save_profiles(
@@ -3356,15 +2485,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
         }
         if clean_name.casefold() in existing_names:
-            raise ValueError("A save profile with this name already exists here.")
+            raise ValueError(_tr("A save profile with this name already exists here."))
 
         root.mkdir(parents=True, exist_ok=True)
         if self._is_reparse_point(root):
-            raise OSError(f"The save profile folder is a link and cannot be used: {root}")
+            raise OSError(_tr("The save profile folder is a link and cannot be used: {path}").format(path=root))
         profile_id = uuid.uuid4().hex
         destination = root / profile_id
         if os.path.lexists(destination) or os.path.lexists(root / f"{profile_id}.json"):
-            raise FileExistsError("A save profile with this identifier already exists.")
+            raise FileExistsError(_tr("A save profile with this identifier already exists."))
 
         temporary_directory = Path(tempfile.mkdtemp(prefix=f".{profile_id}.", dir=root))
         created_directory = False
@@ -3372,14 +2501,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         try:
             if source_path is not None:
                 if source_root is None:
-                    raise ValueError("The selected save source has no known folder.")
+                    raise ValueError(_tr("The selected save source has no known folder."))
                 if (
                     source_path.suffix.casefold() != ".sl2"
                     or self._is_reparse_point(source_path)
                     or not source_path.is_file()
                 ):
                     raise FileNotFoundError(
-                        f"The selected .sl2 save is no longer available: {source_path}"
+                        _tr("The selected .sl2 save is no longer available: {path}").format(path=source_path)
                     )
                 source_root_resolved = source_root.resolve(strict=True)
                 source_path_resolved = source_path.resolve(strict=True)
@@ -3389,12 +2518,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     or ".." in relative_path.parts
                     or relative_path.suffix.casefold() != ".sl2"
                 ):
-                    raise ValueError("The selected save path is outside its source folder.")
+                    raise ValueError(_tr("The selected save path is outside its source folder."))
                 source_parent = source_path.parent
                 while source_parent == source_root or source_root in source_parent.parents:
                     if self._is_reparse_point(source_parent):
                         raise OSError(
-                            f"The selected save folder contains a link: {source_parent}"
+                            _tr("The selected save folder contains a link: {path}").format(path=source_parent)
                         )
                     if source_parent == source_root:
                         break
@@ -3452,12 +2581,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         dialog = QDialog(parent or self.__parent_widget)
         dialog.setObjectName("EldenRingCreateSaveProfileDialog")
-        dialog.setWindowTitle("Create Elden Ring save profile")
+        dialog.setWindowTitle(_tr("Create Elden Ring save profile"))
         dialog.setMinimumSize(700, 460)
         dialog.resize(780, 500)
         dialog.setSizeGripEnabled(True)
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(18, 16, 18, 14)
+        layout.setContentsMargins(16, 16, 16, 14)
         layout.setSpacing(10)
 
         header = QFrame(dialog)
@@ -3465,53 +2594,65 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         header_layout = QVBoxLayout(header)
         header_layout.setContentsMargins(14, 10, 14, 10)
         header_layout.setSpacing(3)
-        heading = QLabel("Create a save profile", header)
-        heading.setObjectName("saveProfileTitle")
+        _add_circular_heading(
+            header_layout,
+            header,
+            _tr("Create a save profile"),
+            "saveProfileTitle",
+            ":/MO/gui/mainwindow/files/save.svg",
+            "saveProfileHeaderIcon",
+            30,
+            "S",
+        )
         intro = QLabel(
-            "Start with a fresh save or copy an existing save into a separate profile.",
+            _tr("Start with a fresh save or copy an existing save into a separate profile."),
             header,
         )
         intro.setObjectName("saveProfileSubtitle")
         intro.setWordWrap(True)
-        header_layout.addWidget(heading)
         header_layout.addWidget(intro)
         layout.addWidget(header)
 
-        details_group = QGroupBox("Profile name", dialog)
+        details_group = QFrame(dialog)
         details_group.setObjectName("saveProfileDetailsCard")
         details_layout = QVBoxLayout(details_group)
-        details_layout.setContentsMargins(14, 12, 14, 12)
+        details_layout.setContentsMargins(14, 11, 14, 11)
         details_layout.setSpacing(6)
+        details_heading = QLabel(_tr("Profile name"), details_group)
+        details_heading.setObjectName("saveProfileCardTitle")
+        details_layout.addWidget(details_heading)
         name_row = QHBoxLayout()
-        name_label = QLabel("Save profile name:", details_group)
         name_edit = QLineEdit(details_group)
         name_edit.setObjectName("saveProfileNameEdit")
-        name_edit.setPlaceholderText("For example: Modded journey")
+        name_edit.setAccessibleName(_tr("Save profile name"))
+        name_edit.setPlaceholderText(_tr("For example: Modded journey"))
         name_edit.setMaxLength(64)
         name_row.addWidget(name_edit, 1)
-        details_layout.addWidget(name_label)
         details_layout.addLayout(name_row)
         layout.addWidget(details_group)
 
-        source_group = QGroupBox("Starting save", dialog)
+        source_group = QFrame(dialog)
         source_group.setObjectName("saveProfileStartingSaveCard")
         source_layout = QVBoxLayout(source_group)
-        source_layout.setContentsMargins(14, 12, 14, 12)
+        source_layout.setContentsMargins(14, 11, 14, 11)
         source_layout.setSpacing(7)
+        source_heading = QLabel(_tr("Starting save"), source_group)
+        source_heading.setObjectName("saveProfileCardTitle")
+        source_layout.addWidget(source_heading)
         source_note = QLabel(
-            "Choose a new empty save or import an existing .sl2 file. Imports are "
+            _tr("Choose a new empty save or import an existing .sl2 file. Imports are "
             "copied as ER0000.sl2; a matching .bak is copied as ER0000.sl2.bak. "
-            "The source is left unchanged. Close Elden Ring before importing.",
+            "The source is left unchanged. Close Elden Ring before importing."),
             source_group,
         )
         source_note.setObjectName("saveProfileSourceNote")
         source_note.setWordWrap(True)
         source_layout.addWidget(source_note)
         source_row = QHBoxLayout()
-        source_label = QLabel("Start from:", source_group)
+        source_label = QLabel(_tr("Start from:"), source_group)
         source_combo = QComboBox(source_group)
         source_combo.setObjectName("saveProfileSourceCombo")
-        source_combo.addItem("Start a new game with an empty save profile", None)
+        source_combo.addItem(_tr("Start a new game with an empty save profile"), None)
         source_combo.setMaxVisibleItems(10)
         source_combo.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -3547,7 +2688,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         location_layout = QVBoxLayout(location_card)
         location_layout.setContentsMargins(12, 8, 12, 8)
         location_layout.setSpacing(3)
-        location_caption = QLabel("Save profile folder", location_card)
+        location_caption = QLabel(_tr("Save profile folder"), location_card)
         location_caption.setObjectName("saveProfileLocationCaption")
         location_label = QLabel(
             str(self._save_profiles_root_directory(profile_directory, mode)),
@@ -3575,7 +2716,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         buttons.setObjectName("saveProfileButtons")
         create_button = buttons.button(QDialogButtonBox.StandardButton.Save)
         if create_button is not None:
-            create_button.setText("Create save profile")
+            create_button.setText(_tr("Create save profile"))
+            create_button.setObjectName("saveProfileCreateButton")
+            create_button.setDefault(True)
+        cancel_button = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        if cancel_button is not None:
+            cancel_button.setObjectName("saveProfileCancelButton")
             existing_names = {
                 existing_name.casefold()
                 for _profile_id, existing_name in self._read_named_save_profiles(
@@ -3593,7 +2739,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 duplicate = clean_name.casefold() in existing_names
                 create_button.setEnabled(not duplicate)
                 status.setText(
-                    "A save profile with this name already exists here."
+                    _tr("A save profile with this name already exists here.")
                     if duplicate
                     else ""
                 )
@@ -3617,7 +2763,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             except (OSError, UnicodeError, ValueError, configparser.Error) as error:
                 status.setText(str(error))
-                QMessageBox.warning(dialog, "Could not create save profile", str(error))
+                self._show_notice(
+                    dialog, _tr("Could not create save profile"), str(error), "warning"
+                )
                 return
             dialog.setProperty("_eldenRingCreatedSaveProfileId", profile_id)
             dialog.accept()
@@ -3635,21 +2783,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         profile = self.__organizer.profile()
         if profile is None:
-            QMessageBox.warning(
+            self._show_notice(
                 self.__parent_widget,
-                "No active Elden Ring profile",
-                "Select an Elden Ring profile in MO2 before changing save options.",
+                _tr("No active Elden Ring profile"),
+                _tr("Select an Elden Ring profile in MO2 before changing save options."),
+                "warning",
             )
             return
 
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingSaveIsolationDialog")
-        dialog.setWindowTitle("Elden Ring Save Isolation")
-        dialog.setMinimumSize(720, 540)
-        dialog.resize(820, 680)
+        dialog.setWindowTitle(_tr("Elden Ring Save Isolation"))
+        dialog.setMinimumSize(800, 560)
+        dialog.resize(960, 710)
         dialog.setSizeGripEnabled(True)
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 14, 16, 12)
+        layout.setContentsMargins(16, 16, 16, 14)
         layout.setSpacing(9)
 
         header = QFrame(dialog)
@@ -3657,16 +2806,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         header_layout = QVBoxLayout(header)
         header_layout.setContentsMargins(14, 10, 14, 10)
         header_layout.setSpacing(3)
-        heading = QLabel("Save routing and profiles", header)
-        heading.setObjectName("saveIsolationPageTitle")
+        _add_circular_heading(
+            header_layout,
+            header,
+            _tr("Save routing and profiles"),
+            "saveIsolationPageTitle",
+            ":/MO/gui/mainwindow/files/save.svg",
+            "saveIsolationHeaderIcon",
+            30,
+            "S",
+        )
         subtitle = QLabel(
-            "Choose where Elden Ring loads this MO2 profile's save. Restart MO2 "
-            "before launching after you save a route.",
+            _tr("Choose the save route for the active MO2 profile."),
             header,
         )
         subtitle.setObjectName("saveIsolationPageSubtitle")
         subtitle.setWordWrap(True)
-        header_layout.addWidget(heading)
         header_layout.addWidget(subtitle)
         layout.addWidget(header)
 
@@ -3677,20 +2832,35 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         content = QWidget(scroll_area)
         content.setObjectName("saveIsolationContent")
-        content_layout = QVBoxLayout(content)
+        content_layout = QGridLayout(content)
         content_layout.setContentsMargins(2, 2, 8, 2)
         content_layout.setSpacing(8)
+        content_layout.setColumnStretch(0, 1)
+        content_layout.setColumnStretch(1, 1)
         scroll_area.setWidget(content)
         layout.addWidget(scroll_area, 1)
 
-        profile_group = QGroupBox("Active MO2 profile", content)
+        profile_group = QFrame(content)
         profile_group.setObjectName("saveIsolationProfileCard")
         profile_layout = QVBoxLayout(profile_group)
-        profile_layout.setContentsMargins(12, 10, 12, 10)
-        profile_label = QLabel(f"<b>Profile:</b> {profile.name()}")
+        profile_layout.setContentsMargins(13, 11, 13, 11)
+        profile_layout.setSpacing(5)
+        _add_circular_heading(
+            profile_layout,
+            profile_group,
+            _tr("Active MO2 profile"),
+            "saveIsolationCardTitle",
+            ":/MO/gui/mainwindow/profile.svg",
+            "saveIsolationProfileIcon",
+            26,
+            "P",
+        )
+        profile_label = QLabel(profile.name(), profile_group)
         profile_label.setObjectName("saveIsolationProfileName")
         profile_layout.addWidget(profile_label)
-        profile_path_label = QLabel(str(self._profile_directory(profile)))
+        profile_path_label = QLabel(
+            str(self._profile_directory(profile)), profile_group
+        )
         profile_path_label.setObjectName("saveIsolationProfilePath")
         profile_path_label.setWordWrap(True)
         profile_path_label.setTextInteractionFlags(
@@ -3698,25 +2868,38 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         profile_layout.addWidget(profile_path_label)
         profile_note = QLabel(
-            "The selected mode is stored with this profile and checked before "
-            "each Elden Ring launch. Restart MO2 after changing the mode so its "
-            "save mapping is reloaded before you launch the game."
+            _tr("Changes between the profile and instance-shared routes take effect "
+            "on the next game launch without restarting MO2. Restart MO2 only "
+            "when switching to or from the global Steam save.")
         )
         profile_note.setObjectName("saveIsolationSectionNote")
         profile_note.setWordWrap(True)
         profile_layout.addWidget(profile_note)
-        content_layout.addWidget(profile_group)
+        content_layout.addWidget(profile_group, 0, 0)
 
-        mode_group = QGroupBox("Save mode for this profile", content)
+        mode_group = QFrame(content)
         mode_group.setObjectName("saveIsolationModeCard")
         mode_layout = QVBoxLayout(mode_group)
-        mode_layout.setContentsMargins(12, 10, 12, 10)
+        mode_layout.setContentsMargins(13, 11, 13, 11)
         mode_layout.setSpacing(6)
+        _add_circular_heading(
+            mode_layout,
+            mode_group,
+            _tr("Save mode"),
+            "saveIsolationCardTitle",
+            ":/MO/gui/mainwindow/settings.svg",
+            "saveIsolationModeIcon",
+            26,
+            "M",
+        )
+        mode_caption = QLabel(_tr("Route this profile's Elden Ring saves to:"), mode_group)
+        mode_caption.setObjectName("saveIsolationFieldCaption")
+        mode_layout.addWidget(mode_caption)
         mode_box = QComboBox(mode_group)
         mode_box.setObjectName("saveIsolationModeCombo")
-        mode_box.addItem("Isolate saves for this profile (recommended)", self.ProfileIsolated)
-        mode_box.addItem("Share modded saves within this MO2 instance", self.InstanceShared)
-        mode_box.addItem("Use global Steam / Elden Ring saves", self.GlobalShared)
+        mode_box.addItem(_tr("Isolate saves for this profile (recommended)"), self.ProfileIsolated)
+        mode_box.addItem(_tr("Share modded saves within this MO2 instance"), self.InstanceShared)
+        mode_box.addItem(_tr("Use global Steam / Elden Ring saves"), self.GlobalShared)
         current_mode = self._read_mode(profile)
         mode_box.setCurrentIndex(max(0, mode_box.findData(current_mode)))
         mode_layout.addWidget(mode_box)
@@ -3724,40 +2907,60 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         mode_description.setObjectName("saveIsolationModeDescription")
         mode_description.setWordWrap(True)
         mode_layout.addWidget(mode_description)
-        content_layout.addWidget(mode_group)
-        save_profile_group = QGroupBox("Game save profile", content)
+        content_layout.addWidget(mode_group, 0, 1)
+        save_profile_group = QFrame(content)
         save_profile_group.setObjectName("saveIsolationGameProfileCard")
         save_profile_layout = QVBoxLayout(save_profile_group)
-        save_profile_layout.setContentsMargins(12, 10, 12, 10)
+        save_profile_layout.setContentsMargins(13, 11, 13, 11)
         save_profile_layout.setSpacing(6)
+        _add_circular_heading(
+            save_profile_layout,
+            save_profile_group,
+            _tr("Game save profile"),
+            "saveIsolationCardTitle",
+            ":/MO/gui/mainwindow/files/save.svg",
+            "saveIsolationGameProfileIcon",
+            26,
+            "S",
+        )
         save_profile_row = QHBoxLayout()
         save_profile_combo = QComboBox(save_profile_group)
         save_profile_combo.setObjectName("saveIsolationGameProfileCombo")
-        save_profile_combo.setMinimumContentsLength(30)
+        save_profile_combo.setMinimumContentsLength(24)
         save_profile_combo.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
         )
         save_profile_combo.setMaxVisibleItems(10)
-        create_save_profile_button = QPushButton("Create or import…", save_profile_group)
+        create_save_profile_button = QPushButton(_tr("Create or import…"), save_profile_group)
         create_save_profile_button.setObjectName("saveIsolationCreateProfileButton")
         save_profile_row.addWidget(save_profile_combo, 1)
         save_profile_row.addWidget(create_save_profile_button)
         save_profile_layout.addLayout(save_profile_row)
         save_profile_note = QLabel(
-            "Every choice has its own save folder. MO2 presents the selected save "
-            "to Elden Ring as ER0000.sl2; importing a save leaves its source intact.",
+            _tr("Every choice has its own save folder. MO2 presents the selected save "
+            "to Elden Ring as ER0000.sl2; importing a save leaves its source intact."),
             save_profile_group,
         )
         save_profile_note.setObjectName("saveIsolationSectionNote")
         save_profile_note.setWordWrap(True)
         save_profile_layout.addWidget(save_profile_note)
-        content_layout.addWidget(save_profile_group)
+        content_layout.addWidget(save_profile_group, 1, 0, 1, 2)
 
-        status_group = QGroupBox("Routing status", content)
+        status_group = QFrame(content)
         status_group.setObjectName("saveIsolationRoutingCard")
         status_layout = QVBoxLayout(status_group)
-        status_layout.setContentsMargins(12, 10, 12, 10)
+        status_layout.setContentsMargins(13, 11, 13, 11)
         status_layout.setSpacing(5)
+        _add_circular_heading(
+            status_layout,
+            status_group,
+            _tr("Routing status"),
+            "saveIsolationCardTitle",
+            ":/MO/gui/mainwindow/files/game-data.svg",
+            "saveIsolationStatusIcon",
+            26,
+            "R",
+        )
         status_label = QLabel()
         status_label.setObjectName("saveIsolationRoutingStatus")
         status_label.setWordWrap(True)
@@ -3771,64 +2974,96 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         status_layout.addWidget(active_path_label)
         mo2_saves_state = bool(profile.localSavesEnabled())
         mo2_state_label = QLabel(
-            "MO2 profile-specific saves: "
-            + ("enabled" if mo2_saves_state else "disabled")
+            _tr("MO2 profile-specific saves: enabled")
+            if mo2_saves_state
+            else _tr("MO2 profile-specific saves: disabled")
         )
         mo2_state_label.setObjectName("saveIsolationMo2SaveState")
         status_layout.addWidget(mo2_state_label)
-        content_layout.addWidget(status_group)
+        content_layout.addWidget(status_group, 2, 0)
 
+        safety_card = QFrame(content)
+        safety_card.setObjectName("saveIsolationSafetyCard")
+        safety_layout = QHBoxLayout(safety_card)
+        safety_layout.setContentsMargins(12, 9, 12, 9)
+        safety_layout.setSpacing(9)
+        safety_layout.addWidget(
+            _make_circular_icon(
+                safety_card,
+                "saveIsolationSafetyIcon",
+                ":/MO/gui/mainwindow/status/warning.svg",
+                26,
+                "!",
+            ),
+            0,
+            Qt.AlignmentFlag.AlignTop,
+        )
+        safety_caption = QLabel(_tr("Safety"), safety_card)
+        safety_caption.setObjectName("saveIsolationSafetyCaption")
         safety_note = QLabel(
-            "This only routes save files. It does not change Easy Anti-Cheat or "
+            _tr("This only routes save files. It does not change Easy Anti-Cheat or "
             "network mode, and it cannot make modded saves safe for online play. "
             "The global folder can contain separate subfolders for multiple "
             "Steam IDs; identical ER0000.sl2 names under different IDs are "
-            "separate account saves."
+            "separate account saves."),
+            safety_card,
         )
         safety_note.setObjectName("saveIsolationSafetyNote")
         safety_note.setWordWrap(True)
-        content_layout.addWidget(safety_note)
+        safety_layout.addWidget(safety_caption, 0, Qt.AlignmentFlag.AlignTop)
+        safety_layout.addWidget(safety_note, 1)
+        content_layout.addWidget(safety_card, 3, 0, 1, 2)
 
-        actions_group = QGroupBox("Folders and tools", content)
+        actions_group = QFrame(content)
         actions_group.setObjectName("saveIsolationActionsCard")
         actions_layout = QVBoxLayout(actions_group)
-        actions_layout.setContentsMargins(12, 10, 12, 10)
-        actions_layout.setSpacing(6)
+        actions_layout.setContentsMargins(13, 11, 13, 11)
+        actions_layout.setSpacing(7)
+        _add_circular_heading(
+            actions_layout,
+            actions_group,
+            _tr("Folders and tools"),
+            "saveIsolationCardTitle",
+            ":/MO/gui/mainwindow/files/folder.svg",
+            "saveIsolationActionsIcon",
+            26,
+            "F",
+        )
         folder_buttons = QHBoxLayout()
-        folder_buttons.setSpacing(8)
-        open_active_button = QPushButton("Open selected save folder", actions_group)
+        folder_buttons.setSpacing(7)
+        open_active_button = QPushButton(_tr("Open selected save folder"), actions_group)
         open_active_button.setObjectName("saveIsolationOpenSelectedButton")
-        open_global_button = QPushButton("Open global save folder", actions_group)
+        open_global_button = QPushButton(_tr("Open global save folder"), actions_group)
         open_global_button.setObjectName("saveIsolationOpenGlobalButton")
         folder_buttons.addWidget(open_active_button)
         folder_buttons.addWidget(open_global_button)
         actions_layout.addLayout(folder_buttons)
 
         tool_buttons = QHBoxLayout()
-        tool_buttons.setSpacing(8)
-        copy_report_button = QPushButton("Copy save-routing diagnostics", actions_group)
+        tool_buttons.setSpacing(7)
+        copy_report_button = QPushButton(_tr("Copy routing diagnostics"), actions_group)
         copy_report_button.setObjectName("saveIsolationCopyDiagnosticsButton")
-        tool_buttons.addWidget(copy_report_button)
-
-        transfer_button = QPushButton("Transfer one save file…", actions_group)
+        transfer_button = QPushButton(_tr("Transfer one save…"), actions_group)
         transfer_button.setObjectName("saveIsolationTransferButton")
         transfer_button.setToolTip(
-            "Choose one .sl2 file and copy it once between MO2 profile, "
-            "instance-shared, or global save routes."
+            _tr("Choose one .sl2 file and copy it once between MO2 profile, "
+            "instance-shared, or global save routes.")
         )
+        tool_buttons.addWidget(copy_report_button)
         tool_buttons.addWidget(transfer_button)
         actions_layout.addLayout(tool_buttons)
-        content_layout.addWidget(actions_group)
-        content_layout.addStretch(1)
+        # Keep the heading level with the Routing status card beside it.
+        actions_layout.addStretch(1)
+        content_layout.addWidget(actions_group, 2, 1)
+        content_layout.setRowStretch(4, 1)
 
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save
-            | QDialogButtonBox.StandardButton.Close
+            QDialogButtonBox.StandardButton.Close
         )
         button_box.setObjectName("saveIsolationDialogButtons")
-        save_button = button_box.button(QDialogButtonBox.StandardButton.Save)
-        if save_button is not None:
-            save_button.setText("Save route and game profile")
+        close_button = button_box.button(QDialogButtonBox.StandardButton.Close)
+        if close_button is not None:
+            close_button.setObjectName("saveIsolationCloseButton")
         layout.addWidget(button_box)
 
         def refresh_details() -> None:
@@ -3846,13 +3081,29 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             selected_save_id = str(save_profile_combo.currentData() or "")
             selected_save_name = save_profile_combo.currentText()
+            save_profile_combo.setProperty(
+                "_eldenRingMissingSaveProfile",
+                self._is_missing_save_profile_selection(
+                    save_profile_combo, selected_save_id
+                ),
+            )
             local_saves_on = bool(profile.localSavesEnabled())
             active_path = self._save_directory_for_selection(
                 profile_directory, mode, selected_save_id
             )
-            mode_description.setText(self.ModeDescriptions[mode])
+            mode_description.setText(self.mode_description(mode))
+            save_profile_note.setText(
+                _tr("Named game save profiles are only available with profile-isolated "
+                "or instance-shared saves.")
+                if mode == self.GlobalShared
+                else (
+                    _tr("Each named game save profile has its own folder. MO2 presents "
+                    "the selected save to Elden Ring as ER0000.sl2; importing a "
+                    "save leaves its source intact.")
+                )
+            )
             active_path_label.setText(
-                f"<b>Selected save folder:</b><br>{active_path}"
+                _tr("<b>Selected save folder:</b><br>{path}").format(path=active_path)
             )
             create_save_profile_button.setEnabled(
                 mode in {self.ProfileIsolated, self.InstanceShared}
@@ -3860,43 +3111,43 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             if save_profile_combo.property("_eldenRingMissingSaveProfile"):
                 status_label.setText(
-                    "<b>Save profile unavailable.</b> Choose an available profile "
-                    "or the standard saves before saving."
+                    _tr("<b>Save profile unavailable.</b> Choose an available profile "
+                    "or the standard saves before saving.")
                 )
             elif mode in {self.ProfileIsolated, self.InstanceShared} and not local_saves_on:
                 status_label.setText(
-                    "<b>Launch blocked:</b> enable 'Use profile-specific Save Games' "
-                    "for this profile in MO2's Profiles dialog. This prevents a "
-                    "modded profile from silently using the global Steam save."
+                    _tr("<b>Route saved.</b> Restart MO2 before launching so it can "
+                    "reload this profile's save mode.")
                 )
             elif mode == self.GlobalShared and local_saves_on:
                 status_label.setText(
-                    "<b>Launch blocked:</b> this mode requires profile-specific "
-                    "saves to be disabled in MO2 for the active profile."
+                    _tr("<b>Route saved.</b> Restart MO2 before launching so it can "
+                    "reload this profile's save mode.")
                 )
             elif mode == self.GlobalShared:
                 status_label.setText(
-                    "<b>Global save selected.</b> This is shared with Steam and "
-                    "any other instance using the global save path."
+                    _tr("<b>Global save selected.</b> This is shared with Steam and "
+                    "any other instance using the global save path.")
                 )
             elif mode == self.InstanceShared:
                 status_label.setText(
-                    f"<b>Instance-shared modded save selected.</b> "
-                    f"Game save profile: {selected_save_name}. Profiles in this "
-                    "instance can choose the same named profile to share it."
+                    _tr("<b>Instance-shared modded save selected.</b> "
+                    "Game save profile: {save}. Profiles in this "
+                    "instance can choose the same named profile to share it.").format(save=selected_save_name)
                 )
             else:
                 status_label.setText(
-                    f"<b>Profile-isolated save selected.</b> "
-                    f"Game save profile: {selected_save_name}."
+                    _tr("<b>Profile-isolated save selected.</b> "
+                    "Game save profile: {save}.").format(save=selected_save_name)
                 )
 
         def open_folder(path: Path) -> None:
             if not path.is_dir():
-                QMessageBox.information(
+                self._show_notice(
                     dialog,
-                    "Save folder not found",
-                    f"This folder does not exist yet:\n\n{path}",
+                    _tr("Save folder not found"),
+                    _tr("This folder does not exist yet:\n\n{path}").format(path=path),
+                    "info",
                 )
                 return
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
@@ -3921,22 +3172,24 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             )
             QApplication.clipboard().setText(report)
-            QMessageBox.information(
+            self._show_notice(
                 dialog,
-                "Diagnostics copied",
-                "Save-routing information was copied to the clipboard. It includes "
+                _tr("Diagnostics copied"),
+                _tr("Save-routing information was copied to the clipboard. It includes "
                 "local paths and may include your Windows user name; review it "
-                "before sharing.",
+                "before sharing."),
+                "success",
             )
 
         def create_save_profile() -> None:
             mode = mode_box.currentData()
             if mode == self.GlobalShared:
-                QMessageBox.information(
+                self._show_notice(
                     dialog,
-                    "Global Steam save selected",
-                    "Named game save profiles are available with profile-isolated "
-                    "or instance-shared saves.",
+                    _tr("Global Steam save selected"),
+                    _tr("Named game save profiles are available with profile-isolated "
+                    "or instance-shared saves."),
+                    "info",
                 )
                 return
             profile_id = self._display_create_save_profile_dialog(
@@ -3954,25 +3207,30 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "_eldenRingSaveUiSaveProfileRouteKey",
                 f"{self._normalized_path(self._profile_directory(profile))}|{mode}",
             )
-            refresh_details()
-            QMessageBox.information(
-                dialog,
-                "Save profile created",
-                f"'{save_profile_combo.currentText()}' is ready. Select 'Save route "
-                "and game profile' to use it for this MO2 profile.",
-            )
+            persist_route_selection()
 
-        def save_mode() -> None:
+        def restore_saved_selection() -> None:
+            saved_mode = self._read_mode(profile)
+            mode_box.blockSignals(True)
+            mode_index = mode_box.findData(saved_mode)
+            if mode_index >= 0:
+                mode_box.setCurrentIndex(mode_index)
+            mode_box.blockSignals(False)
+            dialog.setProperty("_eldenRingSaveUiSaveProfileRouteKey", "")
+            refresh_details()
+
+        def persist_route_selection(*_args) -> None:
             mode = mode_box.currentData()
             selected_save_id = str(save_profile_combo.currentData() or "")
             if (
                 mode != self.GlobalShared
                 and save_profile_combo.property("_eldenRingMissingSaveProfile")
             ):
-                QMessageBox.warning(
+                self._show_notice(
                     dialog,
-                    "Save profile unavailable",
-                    "Choose an available named save profile before saving.",
+                    _tr("Save profile unavailable"),
+                    _tr("Choose an available named save profile before saving."),
+                    "warning",
                 )
                 return
             if mode != self.GlobalShared and selected_save_id:
@@ -3983,25 +3241,60 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     )
                 }
                 if selected_save_id not in available_ids:
-                    QMessageBox.warning(
+                    self._show_notice(
                         dialog,
-                        "Save profile unavailable",
-                        "Choose an available named save profile before saving.",
+                        _tr("Save profile unavailable"),
+                        _tr("Choose an available named save profile before saving."),
+                        "warning",
                     )
                     return
-            if mode == self.GlobalShared:
-                answer = QMessageBox.warning(
+            try:
+                profile_directory = self._profile_directory(profile)
+                previous_mode = self._read_mode(profile)
+                previous_save_id = self._read_save_profile_id_directory(
+                    profile_directory, mode
+                )
+            except Exception:
+                qInfo(
+                    "Elden Ring MO2 Save Isolation: route state read failed:\n"
+                    + traceback.format_exc()
+                )
+                self._show_notice(
                     dialog,
-                    "Use the global Steam save?",
-                    "This shares the same save folder with Steam and all MO2 "
+                    _tr("Could not read route"),
+                    _tr("The current save route could not be read. See the MO2 log."),
+                    "warning",
+                )
+                restore_saved_selection()
+                return
+            if mode == previous_mode and selected_save_id == previous_save_id:
+                refresh_details()
+                return
+            if mode == self.GlobalShared:
+                confirmed_global = self._ask_confirmation(
+                    dialog,
+                    _tr("Use the global Steam save?"),
+                    _tr("This shares the same save folder with Steam and all MO2 "
                     "instances that use the global path. Modded play can alter "
                     "the vanilla character.\n\n"
-                    "Select this only if you deliberately want to share that save. "
-                    "Continue?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No,
+                    "Choose Use global Steam save to store this route for the "
+                    "current profile. Closing this prompt or keeping the current "
+                    "mode leaves the saved route unchanged."),
+                    _tr("Use global save"),
+                    _tr("Keep current mode"),
+                    "warning",
                 )
-                if answer != QMessageBox.StandardButton.Yes:
+                if not confirmed_global:
+                    restore_saved_selection()
+                    status_label.setText(
+                        _tr("<b>Global Steam route not applied.</b> "
+                        "The previously saved mode remains active.")
+                    )
+                    qInfo(
+                        "Elden Ring MO2 Save Isolation: global Steam route "
+                        f"selection was cancelled for profile '{profile.name()}'; "
+                        f"stored mode remains '{self._read_mode(profile)}'."
+                    )
                     return
             try:
                 self._save_mode(
@@ -4009,20 +3302,77 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     mode,
                     selected_save_id if mode != self.GlobalShared else None,
                 )
+                persisted_mode = self._read_mode(profile)
+                persisted_save_id = self._read_save_profile_id_directory(
+                    profile_directory, mode
+                )
+                expected_save_id = (
+                    selected_save_id if mode != self.GlobalShared else ""
+                )
+                if (
+                    persisted_mode != mode
+                    or persisted_save_id != expected_save_id
+                ):
+                    raise OSError(
+                        _tr("The selected save route could not be verified after writing. "
+                        "The menu will return to the route currently stored on disk.")
+                    )
             except (OSError, UnicodeError, configparser.Error, ValueError) as error:
-                QMessageBox.warning(dialog, "Could not save route", str(error))
+                qInfo(
+                    "Elden Ring MO2 Save Isolation: could not verify the selected "
+                    f"mode '{mode}' for profile '{profile.name()}': {error}"
+                )
+                self._show_notice(
+                    dialog, _tr("Could not save route"), str(error), "warning"
+                )
+                restore_saved_selection()
                 return
-            refresh_details()
-            QMessageBox.information(
-                dialog,
-                "Save settings saved",
-                f"The route and game save profile were saved for MO2 profile "
-                f"'{profile.name()}'. Restart MO2 before launching so the new "
-                "save mapping takes effect. If the status says launch blocked, "
-                "adjust MO2's profile-specific save setting first.",
+            qInfo(
+                "Elden Ring MO2 Save Isolation: saved and verified mode "
+                f"'{mode}' for profile '{profile.name()}'; named save profile "
+                f"selected: {bool(selected_save_id)}."
             )
-        mode_box.currentIndexChanged.connect(refresh_details)
-        save_profile_combo.currentIndexChanged.connect(refresh_details)
+            refresh_details()
+            restart_required = (
+                (previous_mode == self.GlobalShared)
+                != (mode == self.GlobalShared)
+            )
+            if not restart_required:
+                status_label.setText(
+                    _tr("<b>Saved for {profile}.</b> The selected local "
+                    "save route will be used the next time Elden Ring starts. "
+                    "MO2 does not need to restart.").format(profile=profile.name())
+                )
+                return
+
+            restart_now = self._ask_confirmation(
+                dialog,
+                _tr("Restart MO2 to apply Steam save routing?"),
+                _tr("The save route for {profile} has been saved.\n\n"
+                "This change switches to or from the global Steam save. Restart "
+                "Mod Organizer before launching Elden Ring so it can reload the "
+                "profile-specific save setting, or choose Later and restart manually.").format(
+                    profile=profile.name()
+                ),
+                _tr("Restart now"),
+                _tr("Later"),
+                "info",
+            )
+            if restart_now:
+                dialog.accept()
+                QTimer.singleShot(0, self._request_mo2_restart)
+            else:
+                status_label.setText(
+                    _tr("<b>Route saved for {profile}.</b> Restart MO2 "
+                    "before launching Elden Ring to apply the Steam save route.").format(profile=profile.name())
+                )
+
+        def route_selection_changed(*_args) -> None:
+            refresh_details()
+            persist_route_selection()
+
+        mode_box.currentIndexChanged.connect(route_selection_changed)
+        save_profile_combo.currentIndexChanged.connect(route_selection_changed)
         create_save_profile_button.clicked.connect(create_save_profile)
         open_active_button.clicked.connect(
             lambda: open_folder(
@@ -4040,10 +3390,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 self._profile_directory(profile), profile.name(), dialog
             )
         )
-        button_box.accepted.connect(save_mode)
         button_box.rejected.connect(dialog.reject)
 
         refresh_details()
+        qInfo(
+            "Elden Ring MO2 Save Isolation: opened Tools for profile "
+            f"'{profile.name()}' with stored mode '{self._read_mode(profile)}'; "
+            "named save profile selected: "
+            f"{bool(save_profile_combo.currentData())}."
+        )
         dialog.exec()
 
 

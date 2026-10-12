@@ -650,7 +650,7 @@
             <item>
             <layout class="QVBoxLayout" name="verticalLayout_12">
               <item>
-               <widget class="QToolButton" name="startButton">
+               <widget class="RunMenuToolButton" name="startButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -996,13 +996,19 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <property name="spacing">
-              <number>2</number>
+              <number>8</number>
+             </property>
+             <property name="leftMargin">
+              <number>8</number>
+             </property>
+             <property name="rightMargin">
+              <number>8</number>
              </property>
              <property name="topMargin">
-              <number>6</number>
+              <number>8</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>6</number>
              </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
@@ -1068,7 +1074,10 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,1,2">
+              <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="0,0,1">
+               <property name="spacing">
+                <number>8</number>
+               </property>
                <item>
                 <widget class="QCheckBox" name="dataTabShowOnlyConflicts">
                  <property name="toolTip">
@@ -1118,13 +1127,19 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <property name="spacing">
-              <number>2</number>
+              <number>8</number>
+             </property>
+             <property name="leftMargin">
+              <number>8</number>
+             </property>
+             <property name="rightMargin">
+              <number>8</number>
              </property>
              <property name="topMargin">
-              <number>6</number>
+              <number>8</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>8</number>
              </property>
              <item>
               <widget class="QTreeWidget" name="savegameList">
@@ -1142,7 +1157,7 @@
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
                                   &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;/p&gt;
-                                  &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Profiles &amp;gt; Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Elden Ring Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </string>
                </property>
                <property name="sizeAdjustPolicy">
@@ -1204,16 +1219,25 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <property name="spacing">
-              <number>2</number>
+              <number>8</number>
+             </property>
+             <property name="leftMargin">
+              <number>8</number>
              </property>
              <property name="topMargin">
-              <number>6</number>
+              <number>8</number>
+             </property>
+             <property name="rightMargin">
+              <number>8</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>8</number>
              </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
+               <property name="spacing">
+                <number>8</number>
+               </property>
                <item>
                 <widget class="QPushButton" name="btnRefreshDownloads">
                  <property name="toolTip">
@@ -1248,6 +1272,21 @@
              </item>
              <item>
               <layout class="QVBoxLayout" name="downloadLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="DownloadListView" name="downloadView">
                  <property name="minimumSize">
@@ -1303,7 +1342,10 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,1,2">
+              <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="0,1,1">
+               <property name="spacing">
+                <number>8</number>
+               </property>
                <item>
                 <widget class="QCheckBox" name="showHiddenBox">
                  <property name="toolTip">
@@ -1485,16 +1527,16 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_6">
      <property name="leftMargin">
-      <number>0</number>
+      <number>4</number>
      </property>
      <property name="topMargin">
-      <number>0</number>
+      <number>4</number>
      </property>
      <property name="rightMargin">
-      <number>0</number>
+      <number>4</number>
      </property>
      <property name="bottomMargin">
-      <number>0</number>
+      <number>4</number>
      </property>
      <item>
       <widget class="LogList" name="logList">
@@ -1743,16 +1785,16 @@
      <normaloff>:/MO/gui/contextmenu/endorse.svg</normaloff>:/MO/gui/contextmenu/endorse.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Endorse ModOrganizer</string>
+    <string>&amp;Endorse MO2 Revamped</string>
    </property>
    <property name="iconText">
-    <string>&amp;Endorse ModOrganizer</string>
+    <string>&amp;Endorse MO2 Revamped</string>
    </property>
    <property name="toolTip">
-    <string>Endorse Mod Organizer</string>
+    <string>Endorse MO2 Revamped</string>
    </property>
    <property name="statusTip">
-    <string>Endorse Mod Organizer</string>
+    <string>Endorse MO2 Revamped</string>
    </property>
   </action>
   <action name="actionChange_Game">
@@ -1913,6 +1955,11 @@
    <class>StatusBar</class>
    <extends>QStatusBar</extends>
    <header>statusbar.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RunMenuToolButton</class>
+   <extends>QToolButton</extends>
+   <header>runmenutoolbutton.h</header>
   </customwidget>
   <customwidget>
    <class>DownloadListView</class>

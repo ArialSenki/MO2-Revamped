@@ -1,6 +1,5 @@
 #include "organizercore.h"
 #include "categoriesdialog.h"
-#include "credentialsdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
 #include "env.h"
@@ -310,17 +309,6 @@ bool OrganizerCore::nexusApi(bool retry)
       accessManager->refuseValidation();
       return false;
     }
-  }
-}
-
-void OrganizerCore::startMOUpdate()
-{
-  if (nexusApi()) {
-    m_PostLoginTasks.append([&]() {
-      m_Updater.startUpdate();
-    });
-  } else {
-    m_Updater.startUpdate();
   }
 }
 
@@ -1809,14 +1797,6 @@ void OrganizerCore::loginSuccessful(bool necessary)
   NexusInterface::instance().loginCompleted();
 }
 
-void OrganizerCore::loginSuccessfulUpdate(bool necessary)
-{
-  if (necessary) {
-    MessageDialog::showMessage(tr("login successful"), qApp->activeWindow());
-  }
-  m_Updater.startUpdate();
-}
-
 void OrganizerCore::loginFailed(const QString& message)
 {
   qCritical().nospace().noquote() << "Nexus API validation failed: " << message;
@@ -1843,13 +1823,6 @@ void OrganizerCore::loginFailed(const QString& message)
     m_PostLoginTasks.clear();
   }
   NexusInterface::instance().loginCompleted();
-}
-
-void OrganizerCore::loginFailedUpdate(const QString& message)
-{
-  MessageDialog::showMessage(
-      tr("login failed: %1. You need to log-in with Nexus to update MO.").arg(message),
-      qApp->activeWindow());
 }
 
 void OrganizerCore::syncOverwrite()

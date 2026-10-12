@@ -70,9 +70,9 @@ paths, screenshots, or local backup details.
 - Added separate general and Elden Ring-only installer builds with manifest
   checks, per-file SHA-256 verification, and release checksums.
 - Removed private build directories from CPython PDB references and stripped
-  toolchain debug metadata from the Elden Ring bridge. Rebuilt GitHub++ without
-  Qt source-file logging paths, then scanned the staged payloads and installer
-  executables for local paths.
+  toolchain debug metadata from the Elden Ring bridge. Rebuilt GitHub++ with a
+  neutral source-path mapping while preserving Qt file/line logging context,
+  then scanned staged payloads and installer executables for local paths.
 - Fixed release theme staging so the reviewed Light and Dark styles replace
   the filenames MO2 actually loads; omitted two unused legacy stylesheet
   copies from the packages.
@@ -83,6 +83,45 @@ paths, screenshots, or local backup details.
   release payloads without copying user profiles, mods, downloads, logs, or
   instance configuration.
 
+## Release-candidate isolation correction
+
+- Separated Complete Standard's instances and preferences from the original
+  MO2 Local AppData store. Complete Portable and Elden Ring Isolated resolve
+  their MO2 settings and additional instances within their own installation.
+- Removed the save-isolation plugin's original MO2 AppData scan and pending
+  mode file. It now discovers profiles from the active Elden Ring instance;
+  the optional Steam save route remains in the game's own save directory.
+- Made the migration source explicitly user-selected and left it unchanged.
+- Added an installer identity marker, restricted maintenance actions to
+  Revamped installations, and retained a narrow recognition path for the
+  branded v1.0.0 Complete/Portable package.
+- Changed the isolated release stage to derive from Complete and verify
+  identical core files plus hashes for shared plugins.
+- Redesigned the installer after the isolation safeguards with Revamped
+  branding, clearer section cards, and a stronger primary action. Both
+  installer variants compile and their embedded payload resources pass the
+  local manifest/hash checks. User visual and launch review of the exact v1.0.1
+  executables remains pending.
+
+## Final pre-release audit — October 9, 2026
+
+- Verified Save Isolation and named Game Save Profile persistence through a
+  temporary-directory harness, including the three routes, independent IDs,
+  imported saves, backup copying, duplicate rejection, and pending instance
+  choices. The open Full process still uses its earlier plugin; the new
+  candidate has not been installed or opened for a live UI test.
+- Mapped source, dependency, and GitHub++ paths to neutral names in the release
+  executable while retaining file/line diagnostics. The completed binary scan
+  found no user-profile or source-checkout path.
+- Tightened the Elden Ring-only plugin allowlist to reject nested game modules
+  and removed the unused psutil test suite from release payloads. Complete and
+  Isolated now share a verified core; the isolated installer excludes the
+  unrelated S.T.A.L.K.E.R. stub and contains only approved Elden Ring modules.
+- Prepared a local v1.0.1 candidate with 1,300 Complete files and 1,200
+  Elden Ring Isolated files. Both installers pass manifest, embedded-resource,
+  and checksum verification. Neither was launched, the game was not started,
+  and GitHub was not updated pending user review.
+
 ## Windows display scaling note
 
 A difference between the laptop's 125% scaling and the external monitor's
@@ -90,3 +129,30 @@ A difference between the laptop's 125% scaling and the external monitor's
 screens. Setting both displays to 100% returned the windows to the expected
 size. This was a Windows display setting change and is not included in the
 application binaries.
+
+## Save-recovery manifest hardening — October 9, 2026
+
+- The final source pass found that `Path("..").name` is still `".."`, so the
+  previous single-component check could accept a parent-directory entry in a
+  recovery manifest. Recovery now validates the manifest object, directory
+  list, every path component, and duplicate names before moving any save
+  folder.
+- Added a temporary-directory harness for normal restoration, preservation of
+  unexpected game output, recovery when a crash leaves no manifest, and
+  rejection of malformed, traversal, drive-relative, and duplicate entries.
+- The harness passes, and Complete and Elden Ring Isolated contain the same
+  updated game plugin. The new local candidate remains unpublished pending
+  user review and live UI checks.
+
+## Save-recovery destination validation — October 9, 2026
+
+- Recovery now also requires a non-empty string destination in the manifest
+  and verifies that its normalized absolute path matches the current Elden
+  Ring save folder. Missing, blank, malformed, or different destinations fail
+  closed before a folder is created or moved.
+- Extended the temporary recovery harness to verify missing, empty, whitespace,
+  non-string, and mismatched destinations. These cases preserve the quarantined
+  save and do not create or modify the global save folder.
+- The Save Isolation and MO2 runtime-route harnesses pass again, and both save
+  plugin files parse. Candidate r3 build and payload checks are recorded in the
+  release audit; live UI persistence and visual review remain outstanding.

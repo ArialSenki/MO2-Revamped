@@ -44,24 +44,9 @@ class QProgressDialog;
 class Settings;
 
 /**
- * @brief manages updates for Mod Organizer itself
- * This class is used to update the Mod Organizer
- * The process looks like this:
- * 1. call testForUpdate() to determine is available
- * 2. if the updateAvailable() signal is received, allow the user to start the update
- * 3. if the user start the update, call startUpdate()
- * 4. startUpdate() will first query a list of files, try to determine if there is an
- *    incremental update. If not, the user will have to confirm the download of a full
- *download. Once the correct file is selected, it is downloaded.
- * 5. before the downloaded file is extracted, existing files that are going to be
- *replaced are moved to "update_backup" on because files that are currently open can't
- *be replaced.
- * 6. the update is extracted and then deleted
- * 7. finally, a restart is requested via signal.
- * 8. at restart, Mod Organizer will remove the update_backup directory since none of
- *the files should now be open
- *
- * @todo use NexusBridge
+ * @brief checks GitHub for newer MO2 Revamped releases
+ * testForUpdate() emits updateAvailable() when a newer release exists. MO2 Revamped
+ * is updated with its own setup, so the UI only links to the release page.
  **/
 class SelfUpdater : public QObject
 {
@@ -90,12 +75,6 @@ public:
   void testForUpdate(const Settings& settings);
 
   /**
-   * @brief start the update process
-   * @note this should not be called if there is no update available
-   **/
-  void startUpdate();
-
-  /**
    * @return current version of Mod Organizer
    **/
   MOBase::VersionInfo getVersion() const { return m_MOVersion; }
@@ -103,51 +82,16 @@ public:
 signals:
 
   /**
-   * @brief emitted if a restart of the client is necessary to complete the update
-   **/
-  void restart();
-
-  /**
    * @brief emitted if an update is available
    **/
   void updateAvailable();
-
-  /**
-   * @brief emitted if a message of the day was received
-   **/
-  void motdAvailable(const QString& motd);
-
-private:
-  void openOutputFile(const QString& fileName);
-  void download(const QString& downloadLink);
-  void installUpdate();
-  void report7ZipError(const QString& errorMessage);
-  void showProgress();
-  void closeProgress();
-
-private slots:
-
-  void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-  void downloadReadyRead();
-  void downloadFinished();
-  void downloadCancel();
 
 private:
   QWidget* m_Parent;
   MOBase::VersionInfo m_MOVersion;
   NexusInterface* m_Interface;
-  QFile m_UpdateFile;
-  QNetworkReply* m_Reply;
-  QProgressDialog* m_Progress{nullptr};
-  bool m_Canceled;
-  int m_Attempts;
 
   GitHub m_GitHub;
-
-  // Map from version to release, in decreasing order (first element is the latest
-  // release):
-  using CandidatesMap = std::map<MOBase::VersionInfo, QJsonObject, std::greater<>>;
-  CandidatesMap m_UpdateCandidates;
 };
 
 #endif  // SELFUPDATER_H

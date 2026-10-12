@@ -56,14 +56,6 @@ public:
   //
   void exploreGame();
 
-  // converts the selected, portable instance to a global one; not implemented
-  //
-  void convertToGlobal();
-
-  // converts the selected, global instance to a portable one; not implemented
-  //
-  void convertToPortable();
-
   // opens the ini of the selected instance in the shell
   //
   void openINI();

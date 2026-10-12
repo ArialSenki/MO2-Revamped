@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>820</width>
-    <height>592</height>
+    <width>1000</width>
+    <height>740</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -476,7 +476,7 @@
        <item>
         <widget class="QLabel" name="themePageSubtitle">
          <property name="text">
-          <string>Choose Light or Dark, then customize the highlights used for mod conflicts and selected plugins.</string>
+          <string>Choose Light, Dark Blue, or Dark Black, then customize the highlights used for mod conflicts and selected plugins.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -734,6 +734,19 @@ If you disable this feature, MO will only display official DLCs this way. Please
                </property>
               </widget>
              </item>
+             <item>
+              <spacer name="modListDisplayBottomSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
             </layout>
            </widget>
           </item>
@@ -785,6 +798,19 @@ If you disable this feature, MO will only display official DLCs this way. Please
                </property>
               </widget>
              </item>
+             <item>
+              <spacer name="modListWorkflowBottomSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
             </layout>
            </widget>
           </item>
@@ -835,7 +861,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
           <item>
            <layout class="QGridLayout" name="gridLayout_9">
             <property name="verticalSpacing">
-             <number>9</number>
+             <number>6</number>
             </property>
             <item row="5" column="1">
              <widget class="QCheckBox" name="collapsibleSeparatorsHighlightToBox">
@@ -909,6 +935,12 @@ If you disable this feature, MO will only display official DLCs this way. Please
             </item>
             <item row="8" column="1" colspan="2">
              <widget class="QWidget" name="widget_4" native="true">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>32</height>
+               </size>
+              </property>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <property name="leftMargin">
                 <number>0</number>
@@ -978,20 +1010,27 @@ If you disable this feature, MO will only display official DLCs this way. Please
               </layout>
              </widget>
             </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="collapsibleSeparatorsProfilesLabel">
+              <property name="text">
+               <string>Profiles</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1" colspan="2">
+             <widget class="QCheckBox" name="collapsibleSeparatorsPerProfileBox">
+              <property name="toolTip">
+               <string>Do not share the collapse/expanded state of separators between profiles.</string>
+              </property>
+              <property name="whatsThis">
+               <string>Do not share the collapse/expanded state of separators between profiles.</string>
+              </property>
+              <property name="text">
+               <string>Keep separator collapse state per profile</string>
+              </property>
+             </widget>
+            </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="collapsibleSeparatorsPerProfileBox">
-            <property name="toolTip">
-             <string>Do not share the collapse/expanded state of separators between profiles.</string>
-            </property>
-            <property name="whatsThis">
-             <string>Do not share the collapse/expanded state of separators between profiles.</string>
-            </property>
-            <property name="text">
-             <string>Keep separator collapse state per profile</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </widget>
@@ -1004,7 +1043,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+          <height>8</height>
           </size>
          </property>
         </spacer>
@@ -1459,10 +1498,6 @@ If you disable this feature, MO will only display official DLCs this way. Please
                    </property>
                    <property name="text">
                     <string>Disconnect from Nexus</string>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/MO/gui/edit_clear</normaloff>:/MO/gui/edit_clear</iconset>
                    </property>
                   </widget>
                  </item>
@@ -2320,7 +2355,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
               </item>
               <item>
                <widget class="QWidget" name="customBrowserRow">
-                <layout class="QHBoxLayout" name="customBrowserLayout">
+                <layout class="QVBoxLayout" name="customBrowserLayout">
                  <property name="leftMargin">
                   <number>0</number>
                  </property>
@@ -2350,26 +2385,44 @@ If you disable this feature, MO will only display official DLCs this way. Please
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="browserCommand">
-                   <property name="toolTip">
-                    <string>Browser command with %1 in place of the target URL.</string>
-                   </property>
-                   <property name="statusTip">
-                    <string>Use %1 as the URL placeholder in the browser command.</string>
-                   </property>
-                   <property name="whatsThis">
-                    <string>Browser command with %1 in place of the target URL.</string>
-                   </property>
-                   <property name="placeholderText">
-                    <string>Browser command (%1 = URL)</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QToolButton" name="browseCustomBrowser">
-                   <property name="text">
-                    <string>Browse</string>
-                   </property>
+                  <widget class="QWidget" name="browserCommandRow">
+                   <layout class="QHBoxLayout" name="browserCommandLayout">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QLineEdit" name="browserCommand">
+                      <property name="toolTip">
+                       <string>Browser command with %1 in place of the target URL.</string>
+                      </property>
+                      <property name="statusTip">
+                       <string>Use %1 as the URL placeholder in the browser command.</string>
+                      </property>
+                      <property name="whatsThis">
+                       <string>Browser command with %1 in place of the target URL.</string>
+                      </property>
+                      <property name="placeholderText">
+                       <string>Browser command (%1 = URL)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="browseCustomBrowser">
+                      <property name="text">
+                       <string>Browse</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
                  </item>
                 </layout>
@@ -2432,10 +2485,6 @@ If you disable this feature, MO will only display official DLCs this way. Please
                 </property>
                 <property name="text">
                  <string>Back-date BSA archives</string>
-                </property>
-                <property name="icon">
-                 <iconset>
-                  <normaloff>:/MO/gui/resources/emblem-readonly.png</normaloff>:/MO/gui/resources/emblem-readonly.png</iconset>
                 </property>
                </widget>
               </item>

@@ -9,6 +9,35 @@ mo2_configure_executable(organizer
 		uibase githubpp bsatk esptk archive usvfs lootcli boost::program_options
 		DirectXTex libbsarch Qt::WebEngineWidgets Qt::WebSockets)
 
+# Keep user-specific source paths out of Release binaries. MSVC 19.30+ requires
+# deterministic compilation for /pathmap to affect __FILE__ strings.
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1930)
+	file(TO_CMAKE_PATH "$ENV{USERPROFILE}" MO2_USER_PROFILE_PATH)
+	file(TO_CMAKE_PATH "${PROJECT_SOURCE_DIR}" MO2_PROJECT_SOURCE_PATH)
+	# Map the project root first because it is nested under the user profile.
+	if(NOT MO2_PROJECT_SOURCE_PATH STREQUAL "")
+		target_compile_options(organizer PRIVATE
+			"$<$<CONFIG:Release>:/pathmap:${MO2_PROJECT_SOURCE_PATH}=MO2_SOURCE>")
+	endif()
+	# Third-party headers are compiled into organizer too. Map the shared
+	# dependency checkout before the broader user-profile mapping below.
+	if(BOOST_ROOT)
+		get_filename_component(MO2_DEPENDENCY_BUILD_ROOT "${BOOST_ROOT}" DIRECTORY)
+		file(TO_CMAKE_PATH "${MO2_DEPENDENCY_BUILD_ROOT}" MO2_DEPENDENCY_BUILD_PATH)
+		if(NOT MO2_DEPENDENCY_BUILD_PATH STREQUAL "")
+			target_compile_options(organizer PRIVATE
+				"$<$<CONFIG:Release>:/pathmap:${MO2_DEPENDENCY_BUILD_PATH}=MO2_DEPS>")
+		endif()
+	endif()
+	if(NOT MO2_USER_PROFILE_PATH STREQUAL "")
+		target_compile_options(organizer PRIVATE
+			"$<$<CONFIG:Release>:/experimental:deterministic>"
+			"$<$<CONFIG:Release>:/pathmap:${MO2_USER_PROFILE_PATH}=MO2_USER>")
+	endif()
+	target_link_options(organizer PRIVATE
+		"$<$<CONFIG:Release>:/PDBALTPATH:%_PDB%>")
+endif()
+
 # Allow the fork release build to use an official, newer USVFS package without
 # replacing the dependency cache used by other MO2 builds on this machine.
 set(MO2_USVFS_OVERRIDE_ROOT "" CACHE PATH "Optional USVFS release package root")
@@ -48,8 +77,13 @@ install(FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Classic Refined - Dark.qss"
 	DESTINATION bin/stylesheets
 	RENAME dark.qss)
+install(FILES
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Classic Refined - Dark Black.qss"
+	DESTINATION bin/stylesheets
+	RENAME dark-black.qss)
 install(DIRECTORY
 	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-classic-refined-light"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-classic-refined-black"
 	DESTINATION bin/stylesheets)
 install(DIRECTORY
 	"${CMAKE_CURRENT_SOURCE_DIR}/tutorials"
@@ -69,7 +103,6 @@ mo2_add_filter(NAME src/application GROUPS
 	multiprocess
 	sanitychecks
 	selfupdater
-	updatedialog
 )
 
 mo2_add_filter(NAME src/browser GROUPS
@@ -102,13 +135,11 @@ mo2_add_filter(NAME src/core GROUPS
 mo2_add_filter(NAME src/dialogs GROUPS
 	aboutdialog
 	activatemodsdialog
-	credentialsdialog
 	filedialogmemory
 	forcedloaddialog
 	forcedloaddialogwidget
 	listdialog
 	messagedialog
-	motddialog
 	overwriteinfodialog
 	queryoverwritedialog
 	problemsdialog

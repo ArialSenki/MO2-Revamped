@@ -379,14 +379,17 @@ void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
 
 bool launchFreshProcessAfterRestart()
 {
-  std::vector<wchar_t> modulePath(32768, L'\0');
-  const DWORD modulePathLength = GetModuleFileNameW(
-      nullptr, modulePath.data(), static_cast<DWORD>(modulePath.size()));
-  if (modulePathLength == 0 || modulePathLength >= modulePath.size()) {
-    return false;
+  std::wstring executable =
+      RestartExecutable().replace(QLatin1Char('/'), QLatin1Char('\\')).toStdWString();
+  if (executable.empty()) {
+    std::vector<wchar_t> modulePath(32768, L'\0');
+    const DWORD modulePathLength = GetModuleFileNameW(
+        nullptr, modulePath.data(), static_cast<DWORD>(modulePath.size()));
+    if (modulePathLength == 0 || modulePathLength >= modulePath.size()) {
+      return false;
+    }
+    executable.assign(modulePath.data(), modulePathLength);
   }
-
-  const std::wstring executable(modulePath.data(), modulePathLength);
   std::wstring commandLine = L"\"" + executable + L"\"";
   std::vector<wchar_t> mutableCommandLine(commandLine.begin(), commandLine.end());
   mutableCommandLine.push_back(L'\0');
@@ -593,6 +596,11 @@ int run(int argc, char* argv[])
         const auto r = app.setup(multiProcess, pick);
         writeStartupDiagnosticEvent("application.setup.returned");
         pick         = false;
+
+        if (r == RestartExitCode && !RestartExecutable().isEmpty()) {
+          // handing off to another MO2 copy; it needs this process gone
+          return kFreshProcessRestartExitCode;
+        }
 
         if (r == RestartExitCode || r == ReselectExitCode) {
           // resets things when MO is "restarted"

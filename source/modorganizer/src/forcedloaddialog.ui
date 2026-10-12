@@ -7,16 +7,19 @@
   <property name="windowTitle"><string>Force-load settings</string></property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing"><number>12</number></property>
-   <property name="leftMargin"><number>18</number></property>
+   <property name="leftMargin"><number>16</number></property>
    <property name="topMargin"><number>16</number></property>
-   <property name="rightMargin"><number>18</number></property>
+   <property name="rightMargin"><number>16</number></property>
    <property name="bottomMargin"><number>14</number></property>
    <item>
-    <widget class="QWidget" name="headerPanel" native="true">
+    <widget class="QFrame" name="headerPanel">
+     <property name="minimumSize"><size><width>0</width><height>72</height></size></property>
+     <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+     <property name="frameShadow"><enum>QFrame::Plain</enum></property>
      <layout class="QVBoxLayout" name="headerLayout">
       <property name="spacing"><number>4</number></property>
-      <property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property>
-      <property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
+      <property name="leftMargin"><number>12</number></property><property name="topMargin"><number>8</number></property>
+      <property name="rightMargin"><number>12</number></property><property name="bottomMargin"><number>8</number></property>
       <item><widget class="QLabel" name="titleLabel"><property name="font"><font><pointsize>16</pointsize><weight>600</weight><bold>true</bold></font></property><property name="text"><string>Force-load libraries</string></property></widget></item>
       <item><widget class="QLabel" name="subtitleLabel"><property name="text"><string>Choose which library MO2 loads for each process. Disabled rules stay saved but are not applied.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
      </layout>
@@ -34,6 +37,8 @@
         <property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property>
         <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
         <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+        <property name="alternatingRowColors"><bool>true</bool></property>
+        <property name="showGrid"><bool>false</bool></property>
         <property name="columnCount"><number>1</number></property>
         <attribute name="horizontalHeaderVisible"><bool>false</bool></attribute>
         <attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute>

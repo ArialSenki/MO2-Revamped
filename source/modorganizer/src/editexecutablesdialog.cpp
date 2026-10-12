@@ -24,17 +24,129 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "organizercore.h"
 #include "spawn.h"
 #include "ui_editexecutablesdialog.h"
-#include <QIcon>
 
+#include <QAbstractButton>
+#include <QAction>
+#include <QBoxLayout>
+#include <QFileDialog>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QIcon>
+#include <QLabel>
 #include <QGuiApplication>
+#include <QMenu>
 #include <QMessageBox>
+#include <QPixmap>
+#include <QPushButton>
 #include <QScreen>
+#include <QVBoxLayout>
 #include <Shellapi.h>
 #include <algorithm>
 #include <utility.h>
 
 using namespace MOBase;
 using namespace MOShared;
+
+namespace
+{
+void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
+                            const QString& iconPath,
+                            const QString& iconObjectName, int size)
+{
+  if (layout == nullptr || heading == nullptr) {
+    return;
+  }
+
+  const int index = layout->indexOf(heading);
+  if (index < 0) {
+    return;
+  }
+
+  layout->removeWidget(heading);
+  auto* row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(8);
+
+  auto* icon = new QLabel(heading->parentWidget());
+  icon->setObjectName(iconObjectName);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(size, size);
+  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+
+  row->addWidget(icon, 0, Qt::AlignVCenter);
+  row->addWidget(heading, 1, Qt::AlignVCenter);
+  layout->insertLayout(index, row);
+}
+
+void addExecutableGroupHeading(QGroupBox* group, const QString& text,
+                               const QString& iconPath,
+                               const QString& iconObjectName)
+{
+  if (group == nullptr) {
+    return;
+  }
+
+  auto* layout = qobject_cast<QVBoxLayout*>(group->layout());
+  if (layout == nullptr) {
+    return;
+  }
+
+  group->setTitle(QString());
+  auto* row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(8);
+
+  auto* icon = new QLabel(group);
+  icon->setObjectName(iconObjectName);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(26, 26);
+  const QPixmap pixmap = QIcon(iconPath).pixmap(14, 14);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+
+  auto* heading = new QLabel(text, group);
+  heading->setObjectName("executableSectionTitle");
+  row->addWidget(icon, 0, Qt::AlignVCenter);
+  row->addWidget(heading, 0, Qt::AlignVCenter);
+  row->addStretch(1);
+  layout->insertLayout(0, row);
+}
+
+void styleExecutablePrompt(QMessageBox& prompt,
+                           QMessageBox::StandardButton confirmButton)
+{
+  prompt.setObjectName("revampedExecutableActionPrompt");
+  prompt.setWindowTitle("MO2 Revamped");
+  prompt.setTextFormat(Qt::PlainText);
+
+  if (QLabel* label = prompt.findChild<QLabel*>("qt_msgbox_label")) {
+    label->setWordWrap(true);
+  }
+  if (QLabel* label = prompt.findChild<QLabel*>("qt_msgbox_informativelabel")) {
+    label->setWordWrap(true);
+  }
+
+  if (QAbstractButton* button = prompt.button(confirmButton)) {
+    button->setObjectName("executablePromptPrimaryButton");
+  }
+  if (QAbstractButton* button = prompt.button(QMessageBox::Cancel)) {
+    button->setObjectName("executablePromptCancelButton");
+  }
+}
+
+void showExecutableNotice(QWidget* parent, QMessageBox::Icon icon,
+                          const QString& heading, const QString& details)
+{
+  QMessageBox prompt(icon, "MO2 Revamped", heading, QMessageBox::Ok, parent);
+  prompt.setInformativeText(details);
+  styleExecutablePrompt(prompt, QMessageBox::Ok);
+  prompt.exec();
+}
+}  // namespace
 
 class IgnoreChanges
 {
@@ -60,13 +172,43 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
       m_executablesList(*oc.executablesList()), m_settingUI(false)
 {
   ui->setupUi(this);
-  ui->add->setIcon(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"));
+  addCircularHeadingIcon(ui->headerLayout, ui->dialogHeading,
+                         ":/MO/gui/mainwindow/executables.svg",
+                         "executableHeaderIcon", 32);
+  addExecutableGroupHeading(
+      ui->launchGroup, tr("Program"),
+      ":/MO/gui/mainwindow/files/executable.svg", "executableProgramIcon");
+  addExecutableGroupHeading(
+      ui->optionsGroup, tr("Optional launch behaviour"),
+      ":/MO/gui/mainwindow/settings.svg", "executableOptionsIcon");
+  ui->add->setIcon(QIcon(":/MO/gui/mainwindow/action-add-light.svg"));
   ui->add->setIconSize(QSize(16, 16));
+
+  // Tool buttons keep their size hint by default; let both action rows span
+  // the list width evenly instead of leaving uneven gaps.
+  for (QToolButton* button : {ui->add, ui->remove, ui->up, ui->down, ui->reset}) {
+    button->setSizePolicy(QSizePolicy::Expanding, button->sizePolicy().verticalPolicy());
+    button->setIconSize(QSize(16, 16));
+  }
+  if (ui->actionsSpacer != nullptr) {
+    ui->orderActionsLayout->removeItem(ui->actionsSpacer);
+    delete ui->actionsSpacer;
+    ui->actionsSpacer = nullptr;
+  }
   ui->browseBinary->setIcon(QIcon(":/MO/gui/mainwindow/files/executable.svg"));
   ui->browseWorkingDirectory->setIcon(
       QIcon(":/MO/gui/mainwindow/files/folder.svg"));
   ui->configureLibraries->setIcon(
       QIcon(":/MO/gui/mainwindow/files/library.svg"));
+  if (auto* button = ui->buttons->button(QDialogButtonBox::Ok)) {
+    button->setObjectName("executableAcceptButton");
+  }
+  if (auto* button = ui->buttons->button(QDialogButtonBox::Apply)) {
+    button->setObjectName("executableApplyButton");
+  }
+  if (auto* button = ui->buttons->button(QDialogButtonBox::Cancel)) {
+    button->setObjectName("executableCancelButton");
+  }
   ui->splitter->setSizes({265, 1});
   ui->splitter->setStretchFactor(0, 0);
   ui->splitter->setStretchFactor(1, 1);
@@ -97,16 +239,19 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
     selectIndex(sel);
   }
 
-  auto* m = new QMenu;
-  m->addAction(tr("Add from file..."), [&] {
-    addFromFile();
-  });
-  m->addAction(tr("Add empty"), [&] {
-    addEmpty();
-  });
-  m->addAction(tr("Clone selected"), [&] {
-    clone();
-  });
+  auto* m = new QMenu(ui->add);
+  m->setObjectName("executableAddMenu");
+  auto* addFromFileAction = m->addAction(tr("Add from file..."));
+  auto* addEmptyAction    = m->addAction(tr("Add empty"));
+  auto* cloneAction       = m->addAction(tr("Clone selected"));
+  cloneAction->setEnabled(selectedExe() != nullptr);
+  connect(addFromFileAction, &QAction::triggered, this,
+          [this]() { addFromFile(); });
+  connect(addEmptyAction, &QAction::triggered, this,
+          [this]() { addEmpty(); });
+  connect(cloneAction, &QAction::triggered, this, [this]() { clone(); });
+  connect(ui->list, &QListWidget::itemSelectionChanged, cloneAction,
+          [this, cloneAction]() { cloneAction->setEnabled(selectedExe() != nullptr); });
   ui->add->setMenu(m);
 
   // some widgets need to do more than just save() and have their own handler
@@ -238,15 +383,17 @@ bool EditExecutablesDialog::checkOutputMods(const ExecutablesList& exes)
 
     if (modName && modName->enabled) {
       if (modName->value.isEmpty()) {
-        QMessageBox::critical(this, tr("Empty output mod"),
-                              tr("The output mod for %2 is empty.").arg(e.title()));
+        showExecutableNotice(
+            this, QMessageBox::Warning, tr("Output mod is empty"),
+            tr("Output-mod routing is enabled for \"%1\", but no mod is selected.")
+                .arg(e.title()));
 
         return false;
       } else if (ModInfo::getIndex(modName->value) == UINT_MAX) {
-        QMessageBox::critical(this, tr("Output mod not found"),
-                              tr("The output mod '%1' for %2 does not exist.")
-                                  .arg(modName->value)
-                                  .arg(e.title()));
+        showExecutableNotice(
+            this, QMessageBox::Warning, tr("Output mod not found"),
+            tr("The mod \"%1\" assigned to \"%2\" does not exist.")
+                .arg(modName->value, e.title()));
 
         return false;
       }
@@ -590,16 +737,20 @@ void EditExecutablesDialog::on_list_itemSelectionChanged()
 
 void EditExecutablesDialog::on_reset_clicked()
 {
-  const auto title = tr("Reset plugin executables");
+  QMessageBox prompt(QMessageBox::Question, "MO2 Revamped",
+                     tr("Restore the game-provided executables?"),
+                     QMessageBox::Ok | QMessageBox::Cancel, this);
+  prompt.setInformativeText(
+      tr("MO2 will add the executables supplied by the game plugin. Existing "
+         "entries with matching names will be renamed and kept."));
+  styleExecutablePrompt(prompt, QMessageBox::Ok);
+  if (QAbstractButton* button = prompt.button(QMessageBox::Ok)) {
+    button->setText(tr("Restore"));
+  }
+  prompt.setDefaultButton(QMessageBox::Cancel);
+  prompt.setEscapeButton(QMessageBox::Cancel);
 
-  const auto text =
-      tr("This will restore all the executables provided by the game plugin. If "
-         "there are existing executables with the same names, they will be "
-         "automatically renamed and left unchanged.");
-
-  const auto buttons = QMessageBox::Ok | QMessageBox::Cancel;
-
-  if (QMessageBox::question(this, title, text, buttons) != QMessageBox::Ok) {
+  if (prompt.exec() != QMessageBox::Ok) {
     return;
   }
 
@@ -836,7 +987,8 @@ void EditExecutablesDialog::on_browseWorkingDirectory_clicked()
 {
   QString dirName = FileDialogMemory::getExistingDirectory(
       "editExecutableDirectory", this, tr("Select a directory"),
-      ui->workingDirectory->text());
+      ui->workingDirectory->text(),
+      QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
 
   if (dirName.isNull()) {
     // cancelled
@@ -885,7 +1037,8 @@ QFileInfo EditExecutablesDialog::browseBinary(const QString& initial)
       tr("Executables (*.exe *.bat *.jar)") + ";;" + tr("All Files (*.*)");
 
   const auto f = FileDialogMemory::getOpenFileName(
-      "editExecutableBinary", this, tr("Select an executable"), initial, Filters);
+      "editExecutableBinary", this, tr("Select an executable"), initial, Filters,
+      nullptr, QFileDialog::DontUseNativeDialog);
 
   if (f.isNull()) {
     return {};
@@ -899,11 +1052,10 @@ void EditExecutablesDialog::setJarBinary(const QFileInfo& binary)
   auto java = spawn::findJavaInstallation(binary.absoluteFilePath());
 
   if (java.isEmpty()) {
-    QMessageBox::information(
-        this, tr("Java required"),
-        tr("MO requires Java to run this application. If you already "
-           "have it installed, select javaw.exe from that installation as "
-           "the binary."));
+    showExecutableNotice(
+        this, QMessageBox::Information, tr("Java is required"),
+        tr("MO needs Java to launch this JAR. If Java is already installed, "
+           "browse to its javaw.exe file and select it as the binary."));
   }
 
   {

@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "moapplication.h"
+#include "revampedtheme.h"
 #include "commandline.h"
 #include "instancemanager.h"
 #include "loglist.h"
@@ -27,6 +28,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "organizercore.h"
+#include "revampedprompts.h"
 #include "sanitychecks.h"
 #include "settings.h"
 #include "shared/appconfig.h"
@@ -37,6 +39,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractItemView>
 #include <QColor>
 #include <QDebug>
+#include <QDialog>
 #include <QEvent>
 #include <QFile>
 #include <QFileInfo>
@@ -50,6 +53,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <QRectF>
 #include <QRegion>
+#include <QScreen>
 #include <QStyle>
 #include <QStyleHintReturnMask>
 #include <QVariant>
@@ -85,6 +89,61 @@ namespace
 {
 
 void applyNativeTitleBarTheme(QWidget* window, const QString& styleName);
+
+// Several dialogs request a generous default size or restore a saved one. On
+// 768p displays, at 150% scaling, or after moving to a smaller monitor, those
+// sizes would push the button row below the taskbar. Shrink the dialog (and its
+// minimum) to the work area and keep the whole frame on screen.
+void fitDialogToAvailableScreen(QDialog* dialog)
+{
+  if (dialog->windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
+    return;
+  }
+
+  QScreen* screen = QGuiApplication::screenAt(dialog->geometry().center());
+  if (screen == nullptr) {
+    screen = dialog->screen();
+  }
+  if (screen == nullptr) {
+    return;
+  }
+
+  const QRect available = screen->availableGeometry();
+
+  // The native frame is unknown before the first show; reserve room for a
+  // standard Windows title bar and borders.
+  QSize frame = dialog->frameGeometry().size() - dialog->geometry().size();
+  if (frame.width() <= 0 || frame.height() <= 0) {
+    frame = QSize(16, 39);
+  }
+
+  const QSize maxSize(qMax(320, available.width() - frame.width()),
+                      qMax(240, available.height() - frame.height()));
+
+  if (dialog->minimumWidth() > maxSize.width() ||
+      dialog->minimumHeight() > maxSize.height()) {
+    dialog->setMinimumSize(dialog->minimumSize().boundedTo(maxSize));
+  }
+
+  const QSize current = dialog->size();
+  const QSize fitted  = current.boundedTo(maxSize);
+  QPoint position     = dialog->pos();
+  if (fitted != current) {
+    dialog->resize(fitted);
+    // Keep the dialog centred where Qt placed it.
+    position += QPoint((current.width() - fitted.width()) / 2,
+                       (current.height() - fitted.height()) / 2);
+  }
+
+  const QSize outer = dialog->size() + frame;
+  position.setX(qBound(available.left(), position.x(),
+                       qMax(available.left(), available.right() - outer.width() + 1)));
+  position.setY(qBound(available.top(), position.y(),
+                       qMax(available.top(), available.bottom() - outer.height() + 1)));
+  if (position != dialog->pos()) {
+    dialog->move(position);
+  }
+}
 
 class ItemViewSelectionHighlightFilter final : public QObject
 {
@@ -261,28 +320,17 @@ private:
       return;
     }
 
-    // The official themes use this property to distinguish the active view's
-    // selected row from selections that remain in the other panes.
-    const QVariant selectionState = view->property("selectionHighlightActive");
-    if (!selectionState.isValid() || selectionState.toBool() != active) {
-      view->setProperty("selectionHighlightActive", active);
-      QStyle* style = view->style();
-      style->unpolish(view);
-      style->polish(view);
-    }
-
-    // Keep the existing row brush and let the Fusion style blend this alpha
-    // highlight over it. Inactive selections keep their model state but paint
-    // no selection fill.
-    const QColor highlight = active ? QColor(75, 146, 198, 82)
+    // Update the view palette directly. Re-polishing a view when focus moves
+    // can invalidate Qt's item-view internals while switching between lists.
+    // The per-view palette keeps selection local and preserves each row brush.
+    const QColor highlight = active ? MOBase::RevampedTheme::accent(QColor(75, 146, 198, 82))
                                     : QColor(0, 0, 0, 0);
-    const QColor highlightedText = active ? QColor(24, 62, 95)
-                                          : QColor(41, 56, 71);
     QPalette palette = view->palette();
     for (QPalette::ColorGroup group :
          {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
       palette.setColor(group, QPalette::Highlight, highlight);
-      palette.setColor(group, QPalette::HighlightedText, highlightedText);
+      palette.setColor(group, QPalette::HighlightedText,
+                       palette.color(group, QPalette::Text));
     }
     view->setPalette(palette);
     view->viewport()->setPalette(palette);
@@ -463,6 +511,11 @@ OrganizerCore& MOApplication::core()
 
 void MOApplication::firstTimeSetup(MOMultiProcess& multiProcess)
 {
+  // Instance selection and the creation wizard are shown before an instance's
+  // own settings are available. Use the bundled Revamped default for those
+  // startup dialogs; setup() will apply the selected instance's saved theme.
+  setStyleFile(Settings::defaultInterfaceStyleName());
+
   connect(
       &multiProcess, &MOMultiProcess::messageSent, this,
       [this](auto&& s) {
@@ -480,6 +533,12 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   // makes plugin data path available to plugins, see
   // IOrganizer::getPluginDataPath()
   MOBase::details::setPluginDataPath(OrganizerCore::pluginDataPath());
+
+  // the instance dialogs below run before any instance settings are loaded;
+  // show them in the language that was last chosen
+  if (const QString language = GlobalSettings::language(); !language.isEmpty()) {
+    InstallLanguageTranslators(language);
+  }
 
   // figuring out the current instance
   m_instance = getCurrentInstance(forceSelect);
@@ -534,6 +593,8 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
     selectedStyle = "Light.qss";
   } else if (configuredStyle.compare("dark.qss", Qt::CaseInsensitive) == 0) {
     selectedStyle = "dark.qss";
+  } else if (configuredStyle.compare("dark-black.qss", Qt::CaseInsensitive) == 0) {
+    selectedStyle = "dark-black.qss";
   } else {
     selectedStyle = Settings::defaultInterfaceStyleName();
   }
@@ -557,7 +618,7 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
                 selectedStyle);
     }
   } else {
-    log::error("Revamped Light and Dark stylesheets are missing from '{}'",
+    log::error("Revamped Light, Dark Blue and Dark Black stylesheets are missing from '{}'",
                stylesheetsPath);
   }
   log::getDefault().setLevel(m_settings->diagnostics().logLevel());
@@ -723,29 +784,23 @@ int MOApplication::run(MOMultiProcess& multiProcess)
       const QString currentTheme = interfaceSettings.styleName().value_or(
           Settings::defaultInterfaceStyleName());
 
-      QMessageBox themeChoice(&mainWindow);
-      themeChoice.setIcon(QMessageBox::Information);
-      themeChoice.setWindowTitle(tr("MO2 Revamped"));
-      themeChoice.setText(tr("Choose a theme for this instance."));
-      themeChoice.setInformativeText(
-          tr("You can change it later in Settings > Theme."));
-
-      auto* lightButton =
-          themeChoice.addButton(tr("Light"), QMessageBox::AcceptRole);
-      auto* darkButton =
-          themeChoice.addButton(tr("Dark"), QMessageBox::AcceptRole);
-      auto* defaultButton =
-          currentTheme == "Light.qss" ? lightButton : darkButton;
-      themeChoice.setDefaultButton(defaultButton);
-      themeChoice.setEscapeButton(defaultButton);
-      themeChoice.exec();
-
-      QString selectedTheme = currentTheme;
-      if (themeChoice.clickedButton() == lightButton) {
-        selectedTheme = "Light.qss";
-      } else if (themeChoice.clickedButton() == darkButton) {
-        selectedTheme = "dark.qss";
-      }
+      const auto currentChoice =
+          currentTheme == "Light.qss" ? RevampedPrompts::ThemeChoice::Light
+          : currentTheme == "dark-black.qss" ? RevampedPrompts::ThemeChoice::DarkBlack
+                                             : RevampedPrompts::ThemeChoice::Dark;
+      const auto selectedChoice = RevampedPrompts::chooseTheme(
+          &mainWindow, tr("MO2 Revamped"),
+          tr("Choose a theme for this instance."),
+          tr("You can change it later in Settings > Theme."), tr("Light"),
+          tr("Dark Blue"), tr("Dark Black"), currentChoice);
+      const QString selectedTheme = !selectedChoice
+                                        ? currentTheme
+                                        : (*selectedChoice ==
+                                                   RevampedPrompts::ThemeChoice::Light
+                                               ? QStringLiteral("Light.qss")
+                                               : (*selectedChoice == RevampedPrompts::ThemeChoice::DarkBlack
+                                                      ? QStringLiteral("dark-black.qss")
+                                                      : QStringLiteral("dark.qss")));
 
       if (selectedTheme != currentTheme) {
         interfaceSettings.setStyleName(selectedTheme);
@@ -1089,6 +1144,7 @@ bool MOApplication::setStyleFile(const QString& styleName)
     }
   } else {
     setStyle(new ProxyStyle(QStyleFactory::create(m_defaultStyle)));
+    m_activeBaseStyle = m_defaultStyle;
     setStyleSheet("");
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
@@ -1097,6 +1153,13 @@ bool MOApplication::setStyleFile(const QString& styleName)
 
 bool MOApplication::notify(QObject* receiver, QEvent* event)
 {
+  if (event->type() == QEvent::Show && !event->spontaneous()) {
+    if (auto* dialog = qobject_cast<QDialog*>(receiver);
+        dialog != nullptr && dialog->isWindow()) {
+      fitDialogToAvailableScreen(dialog);
+    }
+  }
+
   if (event->type() == QEvent::Show) {
     // Qt implements menus, combo-box lists, completers, and tooltips as
     // separate top-level windows. Apply rounded native corners to both popup
@@ -1223,14 +1286,45 @@ QString extractBaseStyleFromStyleSheet(QFile& stylesheet, const QString& default
 
 void MOApplication::updateStyle(const QString& fileName)
 {
+  setProperty("revampedDarkBlack",
+              QFileInfo(fileName).fileName().compare("dark-black.qss", Qt::CaseInsensitive) == 0);
+  const auto applyBaseStyle = [this](const QString& baseStyleName) {
+    if (m_activeBaseStyle.compare(baseStyleName, Qt::CaseInsensitive) == 0) {
+      return;
+    }
+
+    setStyle(new ProxyStyle(QStyleFactory::create(baseStyleName)));
+    m_activeBaseStyle = baseStyleName;
+  };
+
   if (QStyleFactory::keys().contains(fileName)) {
     setStyleSheet("");
-    setStyle(new ProxyStyle(QStyleFactory::create(fileName)));
+    applyBaseStyle(fileName);
   } else {
     QFile stylesheet(fileName);
     if (stylesheet.exists()) {
-      setStyle(new ProxyStyle(QStyleFactory::create(
-          extractBaseStyleFromStyleSheet(stylesheet, m_defaultStyle))));
+      applyBaseStyle(
+          extractBaseStyleFromStyleSheet(stylesheet, m_defaultStyle));
+      QPalette themePalette = style()->standardPalette();
+      if (MOBase::RevampedTheme::isBlack()) {
+        themePalette.setColor(QPalette::Window, QColor("#242424"));
+        themePalette.setColor(QPalette::WindowText, QColor("#D3D3D3"));
+        themePalette.setColor(QPalette::Base, QColor("#202020"));
+        themePalette.setColor(QPalette::AlternateBase, QColor("#272727"));
+        themePalette.setColor(QPalette::Text, QColor("#D3D3D3"));
+        themePalette.setColor(QPalette::Button, QColor("#2A2A2A"));
+        themePalette.setColor(QPalette::ButtonText, QColor("#E0E0E0"));
+        themePalette.setColor(QPalette::Highlight, QColor("#454545"));
+        themePalette.setColor(QPalette::HighlightedText, QColor("#FFFFFF"));
+        themePalette.setColor(QPalette::Link, QColor("#D0D0D0"));
+        themePalette.setColor(QPalette::LinkVisited, QColor("#B0B0B0"));
+        themePalette.setColor(QPalette::ToolTipBase, QColor("#2A2A2A"));
+        themePalette.setColor(QPalette::ToolTipText, QColor("#E0E0E0"));
+        for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
+          themePalette.setColor(QPalette::Disabled, role, QColor("#909090"));
+        }
+      }
+      setPalette(themePalette);
       setStyleSheet(QString("file:///%1").arg(fileName));
     } else {
       log::warn("invalid stylesheet: {}", fileName);

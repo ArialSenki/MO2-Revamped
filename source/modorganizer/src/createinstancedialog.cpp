@@ -18,7 +18,10 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QIcon>
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QPixmap>
 #include <QSet>
 #include <QSize>
 #include <QSizePolicy>
@@ -33,6 +36,38 @@ class Failed
 {};
 
 namespace {
+
+void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
+                            const QString& iconPath,
+                            const QString& iconObjectName, int size)
+{
+  if (layout == nullptr || heading == nullptr) {
+    return;
+  }
+
+  const int index = layout->indexOf(heading);
+  if (index < 0) {
+    return;
+  }
+
+  layout->removeWidget(heading);
+  auto* row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(8);
+
+  auto* icon = new QLabel(heading->parentWidget());
+  icon->setObjectName(iconObjectName);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(size, size);
+  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+
+  row->addWidget(icon, 0, Qt::AlignVCenter);
+  row->addWidget(heading, 1, Qt::AlignVCenter);
+  layout->insertLayout(index, row);
+}
 
 void compactVerticalSpacers(QLayout* layout)
 {
@@ -217,8 +252,34 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   using namespace cid;
 
   ui->setupUi(this);
-  setMinimumSize(760, 480);
-  resize(820, 520);
+  addCircularHeadingIcon(ui->horizontalLayout_15, ui->title,
+                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+                         QStringLiteral("instanceWizardHeaderIcon"), 32);
+  addCircularHeadingIcon(ui->verticalLayout_6, ui->label_2,
+                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+                         QStringLiteral("instanceTypeIcon"), 28);
+  addCircularHeadingIcon(ui->gameSelectionHeaderLayout, ui->label_3,
+                         QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
+                         QStringLiteral("instanceGameIcon"), 28);
+  addCircularHeadingIcon(ui->verticalLayout_18, ui->label_4,
+                         QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
+                         QStringLiteral("instanceEditionIcon"), 28);
+  addCircularHeadingIcon(ui->horizontalLayout_4, ui->instanceNameLabel,
+                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+                         QStringLiteral("instanceNameIcon"), 28);
+  addCircularHeadingIcon(ui->horizontalLayout_8, ui->profileSettingsLabel,
+                         QStringLiteral(":/MO/gui/mainwindow/profile.svg"),
+                         QStringLiteral("instanceProfileIcon"), 28);
+  addCircularHeadingIcon(ui->verticalLayout_10, ui->label_5,
+                         QStringLiteral(":/MO/gui/mainwindow/explore-virtual-folder.svg"),
+                         QStringLiteral("instancePathsIcon"), 28);
+  addCircularHeadingIcon(ui->verticalLayout_29, ui->label_7,
+                         QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
+                         QStringLiteral("instanceNexusIcon"), 28);
+  addCircularHeadingIcon(ui->verticalLayout_24, ui->label_16,
+                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+                         QStringLiteral("instanceReviewIcon"), 28);
+  setFixedSize(820, 700);
   m_originalNext = ui->next->text();
 
   m_pages.push_back(std::make_unique<IntroPage>(*this));
@@ -231,10 +292,15 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   m_pages.push_back(std::make_unique<NexusPage>(*this));
   m_pages.push_back(std::make_unique<ConfirmationPage>(*this));
 
-  ui->verticalLayout_15->setContentsMargins(12, 10, 12, 10);
+  if (QLayout* dialogLayout = layout()) {
+    dialogLayout->setContentsMargins(10, 8, 10, 8);
+    dialogLayout->setSpacing(8);
+  }
+  ui->verticalLayout_15->setContentsMargins(12, 8, 12, 8);
   ui->verticalLayout_15->setSpacing(8);
-  ui->horizontalLayout_15->setSpacing(12);
-  ui->horizontalLayout->setContentsMargins(12, 8, 12, 8);
+  ui->horizontalLayout_15->setContentsMargins(0, 0, 0, 0);
+  ui->horizontalLayout_15->setSpacing(10);
+  ui->horizontalLayout->setContentsMargins(10, 6, 10, 6);
   ui->horizontalLayout->setSpacing(8);
   ui->title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
   ui->stepIndicator->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -245,12 +311,13 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   ui->back->setMinimumHeight(34);
   ui->next->setMinimumHeight(34);
   ui->cancel->setMinimumHeight(34);
-  ui->verticalLayout_23->setContentsMargins(12, 12, 12, 12);
-  ui->verticalLayout_23->setSpacing(10);
-  ui->horizontalLayout_5->setContentsMargins(10, 6, 10, 6);
-  ui->horizontalLayout_5->setSpacing(8);
-  ui->review->setMinimumHeight(280);
-  ui->review->setMaximumHeight(320);
+  ui->verticalLayout_23->setContentsMargins(8, 8, 8, 8);
+  ui->verticalLayout_23->setSpacing(8);
+  ui->verticalLayout_11->setContentsMargins(0, 0, 0, 0);
+  ui->horizontalLayout_5->setContentsMargins(8, 4, 8, 4);
+  ui->horizontalLayout_5->setSpacing(6);
+  ui->review->setMinimumHeight(180);
+  ui->review->setMaximumHeight(240);
   ui->review->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   ui->review->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
   ui->creationLog->setMinimumHeight(72);
@@ -262,7 +329,8 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   ui->launch->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
   if (QBoxLayout* nameCardLayout =
           qobject_cast<QBoxLayout*>(ui->widget_9->layout())) {
-    nameCardLayout->setSpacing(8);
+    nameCardLayout->setContentsMargins(0, 0, 0, 0);
+    nameCardLayout->setSpacing(6);
     if (ui->verticalSpacer_2 != nullptr) {
       nameCardLayout->removeItem(ui->verticalSpacer_2);
       delete ui->verticalSpacer_2;
@@ -270,14 +338,13 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
     }
   }
 
-  // Keep each step on the same responsive content grid. The page can grow
-  // with the window, which gives game paths and advanced directory fields
-  // enough room without centering controls in a narrow fixed-width column.
+  // Keep a shared content grid while sizing each step around its actual
+  // controls. Scrollable pages can still grow when they have more content.
   for (int i = 0; i < ui->pages->count(); ++i) {
     QWidget* page = ui->pages->widget(i);
     if (QLayout* pageLayout = page->layout()) {
-      pageLayout->setContentsMargins(20, 16, 20, 16);
-      pageLayout->setSpacing(14);
+      pageLayout->setContentsMargins(12, 8, 12, 8);
+      pageLayout->setSpacing(8);
       compactVerticalSpacers(pageLayout);
       const bool compactContentPage = page == ui->page_6 || page == ui->page_8;
       const auto hasVisibleChoice = [page](const char* objectName) {
@@ -313,7 +380,9 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
           if (content->layout() != nullptr) {
             compactVerticalSpacers(content->layout());
             content->layout()->setSpacing(
-                qMax(content->layout()->spacing(), 12));
+                content->objectName() == QStringLiteral("widget_9")
+                    ? 6
+                    : qMax(content->layout()->spacing(), 8));
           }
           // Keep scrollable panels stretched with the current page. AlignTop
           // overrides an expanding size policy and leaves the game list
@@ -354,6 +423,7 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
           if (QBoxLayout* choicesLayout =
                   qobject_cast<QBoxLayout*>(choices->layout())) {
             choicesLayout->setContentsMargins(0, 0, 0, 0);
+            choicesLayout->setSpacing(6);
             for (const auto* objectName : {"createGlobal", "createPortable",
                                            "createIsolated"}) {
               if (QCommandLinkButton* choice = page->findChild<QCommandLinkButton*>(
@@ -405,8 +475,8 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   }
 
   // Pages can reveal game-specific controls after they are constructed.
-  // Keep enough width for the widest page. Short steps retain the compact
-  // dialog height; scrollable pages can use the available vertical space.
+  // Keep enough width for the widest page without changing the shared window
+  // size between steps.
   QSize largestPageSize;
   for (int i = 0; i < ui->pages->count(); ++i) {
     QWidget* page = ui->pages->widget(i);
@@ -724,9 +794,17 @@ void CreateInstanceDialog::finish()
     // launch the new instance
     if (ui->launch->isChecked()) {
       if (ci.type == Isolated) {
-        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(ci.dataPath))) {
-          logCreation(tr("Could not open the isolated copy folder: %1")
-                          .arg(ci.dataPath));
+        // The copy cannot start while this MO2 holds the single-instance
+        // lock, so close this one and start the copy's own executable.
+        const QString executable =
+            QDir(ci.dataPath).filePath(QStringLiteral("ModOrganizer.exe"));
+        SetRestartExecutable(executable);
+        if (ExitModOrganizer(Exit::Restart)) {
+          m_switching = true;
+        } else {
+          SetRestartExecutable(QString());
+          logCreation(tr("Close Mod Organizer, then start the isolated copy: %1")
+                          .arg(QDir::toNativeSeparators(executable)));
         }
       } else {
         InstanceManager::singleton().setCurrentInstance(

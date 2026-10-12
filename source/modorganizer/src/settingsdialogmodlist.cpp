@@ -1,5 +1,6 @@
 #include "settingsdialogmodlist.h"
 #include "categoriesdialog.h"
+#include "circularuihelpers.h"
 #include "colortable.h"
 #include "modlist.h"
 #include "shared/appconfig.h"
@@ -17,6 +18,23 @@ ModListSettingsTab::ModListSettingsTab(Settings& s, SettingsDialog& d)
           {ModList::COL_CONTENT, ui->collapsibleSeparatorsIconsContentsBox},
           {ModList::COL_VERSION, ui->collapsibleSeparatorsIconsVersionBox}}
 {
+  CircularUi::addIconToHeading(
+      ui->modListPageTitle, ":/MO/gui/mainwindow/settings.svg",
+      QStringLiteral("modListPageIcon"), 36, QStringLiteral("M"));
+  CircularUi::addGroupHeading(
+      ui->modListDisplayGroup, ":/MO/gui/mainwindow/filter.svg",
+      QStringLiteral("modListDisplayIcon"), 26,
+      QStringLiteral("modListDisplaySectionTitle"), QStringLiteral("F"));
+  CircularUi::addGroupHeading(
+      ui->modListWorkflowGroup, ":/MO/gui/mainwindow/install.svg",
+      QStringLiteral("modListWorkflowIcon"), 26,
+      QStringLiteral("modListWorkflowSectionTitle"), QStringLiteral("I"));
+  CircularUi::addGroupHeading(
+      ui->collapsibleSeparatorsWidget, ":/MO/gui/contextmenu/collapse.svg",
+      QStringLiteral("collapsibleSeparatorsSectionIcon"), 26,
+      QStringLiteral("collapsibleSeparatorsSectionTitle"),
+      QStringLiteral("S"));
+
   // connect before setting to trigger
   QObject::connect(ui->collapsibleSeparatorsAscBox, &QCheckBox::toggled, [=] {
     updateCollapsibleSeparatorsGroup();
@@ -78,6 +96,14 @@ void ModListSettingsTab::updateCollapsibleSeparatorsGroup()
                        ui->collapsibleSeparatorsDscBox->isChecked();
   for (auto* widget : ui->collapsibleSeparatorsWidget->findChildren<QWidget*>()) {
     widget->setEnabled(checked);
+  }
+  if (auto* sectionTitle = ui->collapsibleSeparatorsWidget->findChild<QWidget*>(
+          QStringLiteral("collapsibleSeparatorsSectionTitle"))) {
+    sectionTitle->setEnabled(true);
+  }
+  if (auto* sectionIcon = ui->collapsibleSeparatorsWidget->findChild<QWidget*>(
+          QStringLiteral("collapsibleSeparatorsSectionIcon"))) {
+    sectionIcon->setEnabled(true);
   }
   ui->collapsibleSeparatorsLabel->setEnabled(true);
   ui->collapsibleSeparatorsAscBox->setEnabled(true);

@@ -6,22 +6,28 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>250</height>
+    <width>540</width>
+    <height>270</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>520</width>
+    <height>220</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Create Profile</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="spacing">
-    <number>9</number>
+    <number>12</number>
    </property>
    <property name="leftMargin">
     <number>16</number>
    </property>
    <property name="topMargin">
-    <number>14</number>
+    <number>16</number>
    </property>
    <property name="rightMargin">
     <number>16</number>
@@ -33,19 +39,19 @@
     <widget class="QWidget" name="profileHeader">
      <layout class="QVBoxLayout" name="profileHeaderLayout">
       <property name="spacing">
-       <number>2</number>
+       <number>4</number>
       </property>
       <property name="leftMargin">
-       <number>2</number>
+       <number>12</number>
       </property>
       <property name="topMargin">
-       <number>0</number>
+       <number>8</number>
       </property>
       <property name="rightMargin">
-       <number>2</number>
+       <number>12</number>
       </property>
       <property name="bottomMargin">
-       <number>0</number>
+       <number>8</number>
       </property>
       <item>
        <widget class="QLabel" name="profilePageTitle">
@@ -142,6 +148,16 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="profileInputDivider">
+     <property name="frameShape">
+      <enum>QFrame::HLine</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
     </widget>
    </item>
    <item>

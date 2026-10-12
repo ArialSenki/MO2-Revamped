@@ -73,6 +73,7 @@ class DirectoryEntry;
 #include <QHeaderView>
 #include <QList>
 #include <QMainWindow>
+#include <QMargins>
 #include <QObject>
 #include <QPersistentModelIndex>
 #include <QProcess>
@@ -158,6 +159,7 @@ public:
 
 public slots:
   void refresherProgress(const DirectoryRefreshProgress* p);
+  void requestRestartFromPlugin();
 
 signals:
   // emitted after the information dialog has been closed, used by tutorials
@@ -202,6 +204,10 @@ private:
   void updatePinnedExecutables();
   void setToolbarSize(const QSize& s);
   void setToolbarButtonStyle(Qt::ToolButtonStyle s);
+  void stabilizeToolbarButtonGeometry(bool recapture);
+  bool m_toolbarButtonGeometryInitialized = false;
+  QMargins m_toolbarContentsMargins;
+  int m_toolbarLayoutSpacing = -1;
 
   void registerModPage(MOBase::IPluginModPage* modPage);
   bool registerNexusPage(const QString& gameName);
@@ -230,7 +236,6 @@ private:
   // Performs checks, sets the m_NumberOfProblems and signals checkForProblemsDone().
   void checkForProblemsImpl();
 
-  bool errorReported(QString& logFile);
 
   static void setupNetworkProxy(bool activate);
   void activateProxy(bool activate);
@@ -250,7 +255,7 @@ private:
 
   void dropLocalFile(const QUrl& url, const QString& outputDir, bool move);
 
-  void toggleMO2EndorseState();
+  void toggleRevampedEndorseState();
 
   void updateSortButton();
 
@@ -306,8 +311,6 @@ private:
 
   QFuture<void> m_MetaSave;
 
-  QTime m_StartTime;
-
   OrganizerCore& m_OrganizerCore;
   PluginContainer& m_PluginContainer;
 
@@ -342,7 +345,6 @@ private slots:
   void showError(const QString& message);
 
   // main window actions
-  void helpTriggered();
   void issueTriggered();
   void revampedRepositoryTriggered();
   void gameSupportTriggered();
@@ -368,8 +370,6 @@ private slots:
 
   void actionEndorseMO();
   void actionWontEndorseMO();
-
-  void motdReceived(const QString& motd);
 
   void originModified(int originID);
 
@@ -401,7 +401,6 @@ private slots:
   void modRemoved(const QString& fileName);
 
   void hookUpWindowTutorials();
-  bool shouldStartTutorial() const;
 
   void openInstanceFolder();
   void openInstallFolder();
@@ -473,7 +472,7 @@ private slots:  // ui slots
   void on_bsaList_customContextMenuRequested(const QPoint& pos);
   void on_executablesListBox_currentIndexChanged(int index);
   void on_profileBox_currentIndexChanged(int index);
-  void on_startButton_clicked();
+  void launchSelectedExecutable();
   void on_tabWidget_currentChanged(int index);
 
   void on_displayCategoriesBtn_toggled(bool checked);

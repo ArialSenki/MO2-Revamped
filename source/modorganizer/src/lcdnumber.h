@@ -27,6 +27,15 @@ public:
   LCDNumber(QWidget* parent = nullptr);
   void mousePressEvent(QMouseEvent* event);
 
+  // QLCDNumber paints its digits across the whole widget and ignores the
+  // stylesheet padding, so a themed border clips the outer digits. Moves the
+  // counter into a frame named "<objectName>Frame" (property lcdFrame=true)
+  // that carries the border and the inner margins instead.
+  void useFrame();
+
+  // calls useFrame() on every LCDNumber below root
+  static void useFrames(QWidget* root);
+
 public slots:
   void showToolTip();
 

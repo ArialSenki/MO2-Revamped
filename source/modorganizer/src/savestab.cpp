@@ -3,6 +3,7 @@
 #include "organizercore.h"
 #include "ui_mainwindow.h"
 #include <iplugingame.h>
+#include <localsavegames.h>
 #include <isavegameinfowidget.h>
 #include <QIcon>
 #include <QTimer>
@@ -131,17 +132,29 @@ void SavesTab::refreshSavesIfOpen()
 QDir SavesTab::currentSavesDir() const
 {
   QDir savesDir;
-  if (m_core.currentProfile()->localSavesEnabled()) {
-    savesDir.setPath(m_core.currentProfile()->savePath());
+  auto currentProfile = m_core.currentProfile();
+  if (currentProfile->localSavesEnabled()) {
+    auto localSaves = m_core.gameFeatures().gameFeature<LocalSavegames>();
+    if (localSaves != nullptr) {
+      const auto mappings = localSaves->mappings(
+          currentProfile->absolutePath() + "/saves");
+      const QString gameSavePath = QDir::cleanPath(
+          m_core.managedGame()->savesDirectory().absolutePath());
+      for (const auto& mapping : mappings) {
+        if (mapping.isDirectory &&
+            QDir::cleanPath(mapping.destination) == gameSavePath) {
+          savesDir.setPath(mapping.source);
+          return savesDir;
+        }
+      }
+    }
+    savesDir.setPath(currentProfile->savePath());
   } else {
     auto iniFiles = m_core.managedGame()->iniFiles();
-
     if (iniFiles.isEmpty()) {
       return m_core.managedGame()->savesDirectory();
     }
-
-    QString iniPath = m_core.currentProfile()->absoluteIniFilePath(iniFiles[0]);
-
+    QString iniPath = currentProfile->absoluteIniFilePath(iniFiles[0]);
     wchar_t path[MAX_PATH];
     if (::GetPrivateProfileStringW(L"General", L"SLocalSavePath", L"", path, MAX_PATH,
                                    iniPath.toStdWString().c_str())) {
@@ -151,17 +164,23 @@ QDir SavesTab::currentSavesDir() const
       savesDir = m_core.managedGame()->savesDirectory();
     }
   }
-
   return savesDir;
 }
 
 void SavesTab::startMonitorSaves()
 {
+  startMonitorSaves(currentSavesDir());
+}
+
+void SavesTab::startMonitorSaves(const QDir& savesDir)
+{
   stopMonitorSaves();
-
-  QDir savesDir = currentSavesDir();
-
   m_SavesWatcher.addPath(savesDir.absolutePath());
+  if (m_core.currentProfile()->localSavesEnabled() &&
+      m_core.gameFeatures().gameFeature<LocalSavegames>() != nullptr) {
+    // Save Isolation atomically replaces its route INI in the profile folder.
+    m_SavesWatcher.addPath(m_core.currentProfile()->absolutePath());
+  }
 }
 
 void SavesTab::stopMonitorSaves()
@@ -190,10 +209,13 @@ void SavesTab::refreshSaveListNow()
 {
   TimeThis tt("MainWindow::refreshSaveList()");
 
-  startMonitorSaves();  // re-starts monitoring
+  // Reuse one mapping lookup for both the watcher and save list. The save
+  // mapping provider logs each lookup, so asking twice here duplicates the
+  // same "save mapping prepared" entry on every refresh.
+  QDir savesDir = currentSavesDir();
+  startMonitorSaves(savesDir);  // re-starts monitoring
 
   try {
-    QDir savesDir = currentSavesDir();
     MOBase::log::debug("reading save games from {}", savesDir.absolutePath());
     m_SaveGames = m_core.managedGame()->listSaves(savesDir);
     std::sort(m_SaveGames.begin(), m_SaveGames.end(),

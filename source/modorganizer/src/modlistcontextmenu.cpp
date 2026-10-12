@@ -1,4 +1,5 @@
 #include "modlistcontextmenu.h"
+#include "menuutils.h"
 
 #include <report.h>
 
@@ -110,7 +111,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
   if (modIndex.isValid() && view->sortColumn() == ModList::COL_PRIORITY) {
     auto info = ModInfo::getByIndex(modIndex.toInt());
     if (!info->isBackup()) {
-      addSection(tr("Add to list"));
+      addMenuSection(this, tr("Add to list"));
 
       // the mod are not created/installed at the same position depending
       // on the clicked mod and the sort order
@@ -138,7 +139,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
       separatorAction->setIcon(QIcon(":/MO/gui/contextmenu/separator.svg"));
     }
   } else {
-    addSection(tr("Add to list"));
+    addMenuSection(this, tr("Add to list"));
     QAction* installAction = addAction(tr("Install mod..."), [=]() {
       view->actions().installMod();
     });
@@ -154,14 +155,14 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
   }
 
   if (view->hasCollapsibleSeparators()) {
-    addSection(tr("List display"));
+    addMenuSection(this, tr("List display"));
     QAction* collapseAction = addAction(tr("Collapse all"), view, &QTreeView::collapseAll);
     collapseAction->setIcon(QIcon(":/MO/gui/contextmenu/collapse.svg"));
     QAction* expandAction = addAction(tr("Expand all"), view, &QTreeView::expandAll);
     expandAction->setIcon(QIcon(":/MO/gui/contextmenu/expand.svg"));
   }
 
-  addSection(tr("Bulk actions"));
+  addMenuSection(this, tr("Bulk actions"));
 
   QString enableTxt = tr("Enable all"), disableTxt = tr("Disable all");
 
@@ -179,7 +180,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
   });
   disableAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
 
-  addSection(tr("Maintenance"));
+  addMenuSection(this, tr("Maintenance"));
   QAction* updatesAction = addAction(tr("Check for updates"), [=]() {
     view->actions().checkModsForUpdates();
   });
@@ -197,7 +198,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
 
   if (m_ProfileBackupCreation || m_ProfileBackupRestoration ||
       m_ProfileBackupRemoval) {
-    addSection(tr("Mod list backups"));
+    addMenuSection(this, tr("Mod list backups"));
     if (m_ProfileBackupCreation) {
       QAction* createBackupAction = addAction(tr("Create mod list backup"));
       createBackupAction->setIcon(QIcon(":/MO/gui/contextmenu/backup.svg"));
@@ -227,7 +228,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
 
   if (m_LoadOrderBackupCreation || m_LoadOrderBackupRestoration ||
       m_LoadOrderBackupRemoval) {
-    addSection(tr("Plugin order backups"));
+    addMenuSection(this, tr("Plugin order backups"));
     if (m_LoadOrderBackupCreation) {
       QAction* createBackupAction = addAction(tr("Create plugin order backup"));
       createBackupAction->setIcon(QIcon(":/MO/gui/contextmenu/backup.svg"));
@@ -318,7 +319,7 @@ bool ModListChangeCategoryMenu::populate(QMenu* menu, CategoryFactory* factory,
 
       if (factory->hasChildren(i)) {
         if (populate(targetMenu, factory, mod, factory->getCategoryID(i)) || enabled) {
-          targetMenu->setIcon(QIcon(":/MO/gui/resources/check.png"));
+          targetMenu->setIcon(QIcon(":/MO/gui/check"));
         }
       }
     }
@@ -528,7 +529,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
   setDefaultAction(manageAction);
 
   if (QDir(mod->absolutePath()).count() > 2) {
-    addSection(tr("Organize files"));
+    addMenuSection(this, tr("Organize files"));
     QAction* syncAction = addAction(tr("Sync to Mods..."), [=]() {
       m_core.syncOverwrite();
     });
@@ -547,7 +548,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
     moveAction->setToolTip(
         tr("Choose a regular mod and move all files from Overwrite into it."));
 
-    addSection(tr("Cleanup"));
+    addMenuSection(this, tr("Cleanup"));
     QAction* clearAction = addAction(tr("Clear Overwrite..."), [=]() {
       m_actions.clearOverwrite();
     });

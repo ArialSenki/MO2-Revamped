@@ -33,20 +33,20 @@
     <number>16</number>
    </property>
    <property name="bottomMargin">
-    <number>12</number>
+    <number>14</number>
    </property>
    <item>
     <widget class="QFrame" name="headerCard">
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>60</height>
+      <height>76</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>60</height>
+      <height>76</height>
       </size>
      </property>
      <property name="frameShape">
@@ -55,30 +55,30 @@
      <property name="frameShadow">
       <enum>QFrame::Plain</enum>
      </property>
-     <layout class="QHBoxLayout" name="headerLayout" stretch="0,1">
+     <layout class="QVBoxLayout" name="headerLayout">
       <property name="spacing">
-       <number>12</number>
+       <number>3</number>
       </property>
       <property name="leftMargin">
-       <number>14</number>
+       <number>12</number>
       </property>
       <property name="topMargin">
-       <number>6</number>
+       <number>8</number>
       </property>
       <property name="rightMargin">
-       <number>14</number>
+       <number>12</number>
       </property>
       <property name="bottomMargin">
-       <number>6</number>
+       <number>8</number>
       </property>
-      <item alignment="Qt::AlignVCenter">
+      <item>
        <widget class="QLabel" name="dialogHeading">
         <property name="text">
          <string>Configure launch targets</string>
         </property>
        </widget>
       </item>
-      <item alignment="Qt::AlignVCenter">
+      <item>
        <widget class="QLabel" name="dialogDescription">
         <property name="text">
          <string>Select a program to edit its launch details. Add, remove, reorder, or reset entries here.</string>
@@ -179,7 +179,7 @@
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/MO/gui/add</normaloff>:/MO/gui/add</iconset>
+             <normaloff>:/MO/gui/mainwindow/action-add-light.svg</normaloff>:/MO/gui/mainwindow/action-add-light.svg</iconset>
            </property>
            <property name="popupMode">
             <enum>QToolButton::InstantPopup</enum>
@@ -205,7 +205,7 @@
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/MO/gui/resources/list-remove.png</normaloff>:/MO/gui/resources/list-remove.png</iconset>
+             <normaloff>:/MO/gui/contextmenu/remove.svg</normaloff>:/MO/gui/contextmenu/remove.svg</iconset>
            </property>
            <property name="toolButtonStyle">
             <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -235,7 +235,7 @@
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/MO/gui/resources/go-up.png</normaloff>:/MO/gui/resources/go-up.png</iconset>
+             <normaloff>:/MO/gui/mainwindow/action-up.svg</normaloff>:/MO/gui/mainwindow/action-up.svg</iconset>
            </property>
            <property name="toolButtonStyle">
             <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -258,7 +258,7 @@
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/MO/gui/resources/go-down.png</normaloff>:/MO/gui/resources/go-down.png</iconset>
+             <normaloff>:/MO/gui/mainwindow/action-down.svg</normaloff>:/MO/gui/mainwindow/action-down.svg</iconset>
            </property>
            <property name="toolButtonStyle">
             <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -294,7 +294,7 @@
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/MO/gui/edit_clear</normaloff>:/MO/gui/edit_clear</iconset>
+             <normaloff>:/MO/gui/mainwindow/action-reset.svg</normaloff>:/MO/gui/mainwindow/action-reset.svg</iconset>
            </property>
            <property name="toolButtonStyle">
             <enum>Qt::ToolButtonTextBesideIcon</enum>

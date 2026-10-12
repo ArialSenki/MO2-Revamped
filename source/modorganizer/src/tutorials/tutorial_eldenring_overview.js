@@ -47,7 +47,7 @@ function setupTooltips() {
   tooltips = []
 
   tooltipWidget("modList", qsTr("Installed Elden Ring mods are listed here. Checked mods are active in this profile; their files are combined in the virtual game directory."))
-  tooltipWidget("profileBox", qsTr("Profiles keep separate enabled mod lists. Elden Ring save isolation is configured from the Profiles window."))
+  tooltipWidget("profileBox", qsTr("Profiles keep separate enabled mod lists. Configure Elden Ring save routes and named save profiles from Tools > Elden Ring Save Isolation."))
   tooltipWidget("listOptionsBtn", qsTr("Open the gear menu to manage the mod list, refresh data, check for updates, and create, restore, or delete mod-list and plugin-order backups for this profile."))
   tooltipWidget("openFolderMenu", qsTr("Open the folders used by this MO2 instance, including its mods, profiles, downloads, and the Elden Ring game folder."))
   tooltipWidget("activeModsCounter", qsTr("Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type."))
@@ -65,7 +65,7 @@ function setupTooltips() {
   tooltipAction("actionInstallMod", qsTr("Install a mod archive stored on your computer."))
   tooltipAction("actionNexus", qsTr("Open the Nexus Mods page for the currently managed game."))
   tooltipAction("actionModPage", qsTr("Open the Nexus Mods page for the selected mod when it has a Nexus link."))
-  tooltipAction("actionAdd_Profile", qsTr("Create, copy, rename, or manage profiles and their Elden Ring save settings."))
+  tooltipAction("actionAdd_Profile", qsTr("Create, copy, rename, or manage profiles and their enabled mods. Use Tools > Elden Ring Save Isolation to choose Elden Ring save routes and named save profiles."))
   tooltipAction("action_Refresh", qsTr("Refresh the active profile and virtual game file list."))
   tooltipAction("actionModify_Executables", qsTr("Add or edit programs that can be launched through this MO2 instance."))
   tooltipAction("actionTool", qsTr("Open this instance's tools. The Native DLL Profile tool detects native DLLs and configures their order and optional initializer for each MO2 profile."))

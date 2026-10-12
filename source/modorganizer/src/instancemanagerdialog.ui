@@ -36,7 +36,7 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/MO/gui/add</normaloff>:/MO/gui/add</iconset>
+          <normaloff>:/MO/gui/mainwindow/action-add-light.svg</normaloff>:/MO/gui/mainwindow/action-add-light.svg</iconset>
         </property>
        </widget>
       </item>
@@ -262,9 +262,12 @@
                 </widget>
                </item>
                <item row="4" column="0">
-                <widget class="QLabel" name="label_4">
+                <widget class="QLabel" name="instanceFolderLabel">
                  <property name="text">
-                  <string>Location</string>
+                  <string>Instance folder</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>Folder that contains this MO2 instance's configuration.</string>
                  </property>
                 </widget>
                </item>
@@ -283,9 +286,12 @@
                 </widget>
                </item>
                <item row="5" column="0">
-                <widget class="QLabel" name="label_6">
+                <widget class="QLabel" name="modDataFolderLabel">
                  <property name="text">
-                  <string>Base folder</string>
+                  <string>Mod data folder</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>Base path resolved from this instance's settings for its profiles, mods, downloads, and overwrite data.</string>
                  </property>
                 </widget>
                </item>
@@ -356,20 +362,6 @@
                 <number>0</number>
                </property>
                <item>
-                <widget class="QPushButton" name="convertToPortable">
-                 <property name="text">
-                  <string>Convert to portable</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="convertToGlobal">
-                 <property name="text">
-                  <string>Convert to global</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <widget class="QPushButton" name="openINI">
                  <property name="text">
                   <string>Open INI</string>
@@ -383,7 +375,7 @@
                  </property>
                  <property name="icon">
                   <iconset resource="resources.qrc">
-                   <normaloff>:/MO/gui/remove</normaloff>:/MO/gui/remove</iconset>
+                   <normaloff>:/MO/gui/contextmenu/remove.svg</normaloff>:/MO/gui/contextmenu/remove.svg</iconset>
                  </property>
                 </widget>
                </item>
@@ -460,7 +452,7 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/MO/gui/next</normaloff>:/MO/gui/next</iconset>
+          <normaloff>:/MO/gui/mainwindow/action-switch.svg</normaloff>:/MO/gui/mainwindow/action-switch.svg</iconset>
         </property>
        </widget>
       </item>

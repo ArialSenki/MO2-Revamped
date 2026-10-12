@@ -1,4 +1,5 @@
 #include "settingsdialognexus.h"
+#include "circularuihelpers.h"
 #include "log.h"
 #include "nexusinterface.h"
 #include "serverinfo.h"
@@ -6,7 +7,99 @@
 #include "ui_settingsdialog.h"
 #include <utility.h>
 
+#include <QBoxLayout>
+#include <QHBoxLayout>
+#include <QGroupBox>
+#include <QLabel>
+#include <QLayout>
+#include <QLayoutItem>
+#include <QAbstractScrollArea>
+#include <QSizePolicy>
+#include <QVBoxLayout>
+
 using namespace MOBase;
+
+namespace
+{
+
+QLayout* findContainingLayout(QLayout* layout, QWidget* widget)
+{
+  if (!layout || !widget) {
+    return nullptr;
+  }
+
+  for (int index = 0; index < layout->count(); ++index) {
+    QLayoutItem* item = layout->itemAt(index);
+    if (item->widget() == widget) {
+      return layout;
+    }
+    if (QLayout* nested = item->layout()) {
+      if (QLayout* containing = findContainingLayout(nested, widget)) {
+        return containing;
+      }
+    }
+  }
+  return nullptr;
+}
+
+QWidget* wrapNexusGroupInCard(QGroupBox* group, const QString& cardObjectName,
+                              const QString& headingObjectName,
+                              const QString& iconPath,
+                              const QString& iconObjectName,
+                              const QString& fallback)
+{
+  if (!group || !group->parentWidget() || !group->parentWidget()->layout()) {
+    return group;
+  }
+
+  QLayout* rootLayout = group->parentWidget()->layout();
+  QLayout* parentLayout = findContainingLayout(rootLayout, group);
+  if (!parentLayout) {
+    return group;
+  }
+  QWidget* card = new QWidget(group->parentWidget());
+  card->setObjectName(cardObjectName);
+  card->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(12, 10, 12, 10);
+  cardLayout->setSpacing(8);
+
+  auto* heading = new QLabel(group->title(), card);
+  heading->setObjectName(headingObjectName);
+  cardLayout->addWidget(heading);
+  MOBase::CircularUi::addIconToHeading(heading, iconPath, iconObjectName, 26,
+                                       fallback);
+
+  const QString title = group->title();
+  group->setTitle(QString());
+  if (QLayout* contentLayout = group->layout()) {
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    contentLayout->setSpacing(8);
+  }
+
+  QLayoutItem* oldItem = parentLayout->replaceWidget(group, card);
+  if (!oldItem) {
+    group->setTitle(title);
+    delete card;
+    return group;
+  }
+  delete oldItem;
+
+  cardLayout->addWidget(group);
+  // Keep content at the top when a side-by-side card is taller.
+  cardLayout->addStretch(1);
+  if (auto* boxLayout = qobject_cast<QBoxLayout*>(parentLayout);
+      boxLayout && boxLayout->direction() == QBoxLayout::LeftToRight) {
+    const int index = boxLayout->indexOf(card);
+    if (index >= 0) {
+      boxLayout->setStretch(index, 1);
+    }
+  }
+  return card;
+}
+
+}  // namespace
 
 template <typename T>
 class ServerItem : public QListWidgetItem
@@ -292,6 +385,109 @@ void NexusConnectionUI::updateState()
 
 NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab(s, d)
 {
+  MOBase::CircularUi::addIconToHeading(
+      ui->nexusPageTitle, ":/MO/gui/mainwindow/mod-page.svg",
+      QStringLiteral("nexusPageIcon"), 36, QStringLiteral("N"));
+
+  if (auto* pageLayout = qobject_cast<QVBoxLayout*>(
+          ui->nexusScrollAreaWidgetContents->layout())) {
+    pageLayout->setContentsMargins(8, 6, 8, 8);
+    pageLayout->setSpacing(10);
+  }
+
+  QWidget* accountCard = wrapNexusGroupInCard(
+      ui->nexusAccountGroup, QStringLiteral("nexusAccountCard"),
+      QStringLiteral("nexusAccountTitle"),
+      QStringLiteral(":/MO/gui/mainwindow/profile.svg"),
+      QStringLiteral("nexusAccountIcon"), QStringLiteral("A"));
+  wrapNexusGroupInCard(
+      ui->nexusUsageGroup, QStringLiteral("nexusUsageCard"),
+      QStringLiteral("nexusUsageTitle"),
+      QStringLiteral(":/MO/gui/mainwindow/github-updates.svg"),
+      QStringLiteral("nexusUsageIcon"), QStringLiteral("U"));
+  wrapNexusGroupInCard(
+      ui->nexusConnectionGroup, QStringLiteral("nexusConnectionCard"),
+      QStringLiteral("nexusConnectionTitle"),
+      QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
+      QStringLiteral("nexusConnectionIcon"), QStringLiteral("C"));
+  wrapNexusGroupInCard(
+      ui->nexusOptionsGroup, QStringLiteral("nexusOptionsCard"),
+      QStringLiteral("nexusOptionsTitle"),
+      QStringLiteral(":/MO/gui/mainwindow/tools.svg"),
+      QStringLiteral("nexusOptionsIcon"), QStringLiteral("M"));
+  wrapNexusGroupInCard(
+      ui->nexusServersGroup, QStringLiteral("nexusServersCard"),
+      QStringLiteral("nexusServersTitle"),
+      QStringLiteral(":/MO/gui/mainwindow/install.svg"),
+      QStringLiteral("nexusServersIcon"), QStringLiteral("S"));
+
+  if (accountCard) {
+    auto* accountRow = qobject_cast<QHBoxLayout*>(findContainingLayout(
+        ui->nexusScrollAreaWidgetContents->layout(), accountCard));
+    if (accountRow) {
+      accountRow->setContentsMargins(0, 0, 0, 0);
+      accountRow->setSpacing(10);
+      accountRow->setStretch(0, 1);
+      accountRow->setStretch(1, 1);
+    }
+  }
+
+  if (auto* connectionLayout =
+          qobject_cast<QHBoxLayout*>(ui->nexusConnectionGroup->layout())) {
+    connectionLayout->setContentsMargins(0, 0, 0, 0);
+    connectionLayout->setSpacing(12);
+    connectionLayout->setStretch(0, 3);
+    connectionLayout->setStretch(1, 5);
+  }
+  if (auto* actionsLayout =
+          qobject_cast<QVBoxLayout*>(ui->nexusConnectionActions->layout())) {
+    actionsLayout->setSpacing(8);
+  }
+  if (auto* activityLayout =
+          qobject_cast<QVBoxLayout*>(ui->nexusActivityPanel->layout())) {
+    activityLayout->setSpacing(8);
+  }
+  if (auto* optionsLayout =
+          qobject_cast<QHBoxLayout*>(ui->nexusOptionsGroup->layout())) {
+    optionsLayout->setContentsMargins(0, 0, 0, 0);
+    optionsLayout->setSpacing(14);
+    optionsLayout->setStretch(0, 3);
+    optionsLayout->setStretch(1, 2);
+  }
+  if (auto* featuresLayout =
+          qobject_cast<QVBoxLayout*>(ui->nexusFeatureOptions->layout())) {
+    featuresLayout->setSpacing(5);
+    featuresLayout->addStretch(1);
+  }
+  if (auto* toolsLayout =
+          qobject_cast<QVBoxLayout*>(ui->nexusIntegrationTools->layout())) {
+    toolsLayout->setSpacing(8);
+    // Start both columns at the same height as their descriptions.
+    toolsLayout->addStretch(1);
+  }
+  if (auto* serversLayout =
+          qobject_cast<QHBoxLayout*>(ui->nexusServersGroup->layout())) {
+    serversLayout->setContentsMargins(0, 0, 0, 0);
+    serversLayout->setSpacing(12);
+    serversLayout->setStretch(0, 1);
+    serversLayout->setStretch(1, 1);
+  }
+
+  ui->nexusActivityPanel->setMinimumWidth(0);
+  ui->nexusConnectionActions->setMinimumWidth(0);
+  ui->nexusLog->setMinimumHeight(132);
+  ui->nexusLog->setMaximumHeight(180);
+  ui->nexusLog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  ui->nexusLog->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
+  ui->knownServersList->setMinimumHeight(150);
+  ui->preferredServersList->setMinimumHeight(150);
+  ui->knownServersList->setSizePolicy(QSizePolicy::Expanding,
+                                      QSizePolicy::Expanding);
+  ui->preferredServersList->setSizePolicy(QSizePolicy::Expanding,
+                                          QSizePolicy::Expanding);
+  ui->label_18->setMinimumHeight(24);
+  ui->label_21->setMinimumHeight(24);
+
   ui->endorsementBox->setChecked(settings().nexus().endorsementIntegration());
   ui->trackedBox->setChecked(settings().nexus().trackedIntegration());
   ui->categoryMappingsBox->setChecked(settings().nexus().categoryMappings());
@@ -345,15 +541,8 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   QObject::connect(ui->associateButton, &QPushButton::clicked, [&] {
     associate();
   });
-  QObject::connect(ui->useCustomBrowser, &QCheckBox::clicked, [&] {
-    updateCustomBrowser();
-  });
-  QObject::connect(ui->browseCustomBrowser, &QPushButton::clicked, [&] {
-    browseCustomBrowser();
-  });
 
   updateNexusData();
-  updateCustomBrowser();
 }
 
 void NexusSettingsTab::update()
@@ -447,23 +636,3 @@ void NexusSettingsTab::updateNexusData()
   }
 }
 
-void NexusSettingsTab::updateCustomBrowser()
-{
-  ui->browserCommand->setEnabled(ui->useCustomBrowser->isChecked());
-}
-
-void NexusSettingsTab::browseCustomBrowser()
-{
-  const QString Filters =
-      QObject::tr("Executables (*.exe)") + ";;" + QObject::tr("All Files (*.*)");
-
-  QString file = QFileDialog::getOpenFileName(
-      parentWidget(), QObject::tr("Select the browser executable"),
-      ui->browserCommand->text(), Filters);
-
-  if (file.isNull() || file == "") {
-    return;
-  }
-
-  ui->browserCommand->setText(file + " \"%1\"");
-}

@@ -27,10 +27,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 class QListWidget;
 class QListWidgetItem;
 class QString;
-class QComboBox;
-class QGroupBox;
-class QLabel;
-class QPushButton;
 
 namespace Ui
 {
@@ -131,26 +127,14 @@ private slots:
 
   void on_renameButton_clicked();
 
-  void saveEldenRingSaveMode();
-
 private:
   Ui::ProfilesDialog* ui;
   GameFeatures& m_GameFeatures;
   QListWidget* m_ProfilesList;
   bool m_FailState;
   MOBase::IPluginGame const* m_Game;
-  bool m_IsEldenRing;
-  QGroupBox* m_eldenRingSaveGroup = nullptr;
-  QLabel* m_eldenRingProfileLabel = nullptr;
-  QLabel* m_eldenRingSaveScope = nullptr;
-  QComboBox* m_eldenRingSaveMode = nullptr;
-  QLabel* m_eldenRingSaveDescription = nullptr;
-  QLabel* m_eldenRingSaveStatus = nullptr;
-  QPushButton* m_eldenRingSaveModeSaveButton = nullptr;
   QString m_ActiveProfileName;
   std::optional<QString> m_Selected;
-
-  void updateEldenRingSaveSettings(Profile* profile);
 };
 
 #endif  // PROFILESDIALOG_H

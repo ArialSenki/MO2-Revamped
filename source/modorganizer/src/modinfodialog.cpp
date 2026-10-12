@@ -173,6 +173,7 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       m_arrangingTabs(false)
 {
   ui->setupUi(this);
+  LCDNumber::useFrames(this);
 
   // All nine information tabs should remain readable without Qt's tiny
   // tab-scrolling buttons clipping the first and last labels.

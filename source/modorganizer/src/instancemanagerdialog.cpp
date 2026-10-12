@@ -1,6 +1,7 @@
 #include "instancemanagerdialog.h"
 #include "createinstancedialog.h"
 #include "filesystemutilities.h"
+#include "gameiconutils.h"
 #include "instancemanager.h"
 #include "plugincontainer.h"
 #include "selectiondialog.h"
@@ -15,14 +16,17 @@
 #include <QFileInfo>
 #include <QCheckBox>
 #include <QAbstractItemView>
+#include <QBoxLayout>
 #include <QDialogButtonBox>
 #include <QFrame>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QIcon>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QPixmap>
 #include <QPushButton>
 #include <QSize>
 #include <QSizePolicy>
@@ -30,10 +34,60 @@
 
 using namespace MOBase;
 
+namespace
+{
+void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
+                            const QString& iconPath,
+                            const QString& iconObjectName, int size)
+{
+  if (layout == nullptr || heading == nullptr) {
+    return;
+  }
+
+  const int index = layout->indexOf(heading);
+  if (index < 0) {
+    return;
+  }
+
+  layout->removeWidget(heading);
+  auto* row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(8);
+
+  auto* icon = new QLabel(heading->parentWidget());
+  icon->setObjectName(iconObjectName);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(size, size);
+  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+
+  row->addWidget(icon, 0, Qt::AlignVCenter);
+  row->addWidget(heading, 1, Qt::AlignVCenter);
+  layout->insertLayout(index, row);
+}
+
+QLabel* makeCircularHeaderIcon(QWidget* parent, const QString& iconPath,
+                               const QString& objectName, int size)
+{
+  auto* icon = new QLabel(parent);
+  icon->setObjectName(objectName);
+  icon->setAlignment(Qt::AlignCenter);
+  icon->setFixedSize(size, size);
+  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  if (!pixmap.isNull()) {
+    icon->setPixmap(pixmap);
+  }
+  return icon;
+}
+}  // namespace
+
 // returns the icon for the given instance or an empty 32x32 icon if the game
 // plugin couldn't be found
 //
-QIcon instanceIcon(PluginContainer& pc, const Instance& i)
+QIcon instanceIcon(PluginContainer& pc, const Instance& i,
+                   const QWidget* themeWidget)
 {
   auto* game = InstanceManager::singleton().gamePluginForDirectory(i.directory(), pc);
 
@@ -81,7 +135,8 @@ QIcon instanceIcon(PluginContainer& pc, const Instance& i)
   // set directory for this instance
   game->setGamePath(i.gameDirectory());
 
-  return game->gameIcon();
+  return MOBase::makeRunStyleGameIcon(game->gameIcon(), themeWidget,
+                                      QSize(36, 36));
 }
 
 // pops up a dialog to ask for an instance name when renaming
@@ -96,26 +151,37 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
   dlg.setMinimumWidth(460);
 
   auto* ly = new QVBoxLayout(&dlg);
-  ly->setContentsMargins(22, 18, 22, 18);
+  ly->setContentsMargins(16, 16, 16, 14);
   ly->setSpacing(14);
 
   auto* header = new QWidget(&dlg);
   header->setObjectName(QStringLiteral("instanceNameHeader"));
-  auto* headerLayout = new QVBoxLayout(header);
+  auto* headerLayout = new QHBoxLayout(header);
   headerLayout->setContentsMargins(0, 0, 0, 0);
-  headerLayout->setSpacing(4);
+  headerLayout->setSpacing(12);
 
-  auto* heading = new QLabel(title, header);
+  auto* headerIcon = makeCircularHeaderIcon(
+      header, QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+      QStringLiteral("instanceNameHeaderIcon"), 40);
+  auto* headerText = new QWidget(header);
+  headerText->setObjectName(QStringLiteral("instanceNameHeaderText"));
+  auto* headerTextLayout = new QVBoxLayout(headerText);
+  headerTextLayout->setContentsMargins(0, 0, 0, 0);
+  headerTextLayout->setSpacing(4);
+
+  auto* heading = new QLabel(title, headerText);
   heading->setObjectName(QStringLiteral("instanceNameHeading"));
   auto* description = new QLabel(
       moreText.isEmpty()
           ? QObject::tr("Choose a clear folder name for this instance.")
           : moreText,
-      header);
+      headerText);
   description->setObjectName(QStringLiteral("instanceNameDescription"));
   description->setWordWrap(true);
-  headerLayout->addWidget(heading);
-  headerLayout->addWidget(description);
+  headerTextLayout->addWidget(heading);
+  headerTextLayout->addWidget(description);
+  headerLayout->addWidget(headerIcon, 0, Qt::AlignVCenter);
+  headerLayout->addWidget(headerText, 1);
   ly->addWidget(header);
 
   auto* nameCard = new QGroupBox(QObject::tr("Instance name"), &dlg);
@@ -198,25 +264,37 @@ void showInstanceExample(QWidget* parent)
   dlg.resize(580, 410);
 
   auto* layout = new QVBoxLayout(&dlg);
-  layout->setContentsMargins(20, 18, 20, 18);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(12);
 
   auto* header = new QFrame(&dlg);
   header->setObjectName(QStringLiteral("instanceHelpHeaderPanel"));
-  auto* headerLayout = new QVBoxLayout(header);
-  headerLayout->setContentsMargins(16, 14, 16, 14);
-  headerLayout->setSpacing(5);
+  auto* headerLayout = new QHBoxLayout(header);
+  headerLayout->setContentsMargins(14, 12, 14, 12);
+  headerLayout->setSpacing(12);
 
-  auto* heading = new QLabel(QObject::tr("An instance is its own MO2 workspace."), header);
+  auto* headerIcon = makeCircularHeaderIcon(
+      header, QStringLiteral(":/MO/gui/mainwindow/help.svg"),
+      QStringLiteral("instanceHelpHeaderIcon"), 40);
+  auto* headerText = new QWidget(header);
+  headerText->setObjectName(QStringLiteral("instanceHelpHeaderText"));
+  auto* headerTextLayout = new QVBoxLayout(headerText);
+  headerTextLayout->setContentsMargins(0, 0, 0, 0);
+  headerTextLayout->setSpacing(5);
+
+  auto* heading = new QLabel(
+      QObject::tr("An instance is its own MO2 workspace."), headerText);
   heading->setObjectName(QStringLiteral("instanceHelpHeading"));
   auto* description = new QLabel(
       QObject::tr("Each instance keeps its profiles, mods, downloads and settings together. "
                   "Use separate instances when you want independent setups."),
-      header);
+      headerText);
   description->setObjectName(QStringLiteral("instanceHelpDescription"));
   description->setWordWrap(true);
-  headerLayout->addWidget(heading);
-  headerLayout->addWidget(description);
+  headerTextLayout->addWidget(heading);
+  headerTextLayout->addWidget(description);
+  headerLayout->addWidget(headerIcon, 0, Qt::AlignVCenter);
+  headerLayout->addWidget(headerText, 1);
   layout->addWidget(header);
 
   auto addExample = [&](const QString& game, const QString& detail) {
@@ -268,7 +346,20 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
 {
   ui->setupUi(this);
 
-  ui->splitter->setSizes({250, 1});
+  addCircularHeadingIcon(ui->horizontalLayout_2, ui->managerSummary,
+                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+                         QStringLiteral("managerSummaryIcon"), 32);
+  addCircularHeadingIcon(ui->verticalLayout, ui->instancesHeading,
+                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+                         QStringLiteral("instancesHeaderIcon"), 24);
+  addCircularHeadingIcon(ui->verticalLayout_2, ui->detailsHeading,
+                         QStringLiteral(":/MO/gui/mainwindow/settings.svg"),
+                         QStringLiteral("instanceDetailsHeaderIcon"), 24);
+
+  // Keep the drag target comfortable while avoiding the oversized gray rail
+  // between the two cards.
+  ui->splitter->setHandleWidth(5);
+  ui->splitter->setSizes({260, 1});
   ui->splitter->setStretchFactor(0, 0);
   ui->splitter->setStretchFactor(1, 1);
 
@@ -283,7 +374,7 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
   ui->createNew->setMinimumHeight(34);
   ui->list->setIconSize(QSize(36, 36));
   ui->list->setSpacing(4);
-  ui->list->setMinimumWidth(225);
+  ui->list->setMinimumWidth(235);
   ui->horizontalLayout_2->setContentsMargins(12, 8, 12, 8);
   ui->horizontalLayout_2->setSpacing(12);
   ui->verticalLayout->setContentsMargins(12, 12, 12, 12);
@@ -292,6 +383,12 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
   ui->verticalLayout_2->setSpacing(10);
   ui->openINI->setToolTip(
       tr("Open this instance's ModOrganizer.ini with the associated editor."));
+  ui->location->setToolTip(
+      tr("Folder that contains this MO2 instance's configuration."));
+  ui->baseDirectory->setToolTip(
+      tr("Base path resolved from this instance's settings for its profiles, "
+         "mods, downloads, and overwrite data."));
+  ui->gameDir->setToolTip(tr("Folder where the game is installed."));
   ui->switchToInstance->setToolTip(
       tr("Restart Mod Organizer and open the selected instance."));
   ui->detailsHeading->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -356,12 +453,6 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
     exploreGame();
   });
 
-  connect(ui->convertToGlobal, &QPushButton::clicked, [&] {
-    convertToGlobal();
-  });
-  connect(ui->convertToPortable, &QPushButton::clicked, [&] {
-    convertToPortable();
-  });
   connect(ui->openINI, &QPushButton::clicked, [&] {
     openINI();
   });
@@ -465,7 +556,7 @@ void InstanceManagerDialog::updateList()
     const auto& ii = *m_instances[i];
 
     auto* item = new QStandardItem(ii.displayName());
-    item->setIcon(instanceIcon(m_pc, ii));
+    item->setIcon(instanceIcon(m_pc, ii, this));
     item->setSizeHint(QSize(220, 48));
     item->setToolTip(
         tr("%1\nGame: %2\nLocation: %3")
@@ -602,7 +693,7 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
   dlg.resize(580, 290);
 
   auto* layout = new QVBoxLayout(&dlg);
-  layout->setContentsMargins(20, 18, 20, 18);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(12);
 
   auto* header = new QFrame(&dlg);
@@ -616,10 +707,10 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
   badge->setFixedSize(42, 42);
   auto* badgeLayout = new QVBoxLayout(badge);
   badgeLayout->setContentsMargins(0, 0, 0, 0);
-  auto* mark = new QLabel(QStringLiteral("i"), badge);
-  mark->setObjectName(QStringLiteral("switchInstanceMark"));
-  mark->setAlignment(Qt::AlignCenter);
-  badgeLayout->addWidget(mark);
+  auto* icon = makeCircularHeaderIcon(
+      badge, QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
+      QStringLiteral("switchInstanceIcon"), 24);
+  badgeLayout->addWidget(icon, 0, Qt::AlignCenter);
 
   auto* headerText = new QWidget(header);
   headerText->setObjectName(QStringLiteral("switchInstanceHeaderText"));
@@ -796,7 +887,7 @@ void InstanceManagerDialog::deleteInstance()
   dlg.resize(720, 500);
 
   auto* dialogLayout = new QVBoxLayout(&dlg);
-  dialogLayout->setContentsMargins(20, 18, 20, 18);
+  dialogLayout->setContentsMargins(16, 16, 16, 14);
   dialogLayout->setSpacing(12);
 
   auto* header = new QFrame(&dlg);
@@ -810,10 +901,10 @@ void InstanceManagerDialog::deleteInstance()
   warningBadge->setFixedSize(42, 42);
   auto* badgeLayout = new QVBoxLayout(warningBadge);
   badgeLayout->setContentsMargins(0, 0, 0, 0);
-  auto* warningMark = new QLabel(QStringLiteral("!"), warningBadge);
-  warningMark->setObjectName(QStringLiteral("deleteWarningMark"));
-  warningMark->setAlignment(Qt::AlignCenter);
-  badgeLayout->addWidget(warningMark);
+  auto* warningIcon = makeCircularHeaderIcon(
+      warningBadge, QStringLiteral(":/MO/gui/mainwindow/status/warning.svg"),
+      QStringLiteral("deleteWarningIcon"), 24);
+  badgeLayout->addWidget(warningIcon, 0, Qt::AlignCenter);
 
   auto* headerText = new QWidget(header);
   headerText->setObjectName(QStringLiteral("deleteInstanceHeaderText"));
@@ -976,16 +1067,6 @@ bool InstanceManagerDialog::doDelete(const QStringList& files, bool recycle)
   return false;
 }
 
-void InstanceManagerDialog::convertToGlobal()
-{
-  // not implemented
-}
-
-void InstanceManagerDialog::convertToPortable()
-{
-  // not implemented
-}
-
 void InstanceManagerDialog::onSelection()
 {
   const auto i = singleSelectionIndex();
@@ -1061,9 +1142,21 @@ void InstanceManagerDialog::fillData(const Instance& ii)
 
   ui->name->setText(ii.displayName());
   ui->location->setText(ii.directory());
+  ui->location->setCursorPosition(ui->location->text().size());
+  ui->location->setToolTip(
+      tr("Instance folder: %1")
+          .arg(QDir::toNativeSeparators(ii.directory())));
   ui->baseDirectory->setText(ii.baseDirectory());
+  ui->baseDirectory->setCursorPosition(ui->baseDirectory->text().size());
+  ui->baseDirectory->setToolTip(
+      tr("Mod data folder: %1")
+          .arg(QDir::toNativeSeparators(ii.baseDirectory())));
   ui->gameName->setText(ii.gameName());
   ui->gameDir->setText(ii.gameDirectory());
+  ui->gameDir->setCursorPosition(ui->gameDir->text().size());
+  ui->gameDir->setToolTip(
+      tr("Game folder: %1")
+          .arg(QDir::toNativeSeparators(ii.gameDirectory())));
   setButtonsEnabled(true);
 
   const auto& m = InstanceManager::singleton();
@@ -1090,26 +1183,6 @@ void InstanceManagerDialog::fillData(const Instance& ii)
     ui->deleteInstance->setEnabled(false);
   }
 
-  if (ii.isPortable()) {
-    ui->convertToPortable->setVisible(false);
-    ui->convertToGlobal->setVisible(true);
-    ui->convertToGlobal->setEnabled(true);
-  } else {
-    ui->convertToPortable->setVisible(true);
-    ui->convertToGlobal->setVisible(false);
-
-    if (m.portableInstanceExists()) {
-      ui->convertToPortable->setEnabled(false);
-      ui->convertToPortable->setToolTip(tr("A portable instance already exists."));
-    } else {
-      ui->convertToPortable->setEnabled(false);
-      ui->convertToPortable->setToolTip("");
-    }
-  }
-
-  // not implemented, hide the buttons
-  ui->convertToPortable->setVisible(false);
-  ui->convertToGlobal->setVisible(false);
 }
 
 void InstanceManagerDialog::clearData()
@@ -1126,8 +1199,6 @@ void InstanceManagerDialog::clearData()
 
   setButtonsEnabled(false);
 
-  ui->convertToPortable->setVisible(false);
-  ui->convertToGlobal->setVisible(false);
 }
 
 void InstanceManagerDialog::setButtonsEnabled(bool b)
@@ -1136,8 +1207,6 @@ void InstanceManagerDialog::setButtonsEnabled(bool b)
   ui->exploreLocation->setEnabled(b);
   ui->exploreBaseDirectory->setEnabled(b);
   ui->exploreGame->setEnabled(b);
-  ui->convertToPortable->setEnabled(b);
-  ui->convertToGlobal->setEnabled(b);
   ui->deleteInstance->setEnabled(b);
   ui->openINI->setEnabled(b);
   ui->switchToInstance->setEnabled(b);

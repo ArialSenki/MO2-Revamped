@@ -1452,6 +1452,18 @@ NativeInitializerRequest* find_native_initializer(const wchar_t* module_path) {
   return nullptr;
 }
 
+bool all_native_initializers_started() {
+  if (g_native_initializer_requests.empty()) {
+    return false;
+  }
+  for (auto& request : g_native_initializer_requests) {
+    if (InterlockedCompareExchange(&request.started, 0, 0) == 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 using NativeInitializerFunction = bool(__cdecl*)();
 
 DWORD WINAPI run_native_initializer(void* context) {
@@ -1536,12 +1548,196 @@ void inspect_loaded_mods() {
   CloseHandle(snapshot);
 }
 
+bool read_skip_intro_logos_setting() {
+  wchar_t config_path[MAX_PATH] = {};
+  const DWORD length = GetEnvironmentVariableW(
+      L"ELDENRING_MO2_PROFILE_CONFIG", config_path, MAX_PATH);
+  if (length == 0 || length >= MAX_PATH ||
+      GetFileAttributesW(config_path) == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+  return GetPrivateProfileIntW(L"Startup", L"skip_intro_logos", 0,
+                               config_path) != 0;
+}
+
+// Skips the startup logo screens with the conditional-jump patch used by
+// TechieW's MIT-licensed "Skip The Intro" mod. The patch is applied only when
+// the signature occurs exactly once and the expected jump is present, so an
+// unknown game version is left untouched.
+// Returns false only when the code was not found yet and a later attempt may
+// still find it; every other outcome is final and logged.
+bool apply_skip_intro_logos(bool final_attempt) {
+
+  // c6 ?? ?? ?? ?? ?? 01 ?? 03 00 00 00 ?? 8b ?? e8 ?? ?? ?? ?? e9 ?? ?? ?? ?? ?? 8d
+  static const short signature[] = {
+      0xC6, -1, -1, -1, -1, -1, 0x01, -1,   0x03, 0x00, 0x00, 0x00, -1, 0x8B,
+      -1,   0xE8, -1, -1, -1, -1, 0xE9, -1, -1,   -1,   -1,   -1,   0x8D};
+  constexpr size_t signature_size = sizeof(signature) / sizeof(signature[0]);
+  constexpr size_t jump_offset = 60;
+
+  HMODULE image = GetModuleHandleW(nullptr);
+  const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
+  if (image == nullptr || dos->e_magic != IMAGE_DOS_SIGNATURE ||
+      dos->e_lfanew <= 0) {
+    log_line("Intro logo skip unavailable: invalid game image.");
+    return true;
+  }
+  const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(
+      reinterpret_cast<const unsigned char*>(image) + dos->e_lfanew);
+  if (nt->Signature != IMAGE_NT_SIGNATURE ||
+      nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    log_line("Intro logo skip unavailable: game image is not 64-bit PE.");
+    return true;
+  }
+
+  unsigned char* image_base = reinterpret_cast<unsigned char*>(image);
+  const size_t image_size = nt->OptionalHeader.SizeOfImage;
+  const IMAGE_SECTION_HEADER* sections = IMAGE_FIRST_SECTION(nt);
+  unsigned char* jump = nullptr;
+  unsigned int matches = 0;
+  size_t scanned_bytes = 0;
+  for (unsigned int index = 0; index < nt->FileHeader.NumberOfSections;
+       ++index) {
+    const IMAGE_SECTION_HEADER& section = sections[index];
+    if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
+        section.VirtualAddress >= image_size) {
+      continue;
+    }
+    size_t section_size = section.Misc.VirtualSize != 0
+                              ? section.Misc.VirtualSize
+                              : section.SizeOfRawData;
+    if (section_size > image_size - section.VirtualAddress) {
+      section_size = image_size - section.VirtualAddress;
+    }
+    // Scan region by region and skip memory that is not committed and
+    // readable: protected game code reads fault while the game starts.
+    unsigned char* section_start = image_base + section.VirtualAddress;
+    unsigned char* section_end = section_start + section_size;
+    unsigned char* region = section_start;
+    while (region < section_end) {
+      MEMORY_BASIC_INFORMATION info = {};
+      if (VirtualQuery(region, &info, sizeof(info)) == 0) {
+        break;
+      }
+      unsigned char* region_end =
+          static_cast<unsigned char*>(info.BaseAddress) + info.RegionSize;
+      if (region_end > section_end) {
+        region_end = section_end;
+      }
+      const DWORD readable = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
+                             PAGE_EXECUTE | PAGE_EXECUTE_READ |
+                             PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;
+      if (info.State == MEM_COMMIT && (info.Protect & readable) != 0 &&
+          (info.Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0) {
+        scanned_bytes += static_cast<size_t>(region_end - region);
+        unsigned char* scan_start = region;
+        if (scan_start < section_start + jump_offset) {
+          scan_start = section_start + jump_offset;
+        }
+        for (unsigned char* match = scan_start;
+             match + signature_size <= region_end; ++match) {
+          size_t matched = 0;
+          while (matched < signature_size &&
+                 (signature[matched] < 0 ||
+                  match[matched] ==
+                      static_cast<unsigned char>(signature[matched]))) {
+            ++matched;
+          }
+          if (matched == signature_size) {
+            ++matches;
+            jump = match - jump_offset;
+          }
+        }
+      }
+      region = region_end;
+    }
+  }
+
+  MEMORY_BASIC_INFORMATION jump_info = {};
+  const bool jump_readable =
+      jump != nullptr && VirtualQuery(jump, &jump_info, sizeof(jump_info)) != 0 &&
+      jump_info.State == MEM_COMMIT &&
+      (jump_info.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ |
+                            PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) != 0 &&
+      (jump_info.Protect & PAGE_GUARD) == 0;
+  if (matches == 0 && !final_attempt) {
+    return false;
+  }
+  {
+    char summary[160] = {};
+    wsprintfA(summary,
+              "Intro logo skip scan: %u match(es) in %u KiB of readable game code.",
+              matches, static_cast<unsigned int>(scanned_bytes / 1024));
+    log_line(summary);
+  }
+  if (matches != 1 || !jump_readable || jump[0] != 0x74) {
+    log_line(matches == 0
+                 ? "Intro logo skip unavailable: this game version is not recognized; logos unchanged."
+                 : "Intro logo skip unavailable: the game code did not match safely; logos unchanged.");
+    return true;
+  }
+
+  DWORD previous_protection = 0;
+  if (!VirtualProtect(jump, 2, PAGE_EXECUTE_READWRITE, &previous_protection)) {
+    log_line("Intro logo skip unavailable: game code could not be made writable.");
+    return true;
+  }
+  jump[0] = 0x90;
+  jump[1] = 0x90;
+  VirtualProtect(jump, 2, previous_protection, &previous_protection);
+  FlushInstructionCache(GetCurrentProcess(), jump, 2);
+  log_line("Intro logo screens skipped.");
+  return true;
+}
+
+BOOL CALLBACK find_game_window(HWND window, LPARAM parameter) {
+  if (is_process_top_level_window(window)) {
+    *reinterpret_cast<bool*>(parameter) = true;
+    return FALSE;
+  }
+  return TRUE;
+}
+
+// The bridge loads while MO2 is still injecting into the suspended game.
+// Touching game code then can stop the launch, so wait until the game has
+// created its first window; the logos are only checked after that.
+DWORD WINAPI skip_intro_logos_worker(void*) {
+  for (unsigned int attempt = 0; attempt < 1200; ++attempt) {
+    bool found = false;
+    EnumWindows(find_game_window, reinterpret_cast<LPARAM>(&found));
+    if (found) {
+      // The game can unpack this code shortly after its window appears.
+      for (unsigned int scan = 0; scan < 50; ++scan) {
+        if (apply_skip_intro_logos(scan == 49)) {
+          return 0;
+        }
+        Sleep(100);
+      }
+      return 0;
+    }
+    Sleep(50);
+  }
+  log_line("Intro logo skip unavailable: the game window did not appear within 60 seconds.");
+  return 0;
+}
+
+void schedule_skip_intro_logos() {
+  if (!read_skip_intro_logos_setting()) {
+    return;
+  }
+  log_line("Profile option enabled: skip the intro logo screens.");
+  HANDLE worker = CreateThread(nullptr, 0, skip_intro_logos_worker, nullptr, 0,
+                               nullptr);
+  if (worker != nullptr) {
+    CloseHandle(worker);
+  } else {
+    log_line("Intro logo skip unavailable: its worker thread could not start.");
+  }
+}
+
 DWORD WINAPI bridge_worker(void*) {
-  open_log();
-  log_line("MO2 native bridge started.");
-  log_line("MO2 native bridge version: 0.5.0-alpha.33.");
+  schedule_skip_intro_logos();
   read_native_initializer_requests();
-  install_startup_window_hooks();
   wchar_t executable_path[MAX_PATH] = {};
   const DWORD executable_path_length =
       GetModuleFileNameW(nullptr, executable_path, MAX_PATH);
@@ -1560,11 +1756,23 @@ DWORD WINAPI bridge_worker(void*) {
   schedule_cpu0_affinity_adjustment();
   install_loose_asset_hook();
 
-  // The bridge is queued before the mod DLLs so its startup hooks can run
-  // early. Keep scanning briefly to find DLLs that MO2 loads afterward.
-  for (unsigned int scan = 0; scan < 40; ++scan) {
-    inspect_loaded_mods();
-    Sleep(250);
+  // Only explicit Revamped initializers need late DLL discovery. Without
+  // requests, repeatedly enumerating every module in the game process has no
+  // functional effect; it only looked for unsupported Mod Engine 2 exports.
+  if (g_native_initializer_requests.empty()) {
+    log_line("No configured Revamped native initializers; skipped DLL discovery.");
+  } else {
+    // The bridge is queued before mod DLLs so its startup hooks can run early.
+    // Keep scanning briefly for configured DLLs that MO2 loads afterward, but
+    // stop as soon as every requested initializer has been started.
+    for (unsigned int scan = 0; scan < 40; ++scan) {
+      inspect_loaded_mods();
+      if (all_native_initializers_started()) {
+        log_line("All configured Revamped native initializers were found.");
+        break;
+      }
+      Sleep(250);
+    }
   }
 
   log_line("MO2 native bridge scan finished.");
@@ -1577,6 +1785,13 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
   if (reason == DLL_PROCESS_ATTACH) {
     g_module = instance;
     DisableThreadLibraryCalls(instance);
+    open_log();
+    log_line("MO2 native bridge started.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.35.");
+    // Install the startup window hooks while the loader still holds the game's
+    // main thread. From the worker thread they raced the game's first window,
+    // so "start minimized" and the black background only applied sometimes.
+    install_startup_window_hooks();
     HANDLE thread = CreateThread(nullptr, 0, bridge_worker, nullptr, 0, nullptr);
     if (thread != nullptr) {
       CloseHandle(thread);

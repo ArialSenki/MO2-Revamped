@@ -140,11 +140,18 @@
         <file alias="filter.svg">resources/mainwindow/filter.svg</file>
         <file alias="shortcut-add.svg">resources/mainwindow/shortcut-add.svg</file>
         <file alias="shortcut-remove.svg">resources/mainwindow/shortcut-remove.svg</file>
+        <file alias="action-add.svg">resources/mainwindow/action-add.svg</file>
+        <file alias="action-add-light.svg">resources/mainwindow/action-add-light.svg</file>
+        <file alias="action-down.svg">resources/mainwindow/action-down.svg</file>
+        <file alias="action-reset.svg">resources/mainwindow/action-reset.svg</file>
+        <file alias="action-switch.svg">resources/mainwindow/action-switch.svg</file>
+        <file alias="action-up.svg">resources/mainwindow/action-up.svg</file>
     </qresource>
     <qresource prefix="/MO/gui/mainwindow/status">
         <file alias="warning.svg">resources/mainwindow/status/warning.svg</file>
         <file alias="error.svg">resources/mainwindow/status/error.svg</file>
         <file alias="info.svg">resources/mainwindow/status/info.svg</file>
+        <file alias="about-revamped.svg">resources/mainwindow/status/about-revamped.svg</file>
         <file alias="debug.svg">resources/mainwindow/status/debug.svg</file>
         <file alias="update.svg">resources/mainwindow/status/update.svg</file>
         <file alias="version.svg">resources/mainwindow/status/version.svg</file>

@@ -21,7 +21,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>10</number>
+    <number>12</number>
    </property>
    <property name="leftMargin">
     <number>16</number>
@@ -33,7 +33,7 @@
     <number>16</number>
    </property>
    <property name="bottomMargin">
-    <number>12</number>
+    <number>14</number>
    </property>
    <item>
     <widget class="QFrame" name="overwriteIntroPanel">

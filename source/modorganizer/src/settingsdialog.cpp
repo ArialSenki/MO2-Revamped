@@ -33,12 +33,32 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QComboBox>
 #include <QFrame>
 #include <QPalette>
+#include <QScreen>
+#include <QSizePolicy>
+#include <QStyledItemDelegate>
+#include <QTabWidget>
 #include <QTimer>
 
 using namespace MOBase;
 
 namespace
 {
+
+class SettingsComboPopupDelegate final : public QStyledItemDelegate
+{
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+
+  QSize sizeHint(const QStyleOptionViewItem& option,
+                 const QModelIndex& index) const override
+  {
+    QSize hint = QStyledItemDelegate::sizeHint(option, index);
+    // Keep the item geometry in step with the vertical padding in the Light
+    // theme. Without this, the popup can paint one row over the next one.
+    hint.setHeight(qMax(hint.height(), 32));
+    return hint;
+  }
+};
 
 void configureSettingsComboPopups(QWidget* root, bool lightStyle)
 {
@@ -50,6 +70,10 @@ void configureSettingsComboPopups(QWidget* root, bool lightStyle)
     QAbstractItemView* popupView = combo->view();
     if (!popupView) {
       continue;
+    }
+
+    if (combo->objectName() != QStringLiteral("languageBox")) {
+      popupView->setItemDelegate(new SettingsComboPopupDelegate(popupView));
     }
 
     combo->setMaxVisibleItems(8);
@@ -73,18 +97,6 @@ void configureSettingsComboPopups(QWidget* root, bool lightStyle)
     popupView->setAutoFillBackground(false);
     popupView->viewport()->setAutoFillBackground(false);
     popupView->setFrameShape(QFrame::NoFrame);
-    popupView->setStyleSheet(
-        "QAbstractItemView { color: #293847; background-color: transparent; "
-        "border: none; border-radius: 7px; padding: 3px; outline: none; "
-        "selection-background-color: #D7EAF9; "
-        "selection-color: #183E5F; } "
-        "QAbstractItemView::item { color: #293847; background-color: "
-        "transparent; min-height: 22px; padding: 4px 8px; border: none; } "
-        "QAbstractItemView::item:hover { background-color: #F0F6FB; "
-        "color: #183E5F; } "
-        "QAbstractItemView::item:selected { background-color: #D7EAF9; "
-        "color: #183E5F; }");
-
     QWidget* popupFrame = popupView->window();
     if (popupFrame && popupFrame != popupView &&
         popupFrame != combo->window()) {
@@ -108,9 +120,23 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
 {
   ui->setupUi(this);
 
-  // Build a page the first time it is opened. The Plugins page enumerates
-  // every installed plugin and resolves its settings and descriptions, which
-  // is unnecessary work when the user only opens general settings.
+  // Give every Settings page more room while keeping the dialog inside the
+  // available display area. The minimum also upgrades previously saved small
+  // geometries when GeometrySaver restores them in exec().
+  const QSize availableSize = screen() ? screen()->availableGeometry().size()
+                                      : QSize(1920, 1080);
+  const int targetWidth = qMax(320, qMin(1000, availableSize.width() - 48));
+  const int targetHeight = qMax(320, qMin(740, availableSize.height() - 32));
+  setMinimumSize(qMin(980, targetWidth), qMin(700, targetHeight));
+  resize(targetWidth, targetHeight);
+
+  QSizePolicy tabPolicy = ui->tabWidget->sizePolicy();
+  tabPolicy.setVerticalPolicy(QSizePolicy::Ignored);
+  ui->tabWidget->setSizePolicy(tabPolicy);
+
+  // Build less commonly used pages the first time they are opened. Plugins
+  // scans installed plugins and Workarounds reads saved Steam credentials, so
+  // keep both lazy but finish their setup before their first paint.
   m_tabFactories = {
       [this] { return std::make_unique<GeneralSettingsTab>(m_settings, *this); },
       [this] { return std::make_unique<ThemeSettingsTab>(m_settings, *this); },
@@ -129,9 +155,16 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
       },
   };
   m_tabs.resize(m_tabFactories.size());
+  constexpr int PluginsTabIndex = 5;
+  constexpr int WorkaroundsTabIndex = 6;
   connect(ui->tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
+    if (index == PluginsTabIndex || index == WorkaroundsTabIndex) {
+      initializeTab(index);
+      return;
+    }
+
     // Let the dialog paint the selected page before building it. This keeps
-    // opening Settings responsive even when the last-used page is Plugins.
+    // other lazy pages from delaying Settings when first opened.
     QTimer::singleShot(0, this, [this, index] {
       if (ui->tabWidget->currentIndex() == index) {
         initializeTab(index);
@@ -139,6 +172,20 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
     });
   });
   initializeTab(ui->tabWidget->currentIndex());
+
+  // These pages add circular headings and rebuild part of their layout at
+  // runtime. Prepare them while Settings is hidden to avoid a visible jump on
+  // the first visit.
+  constexpr int ThemeTabIndex = 1;
+  constexpr int ModListTabIndex = 2;
+  constexpr int PathsTabIndex = 3;
+  constexpr int NexusTabIndex = 4;
+  constexpr int DiagnosticsTabIndex = 7;
+  initializeTab(ThemeTabIndex);
+  initializeTab(ModListTabIndex);
+  initializeTab(PathsTabIndex);
+  initializeTab(NexusTabIndex);
+  initializeTab(DiagnosticsTabIndex);
 }
 
 void SettingsDialog::initializeTab(int index)
@@ -210,16 +257,6 @@ SettingsDialog::~SettingsDialog()
 {
   disconnect(this);
   delete ui;
-}
-
-QString SettingsDialog::getColoredButtonStyleSheet() const
-{
-  return QString("QPushButton {"
-                 "background-color: %1;"
-                 "color: %2;"
-                 "border: 1px solid;"
-                 "padding: 3px;"
-                 "}");
 }
 
 void SettingsDialog::accept()
