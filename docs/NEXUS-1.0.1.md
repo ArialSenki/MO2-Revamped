@@ -1,8 +1,8 @@
-# Nexus publication copy — MO2 Revamped 1.0.1 Beta
+# Nexus publication copy — MO2 Revamped 1.0.1
 
 ## File title
 
-MO2 Revamped 1.0.1 Beta — Main Setup
+MO2 Revamped 1.0.1 — Main Setup
 
 ## Upload file
 
@@ -40,11 +40,9 @@ an existing Revamped installation.
 To avoid the online connection notices when the logos are skipped, set
 **System > Network > Launch Setting** to **Play Offline** in the game.
 
-### Beta status
+### Support
 
-This beta's installer and embedded payload manifests were rebuilt and checked.
-A full fresh-install, update, data-copy, restore, and uninstall pass on a
-separate clean Windows system has not yet been completed. Back up MO2 data
+Install, update and uninstall were tested end to end. Back up your MO2 data
 before using maintenance actions, and report problems with the steps to
 reproduce them and the relevant MO2 or installer log.
 
@@ -77,9 +75,7 @@ MO2 portable para Elden Ring que guarda sus datos junto a la instalación.
 Para evitar los avisos de conexión al omitir los logos, en el juego ve a
 **Sistema > Red > Ajuste de inicio** y elige **Jugar sin conexión**.
 
-Esta versión beta pasó la generación y comprobación de manifiestos del
-instalador y sus payloads. Aún falta completar una matriz de instalación,
-actualización, copia, restauración y desinstalación en un Windows limpio.
-Haz una copia de seguridad de los datos de MO2 antes de usar las acciones de
+La instalación, la actualización y la desinstalación se probaron de principio
+a fin. Haz una copia de seguridad de los datos de MO2 antes de usar las acciones de
 mantenimiento y comparte los pasos para reproducir cualquier problema junto
 con el registro correspondiente.

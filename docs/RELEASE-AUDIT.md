@@ -1,6 +1,6 @@
 # Release audit
 
-## Current local candidate — October 12, 2026 (v1.0.1 Beta, rc12h)
+## Published release — October 12, 2026 (v1.0.1, rc12h)
 
 - Installer: `MO2-Revamped-Setup-1.0.1.exe`, 683,894,272 bytes, SHA-256
   `8AE75917426AF3CAA563A0D7B8AA149907CE3E950204B731BA5306DB4BB9CF48`.
@@ -15,7 +15,7 @@
   with administrator rights; rc12h changes only MO2, the bridge, plugins and
   translations. Not Authenticode signed.
 
-## Current local candidate — October 11, 2026 (v1.0.1 Beta)
+## Earlier local candidate — October 11, 2026 (v1.0.1)
 
 - Installer: `MO2-Revamped-Setup-1.0.1.exe`, 376,334,848 bytes, SHA-256
   `3B7207F3AAB28D3F65FB9CB75516253A9B616991B4397C7CEC577CCC551034BF`.

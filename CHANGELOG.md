@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.0.1 Beta — Candidate: interface, installer, and package refresh
+## 1.0.1 — Interface, installer, and package refresh
 
-Prepared locally on October 11, 2026. This unpublished beta candidate uses one
+Released on October 12, 2026 as a stable release for Elden Ring. It uses one
 general setup executable. For now its only new installation is the Elden Ring
 Isolated edition: one portable instance for Elden Ring that keeps its data
 beside the installation. The Standard multi-instance installation and the

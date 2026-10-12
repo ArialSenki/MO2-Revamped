@@ -11,10 +11,10 @@ installer. It is maintained by **ArialSenki**.
 
 ## Download
 
-**Latest: [v1.0.1 Beta](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1-beta)**
+**Latest: [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)**
 — `MO2-Revamped-Setup-1.0.1.exe` with its `SHA256SUMS.txt`.
 
-The previous stable release, [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0),
+The previous release, [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0),
 remains available.
 
 ### Installing
@@ -28,9 +28,9 @@ remains available.
 Run the same setup again to **update**, **restore** or **uninstall** an
 existing installation; updates keep your data and back up the previous files
 first. The Standard multi-instance installation and "Copy data" are shown as
-*coming soon* in this beta.
+*coming soon* in this version.
 
-## What's new in 1.0.1 Beta
+## What's new in 1.0.1
 
 - **Isolated installer.** One setup file installs, updates, restores and
   uninstalls the Elden Ring edition, and starts MO2 afterwards without
