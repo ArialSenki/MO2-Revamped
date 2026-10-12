@@ -1,0 +1,69 @@
+[size=5][b]Description[/b][/size]
+[b]MO2 Revamped[/b] is an unofficial community edition of [url=https://github.com/ModOrganizer2/modorganizer]Mod Organizer 2[/url] v2.5.2 (USVFS 0.5.7.2), built for Elden Ring. It keeps the MO2 workflow you know (virtual file system, profiles, plugin and mod lists) and adds a refreshed interface, dedicated Elden Ring tools and a guided installer.
+
+[b]This project is not affiliated with, or endorsed by, the Mod Organizer 2 team, Nexus Mods, FromSoftware or Bandai Namco.[/b] All upstream names, copyrights and licenses are preserved.
+
+[b]Play offline.[/b] Mods are for offline play only. To avoid the online connection notices, set [b]System > Network > Launch Setting[/b] to [b]Play Offline[/b] in the game.
+
+[b]Verify the download[/b]
+The installer is [b]not digitally signed[/b], so Windows SmartScreen may show a warning. SHA-256 of [i]MO2-Revamped-Setup-1.0.1.exe[/i]:
+[code]8AE75917426AF3CAA563A0D7B8AA149907CE3E950204B731BA5306DB4BB9CF48[/code]In PowerShell:
+[code]Get-FileHash .\MO2-Revamped-Setup-1.0.1.exe[/code]
+[size=5][b]Installation[/b][/size]
+[list=1]
+[*]Download the main file and run [i]MO2-Revamped-Setup-1.0.1.exe[/i].[/*]
+[*]Pick your language and choose [b]Install isolated Elden Ring[/b].[/*]
+[*]Choose the installation folder. MO2 Revamped starts automatically when setup finishes, in the language you chose.[/*]
+[*]Point it at your Elden Ring folder and follow the first-start prompts (profile, theme and categories).[/*]
+[/list]
+The isolated edition is a self-contained, portable MO2: profiles, mods, downloads and settings all live inside its own folder. It never reads or changes an existing Mod Organizer 2 installation, so both can be used side by side.
+
+[b]Updating:[/b] run the new setup and choose [b]Update[/b]. Your data is kept and the previous files are backed up first.
+[b]Uninstalling:[/b] run the setup and choose [b]Uninstall[/b]. The option to erase your data starts unchecked.
+The Standard multi-instance installation and [i]Copy data[/i] are shown as [i]coming soon[/i].
+
+[size=5][b]Main features[/b][/size]
+[b]Elden Ring tools[/b]
+[list]
+[*][b]Archive installer[/b]: keep a mod's original folder layout or use MO2's standard layout; optionally omit .txt and .md files.[/*]
+[*][b]Native DLL Profile[/b]: per-profile load order for native DLL mods, loaded through the Revamped native bridge.[/*]
+[*][b]Startup Options[/b]: start minimized, black background (both now apply on every launch), [b]skip the intro logo screens[/b], and optional cleanup after the game closes.[/*]
+[*][b]Save Isolation[/b] ([i]Tools > Save Isolation[/i]): separate saves per profile, shared saves within the installation, or the global Steam save, with named save profiles and safe copy actions.[/*]
+[/list]
+[b]Interface[/b]
+[list]
+[*][b]Six languages[/b]: English, Spanish, German, French, Italian and Brazilian Portuguese, across the interface, tutorials and every Revamped tool.[/*]
+[*]Three themes: [b]Light[/b], [b]Dark Blue[/b] and [b]Dark Black[/b].[/*]
+[*]Reworked main window, menus, file panes, log area, filters, category manager, Overwrite view and dialogs.[/*]
+[*]Every dialog stays on screen, so buttons remain reachable on 768p displays and at 150% scaling.[/*]
+[/list]
+[b]Installer[/b]
+[list]
+[*]One setup file to install, update, restore and uninstall, in six languages.[/*]
+[*]Integrity checks and backups before updates; only maintains folders it recognizes as MO2 Revamped.[/*]
+[*]Starts MO2 without administrator rights after installing.[/*]
+[/list]
+[spoiler]
+[b]Bundled runtime:[/b] Mod Organizer 2 2.5.2 · USVFS 0.5.7.2 · Qt/PyQt 6.7.1 · Python 3.12.15 · OpenSSL 3.5.9 · 7-Zip 24.05 · LOOT CLI 1.6.0 / libloot 0.23.0 · Explorer++ 1.4.0
+[b]Native bridge:[/b] 0.5.0-alpha.35. The product version (1.0.1) does not mean each Elden Ring component has reached 1.0.
+[b]Logo skip:[/b] if the game version is not recognized, the logos simply play as usual.[/spoiler]
+
+[size=5][b]Requirements[/b][/size]
+[list]
+[*]Windows 10 or 11, 64-bit.[/*]
+[*]Elden Ring (Steam).[/*]
+[*][url=https://aka.ms/vs/17/release/vc_redist.x64.exe]Microsoft Visual C++ 2015–2022 Redistributable (x64)[/url] (usually already installed).[/*]
+[*]No other mods required.[/*]
+[/list]
+[size=5][b]Source code, license and bugs[/b][/size]
+Free software under the [b]GNU General Public License v3[/b]. Source code and releases: [url=https://github.com/ArialSenki/MO2-Revamped]github.com/ArialSenki/MO2-Revamped[/url]
+To report a bug, use the [b]Bugs[/b] tab and include your Windows version, the steps to reproduce it and the bug-report ZIP that MO2 Revamped can create (or [i]logs/mo_interface.log[/i]). Remove personal paths before posting, and never attach saves or account data.
+
+[size=5][b]Shout outs[/b][/size]
+[list]
+[*][b]Mod Organizer 2 team and contributors[/b] — [url=https://github.com/ModOrganizer2/modorganizer]Mod Organizer 2[/url] and [url=https://github.com/ModOrganizer2/usvfs]USVFS[/url] (GPLv3). This project would not exist without their work.[/*]
+[*][b]Soar Qin[/b] — [url=https://github.com/soarqin/YAFSML]YAFSML[/url], whose Elden Ring resolver is adapted here (MIT).[/*]
+[*][b]TechieW / Marius Storvik[/b] — [url=https://github.com/e5h/ME2_EldenRingMods]SkipTheIntro[/url], whose intro-logo pattern is used by the logo skip (MIT).[/*]
+[*][b]TsudaKageyu[/b] — [url=https://github.com/TsudaKageyu/minhook]MinHook[/url] (BSD 2-Clause).[/*]
+[*]OpenSSL, Qt, Python, 7-Zip, LOOT, Explorer++ and all other bundled projects (see [i]THIRD-PARTY-NOTICES.md[/i] and the [i]licenses[/i] folder).[/*]
+[/list]
