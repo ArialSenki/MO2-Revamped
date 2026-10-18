@@ -284,6 +284,8 @@ function Copy-RevampedSources {
                 'MO2 Classic Refined - Light.qss' { $relative = 'Light.qss' }
                 'MO2 Classic Refined - Dark.qss' { $relative = 'dark.qss' }
                 'MO2 Classic Refined - Dark Black.qss' { $relative = 'dark-black.qss' }
+                'MO2 Fluent v4 - Light.qss' { $relative = 'fluent-v4-light.qss' }
+                'MO2 Fluent v4 - Dark.qss' { $relative = 'fluent-v4-dark.qss' }
                 default { throw "Unexpected Revamped theme stylesheet: $($file.Name)" }
             }
         }
