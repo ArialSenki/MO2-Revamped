@@ -1423,7 +1423,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->displayCategoriesBtn->setToolTip(tr("Filter options"));
   ui->logDock->setMinimumHeight(175);
   ui->logList->setMinimumHeight(140);
-  ui->startButton->setMinimumHeight(44);
+  ui->startButton->setMinimumHeight(32);
   ui->startButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
   ui->startButton->setPopupMode(QToolButton::MenuButtonPopup);
   ui->startButton->setMenu(ui->menuRun);

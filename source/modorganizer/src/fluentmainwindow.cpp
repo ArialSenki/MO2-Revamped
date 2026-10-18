@@ -117,7 +117,6 @@ void MainWindow::setupFluentLayout()
   updateMoreActionsMenu();
 
   ui->activeModslabel->setText(tr("Active"));
-  ui->pageTitle->setText(tr("Mods"));
 
   setRunState(RunState::Idle);
   new IconTint(ui->startButton, QStringLiteral(":/MO/gui/mainwindow/run.svg"));

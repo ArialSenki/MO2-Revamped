@@ -7248,8 +7248,8 @@ QGroupBox::title {
 
 /* Main window: profile row. */
 QMainWindow#MainWindow QWidget#centralWidget QLabel#label_3 {
-    min-height: 30px;
-    max-height: 30px;
+    min-height: 32px;
+    max-height: 32px;
     color: #5D5D5D;
     background-color: transparent;
     border: none;
@@ -7259,8 +7259,8 @@ QMainWindow#MainWindow QWidget#centralWidget QLabel#label_3 {
 QMainWindow#MainWindow QComboBox#profileBox,
 QMainWindow#MainWindow QComboBox#profileBox:hover,
 QMainWindow#MainWindow QComboBox#profileBox:on {
-    min-height: 30px;
-    max-height: 30px;
+    min-height: 32px;
+    max-height: 32px;
     padding: 2px 30px 2px 10px;
     color: #1A1A1A;
     background-color: #FFFFFF;
@@ -7471,7 +7471,7 @@ QFrame#startGroup {
     border: none;
 }
 QComboBox#executablesListBox {
-    min-height: 34px;
+    min-height: 32px;
     padding: 2px 10px;
     color: #1A1A1A;
     background-color: #FFFFFF;
@@ -7492,8 +7492,8 @@ QComboBox#executablesListBox:on {
 QToolButton#startButton,
 QToolButton#refinedRunButton {
     min-width: 124px;
-    min-height: 34px;
-    max-height: 34px;
+    min-height: 30px;
+    max-height: 30px;
     padding: 2px 0px 2px 12px;
     color: #FFFFFF;
     background-color: #005FB8;
@@ -7791,27 +7791,14 @@ QStatusBar QLabel#apistats[apiState="warning"] {
 }
 
 /* ----------------------------------------------------------------------
-   Fluent v4 main window structure (pageHeader, cards, expander). These
+   Fluent v4 main window structure (cards, Run row, expander). These
    object names exist only in the Fluent build of mainwindow.ui; older
    builds ignore the rules.
    ---------------------------------------------------------------------- */
 
-QMainWindow#MainWindow QWidget#pageHeader {
-    background-color: transparent;
-}
-QMainWindow#MainWindow QLabel#pageTitle {
-    color: #1A1A1A;
-    font-family: "Segoe UI Variable Display", "Segoe UI";
-    font-size: 20pt;
-    font-weight: 600;
-    padding: 0px;
-}
-QMainWindow#MainWindow QLabel#pageSubtitle {
-    color: #5D5D5D;
-    padding: 0px 0px 2px 1px;
-}
-QMainWindow#MainWindow QWidget#pageHeader QFrame#startGroup {
-    min-width: 380px;
+/* Run row at the top of the Data card, the same height as the profile row
+   of the mod list card so both cards line up. */
+QFrame[fluentCard="true"] QFrame#startGroup {
     background-color: transparent;
     border: none;
 }
@@ -7859,8 +7846,8 @@ FluentTabBar::tab:hover:!selected {
 QMainWindow#MainWindow QToolButton#moreActionsBtn {
     min-width: 32px;
     max-width: 32px;
-    min-height: 30px;
-    max-height: 30px;
+    min-height: 32px;
+    max-height: 32px;
     padding: 0px;
     color: #1A1A1A;
     background-color: transparent;
