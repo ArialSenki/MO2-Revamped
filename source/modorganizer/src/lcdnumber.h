@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef LCDNUMBER_H
+#define LCDNUMBER_H
+
 #include <QLCDNumber>
 #include <QMouseEvent>
 #include <QWidget>
@@ -36,9 +39,23 @@ public:
   // calls useFrame() on every LCDNumber below root
   static void useFrames(QWidget* root);
 
+  // Fluent counters show plain text such as "2/4" in the widget font instead
+  // of seven-segment digits; an empty string restores the digits
+  void setDisplayText(const QString& text);
+  QString displayText() const;
+
+  QSize sizeHint() const override;
+  QSize minimumSizeHint() const override;
+
 public slots:
   void showToolTip();
 
+protected:
+  void paintEvent(QPaintEvent* event) override;
+
 private:
   QPoint m_toolTipPosition;
+  QString m_displayText;
 };
+
+#endif  // LCDNUMBER_H

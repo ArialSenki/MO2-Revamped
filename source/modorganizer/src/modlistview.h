@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QTreeView>
 
+#include "lcdnumber.h"
 #include "modlistsortproxy.h"
 #include "qtgroupingproxy.h"
 #include "viewmarkingscrollbar.h"
@@ -32,7 +33,27 @@ class ModListView : public QTreeView
 {
   Q_OBJECT
 
+  // Fluent switch colors, set by the stylesheet with qproperty-*; while they
+  // are invalid the indicator images from the stylesheet are used unchanged
+  Q_PROPERTY(QColor switchOnColor MEMBER m_switchOnColor)
+  Q_PROPERTY(QColor switchOffColor MEMBER m_switchOffColor)
+  Q_PROPERTY(QColor switchBorderColor MEMBER m_switchBorderColor)
+  Q_PROPERTY(QColor switchKnobOnColor MEMBER m_switchKnobOnColor)
+  Q_PROPERTY(QColor switchKnobOffColor MEMBER m_switchKnobOffColor)
+
 public:
+  struct SwitchColors
+  {
+    QColor on, off, border, knobOn, knobOff;
+    bool isValid() const { return on.isValid() && off.isValid(); }
+  };
+
+  SwitchColors switchColors() const
+  {
+    return {m_switchOnColor, m_switchOffColor, m_switchBorderColor,
+            m_switchKnobOnColor, m_switchKnobOffColor};
+  }
+
   // this is a public version of DropIndicatorPosition
   enum DropPosition
   {
@@ -207,7 +228,7 @@ private:  // private structures
     QComboBox* groupBy;
 
     // the mod counter
-    QLCDNumber* counter;
+    LCDNumber* counter;
 
     // filters related
     QLineEdit* filter;
@@ -347,6 +368,9 @@ public:  // member variables
   // replace the auto-expand timer from QTreeView to avoid
   // auto-collapsing
   QBasicTimer m_openTimer;
+
+  QColor m_switchOnColor, m_switchOffColor, m_switchBorderColor;
+  QColor m_switchKnobOnColor, m_switchKnobOffColor;
 };
 
 #endif  // MODLISTVIEW_H

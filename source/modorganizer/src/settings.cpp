@@ -867,6 +867,16 @@ void GeometrySettings::restoreToolbars(QMainWindow* w) const
   }
 }
 
+bool GeometrySettings::fluentToolbarApplied() const
+{
+  return get<bool>(m_Settings, "Geometry", "fluent_toolbar_v4", false);
+}
+
+void GeometrySettings::setFluentToolbarApplied(bool b)
+{
+  set(m_Settings, "Geometry", "fluent_toolbar_v4", b);
+}
+
 void GeometrySettings::saveToolbars(const QMainWindow* w)
 {
   const auto tbs = w->findChildren<QToolBar*>();
@@ -2134,6 +2144,16 @@ bool InterfaceSettings::lockGUI() const
 void InterfaceSettings::setLockGUI(bool b)
 {
   set(m_Settings, "Settings", "lock_gui", b);
+}
+
+bool InterfaceSettings::animationsEnabled() const
+{
+  return get<bool>(m_Settings, "Settings", "animations", true);
+}
+
+void InterfaceSettings::setAnimationsEnabled(bool b)
+{
+  set(m_Settings, "Settings", "animations", b);
 }
 
 std::optional<QString> InterfaceSettings::styleName() const

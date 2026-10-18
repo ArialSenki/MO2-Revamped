@@ -2,6 +2,7 @@
 #include "categoriesdialog.h"
 #include "circularuihelpers.h"
 #include "colortable.h"
+#include "fluentmotion.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
 #include <questionboxmemory.h>
@@ -112,6 +113,7 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
       settings().interface().showChangeGameConfirmation());
   ui->doubleClickPreviews->setChecked(
       settings().interface().doubleClicksOpenPreviews());
+  ui->animationsBox->setChecked(settings().interface().animationsEnabled());
 
   // The legacy View > Toolbars controls now live with the other interface
   // preferences. Read the live widgets so existing toolbar settings carry over.
@@ -132,7 +134,7 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
       QObject::tr("Text only"), static_cast<int>(Qt::ToolButtonTextOnly));
   ui->toolbarButtonStyleCombo->addItem(
       QObject::tr("Icons and text"),
-      static_cast<int>(Qt::ToolButtonTextUnderIcon));
+      static_cast<int>(Qt::ToolButtonTextBesideIcon));
   ui->toolbarButtonStyleCombo->setMinimumWidth(190);
 
   if (mainWindow) {
@@ -225,6 +227,8 @@ void GeneralSettingsTab::update()
       ui->changeGameConfirmation->isChecked());
   settings().interface().setDoubleClicksOpenPreviews(
       ui->doubleClickPreviews->isChecked());
+  settings().interface().setAnimationsEnabled(ui->animationsBox->isChecked());
+  FluentMotion::setEnabled(ui->animationsBox->isChecked());
 
   if (auto* mainWindow = qobject_cast<QMainWindow*>(dialog().parentWidget())) {
     const QVariant iconSizeData = ui->toolbarIconSizeCombo->currentData();

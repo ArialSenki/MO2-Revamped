@@ -133,6 +133,11 @@ public:
   void saveToolbars(const QMainWindow* w);
   void restoreToolbars(QMainWindow* w) const;
 
+  // whether the Fluent command bar defaults (small icons, text beside icons)
+  // have been applied once; later changes by the user are kept
+  bool fluentToolbarApplied() const;
+  void setFluentToolbarApplied(bool b);
+
   void saveDocks(const QMainWindow* w);
   void restoreDocks(QMainWindow* w) const;
 
@@ -586,6 +591,11 @@ public:
   //
   bool lockGUI() const;
   void setLockGUI(bool b);
+
+  // whether tabs, switches, the log panel and the Run button animate
+  //
+  bool animationsEnabled() const;
+  void setAnimationsEnabled(bool b);
 
   // filename of the theme
   //

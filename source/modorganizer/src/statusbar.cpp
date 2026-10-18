@@ -142,6 +142,14 @@ void StatusBar::updateNormalMessage(OrganizerCore& core)
   const auto s = QString("%1 - %2 - %3").arg(game).arg(instance).arg(profile);
 
   m_normal->setText(s);
+
+  // the Fluent page header repeats the context under the "Mods" title
+  if (ui != nullptr) {
+    //"\xc2\xb7" is a middle dot
+    ui->pageSubtitle->setText(
+        tr("%1 \xc2\xb7 %2 \xc2\xb7 Profile %3 \xc2\xb7 lower in the list wins conflicts")
+            .arg(game, instance, profile));
+  }
 }
 
 void StatusBar::showEvent(QShowEvent*)
