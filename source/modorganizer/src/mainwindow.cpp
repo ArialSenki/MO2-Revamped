@@ -35,6 +35,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "executableinfo.h"
 #include "executableslist.h"
 #include "filedialogmemory.h"
+#include "fluentmotion.h"
 #include "gameiconutils.h"
 #include "filterlist.h"
 #include "guessedvalue.h"
@@ -140,6 +141,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMenu>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QMouseEvent>
 #include <QModelIndex>
 #include <QNetworkProxyFactory>
 #include <QPainter>
@@ -172,6 +174,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTreeView>
 #include <QTreeWidgetItemIterator>
 #include <QUrl>
+#include <QVariantAnimation>
 #include <QVariantList>
 #include <QVBoxLayout>
 #include <QVersionNumber>
@@ -331,27 +334,73 @@ private:
   bool m_Floating = false;
 };
 
+// Fluent v4 expander row for the log: a chevron, the title, and the latest
+// message; clicking the row folds the log list away with an animation
 class LogDockTitleBar final : public QWidget
 {
 public:
   explicit LogDockTitleBar(QDockWidget* dock)
-      : QWidget(dock), m_Title(new QLabel(dock->windowTitle(), this)),
+      : QWidget(dock), m_Dock(dock), m_Title(new QLabel(dock->windowTitle(), this)),
+        m_Summary(new QLabel(this)), m_Chevron(new QToolButton(this)),
         m_FloatButton(new LogDockControlButton(
-            LogDockControlButton::Glyph::Float, this))
+            LogDockControlButton::Glyph::Float, this)),
+        m_Animation(FluentMotion::createAnimation(this))
   {
     setObjectName(QStringLiteral("logDockTitleBar"));
     setAttribute(Qt::WA_StyledBackground, true);
+    setCursor(Qt::PointingHandCursor);
 
     m_Title->setObjectName(QStringLiteral("logDockTitleLabel"));
     m_Title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_Title->setContentsMargins(0, 0, 0, 0);
     m_Title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
+    m_Summary->setObjectName(QStringLiteral("logDockSummaryLabel"));
+    m_Summary->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_Summary->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    m_Summary->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+
+    QFont glyphs;
+    glyphs.setFamilies({QStringLiteral("Segoe Fluent Icons"),
+                        QStringLiteral("Segoe MDL2 Assets")});
+    glyphs.setPointSize(8);
+    m_Chevron->setObjectName(QStringLiteral("logDockExpandButton"));
+    m_Chevron->setFont(glyphs);
+    m_Chevron->setFixedSize(24, 24);
+    m_Chevron->setFocusPolicy(Qt::NoFocus);
+
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(10, 0, 8, 0);
-    layout->setSpacing(5);
-    layout->addWidget(m_Title, 1);
+    layout->setContentsMargins(6, 0, 8, 0);
+    layout->setSpacing(6);
+    layout->addWidget(m_Chevron, 0, Qt::AlignVCenter);
+    layout->addWidget(m_Title, 0);
+    layout->addWidget(m_Summary, 1);
     layout->addWidget(m_FloatButton, 0, Qt::AlignVCenter);
+
+    connect(m_Chevron, &QToolButton::clicked, this, [this] {
+      setExpanded(!m_Expanded);
+    });
+
+    connect(m_Animation, &QVariantAnimation::valueChanged, this, [this](auto&& v) {
+      if (auto* mw = qobject_cast<QMainWindow*>(m_Dock->parentWidget())) {
+        mw->resizeDocks({m_Dock}, {v.toInt()}, Qt::Vertical);
+      }
+    });
+
+    // the log list stays visible at zero height while folded; hiding it would
+    // shrink the dock horizontally as well
+    connect(m_Animation, &QVariantAnimation::finished, this, [this] {
+      if (m_Expanded) {
+        relaxContentMinimum(false);
+        m_Dock->setMinimumHeight(m_ExpandedMinimum);
+      }
+    });
+
+    connect(&LogModel::instance(), &QAbstractItemModel::rowsInserted, this,
+            [this] { updateSummary(); });
+
+    updateChevron();
+    updateSummary();
 
     auto* closeButton =
         new LogDockControlButton(LogDockControlButton::Glyph::Close, this);
@@ -377,7 +426,118 @@ public:
   QSize sizeHint() const override { return QSize(180, 34); }
   QSize minimumSizeHint() const override { return QSize(82, 34); }
 
+  void setExpanded(bool expanded)
+  {
+    if (expanded == m_Expanded || m_Dock->isFloating()) {
+      return;
+    }
+
+    m_Expanded            = expanded;
+    const int titleHeight = sizeHint().height();
+
+    // the log list and the dock carry minimum heights that would stop the
+    // panel from folding; lift them while the panel moves
+    relaxContentMinimum(true);
+    m_Dock->setMinimumHeight(titleHeight);
+
+    if (expanded) {
+      FluentMotion::start(m_Animation, titleHeight, m_ExpandedHeight,
+                          FluentMotion::Normal);
+    } else {
+      m_ExpandedHeight = m_Dock->height();
+      FluentMotion::start(m_Animation, m_ExpandedHeight, titleHeight,
+                          FluentMotion::Normal);
+    }
+
+    updateChevron();
+  }
+
+protected:
+  void mousePressEvent(QMouseEvent* e) override
+  {
+    m_PressPosition = e->position().toPoint();
+    QWidget::mousePressEvent(e);
+  }
+
+  void mouseReleaseEvent(QMouseEvent* e) override
+  {
+    // the whole row toggles, like a Windows 11 expander; the buttons on the
+    // right handle their own clicks, and dragging the row moves the dock
+    const QPoint moved = e->position().toPoint() - m_PressPosition;
+    if (e->button() == Qt::LeftButton && moved.manhattanLength() < 4) {
+      setExpanded(!m_Expanded);
+    }
+
+    QWidget::mouseReleaseEvent(e);
+  }
+
+  void resizeEvent(QResizeEvent* e) override
+  {
+    QWidget::resizeEvent(e);
+    updateSummary();
+  }
+
 private:
+  void relaxContentMinimum(bool relax)
+  {
+    QWidget* content = m_Dock->widget();
+    if (content == nullptr) {
+      return;
+    }
+
+    if (relax) {
+      if (m_SavedMinimums.isEmpty()) {
+        m_ExpandedMinimum = qMax(m_ExpandedMinimum, m_Dock->minimumHeight());
+        m_SavedMinimums.append({content, content->minimumHeight()});
+        for (auto* child : content->findChildren<QWidget*>()) {
+          if (child->minimumHeight() > 0) {
+            m_SavedMinimums.append({child, child->minimumHeight()});
+          }
+        }
+      }
+      // 0 would fall back to minimumSizeHint(), which keeps a tree view
+      // several rows tall; 1 lets the layout shrink it completely
+      for (const auto& saved : m_SavedMinimums) {
+        if (saved.first) {
+          saved.first->setMinimumHeight(1);
+        }
+      }
+    } else {
+      for (const auto& saved : m_SavedMinimums) {
+        if (saved.first) {
+          saved.first->setMinimumHeight(saved.second);
+        }
+      }
+      m_SavedMinimums.clear();
+    }
+  }
+
+  void updateChevron()
+  {
+    // ChevronUp folds, ChevronDown unfolds
+    m_Chevron->setText(QString(QChar(m_Expanded ? 0xE70E : 0xE70D)));
+    const QString action = m_Expanded ? QObject::tr("Collapse log")
+                                      : QObject::tr("Expand log");
+    m_Chevron->setToolTip(action);
+    m_Chevron->setAccessibleName(action);
+  }
+
+  void updateSummary()
+  {
+    const auto& entries = LogModel::instance().entries();
+    if (entries.empty()) {
+      m_Summary->clear();
+      return;
+    }
+
+    QString text = QString::fromStdString(entries.back().message);
+    text         = text.section(QLatin1Char('\n'), 0, 0).trimmed();
+
+    const int width = qMax(0, m_Summary->width());
+    m_Summary->setText(m_Summary->fontMetrics().elidedText(text, Qt::ElideRight, width));
+    m_Summary->setToolTip(text);
+  }
+
   void updateFloatControl(bool floating)
   {
     if (m_FloatButton == nullptr) {
@@ -391,8 +551,17 @@ private:
     m_FloatButton->setAccessibleName(action);
   }
 
+  QDockWidget* m_Dock;
   QLabel* m_Title;
+  QLabel* m_Summary;
+  QToolButton* m_Chevron;
   LogDockControlButton* m_FloatButton;
+  QVariantAnimation* m_Animation;
+  bool m_Expanded       = true;
+  int m_ExpandedHeight  = 175;
+  int m_ExpandedMinimum = 175;
+  QList<QPair<QPointer<QWidget>, int>> m_SavedMinimums;
+  QPoint m_PressPosition;
 };
 
 class ResponsiveColumnSizer final : public QObject
@@ -1301,6 +1470,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   setupToolbar();
   toggleRevampedEndorseState();
+  setupFluentLayout();
 
   TaskProgressManager::instance().tryCreateTaskbar();
 
@@ -1829,7 +1999,7 @@ void MainWindow::updateToolbarMenu()
   ui->actionToolBarTextOnly->setChecked(ui->toolBar->toolButtonStyle() ==
                                         Qt::ToolButtonTextOnly);
   ui->actionToolBarIconsAndText->setChecked(ui->toolBar->toolButtonStyle() ==
-                                            Qt::ToolButtonTextUnderIcon);
+                                            Qt::ToolButtonTextBesideIcon);
 }
 
 void MainWindow::updateViewMenu()
@@ -1895,7 +2065,7 @@ void MainWindow::on_actionToolBarTextOnly_triggered()
 
 void MainWindow::on_actionToolBarIconsAndText_triggered()
 {
-  setToolbarButtonStyle(Qt::ToolButtonTextUnderIcon);
+  setToolbarButtonStyle(Qt::ToolButtonTextBesideIcon);
 }
 
 void MainWindow::on_actionViewLog_triggered()
@@ -2658,7 +2828,8 @@ void MainWindow::registerPluginTool(IPluginTool* tool, QString name, QMenu* menu
   if (name.isEmpty())
     name = tool->displayName();
 
-  QAction* action = new QAction(tool->icon(), name, menu);
+  const QIcon icon = tool->icon().isNull() ? fluentToolIcon(name) : tool->icon();
+  QAction* action  = new QAction(icon, name, menu);
   action->setToolTip(tool->tooltip());
   tool->setParentWidget(this);
   connect(
@@ -3346,6 +3517,7 @@ void MainWindow::readSettings()
   s.geometry().restoreState(this);
   s.geometry().restoreDocks(this);
   s.geometry().restoreToolbars(this);
+  applyFluentToolbarDefaults(SmallToolbarSize);
   s.geometry().restoreState(ui->splitter);
   s.geometry().restoreGeometry(m_FilterOptionsDialog);
   ui->menuBar->hide();
@@ -3482,7 +3654,9 @@ void MainWindow::launchSelectedExecutable()
   }
 
   ui->startButton->setEnabled(false);
+  setRunState(RunState::Mounting);
   Guard g([&] {
+    setRunState(RunState::Idle);
     ui->startButton->setEnabled(true);
   });
 
@@ -4550,6 +4724,7 @@ void MainWindow::languageChange(const QString& newLanguage)
 
   ui->listOptionsBtn->setMenu(createModListOptionsMenu());
   ui->openFolderMenu->setMenu(openFolderMenu());
+  updateMoreActionsMenu();
 }
 
 void MainWindow::originModified(int originID)

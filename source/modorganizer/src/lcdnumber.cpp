@@ -20,6 +20,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QLayout>
+#include <QPainter>
 #include <QTimer>
 #include <QToolTip>
 
@@ -74,4 +75,53 @@ void LCDNumber::mousePressEvent(QMouseEvent* event)
 void LCDNumber::showToolTip()
 {
   QToolTip::showText(m_toolTipPosition, toolTip());
+}
+
+void LCDNumber::setDisplayText(const QString& text)
+{
+  if (m_displayText == text) {
+    return;
+  }
+
+  m_displayText = text;
+  updateGeometry();
+  update();
+}
+
+QString LCDNumber::displayText() const
+{
+  return m_displayText;
+}
+
+QSize LCDNumber::sizeHint() const
+{
+  if (m_displayText.isEmpty()) {
+    return QLCDNumber::sizeHint();
+  }
+
+  QFont f = font();
+  f.setWeight(QFont::DemiBold);
+  const QFontMetrics fm(f);
+  return QSize(fm.horizontalAdvance(m_displayText) + 4, fm.height() + 2);
+}
+
+QSize LCDNumber::minimumSizeHint() const
+{
+  return m_displayText.isEmpty() ? QLCDNumber::minimumSizeHint() : sizeHint();
+}
+
+void LCDNumber::paintEvent(QPaintEvent* event)
+{
+  if (m_displayText.isEmpty()) {
+    QLCDNumber::paintEvent(event);
+    return;
+  }
+
+  // the stylesheet "color" ends up in the foreground role of the palette
+  QPainter p(this);
+  QFont f = font();
+  f.setWeight(QFont::DemiBold);
+  p.setFont(f);
+  p.setPen(palette().color(foregroundRole()));
+  p.drawText(rect(), Qt::AlignCenter, m_displayText);
 }

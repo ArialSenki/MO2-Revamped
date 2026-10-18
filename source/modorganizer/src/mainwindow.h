@@ -81,6 +81,7 @@ class DirectoryEntry;
 #include <QStringList>
 #include <QTime>
 #include <QTimer>
+#include <QToolButton>
 #include <QVariant>
 #include <Qt>
 #include <QtConcurrent/QtConcurrentRun>
@@ -205,6 +206,25 @@ private:
   void setToolbarSize(const QSize& s);
   void setToolbarButtonStyle(Qt::ToolButtonStyle s);
   void stabilizeToolbarButtonGeometry(bool recapture);
+
+  // Fluent v4 layer, see fluentmainwindow.cpp
+  enum class RunState
+  {
+    Idle,
+    Mounting,
+    Starting,
+    Running
+  };
+
+  void setupFluentLayout();
+  void updateMoreActionsMenu();
+  void setRunState(RunState state);
+  void waitForRunningProcess();
+  void applyFluentToolbarDefaults(const QSize& iconSize);
+  static QIcon fluentToolIcon(const QString& name);
+  QToolButton* m_moreActionsButton = nullptr;
+  RunState m_runState              = RunState::Idle;
+
   bool m_toolbarButtonGeometryInitialized = false;
   QMargins m_toolbarContentsMargins;
   int m_toolbarLayoutSpacing = -1;

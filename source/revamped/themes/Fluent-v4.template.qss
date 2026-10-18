@@ -931,3 +931,155 @@ QStatusBar QLabel#apistats[apiState="warning"] {
     background-color: @warnBg@;
     border: 1px solid @warnBg@;
 }
+
+/* ----------------------------------------------------------------------
+   Fluent v4 main window structure (pageHeader, cards, expander). These
+   object names exist only in the Fluent build of mainwindow.ui; older
+   builds ignore the rules.
+   ---------------------------------------------------------------------- */
+
+QMainWindow#MainWindow QWidget#pageHeader {
+    background-color: transparent;
+}
+QMainWindow#MainWindow QLabel#pageTitle {
+    color: @text@;
+    font-family: "Segoe UI Variable Display", "Segoe UI";
+    font-size: 20pt;
+    font-weight: 600;
+    padding: 0px;
+}
+QMainWindow#MainWindow QLabel#pageSubtitle {
+    color: @muted@;
+    padding: 0px 0px 2px 1px;
+}
+QMainWindow#MainWindow QWidget#pageHeader QFrame#startGroup {
+    min-width: 380px;
+    background-color: transparent;
+    border: none;
+}
+
+QFrame[fluentCard="true"] {
+    background-color: @card@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+}
+QFrame[fluentCard="true"] QLabel {
+    background-color: transparent;
+}
+QMainWindow#MainWindow QFrame[fluentCard="true"] QTreeView#modList {
+    background-color: @card@;
+    border: none;
+    border-top: 1px solid @line@;
+    border-bottom: 1px solid @line@;
+    border-radius: 0px;
+}
+QFrame[fluentCard="true"] QTabWidget::pane,
+QWidget#centralWidget QFrame[fluentCard="true"] QTabWidget#tabWidget::pane {
+    background-color: @card@;
+    border: none;
+    border-top: 1px solid @line@;
+    border-radius: 0px;
+    top: 0px;
+}
+QFrame[fluentCard="true"] QTabWidget::tab-bar {
+    left: 0px;
+}
+
+FluentTabBar {
+    qproperty-indicatorColor: @accent@;
+    background-color: transparent;
+}
+FluentTabBar::tab,
+FluentTabBar::tab:hover,
+FluentTabBar::tab:selected {
+    border-bottom: 3px solid transparent;
+}
+FluentTabBar::tab:hover:!selected {
+    color: @text@;
+}
+
+QMainWindow#MainWindow QToolButton#moreActionsBtn {
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 30px;
+    max-height: 30px;
+    padding: 0px;
+    color: @text@;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+QMainWindow#MainWindow QToolButton#moreActionsBtn:hover {
+    background-color: @hover@;
+}
+QMainWindow#MainWindow QToolButton#moreActionsBtn:pressed,
+QMainWindow#MainWindow QToolButton#moreActionsBtn:open {
+    background-color: @pressed@;
+}
+QMainWindow#MainWindow QToolButton#moreActionsBtn::menu-indicator {
+    image: none;
+    width: 0px;
+}
+QMainWindow#MainWindow QLabel#activeModslabel {
+    color: @muted@;
+    padding-left: 6px;
+}
+
+/* Run button states: Mounting and Starting keep the accent, Running turns green. */
+QToolButton#startButton[runState="busy"],
+QToolButton#startButton[runState="busy"]:disabled {
+    color: @accentFg@;
+    background-color: @accentPressed@;
+    border-color: @accentPressed@;
+}
+QToolButton#startButton[runState="running"],
+QToolButton#startButton[runState="running"]:disabled {
+    color: @runningFg@;
+    background-color: @running@;
+    border-color: @running@;
+}
+
+/* Log expander row. */
+QWidget#logDockTitleBar {
+    min-height: 34px;
+    max-height: 34px;
+    background-color: @card@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+}
+QDockWidget#logDock QWidget#logDockTitleBar {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+QLabel#logDockSummaryLabel {
+    color: @muted@;
+    background-color: transparent;
+    padding-left: 6px;
+}
+QToolButton#logDockExpandButton {
+    color: @muted@;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 0px;
+}
+QToolButton#logDockExpandButton:hover {
+    color: @text@;
+    background-color: @hover@;
+}
+
+/* The animated pill replaces the stylesheet underline in the main window. */
+QWidget#centralWidget QTabWidget#tabWidget FluentTabBar::tab,
+QWidget#centralWidget QTabWidget#tabWidget FluentTabBar::tab:hover,
+QWidget#centralWidget QTabWidget#tabWidget FluentTabBar::tab:selected {
+    border-bottom: 3px solid transparent;
+}
+
+/* Animated mod list switches (ModListView paints them with these colors). */
+QMainWindow#MainWindow ModListView#modList {
+    qproperty-switchOnColor: @accent@;
+    qproperty-switchOffColor: @trackOff@;
+    qproperty-switchBorderColor: @trackLine@;
+    qproperty-switchKnobOnColor: @knobOn@;
+    qproperty-switchKnobOffColor: @knobOff@;
+}

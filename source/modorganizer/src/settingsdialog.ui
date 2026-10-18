@@ -299,6 +299,16 @@
                 </property>
                </widget>
               </item>
+              <item>
+               <widget class="QCheckBox" name="animationsBox">
+                <property name="toolTip">
+                 <string>Animate tab changes, switches, the log panel, and the Run button. Turn this off to show every change immediately.</string>
+                </property>
+                <property name="text">
+                 <string>Enable animations</string>
+                </property>
+               </widget>
+              </item>
              </layout>
            </widget>
            </item>

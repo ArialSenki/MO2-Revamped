@@ -188,6 +188,8 @@ mo2_add_filter(NAME src/loot GROUPS
 mo2_add_filter(NAME src/mainwindow GROUPS
 	datatab
 	downloadstab
+	fluentmotion
+	fluenttabwidget
 	iconfetcher
 	filetree
 	filetreeitem
