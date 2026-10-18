@@ -11,6 +11,8 @@
 #include "ui_mainwindow.h"
 
 #include <QApplication>
+#include <QEvent>
+#include <QIcon>
 #include <QMenu>
 #include <QPainter>
 #include <QPixmap>
@@ -32,6 +34,57 @@ QFont fluentIconFont(int pointSize)
 }
 
 constexpr char16_t MoreGlyph = 0xE712;
+
+// keeps a monochrome icon in the text color of its button, so the Run glyph
+// is white on the light theme's accent and black on the dark theme's
+class IconTint : public QObject
+{
+public:
+  IconTint(QToolButton* button, QString path)
+      : QObject(button), m_button(button), m_path(std::move(path))
+  {
+    button->installEventFilter(this);
+    apply();
+  }
+
+protected:
+  bool eventFilter(QObject* o, QEvent* e) override
+  {
+    if (o == m_button && (e->type() == QEvent::PaletteChange ||
+                          e->type() == QEvent::StyleChange)) {
+      apply();
+    }
+    return false;
+  }
+
+private:
+  QToolButton* m_button;
+  QString m_path;
+  QColor m_applied;
+
+  void apply()
+  {
+    const QColor color = m_button->palette().color(QPalette::ButtonText);
+    if (color == m_applied) {
+      return;
+    }
+    m_applied = color;
+
+    const QIcon source(m_path);
+    QIcon tinted;
+    for (int size : {16, 20, 24, 32, 48}) {
+      QPixmap pixmap = source.pixmap(size, size);
+      QPainter p(&pixmap);
+      p.setCompositionMode(QPainter::CompositionMode_SourceIn);
+      p.fillRect(pixmap.rect(), color);
+      p.end();
+      tinted.addPixmap(pixmap);
+    }
+
+    // setIcon() triggers no palette change, so this does not recurse
+    m_button->setIcon(tinted);
+  }
+};
 
 void repolish(QWidget* w)
 {
@@ -67,6 +120,7 @@ void MainWindow::setupFluentLayout()
   ui->pageTitle->setText(tr("Mods"));
 
   setRunState(RunState::Idle);
+  new IconTint(ui->startButton, QStringLiteral(":/MO/gui/mainwindow/run.svg"));
 
   // the Run button follows the process from the moment it is clicked; other
   // launches (shortcuts, plugins) leave it alone
