@@ -59,6 +59,28 @@ $themes = @(
             trackOff = '#2F2F2F'; trackOffHover = '#363636'; trackLine = '#9A9A9A'; knobOff = '#C5C5C5'; knobOn = '#000000'
             boxLine = '#9A9A9A'; boxFill = '#2F2F2F'; boxHover = '#363636'; disabledLine = '#555555'; disabledFill = '#3A3A3A'
         }
+    },
+    @{
+        # Dark Black is the neutral variant: charcoal surfaces one step below
+        # Fluent Dark and a gray accent instead of the Windows blue.
+        Name = 'Dark Black'; Source = 'MO2 Classic Refined - Dark.qss'
+        Output = 'MO2 Fluent v4 - Dark Black.qss'; Assets = 'mo2-fluent-v4-black'; Dark = $true
+        Tokens = [ordered]@{
+            bg = '#181818'; card = '#222222'; cardLine = '#2E2E2E'; line = '#2C2C2C'
+            rowAlt = '#252525'; rowHover = '#2A2A2A'; hover = '#262626'; pressed = '#1F1F1F'
+            sel = '#383838'; menu = '#232323'; menuLine = '#333333'
+            field = '#262626'; fieldHover = '#2B2B2B'; fieldLine = '#353535'; fieldBottom = '#8F8F8F'
+            btn = '#252525'; btnHover = '#2B2B2B'; btnPressed = '#1F1F1F'; btnLine = '#353535'; btnBottom = '#3E3E3E'
+            disabledBg = '#212121'
+            text = '#EDEDED'; muted = '#BDBDBD'; faint = '#8F8F8F'
+            accent = '#D6D6D6'; accentHover = '#C6C6C6'; accentPressed = '#B3B3B3'
+            accentFg = '#000000'; accentFgPressed = '#2A2A2A'; accentText = '#E6E6E6'
+            accentDivider = '#6A6A6A'; accentSubtle = '#333333'
+            warnBg = '#3D3218'; warnFg = '#F5D58C'; running = '#6CCB5F'; runningFg = '#000000'
+            scroll = '#4E4E4E'; scrollHover = '#7A7A7A'
+            trackOff = '#262626'; trackOffHover = '#2E2E2E'; trackLine = '#8F8F8F'; knobOff = '#BDBDBD'; knobOn = '#000000'
+            boxLine = '#8F8F8F'; boxFill = '#262626'; boxHover = '#2E2E2E'; disabledLine = '#4F4F4F'; disabledFill = '#353535'
+        }
     }
 )
 

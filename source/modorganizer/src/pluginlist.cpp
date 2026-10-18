@@ -1283,7 +1283,7 @@ QVariant PluginList::foregroundData(const QModelIndex& modelIndex) const
   }
 
   if ((modelIndex.column() == COL_NAME) && m_ESPs[index].forceDisabled) {
-    return QBrush(MOBase::RevampedTheme::isBlack() ? QColor("#F0A0A0") : QColor(Qt::darkRed));
+    return QBrush(MOBase::RevampedTheme::criticalText());
   }
 
   return {};

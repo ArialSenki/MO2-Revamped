@@ -198,15 +198,15 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
     }
   } else if (role == Qt::ForegroundRole && index.column() == COL_STATUS) {
     if (pendingDownload) {
-      return MOBase::RevampedTheme::isBlack() ? QColor("#D0D0D0") : QColor(Qt::darkBlue);
+      return MOBase::RevampedTheme::infoText();
     } else {
       DownloadManager::DownloadState state = m_manager.getState(index.row());
       if (state == DownloadManager::STATE_READY)
-        return MOBase::RevampedTheme::isBlack() ? QColor("#9BCB9B") : QColor(Qt::darkGreen);
+        return MOBase::RevampedTheme::successText();
       else if (state == DownloadManager::STATE_UNINSTALLED)
-        return MOBase::RevampedTheme::isBlack() ? QColor("#D9C48A") : QColor(Qt::darkYellow);
+        return MOBase::RevampedTheme::cautionText();
       else if (state == DownloadManager::STATE_PAUSED)
-        return MOBase::RevampedTheme::isBlack() ? QColor("#F0A0A0") : QColor(Qt::darkRed);
+        return MOBase::RevampedTheme::criticalText();
     }
   } else if (role == Qt::ToolTipRole) {
     if (pendingDownload) {

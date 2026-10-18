@@ -356,17 +356,18 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     if (column == COL_NAME) {
       int highlight = modInfo->getHighlight();
       if (highlight & ModInfo::HIGHLIGHT_IMPORTANT) {
-        return QBrush(MOBase::RevampedTheme::isBlack() ? QColor("#F0A0A0") : QColor(Qt::darkRed));
+        return QBrush(MOBase::RevampedTheme::criticalText());
       } else if (highlight & ModInfo::HIGHLIGHT_INVALID) {
-        return QBrush(MOBase::RevampedTheme::isBlack() ? QColor("#A6A6A6") : QColor(Qt::darkGray));
+        return QBrush(MOBase::RevampedTheme::dimmedText());
       }
     } else if (column == COL_VERSION) {
       if (!modInfo->newestVersion().isValid()) {
         return QVariant();
       } else if (modInfo->updateAvailable() || modInfo->downgradeAvailable()) {
-        return QBrush(Qt::red);
+        return QBrush(MOBase::RevampedTheme::isDark() ? MOBase::RevampedTheme::criticalText()
+                                                     : QColor(Qt::red));
       } else {
-        return QBrush(Qt::darkGreen);
+        return QBrush(MOBase::RevampedTheme::successText());
       }
     }
     return QVariant();
