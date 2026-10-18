@@ -8027,3 +8027,25 @@ QComboBox#executablesListBox:on {
     padding-top: 0px;
     padding-bottom: 0px;
 }
+
+/* Mica: on Windows 11 the main window is translucent and MOApplication sets
+   fluentMica, so the window surfaces between the cards let the system
+   backdrop through. The cards, lists and fields keep their own fill. */
+QMainWindow#MainWindow[fluentMica="true"],
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget,
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget QSplitter#categoriesSplitter,
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget QSplitter#splitter,
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget QSplitter#splitter::handle,
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget QSplitter#splitter::handle:hover,
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget QSplitter#splitter::handle:pressed,
+QMainWindow#MainWindow[fluentMica="true"] QWidget#centralWidget QSplitterHandle,
+QMainWindow#MainWindow[fluentMica="true"]::separator,
+QMainWindow#MainWindow[fluentMica="true"] QMenuBar#menuBar,
+QMainWindow#MainWindow[fluentMica="true"] QToolBar#toolBar,
+QMainWindow#MainWindow[fluentMica="true"] QToolBar#toolBar > QWidget,
+QMainWindow#MainWindow[fluentMica="true"] QStatusBar#statusBar,
+QMainWindow#MainWindow[fluentMica="true"] QStatusBar#statusBar QLabel,
+QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock,
+QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock QWidget#dockWidgetContents {
+    background-color: transparent;
+}

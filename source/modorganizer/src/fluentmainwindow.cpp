@@ -14,6 +14,7 @@
 #include <QEvent>
 #include <QIcon>
 #include <QMenu>
+#include <QOperatingSystemVersion>
 #include <QPainter>
 #include <QPixmap>
 #include <QStyle>
@@ -97,6 +98,15 @@ void repolish(QWidget* w)
 void MainWindow::setupFluentLayout()
 {
   FluentMotion::setEnabled(m_OrganizerCore.settings().interface().animationsEnabled());
+
+  // Mica needs a translucent window surface, which Qt only honors before the
+  // native window exists. MOApplication turns the backdrop on and off with
+  // the theme; switching into a Fluent theme takes effect after a restart.
+  if (qApp->property("revampedFluent").toBool() &&
+      QOperatingSystemVersion::current() >=
+          QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621)) {
+    setAttribute(Qt::WA_TranslucentBackground);
+  }
 
   // one "more" button replaces the list options gear and the folder button;
   // both stay in the .ui (hidden) because other code still sets their menus

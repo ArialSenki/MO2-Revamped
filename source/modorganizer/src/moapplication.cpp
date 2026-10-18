@@ -1063,6 +1063,48 @@ bool stylePrefersDarkTitleBar(const QString& styleName)
   return background.isValid() && background.lightness() < 128;
 }
 
+// The generated Fluent v4 themes name themselves in their header comment.
+bool styleIsFluent(const QString& styleName)
+{
+  QFile stylesheet(styleName);
+  if (!stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return false;
+  }
+  return QString::fromUtf8(stylesheet.read(512)).contains(
+      QStringLiteral("MO2 Revamped Fluent v4"));
+}
+
+#ifdef Q_OS_WIN
+// Windows 11 Mica behind a translucent main window (see MainWindow). The
+// stylesheet leaves the window surfaces transparent while the
+// fluentMica property is set; cards stay opaque on top of it.
+bool applyMica(QWidget* window)
+{
+  const HWND handle = reinterpret_cast<HWND>(window->winId());
+  const bool mica   = window->testAttribute(Qt::WA_TranslucentBackground) &&
+                    qApp->property("revampedFluent").toBool();
+
+  // DWMWA_SYSTEMBACKDROP_TYPE: 2 is DWMSBT_MAINWINDOW (Mica), 1 is none
+  const int backdrop = mica ? 2 : 1;
+  DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(38), &backdrop,
+                        sizeof(backdrop));
+  const MARGINS margins = mica ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, 0, 0};
+  DwmExtendFrameIntoClientArea(handle, &margins);
+
+  if (window->property("fluentMica").toBool() != mica) {
+    window->setProperty("fluentMica", mica);
+    window->style()->unpolish(window);
+    window->style()->polish(window);
+    for (QWidget* child : window->findChildren<QWidget*>()) {
+      child->style()->unpolish(child);
+      child->style()->polish(child);
+    }
+    window->update();
+  }
+  return mica;
+}
+#endif
+
 void applyNativeTitleBarTheme(QWidget* window, const QString& styleName)
 {
 #ifdef Q_OS_WIN
@@ -1071,6 +1113,7 @@ void applyNativeTitleBarTheme(QWidget* window, const QString& styleName)
   }
 
   const HWND handle = reinterpret_cast<HWND>(window->winId());
+  const bool mica   = applyMica(window);
   const BOOL useDarkMode = stylePrefersDarkTitleBar(styleName) ? TRUE : FALSE;
 
   // Attribute 20 is supported on current Windows 11 builds; 19 is the
@@ -1082,13 +1125,28 @@ void applyNativeTitleBarTheme(QWidget* window, const QString& styleName)
     DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(19),
                           &useDarkMode, sizeof(useDarkMode));
   }
+  if (mica) {
+    // Qt re-evaluates the frame mode when the repolish above is processed;
+    // the Mica backdrop follows that mode, so restore ours afterwards.
+    QTimer::singleShot(0, window, [handle, useDarkMode] {
+      DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(20), &useDarkMode,
+                            sizeof(useDarkMode));
+    });
+  }
 
   // Match the native caption to the background in the active Revamped QSS.
   // Windows 11 supports custom caption/text colors; older builds retain the
   // standard dark/light caption supplied above.
   const QColor background = styleWindowBackgroundColor(styleName);
   const COLORREF defaultColor = static_cast<COLORREF>(0xFFFFFFFFu);
-  if (background.isValid()) {
+  if (mica) {
+    // DWMWA_COLOR_NONE lets the Mica backdrop show through the caption too
+    const COLORREF noColor = static_cast<COLORREF>(0xFFFFFFFEu);
+    DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(35), &noColor,
+                          sizeof(noColor));
+    DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(36),
+                          &defaultColor, sizeof(defaultColor));
+  } else if (background.isValid()) {
     const QColor text = background.lightness() < 128 ? QColor("#D3D3D3")
                                                      : QColor("#293847");
     const auto toColorRef = [](const QColor& color) {
@@ -1286,8 +1344,12 @@ QString extractBaseStyleFromStyleSheet(QFile& stylesheet, const QString& default
 
 void MOApplication::updateStyle(const QString& fileName)
 {
+  const QString styleFile = QFileInfo(fileName).fileName();
   setProperty("revampedDarkBlack",
-              QFileInfo(fileName).fileName().compare("dark-black.qss", Qt::CaseInsensitive) == 0);
+              styleFile.compare("dark-black.qss", Qt::CaseInsensitive) == 0 ||
+                  styleFile.compare("fluent-v4-black.qss", Qt::CaseInsensitive) == 0);
+  setProperty("revampedDark", stylePrefersDarkTitleBar(fileName));
+  setProperty("revampedFluent", styleIsFluent(fileName));
   const auto applyBaseStyle = [this](const QString& baseStyleName) {
     if (m_activeBaseStyle.compare(baseStyleName, Qt::CaseInsensitive) == 0) {
       return;
@@ -1322,6 +1384,26 @@ void MOApplication::updateStyle(const QString& fileName)
         themePalette.setColor(QPalette::ToolTipText, QColor("#E0E0E0"));
         for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
           themePalette.setColor(QPalette::Disabled, role, QColor("#909090"));
+        }
+      } else if (property("revampedFluent").toBool() && property("revampedDark").toBool()) {
+        // Fluent Dark tokens. A dark palette also keeps Qt from switching the
+        // native frame (and the Mica backdrop) back to light when it repolishes.
+        themePalette.setColor(QPalette::Window, QColor("#202226"));
+        themePalette.setColor(QPalette::WindowText, QColor("#FFFFFF"));
+        themePalette.setColor(QPalette::Base, QColor("#2B2B2B"));
+        themePalette.setColor(QPalette::AlternateBase, QColor("#2E2E2E"));
+        themePalette.setColor(QPalette::Text, QColor("#FFFFFF"));
+        themePalette.setColor(QPalette::PlaceholderText, QColor("#9A9A9A"));
+        themePalette.setColor(QPalette::Button, QColor("#2D2D2D"));
+        themePalette.setColor(QPalette::ButtonText, QColor("#FFFFFF"));
+        themePalette.setColor(QPalette::Highlight, QColor("#343B44"));
+        themePalette.setColor(QPalette::HighlightedText, QColor("#FFFFFF"));
+        themePalette.setColor(QPalette::Link, QColor("#60CDFF"));
+        themePalette.setColor(QPalette::LinkVisited, QColor("#99EBFF"));
+        themePalette.setColor(QPalette::ToolTipBase, QColor("#2C2C2C"));
+        themePalette.setColor(QPalette::ToolTipText, QColor("#FFFFFF"));
+        for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
+          themePalette.setColor(QPalette::Disabled, role, QColor("#9A9A9A"));
         }
       }
       setPalette(themePalette);

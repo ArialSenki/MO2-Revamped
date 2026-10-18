@@ -1874,7 +1874,10 @@ void MainWindow::allowListResize()
 
 void MainWindow::updateStyle(const QString& fileName)
 {
-  qApp->setProperty("revampedDarkBlack", QFileInfo(fileName).fileName().compare("dark-black.qss", Qt::CaseInsensitive) == 0);
+  const QString styleFile = QFileInfo(fileName).fileName();
+  qApp->setProperty("revampedDarkBlack",
+                    styleFile.compare("dark-black.qss", Qt::CaseInsensitive) == 0 ||
+                        styleFile.compare("fluent-v4-black.qss", Qt::CaseInsensitive) == 0);
   refreshExecutablesList();
   resetActionIcons();
   createEndorseMenu();
