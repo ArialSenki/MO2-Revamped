@@ -265,7 +265,7 @@
           <number>12</number>
          </property>
          <property name="bottomMargin">
-          <number>10</number>
+          <number>12</number>
          </property>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,1,0,0,0,0,0,0,0">
@@ -656,12 +656,6 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>32</height>
-               </size>
-              </property>
               <property name="font">
                <font>
                 <pointsize>9</pointsize>
@@ -1044,16 +1038,16 @@
               <number>8</number>
              </property>
              <property name="leftMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="rightMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="topMargin">
               <number>8</number>
              </property>
              <property name="bottomMargin">
-              <number>6</number>
+              <number>0</number>
              </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
@@ -1175,16 +1169,16 @@
               <number>8</number>
              </property>
              <property name="leftMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="rightMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="topMargin">
               <number>8</number>
              </property>
              <property name="bottomMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <item>
               <widget class="QTreeWidget" name="savegameList">
@@ -1267,16 +1261,16 @@
               <number>8</number>
              </property>
              <property name="leftMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="topMargin">
               <number>8</number>
              </property>
              <property name="rightMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>8</number>
+              <number>0</number>
              </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
@@ -1650,7 +1644,7 @@
     <string>&amp;Profiles...</string>
    </property>
    <property name="iconText">
-    <string>&amp;Profiles</string>
+    <string>Profiles</string>
    </property>
    <property name="toolTip">
     <string>Configure profiles</string>
@@ -1671,7 +1665,7 @@
     <string>&amp;Executables...</string>
    </property>
    <property name="iconText">
-    <string>&amp;Executables</string>
+    <string>Executables</string>
    </property>
    <property name="toolTip">
     <string>Configure the executables that can be started through Mod Organizer</string>
@@ -1692,7 +1686,7 @@
     <string>&amp;Tool Plugins</string>
    </property>
    <property name="iconText">
-    <string>&amp;Tools</string>
+    <string>Tools</string>
    </property>
    <property name="toolTip">
     <string>Tools</string>
@@ -1710,7 +1704,7 @@
     <string>&amp;Settings...</string>
    </property>
    <property name="iconText">
-    <string>&amp;Settings</string>
+    <string>Settings</string>
    </property>
    <property name="toolTip">
     <string>Configure settings and workarounds</string>
@@ -1815,7 +1809,7 @@
     <string>&amp;Help</string>
    </property>
    <property name="iconText">
-    <string>&amp;Help</string>
+    <string>Help</string>
    </property>
    <property name="toolTip">
     <string>Show help options</string>
@@ -1854,7 +1848,7 @@
     <string>Manage Instan&amp;ces...</string>
    </property>
    <property name="iconText">
-    <string>Manage Instan&amp;ces...</string>
+    <string>Manage Instances...</string>
    </property>
    <property name="toolTip">
     <string>Open the instance manager window to manage a different instance</string>
@@ -1868,7 +1862,7 @@
     <string>E&amp;xit</string>
    </property>
    <property name="iconText">
-    <string>E&amp;xit</string>
+    <string>Exit</string>
    </property>
    <property name="toolTip">
     <string>Exits Mod Organizer</string>
