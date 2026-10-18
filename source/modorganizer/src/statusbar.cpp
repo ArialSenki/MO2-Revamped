@@ -17,6 +17,9 @@ StatusBar::StatusBar(QWidget* parent)
 void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
 {
   ui              = mainWindowUI;
+
+  // keep the last permanent widget (the API counter) clear of the window edge
+  setContentsMargins(0, 0, 10, 0);
   m_notifications = new StatusBarAction(ui->actionNotifications);
   m_update        = new StatusBarAction(ui->actionUpdate);
 
@@ -111,6 +114,10 @@ void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
     m_api->style()->polish(m_api);
   }
   m_api->setAutoFillBackground(true);
+
+  // the new state can change padding and border; without this the label keeps
+  // its previous width and the end of the text and the border get clipped
+  m_api->updateGeometry();
 }
 
 void StatusBar::setUpdateAvailable(bool b)

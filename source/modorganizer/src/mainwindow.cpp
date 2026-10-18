@@ -1423,14 +1423,16 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->displayCategoriesBtn->setToolTip(tr("Filter options"));
   ui->logDock->setMinimumHeight(175);
   ui->logList->setMinimumHeight(140);
-  ui->startButton->setMinimumHeight(32);
   ui->startButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
   ui->startButton->setPopupMode(QToolButton::MenuButtonPopup);
   ui->startButton->setMenu(ui->menuRun);
   // Center the icon and label across the full split Run button. Its menu area
   // is excluded from the label area, so account for half of that width here.
+  // The height lives here too: with its own style sheet the button does not
+  // pick up min-/max-height from the theme, and the Fluent row is 32px tall.
   ui->startButton->setStyleSheet(
-      QStringLiteral("QToolButton#startButton { padding-left: 43px; }"
+      QStringLiteral("QToolButton#startButton { padding: 0px 0px 0px 43px; "
+                     "min-height: 30px; max-height: 30px; }"
                      "QToolButton#startButton::menu-button { width: %1px; }"
                      "QToolButton#startButton[menuButtonActive=\"true\"]::menu-button { "
                      "background-color: rgba(0, 0, 0, 38); }")

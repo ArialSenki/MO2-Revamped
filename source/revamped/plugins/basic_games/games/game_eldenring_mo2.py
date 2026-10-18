@@ -1694,9 +1694,12 @@ class EldenRingMo2Game(BasicGame):
                 run_button = window.findChild(QAbstractButton, "startButton")
                 if selector is None or run_button is None:
                     continue
+                # The Fluent v4 window (recognized by its single "more" button)
+                # sizes and centers the picker and Run itself.
+                fluent_layout = window.findChild(QToolButton, "moreActionsBtn") is not None
                 selector_parent = selector.parentWidget()
                 layout = selector_parent.layout() if selector_parent is not None else None
-                if layout is not None:
+                if layout is not None and not fluent_layout:
                     layout.setAlignment(selector, Qt.AlignmentFlag.AlignTop)
                 selector.setMinimumContentsLength(32)
                 selector.setSizeAdjustPolicy(
@@ -1717,7 +1720,8 @@ class EldenRingMo2Game(BasicGame):
         # QToolButton. Keep that native control and its auto-connected Run slot.
         if isinstance(run_button, QToolButton) and run_button.menu() is not None:
             run_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
-            run_button.setMinimumHeight(44)
+            if window.findChild(QToolButton, "moreActionsBtn") is None:
+                run_button.setMinimumHeight(44)
             return True
 
         if window.findChild(QToolButton, "refinedRunButton") is not None:
