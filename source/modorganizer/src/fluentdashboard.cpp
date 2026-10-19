@@ -18,11 +18,7 @@
 #include <QDateTime>
 #include <QLabel>
 #include <QLocale>
-#include <QLinearGradient>
-#include <QPainter>
-#include <QPainterPath>
 #include <QPushButton>
-#include <QSettings>
 #include <QStyle>
 
 namespace
@@ -52,48 +48,6 @@ void repolish(QWidget* w)
   w->update();
 }
 
-// Steam installs that may hold the artwork cache: the one the game lives in
-// (…/steamapps/common/<game>) and the one registered for the user
-QStringList steamRoots(const QDir& gameDirectory)
-{
-  QStringList roots;
-  QDir dir = gameDirectory;
-  while (dir.cdUp()) {
-    if (dir.dirName().compare(QStringLiteral("steamapps"), Qt::CaseInsensitive) == 0) {
-      if (dir.cdUp()) {
-        roots << dir.absolutePath();
-      }
-      break;
-    }
-  }
-
-  const QSettings steam(QStringLiteral("HKEY_CURRENT_USER\\Software\\Valve\\Steam"),
-                        QSettings::NativeFormat);
-  const QString registered =
-      QDir::fromNativeSeparators(steam.value(QStringLiteral("SteamPath")).toString());
-  if (!registered.isEmpty() && !roots.contains(registered, Qt::CaseInsensitive)) {
-    roots << registered;
-  }
-  return roots;
-}
-
-// Steam keeps library artwork per app, in a folder of its own on current
-// clients and as <appid>_<name> files on older ones
-QString steamArtwork(const QStringList& roots, const QString& appId,
-                     const QString& name)
-{
-  for (const QString& root : roots) {
-    const QString cache = root + QStringLiteral("/appcache/librarycache/");
-    for (const QString& candidate :
-         {cache + appId + QLatin1Char('/') + name, cache + appId + QLatin1Char('_') + name}) {
-      if (QFileInfo::exists(candidate)) {
-        return candidate;
-      }
-    }
-  }
-  return {};
-}
-
 QString modCountText(int count)
 {
   return count == 1 ? QObject::tr("1 mod") : QObject::tr("%1 mods").arg(count);
@@ -105,62 +59,21 @@ FluentHeroBanner::FluentHeroBanner(QWidget* parent) : QFrame(parent)
   setObjectName(QStringLiteral("fluentHero"));
 }
 
-void FluentHeroBanner::setArt(const QPixmap& art)
-{
-  m_art = art;
-  setProperty("hasArt", !art.isNull());
-  repolish(this);
-}
-
-void FluentHeroBanner::paintEvent(QPaintEvent* event)
-{
-  QFrame::paintEvent(event);
-  if (m_art.isNull()) {
-    return;
-  }
-
-  QPainter p(this);
-  p.setRenderHint(QPainter::Antialiasing);
-  p.setRenderHint(QPainter::SmoothPixmapTransform);
-
-  const QRectF area = QRectF(rect()).adjusted(1, 1, -1, -1);
-  QPainterPath clip;
-  clip.addRoundedRect(area, 7, 7);
-  p.setClipPath(clip);
-
-  // cover the banner, keeping the middle of the artwork
-  const QSizeF art  = m_art.deviceIndependentSize();
-  const qreal scale = std::max(area.width() / art.width(), area.height() / art.height());
-  const QSizeF drawn = art * scale;
-  const QRectF target(area.center().x() - drawn.width() / 2,
-                      area.center().y() - drawn.height() / 2, drawn.width(),
-                      drawn.height());
-  p.drawPixmap(target, m_art, QRectF(QPointF(0, 0), m_art.size()));
-
-  // a scrim from the left keeps the logo, labels and pickers readable on any
-  // artwork, in both themes
-  QLinearGradient scrim(area.topLeft(), area.topRight());
-  scrim.setColorAt(0.0, QColor(0, 0, 0, 215));
-  scrim.setColorAt(0.55, QColor(0, 0, 0, 150));
-  scrim.setColorAt(1.0, QColor(0, 0, 0, 50));
-  p.fillPath(clip, scrim);
-}
-
 FluentStatTile::FluentStatTile(char16_t glyph, const QString& caption, QWidget* parent)
     : QFrame(parent)
 {
   setObjectName(QStringLiteral("fluentStatTile"));
-  setFixedHeight(72);
+  setFixedHeight(60);
 
   m_layout = new QHBoxLayout(this);
-  m_layout->setContentsMargins(16, 12, 16, 12);
+  m_layout->setContentsMargins(14, 8, 14, 8);
   m_layout->setSpacing(14);
 
   m_badge = new QLabel(QString(QChar(glyph)), this);
   m_badge->setObjectName(QStringLiteral("fluentStatBadge"));
   m_badge->setFont(iconFont(15));
   m_badge->setAlignment(Qt::AlignCenter);
-  m_badge->setFixedSize(40, 40);
+  m_badge->setFixedSize(34, 34);
   m_layout->addWidget(m_badge);
 
   auto* text = new QVBoxLayout;
@@ -215,57 +128,52 @@ FluentDashboard::FluentDashboard(Ui::MainWindow* mainUi, OrganizerCore& core,
 
 void FluentDashboard::setupBanner(QWidget* central)
 {
+  // one compact bar: the game, the profile and program pickers, when it was
+  // last played, and Run
   m_banner = new FluentHeroBanner(central);
-  m_banner->setFixedHeight(150);
+  m_banner->setFixedHeight(56);
 
   auto* row = new QHBoxLayout(m_banner);
-  row->setContentsMargins(28, 16, 32, 16);
-  row->setSpacing(24);
-
-  auto* left = new QVBoxLayout;
-  left->setSpacing(12);
-  left->addStretch();
+  row->setContentsMargins(16, 0, 10, 0);
+  row->setSpacing(10);
 
   m_logo = new QLabel(m_banner);
   m_logo->setObjectName(QStringLiteral("fluentHeroLogo"));
+  m_logo->setFixedSize(22, 22);
   m_title = new QLabel(m_banner);
   m_title->setObjectName(QStringLiteral("fluentHeroTitle"));
-  left->addWidget(m_logo, 0, Qt::AlignLeft | Qt::AlignVCenter);
-  left->addWidget(m_title, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  row->addWidget(m_logo);
+  row->addWidget(m_title);
+  row->addSpacing(18);
 
-  auto* pickers = new QHBoxLayout;
-  pickers->setSpacing(10);
   auto* profileLabel = new QLabel(tr("Profile"), m_banner);
   profileLabel->setObjectName(QStringLiteral("fluentHeroLabel"));
-  pickers->addWidget(profileLabel);
-  pickers->addWidget(ui->profileBox);
-  ui->profileBox->setMinimumWidth(200);
-  pickers->addSpacing(18);
+  row->addWidget(profileLabel);
+  row->addWidget(ui->profileBox);
+  ui->profileBox->setMinimumWidth(180);
+  row->addSpacing(12);
   auto* programLabel = new QLabel(tr("Program"), m_banner);
   programLabel->setObjectName(QStringLiteral("fluentHeroLabel"));
-  pickers->addWidget(programLabel);
-  pickers->addWidget(ui->executablesListBox);
-  ui->executablesListBox->setMinimumWidth(280);
-  pickers->addSpacing(18);
+  row->addWidget(programLabel);
+  row->addWidget(ui->executablesListBox);
+  ui->executablesListBox->setMinimumWidth(260);
+  row->addSpacing(12);
   m_lastPlayed = new QLabel(m_banner);
   m_lastPlayed->setObjectName(QStringLiteral("fluentHeroLabel"));
-  pickers->addWidget(m_lastPlayed);
-  pickers->addStretch();
-  left->addLayout(pickers);
-  left->addStretch();
-  row->addLayout(left, 1);
+  row->addWidget(m_lastPlayed);
+  row->addStretch(1);
 
   // the button carries its own style sheet (see MainWindow), which wins over
-  // the theme for its size; make it the banner's large call to action
+  // the theme for its size
   ui->startButton->setProperty("fluentKeepIcon", true);
   ui->startButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  ui->startButton->setMinimumWidth(220);
+  ui->startButton->setMinimumWidth(170);
   ui->startButton->setStyleSheet(
       QStringLiteral(
-          "QToolButton#startButton { padding: 0px 0px 0px %2px; min-height: 50px; "
-          "max-height: 50px; border-radius: 6px; font-size: 12pt; }"
+          "QToolButton#startButton { padding: 0px 0px 0px %2px; min-height: 34px; "
+          "max-height: 34px; border-radius: 4px; }"
           "QToolButton#startButton::menu-button { width: %1px; "
-          "border-top-right-radius: 6px; border-bottom-right-radius: 6px; }"
+          "border-top-right-radius: 4px; border-bottom-right-radius: 4px; }"
           "QToolButton#startButton[menuButtonActive=\"true\"]::menu-button { "
           "background-color: rgba(0, 0, 0, 38); }")
           .arg(RunMenuToolButton::menuButtonWidth())
@@ -381,32 +289,9 @@ void FluentDashboard::refreshGame()
 
   m_title->setText(game->gameName());
 
-  QPixmap art;
-  QPixmap logo;
-  const QString appId = game->steamAPPId();
-  if (!appId.isEmpty()) {
-    const QStringList roots = steamRoots(game->gameDirectory());
-    art.load(steamArtwork(roots, appId, QStringLiteral("library_hero.jpg")));
-    if (art.isNull()) {
-      art.load(steamArtwork(roots, appId, QStringLiteral("header.jpg")));
-    }
-    logo.load(steamArtwork(roots, appId, QStringLiteral("logo.png")));
-  }
-  m_banner->setArt(art);
-
-  if (!logo.isNull() && !art.isNull()) {
-    const qreal ratio = m_logo->devicePixelRatioF();
-    QPixmap scaled    = logo.scaled(QSize(320, 60) * ratio, Qt::KeepAspectRatio,
-                                    Qt::SmoothTransformation);
-    scaled.setDevicePixelRatio(ratio);
-    m_logo->setPixmap(scaled);
-    m_logo->setAccessibleName(game->gameName());
-    m_logo->show();
-    m_title->hide();
-  } else {
-    m_logo->hide();
-    m_title->show();
-  }
+  const QIcon icon = game->gameIcon();
+  m_logo->setPixmap(icon.pixmap(QSize(22, 22)));
+  m_logo->setVisible(!icon.isNull());
 }
 
 void FluentDashboard::scheduleRefresh()

@@ -8050,7 +8050,7 @@ QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock QWidget#dockWidget
     background-color: transparent;
 }
 
-/* Game header: the banner with the game's artwork, the pickers and Run. */
+/* Game bar: the game, the pickers, last played and Run. */
 QFrame#fluentHero {
     background-color: #2B2B2B;
     border: 1px solid #363636;
@@ -8058,7 +8058,7 @@ QFrame#fluentHero {
 }
 QLabel#fluentHeroTitle {
     color: #FFFFFF;
-    font-size: 22pt;
+    font-size: 12pt;
     font-weight: 600;
     background-color: transparent;
 }
@@ -8068,23 +8068,6 @@ QLabel#fluentHeroLabel {
 }
 QLabel#fluentHeroLogo {
     background-color: transparent;
-}
-QFrame#fluentHero[hasArt="true"] QLabel#fluentHeroTitle,
-QFrame#fluentHero[hasArt="true"] QLabel#fluentHeroLabel {
-    color: #FFFFFF;
-}
-QFrame#fluentHero QToolButton#startButton {
-    min-width: 200px;
-    min-height: 50px;
-    max-height: 50px;
-    padding: 0px 0px 0px 28px;
-    border-radius: 6px;
-    font-size: 12pt;
-}
-QFrame#fluentHero QToolButton#startButton::menu-button {
-    width: 40px;
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
 }
 
 /* Summary row below the header. */
@@ -8098,7 +8081,7 @@ QFrame#fluentStatTile QLabel {
 }
 QLabel#fluentStatBadge {
     font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
-    font-size: 15pt;
+    font-size: 13pt;
     border-radius: 8px;
     color: #C5C5C5;
     background-color: #3D3D3D;
@@ -8120,7 +8103,7 @@ QLabel#fluentStatCaption {
 }
 QLabel#fluentStatValue {
     color: #FFFFFF;
-    font-size: 14pt;
+    font-size: 12pt;
     font-weight: 600;
 }
 QPushButton#fluentStatAction,
@@ -8239,4 +8222,33 @@ QDialog#SettingsDialog QWidget#fluentNavPage QComboBox {
     max-height: 22px;
     padding: 4px 10px;
     border-radius: 4px;
+}
+
+/* Settings pages share the window surface with the navigation: no darker
+   page panel behind the cards. */
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#generalTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#themeTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#uiTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#pathsTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#nexusTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#pluginsTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#workaroundTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#diagnosticsTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QStackedWidget#qt_tabwidget_stackedwidget,
+QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea,
+QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea > QWidget#qt_scrollarea_viewport,
+QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea > QWidget#qt_scrollarea_viewport > QWidget,
+QDialog#SettingsDialog QWidget#fluentPageContent {
+    background-color: transparent;
+    border: none;
+}
+QDialog#SettingsDialog QWidget#fluentNavPage QFrame#fluentSettingRow QLabel#fluentSettingTitle {
+    font-weight: normal;
+    padding: 0px;
+}
+QDialog#SettingsDialog QWidget#fluentNavPage QLabel#fluentSettingSubheading {
+    color: #C5C5C5;
+    font-weight: 600;
+    padding: 10px 4px 2px 4px;
+    background-color: transparent;
 }

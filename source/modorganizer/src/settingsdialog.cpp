@@ -187,6 +187,9 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
       }
     });
   });
+  // the Plugins page is built on its first visit and has no scroll area; its
+  // full height would otherwise set the dialog's minimum height
+  FluentSettings::wrapInScrollArea(ui->tabWidget->widget(PluginsTabIndex));
   initializeTab(ui->tabWidget->currentIndex());
 
   // These pages add circular headings and rebuild part of their layout at
