@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "downloadlistview.h"
+#include <QAbstractProxyModel>
 #include "fluenticons.h"
 #include "menuutils.h"
 #include "downloadlist.h"
@@ -585,7 +586,12 @@ void DownloadListView::paintEvent(QPaintEvent* event)
 {
   QTreeView::paintEvent(event);
 
-  if (model() == nullptr || model()->rowCount() > 0) {
+  // a filter that hides every row is not an empty list
+  const QAbstractItemModel* source = model();
+  if (auto* proxy = qobject_cast<const QAbstractProxyModel*>(source)) {
+    source = proxy->sourceModel();
+  }
+  if (source == nullptr || source->rowCount() > 0) {
     return;
   }
 

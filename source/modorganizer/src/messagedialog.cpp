@@ -111,9 +111,16 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   }
 
   MessageDialog* dialog = new MessageDialog(text, reference);
+  // the toast rises into place over the bottom of the window; it starts
+  // transparent so its first frame does not flash at full opacity
+  const bool animate = qApp->property("revampedFluent").toBool() && FluentMotion::enabled();
+  if (animate) {
+    dialog->setWindowOpacity(0.0);
+  }
   dialog->show();
-  // the toast rises into place over the bottom of the window
-  FluentMotion::popIn(dialog, -6);
+  if (animate) {
+    FluentMotion::popIn(dialog, -6);
+  }
 
   if (bringToFront) {
     reference->activateWindow();

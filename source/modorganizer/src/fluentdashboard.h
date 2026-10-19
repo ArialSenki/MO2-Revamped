@@ -87,6 +87,7 @@ private:
   void setupModsHeader();
   void refreshStats();
   void refreshLastPlayed();
+  void refreshDisk();
   void onQuickFilterChanged(int specialCategory);
 };
 

@@ -2244,11 +2244,6 @@ void MainWindow::updateProblemsButton()
 
   const std::size_t numProblems = m_NumberOfProblems;
 
-  // original icon without a count painted on it
-  const QIcon original = m_originalNotificationIcon.isNull()
-                             ? QIcon(DefaultIconName)
-                             : m_originalNotificationIcon;
-
   if (numProblems > 0) {
     ui->actionNotifications->setToolTip(tr("There are notifications to read"));
   } else {
@@ -2268,6 +2263,11 @@ void MainWindow::updateProblemsButton()
     }
     return;
   }
+
+  // original icon without a count painted on it
+  const QIcon original = m_originalNotificationIcon.isNull()
+                             ? QIcon(DefaultIconName)
+                             : m_originalNotificationIcon;
 
   // Keep the toolbar icon canvas identical with and without a badge. Swapping
   // between the theme icon and a composed pixmap can change the button's size
@@ -4777,6 +4777,8 @@ void MainWindow::languageChange(const QString& newLanguage)
     installTranslator(QFileInfo(fileName).baseName());
   }
   ui->retranslateUi(this);
+  // the command bar labels carry a leading gap; rebuild them in the new language
+  applyFluentActionIcons();
   if (m_FilterOptionsDialog) {
     m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
     m_FilterDialogTitle->setText(tr("Filter options"));

@@ -343,12 +343,10 @@ void MainWindow::applyFluentActionIcons()
     // Qt leaves only 4px between a tool button's icon and its text; the
     // command bars of Windows 11 leave 8px, so labeled buttons get a space.
     // The icon text is only shown on the toolbar; menus use the plain text.
+    // (retranslateUi() sets the short labels again, then this runs again)
     if (action->priority() != QAction::LowPriority &&
         !action->iconText().startsWith(QLatin1Char(' '))) {
       action->setIconText(QLatin1Char(' ') + action->iconText());
-    }
-    if (action == ui->actionNotifications) {
-      m_originalNotificationIcon = icon;
     }
   }
 }
