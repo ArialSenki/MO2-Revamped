@@ -11,6 +11,7 @@
 #include <QCommandLinkButton>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QHeaderView>
 #include <QLabel>
 #include <QMessageBox>
 #include <QPushButton>
@@ -93,7 +94,7 @@ void styleButton(QAbstractButton* button, bool primary)
 
   button->setStyleSheet(
       QStringLiteral(
-          "%5 { min-height: 22px; max-height: 22px; padding: 4px %6px; "
+          "%5 { min-height: 22px; max-height: 22px; padding: 4px %6px; font-weight: normal; "
           "border-radius: 4px; color: %1; background-color: %2; border: 1px solid %3; }"
           "%5:hover { background-color: %4; }"
           "%5:disabled { color: rgba(128, 128, 128, 170); "
@@ -110,7 +111,7 @@ void styleButton(QAbstractButton* button, bool primary)
 void flattenHeaders(QDialog* dialog)
 {
   static const QRegularExpression headerName(
-      QStringLiteral("header(card|panel)?$"), QRegularExpression::CaseInsensitiveOption);
+      QStringLiteral("(header|intro)(card|panel)?$"), QRegularExpression::CaseInsensitiveOption);
 
   for (QWidget* w : dialog->findChildren<QWidget*>()) {
     if (!headerName.match(w->objectName()).hasMatch() ||
@@ -121,7 +122,9 @@ void flattenHeaders(QDialog* dialog)
     w->setStyleSheet(QStringLiteral("#%1 { background-color: transparent; border: none; }")
                          .arg(w->objectName()));
     for (QLabel* label : w->findChildren<QLabel*>()) {
-      if (label->text().isEmpty() && label->pixmap().isNull() == false) {
+      // a program logo stays; only icon badges go
+      if (label->text().isEmpty() && label->pixmap().isNull() == false &&
+          !label->objectName().contains(QLatin1String("Logo"), Qt::CaseInsensitive)) {
         label->hide();
       }
     }
@@ -144,6 +147,38 @@ void matchTitleBar(QDialog* dialog)
 #else
   Q_UNUSED(dialog);
 #endif
+}
+
+// the Elden Ring plugin windows (Python): their own card layout stays, but
+// their check boxes become switch rows and their heading badges go away
+bool isPluginDialog(const QDialog* dialog)
+{
+  const QString name = dialog->objectName();
+  return name.startsWith(QLatin1String("EldenRing")) ||
+         name.startsWith(QLatin1String("NativeProfile"));
+}
+
+// the round icon badges next to the plugin card headings; Windows 11 cards
+// head with plain text
+void hideHeadingBadges(QDialog* dialog)
+{
+  for (QLabel* label : dialog->findChildren<QLabel*>()) {
+    if (label->objectName().endsWith(QLatin1String("Icon")) && label->maximumWidth() <= 40 &&
+        label->maximumHeight() <= 40) {
+      label->hide();
+    }
+  }
+}
+
+// table headings start where their column's text starts, like the main
+// window's lists
+void alignHeaders(QDialog* dialog)
+{
+  for (QHeaderView* header : dialog->findChildren<QHeaderView*>()) {
+    if (header->orientation() == Qt::Horizontal && header->styleSheet().isEmpty()) {
+      header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    }
+  }
 }
 
 // dialogs that are mostly options get Settings rows
@@ -185,7 +220,11 @@ void polish(QDialog* dialog)
 
   if (isOptionsDialog(dialog)) {
     FluentSettings::restyle(dialog, false);
+  } else if (isPluginDialog(dialog)) {
+    hideHeadingBadges(dialog);
+    FluentSettings::switchRows(dialog);
   }
+  alignHeaders(dialog);
 
   for (QPushButton* button : dialog->findChildren<QPushButton*>()) {
     // command links and tile buttons keep their size

@@ -867,14 +867,20 @@ void GeometrySettings::restoreToolbars(QMainWindow* w) const
   }
 }
 
+// the key names the command bar layout it applies; a new key applies the
+// current compact bar (16 px glyphs, labels beside) once more to instances
+// that took an earlier one ("fluent_toolbar_v4" stored 28 px icons only)
+static constexpr auto FluentToolbarKey = "fluent_toolbar_v4_compact";
+
 bool GeometrySettings::fluentToolbarApplied() const
 {
-  return get<bool>(m_Settings, "Geometry", "fluent_toolbar_v4", false);
+  return get<bool>(m_Settings, "Geometry", FluentToolbarKey, false);
 }
 
 void GeometrySettings::setFluentToolbarApplied(bool b)
 {
-  set(m_Settings, "Geometry", "fluent_toolbar_v4", b);
+  set(m_Settings, "Geometry", FluentToolbarKey, b);
+  remove(m_Settings, "Geometry", "fluent_toolbar_v4");
 }
 
 void GeometrySettings::saveToolbars(const QMainWindow* w)
