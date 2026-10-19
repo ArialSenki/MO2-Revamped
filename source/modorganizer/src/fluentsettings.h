@@ -14,7 +14,13 @@ namespace FluentSettings
 {
 
 // restyles the check boxes below root once; calling it again is harmless
-void restyle(QWidget* root);
+// allowScroll wraps a page without a scroll area into one (Settings pages);
+// dialogs pass false
+void restyle(QWidget* root, bool allowScroll = true);
+
+// puts a page without a scroll area into one; restyle() does this too, but
+// pages built lazily need it up front so they do not inflate the dialog
+void wrapInScrollArea(QWidget* page);
 
 }  // namespace FluentSettings
 

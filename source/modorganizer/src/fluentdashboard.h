@@ -1,8 +1,8 @@
 #ifndef FLUENTDASHBOARD_H
 #define FLUENTDASHBOARD_H
 
-// Fluent v4 "game first" header of the main window: a banner with the game's
-// Steam artwork, the profile and program pickers and the Run button, and a
+// Fluent v4 "game first" header of the main window: a bar with the game,
+// the profile and program pickers and the Run button, and a
 // row of summary tiles (active mods, conflicts, Overwrite, updates) above the
 // cards. The pickers and Run are the existing widgets, moved here, so code
 // and plugins that look them up by name keep working.
@@ -25,19 +25,11 @@ namespace Ui
 class MainWindow;
 }
 
+// the game bar above the summary row
 class FluentHeroBanner : public QFrame
 {
 public:
   explicit FluentHeroBanner(QWidget* parent = nullptr);
-
-  void setArt(const QPixmap& art);
-  bool hasArt() const { return !m_art.isNull(); }
-
-protected:
-  void paintEvent(QPaintEvent* event) override;
-
-private:
-  QPixmap m_art;
 };
 
 class FluentStatTile : public QFrame

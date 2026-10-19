@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "moapplication.h"
 #include "revampedtheme.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "commandline.h"
 #include "instancemanager.h"
@@ -1217,6 +1218,9 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
     if (auto* dialog = qobject_cast<QDialog*>(receiver);
         dialog != nullptr && dialog->isWindow()) {
       fitDialogToAvailableScreen(dialog);
+      if (property("revampedFluent").toBool()) {
+        FluentDialogs::polish(dialog);
+      }
     }
 
     // Fluent v4: menu and button icons in the theme's ink

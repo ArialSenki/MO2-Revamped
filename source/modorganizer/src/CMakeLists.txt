@@ -189,6 +189,7 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	datatab
 	downloadstab
 	fluentdashboard
+	fluentdialogs
 	fluenticons
 	fluentnavigation
 	fluentsettings

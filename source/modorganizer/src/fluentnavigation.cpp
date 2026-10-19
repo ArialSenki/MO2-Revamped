@@ -6,6 +6,7 @@
 #include <QLayout>
 #include <QListWidget>
 #include <QPainter>
+#include <QStackedWidget>
 #include <QStyledItemDelegate>
 #include <QTabBar>
 #include <QTabWidget>
@@ -144,6 +145,13 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
   tabs->tabBar()->hide();
   tabs->setProperty("fluentNavigation", true);
   tabs->setDocumentMode(true);
+
+  // the pages share the window surface with the list: no darker panel behind
+  // them (a widget's own sheet wins over the per-dialog theme rules)
+  if (auto* stack = tabs->findChild<QStackedWidget*>(QString(), Qt::FindDirectChildrenOnly)) {
+    stack->setStyleSheet(QStringLiteral(
+        "QStackedWidget, QStackedWidget > QWidget { background-color: transparent; }"));
+  }
 
   new NavigationState(tabs, nav, std::move(glyphFor));
   sync(tabs);
