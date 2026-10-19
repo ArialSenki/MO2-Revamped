@@ -2,6 +2,7 @@
 #include "categoriesdialog.h"
 #include "circularuihelpers.h"
 #include "colortable.h"
+#include "fluenticons.h"
 #include "modlist.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
@@ -20,6 +21,9 @@ using namespace MOBase;
 
 namespace
 {
+
+// style box item data: whether the style sheet is a Fluent v4 theme
+constexpr int FluentRole = Qt::UserRole + 1;
 
 void stackThemeStyleControls(QGroupBox* group)
 {
@@ -82,6 +86,14 @@ void ThemeSettingsTab::update()
   if (oldStyle != newStyle) {
     settings().interface().setStyleName(newStyle);
     emit settings().styleChanged(newStyle);
+
+    // the Fluent layout is built with the main window, so going between a
+    // Fluent and a classic theme takes a restart to finish
+    const bool fluent =
+        ui->styleBox->itemData(ui->styleBox->currentIndex(), FluentRole).toBool();
+    if (fluent != FluentIcons::active()) {
+      dialog().setExitNeeded(dialog().exitNeeded() | Exit::Restart);
+    }
   }
 
   // colors
@@ -114,6 +126,7 @@ void ThemeSettingsTab::addStyles()
         : fluent                                       ? QObject::tr("Dark")
                                                        : QObject::tr("Dark Blue");
     ui->styleBox->addItem(displayName, fileName);
+    ui->styleBox->setItemData(ui->styleBox->count() - 1, fluent, FluentRole);
   }
 }
 

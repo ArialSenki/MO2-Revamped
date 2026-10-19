@@ -7846,7 +7846,12 @@ FluentTabBar::tab:hover:!selected {
     color: #1A1A1A;
 }
 
+/* Glyph buttons: the icon font has to come from here, since the QWidget rule
+   above overrides fonts set in code; in the text font Qt searches every
+   installed font for the glyph and logs DirectWrite errors on the old ones. */
 QMainWindow#MainWindow QToolButton#moreActionsBtn {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 15px;
     min-width: 30px;
     max-width: 30px;
     min-height: 30px;
@@ -7905,6 +7910,8 @@ QLabel#logDockSummaryLabel {
     padding-left: 6px;
 }
 QToolButton#logDockExpandButton {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 8pt;
     color: #5D5D5D;
     background-color: transparent;
     border: none;
