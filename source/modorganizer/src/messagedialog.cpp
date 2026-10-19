@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "messagedialog.h"
+#include "fluentmotion.h"
 #include "ui_messagedialog.h"
 #include <QResizeEvent>
 #include <QTimer>
@@ -59,7 +60,13 @@ MessageDialog::MessageDialog(const QString& text, QWidget* reference)
   this->setMinimumWidth(280);
   this->setFocusPolicy(Qt::NoFocus);
   this->setAttribute(Qt::WA_ShowWithoutActivating);
-  QTimer::singleShot(1000 + (text.length() * 40), this, SLOT(hide()));
+  this->setAttribute(Qt::WA_DeleteOnClose);
+  QTimer::singleShot(1000 + (text.length() * 40), this, [this] {
+    // closing deletes the toast; it used to stay hidden in memory
+    FluentMotion::fadeOut(this, [this] {
+      close();
+    });
+  });
   if (reference != nullptr) {
     QPoint position =
         reference->mapToGlobal(QPoint(reference->width() / 2, reference->height()));
@@ -105,6 +112,8 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
 
   MessageDialog* dialog = new MessageDialog(text, reference);
   dialog->show();
+  // the toast rises into place over the bottom of the window
+  FluentMotion::popIn(dialog, -6);
 
   if (bringToFront) {
     reference->activateWindow();

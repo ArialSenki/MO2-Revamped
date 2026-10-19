@@ -44,6 +44,10 @@ QIcon glyph(char16_t codepoint, Tone tone = Tone::Ink);
 // is active, the resource itself otherwise
 QIcon icon(const QString& resource);
 
+// the icon for a file or folder in the data, conflict and file trees, picked
+// from its extension (Elden Ring archives, DLLs, configs, saves...)
+QIcon file(const QString& fileName, bool directory);
+
 // the glyph matching an icon that was created from an MO2 resource (in a .ui
 // file, a plugin or a style sheet), or the icon unchanged
 QIcon fluent(const QIcon& icon);

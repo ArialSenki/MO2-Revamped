@@ -3,8 +3,11 @@
 
 #include <QEasingCurve>
 
+#include <functional>
+
 class QVariantAnimation;
 class QObject;
+class QWidget;
 
 // Shared timing for the Fluent v4 animations. Everything that moves goes through
 // here so the "Enable animations" setting can turn all of it off at once.
@@ -31,6 +34,14 @@ QVariantAnimation* createAnimation(QObject* parent,
 // end when animations are disabled
 void start(QVariantAnimation* animation, const QVariant& start, const QVariant& end,
            int ms = Normal);
+
+// Windows 11 popup entrance: a menu, list or tooltip window fades in while it
+// slides `lift` pixels into place (0 for a plain fade). Replaces Qt's roll
+// and fade effects.
+void popIn(QWidget* popup, int lift = 6);
+
+// fades a window out, then calls done (right away when animations are off)
+void fadeOut(QWidget* window, std::function<void()> done);
 
 }  // namespace FluentMotion
 

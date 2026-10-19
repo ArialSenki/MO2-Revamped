@@ -84,7 +84,7 @@ QVariant DownloadList::headerData(int section, Qt::Orientation orientation,
     case COL_STATUS:
       return tr("Status");
     case COL_FILETIME:
-      return tr("Filetime");
+      return tr("Modified");
     case COL_SOURCEGAME:
       return tr("Source Game");
     default:

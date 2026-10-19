@@ -28,7 +28,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modinfodialogtextfiles.h"
 #include "modlistview.h"
 #include "organizercore.h"
+#include "game_features.h"
 #include "plugincontainer.h"
+#include <gameplugins.h>
 #include "shared/directoryentry.h"
 #include "shared/filesorigin.h"
 #include "ui_modinfodialog.h"
@@ -435,8 +437,12 @@ void ModInfoDialog::setTabsVisibility(bool firstTime)
 
     bool visible = true;
 
-    // a tab is visible if it can handle the current mod
-    if (m_mod->hasFlag(ModInfo::FLAG_FOREIGN)) {
+    // a tab is visible if it can handle the current mod; optional ESPs only
+    // exist in games with plugins (not Elden Ring)
+    if (tabInfo.tab->tabID() == ModInfoTabIDs::Esps &&
+        !m_core.gameFeatures().gameFeature<MOBase::GamePlugins>()) {
+      visible = false;
+    } else if (m_mod->hasFlag(ModInfo::FLAG_FOREIGN)) {
       visible = tabInfo.tab->canHandleUnmanaged();
     } else if (m_mod->hasFlag(ModInfo::FLAG_SEPARATOR)) {
       visible = tabInfo.tab->canHandleSeparators();
