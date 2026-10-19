@@ -38,6 +38,7 @@ class Executable;
 class CategoryFactory;
 class OrganizerCore;
 class FilterList;
+class FluentDashboard;
 class DataTab;
 class DownloadsTab;
 class SavesTab;
@@ -221,8 +222,12 @@ private:
   void setRunState(RunState state);
   void waitForRunningProcess();
   void applyFluentToolbarDefaults(const QSize& iconSize);
+  void setupFluentCommandBar();
+  void applyFluentActionIcons();
   static QIcon fluentToolIcon(const QString& name);
   QToolButton* m_moreActionsButton = nullptr;
+  FluentDashboard* m_fluentDashboard = nullptr;
+  QAction* m_fluentOverflowAction     = nullptr;
   RunState m_runState              = RunState::Idle;
 
   bool m_toolbarButtonGeometryInitialized = false;

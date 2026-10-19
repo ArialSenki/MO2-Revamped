@@ -424,7 +424,7 @@ QVariant FileTreeModel::data(const QModelIndex& index, int role) const
 QVariant FileTreeModel::headerData(int i, Qt::Orientation ori, int role) const
 {
   static const std::array<QString, ColumnCount> names = {
-      tr("Name"), tr("Mod"), tr("Type"), tr("Size"), tr("Date modified")};
+      tr("Name"), tr("Origin"), tr("Type"), tr("Size"), tr("Date modified")};
 
   if (role == Qt::DisplayRole) {
     if (i >= 0 && i < static_cast<int>(names.size())) {

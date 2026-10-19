@@ -1143,3 +1143,104 @@ QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock,
 QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock QWidget#dockWidgetContents {
     background-color: transparent;
 }
+
+/* Game header: the banner with the game's artwork, the pickers and Run. */
+QFrame#fluentHero {
+    background-color: @card@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+}
+QLabel#fluentHeroTitle {
+    color: @text@;
+    font-size: 22pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QLabel#fluentHeroLabel {
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel#fluentHeroLogo {
+    background-color: transparent;
+}
+QFrame#fluentHero[hasArt="true"] QLabel#fluentHeroTitle,
+QFrame#fluentHero[hasArt="true"] QLabel#fluentHeroLabel {
+    color: #FFFFFF;
+}
+QFrame#fluentHero QToolButton#startButton {
+    min-width: 200px;
+    min-height: 50px;
+    max-height: 50px;
+    padding: 0px 0px 0px 28px;
+    border-radius: 6px;
+    font-size: 12pt;
+}
+QFrame#fluentHero QToolButton#startButton::menu-button {
+    width: 40px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Summary row below the header. */
+QFrame#fluentStatTile {
+    background-color: @card@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+}
+QFrame#fluentStatTile QLabel {
+    background-color: transparent;
+}
+QLabel#fluentStatBadge {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 15pt;
+    border-radius: 8px;
+    color: @muted@;
+    background-color: @fieldLine@;
+}
+QLabel#fluentStatBadge[tone="accent"] {
+    color: @accentText@;
+    background-color: @accentSubtle@;
+}
+QLabel#fluentStatBadge[tone="caution"] {
+    color: @warnFg@;
+    background-color: @warnBg@;
+}
+QLabel#fluentStatBadge[tone="critical"] {
+    color: @critFg@;
+    background-color: @critBg@;
+}
+QLabel#fluentStatCaption {
+    color: @faint@;
+}
+QLabel#fluentStatValue {
+    color: @text@;
+    font-size: 14pt;
+    font-weight: 600;
+}
+QPushButton#fluentStatAction,
+QPushButton#fluentFilterChip {
+    min-height: 26px;
+    max-height: 26px;
+    padding: 0px 14px;
+    color: @muted@;
+    background-color: @field@;
+    border: 1px solid @fieldLine@;
+    border-radius: 13px;
+}
+QPushButton#fluentStatAction:hover,
+QPushButton#fluentFilterChip:hover {
+    color: @text@;
+    background-color: @fieldHover@;
+}
+QPushButton#fluentFilterChip:checked {
+    color: @accentText@;
+    background-color: @accentSubtle@;
+    border-color: @accentDivider@;
+}
+
+/* Mods card title. */
+QLabel#fluentCardTitle {
+    color: @text@;
+    font-size: 12pt;
+    font-weight: 600;
+}

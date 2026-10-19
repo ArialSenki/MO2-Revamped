@@ -394,6 +394,12 @@ void FilterList::setSelection(const std::vector<Criteria>& criteria)
   }
 }
 
+void FilterList::select(const std::vector<Criteria>& criteria)
+{
+  setSelection(criteria);
+  checkCriteria();
+}
+
 void FilterList::clearSelection()
 {
   for (int i = 0; i < ui->filters->topLevelItemCount(); ++i) {

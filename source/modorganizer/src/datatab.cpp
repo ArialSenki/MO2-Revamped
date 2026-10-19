@@ -111,6 +111,18 @@ void DataTab::restoreState(Settings& s)
     layoutSettings.sync();
   }
 
+  // Fluent v4 shows name, origin and size; type and date stay one right-click
+  // away in the header
+  constexpr auto fluentColumnsKey = "Settings/fluent_v4_data_columns_applied";
+  if (!layoutSettings.value(fluentColumnsKey, false).toBool()) {
+    header->setSectionHidden(FileTreeModel::FileType, true);
+    header->setSectionHidden(FileTreeModel::LastModified, true);
+    header->resizeSection(FileTreeModel::ModName, 220);
+    header->resizeSection(FileTreeModel::FileSize, 110);
+    layoutSettings.setValue(fluentColumnsKey, true);
+    layoutSettings.sync();
+  }
+
   header->setSectionResizeMode(FileTreeModel::FileName, QHeaderView::Stretch);
 
   // prior to 2.3, the list was not sortable, and this remembered in the

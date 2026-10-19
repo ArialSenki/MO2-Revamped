@@ -24,6 +24,8 @@ public:
 
   void setSelection(const std::vector<ModListSortProxy::Criteria>& criteria);
   void clearSelection();
+  // like setSelection(), and applies the criteria to the mod list
+  void select(const std::vector<ModListSortProxy::Criteria>& criteria);
   void refresh();
 
 signals:
