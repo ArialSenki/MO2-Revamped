@@ -941,6 +941,11 @@ public:  // Conflicts
     return s_EmptySet;
   }
 
+  // the number of other mods sharing files with this one in any of the lists
+  // above, counted once per mod. Updates may be delayed.
+  //
+  virtual std::size_t getConflictingModCount() const { return 0; }
+
 public slots:
 
   /**

@@ -95,11 +95,29 @@ void MainWindow::setupFluentLayout()
 {
   FluentMotion::setEnabled(m_OrganizerCore.settings().interface().animationsEnabled());
 
+  // the Run button follows the process from the moment it is clicked; other
+  // launches (shortcuts, plugins) leave it alone
+  setRunState(RunState::Idle);
+  m_OrganizerCore.onAboutToRun([this](auto&&...) {
+    if (m_runState != RunState::Mounting) {
+      return true;
+    }
+
+    setRunState(RunState::Starting);
+    waitForRunningProcess();
+    return true;
+  });
+
+  // classic themes keep the original window; switching between Fluent and a
+  // classic theme takes effect after a restart
+  if (!FluentIcons::active()) {
+    return;
+  }
+
   // Mica needs a translucent window surface, which Qt only honors before the
   // native window exists. MOApplication turns the backdrop on and off with
-  // the theme; switching into a Fluent theme takes effect after a restart.
-  if (qApp->property("revampedFluent").toBool() &&
-      QOperatingSystemVersion::current() >=
+  // the theme.
+  if (QOperatingSystemVersion::current() >=
           QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621)) {
     setAttribute(Qt::WA_TranslucentBackground);
   }
@@ -126,21 +144,7 @@ void MainWindow::setupFluentLayout()
 
   m_fluentDashboard = new FluentDashboard(ui, m_OrganizerCore, this);
   setupFluentCommandBar();
-
-  setRunState(RunState::Idle);
   new IconTint(ui->startButton, QStringLiteral(":/MO/gui/mainwindow/run.svg"));
-
-  // the Run button follows the process from the moment it is clicked; other
-  // launches (shortcuts, plugins) leave it alone
-  m_OrganizerCore.onAboutToRun([this](auto&&...) {
-    if (m_runState != RunState::Mounting) {
-      return true;
-    }
-
-    setRunState(RunState::Starting);
-    waitForRunningProcess();
-    return true;
-  });
 }
 
 void MainWindow::waitForRunningProcess()
@@ -222,7 +226,7 @@ void MainWindow::setRunState(RunState state)
 void MainWindow::applyFluentToolbarDefaults(const QSize& iconSize)
 {
   auto& geometry = m_OrganizerCore.settings().geometry();
-  if (geometry.fluentToolbarApplied()) {
+  if (!FluentIcons::active() || geometry.fluentToolbarApplied()) {
     return;
   }
 

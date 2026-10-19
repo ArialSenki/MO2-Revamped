@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modinfodialog.h"
+#include "fluenticons.h"
 #include "fluentnavigation.h"
 #include "modinfodialogcategories.h"
 #include "modinfodialogconflicts.h"
@@ -187,27 +188,29 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
 
   // Fluent v4: the pages are listed on the left, like Windows 11 Settings;
   // reAddTabs() and setTabsColors() keep the list in step
-  FluentNavigation::attach(ui->tabWidget, [](int, QWidget* page) -> char16_t {
-    static const std::pair<const char*, char16_t> glyphs[] = {
-        {"tabText", 0xE8A5},        // Document
-        {"tabIni", 0xE70F},         // Edit
-        {"tabImages", 0xEB9F},      // Photo
-        {"tabESPs", 0xE8FD},        // BulletedList
-        {"tabConflicts", 0xE7BA},   // Warning
-        {"tabCategories", 0xE8EC},  // Tag
-        {"tabNexus", 0xE774},       // Globe
-        {"tabNotes", 0xE70B},       // QuickNote
-        {"tabFiles", 0xE8B7},       // Folder
-    };
-    for (const auto& [name, glyph] : glyphs) {
-      if (page != nullptr && page->objectName() == QLatin1String(name)) {
-        return glyph;
+  if (FluentIcons::active()) {
+    FluentNavigation::attach(ui->tabWidget, [](int, QWidget* page) -> char16_t {
+      static const std::pair<const char*, char16_t> glyphs[] = {
+          {"tabText", 0xE8A5},        // Document
+          {"tabIni", 0xE70F},         // Edit
+          {"tabImages", 0xEB9F},      // Photo
+          {"tabESPs", 0xE8FD},        // BulletedList
+          {"tabConflicts", 0xE7BA},   // Warning
+          {"tabCategories", 0xE8EC},  // Tag
+          {"tabNexus", 0xE774},       // Globe
+          {"tabNotes", 0xE70B},       // QuickNote
+          {"tabFiles", 0xE8B7},       // Folder
+      };
+      for (const auto& [name, glyph] : glyphs) {
+        if (page != nullptr && page->objectName() == QLatin1String(name)) {
+          return glyph;
+        }
       }
-    }
-    return 0xE915;
-  });
-  setMinimumSize(1200, 620);
-  resize(1300, 720);
+      return 0xE915;
+    });
+    setMinimumSize(1200, 620);
+    resize(1300, 720);
+  }
 
   {
     auto* sc = new QShortcut(QKeySequence::Delete, this);

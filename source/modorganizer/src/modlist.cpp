@@ -338,10 +338,17 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     if (column == COL_NAME && modInfo->isOverwrite()) {
       return FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg");
     } else if (column == COL_VERSION) {
-      // a new version shows in the Status column; only the unusual
-      // "installed is newer" case keeps its mark here
-      if (!modInfo->updateAvailable() && modInfo->downgradeAvailable()) {
+      // with a Fluent theme a new version shows in the Status column; only
+      // the unusual "installed is newer" case keeps its mark here
+      const bool fluent = FluentIcons::active();
+      if (modInfo->updateAvailable()) {
+        if (!fluent) {
+          return QIcon(":/MO/gui/mainwindow/status/update.svg");
+        }
+      } else if (modInfo->downgradeAvailable()) {
         return FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg");
+      } else if (!fluent && modInfo->version().scheme() == VersionInfo::SCHEME_DATE) {
+        return QIcon(":/MO/gui/mainwindow/status/version.svg");
       }
     }
     return QVariant();
@@ -1270,7 +1277,8 @@ QString ModList::getColumnName(int column)
 {
   switch (column) {
   case COL_CONFLICTFLAGS:
-    return tr("Status");
+    // the Fluent Status column also shows new versions
+    return FluentIcons::active() ? tr("Status") : tr("Conflicts");
   case COL_FLAGS:
     return tr("Flags");
   case COL_CONTENT:
@@ -1314,7 +1322,8 @@ QString ModList::getColumnToolTip(int column) const
   case COL_MODID:
     return tr("Id of the mod as used on Nexus.");
   case COL_CONFLICTFLAGS:
-    return tr("New versions and file conflicts with other mods.");
+    return FluentIcons::active() ? tr("New versions and file conflicts with other mods.")
+                                 : tr("Indicators of file conflicts between mods.");
   case COL_FLAGS:
     return tr("Emblems to highlight things that might require attention.");
   case COL_CONTENT: {

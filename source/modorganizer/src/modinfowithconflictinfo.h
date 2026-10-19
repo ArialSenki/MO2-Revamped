@@ -77,6 +77,10 @@ public:
   {
     return m_Conflicts.value().m_ArchiveLooseOverwrittenList;
   }
+  std::size_t getConflictingModCount() const override
+  {
+    return m_Conflicts.value().m_ConflictingModCount;
+  }
 
 public slots:
 
@@ -164,6 +168,9 @@ private:
     std::set<unsigned int>
         m_ArchiveLooseOverwrittenList;  // indices of mods with loose files overwriting
                                         // this mod's archive files
+
+    // the mods in all of the lists above, each counted once
+    std::size_t m_ConflictingModCount = 0;
   };
 
   Conflicts doConflictCheck() const;

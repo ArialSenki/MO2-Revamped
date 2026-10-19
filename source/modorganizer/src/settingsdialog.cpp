@@ -147,20 +147,22 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   ui->tabWidget->setSizePolicy(tabPolicy);
 
   // Fluent v4: pages listed on the left, like Windows 11 Settings
-  FluentNavigation::attach(ui->tabWidget, {
-                                              0xE713,  // General: Settings
-                                              0xE790,  // Theme: Color
-                                              0xE8FD,  // Mod List: BulletedList
-                                              0xE8B7,  // Paths: Folder
-                                              0xE774,  // Nexus: Globe
-                                              0xEA86,  // Plugins: Puzzle
-                                              0xE90F,  // Workarounds: Repair
-                                              0xE9D9,  // Diagnostics: Diagnostic
-                                          });
-  // room for the navigation rail, still inside the available screen width
-  const int maxWidth = qMax(320, availableSize.width() - 48);
-  setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
-  resize(qMin(width() + 248, maxWidth), height());
+  if (FluentIcons::active()) {
+    FluentNavigation::attach(ui->tabWidget, {
+                                                0xE713,  // General: Settings
+                                                0xE790,  // Theme: Color
+                                                0xE8FD,  // Mod List: BulletedList
+                                                0xE8B7,  // Paths: Folder
+                                                0xE774,  // Nexus: Globe
+                                                0xEA86,  // Plugins: Puzzle
+                                                0xE90F,  // Workarounds: Repair
+                                                0xE9D9,  // Diagnostics: Diagnostic
+                                            });
+    // room for the navigation rail, still inside the available screen width
+    const int maxWidth = qMax(320, availableSize.width() - 48);
+    setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
+    resize(qMin(width() + 248, maxWidth), height());
+  }
 
   // Build less commonly used pages the first time they are opened. Plugins
   // scans installed plugins and Workarounds reads saved Steam credentials, so
@@ -270,7 +272,9 @@ void SettingsDialog::initializeTab(int index)
   }
 
   m_tabs[index] = m_tabFactories[index]();
-  FluentSettings::restyle(ui->tabWidget->widget(index));
+  if (FluentIcons::active()) {
+    FluentSettings::restyle(ui->tabWidget->widget(index));
+  }
   const QString activeStyle = m_settings.interface().styleName().value_or("");
   configureSettingsComboPopups(
       ui->tabWidget->widget(index),

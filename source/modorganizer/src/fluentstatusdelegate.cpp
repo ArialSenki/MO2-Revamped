@@ -45,20 +45,14 @@ std::optional<Status> statusFor(const QModelIndex& index)
     return Status{QObject::tr("Fully overwritten"), Tone::Critical};
   }
 
-  std::set<unsigned int> others;
-  for (const auto* set :
-       {&mod->getModOverwrite(), &mod->getModOverwritten(), &mod->getModArchiveOverwrite(),
-        &mod->getModArchiveOverwritten(), &mod->getModArchiveLooseOverwrite(),
-        &mod->getModArchiveLooseOverwritten()}) {
-    others.insert(set->begin(), set->end());
-  }
-  if (others.empty()) {
+  // counted once per conflict check, not on every paint
+  const std::size_t others = mod->getConflictingModCount();
+  if (others == 0) {
     return {};
   }
 
-  return Status{others.size() == 1
-                    ? QObject::tr("1 conflict")
-                    : QObject::tr("%1 conflicts").arg(others.size()),
+  return Status{others == 1 ? QObject::tr("1 conflict")
+                            : QObject::tr("%1 conflicts").arg(others),
                 Tone::Caution};
 }
 

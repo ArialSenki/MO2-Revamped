@@ -357,7 +357,8 @@ private:
 };
 
 // Fluent v4 expander row for the log: a chevron, the title, and the latest
-// message; clicking the row folds the log list away with an animation
+// message; clicking the row folds the log list away with an animation. Classic
+// themes get the plain title row with the float and close buttons.
 class LogDockTitleBar final : public QWidget
 {
 public:
@@ -366,11 +367,14 @@ public:
         m_Summary(new QLabel(this)), m_Chevron(new QToolButton(this)),
         m_FloatButton(new LogDockControlButton(
             LogDockControlButton::Glyph::Float, this)),
-        m_Animation(FluentMotion::createAnimation(this))
+        m_Animation(FluentMotion::createAnimation(this)),
+        m_Foldable(FluentIcons::active())
   {
     setObjectName(QStringLiteral("logDockTitleBar"));
     setAttribute(Qt::WA_StyledBackground, true);
-    setCursor(Qt::PointingHandCursor);
+    if (m_Foldable) {
+      setCursor(Qt::PointingHandCursor);
+    }
 
     m_Title->setObjectName(QStringLiteral("logDockTitleLabel"));
     m_Title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -398,6 +402,8 @@ public:
     layout->addWidget(m_Title, 0);
     layout->addWidget(m_Summary, 1);
     layout->addWidget(m_FloatButton, 0, Qt::AlignVCenter);
+    m_Chevron->setVisible(m_Foldable);
+    m_Summary->setVisible(m_Foldable);
 
     connect(m_Chevron, &QToolButton::clicked, this, [this] {
       setExpanded(!m_Expanded);
@@ -440,8 +446,14 @@ public:
     });
     connect(dock, &QDockWidget::windowTitleChanged, m_Title,
             &QLabel::setText);
-    connect(dock, &QDockWidget::topLevelChanged, this,
-            [this](bool floating) { updateFloatControl(floating); });
+    connect(dock, &QDockWidget::topLevelChanged, this, [this](bool floating) {
+      updateFloatControl(floating);
+      // a folded log that leaves the window (float button or a drag) opens
+      // again; a floating window only one row tall would hide the list
+      if (floating) {
+        unfoldNow();
+      }
+    });
     updateFloatControl(dock->isFloating());
   }
 
@@ -454,7 +466,7 @@ public:
 
   void setExpanded(bool expanded)
   {
-    if (expanded == m_Expanded || m_Dock->isFloating()) {
+    if (!m_Foldable || expanded == m_Expanded || m_Dock->isFloating()) {
       return;
     }
 
@@ -493,11 +505,29 @@ protected:
     // the whole row toggles, like a Windows 11 expander; the buttons on the
     // right handle their own clicks, and dragging the row moves the dock
     const QPoint moved = e->position().toPoint() - m_PressPosition;
-    if (e->button() == Qt::LeftButton && moved.manhattanLength() < 4) {
-      setExpanded(!m_Expanded);
+    if (m_Foldable && e->button() == Qt::LeftButton && moved.manhattanLength() < 4) {
+      if (m_SkipRelease) {
+        m_SkipRelease = false;
+      } else {
+        setExpanded(!m_Expanded);
+      }
     }
 
     QWidget::mouseReleaseEvent(e);
+  }
+
+  void mouseDoubleClickEvent(QMouseEvent* e) override
+  {
+    // QDockWidget floats on a title bar double-click; the expander row already
+    // toggled on the first click, so a double-click counts as that one click
+    // (the float button floats the log)
+    if (m_Foldable) {
+      m_SkipRelease = e->button() == Qt::LeftButton;
+      e->accept();
+      return;
+    }
+
+    QWidget::mouseDoubleClickEvent(e);
   }
 
   void resizeEvent(QResizeEvent* e) override
@@ -507,6 +537,24 @@ protected:
   }
 
 private:
+  // opens the log at once, without the animation
+  void unfoldNow()
+  {
+    if (m_Expanded) {
+      return;
+    }
+
+    m_Animation->stop();
+    m_Expanded = true;
+    relaxContentMinimum(false);
+    m_Dock->setMinimumHeight(m_ExpandedMinimum);
+    m_Dock->resize(m_Dock->width(), qMax(m_ExpandedHeight, m_ExpandedMinimum));
+    updateChevron();
+    if (expandedChanged) {
+      expandedChanged(true);
+    }
+  }
+
   void relaxContentMinimum(bool relax)
   {
     QWidget* content = m_Dock->widget();
@@ -586,6 +634,8 @@ private:
   QToolButton* m_Chevron;
   LogDockControlButton* m_FloatButton;
   QVariantAnimation* m_Animation;
+  bool m_Foldable;
+  bool m_SkipRelease    = false;
   bool m_Expanded       = true;
   int m_ExpandedHeight  = 175;
   int m_ExpandedMinimum = 175;
@@ -1562,7 +1612,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   // saves tab
   m_SavesTab.reset(new SavesTab(this, m_OrganizerCore, ui));
-  m_fluentDashboard->setSavesDirectory([this] { return m_SavesTab->currentSavesDir(); });
+  if (m_fluentDashboard != nullptr) {
+    m_fluentDashboard->setSavesDirectory([this] { return m_SavesTab->currentSavesDir(); });
+  }
 
   // Hide stuff we do not need:
   auto& features = m_OrganizerCore.gameFeatures();
@@ -2632,7 +2684,8 @@ void MainWindow::showEvent(QShowEvent* event)
 
     // Fluent v4 keeps the log folded to its one-line summary unless it was
     // left open last time
-    if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget())) {
+    if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget());
+        logBar != nullptr && FluentIcons::active()) {
       const QString file = m_OrganizerCore.settings().filename();
       constexpr auto logExpandedKey = "Settings/fluent_v4_log_expanded";
       if (!QSettings(file, QSettings::IniFormat).value(logExpandedKey, false).toBool()) {

@@ -554,21 +554,24 @@ QIcon fluent(const QIcon& icon)
     return icon;
   }
 
-  // the same QIcon is often set on many actions; remember the answer per icon
-  static QHash<qint64, std::optional<Glyph>> known;
-  auto it = known.find(icon.cacheKey());
-  if (it == known.end()) {
+  // the same QIcon is often set on many actions; remember the answer per
+  // icon. Plugins and views create icons all the time, so keep the most
+  // recent ones only.
+  static QCache<qint64, std::optional<Glyph>> known(1024);
+  const std::optional<Glyph>* answer = known.object(icon.cacheKey());
+  if (answer == nullptr) {
     const auto& table = fingerprintTable();
     auto match        = table.find(fingerprint(icon));
-    it = known.insert(icon.cacheKey(), match == table.end()
-                                           ? std::nullopt
-                                           : std::optional<Glyph>(*match));
+    auto* found       = new std::optional<Glyph>(
+        match == table.end() ? std::nullopt : std::optional<Glyph>(*match));
+    known.insert(icon.cacheKey(), found);
+    answer = found;
   }
 
-  if (!it->has_value()) {
+  if (!answer->has_value()) {
     return icon;
   }
-  return glyph((*it)->codepoint, (*it)->tone);
+  return glyph((*answer)->codepoint, (*answer)->tone);
 }
 
 QIcon monochrome(const QIcon& icon, const QColor& ink)
