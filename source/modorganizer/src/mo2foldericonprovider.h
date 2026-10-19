@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define MO2FOLDERICONPROVIDER_H
 
 #include <QFileIconProvider>
+#include "fluenticons.h"
 #include <QFileInfo>
 #include <QIcon>
 
@@ -30,7 +31,7 @@ public:
   QIcon icon(IconType type) const override
   {
     if (type == Folder) {
-      return QIcon(QStringLiteral(":/MO/gui/folder"));
+      return FluentIcons::icon(QStringLiteral(":/MO/gui/folder"));
     }
     return QFileIconProvider::icon(type);
   }

@@ -1,4 +1,5 @@
 #include "texteditor.h"
+#include "fluenticons.h"
 #include "utility.h"
 #include <QSplitter>
 #include <log.h>
@@ -461,14 +462,14 @@ TextEditorToolbar::TextEditorToolbar(TextEditor& editor)
     : m_editor(editor), m_save(nullptr), m_wordWrap(nullptr), m_explore(nullptr),
       m_path(nullptr)
 {
-  m_save = new QAction(QIcon(":/MO/gui/save"), QObject::tr("&Save"), &editor);
+  m_save = new QAction(FluentIcons::icon(":/MO/gui/save"), QObject::tr("&Save"), &editor);
 
   m_save->setShortcutContext(Qt::WidgetWithChildrenShortcut);
   m_save->setShortcut(Qt::CTRL + Qt::Key_S);
   m_editor.addAction(m_save);
 
   m_wordWrap =
-      new QAction(QIcon(":/MO/gui/word-wrap"), QObject::tr("&Word wrap"), &editor);
+      new QAction(FluentIcons::icon(":/MO/gui/word-wrap"), QObject::tr("&Word wrap"), &editor);
 
   m_wordWrap->setCheckable(true);
 

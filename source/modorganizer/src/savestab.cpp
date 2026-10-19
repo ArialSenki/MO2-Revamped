@@ -1,4 +1,5 @@
 #include "savestab.h"
+#include "fluenticons.h"
 #include "activatemodsdialog.h"
 #include "organizercore.h"
 #include "ui_mainwindow.h"
@@ -287,7 +288,7 @@ void SavesTab::onContextMenu(const QPoint& pos)
   auto info = m_core.gameFeatures().gameFeature<SaveGameInfo>();
   if (info != nullptr) {
     QAction* action = menu.addAction(tr("Restore required plugins..."));
-    action->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+    action->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
     action->setToolTip(
         tr("Choose installed mods to activate the plugins required by this save."));
     action->setEnabled(false);
@@ -308,12 +309,12 @@ void SavesTab::onContextMenu(const QPoint& pos)
   QAction* deleteAction = menu.addAction(deleteMenuLabel, [&] {
     deleteSavegame();
   });
-  deleteAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  deleteAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
 
   QAction* openFolderAction = menu.addAction(tr("Open in Explorer..."), [&] {
     openInExplorer();
   });
-  openFolderAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
+  openFolderAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
 
   menu.exec(ui.list->viewport()->mapToGlobal(pos));
 }

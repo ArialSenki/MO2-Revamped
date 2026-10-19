@@ -1,4 +1,5 @@
 #include "filetree.h"
+#include "fluenticons.h"
 #include "envshell.h"
 #include "filetreeitem.h"
 #include "filetreemodel.h"
@@ -53,7 +54,7 @@ public:
 
   MenuItem& icon(const QString& path)
   {
-    m_action->setIcon(QIcon(path));
+    m_action->setIcon(FluentIcons::icon(path));
     return *this;
   }
 

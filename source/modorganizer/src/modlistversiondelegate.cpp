@@ -1,4 +1,5 @@
 #include "modlistversiondelegate.h"
+#include "fluenticons.h"
 
 #include "log.h"
 #include "modlistview.h"
@@ -41,7 +42,7 @@ void ModListVersionDelegate::paint(QPainter* painter,
     opt.decorationAlignment = Qt::AlignCenter;
 
     if (upgrade) {
-      QIcon icon(":/MO/gui/mainwindow/status/update.svg");
+      const QIcon icon = FluentIcons::icon(":/MO/gui/mainwindow/status/update.svg");
       QPixmap pixmap = decoration(opt, icon);
 
       QSize pm = icon.actualSize(opt.decorationSize);
@@ -54,7 +55,7 @@ void ModListVersionDelegate::paint(QPainter* painter,
     }
 
     if (downgrade) {
-      QIcon icon(":/MO/gui/mainwindow/status/warning.svg");
+      const QIcon icon = FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg");
       QPixmap pixmap = decoration(opt, icon);
 
       QSize pm = icon.actualSize(opt.decorationSize);

@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "overwriteinfodialog.h"
+#include "fluenticons.h"
 #include "mo2foldericonprovider.h"
 #include "organizercore.h"
 #include "report.h"
@@ -75,10 +76,10 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   m_RenameAction    = new QAction(tr("&Rename"), ui->filesView);
   m_OpenAction      = new QAction(tr("&Open file"), ui->filesView);
   m_NewFolderAction = new QAction(tr("&New Folder"), ui->filesView);
-  m_NewFolderAction->setIcon(QIcon(":/MO/gui/mainwindow/files/folder.svg"));
-  m_RenameAction->setIcon(QIcon(":/MO/gui/contextmenu/rename.svg"));
-  m_OpenAction->setIcon(QIcon(":/MO/gui/mainwindow/files/file.svg"));
-  m_DeleteAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  m_NewFolderAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg"));
+  m_RenameAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"));
+  m_OpenAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/file.svg"));
+  m_DeleteAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   m_NewFolderAction->setToolTip(tr("Create a folder inside Overwrite."));
   m_OpenAction->setToolTip(tr("Open the selected file with its associated application."));
   m_RenameAction->setToolTip(tr("Rename the selected file or folder."));

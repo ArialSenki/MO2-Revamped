@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "loglist.h"
+#include "fluenticons.h"
 #include "copyeventfilter.h"
 #include "env.h"
 #include "organizercore.h"
@@ -143,15 +144,15 @@ QVariant LogModel::data(const QModelIndex& index, int role) const
     if (index.column() == 1) {
       switch (e.level) {
       case log::Warning:
-        return QIcon(":/MO/gui/mainwindow/status/warning.svg");
+        return FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg");
 
       case log::Error:
-        return QIcon(":/MO/gui/mainwindow/status/error.svg");
+        return FluentIcons::icon(":/MO/gui/mainwindow/status/error.svg");
 
       case log::Debug:
-        return QIcon(":/MO/gui/mainwindow/status/debug.svg");
+        return FluentIcons::icon(":/MO/gui/mainwindow/status/debug.svg");
       case log::Info:
-        return QIcon(":/MO/gui/mainwindow/status/info.svg");
+        return FluentIcons::icon(":/MO/gui/mainwindow/status/info.svg");
       default:
         return {};
       }
@@ -254,21 +255,21 @@ QMenu* LogList::createMenu(QWidget* parent)
   QAction* clearAction = menu->addAction(tr("C&lear all"), [&] {
     clear();
   });
-  clearAction->setIcon(QIcon(":/MO/gui/mainwindow/clear.svg"));
+  clearAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/clear.svg"));
   QAction* openLogsAction = menu->addAction(tr("&Open logs folder"), [&] {
     openLogsFolder();
   });
-  openLogsAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
+  openLogsAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
 
   auto* levels = new QMenu(tr("&Level"));
-  levels->setIcon(QIcon(":/MO/gui/mainwindow/status/info.svg"));
+  levels->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/status/info.svg"));
   menu->addMenu(levels);
 
   auto* ag = new QActionGroup(menu);
 
   auto addAction = [&](auto&& text, auto&& level, const QString& iconPath) {
     auto* a = new QAction(text, ag);
-    a->setIcon(QIcon(iconPath));
+    a->setIcon(FluentIcons::icon(iconPath));
 
     a->setCheckable(true);
     a->setChecked(log::getDefault().level() == level);

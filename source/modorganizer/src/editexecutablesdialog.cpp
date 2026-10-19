@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "editexecutablesdialog.h"
+#include "fluenticons.h"
 #include "filedialogmemory.h"
 #include "forcedloaddialog.h"
 #include "modlist.h"
@@ -28,6 +29,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractButton>
 #include <QAction>
 #include <QBoxLayout>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QLineEdit>
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -53,7 +57,8 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
                             const QString& iconPath,
                             const QString& iconObjectName, int size)
 {
-  if (layout == nullptr || heading == nullptr) {
+  // Fluent v4 headings are plain text, like Windows 11 Settings
+  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
     return;
   }
 
@@ -71,7 +76,7 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
   icon->setObjectName(iconObjectName);
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(size, size);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
   }
@@ -103,7 +108,11 @@ void addExecutableGroupHeading(QGroupBox* group, const QString& text,
   icon->setObjectName(iconObjectName);
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(26, 26);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(14, 14);
+  // Fluent v4 headings are plain text, like Windows 11 Settings
+  if (FluentIcons::active()) {
+    icon->hide();
+  }
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(14, 14);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
   }
@@ -181,8 +190,56 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
   addExecutableGroupHeading(
       ui->optionsGroup, tr("Optional launch behaviour"),
       ":/MO/gui/mainwindow/settings.svg", "executableOptionsIcon");
-  ui->add->setIcon(QIcon(":/MO/gui/mainwindow/action-add-light.svg"));
+  ui->add->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/action-add-light.svg"));
   ui->add->setIconSize(QSize(16, 16));
+
+  if (FluentIcons::active()) {
+    // Fluent v4: every option becomes a full-width switch row (see
+    // FluentSettings); the value it unlocks (AppID, mod, libraries) moves to
+    // the line below, like an expanded Windows 11 setting
+    QVBoxLayout* options = ui->optionsLayout;
+    auto restack = [options](QHBoxLayout* row, QList<QWidget*> details) {
+      const int index = options->indexOf(row);
+      if (index < 0) {
+        return;
+      }
+
+      QList<QWidget*> boxes;
+      for (int i = 0; i < row->count(); ++i) {
+        if (auto* box = qobject_cast<QCheckBox*>(row->itemAt(i)->widget())) {
+          boxes.append(box);
+        }
+      }
+      for (QWidget* w : boxes + details) {
+        row->removeWidget(w);
+      }
+      options->removeItem(row);
+      delete row;
+
+      int at = index;
+      for (QWidget* box : boxes) {
+        options->insertWidget(at++, box);
+      }
+      if (!details.isEmpty()) {
+        auto* detail = new QHBoxLayout;
+        detail->setContentsMargins(4, 0, 4, 8);
+        detail->setSpacing(8);
+        for (QWidget* w : details) {
+          const bool field = qobject_cast<QLineEdit*>(w) || qobject_cast<QComboBox*>(w);
+          detail->addWidget(w, field ? 1 : 0);
+        }
+        if (details.size() == 1 && qobject_cast<QPushButton*>(details.front())) {
+          detail->addStretch(1);
+        }
+        options->insertLayout(at, detail);
+      }
+    };
+
+    restack(ui->horizontalLayout_5, {ui->steamAppIdLabel, ui->steamAppID});
+    restack(ui->horizontalLayout_9, {ui->mods});
+    restack(ui->horizontalLayout_8, {ui->configureLibraries});
+    restack(ui->displayOptionsLayout, {});
+  }
 
   // Tool buttons keep their size hint by default; let both action rows span
   // the list width evenly instead of leaving uneven gaps.
@@ -195,11 +252,11 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
     delete ui->actionsSpacer;
     ui->actionsSpacer = nullptr;
   }
-  ui->browseBinary->setIcon(QIcon(":/MO/gui/mainwindow/files/executable.svg"));
+  ui->browseBinary->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/executable.svg"));
   ui->browseWorkingDirectory->setIcon(
-      QIcon(":/MO/gui/mainwindow/files/folder.svg"));
+      FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg"));
   ui->configureLibraries->setIcon(
-      QIcon(":/MO/gui/mainwindow/files/library.svg"));
+      FluentIcons::icon(":/MO/gui/mainwindow/files/library.svg"));
   if (auto* button = ui->buttons->button(QDialogButtonBox::Ok)) {
     button->setObjectName("executableAcceptButton");
   }

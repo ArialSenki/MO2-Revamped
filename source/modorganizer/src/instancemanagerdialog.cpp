@@ -1,4 +1,5 @@
 #include "instancemanagerdialog.h"
+#include "fluenticons.h"
 #include "createinstancedialog.h"
 #include "filesystemutilities.h"
 #include "gameiconutils.h"
@@ -40,7 +41,8 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
                             const QString& iconPath,
                             const QString& iconObjectName, int size)
 {
-  if (layout == nullptr || heading == nullptr) {
+  // Fluent v4 headings are plain text, like Windows 11 Settings
+  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
     return;
   }
 
@@ -58,7 +60,7 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
   icon->setObjectName(iconObjectName);
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(size, size);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
   }
@@ -75,7 +77,12 @@ QLabel* makeCircularHeaderIcon(QWidget* parent, const QString& iconPath,
   icon->setObjectName(objectName);
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(size, size);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  // Fluent v4 headings are plain text, like Windows 11 Settings; the badges
+  // of the confirmation prompts stay
+  if (FluentIcons::active() && objectName.endsWith(QLatin1String("HeaderIcon"))) {
+    icon->hide();
+  }
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
   }
