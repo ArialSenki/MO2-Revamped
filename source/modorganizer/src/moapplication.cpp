@@ -1227,6 +1227,13 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
     if (property("revampedFluent").toBool()) {
       if (auto* menu = qobject_cast<QMenu*>(receiver)) {
         FluentIcons::apply(menu);
+      } else if (auto* window = qobject_cast<QWidget*>(receiver);
+                 window != nullptr && window->isWindow() &&
+                 window->windowType() != Qt::Popup && window->windowType() != Qt::ToolTip) {
+        // the theme may have set button icons after the buttons were shown
+        for (QAbstractButton* child : window->findChildren<QAbstractButton*>()) {
+          FluentIcons::apply(child);
+        }
       } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
                  button != nullptr && !button->icon().isNull()) {
         FluentIcons::apply(button);

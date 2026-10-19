@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFile>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QLayoutItem>
 #include <QStringList>
 #include <questionboxmemory.h>
