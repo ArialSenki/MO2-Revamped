@@ -18,7 +18,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
-    <normaloff>:/MO/gui/app_icon</normaloff>:/MO/gui/app_icon</iconset>
+    <normaloff>:/MO/gui/app_icon_sizes</normaloff>:/MO/gui/app_icon_sizes</iconset>
   </property>
   <property name="documentMode">
    <bool>false</bool>
