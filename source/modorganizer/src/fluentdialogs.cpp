@@ -1,5 +1,6 @@
 #include "fluentdialogs.h"
 
+#include "fluenticons.h"
 #include "fluentsettings.h"
 #include "revampedtheme.h"
 
@@ -17,6 +18,12 @@
 #include <QToolButton>
 #include <QRegularExpression>
 #include <QScreen>
+#include <QTimer>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <dwmapi.h>
+#endif
 
 #include <algorithm>
 
@@ -155,6 +162,24 @@ void fitSize(QDialog* dialog)
   dialog->move(frame.topLeft());
 }
 
+// the native title bar follows the theme's light or dark mode; Qt may set the
+// frame mode again while the dialog settles, so it is applied once more after
+void matchTitleBar(QDialog* dialog)
+{
+#ifdef Q_OS_WIN
+  const auto apply = [dialog] {
+    const BOOL dark   = MOBase::RevampedTheme::isDark() ? TRUE : FALSE;
+    const HWND handle = reinterpret_cast<HWND>(dialog->winId());
+    // DWMWA_USE_IMMERSIVE_DARK_MODE
+    DwmSetWindowAttribute(handle, 20, &dark, sizeof(dark));
+  };
+  apply();
+  QTimer::singleShot(0, dialog, apply);
+#else
+  Q_UNUSED(dialog);
+#endif
+}
+
 // dialogs that are mostly options get Settings rows
 bool isOptionsDialog(const QDialog* dialog)
 {
@@ -228,6 +253,13 @@ void polish(QDialog* dialog)
     }
     styleButton(button, false);
   }
+
+  // restyling re-applies icons the theme sets on buttons; ink them again
+  for (QAbstractButton* button : dialog->findChildren<QAbstractButton*>()) {
+    FluentIcons::apply(button);
+  }
+
+  matchTitleBar(dialog);
 }
 
 }  // namespace FluentDialogs

@@ -368,6 +368,10 @@ void flattenOptionGrids(QWidget* root)
       if (line.size() >= 2 && qobject_cast<QLabel*>(line[0]) != nullptr &&
           std::all_of(line.begin() + 1, line.end(), isRows)) {
         for (auto it = line.begin() + 1; it != line.end(); ++it) {
+          // only containers of rows stack; a row keeps its own layout
+          if ((*it)->objectName() == QLatin1String("fluentSettingRow")) {
+            continue;
+          }
           if (auto* box = qobject_cast<QBoxLayout*>((*it)->layout())) {
             box->setDirection(QBoxLayout::TopToBottom);
             box->setSpacing(0);
