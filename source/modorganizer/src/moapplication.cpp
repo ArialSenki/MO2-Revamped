@@ -509,6 +509,10 @@ MOApplication::MOApplication(int& argc, char** argv) : QApplication(argc, argv)
 
   qputenv("QML_DISABLE_DISK_CACHE", "true");
 
+  // every window gets the icon with its drawn small sizes; scaling the large
+  // logo down would shrink its "M2" into a smudge at 16 px
+  setWindowIcon(QIcon(QStringLiteral(":/MO/gui/app_icon_sizes")));
+
   connect(&m_styleWatcher, &QFileSystemWatcher::fileChanged, [&](auto&& file) {
     log::debug("style file '{}' changed, reloading", file);
     updateStyle(file);

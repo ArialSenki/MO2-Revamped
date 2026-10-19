@@ -79,6 +79,7 @@
         <file alias="awaiting">resources/status_awaiting.png</file>
         <file alias="inactive">resources/status_inactive.png</file>
         <file alias="app_icon">resources/mo_icon.png</file>
+        <file alias="app_icon_sizes">mo_icon.ico</file>
         <file alias="package">resources/package.png</file>
         <file alias="instance_switch">resources/switch-instance-icon.png</file>
         <file alias="open_folder">resources/open-Folder-Icon.png</file>
