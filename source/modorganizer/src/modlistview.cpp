@@ -24,6 +24,7 @@
 #include "log.h"
 #include "mainwindow.h"
 #include "fluenticons.h"
+#include "fluentswitch.h"
 #include "modconflicticondelegate.h"
 #include "modcontenticondelegate.h"
 #include "modelutils.h"
@@ -125,29 +126,27 @@ public:
     paintSwitch(painter, opt, index);
   }
 
-  bool editorEvent(QEvent* event, QAbstractItemModel* model,
-                   const QStyleOptionViewItem& option,
-                   const QModelIndex& index) override
+private:
+  // keyed by mod index: toggling a mod makes the list refresh its rows, so
+  // row indexes would not survive until the next frame
+  QHash<int, QVariantAnimation*> m_switchAnimations;
+
+  // the state each switch was last painted in; a mod painted in a new state
+  // was toggled (a click, the keyboard, a menu, "enable all"...) and slides
+  // over instead of jumping
+  mutable QHash<int, bool> m_paintedStates;
+
+  static int modKey(const QModelIndex& index)
   {
-    const auto before = index.data(Qt::CheckStateRole);
-    const bool result = QStyledItemDelegate::editorEvent(event, model, option, index);
-
-    // animate the knob when a click on the switch toggled the mod
-    const auto after = index.data(Qt::CheckStateRole);
-    if (result && before.isValid() && after.isValid() && before != after) {
-      animateSwitch(index, after.toInt() == Qt::Checked);
-    }
-
-    return result;
+    bool ok       = false;
+    const int mod = index.data(ModList::IndexRole).toInt(&ok);
+    return ok ? mod : -1;
   }
 
-private:
-  QHash<QPersistentModelIndex, QVariantAnimation*> m_switchAnimations;
-
-  // switch position for the index, 0 is off and 1 is on
-  qreal switchPosition(const QModelIndex& index, bool checked) const
+  // switch position for the mod, 0 is off and 1 is on
+  qreal switchPosition(int key, bool checked) const
   {
-    auto itor = m_switchAnimations.find(QPersistentModelIndex(index));
+    auto itor = m_switchAnimations.find(key);
     if (itor != m_switchAnimations.end()) {
       return (*itor)->currentValue().toReal();
     }
@@ -155,13 +154,12 @@ private:
     return checked ? 1.0 : 0.0;
   }
 
-  void animateSwitch(const QModelIndex& index, bool checked)
+  void animateSwitch(int key, bool checked)
   {
     if (!FluentMotion::enabled() || !m_view->switchColors().isValid()) {
       return;
     }
 
-    const QPersistentModelIndex key(index);
     if (auto* old = m_switchAnimations.take(key)) {
       old->stop();
       old->deleteLater();
@@ -170,29 +168,30 @@ private:
     auto* animation = FluentMotion::createAnimation(this);
     m_switchAnimations.insert(key, animation);
 
-    connect(animation, &QVariantAnimation::valueChanged, this, [this, key] {
-      if (key.isValid()) {
-        m_view->viewport()->update(m_view->visualRect(key));
-      }
+    // the switch column is narrow; repainting it is cheaper than finding the
+    // mod's row again on every frame
+    connect(animation, &QVariantAnimation::valueChanged, this, [this] {
+      m_view->viewport()->update();
     });
 
     connect(animation, &QVariantAnimation::finished, this, [this, key, animation] {
       m_switchAnimations.remove(key);
       animation->deleteLater();
-      if (key.isValid()) {
-        m_view->viewport()->update(m_view->visualRect(key));
-      }
+      m_view->viewport()->update();
     });
 
-    FluentMotion::start(animation, checked ? 0.0 : 1.0, checked ? 1.0 : 0.0,
-                        FluentMotion::Fast);
+    FluentMotion::start(animation, checked ? 0.0 : 1.0, checked ? 1.0 : 0.0, 200);
   }
 
   // draws the switch over the indicator image from the stylesheet, so the
   // knob can move and the track can fade between the two states
-  void paintSwitch(QPainter* painter, const QStyleOptionViewItem& option,
+  void paintSwitch(QPainter* painter, const QStyleOptionViewItem& viewOption,
                    const QModelIndex& index) const
   {
+    // paint() hands over the view's option; the check state and the
+    // indicator only appear once the option is filled in for the index
+    QStyleOptionViewItem option(viewOption);
+    initStyleOption(&option, index);
     if (!(option.features & QStyleOptionViewItem::HasCheckIndicator)) {
       return;
     }
@@ -211,37 +210,21 @@ private:
     }
 
     const bool checked = (option.checkState != Qt::Unchecked);
-    const qreal t      = switchPosition(index, checked);
+    const int key      = modKey(index);
+    auto painted       = m_paintedStates.find(key);
+    if (painted == m_paintedStates.end()) {
+      m_paintedStates.insert(key, checked);
+    } else if (*painted != checked) {
+      *painted = checked;
+      if (key >= 0) {
+        const_cast<ModListStyledItemDelegate*>(this)->animateSwitch(key, checked);
+      }
+    }
 
-    auto mix = [t](const QColor& a, const QColor& b) {
-      return QColor::fromRgbF(a.redF() + (b.redF() - a.redF()) * t,
-                              a.greenF() + (b.greenF() - a.greenF()) * t,
-                              a.blueF() + (b.blueF() - a.blueF()) * t,
-                              a.alphaF() + (b.alphaF() - a.alphaF()) * t);
-    };
-
-    const qreal h      = track.height();
-    const qreal radius = h / 2.0;
-    const QRectF body  = track.adjusted(0.5, 0.5, -0.5, -0.5);
-
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing);
-
-    const QColor border = colors.border.isValid() ? colors.border : colors.off;
-    painter->setPen(QPen(mix(border, colors.on), 1.0));
-    painter->setBrush(mix(colors.off, colors.on));
-    painter->drawRoundedRect(body, radius - 0.5, radius - 0.5);
-
-    // the knob grows slightly when switched on, as in Windows 11
-    const qreal knob = h * (0.25 + 0.05 * t);
-    const qreal x    = track.left() + radius + (track.width() - 2 * radius) * t;
-    const QColor knobOff = colors.knobOff.isValid() ? colors.knobOff : border;
-    const QColor knobOn  = colors.knobOn.isValid() ? colors.knobOn : Qt::white;
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(mix(knobOff, knobOn));
-    painter->drawEllipse(QPointF(x, track.center().y()), knob, knob);
-
-    painter->restore();
+    const qreal hover = (option.state & QStyle::State_MouseOver) ? 1.0 : 0.0;
+    FluentSwitch::paint(painter, track, switchPosition(key, checked), hover,
+                        {colors.on, colors.off, colors.border, colors.knobOn,
+                         colors.knobOff});
   }
 };
 

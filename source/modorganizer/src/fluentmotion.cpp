@@ -116,6 +116,9 @@ void fadeOut(QWidget* window, std::function<void()> done)
   }
 
   QVariantAnimation* animation = windowAnimation(window);
+  // exits accelerate (Windows 11 "fast out"): the window leaves without the
+  // lingering tail of an entrance curve
+  animation->setEasingCurve(QEasingCurve::InCubic);
   QObject::connect(animation, &QVariantAnimation::valueChanged, window,
                    [window](const QVariant& value) {
                      window->setWindowOpacity(value.toDouble());

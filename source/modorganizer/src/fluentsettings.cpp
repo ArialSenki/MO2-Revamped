@@ -1,4 +1,5 @@
 ﻿#include "fluentsettings.h"
+#include "fluentswitch.h"
 
 #include <QAbstractItemView>
 #include <QAbstractSpinBox>
@@ -206,6 +207,9 @@ void makeRow(QCheckBox* box, bool takeDetail = false)
   box->setAccessibleName(QString(title).remove(QLatin1Char('&')));
   box->setText(QString());
   box->setProperty("fluentSwitch", true);
+  // the theme hides its still image of the switch; FluentSwitch draws it
+  box->setProperty("fluentAnimated", true);
+  FluentSwitch::animate(box);
   // the property selects the switch rules; repolish when the page is shown
   box->style()->unpolish(box);
   box->style()->polish(box);
