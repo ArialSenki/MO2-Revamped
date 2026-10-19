@@ -18,6 +18,11 @@ namespace FluentSettings
 // dialogs pass false
 void restyle(QWidget* root, bool allowScroll = true);
 
+// turns only the check boxes below root into switch rows, leaving the layout
+// as it is; for plugin windows with their own card layout. A word-wrapped
+// label placed right below a check box becomes the row's description.
+void switchRows(QWidget* root);
+
 // puts a page without a scroll area into one; restyle() does this too, but
 // pages built lazily need it up front so they do not inflate the dialog
 void wrapInScrollArea(QWidget* page);

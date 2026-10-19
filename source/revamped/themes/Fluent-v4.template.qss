@@ -1391,3 +1391,10 @@ QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab:sele
     background-color: transparent;
     border-bottom: 3px solid @accent@;
 }
+
+/* About: the program logo stands on its own, without the round badge. */
+QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutLogo {
+    background-color: transparent;
+    border: none;
+    padding: 0px;
+}

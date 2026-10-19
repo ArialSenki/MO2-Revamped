@@ -127,12 +127,35 @@ private:
   QWidget* m_row;
 };
 
-void makeRow(QCheckBox* box)
+// the word-wrapped label a plugin put right below the check box to explain
+// it, if any
+QLabel* takeDetailLabel(QCheckBox* box)
+{
+  auto* layout = qobject_cast<QBoxLayout*>(box->parentWidget()->layout());
+  if (layout == nullptr) {
+    return nullptr;
+  }
+  const int index = layout->indexOf(box);
+  if (index < 0 || index + 1 >= layout->count()) {
+    return nullptr;
+  }
+  auto* label = qobject_cast<QLabel*>(layout->itemAt(index + 1)->widget());
+  if (label == nullptr || !label->wordWrap() || !label->objectName().isEmpty() ||
+      label->text().isEmpty()) {
+    return nullptr;
+  }
+  layout->removeWidget(label);
+  return label;
+}
+
+void makeRow(QCheckBox* box, bool takeDetail = false)
 {
   QWidget* parent = box->parentWidget();
   if (parent == nullptr || parent->layout() == nullptr) {
     return;
   }
+
+  QLabel* detail = takeDetail ? takeDetailLabel(box) : nullptr;
 
   auto* row = new QFrame(parent);
   row->setObjectName(QStringLiteral("fluentSettingRow"));
@@ -140,6 +163,9 @@ void makeRow(QCheckBox* box)
   if (parent->layout()->replaceWidget(box, row) == nullptr) {
     delete row;
     return;
+  }
+  if (detail != nullptr) {
+    detail->setParent(row);
   }
 
   const QString title       = box->text();
@@ -157,7 +183,15 @@ void makeRow(QCheckBox* box)
   titleLabel->setWordWrap(true);
   text->addWidget(titleLabel);
   QList<QLabel*> labels = {titleLabel};
-  if (!description.isEmpty()) {
+  if (detail != nullptr) {
+    // the plugin's own label keeps its text and any later updates to it
+    detail->setObjectName(QStringLiteral("fluentSettingDescription"));
+    detail->setContentsMargins(0, 0, 0, 0);
+    detail->style()->unpolish(detail);
+    detail->style()->polish(detail);
+    text->addWidget(detail);
+    labels << detail;
+  } else if (!description.isEmpty()) {
     auto* descriptionLabel = new QLabel(description, row);
     descriptionLabel->setObjectName(QStringLiteral("fluentSettingDescription"));
     descriptionLabel->setTextFormat(Qt::PlainText);
@@ -587,6 +621,27 @@ void makeFormRows(QGridLayout* grid)
 namespace FluentSettings
 {
 
+void makeRows(QWidget* root, bool takeDetails)
+{
+  for (QCheckBox* box : root->findChildren<QCheckBox*>()) {
+    // already a row, part of an item view, or explicitly kept as is
+    if (box->property("fluentSwitch").toBool() || box->property("fluentKeepCheckBox").toBool() ||
+        box->text().isEmpty()) {
+      continue;
+    }
+    bool inView = false;
+    for (QWidget* p = box->parentWidget(); p != nullptr && p != root; p = p->parentWidget()) {
+      if (qobject_cast<QAbstractItemView*>(p) != nullptr) {
+        inView = true;
+        break;
+      }
+    }
+    if (!inView) {
+      makeRow(box, takeDetails);
+    }
+  }
+}
+
 void restyle(QWidget* root, bool allowScroll)
 {
   if (root == nullptr || root->property("fluentRestyled").toBool()) {
@@ -606,25 +661,17 @@ void restyle(QWidget* root, bool allowScroll)
     makeFormRows(form);
   }
 
-  for (QCheckBox* box : root->findChildren<QCheckBox*>()) {
-    // already a row, part of an item view, or explicitly kept as is
-    if (box->property("fluentSwitch").toBool() || box->property("fluentKeepCheckBox").toBool() ||
-        box->text().isEmpty()) {
-      continue;
-    }
-    bool inView = false;
-    for (QWidget* p = box->parentWidget(); p != nullptr && p != root; p = p->parentWidget()) {
-      if (qobject_cast<QAbstractItemView*>(p) != nullptr) {
-        inView = true;
-        break;
-      }
-    }
-    if (!inView) {
-      makeRow(box);
-    }
-  }
-
+  makeRows(root, false);
   flattenOptionGrids(root);
+}
+
+void switchRows(QWidget* root)
+{
+  if (root == nullptr || root->property("fluentSwitchRows").toBool()) {
+    return;
+  }
+  root->setProperty("fluentSwitchRows", true);
+  makeRows(root, true);
 }
 
 }  // namespace FluentSettings
