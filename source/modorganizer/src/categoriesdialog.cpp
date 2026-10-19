@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "categoriesdialog.h"
+#include "fluenticons.h"
 #include "categories.h"
 #include "categoryimportdialog.h"
 #include "circularuihelpers.h"
@@ -158,8 +159,8 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
   ui->nexusCategoryList->setSpacing(1);
   ui->nexusRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
   ui->nexusImportButton->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
-  ui->addCategoryButton->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
-  ui->removeCategoryButton->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  ui->addCategoryButton->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
+  ui->removeCategoryButton->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   ui->nexusRefresh->setIconSize(QSize(16, 16));
   ui->nexusImportButton->setIconSize(QSize(16, 16));
   ui->addCategoryButton->setIconSize(QSize(16, 16));
@@ -940,15 +941,15 @@ void CategoriesDialog::on_categoriesTable_customContextMenuRequested(const QPoin
   m_ContextRow = ui->categoriesTable->rowAt(pos.y());
   QMenu menu;
   QAction* addAction = menu.addAction(tr("Add"), this, SLOT(addCategory_clicked()));
-  addAction->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
+  addAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
   QAction* removeAction =
       menu.addAction(tr("Remove"), this, SLOT(removeCategory_clicked()));
-  removeAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  removeAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   if (Settings::instance().nexus().categoryMappings()) {
     QAction* removeMappingAction = menu.addAction(
         tr("Remove Nexus Mapping(s)"), this, SLOT(removeNexusMap_clicked()));
     removeMappingAction->setIcon(
-        QIcon(":/MO/gui/contextmenu/remap-category.svg"));
+        FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"));
   }
 
   menu.exec(ui->categoriesTable->mapToGlobal(pos));

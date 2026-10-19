@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "downloadlistview.h"
+#include "fluenticons.h"
 #include "menuutils.h"
 #include "downloadlist.h"
 #include "startupdiagnostics.h"
@@ -277,7 +278,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
                                  auto callback) {
     QAction* action = menu.addAction(text, callback);
     if (!iconPath.isEmpty()) {
-      action->setIcon(QIcon(iconPath));
+      action->setIcon(FluentIcons::icon(iconPath));
     }
     return action;
   };

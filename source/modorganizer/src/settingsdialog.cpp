@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "settingsdialog.h"
+#include "fluenticons.h"
 #include "fluentnavigation.h"
 #include "fluentsettings.h"
 #include "settingsdialogdiagnostics.h"
@@ -28,7 +29,15 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "settingsdialogplugins.h"
 #include "settingsdialogtheme.h"
 #include "settingsdialogworkarounds.h"
+#include "plugincontainer.h"
 #include "ui_settingsdialog.h"
+
+#include "game_features.h"
+#include <bsainvalidation.h>
+#include <dataarchives.h>
+#include <gameplugins.h>
+#include <unmanagedmods.h>
+#include <iplugingame.h>
 
 #include <QAbstractItemView>
 #include <QColor>
@@ -121,6 +130,7 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
       m_settings(settings), m_exit(Exit::None), m_pluginContainer(pluginContainer)
 {
   ui->setupUi(this);
+  hideUnsupportedOptions();
 
   // Give every Settings page more room while keeping the dialog inside the
   // available display area. The minimum also upgrades previously saved small
@@ -207,6 +217,50 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   initializeTab(DiagnosticsTabIndex);
 }
 
+void SettingsDialog::hideUnsupportedOptions()
+{
+  // options that only matter for games with plugins, archives or INI files
+  // (the Bethesda games) are hidden when the managed game has none of these,
+  // as for Elden Ring
+  const MOBase::IPluginGame* game = m_settings.game().plugin();
+  if (game == nullptr || m_pluginContainer == nullptr) {
+    return;
+  }
+
+  auto& features         = m_pluginContainer->gameFeatures();
+  const bool hasPlugins  = features.gameFeature<MOBase::GamePlugins>() != nullptr;
+  const bool hasArchives = features.gameFeature<MOBase::DataArchives>() != nullptr;
+  const bool hasInvalidation =
+      features.gameFeature<MOBase::BSAInvalidation>() != nullptr;
+  const bool hasUnmanaged = features.gameFeature<MOBase::UnmanagedMods>() != nullptr;
+
+  // the Elden Ring plugin manages save isolation itself (Save Isolation tool)
+  const bool pluginOwnsSaves =
+      game->gameShortName().compare(QStringLiteral("eldenring"), Qt::CaseInsensitive) == 0;
+
+  ui->localINIs->setVisible(!game->iniFiles().isEmpty());
+  ui->localSaves->setVisible(!pluginOwnsSaves);
+  ui->automaticArchiveInvalidation->setVisible(hasInvalidation);
+  ui->groupBox_8->setVisible(!ui->localINIs->isHidden() || !ui->localSaves->isHidden() ||
+                             !ui->automaticArchiveInvalidation->isHidden());
+
+  ui->displayForeignBox->setVisible(hasUnmanaged);
+  if (!hasPlugins) {
+    ui->collapsibleSeparatorsHighlightLabel->setText(tr("Highlights"));
+    ui->collapsibleSeparatorsHighlightFromBox->setToolTip(
+        tr("When you select a collapsed separator, highlight the mods it contains."));
+  }
+  ui->forceEnableBox->setVisible(hasPlugins || hasArchives);
+  ui->enableArchiveParsingBox->setVisible(hasArchives);
+  ui->bsaDateBtn->setVisible(hasArchives && hasInvalidation);
+  if (game->sortMechanism() == MOBase::IPluginGame::SortMechanism::NONE) {
+    ui->diagnosticsLootGroup->hide();
+    ui->diagnosticsPageSubtitle->setText(
+        tr("Choose how much troubleshooting information MO2 collects. The "
+           "recommended levels are suitable for everyday use."));
+  }
+}
+
 void SettingsDialog::initializeTab(int index)
 {
   if (index < 0 || static_cast<size_t>(index) >= m_tabs.size() || m_tabs[index]) {
@@ -218,7 +272,8 @@ void SettingsDialog::initializeTab(int index)
   const QString activeStyle = m_settings.interface().styleName().value_or("");
   configureSettingsComboPopups(
       ui->tabWidget->widget(index),
-      activeStyle.compare("Light.qss", Qt::CaseInsensitive) == 0);
+      activeStyle.compare("Light.qss", Qt::CaseInsensitive) == 0 &&
+          !FluentIcons::active());
 }
 
 PluginContainer* SettingsDialog::pluginContainer()

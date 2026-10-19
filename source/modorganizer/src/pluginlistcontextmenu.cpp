@@ -1,4 +1,5 @@
 #include "pluginlistcontextmenu.h"
+#include "fluenticons.h"
 
 #include <report.h>
 #include <utility.h>
@@ -25,11 +26,11 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
     QAction* enableSelectedAction = addAction(tr("Enable selected"), [=]() {
       m_core.pluginList()->setEnabled(m_selected, true);
     });
-    enableSelectedAction->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+    enableSelectedAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
     QAction* disableSelectedAction = addAction(tr("Disable selected"), [=]() {
       m_core.pluginList()->setEnabled(m_selected, false);
     });
-    disableSelectedAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
+    disableSelectedAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
 
     addSeparator();
   }
@@ -41,7 +42,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       m_core.pluginList()->setEnabledAll(true);
     }
   });
-  enableAllAction->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+  enableAllAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
   QAction* disableAllAction = addAction(tr("Disable all"), [=]() {
     if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
                               tr("Really disable all plugins?"),
@@ -49,7 +50,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       m_core.pluginList()->setEnabledAll(false);
     }
   });
-  disableAllAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
+  disableAllAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
 
   if (!m_selected.isEmpty()) {
     addSeparator();
@@ -73,13 +74,13 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       QAction* unlockAction = addAction(tr("Unlock load order"), [=]() {
         setESPLock(m_selected, false);
       });
-      unlockAction->setIcon(QIcon(":/MO/gui/contextmenu/unlock.svg"));
+      unlockAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/unlock.svg"));
     }
     if (hasUnlocked) {
       QAction* lockAction = addAction(tr("Lock load order"), [=]() {
         setESPLock(m_selected, true);
       });
-      lockAction->setIcon(QIcon(":/MO/gui/mainwindow/status/locked.svg"));
+      lockAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/status/locked.svg"));
     }
   }
 
@@ -93,7 +94,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       QAction* openOriginAction = addAction(tr("Open Origin in Explorer"), [=]() {
         openOriginExplorer(m_selected);
       });
-      openOriginAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
+      openOriginAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
       ModInfo::Ptr modInfo              = ModInfo::getByIndex(modInfoIndex);
       std::vector<ModInfo::EFlag> flags = modInfo->getFlags();
 
@@ -101,7 +102,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
         QAction* infoAction = addAction(tr("Open Origin Info..."), [=]() {
           openOriginInformation(index);
         });
-        infoAction->setIcon(QIcon(":/MO/gui/contextmenu/information.svg"));
+        infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
         setDefaultAction(infoAction);
       }
     }

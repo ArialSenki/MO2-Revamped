@@ -18,12 +18,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "icondelegate.h"
+#include "fluenticons.h"
 #include <algorithm>
 #include <QDebug>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPainter>
-#include <QPixmapCache>
 #include <log.h>
 
 using namespace MOBase;
@@ -66,16 +66,13 @@ void IconDelegate::paintIcons(QPainter* painter, const QStyleOptionViewItem& opt
       x += iconWidth + spacing;
       continue;
     }
-    QPixmap icon;
-    QString fullIconId = QString("%1_%2").arg(iconId).arg(iconWidth);
-    if (!QPixmapCache::find(fullIconId, &icon)) {
-      icon = QIcon(iconId).pixmap(iconWidth, iconWidth);
-      if (icon.isNull()) {
-        log::warn("failed to load icon {}", iconId);
-      }
-      QPixmapCache::insert(fullIconId, icon);
+    // FluentIcons caches the icons, and the icons cache their pixmaps per
+    // size, scale and theme color
+    const QIcon icon = FluentIcons::icon(iconId);
+    if (icon.isNull()) {
+      log::warn("failed to load icon {}", iconId);
     }
-    painter->drawPixmap(x, margin, iconWidth, iconWidth, icon);
+    icon.paint(painter, QRect(x, margin, iconWidth, iconWidth));
     x += iconWidth + spacing;
   }
 

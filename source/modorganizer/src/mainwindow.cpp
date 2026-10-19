@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "mainwindow.h"
+#include "fluenticons.h"
 #include "menuutils.h"
 #include "ui_mainwindow.h"
 
@@ -221,6 +222,26 @@ using namespace MOShared;
 const QSize SmallToolbarSize(24, 24);
 const QSize MediumToolbarSize(32, 32);
 const QSize LargeToolbarSize(42, 36);
+
+// Fluent command bars use the smaller Windows 11 icon sizes. None of them
+// equals a classic size, so a size saved by either kind of theme can be told
+// apart and mapped on startup.
+static QSize toolbarIconSize(const QSize& classic)
+{
+  if (!FluentIcons::active()) {
+    return classic;
+  }
+  if (classic == QSize(16, 16) || classic == QSize(20, 20) || classic == QSize(28, 28)) {
+    return classic;
+  }
+  if (classic.height() <= SmallToolbarSize.height()) {
+    return {16, 16};
+  }
+  if (classic.height() <= MediumToolbarSize.height()) {
+    return {20, 20};
+  }
+  return {28, 28};
+}
 
 QString UnmanagedModName()
 {
@@ -840,6 +861,11 @@ private:
 
 QIcon makeEndorsementMenuIcon(const QString& resourcePath)
 {
+  // Fluent menus show plain glyphs, like every other menu
+  if (FluentIcons::active()) {
+    return FluentIcons::icon(resourcePath);
+  }
+
   const QString styleName =
       Settings::instance().interface().styleName().value_or(QString{});
   const bool darkTheme = styleName.contains(QStringLiteral("dark"),
@@ -1276,7 +1302,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   filterDialogIcon->setFixedSize(42, 42);
   filterDialogIcon->setAlignment(Qt::AlignCenter);
   filterDialogIcon->setPixmap(
-      QIcon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")).pixmap(20, 20));
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")).pixmap(20, 20));
   filterDialogHeaderLayout->addWidget(filterDialogIcon, 0, Qt::AlignVCenter);
 
   auto* filterDialogHeaderText = new QWidget(filterDialogHeader);
@@ -1360,9 +1386,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
     actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
     actionButtonsLayout->setSpacing(8);
   }
-  ui->filtersClear->setIcon(QIcon(QStringLiteral(":/MO/gui/edit_clear")));
+  ui->filtersClear->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/edit_clear")));
   ui->filtersEdit->setIcon(
-      QIcon(QStringLiteral(":/MO/gui/contextmenu/categories.svg")));
+      FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/categories.svg")));
   ui->filtersClear->setIconSize(QSize(16, 16));
   ui->filtersEdit->setIconSize(QSize(16, 16));
   filterActionsLayout->addWidget(ui->widget_2);
@@ -1435,7 +1461,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   ui->displayCategoriesBtn->setText(QString());
   ui->displayCategoriesBtn->setIcon(
-      QIcon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")));
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")));
   ui->displayCategoriesBtn->setIconSize(QSize(16, 16));
   ui->displayCategoriesBtn->setMaximumWidth(30);
   ui->displayCategoriesBtn->setMinimumWidth(28);
@@ -1560,11 +1586,11 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   new ResponsiveColumnSizer(ui->savegameList, this);
   new ResponsiveColumnSizer(ui->downloadView, this);
 
-  m_LinkToolbar = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
+  m_LinkToolbar = new QAction(FluentIcons::icon(":/MO/gui/mainwindow/shortcut-add.svg"),
                               tr("Toolbar and Menu"), this);
-  m_LinkDesktop = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
+  m_LinkDesktop = new QAction(FluentIcons::icon(":/MO/gui/mainwindow/shortcut-add.svg"),
                               tr("Desktop"), this);
-  m_LinkStartMenu = new QAction(QIcon(":/MO/gui/mainwindow/shortcut-add.svg"),
+  m_LinkStartMenu = new QAction(FluentIcons::icon(":/MO/gui/mainwindow/shortcut-add.svg"),
                                 tr("Start Menu"), this);
   connect(m_LinkToolbar, &QAction::triggered, this, &MainWindow::linkToolbar);
   connect(m_LinkDesktop, &QAction::triggered, this, &MainWindow::linkDesktop);
@@ -2016,10 +2042,11 @@ void MainWindow::updateToolbarMenu()
   ui->actionToolBarMainToggle->setChecked(ui->toolBar->isVisible());
   ui->actionStatusBarToggle->setChecked(ui->statusBar->isVisible());
 
-  ui->actionToolBarSmallIcons->setChecked(ui->toolBar->iconSize() == SmallToolbarSize);
-  ui->actionToolBarMediumIcons->setChecked(ui->toolBar->iconSize() ==
-                                           MediumToolbarSize);
-  ui->actionToolBarLargeIcons->setChecked(ui->toolBar->iconSize() == LargeToolbarSize);
+  const QSize iconSize = ui->toolBar->iconSize();
+  ui->actionToolBarSmallIcons->setChecked(iconSize == toolbarIconSize(SmallToolbarSize));
+  ui->actionToolBarMediumIcons->setChecked(iconSize ==
+                                           toolbarIconSize(MediumToolbarSize));
+  ui->actionToolBarLargeIcons->setChecked(iconSize == toolbarIconSize(LargeToolbarSize));
 
   ui->actionToolBarIconsOnly->setChecked(ui->toolBar->toolButtonStyle() ==
                                          Qt::ToolButtonIconOnly);
@@ -2100,8 +2127,9 @@ void MainWindow::on_actionViewLog_triggered()
   ui->logDock->setVisible(!ui->logDock->isVisible());
 }
 
-void MainWindow::setToolbarSize(const QSize& s)
+void MainWindow::setToolbarSize(const QSize& requested)
 {
+  const QSize s = toolbarIconSize(requested);
   for (auto* action : ui->toolBar->actions()) {
     if (auto* button = qobject_cast<QToolButton*>(
             ui->toolBar->widgetForAction(action))) {
@@ -2224,6 +2252,20 @@ void MainWindow::updateProblemsButton()
     ui->actionNotifications->setToolTip(tr("There are notifications to read"));
   } else {
     ui->actionNotifications->setToolTip(tr("There are no notifications"));
+  }
+
+  if (FluentIcons::active()) {
+    const QIcon icon = fluentNotificationIcon(numProblems);
+    ui->actionNotifications->setEnabled(numProblems > 0);
+    ui->actionNotifications->setIcon(icon);
+    if (auto* button = qobject_cast<QAbstractButton*>(
+            ui->toolBar->widgetForAction(ui->actionNotifications))) {
+      button->setIcon(icon);
+    }
+    if (ui->statusBar) {
+      ui->statusBar->setNotifications(numProblems > 0);
+    }
+    return;
   }
 
   // Keep the toolbar icon canvas identical with and without a badge. Swapping
@@ -2418,7 +2460,7 @@ void MainWindow::createHelpMenu()
   if (isEldenRing) {
     QAction* guideAction = new QAction(tr("Elden Ring Guide"), menu);
     guideAction->setObjectName(QStringLiteral("eldenRingGuideAction"));
-    guideAction->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
+    guideAction->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
     guideAction->setToolTip(
         tr("Learn about profiles, archive layouts, native DLLs, and save profiles."));
     connect(guideAction, &QAction::triggered, this,
@@ -2478,7 +2520,7 @@ void MainWindow::createHelpMenu()
   if (!tutorials.empty()) {
     QMenu* tutorialMenu = new QMenu(tr("Guided Tours"), menu);
     tutorialMenu->setObjectName(QStringLiteral("revampedGuidedToursMenu"));
-    tutorialMenu->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
+    tutorialMenu->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
     for (const auto& tutorial : tutorials) {
       connect(tutorial.second, SIGNAL(triggered()), this,
               SLOT(tutorialTriggered()));
@@ -2492,7 +2534,7 @@ void MainWindow::createHelpMenu()
   QAction* repositoryAction = new QAction(tr("MO2 Revamped on GitHub"), menu);
   repositoryAction->setObjectName(QStringLiteral("revampedRepositoryAction"));
   repositoryAction->setIcon(
-      QIcon(QStringLiteral(":/MO/gui/mainwindow/github-updates.svg")));
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/github-updates.svg")));
   repositoryAction->setToolTip(
       tr("Open the project repository, source notes, and third-party notices."));
   connect(repositoryAction, SIGNAL(triggered()), this,
@@ -2503,7 +2545,7 @@ void MainWindow::createHelpMenu()
     QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
     gameSupportAction->setObjectName(QStringLiteral("gameSupportWikiAction"));
     gameSupportAction->setIcon(
-        QIcon(QStringLiteral(":/MO/gui/mainwindow/mod-page.svg")));
+        FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/mod-page.svg")));
     gameSupportAction->setToolTip(
         tr("Open the game-specific modding reference provided by its MO2 plugin."));
     connect(gameSupportAction, SIGNAL(triggered()), this, SLOT(gameSupportTriggered()));
@@ -2515,7 +2557,7 @@ void MainWindow::createHelpMenu()
   QAction* issueAction = new QAction(tr("Report a Problem"), menu);
   issueAction->setObjectName(QStringLiteral("revampedIssueAction"));
   issueAction->setIcon(
-      QIcon(QStringLiteral(":/MO/gui/mainwindow/status/warning.svg")));
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/status/warning.svg")));
   issueAction->setToolTip(
       tr("Open the MO2 Revamped issue tracker on GitHub."));
   connect(issueAction, SIGNAL(triggered()), this, SLOT(issueTriggered()));
@@ -2526,7 +2568,7 @@ void MainWindow::createHelpMenu()
       menu->addAction(tr("About MO2 Revamped"), this, SLOT(about()));
   revampedAboutAction->setObjectName(QStringLiteral("mo2RevampedAboutAction"));
   revampedAboutAction->setIcon(
-      QIcon(QStringLiteral(":/MO/gui/mainwindow/status/about-revamped.svg")));
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/status/about-revamped.svg")));
   revampedAboutAction->setToolTip(
       tr("Show MO2 Revamped information, components, and credits."));
 }
@@ -3274,7 +3316,7 @@ void MainWindow::refreshExecutablesList()
 
     if (title.compare(QStringLiteral("Explore Virtual Folder"),
                       Qt::CaseInsensitive) == 0) {
-      icon = QIcon(":/MO/gui/mainwindow/explore-virtual-folder.svg");
+      icon = FluentIcons::icon(":/MO/gui/mainwindow/explore-virtual-folder.svg");
     }
 
     if (icon.isNull() && !binary.fileName().isEmpty()) {
@@ -3474,7 +3516,7 @@ void MainWindow::checkBSAList()
 
         if (item->checkState(0) == Qt::Unchecked) {
           if (defaultArchives.contains(filename)) {
-            item->setIcon(0, QIcon(":/MO/gui/mainwindow/status/warning.svg"));
+            item->setIcon(0, FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg"));
             item->setToolTip(
                 0, tr("This bsa is enabled in the ini file so it may be required!"));
             modWarning = true;
@@ -3487,7 +3529,7 @@ void MainWindow::checkBSAList()
       }
     }
     if (warning) {
-      ui->tabWidget->setTabIcon(1, QIcon(":/MO/gui/mainwindow/status/warning.svg"));
+      ui->tabWidget->setTabIcon(1, FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg"));
     } else {
       ui->tabWidget->setTabIcon(1, QIcon());
     }
@@ -3559,6 +3601,9 @@ void MainWindow::readSettings()
   s.geometry().restoreDocks(this);
   s.geometry().restoreToolbars(this);
   applyFluentToolbarDefaults(SmallToolbarSize);
+  if (FluentIcons::active() && ui->toolBar->iconSize() != toolbarIconSize(ui->toolBar->iconSize())) {
+    setToolbarSize(ui->toolBar->iconSize());
+  }
   s.geometry().restoreState(ui->splitter);
   s.geometry().restoreGeometry(m_FilterOptionsDialog);
   ui->menuBar->hide();
@@ -3774,7 +3819,7 @@ void MainWindow::configureEldenRingHelp()
       "organizes DLLs from recognized native-mod folders under Game/DLLs."));
   ui->savegameList->setWhatsThis(tr(
       "Browse the save files available to this Elden Ring profile. Configure "
-      "its route in Tools > Elden Ring Save Isolation to keep saves separate "
+      "its route in Tools > Save Isolation to keep saves separate "
       "per MO2 profile, share a named save profile in this instance, or use "
       "the global Steam save folder."));
   ui->downloadView->setWhatsThis(tr(
@@ -3949,7 +3994,7 @@ void MainWindow::showEldenRingGuide()
       {{tr("Profiles"),
         tr("<p>Enable mods with their checkboxes. Each profile keeps its own "
            "enabled mod list. Configure Elden Ring save routes in "
-           "<b>Tools &gt; Elden Ring Save Isolation</b>.</p>")},
+           "<b>Tools &gt; Save Isolation</b>.</p>")},
        {tr("Mod priority"),
         tr("<p>The left list controls file priority when mods provide the same "
            "file. The <b>Data</b> tab shows which mod wins. Avoid enabling two "
@@ -4375,16 +4420,29 @@ QMenu* MainWindow::openFolderMenu()
   auto addFolderAction = [this, FolderMenu](const QString& text, const QString& icon,
                                              const char* slot, const QString& route) {
     QAction* action = FolderMenu->addAction(text, this, slot);
-    action->setIcon(QIcon(icon));
+    action->setIcon(FluentIcons::icon(icon));
     action->setProperty("folderRoute", route);
   };
 
- addFolderAction(tr("Game"), ":/MO/gui/mainwindow/files/game-data.svg",
+  // games without a "My Games" folder (Elden Ring keeps its documents in
+  // AppData, next to the saves) and without INI files get fitting entries
+  const IPluginGame* game = m_OrganizerCore.managedGame();
+  const bool documentsAreSaves =
+      game->documentsDirectory() == game->savesDirectory();
+
+  addFolderAction(tr("Game"), ":/MO/gui/mainwindow/files/game-data.svg",
                   SLOT(openGameFolder()), QStringLiteral("game"));
-  addFolderAction(tr("My Games"), ":/MO/gui/mainwindow/files/folder.svg",
-                  SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
-  addFolderAction(tr("INI files"), ":/MO/gui/mainwindow/files/config.svg",
-                  SLOT(openIniFolder()), QStringLiteral("ini"));
+  if (documentsAreSaves) {
+    addFolderAction(tr("Saves"), ":/MO/gui/mainwindow/files/save.svg",
+                    SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
+  } else {
+    addFolderAction(tr("My Games"), ":/MO/gui/mainwindow/files/folder.svg",
+                    SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
+  }
+  if (!game->iniFiles().isEmpty()) {
+    addFolderAction(tr("INI files"), ":/MO/gui/mainwindow/files/config.svg",
+                    SLOT(openIniFolder()), QStringLiteral("ini"));
+  }
 
   addMenuSection(FolderMenu, tr("MO2 instance"));
   addFolderAction(tr("Instance"), ":/MO/gui/mainwindow/instance.svg",
@@ -4406,7 +4464,7 @@ QMenu* MainWindow::openFolderMenu()
   QAction* logsAction = FolderMenu->addAction(tr("Logs"), [=] {
     ui->logList->openLogsFolder();
   });
-  logsAction->setIcon(QIcon(":/MO/gui/mainwindow/status/debug.svg"));
+  logsAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/status/debug.svg"));
   logsAction->setProperty("folderRoute", QStringLiteral("logs"));
 
   connect(FolderMenu, &QMenu::aboutToShow, this, [this, FolderMenu] {
@@ -4426,7 +4484,10 @@ QMenu* MainWindow::openFolderMenu()
         description = tr("Open the active game's installation folder.");
       } else if (route == QLatin1String("myGames")) {
         path = m_OrganizerCore.managedGame()->documentsDirectory().absolutePath();
-        description = tr("Open the game's documents folder.");
+        description = m_OrganizerCore.managedGame()->documentsDirectory() ==
+                              m_OrganizerCore.managedGame()->savesDirectory()
+                          ? tr("Open the game's save folder.")
+                          : tr("Open the game's documents folder.");
       } else if (route == QLatin1String("ini")) {
         const auto* profile = m_OrganizerCore.currentProfile();
         path = profile->localSettingsEnabled()
@@ -4508,8 +4569,8 @@ void MainWindow::updateShortcutActionIcons()
   m_LinkDesktop->setEnabled(true);
   m_LinkStartMenu->setEnabled(true);
 
-  const QIcon addIcon(":/MO/gui/mainwindow/shortcut-add.svg");
-  const QIcon removeIcon(":/MO/gui/mainwindow/shortcut-remove.svg");
+  const QIcon addIcon = FluentIcons::icon(":/MO/gui/mainwindow/shortcut-add.svg");
+  const QIcon removeIcon = FluentIcons::icon(":/MO/gui/mainwindow/shortcut-remove.svg");
 
   env::Shortcut shortcut(*exe);
 
@@ -4743,7 +4804,7 @@ void MainWindow::languageChange(const QString& newLanguage)
     ui->categoriesGroup->setTitle(QString());
     ui->displayCategoriesBtn->setText(QString());
     ui->displayCategoriesBtn->setIcon(
-        QIcon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")));
+        FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/filter.svg")));
     ui->displayCategoriesBtn->setIconSize(QSize(16, 16));
     ui->displayCategoriesBtn->setToolTip(tr("Filter options"));
 
@@ -4807,7 +4868,7 @@ void MainWindow::actionEndorseMO()
           this, tr("Endorse MO2 Revamped"), tr("Support MO2 Revamped"),
           tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
           tr("Endorse"), tr("Cancel"),
-          QIcon(QStringLiteral(":/MO/gui/contextmenu/endorse.svg")))) {
+          FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/endorse.svg")))) {
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
         m_OrganizerCore.getVersion().canonicalString(), true, this, QVariant(),
@@ -4821,7 +4882,7 @@ void MainWindow::actionWontEndorseMO()
           this, tr("Endorsement preference"), tr("Don't endorse MO2 Revamped"),
           tr("This will record your choice not to endorse the listing on Nexus Mods."),
           tr("Won't Endorse"), tr("Cancel"),
-          QIcon(QStringLiteral(":/MO/gui/contextmenu/wont-endorse.svg")))) {
+          FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/wont-endorse.svg")))) {
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
         m_OrganizerCore.getVersion().canonicalString(), false, this, QVariant(),
@@ -5466,7 +5527,7 @@ void MainWindow::on_bsaList_customContextMenuRequested(const QPoint& pos)
       tr("Extract..."), [=, item = ui->bsaList->itemAt(pos)]() {
     extractBSATriggered(item);
   });
-  extractAction->setIcon(QIcon(":/MO/gui/contextmenu/export.svg"));
+  extractAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/export.svg"));
 
   menu.exec(ui->bsaList->viewport()->mapToGlobal(pos));
 }
@@ -5539,7 +5600,7 @@ void MainWindow::toolBar_customContextMenuRequested(const QPoint& point)
       QAction* removeAction = menu.addAction(
           tr("Remove '%1' from the toolbar").arg(action->text()),
           [&, action]() { removeFromToolbar(action); });
-      removeAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+      removeAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
       menu.exec(ui->toolBar->mapToGlobal(point));
       return;
     }
@@ -5739,7 +5800,7 @@ QString MainWindow::queryRestore(const QString& filePath)
       incompleteLoadOrderBackupFound = true;
       return;
     }
-    dialog.addChoice(QIcon(":/MO/gui/mainwindow/restore.svg"), displayName,
+    dialog.addChoice(FluentIcons::icon(":/MO/gui/mainwindow/restore.svg"), displayName,
                      choiceDescription, suffix);
   };
   for (const QFileInfo& info : boost::adaptors::reverse(files)) {
@@ -6001,12 +6062,12 @@ void MainWindow::deleteProfileModListBackup()
     if (timestampMatch.hasMatch()) {
       const QDateTime time = QDateTime::fromString(
           timestampMatch.captured(1), PATTERN_BACKUP_DATE);
-      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                        tr("Backup from %1").arg(time.toString()),
                        tr("Permanently delete this saved mod list backup."),
                        info.absoluteFilePath());
     } else if (legacyMatch.hasMatch()) {
-      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                        legacyMatch.captured(1),
                        tr("Permanently delete this saved mod list backup."),
                        info.absoluteFilePath());
@@ -6086,12 +6147,12 @@ void MainWindow::deleteProfileLoadOrderBackup()
     if (timestampMatch.hasMatch()) {
       const QDateTime time = QDateTime::fromString(
           timestampMatch.captured(1), PATTERN_BACKUP_DATE);
-      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                        tr("Backup from %1").arg(time.toString()),
                        tr("Permanently delete this saved plugin load order."),
                        info.absoluteFilePath());
     } else if (legacyMatch.hasMatch()) {
-      dialog.addChoice(QIcon(":/MO/gui/contextmenu/remove.svg"),
+      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                        legacyMatch.captured(1),
                        tr("Permanently delete this saved plugin load order."),
                        info.absoluteFilePath());

@@ -408,6 +408,12 @@ public:
       return 0;
     }
 
+    // Windows 11 only underlines access keys while Alt is held; Fluent
+    // themes keep menus and buttons free of the underlines
+    if (hint == SH_UnderlineShortcut && qApp->property("revampedFluent").toBool()) {
+      return 0;
+    }
+
     return QProxyStyle::styleHint(hint, option, widget, returnData);
   }
 

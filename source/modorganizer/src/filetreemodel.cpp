@@ -1,5 +1,6 @@
 #include "filetreemodel.h"
 #include "organizercore.h"
+#include "fluenticons.h"
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
@@ -1170,61 +1171,55 @@ QString FileTreeModel::makeTooltip(const FileTreeItem& item) const
 
 QVariant FileTreeModel::makeIcon(const FileTreeItem& item) const
 {
-  static const QIcon folderIcon(":/MO/gui/mainwindow/files/folder.svg");
-  static const QIcon fileIcon(":/MO/gui/mainwindow/files/file.svg");
-  static const QIcon executableIcon(":/MO/gui/mainwindow/files/executable.svg");
-  static const QIcon libraryIcon(":/MO/gui/mainwindow/files/library.svg");
-  static const QIcon gameDataIcon(":/MO/gui/mainwindow/files/game-data.svg");
-  static const QIcon archiveIcon(":/MO/gui/mainwindow/files/archive.svg");
-  static const QIcon configIcon(":/MO/gui/mainwindow/files/config.svg");
-  static const QIcon scriptIcon(":/MO/gui/mainwindow/files/script.svg");
-  static const QIcon imageIcon(":/MO/gui/mainwindow/files/image.svg");
-  static const QIcon saveIcon(":/MO/gui/mainwindow/files/save.svg");
-  static const QIcon textIcon(":/MO/gui/mainwindow/files/text.svg");
+  // FluentIcons caches the icons, so asking for one per row is cheap
+  const auto icon = [](const QString& name) {
+    return FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/") + name +
+                             QStringLiteral(".svg"));
+  };
 
   if (item.isDirectory()) {
-    return folderIcon;
+    return icon(QStringLiteral("folder"));
   }
 
   const QString extension = QFileInfo(item.filename()).suffix().toLower();
   if (extension == "exe" || extension == "com") {
-    return executableIcon;
+    return icon(QStringLiteral("executable"));
   }
   if (extension == "dll" || extension == "so" || extension == "dylib") {
-    return libraryIcon;
+    return icon(QStringLiteral("library"));
   }
   if (extension == "bdt" || extension == "bhd" || extension == "bin" ||
       extension == "dat") {
-    return gameDataIcon;
+    return icon(QStringLiteral("game-data"));
   }
   if (extension == "dcx" || extension == "bnd" || extension == "zip" ||
       extension == "7z" || extension == "rar" || extension == "tar" ||
       extension == "gz" || extension == "xz" || extension == "bsa" ||
       extension == "ba2" || extension == "pak") {
-    return archiveIcon;
+    return icon(QStringLiteral("archive"));
   }
   if (extension == "ini" || extension == "json" || extension == "xml" ||
       extension == "toml" || extension == "yaml" || extension == "yml" ||
       extension == "cfg" || extension == "conf") {
-    return configIcon;
+    return icon(QStringLiteral("config"));
   }
   if (extension == "hks" || extension == "lua" || extension == "py" ||
       extension == "js" || extension == "bat" || extension == "cmd" ||
       extension == "ps1") {
-    return scriptIcon;
+    return icon(QStringLiteral("script"));
   }
   if (extension == "png" || extension == "jpg" || extension == "jpeg" ||
       extension == "dds" || extension == "tga" || extension == "bmp" ||
       extension == "gif" || extension == "webp") {
-    return imageIcon;
+    return icon(QStringLiteral("image"));
   }
   if (extension == "sl2" || extension == "co2" || extension == "bak") {
-    return saveIcon;
+    return icon(QStringLiteral("save"));
   }
   if (extension == "txt" || extension == "md" || extension == "log" ||
       extension == "csv") {
-    return textIcon;
+    return icon(QStringLiteral("text"));
   }
 
-  return fileIcon;
+  return icon(QStringLiteral("file"));
 }

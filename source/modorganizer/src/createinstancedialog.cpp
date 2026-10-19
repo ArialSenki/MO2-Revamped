@@ -1,4 +1,5 @@
 #include "createinstancedialog.h"
+#include "fluenticons.h"
 #include "createinstancedialogpages.h"
 #include "eldenringsavesettings.h"
 #include "instancemanager.h"
@@ -41,7 +42,8 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
                             const QString& iconPath,
                             const QString& iconObjectName, int size)
 {
-  if (layout == nullptr || heading == nullptr) {
+  // Fluent v4 headings are plain text, like Windows 11 Settings
+  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
     return;
   }
 
@@ -59,7 +61,7 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
   icon->setObjectName(iconObjectName);
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(size, size);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
   }

@@ -1,4 +1,5 @@
 #include "forcedloaddialog.h"
+#include "fluenticons.h"
 #include "ui_forcedloaddialog.h"
 
 #include "forcedloaddialogwidget.h"
@@ -37,7 +38,7 @@ void addRulesGroupHeading(QGroupBox* group)
   icon->setObjectName(QStringLiteral("rulesSectionIcon"));
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(26, 26);
-  const QPixmap pixmap = QIcon(QStringLiteral(":/MO/gui/mainwindow/files/library.svg"))
+  const QPixmap pixmap = FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/library.svg"))
                              .pixmap(18, 18);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);

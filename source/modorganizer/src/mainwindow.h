@@ -225,6 +225,7 @@ private:
   void setupFluentCommandBar();
   void applyFluentActionIcons();
   static QIcon fluentToolIcon(const QString& name);
+  QIcon fluentNotificationIcon(std::size_t count) const;
   QToolButton* m_moreActionsButton = nullptr;
   FluentDashboard* m_fluentDashboard = nullptr;
   QAction* m_fluentOverflowAction     = nullptr;

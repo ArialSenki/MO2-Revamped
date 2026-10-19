@@ -16,6 +16,8 @@
 #include <QString>
 #include <QWidget>
 
+#include "fluenticons.h"
+
 namespace MOBase::CircularUi {
 
 inline QLabel* createBadge(QWidget* parent, const QString& objectName,
@@ -35,7 +37,7 @@ inline QLabel* createBadge(QWidget* parent, const QString& objectName,
   }
 
   const int iconSize = std::max(12, size / 2);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(QSize(iconSize, iconSize));
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(QSize(iconSize, iconSize));
   if (pixmap.isNull()) {
     badge->setText(fallback);
   } else {

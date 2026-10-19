@@ -1,4 +1,5 @@
 #include "settingsdialogpaths.h"
+#include "fluenticons.h"
 #include "circularuihelpers.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
@@ -24,7 +25,7 @@ void addPathRow(QGridLayout* layout, int row, QLabel* label, QLineEdit* edit,
   browseButton->setText(QObject::tr("Browse"));
   browseButton->setMinimumWidth(108);
   browseButton->setMinimumHeight(34);
-  browseButton->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
+  browseButton->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
   browseButton->setIconSize(QSize(16, 16));
 
   layout->addWidget(label, row, 0);
@@ -96,7 +97,7 @@ PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
     addPathRow(gameLayout, 0, ui->label_29, ui->managedGameDirEdit,
                ui->browseGameDirBtn);
     ui->browseGameDirBtn->setIcon(
-        QIcon(QStringLiteral(":/MO/gui/mainwindow/files/executable.svg")));
+        FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/executable.svg")));
     gameLayout->setColumnStretch(1, 1);
     MOBase::CircularUi::addGroupHeading(
         gameGroup, ":/MO/gui/mainwindow/files/executable.svg",

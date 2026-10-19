@@ -96,6 +96,37 @@ private:
   }
 };
 
+// settings code shows and hides some controls (per game, per option); the
+// row that now holds a control follows it
+class VisibilityMirror : public QObject
+{
+public:
+  VisibilityMirror(QWidget* control, QWidget* row) : QObject(row), m_row(row)
+  {
+    control->installEventFilter(this);
+    // only an explicit hide counts; moving into the row hid it implicitly
+    const bool hidden = control->testAttribute(Qt::WA_WState_ExplicitShowHide) &&
+                        control->testAttribute(Qt::WA_WState_Hidden);
+    if (hidden) {
+      m_row->hide();
+    }
+  }
+
+protected:
+  bool eventFilter(QObject*, QEvent* event) override
+  {
+    if (event->type() == QEvent::ShowToParent) {
+      m_row->show();
+    } else if (event->type() == QEvent::HideToParent) {
+      m_row->hide();
+    }
+    return false;
+  }
+
+private:
+  QWidget* m_row;
+};
+
 void makeRow(QCheckBox* box)
 {
   QWidget* parent = box->parentWidget();
@@ -148,38 +179,9 @@ void makeRow(QCheckBox* box)
   layout->addWidget(box, 0, Qt::AlignVCenter | Qt::AlignRight);
 
   new RowBehavior(row, box, labels);
+  new VisibilityMirror(box, row);
 }
 
-// settings code shows and hides some controls (per game, per option); the
-// row that now holds a control follows it
-class VisibilityMirror : public QObject
-{
-public:
-  VisibilityMirror(QWidget* control, QWidget* row) : QObject(row), m_row(row)
-  {
-    control->installEventFilter(this);
-    // only an explicit hide counts; moving into the row hid it implicitly
-    const bool hidden = control->testAttribute(Qt::WA_WState_ExplicitShowHide) &&
-                        control->testAttribute(Qt::WA_WState_Hidden);
-    if (hidden) {
-      m_row->hide();
-    }
-  }
-
-protected:
-  bool eventFilter(QObject*, QEvent* event) override
-  {
-    if (event->type() == QEvent::ShowToParent) {
-      m_row->show();
-    } else if (event->type() == QEvent::HideToParent) {
-      m_row->hide();
-    }
-    return false;
-  }
-
-private:
-  QWidget* m_row;
-};
 
 // pages without a scroll area of their own get one, so they can grow into a
 // single column without clipping

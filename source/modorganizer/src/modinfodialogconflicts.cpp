@@ -1,4 +1,5 @@
 #include "modinfodialogconflicts.h"
+#include "fluenticons.h"
 #include "modinfodialog.h"
 #include "modinfodialogconflictsmodels.h"
 #include "organizercore.h"
@@ -470,16 +471,16 @@ ConflictsTab::Actions ConflictsTab::createMenuActions(QTreeView* tree)
 
   if (enableRun) {
     actions.open      = new QAction(tr("&Execute"), parentWidget());
-    actions.open->setIcon(QIcon(":/MO/gui/mainwindow/files/executable.svg"));
+    actions.open->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/executable.svg"));
     actions.runHooked = new QAction(tr("Execute with &VFS"), parentWidget());
   } else if (enableOpen) {
     actions.open      = new QAction(tr("&Open"), parentWidget());
-    actions.open->setIcon(QIcon(":/MO/gui/mainwindow/files/file.svg"));
+    actions.open->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/file.svg"));
     actions.runHooked = new QAction(tr("Open with &VFS"), parentWidget());
   }
   if (actions.runHooked) {
     actions.runHooked->setIcon(
-        QIcon(":/MO/gui/mainwindow/explore-virtual-folder.svg"));
+        FluentIcons::icon(":/MO/gui/mainwindow/explore-virtual-folder.svg"));
   }
 
   actions.preview = new QAction(tr("&Preview"), parentWidget());
@@ -489,17 +490,17 @@ ConflictsTab::Actions ConflictsTab::createMenuActions(QTreeView* tree)
   actions.gotoMenu->setEnabled(enableGoto);
 
   actions.explore = new QAction(tr("Open in &Explorer"), parentWidget());
-  actions.explore->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
+  actions.explore->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
   actions.explore->setEnabled(enableExplore);
 
   actions.hide = new QAction(tr("&Hide"), parentWidget());
-  actions.hide->setIcon(QIcon(":/MO/gui/contextmenu/visibility-hide.svg"));
+  actions.hide->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visibility-hide.svg"));
   actions.hide->setEnabled(enableHide);
 
   // note that it is possible for hidden files to appear if they override other
   // hidden files from another mod
   actions.unhide = new QAction(tr("&Unhide"), parentWidget());
-  actions.unhide->setIcon(QIcon(":/MO/gui/contextmenu/visibility-show.svg"));
+  actions.unhide->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visibility-show.svg"));
   actions.unhide->setEnabled(enableUnhide);
 
   if (enableGoto && n == 1) {

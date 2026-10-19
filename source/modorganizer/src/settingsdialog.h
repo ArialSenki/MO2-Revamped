@@ -83,6 +83,7 @@ public slots:
 
 private:
   void initializeTab(int index);
+  void hideUnsupportedOptions();
 
   Ui::SettingsDialog* ui;
   Settings& m_settings;

@@ -6947,8 +6947,8 @@ QToolBar, QMainWindow#MainWindow QToolBar#toolBar {
     background-color: #202226;
     border: none;
     border-bottom: 1px solid #353535;
-    padding: 2px 8px 4px 8px;
-    spacing: 2px;
+    padding: 4px 8px 4px 8px;
+    spacing: 4px;
 }
 QToolBar > QWidget,
 QMainWindow#MainWindow QToolBar#toolBar > QWidget {
@@ -6970,9 +6970,10 @@ QToolButton:pressed, QToolButton:checked {
     background-color: #292B2F;
     border-color: transparent;
 }
+/* Command bar: 16px glyphs, compact 32px buttons like File Explorer's. */
 QMainWindow#MainWindow QToolBar#toolBar QToolButton {
-    margin: 1px 1px;
-    padding: 4px 9px;
+    margin: 0px 1px;
+    padding: 6px 8px;
 }
 QToolButton::menu-indicator {
     image: url(./mo2-fluent-v4-dark/chevron-down.svg);
@@ -7989,7 +7990,16 @@ QWidget#centralWidget QTabWidget#tabWidget QStackedWidget > QWidget {
 
 /* Command bar menus: the chevron sits on the text line at the right edge. */
 QMainWindow#MainWindow QToolBar#toolBar QToolButton[popupMode="2"] {
-    padding-right: 20px;
+    padding-right: 18px;
+}
+/* the overflow button is "...": no chevron next to it */
+QMainWindow#MainWindow QToolBar#toolBar QToolButton#actionFluentMore,
+QMainWindow#MainWindow QToolBar#toolBar QToolButton[popupMode="2"]#actionFluentMore {
+    padding-right: 8px;
+}
+QMainWindow#MainWindow QToolBar#toolBar QToolButton#actionFluentMore::menu-indicator {
+    image: none;
+    width: 0px;
 }
 QMainWindow#MainWindow QToolBar#toolBar QToolButton::menu-indicator {
     subcontrol-origin: padding;

@@ -1,4 +1,5 @@
 #include "modlistcontextmenu.h"
+#include "fluenticons.h"
 #include "menuutils.h"
 
 #include <report.h>
@@ -128,38 +129,38 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
       QAction* installAction = addAction(installText, [=]() {
         view->actions().installMod("", index);
       });
-      installAction->setIcon(QIcon(":/MO/gui/mainwindow/install.svg"));
+      installAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/install.svg"));
       QAction* createAction = addAction(createText, [=]() {
         view->actions().createEmptyMod(index);
       });
-      createAction->setIcon(QIcon(":/MO/gui/contextmenu/create-mod.svg"));
+      createAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"));
       QAction* separatorAction = addAction(tr("Create separator above"), [=]() {
         view->actions().createSeparator(index);
       });
-      separatorAction->setIcon(QIcon(":/MO/gui/contextmenu/separator.svg"));
+      separatorAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/separator.svg"));
     }
   } else {
     addMenuSection(this, tr("Add to list"));
     QAction* installAction = addAction(tr("Install mod..."), [=]() {
       view->actions().installMod();
     });
-    installAction->setIcon(QIcon(":/MO/gui/mainwindow/install.svg"));
+    installAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/install.svg"));
     QAction* createAction = addAction(tr("Create empty mod"), [=]() {
       view->actions().createEmptyMod();
     });
-    createAction->setIcon(QIcon(":/MO/gui/contextmenu/create-mod.svg"));
+    createAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"));
     QAction* separatorAction = addAction(tr("Create separator"), [=]() {
       view->actions().createSeparator();
     });
-    separatorAction->setIcon(QIcon(":/MO/gui/contextmenu/separator.svg"));
+    separatorAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/separator.svg"));
   }
 
   if (view->hasCollapsibleSeparators()) {
     addMenuSection(this, tr("List display"));
     QAction* collapseAction = addAction(tr("Collapse all"), view, &QTreeView::collapseAll);
-    collapseAction->setIcon(QIcon(":/MO/gui/contextmenu/collapse.svg"));
+    collapseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/collapse.svg"));
     QAction* expandAction = addAction(tr("Expand all"), view, &QTreeView::expandAll);
-    expandAction->setIcon(QIcon(":/MO/gui/contextmenu/expand.svg"));
+    expandAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/expand.svg"));
   }
 
   addMenuSection(this, tr("Bulk actions"));
@@ -174,34 +175,34 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
   QAction* enableAction = addAction(enableTxt, [=] {
     view->actions().setAllMatchingModsEnabled(true);
   });
-  enableAction->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+  enableAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
   QAction* disableAction = addAction(disableTxt, [=] {
     view->actions().setAllMatchingModsEnabled(false);
   });
-  disableAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
+  disableAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
 
   addMenuSection(this, tr("Maintenance"));
   QAction* updatesAction = addAction(tr("Check for updates"), [=]() {
     view->actions().checkModsForUpdates();
   });
-  updatesAction->setIcon(QIcon(":/MO/gui/contextmenu/update-check.svg"));
+  updatesAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/update-check.svg"));
   QAction* categoriesAction = addAction(tr("Auto assign categories"), [=]() {
     view->actions().assignCategories();
   });
-  categoriesAction->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
+  categoriesAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
   QAction* refreshAction = addAction(tr("Refresh"), &core, &OrganizerCore::refresh);
-  refreshAction->setIcon(QIcon(":/MO/gui/mainwindow/refresh.svg"));
+  refreshAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/refresh.svg"));
   QAction* exportAction = addAction(tr("Export to csv..."), [=]() {
     view->actions().exportModListCSV();
   });
-  exportAction->setIcon(QIcon(":/MO/gui/contextmenu/export.svg"));
+  exportAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/export.svg"));
 
   if (m_ProfileBackupCreation || m_ProfileBackupRestoration ||
       m_ProfileBackupRemoval) {
     addMenuSection(this, tr("Mod list backups"));
     if (m_ProfileBackupCreation) {
       QAction* createBackupAction = addAction(tr("Create mod list backup"));
-      createBackupAction->setIcon(QIcon(":/MO/gui/contextmenu/backup.svg"));
+      createBackupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"));
       createBackupAction->setToolTip(
           tr("Save a backup of this profile's current mod list."));
       connect(createBackupAction, &QAction::triggered, this,
@@ -210,7 +211,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     if (m_ProfileBackupRestoration) {
       QAction* restoreBackupAction =
           addAction(tr("Restore mod list backup..."));
-      restoreBackupAction->setIcon(QIcon(":/MO/gui/mainwindow/restore.svg"));
+      restoreBackupAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/restore.svg"));
       restoreBackupAction->setToolTip(
           tr("Choose a saved backup for this profile's mod list."));
       connect(restoreBackupAction, &QAction::triggered, this,
@@ -218,7 +219,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     }
     if (m_ProfileBackupRemoval) {
       QAction* deleteBackupAction = addAction(tr("Delete mod list backup..."));
-      deleteBackupAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+      deleteBackupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
       deleteBackupAction->setToolTip(
           tr("Choose and permanently delete a saved mod list backup."));
       connect(deleteBackupAction, &QAction::triggered, this,
@@ -231,7 +232,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     addMenuSection(this, tr("Plugin order backups"));
     if (m_LoadOrderBackupCreation) {
       QAction* createBackupAction = addAction(tr("Create plugin order backup"));
-      createBackupAction->setIcon(QIcon(":/MO/gui/contextmenu/backup.svg"));
+      createBackupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"));
       createBackupAction->setToolTip(
           tr("Save this profile's current plugin load order."));
       connect(createBackupAction, &QAction::triggered, this,
@@ -240,7 +241,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     if (m_LoadOrderBackupRestoration) {
       QAction* restoreBackupAction =
           addAction(tr("Restore plugin order backup..."));
-      restoreBackupAction->setIcon(QIcon(":/MO/gui/mainwindow/restore.svg"));
+      restoreBackupAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/restore.svg"));
       restoreBackupAction->setToolTip(
           tr("Choose a saved plugin load order for this profile."));
       connect(restoreBackupAction, &QAction::triggered, this,
@@ -249,7 +250,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     if (m_LoadOrderBackupRemoval) {
       QAction* deleteBackupAction =
           addAction(tr("Delete plugin order backup..."));
-      deleteBackupAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+      deleteBackupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
       deleteBackupAction->setToolTip(
           tr("Choose and permanently delete a saved plugin load order."));
       connect(deleteBackupAction, &QAction::triggered, this,
@@ -319,7 +320,7 @@ bool ModListChangeCategoryMenu::populate(QMenu* menu, CategoryFactory* factory,
 
       if (factory->hasChildren(i)) {
         if (populate(targetMenu, factory, mod, factory->getCategoryID(i)) || enabled) {
-          targetMenu->setIcon(QIcon(":/MO/gui/check"));
+          targetMenu->setIcon(FluentIcons::icon(":/MO/gui/check"));
         }
       }
     }
@@ -419,7 +420,7 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
     QAction* infoAction = addAction(tr("Information..."), [=]() {
       view->actions().displayModInformation(m_index.data(ModList::IndexRole).toInt());
     });
-    infoAction->setIcon(QIcon(":/MO/gui/contextmenu/information.svg"));
+    infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
     setDefaultAction(infoAction);
   }
 }
@@ -494,7 +495,7 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
 {
   ModListChangeCategoryMenu* categoriesMenu =
       new ModListChangeCategoryMenu(m_categories, mod, this);
-  categoriesMenu->setIcon(QIcon(":/MO/gui/contextmenu/categories.svg"));
+  categoriesMenu->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
   connect(categoriesMenu, &QMenu::aboutToHide, [=]() {
     m_actions.setCategories(m_selected, m_index, categoriesMenu->categories());
   });
@@ -505,7 +506,7 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
   if (mod->getCategories().size() > 1) {
     ModListPrimaryCategoryMenu* primaryCategoryMenu =
         new ModListPrimaryCategoryMenu(m_categories, mod, this);
-    primaryCategoryMenu->setIcon(QIcon(":/MO/gui/contextmenu/primary-category.svg"));
+    primaryCategoryMenu->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/primary-category.svg"));
     connect(primaryCategoryMenu, &QMenu::aboutToHide, [=]() {
       int category = primaryCategoryMenu->primaryCategory();
       if (category != -1) {
@@ -656,7 +657,7 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
     QAction* forceCheckAction = addAction(tr("Force-check updates"), [=]() {
       m_actions.checkModsForUpdates(m_selected);
     });
-    forceCheckAction->setIcon(QIcon(":/MO/gui/contextmenu/updates.svg"));
+    forceCheckAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/updates.svg"));
   }
   if (mod->updateIgnored()) {
     addAction(tr("Un-ignore update"), [=]() {
@@ -674,11 +675,11 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
   QAction* enableAction = addAction(tr("Enable selected"), [=]() {
     m_core.modList()->setActive(m_selected, true);
   });
-  enableAction->setIcon(QIcon(":/MO/gui/contextmenu/enable.svg"));
+  enableAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
   QAction* disableAction = addAction(tr("Disable selected"), [=]() {
     m_core.modList()->setActive(m_selected, false);
   });
-  disableAction->setIcon(QIcon(":/MO/gui/contextmenu/disable.svg"));
+  disableAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
 
   addSeparator();
 
@@ -690,19 +691,19 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
   QAction* renameAction = addAction(tr("Rename Mod..."), [=]() {
     m_actions.renameMod(m_index);
   });
-  renameAction->setIcon(QIcon(":/MO/gui/contextmenu/rename.svg"));
+  renameAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"));
   QAction* reinstallAction = addAction(tr("Reinstall Mod"), [=]() {
     m_actions.reinstallMod(m_index);
   });
-  reinstallAction->setIcon(QIcon(":/MO/gui/contextmenu/reinstall.svg"));
+  reinstallAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"));
   QAction* removeAction = addAction(tr("Remove Mod..."), [=]() {
     m_actions.removeMods(m_selected);
   });
-  removeAction->setIcon(QIcon(":/MO/gui/contextmenu/remove.svg"));
+  removeAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   QAction* backupAction = addAction(tr("Create Backup"), [=]() {
     m_actions.createBackup(m_index);
   });
-  backupAction->setIcon(QIcon(":/MO/gui/contextmenu/backup.svg"));
+  backupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"));
 
   if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_HIDDEN_FILES) !=
       flags.end()) {
@@ -731,23 +732,23 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
       QAction* unendorseAction = addAction(tr("Un-Endorse"), [=]() {
         m_actions.setEndorsed(m_selected, false);
       });
-      unendorseAction->setIcon(QIcon(":/MO/gui/contextmenu/endorse.svg"));
+      unendorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"));
     } break;
     case EndorsedState::ENDORSED_FALSE: {
       QAction* endorseAction = addAction(tr("Endorse"), [=]() {
         m_actions.setEndorsed(m_selected, true);
       });
-      endorseAction->setIcon(QIcon(":/MO/gui/contextmenu/endorse.svg"));
+      endorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"));
       QAction* wontEndorseAction = addAction(tr("Won't endorse"), [=]() {
         m_actions.willNotEndorsed(m_selected);
       });
-      wontEndorseAction->setIcon(QIcon(":/MO/gui/contextmenu/wont-endorse.svg"));
+      wontEndorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/wont-endorse.svg"));
     } break;
     case EndorsedState::ENDORSED_NEVER: {
       QAction* endorseAction = addAction(tr("Endorse"), [=]() {
         m_actions.setEndorsed(m_selected, true);
       });
-      endorseAction->setIcon(QIcon(":/MO/gui/contextmenu/endorse.svg"));
+      endorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"));
     } break;
     default: {
       QAction* action = new QAction(tr("Endorsement state unknown"), this);
@@ -764,7 +765,7 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
         addAction(tr("Remap Category (From Nexus)"), [=]() {
           m_actions.remapCategory(m_selected);
         });
-    remapCategoryAction->setIcon(QIcon(":/MO/gui/contextmenu/remap-category.svg"));
+    remapCategoryAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"));
   }
 
   if (mod->nexusId() > 0 && Settings::instance().nexus().trackedIntegration()) {
@@ -773,13 +774,13 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
       QAction* startTrackingAction = addAction(tr("Start tracking"), [=]() {
         m_actions.setTracked(m_selected, true);
       });
-      startTrackingAction->setIcon(QIcon(":/MO/gui/contextmenu/tracking.svg"));
+      startTrackingAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/tracking.svg"));
     } break;
     case TrackedState::TRACKED_TRUE: {
       QAction* stopTrackingAction = addAction(tr("Stop tracking"), [=]() {
         m_actions.setTracked(m_selected, false);
       });
-      stopTrackingAction->setIcon(QIcon(":/MO/gui/contextmenu/tracking.svg"));
+      stopTrackingAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/tracking.svg"));
     } break;
     default: {
       QAction* action = new QAction(tr("Tracked state unknown"), this);
@@ -810,7 +811,7 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
     QAction* visitNexusAction = addAction(tr("Visit on Nexus"), [=]() {
       m_actions.visitOnNexus(m_selected);
     });
-    visitNexusAction->setIcon(QIcon(":/MO/gui/contextmenu/visit.svg"));
+    visitNexusAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visit.svg"));
   }
 
   const auto url = mod->parseCustomURL();
@@ -819,11 +820,11 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
         addAction(tr("Visit on %1").arg(url.host()), [=]() {
           m_actions.visitWebPage(m_selected);
         });
-    visitCustomUrlAction->setIcon(QIcon(":/MO/gui/contextmenu/visit.svg"));
+    visitCustomUrlAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visit.svg"));
   }
 
   QAction* openExplorerAction = addAction(tr("Open in Explorer"), [=]() {
     m_actions.openExplorer(m_selected);
   });
-  openExplorerAction->setIcon(QIcon(":/MO/gui/contextmenu/explorer.svg"));
+  openExplorerAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
 }

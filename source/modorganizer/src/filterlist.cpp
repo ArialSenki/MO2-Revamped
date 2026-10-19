@@ -1,4 +1,5 @@
 #include "filterlist.h"
+#include "fluenticons.h"
 #include "categories.h"
 #include "categoriesdialog.h"
 #include "organizercore.h"
@@ -43,7 +44,7 @@ public:
                                  "Right-click reverses; Space advances.")));
     setData(0, TypeRole, type);
     setData(0, IDRole, id);
-    setData(0, Qt::DecorationRole, QIcon(":/MO/gui/unchecked-checkbox"));
+    setData(0, Qt::DecorationRole, FluentIcons::icon(":/MO/gui/unchecked-checkbox"));
   }
 
   CriteriaType type() const
@@ -108,17 +109,17 @@ private:
 
     switch (m_state) {
     case Inactive: {
-      i = QIcon(":/MO/gui/unchecked-checkbox");
+      i = FluentIcons::icon(":/MO/gui/unchecked-checkbox");
       break;
     }
 
     case Active: {
-      i = QIcon(":/MO/gui/checked-checkbox");
+      i = FluentIcons::icon(":/MO/gui/checked-checkbox");
       break;
     }
 
     case Inverted: {
-      i = QIcon(":/MO/gui/indeterminate-checkbox");
+      i = FluentIcons::icon(":/MO/gui/indeterminate-checkbox");
       break;
     }
     }

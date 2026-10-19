@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modlist.h"
+#include "fluenticons.h"
 
 #include "messagedialog.h"
 #include "modinforegular.h"
@@ -335,12 +336,12 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     return result;
   } else if (role == Qt::DecorationRole) {
     if (column == COL_NAME && modInfo->isOverwrite()) {
-      return QIcon(":/MO/gui/mainwindow/files/folder.svg");
+      return FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg");
     } else if (column == COL_VERSION) {
       // a new version shows in the Status column; only the unusual
       // "installed is newer" case keeps its mark here
       if (!modInfo->updateAvailable() && modInfo->downgradeAvailable()) {
-        return QIcon(":/MO/gui/mainwindow/status/warning.svg");
+        return FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg");
       }
     }
     return QVariant();

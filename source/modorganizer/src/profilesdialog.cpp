@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "profilesdialog.h"
+#include "fluenticons.h"
 #include "ui_profilesdialog.h"
 
 #include "bsainvalidation.h"
@@ -61,7 +62,8 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
                             const QString& iconPath,
                             const QString& iconObjectName, int size)
 {
-  if (layout == nullptr || heading == nullptr) {
+  // Fluent v4 headings are plain text, like Windows 11 Settings
+  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
     return;
   }
 
@@ -79,7 +81,7 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
   icon->setObjectName(iconObjectName);
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(size, size);
-  const QPixmap pixmap = QIcon(iconPath).pixmap(size / 2, size / 2);
+  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
   }
@@ -147,7 +149,7 @@ ProfilesDialog::ProfilesDialog(const QString& profileName, OrganizerCore& organi
   if (EldenRingSaveSettings::supports(m_Game)) {
     ui->profileOptionsPanel->hide();
     ui->profilesPageSubtitle->setText(
-        tr("Elden Ring save routing is managed in Tools > Elden Ring Save Isolation."));
+        tr("Elden Ring save routing is managed in Tools > Save Isolation."));
     ui->localSavesBox->hide();
     // Elden Ring routes saves through its dedicated Tools dialog. Keep the
     // legacy transfer action available for games that still use MO2's native

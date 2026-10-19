@@ -4,7 +4,9 @@
 // behavior that a stylesheet cannot express.
 
 #include "fluentdashboard.h"
+#include "fluenticons.h"
 #include "fluentmotion.h"
+#include "revampedtheme.h"
 #include "mainwindow.h"
 #include "organizercore.h"
 #include "settings.h"
@@ -27,17 +29,6 @@
 
 namespace
 {
-// Segoe Fluent Icons on Windows 11, Segoe MDL2 Assets on Windows 10; both use
-// the same code points
-QFont fluentIconFont(int pointSize)
-{
-  QFont f;
-  f.setFamilies({QStringLiteral("Segoe Fluent Icons"),
-                 QStringLiteral("Segoe MDL2 Assets")});
-  f.setPointSize(pointSize);
-  return f;
-}
-
 constexpr char16_t MoreGlyph = 0xE712;
 
 // keeps a monochrome icon in the text color of its button, so the Run glyph
@@ -75,7 +66,7 @@ private:
     }
     m_applied = color;
 
-    const QIcon source(m_path);
+    const QIcon source = FluentIcons::icon(m_path);
     QIcon tinted;
     for (int size : {16, 20, 24, 32, 48}) {
       QPixmap pixmap = source.pixmap(size, size);
@@ -98,27 +89,6 @@ void repolish(QWidget* w)
   w->update();
 }
 
-// a Segoe Fluent Icons glyph as a monochrome icon in the given color
-QIcon glyphIcon(char16_t glyph, const QColor& color)
-{
-  QIcon icon;
-  for (int size : {16, 20, 24, 32, 48}) {
-    QPixmap pixmap(size, size);
-    pixmap.fill(Qt::transparent);
-
-    QPainter p(&pixmap);
-    p.setRenderHint(QPainter::TextAntialiasing);
-    QFont f = fluentIconFont(10);
-    f.setPixelSize(size - 2);
-    p.setFont(f);
-    p.setPen(color);
-    p.drawText(pixmap.rect(), Qt::AlignCenter, QString(QChar(glyph)));
-    p.end();
-
-    icon.addPixmap(pixmap);
-  }
-  return icon;
-}
 }  // namespace
 
 void MainWindow::setupFluentLayout()
@@ -141,7 +111,7 @@ void MainWindow::setupFluentLayout()
 
   m_moreActionsButton = new QToolButton(ui->layoutWidget);
   m_moreActionsButton->setObjectName(QStringLiteral("moreActionsBtn"));
-  m_moreActionsButton->setFont(fluentIconFont(11));
+  m_moreActionsButton->setFont(FluentIcons::font(15));
   m_moreActionsButton->setText(QString(QChar(MoreGlyph)));
   m_moreActionsButton->setToolTip(tr("Mod list actions, backups, and folders"));
   m_moreActionsButton->setAccessibleName(tr("More actions"));
@@ -200,7 +170,7 @@ void MainWindow::updateMoreActionsMenu()
   QMenu* folders = openFolderMenu();
   folders->setParent(menu, folders->windowFlags());
   folders->setTitle(tr("Open folder"));
-  folders->setIcon(QIcon(QStringLiteral(":/MO/gui/contextmenu/explorer.svg")));
+  folders->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/explorer.svg")));
 
   // the list menu clears and repopulates itself in its own aboutToShow
   // handler, which was connected first; append the folders after it
@@ -263,34 +233,28 @@ void MainWindow::applyFluentToolbarDefaults(const QSize& iconSize)
 
 QIcon MainWindow::fluentToolIcon(const QString& name)
 {
-  // tool plugins without an icon get a colored Fluent glyph, picked from the
-  // tool name so the same tool keeps the same mark
+  // tool plugins without an icon get a Fluent glyph picked from the tool
+  // name, so the same tool keeps the same mark
   struct Mark
   {
     const char* keyword;
     char16_t glyph;
-    QColor color;
   };
 
   static const Mark marks[] = {
-      {"startup", 0xE768, QColor(0x00, 0x78, 0xD4)},  // Play
-      {"save", 0xE74E, QColor(0x10, 0x7C, 0x10)},     // Save
-      {"dll", 0xE943, QColor(0x87, 0x64, 0xB8)},      // Code
-      {"ini", 0xE70F, QColor(0xCA, 0x50, 0x10)},      // Edit
-      {"fnis", 0xE805, QColor(0x00, 0x99, 0xBC)},     // Walk
+      {"startup", 0xE768},  // Play
+      {"save", 0xE74E},     // Save
+      {"dll", 0xE943},      // Code
+      {"ini", 0xE70F},      // Edit
   };
 
-  char16_t glyph = 0xE90F;  // Repair
-  QColor color(0x5D, 0x5D, 0x5D);
   for (const auto& mark : marks) {
     if (name.contains(QLatin1String(mark.keyword), Qt::CaseInsensitive)) {
-      glyph = mark.glyph;
-      color = mark.color;
-      break;
+      return FluentIcons::glyph(mark.glyph);
     }
   }
 
-  return glyphIcon(glyph, color);
+  return FluentIcons::glyph(0xE90F);  // Repair
 }
 
 void MainWindow::setupFluentCommandBar()
@@ -327,6 +291,7 @@ void MainWindow::setupFluentCommandBar()
   bar->addAction(m_fluentOverflowAction);
   if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_fluentOverflowAction))) {
     button->setPopupMode(QToolButton::InstantPopup);
+    button->setObjectName(QStringLiteral("actionFluentMore"));
   }
 
   // low priority actions show their icon only next to labeled ones
@@ -340,9 +305,11 @@ void MainWindow::setupFluentCommandBar()
 
 void MainWindow::applyFluentActionIcons()
 {
-  // monochrome Fluent glyphs in the toolbar's text color replace the
-  // stylesheet's colored icons, so the command bar reads as one set
-  const QColor color = ui->toolBar->palette().color(QPalette::ButtonText);
+  // Fluent glyphs in the theme's ink replace the style sheet's colored
+  // icons, so the command bar reads as one set with the rest of the window
+  if (!FluentIcons::active()) {
+    return;
+  }
 
   const std::pair<QAction*, char16_t> glyphs[] = {
       {ui->actionChange_Game, 0xE8AB},         // Switch
@@ -356,7 +323,7 @@ void MainWindow::applyFluentActionIcons()
       {ui->actionSettings, 0xE713},            // Settings
       {ui->actionEndorseMO, 0xEB51},           // Heart
       {ui->actionNotifications, 0xEA8F},       // Ringer
-      {ui->actionUpdate, 0xE943},              // Code
+      {ui->actionUpdate, 0xE895},              // Sync
       {ui->actionHelp, 0xE897},                // Help
       {m_fluentOverflowAction, MoreGlyph},
   };
@@ -365,14 +332,61 @@ void MainWindow::applyFluentActionIcons()
     if (action == nullptr) {
       continue;
     }
-    const QIcon icon = glyphIcon(glyph, color);
+    const QIcon icon = FluentIcons::glyph(glyph);
     action->setIcon(icon);
     if (auto* button =
             qobject_cast<QAbstractButton*>(ui->toolBar->widgetForAction(action))) {
       button->setIcon(icon);
+
+    }
+
+    // Qt leaves only 4px between a tool button's icon and its text; the
+    // command bars of Windows 11 leave 8px, so labeled buttons get a space.
+    // The icon text is only shown on the toolbar; menus use the plain text.
+    if (action->priority() != QAction::LowPriority &&
+        !action->iconText().startsWith(QLatin1Char(' '))) {
+      action->setIconText(QLatin1Char(' ') + action->iconText());
     }
     if (action == ui->actionNotifications) {
       m_originalNotificationIcon = icon;
     }
   }
+}
+
+QIcon MainWindow::fluentNotificationIcon(std::size_t count) const
+{
+  // the bell, with a Windows 11 attention dot while there are notifications
+  const QSize canvas = ui->toolBar->iconSize();
+  const qreal dpr    = devicePixelRatioF();
+  const int extent   = qMin(canvas.width(), canvas.height());
+
+  QPixmap pixmap(canvas * dpr);
+  pixmap.setDevicePixelRatio(dpr);
+  pixmap.fill(Qt::transparent);
+
+  QPainter p(&pixmap);
+  p.setRenderHint(QPainter::Antialiasing);
+  p.setRenderHint(QPainter::TextAntialiasing);
+  const QRect bell((canvas.width() - extent) / 2, (canvas.height() - extent) / 2,
+                   extent, extent);
+  FluentIcons::glyph(0xEA8F).paint(&p, bell);
+
+  if (count > 0) {
+    // an accent dot at the top right, cut out of the bell like the badges of
+    // Windows 11; the count itself is in the tooltip and the status bar
+    const qreal dot = qMax(5.0, extent * 0.42);
+    const QRectF badge(bell.right() + 1 - dot, bell.top(), dot, dot);
+    const qreal gap = qMax(1.0, extent / 12.0);
+
+    p.setPen(Qt::NoPen);
+    p.setCompositionMode(QPainter::CompositionMode_Clear);
+    p.setBrush(Qt::black);
+    p.drawEllipse(badge.adjusted(-gap, -gap, gap, gap));
+    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    p.setBrush(FluentIcons::color(FluentIcons::Tone::Accent));
+    p.drawEllipse(badge);
+  }
+  p.end();
+
+  return QIcon(pixmap);
 }
