@@ -168,6 +168,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTime>
+#include <QScreen>
 #include <QTimer>
 #include <QToolButton>
 #include <QToolTip>
@@ -452,6 +453,9 @@ public:
       // again; a floating window only one row tall would hide the list
       if (floating) {
         unfoldNow();
+        // Qt floats the log where it was docked, which can leave the bottom
+        // of the window under the taskbar
+        QTimer::singleShot(0, m_Dock, [this] { keepFloatingOnScreen(); });
       }
     });
     updateFloatControl(dock->isFloating());
@@ -537,6 +541,25 @@ protected:
   }
 
 private:
+  void keepFloatingOnScreen()
+  {
+    if (!m_Dock->isFloating() || m_Dock->screen() == nullptr) {
+      return;
+    }
+
+    const QRect area  = m_Dock->screen()->availableGeometry();
+    QRect frame       = m_Dock->frameGeometry();
+    const QPoint inner = m_Dock->geometry().topLeft() - frame.topLeft();
+    frame.setSize(frame.size().boundedTo(area.size()));
+    frame.moveLeft(std::clamp(frame.left(), area.left(), area.right() - frame.width() + 1));
+    frame.moveTop(std::clamp(frame.top(), area.top(), area.bottom() - frame.height() + 1));
+    if (frame != m_Dock->frameGeometry()) {
+      m_Dock->setGeometry(QRect(frame.topLeft() + inner,
+                                frame.size() - (m_Dock->frameGeometry().size() -
+                                                m_Dock->geometry().size())));
+    }
+  }
+
   // opens the log at once, without the animation
   void unfoldNow()
   {
