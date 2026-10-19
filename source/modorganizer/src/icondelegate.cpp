@@ -70,7 +70,12 @@ void IconDelegate::paintIcons(QPainter* painter, const QStyleOptionViewItem& opt
     // size, scale and theme color
     const QIcon icon = FluentIcons::icon(iconId);
     if (icon.isNull()) {
-      log::warn("failed to load icon {}", iconId);
+      // painted on every row; report each missing icon once
+      static QSet<QString> reported;
+      if (!reported.contains(iconId)) {
+        reported.insert(iconId);
+        log::warn("failed to load icon {}", iconId);
+      }
     }
     icon.paint(painter, QRect(x, margin, iconWidth, iconWidth));
     x += iconWidth + spacing;

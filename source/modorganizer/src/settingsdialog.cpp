@@ -157,8 +157,10 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
                                               0xE90F,  // Workarounds: Repair
                                               0xE9D9,  // Diagnostics: Diagnostic
                                           });
-  setMinimumWidth(minimumWidth() + 248);
-  resize(width() + 248, height());
+  // room for the navigation rail, still inside the available screen width
+  const int maxWidth = qMax(320, availableSize.width() - 48);
+  setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
+  resize(qMin(width() + 248, maxWidth), height());
 
   // Build less commonly used pages the first time they are opened. Plugins
   // scans installed plugins and Workarounds reads saved Steam credentials, so

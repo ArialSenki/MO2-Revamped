@@ -286,10 +286,11 @@ public:
     }
 
     const int pixels  = qMax(1, qRound(extent * scale));
-    const QString key = QStringLiteral("fluentglyph-%1-%2-%3")
+    const QString key = QStringLiteral("fluentglyph-%1-%2-%3-%4")
                             .arg(int(m_codepoint), 0, 16)
                             .arg(pixels)
-                            .arg(ink.rgba(), 0, 16);
+                            .arg(ink.rgba(), 0, 16)
+                            .arg(scale);
 
     QPixmap pm;
     if (!QPixmapCache::find(key, &pm)) {
@@ -305,10 +306,11 @@ public:
                  QString(QChar(m_codepoint)));
       p.end();
 
+      // the ratio is part of the cached pixmap, so painting never detaches it
+      pm.setDevicePixelRatio(scale);
       QPixmapCache::insert(key, pm);
     }
 
-    pm.setDevicePixelRatio(scale);
     return pm;
   }
 

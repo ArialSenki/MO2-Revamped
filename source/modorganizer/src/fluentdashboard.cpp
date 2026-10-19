@@ -122,8 +122,15 @@ FluentDashboard::FluentDashboard(Ui::MainWindow* mainUi, OrganizerCore& core,
   connect(ui->modList, &ModListView::quickFilterChanged, this,
           &FluentDashboard::onQuickFilterChanged);
 
+  // Overwrite and the saves folder are read from disk; that only changes on a
+  // directory refresh or a profile switch, not on every enable/disable
+  connect(&m_core, &OrganizerCore::directoryStructureReady, this,
+          &FluentDashboard::refreshDisk);
+  connect(&m_core, &OrganizerCore::profileChanged, this, &FluentDashboard::refreshDisk);
+
   refreshGame();
   scheduleRefresh();
+  refreshDisk();
 }
 
 void FluentDashboard::setupBanner(QWidget* central)
@@ -339,6 +346,20 @@ void FluentDashboard::refreshStats()
     }
   }
 
+  m_active->setValue(tr("%1 of %2").arg(active).arg(total), QStringLiteral("accent"));
+  m_conflicts->setValue(conflicts > 0 ? modCountText(conflicts) : tr("None"),
+                        conflicts > 0 ? QStringLiteral("caution")
+                                      : QStringLiteral("neutral"));
+  m_conflictsAction->setVisible(conflicts > 0);
+
+
+  m_updates->setValue(updates > 0 ? tr("%1 available").arg(updates) : tr("Up to date"),
+                      updates > 0 ? QStringLiteral("accent") : QStringLiteral("neutral"));
+  m_updatesAction->setVisible(updates > 0);
+}
+
+void FluentDashboard::refreshDisk()
+{
   int overwriteFiles = 0;
   QDirIterator files(m_core.overwritePath(), QDir::Files | QDir::Hidden | QDir::System,
                      QDirIterator::Subdirectories);
@@ -353,12 +374,6 @@ void FluentDashboard::refreshStats()
            .entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden)
            .isEmpty();
 
-  m_active->setValue(tr("%1 of %2").arg(active).arg(total), QStringLiteral("accent"));
-  m_conflicts->setValue(conflicts > 0 ? modCountText(conflicts) : tr("None"),
-                        conflicts > 0 ? QStringLiteral("caution")
-                                      : QStringLiteral("neutral"));
-  m_conflictsAction->setVisible(conflicts > 0);
-
   QString overwriteText = overwriteFolders ? tr("Empty folders") : tr("Empty");
   if (overwriteFiles >= OverwriteCountLimit) {
     overwriteText = tr("%1+ files").arg(OverwriteCountLimit);
@@ -370,16 +385,12 @@ void FluentDashboard::refreshStats()
   m_overwriteAction->setVisible(overwriteFiles > 0 || overwriteFolders);
 
   refreshLastPlayed();
-
-  m_updates->setValue(updates > 0 ? tr("%1 available").arg(updates) : tr("Up to date"),
-                      updates > 0 ? QStringLiteral("accent") : QStringLiteral("neutral"));
-  m_updatesAction->setVisible(updates > 0);
 }
 
 void FluentDashboard::setSavesDirectory(std::function<QDir()> provider)
 {
   m_savesDirectory = std::move(provider);
-  scheduleRefresh();
+  refreshLastPlayed();
 }
 
 void FluentDashboard::refreshLastPlayed()
