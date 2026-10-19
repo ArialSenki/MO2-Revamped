@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modinfodialog.h"
+#include "fluentnavigation.h"
 #include "modinfodialogcategories.h"
 #include "modinfodialogconflicts.h"
 #include "modinfodialogesps.h"
@@ -181,6 +182,30 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
   resize(1060, 700);
   ui->tabWidget->tabBar()->setUsesScrollButtons(false);
   ui->tabWidget->tabBar()->setElideMode(Qt::ElideNone);
+
+  // Fluent v4: the pages are listed on the left, like Windows 11 Settings;
+  // reAddTabs() and setTabsColors() keep the list in step
+  FluentNavigation::attach(ui->tabWidget, [](int, QWidget* page) -> char16_t {
+    static const std::pair<const char*, char16_t> glyphs[] = {
+        {"tabText", 0xE8A5},        // Document
+        {"tabIni", 0xE70F},         // Edit
+        {"tabImages", 0xEB9F},      // Photo
+        {"tabESPs", 0xE8FD},        // BulletedList
+        {"tabConflicts", 0xE7BA},   // Warning
+        {"tabCategories", 0xE8EC},  // Tag
+        {"tabNexus", 0xE774},       // Globe
+        {"tabNotes", 0xE70B},       // QuickNote
+        {"tabFiles", 0xE8B7},       // Folder
+    };
+    for (const auto& [name, glyph] : glyphs) {
+      if (page != nullptr && page->objectName() == QLatin1String(name)) {
+        return glyph;
+      }
+    }
+    return 0xE915;
+  });
+  setMinimumSize(1200, 620);
+  resize(1300, 720);
 
   {
     auto* sc = new QShortcut(QKeySequence::Delete, this);
@@ -530,6 +555,8 @@ void ModInfoDialog::reAddTabs(const std::vector<bool>& visibility, ModInfoTabIDs
       ui->tabWidget->setCurrentIndex(static_cast<int>(i));
     }
   }
+
+  FluentNavigation::sync(ui->tabWidget);
 }
 
 void ModInfoDialog::updateTabs(bool becauseOriginChanged)
@@ -622,6 +649,8 @@ void ModInfoDialog::setTabsColors()
 
     ui->tabWidget->tabBar()->setTabTextColor(tabInfo.realPos, color);
   }
+
+  FluentNavigation::sync(ui->tabWidget);
 }
 
 void ModInfoDialog::switchToTab(ModInfoTabIDs id)

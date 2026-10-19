@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "moapplication.h"
 #include "revampedtheme.h"
+#include "fluenticons.h"
 #include "commandline.h"
 #include "instancemanager.h"
 #include "loglist.h"
@@ -44,6 +45,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFile>
 #include <QFileInfo>
 #include <QMainWindow>
+#include <QAbstractButton>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -1215,6 +1217,16 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
     if (auto* dialog = qobject_cast<QDialog*>(receiver);
         dialog != nullptr && dialog->isWindow()) {
       fitDialogToAvailableScreen(dialog);
+    }
+
+    // Fluent v4: menu and button icons in the theme's ink
+    if (property("revampedFluent").toBool()) {
+      if (auto* menu = qobject_cast<QMenu*>(receiver)) {
+        FluentIcons::apply(menu);
+      } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
+                 button != nullptr && !button->icon().isNull()) {
+        FluentIcons::apply(button);
+      }
     }
   }
 

@@ -18,6 +18,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "settingsdialog.h"
+#include "fluentnavigation.h"
+#include "fluentsettings.h"
 #include "settingsdialogdiagnostics.h"
 #include "settingsdialoggeneral.h"
 #include "settingsdialogmodlist.h"
@@ -134,6 +136,20 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   tabPolicy.setVerticalPolicy(QSizePolicy::Ignored);
   ui->tabWidget->setSizePolicy(tabPolicy);
 
+  // Fluent v4: pages listed on the left, like Windows 11 Settings
+  FluentNavigation::attach(ui->tabWidget, {
+                                              0xE713,  // General: Settings
+                                              0xE790,  // Theme: Color
+                                              0xE8FD,  // Mod List: BulletedList
+                                              0xE8B7,  // Paths: Folder
+                                              0xE774,  // Nexus: Globe
+                                              0xEA86,  // Plugins: Puzzle
+                                              0xE90F,  // Workarounds: Repair
+                                              0xE9D9,  // Diagnostics: Diagnostic
+                                          });
+  setMinimumWidth(minimumWidth() + 248);
+  resize(width() + 248, height());
+
   // Build less commonly used pages the first time they are opened. Plugins
   // scans installed plugins and Workarounds reads saved Steam credentials, so
   // keep both lazy but finish their setup before their first paint.
@@ -195,6 +211,7 @@ void SettingsDialog::initializeTab(int index)
   }
 
   m_tabs[index] = m_tabFactories[index]();
+  FluentSettings::restyle(ui->tabWidget->widget(index));
   const QString activeStyle = m_settings.interface().styleName().value_or("");
   configureSettingsComboPopups(
       ui->tabWidget->widget(index),
