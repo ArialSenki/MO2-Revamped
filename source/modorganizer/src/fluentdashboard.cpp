@@ -278,6 +278,14 @@ void FluentDashboard::setupModsHeader()
   ui->dataTabRefresh->setAccessibleName(tr("Refresh"));
   ui->horizontalSpacer_4->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
   ui->horizontalLayout_12->invalidate();
+
+  // the same for the Downloads tab
+  ui->horizontalLayout_16->addWidget(ui->btnRefreshDownloads);
+  ui->btnRefreshDownloads->setText(QString());
+  ui->btnRefreshDownloads->setFixedWidth(32);
+  ui->btnRefreshDownloads->setAccessibleName(tr("Refresh"));
+  ui->horizontalSpacer_7->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
+  ui->horizontalLayout->invalidate();
 }
 
 void FluentDashboard::refreshGame()

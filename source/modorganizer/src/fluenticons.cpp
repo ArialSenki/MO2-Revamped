@@ -16,6 +16,7 @@ constexpr int Sizes[] = {16, 20, 24, 32};
 // from the source rather than from an already recolored copy
 const char* const OriginalProperty = "fluentOriginalIcon";
 const char* const InkProperty      = "fluentIconInk";
+const char* const ShownProperty    = "fluentIconShown";
 
 QPixmap recolor(const QPixmap& source, const QColor& ink)
 {
@@ -81,6 +82,30 @@ QIcon monochrome(const QIcon& icon, const QColor& ink)
   return result;
 }
 
+// recolors an action's or a button's icon; when code or the style sheet has
+// put a different icon there since, that one becomes the new original
+template <class T>
+void recolor(T* object, const QColor& ink)
+{
+  const QIcon current = object->icon();
+  if (current.isNull()) {
+    return;
+  }
+
+  const bool ours = current.cacheKey() == object->property(ShownProperty).toLongLong();
+  if (ours && object->property(InkProperty).template value<QColor>() == ink) {
+    return;
+  }
+
+  const QIcon original =
+      ours ? object->property(OriginalProperty).template value<QIcon>() : current;
+  const QIcon result = monochrome(original, ink);
+  object->setProperty(OriginalProperty, QVariant::fromValue(original));
+  object->setIcon(result);
+  object->setProperty(ShownProperty, result.cacheKey());
+  object->setProperty(InkProperty, ink);
+}
+
 void apply(QMenu* menu)
 {
   if (menu == nullptr) {
@@ -89,18 +114,7 @@ void apply(QMenu* menu)
 
   const QColor ink = menu->palette().color(QPalette::Active, QPalette::Text);
   for (QAction* action : menu->actions()) {
-    QVariant original = action->property(OriginalProperty);
-    if (!original.isValid()) {
-      if (action->icon().isNull()) {
-        continue;
-      }
-      original = QVariant::fromValue(action->icon());
-      action->setProperty(OriginalProperty, original);
-    } else if (action->property(InkProperty).value<QColor>() == ink) {
-      continue;
-    }
-    action->setIcon(monochrome(original.value<QIcon>(), ink));
-    action->setProperty(InkProperty, ink);
+    recolor(action, ink);
   }
 }
 
@@ -111,19 +125,7 @@ void apply(QAbstractButton* button)
     return;
   }
 
-  const QColor ink = button->palette().color(QPalette::Active, QPalette::ButtonText);
-  QVariant original = button->property(OriginalProperty);
-  if (!original.isValid()) {
-    if (button->icon().isNull()) {
-      return;
-    }
-    original = QVariant::fromValue(button->icon());
-    button->setProperty(OriginalProperty, original);
-  } else if (button->property(InkProperty).value<QColor>() == ink) {
-    return;
-  }
-  button->setIcon(monochrome(original.value<QIcon>(), ink));
-  button->setProperty(InkProperty, ink);
+  recolor(button, button->palette().color(QPalette::Active, QPalette::ButtonText));
 }
 
 }  // namespace FluentIcons
