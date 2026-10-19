@@ -253,6 +253,15 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
     }
   }
 
+  std::set<unsigned int> others;
+  for (const auto* list :
+       {&conflicts.m_OverwriteList, &conflicts.m_OverwrittenList,
+        &conflicts.m_ArchiveOverwriteList, &conflicts.m_ArchiveOverwrittenList,
+        &conflicts.m_ArchiveLooseOverwriteList, &conflicts.m_ArchiveLooseOverwrittenList}) {
+    others.insert(list->begin(), list->end());
+  }
+  conflicts.m_ConflictingModCount = others.size();
+
   return conflicts;
 }
 

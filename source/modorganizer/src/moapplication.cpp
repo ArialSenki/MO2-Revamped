@@ -97,8 +97,10 @@ void applyNativeTitleBarTheme(QWidget* window, const QString& styleName);
 // Several dialogs request a generous default size or restore a saved one. On
 // 768p displays, at 150% scaling, or after moving to a smaller monitor, those
 // sizes would push the button row below the taskbar. Shrink the dialog (and its
-// minimum) to the work area and keep the whole frame on screen.
-void fitDialogToAvailableScreen(QDialog* dialog)
+// minimum) to the work area and keep the whole frame on screen. With
+// fluentSize, it also trims the dialog to the Fluent opening size (see
+// FluentDialogs::maxSize()).
+void fitDialogToAvailableScreen(QDialog* dialog, bool fluentSize)
 {
   if (dialog->windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
     return;
@@ -121,8 +123,11 @@ void fitDialogToAvailableScreen(QDialog* dialog)
     frame = QSize(16, 39);
   }
 
-  const QSize maxSize(qMax(320, available.width() - frame.width()),
-                      qMax(240, available.height() - frame.height()));
+  QSize maxSize(qMax(320, available.width() - frame.width()),
+                qMax(240, available.height() - frame.height()));
+  if (fluentSize) {
+    maxSize = maxSize.boundedTo(FluentDialogs::maxSize(available));
+  }
 
   if (dialog->minimumWidth() > maxSize.width() ||
       dialog->minimumHeight() > maxSize.height()) {
@@ -1224,8 +1229,12 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
   if (event->type() == QEvent::Show && !event->spontaneous()) {
     if (auto* dialog = qobject_cast<QDialog*>(receiver);
         dialog != nullptr && dialog->isWindow()) {
-      fitDialogToAvailableScreen(dialog);
-      if (property("revampedFluent").toBool()) {
+      // Fluent trims a dialog to its opening size once, so the user can
+      // still make it larger; message boxes keep their own size
+      const bool fluent = property("revampedFluent").toBool();
+      fitDialogToAvailableScreen(dialog, fluent && !FluentDialogs::polished(dialog) &&
+                                             qobject_cast<QMessageBox*>(dialog) == nullptr);
+      if (fluent) {
         FluentDialogs::polish(dialog);
       }
     }

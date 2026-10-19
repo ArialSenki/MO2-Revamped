@@ -23,6 +23,7 @@
 #include "genericicondelegate.h"
 #include "log.h"
 #include "mainwindow.h"
+#include "fluenticons.h"
 #include "modconflicticondelegate.h"
 #include "modcontenticondelegate.h"
 #include "modelutils.h"
@@ -926,7 +927,13 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
 
   setItemDelegateForColumn(ModList::COL_FLAGS,
                            new ModFlagIconDelegate(this, ModList::COL_FLAGS, 120));
-  setItemDelegateForColumn(ModList::COL_CONFLICTFLAGS, new FluentStatusDelegate(this));
+  if (FluentIcons::active()) {
+    setItemDelegateForColumn(ModList::COL_CONFLICTFLAGS, new FluentStatusDelegate(this));
+  } else {
+    setItemDelegateForColumn(
+        ModList::COL_CONFLICTFLAGS,
+        new ModConflictIconDelegate(this, ModList::COL_CONFLICTFLAGS, 80));
+  }
   setItemDelegateForColumn(ModList::COL_CONTENT,
                            new ModContentIconDelegate(this, ModList::COL_CONTENT, 150));
   setItemDelegateForColumn(ModList::COL_VERSION,
@@ -1024,7 +1031,7 @@ void ModListView::restoreState(const Settings& s)
   // version. Every other column stays one right-click away in the header.
   QSettings layout(s.filename(), QSettings::IniFormat);
   constexpr auto columnsAppliedKey = "Settings/fluent_v4_mod_columns_applied";
-  if (!layout.value(columnsAppliedKey, false).toBool()) {
+  if (FluentIcons::active() && !layout.value(columnsAppliedKey, false).toBool()) {
     QHeaderView* h = header();
     for (int column : {ModList::COL_FLAGS, ModList::COL_CONTENT, ModList::COL_CATEGORY,
                        ModList::COL_MODID, ModList::COL_GAME, ModList::COL_INSTALLTIME,

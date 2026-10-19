@@ -17,7 +17,6 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QRegularExpression>
-#include <QScreen>
 #include <QTimer>
 
 #ifdef Q_OS_WIN
@@ -129,39 +128,6 @@ void flattenHeaders(QDialog* dialog)
   }
 }
 
-// dialogs open at a comfortable size on any display: at most 82% of the work
-// area (and 860px tall), so a 1080p screen shows them whole and a 1440p one
-// does not get a wall of a window; saved sizes above that are trimmed too
-void fitSize(QDialog* dialog)
-{
-  if (dialog->isMaximized() || dialog->isFullScreen() || dialog->screen() == nullptr) {
-    return;
-  }
-
-  const QRect area = dialog->screen()->availableGeometry();
-  const int maxWidth  = std::min(1240, static_cast<int>(area.width() * 0.82));
-  const int maxHeight = std::min(860, static_cast<int>(area.height() * 0.82));
-
-  QSize minimum = dialog->minimumSize();
-  minimum       = minimum.boundedTo(QSize(maxWidth, maxHeight));
-  dialog->setMinimumSize(minimum);
-
-  const QSize size = dialog->size().boundedTo(QSize(maxWidth, maxHeight));
-  if (size == dialog->size()) {
-    return;
-  }
-  dialog->resize(size);
-
-  // keep it centered where it was going to open
-  const QWidget* anchor = dialog->parentWidget() ? dialog->parentWidget()->window() : nullptr;
-  const QPoint center = anchor ? anchor->frameGeometry().center() : area.center();
-  QRect frame(QPoint(0, 0), dialog->frameGeometry().size().boundedTo(area.size()));
-  frame.moveCenter(center);
-  frame.moveLeft(std::clamp(frame.left(), area.left(), area.right() - frame.width()));
-  frame.moveTop(std::clamp(frame.top(), area.top(), area.bottom() - frame.height()));
-  dialog->move(frame.topLeft());
-}
-
 // the native title bar follows the theme's light or dark mode; Qt may set the
 // frame mode again while the dialog settles, so it is applied once more after
 void matchTitleBar(QDialog* dialog)
@@ -196,15 +162,25 @@ bool isOptionsDialog(const QDialog* dialog)
 namespace FluentDialogs
 {
 
+QSize maxSize(const QRect& available)
+{
+  return QSize(std::min(1240, static_cast<int>(available.width() * 0.82)),
+               std::min(860, static_cast<int>(available.height() * 0.82)));
+}
+
+bool polished(const QDialog* dialog)
+{
+  return dialog->property("fluentPolished").toBool();
+}
+
 void polish(QDialog* dialog)
 {
-  if (dialog == nullptr || dialog->property("fluentPolished").toBool() ||
+  if (dialog == nullptr || polished(dialog) ||
       qobject_cast<QMessageBox*>(dialog) != nullptr) {
     return;
   }
   dialog->setProperty("fluentPolished", true);
 
-  fitSize(dialog);
   flattenHeaders(dialog);
 
   if (isOptionsDialog(dialog)) {
