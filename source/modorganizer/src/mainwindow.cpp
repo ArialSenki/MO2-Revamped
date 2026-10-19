@@ -68,6 +68,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "report.h"
 #include "savegameinfo.h"
 #include "savestab.h"
+#include "fluentdashboard.h"
 #include "selectiondialog.h"
 #include "serverinfo.h"
 #include "settingsdialog.h"
@@ -223,7 +224,7 @@ const QSize LargeToolbarSize(42, 36);
 
 QString UnmanagedModName()
 {
-  return QObject::tr("<Unmanaged>");
+  return QObject::tr("Base game");
 }
 
 bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
@@ -423,6 +424,10 @@ public:
     updateFloatControl(dock->isFloating());
   }
 
+  // the folded state is remembered between sessions (see MainWindow)
+  bool isExpanded() const { return m_Expanded; }
+  std::function<void(bool)> expandedChanged;
+
   QSize sizeHint() const override { return QSize(180, 34); }
   QSize minimumSizeHint() const override { return QSize(82, 34); }
 
@@ -434,6 +439,9 @@ public:
 
     m_Expanded            = expanded;
     const int titleHeight = sizeHint().height();
+    if (expandedChanged) {
+      expandedChanged(expanded);
+    }
 
     // the log list and the dock carry minimum heights that would stop the
     // panel from folding; lift them while the panel moves
@@ -643,7 +651,11 @@ private:
       // Keep the mod name and status columns readable when the window narrows;
       // the remaining width is distributed proportionally by resizeColumns().
       constexpr int widths[] = {120, 150, 130, 105, 160, 90,
-                                105, 160, 130, 150, 140};
+                                105, 120, 130, 52, 140};
+      if (column == ModList::COL_PRIORITY) {
+        // the "#" column only holds short numbers
+        return widths[column];
+      }
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -676,6 +688,13 @@ private:
     m_weights.resize(m_header->count());
     for (int column = 0; column < m_header->count(); ++column) {
       m_weights[column] = std::max(1, m_header->sectionSize(column));
+    }
+
+    // the mod list's "#" column keeps its minimum instead of growing with the
+    // window
+    if (m_view->objectName() == QStringLiteral("modList") &&
+        ModList::COL_PRIORITY < m_header->count()) {
+      m_weights[ModList::COL_PRIORITY] = 1;
     }
   }
 
@@ -1516,6 +1535,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   // saves tab
   m_SavesTab.reset(new SavesTab(this, m_OrganizerCore, ui));
+  m_fluentDashboard->setSavesDirectory([this] { return m_SavesTab->currentSavesDir(); });
 
   // Hide stuff we do not need:
   auto& features = m_OrganizerCore.gameFeatures();
@@ -1803,6 +1823,8 @@ void MainWindow::resetActionIcons()
       m_originalNotificationIcon = icon;
     }
   }
+
+  applyFluentActionIcons();
 
   // update the button for the potentially new icon
   updateProblemsButton();
@@ -2565,6 +2587,19 @@ void MainWindow::showEvent(QShowEvent* event)
     // Mod Name section back into a non-interactive resize mode.
     new ResponsiveColumnSizer(ui->modList, this);
 
+    // Fluent v4 keeps the log folded to its one-line summary unless it was
+    // left open last time
+    if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget())) {
+      const QString file = m_OrganizerCore.settings().filename();
+      constexpr auto logExpandedKey = "Settings/fluent_v4_log_expanded";
+      if (!QSettings(file, QSettings::IniFormat).value(logExpandedKey, false).toBool()) {
+        QTimer::singleShot(0, logBar, [logBar] { logBar->setExpanded(false); });
+      }
+      logBar->expandedChanged = [file](bool expanded) {
+        QSettings(file, QSettings::IniFormat).setValue("Settings/fluent_v4_log_expanded", expanded);
+      };
+    }
+
     // this needs to be connected here instead of in the constructor because the
     // actual changing of the stylesheet is done by MOApplication, which
     // connects its signal in runApplication() (in main.cpp), and that happens
@@ -3037,7 +3072,8 @@ void MainWindow::updateModPageMenu()
   bool keepOriginalAction =
       modPagePlugins.size() == 0 && registeredSources.length() <= 1;
   if (keepOriginalAction) {
-    ui->toolBar->insertAction(ui->actionAdd_Profile, ui->actionNexus);
+    // next to the mod page action; Profiles may live in the overflow menu
+    ui->toolBar->insertAction(ui->actionTool, ui->actionNexus);
   } else {
     ui->toolBar->removeAction(ui->actionNexus);
   }

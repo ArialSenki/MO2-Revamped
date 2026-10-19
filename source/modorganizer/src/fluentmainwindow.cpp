@@ -3,6 +3,7 @@
 // defaults. The widgets themselves live in mainwindow.ui; this file only adds
 // behavior that a stylesheet cannot express.
 
+#include "fluentdashboard.h"
 #include "fluentmotion.h"
 #include "mainwindow.h"
 #include "organizercore.h"
@@ -10,6 +11,8 @@
 #include "uilocker.h"
 #include "ui_mainwindow.h"
 
+#include <QAbstractButton>
+#include <QAction>
 #include <QApplication>
 #include <QEvent>
 #include <QIcon>
@@ -19,6 +22,7 @@
 #include <QPixmap>
 #include <QStyle>
 #include <QTimer>
+#include <QToolBar>
 #include <QToolButton>
 
 namespace
@@ -93,6 +97,28 @@ void repolish(QWidget* w)
   w->style()->polish(w);
   w->update();
 }
+
+// a Segoe Fluent Icons glyph as a monochrome icon in the given color
+QIcon glyphIcon(char16_t glyph, const QColor& color)
+{
+  QIcon icon;
+  for (int size : {16, 20, 24, 32, 48}) {
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::transparent);
+
+    QPainter p(&pixmap);
+    p.setRenderHint(QPainter::TextAntialiasing);
+    QFont f = fluentIconFont(10);
+    f.setPixelSize(size - 2);
+    p.setFont(f);
+    p.setPen(color);
+    p.drawText(pixmap.rect(), Qt::AlignCenter, QString(QChar(glyph)));
+    p.end();
+
+    icon.addPixmap(pixmap);
+  }
+  return icon;
+}
 }  // namespace
 
 void MainWindow::setupFluentLayout()
@@ -127,6 +153,9 @@ void MainWindow::setupFluentLayout()
   updateMoreActionsMenu();
 
   ui->activeModslabel->setText(tr("Active"));
+
+  m_fluentDashboard = new FluentDashboard(ui, m_OrganizerCore, this);
+  setupFluentCommandBar();
 
   setRunState(RunState::Idle);
   new IconTint(ui->startButton, QStringLiteral(":/MO/gui/mainwindow/run.svg"));
@@ -261,22 +290,89 @@ QIcon MainWindow::fluentToolIcon(const QString& name)
     }
   }
 
-  QIcon icon;
-  for (int size : {16, 20, 24, 32}) {
-    QPixmap pixmap(size, size);
-    pixmap.fill(Qt::transparent);
+  return glyphIcon(glyph, color);
+}
 
-    QPainter p(&pixmap);
-    p.setRenderHint(QPainter::TextAntialiasing);
-    QFont f = fluentIconFont(10);
-    f.setPixelSize(size - 2);
-    p.setFont(f);
-    p.setPen(color);
-    p.drawText(pixmap.rect(), Qt::AlignCenter, QString(QChar(glyph)));
-    p.end();
+void MainWindow::setupFluentCommandBar()
+{
+  QToolBar* bar = ui->toolBar;
 
-    icon.addPixmap(pixmap);
+  // the command bar keeps the everyday actions; setup, links and help move
+  // into one overflow button at the far right. The actions stay on the window
+  // so their shortcuts keep working.
+  const QList<QAction*> overflow = {ui->actionAdd_Profile, ui->actionModify_Executables,
+                                    ui->action_Refresh, ui->actionEndorseMO,
+                                    ui->actionUpdate, ui->actionHelp};
+  for (QAction* action : overflow) {
+    bar->removeAction(action);
+    addAction(action);
   }
 
-  return icon;
+  bar->removeAction(ui->actionSettings);
+  bar->addAction(ui->actionSettings);
+
+  auto* menu = new QMenu(this);
+  menu->addAction(ui->actionAdd_Profile);
+  menu->addAction(ui->actionModify_Executables);
+  menu->addAction(ui->action_Refresh);
+  menu->addSeparator();
+  menu->addAction(ui->actionEndorseMO);
+  menu->addAction(ui->actionUpdate);
+  menu->addAction(ui->actionHelp);
+
+  m_fluentOverflowAction = new QAction(tr("More"), this);
+  m_fluentOverflowAction->setObjectName(QStringLiteral("actionFluentMore"));
+  m_fluentOverflowAction->setToolTip(tr("Profiles, executables, refresh, links and help"));
+  m_fluentOverflowAction->setMenu(menu);
+  bar->addAction(m_fluentOverflowAction);
+  if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_fluentOverflowAction))) {
+    button->setPopupMode(QToolButton::InstantPopup);
+  }
+
+  // low priority actions show their icon only next to labeled ones
+  for (QAction* action : {ui->actionNotifications, ui->actionSettings,
+                          m_fluentOverflowAction}) {
+    action->setPriority(QAction::LowPriority);
+  }
+
+  applyFluentActionIcons();
+}
+
+void MainWindow::applyFluentActionIcons()
+{
+  // monochrome Fluent glyphs in the toolbar's text color replace the
+  // stylesheet's colored icons, so the command bar reads as one set
+  const QColor color = ui->toolBar->palette().color(QPalette::ButtonText);
+
+  const std::pair<QAction*, char16_t> glyphs[] = {
+      {ui->actionChange_Game, 0xE8AB},         // Switch
+      {ui->actionInstallMod, 0xE896},          // Download
+      {ui->actionNexus, 0xE774},               // Globe
+      {ui->actionModPage, 0xE774},             // Globe
+      {ui->actionAdd_Profile, 0xE716},         // People
+      {ui->action_Refresh, 0xE72C},            // Refresh
+      {ui->actionModify_Executables, 0xE71D},  // AllApps
+      {ui->actionTool, 0xE90F},                // Repair
+      {ui->actionSettings, 0xE713},            // Settings
+      {ui->actionEndorseMO, 0xEB51},           // Heart
+      {ui->actionNotifications, 0xEA8F},       // Ringer
+      {ui->actionUpdate, 0xE943},              // Code
+      {ui->actionHelp, 0xE897},                // Help
+      {m_fluentOverflowAction, MoreGlyph},
+  };
+
+  for (const auto& [action, glyph] : glyphs) {
+    if (action == nullptr) {
+      continue;
+    }
+    const QIcon icon = glyphIcon(glyph, color);
+    action->setIcon(icon);
+    if (auto* button =
+            qobject_cast<QAbstractButton*>(ui->toolBar->widgetForAction(action))) {
+      button->setIcon(icon);
+    }
+    if (action == ui->actionNotifications) {
+      m_originalNotificationIcon = icon;
+    }
+  }
 }

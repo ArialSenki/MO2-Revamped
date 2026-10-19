@@ -1,10 +1,12 @@
 #include "modlistview.h"
+#include "fluentstatusdelegate.h"
 #include <QApplication>
 #include <QHash>
 #include <QMimeData>
 #include <QPainter>
 #include <QPersistentModelIndex>
 #include <QProxyStyle>
+#include <QSettings>
 #include <QUrl>
 #include <QVariantAnimation>
 
@@ -678,6 +680,17 @@ void ModListView::updateModCount()
                              .arg(c.visible.backup)
                              .arg(c.separator)
                              .arg(c.visible.separator));
+
+  emit modCountChanged();
+}
+
+void ModListView::setQuickFilter(int specialCategory)
+{
+  std::vector<ModListSortProxy::Criteria> criteria;
+  if (specialCategory >= 0) {
+    criteria.push_back({ModListSortProxy::TypeSpecial, specialCategory, false});
+  }
+  m_filters->select(criteria);
 }
 
 void ModListView::refreshFilters()
@@ -913,9 +926,7 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
 
   setItemDelegateForColumn(ModList::COL_FLAGS,
                            new ModFlagIconDelegate(this, ModList::COL_FLAGS, 120));
-  setItemDelegateForColumn(
-      ModList::COL_CONFLICTFLAGS,
-      new ModConflictIconDelegate(this, ModList::COL_CONFLICTFLAGS, 80));
+  setItemDelegateForColumn(ModList::COL_CONFLICTFLAGS, new FluentStatusDelegate(this));
   setItemDelegateForColumn(ModList::COL_CONTENT,
                            new ModContentIconDelegate(this, ModList::COL_CONTENT, 150));
   setItemDelegateForColumn(ModList::COL_VERSION,
@@ -982,6 +993,12 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
           &ModListView::onModFilterActive);
   connect(m_filters.get(), &FilterList::criteriaChanged, [=](auto&& v) {
     onFiltersCriteria(v);
+
+    int quick = v.empty() ? -1 : -2;
+    if (v.size() == 1 && v[0].type == ModListSortProxy::TypeSpecial && !v[0].inverse) {
+      quick = v[0].id;
+    }
+    emit quickFilterChanged(quick);
   });
   connect(m_filters.get(), &FilterList::optionsChanged, [=](auto&& mode, auto&& sep) {
     setFilterOptions(mode, sep);
@@ -1002,6 +1019,35 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
 void ModListView::restoreState(const Settings& s)
 {
   s.geometry().restoreState(header());
+
+  // Fluent v4 table, applied once over the saved layout: # · name · status ·
+  // version. Every other column stays one right-click away in the header.
+  QSettings layout(s.filename(), QSettings::IniFormat);
+  constexpr auto columnsAppliedKey = "Settings/fluent_v4_mod_columns_applied";
+  if (!layout.value(columnsAppliedKey, false).toBool()) {
+    QHeaderView* h = header();
+    for (int column : {ModList::COL_FLAGS, ModList::COL_CONTENT, ModList::COL_CATEGORY,
+                       ModList::COL_MODID, ModList::COL_GAME, ModList::COL_INSTALLTIME,
+                       ModList::COL_NOTES}) {
+      h->setSectionHidden(column, true);
+    }
+    const int order[] = {ModList::COL_PRIORITY, ModList::COL_NAME,
+                         ModList::COL_CONFLICTFLAGS, ModList::COL_VERSION};
+    for (int position = 0; position < static_cast<int>(std::size(order)); ++position) {
+      h->setSectionHidden(order[position], false);
+      h->moveSection(h->visualIndex(order[position]), position);
+    }
+    for (int column = 0; column < h->count(); ++column) {
+      h->setSectionResizeMode(column, QHeaderView::Interactive);
+    }
+    h->resizeSection(ModList::COL_PRIORITY, 52);
+    h->resizeSection(ModList::COL_CONFLICTFLAGS, 170);
+    h->resizeSection(ModList::COL_VERSION, 140);
+    h->setSectionResizeMode(ModList::COL_NAME, QHeaderView::Stretch);
+
+    layout.setValue(columnsAppliedKey, true);
+    layout.sync();
+  }
 
   s.widgets().restoreIndex(ui.groupBy);
   s.widgets().restoreTreeExpandState(this);

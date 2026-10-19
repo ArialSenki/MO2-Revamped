@@ -122,6 +122,11 @@ public:
   void scrollToAndSelect(const QModelIndexList& indexes,
                          const QModelIndex& current = QModelIndex());
 
+  // Fluent v4 quick filters: keep only the given special filter (a
+  // CategoryFactory::SpecialCategories value), or clear the panel with -1
+  //
+  void setQuickFilter(int specialCategory);
+
   // refresh the view (to call when settings have been changed)
   //
   void refresh();
@@ -136,6 +141,15 @@ signals:
   // is expanded and the position of the indicator
   //
   void dropEntered(const QMimeData* mimeData, bool dropExpanded, DropPosition position);
+
+  // emitted after the mod counter was updated (Fluent v4 summary row)
+  //
+  void modCountChanged();
+
+  // emitted when the filter criteria change: the special filter id when the
+  // panel holds exactly that one filter, -1 when it is empty, -2 otherwise
+  //
+  void quickFilterChanged(int specialCategory);
 
 public slots:
 

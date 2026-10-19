@@ -90,13 +90,16 @@ void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
   QString apiState;
 
   if (user.type() == APIUserAccountTypes::None) {
-    text     = "API: not logged in";
+    text     = tr("Nexus: not signed in");
+    m_api->setToolTip(tr("Sign in to Nexus Mods in Settings to check for updates."));
     apiState = QStringLiteral("offline");
   } else {
-    text = QString("API: Queued: %1 | Daily: %2 | Hourly: %3")
-               .arg(stats.requestsQueued)
-               .arg(user.limits().remainingDailyRequests)
-               .arg(user.limits().remainingHourlyRequests);
+    // one short figure in the bar, the full breakdown on hover
+    text = tr("Nexus API: %1 left today").arg(user.limits().remainingDailyRequests);
+    m_api->setToolTip(tr("Queued requests: %1\nRemaining today: %2\nRemaining this hour: %3")
+                          .arg(stats.requestsQueued)
+                          .arg(user.limits().remainingDailyRequests)
+                          .arg(user.limits().remainingHourlyRequests));
 
     if (user.remainingRequests() > 500) {
       apiState = QStringLiteral("healthy");

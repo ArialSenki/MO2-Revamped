@@ -270,16 +270,13 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       return QVariant();
     }
   } else if (role == Qt::TextAlignmentRole) {
-    if (column == COL_NAME) {
-      if (modInfo->getHighlight() & ModInfo::HIGHLIGHT_CENTER) {
-        return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
-      } else {
-        return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
-      }
-    } else if (column == COL_VERSION) {
-      return QVariant(Qt::AlignRight | Qt::AlignVCenter);
-    } else if (column == COL_NOTES) {
+    // Fluent tables: text columns start at the left edge, the priority
+    // number lines up on the right; icon columns stay centered
+    if (column == COL_NAME || column == COL_VERSION || column == COL_NOTES ||
+        column == COL_CATEGORY || column == COL_GAME || column == COL_INSTALLTIME) {
       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+    } else if (column == COL_PRIORITY || column == COL_MODID) {
+      return QVariant(Qt::AlignRight | Qt::AlignVCenter);
     } else {
       return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
     }
@@ -334,21 +331,16 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       if (modInfo->updateAvailable() || modInfo->downgradeAvailable()) {
         result.setWeight(QFont::Bold);
       }
-      if (modInfo->canBeUpdated()) {
-        result.setItalic(true);
-      }
     }
     return result;
   } else if (role == Qt::DecorationRole) {
     if (column == COL_NAME && modInfo->isOverwrite()) {
       return QIcon(":/MO/gui/mainwindow/files/folder.svg");
     } else if (column == COL_VERSION) {
-      if (modInfo->updateAvailable()) {
-        return QIcon(":/MO/gui/mainwindow/status/update.svg");
-      } else if (modInfo->downgradeAvailable()) {
+      // a new version shows in the Status column; only the unusual
+      // "installed is newer" case keeps its mark here
+      if (!modInfo->updateAvailable() && modInfo->downgradeAvailable()) {
         return QIcon(":/MO/gui/mainwindow/status/warning.svg");
-      } else if (modInfo->version().scheme() == VersionInfo::SCHEME_DATE) {
-        return QIcon(":/MO/gui/mainwindow/status/version.svg");
       }
     }
     return QVariant();
@@ -603,7 +595,11 @@ QVariant ModList::headerData(int section, Qt::Orientation orientation, int role)
     } else if (role == Qt::ToolTipRole) {
       return getColumnToolTip(section);
     } else if (role == Qt::TextAlignmentRole) {
-      return QVariant(Qt::AlignCenter);
+      // Fluent tables align headings with their content
+      if (section == COL_PRIORITY) {
+        return QVariant(Qt::AlignRight | Qt::AlignVCenter);
+      }
+      return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
     } else if (role == MOBase::EnabledColumnRole) {
       if (section == COL_CONTENT) {
         return !m_Organizer->modDataContents().empty();
@@ -1273,17 +1269,17 @@ QString ModList::getColumnName(int column)
 {
   switch (column) {
   case COL_CONFLICTFLAGS:
-    return tr("Conflicts");
+    return tr("Status");
   case COL_FLAGS:
     return tr("Flags");
   case COL_CONTENT:
     return tr("Content");
   case COL_NAME:
-    return tr("Mod Name");
+    return tr("Name");
   case COL_VERSION:
     return tr("Version");
   case COL_PRIORITY:
-    return tr("Priority");
+    return QStringLiteral("#");
   case COL_CATEGORY:
     return tr("Category");
   case COL_GAME:
@@ -1317,7 +1313,7 @@ QString ModList::getColumnToolTip(int column) const
   case COL_MODID:
     return tr("Id of the mod as used on Nexus.");
   case COL_CONFLICTFLAGS:
-    return tr("Indicators of file conflicts between mods.");
+    return tr("New versions and file conflicts with other mods.");
   case COL_FLAGS:
     return tr("Emblems to highlight things that might require attention.");
   case COL_CONTENT: {
