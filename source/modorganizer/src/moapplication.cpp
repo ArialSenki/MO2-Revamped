@@ -50,6 +50,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractButton>
 #include <QMenu>
 #include <QMessageBox>
+#include <QTreeView>
 #include <QMouseEvent>
 #include <QPalette>
 #include <QPainter>
@@ -1230,6 +1231,13 @@ bool MOApplication::setStyleFile(const QString& styleName)
 
 bool MOApplication::notify(QObject* receiver, QEvent* event)
 {
+  // Fluent v4: trees open and close their branches with a slide
+  if (event->type() == QEvent::Polish && property("revampedFluent").toBool()) {
+    if (auto* tree = qobject_cast<QTreeView*>(receiver)) {
+      tree->setAnimated(FluentMotion::enabled());
+    }
+  }
+
   if (event->type() == QEvent::Show && !event->spontaneous()) {
     if (auto* dialog = qobject_cast<QDialog*>(receiver);
         dialog != nullptr && dialog->isWindow()) {

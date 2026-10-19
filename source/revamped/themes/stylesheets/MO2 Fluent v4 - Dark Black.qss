@@ -8220,6 +8220,25 @@ QFrame#fluentSettingRow[fluentGridRow="true"] {
     border-top: none;
 }
 
+/* Animated switches: FluentSwitchPainter draws them in these colors over the
+   indicator, so the still images above are hidden. */
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator,
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator:unchecked,
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator:unchecked:hover,
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator:checked,
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator:checked:hover,
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator:unchecked:disabled,
+QCheckBox[fluentSwitch="true"][fluentAnimated="true"]::indicator:checked:disabled {
+    image: none;
+}
+FluentSwitchPainter {
+    qproperty-onColor: #D6D6D6;
+    qproperty-offColor: #262626;
+    qproperty-borderColor: #8F8F8F;
+    qproperty-knobOnColor: #000000;
+    qproperty-knobOffColor: #BDBDBD;
+}
+
 /* Settings controls at the Windows 11 size: 32px fields, buttons and lists
    (the page-specific rules of the base theme made them up to 44px). */
 QDialog#SettingsDialog QWidget#fluentNavPage QPushButton {
