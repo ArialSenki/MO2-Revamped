@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "revampedtheme.h"
 #include "fluentdialogs.h"
 #include "fluenticons.h"
+#include "fluentmotion.h"
 #include "commandline.h"
 #include "instancemanager.h"
 #include "loglist.h"
@@ -1266,6 +1267,11 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
           sizeof(preference));
       useRoundedRegionFallback = FAILED(result);
 #endif
+
+      // Fluent v4: menus and lists slide in, tooltips fade in
+      if (property("revampedFluent").toBool() && !event->spontaneous()) {
+        FluentMotion::popIn(popup, isToolTip ? 0 : 6);
+      }
 
       if (useRoundedRegionFallback) {
         QPainterPath roundedPopup;

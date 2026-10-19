@@ -224,6 +224,8 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         text = QLabel(description, card)
         text.setObjectName("mo2RevampedAboutFeatureText")
         text.setWordWrap(True)
+        # the text starts under the title instead of floating in the card
+        text.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         card_layout.addWidget(text, 1)
         return card
 
@@ -356,14 +358,16 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         feature_grid.addWidget(
             self._about_feature(
                 _tr("Interface and diagnostics"),
-                _tr("Includes the light and dark MO2 Classic Refined themes, plus "
-                    "tools to prepare diagnostic reports."),
+                _tr("Includes Windows 11 style themes (Light, Dark and Dark Black) "
+                    "with Fluent icons, plus tools to prepare diagnostic reports."),
                 overview_page,
             ),
             1,
             1,
         )
-        overview_layout.addLayout(feature_grid, 1)
+        # cards keep their natural height; spare room goes below them
+        overview_layout.addLayout(feature_grid)
+        overview_layout.addStretch(1)
 
         compatibility_note = QLabel(
             _tr("Elden Ring-specific features are only enabled in an instance "
@@ -428,7 +432,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             self._about_feature(
                 _tr("Profiles and interface"),
                 _tr("Save isolation · {saves}\nStartup options · {startup}\n"
-                    "MO2 Classic Refined · Light and Dark").format(
+                    "Fluent themes · Light, Dark and Dark Black").format(
                     saves="alpha.76", startup="0.5.0.64"
                 ),
                 components_page,
@@ -436,7 +440,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             1,
             1,
         )
-        components_layout.addLayout(components_grid, 1)
+        # cards keep their natural height; spare room goes below them
+        components_layout.addLayout(components_grid)
+        components_layout.addStretch(1)
 
         component_versions_note = QLabel(
             _tr("These are the versions included in this build; they are not "

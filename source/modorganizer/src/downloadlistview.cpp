@@ -580,3 +580,38 @@ void DownloadListView::issueRemoveFromViewUninstalled()
     emit removeDownload(-3, false);
   }
 }
+
+void DownloadListView::paintEvent(QPaintEvent* event)
+{
+  QTreeView::paintEvent(event);
+
+  if (model() == nullptr || model()->rowCount() > 0) {
+    return;
+  }
+
+  // Windows 11 empty state: a muted glyph, a title and one line of help
+  QPainter p(viewport());
+  p.setRenderHint(QPainter::Antialiasing);
+  p.setRenderHint(QPainter::TextAntialiasing);
+
+  const QRect area = viewport()->rect().adjusted(24, 0, -24, 0);
+  const int glyph  = 32;
+  const int top    = area.center().y() - 56;
+
+  FluentIcons::glyph(0xE896, FluentIcons::Tone::Muted)
+      .paint(&p, QRect(area.center().x() - glyph / 2, top, glyph, glyph));
+
+  QFont titleFont = font();
+  titleFont.setPointSizeF(titleFont.pointSizeF() + 3);
+  titleFont.setWeight(QFont::DemiBold);
+  p.setFont(titleFont);
+  p.setPen(palette().color(QPalette::Text));
+  const QRect title(area.left(), top + glyph + 12, area.width(), 28);
+  p.drawText(title, Qt::AlignHCenter | Qt::AlignVCenter, tr("No downloads yet"));
+
+  p.setFont(font());
+  p.setPen(FluentIcons::color(FluentIcons::Tone::Muted));
+  const QRect help(area.left(), title.bottom() + 4, area.width(), 44);
+  p.drawText(help, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap,
+             tr("Archives you download with Nexus or add with Install appear here."));
+}

@@ -1245,11 +1245,12 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   setStartupDiagnosticPhase("mainwindow.construct.begin");
   writeStartupDiagnosticEvent("mainwindow.construct.begin");
 
-  // Keep the slow native menu fade disabled while allowing lighter menu and
-  // combo motion effects.
+  // Qt's own popup effects (a slow fade, a roll-down) are replaced by the
+  // Fluent entrance in MOApplication::notify; classic themes keep the roll
+  const bool fluentPopups = qApp->property("revampedFluent").toBool();
   QApplication::setEffectEnabled(Qt::UI_FadeMenu, false);
-  QApplication::setEffectEnabled(Qt::UI_AnimateMenu, true);
-  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, true);
+  QApplication::setEffectEnabled(Qt::UI_AnimateMenu, !fluentPopups);
+  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, !fluentPopups);
   QApplication::setEffectEnabled(Qt::UI_AnimateTooltip, false);
   QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
 

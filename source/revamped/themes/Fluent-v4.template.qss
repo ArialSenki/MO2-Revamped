@@ -1356,3 +1356,31 @@ QDialog#SettingsDialog QWidget#fluentNavPage QLabel#fluentSettingSubheading {
     padding: 10px 4px 2px 4px;
     background-color: transparent;
 }
+
+/* About MO2 Revamped (python plugin): pivot tabs like the rest of Fluent. */
+QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs::pane {
+    background-color: @card@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+    top: -1px;
+}
+QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab {
+    color: @muted@;
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0px;
+    min-height: 22px;
+    padding: 7px 12px 5px 12px;
+    margin: 0px 2px 0px 0px;
+}
+QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab:hover {
+    color: @text@;
+    background-color: transparent;
+    border-bottom-color: @line@;
+}
+QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab:selected {
+    color: @text@;
+    background-color: transparent;
+    border-bottom: 3px solid @accent@;
+}

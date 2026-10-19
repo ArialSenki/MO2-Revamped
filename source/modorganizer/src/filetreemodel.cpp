@@ -1171,55 +1171,5 @@ QString FileTreeModel::makeTooltip(const FileTreeItem& item) const
 
 QVariant FileTreeModel::makeIcon(const FileTreeItem& item) const
 {
-  // FluentIcons caches the icons, so asking for one per row is cheap
-  const auto icon = [](const QString& name) {
-    return FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/") + name +
-                             QStringLiteral(".svg"));
-  };
-
-  if (item.isDirectory()) {
-    return icon(QStringLiteral("folder"));
-  }
-
-  const QString extension = QFileInfo(item.filename()).suffix().toLower();
-  if (extension == "exe" || extension == "com") {
-    return icon(QStringLiteral("executable"));
-  }
-  if (extension == "dll" || extension == "so" || extension == "dylib") {
-    return icon(QStringLiteral("library"));
-  }
-  if (extension == "bdt" || extension == "bhd" || extension == "bin" ||
-      extension == "dat") {
-    return icon(QStringLiteral("game-data"));
-  }
-  if (extension == "dcx" || extension == "bnd" || extension == "zip" ||
-      extension == "7z" || extension == "rar" || extension == "tar" ||
-      extension == "gz" || extension == "xz" || extension == "bsa" ||
-      extension == "ba2" || extension == "pak") {
-    return icon(QStringLiteral("archive"));
-  }
-  if (extension == "ini" || extension == "json" || extension == "xml" ||
-      extension == "toml" || extension == "yaml" || extension == "yml" ||
-      extension == "cfg" || extension == "conf") {
-    return icon(QStringLiteral("config"));
-  }
-  if (extension == "hks" || extension == "lua" || extension == "py" ||
-      extension == "js" || extension == "bat" || extension == "cmd" ||
-      extension == "ps1") {
-    return icon(QStringLiteral("script"));
-  }
-  if (extension == "png" || extension == "jpg" || extension == "jpeg" ||
-      extension == "dds" || extension == "tga" || extension == "bmp" ||
-      extension == "gif" || extension == "webp") {
-    return icon(QStringLiteral("image"));
-  }
-  if (extension == "sl2" || extension == "co2" || extension == "bak") {
-    return icon(QStringLiteral("save"));
-  }
-  if (extension == "txt" || extension == "md" || extension == "log" ||
-      extension == "csv") {
-    return icon(QStringLiteral("text"));
-  }
-
-  return icon(QStringLiteral("file"));
+  return FluentIcons::file(item.filename(), item.isDirectory());
 }

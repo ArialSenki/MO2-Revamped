@@ -93,6 +93,9 @@ signals:
   void openInDownloadsFolder(int index);
 
 protected:
+  // an empty list explains where downloads come from
+  void paintEvent(QPaintEvent* event) override;
+
   void keyPressEvent(QKeyEvent* event) override;
 
 private slots:

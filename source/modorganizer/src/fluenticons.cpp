@@ -7,6 +7,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QCache>
+#include <QFileInfo>
 #include <QHash>
 #include <QIconEngine>
 #include <QImage>
@@ -481,6 +482,63 @@ QIcon icon(const QString& resource)
     return *original;
   }
   return *originals.insert(resource, QIcon(resource));
+}
+
+QIcon file(const QString& fileName, bool directory)
+{
+  // the icons are cached by icon(), so asking for one per row is cheap
+  const auto fileIcon = [](const QString& name) {
+    return FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/") + name +
+                             QStringLiteral(".svg"));
+  };
+
+  if (directory) {
+    return fileIcon(QStringLiteral("folder"));
+  }
+
+  const QString extension = QFileInfo(fileName).suffix().toLower();
+  if (extension == "exe" || extension == "com") {
+    return fileIcon(QStringLiteral("executable"));
+  }
+  if (extension == "dll" || extension == "so" || extension == "dylib") {
+    return fileIcon(QStringLiteral("library"));
+  }
+  if (extension == "bdt" || extension == "bhd" || extension == "bin" ||
+      extension == "dat") {
+    return fileIcon(QStringLiteral("game-data"));
+  }
+  if (extension == "dcx" || extension == "bnd" || extension == "zip" ||
+      extension == "7z" || extension == "rar" || extension == "tar" ||
+      extension == "gz" || extension == "xz" || extension == "bsa" ||
+      extension == "ba2" || extension == "pak") {
+    return fileIcon(QStringLiteral("archive"));
+  }
+  if (extension == "ini" || extension == "json" || extension == "xml" ||
+      extension == "toml" || extension == "yaml" || extension == "yml" ||
+      extension == "cfg" || extension == "conf") {
+    return fileIcon(QStringLiteral("config"));
+  }
+  if (extension == "hks" || extension == "lua" || extension == "py" ||
+      extension == "js" || extension == "bat" || extension == "cmd" ||
+      extension == "ps1") {
+    return fileIcon(QStringLiteral("script"));
+  }
+  if (extension == "png" || extension == "jpg" || extension == "jpeg" ||
+      extension == "dds" || extension == "tga" || extension == "bmp" ||
+      extension == "gif" || extension == "webp") {
+    return fileIcon(QStringLiteral("image"));
+  }
+  // Elden Ring saves, Seamless Co-op (co2) and Convergence (cnv) saves
+  if (extension == "sl2" || extension == "co2" || extension == "cnv" ||
+      extension == "bak") {
+    return fileIcon(QStringLiteral("save"));
+  }
+  if (extension == "txt" || extension == "md" || extension == "log" ||
+      extension == "csv") {
+    return fileIcon(QStringLiteral("text"));
+  }
+
+  return fileIcon(QStringLiteral("file"));
 }
 
 bool isGlyph(const QIcon& icon)

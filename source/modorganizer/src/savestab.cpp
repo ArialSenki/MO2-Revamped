@@ -6,7 +6,9 @@
 #include <iplugingame.h>
 #include <localsavegames.h>
 #include <isavegameinfowidget.h>
+#include <QHeaderView>
 #include <QIcon>
+#include <QLocale>
 #include <QTimer>
 
 using namespace MOBase;
@@ -225,10 +227,23 @@ void SavesTab::refreshSaveListNow()
               });
 
     ui.list->clear();
+
+    // a third column shows when each save was written, newest first
+    if (ui.list->columnCount() < 3) {
+      ui.list->setColumnCount(3);
+      ui.list->headerItem()->setText(2, tr("Modified"));
+      ui.list->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    }
+
+    const QLocale locale;
     for (auto& save : m_SaveGames) {
       auto relpath = savesDir.relativeFilePath(save->getFilepath());
       auto display = save->getName();
-      ui.list->addTopLevelItem(new QTreeWidgetItem(ui.list, {display, relpath}));
+      auto* item   = new QTreeWidgetItem(
+          ui.list, {display, relpath,
+                    locale.toString(save->getCreationTime(), QLocale::ShortFormat)});
+      item->setIcon(0, FluentIcons::file(save->getFilepath(), false));
+      ui.list->addTopLevelItem(item);
     }
   } catch (std::exception& e) {
     // listSaves() can throw
