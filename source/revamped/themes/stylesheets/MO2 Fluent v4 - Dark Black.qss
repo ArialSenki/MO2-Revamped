@@ -8150,3 +8150,93 @@ QLabel#fluentCardTitle {
     font-size: 12pt;
     font-weight: 600;
 }
+
+/* Settings-style navigation (FluentNavigation): the list paints its own
+   rows; the pages lose the tab pane frame. */
+QListWidget#fluentNav,
+QListWidget#fluentNav:focus {
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+QWidget#fluentNavPage {
+    background-color: transparent;
+}
+QTabWidget[fluentNavigation="true"]::pane {
+    border: none;
+    background-color: transparent;
+    top: 0px;
+}
+
+/* Settings rows (FluentSettings): title and description on the left, a
+   toggle switch on the right, hairlines between the rows of a card. */
+QFrame#fluentSettingRow {
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid #2C2C2C;
+}
+QFrame#fluentSettingRow:hover {
+    background-color: #2A2A2A;
+}
+QLabel#fluentSettingTitle {
+    color: #EDEDED;
+    background-color: transparent;
+}
+QLabel#fluentSettingDescription {
+    color: #8F8F8F;
+    font-size: 8.5pt;
+    background-color: transparent;
+}
+QLabel#fluentSettingTitle:disabled,
+QLabel#fluentSettingDescription:disabled {
+    color: #4F4F4F;
+}
+QCheckBox[fluentSwitch="true"] {
+    spacing: 0px;
+    background-color: transparent;
+}
+QCheckBox[fluentSwitch="true"]::indicator,
+QCheckBox[fluentSwitch="true"]::indicator:unchecked {
+    width: 40px;
+    height: 20px;
+    image: url(./mo2-fluent-v4-black/switch-off.svg);
+}
+QCheckBox[fluentSwitch="true"]::indicator:unchecked:hover {
+    image: url(./mo2-fluent-v4-black/switch-off-hover.svg);
+}
+QCheckBox[fluentSwitch="true"]::indicator:checked {
+    image: url(./mo2-fluent-v4-black/switch-on.svg);
+}
+QCheckBox[fluentSwitch="true"]::indicator:checked:hover {
+    image: url(./mo2-fluent-v4-black/switch-on-hover.svg);
+}
+QCheckBox[fluentSwitch="true"]::indicator:unchecked:disabled {
+    image: url(./mo2-fluent-v4-black/switch-off-disabled.svg);
+}
+QCheckBox[fluentSwitch="true"]::indicator:checked:disabled {
+    image: url(./mo2-fluent-v4-black/switch-on-disabled.svg);
+}
+QFrame#fluentSettingRow[fluentGridRow="true"] {
+    border-top: none;
+}
+
+/* Settings controls at the Windows 11 size: 32px fields, buttons and lists
+   (the page-specific rules of the base theme made them up to 44px). */
+QDialog#SettingsDialog QWidget#fluentNavPage QPushButton {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 4px 16px;
+    border-radius: 4px;
+}
+QDialog#SettingsDialog QWidget#fluentNavPage QLineEdit {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+QDialog#SettingsDialog QWidget#fluentNavPage QComboBox {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 4px 10px;
+    border-radius: 4px;
+}

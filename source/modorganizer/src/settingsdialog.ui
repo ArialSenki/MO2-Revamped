@@ -486,7 +486,7 @@
        <item>
         <widget class="QLabel" name="themePageSubtitle">
          <property name="text">
-          <string>Choose Light, Dark Blue, or Dark Black, then customize the highlights used for mod conflicts and selected plugins.</string>
+          <string>Choose a light or dark theme, then customize the highlights used for mod conflicts and selected plugins.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>

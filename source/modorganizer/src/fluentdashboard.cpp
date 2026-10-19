@@ -257,6 +257,7 @@ void FluentDashboard::setupBanner(QWidget* central)
 
   // the button carries its own style sheet (see MainWindow), which wins over
   // the theme for its size; make it the banner's large call to action
+  ui->startButton->setProperty("fluentKeepIcon", true);
   ui->startButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   ui->startButton->setMinimumWidth(220);
   ui->startButton->setStyleSheet(

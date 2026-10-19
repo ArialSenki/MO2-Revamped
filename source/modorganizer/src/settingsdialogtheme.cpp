@@ -8,6 +8,7 @@
 #include <QBoxLayout>
 #include <QCoreApplication>
 #include <QDir>
+#include <QFile>
 #include <QHBoxLayout>
 #include <QLayoutItem>
 #include <QStringList>
@@ -100,9 +101,16 @@ void ThemeSettingsTab::addStyles()
       continue;
     }
 
+    // the Fluent themes install under the same file names; their dark theme
+    // is neutral rather than blue
+    QFile file(styleDirectory.filePath(fileName));
+    const bool fluent = file.open(QIODevice::ReadOnly) &&
+                        QString::fromUtf8(file.read(512)).contains(
+                            QStringLiteral("MO2 Revamped Fluent v4"));
     const QString displayName =
         fileName == QStringLiteral("Light.qss") ? QObject::tr("Light")
         : fileName == QStringLiteral("dark-black.qss") ? QObject::tr("Dark Black")
+        : fluent                                       ? QObject::tr("Dark")
                                                        : QObject::tr("Dark Blue");
     ui->styleBox->addItem(displayName, fileName);
   }

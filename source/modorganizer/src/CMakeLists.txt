@@ -189,6 +189,10 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	datatab
 	downloadstab
 	fluentdashboard
+	fluenticons
+	fluentnavigation
+	fluentsettings
+	fluentstatusdelegate
 	fluentmotion
 	fluenttabwidget
 	iconfetcher

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <QBoxLayout>
+#include <QCoreApplication>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -25,6 +26,13 @@ inline QLabel* createBadge(QWidget* parent, const QString& objectName,
   badge->setObjectName(objectName);
   badge->setAlignment(Qt::AlignCenter);
   badge->setFixedSize(size, size);
+
+  // Fluent v4 headings are plain text, like Windows 11 Settings
+  if (const auto* app = QCoreApplication::instance();
+      app != nullptr && app->property("revampedFluent").toBool()) {
+    badge->hide();
+    return badge;
+  }
 
   const int iconSize = std::max(12, size / 2);
   const QPixmap pixmap = QIcon(iconPath).pixmap(QSize(iconSize, iconSize));

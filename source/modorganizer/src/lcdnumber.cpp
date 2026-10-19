@@ -18,6 +18,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "lcdnumber.h"
 
 #include <QFrame>
+
+#include <algorithm>
 #include <QHBoxLayout>
 #include <QLayout>
 #include <QPainter>
@@ -93,35 +95,37 @@ QString LCDNumber::displayText() const
   return m_displayText;
 }
 
+QString LCDNumber::shownText() const
+{
+  // Fluent counters always read as text; without a set text, the number
+  QString text = m_displayText;
+  if (text.isEmpty()) {
+    text = QString::number(intValue());
+  }
+  return text;
+}
+
 QSize LCDNumber::sizeHint() const
 {
-  if (m_displayText.isEmpty()) {
-    return QLCDNumber::sizeHint();
-  }
-
   QFont f = font();
   f.setWeight(QFont::DemiBold);
   const QFontMetrics fm(f);
-  return QSize(fm.horizontalAdvance(m_displayText) + 4, fm.height() + 2);
+  return QSize(std::max(fm.horizontalAdvance(shownText()) + 4, fm.height()),
+               fm.height() + 2);
 }
 
 QSize LCDNumber::minimumSizeHint() const
 {
-  return m_displayText.isEmpty() ? QLCDNumber::minimumSizeHint() : sizeHint();
+  return sizeHint();
 }
 
-void LCDNumber::paintEvent(QPaintEvent* event)
+void LCDNumber::paintEvent(QPaintEvent*)
 {
-  if (m_displayText.isEmpty()) {
-    QLCDNumber::paintEvent(event);
-    return;
-  }
-
   // the stylesheet "color" ends up in the foreground role of the palette
   QPainter p(this);
   QFont f = font();
   f.setWeight(QFont::DemiBold);
   p.setFont(f);
   p.setPen(palette().color(foregroundRole()));
-  p.drawText(rect(), Qt::AlignCenter, m_displayText);
+  p.drawText(rect(), Qt::AlignCenter, shownText());
 }
