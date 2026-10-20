@@ -1417,3 +1417,124 @@ QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutLogo {
     border: none;
     padding: 0px;
 }
+
+/* Dialogs: every button and field at the Windows 11 height of 32px. These
+   generic rules replace the classic per-dialog looks, which the generator
+   drops, and the per-widget style sheets FluentDialogs used to set. */
+QDialog QPushButton {
+    min-height: 20px;
+    padding: 5px 14px;
+    font-weight: normal;
+}
+QDialog QDialogButtonBox QPushButton {
+    min-width: 72px;
+}
+QDialog QPushButton:default {
+    color: @text@;
+    background-color: @btn@;
+    border: 1px solid @btnLine@;
+    border-bottom-color: @btnBottom@;
+}
+QDialog QPushButton:default:hover {
+    background-color: @btnHover@;
+}
+QDialog QPushButton:default:pressed {
+    color: @muted@;
+    background-color: @btnPressed@;
+    border-bottom-color: @btnLine@;
+}
+QDialog QPushButton[fluentPrimary="true"],
+QMessageBox QPushButton:default {
+    color: @accentFg@;
+    background-color: @accent@;
+    border: 1px solid @accent@;
+}
+QDialog QPushButton[fluentPrimary="true"]:hover,
+QMessageBox QPushButton:default:hover {
+    background-color: @accentHover@;
+    border-color: @accentHover@;
+}
+QDialog QPushButton[fluentPrimary="true"]:pressed,
+QMessageBox QPushButton:default:pressed {
+    color: @accentFgPressed@;
+    background-color: @accentPressed@;
+    border-color: @accentPressed@;
+}
+QDialog QPushButton:default:disabled,
+QDialog QPushButton[fluentPrimary="true"]:disabled {
+    color: @faint@;
+    background-color: @disabledBg@;
+    border-color: @line@;
+}
+QDialog QLineEdit, QDialog QComboBox, QDialog QAbstractSpinBox {
+    min-height: 22px;
+    padding: 4px 10px;
+}
+QDialog QComboBox:focus, QDialog QLineEdit:focus, QDialog QAbstractSpinBox:focus {
+    padding-bottom: 3px;
+}
+/* editors inside lists, combo boxes and spin boxes keep the row's height */
+QDialog QAbstractItemView QLineEdit, QDialog QAbstractItemView QComboBox,
+QDialog QAbstractItemView QAbstractSpinBox,
+QDialog QComboBox QLineEdit, QDialog QAbstractSpinBox QLineEdit {
+    min-height: 0px;
+    padding: 0px 2px;
+}
+QDialog QComboBox QLineEdit, QDialog QAbstractSpinBox QLineEdit,
+QDialog QComboBox QLineEdit:focus, QDialog QAbstractSpinBox QLineEdit:focus {
+    border: none;
+    background-color: transparent;
+}
+
+/* text buttons built as tool buttons (split "Add" buttons, list actions) */
+QDialog QToolButton[fluentButton="true"] {
+    color: @text@;
+    background-color: @btn@;
+    border: 1px solid @btnLine@;
+    border-bottom-color: @btnBottom@;
+    border-radius: 4px;
+    min-height: 20px;
+    padding: 5px 8px;
+}
+QDialog QToolButton[fluentButton="true"]:hover {
+    background-color: @btnHover@;
+}
+QDialog QToolButton[fluentButton="true"]:pressed {
+    color: @muted@;
+    background-color: @btnPressed@;
+    border-bottom-color: @btnLine@;
+}
+QDialog QToolButton[fluentButton="true"]:disabled {
+    color: @faint@;
+    background-color: @disabledBg@;
+    border-color: @line@;
+}
+QDialog QToolButton[fluentButton="true"]::menu-button {
+    width: 22px;
+    border: none;
+    border-left: 1px solid @btnLine@;
+}
+
+/* scrolling pages of dialogs share the dialog surface */
+QDialog QScrollArea, QDialog QScrollArea > QWidget#qt_scrollarea_viewport {
+    background-color: transparent;
+    border: none;
+}
+QDialog QGroupBox {
+    background-color: @card@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+    margin-top: 22px;
+    padding: 10px 10px 8px 10px;
+    font-weight: 600;
+}
+QDialog QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 2px;
+    padding: 0px 2px 4px 2px;
+    color: @text@;
+}
+QDialog QGroupBox > QWidget {
+    font-weight: normal;
+}

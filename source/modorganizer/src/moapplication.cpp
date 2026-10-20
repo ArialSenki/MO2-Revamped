@@ -43,6 +43,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QColor>
 #include <QDebug>
 #include <QDialog>
+#include <QElapsedTimer>
 #include <QEvent>
 #include <QFile>
 #include <QFileInfo>
@@ -94,6 +95,96 @@ namespace
 {
 
 void applyNativeTitleBarTheme(QWidget* window, const QString& styleName);
+
+// MO2_REVAMPED_PERF=1 writes "[perf]" lines to the log: events that keep the
+// UI thread busy for a frame or more, how long a dialog takes from the click
+// that opened it to its first paint, and repaint bursts
+namespace Perf
+{
+bool enabled()
+{
+  static const bool on = qEnvironmentVariableIsSet("MO2_REVAMPED_PERF");
+  return on;
+}
+
+QElapsedTimer& clock()
+{
+  static QElapsedTimer timer = [] {
+    QElapsedTimer t;
+    t.start();
+    return t;
+  }();
+  return timer;
+}
+
+int depth          = 0;
+qint64 lastInput   = -1;
+qint64 paintSecond = 0;
+int paints         = 0;
+int paintsOutside  = 0;
+
+class Scope
+{
+public:
+  Scope(QObject* receiver, QEvent* event)
+      : m_type(event->type()), m_class(receiver->metaObject()->className()),
+        m_name(receiver->objectName()), m_start(clock().nsecsElapsed())
+  {
+    ++depth;
+    const qint64 now = m_start / 1000000;
+    if (m_type == QEvent::MouseButtonRelease || m_type == QEvent::KeyPress) {
+      lastInput = now;
+    }
+
+    if (m_type == QEvent::Paint) {
+      if (now / 1000 != paintSecond) {
+        if (paints >= 240) {
+          log::info("[perf] {} paint events in one second ({} outside the main window)",
+                    paints, paintsOutside);
+        }
+        paintSecond   = now / 1000;
+        paints        = 0;
+        paintsOutside = 0;
+      }
+      ++paints;
+      if (auto* w = qobject_cast<QWidget*>(receiver);
+          w != nullptr && qobject_cast<QMainWindow*>(w->window()) == nullptr) {
+        ++paintsOutside;
+      }
+
+      // first paint of a dialog: the time since the click or key that opened it
+      if (auto* dialog = qobject_cast<QDialog*>(receiver);
+          dialog != nullptr && dialog->property("perfShownAt").isValid()) {
+        const qint64 shown = dialog->property("perfShownAt").toLongLong();
+        dialog->setProperty("perfShownAt", QVariant());
+        log::info("[perf] dialog {}#{} painted {} ms after input, {} ms after show",
+                  m_class, m_name, lastInput >= 0 ? now - lastInput : -1, now - shown);
+      }
+    } else if (m_type == QEvent::Show) {
+      if (auto* dialog = qobject_cast<QDialog*>(receiver);
+          dialog != nullptr && dialog->isWindow()) {
+        dialog->setProperty("perfShownAt", now);
+      }
+    }
+  }
+
+  ~Scope()
+  {
+    --depth;
+    const qint64 ms = (clock().nsecsElapsed() - m_start) / 1000000;
+    if (depth == 0 && ms >= 16) {
+      log::info("[perf] {} ms in event {} for {}#{}", ms, static_cast<int>(m_type),
+                m_class, m_name);
+    }
+  }
+
+private:
+  QEvent::Type m_type;
+  const char* m_class;
+  QString m_name;
+  qint64 m_start;
+};
+}  // namespace Perf
 
 // Several dialogs request a generous default size or restore a saved one. On
 // 768p displays, at 150% scaling, or after moving to a smaller monitor, those
@@ -1230,6 +1321,15 @@ bool MOApplication::setStyleFile(const QString& styleName)
 }
 
 bool MOApplication::notify(QObject* receiver, QEvent* event)
+{
+  if (!Perf::enabled() || receiver == nullptr) {
+    return dispatch(receiver, event);
+  }
+  Perf::Scope scope(receiver, event);
+  return dispatch(receiver, event);
+}
+
+bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
   // Fluent v4: trees open and close their branches with a slide
   if (event->type() == QEvent::Polish && property("revampedFluent").toBool()) {
