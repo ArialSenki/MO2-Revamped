@@ -6856,3 +6856,14 @@ QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsSectionIcon {
     border-radius: 13px;
     padding: 0;
 }
+
+/* Settings pages that scroll keep the page surface (was a style sheet in
+   settingsdialog.ui, which made every widget on those pages slower to style). */
+QDialog#SettingsDialog QScrollArea#generalScrollArea,
+QDialog#SettingsDialog QWidget#generalScrollAreaWidgetContents,
+QDialog#SettingsDialog QScrollArea#nexusScrollArea,
+QDialog#SettingsDialog QWidget#nexusScrollAreaWidgetContents,
+QDialog#SettingsDialog QScrollArea#workaroundScrollArea,
+QDialog#SettingsDialog QWidget#workaroundScrollAreaWidgetContents {
+    background-color: transparent;
+}

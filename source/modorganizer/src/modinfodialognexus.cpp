@@ -1,5 +1,6 @@
 #include "revampedtheme.h"
 #include "modinfodialognexus.h"
+#include "fluenticons.h"
 #include "bbcode.h"
 #include "iplugingame.h"
 #include "organizercore.h"
@@ -151,13 +152,24 @@ bool NexusTab::usesOriginFiles() const
 
 void NexusTab::updateVersionColor()
 {
-  if (mod().version() != mod().newestVersion()) {
-    ui->version->setStyleSheet("color: red");
+  const bool outdated = mod().version() != mod().newestVersion();
+  if (outdated) {
     ui->version->setToolTip(
         tr("Current Version: %1").arg(mod().newestVersion().canonicalString()));
   } else {
-    ui->version->setStyleSheet("color: green");
     ui->version->setToolTip(tr("No update available"));
+  }
+
+  if (FluentIcons::active()) {
+    // the theme colors it (versionState) in its critical and success tones
+    const QString state = outdated ? QStringLiteral("outdated") : QStringLiteral("current");
+    if (ui->version->property("versionState").toString() != state) {
+      ui->version->setProperty("versionState", state);
+      ui->version->style()->unpolish(ui->version);
+      ui->version->style()->polish(ui->version);
+    }
+  } else {
+    ui->version->setStyleSheet(outdated ? "color: red" : "color: green");
   }
 }
 

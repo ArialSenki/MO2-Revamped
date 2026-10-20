@@ -1390,7 +1390,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   m_FilterDialogTitle = new QLabel(tr("Filter options"), filterDialogHeaderText);
   m_FilterDialogTitle->setObjectName(QStringLiteral("filterDialogTitle"));
   auto filterTitleFont = m_FilterDialogTitle->font();
-  filterTitleFont.setBold(true);
+  filterTitleFont.setWeight(QFont::DemiBold);
   filterTitleFont.setPointSize(filterTitleFont.pointSize() + 2);
   m_FilterDialogTitle->setFont(filterTitleFont);
   filterDialogHeaderTextLayout->addWidget(m_FilterDialogTitle);
@@ -1466,6 +1466,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->filtersClear->setIconSize(QSize(16, 16));
   ui->filtersEdit->setIconSize(QSize(16, 16));
   filterActionsLayout->addWidget(ui->widget_2);
+  filterActionsLayout->addStretch(1);
   filterControlsLayout->addWidget(filterActionsCard, 1);
 
   auto* filterBehaviorCard = new QFrame(filterControlsRow);
@@ -1516,6 +1517,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   separatorsLayout->addWidget(ui->filtersSeparators, 1);
   behaviorControlsLayout->addWidget(separatorsRow);
   filterBehaviorLayout->addWidget(ui->widget);
+  filterBehaviorLayout->addStretch(1);
   filterControlsLayout->addWidget(filterBehaviorCard, 1);
   filterGroupLayout->addWidget(filterControlsRow);
 

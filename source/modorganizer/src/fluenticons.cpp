@@ -118,6 +118,7 @@ const QHash<QString, Glyph>& glyphTable()
                          {"alternate_game_alt", 0xE7FC, Tone::Caution},
                          {"alternate_game", 0xE7FC, Tone::Caution},
                          {"tracked", 0xE7B3, Tone::Accent},
+                         {"resources/internet-web-browser.png", 0xE774, Tone::Ink},
                      });
 
     add(":/MO/gui/contextmenu/", {
@@ -329,9 +330,11 @@ public:
     return sizes;
   }
 
+  // "fluent:<code point>:<tone>", read back by inkVersion()
   QString iconName() override
   {
-    return GlyphPrefix + QString::number(int(m_codepoint), 16);
+    return GlyphPrefix + QString::number(int(m_codepoint), 16) + QLatin1Char(':') +
+           QString::number(int(m_tone));
   }
 
   bool isNull() override { return false; }
@@ -604,6 +607,28 @@ QIcon monochrome(const QIcon& icon, const QColor& ink)
   return result;
 }
 
+// the same glyph in the text color: buttons and menu entries show their
+// icons in ink like Windows 11 (status colors are for status indicators);
+// null when the icon already is an ink glyph
+QIcon inkVersion(const QIcon& glyphIcon)
+{
+  const QStringList parts = glyphIcon.name().mid(GlyphPrefix.size()).split(QLatin1Char(':'));
+  if (parts.size() != 2 || parts[1].toInt() == int(Tone::Ink)) {
+    return {};
+  }
+  bool ok                 = false;
+  const char16_t codepoint = static_cast<char16_t>(parts[0].toUInt(&ok, 16));
+  if (!ok) {
+    return {};
+  }
+  static QHash<char16_t, QIcon> inked;
+  auto it = inked.constFind(codepoint);
+  if (it == inked.constEnd()) {
+    it = inked.insert(codepoint, glyph(codepoint, Tone::Ink));
+  }
+  return *it;
+}
+
 // gives an action's or a button's icon the Fluent look: the glyph of a known
 // resource, or a monochrome copy of anything else. When code or the style
 // sheet has put a different icon there since, that one becomes the new
@@ -612,7 +637,13 @@ template <class T>
 void restyle(T* object, const QColor& ink)
 {
   const QIcon current = object->icon();
-  if (current.isNull() || isGlyph(current)) {
+  if (current.isNull()) {
+    return;
+  }
+  if (isGlyph(current)) {
+    if (const QIcon inked = inkVersion(current); !inked.isNull()) {
+      object->setIcon(inked);
+    }
     return;
   }
 
@@ -626,7 +657,8 @@ void restyle(T* object, const QColor& ink)
 
   const QIcon glyphIcon = fluent(original);
   if (isGlyph(glyphIcon)) {
-    object->setIcon(glyphIcon);
+    const QIcon inked = inkVersion(glyphIcon);
+    object->setIcon(inked.isNull() ? glyphIcon : inked);
     return;
   }
 

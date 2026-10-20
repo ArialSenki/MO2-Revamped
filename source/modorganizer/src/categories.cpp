@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "categories.h"
+#include "fluenticons.h"
 
 #include <log.h>
 #include <report.h>
@@ -603,7 +604,9 @@ QString CategoryFactory::getSpecialCategoryName(SpecialCategories type) const
   default:
     return {};
   }
-  return QString("<%1>").arg(label);
+  // Fluent lists the built-in filters by name; classic themes keep the
+  // angle brackets that set them apart from user categories
+  return FluentIcons::active() ? label : QString("<%1>").arg(label);
 }
 
 QString CategoryFactory::getCategoryNameByID(int id) const

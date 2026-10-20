@@ -132,7 +132,8 @@ public:
   {
     ++depth;
     const qint64 now = m_start / 1000000;
-    if (m_type == QEvent::MouseButtonRelease || m_type == QEvent::KeyPress) {
+    if (m_type == QEvent::MouseButtonRelease || m_type == QEvent::MouseButtonDblClick ||
+        m_type == QEvent::KeyPress) {
       lastInput = now;
     }
 
