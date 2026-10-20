@@ -5001,7 +5001,7 @@ QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
 }
 
 /* Check boxes, radio buttons, and switches. */
-QCheckBox::indicator, QGroupBox::indicator, QTreeView::indicator {
+QCheckBox::indicator, QGroupBox::indicator, QTreeView::indicator, QTableView::indicator, QListView::indicator {
     width: 18px;
     height: 18px;
     border: none;
@@ -5009,29 +5009,29 @@ QCheckBox::indicator, QGroupBox::indicator, QTreeView::indicator {
     background-color: transparent;
 }
 QCheckBox::indicator:unchecked, QGroupBox::indicator:unchecked,
-QTreeView::indicator:unchecked {
+QTreeView::indicator:unchecked, QTableView::indicator:unchecked, QListView::indicator:unchecked {
     image: url(./mo2-fluent-v4-black/checkbox-unchecked.svg);
 }
 QCheckBox::indicator:unchecked:hover, QGroupBox::indicator:unchecked:hover,
-QTreeView::indicator:unchecked:hover {
+QTreeView::indicator:unchecked:hover, QTableView::indicator:unchecked:hover, QListView::indicator:unchecked:hover {
     image: url(./mo2-fluent-v4-black/checkbox-unchecked-hover.svg);
 }
 QCheckBox::indicator:checked, QGroupBox::indicator:checked,
-QTreeView::indicator:checked {
+QTreeView::indicator:checked, QTableView::indicator:checked, QListView::indicator:checked {
     image: url(./mo2-fluent-v4-black/checkbox-checked.svg);
 }
 QCheckBox::indicator:indeterminate, QGroupBox::indicator:indeterminate,
-QTreeView::indicator:indeterminate {
+QTreeView::indicator:indeterminate, QTableView::indicator:indeterminate, QListView::indicator:indeterminate {
     image: url(./mo2-fluent-v4-black/checkbox-indeterminate.svg);
 }
 QCheckBox::indicator:unchecked:disabled, QGroupBox::indicator:unchecked:disabled,
-QTreeView::indicator:unchecked:disabled {
+QTreeView::indicator:unchecked:disabled, QTableView::indicator:unchecked:disabled, QListView::indicator:unchecked:disabled {
     image: url(./mo2-fluent-v4-black/checkbox-disabled.svg);
 }
 QCheckBox::indicator:checked:disabled, QGroupBox::indicator:checked:disabled,
-QTreeView::indicator:checked:disabled,
+QTreeView::indicator:checked:disabled, QTableView::indicator:checked:disabled, QListView::indicator:checked:disabled,
 QCheckBox::indicator:indeterminate:disabled, QGroupBox::indicator:indeterminate:disabled,
-QTreeView::indicator:indeterminate:disabled {
+QTreeView::indicator:indeterminate:disabled, QTableView::indicator:indeterminate:disabled, QListView::indicator:indeterminate:disabled {
     image: url(./mo2-fluent-v4-black/checkbox-checked-disabled.svg);
 }
 QRadioButton::indicator {
