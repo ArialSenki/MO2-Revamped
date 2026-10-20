@@ -94,6 +94,19 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/markdown.html"
 
 mo2_deploy_qt(BINARIES ModOrganizer.exe uibase.dll plugins/bsa_packer.dll)
 
+# QtWebEngineProcess.exe goes next to the Qt dlls it imports: Chromium's sandbox
+# doesn't give the render process MO's PATH (see WebEngineProcessPath in
+# mainwindow.cpp)
+install(CODE "
+	if(EXISTS \"\${CMAKE_INSTALL_PREFIX}/bin/QtWebEngineProcess.exe\")
+		file(RENAME \"\${CMAKE_INSTALL_PREFIX}/bin/QtWebEngineProcess.exe\"
+			\"\${CMAKE_INSTALL_PREFIX}/bin/dlls/QtWebEngineProcess.exe\")
+	endif()
+")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/dlls.qt.conf"
+		DESTINATION bin/dlls
+		RENAME qt.conf)
+
 mo2_add_filter(NAME src/application GROUPS
 	iuserinterface
 	commandline

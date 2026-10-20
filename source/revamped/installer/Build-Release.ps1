@@ -349,6 +349,24 @@ function Copy-RevampedSources {
     [IO.File]::WriteAllText((Join-Path $DestinationRoot 'MO2-Revamped.install'), "MO2-REVAMPED-INSTALLATION-MARKER`r`n", [Text.UTF8Encoding]::new($false))
 }
 
+function Move-WebEngineProcessToDlls {
+    # QtWebEngineProcess.exe imports the Qt dlls in dlls\. From the root it only
+    # found them through MO's PATH, which Chromium's sandbox doesn't give the
+    # render process, so web pages never rendered. MO points Qt at dlls\ when
+    # the helper is there; dlls\qt.conf leads it back to the root's resources.
+    param([string]$DestinationRoot)
+    $dlls = Join-Path $DestinationRoot 'dlls'
+    $rootHelper = Join-Path $DestinationRoot 'QtWebEngineProcess.exe'
+    $helper = Join-Path $dlls 'QtWebEngineProcess.exe'
+    if (Test-Path -LiteralPath $rootHelper -PathType Leaf) {
+        Move-Item -LiteralPath $rootHelper -Destination $helper -Force
+    }
+    if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+        throw "The runtime does not contain QtWebEngineProcess.exe: $helper"
+    }
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'source\modorganizer\src\dlls.qt.conf') -Destination (Join-Path $dlls 'qt.conf') -Force
+}
+
 function Copy-OpenSslRuntime {
     param([string]$RuntimeSource, [string]$DestinationRoot)
     $sourceFiles = @(
@@ -729,6 +747,7 @@ $fullStage = Join-Path $stageRoot 'complete'
 $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
 Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage
+Move-WebEngineProcessToDlls -DestinationRoot $fullStage
 Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath
 Copy-OpenSslRuntime -RuntimeSource $openSslRuntimeRoot -DestinationRoot $fullStage
 Copy-PythonRuntime -RuntimeSource $pythonRuntimeRoot -DestinationRoot $fullStage
