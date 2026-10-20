@@ -43,6 +43,11 @@ void popIn(QWidget* popup, int lift = 6);
 // fades a window out, then calls done (right away when animations are off)
 void fadeOut(QWidget* window, std::function<void()> done);
 
+// Windows 11 page entrance for a page that just became current (Settings
+// pages, the main window's tabs): it fades in while it rises `rise` pixels
+// into place. Pages with GPU-rendered children (web views) switch at once.
+void pageIn(QWidget* page, int rise = 16);
+
 }  // namespace FluentMotion
 
 #endif  // FLUENTMOTION_H
