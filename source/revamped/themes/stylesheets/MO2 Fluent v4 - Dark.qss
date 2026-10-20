@@ -1257,7 +1257,7 @@ QDialog#SettingsDialog QWidget#generalTab QLabel#generalSectionTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#generalTab QWidget#generalActionsCard {
@@ -1274,7 +1274,7 @@ QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription {
 
 QDialog#SettingsDialog QWidget#pathsTab QLabel {
     color: #C5C5C5;
-    padding: 1px 2px;
+    padding: 1px 0px;
 }
 
 QDialog#SettingsDialog QWidget#pathsTab QLabel#label_25,
@@ -1287,7 +1287,7 @@ QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsBaseDirHint,
 QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsWritableHint {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px;
+    padding: 1px 0px;
 }
 
 QDialog#SettingsDialog QWidget#pathsTab QGroupBox#pathsStorageGroup,
@@ -1304,7 +1304,7 @@ QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsSectionTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListDisplayGroup,
@@ -1324,7 +1324,7 @@ QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsSectionTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#uiTab QLabel#modListPageIcon { background-color: transparent; border: none; padding: 0px; }
@@ -1338,7 +1338,7 @@ QDialog#SettingsDialog QWidget#uiTab QLabel#modListWorkflowDescription,
 QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsDescription {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsHighlightLabel,
@@ -1368,14 +1368,14 @@ QDialog#SettingsDialog QWidget#themeTab QLabel#themeSectionTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#themeTab QLabel#themePageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#themeTab QLabel#themePageIcon { background-color: transparent; border: none; padding: 0px; }
@@ -1387,7 +1387,7 @@ QDialog#SettingsDialog QWidget#themeTab QLabel#themePageSubtitle,
 QDialog#SettingsDialog QWidget#themeTab QLabel#themeColorDescription {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusAccountCard,
@@ -1422,14 +1422,14 @@ QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusServersTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusPageIcon { background-color: transparent; border: none; padding: 0px; }
@@ -1446,20 +1446,20 @@ QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusFeaturesDescription,
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusToolsDescription {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusActivityTitle {
     color: #FFFFFF;
     font-weight: 600;
-    padding: 1px 3px;
+    padding: 1px 0px;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QLabel#label_18,
 QDialog#SettingsDialog QWidget#nexusTab QLabel#label_21 {
     color: #FFFFFF;
     font-weight: 600;
-    padding: 2px 3px;
+    padding: 2px 0px;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusConnectionActions,
@@ -1486,14 +1486,14 @@ QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSettingsTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginPageIcon { background-color: transparent; border: none; padding: 0px; }
@@ -1509,13 +1509,13 @@ QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSettingsDescription,
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginBlacklistDescription {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSettingsTitle {
     color: #FFFFFF;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
@@ -1529,7 +1529,7 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel {
     background-color: transparent;
     border: none;
-    padding: 3px 2px;
+    padding: 3px 0px;
 }
 
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#label_13,
@@ -1541,7 +1541,7 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#label
 
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#noPluginLabel {
     color: #C5C5C5;
-    padding: 18px;
+    padding: 18px 0px;
 }
 
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundPageIcon { background-color: transparent; border: none; padding: 0px; }
@@ -1556,7 +1556,7 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundBehaviorTitle,
@@ -1567,7 +1567,7 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundPageSubtitle,
@@ -1578,7 +1578,7 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#maintenanceToolsDescription,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#virtualFilesystemDescription {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#workaroundsOptionsBox,
@@ -1613,14 +1613,14 @@ QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsSectionTitle {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsPageSubtitle,
@@ -1629,7 +1629,7 @@ QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsLootDescription,
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsFilesDescription {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsPageIcon,
@@ -1659,7 +1659,7 @@ QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsFieldLabel {
 
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsExplainedLabel {
     color: #FFFFFF;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageTitle,
@@ -1668,7 +1668,7 @@ QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 2px 3px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageSubtitle,
@@ -1676,7 +1676,7 @@ QDialog#SettingsDialog QWidget#uiTab QLabel#modListPageSubtitle,
 QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageSubtitle {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 1px 4px 3px;
+    padding: 1px 0px 3px;
 }
 
 QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageIcon { background-color: transparent; border: none; padding: 0px; }
@@ -1688,23 +1688,23 @@ QDialog#ModInfoDialog QLabel#modInfoPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 1px 2px 0;
+    padding: 1px 0px 0;
 }
 
 QDialog#ModInfoDialog QLabel#modInfoPageSubtitle {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 0 3px 1px;
+    padding: 0 0px 1px;
 }
 
 QDialog#ProfilesDialog QLabel#profilesPageTitle {
 
-padding: 1px 2px 0;
+padding: 1px 0px 0;
 }
 
 QDialog#ProfilesDialog QLabel#profilesPageSubtitle {
 
-padding: 0 3px 1px;
+padding: 0 0px 1px;
 }
 
 QDialog#QueryOverwriteDialog QLabel#overwritePageTitle,
@@ -1712,14 +1712,14 @@ QDialog#SyncOverwriteDialog QLabel#syncPageTitle {
     color: #FFFFFF;
     font-size: 15pt;
     font-weight: 600;
-    padding: 1px 2px 0;
+    padding: 1px 0px 0;
 }
 
 QDialog#QueryOverwriteDialog QLabel#overwritePageSubtitle,
 QDialog#SyncOverwriteDialog QLabel#syncPageSubtitle {
     color: #C5C5C5;
     font-size: 9pt;
-    padding: 0 3px 1px;
+    padding: 0 0px 1px;
 }
 
 QDialog#QueryOverwriteDialog QFrame#frame_2,
@@ -1742,7 +1742,7 @@ QDialog#ProfileInputDialog QLabel#profilePageTitle {
     color: #FFFFFF;
     font-size: 16pt;
     font-weight: 600;
-    padding: 1px 2px 0;
+    padding: 1px 0px 0;
 }
 
 QDialog#ProfileInputDialog QLabel#profilePageSubtitle,
@@ -1774,7 +1774,7 @@ QMessageBox#revampedProfileActionPrompt QLabel#qt_msgbox_informativelabel {
     color: #FFFFFF;
     min-width: 340px;
     max-width: 460px;
-    padding: 4px 8px;
+    padding: 4px 0px;
 }
 
 QMessageBox#revampedProfileActionPrompt QLabel#qt_msgbox_label {
@@ -1785,7 +1785,7 @@ QMessageBox#revampedProfileActionPrompt QLabel#qt_msgbox_label {
 
 QDialog#EldenRingSaveTransferDialog QLabel#saveTransferTitle {
 
-padding: 1px 2px 0;
+padding: 1px 0px 0;
 }
 
 QDialog#EldenRingSaveTransferDialog QLabel#saveTransferSectionHeading,
@@ -1843,7 +1843,7 @@ QDialog#InstanceManagerDialog QLabel#detailsHeading {
     color: #FFFFFF;
     font-size: 12pt;
     font-weight: 600;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#InstanceManagerDialog QLabel#managerSummary,
@@ -1894,7 +1894,7 @@ QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 {
 
 QDialog#CreateInstanceDialog QLabel#title {
 
-padding: 0;
+padding: 0 0px;
 }
 
 QDialog#CreateInstanceDialog QLabel#label_14,
@@ -1963,7 +1963,7 @@ QDialog#CreateInstanceDialog QWidget#widget {
 
 QDialog#CreateInstanceDialog QLabel#typeSelectionHint {
 
-padding-left: 2px;
+padding-left: 0px;
 }
 
 QDialog#CreateInstanceDialog QWidget#widget_11,
@@ -2425,7 +2425,7 @@ QDialog#AboutDialog QLabel#copyrightText {
     color: #FFFFFF;
     background-color: transparent;
     border: none;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#AboutDialog QGroupBox {
@@ -2629,7 +2629,7 @@ QMessageBox#MO2RevampedReportErrorDialog QLabel#qt_msgbox_informativelabel {
     color: #FFFFFF;
     min-width: 360px;
     max-width: 520px;
-    padding: 5px 10px;
+    padding: 5px 0px;
 }
 
 QMessageBox#MO2RevampedReportConfirmDialog QLabel#qt_msgbox_label,
@@ -2680,7 +2680,7 @@ QDialog#InstanceNameDialog QGroupBox#instanceNameCard::title {
 
 QDialog#InstanceNameDialog QLabel#instanceNameValidation {
     color: #E28B7F;
-    padding-left: 2px;
+    padding-left: 0px;
 }
 
 QFrame#uiLockerCard {
@@ -2800,13 +2800,13 @@ QDialog#CreateInstanceDialog QLabel#eldenRingWizardScopeNote {
 
 QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_description {
     color: #FFFFFF;
-    padding: 2px 1px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_status,
 QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceSaveStatus {
     color: #C5C5C5;
-    padding: 2px 1px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#CreateInstanceDialog QLabel#eldenRingStartingSaveHeading {
@@ -2840,7 +2840,7 @@ QDialog#CreateInstanceDialog QLabel#label_13 {
     color: #FFFFFF;
     background-color: transparent;
     border: none;
-    padding: 0;
+    padding: 0 0px;
 }
 
 QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_simple,
@@ -2853,12 +2853,12 @@ QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_advanced QW
 
 QDialog#filterOptionsDialog QLabel#filterDialogTitle {
 
-padding: 0;
+padding: 0 0px;
 }
 
 QDialog#filterOptionsDialog QLabel#filterDialogDescription {
 
-padding: 0;
+padding: 0 0px;
 }
 
 QDialog#filterOptionsDialog QGroupBox#categoriesGroup {
@@ -2970,7 +2970,7 @@ QDialog#CreateInstanceDialog QWidget#page_1 QLabel#label_19 {
     min-height: 0px;
     max-height: 0px;
     margin: 0px;
-    padding: 0px;
+    padding: 0px 0px;
     border: none;
 }
 
@@ -3166,14 +3166,14 @@ QDialog#ModInfoDialog QLabel#modInfoEmptyStateDescription,
 QDialog#ModInfoDialog QLabel#modInfoEmptyListState {
     color: #C5C5C5;
     background-color: transparent;
-    padding: 6px;
+    padding: 6px 0px;
 }
 
 QMessageBox#revampedCategorySetupPrompt QLabel#qt_msgbox_label,
 QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_label,
 QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_informativelabel {
     min-width: 360px;
-    padding: 5px 8px;
+    padding: 5px 0px;
 }
 
 QDialog#CreateInstanceDialog QWidget#widget {
@@ -3380,7 +3380,7 @@ QDialog#ProfilesDialog QLabel#profilesSectionTitle {
     color: #FFFFFF;
     font-size: 11pt;
     font-weight: 600;
-    padding-left: 2px;
+    padding-left: 0px;
 }
 
 QDialog#ProfilesDialog QWidget#profileOptionsPanel {
@@ -3443,7 +3443,7 @@ QMessageBox#revampedExecutableActionPrompt QLabel#qt_msgbox_informativelabel {
     color: #FFFFFF;
     min-width: 340px;
     max-width: 460px;
-    padding: 4px 8px;
+    padding: 4px 0px;
 }
 
 QMessageBox#revampedExecutableActionPrompt QLabel#qt_msgbox_label {
@@ -3543,7 +3543,7 @@ QDialog#EldenRingNativeProfileDialog QLabel#nativeTableEmptyState {
     background-color: transparent;
     border: none;
     font-size: 10pt;
-    padding: 18px;
+    padding: 18px 0px;
 }
 
 QDialog#NativeProfileNoticeDialog QFrame#nativeNoticeHeader,
@@ -3634,7 +3634,7 @@ QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationFieldCaption {
 
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationModeDescription {
     color: #C5C5C5;
-    padding: 2px 1px 0;
+    padding: 2px 0px 0;
 }
 
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationRoutingStatus {
@@ -4398,7 +4398,7 @@ QDialog#__overwriteDialog QLabel#overwriteSectionHeading {
     color: #FFFFFF;
     font-size: 10pt;
     font-weight: 600;
-    padding: 2px 1px;
+    padding: 2px 0px;
 }
 
 QDialog#__overwriteDialog QLabel#overwriteContextHint {
@@ -4460,7 +4460,7 @@ QDialog#filterOptionsDialog QLabel#filterBehaviorHeading {
     background-color: transparent;
     border: none;
     font-weight: 600;
-    padding: 1px 2px;
+    padding: 1px 0px;
 }
 
 QDialog#filterOptionsDialog QLabel#filterMatchLabel,

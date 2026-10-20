@@ -3,7 +3,12 @@
 #include "circularuihelpers.h"
 #include "colortable.h"
 #include "fluenticons.h"
+#include "game_features.h"
 #include "modlist.h"
+#include "plugincontainer.h"
+#include "settingsdialog.h"
+#include <dataarchives.h>
+#include <gameplugins.h>
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
 #include <QBoxLayout>
@@ -66,6 +71,19 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
 
   // colors
   ui->colorTable->load(s);
+
+  // the archive conflict and plugin rows only matter for games with archives
+  // or plugins (the Bethesda games); Elden Ring has neither
+  if (PluginContainer* pc = dialog().pluginContainer();
+      pc != nullptr && s.game().plugin() != nullptr) {
+    auto& features      = pc->gameFeatures();
+    const bool archives = features.gameFeature<MOBase::DataArchives>() != nullptr;
+    const bool plugins  = features.gameFeature<MOBase::GamePlugins>() != nullptr;
+    ui->colorTable->setRowHidden(2, !archives);
+    ui->colorTable->setRowHidden(3, !archives);
+    ui->colorTable->setRowHidden(4, !plugins);
+    ui->colorTable->setRowHidden(5, !plugins);
+  }
 
   QObject::connect(ui->resetColorsBtn, &QPushButton::clicked, [&] {
     ui->colorTable->resetColors();
