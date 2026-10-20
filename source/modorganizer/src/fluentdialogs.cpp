@@ -185,6 +185,14 @@ void polish(QDialog* dialog)
   } else if (isPluginDialog(dialog)) {
     hideHeadingBadges(dialog);
     FluentSettings::switchRows(dialog);
+    // notes were indented to line up with a check box's text; with switch
+    // rows they span the card like a Windows 11 info bar
+    for (QLabel* note : dialog->findChildren<QLabel*>()) {
+      const QMargins m = note->contentsMargins();
+      if (note->objectName().endsWith(QLatin1String("Note")) && m.left() > 16) {
+        note->setContentsMargins(0, m.top(), m.right(), m.bottom());
+      }
+    }
   }
   alignHeaders(dialog);
 
