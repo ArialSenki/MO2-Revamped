@@ -1349,6 +1349,9 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
                                              qobject_cast<QMessageBox*>(dialog) == nullptr);
       if (fluent) {
         FluentDialogs::polish(dialog);
+        if (auto* box = qobject_cast<QMessageBox*>(dialog)) {
+          FluentDialogs::polishMessageBox(box);
+        }
       }
     }
 
