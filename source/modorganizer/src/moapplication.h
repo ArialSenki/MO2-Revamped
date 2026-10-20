@@ -92,6 +92,9 @@ private:
   std::unique_ptr<Instance> getCurrentInstance(bool forceSelect);
   std::optional<int> setupInstanceLoop(Instance& currentInstance, PluginContainer& pc);
   void purgeOldFiles();
+
+  // notify() without the MO2_REVAMPED_PERF timing around it
+  bool dispatch(QObject* receiver, QEvent* event);
 };
 
 class MOSplash

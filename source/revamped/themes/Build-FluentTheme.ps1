@@ -168,6 +168,84 @@ function Convert-Qss([string]$text, $theme) {
     })
 }
 
+# Classic Refined styles every dialog one by one (tall buttons, 40px fields,
+# tinted banners, round icon badges). Fluent draws dialogs from its generic
+# rules instead, so the dialog-scoped rules for controls are dropped, banners
+# become a flat page title, and frames keep only a neutral card look. Generic
+# and main-window rules pass through unchanged.
+$dialogScope = [regex]'#\w*(Dialog|Prompt)\b|^(QFileDialog|QInputDialog|QProgressDialog|QErrorMessage|QWizard|QMessageBox)\b'
+$controlType = [regex]'^(QPushButton|QToolButton|QCommandLinkButton|QAbstractButton|QDialogButtonBox|QLineEdit|QComboBox|Q\w*SpinBox|Q\w*Edit|QTextBrowser|QCheckBox|QRadioButton|QHeaderView|QTabBar|QTabWidget|QProgressBar|QSplitter|QSlider|QScrollBar|QAbstractItemView|Q(List|Tree|Table)(Widget|View)|QMessageBox|QDialog)$'
+$bannerName = [regex]'(?i)(header|intro|banner|hero)(card|panel|frame)?$'
+
+function Test-Neutral([string]$hex) {
+    $hsv = Get-Hsv ([Convert]::ToInt32($hex.Substring(0, 2), 16)) ([Convert]::ToInt32($hex.Substring(2, 2), 16)) ([Convert]::ToInt32($hex.Substring(4, 2), 16))
+    return $hsv[1] -le 0.06
+}
+
+# what Fluent keeps of one dialog-scoped selector: 'drop', 'banner', 'card',
+# 'badge', 'label' or 'keep'
+function Get-DialogRuleKind([string]$selector) {
+    $last = ($selector.Trim() -split '\s+|>')[-1]
+    $base = ($last -split '::|:(?!:)')[0]
+    $type = [regex]::Match($base, '^[A-Za-z]*').Value
+    $name = [regex]::Match($base, '#(\w+)').Groups[1].Value
+    if ($type -and $controlType.IsMatch($type)) { return 'drop' }
+    if ($type -eq 'QLabel') {
+        if ($name -match 'Icon$') { return 'badge' }
+        return 'label'
+    }
+    if ($last.Contains('::')) { return 'keep' }
+    if ($name -and $bannerName.IsMatch($name)) { return 'banner' }
+    if ($type -in @('QFrame', 'QGroupBox', 'QWidget', '') -and $name) { return 'card' }
+    return 'keep'
+}
+
+function Convert-DialogBody([string]$kind, [string]$body, $theme) {
+    $t = $theme.Tokens
+    switch ($kind) {
+        'banner' { return ' background-color: transparent; border: none; ' }
+        'badge' { return ' background-color: transparent; border: none; padding: 0px; ' }
+        'label' {
+            $body = [regex]::Replace($body, 'font-weight\s*:\s*(bold|[789]00)', 'font-weight: 600')
+            return [regex]::Replace($body, 'border-radius\s*:\s*\d+px', 'border-radius: 4px')
+        }
+        'card' {
+            $body = [regex]::Replace($body, 'border-radius\s*:\s*\d+px', 'border-radius: 8px')
+            $body = [regex]::Replace($body, '(?<p>background(-color)?\s*:\s*)#(?<c>[0-9A-Fa-f]{6})', [Text.RegularExpressions.MatchEvaluator]{
+                param($m)
+                if (Test-Neutral $m.Groups['c'].Value) { $m.Groups['p'].Value + $t.card } else { $m.Value }
+            })
+            return [regex]::Replace($body, '(?<p>border(-[a-z]+)*\s*:[^;#]*)#(?<c>[0-9A-Fa-f]{6})', [Text.RegularExpressions.MatchEvaluator]{
+                param($m)
+                if (Test-Neutral $m.Groups['c'].Value) { $m.Groups['p'].Value + $t.cardLine } else { $m.Value }
+            })
+        }
+    }
+    return $body
+}
+
+function Convert-DialogRules([string]$text, $theme) {
+    return [regex]::Replace($text, '(?<sel>[^{}]+)\{(?<body>[^{}]*)\}', [Text.RegularExpressions.MatchEvaluator]{
+        param($m)
+        $groups = [ordered]@{}
+        foreach ($sel in ($m.Groups['sel'].Value -split ',')) {
+            $s = $sel.Trim()
+            if (-not $s) { continue }
+            $kind = if ($dialogScope.IsMatch($s)) { Get-DialogRuleKind $s } else { 'generic' }
+            if ($kind -eq 'drop') { $script:droppedSelectors++; continue }
+            if (-not $groups.Contains($kind)) { $groups[$kind] = New-Object Collections.Generic.List[string] }
+            $groups[$kind].Add($s)
+        }
+        $out = ''
+        foreach ($kind in $groups.Keys) {
+            $body = $m.Groups['body'].Value
+            if ($kind -notin @('generic', 'keep')) { $body = Convert-DialogBody $kind $body $theme }
+            $out += "`n" + ($groups[$kind] -join ",`n") + " {" + $body + "}`n"
+        }
+        $out
+    })
+}
+
 function Expand-Tokens([string]$text, $tokens) {
     foreach ($key in $tokens.Keys) { $text = $text.Replace("@$key@", $tokens[$key]) }
     return $text
@@ -232,7 +310,14 @@ function Write-Assets($theme) {
 foreach ($theme in $themes) {
     $sourcePath = Join-Path $styles $theme.Source
     $source = [IO.File]::ReadAllText($sourcePath).TrimStart([char]0xFEFF)
-    $fluent = Convert-Qss $source $theme
+    # the top comments name the base style and the theme; the other comments
+    # describe classic rules and would only lengthen the parse
+    $header = [regex]::Match($source, '^(\s*/\*[^*]*\*/\s*)+').Value
+    $body = [regex]::Replace($source.Substring($header.Length), '(?s)/\*.*?\*/', '')
+    $script:droppedSelectors = 0
+    $body = Convert-DialogRules $body $theme
+    $body = [regex]::Replace($body, '(\r?\n\s*){2,}', "`n`n")
+    $fluent = Convert-Qss ($header + $body) $theme
     $fluent = $fluent -replace '/\* MO2 Revamped (Light|Dark Blue|Dark) \*/', "/* MO2 Revamped Fluent v4 $($theme.Name) */"
     $fluent = $fluent.Replace('./mo2-classic-refined-light/', "./$($theme.Assets)/")
     # Point PNG indicators at the generated vector files.
@@ -248,5 +333,5 @@ foreach ($theme in $themes) {
     if ($missing) { throw "Missing assets for $($theme.Output): $($missing -join ', ')" }
     $sourceBlocks = ([regex]::Matches(($source -replace '(?s)/\*.*?\*/', ''), '\{')).Count
     [IO.File]::WriteAllText((Join-Path $styles $theme.Output), $fluent, $utf8)
-    Write-Host "$($theme.Output): $sourceBlocks base blocks recolored, Fluent layer appended, assets in $($theme.Assets)."
+    Write-Host "$($theme.Output): $sourceBlocks base blocks, $($script:droppedSelectors) classic dialog selectors dropped, Fluent layer appended, assets in $($theme.Assets)."
 }
