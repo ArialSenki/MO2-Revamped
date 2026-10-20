@@ -82,6 +82,7 @@ public slots:
   virtual void accept();
 
 private:
+  void prepareHiddenPages();
   void initializeTab(int index);
   void hideUnsupportedOptions();
 

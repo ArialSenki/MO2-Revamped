@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "settingsdialog.h"
 #include "fluenticons.h"
+#include "fluentperf.h"
 #include "fluentnavigation.h"
 #include "fluentsettings.h"
 #include "settingsdialogdiagnostics.h"
@@ -129,7 +130,9 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
     : TutorableDialog("SettingsDialog", parent), ui(new Ui::SettingsDialog),
       m_settings(settings), m_exit(Exit::None), m_pluginContainer(pluginContainer)
 {
+  FluentPerf::Timer perf("SettingsDialog");
   ui->setupUi(this);
+  perf.lap("setupUi");
   hideUnsupportedOptions();
 
   // Give every Settings page more room while keeping the dialog inside the
@@ -158,6 +161,7 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
                                                 0xE90F,  // Workarounds: Repair
                                                 0xE9D9,  // Diagnostics: Diagnostic
                                             });
+    perf.lap("navigation");
     // room for the navigation rail, still inside the available screen width
     const int maxWidth = qMax(320, availableSize.width() - 48);
     setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
@@ -205,20 +209,33 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   // full height would otherwise set the dialog's minimum height
   FluentSettings::wrapInScrollArea(ui->tabWidget->widget(PluginsTabIndex));
   initializeTab(ui->tabWidget->currentIndex());
+  perf.lap("current page");
 
-  // These pages add circular headings and rebuild part of their layout at
-  // runtime. Prepare them while Settings is hidden to avoid a visible jump on
-  // the first visit.
-  constexpr int ThemeTabIndex = 1;
-  constexpr int ModListTabIndex = 2;
-  constexpr int PathsTabIndex = 3;
-  constexpr int NexusTabIndex = 4;
+  // These pages rebuild part of their layout at runtime. They are prepared
+  // one per event loop pass once Settings has painted, so opening it waits
+  // only for the visible page and a later visit shows no jump.
+  QTimer::singleShot(120, this, [this] {
+    prepareHiddenPages();
+  });
+}
+
+void SettingsDialog::prepareHiddenPages()
+{
+  constexpr int ThemeTabIndex       = 1;
+  constexpr int ModListTabIndex     = 2;
+  constexpr int PathsTabIndex       = 3;
+  constexpr int NexusTabIndex       = 4;
   constexpr int DiagnosticsTabIndex = 7;
-  initializeTab(ThemeTabIndex);
-  initializeTab(ModListTabIndex);
-  initializeTab(PathsTabIndex);
-  initializeTab(NexusTabIndex);
-  initializeTab(DiagnosticsTabIndex);
+  for (int index : {ThemeTabIndex, ModListTabIndex, PathsTabIndex, NexusTabIndex,
+                    DiagnosticsTabIndex}) {
+    if (!m_tabs[index]) {
+      initializeTab(index);
+      QTimer::singleShot(0, this, [this] {
+        prepareHiddenPages();
+      });
+      return;
+    }
+  }
 }
 
 void SettingsDialog::hideUnsupportedOptions()
@@ -271,9 +288,12 @@ void SettingsDialog::initializeTab(int index)
     return;
   }
 
+  FluentPerf::Timer perf("SettingsDialog page");
   m_tabs[index] = m_tabFactories[index]();
+  perf.lap(qPrintable(ui->tabWidget->widget(index)->objectName()));
   if (FluentIcons::active()) {
     FluentSettings::restyle(ui->tabWidget->widget(index));
+    perf.lap("restyle");
   }
   const QString activeStyle = m_settings.interface().styleName().value_or("");
   configureSettingsComboPopups(
@@ -308,9 +328,11 @@ ExitFlags SettingsDialog::exitNeeded() const
 
 int SettingsDialog::exec()
 {
+  FluentPerf::Timer perf("SettingsDialog::exec");
   GeometrySaver gs(m_settings, this);
 
   m_settings.widgets().restoreIndex(ui->tabWidget);
+  perf.lap("restore");
 
   auto ret = TutorableDialog::exec();
 

@@ -73,6 +73,10 @@ FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
     onUnhide();
   });
 
+  if (FluentIcons::active()) {
+    ui->openInExplorer->setIcon(FluentIcons::glyph(0xE838));  // OpenFolderHorizontal
+    ui->openInExplorer->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  }
   connect(ui->openInExplorer, &QToolButton::clicked, [&] {
     onOpenInExplorer();
   });

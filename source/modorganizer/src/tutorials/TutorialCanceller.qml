@@ -1,6 +1,6 @@
 import QtQuick 2.7
 
-// rectangle for description texts
+// "Exit tutorial" as a small subtle button below the teaching tip
 Rectangle {
     id: cancellerPanel
     property alias text: textBox.text
@@ -8,50 +8,50 @@ Rectangle {
     property int innerWidth;
     signal clicked
 
+    SystemPalette { id: palette; colorGroup: SystemPalette.Active }
+    readonly property bool dark: palette.window.hslLightness < 0.5
+
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
     anchors.bottomMargin: 70
-    width: textBox.width + 30
-    height: textBox.height + 8
-    border.color: "black"
-    border.width: 3
-    smooth: true
-    //opacity: 0.9
+    width: textBox.implicitWidth + 44
+    height: 28
+    radius: 4
+    border.width: 1
+    border.color: dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.10)
+    color: clickArea.containsMouse ? (dark ? "#323232" : "#F0F0F0")
+                                   : (dark ? "#2C2C2C" : "#F9F9F9")
     z: 10000
-    color: "#FF707070"
 
-    Image {
+    Behavior on color { ColorAnimation { duration: 83 } }
+
+    Text {
         id: cancelIcon
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 5
-        anchors.right: parent.right
-        anchors.rightMargin: 5
-        source: "qrc:/MO/gui/multiply_red"
-
-        SequentialAnimation on opacity {
-            loops: 2
-            running: cancelIcon.visible
-
-            PauseAnimation { duration: 350 }
-            NumberAnimation { easing.type: Easing.InOutSine; duration: 450; to: 0.84 }
-            NumberAnimation { easing.type: Easing.InOutSine; duration: 550; to: 1.0 }
-        }
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        anchors.leftMargin: 10
+        text: ""
+        font.family: "Segoe Fluent Icons"
+        font.pixelSize: 10
+        color: palette.windowText
     }
 
     Text {
         id: textBox
         text: qsTr("Exit Tutorial")
-        font.pointSize: 12
-        font.bold: false
-        width: cancellerPanel.innerWidth
-        font.family: "Courier"
-        wrapMode: Text.WordWrap
-        anchors.centerIn: parent
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: cancelIcon.right
+        anchors.leftMargin: 8
+        font.family: "Segoe UI Variable Text"
+        font.pointSize: 9
+        color: palette.windowText
     }
 
     MouseArea {
         id: clickArea
         anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
         onClicked: parent.clicked()
     }
 }

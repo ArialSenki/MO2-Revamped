@@ -58,8 +58,7 @@ Rectangle  {
   Rectangle {
     id: disabledBackground
     anchors.fill: parent
-    opacity: 0.2
-    color: "#808080"
+    color: Qt.rgba(0, 0, 0, 0.3)
   }
 
   Connections {

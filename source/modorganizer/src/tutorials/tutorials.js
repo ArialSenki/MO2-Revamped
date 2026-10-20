@@ -8,11 +8,7 @@ function highlightItem(widgetName, click) {
     highlight.y = rect.y - 1
     highlight.width = rect.width + 2
     highlight.height = rect.height + 2
-    if (click) {
-        highlight.border.color = "green"
-    } else {
-        highlight.border.color = "blue"
-    }
+    highlight.clickTarget = click ? true : false
     highlight.visible = true
 }
 
@@ -23,11 +19,7 @@ function highlightAction(actionName, click) {
     highlight.y = rect.y + offsetRect.height
     highlight.width = rect.width + 2
     highlight.height = rect.height + 2
-    if (click) {
-        highlight.border.color = "green"
-    } else {
-        highlight.border.color = "blue"
-    }
+    highlight.clickTarget = click ? true : false
     highlight.visible = true
 }
 

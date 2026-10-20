@@ -27,6 +27,10 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor);
 // glyphs in tab order; missing ones fall back to a dot
 QListWidget* attach(QTabWidget* tabs, const QList<char16_t>& glyphs);
 
+// moves a page heading above the pages, next to the list, so the title
+// lines up with the content like a Windows 11 Settings page
+void setHeader(QTabWidget* tabs, QWidget* header);
+
 // rebuilds the list after the tabs were added, removed, reordered, renamed
 // or recolored (a tab whose text color is set shows dimmed)
 void sync(QTabWidget* tabs);

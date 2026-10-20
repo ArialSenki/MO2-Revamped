@@ -318,6 +318,10 @@ foreach ($theme in $themes) {
     $body = Convert-DialogRules $body $theme
     $body = [regex]::Replace($body, '(\r?\n\s*){2,}', "`n`n")
     $fluent = Convert-Qss ($header + $body) $theme
+    # plain containers share the window surface; the base gave them a classic
+    # gray that showed as darker bands behind page headers. Only the base rule
+    # changes, so later type rules (labels, counters) stay transparent.
+    $fluent = ([regex]'(?m)^QWidget \{(?<body>[^}]*?)background-color:\s*#[0-9A-Fa-f]{6}').Replace($fluent, ('QWidget {${body}background-color: ' + $theme.Tokens.bg), 1)
     $fluent = $fluent -replace '/\* MO2 Revamped (Light|Dark Blue|Dark) \*/', "/* MO2 Revamped Fluent v4 $($theme.Name) */"
     $fluent = $fluent.Replace('./mo2-classic-refined-light/', "./$($theme.Assets)/")
     # Point PNG indicators at the generated vector files.

@@ -191,7 +191,10 @@ void polish(QDialog* dialog)
     }
   }
   for (QToolButton* button : dialog->findChildren<QToolButton*>()) {
-    if (button->toolButtonStyle() == Qt::ToolButtonIconOnly || button->text().isEmpty() ||
+    // an "icon only" tool button without an icon shows its text
+    const bool iconOnly =
+        button->toolButtonStyle() == Qt::ToolButtonIconOnly && !button->icon().isNull();
+    if (iconOnly || button->text().isEmpty() ||
         button->autoRaise() || qobject_cast<QToolBar*>(button->parentWidget()) != nullptr ||
         button->property("fluentKeepStyle").toBool() || insideItemView(button, dialog) ||
         !button->styleSheet().isEmpty()) {

@@ -233,6 +233,10 @@ void SavesTab::refreshSaveListNow()
       ui.list->setColumnCount(3);
       ui.list->headerItem()->setText(2, tr("Modified"));
       ui.list->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+      // the file path takes the free width, so the three columns fit the card
+      // without a horizontal scroll bar
+      ui.list->header()->setStretchLastSection(false);
+      ui.list->header()->setSectionResizeMode(1, QHeaderView::Stretch);
     }
 
     const QLocale locale;

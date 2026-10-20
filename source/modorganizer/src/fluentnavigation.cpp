@@ -160,6 +160,10 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
     return nullptr;
   }
 
+  // set before the move below, which repolishes the pages anyway: the theme
+  // gives the pages the window surface, no darker panel behind them
+  tabs->setProperty("fluentNavigation", true);
+
   auto* page = new QWidget(parent);
   page->setObjectName(QStringLiteral("fluentNavPage"));
   if (parent->layout()->replaceWidget(tabs, page) == nullptr) {
@@ -183,15 +187,7 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
   layout->addWidget(tabs, 1);
 
   tabs->tabBar()->hide();
-  tabs->setProperty("fluentNavigation", true);
   tabs->setDocumentMode(true);
-
-  // the pages share the window surface with the list: no darker panel behind
-  // them (a widget's own sheet wins over the per-dialog theme rules)
-  if (auto* stack = tabs->findChild<QStackedWidget*>(QString(), Qt::FindDirectChildrenOnly)) {
-    stack->setStyleSheet(QStringLiteral(
-        "QStackedWidget, QStackedWidget > QWidget { background-color: transparent; }"));
-  }
 
   new NavigationState(tabs, nav, std::move(glyphFor));
   sync(tabs);
@@ -227,6 +223,26 @@ QListWidget* attach(QTabWidget* tabs, const QList<char16_t>& glyphs)
   return attach(tabs, [glyphs](int index, QWidget*) {
     return index < glyphs.size() ? glyphs[index] : FallbackGlyph;
   });
+}
+
+void setHeader(QTabWidget* tabs, QWidget* header)
+{
+  auto* row = qobject_cast<QHBoxLayout*>(
+      tabs->parentWidget() != nullptr ? tabs->parentWidget()->layout() : nullptr);
+  if (header == nullptr || stateOf(tabs) == nullptr || row == nullptr) {
+    return;
+  }
+
+  if (QWidget* old = header->parentWidget(); old != nullptr && old->layout() != nullptr) {
+    old->layout()->removeWidget(header);
+  }
+  row->removeWidget(tabs);
+  auto* column = new QVBoxLayout;
+  column->setContentsMargins(0, 0, 0, 0);
+  column->setSpacing(4);
+  column->addWidget(header);
+  column->addWidget(tabs, 1);
+  row->addLayout(column, 1);
 }
 
 void sync(QTabWidget* tabs)

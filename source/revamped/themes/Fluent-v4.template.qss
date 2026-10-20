@@ -1256,6 +1256,10 @@ QListWidget#fluentNav:focus {
 QWidget#fluentNavPage {
     background-color: transparent;
 }
+QTabWidget[fluentNavigation="true"] > QStackedWidget,
+QTabWidget[fluentNavigation="true"] > QStackedWidget > QWidget {
+    background-color: transparent;
+}
 QTabWidget[fluentNavigation="true"]::pane {
     border: none;
     background-color: transparent;
@@ -1537,4 +1541,25 @@ QDialog QGroupBox::title {
 }
 QDialog QGroupBox > QWidget {
     font-weight: normal;
+}
+
+/* Mod information, Nexus page: the installed version in the status tones */
+QDialog#ModInfoDialog QLineEdit#version[versionState="outdated"] {
+    color: @critFg@;
+}
+QDialog#ModInfoDialog QLineEdit#version[versionState="current"] {
+    color: @running@;
+}
+
+/* Filter options: its buttons came from the main window, whose sizes would
+   follow them here */
+QDialog#filterOptionsDialog QPushButton#filtersClear,
+QDialog#filterOptionsDialog QPushButton#filtersEdit {
+    min-height: 20px;
+    max-height: 20px;
+    padding: 5px 12px;
+}
+QDialog#filterOptionsDialog QComboBox#filtersSeparators {
+    min-height: 22px;
+    max-height: 22px;
 }

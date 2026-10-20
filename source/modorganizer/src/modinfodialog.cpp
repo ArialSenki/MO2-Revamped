@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "modinfodialog.h"
 #include "fluenticons.h"
+#include "fluentperf.h"
 #include "fluentnavigation.h"
 #include "modinfodialogcategories.h"
 #include "modinfodialogconflicts.h"
@@ -176,7 +177,9 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       m_plugin(plugin), m_modListView(modListView), m_initialTab(ModInfoTabIDs::None),
       m_arrangingTabs(false)
 {
+  FluentPerf::Timer perf("ModInfoDialog");
   ui->setupUi(this);
+  perf.lap("setupUi");
   LCDNumber::useFrames(this);
 
   // All nine information tabs should remain readable without Qt's tiny
@@ -208,9 +211,11 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       }
       return 0xE915;
     });
+    FluentNavigation::setHeader(ui->tabWidget, ui->modInfoHeader);
     setMinimumSize(1200, 620);
     resize(1300, 720);
   }
+  perf.lap("navigation");
 
   {
     auto* sc = new QShortcut(QKeySequence::Delete, this);
@@ -232,7 +237,9 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
   }
 
   setMod(mod);
+  perf.lap("setMod");
   createTabs();
+  perf.lap("createTabs");
 
   connect(ui->tabWidget, &QTabWidget::currentChanged, [&] {
     onTabSelectionChanged();
@@ -313,8 +320,10 @@ void ModInfoDialog::createTabs()
 
 int ModInfoDialog::exec()
 {
+  FluentPerf::Timer perf("ModInfoDialog::exec");
   GeometrySaver gs(Settings::instance(), this);
   restoreState();
+  perf.lap("restore");
 
   // whether to select the first tab; if the main window requested a specific
   // tab, it is selected when encountered in update()
@@ -322,10 +331,12 @@ int ModInfoDialog::exec()
   const auto requestedTab         = m_initialTab;
 
   update(true);
+  perf.lap("update");
 
   if (noCustomTabRequested) {
     m_core.settings().widgets().restoreIndex(ui->tabWidget);
   }
+  perf.lap("restoreIndex");
 
   const int r = TutorableDialog::exec();
   saveState();
