@@ -1053,18 +1053,17 @@ QTreeView::indicator {
 }
 
 QFrame#notificationHeaderPanel,
+QFrame#overwriteIntroPanel { background-color: transparent; border: none; }
+
 QFrame#notificationListCard,
-QFrame#notificationDetailsCard,
-QFrame#overwriteIntroPanel {
+QFrame#notificationDetailsCard {
     color: #FFFFFF;
     background-color: #2D2D2D;
     border: 1px solid #454545;
     border-radius: 8px;
 }
 
-QFrame#notificationHeaderPanel {
-    background-color: #373737;
-}
+QFrame#notificationHeaderPanel { background-color: transparent; border: none; }
 
 QLabel#notificationHeading,
 QLabel#overwriteHeading {
@@ -6313,4 +6312,24 @@ QDialog#filterOptionsDialog QPushButton#filtersEdit {
 QDialog#filterOptionsDialog QComboBox#filtersSeparators {
     min-height: 22px;
     max-height: 22px;
+}
+
+/* Notifications: the guided fix is the dialog's primary action */
+QDialog QPushButton#fixButton,
+QDialog QPushButton#manageOverwriteButton {
+    color: #000000;
+    background-color: #4CC2FF;
+    border: 1px solid #4CC2FF;
+    font-weight: normal;
+}
+QDialog QPushButton#fixButton:hover,
+QDialog QPushButton#manageOverwriteButton:hover {
+    background-color: #48B1E8;
+    border-color: #48B1E8;
+}
+QDialog QPushButton#fixButton:pressed,
+QDialog QPushButton#manageOverwriteButton:pressed {
+    color: #1B3A4C;
+    background-color: #42A0D2;
+    border-color: #42A0D2;
 }

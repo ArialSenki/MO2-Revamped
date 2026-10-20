@@ -13,6 +13,7 @@
 #include <QDialogButtonBox>
 #include <QHeaderView>
 #include <QLabel>
+#include <QLayout>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QToolBar>
@@ -77,6 +78,11 @@ void flattenHeaders(QDialog* dialog)
     if (!headerName.match(w->objectName()).hasMatch() ||
         qobject_cast<QAbstractItemView*>(w) != nullptr) {
       continue;
+    }
+    // a flat title needs no card padding: its text lines up with the content
+    if (QLayout* layout = w->layout(); layout != nullptr && w->parentWidget() == dialog) {
+      const QMargins m = layout->contentsMargins();
+      layout->setContentsMargins(qMin(m.left(), 4), m.top(), qMin(m.right(), 4), m.bottom());
     }
     for (QLabel* label : w->findChildren<QLabel*>()) {
       if (label->text().isEmpty() && label->pixmap().isNull() == false &&
@@ -143,7 +149,7 @@ bool isOptionsDialog(const QDialog* dialog)
   static const QStringList names = {
       QStringLiteral("ProfilesDialog"),        QStringLiteral("EditExecutablesDialog"),
       QStringLiteral("CreateInstanceDialog"),  QStringLiteral("InstanceManagerDialog"),
-      QStringLiteral("TransferSavesDialog"),   QStringLiteral("CategoriesDialog"),
+      QStringLiteral("TransferSavesDialog"),
       QStringLiteral("LootDialog"),            QStringLiteral("ProblemsDialog"),
   };
   return names.contains(dialog->objectName());
@@ -181,6 +187,16 @@ void polish(QDialog* dialog)
     FluentSettings::switchRows(dialog);
   }
   alignHeaders(dialog);
+
+  // page titles in semibold like Windows 11 (some .ui files make them bold)
+  const int bodySize = dialog->font().pointSize();
+  for (QLabel* label : dialog->findChildren<QLabel*>()) {
+    QFont f = label->font();
+    if (f.weight() > QFont::DemiBold && f.pointSize() >= bodySize + 2) {
+      f.setWeight(QFont::DemiBold);
+      label->setFont(f);
+    }
+  }
 
   // sizes and colors come from the theme's generic dialog rules; the
   // primary button and text tool buttons need a role. The accent stays on the

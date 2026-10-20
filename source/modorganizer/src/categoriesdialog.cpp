@@ -157,8 +157,10 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
   ui->nexusCategoryList->setAlternatingRowColors(true);
   ui->nexusCategoryList->setUniformItemSizes(true);
   ui->nexusCategoryList->setSpacing(1);
-  ui->nexusRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
-  ui->nexusImportButton->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+  ui->nexusRefresh->setIcon(FluentIcons::icon(":/MO/gui/refresh"));
+  ui->nexusImportButton->setIcon(FluentIcons::active()
+                                     ? FluentIcons::glyph(0xE896)  // Download
+                                     : style()->standardIcon(QStyle::SP_DialogOpenButton));
   ui->addCategoryButton->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
   ui->removeCategoryButton->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   ui->nexusRefresh->setIconSize(QSize(16, 16));
