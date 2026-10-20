@@ -1,5 +1,6 @@
 #include "settingsdialognexus.h"
 #include "circularuihelpers.h"
+#include "fluenticons.h"
 #include "log.h"
 #include "nexusinterface.h"
 #include "serverinfo.h"
@@ -391,7 +392,13 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
 
   if (auto* pageLayout = qobject_cast<QVBoxLayout*>(
           ui->nexusScrollAreaWidgetContents->layout())) {
-    pageLayout->setContentsMargins(8, 6, 8, 8);
+    // Fluent pages start their title at the page's own margin, like the
+    // other Settings pages; the classic theme keeps its inset
+    if (FluentIcons::active()) {
+      pageLayout->setContentsMargins(0, 0, 0, 8);
+    } else {
+      pageLayout->setContentsMargins(8, 6, 8, 8);
+    }
     pageLayout->setSpacing(10);
   }
 

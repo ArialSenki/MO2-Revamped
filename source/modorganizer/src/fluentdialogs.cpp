@@ -7,6 +7,7 @@
 #include <QAbstractItemView>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QGridLayout>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLayout>
@@ -81,6 +82,11 @@ void flattenHeaders(QDialog* dialog)
       layout->setContentsMargins(qMin(m.left(), 4), m.top(), qMin(m.right(), 4), m.bottom());
     }
     for (QLabel* label : w->findChildren<QLabel*>()) {
+      // a label the theme gives a frame indents its text by half an "x"
+      // (7 px for a title); flat titles start where their subtitle starts
+      if (label->indent() < 0 && label->frameWidth() > 0) {
+        label->setIndent(0);
+      }
       if (label->text().isEmpty() && label->pixmap().isNull() == false &&
           !label->objectName().contains(QLatin1String("Logo"), Qt::CaseInsensitive)) {
         label->hide();
@@ -265,9 +271,22 @@ void polishMessageBox(QMessageBox* box)
 
   // the roomy padding of a Windows 11 dialog, and a width that does not wrap
   // a short question onto a cramped line
-  if (QLayout* layout = box->layout()) {
-    layout->setContentsMargins(24, 20, 24, 20);
-    layout->setSpacing(16);
+  if (auto* grid = qobject_cast<QGridLayout*>(box->layout())) {
+    grid->setContentsMargins(24, 20, 24, 20);
+    grid->setVerticalSpacing(16);
+    // Qt indents the text with a spacer column (15 px without an icon, 7 px
+    // after one) that the button row spans, so the grid's spacing comes on
+    // top of it; Windows 11 starts the text at the margin, or 16 px past the
+    // icon
+    grid->setHorizontalSpacing(0);
+    const bool hasIcon = !box->iconPixmap().isNull();
+    for (int i = 0; i < grid->count(); ++i) {
+      QSpacerItem* spacer = grid->itemAt(i)->spacerItem();
+      if (spacer != nullptr && spacer->sizeHint().height() <= 1) {
+        spacer->changeSize(hasIcon ? 16 : 0, 1, QSizePolicy::Fixed, QSizePolicy::Fixed);
+      }
+    }
+    grid->invalidate();
   }
   if (auto* text = box->findChild<QLabel*>(QStringLiteral("qt_msgbox_label"))) {
     text->setMinimumWidth(qMax(text->minimumWidth(), 320));
