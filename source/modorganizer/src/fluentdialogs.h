@@ -7,6 +7,7 @@
 // options. Runs once per dialog; MOApplication calls it for Fluent themes.
 
 class QDialog;
+class QMessageBox;
 class QRect;
 class QSize;
 
@@ -22,6 +23,11 @@ QSize maxSize(const QRect& available);
 bool polished(const QDialog* dialog);
 
 void polish(QDialog* dialog);
+
+// Windows 11 message boxes: questions without the old "?" badge (Windows 11
+// dialogs ask in words), information, warnings and errors with the Fluent
+// status glyph in its color; the title bar follows the theme. Runs once.
+void polishMessageBox(QMessageBox* box);
 
 }  // namespace FluentDialogs
 

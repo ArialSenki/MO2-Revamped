@@ -231,4 +231,49 @@ void polish(QDialog* dialog)
   matchTitleBar(dialog);
 }
 
+void polishMessageBox(QMessageBox* box)
+{
+  if (box == nullptr || box->property("fluentPolished").toBool()) {
+    return;
+  }
+  box->setProperty("fluentPolished", true);
+
+  char16_t glyph = 0;
+  auto tone      = FluentIcons::Tone::Accent;
+  switch (box->icon()) {
+  case QMessageBox::Question:
+    box->setIcon(QMessageBox::NoIcon);
+    break;
+  case QMessageBox::Information:
+    glyph = 0xE946;  // Info
+    break;
+  case QMessageBox::Warning:
+    glyph = 0xE7BA;  // Warning
+    tone  = FluentIcons::Tone::Caution;
+    break;
+  case QMessageBox::Critical:
+    glyph = 0xEA39;  // ErrorBadge
+    tone  = FluentIcons::Tone::Critical;
+    break;
+  default:
+    break;
+  }
+  if (glyph != 0) {
+    box->setIconPixmap(
+        FluentIcons::glyph(glyph, tone).pixmap(QSize(28, 28), box->devicePixelRatioF()));
+  }
+
+  // the roomy padding of a Windows 11 dialog, and a width that does not wrap
+  // a short question onto a cramped line
+  if (QLayout* layout = box->layout()) {
+    layout->setContentsMargins(24, 20, 24, 20);
+    layout->setSpacing(16);
+  }
+  if (auto* text = box->findChild<QLabel*>(QStringLiteral("qt_msgbox_label"))) {
+    text->setMinimumWidth(qMax(text->minimumWidth(), 320));
+  }
+
+  matchTitleBar(box);
+}
+
 }  // namespace FluentDialogs
