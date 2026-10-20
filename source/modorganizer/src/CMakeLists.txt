@@ -69,21 +69,24 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/dlls.manifest.debug.qt6"
 		CONFIGURATIONS Debug
 		RENAME dlls.manifest)
 
+# MO offers Light.qss, dark.qss and dark-black.qss: the Fluent themes are the
+# default under those names (see Build-Release.ps1)
 install(FILES
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Classic Refined - Light.qss"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Fluent v4 - Light.qss"
 	DESTINATION bin/stylesheets
 	RENAME Light.qss)
 install(FILES
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Classic Refined - Dark.qss"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Fluent v4 - Dark.qss"
 	DESTINATION bin/stylesheets
 	RENAME dark.qss)
 install(FILES
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Classic Refined - Dark Black.qss"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/MO2 Fluent v4 - Dark Black.qss"
 	DESTINATION bin/stylesheets
 	RENAME dark-black.qss)
 install(DIRECTORY
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-classic-refined-light"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-classic-refined-black"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-fluent-v4-light"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-fluent-v4-dark"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-fluent-v4-black"
 	DESTINATION bin/stylesheets)
 install(DIRECTORY
 	"${CMAKE_CURRENT_SOURCE_DIR}/tutorials"
