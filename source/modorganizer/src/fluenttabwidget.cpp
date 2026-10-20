@@ -1,6 +1,7 @@
 #include "fluenttabwidget.h"
 #include "fluentmotion.h"
 
+#include <QApplication>
 #include <QPainter>
 #include <QPainterPath>
 #include <QVariantAnimation>
@@ -101,4 +102,11 @@ void FluentTabBar::showEvent(QShowEvent* e)
 FluentTabWidget::FluentTabWidget(QWidget* parent) : QTabWidget(parent)
 {
   setTabBar(new FluentTabBar(this));
+
+  // with a Fluent theme the new page rises into place while the pill slides
+  connect(this, &QTabWidget::currentChanged, this, [this](int index) {
+    if (qApp->property("revampedFluent").toBool()) {
+      FluentMotion::pageIn(widget(index), 12);
+    }
+  });
 }

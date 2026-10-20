@@ -1,5 +1,6 @@
 #include "fluentmotion.h"
 
+#include <QGraphicsOpacityEffect>
 #include <QPointer>
 #include <QVariantAnimation>
 #include <QWidget>
@@ -135,6 +136,52 @@ void fadeOut(QWidget* window, std::function<void()> done)
   animation->setEndValue(0.0);
   animation->setDuration(Fast);
   animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void pageIn(QWidget* page, int rise)
+{
+  if (!g_enabled || page == nullptr || !page->isVisible()) {
+    return;
+  }
+
+  // a graphics effect does not compose GPU-rendered children (web views,
+  // OpenGL); those pages switch without the entrance
+  for (QWidget* child : page->findChildren<QWidget*>()) {
+    if (child->inherits("QWebEngineView") || child->inherits("QOpenGLWidget") ||
+        child->inherits("QQuickWidget") || child->inherits("QWebView")) {
+      return;
+    }
+  }
+
+  // a page switched again before its entrance ended starts from where it is
+  QPoint end = page->pos();
+  if (const QVariant settled = page->property("fluentPageEnd"); settled.isValid()) {
+    end = settled.toPoint();
+  }
+  page->setProperty("fluentPageEnd", end);
+
+  auto* effect = new QGraphicsOpacityEffect(page);
+  effect->setOpacity(0.0);
+  page->setGraphicsEffect(effect);  // replaces (and deletes) a running one
+  page->move(end.x(), end.y() + rise);
+
+  // the fade ends after two thirds of the slide, like Windows 11 (167 ms of
+  // opacity, 250 ms of movement)
+  QVariantAnimation* animation = createAnimation(effect, QEasingCurve::OutCubic);
+  QObject::connect(animation, &QVariantAnimation::valueChanged, effect,
+                   [page, effect, end, rise](const QVariant& value) {
+                     const qreal t = value.toReal();
+                     effect->setOpacity(qMin(1.0, t * 1.5));
+                     page->move(end.x(), end.y() + qRound((1.0 - t) * rise));
+                   });
+  QObject::connect(animation, &QVariantAnimation::finished, page, [page, effect, end] {
+    page->move(end);
+    page->setProperty("fluentPageEnd", QVariant());
+    if (page->graphicsEffect() == effect) {
+      page->setGraphicsEffect(nullptr);  // deletes the effect and the animation
+    }
+  });
+  start(animation, 0.0, 1.0, Normal);
 }
 
 }  // namespace FluentMotion

@@ -1,8 +1,10 @@
 #include "modinfodialogconflicts.h"
 #include "fluenticons.h"
+#include "fluentmotion.h"
 #include "modinfodialog.h"
 #include "modinfodialogconflictsmodels.h"
 #include "organizercore.h"
+#include <QTimer>
 #include "settings.h"
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
@@ -564,6 +566,21 @@ GeneralConflictsTab::GeneralConflictsTab(ConflictsTab* tab, Ui::ModInfoDialog* p
   m_expanders.overwrite.set(ui->overwriteExpander, ui->overwriteTree, true);
   m_expanders.overwritten.set(ui->overwrittenExpander, ui->overwrittenTree, true);
   m_expanders.nonconflict.set(ui->noConflictExpander, ui->noConflictTree);
+
+  // Fluent: an expanded list rises into place once the layout has made room
+  const std::pair<ExpanderWidget*, QWidget*> expanders[] = {
+      {&m_expanders.overwrite, ui->overwriteTree},
+      {&m_expanders.overwritten, ui->overwrittenTree},
+      {&m_expanders.nonconflict, ui->noConflictTree}};
+  for (const auto& [expander, content] : expanders) {
+    QObject::connect(expander, &ExpanderWidget::toggled, content, [content](bool opened) {
+      if (opened && FluentIcons::active()) {
+        QTimer::singleShot(0, content, [content] {
+          FluentMotion::pageIn(content, 8);
+        });
+      }
+    });
+  }
 
   m_filterOverwrite.setEdit(ui->overwriteLineEdit);
   m_filterOverwrite.setList(ui->overwriteTree);

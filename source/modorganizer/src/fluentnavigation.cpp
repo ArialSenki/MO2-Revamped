@@ -7,8 +7,6 @@
 #include <QAbstractButton>
 #include <QApplication>
 #include <QBoxLayout>
-#include <QGraphicsOpacityEffect>
-#include <QVariantAnimation>
 #include <QLayout>
 #include <QListWidget>
 #include <QPainter>
@@ -107,40 +105,6 @@ public:
   }
 };
 
-// the new page fades in, like a Windows 11 Settings page; the effect only
-// lives for the animation so scrolling and painting stay cheap afterwards
-void fadeIn(QWidget* page)
-{
-  if (page == nullptr || FluentMotion::duration(FluentMotion::Fast) == 0) {
-    return;
-  }
-
-  // a graphics effect does not compose GPU-rendered children (web views,
-  // OpenGL); those pages switch without the fade
-  for (QWidget* child : page->findChildren<QWidget*>()) {
-    if (child->inherits("QWebEngineView") || child->inherits("QOpenGLWidget") ||
-        child->inherits("QQuickWidget") || child->inherits("QWebView")) {
-      return;
-    }
-  }
-
-  auto* effect = new QGraphicsOpacityEffect(page);
-  effect->setOpacity(0.0);
-  page->setGraphicsEffect(effect);
-
-  QVariantAnimation* animation = FluentMotion::createAnimation(effect);
-  QObject::connect(animation, &QVariantAnimation::valueChanged, effect,
-                   [effect](const QVariant& value) {
-                     effect->setOpacity(value.toReal());
-                   });
-  QObject::connect(animation, &QVariantAnimation::finished, page, [page, effect] {
-    if (page->graphicsEffect() == effect) {
-      page->setGraphicsEffect(nullptr);  // deletes the effect and the animation
-    }
-  });
-  FluentMotion::start(animation, 0.0, 1.0, FluentMotion::Fast);
-}
-
 NavigationState* stateOf(QTabWidget* tabs)
 {
   // the state object has no meta object of its own, so look it up by name
@@ -212,7 +176,7 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
         FluentIcons::apply(button);
       }
     }
-    fadeIn(page);
+    FluentMotion::pageIn(page);
   });
 
   return nav;
