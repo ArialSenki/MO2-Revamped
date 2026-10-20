@@ -255,6 +255,47 @@ namespace {
 
 constexpr int kRevampedNexusModId = 11290;
 
+// QtWebEngineProcess.exe imports Qt6WebEngineCore.dll and the other Qt dlls in
+// dlls/. A copy in MO's folder only finds them through the PATH set by
+// addDllsToPath(), which Chromium's sandbox doesn't give the render process,
+// so every page (Nexus Info, LOOT report) died with 0xC0000135, sometimes
+// with a system error box. Releases ship the helper in dlls/, next to them,
+// with a qt.conf that points it back at MO's folder for resources.
+//
+// Qt reads QTWEBENGINEPROCESS_PATH once, when the default profile creates the
+// web engine; the variable is removed afterwards so the game and tools started
+// by MO don't inherit it.
+class WebEngineProcessPath
+{
+public:
+  WebEngineProcessPath()
+  {
+    const QString helper = QDir::toNativeSeparators(
+        QCoreApplication::applicationDirPath() + "/dlls/QtWebEngineProcess.exe");
+
+    // the wide CRT call keeps paths outside the ANSI code page intact
+    m_set = !qEnvironmentVariableIsSet("QTWEBENGINEPROCESS_PATH") &&
+            QFileInfo::exists(helper);
+    if (m_set) {
+      _wputenv_s(Name, helper.toStdWString().c_str());
+    }
+  }
+
+  ~WebEngineProcessPath()
+  {
+    if (m_set) {
+      _wputenv_s(Name, L"");
+    }
+  }
+
+  WebEngineProcessPath(const WebEngineProcessPath&)            = delete;
+  WebEngineProcessPath& operator=(const WebEngineProcessPath&) = delete;
+
+private:
+  static constexpr const wchar_t* Name = L"QTWEBENGINEPROCESS_PATH";
+  bool m_set = false;
+};
+
 class LogDockControlButton final : public QToolButton
 {
 public:
@@ -1328,8 +1369,11 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
 
   setStartupDiagnosticPhase("mainwindow.webengine.configure");
-  QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(
-      QWebEngineProfile::NoPersistentCookies);
+  {
+    WebEngineProcessPath processPath;
+    QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(
+        QWebEngineProfile::NoPersistentCookies);
+  }
   QWebEngineProfile::defaultProfile()->setHttpCacheMaximumSize(52428800);
   QWebEngineProfile::defaultProfile()->setCachePath(settings.paths().cache());
   QWebEngineProfile::defaultProfile()->setPersistentStoragePath(
