@@ -207,6 +207,21 @@ function Convert-DialogBody([string]$kind, [string]$body, $theme) {
         'badge' { return ' background-color: transparent; border: none; padding: 0px; ' }
         'label' {
             $body = [regex]::Replace($body, 'font-weight\s*:\s*(bold|[789]00)', 'font-weight: 600')
+            # plain text starts where the card's title and rows start; only
+            # labels drawn as boxes (status pills, notes) keep side padding
+            if ($body -notmatch 'background(-color)?\s*:\s*(#|rgb)' -and $body -notmatch 'border\s*:\s*\d') {
+                $body = [regex]::Replace($body, 'padding\s*:\s*(?<v>[^;]+)', [Text.RegularExpressions.MatchEvaluator]{
+                    param($m)
+                    $v = $m.Groups['v'].Value.Trim() -split '\s+'
+                    switch ($v.Count) {
+                        1 { "padding: $($v[0]) 0px" }
+                        2 { "padding: $($v[0]) 0px" }
+                        3 { "padding: $($v[0]) 0px $($v[2])" }
+                        default { "padding: $($v[0]) 0px $($v[2]) 0px" }
+                    }
+                })
+                $body = [regex]::Replace($body, 'padding-(left|right)\s*:\s*[^;]+', 'padding-$1: 0px')
+            }
             return [regex]::Replace($body, 'border-radius\s*:\s*\d+px', 'border-radius: 4px')
         }
         'card' {

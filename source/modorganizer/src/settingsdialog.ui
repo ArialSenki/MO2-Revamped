@@ -842,7 +842,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
        <item>
         <widget class="QGroupBox" name="collapsibleSeparatorsWidget">
          <property name="title">
-          <string>Collapsible Separators</string>
+          <string>Collapsible separators</string>
          </property>
          <property name="flat">
           <bool>false</bool>

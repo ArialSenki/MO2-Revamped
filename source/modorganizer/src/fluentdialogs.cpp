@@ -5,10 +5,6 @@
 #include "revampedtheme.h"
 
 #include <QAbstractItemView>
-#include <QAbstractSpinBox>
-#include <QComboBox>
-#include <QLineEdit>
-#include <QCommandLinkButton>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QHeaderView>
@@ -190,7 +186,7 @@ void polish(QDialog* dialog)
     for (QLabel* note : dialog->findChildren<QLabel*>()) {
       const QMargins m = note->contentsMargins();
       if (note->objectName().endsWith(QLatin1String("Note")) && m.left() > 16) {
-        note->setContentsMargins(0, m.top(), m.right(), m.bottom());
+        note->setContentsMargins(8, m.top(), m.right(), m.bottom());
       }
     }
   }
