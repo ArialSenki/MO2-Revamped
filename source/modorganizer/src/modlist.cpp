@@ -356,7 +356,9 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     if (column == COL_NAME) {
       int highlight = modInfo->getHighlight();
       if (highlight & ModInfo::HIGHLIGHT_IMPORTANT) {
-        return QBrush(MOBase::RevampedTheme::criticalText());
+        // Fluent: files waiting in Overwrite are a caution, not an error
+        return QBrush(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Caution)
+                                            : MOBase::RevampedTheme::criticalText());
       } else if (highlight & ModInfo::HIGHLIGHT_INVALID) {
         return QBrush(MOBase::RevampedTheme::dimmedText());
       }
@@ -364,6 +366,10 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       if (!modInfo->newestVersion().isValid()) {
         return QVariant();
       } else if (modInfo->updateAvailable() || modInfo->downgradeAvailable()) {
+        // Fluent marks an available update in the accent, like Windows Update
+        if (FluentIcons::active()) {
+          return QBrush(FluentIcons::color(FluentIcons::Tone::Accent));
+        }
         return QBrush(MOBase::RevampedTheme::isDark() ? MOBase::RevampedTheme::criticalText()
                                                      : QColor(Qt::red));
       } else {

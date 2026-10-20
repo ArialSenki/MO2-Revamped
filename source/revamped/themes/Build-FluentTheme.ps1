@@ -231,7 +231,9 @@ function Convert-DialogRules([string]$text, $theme) {
         foreach ($sel in ($m.Groups['sel'].Value -split ',')) {
             $s = $sel.Trim()
             if (-not $s) { continue }
-            $kind = if ($dialogScope.IsMatch($s)) { Get-DialogRuleKind $s } else { 'generic' }
+            $kind = if ($dialogScope.IsMatch($s)) { Get-DialogRuleKind $s }
+                    elseif ($s -notmatch 'MainWindow' -and (Get-DialogRuleKind $s) -eq 'banner') { 'banner' }
+                    else { 'generic' }
             if ($kind -eq 'drop') { $script:droppedSelectors++; continue }
             if (-not $groups.Contains($kind)) { $groups[$kind] = New-Object Collections.Generic.List[string] }
             $groups[$kind].Add($s)

@@ -1563,3 +1563,23 @@ QDialog#filterOptionsDialog QComboBox#filtersSeparators {
     min-height: 22px;
     max-height: 22px;
 }
+
+/* Notifications: the guided fix is the dialog's primary action */
+QDialog QPushButton#fixButton,
+QDialog QPushButton#manageOverwriteButton {
+    color: @accentFg@;
+    background-color: @accent@;
+    border: 1px solid @accent@;
+    font-weight: normal;
+}
+QDialog QPushButton#fixButton:hover,
+QDialog QPushButton#manageOverwriteButton:hover {
+    background-color: @accentHover@;
+    border-color: @accentHover@;
+}
+QDialog QPushButton#fixButton:pressed,
+QDialog QPushButton#manageOverwriteButton:pressed {
+    color: @accentFgPressed@;
+    background-color: @accentPressed@;
+    border-color: @accentPressed@;
+}

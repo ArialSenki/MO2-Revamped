@@ -129,7 +129,21 @@ void ProblemsDialog::selectionChanged()
           : tr("Review the details below to understand this notification and choose an "
                "available action."));
 
-  if (text.isEmpty()) {
+  if (isOverwrite && text.contains(QLatin1String("Creation Club"))) {
+    // the basic diagnosis text is written for the Bethesda games (Wrye Bash,
+    // xEdit, ESL files); this build manages Elden Ring
+    ui->descriptionText->setText(
+        tr("<p>Overwrite holds files that the game and tools created while running "
+           "through MO2: logs and settings written by DLL mods, files saved by mod "
+           "tools, and similar output. They do not belong to any mod yet.</p>"
+           "<p>Files in <b>Overwrite</b> take priority over every mod in the profile. "
+           "Move the files you want to keep into a mod: drag them from the Manage "
+           "Overwrite window onto a mod, or right-click Overwrite in the mod list and "
+           "create a mod from its contents. Delete what you no longer need, such as "
+           "old logs.</p>"
+           "<p>Startup options can clear old mod logs from Overwrite before each "
+           "launch.</p>"));
+  } else if (text.isEmpty()) {
     ui->descriptionText->setPlainText(
         tr("The plugin that reported this notification did not provide additional "
            "details."));
