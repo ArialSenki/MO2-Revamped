@@ -3237,8 +3237,7 @@ void MainWindow::updateModPageMenu()
   bool keepOriginalAction =
       modPagePlugins.size() == 0 && registeredSources.length() <= 1;
   if (keepOriginalAction) {
-    // next to the mod page action; Profiles may live in the overflow menu
-    ui->toolBar->insertAction(ui->actionTool, ui->actionNexus);
+    ui->toolBar->insertAction(ui->actionAdd_Profile, ui->actionNexus);
   } else {
     ui->toolBar->removeAction(ui->actionNexus);
   }

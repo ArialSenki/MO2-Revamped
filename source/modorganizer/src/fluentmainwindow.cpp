@@ -265,32 +265,25 @@ void MainWindow::setupFluentCommandBar()
 {
   QToolBar* bar = ui->toolBar;
 
-  // the command bar keeps the everyday actions; setup, links and help move
-  // into one overflow button at the far right. The actions stay on the window
-  // so their shortcuts keep working.
-  const QList<QAction*> overflow = {ui->actionAdd_Profile, ui->actionModify_Executables,
-                                    ui->action_Refresh, ui->actionEndorseMO,
-                                    ui->actionUpdate, ui->actionHelp};
+  // the left group keeps MO2's original order (install, Nexus, profiles,
+  // refresh, executables, tools, settings); links and help move into one
+  // overflow button at the far right. The actions stay on the window so their
+  // shortcuts keep working.
+  const QList<QAction*> overflow = {ui->actionEndorseMO, ui->actionUpdate,
+                                    ui->actionHelp};
   for (QAction* action : overflow) {
     bar->removeAction(action);
     addAction(action);
   }
 
-  bar->removeAction(ui->actionSettings);
-  bar->addAction(ui->actionSettings);
-
   auto* menu = new QMenu(this);
-  menu->addAction(ui->actionAdd_Profile);
-  menu->addAction(ui->actionModify_Executables);
-  menu->addAction(ui->action_Refresh);
-  menu->addSeparator();
   menu->addAction(ui->actionEndorseMO);
   menu->addAction(ui->actionUpdate);
   menu->addAction(ui->actionHelp);
 
   m_fluentOverflowAction = new QAction(tr("More"), this);
   m_fluentOverflowAction->setObjectName(QStringLiteral("actionFluentMore"));
-  m_fluentOverflowAction->setToolTip(tr("Profiles, executables, refresh, links and help"));
+  m_fluentOverflowAction->setToolTip(tr("Links, updates and help"));
   m_fluentOverflowAction->setMenu(menu);
   bar->addAction(m_fluentOverflowAction);
   if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_fluentOverflowAction))) {
@@ -299,8 +292,7 @@ void MainWindow::setupFluentCommandBar()
   }
 
   // low priority actions show their icon only next to labeled ones
-  for (QAction* action : {ui->actionNotifications, ui->actionSettings,
-                          m_fluentOverflowAction}) {
+  for (QAction* action : {ui->actionNotifications, m_fluentOverflowAction}) {
     action->setPriority(QAction::LowPriority);
   }
 
