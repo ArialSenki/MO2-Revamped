@@ -1,4 +1,5 @@
 #include "instancemanagerdialog.h"
+#include "fluentpanels.h"
 #include "createinstancedialog.h"
 #include "envshortcut.h"
 #include "filesystemutilities.h"
@@ -74,147 +75,13 @@ constexpr char16_t TagGlyph      = 0xE8EC;
 constexpr char16_t NoteGlyph     = 0xE70B;  // QuickNote
 constexpr char16_t CopyPathGlyph = 0xE77F;  // Paste, the clipboard
 
-constexpr int RowHeight   = 60;
-constexpr int CaptionRole = Qt::UserRole + 1;
+using FluentPanels::CaptionRole;
+using FluentPanels::ElidedLabel;
+using FluentPanels::glyphLabel;
+using FluentPanels::HeaderRole;
 constexpr int IndexRole   = Qt::UserRole + 2;  // the instance's index, -1 on a heading
-constexpr int HeaderRole  = Qt::UserRole + 3;  // a group heading
 constexpr int GroupRole   = Qt::UserRole + 4;  // a heading's group name
 constexpr int NotesRole   = Qt::UserRole + 5;  // searched along with the name
-constexpr int HeaderHeight = 34;
-
-QLabel* glyphLabel(char16_t glyph, QWidget* parent)
-{
-  auto* label = new QLabel(QString(QChar(glyph)), parent);
-  label->setObjectName(QStringLiteral("instanceRowGlyph"));
-  label->setFont(FluentIcons::font(16));
-  label->setFixedWidth(24);
-  label->setAlignment(Qt::AlignCenter);
-  return label;
-}
-
-// a label that elides its text in the middle, so a long path keeps its drive
-// and its last folder; the whole text is in the tool tip
-class ElidedLabel : public QLabel
-{
-public:
-  using QLabel::QLabel;
-
-  void setFullText(const QString& text)
-  {
-    m_full = text;
-    setToolTip(text);
-    updateGeometry();
-    update();
-  }
-
-  QSize minimumSizeHint() const override { return QSize(40, QLabel::minimumSizeHint().height()); }
-
-  QSize sizeHint() const override
-  {
-    return QSize(fontMetrics().horizontalAdvance(m_full), fontMetrics().height());
-  }
-
-protected:
-  void paintEvent(QPaintEvent*) override
-  {
-    QPainter p(this);
-    p.setPen(palette().color(QPalette::WindowText));
-    p.setFont(font());
-    p.drawText(contentsRect(), Qt::AlignLeft | Qt::AlignVCenter,
-               fontMetrics().elidedText(m_full, Qt::ElideMiddle, contentsRect().width()));
-  }
-
-private:
-  QString m_full;
-};
-
-// the instance rows of the list card: the game's badge, the name and a
-// caption below it, a hover fill and the accent pill of the selected row like
-// the Settings navigation
-class InstanceRowDelegate : public QStyledItemDelegate
-{
-public:
-  using QStyledItemDelegate::QStyledItemDelegate;
-
-  QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override
-  {
-    return QSize(QStyledItemDelegate::sizeHint(option, index).width(),
-                 index.data(HeaderRole).toBool() ? HeaderHeight : RowHeight);
-  }
-
-  void paint(QPainter* painter, const QStyleOptionViewItem& option,
-             const QModelIndex& index) const override
-  {
-    const bool selected = option.state & QStyle::State_Selected;
-    const bool hovered  = option.state & QStyle::State_MouseOver;
-    const QColor ink    = option.palette.color(QPalette::Active, QPalette::WindowText);
-
-    if (index.data(HeaderRole).toBool()) {
-      // a group heading: semibold caption text, no hover
-      painter->save();
-      QFont heading = option.font;
-      heading.setWeight(QFont::DemiBold);
-      heading.setPointSizeF(option.font.pointSizeF() * 0.92);
-      painter->setFont(heading);
-      painter->setPen(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Muted)
-                                            : option.palette.color(QPalette::Disabled,
-                                                                   QPalette::WindowText));
-      painter->drawText(QRectF(option.rect).adjusted(10, 0, -8, -5),
-                        Qt::AlignLeft | Qt::AlignBottom,
-                        QFontMetrics(heading).elidedText(index.data().toString(),
-                                                         Qt::ElideRight,
-                                                         option.rect.width() - 18));
-      painter->restore();
-      return;
-    }
-
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing);
-
-    const QRectF row = QRectF(option.rect).adjusted(2, 2, -2, -2);
-    if (selected || hovered) {
-      QColor fill = ink;
-      fill.setAlpha(selected ? 26 : 15);
-      painter->setPen(Qt::NoPen);
-      painter->setBrush(fill);
-      painter->drawRoundedRect(row, 4, 4);
-    }
-    if (selected) {
-      painter->setBrush(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Accent)
-                                              : option.palette.color(QPalette::Highlight));
-      painter->drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5);
-    }
-
-    const QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
-    const QRect iconRect(static_cast<int>(row.left()) + 12,
-                         static_cast<int>(row.center().y()) - 16, 32, 32);
-    icon.paint(painter, iconRect);
-
-    const QRectF text = row.adjusted(56, 8, -10, -8);
-    QFont name        = option.font;
-    name.setWeight(selected ? QFont::DemiBold : QFont::Normal);
-    painter->setFont(name);
-    painter->setPen(ink);
-    const QFontMetrics nameMetrics(name);
-    painter->drawText(QRectF(text.left(), text.top(), text.width(), text.height() / 2),
-                      Qt::AlignLeft | Qt::AlignVCenter,
-                      nameMetrics.elidedText(index.data().toString(), Qt::ElideRight,
-                                             static_cast<int>(text.width())));
-
-    QFont caption = option.font;
-    caption.setPointSizeF(option.font.pointSizeF() * 0.9);
-    painter->setFont(caption);
-    painter->setPen(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Muted)
-                                          : option.palette.color(QPalette::Disabled,
-                                                                 QPalette::WindowText));
-    painter->drawText(QRectF(text.left(), text.center().y(), text.width(), text.height() / 2),
-                      Qt::AlignLeft | Qt::AlignVCenter,
-                      QFontMetrics(caption).elidedText(index.data(CaptionRole).toString(),
-                                                       Qt::ElideRight,
-                                                       static_cast<int>(text.width())));
-    painter->restore();
-  }
-};
 
 // when the instance was last used: its settings and its log are written
 // while it runs; "today at 13:20", "yesterday", "3 days ago" or a date like
@@ -644,7 +511,7 @@ QWidget* InstanceManagerDialog::createListCard()
   m_list = new QListView(card);
   m_list->setObjectName(QStringLiteral("instanceList"));
   m_list->setModel(m_model);
-  m_list->setItemDelegate(new InstanceRowDelegate(m_list));
+  m_list->setItemDelegate(new FluentPanels::RowDelegate(m_list));
   m_list->setFrameShape(QFrame::NoFrame);
   m_list->setMouseTracking(true);
   m_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -804,38 +671,10 @@ InstanceManagerDialog::addDetailRow(QWidget* parent, char16_t glyph, const QStri
 {
   // a Settings row: glyph, title with the value below it, and a button that
   // opens it when there is something to open
+  const auto shared = FluentPanels::addDetailRow(parent, glyph, title, tip, actionGlyph);
   DetailRow row;
-  auto* frame = new QFrame(parent);
-  frame->setObjectName(QStringLiteral("fluentSettingRow"));
-  frame->setMinimumHeight(62);
-
-  auto* layout = new QHBoxLayout(frame);
-  layout->setContentsMargins(18, 8, 12, 8);
-  layout->setSpacing(14);
-  layout->addWidget(glyphLabel(glyph, frame));
-
-  auto* text = new QVBoxLayout;
-  text->setSpacing(2);
-  auto* titleLabel = new QLabel(title, frame);
-  titleLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
-  row.value = new ElidedLabel(frame);
-  row.value->setObjectName(QStringLiteral("instanceDetailValue"));
-  text->addWidget(titleLabel);
-  text->addWidget(row.value);
-  layout->addLayout(text, 1);
-
-  if (!tip.isEmpty()) {
-    row.action = new QToolButton(frame);
-    row.action->setObjectName(QStringLiteral("instanceIconButton"));
-    row.action->setIcon(FluentIcons::glyph(actionGlyph));
-    row.action->setAutoRaise(true);
-    row.action->setToolTip(tip);
-    row.action->setAccessibleName(tip);
-    row.action->setCursor(Qt::PointingHandCursor);
-    layout->addWidget(row.action);
-  }
-
-  parent->layout()->addWidget(frame);
+  row.value  = shared.value;
+  row.action = shared.action;
   return row;
 }
 

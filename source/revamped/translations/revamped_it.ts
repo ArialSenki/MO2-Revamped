@@ -6183,6 +6183,206 @@ Procedere?</translation>
       <source>Elden Ring save routing is managed in Tools &gt; Save Isolation.</source>
       <translation>I percorsi dei salvataggi di Elden Ring si gestiscono in Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
+    <message>
+      <source>Today at %1</source>
+      <translation>Oggi alle %1</translation>
+    </message>
+    <message>
+      <source>Yesterday at %1</source>
+      <translation>Ieri alle %1</translation>
+    </message>
+    <message>
+      <source>What is a profile?</source>
+      <translation>Cos’è un profilo?</translation>
+    </message>
+    <message>
+      <source>New profile</source>
+      <translation>Nuovo profilo</translation>
+    </message>
+    <message>
+      <source>Create a profile with its own mod list (Ctrl+N)</source>
+      <translation>Crea un profilo con il proprio elenco di mod (Ctrl+N)</translation>
+    </message>
+    <message>
+      <source>Select a profile to see its mods and options.</source>
+      <translation>Seleziona un profilo per vederne mod e opzioni.</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Profile folder</source>
+      <translation>Cartella del profilo</translation>
+    </message>
+    <message>
+      <source>Open the profile folder</source>
+      <translation>Apri la cartella del profilo</translation>
+    </message>
+    <message>
+      <source>Mod list changed</source>
+      <translation>Elenco mod modificato</translation>
+    </message>
+    <message>
+      <source>Saves</source>
+      <translation>Salvataggi</translation>
+    </message>
+    <message>
+      <source>Profile-specific saves</source>
+      <translation>Salvataggi specifici del profilo</translation>
+    </message>
+    <message>
+      <source>This profile keeps its own save games instead of sharing the game's.</source>
+      <translation>Questo profilo tiene i propri salvataggi invece di condividere quelli del gioco.</translation>
+    </message>
+    <message>
+      <source>Profile-specific game INI files</source>
+      <translation>File INI del gioco specifici del profilo</translation>
+    </message>
+    <message>
+      <source>This profile keeps its own copy of the game's INI files, so its settings don't change other profiles.</source>
+      <translation>Questo profilo tiene una propria copia dei file INI del gioco, così le sue impostazioni non cambiano gli altri profili.</translation>
+    </message>
+    <message>
+      <source>Automatic archive invalidation</source>
+      <translation>Invalidazione automatica degli archivi</translation>
+    </message>
+    <message>
+      <source>Makes the game load loose files over the ones in its archives.</source>
+      <translation>Fa caricare al gioco i file sciolti al posto di quelli nei suoi archivi.</translation>
+    </message>
+    <message>
+      <source>Duplicate</source>
+      <translation>Duplica</translation>
+    </message>
+    <message>
+      <source>Create a profile with the same mods and options (Ctrl+D)</source>
+      <translation>Crea un profilo con le stesse mod e opzioni (Ctrl+D)</translation>
+    </message>
+    <message>
+      <source>Transfer saves...</source>
+      <translation>Trasferisci salvataggi...</translation>
+    </message>
+    <message>
+      <source>Copy or move saves between this profile and the game</source>
+      <translation>Copia o sposta i salvataggi tra questo profilo e il gioco</translation>
+    </message>
+    <message>
+      <source>Delete profile</source>
+      <translation>Elimina profilo</translation>
+    </message>
+    <message>
+      <source>Can't be read</source>
+      <translation>Non leggibile</translation>
+    </message>
+    <message>
+      <source>%1 of %2 mods</source>
+      <translation>%1 mod su %2</translation>
+    </message>
+    <message>
+      <source>In use</source>
+      <translation>In uso</translation>
+    </message>
+    <message>
+      <source>Use this profile</source>
+      <translation>Usa questo profilo</translation>
+    </message>
+    <message>
+      <source>In use by the main window</source>
+      <translation>In uso nella finestra principale</translation>
+    </message>
+    <message>
+      <source>Not in use</source>
+      <translation>Non in uso</translation>
+    </message>
+    <message>
+      <source>Current profile</source>
+      <translation>Profilo attuale</translation>
+    </message>
+    <message>
+      <source>Switch the main window to this profile</source>
+      <translation>Passa la finestra principale a questo profilo</translation>
+    </message>
+    <message>
+      <source>Switch to another profile before renaming this one</source>
+      <translation>Passa a un altro profilo prima di rinominare questo</translation>
+    </message>
+    <message>
+      <source>Rename (F2)</source>
+      <translation>Rinomina (F2)</translation>
+    </message>
+    <message>
+      <source>Switch to another profile before deleting this one</source>
+      <translation>Passa a un altro profilo prima di eliminare questo</translation>
+    </message>
+    <message>
+      <source>Delete the profile and its own saves (Delete)</source>
+      <translation>Elimina il profilo e i suoi salvataggi (Canc)</translation>
+    </message>
+    <message>
+      <source>This profile can't be read</source>
+      <translation>Questo profilo non è leggibile</translation>
+    </message>
+    <message>
+      <source>Unknown</source>
+      <translation>Sconosciuto</translation>
+    </message>
+    <message>
+      <source>%1 of %2 mods enabled</source>
+      <translation>%1 mod attive su %2</translation>
+    </message>
+    <message>
+      <source>Chosen in Tools &gt; Save Isolation</source>
+      <translation>Si scelgono in Strumenti &gt; Save Isolation</translation>
+    </message>
+    <message>
+      <source>Turn on profile-specific saves to transfer saves</source>
+      <translation>Attiva i salvataggi specifici del profilo per trasferirli</translation>
+    </message>
+    <message>
+      <source>New profile...</source>
+      <translation>Nuovo profilo...</translation>
+    </message>
+    <message>
+      <source>Open profiles folder</source>
+      <translation>Apri cartella dei profili</translation>
+    </message>
+    <message>
+      <source>Rename...</source>
+      <translation>Rinomina...</translation>
+    </message>
+    <message>
+      <source>Duplicate...</source>
+      <translation>Duplica...</translation>
+    </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Apri cartella</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Folder path</source>
+      <translation>Percorso della cartella</translation>
+    </message>
+    <message>
+      <source>Delete profile...</source>
+      <translation>Elimina profilo...</translation>
+    </message>
+    <message>
+      <source>A profile is one setup of the same instance: which mods are enabled, their order and, if you want, its own saves and game INI files. Profiles share the instance's mods and downloads, so a second profile costs no disk space.
+
+Use one per playthrough or per mod list you want to try. The profile in use is chosen next to Program in the main window.</source>
+      <translation>Un profilo è una configurazione della stessa istanza: quali mod sono attive, il loro ordine e, se vuoi, salvataggi e file INI propri. I profili condividono mod e download dell’istanza, quindi un secondo profilo non occupa spazio su disco.
+
+Usane uno per partita o per elenco di mod da provare. Il profilo in uso si sceglie accanto a Programma nella finestra principale.</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>
@@ -6791,6 +6991,10 @@ Esempio:
     <message>
       <source>Programs</source>
       <translation>Programmi</translation>
+    </message>
+    <message>
+      <source>Unknown</source>
+      <translation>Sconosciuto</translation>
     </message>
   </context>
   <context>
