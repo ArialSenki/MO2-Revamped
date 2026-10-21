@@ -394,6 +394,262 @@
       <source>Step %1 of %2</source>
       <translation>Paso %1 de %2</translation>
     </message>
+    <message>
+      <source>The desktop shortcut could not be added.</source>
+      <translation>No se pudo añadir el acceso directo del escritorio.</translation>
+    </message>
+    <message>
+      <source>Create instance</source>
+      <translation>Crear instancia</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nueva instancia</translation>
+    </message>
+    <message>
+      <source>Progress</source>
+      <translation>Progreso</translation>
+    </message>
+    <message>
+      <source>Each instance is a setup of its own. These are the steps.</source>
+      <translation>Cada instancia es una configuración propia. Estos son los pasos.</translation>
+    </message>
+    <message>
+      <source>Where it's stored</source>
+      <translation>Dónde se guarda</translation>
+    </message>
+    <message>
+      <source>Global in your user folder, portable next to Mod Organizer, or an isolated copy of Mod Organizer for one game.</source>
+      <translation>Global en tu carpeta de usuario, portable junto a Mod Organizer o una copia aislada de Mod Organizer para un juego.</translation>
+    </message>
+    <message>
+      <source>The game it manages</source>
+      <translation>El juego que gestiona</translation>
+    </message>
+    <message>
+      <source>Installed games are found for you; any other folder can be chosen.</source>
+      <translation>Los juegos instalados se detectan solos; se puede elegir cualquier otra carpeta.</translation>
+    </message>
+    <message>
+      <source>Its name, folders and profiles</source>
+      <translation>Su nombre, carpetas y perfiles</translation>
+    </message>
+    <message>
+      <source>All of it can be checked on the last step before anything is created.</source>
+      <translation>Todo se puede revisar en el último paso, antes de crear nada.</translation>
+    </message>
+    <message>
+      <source>Switching later</source>
+      <translation>Cambiar después</translation>
+    </message>
+    <message>
+      <source>Manage Instances opens any instance at any time.</source>
+      <translation>Gestionar instancias abre cualquier instancia en cualquier momento.</translation>
+    </message>
+    <message>
+      <source>Before you start</source>
+      <translation>Antes de empezar</translation>
+    </message>
+    <message>
+      <source>Run the game once from its own launcher, so its INI files and its save folder exist.</source>
+      <translation>Abre el juego una vez desde su propio launcher, para que existan sus archivos INI y su carpeta de partidas.</translation>
+    </message>
+    <message>
+      <source>Your instances</source>
+      <translation>Tus instancias</translation>
+    </message>
+    <message>
+      <source>Global (recommended)</source>
+      <translation>Global (recomendada)</translation>
+    </message>
+    <message>
+      <source>Kept in your user folder and managed by this Mod Organizer. Its data folders can be moved later.</source>
+      <translation>Se guarda en tu carpeta de usuario y la gestiona este Mod Organizer. Sus carpetas de datos se pueden mover después.</translation>
+    </message>
+    <message>
+      <source>Portable</source>
+      <translation>Portable</translation>
+    </message>
+    <message>
+      <source>Kept next to this Mod Organizer, so the program and the instance travel together.</source>
+      <translation>Se guarda junto a este Mod Organizer, así el programa y la instancia viajan juntos.</translation>
+    </message>
+    <message>
+      <source>Isolated copy</source>
+      <translation>Copia aislada</translation>
+    </message>
+    <message>
+      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring is supported for now.</source>
+      <translation>Una copia aparte de Mod Organizer con sus propios ajustes y datos, para un juego. De momento se admite Elden Ring.</translation>
+    </message>
+    <message>
+      <source>What changes</source>
+      <translation>Qué cambia</translation>
+    </message>
+    <message>
+      <source>Global</source>
+      <translation>Global</translation>
+    </message>
+    <message>
+      <source>Mod Organizer settings</source>
+      <translation>Ajustes de Mod Organizer</translation>
+    </message>
+    <message>
+      <source>Shared</source>
+      <translation>Compartidos</translation>
+    </message>
+    <message>
+      <source>Its own</source>
+      <translation>Propios</translation>
+    </message>
+    <message>
+      <source>Moves with the program folder</source>
+      <translation>Se mueve con la carpeta del programa</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>No</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sí</translation>
+    </message>
+    <message>
+      <source>Plugins and version</source>
+      <translation>Plugins y versión</translation>
+    </message>
+    <message>
+      <source>This Mod Organizer's</source>
+      <translation>Los de este Mod Organizer</translation>
+    </message>
+    <message>
+      <source>Its own copy</source>
+      <translation>Su propia copia</translation>
+    </message>
+    <message>
+      <source>Search games</source>
+      <translation>Buscar juegos</translation>
+    </message>
+    <message>
+      <source>Browse…</source>
+      <translation>Examinar…</translation>
+    </message>
+    <message>
+      <source>Choose a game folder that wasn't found</source>
+      <translation>Elige una carpeta de juego que no se encontró</translation>
+    </message>
+    <message>
+      <source>Is your game missing?</source>
+      <translation>¿No aparece tu juego?</translation>
+    </message>
+    <message>
+      <source>Choose Browse… and select its folder, or turn on Show all supported games.</source>
+      <translation>Usa Examinar… y elige su carpeta, o activa Mostrar todos los juegos compatibles.</translation>
+    </message>
+    <message>
+      <source>It also names the instance's folder.</source>
+      <translation>También da nombre a la carpeta de la instancia.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nombre</translation>
+    </message>
+    <message>
+      <source>How it's listed in Manage Instances.</source>
+      <translation>Cómo aparece en Gestionar instancias.</translation>
+    </message>
+    <message>
+      <source>Group</source>
+      <translation>Grupo</translation>
+    </message>
+    <message>
+      <source>Optional. Instances in a group are listed together in Manage Instances.</source>
+      <translation>Opcional. Las instancias de un grupo aparecen juntas en Gestionar instancias.</translation>
+    </message>
+    <message>
+      <source>Stable setup with Seamless Co-op, for example</source>
+      <translation>Configuración estable con Seamless Co-op, por ejemplo</translation>
+    </message>
+    <message>
+      <source>Notes</source>
+      <translation>Notas</translation>
+    </message>
+    <message>
+      <source>Optional. What this instance is for; the search finds it.</source>
+      <translation>Opcional. Para qué es esta instancia; la búsqueda lo encuentra.</translation>
+    </message>
+    <message>
+      <source>Already for this game</source>
+      <translation>Ya hay para este juego</translation>
+    </message>
+    <message>
+      <source>Add a desktop shortcut that opens it</source>
+      <translation>Añadir un acceso directo en el escritorio que la abra</translation>
+    </message>
+    <message>
+      <source>New profiles of this instance start with these settings. Each profile can change them later.</source>
+      <translation>Los perfiles nuevos de esta instancia empiezan con estos ajustes. Cada perfil puede cambiarlos después.</translation>
+    </message>
+    <message>
+      <source>Each profile keeps its own copy of the game's INI files.</source>
+      <translation>Cada perfil guarda su propia copia de los archivos INI del juego.</translation>
+    </message>
+    <message>
+      <source>Each profile keeps its own saves, separate from the game's.</source>
+      <translation>Cada perfil guarda sus propias partidas, aparte de las del juego.</translation>
+    </message>
+    <message>
+      <source>Lets loose files override the game's archives in games that need it.</source>
+      <translation>Permite que los archivos sueltos sustituyan a los archivos del juego en los juegos que lo necesitan.</translation>
+    </message>
+    <message>
+      <source>The game's INI files now</source>
+      <translation>Los archivos INI del juego ahora</translation>
+    </message>
+    <message>
+      <source>The game's saves now</source>
+      <translation>Las partidas del juego ahora</translation>
+    </message>
+    <message>
+      <source>Disk usage</source>
+      <translation>Uso del disco</translation>
+    </message>
+    <message>
+      <source>Downloads folder</source>
+      <translation>Carpeta de descargas</translation>
+    </message>
+    <message>
+      <source>Another instance's downloads can be shared, so the same archives aren't kept twice.</source>
+      <translation>Se pueden compartir las descargas de otra instancia, para no guardar dos veces los mismos archivos.</translation>
+    </message>
+    <message>
+      <source>Folders it creates</source>
+      <translation>Carpetas que crea</translation>
+    </message>
+    <message>
+      <source>Choose each folder separately</source>
+      <translation>Elegir cada carpeta por separado</translation>
+    </message>
+    <message>
+      <source>Nexus account</source>
+      <translation>Cuenta de Nexus</translation>
+    </message>
+    <message>
+      <source>You can also do this later in Settings.</source>
+      <translation>También puedes hacerlo después en Ajustes.</translation>
+    </message>
+    <message>
+      <source>Nexus connection log</source>
+      <translation>Registro de la conexión con Nexus</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <translation>Atrás</translation>
+    </message>
+    <message>
+      <source>Next</source>
+      <translation>Siguiente</translation>
+    </message>
   </context>
   <context>
     <name>DisableProxyPluginDialog</name>
@@ -415,6 +671,13 @@
     </message>
   </context>
   <context>
+    <name>DownloadList</name>
+    <message>
+      <source>Modified</source>
+      <translation>Modificado</translation>
+    </message>
+  </context>
+  <context>
     <name>DownloadListView</name>
     <message>
       <source>Selected download</source>
@@ -427,6 +690,14 @@
     <message>
       <source>Visibility</source>
       <translation>Visibilidad</translation>
+    </message>
+    <message>
+      <source>No downloads yet</source>
+      <translation>Aún no hay descargas</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here.</source>
+      <translation>Los archivos que descargas con Nexus o añades con Instalar aparecen aquí.</translation>
     </message>
   </context>
   <context>
@@ -2447,6 +2718,13 @@ Error de restauración: {error}</translation>
     </message>
   </context>
   <context>
+    <name>FileTreeModel</name>
+    <message>
+      <source>Origin</source>
+      <translation>Origen</translation>
+    </message>
+  </context>
+  <context>
     <name>FilterList</name>
     <message>
       <source>Clear filters</source>
@@ -2503,6 +2781,113 @@ Error de restauración: {error}</translation>
     <message>
       <source>Hide all separators from the mod list.</source>
       <translation>Oculta todos los separadores de la lista de mods.</translation>
+    </message>
+  </context>
+  <context>
+    <name>FluentDashboard</name>
+    <message>
+      <source>Profile</source>
+      <translation>Perfil</translation>
+    </message>
+    <message>
+      <source>Program</source>
+      <translation>Programa</translation>
+    </message>
+    <message>
+      <source>Active mods</source>
+      <translation>Mods activos</translation>
+    </message>
+    <message>
+      <source>With conflicts</source>
+      <translation>Con conflictos</translation>
+    </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>Updates</source>
+      <translation>Actualizaciones</translation>
+    </message>
+    <message>
+      <source>Show</source>
+      <translation>Mostrar</translation>
+    </message>
+    <message>
+      <source>Manage</source>
+      <translation>Gestionar</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mods</translation>
+    </message>
+    <message>
+      <source>All</source>
+      <translation>Todos</translation>
+    </message>
+    <message>
+      <source>Active</source>
+      <translation>Activos</translation>
+    </message>
+    <message>
+      <source>Conflicts</source>
+      <translation>Conflictos</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Actualizar</translation>
+    </message>
+    <message>
+      <source>%1 of %2</source>
+      <translation>%1 de %2</translation>
+    </message>
+    <message>
+      <source>None</source>
+      <translation>Ninguno</translation>
+    </message>
+    <message>
+      <source>%1 available</source>
+      <translation>%1 disponibles</translation>
+    </message>
+    <message>
+      <source>Up to date</source>
+      <translation>Al día</translation>
+    </message>
+    <message>
+      <source>Empty folders</source>
+      <translation>Carpetas vacías</translation>
+    </message>
+    <message>
+      <source>Empty</source>
+      <translation>Vacío</translation>
+    </message>
+    <message>
+      <source>%1+ files</source>
+      <translation>%1+ archivos</translation>
+    </message>
+    <message>
+      <source>1 file</source>
+      <translation>1 archivo</translation>
+    </message>
+    <message>
+      <source>%1 files</source>
+      <translation>%1 archivos</translation>
+    </message>
+    <message>
+      <source>today at %1</source>
+      <translation>hoy a las %1</translation>
+    </message>
+    <message>
+      <source>yesterday</source>
+      <translation>ayer</translation>
+    </message>
+    <message>
+      <source>%1 days ago</source>
+      <translation>hace %1 días</translation>
+    </message>
+    <message>
+      <source>Last played %1</source>
+      <translation>Última partida %1</translation>
     </message>
   </context>
   <context>
@@ -2747,6 +3132,398 @@ Ubicación: %3</translation>
     <message>
       <source>Ready to switch</source>
       <translation>Listo para cambiar</translation>
+    </message>
+    <message>
+      <source>Instances</source>
+      <translation>Instancias</translation>
+    </message>
+    <message>
+      <source>What is an instance?</source>
+      <translation>¿Qué es una instancia?</translation>
+    </message>
+    <message>
+      <source>Restart Mod Organizer with this instance</source>
+      <translation>Reiniciar Mod Organizer con esta instancia</translation>
+    </message>
+    <message>
+      <source>Group and sort the instances</source>
+      <translation>Agrupar y ordenar las instancias</translation>
+    </message>
+    <message>
+      <source>Group by</source>
+      <translation>Agrupar por</translation>
+    </message>
+    <message>
+      <source>My groups</source>
+      <translation>Mis grupos</translation>
+    </message>
+    <message>
+      <source>Storage</source>
+      <translation>Almacenamiento</translation>
+    </message>
+    <message>
+      <source>No groups</source>
+      <translation>Sin grupos</translation>
+    </message>
+    <message>
+      <source>Sort by</source>
+      <translation>Ordenar por</translation>
+    </message>
+    <message>
+      <source>Last used</source>
+      <translation>Último uso</translation>
+    </message>
+    <message>
+      <source>Search instances</source>
+      <translation>Buscar instancias</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nueva instancia</translation>
+    </message>
+    <message>
+      <source>Create an instance for another game or setup (Ctrl+N)</source>
+      <translation>Crea una instancia para otro juego o configuración (Ctrl+N)</translation>
+    </message>
+    <message>
+      <source>Open the instance folder</source>
+      <translation>Abrir la carpeta de la instancia</translation>
+    </message>
+    <message>
+      <source>Mod data</source>
+      <translation>Datos de mods</translation>
+    </message>
+    <message>
+      <source>Open the mod data folder</source>
+      <translation>Abrir la carpeta de datos de mods</translation>
+    </message>
+    <message>
+      <source>Game folder</source>
+      <translation>Carpeta del juego</translation>
+    </message>
+    <message>
+      <source>Open the game folder</source>
+      <translation>Abrir la carpeta del juego</translation>
+    </message>
+    <message>
+      <source>Profiles</source>
+      <translation>Perfiles</translation>
+    </message>
+    <message>
+      <source>Open the profiles folder</source>
+      <translation>Abrir la carpeta de perfiles</translation>
+    </message>
+    <message>
+      <source>Size on disk</source>
+      <translation>Tamaño en disco</translation>
+    </message>
+    <message>
+      <source>Configuration file</source>
+      <translation>Archivo de configuración</translation>
+    </message>
+    <message>
+      <source>Open ModOrganizer.ini in its editor</source>
+      <translation>Abrir ModOrganizer.ini en su editor</translation>
+    </message>
+    <message>
+      <source>Group</source>
+      <translation>Grupo</translation>
+    </message>
+    <message>
+      <source>Move to another group</source>
+      <translation>Mover a otro grupo</translation>
+    </message>
+    <message>
+      <source>Notes</source>
+      <translation>Notas</translation>
+    </message>
+    <message>
+      <source>Edit the notes</source>
+      <translation>Editar las notas</translation>
+    </message>
+    <message>
+      <source>Duplicate</source>
+      <translation>Duplicar</translation>
+    </message>
+    <message>
+      <source>Desktop shortcut</source>
+      <translation>Acceso directo en el escritorio</translation>
+    </message>
+    <message>
+      <source>Delete instance</source>
+      <translation>Eliminar instancia</translation>
+    </message>
+    <message>
+      <source>Move to group…</source>
+      <translation>Mover a grupo…</translation>
+    </message>
+    <message>
+      <source>Edit notes…</source>
+      <translation>Editar notas…</translation>
+    </message>
+    <message>
+      <source>Open instance folder</source>
+      <translation>Abrir carpeta de la instancia</translation>
+    </message>
+    <message>
+      <source>Open game folder</source>
+      <translation>Abrir carpeta del juego</translation>
+    </message>
+    <message>
+      <source>Open ModOrganizer.ini</source>
+      <translation>Abrir ModOrganizer.ini</translation>
+    </message>
+    <message>
+      <source>Unknown game</source>
+      <translation>Juego desconocido</translation>
+    </message>
+    <message>
+      <source>Portable</source>
+      <translation>Portable</translation>
+    </message>
+    <message>
+      <source>Global</source>
+      <translation>Global</translation>
+    </message>
+    <message>
+      <source>No group</source>
+      <translation>Sin grupo</translation>
+    </message>
+    <message>
+      <source>current</source>
+      <translation>actual</translation>
+    </message>
+    <message>
+      <source>By storage</source>
+      <translation>Por almacenamiento</translation>
+    </message>
+    <message>
+      <source>All instances</source>
+      <translation>Todas las instancias</translation>
+    </message>
+    <message>
+      <source>By game</source>
+      <translation>Por juego</translation>
+    </message>
+    <message>
+      <source>Grouping: %1</source>
+      <translation>Agrupación: %1</translation>
+    </message>
+    <message>
+      <source>Restart to open %1?</source>
+      <translation>¿Reiniciar para abrir %1?</translation>
+    </message>
+    <message>
+      <source>Mod Organizer closes and opens again with the instance %1. Programs started from Mod Organizer should be closed first.</source>
+      <translation>Mod Organizer se cierra y se vuelve a abrir con la instancia %1. Cierra antes los programas iniciados desde Mod Organizer.</translation>
+    </message>
+    <message>
+      <source>Don't ask me again</source>
+      <translation>No volver a preguntar</translation>
+    </message>
+    <message>
+      <source>Restart</source>
+      <translation>Reiniciar</translation>
+    </message>
+    <message>
+      <source>The instance folder is renamed too.</source>
+      <translation>La carpeta de la instancia también cambia de nombre.</translation>
+    </message>
+    <message>
+      <source>Delete %1?</source>
+      <translation>¿Eliminar %1?</translation>
+    </message>
+    <message>
+      <source>Choose what to remove. Items the instance can't do without stay checked.</source>
+      <translation>Elige qué quitar. Lo que la instancia necesita sí o sí queda marcado.</translation>
+    </message>
+    <message>
+      <source>Move to Recycle Bin</source>
+      <translation>Mover a la papelera de reciclaje</translation>
+    </message>
+    <message>
+      <source>Last used %1</source>
+      <translation>Último uso %1</translation>
+    </message>
+    <message>
+      <source>Same as the instance folder</source>
+      <translation>La misma que la carpeta de la instancia</translation>
+    </message>
+    <message>
+      <source>No game plugin can manage %1. The instance can't be opened.</source>
+      <translation>Ningún plugin de juego puede gestionar %1. La instancia no se puede abrir.</translation>
+    </message>
+    <message>
+      <source>this game</source>
+      <translation>este juego</translation>
+    </message>
+    <message>
+      <source>Folder not found: %1</source>
+      <translation>Carpeta no encontrada: %1</translation>
+    </message>
+    <message>
+      <source>%1 (last used)</source>
+      <translation>%1 (último uso)</translation>
+    </message>
+    <message>
+      <source>No profiles yet</source>
+      <translation>Aún no hay perfiles</translation>
+    </message>
+    <message>
+      <source>Portable: kept in its own folder, moves with Mod Organizer</source>
+      <translation>Portable: se guarda en su propia carpeta y se mueve con Mod Organizer</translation>
+    </message>
+    <message>
+      <source>Global: kept in your user folder, %1</source>
+      <translation>Global: se guarda en tu carpeta de usuario, %1</translation>
+    </message>
+    <message>
+      <source>No notes</source>
+      <translation>Sin notas</translation>
+    </message>
+    <message>
+      <source>The open instance can't be renamed</source>
+      <translation>La instancia abierta no se puede renombrar</translation>
+    </message>
+    <message>
+      <source>The portable instance in the Mod Organizer folder can't be renamed</source>
+      <translation>La instancia portable de la carpeta de Mod Organizer no se puede renombrar</translation>
+    </message>
+    <message>
+      <source>Rename this instance and its folder (F2)</source>
+      <translation>Renombrar esta instancia y su carpeta (F2)</translation>
+    </message>
+    <message>
+      <source>The open instance can't be deleted</source>
+      <translation>La instancia abierta no se puede eliminar</translation>
+    </message>
+    <message>
+      <source>Choose which of this instance's folders to remove (Delete)</source>
+      <translation>Elige qué carpetas de esta instancia quitar (Supr)</translation>
+    </message>
+    <message>
+      <source>The portable instance in the Mod Organizer folder can't be duplicated</source>
+      <translation>La instancia portable de la carpeta de Mod Organizer no se puede duplicar</translation>
+    </message>
+    <message>
+      <source>Copy this instance, with its profiles, mods and settings, to a new one (Ctrl+D)</source>
+      <translation>Copia esta instancia, con sus perfiles, mods y ajustes, en una nueva (Ctrl+D)</translation>
+    </message>
+    <message>
+      <source>Remove desktop shortcut</source>
+      <translation>Quitar acceso directo del escritorio</translation>
+    </message>
+    <message>
+      <source>Remove the desktop shortcut that opens this instance</source>
+      <translation>Quita el acceso directo del escritorio que abre esta instancia</translation>
+    </message>
+    <message>
+      <source>Add a desktop shortcut that opens this instance directly</source>
+      <translation>Añade un acceso directo en el escritorio que abre esta instancia directamente</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Abrir</translation>
+    </message>
+    <message>
+      <source>Calculating…</source>
+      <translation>Calculando…</translation>
+    </message>
+    <message>
+      <source>Unknown</source>
+      <translation>Desconocido</translation>
+    </message>
+    <message>
+      <source>Mods %1 · Downloads %2 · Overwrite %3</source>
+      <translation>Mods %1 · Descargas %2 · Overwrite %3</translation>
+    </message>
+    <message>
+      <source>The desktop shortcut could not be changed.</source>
+      <translation>No se pudo cambiar el acceso directo del escritorio.</translation>
+    </message>
+    <message>
+      <source>The copy gets its own folder with this instance's profiles, mods, downloads and settings.</source>
+      <translation>La copia tiene su propia carpeta con los perfiles, mods, descargas y ajustes de esta instancia.</translation>
+    </message>
+    <message>
+      <source>The copy gets its own folder with this instance's profiles and settings. Its mod data folder is elsewhere and stays shared with the original.</source>
+      <translation>La copia tiene su propia carpeta con los perfiles y ajustes de esta instancia. Su carpeta de datos de mods está en otro sitio y sigue compartida con la original.</translation>
+    </message>
+    <message>
+      <source>Duplicate instance</source>
+      <translation>Duplicar instancia</translation>
+    </message>
+    <message>
+      <source>Name of the copy</source>
+      <translation>Nombre de la copia</translation>
+    </message>
+    <message>
+      <source>copy</source>
+      <translation>copia</translation>
+    </message>
+    <message>
+      <source>The instance could not be copied: %1</source>
+      <translation>No se pudo copiar la instancia: %1</translation>
+    </message>
+    <message>
+      <source>No instances yet. Create one with New instance.</source>
+      <translation>Aún no hay instancias. Crea una con Nueva instancia.</translation>
+    </message>
+    <message>
+      <source>Select an instance to see its folders.</source>
+      <translation>Selecciona una instancia para ver sus carpetas.</translation>
+    </message>
+    <message>
+      <source>Move to group</source>
+      <translation>Mover a grupo</translation>
+    </message>
+    <message>
+      <source>Instances in the same group are listed together. Type a new name to make a group, or leave it empty for no group.</source>
+      <translation>Las instancias del mismo grupo aparecen juntas. Escribe un nombre nuevo para crear un grupo, o déjalo vacío para no tener grupo.</translation>
+    </message>
+    <message>
+      <source>Move</source>
+      <translation>Mover</translation>
+    </message>
+    <message>
+      <source>Notes for %1</source>
+      <translation>Notas de %1</translation>
+    </message>
+    <message>
+      <source>What this instance is for, what's in it, or anything to remember. The notes are also found by the search.</source>
+      <translation>Para qué es esta instancia, qué tiene o cualquier cosa que recordar. La búsqueda también encuentra las notas.</translation>
+    </message>
+    <message>
+      <source>Stable setup with Seamless Co-op, for example</source>
+      <translation>Configuración estable con Seamless Co-op, por ejemplo</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Guardar</translation>
+    </message>
+    <message>
+      <source>Rename group…</source>
+      <translation>Renombrar grupo…</translation>
+    </message>
+    <message>
+      <source>Rename group</source>
+      <translation>Renombrar grupo</translation>
+    </message>
+    <message>
+      <source>Every instance in %1 moves to the new name. A name that already exists joins the two groups.</source>
+      <translation>Todas las instancias de %1 pasan al nombre nuevo. Un nombre que ya existe une los dos grupos.</translation>
+    </message>
+    <message>
+      <source>Group name</source>
+      <translation>Nombre del grupo</translation>
+    </message>
+    <message>
+      <source>Remove group</source>
+      <translation>Quitar grupo</translation>
+    </message>
+    <message>
+      <source>The instances stay; they move to No group</source>
+      <translation>Las instancias se quedan; pasan a Sin grupo</translation>
     </message>
   </context>
   <context>
@@ -3771,6 +4548,110 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <source>The plugin-order backup was permanently deleted.</source>
       <translation>La copia del orden de plugins se borró definitivamente.</translation>
     </message>
+    <message>
+      <source>Mod list actions, backups, and folders</source>
+      <translation>Acciones de la lista de mods, copias de seguridad y carpetas</translation>
+    </message>
+    <message>
+      <source>More actions</source>
+      <translation>Más acciones</translation>
+    </message>
+    <message>
+      <source>Active</source>
+      <translation>Activos</translation>
+    </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Abrir carpeta</translation>
+    </message>
+    <message>
+      <source>Mounting…</source>
+      <translation>Montando…</translation>
+    </message>
+    <message>
+      <source>Starting…</source>
+      <translation>Iniciando…</translation>
+    </message>
+    <message>
+      <source>Running</source>
+      <translation>En ejecución</translation>
+    </message>
+    <message>
+      <source>More</source>
+      <translation>Más</translation>
+    </message>
+    <message>
+      <source>Links, updates and help</source>
+      <translation>Enlaces, actualizaciones y ayuda</translation>
+    </message>
+    <message>
+      <source>
+                                  &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
+                                  &lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
+                                  p, li { white-space: pre-wrap; }
+                                  &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
+                                  &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                </source>
+      <translation>
+                                  &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
+                                  &lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
+                                  p, li { white-space: pre-wrap; }
+                                  &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Esta lista muestra las partidas de la carpeta asignada al perfil activo de MO2. Pasa el ratón por una partida para ver más detalles cuando el plugin del juego los ofrece.&lt;/span&gt;&lt;/p&gt;
+                                  &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Si una partida seleccionada necesita plugins que faltan, usa Restaurar plugins necesarios... para activar los mods instalados que los aportan. También puedes borrar la partida o abrir su carpeta. En Elden Ring, elige la ruta de partidas y el perfil de partidas con nombre en Herramientas &amp;gt; Aislamiento de partidas.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                </translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Executables</source>
+      <translation>Ejecutables</translation>
+    </message>
+    <message>
+      <source>Settings</source>
+      <translation>Ajustes</translation>
+    </message>
+    <message>
+      <source>Nexus</source>
+      <translation>Nexus</translation>
+    </message>
+    <message>
+      <source>GitHub</source>
+      <translation>GitHub</translation>
+    </message>
+    <message>
+      <source>Notifications</source>
+      <translation>Notificaciones</translation>
+    </message>
+    <message>
+      <source>Help</source>
+      <translation>Ayuda</translation>
+    </message>
+    <message>
+      <source>Manage Instances...</source>
+      <translation>Gestionar instancias...</translation>
+    </message>
+    <message>
+      <source>Exit</source>
+      <translation>Salir</translation>
+    </message>
+    <message>
+      <source>Browse the save files available to this Elden Ring profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
+      <translation>Explora las partidas disponibles para este perfil de Elden Ring. Configura su ruta en Herramientas &gt; Aislamiento de partidas para separar las partidas por perfil de MO2, compartir un perfil de partidas con nombre en esta instancia o usar la carpeta global de partidas de Steam.</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Enable mods with their checkboxes. Each profile keeps its own enabled mod list. Configure Elden Ring save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Activa los mods con sus casillas. Cada perfil guarda su propia lista de mods activos. Configura las rutas de partidas de Elden Ring en &lt;b&gt;Herramientas &amp;gt; Aislamiento de partidas&lt;/b&gt;.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Open the game's save folder.</source>
+      <translation>Abre la carpeta de partidas del juego.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -4182,6 +5063,21 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Inspect the mod's folder structure and manage its files.</source>
       <translation>Revisa la estructura de carpetas del mod y gestiona sus archivos.</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModList</name>
+    <message>
+      <source>Status</source>
+      <translation>Estado</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nombre</translation>
+    </message>
+    <message>
+      <source>New versions and file conflicts with other mods.</source>
+      <translation>Versiones nuevas y conflictos de archivos con otros mods.</translation>
     </message>
   </context>
   <context>
@@ -4663,6 +5559,10 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
       <source>The plugin that reported this notification did not provide additional details.</source>
       <translation>El plugin que informó de esta notificación no proporcionó más detalles.</translation>
     </message>
+    <message>
+      <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Overwrite contiene los archivos que el juego y las herramientas crearon al ejecutarse desde MO2: registros y ajustes escritos por mods DLL, archivos guardados por herramientas de mods y salidas parecidas. Aún no pertenecen a ningún mod.&lt;/p&gt;&lt;p&gt;Los archivos de &lt;b&gt;Overwrite&lt;/b&gt; tienen prioridad sobre todos los mods del perfil. Mueve a un mod los archivos que quieras conservar: arrástralos desde la ventana Gestionar Overwrite a un mod, o haz clic derecho en Overwrite en la lista de mods y crea un mod con su contenido. Borra lo que ya no necesites, como registros viejos.&lt;/p&gt;&lt;p&gt;Las opciones de inicio pueden vaciar de Overwrite los registros viejos de mods antes de cada arranque.&lt;/p&gt;</translation>
+    </message>
   </context>
   <context>
     <name>ProfileInputDialog</name>
@@ -4794,6 +5694,10 @@ Proceed?</source>
     <message>
       <source>Switch to another profile before renaming it.</source>
       <translation>Cambia a otro perfil antes de renombrarlo.</translation>
+    </message>
+    <message>
+      <source>Elden Ring save routing is managed in Tools &gt; Save Isolation.</source>
+      <translation>Las rutas de partidas de Elden Ring se gestionan en Herramientas &gt; Aislamiento de partidas.</translation>
     </message>
   </context>
   <context>
@@ -5130,6 +6034,210 @@ Proceed?</source>
       <source>Details</source>
       <translation>Detalles</translation>
     </message>
+    <message>
+      <source>Open the %1 instance in Mod Organizer</source>
+      <translation>Abrir la instancia %1 en Mod Organizer</translation>
+    </message>
+    <message>
+      <source>1 mod</source>
+      <translation>1 mod</translation>
+    </message>
+    <message>
+      <source>%1 mods</source>
+      <translation>%1 mods</translation>
+    </message>
+    <message>
+      <source>Pages</source>
+      <translation>Páginas</translation>
+    </message>
+    <message>
+      <source>New version</source>
+      <translation>Versión nueva</translation>
+    </message>
+    <message>
+      <source>Fully overwritten</source>
+      <translation>Sobrescrito por completo</translation>
+    </message>
+    <message>
+      <source>1 conflict</source>
+      <translation>1 conflicto</translation>
+    </message>
+    <message>
+      <source>%1 conflicts</source>
+      <translation>%1 conflictos</translation>
+    </message>
+    <message>
+      <source>Use a name that's a valid folder name.</source>
+      <translation>Usa un nombre que sea válido como nombre de carpeta.</translation>
+    </message>
+    <message>
+      <source>What is an instance?</source>
+      <translation>¿Qué es una instancia?</translation>
+    </message>
+    <message>
+      <source>An instance is its own Mod Organizer workspace. It keeps one game's profiles, mods, downloads and settings together, so separate setups never mix.</source>
+      <translation>Una instancia es un espacio de trabajo propio de Mod Organizer. Guarda juntos los perfiles, mods, descargas y ajustes de un juego, para que las configuraciones distintas nunca se mezclen.</translation>
+    </message>
+    <message>
+      <source>Its mods, profiles and saves stay in this instance.</source>
+      <translation>Sus mods, perfiles y partidas se quedan en esta instancia.</translation>
+    </message>
+    <message>
+      <source>A second instance manages Skyrim without touching Elden Ring.</source>
+      <translation>Una segunda instancia gestiona Skyrim sin tocar Elden Ring.</translation>
+    </message>
+    <message>
+      <source>Global or portable</source>
+      <translation>Global o portable</translation>
+    </message>
+    <message>
+      <source>Global instances are stored in your user folder; portable ones live next to Mod Organizer and move with it.</source>
+      <translation>Las instancias globales se guardan en tu carpeta de usuario; las portables viven junto a Mod Organizer y se mueven con él.</translation>
+    </message>
+    <message>
+      <source>Base game</source>
+      <translation>Juego base</translation>
+    </message>
+    <message>
+      <source>Collapse log</source>
+      <translation>Contraer registro</translation>
+    </message>
+    <message>
+      <source>Expand log</source>
+      <translation>Expandir registro</translation>
+    </message>
+    <message>
+      <source>None yet: this will be the first one.</source>
+      <translation>Ninguna todavía: esta será la primera.</translation>
+    </message>
+    <message>
+      <source>%1 global, %2 portable</source>
+      <translation>%1 globales, %2 portables</translation>
+    </message>
+    <message>
+      <source>1 instance</source>
+      <translation>1 instancia</translation>
+    </message>
+    <message>
+      <source>%1 instances</source>
+      <translation>%1 instancias</translation>
+    </message>
+    <message>
+      <source>Not installed</source>
+      <translation>No instalado</translation>
+    </message>
+    <message>
+      <source>1 instance already</source>
+      <translation>ya hay 1 instancia</translation>
+    </message>
+    <message>
+      <source>%1 instances already</source>
+      <translation>ya hay %1 instancias</translation>
+    </message>
+    <message>
+      <source>Dark</source>
+      <translation>Oscuro</translation>
+    </message>
+    <message>
+      <source>No group</source>
+      <translation>Sin grupo</translation>
+    </message>
+    <message>
+      <source>This instance's own folder</source>
+      <translation>La carpeta propia de esta instancia</translation>
+    </message>
+    <message>
+      <source>Shared with %1</source>
+      <translation>Compartida con %1</translation>
+    </message>
+    <message>
+      <source>%1 free on %2</source>
+      <translation>%1 libres en %2</translation>
+    </message>
+    <message>
+      <source>%1 of %2 used</source>
+      <translation>%1 de %2 usados</translation>
+    </message>
+    <message>
+      <source>%1 in %2</source>
+      <translation>%1 en %2</translation>
+    </message>
+    <message>
+      <source>Downloads from %1</source>
+      <translation>Descargas desde %1</translation>
+    </message>
+    <message>
+      <source>Change</source>
+      <translation>Cambiar</translation>
+    </message>
+    <message>
+      <source>Change %1</source>
+      <translation>Cambiar %1</translation>
+    </message>
+    <message>
+      <source>Check the details, then select Create instance. Nothing is written before that.</source>
+      <translation>Revisa los datos y luego elige Crear instancia. No se escribe nada antes.</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Juego</translation>
+    </message>
+    <message>
+      <source>Game folder</source>
+      <translation>Carpeta del juego</translation>
+    </message>
+    <message>
+      <source>Storage</source>
+      <translation>Almacenamiento</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nombre</translation>
+    </message>
+    <message>
+      <source>Group</source>
+      <translation>Grupo</translation>
+    </message>
+    <message>
+      <source>Notes</source>
+      <translation>Notas</translation>
+    </message>
+    <message>
+      <source>Instance folder</source>
+      <translation>Carpeta de la instancia</translation>
+    </message>
+    <message>
+      <source>Base directory</source>
+      <translation>Directorio base</translation>
+    </message>
+    <message>
+      <source>Disk</source>
+      <translation>Disco</translation>
+    </message>
+    <message>
+      <source>Shortcut</source>
+      <translation>Acceso directo</translation>
+    </message>
+    <message>
+      <source>On the desktop</source>
+      <translation>En el escritorio</translation>
+    </message>
+    <message>
+      <source>Saves</source>
+      <translation>Partidas</translation>
+    </message>
+    <message>
+      <source>Local INIs: %1</source>
+      <translation>INI locales: %1</translation>
+    </message>
+    <message>
+      <source>Local Saves: %1</source>
+      <translation>Partidas locales: %1</translation>
+    </message>
+    <message>
+      <source>Automatic Archive Invalidation: %1</source>
+      <translation>Invalidación automática de archivos: %1</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -5200,6 +6308,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Choose installed mods to activate the plugins required by this save.</source>
       <translation>Elige los mods instalados que activan los plugins que necesita esta partida.</translation>
+    </message>
+    <message>
+      <source>Modified</source>
+      <translation>Modificado</translation>
     </message>
   </context>
   <context>
@@ -5920,6 +7032,57 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
     <message>
       <source>MO2 logs: &lt;a href="LOGS_FULL_PATH"&gt;LOGS_DIR&lt;/a&gt;&lt;br/&gt;Crash dumps: &lt;a href="DUMPS_FULL_PATH"&gt;DUMPS_DIR&lt;/a&gt;</source>
       <translation>Registros de MO2: &lt;a href="LOGS_FULL_PATH"&gt;LOGS_DIR&lt;/a&gt;&lt;br/&gt;Volcados de error: &lt;a href="DUMPS_FULL_PATH"&gt;DUMPS_DIR&lt;/a&gt;</translation>
+    </message>
+    <message>
+      <source>Highlights</source>
+      <translation>Resaltados</translation>
+    </message>
+    <message>
+      <source>When you select a collapsed separator, highlight the mods it contains.</source>
+      <translation>Al seleccionar un separador contraído, resalta los mods que contiene.</translation>
+    </message>
+    <message>
+      <source>Choose how much troubleshooting information MO2 collects. The recommended levels are suitable for everyday use.</source>
+      <translation>Elige cuánta información de diagnóstico recoge MO2. Los niveles recomendados sirven para el uso diario.</translation>
+    </message>
+    <message>
+      <source>Animate tab changes, switches, the log panel, and the Run button. Turn this off to show every change immediately.</source>
+      <translation>Anima los cambios de pestaña, los interruptores, el panel de registro y el botón Ejecutar. Desactívalo para mostrar cada cambio al instante.</translation>
+    </message>
+    <message>
+      <source>Enable animations</source>
+      <translation>Activar animaciones</translation>
+    </message>
+    <message>
+      <source>Choose a light or dark theme, then customize the highlights used for mod conflicts and selected plugins.</source>
+      <translation>Elige un tema claro u oscuro y personaliza los resaltados de los conflictos de mods y de los plugins seleccionados.</translation>
+    </message>
+    <message>
+      <source>Collapsible separators</source>
+      <translation>Separadores contraíbles</translation>
+    </message>
+  </context>
+  <context>
+    <name>StatusBar</name>
+    <message>
+      <source>Nexus: not signed in</source>
+      <translation>Nexus: sin iniciar sesión</translation>
+    </message>
+    <message>
+      <source>Sign in to Nexus Mods in Settings to check for updates.</source>
+      <translation>Inicia sesión en Nexus Mods en Ajustes para buscar actualizaciones.</translation>
+    </message>
+    <message>
+      <source>Nexus API: %1 left today</source>
+      <translation>API de Nexus: quedan %1 hoy</translation>
+    </message>
+    <message>
+      <source>Queued requests: %1
+Remaining today: %2
+Remaining this hour: %3</source>
+      <translation>Solicitudes en cola: %1
+Restantes hoy: %2
+Restantes esta hora: %3</translation>
     </message>
   </context>
   <context>
