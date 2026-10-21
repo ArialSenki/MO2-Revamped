@@ -3896,6 +3896,28 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             "named save profile selected: "
             f"{bool(save_profile_combo.currentData())}."
         )
+
+        def fit_height() -> None:
+            # the default height leaves an empty band under the cards on
+            # most screens; shrink to the content once its text has wrapped
+            scroll = dialog.findChild(QScrollArea)
+            content = scroll.widget() if scroll is not None else None
+            if content is None:
+                return
+            viewport = scroll.viewport()
+            if content.hasHeightForWidth():
+                needed = content.heightForWidth(viewport.width())
+            else:
+                needed = content.sizeHint().height()
+            height = dialog.height() + needed - viewport.height()
+            screen = dialog.screen()
+            if screen is not None:
+                height = min(height, screen.availableGeometry().height() - 40)
+            height = max(dialog.minimumHeight(), height)
+            if needed > 0 and height != dialog.height():
+                dialog.resize(dialog.width(), height)
+
+        QTimer.singleShot(50, fit_height)
         dialog.exec()
 
 
