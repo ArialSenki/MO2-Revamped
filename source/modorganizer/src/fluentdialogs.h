@@ -6,10 +6,42 @@
 // banner cards, and Settings-style option rows in the dialogs that are mostly
 // options. Runs once per dialog; MOApplication calls it for Fluent themes.
 
-class QDialog;
+#include <QDialog>
+
+class QHBoxLayout;
+class QLabel;
 class QMessageBox;
+class QPushButton;
 class QRect;
 class QSize;
+class QVBoxLayout;
+
+// a Windows 11 content dialog: a title, a short text, the dialog's own
+// content below them, and the buttons side by side and of the same width in a
+// darker band at the bottom. The first button added as primary gets the
+// accent and is the default.
+class FluentContentDialog : public QDialog
+{
+public:
+  FluentContentDialog(QWidget* parent, const QString& objectName, const QString& title,
+                      const QString& text = {});
+
+  // where the dialog's own content goes, below the text
+  QVBoxLayout* body() const { return m_body; }
+
+  // the text below the title, for dialogs that change it after creation
+  QLabel* textLabel() const { return m_text; }
+
+  // adds a button to the band; primary buttons get the accent, the first
+  // one added is the default
+  QPushButton* addButton(const QString& text, bool primary = false);
+
+private:
+  QVBoxLayout* m_body;
+  QLabel* m_text;
+  QHBoxLayout* m_buttons;
+  bool m_hasDefault = false;
+};
 
 namespace FluentDialogs
 {

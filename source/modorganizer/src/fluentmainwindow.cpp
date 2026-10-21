@@ -297,6 +297,18 @@ void MainWindow::setupFluentCommandBar()
   }
 
   applyFluentActionIcons();
+
+  // the menus of the command bar (Tools, Nexus...) open with a turning chevron
+  if (FluentIcons::active()) {
+    for (QAction* action : bar->actions()) {
+      auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(action));
+      if (button != nullptr && action != m_fluentOverflowAction) {
+        // the command bar's labels have no descenders, so the chevron sits
+        // a little higher than in the instance manager
+        FluentMotion::animateMenuChevron(button, 10.0, 0.5);
+      }
+    }
+  }
 }
 
 void MainWindow::applyFluentActionIcons()

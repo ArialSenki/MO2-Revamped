@@ -343,4 +343,16 @@ QString toString(Shortcut::Locations loc)
   }
 }
 
+Shortcut instanceShortcut(const Instance& i)
+{
+  const QString id = i.instanceIdentifier();
+  Shortcut shortcut;
+  shortcut.name(QStringLiteral("Mod Organizer - %1").arg(i.displayName()))
+      .target(QFileInfo(qApp->applicationFilePath()).absoluteFilePath())
+      .arguments(id.isEmpty() ? QString() : QStringLiteral("-i \"%1\"").arg(id))
+      .description(QObject::tr("Open the %1 instance in Mod Organizer").arg(i.displayName()))
+      .workingDirectory(qApp->applicationDirPath());
+  return shortcut;
+}
+
 }  // namespace env

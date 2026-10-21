@@ -7,12 +7,20 @@
 #include "settings.h"
 #include "settingsdialognexus.h"
 #include "shared/appconfig.h"
-#include "ui_createinstancedialog.h"
+#include "createinstancedialogui.h"
+#include "fluenticons.h"
 #include <iplugingame.h>
 #include <report.h>
 #include <utility.h>
 
+#include <QCheckBox>
 #include <QComboBox>
+#include <QDialogButtonBox>
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QListWidget>
+#include <QTextEdit>
+#include <QToolButton>
 #include <QColor>
 #include <QCoreApplication>
 #include <QDir>
@@ -30,7 +38,9 @@
 #include <QRegularExpression>
 #include <QScrollArea>
 #include <QSettings>
+#include <QSignalBlocker>
 #include <QSet>
+#include <QStorageInfo>
 #include <QSize>
 #include <QSizePolicy>
 #include <QSpacerItem>
@@ -47,119 +57,16 @@ using MOBase::TaskDialog;
 namespace
 {
 
-enum class WizardIcon
+// Segoe Fluent Icons code points for the choices
+constexpr char16_t HomeGlyph    = 0xE80F;
+constexpr char16_t DriveGlyph   = 0xE88E;  // USB, a folder that travels
+constexpr char16_t LockGlyph    = 0xE72E;
+constexpr char16_t GameGlyph    = 0xE7FC;
+constexpr char16_t EditionGlyph = 0xE8F1;  // Library
+
+QIcon choiceIcon(char16_t glyph)
 {
-  Global,
-  Portable,
-  Isolated,
-  Browse,
-  Edition,
-};
-
-QIcon makeWizardIcon(const QWidget* widget, WizardIcon type)
-{
-  constexpr int iconSize = 40;
-  QPixmap pixmap(iconSize, iconSize);
-  pixmap.fill(Qt::transparent);
-
-  QPainter painter(&pixmap);
-  painter.setRenderHint(QPainter::Antialiasing, true);
-  painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-  const QColor accent = widget->palette().color(QPalette::Highlight);
-  const QColor ink = widget->palette().color(QPalette::Text);
-  const QColor surface = widget->palette().color(QPalette::Base);
-  if (type != WizardIcon::Browse) {
-    QColor tint = accent;
-    tint.setAlpha(28);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(tint);
-    painter.drawEllipse(QRectF(1, 1, 38, 38));
-  }
-
-  const QPen outline(accent, 2.1, Qt::SolidLine, Qt::RoundCap,
-                     Qt::RoundJoin);
-  const QPen detail(ink, 1.7, Qt::SolidLine, Qt::RoundCap,
-                    Qt::RoundJoin);
-  painter.setPen(outline);
-  painter.setBrush(surface);
-
-  auto drawFolder = [&] {
-    QPainterPath folder;
-    folder.moveTo(8, 14);
-    folder.lineTo(16, 14);
-    folder.lineTo(19, 17);
-    folder.lineTo(32, 17);
-    folder.lineTo(32, 29);
-    folder.quadTo(32, 31, 30, 31);
-    folder.lineTo(10, 31);
-    folder.quadTo(8, 31, 8, 29);
-    folder.closeSubpath();
-    painter.drawPath(folder);
-    painter.drawLine(QPointF(8, 19), QPointF(32, 19));
-  };
-
-  switch (type) {
-  case WizardIcon::Global: {
-    // User-space storage: a compact home-folder symbol.
-    QPainterPath home;
-    home.moveTo(8, 19);
-    home.lineTo(20, 9);
-    home.lineTo(32, 19);
-    home.lineTo(29, 19);
-    home.lineTo(29, 31);
-    home.lineTo(22, 31);
-    home.lineTo(22, 24);
-    home.lineTo(18, 24);
-    home.lineTo(18, 31);
-    home.lineTo(11, 31);
-    home.lineTo(11, 19);
-    home.closeSubpath();
-    painter.drawPath(home);
-    break;
-  }
-  case WizardIcon::Portable: {
-    drawFolder();
-    painter.setPen(detail);
-    painter.drawLine(QPointF(17, 24), QPointF(27, 24));
-    painter.drawLine(QPointF(24, 21), QPointF(27, 24));
-    painter.drawLine(QPointF(24, 27), QPointF(27, 24));
-    break;
-  }
-  case WizardIcon::Isolated: {
-    painter.drawRoundedRect(QRectF(8, 8, 24, 20), 4, 4);
-    painter.drawLine(QPointF(8, 14), QPointF(32, 14));
-    painter.setPen(detail);
-    painter.drawEllipse(QPointF(12, 11), 0.8, 0.8);
-    painter.drawEllipse(QPointF(15, 11), 0.8, 0.8);
-    painter.setPen(outline);
-    painter.setBrush(surface);
-    painter.drawRoundedRect(QRectF(21, 23, 12, 10), 3, 3);
-    painter.drawArc(QRectF(24, 18, 6, 10), 0, 180 * 16);
-    break;
-  }
-  case WizardIcon::Browse: {
-    const QPen browsePen(ink, 2.4, Qt::SolidLine, Qt::RoundCap,
-                        Qt::RoundJoin);
-    painter.setPen(browsePen);
-    painter.setBrush(Qt::NoBrush);
-    drawFolder();
-    painter.drawEllipse(QRectF(22, 21, 9, 9));
-    painter.drawLine(QPointF(29, 29), QPointF(34, 34));
-    break;
-  }
-  case WizardIcon::Edition: {
-    painter.drawRoundedRect(QRectF(10, 7, 19, 25), 3, 3);
-    painter.setPen(detail);
-    painter.drawLine(QPointF(15, 15), QPointF(24, 15));
-    painter.drawLine(QPointF(15, 20), QPointF(24, 20));
-    painter.drawLine(QPointF(15, 25), QPointF(21, 25));
-    break;
-  }
-  }
-
-  painter.end();
-  return QIcon(pixmap);
+  return FluentIcons::glyph(glyph, FluentIcons::Tone::Accent);
 }
 
 QString decodeSteamPath(QString path)
@@ -174,6 +81,42 @@ QString normalizedInstallPath(const QString& path)
   return QDir::cleanPath(
              QDir::fromNativeSeparators(QFileInfo(path).absoluteFilePath()))
       .toCaseFolded();
+}
+
+// an instance that exists already, as the wizard shows it
+struct ExistingInstance
+{
+  QString name;
+  QString id;
+  QString game;
+  QString downloads;
+  bool portable = false;
+};
+
+// every global and portable instance, with the game and downloads folder its
+// INI names
+std::vector<ExistingInstance> existingInstances()
+{
+  std::vector<ExistingInstance> list;
+  const auto& manager = InstanceManager::singleton();
+  auto add            = [&](const QString& path, bool portable) {
+    Settings settings(QDir(path).filePath(QString::fromStdWString(AppConfig::iniFileName())));
+    ExistingInstance i;
+    const Instance instance(path, portable);
+    i.name      = instance.displayName();
+    i.id        = instance.instanceIdentifier();
+    i.game      = settings.game().name().value_or(QString());
+    i.downloads = QDir::toNativeSeparators(settings.paths().downloads());
+    i.portable  = portable;
+    list.push_back(std::move(i));
+  };
+  for (auto&& d : manager.globalInstancePaths()) {
+    add(d, false);
+  }
+  for (auto&& d : manager.portableInstancePaths()) {
+    add(d, true);
+  }
+  return list;
 }
 
 QString instanceRootForType(CreateInstanceDialog::Types type,
@@ -350,26 +293,18 @@ std::vector<QPair<QString, QString>> findEldenRingInstallations(
 
 void fitStackedWidgetToCurrentPage(QStackedWidget* stacked)
 {
-  if (stacked == nullptr || stacked->currentWidget() == nullptr) {
+  // only the page shown counts for the stack's size
+  if (stacked == nullptr) {
     return;
   }
-
-  QWidget* currentPage = stacked->currentWidget();
-  currentPage->ensurePolished();
-  if (QLayout* layout = currentPage->layout()) {
-    layout->activate();
+  for (int i = 0; i < stacked->count(); ++i) {
+    QWidget* page      = stacked->widget(i);
+    const bool current = page == stacked->currentWidget();
+    const auto policy  = current ? QSizePolicy::Preferred : QSizePolicy::Ignored;
+    page->setSizePolicy(policy, policy);
   }
-
-  const int height = currentPage->sizeHint()
-                         .expandedTo(currentPage->minimumSizeHint())
-                         .height();
-  if (height <= 0) {
-    return;
-  }
-
-  stacked->setMinimumHeight(height);
-  stacked->setMaximumHeight(height);
-  stacked->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  stacked->setMinimumHeight(0);
+  stacked->setMaximumHeight(QWIDGETSIZE_MAX);
   stacked->updateGeometry();
 }
 
@@ -414,6 +349,17 @@ void PlaceholderLabel::setText(const QString& arg)
 void PlaceholderLabel::setVisible(bool b)
 {
   m_label->setVisible(b);
+
+  // warnings sit in a padded box under the rows; it shows only while one of
+  // them does, so it leaves no gap otherwise
+  QWidget* box = m_label->parentWidget();
+  if (box != nullptr && box->objectName() == QLatin1String("wizardPadded")) {
+    bool any = false;
+    for (QLabel* l : box->findChildren<QLabel*>(Qt::FindDirectChildrenOnly)) {
+      any |= !l->isHidden();
+    }
+    box->setVisible(any);
+  }
 }
 
 Page::Page(CreateInstanceDialog& dlg)
@@ -517,6 +463,33 @@ IntroPage::IntroPage(CreateInstanceDialog& dlg)
   QObject::connect(ui->hideIntro, &QCheckBox::toggled, [&] {
     GlobalSettings::setHideCreateInstanceIntro(ui->hideIntro->isChecked());
   });
+
+  // how many there are, by storage, then by game, most first
+  const auto instances = existingInstances();
+  int portable         = 0;
+  std::map<QString, int> perGame;
+  for (const auto& i : instances) {
+    portable += i.portable ? 1 : 0;
+    if (!i.game.isEmpty()) {
+      ++perGame[i.game];
+    }
+  }
+  if (instances.empty()) {
+    ui->introInstances->setText(QObject::tr("None yet: this will be the first one."));
+    return;
+  }
+  std::vector<std::pair<QString, int>> games(perGame.begin(), perGame.end());
+  std::stable_sort(games.begin(), games.end(), [](auto&& a, auto&& b) {
+    return a.second > b.second;
+  });
+  QStringList names;
+  for (const auto& [game, count] : games) {
+    names.push_back(QStringLiteral("%1 (%2)").arg(game).arg(count));
+  }
+  const int global = static_cast<int>(instances.size()) - portable;
+  ui->introInstances->setText(
+      QObject::tr("%1 global, %2 portable").arg(global).arg(portable) +
+      QStringLiteral(" \u00B7 ") + names.join(QStringLiteral(", ")));
 }
 
 bool IntroPage::doSkip() const
@@ -530,28 +503,34 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
   const bool isolatedEldenRing =
       InstanceManager::singleton().isEldenRingOnlyPortableMode();
 
-  // This legacy note only described Portable storage and was misleading for
-  // Global and Isolated choices. The cards now contain the relevant details.
   ui->portableExistsLabel->setVisible(false);
-  ui->createGlobal->setAutoDefault(false);
-  ui->createPortable->setAutoDefault(false);
-  ui->createIsolated->setAutoDefault(false);
-  ui->createGlobal->setIcon(makeWizardIcon(ui->createGlobal, WizardIcon::Global));
-  ui->createPortable->setIcon(makeWizardIcon(ui->createPortable, WizardIcon::Portable));
-  ui->createIsolated->setIcon(makeWizardIcon(ui->createIsolated, WizardIcon::Isolated));
-  ui->createGlobal->setIconSize(QSize(34, 34));
-  ui->createPortable->setIconSize(QSize(34, 34));
-  ui->createIsolated->setIconSize(QSize(34, 34));
-  ui->createGlobal->setMinimumHeight(54);
-  ui->createPortable->setMinimumHeight(54);
-  ui->createIsolated->setMinimumHeight(54);
-  ui->createGlobal->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  ui->createPortable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  ui->createIsolated->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  ui->widget_15->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  if (auto* choicesLayout =
-          qobject_cast<QVBoxLayout*>(ui->widget_15->layout())) {
-    choicesLayout->setSpacing(0);
+  ui->createGlobal->setIcon(choiceIcon(HomeGlyph));
+  ui->createPortable->setIcon(choiceIcon(DriveGlyph));
+  ui->createIsolated->setIcon(choiceIcon(LockGlyph));
+
+  // each kind with the folder it goes to and the instances already there
+  {
+    const auto& manager  = InstanceManager::singleton();
+    const auto instances = existingInstances();
+    const auto portable =
+        std::count_if(instances.begin(), instances.end(), [](auto&& i) {
+          return i.portable;
+        });
+    auto where = [](const QString& path, qsizetype count) {
+      const QString n = count == 1 ? QObject::tr("1 instance")
+                                   : QObject::tr("%1 instances").arg(count);
+      return QDir::toNativeSeparators(path) + QStringLiteral(" \u00B7 ") + n;
+    };
+    ui->createGlobal->setDescription(
+        ui->createGlobal->description() + QStringLiteral("\n") +
+        where(manager.globalInstancesRootPath(),
+              static_cast<qsizetype>(instances.size()) - portable));
+    ui->createPortable->setDescription(ui->createPortable->description() +
+                                       QStringLiteral("\n") +
+                                       where(manager.portableInstancesRootPath(), portable));
+    ui->createIsolated->setDescription(
+        ui->createIsolated->description() + QStringLiteral("\n") +
+        QDir::toNativeSeparators(manager.isolatedInstancesRootPath()));
   }
 
   QObject::connect(ui->createGlobal, &QAbstractButton::clicked, [&] {
@@ -569,6 +548,7 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
   if (isolatedEldenRing) {
     ui->createGlobal->setVisible(false);
     ui->createIsolated->setVisible(false);
+    ui->typeComparison->setVisible(false);
     ui->portableExistsLabel->setVisible(false);
     ui->createPortable->setText(QCoreApplication::translate(
         "cid::TypePage", "Use this isolated portable setup"));
@@ -668,28 +648,6 @@ void GamePage::doActivated(bool firstTime)
     ui->games = games;
     ui->gameSelectionHint = selectionHint;
 
-    // Keep selection tools attached to the game list instead of in a footer
-    // that floats below the active cards.
-    if (auto* panelLayout = qobject_cast<QBoxLayout*>(ui->widget_6->layout())) {
-      panelLayout->removeWidget(ui->widget_21);
-      panelLayout->removeWidget(ui->widget_23);
-      panelLayout->insertWidget(0, ui->widget_21);
-      panelLayout->insertWidget(1, ui->widget_23, 1);
-      panelLayout->setStretch(0, 0);
-      panelLayout->setStretch(1, 1);
-      panelLayout->setContentsMargins(12, 12, 12, 12);
-      panelLayout->setSpacing(10);
-    }
-    if (auto* toolbarLayout = qobject_cast<QBoxLayout*>(ui->widget_21->layout())) {
-      toolbarLayout->setContentsMargins(0, 0, 0, 0);
-      toolbarLayout->setSpacing(10);
-    }
-    ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    ui->scrollArea_3->viewport()->setAttribute(Qt::WA_StyledBackground, true);
-    if (ui->games != nullptr) {
-      ui->games->setAttribute(Qt::WA_StyledBackground, true);
-    }
-
     // A new wizard always starts with detected installations only. Keep the
     // filter state in GamePage so list rebuilding never depends on a stale UI
     // reference or an implicit Designer default.
@@ -700,10 +658,6 @@ void GamePage::doActivated(bool firstTime)
 
     if (ui->browseGameFolderButton != nullptr) {
       ui->browseGameFolderButton->setAutoDefault(false);
-      ui->browseGameFolderButton->setIcon(
-          makeWizardIcon(ui->browseGameFolderButton, WizardIcon::Browse));
-      ui->browseGameFolderButton->setIconSize(QSize(24, 24));
-      ui->browseGameFolderButton->setMinimumHeight(34);
       QObject::connect(ui->browseGameFolderButton, &QPushButton::clicked,
                        &m_dlg, [this] { selectCustom(); });
     } else {
@@ -711,11 +665,6 @@ void GamePage::doActivated(bool firstTime)
     }
 
     if (ui->gamesFilter != nullptr) {
-      ui->gamesFilter->setMinimumWidth(190);
-      ui->gamesFilter->setMaximumWidth(260);
-      ui->gamesFilter->setFixedHeight(34);
-      ui->gamesFilter->setSizePolicy(QSizePolicy::Expanding,
-                                     QSizePolicy::Fixed);
       ui->gamesFilter->setToolTip(
           QObject::tr("Filter supported games by name."));
       QObject::connect(ui->gamesFilter, &QLineEdit::textChanged, &m_dlg,
@@ -726,7 +675,6 @@ void GamePage::doActivated(bool firstTime)
 
     if (ui->showAllGames != nullptr) {
       ui->showAllGames->setTristate(false);
-      ui->showAllGames->setMinimumHeight(34);
       QObject::connect(ui->showAllGames, &QCheckBox::toggled, &m_dlg,
                        [this](bool showAll) {
                          m_showAllGames = showAll;
@@ -769,6 +717,25 @@ void GamePage::doActivated(bool firstTime)
         isolatedCopy
             ? QObject::tr("Isolated MO2 copies currently support Elden Ring. Choose its installed folder to continue.")
             : QObject::tr("Choose an installed game, or browse to its folder. The selected game and path are shown on each card."));
+  }
+
+  // instances that already manage each game, shown on its row
+  m_instanceCounts.clear();
+  {
+    const auto& manager = InstanceManager::singleton();
+    std::vector<QString> paths;
+    for (auto&& d : manager.globalInstancePaths()) {
+      paths.push_back(d);
+    }
+    for (auto&& d : manager.portableInstancePaths()) {
+      paths.push_back(d);
+    }
+    for (const auto& path : paths) {
+      Settings settings(QDir(path).filePath(QString::fromStdWString(AppConfig::iniFileName())));
+      if (const auto name = settings.game().name(); name && !name->isEmpty()) {
+        ++m_instanceCounts[name->toCaseFolded()];
+      }
+    }
   }
 
   clearButtons();
@@ -1033,8 +1000,8 @@ void GamePage::createGameButton(Game* g)
   g->button->setObjectName(QStringLiteral("gameChoice"));
   g->button->setCheckable(true);
   g->button->setAutoDefault(false);
-  g->button->setMinimumHeight(50);
-  g->button->setIconSize(QSize(32, 32));
+  g->button->setIconSize(QSize(28, 28));
+  g->button->setCursor(Qt::PointingHandCursor);
 
   updateButton(g);
 
@@ -1071,17 +1038,34 @@ void GamePage::updateButton(Game* g)
   g->button->setText(displayName.replace("&", "&&"));
   QIcon gameIcon = g->game->gameIcon();
   if (gameIcon.isNull()) {
-    gameIcon = makeWizardIcon(g->button, WizardIcon::Edition);
+    gameIcon = choiceIcon(GameGlyph);
   }
   gameIcon = MOBase::makeRunStyleGameIcon(gameIcon, g->button,
                                           g->button->iconSize());
   g->button->setIcon(gameIcon);
 
+  QStringList description;
   if (g->installed) {
-    g->button->setDescription(g->dir);
+    for (const auto& installation : g->installations) {
+      if (normalizedInstallPath(installation.path) == normalizedInstallPath(g->dir) &&
+          !installation.source.isEmpty()) {
+        description << installation.source;
+        break;
+      }
+    }
+    description << QDir::toNativeSeparators(g->dir);
   } else {
-    g->button->setDescription(QObject::tr("No installation found"));
+    description << QObject::tr("Not installed");
   }
+
+  // so a second instance of the same game is a choice, not an accident
+  const auto count = m_instanceCounts.find(g->game->gameName().toCaseFolded());
+  if (count != m_instanceCounts.end() && count->second > 0) {
+    description << (count->second == 1
+                        ? QObject::tr("1 instance already")
+                        : QObject::tr("%1 instances already").arg(count->second));
+  }
+  g->button->setDescription(description.join(QStringLiteral(" \u00B7 ")));
 }
 
 void GamePage::selectButton(Game* g)
@@ -1190,9 +1174,7 @@ void GamePage::fillList()
 
     createGameButton(g.get());
     addButton(g->button);
-
   }
-
 }
 
 GamePage::Game* GamePage::checkInstallation(const QString& path, Game* g)
@@ -1429,9 +1411,11 @@ void VariantsPage::fillList()
     auto* b = new QCommandLinkButton(v);
     b->setCheckable(true);
     b->setAutoDefault(false);
-    b->setIcon(makeWizardIcon(b, WizardIcon::Edition));
-    b->setIconSize(QSize(28, 28));
-    b->setMinimumHeight(56);
+    b->setObjectName(QStringLiteral("editionChoice"));
+    b->setProperty("wizardChoice", true);
+    b->setIcon(choiceIcon(EditionGlyph));
+    b->setIconSize(QSize(24, 24));
+    b->setCursor(Qt::PointingHandCursor);
 
     QObject::connect(b, &QAbstractButton::clicked, [v, this] {
       select(v);
@@ -1459,6 +1443,26 @@ NamePage::NamePage(CreateInstanceDialog& dlg)
   QObject::connect(ui->instanceName, &QLineEdit::returnPressed, [&] {
     next();
   });
+
+  QStringList groups;
+  const auto& manager = InstanceManager::singleton();
+  auto addGroupOf     = [&](const QString& path, bool portable) {
+    const QString group = GlobalSettings::instanceValue(
+        QStringLiteral("InstanceGroups"), Instance(path, portable).instanceIdentifier());
+    if (!group.isEmpty() && !groups.contains(group, Qt::CaseInsensitive)) {
+      groups.push_back(group);
+    }
+  };
+  for (auto&& d : manager.globalInstancePaths()) {
+    addGroupOf(d, false);
+  }
+  for (auto&& d : manager.portableInstancePaths()) {
+    addGroupOf(d, true);
+  }
+  groups.sort(Qt::CaseInsensitive);
+  ui->instanceGroup->addItems(groups);
+  ui->instanceGroup->setCurrentIndex(-1);
+  ui->instanceGroup->lineEdit()->setPlaceholderText(QObject::tr("No group"));
 }
 
 bool NamePage::ready() const
@@ -1475,48 +1479,57 @@ void NamePage::doActivated(bool)
     return;
   }
 
-  if (auto* nameLayout =
-          qobject_cast<QVBoxLayout*>(ui->widget_9->layout())) {
-    if (nameLayout->count() > 0) {
-      if (auto* spacer = nameLayout->itemAt(nameLayout->count() - 1)
-                              ->spacerItem()) {
-        spacer->changeSize(20, 0, QSizePolicy::Minimum,
-                           QSizePolicy::Fixed);
-        nameLayout->invalidate();
-        nameLayout->activate();
-        ui->widget_9->updateGeometry();
-      }
-    }
-  }
-
   const auto type = m_dlg.rawCreationInfo().type;
+  ui->instanceGroup->parentWidget()->setVisible(type != CreateInstanceDialog::Isolated);
+  ui->instanceNotes->parentWidget()->setVisible(type != CreateInstanceDialog::Isolated);
+  ui->desktopShortcut->parentWidget()->setVisible(type != CreateInstanceDialog::Isolated);
+
+  // the instances that manage this game already, with their group, so the
+  // new one gets a name of its own
+  {
+    QStringList siblings;
+    for (const auto& i : existingInstances()) {
+      if (i.game.compare(g->gameName(), Qt::CaseInsensitive) != 0) {
+        continue;
+      }
+      QString text = i.name;
+      const QString group =
+          GlobalSettings::instanceValue(QStringLiteral("InstanceGroups"), i.id);
+      if (!group.isEmpty()) {
+        text += QStringLiteral(" (") + group + QStringLiteral(")");
+      }
+      siblings.push_back(text);
+    }
+    ui->instanceSiblings->setText(siblings.join(QStringLiteral(" \u00B7 ")));
+    ui->instanceSiblings->parentWidget()->setVisible(
+        !siblings.isEmpty() && type != CreateInstanceDialog::Isolated);
+  }
   // The heading and live folder preview already explain the name's purpose.
   // Keep the extra paragraph hidden so this step stays focused and compact.
   ui->instanceNameContext->setVisible(false);
   if (type == CreateInstanceDialog::Isolated) {
-    ui->instanceNameLabel->setText(
-        QCoreApplication::translate(
-            "cid::NamePage",
-            "<h3>Name your isolated MO2 copy for %1.</h3>")
-            .arg(g->gameName().toHtmlEscaped()));
+    ui->instanceNameLabel->setText(plainHeading(
+        QCoreApplication::translate("cid::NamePage",
+                                    "<h3>Name your isolated MO2 copy for %1.</h3>")
+            .arg(g->gameName())));
   } else {
     const QString typeName =
         type == CreateInstanceDialog::Portable
             ? QCoreApplication::translate("cid::NamePage", "portable")
             : QCoreApplication::translate("cid::NamePage", "global");
-    ui->instanceNameLabel->setText(
+    ui->instanceNameLabel->setText(plainHeading(
         QCoreApplication::translate("cid::NamePage",
-                                     "<h3>Name this %1 instance for %2.</h3>")
-            .arg(typeName.toHtmlEscaped(), g->gameName().toHtmlEscaped()));
+                                    "<h3>Name this %1 instance for %2.</h3>")
+            .arg(typeName, g->gameName())));
   }
 
   const auto& manager = InstanceManager::singleton();
   if (manager.isEldenRingOnlyPortableMode()) {
-    ui->instanceNameLabel->setText(
+    ui->instanceNameLabel->setText(plainHeading(
         QCoreApplication::translate(
             "cid::NamePage",
             "<h3>This setup will create one isolated portable instance for %1.</h3>")
-            .arg(g->gameName().toHtmlEscaped()));
+            .arg(g->gameName())));
     ui->instanceName->setVisible(false);
     ui->instanceNameContext->setVisible(false);
     m_exists.setVisible(false);
@@ -1689,23 +1702,6 @@ ProfilePage::ProfilePage(CreateInstanceDialog& dlg)
   // first-time instance creation), ProfilePage::doActivated shows this group.
   m_eldenRingSaveGroup->hide();
 
-  // The heading also changes for Elden Ring; preserve its larger height in
-  // both states so it cannot alter the page geometry on activation.
-  const QString eldenRingHeading = QCoreApplication::translate(
-      "cid::ProfilePage", "<h3>Choose how Elden Ring saves are handled.</h3>");
-  auto* headingLayout = ui->widget_24->layout();
-  ui->profileSettingsLabel->setText(eldenRingHeading);
-  if (headingLayout != nullptr) {
-    headingLayout->activate();
-  }
-  const int eldenRingHeadingHeight = ui->widget_24->sizeHint().height();
-
-  ui->profileSettingsLabel->setText(m_defaultHeading);
-  if (headingLayout != nullptr) {
-    headingLayout->activate();
-  }
-  const int standardHeadingHeight = ui->widget_24->sizeHint().height();
-  ui->widget_24->setMinimumHeight(qMax(eldenRingHeadingHeight, standardHeadingHeight));
 }
 
 bool ProfilePage::ready() const
@@ -1742,34 +1738,10 @@ void ProfilePage::doActivated(bool firstTime)
   const bool isEldenRing =
       gamePage != nullptr && EldenRingSaveSettings::supports(gamePage->selectedGame());
 
-  if (auto* contentLayout =
-          qobject_cast<QVBoxLayout*>(ui->widget_25->layout())) {
-    contentLayout->setContentsMargins(0, 0, 0, 0);
-    contentLayout->setSpacing(6);
-    if (contentLayout->count() > 0) {
-      if (auto* spacer = contentLayout->itemAt(contentLayout->count() - 1)
-                             ->spacerItem()) {
-        spacer->changeSize(20, 8, QSizePolicy::Minimum, QSizePolicy::Fixed);
-      }
-    }
-    contentLayout->invalidate();
-  }
-
-  ui->widget_25->setStyleSheet(
-      isEldenRing
-          ? QStringLiteral(
-                "QWidget#widget_25 { background-color: transparent; "
-                "border: none; border-radius: 0; padding: 0; }")
-          : QString());
-
-  if (auto* pageLayout = qobject_cast<QVBoxLayout*>(ui->page->layout())) {
-    ui->widget_25->setSizePolicy(
-        QSizePolicy::Expanding,
-        QSizePolicy::Maximum);
-    pageLayout->setAlignment(ui->widget_25, Qt::AlignTop);
-    pageLayout->invalidate();
-    pageLayout->activate();
-  }
+  // the plugin's save card (or the native one) sits inside the rows' padding;
+  // the switch rows run edge to edge
+  ui->widget_25->layout()->setContentsMargins(isEldenRing ? 20 : 0, isEldenRing ? 4 : 0,
+                                              isEldenRing ? 20 : 0, isEldenRing ? 12 : 0);
 
   const bool pluginOwnsSaveControls =
       m_eldenRingSaveGroup
@@ -1779,10 +1751,27 @@ void ProfilePage::doActivated(bool firstTime)
   ui->profileInisCheckbox->setVisible(!isEldenRing);
   ui->profileSavesCheckbox->setVisible(!isEldenRing);
   ui->archiveInvalidationCheckbox->setVisible(!isEldenRing);
+  ui->profileInisDescription->setVisible(!isEldenRing);
+  ui->profileSavesDescription->setVisible(!isEldenRing);
+  ui->archiveInvalidationDescription->setVisible(!isEldenRing);
+  ui->gameInisPath->parentWidget()->setVisible(!isEldenRing);
+  ui->gameSavesPath->parentWidget()->setVisible(!isEldenRing);
+  if (!isEldenRing && gamePage != nullptr && gamePage->selectedGame() != nullptr) {
+    const auto* game = gamePage->selectedGame();
+    const QString documents =
+        QDir::toNativeSeparators(game->documentsDirectory().absolutePath());
+    const QStringList inis = game->iniFiles();
+    ui->gameInisPath->setText(
+        inis.isEmpty() ? documents
+                       : documents + QStringLiteral(" \u00B7 ") +
+                             inis.join(QStringLiteral(", ")));
+    ui->gameSavesPath->setText(
+        QDir::toNativeSeparators(game->savesDirectory().absolutePath()));
+  }
   ui->profileSettingsLabel->setText(
       isEldenRing
-          ? QCoreApplication::translate(
-                "cid::ProfilePage", "<h3>Choose how Elden Ring saves are handled.</h3>")
+          ? plainHeading(QCoreApplication::translate(
+                "cid::ProfilePage", "<h3>Choose how Elden Ring saves are handled.</h3>"))
           : m_defaultHeading);
 
   if (isEldenRing && firstTime) {
@@ -1841,81 +1830,12 @@ PathsPage::PathsPage(CreateInstanceDialog& dlg)
     onAdvanced();
   });
 
+  QObject::connect(ui->sharedDownloads, qOverload<int>(&QComboBox::currentIndexChanged),
+                   [&] {
+                     onChanged();
+                   });
+
   ui->pathPages->setCurrentIndex(0);
-
-  if (auto* panelLayout = qobject_cast<QVBoxLayout*>(ui->widget_13->layout())) {
-    panelLayout->setContentsMargins(14, 12, 14, 12);
-    panelLayout->setSpacing(0);
-  }
-
-  // Keep the advanced-path toggle outside the bordered path card so it reads
-  // as a simple option instead of a nested panel.
-  if (auto* cardLayout = qobject_cast<QVBoxLayout*>(ui->widget_13->layout())) {
-    if (auto* pageLayout = qobject_cast<QVBoxLayout*>(ui->page_6->layout())) {
-      cardLayout->removeWidget(ui->widget_14);
-      ui->widget_14->setParent(ui->page_6);
-      pageLayout->addWidget(ui->widget_14);
-    }
-  }
-  ui->widget_14->setObjectName(QStringLiteral("advancedPathToggleRow"));
-  if (auto* toggleLayout =
-          qobject_cast<QHBoxLayout*>(ui->widget_14->layout())) {
-    toggleLayout->setContentsMargins(0, 6, 2, 0);
-    toggleLayout->setSpacing(0);
-  }
-  ui->advancedPathOptions->setCursor(Qt::PointingHandCursor);
-
-  QLabel* pathLabels[] = {ui->label_6, ui->label_8, ui->label_9,
-                          ui->label_10, ui->label_12, ui->label_13};
-  int pathLabelWidth = 0;
-  for (QLabel* label : pathLabels) {
-    pathLabelWidth = qMax(pathLabelWidth, label->sizeHint().width());
-  }
-  for (QLabel* label : pathLabels) {
-    label->setMinimumWidth(pathLabelWidth);
-    label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  }
-
-  // Let both path-entry pages use the full width of the wizard. The simple
-  // page otherwise sizes its location field only to its text-edit size hint,
-  // which clips the generated instance path on narrow windows.
-  for (QLineEdit* edit : {ui->location, ui->base, ui->downloads, ui->mods,
-                           ui->profiles, ui->overwrite}) {
-    edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    auto* grid = qobject_cast<QGridLayout*>(edit->parentWidget()->layout());
-    if (grid == nullptr) {
-      continue;
-    }
-
-    int row = 0;
-    int column = 0;
-    int rowSpan = 0;
-    int columnSpan = 0;
-    const int itemIndex = grid->indexOf(edit);
-    if (itemIndex >= 0) {
-      grid->getItemPosition(itemIndex, &row, &column, &rowSpan, &columnSpan);
-      grid->setColumnStretch(column, 1);
-    }
-  }
-
-  QSize largestPathPageSize;
-  for (int i = 0; i < ui->pathPages->count(); ++i) {
-    QWidget* page = ui->pathPages->widget(i);
-    page->ensurePolished();
-    if (QLayout* pageLayout = page->layout()) {
-      pageLayout->activate();
-    }
-    largestPathPageSize = largestPathPageSize.expandedTo(page->minimumSizeHint())
-                              .expandedTo(page->sizeHint());
-  }
-  if (largestPathPageSize.isValid()) {
-    // Keep the width stable for long paths. The active page's height is
-    // adjusted when the wizard enters this step or the advanced toggle moves.
-    ui->pathPages->setMinimumWidth(largestPathPageSize.width());
-    ui->pathPages->setMinimumHeight(0);
-    ui->pathPages->setMaximumHeight(QWIDGETSIZE_MAX);
-    ui->pathPages->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  }
 }
 
 bool PathsPage::ready() const
@@ -1933,6 +1853,29 @@ void PathsPage::doActivated(bool firstTime)
   // if the instance name or type have changed, all the paths must be
   // regenerated
   const bool changed = (m_lastInstanceName != name) || (m_lastType != type);
+
+  // this instance's own downloads, or those of an instance of the same game;
+  // the choice stays while it's still offered
+  {
+    const QString kept = ui->sharedDownloads->currentData().toString();
+    QSignalBlocker blocker(ui->sharedDownloads);
+    ui->sharedDownloads->clear();
+    ui->sharedDownloads->addItem(QObject::tr("This instance's own folder"), QString());
+    if (type != CreateInstanceDialog::Isolated) {
+      const QString game = m_dlg.rawCreationInfo().game->gameName();
+      for (const auto& i : existingInstances()) {
+        if (i.game.compare(game, Qt::CaseInsensitive) == 0 && !i.downloads.isEmpty()) {
+          ui->sharedDownloads->addItem(QObject::tr("Shared with %1").arg(i.name),
+                                       i.downloads);
+          ui->sharedDownloads->setItemData(ui->sharedDownloads->count() - 1,
+                                           i.downloads, Qt::ToolTipRole);
+        }
+      }
+    }
+    const int index = ui->sharedDownloads->findData(kept);
+    ui->sharedDownloads->setCurrentIndex(qMax(index, 0));
+    ui->sharedDownloads->parentWidget()->setVisible(ui->sharedDownloads->count() > 1);
+  }
 
   // generating and paths
   setPaths(name, changed);
@@ -1968,7 +1911,8 @@ CreateInstanceDialog::Paths PathsPage::selectedPaths() const
     p.profiles  = ui->profiles->text();
     p.overwrite = ui->overwrite->text();
   } else {
-    p.base = ui->location->text();
+    p.base      = ui->location->text();
+    p.downloads = ui->sharedDownloads->currentData().toString();
   }
 
   return p;
@@ -1992,8 +1936,39 @@ void PathsPage::browse(QLineEdit* e)
   e->setText(QDir::toNativeSeparators(s));
 }
 
+void PathsPage::updateDiskSpace()
+{
+  // the nearest folder that exists, on the drive the data goes to
+  QString path = ui->advancedPathOptions->isChecked() ? ui->base->text() : ui->location->text();
+  QDir dir(QDir::fromNativeSeparators(path.trimmed()));
+  while (!dir.exists() && dir.cdUp()) {
+  }
+
+  const QStorageInfo storage(dir);
+  if (path.trimmed().isEmpty() || !storage.isValid() || !storage.isReady()) {
+    ui->diskSpace->clear();
+    ui->diskBar->hide();
+    return;
+  }
+  ui->diskSpace->setText(QObject::tr("%1 free on %2")
+                             .arg(localizedByteSize(storage.bytesAvailable()))
+                             .arg(QDir::toNativeSeparators(storage.rootPath())));
+  // how full the drive is
+  const qint64 total = storage.bytesTotal();
+  ui->diskBar->setVisible(total > 0);
+  if (total > 0) {
+    ui->diskBar->setValue(
+        static_cast<int>((total - storage.bytesAvailable()) * 1000 / total));
+    ui->diskBar->setToolTip(QObject::tr("%1 of %2 used")
+                                .arg(localizedByteSize(total - storage.bytesAvailable()))
+                                .arg(localizedByteSize(total)));
+  }
+}
+
 void PathsPage::checkPaths()
 {
+  updateDiskSpace();
+
   if (ui->advancedPathOptions->isChecked()) {
     // checking advanced paths
     m_okay = checkAdvancedPath(ui->base->text()) &&
@@ -2004,6 +1979,21 @@ void PathsPage::checkPaths()
   } else {
     // checking simple path
     m_okay = checkSimplePath(ui->location->text());
+
+    // the folders that go inside the location, and where the downloads go
+    // when they're shared
+    const QString base   = QDir::toNativeSeparators(ui->location->text().trimmed());
+    const QString shared = ui->sharedDownloads->currentData().toString();
+    QStringList inside   = {QStringLiteral("mods"), QStringLiteral("profiles"),
+                            QStringLiteral("overwrite")};
+    if (shared.isEmpty()) {
+      inside.prepend(QStringLiteral("downloads"));
+    }
+    QString text = QObject::tr("%1 in %2").arg(inside.join(QStringLiteral(", ")), base);
+    if (!shared.isEmpty()) {
+      text += QStringLiteral("\n") + QObject::tr("Downloads from %1").arg(shared);
+    }
+    ui->folderPreview->setText(text);
   }
 }
 
@@ -2144,6 +2134,12 @@ NexusPage::NexusPage(CreateInstanceDialog& dlg) : Page(dlg), m_skip(false)
   // just check it once, or connecting and then going back and forth would skip
   // the page, which would be unexpected
   m_skip = GlobalSettings::hasNexusApiKey();
+
+  QObject::connect(ui->nexusLog->model(), &QAbstractItemModel::rowsInserted, &m_dlg, [this] {
+    if (ui->nexusLog->parentWidget()->isHidden()) {
+      ui->nexusLog->parentWidget()->show();
+    }
+  });
 }
 
 NexusPage::~NexusPage() = default;
@@ -2167,83 +2163,144 @@ ConfirmationPage::ConfirmationPage(CreateInstanceDialog& dlg) : Page(dlg)
 
 void ConfirmationPage::doActivated(bool)
 {
-  ui->review->setPlainText(makeReview());
+  // one row per value: the caption, the value and Change, which goes back to
+  // the step it came from
+  auto* rows = ui->review->layout();
+  while (auto* item = rows->takeAt(0)) {
+    delete item->widget();
+    delete item;
+  }
+
+  for (const auto& [caption, value, step] : makeReview()) {
+    auto* row = new QFrame(ui->review);
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(20, 9, 12, 9);
+    rowLayout->setSpacing(16);
+    auto* captionLabel = new QLabel(caption, row);
+    captionLabel->setObjectName(QStringLiteral("wizardReviewKey"));
+    captionLabel->setFixedWidth(120);
+    captionLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    auto* valueLabel = new QLabel(value, row);
+    valueLabel->setObjectName(QStringLiteral("wizardReviewValue"));
+    valueLabel->setWordWrap(true);
+    valueLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    rowLayout->addWidget(captionLabel);
+    rowLayout->addWidget(valueLabel, 1);
+    if (step != nullptr && !m_dlg.isSinglePage()) {
+      auto* change = new QToolButton(row);
+      change->setObjectName(QStringLiteral("wizardChangeButton"));
+      change->setText(QObject::tr("Change"));
+      change->setAutoRaise(true);
+      change->setCursor(Qt::PointingHandCursor);
+      change->setAccessibleName(QObject::tr("Change %1").arg(caption));
+      QObject::connect(change, &QToolButton::clicked, &m_dlg, [this, step = step] {
+        m_dlg.selectPageOf(step);
+      });
+      rowLayout->addWidget(change, 0, Qt::AlignTop);
+    }
+    rows->addWidget(row);
+  }
+
   ui->creationLog->clear();
   ui->creationLog->hide();
+  ui->creationLog->parentWidget()->hide();
   ui->widget_19->updateGeometry();
 
-  if (m_dlg.rawCreationInfo().type == CreateInstanceDialog::Isolated) {
+  const bool isolated = m_dlg.rawCreationInfo().type == CreateInstanceDialog::Isolated;
+  if (isolated) {
     ui->label_17->setText(QObject::tr(
         "MO2 will copy its application files into a separate folder for this game. If you start the copy after setup, this MO2 closes first."));
     ui->launch->setText(QObject::tr("Start the isolated copy after setup"));
   } else {
     ui->label_17->setText(QObject::tr(
-        "The instance is ready to be created. Review the details, then select Finish."));
+        "Check the details, then select Create instance. Nothing is written "
+        "before that."));
     ui->launch->setText(QObject::tr("Launch the new instance"));
   }
 }
 
-QString ConfirmationPage::makeReview() const
+std::vector<ConfirmationPage::ReviewRow> ConfirmationPage::makeReview() const
 {
-  QStringList lines;
+  std::vector<ReviewRow> rows;
 
   const auto ci = m_dlg.rawCreationInfo();
-
-  lines.push_back(QObject::tr("Instance type: %1").arg(toLocalizedString(ci.type)));
-
-  lines.push_back(QObject::tr("Instance location: %1").arg(ci.dataPath));
-
-  if (!ci.instanceName.isEmpty()) {
-    lines.push_back(QObject::tr("Instance name: %1").arg(ci.instanceName));
-  }
-
-  lines.push_back(QObject::tr("Profile settings:"));
-  if (EldenRingSaveSettings::supports(ci.game)) {
-    lines.push_back(QObject::tr("  Elden Ring save mode: %1")
-                        .arg(EldenRingSaveSettings::modeName(
-                            ci.profileSettings.eldenRingSaveMode)));
-  } else {
-    lines.push_back(
-        QObject::tr("  Local INIs: %1")
-            .arg(ci.profileSettings.localInis ? QObject::tr("yes") : QObject::tr("no")));
-    lines.push_back(QObject::tr("  Local Saves: %1")
-                        .arg(ci.profileSettings.localSaves ? QObject::tr("yes")
-                                                           : QObject::tr("no")));
-    lines.push_back(QObject::tr("  Automatic Archive Invalidation: %1")
-                        .arg(ci.profileSettings.archiveInvalidation
-                                 ? QObject::tr("yes")
-                                 : QObject::tr("no")));
-  }
-
-  if (ci.paths.downloads.isEmpty()) {
-    // simple settings
-    if (ci.paths.base != ci.dataPath) {
-      lines.push_back(QObject::tr("Base directory: %1").arg(ci.paths.base));
-    }
-  } else {
-    // advanced settings
-    lines.push_back(QObject::tr("Base directory: %1").arg(ci.paths.base));
-    lines.push_back(dirLine(QObject::tr("Downloads"), ci.paths.downloads));
-    lines.push_back(dirLine(QObject::tr("Mods"), ci.paths.mods));
-    lines.push_back(dirLine(QObject::tr("Profiles"), ci.paths.profiles));
-    lines.push_back(dirLine(QObject::tr("Overwrite"), ci.paths.overwrite));
-  }
+  const Page* typePage    = m_dlg.getPage<TypePage>();
+  const Page* gamePage    = m_dlg.getPage<GamePage>();
+  const Page* namePage    = m_dlg.getPage<NamePage>();
+  const Page* profilePage = m_dlg.getPage<ProfilePage>();
+  const Page* pathsPage   = m_dlg.getPage<PathsPage>();
+  auto yesNo = [](bool b) {
+    return b ? QObject::tr("yes") : QObject::tr("no");
+  };
 
   // game
   QString name = ci.game->gameName();
   if (!ci.gameVariant.isEmpty()) {
     name += " (" + ci.gameVariant + ")";
   }
+  rows.push_back({QObject::tr("Game"), name, gamePage});
+  rows.push_back({QObject::tr("Game folder"), ci.gameLocation, gamePage});
 
-  lines.push_back(QObject::tr("Game: %1").arg(name));
-  lines.push_back(QObject::tr("Game location: %1").arg(ci.gameLocation));
+  rows.push_back({QObject::tr("Storage"), toLocalizedString(ci.type), typePage});
+  if (!ci.instanceName.isEmpty()) {
+    rows.push_back({QObject::tr("Name"), ci.instanceName, namePage});
+  }
+  if (ci.type != CreateInstanceDialog::Isolated) {
+    const QString group = ui->instanceGroup->currentText().trimmed();
+    if (!group.isEmpty()) {
+      rows.push_back({QObject::tr("Group"), group, namePage});
+    }
+    const QString notes = ui->instanceNotes->text().trimmed();
+    if (!notes.isEmpty()) {
+      rows.push_back({QObject::tr("Notes"), notes, namePage});
+    }
+  }
+  rows.push_back({QObject::tr("Instance folder"), ci.dataPath, pathsPage});
 
-  return lines.join("\n");
-}
+  if (!ui->advancedPathOptions->isChecked()) {
+    // simple settings
+    if (ci.paths.base != ci.dataPath) {
+      rows.push_back({QObject::tr("Base directory"), ci.paths.base, pathsPage});
+    }
+    if (!ci.paths.downloads.isEmpty()) {
+      rows.push_back({QObject::tr("Downloads"),
+                      ui->sharedDownloads->currentText() + QStringLiteral(" \u00B7 ") +
+                          ci.paths.downloads,
+                      pathsPage});
+    }
+  } else {
+    // advanced settings
+    rows.push_back({QObject::tr("Base directory"), ci.paths.base, pathsPage});
+    rows.push_back({QObject::tr("Downloads"), ci.paths.downloads, pathsPage});
+    rows.push_back({QObject::tr("Mods"), ci.paths.mods, pathsPage});
+    rows.push_back({QObject::tr("Profiles"), ci.paths.profiles, pathsPage});
+    rows.push_back({QObject::tr("Overwrite"), ci.paths.overwrite, pathsPage});
+  }
+  if (!ui->diskSpace->text().isEmpty()) {
+    rows.push_back({QObject::tr("Disk"), ui->diskSpace->text(), pathsPage});
+  }
+  if (ci.type != CreateInstanceDialog::Isolated && ui->desktopShortcut->isChecked()) {
+    rows.push_back({QObject::tr("Shortcut"), QObject::tr("On the desktop"), namePage});
+  }
 
-QString ConfirmationPage::dirLine(const QString& caption, const QString& path) const
-{
-  return QString("  - %1: %2").arg(caption).arg(path);
+  if (EldenRingSaveSettings::supports(ci.game)) {
+    rows.push_back({QObject::tr("Saves"),
+                    EldenRingSaveSettings::modeName(ci.profileSettings.eldenRingSaveMode),
+                    profilePage});
+  } else {
+    rows.push_back(
+        {QObject::tr("Profiles"),
+         QObject::tr("Local INIs: %1").arg(yesNo(ci.profileSettings.localInis)) +
+             QStringLiteral(" \u00B7 ") +
+             QObject::tr("Local Saves: %1").arg(yesNo(ci.profileSettings.localSaves)) +
+             QStringLiteral(" \u00B7 ") +
+             QObject::tr("Automatic Archive Invalidation: %1")
+                 .arg(yesNo(ci.profileSettings.archiveInvalidation)),
+         profilePage});
+  }
+
+  return rows;
 }
 
 }  // namespace cid

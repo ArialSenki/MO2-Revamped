@@ -4,6 +4,7 @@
 #include <QString>
 
 class Executable;
+class Instance;
 
 namespace env
 {
@@ -101,6 +102,11 @@ private:
 // returns a string representation of the given location
 //
 QString toString(Shortcut::Locations loc);
+
+// a shortcut that starts Mod Organizer with the given instance; the portable
+// instance in the Mod Organizer folder opens without arguments
+//
+Shortcut instanceShortcut(const Instance& i);
 
 }  // namespace env
 

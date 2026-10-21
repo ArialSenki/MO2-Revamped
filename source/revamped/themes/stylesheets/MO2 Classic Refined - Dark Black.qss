@@ -2063,40 +2063,6 @@ QDialog#EldenRingSaveTransferDialog QPushButton#saveTransferCopyButton {
 }
 
 /* MO2 Revamped: Instance Manager */
-QDialog#InstanceManagerDialog QWidget#widget_8 {
-    background-color: #262626;
-    border: 1px solid #2C2C2C;
-    border-radius: 9px;
-}
-QDialog#InstanceManagerDialog QWidget#widget_2,
-QDialog#InstanceManagerDialog QWidget#widget_3 {
-    background-color: #252525;
-    border: 1px solid #2C2C2C;
-    border-radius: 9px;
-}
-QDialog#InstanceManagerDialog QWidget#widget_7,
-QDialog#InstanceManagerDialog QWidget#widget_9 {
-    background-color: transparent;
-    border: none;
-}
-QDialog#InstanceManagerDialog QWidget#widget_9 {
-    border-top: 1px solid #2C2C2C;
-    padding-top: 10px;
-}
-QDialog#InstanceManagerDialog QLabel#instancesHeading,
-QDialog#InstanceManagerDialog QLabel#detailsHeading {
-    color: #F2F2F2;
-    font-size: 12pt;
-    font-weight: 600;
-    padding: 0;
-}
-QDialog#InstanceManagerDialog QLabel#managerSummary,
-QDialog#InstanceManagerDialog QLabel#selectionHint {
-    color: #B3B3B3;
-}
-QDialog#InstanceManagerDialog QLabel#selectionHint {
-    padding-bottom: 2px;
-}
 QDialog#InstanceManagerDialog QPushButton#instanceHelpButton {
     color: #D3D3D3;
     background-color: #272727;
@@ -2112,37 +2078,6 @@ QDialog#InstanceManagerDialog QPushButton#instanceHelpButton:hover {
 }
 QDialog#InstanceManagerDialog QPushButton#instanceHelpButton:pressed {
     background-color: #262626;
-}
-QDialog#InstanceManagerDialog QLabel#instanceStatus {
-    color: #D3D3D3;
-    font-weight: 600;
-    background-color: #272727;
-    border: 1px solid #303030;
-    border-radius: 6px;
-    padding: 5px 9px;
-}
-QDialog#InstanceManagerDialog QListView#list {
-    background-color: #242424;
-    border: 1px solid #2B2B2B;
-    border-radius: 7px;
-    padding: 3px;
-}
-QDialog#InstanceManagerDialog QListView#list::item {
-    padding: 5px 7px;
-    border-radius: 5px;
-}
-QDialog#InstanceManagerDialog QListView#list::item:hover {
-    background-color: #272727;
-}
-QDialog#InstanceManagerDialog QListView#list::item:selected {
-    color: #F6F6F6;
-    background-color: #2C2C2C;
-    border: 1px solid #7A7A7A;
-}
-QDialog#InstanceManagerDialog QLineEdit#filter {
-    min-height: 28px;
-    padding: 4px 8px;
-    border-radius: 6px;
 }
 QDialog#InstanceManagerDialog QPushButton {
     min-height: 31px;
@@ -2189,43 +2124,17 @@ QDialog#InstanceManagerDialog QPushButton#deleteInstance:disabled {
     background-color: #302B2B;
     border-color: #4B4242;
 }
-QDialog#InstanceManagerDialog QSplitter#splitter::handle {
-    background-color: #292929;
-    width: 3px;
-    margin: 8px 0;
-}
 
 /* MO2 Revamped: Create Instance wizard */
-QDialog#CreateInstanceDialog QWidget#widget,
-QDialog#CreateInstanceDialog QWidget#widget_2,
-QDialog#CreateInstanceDialog QWidget#widget_7,
-QDialog#CreateInstanceDialog QWidget#widget_15,
-QDialog#CreateInstanceDialog QWidget#widget_5,
-QDialog#CreateInstanceDialog QWidget#widget_23,
-QDialog#CreateInstanceDialog QWidget#widget_21,
-QDialog#CreateInstanceDialog QWidget#widget_16,
-QDialog#CreateInstanceDialog QWidget#widget_8,
-QDialog#CreateInstanceDialog QWidget#widget_24,
-QDialog#CreateInstanceDialog QWidget#widget_10,
-QDialog#CreateInstanceDialog QWidget#widget_14,
-QDialog#CreateInstanceDialog QWidget#widget_4,
-QDialog#CreateInstanceDialog QWidget#nexusBox_2,
-QDialog#CreateInstanceDialog QWidget#widget_22,
-QDialog#CreateInstanceDialog QWidget#widget_18,
-QDialog#CreateInstanceDialog QWidget#widget_20 {
+QDialog#CreateInstanceDialog QWidget#widget_15 {
     background-color: transparent;
     border: none;
 }
 
 QDialog#CreateInstanceDialog QStackedWidget#pathPages,
-QDialog#CreateInstanceDialog QScrollArea#scrollArea_2,
 QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 {
     background-color: transparent;
     border: none;
-}
-QDialog#CreateInstanceDialog QLabel#title {
-
-    padding: 0;
 }
 
 QDialog#CreateInstanceDialog QLabel#label_14,
@@ -2234,16 +2143,8 @@ QDialog#CreateInstanceDialog QLabel#label_18,
 QDialog#CreateInstanceDialog QLabel#label_17,
 QDialog#CreateInstanceDialog QLabel#pathsLabel,
 QDialog#CreateInstanceDialog QLabel#portableExistsLabel,
-QDialog#CreateInstanceDialog QLabel#label_19,
 QDialog#CreateInstanceDialog QLabel#label_11 {
     color: #B3B3B3;
-}
-QDialog#CreateInstanceDialog QLabel#instanceNamePath {
-    color: #D3D3D3;
-    background-color: #272727;
-    border: 1px solid #303030;
-    border-radius: 6px;
-    padding: 8px 10px;
 }
 QDialog#CreateInstanceDialog QLabel#instanceNameExists,
 QDialog#CreateInstanceDialog QLabel#locationExists,
@@ -2349,18 +2250,10 @@ QDialog#NexusManualKeyDialog QPushButton#openBrowser {
 }
 
 /* MO2 Revamped: Create Instance wizard, unified layout pass */
-QDialog#CreateInstanceDialog QWidget#widget {
-    padding-bottom: 2px;
-}
 
 QDialog#CreateInstanceDialog QLabel#typeSelectionHint {
 
     padding-left: 2px;
-}
-
-QDialog#CreateInstanceDialog QWidget#widget_11,
-QDialog#CreateInstanceDialog QWidget#widget_12 {
-    padding: 9px;
 }
 
 QDialog#CreateInstanceDialog QCommandLinkButton#createGlobal:hover,
@@ -3762,12 +3655,6 @@ QFileDialog#MO2RevampedReportSaveDialog QDialogButtonBox QPushButton#mo2Revamped
 }
 
 /* Wizard refinements: one surface per page, content-sized paths and review. */
-QDialog#CreateInstanceDialog QWidget#widget_11,
-QDialog#CreateInstanceDialog QWidget#widget_12 {
-    color: #D3D3D3;
-
-    border-radius: 0;
-}
 
 QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar:vertical {
     width: 8px;
@@ -3789,17 +3676,8 @@ QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QScrollBar::sub-line:verti
     border: none;
     background-color: transparent;
 }
-
-QDialog#CreateInstanceDialog QWidget#widget_20 {
-    color: #D3D3D3;
-
-}
 QDialog#CreateInstanceDialog QTextEdit#review {
     font-size: 10pt;
-}
-
-QDialog#CreateInstanceDialog QWidget#page_2 QWidget#widget_3 {
-    padding: 11px 11px 0px 11px;
 }
 
 QDialog#CreateInstanceDialog QWidget#page_5 QWidget#widget_9 {
@@ -3858,14 +3736,6 @@ QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#games {
     background-color: #252525;
     border: none;
 }
-QDialog#CreateInstanceDialog QWidget#widget_13 QStackedWidget#pathPages QWidget#page_6_simple QWidget#widget_11,
-QDialog#CreateInstanceDialog QWidget#widget_13 QStackedWidget#pathPages QWidget#page_6_advanced QWidget#widget_12 {
-    color: #D3D3D3;
-    background-color: transparent;
-    border: none;
-    padding: 0;
-}
-QDialog#CreateInstanceDialog QLabel#label_6,
 QDialog#CreateInstanceDialog QLabel#label_8,
 QDialog#CreateInstanceDialog QLabel#label_9,
 QDialog#CreateInstanceDialog QLabel#label_10,
@@ -3879,9 +3749,7 @@ QDialog#CreateInstanceDialog QLabel#label_13 {
 
 /* Keep both path layouts on the same surface as their host card. */
 QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_simple,
-QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_advanced,
-QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_simple QWidget#widget_11,
-QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_advanced QWidget#widget_12 {
+QDialog#CreateInstanceDialog QStackedWidget#pathPages QWidget#page_6_advanced {
     background-color: #252525;
     border: none;
 }
@@ -4076,14 +3944,6 @@ QDialog#SwitchInstanceDialog QPushButton#switchInstanceRestartButton:pressed {
 }
 
 /* Hide the obsolete external help link on the instance setup intro page. */
-QDialog#CreateInstanceDialog QWidget#page_1 QLabel#label_19,
-QDialog#CreateInstanceDialog QWidget#page_1 LinkLabel#label_19 {
-    min-height: 0px;
-    max-height: 0px;
-    margin: 0px;
-    padding: 0px;
-    border: none;
-}
 
 /* Keep a stable width while letting each wizard step use a compact height. */
 QDialog#CreateInstanceDialog {
@@ -4407,36 +4267,6 @@ QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_informativelabel {
 }
 
 /* MO2 Revamped: unified, fixed-size instance wizard */
-QDialog#CreateInstanceDialog QWidget#widget {
-    color: #F2F2F2;
-    background-color: #272727;
-    border: 1px solid #303030;
-    border-radius: 9px;
-}
-QDialog#CreateInstanceDialog QLabel#title {
-    color: #F2F2F2;
-    font-size: 16pt;
-    font-weight: 600;
-}
-QDialog#CreateInstanceDialog QLabel#stepIndicator {
-    color: #EFEFEF;
-    background-color: #2A2A2A;
-    border: 1px solid #767676;
-    border-radius: 11px;
-    font-weight: 600;
-    padding: 5px 11px;
-}
-QDialog#CreateInstanceDialog QProgressBar#stepProgress {
-    min-height: 4px;
-    max-height: 4px;
-    background-color: #2C2C2C;
-    border: none;
-    border-radius: 2px;
-}
-QDialog#CreateInstanceDialog QProgressBar#stepProgress::chunk {
-    background-color: #A3A3A3;
-    border-radius: 2px;
-}
 QDialog#CreateInstanceDialog QStackedWidget#pages {
     color: #D3D3D3;
     background-color: #252525;
@@ -4452,30 +4282,13 @@ QDialog#CreateInstanceDialog QWidget#page,
 QDialog#CreateInstanceDialog QWidget#page_6,
 QDialog#CreateInstanceDialog QWidget#page_7,
 QDialog#CreateInstanceDialog QWidget#page_8,
-QDialog#CreateInstanceDialog QWidget#widget_7,
-QDialog#CreateInstanceDialog QWidget#widget_5,
-QDialog#CreateInstanceDialog QWidget#widget_8,
-QDialog#CreateInstanceDialog QWidget#widget_10,
-QDialog#CreateInstanceDialog QWidget#widget_14,
-QDialog#CreateInstanceDialog QWidget#widget_4,
-QDialog#CreateInstanceDialog QWidget#widget_15,
-QDialog#CreateInstanceDialog QWidget#widget_16,
-QDialog#CreateInstanceDialog QWidget#widget_18,
-QDialog#CreateInstanceDialog QWidget#widget_21,
-QDialog#CreateInstanceDialog QWidget#widget_22,
-QDialog#CreateInstanceDialog QWidget#widget_20,
-QDialog#CreateInstanceDialog QWidget#widget_11,
-QDialog#CreateInstanceDialog QWidget#widget_12 {
+QDialog#CreateInstanceDialog QWidget#widget_15 {
     background-color: transparent;
     border: none;
 }
-QDialog#CreateInstanceDialog QWidget#widget_3,
-QDialog#CreateInstanceDialog QWidget#widget_6,
-QDialog#CreateInstanceDialog QWidget#widget_17,
 QDialog#CreateInstanceDialog QWidget#widget_9,
 QDialog#CreateInstanceDialog QWidget#widget_25,
 QDialog#CreateInstanceDialog QWidget#widget_13,
-QDialog#CreateInstanceDialog QWidget#nexusBox,
 QDialog#CreateInstanceDialog QWidget#widget_19 {
     color: #D3D3D3;
     background-color: #262626;
@@ -4600,22 +4413,11 @@ QDialog#CreateInstanceDialog QCheckBox {
 QDialog#CreateInstanceDialog QCheckBox:hover {
     background-color: #272727;
 }
-QDialog#CreateInstanceDialog QWidget#widget_20 {
-    padding: 8px 10px;
-    background-color: #262626;
-    border: 1px solid #2E2E2E;
-    border-radius: 7px;
-}
 QDialog#CreateInstanceDialog QCheckBox#launch {
     color: #D3D3D3;
     font-weight: 600;
     background-color: transparent;
     border: none;
-}
-QDialog#CreateInstanceDialog QWidget#widget_2 {
-    background-color: transparent;
-    border-top: 1px solid #2C2C2C;
-    padding-top: 8px;
 }
 QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveIsolationGroup {
     color: #D3D3D3;
@@ -4630,11 +4432,8 @@ QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 {
     border: 1px solid #2C2C2C;
     border-radius: 7px;
 }
-QDialog#CreateInstanceDialog QScrollArea#scrollArea_2,
-QDialog#CreateInstanceDialog QScrollArea#scrollArea_2 QWidget#qt_scrollarea_viewport,
 QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#qt_scrollarea_viewport,
-QDialog#CreateInstanceDialog QWidget#games,
-QDialog#CreateInstanceDialog QWidget#scrollAreaWidgetContents {
+QDialog#CreateInstanceDialog QWidget#games {
     background-color: transparent;
     border: none;
 }
@@ -4644,13 +4443,9 @@ QDialog#CreateInstanceDialog QTextEdit#creationLog {
 }
 
 /* Compact spacing for the instance wizard while keeping every control clear. */
-QDialog#CreateInstanceDialog QWidget#widget_3,
-QDialog#CreateInstanceDialog QWidget#widget_6,
-QDialog#CreateInstanceDialog QWidget#widget_17,
 QDialog#CreateInstanceDialog QWidget#widget_9,
 QDialog#CreateInstanceDialog QWidget#widget_25,
-QDialog#CreateInstanceDialog QWidget#widget_13,
-QDialog#CreateInstanceDialog QWidget#nexusBox {
+QDialog#CreateInstanceDialog QWidget#widget_13 {
     padding: 8px;
 }
 QDialog#CreateInstanceDialog QWidget#widget_19 {
@@ -4744,11 +4539,6 @@ QDialog#revampedCategorySetupPrompt QPushButton#promptChoiceButton[secondaryChoi
     background-color: #252525;
 }
 /* Keep the advanced-path toggle visually quiet outside the path card. */
-QDialog#CreateInstanceDialog QWidget#advancedPathToggleRow {
-    background-color: transparent;
-    border: none;
-    padding: 0;
-}
 QDialog#CreateInstanceDialog QCheckBox#advancedPathOptions,
 QDialog#CreateInstanceDialog QCheckBox#advancedPathOptions:hover {
     color: #DBDBDB;
@@ -5525,12 +5315,8 @@ QDialog#EldenRingSaveIsolationConfirmDialog QDialogButtonBox#saveIsolationConfir
 }
 
 /* Flat icon marks for the refreshed dialog and card headings. */
-QDialog#InstanceManagerDialog QLabel#managerSummaryIcon,
-QDialog#InstanceManagerDialog QLabel#instancesHeaderIcon,
-QDialog#InstanceManagerDialog QLabel#instanceDetailsHeaderIcon,
 QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
 QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon,
-QDialog#CreateInstanceDialog QLabel#instanceWizardHeaderIcon,
 QDialog#ProfilesDialog QLabel#profilesHeaderIcon,
 QDialog#ProfilesDialog QLabel#profilesSectionIcon,
 QDialog#ProfilesDialog QLabel#profileOptionsIcon,
@@ -5561,35 +5347,9 @@ QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileHeaderIcon {
     border: none;
     padding: 0;
 }
-QDialog#InstanceManagerDialog QLabel#managerSummaryIcon,
 QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
 QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon {
     border-radius: 20px;
-}
-QDialog#InstanceManagerDialog QLabel#instancesHeaderIcon,
-QDialog#InstanceManagerDialog QLabel#instanceDetailsHeaderIcon {
-    border-radius: 12px;
-}
-QDialog#CreateInstanceDialog QLabel#instanceWizardHeaderIcon {
-    color: #D3D3D3;
-    background-color: #272727;
-    border: 1px solid #303030;
-    border-radius: 16px;
-    padding: 0;
-}
-QDialog#CreateInstanceDialog QLabel#instanceTypeIcon,
-QDialog#CreateInstanceDialog QLabel#instanceGameIcon,
-QDialog#CreateInstanceDialog QLabel#instanceEditionIcon,
-QDialog#CreateInstanceDialog QLabel#instanceNameIcon,
-QDialog#CreateInstanceDialog QLabel#instanceProfileIcon,
-QDialog#CreateInstanceDialog QLabel#instancePathsIcon,
-QDialog#CreateInstanceDialog QLabel#instanceNexusIcon,
-QDialog#CreateInstanceDialog QLabel#instanceReviewIcon {
-    color: #D3D3D3;
-    background-color: #272727;
-    border: 1px solid #303030;
-    border-radius: 14px;
-    padding: 0;
 }
 QDialog#ProfilesDialog QLabel#profilesHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,

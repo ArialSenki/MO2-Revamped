@@ -78,6 +78,12 @@ QToolButton::menu-indicator {
     right: 3px;
     bottom: 3px;
 }
+/* buttons with the turning chevron (FluentMotion::animateMenuChevron) draw
+   their own */
+QToolButton[fluentChevron="true"]::menu-indicator {
+    image: none;
+    width: 0px;
+}
 
 /* Menus: one rounded flyout, compact rows, no descriptions. */
 QMenu,
@@ -1582,4 +1588,311 @@ QDialog QPushButton#manageOverwriteButton:pressed {
     color: @accentFgPressed@;
     background-color: @accentPressed@;
     border-color: @accentPressed@;
+}
+
+/* ----------------------------------------------------------------------
+   Instance manager: the list card on the left, the details card on the
+   right (name, folder rows, actions), Switch and Close below.
+   ---------------------------------------------------------------------- */
+QListView#instanceList,
+QListView#instanceList:focus {
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+QLabel#instanceDetailName {
+    color: @text@;
+    font-size: 15pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QLabel#instanceDetailCaption,
+QLabel#instanceDetailValue {
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel#instanceDetailValue[tone="critical"] {
+    color: @critFg@;
+}
+QScrollArea#instanceDetailsScroll,
+QScrollArea#instanceDetailsScroll > QWidget > QWidget,
+QWidget#instanceDetailRows {
+    background-color: transparent;
+    border: none;
+}
+QToolButton#instanceIconButton {
+    min-width: 30px;
+    max-width: 30px;
+    min-height: 30px;
+    max-height: 30px;
+    padding: 0px;
+}
+QDialog#InstanceManagerDialog QPushButton#deleteInstance {
+    color: @critFg@;
+}
+QDialog#InstanceManagerDialog QPushButton#deleteInstance:disabled {
+    color: @faint@;
+}
+/* the grouping button: its text, then a chevron the button paints itself
+   (it turns while the menu is open), so Qt's arrow is hidden */
+QToolButton#instanceViewButton {
+    color: @muted@;
+    padding: 3px 22px 3px 8px;
+}
+QToolButton#instanceViewButton:hover,
+QToolButton#instanceViewButton:open {
+    color: @text@;
+}
+QToolButton#instanceViewButton::menu-indicator {
+    image: none;
+    width: 0px;
+}
+QToolButton#instanceHelpButton {
+    color: @muted@;
+    padding: 5px 8px;
+}
+QToolButton#instanceHelpButton:hover {
+    color: @text@;
+}
+QLabel#instanceRowGlyph {
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 12pt;
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel#instanceEmptyText {
+    color: @faint@;
+    background-color: transparent;
+}
+
+/* Windows 11 content dialogs (FluentContentDialog): the content on the card
+   surface, the buttons in a darker band below. */
+QDialog[fluentContentDialog="true"],
+QDialog[fluentContentDialog="true"] QWidget#fluentDialogContent {
+    background-color: @card@;
+}
+QLabel#fluentDialogTitle {
+    color: @text@;
+    font-size: 15pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QLabel#fluentDialogText {
+    color: @text@;
+    background-color: transparent;
+}
+QFrame#fluentDialogFooter {
+    background-color: @bg@;
+    border: none;
+    border-top: 1px solid @line@;
+}
+QLabel#instanceNameValidation {
+    color: @critFg@;
+    background-color: transparent;
+}
+QScrollArea#deleteInstanceScroll {
+    background-color: @bg@;
+    border: 1px solid @cardLine@;
+    border-radius: 8px;
+}
+QScrollArea#deleteInstanceScroll > QWidget > QWidget,
+QFrame#deleteInstanceList {
+    background-color: transparent;
+}
+QFrame#instanceHelpExample {
+    background-color: @bg@;
+    border: 1px solid @cardLine@;
+    border-radius: 6px;
+}
+QFrame#instanceHelpExample QLabel {
+    background-color: transparent;
+}
+
+/* ----------------------------------------------------------------------
+   Create instance wizard: laid out like the instance manager. One card
+   with a thin progress line on top, each step's title and text, then rows
+   divided by hairlines; the step count and the buttons under the card.
+   ---------------------------------------------------------------------- */
+QDialog#CreateInstanceDialog QStackedWidget#pages,
+QDialog#CreateInstanceDialog QStackedWidget#pages > QWidget,
+QDialog#CreateInstanceDialog QStackedWidget#pathPages,
+QDialog#CreateInstanceDialog QStackedWidget#pathPages > QWidget,
+QDialog#CreateInstanceDialog QWidget#wizardPageTop,
+QDialog#CreateInstanceDialog QWidget#wizardPadded,
+QDialog#CreateInstanceDialog QWidget#widget_9,
+QDialog#CreateInstanceDialog QWidget#widget_13,
+QDialog#CreateInstanceDialog QWidget#widget_15,
+QDialog#CreateInstanceDialog QWidget#widget_19,
+QDialog#CreateInstanceDialog QWidget#widget_25,
+QDialog#CreateInstanceDialog QWidget#review,
+QDialog#CreateInstanceDialog QDialogButtonBox#editions {
+    background-color: transparent;
+    border: none;
+}
+/* each step scrolls inside the card if it's ever taller than it */
+QDialog#CreateInstanceDialog QScrollArea#wizardPageScroll,
+QDialog#CreateInstanceDialog QScrollArea#wizardPageScroll > QWidget,
+QDialog#CreateInstanceDialog QScrollArea#wizardPageScroll > QWidget > QWidget {
+    background-color: transparent;
+    border: none;
+}
+/* how full the drive under the location is */
+QProgressBar#wizardDiskBar {
+    background-color: @line@;
+    border: none;
+    border-radius: 2px;
+}
+QProgressBar#wizardDiskBar::chunk {
+    background-color: @accent@;
+    border-radius: 2px;
+}
+/* the storage kinds side by side */
+QLabel[wizardCompare="head"] {
+    color: @text@;
+    font-weight: 600;
+    background-color: transparent;
+}
+QLabel[wizardCompare="key"] {
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel[wizardCompare="cell"] {
+    color: @text@;
+    background-color: transparent;
+}
+QProgressBar#wizardProgress {
+    background-color: @line@;
+    border: none;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+}
+QProgressBar#wizardProgress::chunk {
+    background-color: @accent@;
+    border-top-left-radius: 7px;
+}
+QLabel[wizardPageTitle="true"] {
+    color: @text@;
+    font-size: 15pt;
+    font-weight: 600;
+    background-color: transparent;
+}
+QLabel[wizardPageText="true"] {
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel[wizardRowText="true"],
+QLabel#wizardNamePath,
+QLabel#diskSpace,
+QLabel#label_11 {
+    color: @faint@;
+    font-size: 8.5pt;
+    background-color: transparent;
+}
+QLabel#wizardStepText {
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel[wizardFieldCaption="true"] {
+    color: @text@;
+    background-color: transparent;
+}
+
+/* choices: storage types, editions and games are rows of the card; the
+   chosen one is filled and marked by the accent on its left edge */
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"],
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
+    color: @text@;
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid @line@;
+    border-left: 3px solid transparent;
+    border-radius: 0px;
+    padding: 12px 20px 12px 17px;
+    text-align: left;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"]:hover,
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:hover {
+    background-color: @rowHover@;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"]:pressed,
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:pressed {
+    background-color: @pressed@;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"]:checked,
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:checked {
+    background-color: @sel@;
+    border-left-color: @accent@;
+}
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3,
+QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 > QWidget,
+QDialog#CreateInstanceDialog QWidget#games {
+    background-color: transparent;
+    border: none;
+}
+
+/* switches: their text a little away from the switch; the profile options
+   are rows with their explanation under the text */
+QDialog#CreateInstanceDialog QCheckBox[fluentSwitch="true"] {
+    spacing: 12px;
+}
+QDialog#CreateInstanceDialog QCheckBox[wizardOption="true"] {
+    padding: 12px 20px 2px 20px;
+    border-top: 1px solid @line@;
+}
+QLabel[wizardOptionText="true"] {
+    color: @faint@;
+    font-size: 8.5pt;
+    padding: 0px 20px 12px 72px;
+    background-color: transparent;
+}
+
+/* warnings and errors under a field */
+QLabel[wizardInfoBar="caution"] {
+    color: @warnFg@;
+    background-color: @warnBg@;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+QLabel[wizardInfoBar="critical"] {
+    color: @critFg@;
+    background-color: @critBg@;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+/* the folder buttons next to the path fields */
+QDialog#CreateInstanceDialog QToolButton[wizardBrowse="true"] {
+    min-width: 30px;
+    min-height: 28px;
+    padding: 0px 4px;
+    background-color: @btn@;
+    border: 1px solid @btnLine@;
+    border-bottom-color: @btnBottom@;
+    border-radius: 4px;
+}
+QDialog#CreateInstanceDialog QToolButton[wizardBrowse="true"]:hover {
+    background-color: @btnHover@;
+}
+QDialog#CreateInstanceDialog QToolButton[wizardBrowse="true"]:pressed {
+    background-color: @btnPressed@;
+}
+
+/* the review: caption, value and Change, like the instance manager's rows */
+QLabel#wizardReviewKey {
+    color: @muted@;
+    background-color: transparent;
+}
+QLabel#wizardReviewValue {
+    color: @text@;
+    background-color: transparent;
+}
+QToolButton#wizardChangeButton {
+    color: @accentText@;
+    padding: 2px 8px;
+}
+QDialog#CreateInstanceDialog QListWidget#nexusLog,
+QDialog#CreateInstanceDialog QTextEdit#creationLog {
+    background-color: @bg@;
+    border: 1px solid @cardLine@;
+    border-radius: 6px;
 }

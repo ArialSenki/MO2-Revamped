@@ -33,6 +33,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDir>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QUrl>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -2512,6 +2513,48 @@ QSettings GlobalSettings::settings()
 
   QDir().mkpath(settingsDirectory);
   return QSettings(settingsPath, QSettings::IniFormat);
+}
+
+QVariant GlobalSettings::value(const QString& key, const QVariant& defaultValue)
+{
+  return settings().value(key, defaultValue);
+}
+
+void GlobalSettings::setValue(const QString& key, const QVariant& value)
+{
+  settings().setValue(key, value);
+}
+
+void GlobalSettings::remove(const QString& key)
+{
+  settings().remove(key);
+}
+
+namespace
+{
+QString instanceKey(const QString& section, const QString& identifier)
+{
+  // the portable instance in the Mod Organizer folder has no identifier
+  return section + QStringLiteral("/") +
+         (identifier.isEmpty()
+              ? QStringLiteral("portable-root")
+              : QString::fromLatin1(QUrl::toPercentEncoding(identifier)));
+}
+}  // namespace
+
+QString GlobalSettings::instanceValue(const QString& section, const QString& identifier)
+{
+  return settings().value(instanceKey(section, identifier)).toString();
+}
+
+void GlobalSettings::setInstanceValue(const QString& section, const QString& identifier,
+                                      const QString& value)
+{
+  if (value.trimmed().isEmpty()) {
+    settings().remove(instanceKey(section, identifier));
+  } else {
+    settings().setValue(instanceKey(section, identifier), value.trimmed());
+  }
 }
 
 bool GlobalSettings::hideCreateInstanceIntro()

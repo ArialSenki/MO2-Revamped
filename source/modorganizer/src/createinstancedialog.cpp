@@ -6,12 +6,24 @@
 #include "settings.h"
 #include "shared/appconfig.h"
 #include "shared/util.h"
-#include "ui_createinstancedialog.h"
+#include "createinstancedialogui.h"
+#include "envshortcut.h"
+#include "fluentmotion.h"
+#include "gameiconutils.h"
 #include <iplugingame.h>
 #include <utility.h>
 
 #include <QLayout>
 #include <QBoxLayout>
+#include <QComboBox>
+#include <QGuiApplication>
+#include <QProgressBar>
+#include <QScreen>
+#include <QVariantAnimation>
+#include <QCheckBox>
+#include <QPushButton>
+#include <QShortcut>
+#include <QTextEdit>
 #include <QCommandLinkButton>
 #include <QAbstractScrollArea>
 #include <QCoreApplication>
@@ -26,10 +38,14 @@
 #include <QSet>
 #include <QSize>
 #include <QSizePolicy>
+#include <QSignalBlocker>
 #include <QStackedWidget>
 #include <QTextOption>
+#include <QTimer>
 #include <QUrl>
 #include <QWidget>
+#include <QWindow>
+
 
 using namespace MOBase;
 
@@ -37,67 +53,6 @@ class Failed
 {};
 
 namespace {
-
-void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
-                            const QString& iconPath,
-                            const QString& iconObjectName, int size)
-{
-  // Fluent v4 headings are plain text, like Windows 11 Settings
-  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
-    return;
-  }
-
-  const int index = layout->indexOf(heading);
-  if (index < 0) {
-    return;
-  }
-
-  layout->removeWidget(heading);
-  auto* row = new QHBoxLayout();
-  row->setContentsMargins(0, 0, 0, 0);
-  row->setSpacing(8);
-
-  auto* icon = new QLabel(heading->parentWidget());
-  icon->setObjectName(iconObjectName);
-  icon->setAlignment(Qt::AlignCenter);
-  icon->setFixedSize(size, size);
-  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
-  if (!pixmap.isNull()) {
-    icon->setPixmap(pixmap);
-  }
-
-  row->addWidget(icon, 0, Qt::AlignVCenter);
-  row->addWidget(heading, 1, Qt::AlignVCenter);
-  layout->insertLayout(index, row);
-}
-
-void compactVerticalSpacers(QLayout* layout)
-{
-  if (layout == nullptr) {
-    return;
-  }
-
-  for (int i = 0; i < layout->count(); ++i) {
-    QLayoutItem* item = layout->itemAt(i);
-    if (QSpacerItem* spacer = item->spacerItem()) {
-      if (spacer->expandingDirections().testFlag(Qt::Vertical)) {
-        const QSize hint = spacer->sizeHint();
-        spacer->changeSize(hint.width(), qMin(hint.height(), 10),
-                           QSizePolicy::Minimum, QSizePolicy::Fixed);
-      }
-      continue;
-    }
-
-    if (item->layout() != nullptr) {
-      compactVerticalSpacers(item->layout());
-    } else if (QWidget* child = item->widget();
-               child != nullptr && child->layout() != nullptr) {
-      compactVerticalSpacers(child->layout());
-    }
-  }
-
-  layout->invalidate();
-}
 
 bool copyIsolatedApplication(const QString& sourcePath,
                              const QString& destinationPath,
@@ -254,34 +209,11 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   using namespace cid;
 
   ui->setupUi(this);
-  addCircularHeadingIcon(ui->horizontalLayout_15, ui->title,
-                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-                         QStringLiteral("instanceWizardHeaderIcon"), 32);
-  addCircularHeadingIcon(ui->verticalLayout_6, ui->label_2,
-                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-                         QStringLiteral("instanceTypeIcon"), 28);
-  addCircularHeadingIcon(ui->gameSelectionHeaderLayout, ui->label_3,
-                         QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
-                         QStringLiteral("instanceGameIcon"), 28);
-  addCircularHeadingIcon(ui->verticalLayout_18, ui->label_4,
-                         QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
-                         QStringLiteral("instanceEditionIcon"), 28);
-  addCircularHeadingIcon(ui->horizontalLayout_4, ui->instanceNameLabel,
-                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-                         QStringLiteral("instanceNameIcon"), 28);
-  addCircularHeadingIcon(ui->horizontalLayout_8, ui->profileSettingsLabel,
-                         QStringLiteral(":/MO/gui/mainwindow/profile.svg"),
-                         QStringLiteral("instanceProfileIcon"), 28);
-  addCircularHeadingIcon(ui->verticalLayout_10, ui->label_5,
-                         QStringLiteral(":/MO/gui/mainwindow/explore-virtual-folder.svg"),
-                         QStringLiteral("instancePathsIcon"), 28);
-  addCircularHeadingIcon(ui->verticalLayout_29, ui->label_7,
-                         QStringLiteral(":/MO/gui/mainwindow/mod-page.svg"),
-                         QStringLiteral("instanceNexusIcon"), 28);
-  addCircularHeadingIcon(ui->verticalLayout_24, ui->label_16,
-                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-                         QStringLiteral("instanceReviewIcon"), 28);
-  setFixedSize(820, 700);
+  // one size on every step, about the original wizard's, so the window
+  // doesn't jump between steps; a page taller than the card scrolls
+  setFixedSize(804, 640);
+  // the Elden Ring plugin leaves the size to the wizard
+  setProperty("mo2RevampedFitsPages", true);
   m_originalNext = ui->next->text();
 
   m_pages.push_back(std::make_unique<IntroPage>(*this));
@@ -293,176 +225,7 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
   m_pages.push_back(std::make_unique<PathsPage>(*this));
   m_pages.push_back(std::make_unique<NexusPage>(*this));
   m_pages.push_back(std::make_unique<ConfirmationPage>(*this));
-
-  if (QLayout* dialogLayout = layout()) {
-    dialogLayout->setContentsMargins(10, 8, 10, 8);
-    dialogLayout->setSpacing(8);
-  }
-  ui->verticalLayout_15->setContentsMargins(12, 8, 12, 8);
-  ui->verticalLayout_15->setSpacing(8);
-  ui->horizontalLayout_15->setContentsMargins(0, 0, 0, 0);
-  ui->horizontalLayout_15->setSpacing(10);
-  ui->horizontalLayout->setContentsMargins(10, 6, 10, 6);
-  ui->horizontalLayout->setSpacing(8);
-  ui->title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-  ui->stepIndicator->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  ui->stepProgress->setTextVisible(false);
-  ui->stepProgress->setRange(0, 9);
-  ui->stepProgress->setValue(1);
-  ui->stepProgress->setFixedHeight(5);
-  ui->back->setMinimumHeight(34);
-  ui->next->setMinimumHeight(34);
-  ui->cancel->setMinimumHeight(34);
-  ui->verticalLayout_23->setContentsMargins(8, 8, 8, 8);
-  ui->verticalLayout_23->setSpacing(8);
-  ui->verticalLayout_11->setContentsMargins(0, 0, 0, 0);
-  ui->horizontalLayout_5->setContentsMargins(8, 4, 8, 4);
-  ui->horizontalLayout_5->setSpacing(6);
-  ui->review->setMinimumHeight(180);
-  ui->review->setMaximumHeight(240);
-  ui->review->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  ui->review->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-  ui->creationLog->setMinimumHeight(72);
-  ui->creationLog->setMaximumHeight(128);
-  ui->creationLog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  ui->creationLog->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-  ui->creationLog->hide();
-  ui->launch->setMinimumHeight(34);
-  ui->launch->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-  if (QBoxLayout* nameCardLayout =
-          qobject_cast<QBoxLayout*>(ui->widget_9->layout())) {
-    nameCardLayout->setContentsMargins(0, 0, 0, 0);
-    nameCardLayout->setSpacing(6);
-    if (ui->verticalSpacer_2 != nullptr) {
-      nameCardLayout->removeItem(ui->verticalSpacer_2);
-      delete ui->verticalSpacer_2;
-      ui->verticalSpacer_2 = nullptr;
-    }
-  }
-
-  // Keep a shared content grid while sizing each step around its actual
-  // controls. Scrollable pages can still grow when they have more content.
-  for (int i = 0; i < ui->pages->count(); ++i) {
-    QWidget* page = ui->pages->widget(i);
-    if (QLayout* pageLayout = page->layout()) {
-      pageLayout->setContentsMargins(12, 8, 12, 8);
-      pageLayout->setSpacing(8);
-      compactVerticalSpacers(pageLayout);
-      const bool compactContentPage = page == ui->page_6 || page == ui->page_8;
-      const auto hasVisibleChoice = [page](const char* objectName) {
-        const auto* choice = page->findChild<QCommandLinkButton*>(
-            QString::fromLatin1(objectName));
-        return choice != nullptr && !choice->isHidden();
-      };
-      const bool fillTypeChoices =
-          page == ui->page_2 && hasVisibleChoice("createGlobal") &&
-          hasVisibleChoice("createPortable") &&
-          hasVisibleChoice("createIsolated");
-      bool pageHasScrollableContent = false;
-      for (int itemIndex = 0; itemIndex < pageLayout->count(); ++itemIndex) {
-        if (QWidget* content = pageLayout->itemAt(itemIndex)->widget()) {
-          content->setMaximumWidth(QWIDGETSIZE_MAX);
-          content->setMinimumWidth(0);
-          const bool hasScrollArea =
-              content->findChild<QAbstractScrollArea*>() != nullptr ||
-              content->findChild<QStackedWidget*>() != nullptr;
-          const bool hasScrollableContent = hasScrollArea && !compactContentPage;
-          const bool fillsTypeCard =
-              fillTypeChoices && content->objectName() == QStringLiteral("widget_3");
-          const bool expandsContent = hasScrollableContent || fillsTypeCard;
-          pageHasScrollableContent |= hasScrollableContent;
-          content->setSizePolicy(
-              QSizePolicy::Expanding,
-              expandsContent ? QSizePolicy::Expanding : QSizePolicy::Maximum);
-          if (expandsContent) {
-            if (QBoxLayout* boxLayout = qobject_cast<QBoxLayout*>(pageLayout)) {
-              boxLayout->setStretch(itemIndex, 1);
-            }
-          }
-          if (content->layout() != nullptr) {
-            compactVerticalSpacers(content->layout());
-            content->layout()->setSpacing(
-                content->objectName() == QStringLiteral("widget_9")
-                    ? 6
-                    : qMax(content->layout()->spacing(), 8));
-          }
-          // Keep scrollable panels stretched with the current page. AlignTop
-          // overrides an expanding size policy and leaves the game list
-          // compressed at the top of the wizard.
-          if (!expandsContent) {
-            pageLayout->setAlignment(content, Qt::AlignTop);
-          }
-        }
-      }
-      if (fillTypeChoices) {
-        // This panel contains only the three storage choices. Remove the old
-        // helper and trailing spacer, and undo the generic page spacing so
-        // the last card meets the panel's bottom edge.
-        ui->portableExistsLabel->hide();
-        if (QBoxLayout* panelLayout =
-                qobject_cast<QBoxLayout*>(ui->widget_3->layout())) {
-          panelLayout->removeWidget(ui->portableExistsLabel);
-          if (ui->verticalSpacer != nullptr) {
-            panelLayout->removeItem(ui->verticalSpacer);
-            delete ui->verticalSpacer;
-            ui->verticalSpacer = nullptr;
-          }
-          panelLayout->setContentsMargins(0, 0, 0, 0);
-          panelLayout->setSpacing(0);
-          panelLayout->invalidate();
-        }
-
-        QWidget* choices = page->findChild<QWidget*>(QStringLiteral("widget_15"));
-        if (choices != nullptr) {
-          choices->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-          if (QBoxLayout* optionsLayout =
-                  qobject_cast<QBoxLayout*>(ui->widget_3->layout())) {
-            const int choicesIndex = optionsLayout->indexOf(choices);
-            if (choicesIndex >= 0) {
-              optionsLayout->setStretch(choicesIndex, 1);
-            }
-          }
-          if (QBoxLayout* choicesLayout =
-                  qobject_cast<QBoxLayout*>(choices->layout())) {
-            choicesLayout->setContentsMargins(0, 0, 0, 0);
-            choicesLayout->setSpacing(6);
-            for (const auto* objectName : {"createGlobal", "createPortable",
-                                           "createIsolated"}) {
-              if (QCommandLinkButton* choice = page->findChild<QCommandLinkButton*>(
-                      QString::fromLatin1(objectName))) {
-                choice->setSizePolicy(QSizePolicy::Expanding,
-                                      QSizePolicy::Expanding);
-                const int choiceIndex = choicesLayout->indexOf(choice);
-                if (choiceIndex >= 0) {
-                  choicesLayout->setStretch(choiceIndex, 1);
-                }
-              }
-            }
-          }
-        }
-      }
-      if (!pageHasScrollableContent && !fillTypeChoices) {
-        if (QBoxLayout* boxLayout = qobject_cast<QBoxLayout*>(pageLayout)) {
-          boxLayout->addStretch(1);
-        }
-      }
-    }
-
-    for (QLabel* heading : page->findChildren<QLabel*>()) {
-      if (heading->text().trimmed().startsWith(QStringLiteral("<h3"),
-                                                Qt::CaseInsensitive)) {
-        heading->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-      }
-    }
-
-    for (const auto* objectName : {"label_15", "portableExistsLabel",
-                                   "gameSelectionHint", "label_14",
-                                   "label_18", "label_17"}) {
-      if (QLabel* label = page->findChild<QLabel*>(QString::fromLatin1(objectName))) {
-        label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-      }
-    }
-  }
+  m_ready = true;
 
   ui->pages->setCurrentIndex(0);
   ui->launch->setChecked(true);
@@ -474,25 +237,6 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
 
   if (m_pages[0]->skip()) {
     next();
-  }
-
-  // Pages can reveal game-specific controls after they are constructed.
-  // Keep enough width for the widest page without changing the shared window
-  // size between steps.
-  QSize largestPageSize;
-  for (int i = 0; i < ui->pages->count(); ++i) {
-    QWidget* page = ui->pages->widget(i);
-    page->ensurePolished();
-    if (QLayout* pageLayout = page->layout()) {
-      pageLayout->activate();
-    }
-    largestPageSize = largestPageSize.expandedTo(page->minimumSizeHint())
-                          .expandedTo(page->sizeHint());
-  }
-  if (largestPageSize.isValid()) {
-    ui->pages->setMinimumWidth(largestPageSize.width());
-    ui->pages->setMinimumHeight(0);
-    ui->pages->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   }
 
   ui->next->setFocus();
@@ -523,6 +267,29 @@ CreateInstanceDialog::CreateInstanceDialog(const PluginContainer& pc, Settings* 
 }
 
 CreateInstanceDialog::~CreateInstanceDialog() = default;
+
+void CreateInstanceDialog::showEvent(QShowEvent* e)
+{
+  QDialog::showEvent(e);
+
+  // the theme is applied on the first show, and with it the real sizes; the
+  // window then sits over the one that opened it, on that one's screen
+  if (!m_shownOnce) {
+    m_shownOnce = true;
+    QTimer::singleShot(0, this, [this] {
+      if (const QWidget* owner = parentWidget() ? parentWidget()->window() : nullptr) {
+        QRect frame = frameGeometry();
+        frame.moveCenter(owner->frameGeometry().center());
+        if (const QScreen* sc = QGuiApplication::screenAt(owner->frameGeometry().center())) {
+          const QRect area = sc->availableGeometry();
+          frame.moveLeft(qBound(area.left(), frame.left(), area.right() - frame.width()));
+          frame.moveTop(qBound(area.top(), frame.top(), area.bottom() - frame.height()));
+        }
+        move(frame.topLeft());
+      }
+    });
+  }
+}
 
 Ui::CreateInstanceDialog* CreateInstanceDialog::getUI()
 {
@@ -793,6 +560,22 @@ void CreateInstanceDialog::finish()
 
     logCreation(tr("Done."));
 
+    // what the user wrote on the name page, and the shortcut; an isolated
+    // copy keeps its own settings, so they don't apply to it
+    if (ci.type != Isolated) {
+      const Instance created(ci.dataPath, ci.type == Portable);
+      GlobalSettings::setInstanceValue(QStringLiteral("InstanceGroups"),
+                                       created.instanceIdentifier(),
+                                       ui->instanceGroup->currentText());
+      GlobalSettings::setInstanceValue(QStringLiteral("InstanceNotes"),
+                                       created.instanceIdentifier(),
+                                       ui->instanceNotes->text());
+      if (ui->desktopShortcut->isChecked() &&
+          !env::instanceShortcut(created).add(env::Shortcut::Desktop)) {
+        logCreation(tr("The desktop shortcut could not be added."));
+      }
+    }
+
     // launch the new instance
     if (ui->launch->isChecked()) {
       if (ci.type == Isolated) {
@@ -830,6 +613,7 @@ void CreateInstanceDialog::logCreation(const QString& s)
 {
   if (ui->creationLog->isHidden()) {
     ui->creationLog->show();
+    ui->creationLog->parentWidget()->show();
     ui->widget_19->updateGeometry();
   }
   ui->creationLog->insertPlainText(s + "\n");
@@ -850,14 +634,31 @@ void CreateInstanceDialog::selectPage(std::size_t i)
   m_pages[i]->activated();
 
   updateNavigation();
+  FluentMotion::pageIn(ui->pages->currentWidget(), 10);
+}
+
+void CreateInstanceDialog::selectPageOf(const cid::Page* page)
+{
+  for (std::size_t i = 0; i < m_pages.size(); ++i) {
+    if (m_pages[i].get() == page) {
+      selectPage(i);
+      return;
+    }
+  }
 }
 
 void CreateInstanceDialog::updateNavigation()
 {
+  if (!m_ready) {
+    // a page asked before all of them were created
+    return;
+  }
+
   const auto i    = ui->pages->currentIndex();
   const auto last = isOnLastPage();
 
-  int step = 0;
+  // the steps that aren't skipped, and which one this is
+  int step  = 0;
   int steps = 0;
   for (std::size_t page = 0; page < m_pages.size(); ++page) {
     if (m_pages[page]->skip()) {
@@ -868,15 +669,19 @@ void CreateInstanceDialog::updateNavigation()
       ++step;
     }
   }
-  ui->stepIndicator->setText(tr("Step %1 of %2").arg(step).arg(steps));
-  ui->stepProgress->setRange(0, qMax(steps, 1));
-  ui->stepProgress->setValue(step);
+  ui->progress->setRange(0, qMax(steps, 1));
+  ui->progress->setValue(step);
+  ui->progress->setVisible(!m_singlePage);
+  if (!m_singlePage) {
+    ui->title->setText(tr("Step %1 of %2").arg(step).arg(steps));
+  }
 
   ui->next->setEnabled(canNext());
   ui->back->setEnabled(canBack());
+  ui->back->setVisible(!m_singlePage);
 
   if (last) {
-    ui->next->setText(tr("Finish"));
+    ui->next->setText(m_singlePage ? tr("Finish") : tr("Create instance"));
   } else {
     ui->next->setText(m_originalNext);
   }

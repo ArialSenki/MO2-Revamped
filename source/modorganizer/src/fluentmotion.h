@@ -7,6 +7,7 @@
 
 class QVariantAnimation;
 class QObject;
+class QToolButton;
 class QWidget;
 
 // Shared timing for the Fluent v4 animations. Everything that moves goes through
@@ -47,6 +48,13 @@ void fadeOut(QWidget* window, std::function<void()> done);
 // pages, the main window's tabs): it fades in while it rises `rise` pixels
 // into place. Pages with GPU-rendered children (web views) switch at once.
 void pageIn(QWidget* page, int rise = 16);
+
+// Windows 11 drop-down chevron for a tool button with a menu: the button's own
+// arrow is hidden ([fluentChevron="true"] in the theme) and a chevron is drawn
+// `right` pixels from its right edge, turning over while the menu is open.
+// `drop` lowers it from the button's middle so it sits on the text's middle.
+// Safe to call more than once; does nothing for a button without a menu.
+void animateMenuChevron(QToolButton* button, qreal right = 13.0, qreal drop = 2.0);
 
 }  // namespace FluentMotion
 

@@ -156,6 +156,11 @@ public:
   //
   void selectPage(std::size_t i);
 
+  // selects the given page, wherever it is; the review uses it to go back to
+  // the step of a value
+  //
+  void selectPageOf(const cid::Page* page);
+
   // moves by `d` pages, can be negative to move back
   //
   void changePage(int d);
@@ -172,6 +177,11 @@ public:
   //
   bool isOnLastPage() const;
 
+  // whether only one page is shown, to fill in something an existing
+  // instance is missing
+  //
+  bool isSinglePage() const { return m_singlePage; }
+
   // returns whether the user has requested to switch to the new instance
   //
   bool switching() const;
@@ -186,6 +196,11 @@ public:
   //
   CreationInfo creationInfo() const;
 
+protected:
+  // fits the window to the first page once the theme has sized it
+  //
+  void showEvent(QShowEvent* e) override;
+
 private:
   std::unique_ptr<Ui::CreateInstanceDialog> ui;
   const PluginContainer& m_pc;
@@ -194,6 +209,8 @@ private:
   QString m_originalNext;
   bool m_switching;
   bool m_singlePage;
+  bool m_ready                        = false;
+  bool m_shownOnce                    = false;
 
   // creates a shortcut for the given sequence
   //

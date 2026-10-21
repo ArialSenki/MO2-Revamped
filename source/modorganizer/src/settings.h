@@ -982,6 +982,18 @@ public:
   // resets anything that the user can disable
   static void resetDialogs();
 
+  // a value of the global settings file under the given key, for preferences
+  // that belong to no instance (the instance manager's grouping, for example)
+  static QVariant value(const QString& key, const QVariant& defaultValue = {});
+  static void setValue(const QString& key, const QVariant& value);
+  static void remove(const QString& key);
+
+  // what the user keeps about an instance (its group, its notes), by section
+  // and instance identifier; an empty value removes it
+  static QString instanceValue(const QString& section, const QString& identifier);
+  static void setInstanceValue(const QString& section, const QString& identifier,
+                               const QString& value);
+
 private:
   static QSettings settings();
 };
