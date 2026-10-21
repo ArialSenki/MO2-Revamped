@@ -7100,6 +7100,30 @@ p, li { white-space: pre-wrap; }
       <source>Delete %1 saves...</source>
       <translation>%1 Spielstände löschen...</translation>
     </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Ordner öffnen</translation>
+    </message>
+    <message>
+      <source>Open the folder these saves are read from</source>
+      <translation>Öffnet den Ordner, aus dem diese Spielstände gelesen werden</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Aktualisieren</translation>
+    </message>
+    <message>
+      <source>This profile's own saves</source>
+      <translation>Eigene Spielstände dieses Profils</translation>
+    </message>
+    <message>
+      <source>The game's saves, shared with Steam</source>
+      <translation>Spielstände des Spiels, mit Steam geteilt</translation>
+    </message>
+    <message>
+      <source>Shared saves</source>
+      <translation>Geteilte Spielstände</translation>
+    </message>
   </context>
   <context>
     <name>SelectionDialog</name>

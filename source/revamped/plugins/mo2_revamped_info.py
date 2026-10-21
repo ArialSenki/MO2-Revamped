@@ -252,8 +252,12 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         logo.setFixedSize(62, 62)
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         try:
+            # the large logo built into ModOrganizer.exe first, so it always
+            # matches the program; the loose files are older builds' fallback
+            pixmap = QPixmap(":/MO/gui/app_icon")
             app_dir = QApplication.applicationDirPath()
-            pixmap = QPixmap(os.path.join(app_dir, "resources", "mo_icon.png"))
+            if pixmap.isNull():
+                pixmap = QPixmap(os.path.join(app_dir, "resources", "mo_icon.png"))
             if pixmap.isNull():
                 pixmap = QPixmap(os.path.join(app_dir, "splash.png"))
             if not pixmap.isNull():

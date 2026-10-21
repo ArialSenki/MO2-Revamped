@@ -150,6 +150,53 @@ void alignHeaders(QDialog* dialog)
   }
 }
 
+// plugin dialogs color status text with plain CSS names (the manual
+// installer's "looks good" / "does not look valid"); the Fluent status
+// colors stay readable on light and dark surfaces
+class StatusInk : public QObject
+{
+public:
+  explicit StatusInk(QLabel* label) : QObject(label), m_label(label)
+  {
+    label->installEventFilter(this);
+    apply();
+  }
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::StyleChange && !m_applying) {
+      apply();
+    }
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QLabel* m_label;
+  bool m_applying = false;
+
+  void apply()
+  {
+    static const QRegularExpression plain(
+        QStringLiteral("color\\s*:\\s*(red|green|darkgreen|darkred)\\s*;?"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QString sheet = m_label->styleSheet();
+    const auto match    = plain.match(sheet);
+    if (!match.hasMatch()) {
+      return;
+    }
+    const bool bad = match.captured(1).contains(QLatin1String("red"), Qt::CaseInsensitive);
+    const QColor ink =
+        FluentIcons::color(bad ? FluentIcons::Tone::Critical : FluentIcons::Tone::Success);
+    m_applying = true;
+    QString fixed = sheet;
+    fixed.replace(match.capturedStart(), match.capturedLength(),
+                  QStringLiteral("color: %1;").arg(ink.name()));
+    m_label->setStyleSheet(fixed);
+    m_applying = false;
+  }
+};
+
 // dialogs that are mostly options get Settings rows
 bool isOptionsDialog(const QDialog* dialog)
 {
@@ -200,6 +247,10 @@ void polish(QDialog* dialog)
     }
   }
   alignHeaders(dialog);
+
+  for (QLabel* label : dialog->findChildren<QLabel*>()) {
+    new StatusInk(label);
+  }
 
   // page titles in semibold like Windows 11 (some .ui files make them bold)
   const int bodySize = dialog->font().pointSize();

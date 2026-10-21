@@ -7370,6 +7370,30 @@ p, li { white-space: pre-wrap; }
       <source>Delete %1 saves...</source>
       <translation>Elimina %1 salvataggi...</translation>
     </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Apri cartella</translation>
+    </message>
+    <message>
+      <source>Open the folder these saves are read from</source>
+      <translation>Apre la cartella da cui vengono letti questi salvataggi</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Aggiorna</translation>
+    </message>
+    <message>
+      <source>This profile's own saves</source>
+      <translation>Salvataggi propri di questo profilo</translation>
+    </message>
+    <message>
+      <source>The game's saves, shared with Steam</source>
+      <translation>Salvataggi del gioco, condivisi con Steam</translation>
+    </message>
+    <message>
+      <source>Shared saves</source>
+      <translation>Salvataggi condivisi</translation>
+    </message>
   </context>
   <context>
     <name>SelectionDialog</name>

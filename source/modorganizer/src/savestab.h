@@ -48,6 +48,12 @@ private:
   QWidget* m_window;
   OrganizerCore& m_core;
   SavesTabUi ui;
+
+  // the footer: which saves the list shows and where they live
+  class QLabel* m_route = nullptr;
+  QString m_routePath;
+  void createFooter();
+  void updateRoute(const QDir& savesDir);
   MOBase::FilterWidget m_filter;
   std::vector<std::shared_ptr<const MOBase::ISaveGame>> m_SaveGames;
   MOBase::ISaveGameInfoWidget* m_CurrentSaveView;
