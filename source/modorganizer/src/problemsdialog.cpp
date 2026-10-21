@@ -1,7 +1,18 @@
 #include "problemsdialog.h"
+#include "fluenticons.h"
+#include "fluentpanels.h"
 #include "organizercore.h"
-#include "ui_problemsdialog.h"
+#include <QClipboard>
+#include <QFrame>
+#include <QGuiApplication>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListWidget>
 #include <QPushButton>
+#include <QStackedWidget>
+#include <QTextBrowser>
+#include <QToolButton>
+#include <QVBoxLayout>
 #include <Shellapi.h>
 #include <iplugin.h>
 #include <iplugindiagnose.h>
@@ -11,30 +22,216 @@
 
 using namespace MOBase;
 
-ProblemsDialog::ProblemsDialog(const PluginContainer& pluginContainer, QWidget* parent)
-    : QDialog(parent), ui(new Ui::ProblemsDialog), m_PluginContainer(pluginContainer),
-      m_hasProblems(false), m_problemCount(0)
+namespace
 {
-  ui->setupUi(this);
-  ui->notificationSplitter->setStretchFactor(0, 4);
-  ui->notificationSplitter->setStretchFactor(1, 5);
-  ui->fixButton->hide();
-  ui->manageOverwriteButton->hide();
+// Segoe Fluent Icons code points
+constexpr char16_t WarningGlyph  = 0xE7BA;
+constexpr char16_t FolderGlyph   = 0xE8B7;
+constexpr char16_t CheckGlyph    = 0xE73E;
+constexpr char16_t RepairGlyph   = 0xE90F;
+constexpr char16_t CopyGlyph     = 0xE8C8;
+constexpr char16_t RefreshGlyph  = 0xE72C;
 
-  connect(ui->problemsWidget, SIGNAL(itemSelectionChanged()), this,
-          SLOT(selectionChanged()));
-  connect(ui->descriptionText, SIGNAL(anchorClicked(QUrl)), this,
-          SLOT(urlClicked(QUrl)));
-  connect(ui->fixButton, &QPushButton::clicked, this, &ProblemsDialog::startFix);
-  connect(ui->manageOverwriteButton, &QPushButton::clicked, this,
-          [this]() { emit manageOverwriteRequested(); });
+// item data of a notification row
+constexpr int TextRole      = Qt::UserRole + 10;  // the full description
+constexpr int PluginRole    = Qt::UserRole + 11;  // the IPluginDiagnose*
+constexpr int KeyRole       = Qt::UserRole + 12;  // the problem's key
+constexpr int FixRole       = Qt::UserRole + 13;  // has a guided fix
+constexpr int OverwriteRole = Qt::UserRole + 14;  // about Overwrite
+}  // namespace
 
+ProblemsDialog::ProblemsDialog(const PluginContainer& pluginContainer, QWidget* parent)
+    : QDialog(parent), m_PluginContainer(pluginContainer), m_hasProblems(false),
+      m_problemCount(0)
+{
+  setupUi();
   runDiagnosis();
 }
 
-ProblemsDialog::~ProblemsDialog()
+ProblemsDialog::~ProblemsDialog() = default;
+
+void ProblemsDialog::setupUi()
 {
-  delete ui;
+  setObjectName(QStringLiteral("ProblemsDialog"));
+  setWindowTitle(tr("Notifications"));
+  setMinimumSize(820, 500);
+  resize(940, 600);
+
+  auto* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(12, 12, 12, 12);
+  layout->setSpacing(10);
+
+  auto* body = new QHBoxLayout;
+  body->setSpacing(8);
+  body->addWidget(createListCard());
+  body->addWidget(createDetails(), 1);
+  layout->addLayout(body, 1);
+
+  // check again on the left, Close on the right
+  auto* footer = new QHBoxLayout;
+  footer->setSpacing(8);
+  auto* again = new QToolButton(this);
+  again->setObjectName(QStringLiteral("instanceHelpButton"));
+  again->setText(tr("Check again"));
+  again->setToolTip(tr("Ask every plugin again whether something needs attention"));
+  again->setIcon(FluentIcons::glyph(RefreshGlyph, FluentIcons::Tone::Muted));
+  again->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  again->setAutoRaise(true);
+  again->setCursor(Qt::PointingHandCursor);
+  footer->addWidget(again);
+  footer->addStretch(1);
+  auto* close = new QPushButton(tr("Close"), this);
+  close->setObjectName(QStringLiteral("close"));
+  close->setAutoDefault(false);
+  footer->addWidget(close);
+  layout->addLayout(footer);
+
+  connect(again, &QToolButton::clicked, this, &ProblemsDialog::runDiagnosis);
+  connect(close, &QPushButton::clicked, this, &QDialog::close);
+}
+
+QWidget* ProblemsDialog::createListCard()
+{
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("notificationListCard"));
+  card->setProperty("fluentCard", true);
+  card->setFixedWidth(300);
+
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(8, 10, 8, 8);
+  layout->setSpacing(6);
+
+  auto* title = new QHBoxLayout;
+  title->setContentsMargins(6, 0, 6, 2);
+  auto* heading = new QLabel(tr("Notifications"), card);
+  heading->setObjectName(QStringLiteral("fluentCardTitle"));
+  m_count = new QLabel(card);
+  m_count->setObjectName(QStringLiteral("fluentStatCaption"));
+  title->addWidget(heading);
+  title->addStretch(1);
+  title->addWidget(m_count);
+  layout->addLayout(title);
+
+  m_list = new QListWidget(card);
+  m_list->setObjectName(QStringLiteral("problemsWidget"));
+  m_list->setItemDelegate(new FluentPanels::RowDelegate(m_list, 56, 20));
+  m_list->setFrameShape(QFrame::NoFrame);
+  m_list->setMouseTracking(true);
+  m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_list->setAccessibleName(tr("Notifications"));
+  layout->addWidget(m_list, 1);
+
+  connect(m_list, &QListWidget::itemSelectionChanged, this,
+          &ProblemsDialog::selectionChanged);
+
+  return card;
+}
+
+QWidget* ProblemsDialog::createDetails()
+{
+  m_details = new QStackedWidget(this);
+  m_details->setObjectName(QStringLiteral("notificationDetailsStack"));
+
+  // nothing to review: a check mark and one line, like Windows Update
+  auto* empty = new QFrame(m_details);
+  empty->setProperty("fluentCard", true);
+  auto* emptyLayout = new QVBoxLayout(empty);
+  emptyLayout->addStretch(1);
+  auto* check = new QLabel(QString(QChar(CheckGlyph)), empty);
+  check->setFont(FluentIcons::font(40));
+  check->setAlignment(Qt::AlignCenter);
+  QPalette palette = check->palette();
+  palette.setColor(QPalette::WindowText, FluentIcons::color(FluentIcons::Tone::Success));
+  check->setPalette(palette);
+  auto* caughtUp = new QLabel(tr("You're all caught up"), empty);
+  caughtUp->setObjectName(QStringLiteral("instanceDetailName"));
+  caughtUp->setAlignment(Qt::AlignCenter);
+  auto* caughtUpText =
+      new QLabel(tr("No plugin has anything for you to review right now."), empty);
+  caughtUpText->setObjectName(QStringLiteral("instanceDetailCaption"));
+  caughtUpText->setAlignment(Qt::AlignCenter);
+  caughtUpText->setWordWrap(true);
+  emptyLayout->addWidget(check);
+  emptyLayout->addSpacing(8);
+  emptyLayout->addWidget(caughtUp);
+  emptyLayout->addWidget(caughtUpText);
+  emptyLayout->addStretch(1);
+  m_details->addWidget(empty);
+
+  auto* card = new QFrame(m_details);
+  card->setObjectName(QStringLiteral("notificationDetailsCard"));
+  card->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  // the notification and the plugin that raised it
+  auto* head = new QVBoxLayout;
+  head->setContentsMargins(18, 14, 18, 14);
+  head->setSpacing(2);
+  m_title = new QLabel(card);
+  m_title->setObjectName(QStringLiteral("instanceDetailName"));
+  m_title->setWordWrap(true);
+  m_caption = new QLabel(card);
+  m_caption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  head->addWidget(m_title);
+  head->addWidget(m_caption);
+  layout->addLayout(head);
+
+  // what it means for the user, then the plugin's own text
+  auto* text = new QFrame(card);
+  text->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* textLayout = new QVBoxLayout(text);
+  textLayout->setContentsMargins(18, 12, 18, 12);
+  textLayout->setSpacing(10);
+  m_context = new QLabel(text);
+  m_context->setObjectName(QStringLiteral("fluentSettingDescription"));
+  m_context->setWordWrap(true);
+  m_description = new QTextBrowser(text);
+  m_description->setObjectName(QStringLiteral("descriptionText"));
+  m_description->setFrameShape(QFrame::NoFrame);
+  m_description->setOpenLinks(false);
+  m_description->setLineWrapMode(QTextEdit::WidgetWidth);
+  // reading text, not a field: no box around it
+  m_description->viewport()->setAutoFillBackground(false);
+  m_description->setStyleSheet(
+      QStringLiteral("QTextBrowser { background: transparent; border: none; }"));
+  textLayout->addWidget(m_context);
+  textLayout->addWidget(m_description, 1);
+  layout->addWidget(text, 1);
+
+  // what can be done about it
+  auto* actions = new QFrame(card);
+  actions->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* actionsLayout = new QHBoxLayout(actions);
+  actionsLayout->setContentsMargins(12, 12, 12, 12);
+  actionsLayout->setSpacing(8);
+  m_fix = new QPushButton(FluentIcons::glyph(RepairGlyph), tr("Fix it"), actions);
+  m_fix->setObjectName(QStringLiteral("fixButton"));
+  m_fix->setProperty("fluentPrimary", true);
+  m_fix->setAutoDefault(false);
+  m_manageOverwrite =
+      new QPushButton(FluentIcons::glyph(FolderGlyph), tr("Manage Overwrite"), actions);
+  m_manageOverwrite->setObjectName(QStringLiteral("manageOverwriteButton"));
+  m_manageOverwrite->setAutoDefault(false);
+  m_copy = new QPushButton(FluentIcons::glyph(CopyGlyph), tr("Copy text"), actions);
+  m_copy->setAutoDefault(false);
+  m_copy->setToolTip(tr("Copy the notification, to paste it in a bug report or a post"));
+  actionsLayout->addWidget(m_fix);
+  actionsLayout->addWidget(m_manageOverwrite);
+  actionsLayout->addStretch(1);
+  actionsLayout->addWidget(m_copy);
+  layout->addWidget(actions);
+
+  connect(m_description, &QTextBrowser::anchorClicked, this, &ProblemsDialog::urlClicked);
+  connect(m_fix, &QPushButton::clicked, this, &ProblemsDialog::startFix);
+  connect(m_manageOverwrite, &QPushButton::clicked, this, [this]() {
+    emit manageOverwriteRequested();
+  });
+  connect(m_copy, &QPushButton::clicked, this, &ProblemsDialog::copyText);
+
+  m_details->addWidget(card);
+  return m_details;
 }
 
 int ProblemsDialog::exec()
@@ -45,58 +242,48 @@ int ProblemsDialog::exec()
 
 void ProblemsDialog::runDiagnosis()
 {
-  m_hasProblems = false;
+  m_hasProblems  = false;
   m_problemCount = 0;
-  ui->problemsWidget->clear();
+  m_list->clear();
 
   for (IPluginDiagnose* diagnose : m_PluginContainer.plugins<IPluginDiagnose>()) {
     if (!m_PluginContainer.isEnabled(diagnose)) {
       continue;
     }
 
+    const auto* plugin = dynamic_cast<const IPlugin*>(diagnose);
+    const QString source =
+        plugin != nullptr ? plugin->localizedName() : QStringLiteral("Mod Organizer");
+
     std::vector<unsigned int> activeProblems = diagnose->activeProblems();
-    foreach (unsigned int key, activeProblems) {
-      QTreeWidgetItem* newItem = new QTreeWidgetItem();
+    for (unsigned int key : activeProblems) {
       const QString shortDescription = diagnose->shortDescription(key);
       const QString fullDescription  = diagnose->fullDescription(key);
       const bool isOverwrite =
           (shortDescription + fullDescription).contains("overwrite", Qt::CaseInsensitive);
-      const bool hasGuidedFix = diagnose->hasGuidedFix(key);
 
-      newItem->setText(0, shortDescription);
-      newItem->setData(0, Qt::UserRole, fullDescription);
-      newItem->setData(0, Qt::UserRole + 1,
-                       QVariant::fromValue(reinterpret_cast<void*>(diagnose)));
-      newItem->setData(0, Qt::UserRole + 2, key);
-      newItem->setData(0, Qt::UserRole + 3, hasGuidedFix);
-      newItem->setData(0, Qt::UserRole + 4, isOverwrite);
+      auto* item = new QListWidgetItem(shortDescription, m_list);
+      item->setData(FluentPanels::CaptionRole, source);
+      item->setIcon(isOverwrite
+                        ? FluentIcons::glyph(FolderGlyph, FluentIcons::Tone::Accent)
+                        : FluentIcons::glyph(WarningGlyph, FluentIcons::Tone::Caution));
+      item->setToolTip(shortDescription);
+      item->setData(TextRole, fullDescription);
+      item->setData(PluginRole, QVariant::fromValue(reinterpret_cast<void*>(diagnose)));
+      item->setData(KeyRole, key);
+      item->setData(FixRole, diagnose->hasGuidedFix(key));
+      item->setData(OverwriteRole, isOverwrite);
 
-      ui->problemsWidget->addTopLevelItem(newItem);
       m_hasProblems = true;
       ++m_problemCount;
     }
   }
 
-  ui->notificationCountLabel->setText(
-      tr("%n active notification(s)", nullptr, static_cast<int>(m_problemCount)));
-
-  if (!m_hasProblems) {
-    auto* item = new QTreeWidgetItem;
-
-    item->setText(0, tr("No active notifications"));
-    item->setData(0, Qt::UserRole, QString());
-    item->setFlags(item->flags() & ~Qt::ItemIsSelectable);
-
-    QFont font = item->font(0);
-    font.setItalic(true);
-    item->setFont(0, font);
-
-    ui->problemsWidget->addTopLevelItem(item);
-    selectionChanged();
-  } else {
-    ui->problemsWidget->setCurrentItem(ui->problemsWidget->topLevelItem(0));
-    ui->problemsWidget->scrollToTop();
+  m_count->setText(QString::number(m_problemCount));
+  if (m_hasProblems) {
+    m_list->setCurrentRow(0);
   }
+  selectionChanged();
 }
 
 bool ProblemsDialog::hasProblems() const
@@ -106,22 +293,19 @@ bool ProblemsDialog::hasProblems() const
 
 void ProblemsDialog::selectionChanged()
 {
-  QTreeWidgetItem* item = ui->problemsWidget->currentItem();
+  QListWidgetItem* item = m_list->currentItem();
   if (item == nullptr || !m_hasProblems) {
-    ui->selectedTitleLabel->setText(tr("You're all caught up"));
-    ui->notificationContextLabel->setText(
-        tr("There are no active notifications to review."));
-    ui->descriptionText->clear();
-    ui->fixButton->hide();
-    ui->manageOverwriteButton->hide();
+    m_details->setCurrentIndex(0);
     return;
   }
+  m_details->setCurrentIndex(1);
 
-  const QString text = item->data(0, Qt::UserRole).toString();
-  const bool isOverwrite = item->data(0, Qt::UserRole + 4).toBool();
+  const QString text     = item->data(TextRole).toString();
+  const bool isOverwrite = item->data(OverwriteRole).toBool();
 
-  ui->selectedTitleLabel->setText(item->text(0));
-  ui->notificationContextLabel->setText(
+  m_title->setText(item->text());
+  m_caption->setText(tr("From %1").arg(item->data(FluentPanels::CaptionRole).toString()));
+  m_context->setText(
       isOverwrite
           ? tr("Files here are not assigned to a regular mod yet. Review them and move "
                "anything you want to keep into a mod. Deleting files here removes "
@@ -132,7 +316,7 @@ void ProblemsDialog::selectionChanged()
   if (isOverwrite && text.contains(QLatin1String("Creation Club"))) {
     // the basic diagnosis text is written for the Bethesda games (Wrye Bash,
     // xEdit, ESL files); this build manages Elden Ring
-    ui->descriptionText->setText(
+    m_description->setHtml(
         tr("<p>Overwrite holds files that the game and tools created while running "
            "through MO2: logs and settings written by DLL mods, files saved by mod "
            "tools, and similar output. They do not belong to any mod yet.</p>"
@@ -144,33 +328,40 @@ void ProblemsDialog::selectionChanged()
            "<p>Startup options can clear old mod logs from Overwrite before each "
            "launch.</p>"));
   } else if (text.isEmpty()) {
-    ui->descriptionText->setPlainText(
+    m_description->setPlainText(
         tr("The plugin that reported this notification did not provide additional "
            "details."));
   } else {
-    ui->descriptionText->setText(text);
+    m_description->setText(text);
   }
-  ui->descriptionText->setLineWrapMode(QTextEdit::WidgetWidth);
-  ui->fixButton->setVisible(item->data(0, Qt::UserRole + 3).toBool());
-  ui->manageOverwriteButton->setVisible(isOverwrite);
+  m_fix->setVisible(item->data(FixRole).toBool());
+  m_manageOverwrite->setVisible(isOverwrite);
 }
 
 void ProblemsDialog::startFix()
 {
-  QTreeWidgetItem* item = ui->problemsWidget->currentItem();
-  if (item == nullptr || !item->data(0, Qt::UserRole + 3).toBool()) {
+  QListWidgetItem* item = m_list->currentItem();
+  if (item == nullptr || !item->data(FixRole).toBool()) {
     return;
   }
 
-  IPluginDiagnose* plugin = reinterpret_cast<IPluginDiagnose*>(
-      item->data(0, Qt::UserRole + 1).value<void*>());
+  IPluginDiagnose* plugin =
+      reinterpret_cast<IPluginDiagnose*>(item->data(PluginRole).value<void*>());
   if (plugin == nullptr) {
     log::warn("notification fix has no diagnosis plugin");
     return;
   }
 
-  plugin->startGuidedFix(item->data(0, Qt::UserRole + 2).toUInt());
+  plugin->startGuidedFix(item->data(KeyRole).toUInt());
   runDiagnosis();
+}
+
+void ProblemsDialog::copyText()
+{
+  if (const QListWidgetItem* item = m_list->currentItem()) {
+    QGuiApplication::clipboard()->setText(item->text() + QStringLiteral("\n\n") +
+                                          m_description->toPlainText());
+  }
 }
 
 void ProblemsDialog::urlClicked(const QUrl& url)

@@ -25,7 +25,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "report.h"
 #include "ui_overwriteinfodialog.h"
 #include "utility.h"
+#include <QDirIterator>
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLocale>
 #include <QMenu>
+#include <QTimer>
+#include <QVBoxLayout>
 #include <QIcon>
 #include <QMessageBox>
 #include <QShortcut>
@@ -102,6 +109,130 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   QObject::connect(m_OpenAction, SIGNAL(triggered()), this, SLOT(openTriggered()));
   QObject::connect(m_NewFolderAction, SIGNAL(triggered()), this,
                    SLOT(createDirectoryTriggered()));
+
+  if (FluentIcons::active()) {
+    buildFluentLayout();
+  }
+}
+
+void OverwriteInfoDialog::buildFluentLayout()
+{
+  auto* root = qobject_cast<QVBoxLayout*>(layout());
+  if (root == nullptr) {
+    return;
+  }
+
+  // the intro panel's title and text become the card's header
+  ui->overwriteIntroPanel->hide();
+  ui->overwriteSectionHeading->hide();
+  for (QWidget* w : {static_cast<QWidget*>(ui->overwriteIntroPanel),
+                     static_cast<QWidget*>(ui->overwriteSectionHeading),
+                     static_cast<QWidget*>(ui->filesView),
+                     static_cast<QWidget*>(ui->overwriteContextHint),
+                     static_cast<QWidget*>(ui->buttonBox)}) {
+    root->removeWidget(w);
+  }
+  root->setContentsMargins(12, 12, 12, 12);
+  root->setSpacing(10);
+
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("overwriteCard"));
+  card->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  auto* head = new QHBoxLayout;
+  head->setContentsMargins(18, 14, 12, 14);
+  head->setSpacing(10);
+  auto* names = new QVBoxLayout;
+  names->setSpacing(2);
+  auto* title = new QLabel(tr("Overwrite"), card);
+  title->setObjectName(QStringLiteral("instanceDetailName"));
+  m_summary = new QLabel(card);
+  m_summary->setObjectName(QStringLiteral("instanceDetailCaption"));
+  names->addWidget(title);
+  names->addWidget(m_summary);
+  head->addLayout(names, 1);
+  ui->explorerButton->setParent(card);
+  head->addWidget(ui->explorerButton, 0, Qt::AlignVCenter);
+  ui->explorerButton->show();
+  layout->addLayout(head);
+
+  auto* files = new QFrame(card);
+  files->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* filesLayout = new QVBoxLayout(files);
+  filesLayout->setContentsMargins(8, 4, 8, 4);
+  ui->filesView->setParent(files);
+  ui->filesView->setFrameShape(QFrame::NoFrame);
+  filesLayout->addWidget(ui->filesView);
+  ui->filesView->show();
+  layout->addWidget(files, 1);
+
+  // the hint, as the card's last row with an info glyph
+  auto* hint = new QFrame(card);
+  hint->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* hintLayout = new QHBoxLayout(hint);
+  hintLayout->setContentsMargins(18, 10, 18, 10);
+  hintLayout->setSpacing(12);
+  auto* glyph = new QLabel(QString(QChar(0xE946)), hint);
+  glyph->setObjectName(QStringLiteral("instanceRowGlyph"));
+  glyph->setFont(FluentIcons::font(16));
+  hintLayout->addWidget(glyph, 0, Qt::AlignTop);
+  ui->overwriteContextHint->setParent(hint);
+  ui->overwriteContextHint->setObjectName(QStringLiteral("fluentSettingDescription"));
+  ui->overwriteContextHint->setWordWrap(true);
+  hintLayout->addWidget(ui->overwriteContextHint, 1);
+  ui->overwriteContextHint->show();
+  layout->addWidget(hint);
+
+  root->addWidget(card, 1);
+  root->addWidget(ui->buttonBox);
+
+  // the summary follows what the model sees, a moment after it changes
+  auto* timer = new QTimer(this);
+  timer->setSingleShot(true);
+  timer->setInterval(150);
+  connect(timer, &QTimer::timeout, this, &OverwriteInfoDialog::updateSummary);
+  for (auto signal : {&QFileSystemModel::rowsInserted, &QFileSystemModel::rowsRemoved}) {
+    connect(m_FileSystemModel, signal, timer, qOverload<>(&QTimer::start));
+  }
+  connect(m_FileSystemModel, &QFileSystemModel::fileRenamed, timer,
+          qOverload<>(&QTimer::start));
+  updateSummary();
+}
+
+void OverwriteInfoDialog::updateSummary()
+{
+  if (m_summary == nullptr || !m_ModInfo) {
+    return;
+  }
+
+  qint64 files = 0, folders = 0, bytes = 0;
+  QDirIterator it(m_ModInfo->absolutePath(),
+                  QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden |
+                      QDir::System,
+                  QDirIterator::Subdirectories);
+  while (it.hasNext()) {
+    it.next();
+    if (it.fileInfo().isDir()) {
+      ++folders;
+    } else {
+      ++files;
+      bytes += it.fileInfo().size();
+    }
+  }
+
+  // the same words as the main window's Overwrite card
+  if (files == 0 && folders == 0) {
+    m_summary->setText(tr("Empty: nothing here belongs outside the mods"));
+  } else if (files == 0) {
+    m_summary->setText(tr("Only empty folders, safe to clear"));
+  } else {
+    m_summary->setText(tr("%n file(s), %1, not part of any mod", nullptr,
+                          static_cast<int>(files))
+                           .arg(QLocale().formattedDataSize(bytes)));
+  }
 }
 
 OverwriteInfoDialog::~OverwriteInfoDialog()

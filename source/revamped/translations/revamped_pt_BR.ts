@@ -216,6 +216,18 @@
       <source>Could not refresh the Nexus list. Check your connection and Nexus access.</source>
       <translation>Não foi possível atualizar a lista do Nexus. Verifique sua conexão e o acesso ao Nexus.</translation>
     </message>
+    <message>
+      <source>Copy name</source>
+      <translation>Copiar nome</translation>
+    </message>
+    <message>
+      <source>Remove Nexus mappings</source>
+      <translation>Remover mapeamentos do Nexus</translation>
+    </message>
+    <message>
+      <source>Remove category</source>
+      <translation>Remover categoria</translation>
+    </message>
   </context>
   <context>
     <name>CategoryImportDialog</name>
@@ -5891,6 +5903,25 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <source>Full path</source>
       <translation>Caminho completo</translation>
     </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>Empty: nothing here belongs outside the mods</source>
+      <translation>Vazio: nada fora dos mods</translation>
+    </message>
+    <message>
+      <source>Only empty folders, safe to clear</source>
+      <translation>Apenas pastas vazias, pode limpar com segurança</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s), %1, not part of any mod</source>
+      <translation>
+        <numerusform>%n arquivo, %1, fora de qualquer mod</numerusform>
+        <numerusform>%n arquivos, %1, fora de qualquer mod</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>PluginTypeName</name>
@@ -5982,6 +6013,34 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
     <message>
       <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
       <translation>&lt;p&gt;O Overwrite guarda os arquivos que o jogo e as ferramentas criaram ao rodar pelo MO2: logs e configurações gravados por mods DLL, arquivos salvos por ferramentas de mods e saídas parecidas. Eles ainda não pertencem a nenhum mod.&lt;/p&gt;&lt;p&gt;Os arquivos em &lt;b&gt;Overwrite&lt;/b&gt; têm prioridade sobre todos os mods do perfil. Mova para um mod os arquivos que quiser manter: arraste-os da janela Gerenciar Overwrite para um mod, ou clique com o botão direito em Overwrite na lista de mods e crie um mod com o conteúdo dele. Exclua o que não precisar mais, como logs antigos.&lt;/p&gt;&lt;p&gt;As opções de inicialização podem limpar logs antigos de mods do Overwrite antes de cada execução.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Check again</source>
+      <translation>Verificar novamente</translation>
+    </message>
+    <message>
+      <source>Ask every plugin again whether something needs attention</source>
+      <translation>Pergunta de novo a cada plugin se algo precisa de atenção</translation>
+    </message>
+    <message>
+      <source>No plugin has anything for you to review right now.</source>
+      <translation>Nenhum plugin tem nada para você revisar agora.</translation>
+    </message>
+    <message>
+      <source>Fix it</source>
+      <translation>Corrigir</translation>
+    </message>
+    <message>
+      <source>Copy text</source>
+      <translation>Copiar texto</translation>
+    </message>
+    <message>
+      <source>Copy the notification, to paste it in a bug report or a post</source>
+      <translation>Copia a notificação para colar em um relatório de erro ou post</translation>
+    </message>
+    <message>
+      <source>From %1</source>
+      <translation>De %1</translation>
     </message>
   </context>
   <context>
