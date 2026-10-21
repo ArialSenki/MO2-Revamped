@@ -423,8 +423,17 @@ void polishMessageBox(QMessageBox* box)
     }
     grid->invalidate();
   }
+  // a short question gets a comfortable width; a long text keeps no
+  // minimum, since QMessageBox measures it on one line to decide that it
+  // wraps (a minimum would stop the wrap and cut the text at the edge)
   if (auto* text = box->findChild<QLabel*>(QStringLiteral("qt_msgbox_label"))) {
-    text->setMinimumWidth(qMax(text->minimumWidth(), 320));
+    const bool wrap = text->wordWrap();
+    text->setWordWrap(false);
+    const int oneLine = text->sizeHint().width();
+    text->setWordWrap(wrap);
+    if (oneLine < 320) {
+      text->setMinimumWidth(320);
+    }
   }
 
   matchTitleBar(box);
