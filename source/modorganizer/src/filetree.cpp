@@ -1,5 +1,6 @@
 #include "filetree.h"
 #include "fluenticons.h"
+#include "menuutils.h"
 #include "envshell.h"
 #include "filetreeitem.h"
 #include "filetreemodel.h"
@@ -8,6 +9,7 @@
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
+#include <iplugingame.h>
 #include <log.h>
 #include <QIcon>
 #include <widgetutility.h>
@@ -55,6 +57,12 @@ public:
   MenuItem& icon(const QString& path)
   {
     m_action->setIcon(FluentIcons::icon(path));
+    return *this;
+  }
+
+  MenuItem& icon(const QIcon& icon)
+  {
+    m_action->setIcon(icon);
     return *this;
   }
 
@@ -645,9 +653,28 @@ bool FileTree::showShellMenu(QPoint pos)
   return true;
 }
 
-void FileTree::addDirectoryMenus(QMenu&, FileTreeItem&)
+void FileTree::addDirectoryMenus(QMenu& menu, FileTreeItem& item)
 {
-  // noop
+  // a virtual folder can come from many mods, so it has no single real
+  // folder; it can still be expanded at once and its path copied
+  const QModelIndex index = m_tree->currentIndex();
+
+  MenuItem(tr("Expand all below"))
+      .icon(menuGlyph(MenuGlyphs::Expand))
+      .callback([this, index] {
+        m_tree->expandRecursively(index);
+      })
+      .addTo(menu);
+
+  const QString relative = item.dataRelativeFilePath();
+  addCopyMenu(&menu, {{tr("Name"), item.filename()},
+                      {tr("Path in the game's data"), nativePath(relative)},
+                      {tr("Full path"), nativePath(gameDataPath(relative))}});
+}
+
+QString FileTree::gameDataPath(const QString& relative) const
+{
+  return m_core.managedGame()->dataDirectory().absoluteFilePath(relative);
 }
 
 void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
@@ -661,27 +688,17 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
 
   const QFileInfo target(QString::fromStdWString(file.getFullPath()));
 
-  MenuItem(tr("&Add as Executable"))
-      .icon(":/MO/gui/mainwindow/files/executable.svg")
-      .callback([&] {
-        addAsExecutable();
-      })
-      .hint(tr("Add this file to the executables list"))
-      .disabledHint(tr("This file is not executable"))
-      .enabled(getFileExecutionType(target) == FileExecutionTypes::Executable)
-      .addTo(menu);
-
-  MenuItem(tr("Reveal in E&xplorer"))
-      .icon(":/MO/gui/contextmenu/explorer.svg")
+  MenuItem(tr("Show in folder"))
+      .icon(menuGlyph(MenuGlyphs::Folder))
       .callback([&] {
         exploreOrigin();
       })
-      .hint(tr("Opens the file in Explorer"))
+      .hint(tr("Opens the folder that holds the file, with the file selected"))
       .disabledHint(tr("This file is in an archive"))
       .enabled(!file.isFromArchive())
       .addTo(menu);
 
-  MenuItem(tr("Open &Mod Info"))
+  MenuItem(tr("Mod information..."))
       .icon(":/MO/gui/contextmenu/information.svg")
       .callback([&] {
         openModInfo();
@@ -691,8 +708,29 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
       .enabled(originID != 0)
       .addTo(menu);
 
+  if (auto* item = singleSelection()) {
+    const QString relative = item->dataRelativeFilePath();
+    addCopyMenu(&menu, {{tr("Name"), item->filename()},
+                        {tr("Path in the game's data"), nativePath(relative)},
+                        {tr("Real path"), file.isFromArchive()
+                                              ? QString()
+                                              : nativePath(target.absoluteFilePath())}});
+  }
+
+  menu.addSeparator();
+
+  MenuItem(tr("&Add as executable"))
+      .icon(":/MO/gui/mainwindow/files/executable.svg")
+      .callback([&] {
+        addAsExecutable();
+      })
+      .hint(tr("Add this file to the executables list"))
+      .disabledHint(tr("This file is not executable"))
+      .enabled(getFileExecutionType(target) == FileExecutionTypes::Executable)
+      .addTo(menu);
+
   if (isHidden(file)) {
-    MenuItem(tr("&Un-Hide"))
+    MenuItem(tr("&Un-hide"))
         .icon(":/MO/gui/contextmenu/visibility-show.svg")
         .callback([&] {
           unhide();
@@ -761,7 +799,7 @@ void FileTree::addOpenMenus(QMenu& menu, const MOShared::FileEntry& file)
   }
 
   MenuItem previewMenu(tr("&Preview"));
-  previewMenu
+  previewMenu.icon(menuGlyph(0xE7B3))
       .callback([&] {
         preview();
       })
@@ -801,12 +839,18 @@ void FileTree::addCommonMenus(QMenu& menu)
 {
   menu.addSeparator();
 
-  MenuItem(tr("&Save Tree to Text File..."))
-      .icon(":/MO/gui/contextmenu/export.svg")
+  MenuItem(tr("Ex&pand all"))
+      .icon(":/MO/gui/contextmenu/expand.svg")
       .callback([&] {
-        dumpToFile();
+        expandAll();
       })
-      .hint(tr("Writes the list of files to a text file"))
+      .addTo(menu);
+
+  MenuItem(tr("&Collapse all"))
+      .icon(":/MO/gui/contextmenu/collapse.svg")
+      .callback([&] {
+        collapseAll();
+      })
       .addTo(menu);
 
   MenuItem(tr("&Refresh"))
@@ -817,18 +861,12 @@ void FileTree::addCommonMenus(QMenu& menu)
       .hint(tr("Refreshes the list"))
       .addTo(menu);
 
-  MenuItem(tr("Ex&pand All"))
-      .icon(":/MO/gui/contextmenu/expand.svg")
+  MenuItem(tr("&Save tree as text..."))
+      .icon(":/MO/gui/contextmenu/export.svg")
       .callback([&] {
-        expandAll();
+        dumpToFile();
       })
-      .addTo(menu);
-
-  MenuItem(tr("&Collapse All"))
-      .icon(":/MO/gui/contextmenu/collapse.svg")
-      .callback([&] {
-        collapseAll();
-      })
+      .hint(tr("Writes the list of files to a text file"))
       .addTo(menu);
 }
 

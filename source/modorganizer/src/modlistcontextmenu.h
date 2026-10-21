@@ -133,10 +133,6 @@ private:
   //
   void addCategoryContextMenus(ModInfo::Ptr mod);
 
-  // special menu for categories
-  //
-  void addMenuAsPushButton(QMenu* menu);
-
   // add actions/menus to this menu for each type of mod
   //
   void addOverwriteActions(ModInfo::Ptr mod);
@@ -145,12 +141,25 @@ private:
   void addBackupActions(ModInfo::Ptr mod);
   void addRegularActions(ModInfo::Ptr mod);
 
+  // shared pieces of the per-type menus
+  void addEnableActions();
+  void addVisitActions(ModInfo::Ptr mod);
+  void addColorActions(ModInfo::Ptr mod);
+  void addFolderActions(ModInfo::Ptr mod);
+  void addNexusMenu(ModInfo::Ptr mod);
+
+  // the mod's archive in the downloads folder, empty without one
+  QString downloadPath(ModInfo::Ptr mod) const;
+
   OrganizerCore& m_core;
   CategoryFactory* m_categories;
   QModelIndex m_index;
   QModelIndexList m_selected;
   ModListView* m_view;
   ModListViewActions& m_actions;  // shortcut for m_view->actions()
+
+  // the type's remove command, added last
+  QAction* m_remove = nullptr;
 };
 
 #endif

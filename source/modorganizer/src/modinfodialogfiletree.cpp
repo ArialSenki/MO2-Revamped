@@ -1,5 +1,6 @@
 #include "modinfodialogfiletree.h"
 #include "fluenticons.h"
+#include "menuutils.h"
 #include "filerenamer.h"
 #include "modinfodialog.h"
 #include "mo2foldericonprovider.h"
@@ -26,20 +27,20 @@ FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
   ui->filetree->setModel(m_fs);
   ui->filetree->setColumnWidth(0, 300);
 
-  m_actions.newFolder = new QAction(tr("&New Folder"), ui->filetree);
+  m_actions.newFolder = new QAction(tr("&New folder"), ui->filetree);
   m_actions.open      = new QAction(tr("&Open/Execute"), ui->filetree);
   m_actions.runHooked = new QAction(tr("Open with &VFS"), ui->filetree);
   m_actions.preview   = new QAction(tr("&Preview"), ui->filetree);
-  m_actions.explore   = new QAction(tr("Open in &Explorer"), ui->filetree);
+  m_actions.explore   = new QAction(tr("Show in &folder"), ui->filetree);
   m_actions.rename    = new QAction(tr("&Rename"), ui->filetree);
-  m_actions.del       = new QAction(tr("&Delete"), ui->filetree);
+  m_actions.del       = new QAction(tr("&Delete..."), ui->filetree);
   m_actions.hide      = new QAction(tr("&Hide"), ui->filetree);
-  m_actions.unhide    = new QAction(tr("&Unhide"), ui->filetree);
+  m_actions.unhide    = new QAction(tr("&Un-hide"), ui->filetree);
 
   m_actions.newFolder->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg"));
   m_actions.runHooked->setIcon(
       FluentIcons::icon(":/MO/gui/mainwindow/explore-virtual-folder.svg"));
-  m_actions.explore->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
+  m_actions.explore->setIcon(menuGlyph(MenuGlyphs::Folder));
   m_actions.rename->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"));
   m_actions.del->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   m_actions.hide->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visibility-hide.svg"));
@@ -548,6 +549,14 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
   menu.addAction(m_actions.explore);
   m_actions.explore->setEnabled(enableExplore);
 
+  if (selection.size() == 1) {
+    const QString path = m_fs->filePath(selection[0]);
+    addCopyMenu(&menu, {{tr("Name"), m_fs->fileName(selection[0])},
+                        {tr("Path in the mod"),
+                         nativePath(QDir(mod().absolutePath()).relativeFilePath(path))},
+                        {tr("Full path"), nativePath(path)}});
+  }
+
   menu.addSeparator();
 
   menu.addAction(m_actions.newFolder);
@@ -556,16 +565,18 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
   menu.addAction(m_actions.rename);
   m_actions.rename->setEnabled(enableRename);
 
-  menu.addAction(m_actions.del);
-  m_actions.del->setEnabled(enableDelete);
+  // only the visibility command that applies
+  if (enableHide) {
+    menu.addAction(m_actions.hide);
+  }
+  if (enableUnhide) {
+    menu.addAction(m_actions.unhide);
+  }
 
-  menu.addSeparator();
-
-  menu.addAction(m_actions.hide);
-  m_actions.hide->setEnabled(enableHide);
-
-  menu.addAction(m_actions.unhide);
-  m_actions.unhide->setEnabled(enableUnhide);
+  if (enableDelete) {
+    menu.addSeparator();
+    menu.addAction(m_actions.del);
+  }
 
   if (enableOpen || enableRun || enablePreview) {
     // bold the first option, unbold all the others

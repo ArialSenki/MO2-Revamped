@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "loglist.h"
+#include "menuutils.h"
 #include "fluenticons.h"
 #include "copyeventfilter.h"
 #include "env.h"
@@ -245,21 +246,17 @@ QMenu* LogList::createMenu(QWidget* parent)
 {
   auto* menu = new QMenu(parent);
 
-  menu->addAction(tr("Copy"), [&] {
+  menu->addAction(menuGlyph(MenuGlyphs::Copy), tr("&Copy"), [&] {
     m_copyFilter.copySelection();
   });
-  menu->addAction(tr("&Copy all"), [&] {
+  menu->addAction(tr("Copy &all"), [&] {
     copyToClipboard();
   });
   menu->addSeparator();
-  QAction* clearAction = menu->addAction(tr("C&lear all"), [&] {
-    clear();
-  });
-  clearAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/clear.svg"));
   QAction* openLogsAction = menu->addAction(tr("&Open logs folder"), [&] {
     openLogsFolder();
   });
-  openLogsAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
+  openLogsAction->setIcon(menuGlyph(MenuGlyphs::Folder));
 
   auto* levels = new QMenu(tr("&Level"));
   levels->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/status/info.svg"));
@@ -288,6 +285,12 @@ QMenu* LogList::createMenu(QWidget* parent)
   addAction(tr("&Warnings"), log::Warning,
             ":/MO/gui/mainwindow/status/warning.svg");
   addAction(tr("&Errors"), log::Error, ":/MO/gui/mainwindow/status/error.svg");
+
+  menu->addSeparator();
+  QAction* clearAction = menu->addAction(tr("C&lear all"), [&] {
+    clear();
+  });
+  clearAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/clear.svg"));
 
   return menu;
 }

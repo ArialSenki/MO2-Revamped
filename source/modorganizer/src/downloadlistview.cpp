@@ -34,6 +34,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStyle>
 #include <QSortFilterProxyModel>
 #include <QWidgetAction>
+#include <functional>
 #include <log.h>
 #include <report.h>
 
@@ -273,16 +274,17 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
   QMenu menu(this);
   QModelIndex index = indexAt(point);
   bool hidden       = false;
-  bool hasDownloadActions = false;
 
-  const auto addAction = [&menu](const QString& text, const QString& iconPath,
-                                 auto callback) {
-    QAction* action = menu.addAction(text, callback);
-    if (!iconPath.isEmpty()) {
-      action->setIcon(FluentIcons::icon(iconPath));
-    }
-    return action;
+  const auto addAction = [](QMenu& target, const QString& text, const QIcon& icon,
+                            auto callback) {
+    return target.addAction(icon, text, callback);
   };
+  const auto svg = [](const QString& path) {
+    return FluentIcons::icon(path);
+  };
+
+  // the destructive command of the selected download, added last
+  std::function<void()> remove;
 
   try {
     if (index.row() >= 0) {
@@ -291,76 +293,77 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       DownloadManager::DownloadState state = m_Manager->getState(row);
 
       hidden = m_Manager->isHidden(row);
+      const QString filePath = m_Manager->getFilePath(row);
 
       if (state >= DownloadManager::STATE_READY) {
-        addMenuSection(&menu, tr("Selected download"));
-        hasDownloadActions = true;
-        addAction(tr("Install"), ":/MO/gui/mainwindow/install.svg", [=] {
-          issueInstall(row);
-        });
-        if (m_Manager->isInfoIncomplete(row))
-          addAction(tr("Query Info"), ":/MO/gui/contextmenu/information.svg", [=] {
-            issueQueryInfoMd5(row);
-          });
-        else
-          addAction(tr("Visit on Nexus"), ":/MO/gui/contextmenu/visit.svg", [=] {
-            issueVisitOnNexus(row);
-          });
-        addAction(tr("Open File"), ":/MO/gui/mainwindow/files/archive.svg", [=] {
+        setDefaultMenuAction(&menu, 
+            addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), [=] {
+              issueInstall(row);
+            }));
+        if (m_Manager->isInfoIncomplete(row)) {
+          addAction(menu, tr("Query info"), svg(":/MO/gui/contextmenu/information.svg"),
+                    [=] {
+                      issueQueryInfoMd5(row);
+                    });
+        } else {
+          addAction(menu, tr("Visit on Nexus"), svg(":/MO/gui/contextmenu/visit.svg"),
+                    [=] {
+                      issueVisitOnNexus(row);
+                    });
+        }
+        addAction(menu, tr("Open"), svg(":/MO/gui/mainwindow/files/archive.svg"), [=] {
           issueOpenFile(row);
-        });
-        addAction(tr("Open Meta File"), ":/MO/gui/contextmenu/information.svg", [=] {
-          issueOpenMetaFile(row);
-        });
-        addAction(tr("Reveal in Explorer"), ":/MO/gui/contextmenu/explorer.svg", [=] {
-          issueOpenInDownloadsFolder(row);
         });
 
         menu.addSeparator();
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), [=] {
+          issueOpenInDownloadsFolder(row);
+        });
+        addAction(menu, tr("Open meta file"), menuGlyph(MenuGlyphs::Document), [=] {
+          issueOpenMetaFile(row);
+        });
+        addCopyMenu(&menu, {{tr("File name"), QFileInfo(filePath).fileName()},
+                            {tr("File path"), nativePath(filePath)}});
 
-        addAction(tr("Delete..."), ":/MO/gui/contextmenu/remove.svg", [=] {
+        menu.addSeparator();
+        if (hidden) {
+          addAction(menu, tr("Un-hide"), svg(":/MO/gui/contextmenu/visibility-show.svg"),
+                    [=] {
+                      issueRestoreToView(row);
+                    });
+        } else {
+          addAction(menu, tr("Hide"), svg(":/MO/gui/contextmenu/visibility-hide.svg"),
+                    [=] {
+                      issueRemoveFromView(row);
+                    });
+        }
+        remove = [=] {
           issueDelete(row);
-        });
-        if (hidden)
-          addAction(tr("Un-Hide"), ":/MO/gui/contextmenu/visibility-show.svg", [=] {
-            issueRestoreToView(row);
-          });
-        else
-          addAction(tr("Hide"), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
-            issueRemoveFromView(row);
-          });
+        };
       } else if (state == DownloadManager::STATE_DOWNLOADING) {
-        addMenuSection(&menu, tr("Selected download"));
-        hasDownloadActions = true;
-        QAction* cancelAction = addAction(tr("Cancel"), {}, [=] {
-          issueCancel(row);
-        });
-        cancelAction->setIcon(QApplication::style()->standardIcon(
-            QStyle::SP_MediaStop));
-        QAction* pauseAction = addAction(tr("Pause"), {}, [=] {
+        addAction(menu, tr("Pause"), menuGlyph(0xE769), [=] {
           issuePause(row);
         });
-        pauseAction->setIcon(QApplication::style()->standardIcon(
-            QStyle::SP_MediaPause));
-        addAction(tr("Reveal in Explorer"), ":/MO/gui/contextmenu/explorer.svg", [=] {
+        addAction(menu, tr("Cancel"), menuGlyph(0xE711), [=] {
+          issueCancel(row);
+        });
+        menu.addSeparator();
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), [=] {
           issueOpenInDownloadsFolder(row);
         });
       } else if ((state == DownloadManager::STATE_PAUSED) ||
                  (state == DownloadManager::STATE_ERROR) ||
                  (state == DownloadManager::STATE_PAUSING)) {
-        addMenuSection(&menu, tr("Selected download"));
-        hasDownloadActions = true;
-        addAction(tr("Delete..."), ":/MO/gui/contextmenu/remove.svg", [=] {
-          issueDelete(row);
-        });
-        QAction* resumeAction = addAction(tr("Resume"), {}, [=] {
+        setDefaultMenuAction(&menu, addAction(menu, tr("Resume"), menuGlyph(MenuGlyphs::Run), [=] {
           issueResume(row);
-        });
-        resumeAction->setIcon(QApplication::style()->standardIcon(
-            QStyle::SP_MediaPlay));
-        addAction(tr("Reveal in Explorer"), ":/MO/gui/contextmenu/explorer.svg", [=] {
+        }));
+        menu.addSeparator();
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), [=] {
           issueOpenInDownloadsFolder(row);
         });
+        remove = [=] {
+          issueDelete(row);
+        };
       }
     }
   } catch (std::exception&) {
@@ -368,37 +371,46 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
     // display download-specific actions
   }
 
-  if (hasDownloadActions) {
-    menu.addSeparator();
-  }
-  addMenuSection(&menu, tr("Download cleanup"));
-  addAction(tr("Delete Installed Downloads..."),
-            ":/MO/gui/contextmenu/remove.svg", [=] {
-    issueDeleteCompleted();
-  });
-  addAction(tr("Delete Uninstalled Downloads..."),
-            ":/MO/gui/contextmenu/remove.svg", [=] {
-    issueDeleteUninstalled();
-  });
-  addAction(tr("Delete All Downloads..."), ":/MO/gui/contextmenu/remove.svg", [=] {
-    issueDeleteAll();
+  // the whole list: the folder, then hiding and deleting by state
+  menu.addSeparator();
+  addAction(menu, tr("Open downloads folder"), menuGlyph(MenuGlyphs::Folder), [this] {
+    shell::Explore(m_Manager->getOutputDirectory());
   });
 
-  addMenuSection(&menu, tr("Visibility"));
   if (!hidden) {
-    addAction(tr("Hide Installed..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
+    auto* hide = menu.addMenu(svg(":/MO/gui/contextmenu/visibility-hide.svg"),
+                              tr("Hide downloads"));
+    addAction(*hide, tr("Installed..."), {}, [=] {
       issueRemoveFromViewCompleted();
     });
-    addAction(tr("Hide Uninstalled..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
+    addAction(*hide, tr("Uninstalled..."), {}, [=] {
       issueRemoveFromViewUninstalled();
     });
-    addAction(tr("Hide All..."), ":/MO/gui/contextmenu/visibility-hide.svg", [=] {
+    addAction(*hide, tr("All..."), {}, [=] {
       issueRemoveFromViewAll();
     });
   } else {
-    addAction(tr("Un-Hide All..."), ":/MO/gui/contextmenu/visibility-show.svg", [=] {
-      issueRestoreToViewAll();
-    });
+    addAction(menu, tr("Un-hide all..."), svg(":/MO/gui/contextmenu/visibility-show.svg"),
+              [=] {
+                issueRestoreToViewAll();
+              });
+  }
+
+  auto* cleanup =
+      menu.addMenu(svg(":/MO/gui/contextmenu/remove.svg"), tr("Delete downloads"));
+  addAction(*cleanup, tr("Installed..."), {}, [=] {
+    issueDeleteCompleted();
+  });
+  addAction(*cleanup, tr("Uninstalled..."), {}, [=] {
+    issueDeleteUninstalled();
+  });
+  addAction(*cleanup, tr("All..."), {}, [=] {
+    issueDeleteAll();
+  });
+
+  if (remove) {
+    menu.addSeparator();
+    addAction(menu, tr("Delete..."), svg(":/MO/gui/contextmenu/remove.svg"), remove);
   }
 
   menu.exec(viewport()->mapToGlobal(point));

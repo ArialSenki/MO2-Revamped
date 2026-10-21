@@ -1876,7 +1876,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>M&amp;ain Toolbar</string>
+    <string>M&amp;ain toolbar</string>
    </property>
   </action>
   <action name="actionToolBarSmallIcons">
@@ -1884,7 +1884,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Small Icons</string>
+    <string>&amp;Small icons</string>
    </property>
   </action>
   <action name="actionToolBarLargeIcons">
@@ -1892,7 +1892,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Lar&amp;ge Icons</string>
+    <string>Lar&amp;ge icons</string>
    </property>
   </action>
   <action name="actionToolBarIconsOnly">
@@ -1900,7 +1900,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Icons Only</string>
+    <string>&amp;Icons only</string>
    </property>
   </action>
   <action name="actionToolBarTextOnly">
@@ -1908,7 +1908,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Text Only</string>
+    <string>&amp;Text only</string>
    </property>
   </action>
   <action name="actionToolBarIconsAndText">
@@ -1916,7 +1916,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>I&amp;cons and Text</string>
+    <string>I&amp;cons and text</string>
    </property>
   </action>
   <action name="actionToolBarMediumIcons">
@@ -1924,7 +1924,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>M&amp;edium Icons</string>
+    <string>M&amp;edium icons</string>
    </property>
   </action>
   <action name="actionStatusBarToggle">

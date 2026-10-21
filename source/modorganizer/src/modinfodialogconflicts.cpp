@@ -488,10 +488,10 @@ ConflictsTab::Actions ConflictsTab::createMenuActions(QTreeView* tree)
   actions.preview = new QAction(tr("&Preview"), parentWidget());
   actions.preview->setEnabled(enablePreview);
 
-  actions.gotoMenu = new QMenu(tr("&Go to..."), parentWidget());
+  actions.gotoMenu = new QMenu(tr("&Go to"), parentWidget());
   actions.gotoMenu->setEnabled(enableGoto);
 
-  actions.explore = new QAction(tr("Open in &Explorer"), parentWidget());
+  actions.explore = new QAction(tr("Show in &folder"), parentWidget());
   actions.explore->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
   actions.explore->setEnabled(enableExplore);
 
@@ -501,7 +501,7 @@ ConflictsTab::Actions ConflictsTab::createMenuActions(QTreeView* tree)
 
   // note that it is possible for hidden files to appear if they override other
   // hidden files from another mod
-  actions.unhide = new QAction(tr("&Unhide"), parentWidget());
+  actions.unhide = new QAction(tr("&Un-hide"), parentWidget());
   actions.unhide->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visibility-show.svg"));
   actions.unhide->setEnabled(enableUnhide);
 

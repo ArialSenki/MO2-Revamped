@@ -1,5 +1,6 @@
 #include "savestab.h"
 #include "fluenticons.h"
+#include "menuutils.h"
 #include "activatemodsdialog.h"
 #include "organizercore.h"
 #include "ui_mainwindow.h"
@@ -303,37 +304,42 @@ void SavesTab::onContextMenu(const QPoint& pos)
   }
 
   QMenu menu;
+  const auto rows = selection->selectedRows();
 
+  // only offered when the save actually misses something
   auto info = m_core.gameFeatures().gameFeature<SaveGameInfo>();
-  if (info != nullptr) {
-    QAction* action = menu.addAction(tr("Restore required plugins..."));
-    action->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
-    action->setToolTip(
-        tr("Choose installed mods to activate the plugins required by this save."));
-    action->setEnabled(false);
-    if (selection->selectedRows().count() == 1) {
-      auto& save = m_SaveGames[selection->selectedRows()[0].row()];
-      SaveGameInfo::MissingAssets missing = info->getMissingAssets(*save);
-      if (missing.size() != 0) {
-        connect(action, &QAction::triggered, this, [this, missing] {
-          fixMods(missing);
-        });
-        action->setEnabled(true);
-      }
+  if (info != nullptr && rows.count() == 1) {
+    auto& save = m_SaveGames[rows[0].row()];
+    SaveGameInfo::MissingAssets missing = info->getMissingAssets(*save);
+    if (missing.size() != 0) {
+      QAction* action = menu.addAction(tr("Restore required plugins..."));
+      action->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
+      action->setToolTip(
+          tr("Choose installed mods to activate the plugins required by this save."));
+      connect(action, &QAction::triggered, this, [this, missing] {
+        fixMods(missing);
+      });
+      menu.addSeparator();
     }
   }
 
-  QString deleteMenuLabel =
-      tr("Delete %n save(s)", "", selection->selectedRows().count());
-  QAction* deleteAction = menu.addAction(deleteMenuLabel, [&] {
-    deleteSavegame();
-  });
-  deleteAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
-
-  QAction* openFolderAction = menu.addAction(tr("Open in Explorer..."), [&] {
+  const QString file = m_SaveGames[rows[0].row()]->getFilepath();
+  menu.addAction(menuGlyph(MenuGlyphs::Folder), tr("Show in folder"), [&] {
     openInExplorer();
   });
-  openFolderAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
+  if (rows.count() == 1) {
+    addCopyMenu(&menu, {{tr("File name"), QFileInfo(file).fileName()},
+                        {tr("File path"), nativePath(file)},
+                        {tr("Folder path"), nativePath(QFileInfo(file).absolutePath())}});
+  }
+
+  menu.addSeparator();
+  menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                 rows.count() == 1 ? tr("Delete...")
+                                   : tr("Delete %1 saves...").arg(rows.count()),
+                 [&] {
+                   deleteSavegame();
+                 });
 
   menu.exec(ui.list->viewport()->mapToGlobal(pos));
 }

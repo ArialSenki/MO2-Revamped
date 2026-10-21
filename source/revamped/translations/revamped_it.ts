@@ -734,6 +734,62 @@
       <source>Archives you download with Nexus or add with Install appear here.</source>
       <translation>Gli archivi che scarichi con Nexus o aggiungi con Installa compaiono qui.</translation>
     </message>
+    <message>
+      <source>Query info</source>
+      <translation>Recupera info</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Apri</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Mostra nella cartella</translation>
+    </message>
+    <message>
+      <source>Open meta file</source>
+      <translation>Apri file meta</translation>
+    </message>
+    <message>
+      <source>File name</source>
+      <translation>Nome del file</translation>
+    </message>
+    <message>
+      <source>File path</source>
+      <translation>Percorso del file</translation>
+    </message>
+    <message>
+      <source>Un-hide</source>
+      <translation>Mostra</translation>
+    </message>
+    <message>
+      <source>Open downloads folder</source>
+      <translation>Apri cartella download</translation>
+    </message>
+    <message>
+      <source>Hide downloads</source>
+      <translation>Nascondi download</translation>
+    </message>
+    <message>
+      <source>Installed...</source>
+      <translation>Installati...</translation>
+    </message>
+    <message>
+      <source>Uninstalled...</source>
+      <translation>Non installati...</translation>
+    </message>
+    <message>
+      <source>All...</source>
+      <translation>Tutti...</translation>
+    </message>
+    <message>
+      <source>Un-hide all...</source>
+      <translation>Mostra tutti...</translation>
+    </message>
+    <message>
+      <source>Delete downloads</source>
+      <translation>Elimina download</translation>
+    </message>
   </context>
   <context>
     <name>DownloadManager</name>
@@ -4842,6 +4898,42 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <source>Manage instances…</source>
       <translation>Gestisci istanze…</translation>
     </message>
+    <message>
+      <source>M&amp;ain toolbar</source>
+      <translation>&amp;Barra principale</translation>
+    </message>
+    <message>
+      <source>&amp;Small icons</source>
+      <translation>Icone &amp;piccole</translation>
+    </message>
+    <message>
+      <source>Lar&amp;ge icons</source>
+      <translation>Icone &amp;grandi</translation>
+    </message>
+    <message>
+      <source>&amp;Icons only</source>
+      <translation>&amp;Solo icone</translation>
+    </message>
+    <message>
+      <source>&amp;Text only</source>
+      <translation>Solo &amp;testo</translation>
+    </message>
+    <message>
+      <source>I&amp;cons and text</source>
+      <translation>Icone &amp;e testo</translation>
+    </message>
+    <message>
+      <source>M&amp;edium icons</source>
+      <translation>Icone &amp;medie</translation>
+    </message>
+    <message>
+      <source>Icon size</source>
+      <translation>Dimensione icone</translation>
+    </message>
+    <message>
+      <source>Labels</source>
+      <translation>Etichette</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -5324,6 +5416,126 @@ p, li { white-space: pre-wrap; }
       <source>Remap Category (From Nexus)</source>
       <translation>Riassegna categoria (da Nexus)</translation>
     </message>
+    <message>
+      <source>Send to</source>
+      <translation>Invia a</translation>
+    </message>
+    <message>
+      <source>Categories</source>
+      <translation>Categorie</translation>
+    </message>
+    <message>
+      <source>Primary category</source>
+      <translation>Categoria principale</translation>
+    </message>
+    <message>
+      <source>Enable</source>
+      <translation>Attiva</translation>
+    </message>
+    <message>
+      <source>Disable</source>
+      <translation>Disattiva</translation>
+    </message>
+    <message>
+      <source>Select color...</source>
+      <translation>Scegli colore...</translation>
+    </message>
+    <message>
+      <source>Reset color</source>
+      <translation>Ripristina colore</translation>
+    </message>
+    <message>
+      <source>Mod folder</source>
+      <translation>Cartella della mod</translation>
+    </message>
+    <message>
+      <source>Downloaded archive</source>
+      <translation>Archivio scaricato</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Folder path</source>
+      <translation>Percorso della cartella</translation>
+    </message>
+    <message>
+      <source>Nexus link</source>
+      <translation>Link Nexus</translation>
+    </message>
+    <message>
+      <source>Archive name</source>
+      <translation>Nome dell’archivio</translation>
+    </message>
+    <message>
+      <source>Sync to mods...</source>
+      <translation>Sincronizza con le mod...</translation>
+    </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Apri cartella</translation>
+    </message>
+    <message>
+      <source>Copy folder path</source>
+      <translation>Copia percorso della cartella</translation>
+    </message>
+    <message>
+      <source>Rename</source>
+      <translation>Rinomina</translation>
+    </message>
+    <message>
+      <source>Copy name</source>
+      <translation>Copia nome</translation>
+    </message>
+    <message>
+      <source>Remove separators...</source>
+      <translation>Rimuovi separatori...</translation>
+    </message>
+    <message>
+      <source>Remove separator...</source>
+      <translation>Rimuovi separatore...</translation>
+    </message>
+    <message>
+      <source>Restore backup</source>
+      <translation>Ripristina backup</translation>
+    </message>
+    <message>
+      <source>Remove backup...</source>
+      <translation>Rimuovi backup...</translation>
+    </message>
+    <message>
+      <source>Reinstall</source>
+      <translation>Reinstalla</translation>
+    </message>
+    <message>
+      <source>Create backup</source>
+      <translation>Crea backup</translation>
+    </message>
+    <message>
+      <source>Check for updates</source>
+      <translation>Controlla aggiornamenti</translation>
+    </message>
+    <message>
+      <source>Remove mods...</source>
+      <translation>Rimuovi mod...</translation>
+    </message>
+    <message>
+      <source>Remove...</source>
+      <translation>Rimuovi...</translation>
+    </message>
+    <message>
+      <source>Nexus</source>
+      <translation>Nexus</translation>
+    </message>
+    <message>
+      <source>Un-endorse</source>
+      <translation>Ritira approvazione</translation>
+    </message>
+    <message>
+      <source>Use the Nexus category</source>
+      <translation>Usa la categoria Nexus</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -5402,6 +5614,22 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Choose and permanently delete a saved plugin load order.</source>
       <translation>Scegli ed elimina definitivamente un ordine di caricamento dei plugin salvato.</translation>
+    </message>
+    <message>
+      <source>Install mod above...</source>
+      <translation>Installa mod sopra...</translation>
+    </message>
+    <message>
+      <source>Install mod inside...</source>
+      <translation>Installa mod dentro...</translation>
+    </message>
+    <message>
+      <source>Install mod below...</source>
+      <translation>Installa mod sotto...</translation>
+    </message>
+    <message>
+      <source>Export to CSV...</source>
+      <translation>Esporta in CSV...</translation>
     </message>
   </context>
   <context>
@@ -5672,6 +5900,22 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
     <message>
       <source>Permanently remove the selected file or folder from Overwrite.</source>
       <translation>Rimuove definitivamente da Overwrite il file o la cartella selezionati.</translation>
+    </message>
+    <message>
+      <source>&amp;New folder</source>
+      <translation>&amp;Nuova cartella</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Mostra nella cartella</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Full path</source>
+      <translation>Percorso completo</translation>
     </message>
   </context>
   <context>
@@ -6622,6 +6866,30 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Modified</source>
       <translation>Modificato</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Mostra nella cartella</translation>
+    </message>
+    <message>
+      <source>File name</source>
+      <translation>Nome del file</translation>
+    </message>
+    <message>
+      <source>File path</source>
+      <translation>Percorso del file</translation>
+    </message>
+    <message>
+      <source>Folder path</source>
+      <translation>Percorso della cartella</translation>
+    </message>
+    <message>
+      <source>Delete...</source>
+      <translation>Elimina...</translation>
+    </message>
+    <message>
+      <source>Delete %1 saves...</source>
+      <translation>Elimina %1 salvataggi...</translation>
     </message>
   </context>
   <context>
@@ -7736,6 +8004,160 @@ Rimanenti in quest'ora: %3</translation>
     <message>
       <source>Click to quit</source>
       <translation>Fai clic per uscire</translation>
+    </message>
+  </context>
+  <context>
+    <name>ConflictsTab</name>
+    <message>
+      <source>&amp;Go to</source>
+      <translation>&amp;Vai a</translation>
+    </message>
+    <message>
+      <source>Show in &amp;folder</source>
+      <translation>Mostra nella &amp;cartella</translation>
+    </message>
+    <message>
+      <source>&amp;Un-hide</source>
+      <translation>&amp;Mostra</translation>
+    </message>
+  </context>
+  <context>
+    <name>FileTree</name>
+    <message>
+      <source>&amp;Save tree as text...</source>
+      <translation>&amp;Salva albero come testo...</translation>
+    </message>
+    <message>
+      <source>Expand all below</source>
+      <translation>Espandi tutto sotto</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Path in the game's data</source>
+      <translation>Percorso nei dati del gioco</translation>
+    </message>
+    <message>
+      <source>Full path</source>
+      <translation>Percorso completo</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Mostra nella cartella</translation>
+    </message>
+    <message>
+      <source>Opens the folder that holds the file, with the file selected</source>
+      <translation>Apre la cartella che contiene il file, con il file selezionato</translation>
+    </message>
+    <message>
+      <source>Mod information...</source>
+      <translation>Informazioni sulla mod...</translation>
+    </message>
+    <message>
+      <source>Real path</source>
+      <translation>Percorso reale</translation>
+    </message>
+    <message>
+      <source>&amp;Add as executable</source>
+      <translation>&amp;Aggiungi come eseguibile</translation>
+    </message>
+    <message>
+      <source>&amp;Un-hide</source>
+      <translation>&amp;Mostra</translation>
+    </message>
+    <message>
+      <source>Ex&amp;pand all</source>
+      <translation>Es&amp;pandi tutto</translation>
+    </message>
+    <message>
+      <source>&amp;Collapse all</source>
+      <translation>&amp;Comprimi tutto</translation>
+    </message>
+  </context>
+  <context>
+    <name>FileTreeTab</name>
+    <message>
+      <source>&amp;New folder</source>
+      <translation>&amp;Nuova cartella</translation>
+    </message>
+    <message>
+      <source>Show in &amp;folder</source>
+      <translation>Mostra nella &amp;cartella</translation>
+    </message>
+    <message>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Elimina...</translation>
+    </message>
+    <message>
+      <source>&amp;Un-hide</source>
+      <translation>&amp;Mostra</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Path in the mod</source>
+      <translation>Percorso nella mod</translation>
+    </message>
+    <message>
+      <source>Full path</source>
+      <translation>Percorso completo</translation>
+    </message>
+  </context>
+  <context>
+    <name>LogList</name>
+    <message>
+      <source>&amp;Copy</source>
+      <translation>&amp;Copia</translation>
+    </message>
+    <message>
+      <source>Copy &amp;all</source>
+      <translation>Copia &amp;tutto</translation>
+    </message>
+  </context>
+  <context>
+    <name>MenuUtils</name>
+    <message>
+      <source>Open folder</source>
+      <translation>Apri cartella</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <translation>Copia</translation>
+    </message>
+  </context>
+  <context>
+    <name>PluginListContextMenu</name>
+    <message>
+      <source>Open origin folder</source>
+      <translation>Apri cartella di origine</translation>
+    </message>
+    <message>
+      <source>Plugin name</source>
+      <translation>Nome del plugin</translation>
+    </message>
+    <message>
+      <source>Origin name</source>
+      <translation>Nome dell’origine</translation>
+    </message>
+    <message>
+      <source>Plugin path</source>
+      <translation>Percorso del plugin</translation>
+    </message>
+    <message>
+      <source>Copy plugin name</source>
+      <translation>Copia nome del plugin</translation>
+    </message>
+    <message>
+      <source>Send to</source>
+      <translation>Invia a</translation>
+    </message>
+    <message>
+      <source>Origin information...</source>
+      <translation>Informazioni sull’origine...</translation>
     </message>
   </context>
 </TS>
