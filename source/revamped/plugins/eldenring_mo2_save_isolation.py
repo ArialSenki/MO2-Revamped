@@ -1076,19 +1076,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             raise
         return replaced if moved else None
 
-    @staticmethod
-    def _prune_replaced(replaced_root: Path, keep: int = 10) -> None:
-        # the saves a restore set aside: the newest ones are kept
-        try:
-            folders = sorted(
-                (entry for entry in replaced_root.iterdir() if entry.is_dir()),
-                key=lambda entry: entry.name,
-            )
-        except OSError:
-            return
-        for old in folders[:-keep]:
-            shutil.rmtree(old, ignore_errors=True)
-
     def _display_restore_dialog(self, profile_directory: Path, parent=None) -> None:
         base = self._instance_base()
         if base is None:
@@ -1197,7 +1184,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return
             try:
                 replaced = self._restore_backup(backup, route_root, root.parent / "replaced")
-                self._prune_replaced(root.parent / "replaced")
                 self._refresh_save_checks()
             except OSError as error:
                 self._show_notice(
@@ -1536,12 +1522,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             temporary_path = None
             backup_path = None
+            # replaced saves of the Steam route are kept inside the instance,
+            # never beside the Steam folder
+            instance_base = self._instance_base()
+            if instance_base is not None and self._normalized_path(
+                destination_root_resolved
+            ) == self._normalized_path(self._global_save_directory()):
+                transfer_backup_root = instance_base / "Elden Ring Global Save Backups"
+            else:
+                transfer_backup_root = destination_root_resolved.parent / (
+                    destination_root_resolved.name + " Backups"
+                )
             try:
                 destination_path.parent.mkdir(parents=True, exist_ok=True)
                 if destination_path.exists():
-                    backup_root = destination_root_resolved.parent / (
-                        destination_root_resolved.name + " Backups"
-                    )
+                    backup_root = transfer_backup_root
                     backup_path = backup_root / destination_relative_path
                     backup_path.parent.mkdir(parents=True, exist_ok=True)
                     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
@@ -1611,8 +1606,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     bak_backup = (
                         backup_path.with_name(backup_path.name + ".bak")
                         if backup_path is not None
-                        else destination_root_resolved.parent
-                        / (destination_root_resolved.name + " Backups")
+                        else transfer_backup_root
                         / destination_relative_path.parent
                         / f"ER0000.{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}{destination_path.suffix}.bak"
                     )

@@ -1242,7 +1242,27 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 
     @classmethod
     def mode_for_profile(cls, profile) -> str:
-        return cls.mode_for_profile_directory(Path(profile.absolutePath()))
+        directory = Path(profile.absolutePath())
+        mode = cls.mode_for_profile_directory(directory)
+        if mode == cls.ProfileIsolated and not cls._mode_is_stored(directory):
+            # no valid mode in the ini: MO2 then follows the profile's own
+            # LocalSaves setting, so this does too (Global when it is off)
+            try:
+                if not profile.localSavesEnabled():
+                    return cls.GlobalShared
+            except (AttributeError, RuntimeError):
+                pass
+        return mode
+
+    @classmethod
+    def _mode_is_stored(cls, profile_directory: Path) -> bool:
+        config = configparser.ConfigParser(interpolation=None)
+        try:
+            config.read(profile_directory / cls.ConfigFilename, encoding="utf-8-sig")
+            mode = config.get("Saves", "mode", fallback="").strip().lower()
+        except (OSError, UnicodeError, configparser.Error, ValueError):
+            return False
+        return mode in cls.Modes
 
     @classmethod
     def save_profile_for_profile_directory(
@@ -1448,6 +1468,20 @@ class EldenRingMo2Game(BasicGame):
             "me3-launcher.exe",
         }
     )
+    # other launchers are recognised by name: Mod Engine 2's
+    # launchmod_eldenring.bat, older Seamless Co-op launchers, a Convergence
+    # launcher, or a script host running one of them
+    LauncherNameHints = (
+        "launch",
+        "modengine",
+        "seamless",
+        "ersc",
+        "convergence",
+        "eldenring",
+        "elden ring",
+        "elden_ring",
+    )
+    ScriptHosts = frozenset({"cmd.exe", "powershell.exe", "pwsh.exe"})
     LauncherStartGrace = 90  # seconds a launcher may take to start the game
     GameWatchInterval = 5000  # milliseconds between checks for the game process
 
@@ -1519,6 +1553,26 @@ class EldenRingMo2Game(BasicGame):
             / instance_token
         )
 
+    def _foreign_pending_sessions(self) -> list[Path]:
+        """Sessions of other MO2 Revamped installs that still hide Steam
+        account folders. Only that install restores them; a launch from here
+        would play against a Steam folder that is not complete."""
+        own = self._save_quarantine_root()
+        sessions: list[Path] = []
+        try:
+            for install in own.parent.iterdir():
+                if not install.is_dir() or os.path.normcase(str(install)) == os.path.normcase(str(own)):
+                    continue
+                for session in install.iterdir():
+                    if session.is_dir() and any(
+                        child.is_dir() and child.name != "unrouted-global"
+                        for child in session.iterdir()
+                    ):
+                        sessions.append(session)
+        except OSError:
+            pass
+        return sessions
+
     @staticmethod
     def _write_save_quarantine_manifest(session_directory: Path, manifest: dict) -> None:
         manifest_path = session_directory / EldenRingMo2Game.SaveRecoveryManifestName
@@ -1550,8 +1604,17 @@ class EldenRingMo2Game(BasicGame):
         return False
 
     @classmethod
-    def _is_game_launch(cls, app_path: str) -> bool:
-        return Path(app_path).name.casefold() in cls.GameLaunchers
+    def _is_game_launch(cls, app_path: str, args: str = "") -> bool:
+        name = Path(app_path).name.casefold()
+        if name in cls.GameLaunchers:
+            return True
+        if Path(name).suffix in {".bat", ".cmd"}:
+            return True
+        if name in cls.ScriptHosts:
+            text = args.casefold()
+            return any(hint in text for hint in cls.LauncherNameHints)
+        stem = Path(name).stem
+        return any(hint in stem for hint in cls.LauncherNameHints)
 
     def _restore_global_save_quarantine(
         self, session_directory: Path, global_save_root: Path
@@ -1659,10 +1722,13 @@ class EldenRingMo2Game(BasicGame):
         if not recovery_root.is_dir():
             return True
 
-        if self._elden_ring_process_state() is not False:
+        # a launcher still open (from an instance MO2 just switched away
+        # from) may be about to start the game against the hidden saves
+        if self._elden_ring_process_state() is not False or self._launcher_running():
             qCritical(
                 "Elden Ring MO2: prior global saves need recovery, but Elden Ring "
-                "is running or its process state cannot be confirmed."
+                "or one of its launchers is running, or its process state cannot "
+                "be confirmed."
             )
             return False
 
@@ -1686,6 +1752,21 @@ class EldenRingMo2Game(BasicGame):
                 )
                 return False
         return True
+
+    @classmethod
+    def _launcher_running(cls) -> bool:
+        # a launcher still open may yet start the game (an update prompt, a
+        # Steam sign-in, a slow first start)
+        names = _running_process_names()
+        if names is None:
+            return False
+        return any(
+            name != "eldenring.exe"
+            and name.endswith(".exe")
+            and name not in cls.ScriptHosts
+            and cls._is_game_launch(name)
+            for name in names
+        )
 
     @staticmethod
     def _elden_ring_process_state() -> bool | None:
@@ -1807,7 +1888,10 @@ class EldenRingMo2Game(BasicGame):
             self._game_seen_run = self._game_run
             self._launch_pending_until = 0.0
             return
-        if state is False and remaining > 0:
+        if state is False and (remaining > 0 or self._launcher_running()):
+            if remaining <= 0:
+                # keep new launches waiting while the launcher is still open
+                self._launch_pending_until = time.monotonic() + self.GameWatchInterval / 1000 + 1
             QTimer.singleShot(
                 self.GameWatchInterval,
                 lambda session=session_directory, save_root=global_save_root, left=remaining - self.GameWatchInterval / 1000: self._watch_launch_start(
@@ -2168,10 +2252,12 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: about-to-run save guard received "
             f"'{Path(app_path).name}'."
         )
-        if not self._is_game_launch(app_path):
+        if not self._is_game_launch(app_path, _args or ""):
             # tools (save editors and the like) run without touching the
             # hidden Steam saves of a game that may still be running
             return True
+        # the finished-run hook only gets the path: it recognises this run
+        self._guarded_launch = os.path.normcase(str(app_path))
         if self._active_save_quarantine is not None:
             starting = time.monotonic() < self._launch_pending_until
             if starting or self._elden_ring_process_state() is not False:
@@ -2204,7 +2290,25 @@ class EldenRingMo2Game(BasicGame):
                 "MO2 Revamped recovery folder before continuing."),
             )
             return False
+        foreign_sessions = self._foreign_pending_sessions()
+        if foreign_sessions:
+            QMessageBox.critical(
+                None,
+                _tr("Elden Ring save recovery needed"),
+                _tr("Another MO2 Revamped installation still holds Steam saves it "
+                "hid for its own launch. Start that installation once with Elden "
+                "Ring closed so it puts them back. The game was not started.\n\n{0}").format(
+                    foreign_sessions[0]
+                ),
+            )
+            qCritical(
+                "Elden Ring MO2: blocked launch; another install still holds "
+                f"hidden Steam saves in '{foreign_sessions[0]}'."
+            )
+            return False
         direct_game = Path(app_path).name.casefold() == "eldenring.exe"
+        # read by the save hiding below (how long a launcher may take)
+        self._launch_via_launcher = not direct_game
 
         # the native profile's checks run when MO2 starts eldenring.exe
         # itself; for a launcher MO2 still injects the forced DLLs into the
@@ -2441,7 +2545,6 @@ class EldenRingMo2Game(BasicGame):
         self._activate_profile_config_environment(profile_config, initializer_entries)
         # a new run only once nothing above blocked the launch: a blocked
         # attempt must not disown the watch of a game that is still running
-        self._launch_via_launcher = not direct_game
         self._game_run += 1
         if clear_overwrite_logs_before_game and not clear_overwrite_after_game:
             self._clear_overwrite_logs_before_game()
@@ -2506,7 +2609,10 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: finished-run save cleanup received "
             f"'{Path(app_path).name}'."
         )
-        if not self._is_game_launch(app_path):
+        guarded = self._is_game_launch(app_path) or os.path.normcase(
+            str(app_path)
+        ) == getattr(self, "_guarded_launch", None)
+        if not guarded:
             self._overwrite_cleanup_armed = False
             self._overwrite_cleanup_path = None
             return
@@ -2515,6 +2621,7 @@ class EldenRingMo2Game(BasicGame):
         # a launcher finishes while the game it started keeps running; the
         # Steam saves come back and Overwrite is cleared only once the game is
         # closed
+        self._guarded_launch = None
         self._finish_when_game_closes(
             Path(app_path).name.casefold() != "eldenring.exe",
             self._active_save_quarantine,
@@ -2540,7 +2647,9 @@ class EldenRingMo2Game(BasicGame):
         state = self._elden_ring_process_state()
         seen = seen or state is True
         game_closed = state is False and (
-            seen or not via_launcher or waited >= self.LauncherStartGrace
+            seen
+            or not via_launcher
+            or (waited >= self.LauncherStartGrace and not self._launcher_running())
         )
         if not game_closed:
             if waited == 0:
