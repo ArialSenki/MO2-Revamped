@@ -209,7 +209,7 @@ function Test-ExcludedRuntimeFile {
     $parts = $normalized -split '\\'
     $excludedDirectories = @(
         'profiles', 'mods', 'downloads', 'overwrite', 'logs', 'crashdumps',
-        'webcache', 'portableinstances', 'globalinstances', '_revampedupdatebackups', 'crashes',
+        'webcache', 'portableinstances', 'globalinstances', 'isolatedinstances', '_revampedupdatebackups', 'crashes',
         'diagnostics', '__pycache__', 'work', 'build'
     )
     foreach ($part in $parts[0..([Math]::Max(0, $parts.Length - 2))]) {
