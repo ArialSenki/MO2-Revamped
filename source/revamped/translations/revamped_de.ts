@@ -1252,6 +1252,14 @@ Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste ne
       <source>This archive contains game files ({0}). Installed through MO2 they replace the game's own copies; most mods do not need that.</source>
       <translation>Dieses Archiv enthält Spieldateien ({0}). Über MO2 installiert ersetzen sie die eigenen Kopien des Spiels; die meisten Mods brauchen das nicht.</translation>
     </message>
+    <message>
+      <source>Several folders contain {0}. Only one copy of a DLL can load; if they are alternatives, choose Manual... and keep the one you want.</source>
+      <translation>Mehrere Ordner enthalten {0}. Nur eine Kopie einer DLL kann geladen werden; wenn es Alternativen sind, wähle Manuell... und behalte die gewünschte.</translation>
+    </message>
+    <message>
+      <source>This archive looks like it offers options ({0}). Both layouts install all of them; choose Manual... to keep only the one you want.</source>
+      <translation>Dieses Archiv scheint Optionen anzubieten ({0}). Beide Layouts installieren alle; wähle Manuell..., um nur die gewünschte zu behalten.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
