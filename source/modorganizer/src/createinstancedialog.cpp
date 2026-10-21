@@ -530,6 +530,57 @@ void CreateInstanceDialog::finish()
       s.setEldenRingDefaultSaveMode(ci.profileSettings.eldenRingSaveMode);
     }
 
+    // launchers found in the game folder; the game plugin's own executables
+    // are written first so they keep the top of the list, with their paths
+    // moved to the folder chosen here
+    if (!ui->detectedPrograms->isHidden() && ci.type != Isolated) {
+      std::vector<std::map<QString, QVariant>> executables;
+      for (auto* box : ui->detectedPrograms->findChildren<QCheckBox*>()) {
+        if (!box->isChecked()) {
+          continue;
+        }
+        const QString binary = box->property("toolBinary").toString();
+        executables.push_back({{"title", box->property("toolTitle")},
+                               {"binary", QDir::fromNativeSeparators(binary)},
+                               {"arguments", QString()},
+                               {"workingDirectory",
+                                QDir::fromNativeSeparators(QFileInfo(binary).absolutePath())},
+                               {"steamAppID", QString()},
+                               {"ownicon", true},
+                               {"toolbar", false},
+                               {"hide", false}});
+      }
+      if (!executables.empty()) {
+        const QDir pluginRoot = ci.game->gameDirectory();
+        const QDir chosenRoot(ci.gameLocation);
+        auto moved = [&](const QString& path) {
+          const QString relative = pluginRoot.relativeFilePath(path);
+          return relative.startsWith(QStringLiteral("..")) || QDir::isAbsolutePath(relative)
+                     ? path
+                     : QDir::cleanPath(chosenRoot.filePath(relative));
+        };
+        std::vector<std::map<QString, QVariant>> plugin;
+        for (const auto& info : ci.game->executables()) {
+          if (!info.isValid()) {
+            continue;
+          }
+          plugin.push_back(
+              {{"title", info.title()},
+               {"binary", moved(info.binary().absoluteFilePath())},
+               {"arguments", info.arguments().join(" ")},
+               {"workingDirectory", info.workingDirectory().path().isEmpty()
+                                        ? QString()
+                                        : moved(info.workingDirectory().absolutePath())},
+               {"steamAppID", info.steamAppID()},
+               {"ownicon", true},
+               {"toolbar", false},
+               {"hide", false}});
+        }
+        executables.insert(executables.begin(), plugin.begin(), plugin.end());
+        s.setExecutables(executables);
+      }
+    }
+
     logCreation(tr("Writing %1...").arg(ci.iniPath));
 
     // writing ini

@@ -642,6 +642,14 @@
       <source>Next</source>
       <translation>Weiter</translation>
     </message>
+    <message>
+      <source>%1 is in Program Files. Windows protects that folder, and some mods and tools fail when they write to it. Moving the game to another library avoids it (in Steam: Properties, Installed Files, Move install folder).</source>
+      <translation>%1 liegt in Program Files. Windows schützt diesen Ordner, und manche Mods und Werkzeuge scheitern, wenn sie dort schreiben. Verschiebe das Spiel in eine andere Bibliothek, um das zu vermeiden (in Steam: Eigenschaften, Installierte Dateien, Installationsordner verschieben).</translation>
+    </message>
+    <message>
+      <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href="both"&gt;Turn both on&lt;/a&gt;</source>
+      <translation>OneDrive synchronisiert diese Ordner. Es kann die INI-Dateien und Spielstände sperren oder ältere Kopien zurückholen, während das Spiel läuft. Mit profilspezifischen INI-Dateien und Spielständen bleiben sie in der Instanz, abseits von OneDrive. &lt;a href="both"&gt;Beide einschalten&lt;/a&gt;</translation>
+    </message>
   </context>
   <context>
     <name>DisableProxyPluginDialog</name>
@@ -6205,6 +6213,30 @@ Fortfahren?</translation>
     <message>
       <source>Automatic Archive Invalidation: %1</source>
       <translation>Automatische Archivinvalidierung: %1</translation>
+    </message>
+    <message>
+      <source>In Program Files</source>
+      <translation>In Program Files</translation>
+    </message>
+    <message>
+      <source>Programs found</source>
+      <translation>Gefundene Programme</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables.</source>
+      <translation>Die eingeschalteten werden zu den Programmen hinzugefügt.</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables, after %1.</source>
+      <translation>Die eingeschalteten werden zu den Programmen hinzugefügt, nach %1.</translation>
+    </message>
+    <message>
+      <source>Add %1</source>
+      <translation>%1 hinzufügen</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programme</translation>
     </message>
   </context>
   <context>

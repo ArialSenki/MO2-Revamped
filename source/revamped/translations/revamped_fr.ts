@@ -646,6 +646,14 @@
       <source>Next</source>
       <translation>Suivant</translation>
     </message>
+    <message>
+      <source>%1 is in Program Files. Windows protects that folder, and some mods and tools fail when they write to it. Moving the game to another library avoids it (in Steam: Properties, Installed Files, Move install folder).</source>
+      <translation>%1 se trouve dans Program Files. Windows protège ce dossier, et certains mods et outils échouent quand ils y écrivent. Déplacer le jeu vers une autre bibliothèque l'évite (dans Steam : Propriétés, Fichiers installés, Déplacer le dossier d'installation).</translation>
+    </message>
+    <message>
+      <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href="both"&gt;Turn both on&lt;/a&gt;</source>
+      <translation>OneDrive synchronise ces dossiers. Il peut verrouiller les fichiers INI et les sauvegardes, ou remettre d'anciennes copies, pendant que le jeu tourne. Avec des fichiers INI et des sauvegardes propres à chaque profil, ils restent dans l'instance, hors de OneDrive. &lt;a href="both"&gt;Activer les deux&lt;/a&gt;</translation>
+    </message>
   </context>
   <context>
     <name>DisableProxyPluginDialog</name>
@@ -6413,6 +6421,30 @@ Exemple :
     <message>
       <source>Automatic Archive Invalidation: %1</source>
       <translation>Invalidation automatique des archives : %1</translation>
+    </message>
+    <message>
+      <source>In Program Files</source>
+      <translation>Dans Program Files</translation>
+    </message>
+    <message>
+      <source>Programs found</source>
+      <translation>Programmes trouvés</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables.</source>
+      <translation>Ceux qui sont activés sont ajoutés aux Exécutables.</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables, after %1.</source>
+      <translation>Ceux qui sont activés sont ajoutés aux Exécutables, après %1.</translation>
+    </message>
+    <message>
+      <source>Add %1</source>
+      <translation>Ajouter %1</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programmes</translation>
     </message>
   </context>
   <context>

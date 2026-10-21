@@ -9,6 +9,7 @@
 #include "shared/appconfig.h"
 #include "createinstancedialogui.h"
 #include "fluenticons.h"
+#include "fluentswitch.h"
 #include <iplugingame.h>
 #include <report.h>
 #include <utility.h>
@@ -82,6 +83,49 @@ QString normalizedInstallPath(const QString& path)
              QDir::fromNativeSeparators(QFileInfo(path).absoluteFilePath()))
       .toCaseFolded();
 }
+
+// whether a path is under one of the given environment variables' folders
+bool underAnyOf(const QString& path, std::initializer_list<const char*> variables)
+{
+  const QString target = QDir::cleanPath(QDir::fromNativeSeparators(path)) + '/';
+  for (const char* variable : variables) {
+    const QString root = qEnvironmentVariable(variable);
+    if (!root.isEmpty() &&
+        target.startsWith(QDir::cleanPath(QDir::fromNativeSeparators(root)) + '/',
+                          Qt::CaseInsensitive)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Program Files: Windows blocks writes there for programs that aren't
+// elevated, which breaks mods and tools that write next to the game
+bool inProtectedFolder(const QString& path)
+{
+  return underAnyOf(path, {"ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"});
+}
+
+// a folder OneDrive syncs, which can lock or revert files while a game runs
+bool inOneDrive(const QString& path)
+{
+  return underAnyOf(path, {"OneDrive", "OneDriveConsumer", "OneDriveCommercial"});
+}
+
+// launchers that live in a game's folder and that game plugins don't add to
+// the executables themselves; the first path found is used
+struct KnownTool
+{
+  const char* title;
+  const char* paths[4];
+};
+
+const KnownTool KnownTools[] = {
+    {"Seamless Co-op", {"Game/ersc_launcher.exe", "ersc_launcher.exe"}},
+    {"ModEngine 2",
+     {"modengine2_launcher.exe", "Game/modengine2_launcher.exe",
+      "ModEngine2/modengine2_launcher.exe", "Game/ModEngine2/modengine2_launcher.exe"}},
+};
 
 // an instance that exists already, as the wizard shows it
 struct ExistingInstance
@@ -1054,6 +1098,9 @@ void GamePage::updateButton(Game* g)
       }
     }
     description << QDir::toNativeSeparators(g->dir);
+    if (inProtectedFolder(g->dir)) {
+      description << QObject::tr("In Program Files");
+    }
   } else {
     description << QObject::tr("Not installed");
   }
@@ -1175,6 +1222,29 @@ void GamePage::fillList()
     createGameButton(g.get());
     addButton(g->button);
   }
+
+  updateProtectedWarning();
+}
+
+void GamePage::updateProtectedWarning()
+{
+  const bool show = m_selection != nullptr && m_selection->installed &&
+                    inProtectedFolder(m_selection->dir);
+  if (show) {
+    QString name = m_selection->game->displayGameName().trimmed();
+    if (name.isEmpty()) {
+      name = m_selection->game->gameName();
+    }
+    ui->gameProtectedWarning->setText(
+        QCoreApplication::translate(
+            "CreateInstanceDialog",
+            "%1 is in Program Files. Windows protects that folder, and some mods and "
+            "tools fail when they write to it. Moving the game to another library avoids "
+            "it (in Steam: Properties, Installed Files, Move install folder).")
+            .arg(name));
+  }
+  ui->gameProtectedWarning->setVisible(show);
+  ui->gameProtectedWarning->parentWidget()->setVisible(show);
 }
 
 GamePage::Game* GamePage::checkInstallation(const QString& path, Game* g)
@@ -1554,6 +1624,93 @@ void NamePage::doActivated(bool)
 
   updatePathHint();
   verify();
+  fillPrograms();
+}
+
+void NamePage::fillPrograms()
+{
+  const auto ci = m_dlg.rawCreationInfo();
+  auto* layout  = ui->detectedPrograms->layout();
+
+  // the switches keep their state while the same launcher is offered again
+  QSet<QString> off;
+  for (auto* box : ui->detectedPrograms->findChildren<QCheckBox*>()) {
+    if (!box->isChecked()) {
+      off.insert(box->property("toolBinary").toString());
+    }
+  }
+  while (auto* item = layout->takeAt(0)) {
+    delete item->widget();
+    delete item;
+  }
+
+  auto addRow = [&](const QString& title, const QString& description) {
+    auto* row = new QFrame(ui->detectedPrograms);
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(20, 10, 16, 10);
+    rowLayout->setSpacing(16);
+    auto* text = new QVBoxLayout;
+    text->setSpacing(2);
+    auto* titleLabel = new QLabel(title, row);
+    titleLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
+    auto* descriptionLabel = new QLabel(description, row);
+    descriptionLabel->setObjectName(QStringLiteral("fluentSettingDescription"));
+    descriptionLabel->setWordWrap(true);
+    text->addWidget(titleLabel);
+    text->addWidget(descriptionLabel);
+    rowLayout->addLayout(text, 1);
+    layout->addWidget(row);
+    return rowLayout;
+  };
+
+  bool found = false;
+  if (ci.type != CreateInstanceDialog::Isolated && !ci.gameLocation.isEmpty()) {
+    const QDir dir(ci.gameLocation);
+    for (const auto& tool : KnownTools) {
+      for (const char* path : tool.paths) {
+        if (path == nullptr) {
+          break;
+        }
+        const QString binary = dir.filePath(QString::fromLatin1(path));
+        if (!QFileInfo(binary).isFile()) {
+          continue;
+        }
+        if (!found) {
+          // the section's title and what the switches do
+          QStringList always;
+          if (ci.game != nullptr) {
+            for (const auto& info : ci.game->executables()) {
+              if (info.isValid()) {
+                always.push_back(info.title());
+              }
+            }
+          }
+          addRow(QObject::tr("Programs found"),
+                 always.isEmpty()
+                     ? QObject::tr("The ones turned on are added to Executables.")
+                     : QObject::tr("The ones turned on are added to Executables, after %1.")
+                           .arg(always.join(QStringLiteral(", "))));
+          found = true;
+        }
+        auto* rowLayout = addRow(QString::fromLatin1(tool.title),
+                                 QDir::toNativeSeparators(QString::fromLatin1(path)));
+        auto* box = new QCheckBox(rowLayout->parentWidget());
+        box->setProperty("fluentSwitch", true);
+        box->setProperty("toolBinary", QDir::toNativeSeparators(binary));
+        box->setProperty("toolTitle", QString::fromLatin1(tool.title));
+        box->setAccessibleName(QObject::tr("Add %1").arg(QString::fromLatin1(tool.title)));
+        box->setCursor(Qt::PointingHandCursor);
+        box->setChecked(!off.contains(QDir::toNativeSeparators(binary)));
+        if (FluentIcons::active()) {
+          FluentSwitch::animate(box);
+        }
+        rowLayout->addWidget(box, 0, Qt::AlignVCenter);
+        break;
+      }
+    }
+  }
+  ui->detectedPrograms->setVisible(found);
 }
 
 QString NamePage::selectedInstanceName() const
@@ -1697,6 +1854,12 @@ ProfilePage::ProfilePage(CreateInstanceDialog& dlg)
   m_eldenRingSaveDescription->setText(EldenRingSaveSettings::modeDescription(
       m_eldenRingSaveMode->currentData().toString()));
 
+  // the warning's link turns on both switches that keep the files away
+  QObject::connect(ui->oneDriveWarning, &QLabel::linkActivated, &m_dlg, [this] {
+    ui->profileInisCheckbox->setChecked(true);
+    ui->profileSavesCheckbox->setChecked(true);
+  });
+
   // The plugin replaces this native fallback when it successfully injects
   // its richer save controls. If the plugin is unavailable (including during
   // first-time instance creation), ProfilePage::doActivated shows this group.
@@ -1768,6 +1931,12 @@ void ProfilePage::doActivated(bool firstTime)
     ui->gameSavesPath->setText(
         QDir::toNativeSeparators(game->savesDirectory().absolutePath()));
   }
+  const bool oneDrive =
+      !isEldenRing && gamePage != nullptr && gamePage->selectedGame() != nullptr &&
+      (inOneDrive(gamePage->selectedGame()->documentsDirectory().absolutePath()) ||
+       inOneDrive(gamePage->selectedGame()->savesDirectory().absolutePath()));
+  ui->oneDriveWarning->setVisible(oneDrive);
+  ui->oneDriveWarning->parentWidget()->setVisible(oneDrive);
   ui->profileSettingsLabel->setText(
       isEldenRing
           ? plainHeading(QCoreApplication::translate(
@@ -2240,7 +2409,12 @@ std::vector<ConfirmationPage::ReviewRow> ConfirmationPage::makeReview() const
     name += " (" + ci.gameVariant + ")";
   }
   rows.push_back({QObject::tr("Game"), name, gamePage});
-  rows.push_back({QObject::tr("Game folder"), ci.gameLocation, gamePage});
+  rows.push_back({QObject::tr("Game folder"),
+                  inProtectedFolder(ci.gameLocation)
+                      ? ci.gameLocation + QStringLiteral(" \u00B7 ") +
+                            QObject::tr("In Program Files")
+                      : ci.gameLocation,
+                  gamePage});
 
   rows.push_back({QObject::tr("Storage"), toLocalizedString(ci.type), typePage});
   if (!ci.instanceName.isEmpty()) {
@@ -2279,6 +2453,18 @@ std::vector<ConfirmationPage::ReviewRow> ConfirmationPage::makeReview() const
   }
   if (!ui->diskSpace->text().isEmpty()) {
     rows.push_back({QObject::tr("Disk"), ui->diskSpace->text(), pathsPage});
+  }
+  {
+    QStringList programs;
+    for (auto* box : ui->detectedPrograms->findChildren<QCheckBox*>()) {
+      if (box->isChecked() && !ui->detectedPrograms->isHidden()) {
+        programs.push_back(box->property("toolTitle").toString());
+      }
+    }
+    if (!programs.isEmpty()) {
+      rows.push_back({QObject::tr("Programs"), programs.join(QStringLiteral(", ")),
+                      namePage});
+    }
   }
   if (ci.type != CreateInstanceDialog::Isolated && ui->desktopShortcut->isChecked()) {
     rows.push_back({QObject::tr("Shortcut"), QObject::tr("On the desktop"), namePage});

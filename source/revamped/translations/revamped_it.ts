@@ -677,6 +677,14 @@
       <source>Next</source>
       <translation>Avanti</translation>
     </message>
+    <message>
+      <source>%1 is in Program Files. Windows protects that folder, and some mods and tools fail when they write to it. Moving the game to another library avoids it (in Steam: Properties, Installed Files, Move install folder).</source>
+      <translation>%1 si trova in Program Files. Windows protegge quella cartella e alcune mod e strumenti falliscono quando ci scrivono. Per evitarlo, sposta il gioco in un'altra libreria (in Steam: Proprietà, File installati, Sposta cartella di installazione).</translation>
+    </message>
+    <message>
+      <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href="both"&gt;Turn both on&lt;/a&gt;</source>
+      <translation>OneDrive sincronizza queste cartelle. Può bloccare i file INI e i salvataggi, o ripristinare copie vecchie, mentre il gioco è in esecuzione. Con file INI e salvataggi per profilo restano dentro l'istanza, lontano da OneDrive. &lt;a href="both"&gt;Attiva entrambi&lt;/a&gt;</translation>
+    </message>
   </context>
   <context>
     <name>DisableProxyPluginDialog</name>
@@ -6475,6 +6483,30 @@ Esempio:
     <message>
       <source>Automatic Archive Invalidation: %1</source>
       <translation>Invalidazione automatica degli archivi: %1</translation>
+    </message>
+    <message>
+      <source>In Program Files</source>
+      <translation>In Program Files</translation>
+    </message>
+    <message>
+      <source>Programs found</source>
+      <translation>Programmi trovati</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables.</source>
+      <translation>Quelli attivati vengono aggiunti agli Eseguibili.</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables, after %1.</source>
+      <translation>Quelli attivati vengono aggiunti agli Eseguibili, dopo %1.</translation>
+    </message>
+    <message>
+      <source>Add %1</source>
+      <translation>Aggiungi %1</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programmi</translation>
     </message>
   </context>
   <context>

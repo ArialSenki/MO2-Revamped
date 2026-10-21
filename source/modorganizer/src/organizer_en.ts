@@ -717,48 +717,53 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="533"/>
+        <location filename="createinstancedialog.cpp" line="584"/>
         <source>Writing %1...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="545"/>
+        <location filename="createinstancedialog.cpp" line="596"/>
         <source>Format error.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="549"/>
+        <location filename="createinstancedialog.cpp" line="600"/>
         <source>Error %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="561"/>
+        <location filename="createinstancedialog.cpp" line="612"/>
         <source>Done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="575"/>
+        <location filename="createinstancedialog.cpp" line="626"/>
         <source>The desktop shortcut could not be added.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="591"/>
+        <location filename="createinstancedialog.cpp" line="642"/>
         <source>Close Mod Organizer, then start the isolated copy: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="676"/>
+        <location filename="createinstancedialog.cpp" line="727"/>
         <source>Step %1 of %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="684"/>
+        <location filename="createinstancedialog.cpp" line="735"/>
         <source>Create instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="684"/>
+        <location filename="createinstancedialog.cpp" line="735"/>
         <source>Finish</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="1239"/>
+        <source>%1 is in Program Files. Windows protects that folder, and some mods and tools fail when they write to it. Moving the game to another library avoids it (in Steam: Properties, Installed Files, Move install folder).</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9288,169 +9293,175 @@ Proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="325"/>
+        <location filename="createinstancedialogpages.cpp" line="369"/>
         <source>Global</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="328"/>
+        <location filename="createinstancedialogpages.cpp" line="372"/>
         <location filename="instancemanager.cpp" line="112"/>
         <location filename="moshortcut.cpp" line="39"/>
         <source>Portable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="334"/>
+        <location filename="createinstancedialogpages.cpp" line="378"/>
         <source>Instance type: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="334"/>
+        <location filename="createinstancedialogpages.cpp" line="378"/>
         <source>?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="843"/>
+        <location filename="createinstancedialogpages.cpp" line="887"/>
         <source>Find game installation for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="883"/>
+        <location filename="createinstancedialogpages.cpp" line="927"/>
         <source>Find game installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="932"/>
-        <location filename="createinstancedialogpages.cpp" line="1275"/>
-        <location filename="createinstancedialogpages.cpp" line="1276"/>
+        <location filename="createinstancedialogpages.cpp" line="976"/>
+        <location filename="createinstancedialogpages.cpp" line="1345"/>
+        <location filename="createinstancedialogpages.cpp" line="1346"/>
         <source>Unrecognized game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="934"/>
+        <location filename="createinstancedialogpages.cpp" line="978"/>
         <source>The folder %1 does not seem to contain a game Mod Organizer can manage.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="937"/>
+        <location filename="createinstancedialogpages.cpp" line="981"/>
         <source>See details for the list of supported games.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="217"/>
+        <location filename="createinstancedialogpages.cpp" line="261"/>
         <source>MO2 detected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="259"/>
-        <location filename="createinstancedialogpages.cpp" line="265"/>
+        <location filename="createinstancedialogpages.cpp" line="303"/>
+        <location filename="createinstancedialogpages.cpp" line="309"/>
         <source>Steam library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="286"/>
+        <location filename="createinstancedialogpages.cpp" line="330"/>
         <source>Other installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="331"/>
+        <location filename="createinstancedialogpages.cpp" line="375"/>
         <source>Isolated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="478"/>
+        <location filename="createinstancedialogpages.cpp" line="522"/>
         <source>None yet: this will be the first one.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="491"/>
+        <location filename="createinstancedialogpages.cpp" line="535"/>
         <source>%1 global, %2 portable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="520"/>
+        <location filename="createinstancedialogpages.cpp" line="564"/>
         <source>1 instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="521"/>
+        <location filename="createinstancedialogpages.cpp" line="565"/>
         <source>%1 instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="669"/>
+        <location filename="createinstancedialogpages.cpp" line="713"/>
         <source>Filter supported games by name.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="718"/>
+        <location filename="createinstancedialogpages.cpp" line="762"/>
         <source>Isolated MO2 copies currently support Elden Ring. Choose its installed folder to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="719"/>
+        <location filename="createinstancedialogpages.cpp" line="763"/>
         <source>Choose an installed game, or browse to its folder. The selected game and path are shown on each card.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="816"/>
+        <location filename="createinstancedialogpages.cpp" line="860"/>
         <source>Choose game installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="817"/>
+        <location filename="createinstancedialogpages.cpp" line="861"/>
         <source>Several Elden Ring installations were found. Choose the one this instance should use:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1058"/>
+        <location filename="createinstancedialogpages.cpp" line="1102"/>
+        <location filename="createinstancedialogpages.cpp" line="2415"/>
+        <source>In Program Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="1105"/>
         <source>Not installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1065"/>
+        <location filename="createinstancedialogpages.cpp" line="1112"/>
         <source>1 instance already</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1066"/>
+        <location filename="createinstancedialogpages.cpp" line="1113"/>
         <source>%1 instances already</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1252"/>
-        <location filename="createinstancedialogpages.cpp" line="1253"/>
+        <location filename="createinstancedialogpages.cpp" line="1322"/>
+        <location filename="createinstancedialogpages.cpp" line="1323"/>
         <source>Microsoft Store game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1255"/>
+        <location filename="createinstancedialogpages.cpp" line="1325"/>
         <source>The folder %1 seems to be a Microsoft Store game install.  Games installed through the Microsoft Store are not supported by Mod Organizer and will not work properly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1262"/>
-        <location filename="createinstancedialogpages.cpp" line="1284"/>
-        <location filename="createinstancedialogpages.cpp" line="1310"/>
+        <location filename="createinstancedialogpages.cpp" line="1332"/>
+        <location filename="createinstancedialogpages.cpp" line="1354"/>
+        <location filename="createinstancedialogpages.cpp" line="1380"/>
         <source>Use this folder for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1263"/>
+        <location filename="createinstancedialogpages.cpp" line="1333"/>
         <source>Use this folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1264"/>
-        <location filename="createinstancedialogpages.cpp" line="1285"/>
-        <location filename="createinstancedialogpages.cpp" line="1312"/>
+        <location filename="createinstancedialogpages.cpp" line="1334"/>
+        <location filename="createinstancedialogpages.cpp" line="1355"/>
+        <location filename="createinstancedialogpages.cpp" line="1382"/>
         <source>I know what I&apos;m doing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1265"/>
-        <location filename="createinstancedialogpages.cpp" line="1286"/>
-        <location filename="createinstancedialogpages.cpp" line="1313"/>
+        <location filename="createinstancedialogpages.cpp" line="1335"/>
+        <location filename="createinstancedialogpages.cpp" line="1356"/>
+        <location filename="createinstancedialogpages.cpp" line="1383"/>
         <location filename="instancemanagerdialog.cpp" line="377"/>
         <location filename="settingsdialognexus.cpp" line="364"/>
         <location filename="settingsdialognexus.cpp" line="371"/>
@@ -9467,201 +9478,226 @@ Proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1278"/>
+        <location filename="createinstancedialogpages.cpp" line="1348"/>
         <source>The folder %1 does not seem to contain an installation for &lt;span style=&quot;white-space: nowrap; font-weight: bold;&quot;&gt;%2&lt;/span&gt; or for any other game Mod Organizer can manage.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1297"/>
-        <location filename="createinstancedialogpages.cpp" line="1298"/>
+        <location filename="createinstancedialogpages.cpp" line="1367"/>
+        <location filename="createinstancedialogpages.cpp" line="1368"/>
         <source>Incorrect game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1300"/>
+        <location filename="createinstancedialogpages.cpp" line="1370"/>
         <source>The folder %1 seems to contain an installation for &lt;span style=&quot;white-space: nowrap; font-weight: bold;&quot;&gt;%2&lt;/span&gt;, not &lt;span style=&quot;white-space: nowrap; font-weight: bold;&quot;&gt;%3&lt;/span&gt;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1308"/>
+        <location filename="createinstancedialogpages.cpp" line="1378"/>
         <source>Manage %1 instead</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1465"/>
+        <location filename="createinstancedialogpages.cpp" line="1535"/>
         <source>No group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1863"/>
+        <location filename="createinstancedialogpages.cpp" line="1689"/>
+        <source>Programs found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="1691"/>
+        <source>The ones turned on are added to Executables.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="1692"/>
+        <source>The ones turned on are added to Executables, after %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="1702"/>
+        <source>Add %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="2032"/>
         <source>This instance&apos;s own folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1868"/>
+        <location filename="createinstancedialogpages.cpp" line="2037"/>
         <source>Shared with %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1889"/>
+        <location filename="createinstancedialogpages.cpp" line="2058"/>
         <source>These folders belong to the separate MO2 copy for %1. Its application files and settings will be kept together in that folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1953"/>
+        <location filename="createinstancedialogpages.cpp" line="2122"/>
         <source>%1 free on %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1962"/>
+        <location filename="createinstancedialogpages.cpp" line="2131"/>
         <source>%1 of %2 used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1992"/>
+        <location filename="createinstancedialogpages.cpp" line="2161"/>
         <source>%1 in %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1994"/>
+        <location filename="createinstancedialogpages.cpp" line="2163"/>
         <source>Downloads from %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2193"/>
+        <location filename="createinstancedialogpages.cpp" line="2362"/>
         <source>Change</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2196"/>
+        <location filename="createinstancedialogpages.cpp" line="2365"/>
         <source>Change %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2212"/>
+        <location filename="createinstancedialogpages.cpp" line="2381"/>
         <source>MO2 will copy its application files into a separate folder for this game. If you start the copy after setup, this MO2 closes first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2214"/>
+        <location filename="createinstancedialogpages.cpp" line="2383"/>
         <source>Start the isolated copy after setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2216"/>
+        <location filename="createinstancedialogpages.cpp" line="2385"/>
         <source>Check the details, then select Create instance. Nothing is written before that.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2242"/>
+        <location filename="createinstancedialogpages.cpp" line="2411"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2243"/>
+        <location filename="createinstancedialogpages.cpp" line="2412"/>
         <source>Game folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2245"/>
+        <location filename="createinstancedialogpages.cpp" line="2419"/>
         <source>Storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2247"/>
+        <location filename="createinstancedialogpages.cpp" line="2421"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2252"/>
+        <location filename="createinstancedialogpages.cpp" line="2426"/>
         <source>Group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2256"/>
+        <location filename="createinstancedialogpages.cpp" line="2430"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2259"/>
+        <location filename="createinstancedialogpages.cpp" line="2433"/>
         <source>Instance folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2264"/>
-        <location filename="createinstancedialogpages.cpp" line="2274"/>
+        <location filename="createinstancedialogpages.cpp" line="2438"/>
+        <location filename="createinstancedialogpages.cpp" line="2448"/>
         <source>Base directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2281"/>
+        <location filename="createinstancedialogpages.cpp" line="2455"/>
         <source>Disk</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2284"/>
+        <location filename="createinstancedialogpages.cpp" line="2465"/>
+        <source>Programs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogpages.cpp" line="2470"/>
         <source>Shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2284"/>
+        <location filename="createinstancedialogpages.cpp" line="2470"/>
         <source>On the desktop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2288"/>
+        <location filename="createinstancedialogpages.cpp" line="2474"/>
         <source>Saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2294"/>
+        <location filename="createinstancedialogpages.cpp" line="2480"/>
         <source>Local INIs: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2296"/>
+        <location filename="createinstancedialogpages.cpp" line="2482"/>
         <source>Local Saves: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2298"/>
+        <location filename="createinstancedialogpages.cpp" line="2484"/>
         <source>Automatic Archive Invalidation: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2219"/>
+        <location filename="createinstancedialogpages.cpp" line="2388"/>
         <source>Launch the new instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2234"/>
+        <location filename="createinstancedialogpages.cpp" line="2403"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2234"/>
+        <location filename="createinstancedialogpages.cpp" line="2403"/>
         <source>no</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2267"/>
-        <location filename="createinstancedialogpages.cpp" line="2275"/>
+        <location filename="createinstancedialogpages.cpp" line="2441"/>
+        <location filename="createinstancedialogpages.cpp" line="2449"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2276"/>
+        <location filename="createinstancedialogpages.cpp" line="2450"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2277"/>
-        <location filename="createinstancedialogpages.cpp" line="2293"/>
+        <location filename="createinstancedialogpages.cpp" line="2451"/>
+        <location filename="createinstancedialogpages.cpp" line="2479"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2278"/>
+        <location filename="createinstancedialogpages.cpp" line="2452"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13028,106 +13064,106 @@ Remaining this hour: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="462"/>
+        <location filename="createinstancedialogui.cpp" line="472"/>
         <source>&lt;h3&gt;Confirm the game edition.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="463"/>
+        <location filename="createinstancedialogui.cpp" line="473"/>
         <source>This game has multiple editions. Select the one installed on your computer so MO2 can configure the correct game plugin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="479"/>
+        <location filename="createinstancedialogui.cpp" line="489"/>
         <source>&lt;h3&gt;Choose a name for this instance.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="487"/>
-        <location filename="createinstancedialogui.cpp" line="488"/>
+        <location filename="createinstancedialogui.cpp" line="497"/>
+        <location filename="createinstancedialogui.cpp" line="498"/>
         <source>Instance name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="489"/>
+        <location filename="createinstancedialogui.cpp" line="499"/>
         <source>How it&apos;s listed in Manage Instances.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="496"/>
+        <location filename="createinstancedialogui.cpp" line="506"/>
         <source>Storage folder preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="502"/>
+        <location filename="createinstancedialogui.cpp" line="512"/>
         <source>There is already an instance with this name.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="506"/>
+        <location filename="createinstancedialogui.cpp" line="516"/>
         <source>The name contains invalid characters. It must be a valid folder name.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="544"/>
+        <location filename="createinstancedialogui.cpp" line="561"/>
         <source>&lt;h3&gt;Configure your profile settings.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="546"/>
+        <location filename="createinstancedialogui.cpp" line="563"/>
         <source>New profiles of this instance start with these settings. Each profile can change them later.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="564"/>
+        <location filename="createinstancedialogui.cpp" line="581"/>
         <source>Use profile-specific game INI files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="566"/>
+        <location filename="createinstancedialogui.cpp" line="583"/>
         <source>Each profile keeps its own copy of the game&apos;s INI files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="568"/>
+        <location filename="createinstancedialogui.cpp" line="585"/>
         <source>Use profile-specific save games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="570"/>
+        <location filename="createinstancedialogui.cpp" line="587"/>
         <source>Each profile keeps its own saves, separate from the game&apos;s.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="572"/>
+        <location filename="createinstancedialogui.cpp" line="589"/>
         <source>Automatic archive invalidation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="574"/>
+        <location filename="createinstancedialogui.cpp" line="591"/>
         <source>Lets loose files override the game&apos;s archives in games that need it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="586"/>
+        <location filename="createinstancedialogui.cpp" line="616"/>
         <source>&lt;h3&gt;Select a folder where the data should be stored.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="588"/>
+        <location filename="createinstancedialogui.cpp" line="618"/>
         <source>This includes downloads, mods, profiles and overwrite for your &lt;b&gt;%1&lt;/b&gt; instance. If there is enough space on this drive, you should use the default folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="611"/>
-        <location filename="createinstancedialogui.cpp" line="621"/>
-        <location filename="createinstancedialogui.cpp" line="623"/>
+        <location filename="createinstancedialogui.cpp" line="641"/>
+        <location filename="createinstancedialogui.cpp" line="651"/>
+        <location filename="createinstancedialogui.cpp" line="653"/>
         <source>Location</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="610"/>
-        <location filename="createinstancedialogui.cpp" line="660"/>
+        <location filename="createinstancedialogui.cpp" line="640"/>
+        <location filename="createinstancedialogui.cpp" line="690"/>
         <source>Folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13302,215 +13338,225 @@ Remaining this hour: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="453"/>
+        <location filename="createinstancedialogui.cpp" line="456"/>
+        <source>%1 is in Program Files. Windows protects that folder, and some mods and tools fail when they write to it. Moving the game to another library avoids it (in Steam: Properties, Installed Files, Move install folder).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogui.cpp" line="463"/>
         <source>Is your game missing?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="454"/>
+        <location filename="createinstancedialogui.cpp" line="464"/>
         <source>Choose Browse… and select its folder, or turn on Show all supported games.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="480"/>
+        <location filename="createinstancedialogui.cpp" line="490"/>
         <source>It also names the instance&apos;s folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="489"/>
+        <location filename="createinstancedialogui.cpp" line="499"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="515"/>
-        <location filename="createinstancedialogui.cpp" line="516"/>
+        <location filename="createinstancedialogui.cpp" line="525"/>
+        <location filename="createinstancedialogui.cpp" line="526"/>
         <source>Group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="517"/>
+        <location filename="createinstancedialogui.cpp" line="527"/>
         <source>Optional. Instances in a group are listed together in Manage Instances.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="522"/>
+        <location filename="createinstancedialogui.cpp" line="532"/>
         <source>Stable setup with Seamless Co-op, for example</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="523"/>
-        <location filename="createinstancedialogui.cpp" line="524"/>
+        <location filename="createinstancedialogui.cpp" line="533"/>
+        <location filename="createinstancedialogui.cpp" line="534"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="525"/>
+        <location filename="createinstancedialogui.cpp" line="535"/>
         <source>Optional. What this instance is for; the search finds it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="528"/>
+        <location filename="createinstancedialogui.cpp" line="538"/>
         <source>Already for this game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="578"/>
+        <location filename="createinstancedialogui.cpp" line="595"/>
         <source>The game&apos;s INI files now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="579"/>
+        <location filename="createinstancedialogui.cpp" line="596"/>
         <source>The game&apos;s saves now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="620"/>
+        <location filename="createinstancedialogui.cpp" line="602"/>
+        <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href=&quot;both&quot;&gt;Turn both on&lt;/a&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="createinstancedialogui.cpp" line="650"/>
         <source>Disk usage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="627"/>
+        <location filename="createinstancedialogui.cpp" line="657"/>
         <source>Warning: This folder already exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="629"/>
+        <location filename="createinstancedialogui.cpp" line="659"/>
         <source>Warning: The folder contains invalid characters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="636"/>
+        <location filename="createinstancedialogui.cpp" line="666"/>
         <source>Downloads folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="638"/>
+        <location filename="createinstancedialogui.cpp" line="668"/>
         <source>Another instance&apos;s downloads can be shared, so the same archives aren&apos;t kept twice.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="641"/>
+        <location filename="createinstancedialogui.cpp" line="671"/>
         <source>Folders it creates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="668"/>
+        <location filename="createinstancedialogui.cpp" line="698"/>
         <source>Base directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="637"/>
-        <location filename="createinstancedialogui.cpp" line="670"/>
+        <location filename="createinstancedialogui.cpp" line="667"/>
+        <location filename="createinstancedialogui.cpp" line="700"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="672"/>
+        <location filename="createinstancedialogui.cpp" line="702"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="673"/>
+        <location filename="createinstancedialogui.cpp" line="703"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="675"/>
+        <location filename="createinstancedialogui.cpp" line="705"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="678"/>
+        <location filename="createinstancedialogui.cpp" line="708"/>
         <source>Use %BASE_DIR% to refer to the Base Directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="681"/>
+        <location filename="createinstancedialogui.cpp" line="711"/>
         <source>Warning: The folder %1 already exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="683"/>
+        <location filename="createinstancedialogui.cpp" line="713"/>
         <source>Warning: The folder %1 contains invalid characters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="704"/>
+        <location filename="createinstancedialogui.cpp" line="734"/>
         <source>&lt;h3&gt;Link Mod Organizer with your Nexus account&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="705"/>
+        <location filename="createinstancedialogui.cpp" line="735"/>
         <source>Linking with Nexus allows you to download mods directly from Mod Organizer and automatically check for updates. This is optional.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="711"/>
+        <location filename="createinstancedialogui.cpp" line="741"/>
         <source>Connect to Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="714"/>
+        <location filename="createinstancedialogui.cpp" line="744"/>
         <source>Enter API Key Manually</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="718"/>
+        <location filename="createinstancedialogui.cpp" line="748"/>
         <source>Nexus account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="719"/>
+        <location filename="createinstancedialogui.cpp" line="749"/>
         <source>You can also do this later in Settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="724"/>
+        <location filename="createinstancedialogui.cpp" line="754"/>
         <source>Nexus connection log</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="734"/>
+        <location filename="createinstancedialogui.cpp" line="764"/>
         <source>&lt;h3&gt;Confirmation&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="736"/>
+        <location filename="createinstancedialogui.cpp" line="766"/>
         <source>The instance is about to be created. Review the information below and press &apos;Finish&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="534"/>
+        <location filename="createinstancedialogui.cpp" line="544"/>
         <source>Add a desktop shortcut that opens it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="760"/>
+        <location filename="createinstancedialogui.cpp" line="790"/>
         <source>Instance creation log</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="752"/>
+        <location filename="createinstancedialogui.cpp" line="782"/>
         <source>Launch the new instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="695"/>
+        <location filename="createinstancedialogui.cpp" line="725"/>
         <source>Choose each folder separately</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="778"/>
+        <location filename="createinstancedialogui.cpp" line="808"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="773"/>
+        <location filename="createinstancedialogui.cpp" line="803"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogui.cpp" line="775"/>
+        <location filename="createinstancedialogui.cpp" line="805"/>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13565,38 +13611,38 @@ Remaining this hour: %3</source>
 <context>
     <name>cid::NamePage</name>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1512"/>
+        <location filename="createinstancedialogpages.cpp" line="1582"/>
         <source>&lt;h3&gt;Name your isolated MO2 copy for %1.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1518"/>
+        <location filename="createinstancedialogpages.cpp" line="1588"/>
         <source>portable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1519"/>
+        <location filename="createinstancedialogpages.cpp" line="1589"/>
         <source>global</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1521"/>
+        <location filename="createinstancedialogpages.cpp" line="1591"/>
         <source>&lt;h3&gt;Name this %1 instance for %2.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1529"/>
+        <location filename="createinstancedialogpages.cpp" line="1599"/>
         <source>&lt;h3&gt;This setup will create one isolated portable instance for %1.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1538"/>
-        <location filename="createinstancedialogpages.cpp" line="1600"/>
+        <location filename="createinstancedialogpages.cpp" line="1608"/>
+        <location filename="createinstancedialogpages.cpp" line="1757"/>
         <source>Storage folder: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1596"/>
+        <location filename="createinstancedialogpages.cpp" line="1753"/>
         <source>&lt;instance name&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13604,12 +13650,12 @@ Remaining this hour: %3</source>
 <context>
     <name>cid::ProfilePage</name>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1656"/>
+        <location filename="createinstancedialogpages.cpp" line="1813"/>
         <source>This choice applies only to Elden Ring profiles in the instance being created.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="1773"/>
+        <location filename="createinstancedialogpages.cpp" line="1942"/>
         <source>&lt;h3&gt;Choose how Elden Ring saves are handled.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13617,12 +13663,12 @@ Remaining this hour: %3</source>
 <context>
     <name>cid::TypePage</name>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="553"/>
+        <location filename="createinstancedialogpages.cpp" line="597"/>
         <source>Use this isolated portable setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="556"/>
+        <location filename="createinstancedialogpages.cpp" line="600"/>
         <source>Stores this instance with the MO2 installation. Other games and global instances are not used.</source>
         <translation type="unfinished"></translation>
     </message>
