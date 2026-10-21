@@ -1484,8 +1484,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         self._select_dialog_mode(mode_combo, self.ProfileIsolated)
         self._sync_native_create_instance_mode(dialog, self.ProfileIsolated)
         self._sync_create_instance_game_save_profile_controls(dialog)
-        dialog.adjustSize()
-        dialog.resize(max(dialog.width(), 540), max(dialog.height(), 480))
+        # MO2 Revamped's wizard keeps one size and scrolls a long step; older wizards need
+        # room for the card
+        if not dialog.property("mo2RevampedFitsPages"):
+            dialog.adjustSize()
+            dialog.resize(max(dialog.width(), 540), max(dialog.height(), 480))
         qInfo(
             "Elden Ring MO2 Save Isolation: added save-mode options to the "
             "MO2 2.5.2 instance dialog."

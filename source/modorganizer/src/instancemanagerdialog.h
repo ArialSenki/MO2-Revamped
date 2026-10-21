@@ -2,17 +2,24 @@
 #define MODORGANIZER_INSTANCEMANAGERDIALOG_INCLUDED
 
 #include <QDialog>
-#include <filterwidget.h>
-
-namespace Ui
-{
-class InstanceManagerDialog;
-};
+#include <atomic>
+#include <memory>
+#include <vector>
 
 class Instance;
 class PluginContainer;
+class QLabel;
+class QLineEdit;
+class QListView;
+class QPoint;
+class QPushButton;
+class QStandardItemModel;
+class QStackedWidget;
+class QToolButton;
 
-// a dialog to manage existing instances
+// a dialog to manage existing instances: the instances in a card on the left,
+// the selected one's folders and actions in a card on the right, and Switch
+// and Close below
 //
 class InstanceManagerDialog : public QDialog
 {
@@ -64,6 +71,23 @@ public:
   //
   void deleteInstance();
 
+  // copies the selected instance, with its profiles, mods and settings, to a
+  // new instance
+  //
+  void duplicateInstance();
+
+  // adds a desktop shortcut that opens the selected instance, or removes it
+  //
+  void toggleShortcut();
+
+  // puts the selected instance in one of the user's groups, or in none
+  //
+  void changeGroup();
+
+  // edits the selected instance's notes
+  //
+  void editNotes();
+
   // sets whether the dialog should restart MO when selecting an instance; this
   // is false on startup when no instances exist
   //
@@ -81,12 +105,76 @@ protected:
 private:
   static const std::size_t NoSelection = -1;
 
-  std::unique_ptr<Ui::InstanceManagerDialog> ui;
+  // a row of the details card: the value and, if any, the button that opens it
+  struct DetailRow
+  {
+    QLabel* value       = nullptr;
+    QToolButton* action = nullptr;
+  };
+
   PluginContainer& m_pc;
   std::vector<std::unique_ptr<Instance>> m_instances;
-  MOBase::FilterWidget m_filter;
   QStandardItemModel* m_model;
   bool m_restartOnSelect;
+
+  // how the list is grouped ("game", "custom", "storage", "none") and sorted
+  // ("name", "used"); remembered in the global settings
+  QString m_groupBy;
+  QString m_sortBy;
+
+  QLabel* m_listCount;
+  QToolButton* m_view;
+  QLineEdit* m_filter;
+  QListView* m_list;
+  QPushButton* m_new;
+
+  QStackedWidget* m_detailsStack;
+  QLabel* m_emptyText;
+  QLabel* m_name;
+  QLabel* m_caption;
+  QToolButton* m_rename;
+  DetailRow m_locationRow;
+  DetailRow m_baseRow;
+  DetailRow m_gameRow;
+  DetailRow m_iniRow;
+  DetailRow m_profilesRow;
+  DetailRow m_sizeRow;
+  DetailRow m_storageRow;
+  DetailRow m_groupRow;
+  DetailRow m_notesRow;
+  QPushButton* m_duplicate;
+  QPushButton* m_shortcut;
+  QPushButton* m_delete;
+
+  // set to stop the folder size scan of the previous selection
+  std::shared_ptr<std::atomic_bool> m_sizeScan;
+  QPushButton* m_switch;
+
+  // builds the window: the list card, the details card and the buttons
+  //
+  void setupUi();
+  QWidget* createListCard();
+  QWidget* createDetails();
+  DetailRow addDetailRow(QWidget* parent, char16_t glyph, const QString& title,
+                         const QString& tip, char16_t actionGlyph = 0xE838);
+
+  // shows the actions for the instance under the mouse
+  //
+  void showListMenu(const QPoint& pos);
+
+  // shows the actions for one of the user's groups (rename, remove) at the
+  // given screen position
+  //
+  void showGroupMenu(const QString& group, const QPoint& globalPos);
+
+  // counts the selected instance's mods, downloads and overwrite in the
+  // background and fills the size row when done
+  //
+  void startSizeScan(const Instance& ii);
+
+  // the desktop shortcut for the selected instance, and whether it exists
+  //
+  bool shortcutExists(const Instance& ii) const;
 
   // refreshes the list instances from disk
   //
@@ -96,6 +184,10 @@ private:
   //
   void onSelection();
 
+  // hides the rows that don't match the search text
+  //
+  void applyFilter();
+
   // opens the create instance dialog
   //
   void createNew();
@@ -103,6 +195,10 @@ private:
   // shows a confirmation to the user before switching
   //
   bool confirmSwitch(const Instance& to);
+
+  // the list row of the instance with the given index
+  //
+  int rowOf(std::size_t index) const;
 
   // returns the index of selected instance, NoSelection if none
   //
@@ -125,7 +221,7 @@ private:
   //
   void clearData();
 
-  // enables/disables buttons like rename, explore...
+  // enables/disables the actions that need a selected instance
   //
   void setButtonsEnabled(bool b);
 

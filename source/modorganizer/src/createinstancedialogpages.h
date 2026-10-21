@@ -6,6 +6,7 @@
 #include <QCommandLinkButton>
 #include <QLabel>
 #include <QLineEdit>
+#include <map>
 
 namespace MOBase
 {
@@ -277,6 +278,9 @@ private:
   // from the ui if the checkbox isn't checked
   std::vector<std::unique_ptr<Game>> m_games;
 
+  // how many instances already manage each game, by case-folded game name
+  std::map<QString, int> m_instanceCounts;
+
   // current selection
   Game* m_selection;
   bool m_isolatedModeActive = false;
@@ -526,6 +530,10 @@ private:
   //
   void checkPaths();
 
+  // shows the free space on the drive the data goes to
+  //
+  void updateDiskSpace();
+
   // checks a simple path, forwards to checkPath() with the simple labels
   //
   bool checkSimplePath(const QString& path);
@@ -623,19 +631,22 @@ class ConfirmationPage : public Page
 public:
   ConfirmationPage(CreateInstanceDialog& dlg);
 
-  // recreates the log with the latest settings
+  // fills the summary with the latest settings
   //
   void doActivated(bool firstTime) override;
 
-  // returns the text for the log
+  // a line of the summary: its caption, its value and the step it comes from
   //
-  QString makeReview() const;
+  struct ReviewRow
+  {
+    QString caption;
+    QString value;
+    const Page* step;
+  };
 
-private:
-  // returns a log line with the given caption and path, something like
-  // " - caption: path"
+  // the summary, in display order
   //
-  QString dirLine(const QString& caption, const QString& path) const;
+  std::vector<ReviewRow> makeReview() const;
 };
 
 }  // namespace cid

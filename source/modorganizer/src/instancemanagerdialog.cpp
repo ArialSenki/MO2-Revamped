@@ -1,93 +1,297 @@
 #include "instancemanagerdialog.h"
-#include "fluenticons.h"
 #include "createinstancedialog.h"
+#include "envshortcut.h"
 #include "filesystemutilities.h"
+#include "fluentdialogs.h"
+#include "fluenticons.h"
+#include "fluentmotion.h"
 #include "gameiconutils.h"
 #include "instancemanager.h"
 #include "plugincontainer.h"
-#include "selectiondialog.h"
 #include "settings.h"
 #include "shared/appconfig.h"
 #include "shared/util.h"
-#include "ui_instancemanagerdialog.h"
 #include <iplugingame.h>
 #include <report.h>
 #include <utility.h>
 
-#include <QFileInfo>
+#include <QActionGroup>
 #include <QCheckBox>
-#include <QAbstractItemView>
-#include <QBoxLayout>
-#include <QDialogButtonBox>
-#include <QFrame>
-#include <QGridLayout>
-#include <QGroupBox>
+#include <QComboBox>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QUrl>
+#include <numeric>
+#include <QDateTime>
+#include <QFile>
+#include <QLocale>
+#include <QMenu>
+#include <QPointer>
+#include <QThreadPool>
+#include <QTimer>
+#include <QDir>
+#include <QDirIterator>
+#include <QFileInfo>
 #include <QHBoxLayout>
-#include <QIcon>
 #include <QLabel>
 #include <QLineEdit>
-#include <QListWidget>
-#include <QPixmap>
+#include <QListView>
+#include <QPainter>
 #include <QPushButton>
-#include <QSize>
-#include <QSizePolicy>
+#include <QPlainTextEdit>
+#include <QScrollArea>
+#include <QShortcut>
+#include <QStackedWidget>
+#include <QStandardItemModel>
+#include <QStyledItemDelegate>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 using namespace MOBase;
 
 namespace
 {
-void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
-                            const QString& iconPath,
-                            const QString& iconObjectName, int size)
+// Segoe Fluent Icons code points
+constexpr char16_t AddGlyph      = 0xE710;
+constexpr char16_t RenameGlyph   = 0xE8AC;
+constexpr char16_t OpenGlyph     = 0xE838;  // FolderOpen
+constexpr char16_t DocumentGlyph = 0xE8A5;
+constexpr char16_t DeleteGlyph   = 0xE74D;
+constexpr char16_t HelpGlyph     = 0xE897;
+constexpr char16_t GameGlyph     = 0xE7FC;
+constexpr char16_t DriveGlyph    = 0xE88E;  // USB, a portable folder
+constexpr char16_t FolderGlyph   = 0xE8B7;
+constexpr char16_t LibraryGlyph  = 0xE8F1;
+constexpr char16_t HomeGlyph     = 0xE80F;
+constexpr char16_t PeopleGlyph   = 0xE716;
+constexpr char16_t SizeGlyph     = 0xEDA2;  // HardDrive
+constexpr char16_t CopyGlyph     = 0xE8C8;
+constexpr char16_t PinGlyph      = 0xE718;
+constexpr char16_t PlayGlyph     = 0xE768;
+constexpr char16_t DocumentOpenGlyph = 0xE8E5;  // OpenFile
+constexpr char16_t TagGlyph      = 0xE8EC;
+constexpr char16_t NoteGlyph     = 0xE70B;  // QuickNote
+
+constexpr int RowHeight   = 60;
+constexpr int CaptionRole = Qt::UserRole + 1;
+constexpr int IndexRole   = Qt::UserRole + 2;  // the instance's index, -1 on a heading
+constexpr int HeaderRole  = Qt::UserRole + 3;  // a group heading
+constexpr int GroupRole   = Qt::UserRole + 4;  // a heading's group name
+constexpr int NotesRole   = Qt::UserRole + 5;  // searched along with the name
+constexpr int HeaderHeight = 34;
+
+QLabel* glyphLabel(char16_t glyph, QWidget* parent)
 {
-  // Fluent v4 headings are plain text, like Windows 11 Settings
-  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
-    return;
-  }
-
-  const int index = layout->indexOf(heading);
-  if (index < 0) {
-    return;
-  }
-
-  layout->removeWidget(heading);
-  auto* row = new QHBoxLayout();
-  row->setContentsMargins(0, 0, 0, 0);
-  row->setSpacing(8);
-
-  auto* icon = new QLabel(heading->parentWidget());
-  icon->setObjectName(iconObjectName);
-  icon->setAlignment(Qt::AlignCenter);
-  icon->setFixedSize(size, size);
-  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
-  if (!pixmap.isNull()) {
-    icon->setPixmap(pixmap);
-  }
-
-  row->addWidget(icon, 0, Qt::AlignVCenter);
-  row->addWidget(heading, 1, Qt::AlignVCenter);
-  layout->insertLayout(index, row);
+  auto* label = new QLabel(QString(QChar(glyph)), parent);
+  label->setObjectName(QStringLiteral("instanceRowGlyph"));
+  label->setFont(FluentIcons::font(16));
+  label->setFixedWidth(24);
+  label->setAlignment(Qt::AlignCenter);
+  return label;
 }
 
-QLabel* makeCircularHeaderIcon(QWidget* parent, const QString& iconPath,
-                               const QString& objectName, int size)
+// a label that elides its text in the middle, so a long path keeps its drive
+// and its last folder; the whole text is in the tool tip
+class ElidedLabel : public QLabel
 {
-  auto* icon = new QLabel(parent);
-  icon->setObjectName(objectName);
-  icon->setAlignment(Qt::AlignCenter);
-  icon->setFixedSize(size, size);
-  // Fluent v4 headings are plain text, like Windows 11 Settings; the badges
-  // of the confirmation prompts stay
-  if (FluentIcons::active() && objectName.endsWith(QLatin1String("HeaderIcon"))) {
-    icon->hide();
+public:
+  using QLabel::QLabel;
+
+  void setFullText(const QString& text)
+  {
+    m_full = text;
+    setToolTip(text);
+    updateGeometry();
+    update();
   }
-  const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(size / 2, size / 2);
-  if (!pixmap.isNull()) {
-    icon->setPixmap(pixmap);
+
+  QSize minimumSizeHint() const override { return QSize(40, QLabel::minimumSizeHint().height()); }
+
+  QSize sizeHint() const override
+  {
+    return QSize(fontMetrics().horizontalAdvance(m_full), fontMetrics().height());
   }
-  return icon;
+
+protected:
+  void paintEvent(QPaintEvent*) override
+  {
+    QPainter p(this);
+    p.setPen(palette().color(QPalette::WindowText));
+    p.setFont(font());
+    p.drawText(contentsRect(), Qt::AlignLeft | Qt::AlignVCenter,
+               fontMetrics().elidedText(m_full, Qt::ElideMiddle, contentsRect().width()));
+  }
+
+private:
+  QString m_full;
+};
+
+// the instance rows of the list card: the game's badge, the name and a
+// caption below it, a hover fill and the accent pill of the selected row like
+// the Settings navigation
+class InstanceRowDelegate : public QStyledItemDelegate
+{
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+
+  QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override
+  {
+    return QSize(QStyledItemDelegate::sizeHint(option, index).width(),
+                 index.data(HeaderRole).toBool() ? HeaderHeight : RowHeight);
+  }
+
+  void paint(QPainter* painter, const QStyleOptionViewItem& option,
+             const QModelIndex& index) const override
+  {
+    const bool selected = option.state & QStyle::State_Selected;
+    const bool hovered  = option.state & QStyle::State_MouseOver;
+    const QColor ink    = option.palette.color(QPalette::Active, QPalette::WindowText);
+
+    if (index.data(HeaderRole).toBool()) {
+      // a group heading: semibold caption text, no hover
+      painter->save();
+      QFont heading = option.font;
+      heading.setWeight(QFont::DemiBold);
+      heading.setPointSizeF(option.font.pointSizeF() * 0.92);
+      painter->setFont(heading);
+      painter->setPen(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Muted)
+                                            : option.palette.color(QPalette::Disabled,
+                                                                   QPalette::WindowText));
+      painter->drawText(QRectF(option.rect).adjusted(10, 0, -8, -5),
+                        Qt::AlignLeft | Qt::AlignBottom,
+                        QFontMetrics(heading).elidedText(index.data().toString(),
+                                                         Qt::ElideRight,
+                                                         option.rect.width() - 18));
+      painter->restore();
+      return;
+    }
+
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    const QRectF row = QRectF(option.rect).adjusted(2, 2, -2, -2);
+    if (selected || hovered) {
+      QColor fill = ink;
+      fill.setAlpha(selected ? 26 : 15);
+      painter->setPen(Qt::NoPen);
+      painter->setBrush(fill);
+      painter->drawRoundedRect(row, 4, 4);
+    }
+    if (selected) {
+      painter->setBrush(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Accent)
+                                              : option.palette.color(QPalette::Highlight));
+      painter->drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5);
+    }
+
+    const QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
+    const QRect iconRect(static_cast<int>(row.left()) + 12,
+                         static_cast<int>(row.center().y()) - 16, 32, 32);
+    icon.paint(painter, iconRect);
+
+    const QRectF text = row.adjusted(56, 8, -10, -8);
+    QFont name        = option.font;
+    name.setWeight(selected ? QFont::DemiBold : QFont::Normal);
+    painter->setFont(name);
+    painter->setPen(ink);
+    const QFontMetrics nameMetrics(name);
+    painter->drawText(QRectF(text.left(), text.top(), text.width(), text.height() / 2),
+                      Qt::AlignLeft | Qt::AlignVCenter,
+                      nameMetrics.elidedText(index.data().toString(), Qt::ElideRight,
+                                             static_cast<int>(text.width())));
+
+    QFont caption = option.font;
+    caption.setPointSizeF(option.font.pointSizeF() * 0.9);
+    painter->setFont(caption);
+    painter->setPen(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Muted)
+                                          : option.palette.color(QPalette::Disabled,
+                                                                 QPalette::WindowText));
+    painter->drawText(QRectF(text.left(), text.center().y(), text.width(), text.height() / 2),
+                      Qt::AlignLeft | Qt::AlignVCenter,
+                      QFontMetrics(caption).elidedText(index.data(CaptionRole).toString(),
+                                                       Qt::ElideRight,
+                                                       static_cast<int>(text.width())));
+    painter->restore();
+  }
+};
+
+// when the instance was last used: its settings and its log are written
+// while it runs; "today at 13:20", "yesterday", "3 days ago" or a date like
+// the main window's "Last played"
+QDateTime lastUsedTime(const Instance& i)
+{
+  QDateTime newest;
+  for (const QString& file :
+       {i.iniPath(), QDir(i.directory()).filePath(QStringLiteral("logs/mo_interface.log"))}) {
+    const QDateTime modified = QFileInfo(file).lastModified();
+    if (modified.isValid() && (!newest.isValid() || modified > newest)) {
+      newest = modified;
+    }
+  }
+  return newest;
 }
+
+QString lastUsed(const Instance& i)
+{
+  const QDateTime newest = lastUsedTime(i);
+  if (!newest.isValid()) {
+    return {};
+  }
+
+  auto tr = [](const char* text) {
+    return QCoreApplication::translate("InstanceManagerDialog", text);
+  };
+  const qint64 days = newest.date().daysTo(QDate::currentDate());
+  if (days == 0) {
+    return tr("today at %1").arg(QLocale().toString(newest.time(), QLocale::ShortFormat));
+  } else if (days == 1) {
+    return tr("yesterday");
+  } else if (days < 7) {
+    return tr("%1 days ago").arg(days);
+  }
+  return QLocale().toString(newest.date(), QLocale::ShortFormat);
+}
+
+// what the user keeps about an instance (its group, its notes), in the
+// global settings so it is there whether the instance is open or not
+QString instanceValue(const QString& section, const QString& identifier)
+{
+  return GlobalSettings::instanceValue(section, identifier);
+}
+
+void setInstanceValue(const QString& section, const QString& identifier,
+                      const QString& value)
+{
+  GlobalSettings::setInstanceValue(section, identifier, value);
+}
+
+const QString GroupsSection = QStringLiteral("InstanceGroups");
+const QString NotesSection  = QStringLiteral("InstanceNotes");
+
+QString instanceGroup(const QString& identifier)
+{
+  return instanceValue(GroupsSection, identifier);
+}
+
+void setInstanceGroup(const QString& identifier, const QString& group)
+{
+  setInstanceValue(GroupsSection, identifier, group);
+}
+
+// a group and notes follow an instance that was renamed or copied, and go
+// away with it when it is deleted
+void moveInstanceValues(const QString& from, const QString& to, bool keepSource)
+{
+  for (const QString& section : {GroupsSection, NotesSection}) {
+    const QString value = instanceValue(section, from);
+    if (!keepSource) {
+      setInstanceValue(section, from, {});
+    }
+    if (!to.isEmpty() || !value.isEmpty()) {
+      setInstanceValue(section, to, value);
+    }
+  }
+}
+
 }  // namespace
 
 // returns the icon for the given instance or an empty 32x32 icon if the game
@@ -150,76 +354,27 @@ QIcon instanceIcon(PluginContainer& pc, const Instance& i,
 //
 QString getInstanceName(QWidget* parent, const QString& title, const QString& moreText,
                         const QString& label, const QString& parentDirectory,
-                        const QString& oldName = {})
+                        const QString& oldName = {}, const QString& okText = {},
+                        bool renaming = true)
 {
-  QDialog dlg(parent);
-  dlg.setObjectName(QStringLiteral("InstanceNameDialog"));
-  dlg.setWindowTitle(title);
-  dlg.setMinimumWidth(460);
+  FluentContentDialog dlg(parent, QStringLiteral("InstanceNameDialog"), title, moreText);
 
-  auto* ly = new QVBoxLayout(&dlg);
-  ly->setContentsMargins(16, 16, 16, 14);
-  ly->setSpacing(14);
-
-  auto* header = new QWidget(&dlg);
-  header->setObjectName(QStringLiteral("instanceNameHeader"));
-  auto* headerLayout = new QHBoxLayout(header);
-  headerLayout->setContentsMargins(0, 0, 0, 0);
-  headerLayout->setSpacing(12);
-
-  auto* headerIcon = makeCircularHeaderIcon(
-      header, QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-      QStringLiteral("instanceNameHeaderIcon"), 40);
-  auto* headerText = new QWidget(header);
-  headerText->setObjectName(QStringLiteral("instanceNameHeaderText"));
-  auto* headerTextLayout = new QVBoxLayout(headerText);
-  headerTextLayout->setContentsMargins(0, 0, 0, 0);
-  headerTextLayout->setSpacing(4);
-
-  auto* heading = new QLabel(title, headerText);
-  heading->setObjectName(QStringLiteral("instanceNameHeading"));
-  auto* description = new QLabel(
-      moreText.isEmpty()
-          ? QObject::tr("Choose a clear folder name for this instance.")
-          : moreText,
-      headerText);
-  description->setObjectName(QStringLiteral("instanceNameDescription"));
-  description->setWordWrap(true);
-  headerTextLayout->addWidget(heading);
-  headerTextLayout->addWidget(description);
-  headerLayout->addWidget(headerIcon, 0, Qt::AlignVCenter);
-  headerLayout->addWidget(headerText, 1);
-  ly->addWidget(header);
-
-  auto* nameCard = new QGroupBox(QObject::tr("Instance name"), &dlg);
-  nameCard->setObjectName(QStringLiteral("instanceNameCard"));
-  auto* nameLayout = new QVBoxLayout(nameCard);
-  nameLayout->setContentsMargins(12, 14, 12, 12);
-  nameLayout->setSpacing(7);
-
-  auto* bb = new QDialogButtonBox(
-      QDialogButtonBox::Cancel | QDialogButtonBox::Ok, &dlg);
-  bb->setObjectName(QStringLiteral("instanceNameButtons"));
-  bb->button(QDialogButtonBox::Ok)->setText(QObject::tr("Rename"));
-
-  auto* text = new QLineEdit(oldName, nameCard);
+  auto* caption = new QLabel(label, &dlg);
+  caption->setObjectName(QStringLiteral("instanceNameLabel"));
+  auto* text = new QLineEdit(oldName, &dlg);
   text->setObjectName(QStringLiteral("instanceNameEdit"));
   text->setPlaceholderText(QObject::tr("Enter an instance name"));
   text->selectAll();
-
-  auto* lb = new QLabel(label, nameCard);
-  lb->setObjectName(QStringLiteral("instanceNameLabel"));
-  lb->setWordWrap(true);
-  auto* error = new QLabel(nameCard);
+  auto* error = new QLabel(&dlg);
   error->setObjectName(QStringLiteral("instanceNameValidation"));
   error->setWordWrap(true);
 
-  nameLayout->addWidget(lb);
-  nameLayout->addWidget(text);
-  nameLayout->addWidget(error);
-  ly->addWidget(nameCard);
-  ly->addStretch(1);
-  ly->addWidget(bb);
+  dlg.body()->addWidget(caption);
+  dlg.body()->addWidget(text);
+  dlg.body()->addWidget(error);
+
+  auto* ok     = dlg.addButton(okText.isEmpty() ? QObject::tr("Rename") : okText, true);
+  auto* cancel = dlg.addButton(QObject::tr("Cancel"));
 
   auto check = [&] {
     bool okay = false;
@@ -227,11 +382,11 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
     if (text->text().isEmpty()) {
       error->setText("");
     } else if (!MOBase::validFileName(text->text())) {
-      error->setText(QObject::tr("The instance name must be a valid folder name."));
+      error->setText(QObject::tr("Use a name that's a valid folder name."));
     } else {
       const auto name = MOBase::sanitizeFileName(text->text());
 
-      if ((name != oldName) && QDir(parentDirectory).exists(name)) {
+      if ((!renaming || name != oldName) && QDir(parentDirectory).exists(name)) {
         error->setText(QObject::tr("An instance with this name already exists."));
       } else {
         okay = true;
@@ -239,22 +394,16 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
     }
 
     error->setVisible(!error->text().isEmpty());
-    bb->button(QDialogButtonBox::Ok)->setEnabled(okay);
+    ok->setEnabled(okay);
   };
 
-  QObject::connect(text, &QLineEdit::textChanged, [&] {
-    check();
-  });
-  QObject::connect(bb, &QDialogButtonBox::accepted, [&] {
-    dlg.accept();
-  });
-  QObject::connect(bb, &QDialogButtonBox::rejected, [&] {
-    dlg.reject();
-  });
+  QObject::connect(text, &QLineEdit::textChanged, &dlg, check);
+  QObject::connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+  QObject::connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
 
   check();
 
-  dlg.resize({520, 250});
+  dlg.resize(480, dlg.sizeHint().height());
   if (dlg.exec() != QDialog::Accepted) {
     return {};
   }
@@ -264,217 +413,479 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
 
 void showInstanceExample(QWidget* parent)
 {
-  QDialog dlg(parent);
-  dlg.setObjectName(QStringLiteral("InstanceHelpDialog"));
-  dlg.setWindowTitle(QObject::tr("About instances"));
-  dlg.setMinimumWidth(540);
-  dlg.resize(580, 410);
+  FluentContentDialog dlg(
+      parent, QStringLiteral("InstanceHelpDialog"), QObject::tr("What is an instance?"),
+      QObject::tr("An instance is its own Mod Organizer workspace. It keeps one game's "
+                  "profiles, mods, downloads and settings together, so separate setups "
+                  "never mix."));
 
-  auto* layout = new QVBoxLayout(&dlg);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(12);
+  auto addExample = [&](char16_t glyph, const QString& game, const QString& detail) {
+    auto* row = new QFrame(&dlg);
+    row->setObjectName(QStringLiteral("instanceHelpExample"));
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(14, 10, 14, 10);
+    rowLayout->setSpacing(14);
+    rowLayout->addWidget(glyphLabel(glyph, row));
 
-  auto* header = new QFrame(&dlg);
-  header->setObjectName(QStringLiteral("instanceHelpHeaderPanel"));
-  auto* headerLayout = new QHBoxLayout(header);
-  headerLayout->setContentsMargins(14, 12, 14, 12);
-  headerLayout->setSpacing(12);
-
-  auto* headerIcon = makeCircularHeaderIcon(
-      header, QStringLiteral(":/MO/gui/mainwindow/help.svg"),
-      QStringLiteral("instanceHelpHeaderIcon"), 40);
-  auto* headerText = new QWidget(header);
-  headerText->setObjectName(QStringLiteral("instanceHelpHeaderText"));
-  auto* headerTextLayout = new QVBoxLayout(headerText);
-  headerTextLayout->setContentsMargins(0, 0, 0, 0);
-  headerTextLayout->setSpacing(5);
-
-  auto* heading = new QLabel(
-      QObject::tr("An instance is its own MO2 workspace."), headerText);
-  heading->setObjectName(QStringLiteral("instanceHelpHeading"));
-  auto* description = new QLabel(
-      QObject::tr("Each instance keeps its profiles, mods, downloads and settings together. "
-                  "Use separate instances when you want independent setups."),
-      headerText);
-  description->setObjectName(QStringLiteral("instanceHelpDescription"));
-  description->setWordWrap(true);
-  headerTextLayout->addWidget(heading);
-  headerTextLayout->addWidget(description);
-  headerLayout->addWidget(headerIcon, 0, Qt::AlignVCenter);
-  headerLayout->addWidget(headerText, 1);
-  layout->addWidget(header);
-
-  auto addExample = [&](const QString& game, const QString& detail) {
-    auto* card = new QFrame(&dlg);
-    card->setObjectName(QStringLiteral("instanceHelpExampleCard"));
-    auto* cardLayout = new QVBoxLayout(card);
-    cardLayout->setContentsMargins(14, 10, 14, 10);
-    cardLayout->setSpacing(3);
-
-    auto* gameLabel = new QLabel(game, card);
-    gameLabel->setObjectName(QStringLiteral("instanceHelpGame"));
-    auto* detailLabel = new QLabel(detail, card);
-    detailLabel->setObjectName(QStringLiteral("instanceHelpExampleText"));
+    auto* text = new QVBoxLayout;
+    text->setSpacing(1);
+    auto* gameLabel = new QLabel(game, row);
+    gameLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
+    auto* detailLabel = new QLabel(detail, row);
+    detailLabel->setObjectName(QStringLiteral("fluentSettingDescription"));
     detailLabel->setWordWrap(true);
-    cardLayout->addWidget(gameLabel);
-    cardLayout->addWidget(detailLabel);
-    layout->addWidget(card);
+    text->addWidget(gameLabel);
+    text->addWidget(detailLabel);
+    rowLayout->addLayout(text, 1);
+    dlg.body()->addWidget(row);
   };
 
-  addExample(QObject::tr("Elden Ring"),
-             QObject::tr("Keep Elden Ring profiles, mods, downloads and settings in this instance."));
-  addExample(QObject::tr("Skyrim Special Edition"),
-             QObject::tr("Manage Skyrim separately, without mixing its setup with Elden Ring."));
+  addExample(GameGlyph, QObject::tr("Elden Ring"),
+             QObject::tr("Its mods, profiles and saves stay in this instance."));
+  addExample(GameGlyph, QObject::tr("Skyrim Special Edition"),
+             QObject::tr("A second instance manages Skyrim without touching Elden Ring."));
+  addExample(DriveGlyph, QObject::tr("Global or portable"),
+             QObject::tr("Global instances are stored in your user folder; portable ones "
+                         "live next to Mod Organizer and move with it."));
+  dlg.body()->addStretch(1);
 
-  auto* footer = new QLabel(
-      QObject::tr("Choose the instance you want to manage from this window."), &dlg);
-  footer->setObjectName(QStringLiteral("instanceHelpFooter"));
-  footer->setWordWrap(true);
-  layout->addWidget(footer);
-  layout->addStretch(1);
-
-  auto* closeButton = new QPushButton(QObject::tr("Close"), &dlg);
-  closeButton->setObjectName(QStringLiteral("instanceHelpCloseButton"));
-  closeButton->setDefault(true);
-  auto* buttonLayout = new QHBoxLayout;
-  buttonLayout->addStretch(1);
-  buttonLayout->addWidget(closeButton);
-  layout->addLayout(buttonLayout);
-
-  QObject::connect(closeButton, &QPushButton::clicked, &dlg, &QDialog::accept);
+  auto* close = dlg.addButton(QObject::tr("Close"), true);
+  QObject::connect(close, &QPushButton::clicked, &dlg, &QDialog::accept);
+  dlg.resize(520, dlg.sizeHint().height());
   dlg.exec();
 }
 
-InstanceManagerDialog::~InstanceManagerDialog() = default;
+InstanceManagerDialog::~InstanceManagerDialog()
+{
+  if (m_sizeScan) {
+    *m_sizeScan = true;
+  }
+}
 
 InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* parent)
-    : QDialog(parent), ui(new Ui::InstanceManagerDialog), m_pc(pc), m_model(nullptr),
-      m_restartOnSelect(true)
+    : QDialog(parent), m_pc(pc), m_model(new QStandardItemModel(this)),
+      m_restartOnSelect(true),
+      m_groupBy(GlobalSettings::value(QStringLiteral("InstanceManager/groupBy"),
+                                      QStringLiteral("game"))
+                    .toString()),
+      m_sortBy(GlobalSettings::value(QStringLiteral("InstanceManager/sortBy"),
+                                     QStringLiteral("name"))
+                   .toString())
 {
-  ui->setupUi(this);
-
-  addCircularHeadingIcon(ui->horizontalLayout_2, ui->managerSummary,
-                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-                         QStringLiteral("managerSummaryIcon"), 32);
-  addCircularHeadingIcon(ui->verticalLayout, ui->instancesHeading,
-                         QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-                         QStringLiteral("instancesHeaderIcon"), 24);
-  addCircularHeadingIcon(ui->verticalLayout_2, ui->detailsHeading,
-                         QStringLiteral(":/MO/gui/mainwindow/settings.svg"),
-                         QStringLiteral("instanceDetailsHeaderIcon"), 24);
-
-  // Keep the drag target comfortable while avoiding the oversized gray rail
-  // between the two cards.
-  ui->splitter->setHandleWidth(5);
-  ui->splitter->setSizes({260, 1});
-  ui->splitter->setStretchFactor(0, 0);
-  ui->splitter->setStretchFactor(1, 1);
-
-  m_model = new QStandardItemModel;
-  ui->list->setModel(m_model);
-
-  m_filter.setEdit(ui->filter);
-  m_filter.setList(ui->list);
-  m_filter.setFilteredBorder(false);
-
-  setMinimumSize(860, 560);
-  ui->createNew->setMinimumHeight(34);
-  ui->list->setIconSize(QSize(36, 36));
-  ui->list->setSpacing(4);
-  ui->list->setMinimumWidth(235);
-  ui->horizontalLayout_2->setContentsMargins(12, 8, 12, 8);
-  ui->horizontalLayout_2->setSpacing(12);
-  ui->verticalLayout->setContentsMargins(12, 12, 12, 12);
-  ui->verticalLayout->setSpacing(10);
-  ui->verticalLayout_2->setContentsMargins(16, 14, 16, 16);
-  ui->verticalLayout_2->setSpacing(10);
-  ui->openINI->setToolTip(
-      tr("Open this instance's ModOrganizer.ini with the associated editor."));
-  ui->location->setToolTip(
-      tr("Folder that contains this MO2 instance's configuration."));
-  ui->baseDirectory->setToolTip(
-      tr("Base path resolved from this instance's settings for its profiles, "
-         "mods, downloads, and overwrite data."));
-  ui->gameDir->setToolTip(tr("Folder where the game is installed."));
-  ui->switchToInstance->setToolTip(
-      tr("Restart Mod Organizer and open the selected instance."));
-  ui->detailsHeading->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-  ui->selectionHint->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-  ui->instanceStatus->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-  ui->instanceStatus->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
-  ui->widget_7->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-  ui->widget_9->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  for (QLineEdit* field : ui->widget_7->findChildren<QLineEdit*>()) {
-    field->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  }
-  if (auto* detailsLayout = qobject_cast<QGridLayout*>(ui->widget_7->layout())) {
-    detailsLayout->setContentsMargins(0, 8, 0, 8);
-    detailsLayout->setHorizontalSpacing(12);
-    detailsLayout->setVerticalSpacing(9);
-    detailsLayout->setColumnMinimumWidth(0, 100);
-    detailsLayout->setColumnStretch(1, 1);
-  }
-  for (QLabel* label : ui->widget_7->findChildren<QLabel*>()) {
-    label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-  }
-  if (auto* actionLayout = qobject_cast<QHBoxLayout*>(ui->widget_9->layout())) {
-    actionLayout->setSpacing(8);
-  }
-
-  if (InstanceManager::singleton().isEldenRingOnlyPortableMode()) {
-    ui->createNew->setVisible(false);
-  }
+  setupUi();
 
   updateInstances();
   updateList();
-  ui->list->clearSelection();
-  ui->list->setCurrentIndex(QModelIndex());
+  m_list->clearSelection();
+  m_list->setCurrentIndex(QModelIndex());
   clearData();
 
-  connect(ui->createNew, &QPushButton::clicked, [&] {
-    createNew();
-  });
-  ui->instanceHelpButton->setToolTip(
-      tr("See a local example of how separate MO2 instances work."));
-  connect(ui->instanceHelpButton, &QPushButton::clicked, this, [this] {
+  selectActiveInstance();
+}
+
+void InstanceManagerDialog::setupUi()
+{
+  setObjectName(QStringLiteral("InstanceManagerDialog"));
+  setWindowTitle(tr("Instances"));
+  setMinimumSize(880, 560);
+  resize(1000, 680);
+
+  auto* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(12, 12, 12, 12);
+  layout->setSpacing(10);
+
+  auto* body = new QHBoxLayout;
+  body->setSpacing(8);
+  body->addWidget(createListCard());
+  body->addWidget(createDetails(), 1);
+  layout->addLayout(body, 1);
+
+  // help on the left, Switch and Close on the right
+  auto* footer = new QHBoxLayout;
+  footer->setSpacing(8);
+  auto* help = new QToolButton(this);
+  help->setObjectName(QStringLiteral("instanceHelpButton"));
+  help->setText(tr("What is an instance?"));
+  help->setIcon(FluentIcons::glyph(HelpGlyph, FluentIcons::Tone::Muted));
+  help->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  help->setAutoRaise(true);
+  help->setCursor(Qt::PointingHandCursor);
+  footer->addWidget(help);
+  footer->addStretch(1);
+
+  m_switch = new QPushButton(this);
+  m_switch->setObjectName(QStringLiteral("switchToInstance"));
+  m_switch->setProperty("fluentPrimary", true);
+  m_switch->setAutoDefault(false);
+  m_switch->setToolTip(tr("Restart Mod Organizer with this instance"));
+  auto* close = new QPushButton(tr("Close"), this);
+  close->setObjectName(QStringLiteral("close"));
+  close->setAutoDefault(false);
+  footer->addWidget(m_switch);
+  footer->addWidget(close);
+  layout->addLayout(footer);
+
+  connect(help, &QToolButton::clicked, this, [this] {
     showInstanceExample(this);
   });
 
-  connect(ui->list->selectionModel(), &QItemSelectionModel::selectionChanged, [&] {
-    onSelection();
+  // keyboard: Enter opens (the list does that), F2 renames, Delete deletes,
+  // Ctrl+D duplicates, Ctrl+N creates and Ctrl+F searches; each only does
+  // what its button could do right now
+  auto shortcut = [this](const QKeySequence& keys, auto action) {
+    auto* sc = new QShortcut(keys, this);
+    sc->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(sc, &QShortcut::activated, this, action);
+  };
+  auto when = [](QWidget* button, void (InstanceManagerDialog::*slot)(),
+                 InstanceManagerDialog* self) {
+    return [button, slot, self] {
+      if (button->isEnabled() && !button->isHidden()) {
+        (self->*slot)();
+      }
+    };
+  };
+  shortcut(QKeySequence(Qt::Key_F2), when(m_rename, &InstanceManagerDialog::rename, this));
+  shortcut(QKeySequence(Qt::Key_Delete),
+           when(m_delete, &InstanceManagerDialog::deleteInstance, this));
+  shortcut(QKeySequence(Qt::CTRL | Qt::Key_D),
+           when(m_duplicate, &InstanceManagerDialog::duplicateInstance, this));
+  shortcut(QKeySequence(Qt::CTRL | Qt::Key_N),
+           when(m_new, &InstanceManagerDialog::createNew, this));
+  shortcut(QKeySequence::Find, [this] {
+    m_filter->setVisible(true);
+    m_filter->setFocus();
+    m_filter->selectAll();
   });
-  connect(ui->list, &QListView::activated, [&] {
-    openSelectedInstance();
+  connect(m_switch, &QPushButton::clicked, this,
+          &InstanceManagerDialog::openSelectedInstance);
+  connect(close, &QPushButton::clicked, this, &QDialog::close);
+}
+
+QWidget* InstanceManagerDialog::createListCard()
+{
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("instanceListCard"));
+  card->setProperty("fluentCard", true);
+  card->setFixedWidth(260);
+
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(8, 10, 8, 8);
+  layout->setSpacing(6);
+
+  auto* title = new QHBoxLayout;
+  title->setContentsMargins(6, 0, 6, 2);
+  auto* heading = new QLabel(tr("Instances"), card);
+  heading->setObjectName(QStringLiteral("fluentCardTitle"));
+  m_listCount = new QLabel(card);
+  m_listCount->setObjectName(QStringLiteral("fluentStatCaption"));
+  title->addWidget(heading);
+  title->addStretch(1);
+  title->addWidget(m_listCount);
+
+  // says how the list is grouped; its menu changes the grouping and order
+  m_view = new QToolButton(card);
+  m_view->setObjectName(QStringLiteral("instanceViewButton"));
+  m_view->setAutoRaise(true);
+  m_view->setToolTip(tr("Group and sort the instances"));
+  m_view->setCursor(Qt::PointingHandCursor);
+  m_view->setPopupMode(QToolButton::InstantPopup);
+  m_view->setProperty("fluentKeepStyle", true);
+  auto* viewMenu = new QMenu(m_view);
+  m_view->setMenu(viewMenu);
+  FluentMotion::animateMenuChevron(m_view);
+  title->addWidget(m_view);
+  layout->addLayout(title);
+
+  // the menu is built when it opens, so its checks follow the current choice
+  connect(viewMenu, &QMenu::aboutToShow, this, [this, viewMenu] {
+    viewMenu->clear();
+    auto addChoices = [&](const QString& section, QString& current, const char* key,
+                          const std::vector<std::pair<QString, QString>>& choices) {
+      // the theme hides section titles, so the title is a dimmed entry
+      if (!viewMenu->isEmpty()) {
+        viewMenu->addSeparator();
+      }
+      viewMenu->addAction(section)->setEnabled(false);
+      auto* group = new QActionGroup(viewMenu);
+      for (const auto& [value, text] : choices) {
+        auto* action = viewMenu->addAction(text);
+        action->setCheckable(true);
+        action->setChecked(current == value);
+        group->addAction(action);
+        connect(action, &QAction::triggered, this, [this, &current, key, value = value] {
+          current = value;
+          GlobalSettings::setValue(QString::fromLatin1(key), value);
+          updateList();
+        });
+      }
+    };
+    addChoices(tr("Group by"), m_groupBy, "InstanceManager/groupBy",
+               {{QStringLiteral("game"), tr("Game")},
+                {QStringLiteral("custom"), tr("My groups")},
+                {QStringLiteral("storage"), tr("Storage")},
+                {QStringLiteral("none"), tr("No groups")}});
+    addChoices(tr("Sort by"), m_sortBy, "InstanceManager/sortBy",
+               {{QStringLiteral("name"), tr("Name")},
+                {QStringLiteral("used"), tr("Last used")}});
+    FluentIcons::apply(viewMenu);
   });
 
-  connect(ui->rename, &QPushButton::clicked, [&] {
-    rename();
-  });
-  connect(ui->exploreLocation, &QPushButton::clicked, [&] {
-    exploreLocation();
-  });
-  connect(ui->exploreBaseDirectory, &QPushButton::clicked, [&] {
-    exploreBaseDirectory();
-  });
-  connect(ui->exploreGame, &QPushButton::clicked, [&] {
-    exploreGame();
-  });
+  // only shown when there are enough instances to need it
+  m_filter = new QLineEdit(card);
+  m_filter->setObjectName(QStringLiteral("instanceFilter"));
+  m_filter->setPlaceholderText(tr("Search instances"));
+  m_filter->setClearButtonEnabled(true);
+  layout->addWidget(m_filter);
+  connect(m_filter, &QLineEdit::textChanged, this, &InstanceManagerDialog::applyFilter);
 
-  connect(ui->openINI, &QPushButton::clicked, [&] {
-    openINI();
-  });
-  connect(ui->deleteInstance, &QPushButton::clicked, [&] {
-    deleteInstance();
-  });
+  m_list = new QListView(card);
+  m_list->setObjectName(QStringLiteral("instanceList"));
+  m_list->setModel(m_model);
+  m_list->setItemDelegate(new InstanceRowDelegate(m_list));
+  m_list->setFrameShape(QFrame::NoFrame);
+  m_list->setMouseTracking(true);
+  m_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_list->setAccessibleName(tr("Instances"));
+  m_list->setContextMenuPolicy(Qt::CustomContextMenu);
+  layout->addWidget(m_list, 1);
+  connect(m_list, &QListView::customContextMenuRequested, this,
+          &InstanceManagerDialog::showListMenu);
 
-  connect(ui->switchToInstance, &QPushButton::clicked, [&] {
-    openSelectedInstance();
-  });
-  connect(ui->close, &QPushButton::clicked, [&] {
-    close();
-  });
+  m_new = new QPushButton(FluentIcons::glyph(AddGlyph), tr("New instance"), card);
+  m_new->setObjectName(QStringLiteral("createNew"));
+  m_new->setAutoDefault(false);
+  m_new->setToolTip(tr("Create an instance for another game or setup (Ctrl+N)"));
+  m_new->setVisible(!InstanceManager::singleton().isEldenRingOnlyPortableMode());
+  layout->addWidget(m_new);
 
-  selectActiveInstance();
+  connect(m_new, &QPushButton::clicked, this, &InstanceManagerDialog::createNew);
+  connect(m_list->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+          &InstanceManagerDialog::onSelection);
+  connect(m_list, &QListView::activated, this, &InstanceManagerDialog::openSelectedInstance);
+
+  return card;
+}
+
+QWidget* InstanceManagerDialog::createDetails()
+{
+  m_detailsStack = new QStackedWidget(this);
+  m_detailsStack->setObjectName(QStringLiteral("instanceDetailsStack"));
+
+  // nothing selected
+  auto* empty = new QFrame(m_detailsStack);
+  empty->setProperty("fluentCard", true);
+  auto* emptyLayout = new QVBoxLayout(empty);
+  m_emptyText = new QLabel(empty);
+  m_emptyText->setObjectName(QStringLiteral("instanceEmptyText"));
+  m_emptyText->setAlignment(Qt::AlignCenter);
+  m_emptyText->setWordWrap(true);
+  emptyLayout->addWidget(m_emptyText);
+  m_detailsStack->addWidget(empty);
+
+  auto* card = new QFrame(m_detailsStack);
+  card->setObjectName(QStringLiteral("instanceDetailsCard"));
+  card->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  // the name, its game, storage and last use below it, and the pencil to
+  // rename it
+  auto* head = new QHBoxLayout;
+  head->setContentsMargins(18, 14, 12, 14);
+  head->setSpacing(10);
+  auto* names = new QVBoxLayout;
+  names->setSpacing(2);
+  m_name = new QLabel(card);
+  m_name->setObjectName(QStringLiteral("instanceDetailName"));
+  m_caption = new QLabel(card);
+  m_caption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  names->addWidget(m_name);
+  names->addWidget(m_caption);
+  head->addLayout(names, 1);
+  m_rename = new QToolButton(card);
+  m_rename->setObjectName(QStringLiteral("instanceIconButton"));
+  m_rename->setIcon(FluentIcons::glyph(RenameGlyph));
+  m_rename->setAutoRaise(true);
+  m_rename->setAccessibleName(tr("Rename"));
+  m_rename->setCursor(Qt::PointingHandCursor);
+  head->addWidget(m_rename, 0, Qt::AlignVCenter);
+  layout->addLayout(head);
+  connect(m_rename, &QToolButton::clicked, this, &InstanceManagerDialog::rename);
+
+  // the rows scroll when the window is too short for all of them
+  auto* scroll = new QScrollArea(card);
+  scroll->setObjectName(QStringLiteral("instanceDetailsScroll"));
+  scroll->setFrameShape(QFrame::NoFrame);
+  scroll->setWidgetResizable(true);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  auto* rows = new QWidget(scroll);
+  rows->setObjectName(QStringLiteral("instanceDetailRows"));
+  auto* rowsLayout = new QVBoxLayout(rows);
+  rowsLayout->setContentsMargins(0, 0, 0, 0);
+  rowsLayout->setSpacing(0);
+  scroll->setWidget(rows);
+  layout->addWidget(scroll, 1);
+
+  m_locationRow = addDetailRow(rows, FolderGlyph, tr("Instance folder"),
+                               tr("Open the instance folder"));
+  m_baseRow = addDetailRow(rows, LibraryGlyph, tr("Mod data"), tr("Open the mod data folder"));
+  m_gameRow = addDetailRow(rows, GameGlyph, tr("Game folder"), tr("Open the game folder"));
+  m_profilesRow = addDetailRow(rows, PeopleGlyph, tr("Profiles"), tr("Open the profiles folder"));
+  m_sizeRow     = addDetailRow(rows, SizeGlyph, tr("Size on disk"), {});
+  m_iniRow      = addDetailRow(rows, DocumentGlyph, tr("Configuration file"),
+                               tr("Open ModOrganizer.ini in its editor"), DocumentOpenGlyph);
+  m_storageRow  = addDetailRow(rows, HomeGlyph, tr("Storage"), {});
+  m_groupRow    = addDetailRow(rows, TagGlyph, tr("Group"), tr("Move to another group"),
+                               RenameGlyph);
+  m_notesRow    = addDetailRow(rows, NoteGlyph, tr("Notes"), tr("Edit the notes"), RenameGlyph);
+  rowsLayout->addStretch(1);
+
+  // the rows only scroll when the screen is too short for all of them
+  const QScreen* screen = QGuiApplication::primaryScreen();
+  const int available   = screen != nullptr ? screen->availableGeometry().height() : 1000;
+  scroll->setMinimumHeight(qMin(rows->sizeHint().height(), available - 330));
+
+  connect(m_locationRow.action, &QToolButton::clicked, this,
+          &InstanceManagerDialog::exploreLocation);
+  connect(m_baseRow.action, &QToolButton::clicked, this,
+          &InstanceManagerDialog::exploreBaseDirectory);
+  connect(m_gameRow.action, &QToolButton::clicked, this, &InstanceManagerDialog::exploreGame);
+  connect(m_profilesRow.action, &QToolButton::clicked, this, [this] {
+    if (const auto* i = singleSelection()) {
+      Settings s(i->iniPath());
+      shell::Explore(s.paths().profiles());
+    }
+  });
+  connect(m_iniRow.action, &QToolButton::clicked, this, &InstanceManagerDialog::openINI);
+  connect(m_groupRow.action, &QToolButton::clicked, this,
+          &InstanceManagerDialog::changeGroup);
+  connect(m_notesRow.action, &QToolButton::clicked, this, &InstanceManagerDialog::editNotes);
+
+  // copy and shortcut on the left, delete on the right
+  auto* actions = new QFrame(card);
+  actions->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* actionsLayout = new QHBoxLayout(actions);
+  actionsLayout->setContentsMargins(12, 12, 12, 12);
+  actionsLayout->setSpacing(8);
+  const bool isolated = InstanceManager::singleton().isEldenRingOnlyPortableMode();
+  m_duplicate = new QPushButton(FluentIcons::glyph(CopyGlyph), tr("Duplicate"), actions);
+  m_duplicate->setObjectName(QStringLiteral("duplicateInstance"));
+  m_duplicate->setAutoDefault(false);
+  m_duplicate->setVisible(!isolated);
+  m_shortcut = new QPushButton(FluentIcons::glyph(PinGlyph), tr("Desktop shortcut"), actions);
+  m_shortcut->setObjectName(QStringLiteral("instanceShortcut"));
+  m_shortcut->setAutoDefault(false);
+  m_delete = new QPushButton(FluentIcons::glyph(DeleteGlyph, FluentIcons::Tone::Critical),
+                             tr("Delete instance"), actions);
+  m_delete->setObjectName(QStringLiteral("deleteInstance"));
+  m_delete->setAutoDefault(false);
+  m_delete->setVisible(!isolated);
+  actionsLayout->addWidget(m_duplicate);
+  actionsLayout->addWidget(m_shortcut);
+  actionsLayout->addStretch(1);
+  actionsLayout->addWidget(m_delete);
+  layout->addWidget(actions);
+  connect(m_duplicate, &QPushButton::clicked, this, &InstanceManagerDialog::duplicateInstance);
+  connect(m_shortcut, &QPushButton::clicked, this, &InstanceManagerDialog::toggleShortcut);
+  connect(m_delete, &QPushButton::clicked, this, &InstanceManagerDialog::deleteInstance);
+
+  m_detailsStack->addWidget(card);
+  return m_detailsStack;
+}
+
+InstanceManagerDialog::DetailRow
+InstanceManagerDialog::addDetailRow(QWidget* parent, char16_t glyph, const QString& title,
+                                    const QString& tip, char16_t actionGlyph)
+{
+  // a Settings row: glyph, title with the value below it, and a button that
+  // opens it when there is something to open
+  DetailRow row;
+  auto* frame = new QFrame(parent);
+  frame->setObjectName(QStringLiteral("fluentSettingRow"));
+  frame->setMinimumHeight(62);
+
+  auto* layout = new QHBoxLayout(frame);
+  layout->setContentsMargins(18, 8, 12, 8);
+  layout->setSpacing(14);
+  layout->addWidget(glyphLabel(glyph, frame));
+
+  auto* text = new QVBoxLayout;
+  text->setSpacing(2);
+  auto* titleLabel = new QLabel(title, frame);
+  titleLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
+  row.value = new ElidedLabel(frame);
+  row.value->setObjectName(QStringLiteral("instanceDetailValue"));
+  text->addWidget(titleLabel);
+  text->addWidget(row.value);
+  layout->addLayout(text, 1);
+
+  if (!tip.isEmpty()) {
+    row.action = new QToolButton(frame);
+    row.action->setObjectName(QStringLiteral("instanceIconButton"));
+    row.action->setIcon(FluentIcons::glyph(actionGlyph));
+    row.action->setAutoRaise(true);
+    row.action->setToolTip(tip);
+    row.action->setAccessibleName(tip);
+    row.action->setCursor(Qt::PointingHandCursor);
+    layout->addWidget(row.action);
+  }
+
+  parent->layout()->addWidget(frame);
+  return row;
+}
+
+void InstanceManagerDialog::showListMenu(const QPoint& pos)
+{
+  const QModelIndex index = m_list->indexAt(pos);
+  if (!index.isValid()) {
+    return;
+  }
+  if (index.data(HeaderRole).toBool()) {
+    showGroupMenu(index.data(GroupRole).toString(), m_list->viewport()->mapToGlobal(pos));
+    return;
+  }
+  select(static_cast<std::size_t>(index.data(IndexRole).toInt()));
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+
+  // the same actions as the buttons, in the same states
+  QMenu menu(this);
+  auto add = [&](char16_t glyph, const QString& text, const QWidget* twin, auto slot,
+                 const QKeySequence& keys = {}) {
+    auto* action = menu.addAction(FluentIcons::glyph(glyph), text, this, slot);
+    action->setEnabled(twin == nullptr || twin->isEnabled());
+    action->setVisible(twin == nullptr || !twin->isHidden());
+    if (!keys.isEmpty()) {
+      action->setShortcut(keys);
+      action->setShortcutVisibleInContextMenu(true);
+    }
+    return action;
+  };
+  add(PlayGlyph, m_switch->text(), m_switch, &InstanceManagerDialog::openSelectedInstance,
+      QKeySequence(Qt::Key_Enter));
+  menu.addSeparator();
+  add(RenameGlyph, tr("Rename"), m_rename, &InstanceManagerDialog::rename,
+      QKeySequence(Qt::Key_F2));
+  add(CopyGlyph, tr("Duplicate"), m_duplicate, &InstanceManagerDialog::duplicateInstance,
+      QKeySequence(Qt::CTRL | Qt::Key_D));
+  add(PinGlyph, m_shortcut->text(), m_shortcut, &InstanceManagerDialog::toggleShortcut);
+  add(TagGlyph, tr("Move to group\u2026"), nullptr, &InstanceManagerDialog::changeGroup);
+  add(NoteGlyph, tr("Edit notes\u2026"), nullptr, &InstanceManagerDialog::editNotes);
+  menu.addSeparator();
+  add(FolderGlyph, tr("Open instance folder"), nullptr, &InstanceManagerDialog::exploreLocation);
+  add(GameGlyph, tr("Open game folder"), m_gameRow.action, &InstanceManagerDialog::exploreGame);
+  add(DocumentGlyph, tr("Open ModOrganizer.ini"), nullptr, &InstanceManagerDialog::openINI);
+  menu.addSeparator();
+  add(DeleteGlyph, tr("Delete instance"), m_delete, &InstanceManagerDialog::deleteInstance,
+      QKeySequence(Qt::Key_Delete));
+
+  FluentIcons::apply(&menu);
+  menu.exec(m_list->viewport()->mapToGlobal(pos));
 }
 
 void InstanceManagerDialog::showEvent(QShowEvent* e)
@@ -486,6 +897,28 @@ void InstanceManagerDialog::showEvent(QShowEvent* e)
   if (s) {
     s->geometry().restoreGeometry(this);
   }
+
+  // never shorter than the details need, so their rows don't scroll; a size
+  // saved before the rows were added grows to fit
+  const int needed = qMax(560, layout()->minimumSize().height());
+  setMinimumHeight(needed);
+  if (height() < needed) {
+    resize(width(), needed);
+  }
+
+  // a window that grew stays on its screen; checked once it is shown, when
+  // its frame and its place are final
+  QTimer::singleShot(0, this, [this] {
+    const QScreen* sc = QGuiApplication::screenAt(frameGeometry().center());
+    if (sc == nullptr) {
+      return;
+    }
+    const QRect area  = sc->availableGeometry();
+    const QRect frame = frameGeometry();
+    if (frame.bottom() > area.bottom()) {
+      move(pos().x(), qMax(area.top(), pos().y() - (frame.bottom() - area.bottom())));
+    }
+  });
 
   QDialog::showEvent(e);
 }
@@ -553,30 +986,121 @@ void InstanceManagerDialog::updateList()
   const auto* prevSel     = singleSelection();
 
   m_model->clear();
-  ui->instancesHeading->setText(
-      tr("Available instances (%1)").arg(m_instances.size()));
+
+  // the order inside each group
+  std::vector<std::size_t> order(m_instances.size());
+  std::iota(order.begin(), order.end(), 0);
+  if (m_sortBy == QLatin1String("used")) {
+    std::vector<QDateTime> used;
+    for (const auto& ii : m_instances) {
+      used.push_back(lastUsedTime(*ii));
+    }
+    std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+      return used[a] > used[b];
+    });
+  } else {
+    std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+      return MOBase::naturalCompare(m_instances[a]->displayName(),
+                                    m_instances[b]->displayName()) < 0;
+    });
+  }
+
+  // the group of each instance; an empty name is "no group", listed last
+  auto groupOf = [&](const Instance& ii) -> QString {
+    if (m_groupBy == QLatin1String("game")) {
+      return ii.gameName().isEmpty() ? tr("Unknown game") : ii.gameName();
+    } else if (m_groupBy == QLatin1String("storage")) {
+      return ii.isPortable() ? tr("Portable") : tr("Global");
+    } else if (m_groupBy == QLatin1String("custom")) {
+      return instanceGroup(ii.instanceIdentifier());
+    }
+    return {};
+  };
+
+  QStringList groups;
+  std::vector<QString> groupOfIndex(m_instances.size());
+  for (std::size_t i = 0; i < m_instances.size(); ++i) {
+    groupOfIndex[i] = groupOf(*m_instances[i]);
+    if (!groups.contains(groupOfIndex[i])) {
+      groups.push_back(groupOfIndex[i]);
+    }
+  }
+  std::sort(groups.begin(), groups.end(), [](const QString& a, const QString& b) {
+    if (a.isEmpty() != b.isEmpty()) {
+      return b.isEmpty();
+    }
+    return MOBase::naturalCompare(a, b) < 0;
+  });
+
+  // headings only help when there is more than one group, or when the user
+  // has made groups of their own
+  const bool headings = m_groupBy != QLatin1String("none") &&
+                        (groups.size() > 1 || (m_groupBy == QLatin1String("custom") &&
+                                               !groups.isEmpty() && !groups[0].isEmpty()));
 
   std::size_t sel = NoSelection;
 
-  // creating items for instances
-  for (std::size_t i = 0; i < m_instances.size(); ++i) {
-    const auto& ii = *m_instances[i];
+  for (const QString& group : groups) {
+    std::vector<std::size_t> members;
+    for (const auto i : order) {
+      if (groupOfIndex[i] == group) {
+        members.push_back(i);
+      }
+    }
 
-    auto* item = new QStandardItem(ii.displayName());
-    item->setIcon(instanceIcon(m_pc, ii, this));
-    item->setSizeHint(QSize(220, 48));
-    item->setToolTip(
-        tr("%1\nGame: %2\nLocation: %3")
-            .arg(ii.isPortable() ? tr("Portable instance")
-                                 : tr("Global instance"),
-                 ii.gameName(), ii.directory()));
+    if (headings) {
+      auto* heading = new QStandardItem(
+          QStringLiteral("%1 (%2)")
+              .arg(group.isEmpty() ? tr("No group") : group)
+              .arg(members.size()));
+      heading->setData(true, HeaderRole);
+      heading->setData(-1, IndexRole);
+      heading->setData(group, GroupRole);
+      heading->setFlags(Qt::ItemIsEnabled);
+      m_model->appendRow(heading);
+    }
 
-    m_model->appendRow(item);
+    for (const auto i : members) {
+      const auto& ii = *m_instances[i];
 
-    if (&ii == prevSel) {
-      sel = i;
+      QString caption = ii.isPortable() ? tr("Portable") : tr("Global");
+      if (ii.isActive()) {
+        caption += QStringLiteral(" · ") + tr("current");
+      } else if (!ii.gameName().isEmpty() && m_groupBy != QLatin1String("game")) {
+        caption += QStringLiteral(" · ") + ii.gameName();
+      } else if (const QString used = lastUsed(ii); !used.isEmpty()) {
+        caption += QStringLiteral(" · ") + used;
+      }
+
+      auto* item = new QStandardItem(ii.displayName());
+      item->setIcon(instanceIcon(m_pc, ii, this));
+      item->setData(caption, CaptionRole);
+      item->setData(static_cast<int>(i), IndexRole);
+      item->setData(instanceValue(NotesSection, ii.instanceIdentifier()), NotesRole);
+      item->setToolTip(QDir::toNativeSeparators(ii.directory()));
+      m_model->appendRow(item);
+
+      if (&ii == prevSel) {
+        sel = i;
+      }
     }
   }
+
+  m_listCount->setText(QString::number(m_instances.size()));
+
+  const QString grouping = m_groupBy == QLatin1String("custom")    ? tr("My groups")
+                           : m_groupBy == QLatin1String("storage") ? tr("By storage")
+                           : m_groupBy == QLatin1String("none")    ? tr("All instances")
+                                                                   : tr("By game");
+  m_view->setText(grouping);
+  m_view->setAccessibleName(tr("Grouping: %1").arg(grouping));
+
+  m_filter->setVisible(m_instances.size() > 6);
+  if (!m_filter->isVisible()) {
+    m_filter->clear();
+  }
+
+  applyFilter();
 
   // keep current selection or select the next one if there was a selection;
   // there's no selection when opening the dialog, that's handled in the ctor
@@ -597,15 +1121,54 @@ void InstanceManagerDialog::updateList()
   }
 }
 
+int InstanceManagerDialog::rowOf(std::size_t index) const
+{
+  for (int row = 0; row < m_model->rowCount(); ++row) {
+    if (m_model->item(row)->data(IndexRole).toInt() == static_cast<int>(index)) {
+      return row;
+    }
+  }
+  return -1;
+}
+
+void InstanceManagerDialog::applyFilter()
+{
+  // a heading hides when none of its instances match
+  const QString text = m_filter->text().trimmed();
+  int heading        = -1;
+  bool anyShown      = false;
+  auto closeHeading  = [&] {
+    if (heading >= 0) {
+      m_list->setRowHidden(heading, !anyShown);
+    }
+  };
+
+  for (int row = 0; row < m_model->rowCount(); ++row) {
+    const QStandardItem* item = m_model->item(row);
+    if (item->data(HeaderRole).toBool()) {
+      closeHeading();
+      heading  = row;
+      anyShown = false;
+      continue;
+    }
+    const bool textMatch =
+        text.isEmpty() || item->text().contains(text, Qt::CaseInsensitive) ||
+        item->data(CaptionRole).toString().contains(text, Qt::CaseInsensitive) ||
+        item->data(NotesRole).toString().contains(text, Qt::CaseInsensitive);
+    m_list->setRowHidden(row, !textMatch);
+    anyShown |= textMatch;
+  }
+  closeHeading();
+}
+
 void InstanceManagerDialog::select(std::size_t i)
 {
   if (i < m_instances.size()) {
     const auto& ii = m_instances[i];
     fillData(*ii);
 
-    ui->list->selectionModel()->select(
-        m_filter.mapFromSource(m_filter.sourceModel()->index(i, 0)),
-        QItemSelectionModel::ClearAndSelect);
+    m_list->selectionModel()->select(m_model->index(rowOf(i), 0),
+                                     QItemSelectionModel::ClearAndSelect);
   } else {
     clearData();
   }
@@ -633,7 +1196,7 @@ void InstanceManagerDialog::selectActiveInstance()
           active->instanceIdentifier()) {
         select(i);
 
-        ui->list->scrollTo(m_filter.mapFromSource(m_filter.sourceModel()->index(i, 0)));
+        m_list->scrollTo(m_model->index(rowOf(i), 0));
 
         return;
       }
@@ -642,7 +1205,7 @@ void InstanceManagerDialog::selectActiveInstance()
 
   if (!m_instances.empty()) {
     select(0);
-    ui->list->scrollTo(m_filter.mapFromSource(m_filter.sourceModel()->index(0, 0)));
+    m_list->scrollTo(m_model->index(rowOf(0), 0));
     return;
   }
 
@@ -680,7 +1243,7 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
 {
   // there might not be a global Settings object if this is called on startup
   // when there's no current instance
-  const auto* s = Settings::maybeInstance();
+  auto* s = Settings::maybeInstance();
 
   // if there is are no settings, no instances are loaded and the confirmation
   // wouldn't make sense
@@ -693,82 +1256,32 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
     return true;
   }
 
-  QDialog dlg(this);
-  dlg.setObjectName(QStringLiteral("SwitchInstanceDialog"));
-  dlg.setWindowTitle(tr("Switching instances"));
-  dlg.setMinimumWidth(540);
-  dlg.resize(580, 290);
+  FluentContentDialog dlg(
+      this, QStringLiteral("SwitchInstanceDialog"),
+      tr("Restart to open %1?").arg(to.displayName()),
+      tr("Mod Organizer closes and opens again with the instance %1. Programs started "
+         "from Mod Organizer should be closed first.")
+          .arg(to.displayName()));
 
-  auto* layout = new QVBoxLayout(&dlg);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(12);
+  auto* dontAsk = new QCheckBox(tr("Don't ask me again"), &dlg);
+  dontAsk->setObjectName(QStringLiteral("switchInstanceDontAsk"));
+  dlg.body()->addWidget(dontAsk);
 
-  auto* header = new QFrame(&dlg);
-  header->setObjectName(QStringLiteral("switchInstanceHeader"));
-  auto* headerLayout = new QHBoxLayout(header);
-  headerLayout->setContentsMargins(14, 13, 16, 13);
-  headerLayout->setSpacing(12);
+  auto* restart = dlg.addButton(tr("Restart"), true);
+  auto* cancel  = dlg.addButton(tr("Cancel"));
+  connect(restart, &QPushButton::clicked, &dlg, &QDialog::accept);
+  connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+  dlg.resize(480, dlg.sizeHint().height());
 
-  auto* badge = new QFrame(header);
-  badge->setObjectName(QStringLiteral("switchInstanceBadge"));
-  badge->setFixedSize(42, 42);
-  auto* badgeLayout = new QVBoxLayout(badge);
-  badgeLayout->setContentsMargins(0, 0, 0, 0);
-  auto* icon = makeCircularHeaderIcon(
-      badge, QStringLiteral(":/MO/gui/mainwindow/instance.svg"),
-      QStringLiteral("switchInstanceIcon"), 24);
-  badgeLayout->addWidget(icon, 0, Qt::AlignCenter);
+  if (dlg.exec() != QDialog::Accepted) {
+    return false;
+  }
 
-  auto* headerText = new QWidget(header);
-  headerText->setObjectName(QStringLiteral("switchInstanceHeaderText"));
-  auto* headerTextLayout = new QVBoxLayout(headerText);
-  headerTextLayout->setContentsMargins(0, 0, 0, 0);
-  headerTextLayout->setSpacing(4);
+  if (dontAsk->isChecked()) {
+    s->interface().setShowChangeGameConfirmation(false);
+  }
 
-  auto* heading = new QLabel(
-      tr("Mod Organizer must restart to manage the instance '%1'.")
-          .arg(to.displayName()),
-      headerText);
-  heading->setObjectName(QStringLiteral("switchInstanceHeading"));
-  heading->setWordWrap(true);
-  auto* description = new QLabel(
-      tr("The selected instance will open after Mod Organizer restarts."),
-      headerText);
-  description->setObjectName(QStringLiteral("switchInstanceDescription"));
-  description->setWordWrap(true);
-  headerTextLayout->addWidget(heading);
-  headerTextLayout->addWidget(description);
-  headerLayout->addWidget(badge);
-  headerLayout->addWidget(headerText, 1);
-  layout->addWidget(header);
-
-  auto* settingsHint = new QFrame(&dlg);
-  settingsHint->setObjectName(QStringLiteral("switchInstanceSettingsHint"));
-  auto* settingsLayout = new QHBoxLayout(settingsHint);
-  settingsLayout->setContentsMargins(12, 9, 12, 9);
-  auto* settingsText = new QLabel(
-      tr("You can turn off this confirmation in Settings."), settingsHint);
-  settingsText->setObjectName(QStringLiteral("switchInstanceSettingsText"));
-  settingsText->setWordWrap(true);
-  settingsLayout->addWidget(settingsText);
-  layout->addWidget(settingsHint);
-  layout->addStretch(1);
-
-  auto* buttonLayout = new QHBoxLayout;
-  buttonLayout->setSpacing(8);
-  buttonLayout->addStretch(1);
-  auto* cancelButton = new QPushButton(tr("Cancel"), &dlg);
-  cancelButton->setObjectName(QStringLiteral("switchInstanceCancelButton"));
-  auto* restartButton = new QPushButton(tr("Restart Mod Organizer"), &dlg);
-  restartButton->setObjectName(QStringLiteral("switchInstanceRestartButton"));
-  restartButton->setDefault(true);
-  buttonLayout->addWidget(cancelButton);
-  buttonLayout->addWidget(restartButton);
-  layout->addLayout(buttonLayout);
-
-  connect(cancelButton, &QPushButton::clicked, &dlg, &QDialog::reject);
-  connect(restartButton, &QPushButton::clicked, &dlg, &QDialog::accept);
-  return (dlg.exec() == QDialog::Accepted);
+  return true;
 }
 
 void InstanceManagerDialog::rename()
@@ -802,9 +1315,9 @@ void InstanceManagerDialog::rename()
   // getting new name
   const auto parentDirectory = QFileInfo(i->directory()).dir().absolutePath();
   const auto oldName = QFileInfo(i->directory()).fileName();
-  const auto newName = getInstanceName(this, tr("Rename instance"), "",
-                                       tr("Instance name"), parentDirectory,
-                                       oldName);
+  const auto newName = getInstanceName(
+      this, tr("Rename instance"), tr("The instance folder is renamed too."),
+      tr("Instance name"), parentDirectory, oldName);
 
   if (newName.isEmpty()) {
     return;
@@ -829,14 +1342,14 @@ void InstanceManagerDialog::rename()
     return;
   }
 
-  // updating ui
+  // updating ui; the group follows the new name
   auto newInstance = std::make_unique<Instance>(dest, i->isPortable());
-  i                = newInstance.get();
+  newInstance->readFromIni();
+  moveInstanceValues(i->instanceIdentifier(), newInstance->instanceIdentifier(), false);
 
-  m_model->item(selIndex)->setText(newInstance->displayName());
   m_instances[selIndex] = std::move(newInstance);
-
-  fillData(*i);
+  updateList();
+  select(selIndex);
 }
 
 void InstanceManagerDialog::exploreLocation()
@@ -874,170 +1387,108 @@ void InstanceManagerDialog::deleteInstance()
     return;
   }
 
-  auto& m = InstanceManager::singleton();
   if (i->isActive()) {
-    QMessageBox::information(this, tr("Deleting instance"),
+    QMessageBox::information(this, tr("Delete instance"),
                              tr("The active instance cannot be deleted."));
     return;
   }
 
-  const auto Recycle = QMessageBox::Save;
-  const auto Delete  = QMessageBox::Yes;
-  const auto Cancel  = QMessageBox::Cancel;
-
   const auto files = i->objectsForDeletion();
 
-  QDialog dlg(this);
-  dlg.setObjectName(QStringLiteral("DeleteInstanceDialog"));
-  dlg.setWindowTitle(tr("Deleting instance"));
-  dlg.setMinimumSize(650, 450);
-  dlg.resize(720, 500);
+  FluentContentDialog dlg(
+      this, QStringLiteral("DeleteInstanceDialog"),
+      tr("Delete %1?").arg(i->displayName()),
+      tr("Choose what to remove. Items the instance can't do without stay checked."));
 
-  auto* dialogLayout = new QVBoxLayout(&dlg);
-  dialogLayout->setContentsMargins(16, 16, 16, 14);
-  dialogLayout->setSpacing(12);
+  // the paths in a card of check box rows
+  auto* list = new QFrame(&dlg);
+  list->setObjectName(QStringLiteral("deleteInstanceList"));
+  auto* listLayout = new QVBoxLayout(list);
+  listLayout->setContentsMargins(0, 0, 0, 0);
+  listLayout->setSpacing(0);
 
-  auto* header = new QFrame(&dlg);
-  header->setObjectName(QStringLiteral("deleteInstanceHeader"));
-  auto* headerLayout = new QHBoxLayout(header);
-  headerLayout->setContentsMargins(14, 13, 16, 13);
-  headerLayout->setSpacing(12);
-
-  auto* warningBadge = new QFrame(header);
-  warningBadge->setObjectName(QStringLiteral("deleteWarningBadge"));
-  warningBadge->setFixedSize(42, 42);
-  auto* badgeLayout = new QVBoxLayout(warningBadge);
-  badgeLayout->setContentsMargins(0, 0, 0, 0);
-  auto* warningIcon = makeCircularHeaderIcon(
-      warningBadge, QStringLiteral(":/MO/gui/mainwindow/status/warning.svg"),
-      QStringLiteral("deleteWarningIcon"), 24);
-  badgeLayout->addWidget(warningIcon, 0, Qt::AlignCenter);
-
-  auto* headerText = new QWidget(header);
-  headerText->setObjectName(QStringLiteral("deleteInstanceHeaderText"));
-  auto* headerTextLayout = new QVBoxLayout(headerText);
-  headerTextLayout->setContentsMargins(0, 0, 0, 0);
-  headerTextLayout->setSpacing(3);
-  auto* heading = new QLabel(tr("These files and folders will be deleted"), headerText);
-  heading->setObjectName(QStringLiteral("deleteInstanceHeading"));
-  auto* description = new QLabel(
-      tr("Only checked paths will be removed. Required items stay selected."),
-      headerText);
-  description->setObjectName(QStringLiteral("deleteInstanceDescription"));
-  description->setWordWrap(true);
-  headerTextLayout->addWidget(heading);
-  headerTextLayout->addWidget(description);
-  headerLayout->addWidget(warningBadge);
-  headerLayout->addWidget(headerText, 1);
-  dialogLayout->addWidget(header);
-
-  auto* listCard = new QFrame(&dlg);
-  listCard->setObjectName(QStringLiteral("deleteInstanceListCard"));
-  auto* listLayout = new QVBoxLayout(listCard);
-  listLayout->setContentsMargins(12, 10, 12, 12);
-  listLayout->setSpacing(7);
-
-  auto* listHeader = new QHBoxLayout;
-  auto* listTitle = new QLabel(tr("Items to remove"), listCard);
-  listTitle->setObjectName(QStringLiteral("deleteInstanceListTitle"));
-  const auto itemCountValue = static_cast<qulonglong>(files.size());
-  const auto itemCountText =
-      itemCountValue == 1 ? tr("%1 item").arg(itemCountValue)
-                          : tr("%1 items").arg(itemCountValue);
-  auto* itemCount = new QLabel(itemCountText, listCard);
-  itemCount->setObjectName(QStringLiteral("deleteInstanceItemCount"));
-  listHeader->addWidget(listTitle);
-  listHeader->addStretch(1);
-  listHeader->addWidget(itemCount);
-  listLayout->addLayout(listHeader);
-
-  auto* list = new QListWidget(listCard);
-  list->setObjectName(QStringLiteral("deleteInstancePaths"));
-  list->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  list->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  list->setAlternatingRowColors(true);
-  list->setSelectionMode(QAbstractItemView::NoSelection);
-  list->setMinimumHeight(145);
-  list->setMaximumHeight(250);
-
+  QList<std::pair<QCheckBox*, QString>> checks;
   for (const auto& f : files) {
-    auto* item = new QListWidgetItem(list);
-    item->setData(Qt::UserRole, f.path);
-
-    auto* pathCheck = new QCheckBox(f.path, list);
-    pathCheck->setObjectName(QStringLiteral("deleteInstancePathCheck"));
-    pathCheck->setToolTip(f.path);
-    pathCheck->setChecked(f.mandatoryDelete);
-    pathCheck->setEnabled(!f.mandatoryDelete);
-    pathCheck->setMinimumHeight(32);
-    item->setSizeHint(pathCheck->sizeHint());
-    list->setItemWidget(item, pathCheck);
+    auto* row = new QFrame(list);
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
+    if (checks.isEmpty()) {
+      row->setProperty("fluentGridRow", true);
+    }
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(14, 8, 14, 8);
+    auto* check = new QCheckBox(QDir::toNativeSeparators(f.path), row);
+    check->setObjectName(QStringLiteral("deleteInstancePathCheck"));
+    check->setToolTip(f.path);
+    check->setChecked(f.mandatoryDelete);
+    check->setEnabled(!f.mandatoryDelete);
+    rowLayout->addWidget(check, 1);
+    listLayout->addWidget(row);
+    checks.append({check, f.path});
   }
 
-  if (list->count() == 0) {
-    auto* emptyItem = new QListWidgetItem(tr("No files or folders were found."));
-    emptyItem->setFlags(emptyItem->flags() & (~Qt::ItemIsEnabled));
-    list->addItem(emptyItem);
+  if (checks.isEmpty()) {
+    auto* none = new QLabel(tr("No files or folders were found."), list);
+    none->setObjectName(QStringLiteral("fluentSettingDescription"));
+    none->setContentsMargins(14, 10, 14, 10);
+    listLayout->addWidget(none);
   }
+  listLayout->addStretch(1);
 
-  listLayout->addWidget(list, 1);
-  dialogLayout->addWidget(listCard, 1);
+  auto* scroll = new QScrollArea(&dlg);
+  scroll->setObjectName(QStringLiteral("deleteInstanceScroll"));
+  scroll->setWidget(list);
+  scroll->setWidgetResizable(true);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  scroll->setMinimumHeight(qMin(60 + 40 * static_cast<int>(checks.size()), 260));
+  dlg.body()->addWidget(scroll, 1);
 
-  auto* actionHint = new QLabel(tr("Choose how MO2 should remove the checked items."), &dlg);
-  actionHint->setObjectName(QStringLiteral("deleteInstanceActionHint"));
-  dialogLayout->addWidget(actionHint);
+  enum Choice
+  {
+    Cancelled = 0,
+    Recycle,
+    Permanent
+  };
 
-  auto* buttonLayout = new QHBoxLayout;
-  buttonLayout->setSpacing(8);
-  auto* cancelButton = new QPushButton(tr("Cancel"), &dlg);
-  cancelButton->setObjectName(QStringLiteral("deleteInstanceCancelButton"));
-  cancelButton->setDefault(true);
-  auto* permanentButton = new QPushButton(tr("Delete permanently"), &dlg);
-  permanentButton->setObjectName(QStringLiteral("deleteInstancePermanentButton"));
-  auto* recycleButton = new QPushButton(tr("Move to the recycle bin"), &dlg);
-  recycleButton->setObjectName(QStringLiteral("deleteInstanceRecycleButton"));
-  buttonLayout->addWidget(cancelButton);
-  buttonLayout->addStretch(1);
-  buttonLayout->addWidget(permanentButton);
-  buttonLayout->addWidget(recycleButton);
-  dialogLayout->addLayout(buttonLayout);
-
-  connect(cancelButton, &QPushButton::clicked, &dlg, [&dlg, Cancel] {
-    dlg.done(Cancel);
-  });
-  connect(permanentButton, &QPushButton::clicked, &dlg, [&dlg, Delete] {
-    dlg.done(Delete);
-  });
-  connect(recycleButton, &QPushButton::clicked, &dlg, [&dlg, Recycle] {
+  auto* recycle   = dlg.addButton(tr("Move to Recycle Bin"), true);
+  auto* permanent = dlg.addButton(tr("Delete permanently"));
+  auto* cancel    = dlg.addButton(tr("Cancel"));
+  connect(recycle, &QPushButton::clicked, &dlg, [&dlg] {
     dlg.done(Recycle);
   });
+  connect(permanent, &QPushButton::clicked, &dlg, [&dlg] {
+    dlg.done(Permanent);
+  });
+  connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+  dlg.resize(620, dlg.sizeHint().height());
 
   const auto r = dlg.exec();
 
-  if (r != Recycle && r != Delete) {
+  if (r != Recycle && r != Permanent) {
     return;
   }
 
   // gathering all the selected items
   QStringList selected;
 
-  for (int i = 0; i < list->count(); ++i) {
-    auto* pathCheck = qobject_cast<QCheckBox*>(list->itemWidget(list->item(i)));
-    if (pathCheck && pathCheck->isChecked()) {
-      selected.append(list->item(i)->data(Qt::UserRole).toString());
+  for (const auto& [check, path] : checks) {
+    if (check->isChecked()) {
+      selected.append(path);
     }
   }
 
   if (selected.isEmpty()) {
-    QMessageBox::information(this, tr("Deleting instance"), tr("Nothing to delete."));
+    QMessageBox::information(this, tr("Delete instance"), tr("Nothing to delete."));
 
     return;
   }
 
   // deleting
+  const QString identifier = i->instanceIdentifier();
   if (!doDelete(selected, (r == Recycle))) {
     return;
   }
+  setInstanceValue(GroupsSection, identifier, {});
+  setInstanceValue(NotesSection, identifier, {});
 
   // updating ui
   updateInstances();
@@ -1047,6 +1498,10 @@ void InstanceManagerDialog::deleteInstance()
 void InstanceManagerDialog::setRestartOnSelect(bool b)
 {
   m_restartOnSelect = b;
+
+  if (const auto* i = singleSelection()) {
+    fillData(*i);
+  }
 }
 
 bool InstanceManagerDialog::doDelete(const QStringList& files, bool recycle)
@@ -1082,7 +1537,7 @@ void InstanceManagerDialog::onSelection()
     return;
   }
 
-  select(i);
+  fillData(*m_instances[i]);
 }
 
 void InstanceManagerDialog::createNew()
@@ -1121,14 +1576,14 @@ void InstanceManagerDialog::createNew()
 
 std::size_t InstanceManagerDialog::singleSelectionIndex() const
 {
-  const auto sel =
-      m_filter.mapSelectionToSource(ui->list->selectionModel()->selection());
+  const auto sel = m_list->selectionModel()->selectedIndexes();
 
   if (sel.size() != 1) {
     return NoSelection;
   }
 
-  return static_cast<std::size_t>(sel.indexes()[0].row());
+  const int index = sel[0].data(IndexRole).toInt();
+  return index < 0 ? NoSelection : static_cast<std::size_t>(index);
 }
 
 const Instance* InstanceManagerDialog::singleSelection() const
@@ -1143,78 +1598,446 @@ const Instance* InstanceManagerDialog::singleSelection() const
 
 void InstanceManagerDialog::fillData(const Instance& ii)
 {
-  ui->selectionHint->setVisible(false);
-  ui->widget_7->setVisible(true);
-  ui->widget_9->setVisible(true);
+  m_detailsStack->setCurrentIndex(1);
 
-  ui->name->setText(ii.displayName());
-  ui->location->setText(ii.directory());
-  ui->location->setCursorPosition(ui->location->text().size());
-  ui->location->setToolTip(
-      tr("Instance folder: %1")
-          .arg(QDir::toNativeSeparators(ii.directory())));
-  ui->baseDirectory->setText(ii.baseDirectory());
-  ui->baseDirectory->setCursorPosition(ui->baseDirectory->text().size());
-  ui->baseDirectory->setToolTip(
-      tr("Mod data folder: %1")
-          .arg(QDir::toNativeSeparators(ii.baseDirectory())));
-  ui->gameName->setText(ii.gameName());
-  ui->gameDir->setText(ii.gameDirectory());
-  ui->gameDir->setCursorPosition(ui->gameDir->text().size());
-  ui->gameDir->setToolTip(
-      tr("Game folder: %1")
-          .arg(QDir::toNativeSeparators(ii.gameDirectory())));
-  setButtonsEnabled(true);
-
-  const auto& m = InstanceManager::singleton();
-
-  ui->instanceStatus->setText(
-      QStringLiteral("%1  |  %2")
-          .arg(ii.isPortable() ? tr("Portable storage") : tr("Global storage"),
-               ii.isActive() ? tr("Current instance") : tr("Ready to switch")));
-
+  const auto& m     = InstanceManager::singleton();
   const bool active = ii.isActive();
-  ui->switchToInstance->setEnabled(!active);
-  ui->switchToInstance->setText(active ? tr("Current instance")
-                                       : tr("Switch to this instance"));
+  auto setValue     = [](DetailRow& row, const QString& text, const QString& tone = {}) {
+    static_cast<ElidedLabel*>(row.value)->setFullText(text);
+    if (row.value->property("tone").toString() != tone) {
+      row.value->setProperty("tone", tone);
+      row.value->style()->unpolish(row.value);
+      row.value->style()->polish(row.value);
+    }
+  };
 
-  const auto portableRoot = QDir::cleanPath(
-      QDir::fromNativeSeparators(m.portablePath()));
-  const auto instanceRoot = QDir::cleanPath(
-      QDir::fromNativeSeparators(ii.directory()));
-  const bool isRootPortable =
-      ii.isPortable() &&
-      portableRoot.compare(instanceRoot, Qt::CaseInsensitive) == 0;
-  ui->rename->setEnabled(!isRootPortable);
-  if (m.isEldenRingOnlyPortableMode()) {
-    ui->deleteInstance->setEnabled(false);
+  // name and caption: game, storage, and when it was last used
+  m_name->setText(ii.displayName());
+  QStringList caption;
+  if (!ii.gameName().isEmpty()) {
+    caption << ii.gameName();
+  }
+  caption << (ii.isPortable() ? tr("Portable") : tr("Global"));
+  if (active) {
+    caption << tr("Current instance");
+  } else if (const QString used = lastUsed(ii); !used.isEmpty()) {
+    caption << tr("Last used %1").arg(used);
+  }
+  m_caption->setText(caption.join(QStringLiteral(" · ")));
+
+  // folders
+  Settings settings(ii.iniPath());
+  const bool settingsRead = settings.iniStatus() == QSettings::NoError;
+
+  setValue(m_locationRow, QDir::toNativeSeparators(ii.directory()));
+  const bool sameBase = QDir::cleanPath(QDir::fromNativeSeparators(ii.baseDirectory()))
+                            .compare(QDir::cleanPath(QDir::fromNativeSeparators(ii.directory())),
+                                     Qt::CaseInsensitive) == 0;
+  setValue(m_baseRow, sameBase ? tr("Same as the instance folder")
+                               : QDir::toNativeSeparators(ii.baseDirectory()));
+
+  // the game: a missing folder or plugin is said right away, before a switch
+  // would fail
+  const bool hasPlugin = m.gamePluginForDirectory(ii.directory(), m_pc) != nullptr;
+  const bool gameFound = !ii.gameDirectory().isEmpty() && QDir(ii.gameDirectory()).exists();
+  if (!hasPlugin) {
+    setValue(m_gameRow,
+             tr("No game plugin can manage %1. The instance can't be opened.")
+                 .arg(ii.gameName().isEmpty() ? tr("this game") : ii.gameName()),
+             QStringLiteral("critical"));
+  } else if (!gameFound) {
+    setValue(m_gameRow,
+             tr("Folder not found: %1").arg(QDir::toNativeSeparators(ii.gameDirectory())),
+             QStringLiteral("critical"));
+  } else {
+    setValue(m_gameRow, QDir::toNativeSeparators(ii.gameDirectory()));
   }
 
+  // profiles, the last used one first
+  QStringList profiles;
+  if (settingsRead) {
+    // only folders that are profiles (plugins keep their own folders there)
+    const QDir profilesDir(settings.paths().profiles());
+    for (const QString& name : profilesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot,
+                                                     QDir::Name | QDir::IgnoreCase)) {
+      if (QFileInfo::exists(profilesDir.filePath(name + QStringLiteral("/modlist.txt")))) {
+        profiles << name;
+      }
+    }
+    const QString selected = settings.game().selectedProfileName().value_or(QString());
+    if (profiles.removeOne(selected)) {
+      profiles.prepend(tr("%1 (last used)").arg(selected));
+    }
+  }
+  setValue(m_profilesRow, profiles.isEmpty() ? tr("No profiles yet")
+                                             : profiles.join(QStringLiteral(", ")));
+
+  setValue(m_iniRow, QDir::toNativeSeparators(ii.iniPath()));
+  setValue(m_storageRow,
+           ii.isPortable()
+               ? tr("Portable: kept in its own folder, moves with Mod Organizer")
+               : tr("Global: kept in your user folder, %1")
+                     .arg(QDir::toNativeSeparators(m.globalInstancesRootPath())));
+
+  const QString group = instanceGroup(ii.instanceIdentifier());
+  setValue(m_groupRow, group.isEmpty() ? tr("No group") : group);
+  const QString notes = instanceValue(NotesSection, ii.instanceIdentifier());
+  setValue(m_notesRow, notes.isEmpty() ? tr("No notes")
+                                       : notes.simplified());
+  m_notesRow.value->setToolTip(notes);
+
+  startSizeScan(ii);
+
+  setButtonsEnabled(true);
+
+  const auto portableRoot = QDir::cleanPath(QDir::fromNativeSeparators(m.portablePath()));
+  const auto instanceRoot = QDir::cleanPath(QDir::fromNativeSeparators(ii.directory()));
+  const bool isRootPortable =
+      ii.isPortable() && portableRoot.compare(instanceRoot, Qt::CaseInsensitive) == 0;
+
+  m_rename->setEnabled(!active && !isRootPortable);
+  m_rename->setToolTip(active ? tr("The open instance can't be renamed")
+                       : isRootPortable
+                           ? tr("The portable instance in the Mod Organizer folder can't "
+                                "be renamed")
+                           : tr("Rename this instance and its folder (F2)"));
+  m_delete->setEnabled(!active);
+  m_delete->setToolTip(active ? tr("The open instance can't be deleted")
+                              : tr("Choose which of this instance's folders to remove (Delete)"));
+  m_duplicate->setEnabled(!isRootPortable);
+  m_duplicate->setToolTip(
+      isRootPortable
+          ? tr("The portable instance in the Mod Organizer folder can't be duplicated")
+          : tr("Copy this instance, with its profiles, mods and settings, to a new one "
+               "(Ctrl+D)"));
+  m_gameRow.action->setEnabled(gameFound);
+
+  const bool hasShortcut = shortcutExists(ii);
+  m_shortcut->setText(hasShortcut ? tr("Remove desktop shortcut") : tr("Desktop shortcut"));
+  m_shortcut->setToolTip(hasShortcut
+                             ? tr("Remove the desktop shortcut that opens this instance")
+                             : tr("Add a desktop shortcut that opens this instance directly"));
+
+  // at startup nothing is open yet, so the current instance opens like any
+  // other; once MO runs, it's the one already open
+  const bool alreadyOpen = active && m_restartOnSelect;
+  m_switch->setText(alreadyOpen ? tr("Current instance")
+                                : (m_restartOnSelect ? tr("Switch to this instance")
+                                                     : tr("Open")));
+  m_switch->setEnabled(!alreadyOpen && hasPlugin);
+}
+
+void InstanceManagerDialog::startSizeScan(const Instance& ii)
+{
+  // the previous scan stops; its result would belong to another instance
+  if (m_sizeScan) {
+    *m_sizeScan = true;
+  }
+  m_sizeScan = std::make_shared<std::atomic_bool>(false);
+  static_cast<ElidedLabel*>(m_sizeRow.value)->setFullText(tr("Calculating…"));
+
+  Settings settings(ii.iniPath());
+  if (settings.iniStatus() != QSettings::NoError) {
+    static_cast<ElidedLabel*>(m_sizeRow.value)->setFullText(tr("Unknown"));
+    return;
+  }
+
+  const QStringList folders = {settings.paths().mods(), settings.paths().downloads(),
+                               settings.paths().overwrite()};
+  auto stop                 = m_sizeScan;
+  QPointer<InstanceManagerDialog> self(this);
+
+  QThreadPool::globalInstance()->start([folders, stop, self] {
+    std::vector<qint64> sizes;
+    for (const QString& folder : folders) {
+      qint64 total = 0;
+      QDirIterator it(folder, QDir::Files | QDir::Hidden | QDir::System,
+                      QDirIterator::Subdirectories);
+      while (it.hasNext() && !*stop) {
+        it.next();
+        total += it.fileInfo().size();
+      }
+      sizes.push_back(total);
+    }
+    if (*stop) {
+      return;
+    }
+
+    QMetaObject::invokeMethod(
+        qApp,
+        [sizes, stop, self] {
+          if (!self || *stop) {
+            return;
+          }
+          const QString text = InstanceManagerDialog::tr("Mods %1 · Downloads %2 · "
+                                                         "Overwrite %3")
+                                   .arg(localizedByteSize(sizes[0]))
+                                   .arg(localizedByteSize(sizes[1]))
+                                   .arg(localizedByteSize(sizes[2]));
+          static_cast<ElidedLabel*>(self->m_sizeRow.value)->setFullText(text);
+        },
+        Qt::QueuedConnection);
+  });
+}
+
+bool InstanceManagerDialog::shortcutExists(const Instance& ii) const
+{
+  return env::instanceShortcut(ii).exists(env::Shortcut::Desktop);
+}
+
+void InstanceManagerDialog::toggleShortcut()
+{
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+
+  auto shortcut = env::instanceShortcut(*i);
+  if (!shortcut.toggle(env::Shortcut::Desktop)) {
+    QMessageBox::critical(this, tr("Desktop shortcut"),
+                          tr("The desktop shortcut could not be changed."));
+  }
+  fillData(*i);
+}
+
+void InstanceManagerDialog::duplicateInstance()
+{
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+
+  auto& m                    = InstanceManager::singleton();
+  const QString source       = QDir::cleanPath(i->directory());
+  const auto parentDirectory = QFileInfo(source).dir().absolutePath();
+
+  const bool sameBase = QDir::cleanPath(QDir::fromNativeSeparators(i->baseDirectory()))
+                            .compare(source, Qt::CaseInsensitive) == 0;
+  const QString text =
+      sameBase ? tr("The copy gets its own folder with this instance's profiles, mods, "
+                    "downloads and settings.")
+               : tr("The copy gets its own folder with this instance's profiles and "
+                    "settings. Its mod data folder is elsewhere and stays shared with "
+                    "the original.");
+
+  const auto name = getInstanceName(
+      this, tr("Duplicate instance"), text, tr("Name of the copy"), parentDirectory,
+      m.makeUniqueName(i->displayName() + QStringLiteral(" ") + tr("copy"), parentDirectory),
+      tr("Duplicate"), false);
+  if (name.isEmpty()) {
+    return;
+  }
+
+  const QString destination = QDir(parentDirectory).filePath(name);
+  log::info("duplicating instance {} to {}", source, destination);
+
+  if (!shellCopy(QStringList{QDir::toNativeSeparators(source)},
+                 QStringList{QDir::toNativeSeparators(destination)}, this)) {
+    const auto e = GetLastError();
+    if (e != ERROR_CANCELLED) {
+      QMessageBox::critical(this, tr("Duplicate instance"),
+                            tr("The instance could not be copied: %1")
+                                .arg(QString::fromStdWString(formatSystemMessage(e))));
+    }
+    return;
+  }
+
+  // paths in the copied settings that pointed into the original now point
+  // into the copy
+  const QString ini = QDir(destination).filePath(QFileInfo(i->iniPath()).fileName());
+  QFile file(ini);
+  if (file.open(QIODevice::ReadOnly)) {
+    QString contents = QString::fromUtf8(file.readAll());
+    file.close();
+    const QString forward = source;
+    QString escaped       = QDir::toNativeSeparators(source);
+    escaped.replace(QStringLiteral("\\"), QStringLiteral("\\\\"));
+    for (const auto& [from, to] :
+         {std::pair{forward, QDir::cleanPath(destination)},
+          std::pair{escaped, QDir::toNativeSeparators(QDir::cleanPath(destination))
+                                 .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
+      contents.replace(from, to, Qt::CaseInsensitive);
+    }
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      file.write(contents.toUtf8());
+      // written to disk before the list reads the copy back
+      file.close();
+    }
+  }
+
+  moveInstanceValues(i->instanceIdentifier(),
+                     Instance(destination, i->isPortable()).instanceIdentifier(), true);
+
+  updateInstances();
+  updateList();
+  select(name);
 }
 
 void InstanceManagerDialog::clearData()
 {
-  ui->selectionHint->setVisible(true);
-  ui->widget_7->setVisible(false);
-  ui->widget_9->setVisible(false);
-  ui->instanceStatus->clear();
-  ui->name->clear();
-  ui->location->clear();
-  ui->baseDirectory->clear();
-  ui->gameName->clear();
-  ui->gameDir->clear();
-
+  if (m_sizeScan) {
+    *m_sizeScan = true;
+  }
+  m_emptyText->setText(m_instances.empty()
+                           ? tr("No instances yet. Create one with New instance.")
+                           : tr("Select an instance to see its folders."));
+  m_detailsStack->setCurrentIndex(0);
   setButtonsEnabled(false);
-
 }
 
 void InstanceManagerDialog::setButtonsEnabled(bool b)
 {
-  ui->rename->setEnabled(b);
-  ui->exploreLocation->setEnabled(b);
-  ui->exploreBaseDirectory->setEnabled(b);
-  ui->exploreGame->setEnabled(b);
-  ui->deleteInstance->setEnabled(b);
-  ui->openINI->setEnabled(b);
-  ui->switchToInstance->setEnabled(b);
+  m_rename->setEnabled(b);
+  m_locationRow.action->setEnabled(b);
+  m_baseRow.action->setEnabled(b);
+  m_gameRow.action->setEnabled(b);
+  m_profilesRow.action->setEnabled(b);
+  m_iniRow.action->setEnabled(b);
+  m_groupRow.action->setEnabled(b);
+  m_notesRow.action->setEnabled(b);
+  m_duplicate->setEnabled(b);
+  m_shortcut->setEnabled(b);
+  m_delete->setEnabled(b);
+  m_switch->setEnabled(b);
+}
+
+void InstanceManagerDialog::changeGroup()
+{
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+
+  // the groups already in use, to pick from or to type a new one
+  QStringList groups;
+  for (const auto& other : m_instances) {
+    const QString group = instanceGroup(other->instanceIdentifier());
+    if (!group.isEmpty() && !groups.contains(group, Qt::CaseInsensitive)) {
+      groups.push_back(group);
+    }
+  }
+  groups.sort(Qt::CaseInsensitive);
+
+  FluentContentDialog dlg(
+      this, QStringLiteral("InstanceGroupDialog"), tr("Move to group"),
+      tr("Instances in the same group are listed together. Type a new name to make a "
+         "group, or leave it empty for no group."));
+
+  auto* caption = new QLabel(tr("Group"), &dlg);
+  auto* combo   = new QComboBox(&dlg);
+  combo->setObjectName(QStringLiteral("instanceGroupCombo"));
+  combo->setAccessibleName(tr("Group"));
+  combo->setEditable(true);
+  combo->addItems(groups);
+  combo->setCurrentText(instanceGroup(i->instanceIdentifier()));
+  combo->lineEdit()->setPlaceholderText(tr("No group"));
+  combo->lineEdit()->selectAll();
+  dlg.body()->addWidget(caption);
+  dlg.body()->addWidget(combo);
+
+  auto* move   = dlg.addButton(tr("Move"), true);
+  auto* cancel = dlg.addButton(tr("Cancel"));
+  connect(move, &QPushButton::clicked, &dlg, &QDialog::accept);
+  connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+  dlg.resize(460, dlg.sizeHint().height());
+
+  if (dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  setInstanceGroup(i->instanceIdentifier(), combo->currentText());
+
+  // grouping by the user's groups shows where the instance went
+  if (!combo->currentText().trimmed().isEmpty() && m_groupBy != QLatin1String("custom")) {
+    m_groupBy = QStringLiteral("custom");
+    GlobalSettings::setValue(QStringLiteral("InstanceManager/groupBy"), m_groupBy);
+  }
+  updateList();
+}
+
+void InstanceManagerDialog::editNotes()
+{
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+
+  FluentContentDialog dlg(
+      this, QStringLiteral("InstanceNotesDialog"), tr("Notes for %1").arg(i->displayName()),
+      tr("What this instance is for, what's in it, or anything to remember. The notes "
+         "are also found by the search."));
+
+  auto* edit = new QPlainTextEdit(instanceValue(NotesSection, i->instanceIdentifier()), &dlg);
+  edit->setObjectName(QStringLiteral("instanceNotesEdit"));
+  edit->setAccessibleName(tr("Notes"));
+  edit->setPlaceholderText(tr("Stable setup with Seamless Co-op, for example"));
+  edit->setMinimumHeight(130);
+  dlg.body()->addWidget(edit, 1);
+
+  auto* save   = dlg.addButton(tr("Save"), true);
+  auto* cancel = dlg.addButton(tr("Cancel"));
+  connect(save, &QPushButton::clicked, &dlg, &QDialog::accept);
+  connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+  dlg.resize(520, dlg.sizeHint().height());
+  edit->setFocus();
+
+  if (dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  setInstanceValue(NotesSection, i->instanceIdentifier(), edit->toPlainText());
+  updateList();
+}
+
+void InstanceManagerDialog::showGroupMenu(const QString& group, const QPoint& globalPos)
+{
+  // only the user's own groups can be renamed or removed
+  if (m_groupBy != QLatin1String("custom") || group.isEmpty()) {
+    return;
+  }
+
+  QMenu menu(this);
+  menu.addAction(FluentIcons::glyph(RenameGlyph), tr("Rename group…"), this,
+                 [this, group] {
+                   FluentContentDialog dlg(
+                       this, QStringLiteral("InstanceGroupRenameDialog"),
+                       tr("Rename group"),
+                       tr("Every instance in %1 moves to the new name. A name that "
+                          "already exists joins the two groups.")
+                           .arg(group));
+                   auto* edit = new QLineEdit(group, &dlg);
+                   edit->setAccessibleName(tr("Group name"));
+                   edit->selectAll();
+                   dlg.body()->addWidget(edit);
+                   auto* ok     = dlg.addButton(tr("Rename"), true);
+                   auto* cancel = dlg.addButton(tr("Cancel"));
+                   connect(edit, &QLineEdit::textChanged, ok, [ok](const QString& t) {
+                     ok->setEnabled(!t.trimmed().isEmpty());
+                   });
+                   connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+                   connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+                   dlg.resize(460, dlg.sizeHint().height());
+                   if (dlg.exec() != QDialog::Accepted) {
+                     return;
+                   }
+                   for (const auto& ii : m_instances) {
+                     if (instanceGroup(ii->instanceIdentifier()) == group) {
+                       setInstanceGroup(ii->instanceIdentifier(), edit->text());
+                     }
+                   }
+                   updateList();
+                 });
+  menu.addAction(FluentIcons::glyph(DeleteGlyph), tr("Remove group"), this, [this, group] {
+    // the instances stay; they only leave the group
+    for (const auto& ii : m_instances) {
+      if (instanceGroup(ii->instanceIdentifier()) == group) {
+        setInstanceGroup(ii->instanceIdentifier(), {});
+      }
+    }
+    updateList();
+  });
+  menu.actions().constLast()->setToolTip(tr("The instances stay; they move to No group"));
+
+  FluentIcons::apply(&menu);
+  menu.exec(globalPos);
 }

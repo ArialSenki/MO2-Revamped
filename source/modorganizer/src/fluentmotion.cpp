@@ -1,6 +1,13 @@
 #include "fluentmotion.h"
+#include "fluenticons.h"
 
+#include <QAction>
+#include <QEvent>
 #include <QGraphicsOpacityEffect>
+#include <QMenu>
+#include <QPainter>
+#include <QStyle>
+#include <QToolButton>
 #include <QPointer>
 #include <QVariantAnimation>
 #include <QWidget>
@@ -11,6 +18,76 @@ namespace FluentMotion
 namespace
 {
   bool g_enabled = true;
+
+  // drawn over a tool button: its chevron, at the angle the menu animation is
+  // at; the button's mouse events go through
+  // the menu a tool button opens: its own, or its action's on a toolbar
+  QMenu* menuOf(QToolButton* button)
+  {
+    if (button->menu() != nullptr) {
+      return button->menu();
+    }
+    return button->defaultAction() != nullptr ? button->defaultAction()->menu() : nullptr;
+  }
+
+  class MenuChevron : public QWidget
+  {
+  public:
+    MenuChevron(QToolButton* button, qreal right, qreal drop)
+        : QWidget(button), m_button(button), m_right(right), m_drop(drop),
+          m_turn(createAnimation(this))
+    {
+      setObjectName(QStringLiteral("fluentMenuChevron"));
+      setAttribute(Qt::WA_TransparentForMouseEvents);
+      // the theme's QWidget rule would paint the button's surface over it
+      setStyleSheet(QStringLiteral("background: transparent;"));
+      setGeometry(button->rect());
+      button->installEventFilter(this);
+
+      connect(m_turn, &QVariantAnimation::valueChanged, this, [this] {
+        update();
+      });
+      connect(menuOf(button), &QMenu::aboutToShow, this, [this] {
+        start(m_turn, angle(), 180.0, Fast);
+      });
+      connect(menuOf(button), &QMenu::aboutToHide, this, [this] {
+        start(m_turn, angle(), 0.0, Fast);
+      });
+    }
+
+  protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+      if (watched == m_button && event->type() == QEvent::Resize) {
+        setGeometry(m_button->rect());
+      }
+      return QWidget::eventFilter(watched, event);
+    }
+
+    void paintEvent(QPaintEvent*) override
+    {
+      QPainter p(this);
+      p.setRenderHint(QPainter::Antialiasing);
+      p.setFont(FluentIcons::font(10));
+      p.setPen(m_button->palette().color(
+          m_button->isEnabled() ? QPalette::Active : QPalette::Disabled, QPalette::ButtonText));
+      p.translate(width() - m_right, height() / 2.0 + m_drop);
+      p.rotate(angle());
+      p.drawText(QRectF(-6, -6, 12, 12), Qt::AlignCenter, QString(QChar(0xE70D)));  // ChevronDown
+    }
+
+  private:
+    QToolButton* m_button;
+    qreal m_right;
+    qreal m_drop;
+    QVariantAnimation* m_turn;
+
+    qreal angle() const
+    {
+      const QVariant v = m_turn->currentValue();
+      return v.isValid() ? v.toReal() : 0.0;
+    }
+  };
 }
 
 bool enabled()
@@ -182,6 +259,21 @@ void pageIn(QWidget* page, int rise)
     }
   });
   start(animation, 0.0, 1.0, Normal);
+}
+
+void animateMenuChevron(QToolButton* button, qreal right, qreal drop)
+{
+  if (button == nullptr || menuOf(button) == nullptr ||
+      button->property("fluentChevron").toBool()) {
+    return;
+  }
+
+  // the theme hides the button's own arrow
+  button->setProperty("fluentChevron", true);
+  button->style()->unpolish(button);
+  button->style()->polish(button);
+
+  new MenuChevron(button, right, drop);
 }
 
 }  // namespace FluentMotion

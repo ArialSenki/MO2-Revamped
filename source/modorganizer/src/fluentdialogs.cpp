@@ -7,6 +7,7 @@
 #include <QAbstractItemView>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QFrame>
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QLabel>
@@ -150,7 +151,6 @@ bool isOptionsDialog(const QDialog* dialog)
 {
   static const QStringList names = {
       QStringLiteral("ProfilesDialog"),        QStringLiteral("EditExecutablesDialog"),
-      QStringLiteral("CreateInstanceDialog"),  QStringLiteral("InstanceManagerDialog"),
       QStringLiteral("TransferSavesDialog"),
       QStringLiteral("LootDialog"),            QStringLiteral("ProblemsDialog"),
   };
@@ -296,3 +296,64 @@ void polishMessageBox(QMessageBox* box)
 }
 
 }  // namespace FluentDialogs
+
+FluentContentDialog::FluentContentDialog(QWidget* parent, const QString& objectName,
+                                         const QString& title, const QString& text)
+    : QDialog(parent)
+{
+  setObjectName(objectName);
+  setProperty("fluentContentDialog", true);
+  setWindowTitle(title);
+  setMinimumWidth(440);
+
+  auto* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  auto* content = new QWidget(this);
+  content->setObjectName(QStringLiteral("fluentDialogContent"));
+  auto* contentLayout = new QVBoxLayout(content);
+  contentLayout->setContentsMargins(24, 20, 24, 24);
+  contentLayout->setSpacing(8);
+
+  auto* titleLabel = new QLabel(title, content);
+  titleLabel->setObjectName(QStringLiteral("fluentDialogTitle"));
+  titleLabel->setWordWrap(true);
+  contentLayout->addWidget(titleLabel);
+
+  m_text = new QLabel(text, content);
+  m_text->setObjectName(QStringLiteral("fluentDialogText"));
+  m_text->setWordWrap(true);
+  m_text->setVisible(!text.isEmpty());
+  contentLayout->addWidget(m_text);
+
+  m_body = new QVBoxLayout;
+  m_body->setContentsMargins(0, 8, 0, 0);
+  m_body->setSpacing(8);
+  contentLayout->addLayout(m_body, 1);
+  layout->addWidget(content, 1);
+
+  auto* band = new QFrame(this);
+  band->setObjectName(QStringLiteral("fluentDialogFooter"));
+  m_buttons = new QHBoxLayout(band);
+  m_buttons->setContentsMargins(24, 24, 24, 24);
+  m_buttons->setSpacing(8);
+  layout->addWidget(band);
+}
+
+QPushButton* FluentContentDialog::addButton(const QString& text, bool primary)
+{
+  auto* button = new QPushButton(text, this);
+  button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  button->setMinimumWidth(110);
+  button->setAutoDefault(false);
+  if (primary && !m_hasDefault) {
+    m_hasDefault = true;
+    button->setDefault(true);
+  }
+  if (primary) {
+    button->setProperty("fluentPrimary", true);
+  }
+  m_buttons->addWidget(button);
+  return button;
+}

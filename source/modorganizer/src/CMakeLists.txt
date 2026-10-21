@@ -192,6 +192,7 @@ mo2_add_filter(NAME src/executables GROUPS
 mo2_add_filter(NAME src/instances GROUPS
 	createinstancedialog
 	createinstancedialogpages
+	createinstancedialogui
 	instancemanager
 	instancemanagerdialog
 )
