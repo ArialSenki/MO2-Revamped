@@ -31,7 +31,9 @@
 #include <QPropertyAnimation>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QScreen>
 #include <QSettings>
+#include <QShortcut>
 #include <QStyle>
 #include <QStyleOptionButton>
 #include <QTimer>
@@ -436,8 +438,13 @@ public:
             language_ = QStringLiteral("es");
         loadTranslations(language_);
         setWindowTitle(tr(QStringLiteral("Instalador de MO2 Revamped")));
-        setMinimumSize(920, 660);
+        // small enough for a 1366x768 screen at 150 %
+        setMinimumSize(800, 560);
         resize(1080, 760);
+        if (QScreen *screen = QGuiApplication::primaryScreen()) {
+            const QSize available = screen->availableGeometry().size();
+            resize(qMin(1080, available.width() - 40), qMin(760, available.height() - 40));
+        }
         buildShell();
 
         if (fixedMode_ >= 0) {
@@ -517,11 +524,11 @@ private:
     }
 
     QVector<ModeInfo> modes() const {
-        if (isolated_) return {{1, QStringLiteral("Instalar Elden Ring aislado"), QStringLiteral("Crea una copia portable dedicada a Elden Ring."), QStringLiteral("install")},
+        if (isolated_) return {{1, QStringLiteral("Instalar Elden Ring y Nightreign aislado"), QStringLiteral("Crea una copia portable dedicada a Elden Ring y Nightreign."), QStringLiteral("install")},
                                {2, QStringLiteral("Actualizar instalación aislada"), QStringLiteral("Actualiza solo la copia aislada y conserva sus datos."), QStringLiteral("update")},
                                {4, QStringLiteral("Restaurar copia anterior"), QStringLiteral("Recupera la copia previa de una actualización."), QStringLiteral("restore")},
                                {5, QStringLiteral("Desinstalar instalación aislada"), QStringLiteral("Retira esta copia; puedes conservar o borrar sus datos."), QStringLiteral("remove")}};
-        return {{1, QStringLiteral("Instalar Elden Ring aislado"), QStringLiteral("Crea una copia portable dedicada a Elden Ring."), QStringLiteral("install")},
+        return {{1, QStringLiteral("Instalar Elden Ring y Nightreign aislado"), QStringLiteral("Crea una copia portable dedicada a Elden Ring y Nightreign."), QStringLiteral("install")},
                 {0, QStringLiteral("Nueva instalación"), QStringLiteral("Instala MO2 Revamped. Después podrás crear tus instancias desde la aplicación."), QStringLiteral("install")},
                 {2, QStringLiteral("Actualizar MO2 Revamped"), QStringLiteral("Actualiza una copia reconocida y crea una copia de seguridad."), QStringLiteral("update")},
                 {3, QStringLiteral("Copiar datos"), QStringLiteral("Elige qué datos copiar; el origen permanece intacto."), QStringLiteral("copy")},
@@ -539,7 +546,7 @@ private:
             if (!modeBlocked(tile->mode())) continue;
             tile->setEnabled(false);
             tile->setBadge(tr(QStringLiteral("Próximamente")));
-            tile->setToolTip(tr(QStringLiteral("La instalación estándar con varias instancias estará disponible más adelante. Por ahora, instala la versión aislada de Elden Ring.")));
+            tile->setToolTip(tr(QStringLiteral("La instalación estándar con varias instancias estará disponible más adelante. Por ahora, instala la versión aislada de Elden Ring y Nightreign.")));
         }
     }
 
@@ -567,7 +574,7 @@ private:
         brandText->setSpacing(1);
         auto *brandTitle = new QLabel(QStringLiteral("MO2 Revamped"));
         brandTitle->setObjectName(QStringLiteral("brandTitle"));
-        brandSub_ = new QLabel(tr(QStringLiteral("Instalación y mantenimiento seguro")));
+        brandSub_ = new QLabel(brandSubtitle());
         brandSub_->setObjectName(QStringLiteral("brandSub"));
         brandText->addStretch();
         brandText->addWidget(brandTitle);
@@ -699,12 +706,31 @@ private:
 
         connect(closeButton_, &QPushButton::clicked, this, [this] { if (!busy_) close(); });
         connect(actionButton_, &QPushButton::clicked, this, [this] { beginOperation(); });
+        // a main window has no default button: Enter starts the task (which
+        // still asks to confirm) and Esc closes while nothing runs
+        for (const auto key : {Qt::Key_Return, Qt::Key_Enter}) {
+            auto *enter = new QShortcut(QKeySequence(key), this);
+            connect(enter, &QShortcut::activated, this, [this] {
+                if (!busy_ && actionButton_ && actionButton_->isVisible() && actionButton_->isEnabled())
+                    actionButton_->click();
+            });
+        }
+        auto *escape = new QShortcut(QKeySequence(Qt::Key_Escape), this);
+        connect(escape, &QShortcut::activated, this, [this] { if (!busy_) close(); });
         applyStyle();
+    }
+
+    QString brandSubtitle() const {
+        QString text = tr(QStringLiteral("Instalación y mantenimiento seguro"));
+#ifdef MO2R_VERSION
+        text += QStringLiteral(" · v") + QStringLiteral(MO2R_VERSION);
+#endif
+        return text;
     }
 
     void rebuildShellText() {
         setWindowTitle(tr(QStringLiteral("Instalador de MO2 Revamped")));
-        if (brandSub_) brandSub_->setText(tr(QStringLiteral("Instalación y mantenimiento seguro")));
+        if (brandSub_) brandSub_->setText(brandSubtitle());
         if (sideTitle_) sideTitle_->setText(tr(QStringLiteral("¿Qué quieres hacer?")));
         if (sideHint_) sideHint_->setText(tr(QStringLiteral("Selecciona una tarea para ver sus opciones y la ubicación afectada.")));
         if (closeButton_) closeButton_->setText(tr(QStringLiteral("Cerrar")));
@@ -952,7 +978,7 @@ private:
         optionsCard_ = card(tr(QStringLiteral("Opciones")));
         auto *optionsLayout = qobject_cast<QVBoxLayout *>(optionsCard_->layout());
         if (mode_ == 0 || mode_ == 1 || mode_ == 2) {
-            if (mode_ == 1 && !isolated_) optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Esta edición solo incluye Elden Ring, usa una única instancia portable y guarda sus datos junto a la carpeta de instalación. La instalación estándar con varias instancias está desactivada temporalmente mientras se amplía su soporte."))));
+            if (mode_ == 1 && !isolated_) optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Esta edición solo incluye Elden Ring y Nightreign, usa una única instancia portable y guarda sus datos junto a la carpeta de instalación. La instalación estándar con varias instancias está desactivada temporalmente mientras se amplía su soporte."))));
             if (mode_ == 2) optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Los archivos reemplazados se guardan en una copia previa. Perfiles, mods, descargas y plugins adicionales se mantienen. Los accesos existentes se conservan; las casillas añaden los que falten."))));
             QGridLayout *grid = newGrid(optionsLayout);
             addCheck(grid, QStringLiteral("startMenu"), QStringLiteral("Acceso en menú Inicio"), true, 0, 0);
@@ -1271,9 +1297,9 @@ private:
             title = tr(QStringLiteral("Instalación nueva"));
             body = tr(QStringLiteral("MO2 Revamped se instalará en:")) + QStringLiteral("\n\n") + target + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 1) {
-            title = tr(QStringLiteral("Instalación portable solo para Elden Ring"));
+            title = tr(QStringLiteral("Instalación portable solo para Elden Ring y Nightreign"));
             body = tr(QStringLiteral("La edición portable aislada de MO2 se instalará en:")) + QStringLiteral("\n\n") + target +
-                   tr(QStringLiteral("\n\nSolo incluirá soporte para Elden Ring y no leerá ni modificará las instancias globales de otras copias de MO2. ¿Continuar?"));
+                   tr(QStringLiteral("\n\nSolo incluirá soporte para Elden Ring y Nightreign y no leerá ni modificará las instancias globales de otras copias de MO2. ¿Continuar?"));
         } else if (mode_ == 2) {
             title = tr(isolated_ ? QStringLiteral("Actualizar instalación aislada") : QStringLiteral("Actualizar MO2 Revamped"));
             body = tr(QStringLiteral("Se actualizarán los archivos del programa en:")) + QStringLiteral("\n\n") + target +
@@ -1291,7 +1317,7 @@ private:
             body = tr(QStringLiteral("Se desinstalará esta instalación de MO2 Revamped:")) + QStringLiteral("\n\n") + target;
             if (checks_.value(QStringLiteral("removeAll"))->isChecked()) {
                 destructive = true;
-                body += tr(QStringLiteral("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes y archivos añadidos. También se quitará la carpeta seleccionada y las contenedoras que queden vacías, hasta llegar a una carpeta con contenido o protegida por Windows. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer."));
+                body += tr(QStringLiteral("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes, guardados compartidos, copias de seguridad de guardados y archivos añadidos. También se quitará la carpeta seleccionada y las contenedoras que queden vacías, hasta llegar a una carpeta con contenido o protegida por Windows. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer."));
             } else {
                 body += tr(QStringLiteral("\n\nSe quitarán las carpetas de componentes reconocidas y se conservarán los datos de usuario, como perfiles, mods, descargas, overwrite y ajustes. Los demás archivos fuera de esas carpetas también se mantienen. ")) +
                         (inspection_.value(QStringLiteral("pendingRestore")).toBool() && inspection_.value(QStringLiteral("validBackup")).toBool()
@@ -1460,7 +1486,9 @@ private:
             launcher.exitStatus() == QProcess::NormalExit && launcher.exitCode() == 0)
             return true;
         if (launcher.state() != QProcess::NotRunning) { launcher.kill(); launcher.waitForFinished(1000); }
-        return QProcess::startDetached(path, {}, QFileInfo(path).absolutePath());
+        // no fallback from this elevated window: MO2, its games and mods
+        // would all run as administrator
+        return false;
     }
 
     void completeOperation(int exitCode, bool normalExit) {

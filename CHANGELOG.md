@@ -1,5 +1,66 @@
 # Changelog
 
+## 1.0.2 — Elden Ring Nightreign, safer saves, Fluent dialogs
+
+Released on October 22, 2026. The isolated edition now covers ELDEN RING
+NIGHTREIGN as well as Elden Ring: each portable copy manages the game chosen
+when it is first opened.
+
+### Elden Ring Nightreign
+
+- New game support (Steam app 2622380, `Game/nightreign.exe`) with the same
+  tools as Elden Ring: save isolation per profile, instance or Steam route,
+  named save profiles, automatic save backups and restore, the launch save
+  guard, native DLL loading, the Native DLL profile, startup options and the
+  archive installer. Saves live in `%APPDATA%\Nightreign\<SteamID64>\NR0000.sl2`
+  (`NR0000.co2` with Seamless Co-op).
+- The launch guard knows `nightreign.exe`, `nrsc_launcher.exe` and me3.
+  Nightreign keeps its own recovery folder, separate from Elden Ring's.
+- "Skip the intro logo screens" is off for Nightreign: the patch matches Elden
+  Ring's game code only.
+
+### Saves (Elden Ring and Nightreign)
+
+- While the game runs from MO2 in an isolated mode, the Steam account folders
+  are set aside and come back unchanged when the game closes; this now covers
+  every launcher (Mod Engine 2's `launchmod_*.bat`, Seamless Co-op, me3), a
+  launcher that takes long to start the game, and saves hidden by another
+  MO2 Revamped install.
+- Automatic backups of the save route before each launch (Settings: how many
+  to keep), "Restore a backup…" in Save Isolation, and a save check in
+  Notifications.
+- Named save profiles import Seamless Co-op `.co2` saves; the Saves tab and
+  the transfer and import lists show only the saves the game reads.
+- Instance-shared saves belong to the instance folder (custom profile paths
+  no longer share them between instances).
+- Removing a profile sends it to the Recycle Bin; Windows asks first when it
+  cannot go there.
+
+### Interface
+
+- Profiles, Executables, Notifications and Manage Overwrite use the instance
+  manager's card layout; context menus follow the Windows 11 order with
+  "Open folder" and "Copy" submenus; short scrolls became taller windows.
+- Instance manager: safer delete (never a shared data folder, a drive or the
+  MO2 folder), duplicates and renames rewrite only exact paths.
+- Settings, downloads and mod menus: toolbar size changes apply cleanly, OK
+  no longer switches the theme or closes the log, Space pauses the selected
+  download, "Add to list" is back in a mod's menu.
+- Long plugin messages wrap instead of being cut; launch errors read normally.
+
+### Installer
+
+- Names the edition "Elden Ring and Nightreign" in all six languages and
+  shows its version in the header; Enter starts the task, Esc closes.
+- Uninstalling after an update removes the program instead of putting the
+  previous version back; files an update drops are removed (Restore brings
+  them back).
+- Without an install record, uninstalling keeps user plugins and themes, and
+  "delete all data" names the save folders it would delete.
+- Refuses to update or uninstall while Elden Ring or Nightreign runs; a
+  missing Windows uninstall entry no longer reports a failed install; MO2 is
+  never started as administrator after setup.
+
 ## 1.0.1 — Interface, installer, and package refresh
 
 Released on October 12, 2026 as a stable release for Elden Ring. It uses one
