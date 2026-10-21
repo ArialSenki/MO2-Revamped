@@ -189,6 +189,11 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   } else {
     ui->toolbarViewGroup->setEnabled(false);
   }
+  // update() applies only the boxes the user changes
+  for (auto* box : {ui->mainToolbarVisibleBox, ui->statusBarVisibleBox,
+                    ui->logPanelVisibleBox}) {
+    box->setProperty("mo2InitialChecked", box->isChecked());
+  }
 
   QObject::connect(ui->categoriesBtn, &QPushButton::clicked, [&] {
     onEditCategories();
@@ -243,23 +248,38 @@ void GeneralSettingsTab::update()
       const QSize iconSize = iconSizeData.toSize();
       const auto buttonStyle = static_cast<Qt::ToolButtonStyle>(
           buttonStyleData.toInt());
-      for (auto* toolbar : mainWindow->findChildren<QToolBar*>()) {
-        toolbar->setIconSize(iconSize);
-        toolbar->setToolButtonStyle(buttonStyle);
+      // through MO2's main window, which also resets the buttons' fixed
+      // sizes and the notification badge; plain QMainWindows take it as is
+      if (!QMetaObject::invokeMethod(mainWindow, "setToolbarSize",
+                                     Q_ARG(QSize, iconSize)) ||
+          !QMetaObject::invokeMethod(mainWindow, "setToolbarButtonStyle",
+                                     Q_ARG(Qt::ToolButtonStyle, buttonStyle))) {
+        for (auto* toolbar : mainWindow->findChildren<QToolBar*>()) {
+          toolbar->setIconSize(iconSize);
+          toolbar->setToolButtonStyle(buttonStyle);
+        }
       }
     }
 
+    // only what the user changed here: a log panel tabbed behind another
+    // dock reads as hidden and must not be closed by an unrelated OK
+    auto changed = [](QCheckBox* box) {
+      return box->isChecked() != box->property("mo2InitialChecked").toBool();
+    };
     if (auto* mainToolbar = mainWindow->findChild<QToolBar*>(
-            QStringLiteral("toolBar"))) {
+            QStringLiteral("toolBar"));
+        mainToolbar && changed(ui->mainToolbarVisibleBox)) {
       mainToolbar->setVisible(ui->mainToolbarVisibleBox->isChecked());
     }
     if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
-            QStringLiteral("statusBar"))) {
+            QStringLiteral("statusBar"));
+        statusBar && changed(ui->statusBarVisibleBox)) {
       statusBar->setVisible(ui->statusBarVisibleBox->isChecked());
       settings().geometry().saveVisibility(statusBar);
     }
     if (auto* logDock = mainWindow->findChild<QDockWidget*>(
-            QStringLiteral("logDock"))) {
+            QStringLiteral("logDock"));
+        logDock && changed(ui->logPanelVisibleBox)) {
       logDock->setVisible(ui->logPanelVisibleBox->isChecked());
     }
 

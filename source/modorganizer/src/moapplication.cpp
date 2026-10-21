@@ -904,7 +904,9 @@ int MOApplication::run(MOMultiProcess& multiProcess)
           &mainWindow, tr("MO2 Revamped"),
           tr("Choose a theme for this instance."),
           tr("You can change it later in Settings > Theme."), tr("Light"),
-          tr("Dark Blue"), tr("Dark Black"), currentChoice);
+          // the name Settings > Theme gives the same file
+          FluentIcons::active() ? tr("Dark") : tr("Dark Blue"), tr("Dark Black"),
+          currentChoice);
       const QString selectedTheme = !selectedChoice
                                         ? currentTheme
                                         : (*selectedChoice ==

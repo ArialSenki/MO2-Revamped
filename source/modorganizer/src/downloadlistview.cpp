@@ -390,7 +390,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       issueRemoveFromViewAll();
     });
   } else {
-    addAction(menu, tr("Un-hide all..."), svg(":/MO/gui/contextmenu/visibility-show.svg"),
+    addAction(menu, tr("Un-hide all"), svg(":/MO/gui/contextmenu/visibility-show.svg"),
               [=] {
                 issueRestoreToViewAll();
               });
@@ -422,6 +422,11 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
     const int row = qobject_cast<QSortFilterProxyModel*>(model())
                         ->mapToSource(currentIndex())
                         .row();
+    // a pending row (an nxm link still resolving) has no state yet
+    if (row < 0 || row >= m_Manager->numTotalDownloads()) {
+      QTreeView::keyPressEvent(event);
+      return;
+    }
     auto state = m_Manager->getState(row);
     if (state >= DownloadManager::STATE_READY) {
       if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
@@ -433,7 +438,7 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
       if (event->key() == Qt::Key_Delete) {
         issueCancel(row);
       } else if (event->key() == Qt::Key_Space) {
-        issuePause(event->key());
+        issuePause(row);
       }
     } else if (state == DownloadManager::STATE_PAUSED ||
                state == DownloadManager::STATE_ERROR ||
@@ -466,7 +471,7 @@ void DownloadListView::issueQueryInfoMd5(int index)
 void DownloadListView::issueDelete(int index)
 {
   const auto r = MOBase::TaskDialog(this, tr("Delete download"))
-                     .main("Are you sure you want to delete this download?")
+                     .main(tr("Are you sure you want to delete this download?"))
                      .content(m_Manager->getFilePath(index))
                      .icon(QMessageBox::Question)
                      .button({tr("Move to the Recycle Bin"), QMessageBox::Yes})
@@ -625,11 +630,12 @@ void DownloadListView::paintEvent(QPaintEvent* event)
   p.setFont(titleFont);
   p.setPen(palette().color(QPalette::Text));
   const QRect title(area.left(), top + glyph + 12, area.width(), 28);
-  p.drawText(title, Qt::AlignHCenter | Qt::AlignVCenter, tr("No downloads yet"));
+  p.drawText(title, Qt::AlignHCenter | Qt::AlignVCenter, tr("No downloads to show"));
 
   p.setFont(font());
   p.setPen(FluentIcons::color(FluentIcons::Tone::Muted));
   const QRect help(area.left(), title.bottom() + 4, area.width(), 44);
   p.drawText(help, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap,
-             tr("Archives you download with Nexus or add with Install appear here."));
+             tr("Archives you download with Nexus or add with Install appear here. "
+                "Hidden downloads appear when hidden downloads are shown."));
 }

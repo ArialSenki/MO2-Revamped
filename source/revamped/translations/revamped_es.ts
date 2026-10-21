@@ -779,6 +779,22 @@
       <source>Visit on Nexus</source>
       <translation>Visitar en Nexus</translation>
     </message>
+    <message>
+      <source>Un-hide all</source>
+      <translation>Mostrar todas</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to delete this download?</source>
+      <translation>¿Seguro que quieres eliminar esta descarga?</translation>
+    </message>
+    <message>
+      <source>No downloads to show</source>
+      <translation>No hay descargas que mostrar</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
+      <translation>Aquí aparecen los archivos que descargas de Nexus o añades con Instalar. Las descargas ocultas aparecen al mostrar las descargas ocultas.</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -4165,6 +4181,10 @@ Ubicación: %3</translation>
     <message>
       <source>Dark Black</source>
       <translation>Negro oscuro</translation>
+    </message>
+    <message>
+      <source>Dark</source>
+      <translation>Oscuro</translation>
     </message>
   </context>
   <context>

@@ -802,6 +802,22 @@
       <source>Delete downloads</source>
       <translation>Elimina download</translation>
     </message>
+    <message>
+      <source>Un-hide all</source>
+      <translation>Mostra tutti</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to delete this download?</source>
+      <translation>Vuoi davvero eliminare questo download?</translation>
+    </message>
+    <message>
+      <source>No downloads to show</source>
+      <translation>Nessun download da mostrare</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
+      <translation>Qui compaiono gli archivi scaricati da Nexus o aggiunti con Installa. I download nascosti compaiono quando si mostrano i download nascosti.</translation>
+    </message>
   </context>
   <context>
     <name>DownloadManager</name>
@@ -4218,6 +4234,10 @@ Percorso: %3</translation>
     <message>
       <source>Dark Black</source>
       <translation>Nero scuro</translation>
+    </message>
+    <message>
+      <source>Dark</source>
+      <translation>Scuro</translation>
     </message>
   </context>
   <context>
