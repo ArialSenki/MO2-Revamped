@@ -1546,6 +1546,8 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="204"/>
+        <location filename="editexecutablesdialog.cpp" line="1293"/>
+        <location filename="editexecutablesdialog.cpp" line="1409"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1609,7 +1611,8 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="384"/>
-        <location filename="editexecutablesdialog.cpp" line="188"/>
+        <location filename="editexecutablesdialog.cpp" line="195"/>
+        <location filename="editexecutablesdialog.cpp" line="1254"/>
         <source>Program</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1621,7 +1624,7 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="503"/>
-        <location filename="editexecutablesdialog.cpp" line="191"/>
+        <location filename="editexecutablesdialog.cpp" line="198"/>
         <source>Optional launch behaviour</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1687,6 +1690,8 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="405"/>
+        <location filename="editexecutablesdialog.cpp" line="1253"/>
+        <location filename="editexecutablesdialog.cpp" line="1404"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1719,11 +1724,14 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="459"/>
+        <location filename="editexecutablesdialog.cpp" line="1256"/>
         <source>Start in</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="483"/>
+        <location filename="editexecutablesdialog.cpp" line="1258"/>
+        <location filename="editexecutablesdialog.cpp" line="1406"/>
         <source>Arguments</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1759,89 +1767,267 @@ Canceling download &quot;%2&quot;...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="301"/>
+        <location filename="editexecutablesdialog.cpp" line="260"/>
+        <location filename="editexecutablesdialog.cpp" line="1375"/>
         <source>Add from file...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="302"/>
+        <location filename="editexecutablesdialog.cpp" line="261"/>
+        <location filename="editexecutablesdialog.cpp" line="1377"/>
         <source>Add empty</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="303"/>
+        <location filename="editexecutablesdialog.cpp" line="262"/>
         <source>Clone selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="451"/>
+        <location filename="editexecutablesdialog.cpp" line="414"/>
         <source>Output mod not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="444"/>
+        <location filename="editexecutablesdialog.cpp" line="407"/>
         <source>Output mod is empty</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="445"/>
+        <location filename="editexecutablesdialog.cpp" line="408"/>
         <source>Output-mod routing is enabled for &quot;%1&quot;, but no mod is selected.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="452"/>
+        <location filename="editexecutablesdialog.cpp" line="415"/>
         <source>The mod &quot;%1&quot; assigned to &quot;%2&quot; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="798"/>
+        <location filename="editexecutablesdialog.cpp" line="769"/>
         <source>Restore the game-provided executables?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="801"/>
+        <location filename="editexecutablesdialog.cpp" line="772"/>
         <source>MO2 will add the executables supplied by the game plugin. Existing entries with matching names will be renamed and kept.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="805"/>
+        <location filename="editexecutablesdialog.cpp" line="776"/>
         <source>Restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="991"/>
-        <location filename="editexecutablesdialog.cpp" line="1033"/>
+        <location filename="editexecutablesdialog.cpp" line="963"/>
+        <location filename="editexecutablesdialog.cpp" line="1005"/>
         <source>New Executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1046"/>
+        <location filename="editexecutablesdialog.cpp" line="1018"/>
         <source>Select a directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1094"/>
+        <location filename="editexecutablesdialog.cpp" line="1066"/>
         <source>Executables (*.exe *.bat *.jar)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1094"/>
+        <location filename="editexecutablesdialog.cpp" line="1066"/>
         <source>All Files (*.*)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1097"/>
+        <location filename="editexecutablesdialog.cpp" line="1069"/>
         <source>Select an executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1113"/>
+        <location filename="editexecutablesdialog.cpp" line="1085"/>
         <source>Java is required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1114"/>
+        <location filename="editexecutablesdialog.cpp" line="1086"/>
         <source>MO needs Java to launch this JAR. If Java is already installed, browse to its javaw.exe file and select it as the binary.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1133"/>
+        <location filename="editexecutablesdialog.cpp" line="1419"/>
+        <source>What can I add here?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1166"/>
+        <source>Programs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1188"/>
+        <source>Add program</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1193"/>
+        <location filename="editexecutablesdialog.cpp" line="1379"/>
+        <source>Restore the game&apos;s programs...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1245"/>
+        <location filename="editexecutablesdialog.cpp" line="1246"/>
+        <source>Browse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1253"/>
+        <source>The name in the Program list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1254"/>
+        <source>The file Mod Organizer starts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1256"/>
+        <source>The folder the program runs from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1258"/>
+        <source>Passed to the program as it starts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1264"/>
+        <source>App ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1265"/>
+        <source>Steam app ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1266"/>
+        <source>Starts the program as another Steam app, for tools that need it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1269"/>
+        <source>Save new files to a mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1270"/>
+        <source>Files the program creates go to this mod instead of Overwrite</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1272"/>
+        <source>Configure...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1273"/>
+        <source>Force load libraries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1274"/>
+        <source>Loads extra DLLs into the program when it starts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1276"/>
+        <source>Use the program&apos;s icon</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1277"/>
+        <source>The Run button and shortcuts show the program&apos;s own icon</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1279"/>
+        <source>Hide from the Program list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1280"/>
+        <source>Keeps the program here without listing it in the main window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1290"/>
+        <location filename="editexecutablesdialog.cpp" line="1392"/>
+        <source>Duplicate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1295"/>
+        <source>Remove the program from the list (Delete)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1331"/>
+        <source>No program file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1333"/>
+        <source>Hidden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1352"/>
+        <source>No program selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1353"/>
+        <source>Add one, or pick one in the list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1361"/>
+        <source>Choose the file it starts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1393"/>
+        <source>Move up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1396"/>
+        <source>Move down</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1401"/>
+        <source>Show in folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1405"/>
+        <source>Program path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1420"/>
+        <source>Any program Mod Organizer should start with your mods in place: the game, its launcher, a script extender or tools like xEdit or BodySlide. Programs started from here see the virtual game folder, so they find the mods of the profile in use.
+
+The programs that are not hidden appear in the main window&apos;s Program list, next to Run.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="editexecutablesdialog.cpp" line="1425"/>
+        <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -74,11 +74,19 @@ struct DetailRow
 DetailRow addDetailRow(QWidget* parent, char16_t glyph, const QString& title,
                        const QString& tip = {}, char16_t actionGlyph = 0xE838);
 
-// appends a Settings row with a switch: glyph, title, description and the
-// check box drawn as a switch on the right. The row follows the box's
+// appends a Settings row with a switch: glyph, title, description, an
+// optional value widget the switch turns on (a field, a picker, a button) and
+// the check box drawn as a switch on the right. The row follows the box's
 // visibility, so code that hides the box hides the whole row.
 QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
-                     const QString& description, QCheckBox* box);
+                     const QString& description, QCheckBox* box,
+                     QWidget* value = nullptr);
+
+// appends a Settings row whose value is edited in place: glyph, title and
+// description on the left, the given widgets (a field and its browse button)
+// on the right
+QFrame* addEditRow(QWidget* parent, char16_t glyph, const QString& title,
+                   const QString& description, const QList<QWidget*>& widgets);
 
 }  // namespace FluentPanels
 

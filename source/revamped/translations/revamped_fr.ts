@@ -913,6 +913,146 @@
       <source>MO needs Java to launch this JAR. If Java is already installed, browse to its javaw.exe file and select it as the binary.</source>
       <translation>MO a besoin de Java pour lancer ce JAR. Si Java est déjà installé, recherchez son fichier javaw.exe et sélectionnez-le comme binaire.</translation>
     </message>
+    <message>
+      <source>What can I add here?</source>
+      <translation>Que puis-je ajouter ici ?</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programmes</translation>
+    </message>
+    <message>
+      <source>Add program</source>
+      <translation>Ajouter un programme</translation>
+    </message>
+    <message>
+      <source>Restore the game's programs...</source>
+      <translation>Restaurer les programmes du jeu...</translation>
+    </message>
+    <message>
+      <source>Browse</source>
+      <translation>Parcourir</translation>
+    </message>
+    <message>
+      <source>The name in the Program list</source>
+      <translation>Le nom dans la liste Programme</translation>
+    </message>
+    <message>
+      <source>The file Mod Organizer starts</source>
+      <translation>Le fichier que Mod Organizer lance</translation>
+    </message>
+    <message>
+      <source>The folder the program runs from</source>
+      <translation>Le dossier depuis lequel il s’exécute</translation>
+    </message>
+    <message>
+      <source>Passed to the program as it starts</source>
+      <translation>Transmis au programme à son lancement</translation>
+    </message>
+    <message>
+      <source>App ID</source>
+      <translation>ID d’app</translation>
+    </message>
+    <message>
+      <source>Steam app ID</source>
+      <translation>ID d’app Steam</translation>
+    </message>
+    <message>
+      <source>Starts the program as another Steam app, for tools that need it</source>
+      <translation>Lance le programme comme une autre app Steam, pour les outils qui en ont besoin</translation>
+    </message>
+    <message>
+      <source>Save new files to a mod</source>
+      <translation>Enregistrer les nouveaux fichiers dans un mod</translation>
+    </message>
+    <message>
+      <source>Files the program creates go to this mod instead of Overwrite</source>
+      <translation>Les fichiers créés par le programme vont dans ce mod au lieu d’Overwrite</translation>
+    </message>
+    <message>
+      <source>Configure...</source>
+      <translation>Configurer...</translation>
+    </message>
+    <message>
+      <source>Force load libraries</source>
+      <translation>Forcer le chargement de bibliothèques</translation>
+    </message>
+    <message>
+      <source>Loads extra DLLs into the program when it starts</source>
+      <translation>Charge des DLL supplémentaires dans le programme à son lancement</translation>
+    </message>
+    <message>
+      <source>Use the program's icon</source>
+      <translation>Utiliser l’icône du programme</translation>
+    </message>
+    <message>
+      <source>The Run button and shortcuts show the program's own icon</source>
+      <translation>Le bouton Lancer et les raccourcis affichent l’icône du programme</translation>
+    </message>
+    <message>
+      <source>Hide from the Program list</source>
+      <translation>Masquer dans la liste Programme</translation>
+    </message>
+    <message>
+      <source>Keeps the program here without listing it in the main window</source>
+      <translation>Garde le programme ici sans l’afficher dans la fenêtre principale</translation>
+    </message>
+    <message>
+      <source>Duplicate</source>
+      <translation>Dupliquer</translation>
+    </message>
+    <message>
+      <source>Remove the program from the list (Delete)</source>
+      <translation>Retire le programme de la liste (Suppr)</translation>
+    </message>
+    <message>
+      <source>No program file</source>
+      <translation>Aucun fichier de programme</translation>
+    </message>
+    <message>
+      <source>Hidden</source>
+      <translation>Masqué</translation>
+    </message>
+    <message>
+      <source>No program selected</source>
+      <translation>Aucun programme sélectionné</translation>
+    </message>
+    <message>
+      <source>Add one, or pick one in the list</source>
+      <translation>Ajoutez-en un ou choisissez-en un dans la liste</translation>
+    </message>
+    <message>
+      <source>Choose the file it starts</source>
+      <translation>Choisissez le fichier qu’il lance</translation>
+    </message>
+    <message>
+      <source>Move up</source>
+      <translation>Monter</translation>
+    </message>
+    <message>
+      <source>Move down</source>
+      <translation>Descendre</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Afficher dans le dossier</translation>
+    </message>
+    <message>
+      <source>Program path</source>
+      <translation>Chemin du programme</translation>
+    </message>
+    <message>
+      <source>Any program Mod Organizer should start with your mods in place: the game, its launcher, a script extender or tools like xEdit or BodySlide. Programs started from here see the virtual game folder, so they find the mods of the profile in use.
+
+The programs that are not hidden appear in the main window's Program list, next to Run.</source>
+      <translation>Tout programme que Mod Organizer doit lancer avec vos mods en place : le jeu, son lanceur, un script extender ou des outils comme xEdit ou BodySlide. Les programmes lancés d’ici voient le dossier virtuel du jeu et trouvent donc les mods du profil utilisé.
+
+Les programmes non masqués apparaissent dans la liste Programme de la fenêtre principale, à côté de Lancer.</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>

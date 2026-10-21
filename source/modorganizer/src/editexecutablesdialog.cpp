@@ -18,7 +18,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "editexecutablesdialog.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
+#include "fluentpanels.h"
+#include "menuutils.h"
 #include "filedialogmemory.h"
 #include "forcedloaddialog.h"
 #include "modlist.h"
@@ -43,6 +46,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPixmap>
 #include <QPushButton>
 #include <QScreen>
+#include <QScrollArea>
+#include <QShortcut>
+#include <QToolButton>
+#include <QFrame>
 #include <QVBoxLayout>
 #include <Shellapi.h>
 #include <algorithm>
@@ -193,54 +200,6 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
   ui->add->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/action-add-light.svg"));
   ui->add->setIconSize(QSize(16, 16));
 
-  if (FluentIcons::active()) {
-    // Fluent v4: every option becomes a full-width switch row (see
-    // FluentSettings); the value it unlocks (AppID, mod, libraries) moves to
-    // the line below, like an expanded Windows 11 setting
-    QVBoxLayout* options = ui->optionsLayout;
-    auto restack = [options](QHBoxLayout* row, QList<QWidget*> details) {
-      const int index = options->indexOf(row);
-      if (index < 0) {
-        return;
-      }
-
-      QList<QWidget*> boxes;
-      for (int i = 0; i < row->count(); ++i) {
-        if (auto* box = qobject_cast<QCheckBox*>(row->itemAt(i)->widget())) {
-          boxes.append(box);
-        }
-      }
-      for (QWidget* w : boxes + details) {
-        row->removeWidget(w);
-      }
-      options->removeItem(row);
-      delete row;
-
-      int at = index;
-      for (QWidget* box : boxes) {
-        options->insertWidget(at++, box);
-      }
-      if (!details.isEmpty()) {
-        auto* detail = new QHBoxLayout;
-        detail->setContentsMargins(4, 0, 4, 8);
-        detail->setSpacing(8);
-        for (QWidget* w : details) {
-          const bool field = qobject_cast<QLineEdit*>(w) || qobject_cast<QComboBox*>(w);
-          detail->addWidget(w, field ? 1 : 0);
-        }
-        if (details.size() == 1 && qobject_cast<QPushButton*>(details.front())) {
-          detail->addStretch(1);
-        }
-        options->insertLayout(at, detail);
-      }
-    };
-
-    restack(ui->horizontalLayout_5, {ui->steamAppIdLabel, ui->steamAppID});
-    restack(ui->horizontalLayout_9, {ui->mods});
-    restack(ui->horizontalLayout_8, {ui->configureLibraries});
-    restack(ui->displayOptionsLayout, {});
-  }
-
   // Tool buttons keep their size hint by default; let both action rows span
   // the list width evenly instead of leaving uneven gaps.
   for (QToolButton* button : {ui->add, ui->remove, ui->up, ui->down, ui->reset}) {
@@ -336,6 +295,10 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
   connect(ui->list->model(), &QAbstractItemModel::rowsMoved, [&] {
     saveOrder();
   });
+
+  if (FluentIcons::active()) {
+    buildFluentLayout();
+  }
 }
 
 EditExecutablesDialog::~EditExecutablesDialog() = default;
@@ -561,7 +524,9 @@ void EditExecutablesDialog::fillList()
 
 QListWidgetItem* EditExecutablesDialog::createListItem(const Executable& exe)
 {
-  return new QListWidgetItem(exe.title());
+  auto* item = new QListWidgetItem(exe.title());
+  refreshFluentItem(item);
+  return item;
 }
 
 void EditExecutablesDialog::updateUI(const QListWidgetItem* item, const Executable* e)
@@ -576,6 +541,7 @@ void EditExecutablesDialog::updateUI(const QListWidgetItem* item, const Executab
   }
 
   setButtons(item, e);
+  refreshFluent();
 }
 
 void EditExecutablesDialog::setButtons(const QListWidgetItem* item, const Executable* e)
@@ -628,6 +594,9 @@ void EditExecutablesDialog::setEdits(const Executable& e)
   ui->binary->setText(QDir::toNativeSeparators(e.binaryInfo().filePath()));
   ui->workingDirectory->setText(QDir::toNativeSeparators(e.workingDirectory()));
   ui->arguments->setText(e.arguments());
+  // long paths show their drive and first folders, like the instance manager
+  ui->binary->setCursorPosition(0);
+  ui->workingDirectory->setCursorPosition(0);
   ui->overwriteSteamAppID->setChecked(!e.steamAppID().isEmpty());
   ui->steamAppID->setEnabled(!e.steamAppID().isEmpty());
   ui->steamAppID->setText(e.steamAppID());
@@ -744,6 +713,8 @@ void EditExecutablesDialog::save()
   }
 
   setDirty(true);
+
+  refreshFluent();
 }
 
 void EditExecutablesDialog::saveOrder()
@@ -922,6 +893,7 @@ void EditExecutablesDialog::on_title_textChanged(const QString& original)
   if (auto* i = selectedItem()) {
     i->setText(s);
   }
+  refreshFluent();
 }
 
 void EditExecutablesDialog::on_title_editingFinished()
@@ -1126,4 +1098,332 @@ void EditExecutablesDialog::setJarBinary(const QFileInfo& binary)
   }
 
   save();
+}
+
+void EditExecutablesDialog::buildFluentLayout()
+{
+  // the Designer layout stays for the classic themes; Fluent moves the same
+  // widgets into the instance manager's list and details cards, so all the
+  // handlers above keep working on them
+  m_fluent   = true;
+  auto* root = qobject_cast<QVBoxLayout*>(layout());
+  if (root == nullptr) {
+    return;
+  }
+
+  ui->headerCard->hide();
+  ui->splitter->hide();
+  root->removeWidget(ui->headerCard);
+  root->removeWidget(ui->splitter);
+  root->removeWidget(ui->buttons);
+  root->setContentsMargins(12, 12, 12, 12);
+  root->setSpacing(10);
+
+  auto* body = new QHBoxLayout;
+  body->setSpacing(8);
+  body->addWidget(createFluentListCard());
+  body->addWidget(createFluentDetails(), 1);
+  root->addLayout(body, 1);
+
+  // help on the left, OK, Cancel and Apply on the right
+  auto* footer = new QHBoxLayout;
+  footer->setSpacing(8);
+  auto* help = new QToolButton(this);
+  help->setObjectName(QStringLiteral("instanceHelpButton"));
+  help->setText(tr("What can I add here?"));
+  help->setIcon(FluentIcons::glyph(0xE897, FluentIcons::Tone::Muted));
+  help->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  help->setAutoRaise(true);
+  help->setCursor(Qt::PointingHandCursor);
+  footer->addWidget(help);
+  footer->addStretch(1);
+  footer->addWidget(ui->buttons);
+  root->addLayout(footer);
+  connect(help, &QToolButton::clicked, this, &EditExecutablesDialog::showFluentHelp);
+
+  setMinimumSize(900, 600);
+  resize(std::max(width(), 1000), std::max(height(), 700));
+
+  for (int i = 0; i < ui->list->count(); ++i) {
+    refreshFluentItem(ui->list->item(i));
+  }
+  refreshFluent();
+}
+
+QWidget* EditExecutablesDialog::createFluentListCard()
+{
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("executableListCard"));
+  card->setProperty("fluentCard", true);
+  card->setFixedWidth(280);
+
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(8, 10, 8, 8);
+  layout->setSpacing(6);
+
+  auto* title = new QHBoxLayout;
+  title->setContentsMargins(6, 0, 6, 2);
+  auto* heading = new QLabel(tr("Programs"), card);
+  heading->setObjectName(QStringLiteral("fluentCardTitle"));
+  m_fluentCount = new QLabel(card);
+  m_fluentCount->setObjectName(QStringLiteral("fluentStatCaption"));
+  title->addWidget(heading);
+  title->addStretch(1);
+  title->addWidget(m_fluentCount);
+  layout->addLayout(title);
+
+  ui->list->setParent(card);
+  ui->list->setItemDelegate(new FluentPanels::RowDelegate(ui->list, 56, 24));
+  ui->list->setFrameShape(QFrame::NoFrame);
+  ui->list->setMouseTracking(true);
+  ui->list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  ui->list->setContextMenuPolicy(Qt::CustomContextMenu);
+  layout->addWidget(ui->list, 1);
+  ui->list->show();
+  connect(ui->list, &QListWidget::customContextMenuRequested, this,
+          &EditExecutablesDialog::showFluentListMenu);
+
+  // Add keeps its menu (from a file, empty, a copy); restoring the game's
+  // programs joins it, the order buttons move to the list's menu and drag
+  auto* add = new QPushButton(FluentIcons::glyph(0xE710), tr("Add program"), card);
+  add->setObjectName(QStringLiteral("executableAddButton"));
+  add->setAutoDefault(false);
+  if (QMenu* menu = ui->add->menu()) {
+    menu->addSeparator();
+    menu->addAction(tr("Restore the game's programs..."), this,
+                    &EditExecutablesDialog::on_reset_clicked);
+    add->setMenu(menu);
+  }
+  layout->addWidget(add);
+
+  return card;
+}
+
+QWidget* EditExecutablesDialog::createFluentDetails()
+{
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("executableDetailsCard"));
+  card->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  // the program's name and what it starts
+  auto* head = new QHBoxLayout;
+  head->setContentsMargins(18, 14, 12, 14);
+  head->setSpacing(12);
+  m_fluentIcon = new QLabel(card);
+  m_fluentIcon->setFixedSize(32, 32);
+  head->addWidget(m_fluentIcon, 0, Qt::AlignVCenter);
+  auto* names = new QVBoxLayout;
+  names->setSpacing(2);
+  m_fluentName = new QLabel(card);
+  m_fluentName->setObjectName(QStringLiteral("instanceDetailName"));
+  m_fluentCaption = new QLabel(card);
+  m_fluentCaption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  names->addWidget(m_fluentName);
+  names->addWidget(m_fluentCaption);
+  head->addLayout(names, 1);
+  layout->addLayout(head);
+
+  auto* scroll = new QScrollArea(card);
+  scroll->setObjectName(QStringLiteral("instanceDetailsScroll"));
+  scroll->setFrameShape(QFrame::NoFrame);
+  scroll->setWidgetResizable(true);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  auto* rows = new QWidget(scroll);
+  rows->setObjectName(QStringLiteral("instanceDetailRows"));
+  auto* rowsLayout = new QVBoxLayout(rows);
+  rowsLayout->setContentsMargins(0, 0, 0, 0);
+  rowsLayout->setSpacing(0);
+  scroll->setWidget(rows);
+  layout->addWidget(scroll, 1);
+
+  // the browse buttons become glyph buttons beside their field
+  for (QPushButton* browse : {ui->browseBinary, ui->browseWorkingDirectory}) {
+    browse->setText(QString());
+    browse->setToolTip(tr("Browse"));
+    browse->setAccessibleName(tr("Browse"));
+    browse->setIcon(FluentIcons::glyph(0xE8DA));
+    browse->setFixedWidth(40);
+    browse->setProperty("fluentKeepIcon", true);
+  }
+
+  using FluentPanels::addEditRow;
+  addEditRow(rows, 0xE8AC, tr("Title"), tr("The name in the Program list"), {ui->title});
+  addEditRow(rows, 0xE756, tr("Program"), tr("The file Mod Organizer starts"),
+             {ui->binary, ui->browseBinary});
+  addEditRow(rows, 0xE8B7, tr("Start in"), tr("The folder the program runs from"),
+             {ui->workingDirectory, ui->browseWorkingDirectory});
+  addEditRow(rows, 0xE943, tr("Arguments"), tr("Passed to the program as it starts"),
+             {ui->arguments});
+
+  using FluentPanels::addSwitchRow;
+  ui->steamAppIdLabel->hide();
+  ui->steamAppID->setFixedWidth(140);
+  ui->steamAppID->setPlaceholderText(tr("App ID"));
+  addSwitchRow(rows, 0xE7FC, tr("Steam app ID"),
+               tr("Starts the program as another Steam app, for tools that need it"),
+               ui->overwriteSteamAppID, ui->steamAppID);
+  ui->mods->setMinimumWidth(220);
+  addSwitchRow(rows, 0xE74E, tr("Save new files to a mod"),
+               tr("Files the program creates go to this mod instead of Overwrite"),
+               ui->createFilesInMod, ui->mods);
+  ui->configureLibraries->setText(tr("Configure..."));
+  addSwitchRow(rows, 0xE8F1, tr("Force load libraries"),
+               tr("Loads extra DLLs into the program when it starts"),
+               ui->forceLoadLibraries, ui->configureLibraries);
+  addSwitchRow(rows, 0xE91B, tr("Use the program's icon"),
+               tr("The Run button and shortcuts show the program's own icon"),
+               ui->useApplicationIcon);
+  addSwitchRow(rows, 0xED1A, tr("Hide from the Program list"),
+               tr("Keeps the program here without listing it in the main window"),
+               ui->hide);
+  rowsLayout->addStretch(1);
+
+  // duplicate and move on the left, remove on the right
+  auto* actions = new QFrame(card);
+  actions->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* actionsLayout = new QHBoxLayout(actions);
+  actionsLayout->setContentsMargins(12, 12, 12, 12);
+  actionsLayout->setSpacing(8);
+  m_fluentDuplicate = new QPushButton(FluentIcons::glyph(0xE8C8), tr("Duplicate"), actions);
+  m_fluentDuplicate->setAutoDefault(false);
+  m_fluentRemove = new QPushButton(FluentIcons::glyph(0xE74D, FluentIcons::Tone::Critical),
+                                   tr("Remove"), actions);
+  m_fluentRemove->setAutoDefault(false);
+  m_fluentRemove->setToolTip(tr("Remove the program from the list (Delete)"));
+  actionsLayout->addWidget(m_fluentDuplicate);
+  actionsLayout->addStretch(1);
+  actionsLayout->addWidget(m_fluentRemove);
+  layout->addWidget(actions);
+
+  connect(m_fluentDuplicate, &QPushButton::clicked, this, [this] {
+    clone();
+  });
+  connect(m_fluentRemove, &QPushButton::clicked, this,
+          &EditExecutablesDialog::on_remove_clicked);
+
+  auto* del = new QShortcut(QKeySequence(Qt::Key_Delete), ui->list);
+  del->setContext(Qt::WidgetShortcut);
+  connect(del, &QShortcut::activated, this, [this] {
+    if (selectedExe() != nullptr) {
+      on_remove_clicked();
+    }
+  });
+
+  return card;
+}
+
+void EditExecutablesDialog::refreshFluentItem(QListWidgetItem* item)
+{
+  if (!m_fluent || item == nullptr) {
+    return;
+  }
+
+  auto itor = m_executablesList.find(item->text());
+  if (itor == m_executablesList.end()) {
+    return;
+  }
+
+  const Executable& exe = *itor;
+  const QString file    = exe.binaryInfo().fileName();
+  QString caption       = file.isEmpty() ? tr("No program file") : file;
+  if (exe.hide()) {
+    caption += QStringLiteral(" · ") + tr("Hidden");
+  }
+  item->setData(FluentPanels::CaptionRole, caption);
+  item->setIcon(file.isEmpty() ? FluentIcons::glyph(0xE756, FluentIcons::Tone::Muted)
+                               : iconForExecutable(exe.binaryInfo().filePath()));
+}
+
+void EditExecutablesDialog::refreshFluent()
+{
+  if (!m_fluent) {
+    return;
+  }
+
+  m_fluentCount->setText(QString::number(ui->list->count()));
+
+  const Executable* exe = selectedExe();
+  m_fluentDuplicate->setEnabled(exe != nullptr);
+  m_fluentRemove->setEnabled(exe != nullptr);
+  if (exe == nullptr) {
+    m_fluentName->setText(tr("No program selected"));
+    m_fluentCaption->setText(tr("Add one, or pick one in the list"));
+    m_fluentIcon->clear();
+    return;
+  }
+
+  m_fluentName->setText(exe->title());
+  const QString file = exe->binaryInfo().filePath();
+  m_fluentCaption->setText(file.isEmpty()
+                               ? tr("Choose the file it starts")
+                               : QDir::toNativeSeparators(file));
+  const QIcon icon = file.isEmpty() ? FluentIcons::glyph(0xE756, FluentIcons::Tone::Muted)
+                                    : iconForExecutable(file);
+  m_fluentIcon->setPixmap(icon.pixmap(32, 32));
+  refreshFluentItem(selectedItem());
+}
+
+void EditExecutablesDialog::showFluentListMenu(const QPoint& pos)
+{
+  QListWidgetItem* item = ui->list->itemAt(pos);
+  QMenu menu(this);
+
+  if (item == nullptr) {
+    menu.addAction(FluentIcons::glyph(0xE710), tr("Add from file..."), this,
+                   [this] { addFromFile(); });
+    menu.addAction(tr("Add empty"), this, [this] { addEmpty(); });
+    menu.addSeparator();
+    menu.addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs..."), this,
+                   &EditExecutablesDialog::on_reset_clicked);
+    menu.exec(ui->list->viewport()->mapToGlobal(pos));
+    return;
+  }
+
+  ui->list->setCurrentItem(item);
+  const Executable* exe = selectedExe();
+  if (exe == nullptr) {
+    return;
+  }
+  const QString file = exe->binaryInfo().filePath();
+
+  menu.addAction(FluentIcons::glyph(0xE8C8), tr("Duplicate"), this, [this] { clone(); });
+  auto* up = menu.addAction(FluentIcons::glyph(0xE74A), tr("Move up"), this,
+                            &EditExecutablesDialog::on_up_clicked);
+  up->setEnabled(canMove(item, -1));
+  auto* down = menu.addAction(FluentIcons::glyph(0xE74B), tr("Move down"), this,
+                              &EditExecutablesDialog::on_down_clicked);
+  down->setEnabled(canMove(item, +1));
+  menu.addSeparator();
+
+  auto* show = menu.addAction(menuGlyph(MenuGlyphs::Folder), tr("Show in folder"), this,
+                              [file] { shell::Explore(file); });
+  show->setEnabled(!file.isEmpty() && QFileInfo::exists(file));
+  addCopyMenu(&menu, {{tr("Title"), exe->title()},
+                      {tr("Program path"), QDir::toNativeSeparators(file)},
+                      {tr("Arguments"), exe->arguments()}});
+  menu.addSeparator();
+  auto* remove = menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                                tr("Remove"), this,
+                                &EditExecutablesDialog::on_remove_clicked);
+  remove->setShortcut(QKeySequence(Qt::Key_Delete));
+
+  menu.exec(ui->list->viewport()->mapToGlobal(pos));
+}
+
+void EditExecutablesDialog::showFluentHelp()
+{
+  FluentContentDialog dlg(
+      this, QStringLiteral("ExecutableHelpDialog"), tr("What can I add here?"),
+      tr("Any program Mod Organizer should start with your mods in place: the game, its "
+         "launcher, a script extender or tools like xEdit or BodySlide. Programs "
+         "started from here see the virtual game folder, so they find the mods of "
+         "the profile in use.\n\nThe programs that are not hidden appear in the "
+         "main window's Program list, next to Run."));
+  auto* ok = dlg.addButton(tr("OK"), true);
+  connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+  dlg.resize(520, dlg.sizeHint().height());
+  dlg.exec();
 }
