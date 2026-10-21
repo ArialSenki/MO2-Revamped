@@ -16,6 +16,7 @@
 #include <utility.h>
 
 #include <QActionGroup>
+#include <QClipboard>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGuiApplication>
@@ -71,6 +72,7 @@ constexpr char16_t PlayGlyph     = 0xE768;
 constexpr char16_t DocumentOpenGlyph = 0xE8E5;  // OpenFile
 constexpr char16_t TagGlyph      = 0xE8EC;
 constexpr char16_t NoteGlyph     = 0xE70B;  // QuickNote
+constexpr char16_t CopyPathGlyph = 0xE77F;  // Paste, the clipboard
 
 constexpr int RowHeight   = 60;
 constexpr int CaptionRole = Qt::UserRole + 1;
@@ -877,9 +879,32 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
   add(TagGlyph, tr("Move to group\u2026"), nullptr, &InstanceManagerDialog::changeGroup);
   add(NoteGlyph, tr("Edit notes\u2026"), nullptr, &InstanceManagerDialog::editNotes);
   menu.addSeparator();
-  add(FolderGlyph, tr("Open instance folder"), nullptr, &InstanceManagerDialog::exploreLocation);
-  add(GameGlyph, tr("Open game folder"), m_gameRow.action, &InstanceManagerDialog::exploreGame);
-  add(DocumentGlyph, tr("Open ModOrganizer.ini"), nullptr, &InstanceManagerDialog::openINI);
+
+  // every folder of the instance, as the main window's Open folder lists them
+  auto* folders = menu.addMenu(FluentIcons::glyph(FolderGlyph), tr("Open folder"));
+  {
+    const Settings settings(i->iniPath());
+    auto addFolder = [&](const QString& text, const QString& path) {
+      auto* action = folders->addAction(text, this, [path] {
+        shell::Explore(path);
+      });
+      action->setEnabled(!path.isEmpty() && QDir(path).exists());
+    };
+    addFolder(tr("Instance"), i->directory());
+    addFolder(tr("Mod data"), settings.paths().base());
+    addFolder(tr("Downloads"), settings.paths().downloads());
+    addFolder(tr("Mods"), settings.paths().mods());
+    addFolder(tr("Profiles"), settings.paths().profiles());
+    addFolder(tr("Overwrite"), settings.paths().overwrite());
+    addFolder(tr("Game"), i->gameDirectory());
+    folders->addSeparator();
+    folders->addAction(tr("ModOrganizer.ini"), this, &InstanceManagerDialog::openINI);
+  }
+  add(CopyPathGlyph, tr("Copy folder path"), nullptr, [this] {
+    if (const auto* i = singleSelection()) {
+      QGuiApplication::clipboard()->setText(QDir::toNativeSeparators(i->directory()));
+    }
+  });
   menu.addSeparator();
   add(DeleteGlyph, tr("Delete instance"), m_delete, &InstanceManagerDialog::deleteInstance,
       QKeySequence(Qt::Key_Delete));
@@ -1226,7 +1251,7 @@ void InstanceManagerDialog::openSelectedInstance()
     return;
   }
 
-  if (!confirmSwitch(to)) {
+  if (!confirmSwitch(this, to)) {
     return;
   }
 
@@ -1239,7 +1264,7 @@ void InstanceManagerDialog::openSelectedInstance()
   accept();
 }
 
-bool InstanceManagerDialog::confirmSwitch(const Instance& to)
+bool InstanceManagerDialog::confirmSwitch(QWidget* parent, const Instance& to)
 {
   // there might not be a global Settings object if this is called on startup
   // when there's no current instance
@@ -1257,7 +1282,7 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
   }
 
   FluentContentDialog dlg(
-      this, QStringLiteral("SwitchInstanceDialog"),
+      parent, QStringLiteral("SwitchInstanceDialog"),
       tr("Restart to open %1?").arg(to.displayName()),
       tr("Mod Organizer closes and opens again with the instance %1. Programs started "
          "from Mod Organizer should be closed first.")
@@ -1269,8 +1294,8 @@ bool InstanceManagerDialog::confirmSwitch(const Instance& to)
 
   auto* restart = dlg.addButton(tr("Restart"), true);
   auto* cancel  = dlg.addButton(tr("Cancel"));
-  connect(restart, &QPushButton::clicked, &dlg, &QDialog::accept);
-  connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+  QObject::connect(restart, &QPushButton::clicked, &dlg, &QDialog::accept);
+  QObject::connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
   dlg.resize(480, dlg.sizeHint().height());
 
   if (dlg.exec() != QDialog::Accepted) {

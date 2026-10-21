@@ -223,6 +223,8 @@ private:
   void waitForRunningProcess();
   void applyFluentToolbarDefaults(const QSize& iconSize);
   void setupFluentCommandBar();
+  // the instances to switch to, by game, with the manager and New instance
+  void fillInstanceSwitchMenu(QMenu* menu);
   void applyFluentActionIcons();
   static QIcon fluentToolIcon(const QString& name);
   QIcon fluentNotificationIcon(std::size_t count) const;

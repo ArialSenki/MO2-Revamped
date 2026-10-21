@@ -3,12 +3,16 @@
 // defaults. The widgets themselves live in mainwindow.ui; this file only adds
 // behavior that a stylesheet cannot express.
 
+#include "createinstancedialog.h"
 #include "fluentdashboard.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
 #include "revampedtheme.h"
 #include "mainwindow.h"
+#include "instancemanager.h"
+#include "instancemanagerdialog.h"
 #include "organizercore.h"
+#include "shared/util.h"
 #include "settings.h"
 #include "uilocker.h"
 #include "ui_mainwindow.h"
@@ -26,6 +30,8 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
+#include <algorithm>
+#include <map>
 
 namespace
 {
@@ -291,6 +297,18 @@ void MainWindow::setupFluentCommandBar()
     button->setObjectName(QStringLiteral("actionFluentMore"));
   }
 
+  // Manage Instances opens the instances to switch to; the manager itself
+  // is the menu's last entry
+  auto* instances = new QMenu(this);
+  instances->setObjectName(QStringLiteral("instanceSwitchMenu"));
+  ui->actionChange_Game->setMenu(instances);
+  if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(ui->actionChange_Game))) {
+    button->setPopupMode(QToolButton::InstantPopup);
+  }
+  connect(instances, &QMenu::aboutToShow, this, [this, instances] {
+    fillInstanceSwitchMenu(instances);
+  });
+
   // low priority actions show their icon only next to labeled ones
   for (QAction* action : {ui->actionNotifications, m_fluentOverflowAction}) {
     action->setPriority(QAction::LowPriority);
@@ -309,6 +327,88 @@ void MainWindow::setupFluentCommandBar()
       }
     }
   }
+}
+
+void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
+{
+  menu->clear();
+
+  struct Entry
+  {
+    QString path;
+    bool portable;
+    QString name;
+    QString group;
+    bool active;
+  };
+
+  // the instances by game, the games and the names in alphabetical order
+  std::map<QString, std::pair<QString, std::vector<Entry>>> games;
+  const auto& manager = InstanceManager::singleton();
+  auto add            = [&](const QString& path, bool portable) {
+    Instance instance(path, portable);
+    instance.readFromIni();
+    QString game = instance.gameName();
+    if (game.isEmpty()) {
+      game = tr("Unknown game");
+    }
+    auto& [title, entries] = games[game.toCaseFolded()];
+    title                  = game;
+    entries.push_back({path, portable, instance.displayName(),
+                       GlobalSettings::instanceValue(QStringLiteral("InstanceGroups"),
+                                                     instance.instanceIdentifier()),
+                       instance.isActive()});
+  };
+  for (auto&& d : manager.globalInstancePaths()) {
+    add(d, false);
+  }
+  for (auto&& d : manager.portableInstancePaths()) {
+    add(d, true);
+  }
+
+  for (auto& [key, game] : games) {
+    auto& [title, entries] = game;
+    std::sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) {
+      return QString::localeAwareCompare(a.name, b.name) < 0;
+    });
+
+    // the theme hides section titles, so the game is a dimmed entry
+    if (!menu->isEmpty()) {
+      menu->addSeparator();
+    }
+    menu->addAction(QString(title).replace('&', QStringLiteral("&&")))->setEnabled(false);
+
+    for (const auto& entry : entries) {
+      // the group shows where a shortcut would, at the menu's right edge
+      QString text = QString(entry.name).replace('&', QStringLiteral("&&"));
+      if (!entry.group.isEmpty()) {
+        text += QLatin1Char('\t') + entry.group;
+      }
+      auto* action = menu->addAction(text);
+      action->setCheckable(true);
+      action->setChecked(entry.active);
+      connect(action, &QAction::triggered, this, [this, entry] {
+        if (entry.active) {
+          return;
+        }
+        const Instance to(entry.path, entry.portable);
+        if (!InstanceManagerDialog::confirmSwitch(this, to)) {
+          return;
+        }
+        InstanceManager::singleton().setCurrentInstance(to);
+        ExitModOrganizer(Exit::Restart);
+      });
+    }
+  }
+
+  menu->addSeparator();
+  menu->addAction(FluentIcons::glyph(0xE710), tr("New instance\u2026"), this, [this] {
+    CreateInstanceDialog dlg(m_PluginContainer, Settings::maybeInstance(), this);
+    dlg.exec();
+  });
+  menu->addAction(FluentIcons::glyph(0xE8AB), tr("Manage instances\u2026"), this,
+                  &MainWindow::on_actionChange_Game_triggered);
+  FluentIcons::apply(menu);
 }
 
 void MainWindow::applyFluentActionIcons()
