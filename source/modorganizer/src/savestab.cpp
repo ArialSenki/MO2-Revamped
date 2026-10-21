@@ -1,6 +1,10 @@
 #include "savestab.h"
 #include "fluenticons.h"
 #include "menuutils.h"
+#include "fluentpanels.h"
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include "activatemodsdialog.h"
 #include "organizercore.h"
 #include "ui_mainwindow.h"
@@ -39,6 +43,74 @@ SavesTab::SavesTab(QWidget* window, OrganizerCore& core, Ui::MainWindow* mwui)
   connect(ui.list, &QTreeWidget::itemEntered, [&](auto* item) {
     saveSelectionChanged(item);
   });
+
+  createFooter();
+}
+
+void SavesTab::createFooter()
+{
+  // like the Downloads tab: the source of the list on the left, open and
+  // refresh on the right
+  auto* layout = qobject_cast<QVBoxLayout*>(ui.tab->layout());
+  if (layout == nullptr) {
+    return;
+  }
+
+  auto* footer = new QHBoxLayout;
+  footer->setSpacing(8);
+  auto* route = new FluentPanels::ElidedLabel(ui.tab);
+  route->setObjectName(QStringLiteral("savesRouteLabel"));
+  m_route = route;
+  footer->addWidget(route, 1);
+
+  auto* open = new QPushButton(menuGlyph(MenuGlyphs::Folder), tr("Open folder"), ui.tab);
+  open->setObjectName(QStringLiteral("savesOpenFolder"));
+  open->setToolTip(tr("Open the folder these saves are read from"));
+  auto* refresh = new QPushButton(ui.tab);
+  refresh->setObjectName(QStringLiteral("savesRefresh"));
+  refresh->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/refresh.svg"));
+  refresh->setToolTip(tr("Refresh"));
+  refresh->setAccessibleName(tr("Refresh"));
+  footer->addWidget(open);
+  footer->addWidget(refresh);
+  layout->addLayout(footer);
+
+  connect(open, &QPushButton::clicked, this, [this] {
+    if (!m_routePath.isEmpty()) {
+      shell::Explore(m_routePath);
+    }
+  });
+  connect(refresh, &QPushButton::clicked, this, [this] {
+    refreshSaveList();
+  });
+}
+
+void SavesTab::updateRoute(const QDir& savesDir)
+{
+  if (m_route == nullptr) {
+    return;
+  }
+
+  // say whose saves these are: the profile's own, the game's (shared with
+  // Steam and every setup that does not isolate them) or a shared folder
+  const QString path    = QDir::cleanPath(savesDir.absolutePath());
+  const QString profile = QDir::cleanPath(m_core.currentProfile()->absolutePath());
+  const QString game =
+      QDir::cleanPath(m_core.managedGame()->savesDirectory().absolutePath());
+
+  QString kind;
+  if (path.startsWith(profile + "/", Qt::CaseInsensitive) ||
+      path.compare(profile, Qt::CaseInsensitive) == 0) {
+    kind = tr("This profile's own saves");
+  } else if (path.compare(game, Qt::CaseInsensitive) == 0) {
+    kind = tr("The game's saves, shared with Steam");
+  } else {
+    kind = tr("Shared saves");
+  }
+
+  m_routePath = path;
+  static_cast<FluentPanels::ElidedLabel*>(m_route)->setFullText(
+      kind + QStringLiteral(" \u00b7 ") + QDir::toNativeSeparators(path));
 }
 
 bool SavesTab::eventFilter(QObject* object, QEvent* e)
@@ -218,6 +290,7 @@ void SavesTab::refreshSaveListNow()
   // same "save mapping prepared" entry on every refresh.
   QDir savesDir = currentSavesDir();
   startMonitorSaves(savesDir);  // re-starts monitoring
+  updateRoute(savesDir);
 
   try {
     MOBase::log::debug("reading save games from {}", savesDir.absolutePath());

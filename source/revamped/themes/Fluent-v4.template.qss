@@ -808,6 +808,8 @@ QWidget#downloadTab DownloadListView#downloadView QHeaderView::down-arrow {
 
 QWidget#dataTab QPushButton#dataTabRefresh,
 QWidget#downloadTab QPushButton#btnRefreshDownloads,
+QWidget#savesTab QPushButton#savesRefresh,
+QWidget#savesTab QPushButton#savesOpenFolder,
 QWidget#espTab QPushButton#sortButton {
     min-height: 30px;
     padding: 4px 12px;
@@ -820,6 +822,8 @@ QWidget#espTab QPushButton#sortButton {
 }
 QWidget#dataTab QPushButton#dataTabRefresh:hover,
 QWidget#downloadTab QPushButton#btnRefreshDownloads:hover,
+QWidget#savesTab QPushButton#savesRefresh:hover,
+QWidget#savesTab QPushButton#savesOpenFolder:hover,
 QWidget#espTab QPushButton#sortButton:hover {
     color: @text@;
     background-color: @btnHover@;
@@ -828,6 +832,8 @@ QWidget#espTab QPushButton#sortButton:hover {
 }
 QWidget#dataTab QPushButton#dataTabRefresh:pressed,
 QWidget#downloadTab QPushButton#btnRefreshDownloads:pressed,
+QWidget#savesTab QPushButton#savesRefresh:pressed,
+QWidget#savesTab QPushButton#savesOpenFolder:pressed,
 QWidget#espTab QPushButton#sortButton:pressed {
     color: @muted@;
     background-color: @btnPressed@;
@@ -1141,6 +1147,8 @@ QWidget#dataTab QLineEdit#dataTabFilter,
 QWidget#downloadTab QLineEdit#downloadFilterEdit,
 QWidget#dataTab QPushButton#dataTabRefresh,
 QWidget#downloadTab QPushButton#btnRefreshDownloads,
+QWidget#savesTab QPushButton#savesRefresh,
+QWidget#savesTab QPushButton#savesOpenFolder,
 QWidget#espTab QPushButton#sortButton {
     min-height: 30px;
     max-height: 30px;

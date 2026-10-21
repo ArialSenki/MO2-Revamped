@@ -2797,22 +2797,22 @@ The programs that are not hidden appear in the main window&apos;s Program list, 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="95"/>
+        <location filename="forcedloaddialogwidget.cpp" line="107"/>
         <source>Select a library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="96"/>
+        <location filename="forcedloaddialogwidget.cpp" line="108"/>
         <source>Dynamic link libraries (*.dll)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="118"/>
+        <location filename="forcedloaddialogwidget.cpp" line="130"/>
         <source>Select a process</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="119"/>
+        <location filename="forcedloaddialogwidget.cpp" line="131"/>
         <source>Executable files (*.exe)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11942,22 +11942,53 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>SavesTab</name>
     <message>
-        <location filename="savestab.cpp" line="235"/>
+        <location filename="savestab.cpp" line="66"/>
+        <source>Open folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="68"/>
+        <source>Open the folder these saves are read from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="72"/>
+        <location filename="savestab.cpp" line="73"/>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="104"/>
+        <source>This profile&apos;s own saves</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="106"/>
+        <source>The game&apos;s saves, shared with Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="108"/>
+        <source>Shared saves</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="308"/>
         <source>Modified</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="282"/>
+        <location filename="savestab.cpp" line="355"/>
         <source>%1 more</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="286"/>
+        <location filename="savestab.cpp" line="359"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="savestab.cpp" line="287"/>
+        <location filename="savestab.cpp" line="360"/>
         <source>Are you sure you want to remove the following %n save(s)?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;&lt;br&gt;Removed saves will be sent to the Recycle Bin.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -11965,43 +11996,43 @@ p, li { white-space: pre-wrap; }
         </translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="315"/>
+        <location filename="savestab.cpp" line="388"/>
         <source>Restore required plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="318"/>
+        <location filename="savestab.cpp" line="391"/>
         <source>Choose installed mods to activate the plugins required by this save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="327"/>
+        <location filename="savestab.cpp" line="400"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="331"/>
+        <location filename="savestab.cpp" line="404"/>
         <source>File name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="332"/>
+        <location filename="savestab.cpp" line="405"/>
         <source>File path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="333"/>
+        <location filename="savestab.cpp" line="406"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="338"/>
+        <location filename="savestab.cpp" line="411"/>
         <source>Delete...</source>
         <oldsource>Delete %n save(s)...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="339"/>
+        <location filename="savestab.cpp" line="412"/>
         <source>Delete %1 saves...</source>
         <translation type="unfinished"></translation>
     </message>
