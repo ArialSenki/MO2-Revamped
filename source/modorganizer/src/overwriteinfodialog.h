@@ -50,6 +50,11 @@ protected:
   //
   void showEvent(QShowEvent* e) override;
 
+signals:
+  // the card's buttons for the mod list's Overwrite commands
+  void createModRequested();
+  void moveToModRequested();
+
 private:
   // Fluent: one card with the title, a summary and the folder button on top,
   // the files below and the hint at the bottom, like the manager dialogs
@@ -83,7 +88,9 @@ private:
   QAction* m_NewFolderAction;
 
   ModInfo::Ptr m_ModInfo;
-  class QLabel* m_summary = nullptr;
+  class QLabel* m_summary          = nullptr;
+  class QPushButton* m_createMod   = nullptr;
+  class QPushButton* m_moveToMod   = nullptr;
 };
 
 #endif  // OVERWRITEINFODIALOG_H

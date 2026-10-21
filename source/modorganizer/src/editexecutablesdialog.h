@@ -242,6 +242,7 @@ private:
   QLabel* m_fluentCaption   = nullptr;
   QPushButton* m_fluentDuplicate = nullptr;
   QPushButton* m_fluentRemove    = nullptr;
+  QPushButton* m_fluentShortcut  = nullptr;
 
   void buildFluentLayout();
   QWidget* createFluentListCard();

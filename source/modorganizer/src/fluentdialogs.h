@@ -56,6 +56,10 @@ bool polished(const QDialog* dialog);
 
 void polish(QDialog* dialog);
 
+// grows a shown dialog by the few pixels a scroll area overflows (up to
+// 240), when the taller window still fits the screen; polish() runs it once
+void growForShortScroll(QDialog* dialog);
+
 // Windows 11 message boxes: questions without the old "?" badge (Windows 11
 // dialogs ask in words), information, warnings and errors with the Fluent
 // status glyph in its color; the title bar follows the theme. Runs once.

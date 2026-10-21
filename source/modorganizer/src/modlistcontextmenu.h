@@ -148,6 +148,9 @@ private:
   void addFolderActions(ModInfo::Ptr mod);
   void addNexusMenu(ModInfo::Ptr mod);
 
+  // the mods inside the selected separators, by name
+  QStringList modsUnderSelectedSeparators() const;
+
   // the mod's archive in the downloads folder, empty without one
   QString downloadPath(ModInfo::Ptr mod) const;
 

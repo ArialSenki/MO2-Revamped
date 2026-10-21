@@ -671,8 +671,62 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
   addCopyAction(this, tr("Copy folder path"), nativePath(mod->absolutePath()));
 }
 
+QStringList ModListContextMenu::modsUnderSelectedSeparators() const
+{
+  // a separator holds the mods after it in priority order, up to the next
+  // separator
+  QStringList names;
+  Profile* profile = m_core.currentProfile();
+  if (profile == nullptr) {
+    return names;
+  }
+
+  const auto& byPriority = profile->getAllIndexesByPriority();
+  for (const auto& idx : m_selected) {
+    const auto index = idx.data(ModList::IndexRole);
+    if (!index.isValid() || !ModInfo::getByIndex(index.toInt())->isSeparator()) {
+      continue;
+    }
+    const int priority = profile->getModPriority(index.toInt());
+    for (auto it = byPriority.upper_bound(priority); it != byPriority.end(); ++it) {
+      const auto info = ModInfo::getByIndex(it->second);
+      if (info->isSeparator() || info->isOverwrite()) {
+        break;
+      }
+      if (!info->isForeign() && !info->isBackup() && !names.contains(info->name())) {
+        names.append(info->name());
+      }
+    }
+  }
+  return names;
+}
+
 void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
 {
+  // the mods in the separator, switched together
+  const QStringList inside = modsUnderSelectedSeparators();
+  bool anyActive = false, anyInactive = false;
+  for (const auto& name : inside) {
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index != UINT_MAX && m_core.currentProfile()->modEnabled(index)) {
+      anyActive = true;
+    } else {
+      anyInactive = true;
+    }
+  }
+  if (anyInactive) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"),
+              tr("Enable its mods"), [this, inside]() {
+                m_core.modList()->setActive(inside, true);
+              });
+  }
+  if (anyActive) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"),
+              tr("Disable its mods"), [this, inside]() {
+                m_core.modList()->setActive(inside, false);
+              });
+  }
+
   addSeparator();
   addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"),
             [=]() {
