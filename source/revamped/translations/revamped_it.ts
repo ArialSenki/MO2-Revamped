@@ -2929,6 +2929,14 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <source>The selected save is no longer available: {path}</source>
       <translation>Il salvataggio selezionato non è più disponibile: {path}</translation>
     </message>
+    <message>
+      <source>Every choice has its own save folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Ogni scelta ha la propria cartella dei salvataggi. MO2 presenta il salvataggio scelto a Elden Ring come ER0000.sl2 (ER0000.co2 con Seamless Co-op); l'importazione lascia intatta l'origine.</translation>
+    </message>
+    <message>
+      <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Ogni profilo di salvataggio con nome ha la propria cartella. MO2 presenta il salvataggio scelto a Elden Ring come ER0000.sl2 (ER0000.co2 con Seamless Co-op); l'importazione lascia intatta l'origine.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

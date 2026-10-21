@@ -3422,7 +3422,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         save_profile_layout.addLayout(save_profile_row)
         save_profile_note = QLabel(
             _tr("Every choice has its own save folder. MO2 presents the selected save "
-            "to Elden Ring as ER0000.sl2; importing a save leaves its source intact."),
+            "to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing "
+            "a save leaves its source intact."),
             save_profile_group,
         )
         save_profile_note.setObjectName("saveIsolationSectionNote")
@@ -3589,8 +3590,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if mode == self.GlobalShared
                 else (
                     _tr("Each named game save profile has its own folder. MO2 presents "
-                    "the selected save to Elden Ring as ER0000.sl2; importing a "
-                    "save leaves its source intact.")
+                    "the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with "
+                    "Seamless Co-op); importing a save leaves its source intact.")
                 )
             )
             active_path_label.setText(

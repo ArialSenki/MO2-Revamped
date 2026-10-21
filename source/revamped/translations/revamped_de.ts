@@ -2887,6 +2887,14 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <source>The selected save is no longer available: {path}</source>
       <translation>Der gewählte Spielstand ist nicht mehr verfügbar: {path}</translation>
     </message>
+    <message>
+      <source>Every choice has its own save folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Jede Auswahl hat ihren eigenen Spielstandordner. MO2 stellt Elden Ring den gewählten Spielstand als ER0000.sl2 bereit (ER0000.co2 mit Seamless Co-op); beim Importieren bleibt die Quelle unverändert.</translation>
+    </message>
+    <message>
+      <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Jedes benannte Spielstandprofil hat einen eigenen Ordner. MO2 stellt Elden Ring den gewählten Spielstand als ER0000.sl2 bereit (ER0000.co2 mit Seamless Co-op); beim Importieren bleibt die Quelle unverändert.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
