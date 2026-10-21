@@ -5906,6 +5906,10 @@ p, li { white-space: pre-wrap; }
       <source>Visit on Nexus</source>
       <translation>Visitar en Nexus</translation>
     </message>
+    <message>
+      <source>Add to list</source>
+      <translation>Añadir a la lista</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>

@@ -107,6 +107,36 @@ ModListGlobalContextMenu::ModListGlobalContextMenu(
   });
 }
 
+void ModListGlobalContextMenu::addInsertActions(QMenu* menu, ModListView* view,
+                                                ModInfo::Ptr info,
+                                                const QModelIndex& index)
+{
+  // the mod are not created/installed at the same position depending
+  // on the clicked mod and the sort order
+  QString installText = tr("Install mod above...");
+  QString createText  = tr("Create empty mod above");
+  if (info->isSeparator()) {
+    installText = tr("Install mod inside...");
+    createText  = tr("Create empty mod inside");
+  } else if (view->sortOrder() == Qt::DescendingOrder) {
+    installText = tr("Install mod below...");
+    createText  = tr("Create empty mod below");
+  }
+
+  QAction* installAction = menu->addAction(installText, [=]() {
+    view->actions().installMod("", index);
+  });
+  installAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/install.svg"));
+  QAction* createAction = menu->addAction(createText, [=]() {
+    view->actions().createEmptyMod(index);
+  });
+  createAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"));
+  QAction* separatorAction = menu->addAction(tr("Create separator above"), [=]() {
+    view->actions().createSeparator(index);
+  });
+  separatorAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/separator.svg"));
+}
+
 void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
                                         const QModelIndex& index)
 {
@@ -117,31 +147,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     auto info = ModInfo::getByIndex(modIndex.toInt());
     if (!info->isBackup()) {
       addMenuSection(this, tr("Add to list"));
-
-      // the mod are not created/installed at the same position depending
-      // on the clicked mod and the sort order
-      QString installText = tr("Install mod above...");
-      QString createText  = tr("Create empty mod above");
-      if (info->isSeparator()) {
-        installText = tr("Install mod inside...");
-        createText  = tr("Create empty mod inside");
-      } else if (view->sortOrder() == Qt::DescendingOrder) {
-        installText = tr("Install mod below...");
-        createText  = tr("Create empty mod below");
-      }
-
-      QAction* installAction = addAction(installText, [=]() {
-        view->actions().installMod("", index);
-      });
-      installAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/install.svg"));
-      QAction* createAction = addAction(createText, [=]() {
-        view->actions().createEmptyMod(index);
-      });
-      createAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"));
-      QAction* separatorAction = addAction(tr("Create separator above"), [=]() {
-        view->actions().createSeparator(index);
-      });
-      separatorAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/separator.svg"));
+      addInsertActions(this, view, info, index);
     }
   } else {
     addMenuSection(this, tr("Add to list"));
@@ -430,6 +436,15 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
               &QTreeView::expandAll);
   }
 
+  // install or create next to this mod: only by priority, where a position
+  // in the list means something
+  if (view->sortColumn() == ModList::COL_PRIORITY && !info->isBackup() &&
+      !info->isOverwrite()) {
+    addSeparator();
+    auto* insertMenu = addMenu(menuGlyph(MenuGlyphs::Add), tr("Add to list"));
+    ModListGlobalContextMenu::addInsertActions(insertMenu, view, info, index);
+  }
+
   // the remove command of each type goes last, after the list commands
   if (m_remove != nullptr) {
     addSeparator();
@@ -679,8 +694,9 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
   }
 
   addSeparator();
+  // Overwrite's own folder, not those of other selected mods
   addAction(menuGlyph(MenuGlyphs::Folder), tr("Open folder"), [=]() {
-    m_actions.openExplorer(m_selected);
+    shell::Explore(mod->absolutePath());
   });
   addCopyAction(this, tr("Copy folder path"), nativePath(mod->absolutePath()));
 }
@@ -759,8 +775,16 @@ void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
                          m_selected.size() > 1 ? tr("Remove separators...")
                                                : tr("Remove separator..."),
                          this);
+  // only the separators of a mixed selection: the label names separators
+  QModelIndexList separators;
+  for (const auto& index : m_selected) {
+    const auto selected = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
+    if (selected && selected->isSeparator()) {
+      separators.append(index);
+    }
+  }
   connect(m_remove, &QAction::triggered, this, [=]() {
-    m_actions.removeMods(m_selected);
+    m_actions.removeMods(separators);
   });
 }
 

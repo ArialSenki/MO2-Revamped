@@ -44,6 +44,10 @@ protected:
   // populate the menu
   void populate(OrganizerCore& core, ModListView* view, const QModelIndex& index);
 
+  // install, create an empty mod or a separator next to the given mod
+  static void addInsertActions(QMenu* menu, ModListView* view, ModInfo::Ptr info,
+                               const QModelIndex& index);
+
   // creates a "All mods" context menu for the given index (can be invalid).
   ModListGlobalContextMenu(OrganizerCore& core, ModListView* view,
                            const QModelIndex& index, QWidget* parent = nullptr);

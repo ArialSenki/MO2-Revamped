@@ -5974,6 +5974,10 @@ p, li { white-space: pre-wrap; }
       <source>Folders of the %1 selected mods</source>
       <translation>Dossiers des %1 mods sélectionnés</translation>
     </message>
+    <message>
+      <source>Add to list</source>
+      <translation>Ajouter à la liste</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>

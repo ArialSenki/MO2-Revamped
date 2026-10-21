@@ -708,7 +708,9 @@ void Profile::setModsEnabled(const QList<unsigned int>& modsToEnable,
       log::error("invalid mod index: {}", idx);
       continue;
     }
-    if (ModInfo::getByIndex(idx)->alwaysDisabled()) {
+    // separators (and other mods that cannot be enabled) stay as they are
+    if (ModInfo::getByIndex(idx)->alwaysDisabled() ||
+        !ModInfo::getByIndex(idx)->canBeEnabled()) {
       continue;
     }
     if (!m_ModStatus[idx].m_Enabled) {
