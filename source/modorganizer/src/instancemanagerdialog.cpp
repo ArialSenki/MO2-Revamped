@@ -253,8 +253,14 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
       error->setText(QObject::tr("Use a name that's a valid folder name."));
     } else {
       const auto name = MOBase::sanitizeFileName(text->text());
+      // renaming to a different case of the same name is allowed; the same
+      // name is not a rename
+      const bool sameFolder =
+          renaming && name.compare(oldName, Qt::CaseInsensitive) == 0;
 
-      if ((!renaming || name != oldName) && QDir(parentDirectory).exists(name)) {
+      if (renaming && name == oldName) {
+        okay = false;
+      } else if (!sameFolder && QDir(parentDirectory).exists(name)) {
         error->setText(QObject::tr("An instance with this name already exists."));
       } else {
         okay = true;
@@ -1039,8 +1045,11 @@ void InstanceManagerDialog::select(std::size_t i)
 
 void InstanceManagerDialog::select(const QString& name)
 {
+  // a named portable instance shows as "Portable - name": its folder name
+  // matches too
   for (std::size_t i = 0; i < m_instances.size(); ++i) {
-    if (m_instances[i]->displayName() == name) {
+    if (m_instances[i]->displayName() == name ||
+        QFileInfo(m_instances[i]->directory()).fileName() == name) {
       select(i);
       return;
     }
@@ -1086,6 +1095,17 @@ void InstanceManagerDialog::openSelectedInstance()
 
   if (to.isActive()) {
     accept();
+    return;
+  }
+
+  // removed or moved outside MO2 since the list was filled
+  if (!QFileInfo(to.iniPath()).isFile()) {
+    QMessageBox::warning(this, tr("Open instance"),
+                         tr("This instance's folder or settings file no longer "
+                            "exists:\n%1")
+                             .arg(QDir::toNativeSeparators(to.iniPath())));
+    updateInstances();
+    updateList();
     return;
   }
 
@@ -1243,6 +1263,18 @@ void InstanceManagerDialog::openINI()
   }
 }
 
+bool InstanceManagerDialog::rootPortableKeepsGlobalInstances() const
+{
+  // portable.txt keeps portable mode on by itself
+  const QDir install(InstanceManager::singleton().portablePath());
+  if (QFileInfo(install.filePath("portable.txt")).isFile()) {
+    return false;
+  }
+  const QDir globals(install.filePath("GlobalInstances"));
+  return globals.exists() &&
+         !globals.entryList(QDir::Dirs | QDir::NoDotAndDotDot).isEmpty();
+}
+
 void InstanceManagerDialog::deleteInstance()
 {
   const auto* i = singleSelection();
@@ -1253,6 +1285,21 @@ void InstanceManagerDialog::deleteInstance()
   if (i->isActive()) {
     QMessageBox::information(this, tr("Delete instance"),
                              tr("The active instance cannot be deleted."));
+    return;
+  }
+
+  const auto& manager = InstanceManager::singleton();
+  if (i->isPortable() &&
+      QDir::cleanPath(QDir::fromNativeSeparators(manager.portablePath()))
+              .compare(QDir::cleanPath(QDir::fromNativeSeparators(i->directory())),
+                       Qt::CaseInsensitive) == 0 &&
+      rootPortableKeepsGlobalInstances()) {
+    // its ModOrganizer.ini is what puts MO2 in portable mode; without it the
+    // instances in GlobalInstances would no longer be listed
+    QMessageBox::information(
+        this, tr("Delete instance"),
+        tr("This portable instance keeps the instances in the GlobalInstances "
+           "folder listed, so it can't be deleted."));
     return;
   }
 
@@ -1348,6 +1395,9 @@ void InstanceManagerDialog::deleteInstance()
   // deleting
   const QString identifier = i->instanceIdentifier();
   if (!doDelete(selected, (r == Recycle))) {
+    // part of it may be gone already: the list shows what is left
+    updateInstances();
+    updateList();
     return;
   }
   setInstanceValue(GroupsSection, identifier, {});
@@ -1564,9 +1614,13 @@ void InstanceManagerDialog::fillData(const Instance& ii)
                            ? tr("The portable instance in the Mod Organizer folder can't "
                                 "be renamed")
                            : tr("Rename this instance and its folder (F2)"));
-  m_delete->setEnabled(!active);
-  m_delete->setToolTip(active ? tr("The open instance can't be deleted")
-                              : tr("Choose which of this instance's folders to remove (Delete)"));
+  const bool keepsGlobals = isRootPortable && rootPortableKeepsGlobalInstances();
+  m_delete->setEnabled(!active && !keepsGlobals);
+  m_delete->setToolTip(
+      active         ? tr("The open instance can't be deleted")
+      : keepsGlobals ? tr("This portable instance keeps the instances in the "
+                          "GlobalInstances folder listed; it can't be deleted")
+                     : tr("Choose which of this instance's folders to remove (Delete)"));
   m_duplicate->setEnabled(!isRootPortable);
   m_duplicate->setToolTip(
       isRootPortable
@@ -1715,11 +1769,32 @@ void InstanceManagerDialog::duplicateInstance()
     const QString forward = source;
     QString escaped       = QDir::toNativeSeparators(source);
     escaped.replace(QStringLiteral("\\"), QStringLiteral("\\\\"));
+    // only whole folder names: ...\Skyrim must not turn ...\Skyrim SE into
+    // ...\Skyrim copy SE
+    auto replaceFolder = [](QString& text, const QString& from, const QString& to) {
+      QString result;
+      qsizetype position = 0;
+      for (;;) {
+        const qsizetype found = text.indexOf(from, position, Qt::CaseInsensitive);
+        if (found < 0) {
+          break;
+        }
+        const qsizetype end = found + from.size();
+        const QChar next    = end < text.size() ? text.at(end) : QChar(u'\n');
+        result += text.mid(position, found - position);
+        const bool boundary = next == u'/' || next == u'\\' || next == u'"' ||
+                              next == u'\n' || next == u'\r';
+        result += boundary ? to : text.mid(found, from.size());
+        position = end;
+      }
+      result += text.mid(position);
+      text = result;
+    };
     for (const auto& [from, to] :
          {std::pair{forward, QDir::cleanPath(destination)},
           std::pair{escaped, QDir::toNativeSeparators(QDir::cleanPath(destination))
                                  .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
-      contents.replace(from, to, Qt::CaseInsensitive);
+      replaceFolder(contents, from, to);
     }
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
       file.write(contents.toUtf8());

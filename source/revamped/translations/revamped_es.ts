@@ -4071,6 +4071,24 @@ Ubicación: %3</translation>
       <source>Delete instance…</source>
       <translation>Eliminar instancia…</translation>
     </message>
+    <message>
+      <source>Open instance</source>
+      <translation>Abrir instancia</translation>
+    </message>
+    <message>
+      <source>This instance's folder or settings file no longer exists:
+%1</source>
+      <translation>La carpeta o el archivo de ajustes de esta instancia ya no existe:
+%1</translation>
+    </message>
+    <message>
+      <source>This portable instance keeps the instances in the GlobalInstances folder listed, so it can't be deleted.</source>
+      <translation>Esta instancia portable es la que mantiene en la lista las instancias de la carpeta GlobalInstances, así que no se puede eliminar.</translation>
+    </message>
+    <message>
+      <source>This portable instance keeps the instances in the GlobalInstances folder listed; it can't be deleted</source>
+      <translation>Esta instancia portable mantiene en la lista las instancias de la carpeta GlobalInstances; no se puede eliminar</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>

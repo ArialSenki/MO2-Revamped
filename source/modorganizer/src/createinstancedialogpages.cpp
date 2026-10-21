@@ -2073,14 +2073,16 @@ CreateInstanceDialog::Paths PathsPage::selectedPaths() const
 {
   CreateInstanceDialog::Paths p;
 
+  // trimmed as the checks trim them: a leading space would make a relative
+  // path that fails only when the instance is created
   if (ui->advancedPathOptions->isChecked()) {
-    p.base      = ui->base->text();
-    p.downloads = ui->downloads->text();
-    p.mods      = ui->mods->text();
-    p.profiles  = ui->profiles->text();
-    p.overwrite = ui->overwrite->text();
+    p.base      = ui->base->text().trimmed();
+    p.downloads = ui->downloads->text().trimmed();
+    p.mods      = ui->mods->text().trimmed();
+    p.profiles  = ui->profiles->text().trimmed();
+    p.overwrite = ui->overwrite->text().trimmed();
   } else {
-    p.base      = ui->location->text();
+    p.base      = ui->location->text().trimmed();
     p.downloads = ui->sharedDownloads->currentData().toString();
   }
 
