@@ -17,3 +17,5 @@ compiles them with `lrelease` into `translations/revamped_<language>.qm`, and
 MO2 installs that translator together with its own when the interface language
 is set or changed. Keep every `%1`, `%n` and `{name}` placeholder from the
 source text.
+
+The New instance wizard builds its widgets in code (`createinstancedialogui.cpp`) but keeps the Designer file's `CreateInstanceDialog` context. `lupdate` lists those strings under `Ui::CreateInstanceDialog`; add them here under `CreateInstanceDialog`.
