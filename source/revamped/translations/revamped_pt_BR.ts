@@ -3222,6 +3222,10 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>Não foi possível ler o arquivo de configurações do perfil, então ele foi mantido sem alterações:
 {path}</translation>
     </message>
+    <message>
+      <source>Not available for Nightreign yet.</source>
+      <translation>Ainda não disponível para Nightreign.</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeModel</name>

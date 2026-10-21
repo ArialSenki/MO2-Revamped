@@ -3226,6 +3226,10 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>Le fichier de paramètres du profil n'a pas pu être lu ; il a donc été laissé tel quel :
 {path}</translation>
     </message>
+    <message>
+      <source>Not available for Nightreign yet.</source>
+      <translation>Pas encore disponible pour Nightreign.</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeModel</name>

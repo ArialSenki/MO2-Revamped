@@ -1206,6 +1206,9 @@ class EldenRingModDataChecker(BasicModDataChecker):
 class EldenRingLocalSavegames(mobase.LocalSavegames):
     """Route Elden Ring saves according to the active profile's save mode."""
 
+    # the instance's folder for saves shared by its profiles
+    SharedSavesFolderName = "Elden Ring Shared Saves"
+
     ConfigFilename = "eldenring_mo2_saves.ini"
     ProfileIsolated = "profile"
     InstanceShared = "instance_shared"
@@ -1350,14 +1353,14 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
         # the profiles folder, which is the same place unless the profiles
         # path was customised (two instances could then share it); such a
         # folder that already holds saves is kept so nothing goes missing.
-        legacy = profile_path.parent.parent / "Elden Ring Shared Saves"
+        legacy = profile_path.parent.parent / cls.SharedSavesFolderName
         try:
             base = Path(cls._path_organizer.basePath()) if cls._path_organizer else None
         except (AttributeError, RuntimeError, TypeError):
             base = None
         if base is None or not str(base):
             return legacy
-        anchored = base / "Elden Ring Shared Saves"
+        anchored = base / cls.SharedSavesFolderName
         if os.path.normcase(os.path.abspath(anchored)) == os.path.normcase(os.path.abspath(legacy)):
             return anchored
         try:
@@ -1462,6 +1465,15 @@ class EldenRingMo2Game(BasicGame):
     GameBinary = "Game/eldenring.exe"
     GameDataPath = "Game"
     GameSaveExtension = "sl2"
+    # the names that differ between Elden Ring and Nightreign
+    GameProcess = "eldenring.exe"
+    SaveFolderName = "EldenRing"  # in %APPDATA%
+    SavePrefix = "er0000."  # the save files: ER0000.sl2, .co2, .bak...
+    GlobalBackupsFolderName = "Elden Ring Global Save Backups"
+    LocalSavegamesClass = EldenRingLocalSavegames
+    # Elden Ring keeps the recovery folder name it always had; other games
+    # get their own, so a session is never restored into another game
+    RecoveryScope = ""
     NativeDllSetting = "load_native_dlls"
     SaveBackupsSetting = "save_backups_kept"
     SaveBackupsDefault = 5
@@ -1522,7 +1534,7 @@ class EldenRingMo2Game(BasicGame):
         # launch must not treat the game as closed
         self._launch_pending_until = 0.0
 
-        self._local_savegames_feature = EldenRingLocalSavegames(self, organizer)
+        self._local_savegames_feature = self.LocalSavegamesClass(self, organizer)
         self._register_feature(self._local_savegames_feature)
         self._register_feature(
             EldenRingModDataChecker(organizer, self.name())
@@ -1562,7 +1574,7 @@ class EldenRingMo2Game(BasicGame):
         except (OSError, RuntimeError):
             install_identity = os.path.normcase(os.path.abspath(install_root))
         instance_token = hashlib.sha256(
-            install_identity.encode("utf-8", errors="replace")
+            (install_identity + self.RecoveryScope).encode("utf-8", errors="replace")
         ).hexdigest()[:24]
         return (
             global_save_root.parent
@@ -1575,6 +1587,7 @@ class EldenRingMo2Game(BasicGame):
         account folders. Only that install restores them; a launch from here
         would play against a Steam folder that is not complete."""
         own = self._save_quarantine_root()
+        own_saves = self.savesDirectory().absolutePath()
         sessions: list[Path] = []
         try:
             for install in own.parent.iterdir():
@@ -1593,7 +1606,12 @@ class EldenRingMo2Game(BasicGame):
                             (session / self.SaveRecoveryManifestName).read_text(encoding="utf-8")
                         )
                         owner = Path(str(manifest.get("install_root", "")))
+                        hidden_from = str(manifest.get("global_save_root", ""))
                     except (OSError, UnicodeError, ValueError, AttributeError):
+                        continue
+                    if hidden_from and os.path.normcase(
+                        os.path.abspath(hidden_from)
+                    ) != os.path.normcase(os.path.abspath(own_saves)):
                         continue
                     if str(owner) and owner.is_dir():
                         sessions.append(session)
@@ -1612,8 +1630,8 @@ class EldenRingMo2Game(BasicGame):
             os.fsync(stream.fileno())
         os.replace(temporary_path, manifest_path)
 
-    @staticmethod
-    def _save_directory_contains_elden_ring_saves(directory: Path) -> bool:
+    @classmethod
+    def _save_directory_contains_elden_ring_saves(cls, directory: Path) -> bool:
         # A SteamID64 folder is an account's save folder even when it only holds
         # files of mods with their own extension (Seamless Co-op .co2,
         # alt-saves/Convergence .mod, a custom save_file_extension), so the name
@@ -1625,7 +1643,7 @@ class EldenRingMo2Game(BasicGame):
             if not entry.is_file():
                 continue
             entry_name = entry.name.casefold()
-            if entry_name == "steam_autocloud.vdf" or entry_name.startswith("er0000."):
+            if entry_name == "steam_autocloud.vdf" or entry_name.startswith(cls.SavePrefix):
                 return True
             if entry_name.endswith((".sl2", ".sl2.bak", ".co2", ".co2.bak")):
                 return True
@@ -1796,17 +1814,18 @@ class EldenRingMo2Game(BasicGame):
         if names is None:
             return False
         return any(
-            name in cls.GameLaunchers and name != "eldenring.exe" for name in names
+            name in cls.GameLaunchers and name != cls.GameProcess for name in names
         )
 
-    @staticmethod
-    def _elden_ring_process_state() -> bool | None:
+    @classmethod
+    def _elden_ring_process_state(cls) -> bool | None:
+        # this game's process: eldenring.exe or nightreign.exe
         names = _running_process_names()
         if names is not None:
-            return "eldenring.exe" in names
+            return cls.GameProcess in names
         try:
             result = subprocess.run(
-                ["tasklist", "/FI", "IMAGENAME eq eldenring.exe", "/FO", "CSV", "/NH"],
+                ["tasklist", "/FI", f"IMAGENAME eq {cls.GameProcess}", "/FO", "CSV", "/NH"],
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -1820,7 +1839,7 @@ class EldenRingMo2Game(BasicGame):
         if result.returncode != 0:
             return None
         return any(
-            line.lstrip().casefold().startswith('"eldenring.exe"')
+            line.lstrip().casefold().startswith(f'"{cls.GameProcess}"')
             for line in result.stdout.splitlines()
         )
 
@@ -2162,17 +2181,17 @@ class EldenRingMo2Game(BasicGame):
         )
         return settings
 
-    @staticmethod
-    def save_backup_root(route_root: Path, instance_base: Path, is_global: bool) -> Path:
+    @classmethod
+    def save_backup_root(cls, route_root: Path, instance_base: Path, is_global: bool) -> Path:
         """Where the automatic backups of a save route live: beside the route
         ("<folder> Backups/auto"), or inside the MO2 instance for the global
         Steam route, so nothing is ever written next to the Steam saves."""
         if is_global:
-            return instance_base / "Elden Ring Global Save Backups" / "auto"
+            return instance_base / cls.GlobalBackupsFolderName / "auto"
         return route_root.parent / f"{route_root.name} Backups" / "auto"
 
-    @staticmethod
-    def _route_save_files(route_root: Path) -> list[Path]:
+    @classmethod
+    def _route_save_files(cls, route_root: Path) -> list[Path]:
         """The ER0000.* files of a route: in its account folders and loose in
         its root, without following links."""
         files: list[Path] = []
@@ -2184,9 +2203,9 @@ class EldenRingMo2Game(BasicGame):
                     continue
                 if entry.is_dir():
                     for child in entry.iterdir():
-                        if child.is_file() and not child.is_symlink() and child.name.casefold().startswith("er0000."):
+                        if child.is_file() and not child.is_symlink() and child.name.casefold().startswith(cls.SavePrefix):
                             files.append(child)
-                elif entry.is_file() and entry.name.casefold().startswith("er0000."):
+                elif entry.is_file() and entry.name.casefold().startswith(cls.SavePrefix):
                     files.append(entry)
             except OSError:
                 continue
@@ -2292,6 +2311,9 @@ class EldenRingMo2Game(BasicGame):
             f"'{Path(app_path).name}'."
         )
         self._guarded_launch = None
+        # every game plugin hears every run; only the managed game's acts
+        if not self.isActive():
+            return True
         if not self._is_game_launch(app_path, _args or ""):
             # tools (save editors and the like) run without touching the
             # hidden Steam saves of a game that may still be running
@@ -2346,7 +2368,7 @@ class EldenRingMo2Game(BasicGame):
                 f"hidden Steam saves in '{foreign_sessions[0]}'."
             )
             return False
-        direct_game = Path(app_path).name.casefold() == "eldenring.exe"
+        direct_game = Path(app_path).name.casefold() == self.GameProcess
         # read by the save hiding below (how long a launcher may take)
         self._launch_via_launcher = not direct_game
 
@@ -2385,7 +2407,7 @@ class EldenRingMo2Game(BasicGame):
         profile_save_dir = Path(profile.absolutePath()) / "saves"
         game_save_dir = Path(self.savesDirectory().absolutePath())
         profile_saves_enabled = bool(profile.localSavesEnabled())
-        save_mode = EldenRingLocalSavegames.mode_for_profile(profile)
+        save_mode = self.LocalSavegamesClass.mode_for_profile(profile)
         if not self._local_savegames_feature.profile_route_is_current(profile):
             QMessageBox.warning(
                 None,
@@ -2401,7 +2423,7 @@ class EldenRingMo2Game(BasicGame):
                 f"is stale for profile '{profile.name()}'."
             )
             return False
-        if not EldenRingLocalSavegames.save_profile_is_available(
+        if not self.LocalSavegamesClass.save_profile_is_available(
             Path(profile.absolutePath()), save_mode
         ):
             QMessageBox.warning(
@@ -2418,8 +2440,8 @@ class EldenRingMo2Game(BasicGame):
             )
             return False
         if save_mode in {
-            EldenRingLocalSavegames.ProfileIsolated,
-            EldenRingLocalSavegames.InstanceShared,
+            self.LocalSavegamesClass.ProfileIsolated,
+            self.LocalSavegamesClass.InstanceShared,
         } and not profile_saves_enabled:
             QMessageBox.warning(
                 None,
@@ -2436,7 +2458,7 @@ class EldenRingMo2Game(BasicGame):
             )
             return False
         if (
-            save_mode == EldenRingLocalSavegames.GlobalShared
+            save_mode == self.LocalSavegamesClass.GlobalShared
             and profile_saves_enabled
         ):
             QMessageBox.warning(
@@ -2453,18 +2475,18 @@ class EldenRingMo2Game(BasicGame):
             )
             return False
 
-        active_save_dir = EldenRingLocalSavegames.active_save_directory(
+        active_save_dir = self.LocalSavegamesClass.active_save_directory(
             Path(profile.absolutePath()), save_mode
         )
-        if save_mode == EldenRingLocalSavegames.GlobalShared:
+        if save_mode == self.LocalSavegamesClass.GlobalShared:
             active_save_dir = game_save_dir
             save_route = "global save shared with Steam and all MO2 instances"
-        elif save_mode == EldenRingLocalSavegames.InstanceShared:
+        elif save_mode == self.LocalSavegamesClass.InstanceShared:
             save_route = "instance-shared modded saves"
         else:
             save_route = "profile-isolated saves"
         selected_save_profile = (
-            EldenRingLocalSavegames.save_profile_for_profile_directory(
+            self.LocalSavegamesClass.save_profile_for_profile_directory(
                 Path(profile.absolutePath()), save_mode
             )
         )
@@ -2477,7 +2499,7 @@ class EldenRingMo2Game(BasicGame):
             except (OSError, RuntimeError):
                 return os.path.normcase(os.path.abspath(path))
 
-        if save_mode != EldenRingLocalSavegames.GlobalShared and normalize(
+        if save_mode != self.LocalSavegamesClass.GlobalShared and normalize(
             active_save_dir
         ) == normalize(game_save_dir):
             QMessageBox.critical(
@@ -2506,7 +2528,7 @@ class EldenRingMo2Game(BasicGame):
                 self.save_backup_root(
                     active_save_dir,
                     Path(self._organizer.basePath()),
-                    save_mode == EldenRingLocalSavegames.GlobalShared,
+                    save_mode == self.LocalSavegamesClass.GlobalShared,
                 ),
                 self._save_backups_kept(),
             )
@@ -2520,7 +2542,7 @@ class EldenRingMo2Game(BasicGame):
             bridge_log_history,
         ) = self._read_profile_launch_settings(profile_config)
 
-        if save_mode != EldenRingLocalSavegames.GlobalShared:
+        if save_mode != self.LocalSavegamesClass.GlobalShared:
             if not self._recover_stale_global_save_quarantines():
                 QMessageBox.critical(
                     None,
@@ -2649,6 +2671,9 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: finished-run save cleanup received "
             f"'{Path(app_path).name}'."
         )
+        # every game plugin hears every run; only the managed game's acts
+        if not self.isActive():
+            return
         guarded = self._is_game_launch(app_path) or os.path.normcase(
             str(app_path)
         ) == getattr(self, "_guarded_launch", None)
@@ -2663,7 +2688,7 @@ class EldenRingMo2Game(BasicGame):
         # closed
         self._guarded_launch = None
         self._finish_when_game_closes(
-            Path(app_path).name.casefold() != "eldenring.exe",
+            Path(app_path).name.casefold() != self.GameProcess,
             self._active_save_quarantine,
             self._overwrite_cleanup_armed,
             self._overwrite_cleanup_path,
@@ -3578,7 +3603,7 @@ class EldenRingMo2Game(BasicGame):
         appdata = os.environ.get("APPDATA")
         if not appdata:
             appdata = str(Path.home() / "AppData" / "Roaming")
-        return QDir(str(Path(appdata) / "EldenRing"))
+        return QDir(str(Path(appdata) / self.SaveFolderName))
 
     def savesDirectory(self) -> QDir:
         return self.documentsDirectory()
@@ -3599,7 +3624,7 @@ class EldenRingMo2Game(BasicGame):
             self.gameDirectory(),
             self.GameBinary,
         )
-        executable = mobase.ExecutableInfo("ELDEN RING (MO2)", game_exe)
+        executable = mobase.ExecutableInfo(f"{self.GameName} (MO2)", game_exe)
         executable = executable.withWorkingDirectory(self.dataDirectory())
         executable = executable.withSteamAppId(str(self.GameSteamId))
         return [executable]
@@ -3706,7 +3731,7 @@ class EldenRingMo2Game(BasicGame):
                 qInfo(f"Elden Ring MO2: queued native DLL {library.name}.")
         mod_forced_loads = [
             mobase.ExecutableForcedLoadSetting(
-                "eldenring.exe", str(library)
+                self.GameProcess, str(library)
             ).withEnabled(True)
             for library in libraries
         ]
@@ -3730,7 +3755,7 @@ class EldenRingMo2Game(BasicGame):
                 )
         root_forced_loads = [
             mobase.ExecutableForcedLoadSetting(
-                "eldenring.exe", str(library)
+                self.GameProcess, str(library)
             ).withEnabled(True)
             for _, _, library, _ in root_layout_libraries
         ]
@@ -4036,3 +4061,40 @@ class EldenRingMo2Game(BasicGame):
 
         selected.sort(key=lambda item: (item[0], item[1]))
         return [library for _, _, library in selected]
+
+
+class NightreignLocalSavegames(EldenRingLocalSavegames):
+    """Nightreign routes its saves the same way, in its own shared folder."""
+
+    SharedSavesFolderName = "Nightreign Shared Saves"
+
+
+class EldenRingNightreignMo2Game(EldenRingMo2Game):
+    """ELDEN RING NIGHTREIGN: the Elden Ring support with the game's own names.
+
+    The saves are %APPDATA%/Nightreign/<SteamID64>/NR0000.sl2 (NR0000.co2
+    with Seamless Co-op), the game is Game/nightreign.exe, and mods are
+    usually started through me3 or the Seamless Co-op launcher."""
+
+    Name = "Elden Ring Nightreign MO2 Support"
+    GameName = "ELDEN RING NIGHTREIGN"
+    GameShortName = "nightreign"
+    GameNexusName = "eldenringnightreign"
+    GameSteamId = 2622380
+    GameBinary = "Game/nightreign.exe"
+
+    GameProcess = "nightreign.exe"
+    SaveFolderName = "Nightreign"
+    SavePrefix = "nr0000."
+    GlobalBackupsFolderName = "Nightreign Global Save Backups"
+    LocalSavegamesClass = NightreignLocalSavegames
+    RecoveryScope = "|nightreign"
+    GameLaunchers = frozenset(
+        {
+            "nightreign.exe",
+            # Seamless Co-op for Nightreign
+            "nrsc_launcher.exe",
+            "me3.exe",
+            "me3-launcher.exe",
+        }
+    )

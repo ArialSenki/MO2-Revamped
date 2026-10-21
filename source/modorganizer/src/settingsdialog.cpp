@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "settingsdialog.h"
+#include "eldenringsavesettings.h"
 #include "fluenticons.h"
 #include "fluentperf.h"
 #include "fluentnavigation.h"
@@ -256,8 +257,7 @@ void SettingsDialog::hideUnsupportedOptions()
   const bool hasUnmanaged = features.gameFeature<MOBase::UnmanagedMods>() != nullptr;
 
   // the Elden Ring plugin manages save isolation itself (Save Isolation tool)
-  const bool pluginOwnsSaves =
-      game->gameShortName().compare(QStringLiteral("eldenring"), Qt::CaseInsensitive) == 0;
+  const bool pluginOwnsSaves = EldenRingSaveSettings::supports(game);
 
   ui->localINIs->setVisible(!game->iniFiles().isEmpty());
   ui->localSaves->setVisible(!pluginOwnsSaves);
