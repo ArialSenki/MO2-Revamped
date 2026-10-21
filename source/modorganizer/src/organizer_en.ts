@@ -3144,671 +3144,671 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
 <context>
     <name>InstanceManagerDialog</name>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="606"/>
+        <location filename="instancemanagerdialog.cpp" line="654"/>
         <source>Instance folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="586"/>
-        <location filename="instancemanagerdialog.cpp" line="1950"/>
+        <location filename="instancemanagerdialog.cpp" line="634"/>
+        <location filename="instancemanagerdialog.cpp" line="1964"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="395"/>
+        <location filename="instancemanagerdialog.cpp" line="443"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1154"/>
-        <location filename="instancemanagerdialog.cpp" line="1364"/>
-        <location filename="instancemanagerdialog.cpp" line="1877"/>
-        <location filename="instancemanagerdialog.cpp" line="1916"/>
-        <location filename="instancemanagerdialog.cpp" line="1951"/>
+        <location filename="instancemanagerdialog.cpp" line="1202"/>
+        <location filename="instancemanagerdialog.cpp" line="1417"/>
+        <location filename="instancemanagerdialog.cpp" line="1891"/>
+        <location filename="instancemanagerdialog.cpp" line="1930"/>
+        <location filename="instancemanagerdialog.cpp" line="1965"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="363"/>
-        <location filename="instancemanagerdialog.cpp" line="452"/>
-        <location filename="instancemanagerdialog.cpp" line="524"/>
+        <location filename="instancemanagerdialog.cpp" line="411"/>
+        <location filename="instancemanagerdialog.cpp" line="500"/>
+        <location filename="instancemanagerdialog.cpp" line="572"/>
         <source>Instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="530"/>
+        <location filename="instancemanagerdialog.cpp" line="578"/>
         <source>New instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="382"/>
+        <location filename="instancemanagerdialog.cpp" line="430"/>
         <source>What is an instance?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="882"/>
-        <location filename="instancemanagerdialog.cpp" line="935"/>
-        <location filename="instancemanagerdialog.cpp" line="1533"/>
+        <location filename="instancemanagerdialog.cpp" line="930"/>
+        <location filename="instancemanagerdialog.cpp" line="983"/>
+        <location filename="instancemanagerdialog.cpp" line="1586"/>
         <source>Global</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="882"/>
-        <location filename="instancemanagerdialog.cpp" line="935"/>
-        <location filename="instancemanagerdialog.cpp" line="1533"/>
+        <location filename="instancemanagerdialog.cpp" line="930"/>
+        <location filename="instancemanagerdialog.cpp" line="983"/>
+        <location filename="instancemanagerdialog.cpp" line="1586"/>
         <source>Portable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="511"/>
+        <location filename="instancemanagerdialog.cpp" line="559"/>
         <source>Search instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="394"/>
+        <location filename="instancemanagerdialog.cpp" line="442"/>
         <source>Restart Mod Organizer with this instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1616"/>
+        <location filename="instancemanagerdialog.cpp" line="1669"/>
         <source>Rename this instance and its folder (F2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1623"/>
+        <location filename="instancemanagerdialog.cpp" line="1676"/>
         <source>Choose which of this instance&apos;s folders to remove (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1628"/>
+        <location filename="instancemanagerdialog.cpp" line="1681"/>
         <source>Copy this instance, with its profiles, mods and settings, to a new one (Ctrl+D)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1643"/>
+        <location filename="instancemanagerdialog.cpp" line="1696"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="608"/>
-        <location filename="instancemanagerdialog.cpp" line="739"/>
+        <location filename="instancemanagerdialog.cpp" line="656"/>
+        <location filename="instancemanagerdialog.cpp" line="787"/>
         <source>Mod data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="609"/>
+        <location filename="instancemanagerdialog.cpp" line="657"/>
         <source>Game folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="612"/>
+        <location filename="instancemanagerdialog.cpp" line="660"/>
         <source>Configuration file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="613"/>
+        <location filename="instancemanagerdialog.cpp" line="661"/>
         <source>Open ModOrganizer.ini in its editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="500"/>
-        <location filename="instancemanagerdialog.cpp" line="614"/>
+        <location filename="instancemanagerdialog.cpp" line="548"/>
+        <location filename="instancemanagerdialog.cpp" line="662"/>
         <source>Storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="464"/>
+        <location filename="instancemanagerdialog.cpp" line="512"/>
         <source>Group and sort the instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="937"/>
+        <location filename="instancemanagerdialog.cpp" line="985"/>
         <source>current</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1144"/>
+        <location filename="instancemanagerdialog.cpp" line="1192"/>
         <source>Restart to open %1?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1145"/>
+        <location filename="instancemanagerdialog.cpp" line="1193"/>
         <source>Mod Organizer closes and opens again with the instance %1. Programs started from Mod Organizer should be closed first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1149"/>
+        <location filename="instancemanagerdialog.cpp" line="1197"/>
         <source>Don&apos;t ask me again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1153"/>
+        <location filename="instancemanagerdialog.cpp" line="1201"/>
         <source>Restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1181"/>
-        <location filename="instancemanagerdialog.cpp" line="1193"/>
-        <location filename="instancemanagerdialog.cpp" line="1202"/>
+        <location filename="instancemanagerdialog.cpp" line="1229"/>
+        <location filename="instancemanagerdialog.cpp" line="1241"/>
+        <location filename="instancemanagerdialog.cpp" line="1250"/>
         <source>Rename instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1182"/>
+        <location filename="instancemanagerdialog.cpp" line="1230"/>
         <source>The active instance cannot be renamed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1194"/>
+        <location filename="instancemanagerdialog.cpp" line="1242"/>
         <source>The portable instance in the MO2 installation folder cannot be renamed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1202"/>
+        <location filename="instancemanagerdialog.cpp" line="1250"/>
         <source>The instance folder is renamed too.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1203"/>
+        <location filename="instancemanagerdialog.cpp" line="1251"/>
         <source>Instance name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1219"/>
+        <location filename="instancemanagerdialog.cpp" line="1267"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1220"/>
+        <location filename="instancemanagerdialog.cpp" line="1268"/>
         <source>Failed to rename &quot;%1&quot; to &quot;%2&quot;: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="656"/>
-        <location filename="instancemanagerdialog.cpp" line="1286"/>
-        <location filename="instancemanagerdialog.cpp" line="1300"/>
-        <location filename="instancemanagerdialog.cpp" line="1390"/>
+        <location filename="instancemanagerdialog.cpp" line="704"/>
+        <location filename="instancemanagerdialog.cpp" line="1339"/>
+        <location filename="instancemanagerdialog.cpp" line="1353"/>
+        <location filename="instancemanagerdialog.cpp" line="1443"/>
         <source>Delete instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="497"/>
+        <location filename="instancemanagerdialog.cpp" line="545"/>
         <source>Group by</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="498"/>
-        <location filename="instancemanagerdialog.cpp" line="744"/>
+        <location filename="instancemanagerdialog.cpp" line="546"/>
+        <location filename="instancemanagerdialog.cpp" line="792"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="499"/>
-        <location filename="instancemanagerdialog.cpp" line="960"/>
+        <location filename="instancemanagerdialog.cpp" line="547"/>
+        <location filename="instancemanagerdialog.cpp" line="1008"/>
         <source>My groups</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="501"/>
+        <location filename="instancemanagerdialog.cpp" line="549"/>
         <source>No groups</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="502"/>
+        <location filename="instancemanagerdialog.cpp" line="550"/>
         <source>Sort by</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="503"/>
-        <location filename="instancemanagerdialog.cpp" line="749"/>
+        <location filename="instancemanagerdialog.cpp" line="551"/>
+        <location filename="instancemanagerdialog.cpp" line="797"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="504"/>
+        <location filename="instancemanagerdialog.cpp" line="552"/>
         <source>Last used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="533"/>
+        <location filename="instancemanagerdialog.cpp" line="581"/>
         <source>Create an instance for another game or setup (Ctrl+N)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="607"/>
+        <location filename="instancemanagerdialog.cpp" line="655"/>
         <source>Open the instance folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="608"/>
+        <location filename="instancemanagerdialog.cpp" line="656"/>
         <source>Open the mod data folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="609"/>
+        <location filename="instancemanagerdialog.cpp" line="657"/>
         <source>Open the game folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="610"/>
-        <location filename="instancemanagerdialog.cpp" line="742"/>
+        <location filename="instancemanagerdialog.cpp" line="658"/>
+        <location filename="instancemanagerdialog.cpp" line="790"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="610"/>
+        <location filename="instancemanagerdialog.cpp" line="658"/>
         <source>Open the profiles folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="611"/>
+        <location filename="instancemanagerdialog.cpp" line="659"/>
         <source>Size on disk</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="615"/>
-        <location filename="instancemanagerdialog.cpp" line="1864"/>
-        <location filename="instancemanagerdialog.cpp" line="1867"/>
+        <location filename="instancemanagerdialog.cpp" line="663"/>
+        <location filename="instancemanagerdialog.cpp" line="1878"/>
+        <location filename="instancemanagerdialog.cpp" line="1881"/>
         <source>Group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="615"/>
+        <location filename="instancemanagerdialog.cpp" line="663"/>
         <source>Move to another group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="617"/>
-        <location filename="instancemanagerdialog.cpp" line="1910"/>
+        <location filename="instancemanagerdialog.cpp" line="665"/>
+        <location filename="instancemanagerdialog.cpp" line="1924"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="617"/>
+        <location filename="instancemanagerdialog.cpp" line="665"/>
         <source>Edit the notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="648"/>
-        <location filename="instancemanagerdialog.cpp" line="1743"/>
+        <location filename="instancemanagerdialog.cpp" line="696"/>
+        <location filename="instancemanagerdialog.cpp" line="1796"/>
         <source>Duplicate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="652"/>
-        <location filename="instancemanagerdialog.cpp" line="1633"/>
-        <location filename="instancemanagerdialog.cpp" line="1714"/>
+        <location filename="instancemanagerdialog.cpp" line="700"/>
+        <location filename="instancemanagerdialog.cpp" line="1686"/>
+        <location filename="instancemanagerdialog.cpp" line="1767"/>
         <source>Desktop shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="719"/>
+        <location filename="instancemanagerdialog.cpp" line="767"/>
         <source>Rename…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="721"/>
+        <location filename="instancemanagerdialog.cpp" line="769"/>
         <source>Duplicate…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="724"/>
+        <location filename="instancemanagerdialog.cpp" line="772"/>
         <source>Move to group…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="725"/>
+        <location filename="instancemanagerdialog.cpp" line="773"/>
         <source>Edit notes…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="750"/>
+        <location filename="instancemanagerdialog.cpp" line="798"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="753"/>
+        <location filename="instancemanagerdialog.cpp" line="801"/>
         <source>Delete instance…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="880"/>
+        <location filename="instancemanagerdialog.cpp" line="928"/>
         <source>Unknown game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="923"/>
-        <location filename="instancemanagerdialog.cpp" line="1596"/>
-        <location filename="instancemanagerdialog.cpp" line="1871"/>
+        <location filename="instancemanagerdialog.cpp" line="971"/>
+        <location filename="instancemanagerdialog.cpp" line="1649"/>
+        <location filename="instancemanagerdialog.cpp" line="1885"/>
         <source>No group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="961"/>
+        <location filename="instancemanagerdialog.cpp" line="1009"/>
         <source>By storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="962"/>
+        <location filename="instancemanagerdialog.cpp" line="1010"/>
         <source>All instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="963"/>
+        <location filename="instancemanagerdialog.cpp" line="1011"/>
         <source>By game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="965"/>
+        <location filename="instancemanagerdialog.cpp" line="1013"/>
         <source>Grouping: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1103"/>
+        <location filename="instancemanagerdialog.cpp" line="1151"/>
         <source>Open instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1104"/>
+        <location filename="instancemanagerdialog.cpp" line="1152"/>
         <source>This instance&apos;s folder or settings file no longer exists:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1301"/>
+        <location filename="instancemanagerdialog.cpp" line="1354"/>
         <source>This portable instance keeps the instances in the GlobalInstances folder listed, so it can&apos;t be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1310"/>
+        <location filename="instancemanagerdialog.cpp" line="1363"/>
         <source>Delete %1?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1311"/>
+        <location filename="instancemanagerdialog.cpp" line="1364"/>
         <source>Choose what to remove. Items the instance can&apos;t do without stay checked.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1362"/>
+        <location filename="instancemanagerdialog.cpp" line="1415"/>
         <source>Move to Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1537"/>
+        <location filename="instancemanagerdialog.cpp" line="1590"/>
         <source>Last used %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1549"/>
+        <location filename="instancemanagerdialog.cpp" line="1602"/>
         <source>Same as the instance folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1558"/>
+        <location filename="instancemanagerdialog.cpp" line="1611"/>
         <source>No game plugin can manage %1. The instance can&apos;t be opened.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1559"/>
+        <location filename="instancemanagerdialog.cpp" line="1612"/>
         <source>this game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1563"/>
+        <location filename="instancemanagerdialog.cpp" line="1616"/>
         <source>Folder not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1582"/>
+        <location filename="instancemanagerdialog.cpp" line="1635"/>
         <source>%1 (last used)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1585"/>
+        <location filename="instancemanagerdialog.cpp" line="1638"/>
         <source>No profiles yet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1591"/>
+        <location filename="instancemanagerdialog.cpp" line="1644"/>
         <source>Portable: kept in its own folder, moves with Mod Organizer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1592"/>
+        <location filename="instancemanagerdialog.cpp" line="1645"/>
         <source>Global: kept in your user folder, %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1598"/>
+        <location filename="instancemanagerdialog.cpp" line="1651"/>
         <source>No notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1612"/>
+        <location filename="instancemanagerdialog.cpp" line="1665"/>
         <source>The open instance can&apos;t be renamed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1614"/>
+        <location filename="instancemanagerdialog.cpp" line="1667"/>
         <source>The portable instance in the Mod Organizer folder can&apos;t be renamed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1621"/>
+        <location filename="instancemanagerdialog.cpp" line="1674"/>
         <source>This portable instance keeps the instances in the GlobalInstances folder listed; it can&apos;t be deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1904"/>
+        <location filename="instancemanagerdialog.cpp" line="1918"/>
         <source>Notes for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1905"/>
+        <location filename="instancemanagerdialog.cpp" line="1919"/>
         <source>What this instance is for, what&apos;s in it, or anything to remember. The notes are also found by the search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1911"/>
+        <location filename="instancemanagerdialog.cpp" line="1925"/>
         <source>Stable setup with Seamless Co-op, for example</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1915"/>
+        <location filename="instancemanagerdialog.cpp" line="1929"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1938"/>
+        <location filename="instancemanagerdialog.cpp" line="1952"/>
         <source>Rename group…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1942"/>
+        <location filename="instancemanagerdialog.cpp" line="1956"/>
         <source>Rename group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1943"/>
+        <location filename="instancemanagerdialog.cpp" line="1957"/>
         <source>Every instance in %1 moves to the new name. A name that already exists joins the two groups.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1947"/>
+        <location filename="instancemanagerdialog.cpp" line="1961"/>
         <source>Group name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1968"/>
+        <location filename="instancemanagerdialog.cpp" line="1982"/>
         <source>Remove group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1977"/>
+        <location filename="instancemanagerdialog.cpp" line="1991"/>
         <source>The instances stay; they move to No group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1620"/>
+        <location filename="instancemanagerdialog.cpp" line="1673"/>
         <source>The open instance can&apos;t be deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="729"/>
+        <location filename="instancemanagerdialog.cpp" line="777"/>
         <source>Open folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="738"/>
+        <location filename="instancemanagerdialog.cpp" line="786"/>
         <source>Instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="740"/>
+        <location filename="instancemanagerdialog.cpp" line="788"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="741"/>
+        <location filename="instancemanagerdialog.cpp" line="789"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="743"/>
+        <location filename="instancemanagerdialog.cpp" line="791"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="746"/>
-        <location filename="instancemanagerdialog.cpp" line="751"/>
+        <location filename="instancemanagerdialog.cpp" line="794"/>
+        <location filename="instancemanagerdialog.cpp" line="799"/>
         <source>ModOrganizer.ini</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1627"/>
+        <location filename="instancemanagerdialog.cpp" line="1680"/>
         <source>The portable instance in the Mod Organizer folder can&apos;t be duplicated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1633"/>
+        <location filename="instancemanagerdialog.cpp" line="1686"/>
         <source>Remove desktop shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1635"/>
+        <location filename="instancemanagerdialog.cpp" line="1688"/>
         <source>Remove the desktop shortcut that opens this instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1636"/>
+        <location filename="instancemanagerdialog.cpp" line="1689"/>
         <source>Add a desktop shortcut that opens this instance directly</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1642"/>
+        <location filename="instancemanagerdialog.cpp" line="1695"/>
         <source>Switch to this instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1654"/>
+        <location filename="instancemanagerdialog.cpp" line="1707"/>
         <source>Calculating…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1658"/>
+        <location filename="instancemanagerdialog.cpp" line="1711"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1689"/>
+        <location filename="instancemanagerdialog.cpp" line="1742"/>
         <source>Mods %1 · Downloads %2 · Overwrite %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1715"/>
+        <location filename="instancemanagerdialog.cpp" line="1768"/>
         <source>The desktop shortcut could not be changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1734"/>
+        <location filename="instancemanagerdialog.cpp" line="1787"/>
         <source>The copy gets its own folder with this instance&apos;s profiles, mods, downloads and settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1736"/>
+        <location filename="instancemanagerdialog.cpp" line="1789"/>
         <source>The copy gets its own folder with this instance&apos;s profiles and settings. Its mod data folder is elsewhere and stays shared with the original.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1741"/>
-        <location filename="instancemanagerdialog.cpp" line="1755"/>
+        <location filename="instancemanagerdialog.cpp" line="1794"/>
+        <location filename="instancemanagerdialog.cpp" line="1808"/>
         <source>Duplicate instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1741"/>
+        <location filename="instancemanagerdialog.cpp" line="1794"/>
         <source>Name of the copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1742"/>
+        <location filename="instancemanagerdialog.cpp" line="1795"/>
         <source>copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1756"/>
+        <location filename="instancemanagerdialog.cpp" line="1809"/>
         <source>The instance could not be copied: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1820"/>
+        <location filename="instancemanagerdialog.cpp" line="1834"/>
         <source>No instances yet. Create one with New instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1821"/>
+        <location filename="instancemanagerdialog.cpp" line="1835"/>
         <source>Select an instance to see its folders.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1860"/>
+        <location filename="instancemanagerdialog.cpp" line="1874"/>
         <source>Move to group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1861"/>
+        <location filename="instancemanagerdialog.cpp" line="1875"/>
         <source>Instances in the same group are listed together. Type a new name to make a group, or leave it empty for no group.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1876"/>
+        <location filename="instancemanagerdialog.cpp" line="1890"/>
         <source>Move</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1287"/>
+        <location filename="instancemanagerdialog.cpp" line="1340"/>
         <source>The active instance cannot be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1340"/>
+        <location filename="instancemanagerdialog.cpp" line="1393"/>
         <source>No files or folders were found.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1535"/>
-        <location filename="instancemanagerdialog.cpp" line="1641"/>
+        <location filename="instancemanagerdialog.cpp" line="1588"/>
+        <location filename="instancemanagerdialog.cpp" line="1694"/>
         <source>Current instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1363"/>
+        <location filename="instancemanagerdialog.cpp" line="1416"/>
         <source>Delete permanently</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="1390"/>
+        <location filename="instancemanagerdialog.cpp" line="1443"/>
         <source>Nothing to delete.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10115,7 +10115,7 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
         <location filename="createinstancedialogpages.cpp" line="1335"/>
         <location filename="createinstancedialogpages.cpp" line="1356"/>
         <location filename="createinstancedialogpages.cpp" line="1383"/>
-        <location filename="instancemanagerdialog.cpp" line="245"/>
+        <location filename="instancemanagerdialog.cpp" line="293"/>
         <location filename="settingsdialognexus.cpp" line="364"/>
         <location filename="settingsdialognexus.cpp" line="371"/>
         <location filename="settingsdialogworkarounds.cpp" line="349"/>
@@ -10506,67 +10506,67 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="244"/>
+        <location filename="instancemanagerdialog.cpp" line="292"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="253"/>
+        <location filename="instancemanagerdialog.cpp" line="301"/>
         <source>Use a name that&apos;s a valid folder name.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="291"/>
+        <location filename="instancemanagerdialog.cpp" line="339"/>
         <source>What is an instance?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="292"/>
+        <location filename="instancemanagerdialog.cpp" line="340"/>
         <source>An instance is its own Mod Organizer workspace. It keeps one game&apos;s profiles, mods, downloads and settings together, so separate setups never mix.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="318"/>
+        <location filename="instancemanagerdialog.cpp" line="366"/>
         <source>Its mods, profiles and saves stay in this instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="320"/>
+        <location filename="instancemanagerdialog.cpp" line="368"/>
         <source>A second instance manages Skyrim without touching Elden Ring.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="321"/>
+        <location filename="instancemanagerdialog.cpp" line="369"/>
         <source>Global or portable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="322"/>
+        <location filename="instancemanagerdialog.cpp" line="370"/>
         <source>Global instances are stored in your user folder; portable ones live next to Mod Organizer and move with it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="234"/>
+        <location filename="instancemanagerdialog.cpp" line="282"/>
         <source>Enter an instance name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="264"/>
+        <location filename="instancemanagerdialog.cpp" line="312"/>
         <source>An instance with this name already exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="317"/>
+        <location filename="instancemanagerdialog.cpp" line="365"/>
         <source>Elden Ring</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="319"/>
+        <location filename="instancemanagerdialog.cpp" line="367"/>
         <source>Skyrim Special Edition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="instancemanagerdialog.cpp" line="326"/>
+        <location filename="instancemanagerdialog.cpp" line="374"/>
         <location filename="spawn.cpp" line="244"/>
         <location filename="spawn.cpp" line="265"/>
         <source>Close</source>

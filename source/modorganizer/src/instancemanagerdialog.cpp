@@ -160,6 +160,54 @@ void moveInstanceValues(const QString& from, const QString& to, bool keepSource)
   }
 }
 
+// points the paths of an instance's settings file that lead into `source`
+// at `destination` instead (a duplicated or renamed instance folder)
+void retargetInstancePaths(const QString& ini, const QString& source,
+                           const QString& destination)
+{
+  QFile file(ini);
+  if (file.open(QIODevice::ReadOnly)) {
+    QString contents = QString::fromUtf8(file.readAll());
+    file.close();
+    const QString forward = source;
+    QString escaped       = QDir::toNativeSeparators(source);
+    escaped.replace(QStringLiteral("\\"), QStringLiteral("\\\\"));
+    // only whole folder names: ...\Skyrim must not turn ...\Skyrim SE into
+    // ...\Skyrim copy SE
+    auto replaceFolder = [](QString& text, const QString& from, const QString& to) {
+      QString result;
+      qsizetype position = 0;
+      for (;;) {
+        const qsizetype found = text.indexOf(from, position, Qt::CaseInsensitive);
+        if (found < 0) {
+          break;
+        }
+        const qsizetype end = found + from.size();
+        const QChar next    = end < text.size() ? text.at(end) : QChar(u'\n');
+        result += text.mid(position, found - position);
+        const bool boundary = next == u'/' || next == u'\\' || next == u'"' ||
+                              next == u'\n' || next == u'\r';
+        result += boundary ? to : text.mid(found, from.size());
+        position = end;
+      }
+      result += text.mid(position);
+      text = result;
+    };
+    for (const auto& [from, to] :
+         {std::pair{forward, QDir::cleanPath(destination)},
+          std::pair{escaped, QDir::toNativeSeparators(QDir::cleanPath(destination))
+                                 .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
+      replaceFolder(contents, from, to);
+    }
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      file.write(contents.toUtf8());
+      // written to disk before the list reads the instance back
+      file.close();
+    }
+  }
+
+}
+
 }  // namespace
 
 // returns the icon for the given instance or an empty 32x32 icon if the game
@@ -1225,6 +1273,11 @@ void InstanceManagerDialog::rename()
     return;
   }
 
+  // its settings still pointed into the old folder
+  retargetInstancePaths(QDir(dest).filePath(QFileInfo(i->iniPath()).fileName()),
+                        QDir::cleanPath(QDir::fromNativeSeparators(src)),
+                        QDir::fromNativeSeparators(dest));
+
   // updating ui; the group follows the new name
   auto newInstance = std::make_unique<Instance>(dest, i->isPortable());
   newInstance->readFromIni();
@@ -1761,47 +1814,8 @@ void InstanceManagerDialog::duplicateInstance()
 
   // paths in the copied settings that pointed into the original now point
   // into the copy
-  const QString ini = QDir(destination).filePath(QFileInfo(i->iniPath()).fileName());
-  QFile file(ini);
-  if (file.open(QIODevice::ReadOnly)) {
-    QString contents = QString::fromUtf8(file.readAll());
-    file.close();
-    const QString forward = source;
-    QString escaped       = QDir::toNativeSeparators(source);
-    escaped.replace(QStringLiteral("\\"), QStringLiteral("\\\\"));
-    // only whole folder names: ...\Skyrim must not turn ...\Skyrim SE into
-    // ...\Skyrim copy SE
-    auto replaceFolder = [](QString& text, const QString& from, const QString& to) {
-      QString result;
-      qsizetype position = 0;
-      for (;;) {
-        const qsizetype found = text.indexOf(from, position, Qt::CaseInsensitive);
-        if (found < 0) {
-          break;
-        }
-        const qsizetype end = found + from.size();
-        const QChar next    = end < text.size() ? text.at(end) : QChar(u'\n');
-        result += text.mid(position, found - position);
-        const bool boundary = next == u'/' || next == u'\\' || next == u'"' ||
-                              next == u'\n' || next == u'\r';
-        result += boundary ? to : text.mid(found, from.size());
-        position = end;
-      }
-      result += text.mid(position);
-      text = result;
-    };
-    for (const auto& [from, to] :
-         {std::pair{forward, QDir::cleanPath(destination)},
-          std::pair{escaped, QDir::toNativeSeparators(QDir::cleanPath(destination))
-                                 .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
-      replaceFolder(contents, from, to);
-    }
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-      file.write(contents.toUtf8());
-      // written to disk before the list reads the copy back
-      file.close();
-    }
-  }
+  retargetInstancePaths(QDir(destination).filePath(QFileInfo(i->iniPath()).fileName()),
+                        source, destination);
 
   moveInstanceValues(i->instanceIdentifier(),
                      Instance(destination, i->isPortable()).instanceIdentifier(), true);
