@@ -79,6 +79,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "statusbar.h"
 #include "tutorialmanager.h"
 #include "versioninfo.h"
+#include <memory>
 #include <bsainvalidation.h>
 #include <dataarchives.h>
 #include <safewritefile.h>
@@ -2193,6 +2194,7 @@ QMenu* MainWindow::createPopupMenu()
   m->addAction(ui->actionViewLog);
   m->addSeparator();
 
+  // the submenus belong to the menu, so deleting it frees them too
   auto* size = m->addMenu(tr("Icon size"));
   size->addAction(ui->actionToolBarSmallIcons);
   size->addAction(ui->actionToolBarMediumIcons);
@@ -2354,7 +2356,9 @@ void MainWindow::on_centralWidget_customContextMenuRequested(const QPoint& pos)
     return;
   }
 
-  createPopupMenu()->exec(ui->centralWidget->mapToGlobal(pos));
+  // the menu has no parent; it goes when it closes
+  std::unique_ptr<QMenu> menu(createPopupMenu());
+  menu->exec(ui->centralWidget->mapToGlobal(pos));
 }
 
 void MainWindow::scheduleCheckForProblems()
@@ -5737,7 +5741,7 @@ void MainWindow::toolBar_customContextMenuRequested(const QPoint& point)
   }
 
   // did not click a link button, show the default context menu
-  auto* m = createPopupMenu();
+  std::unique_ptr<QMenu> m(createPopupMenu());
   m->exec(ui->toolBar->mapToGlobal(point));
 }
 

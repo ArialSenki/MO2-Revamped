@@ -17,6 +17,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QRegularExpression>
+#include <QGuiApplication>
 #include <QScreen>
 #include <QScrollArea>
 #include <QScrollBar>
@@ -255,7 +256,11 @@ void growForShortScroll(QDialog* dialog)
       (dialog->windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen))) {
     return;
   }
-  const QScreen* screen = dialog->screen();
+  // the screen fitDialogToAvailableScreen() used for the same dialog
+  const QScreen* screen = QGuiApplication::screenAt(dialog->geometry().center());
+  if (screen == nullptr) {
+    screen = dialog->screen();
+  }
   if (screen == nullptr) {
     return;
   }
@@ -263,8 +268,15 @@ void growForShortScroll(QDialog* dialog)
   int extra = 0;
   for (QScrollArea* area : dialog->findChildren<QScrollArea*>()) {
     QWidget* content = area->widget();
+    // only areas that get taller with the window: not nested in another
+    // scroll area and not held at a fixed height
+    QWidget* outer = area->parentWidget();
+    while (outer != nullptr && outer != dialog && !qobject_cast<QScrollArea*>(outer)) {
+      outer = outer->parentWidget();
+    }
     if (content == nullptr || !area->isVisible() || !area->widgetResizable() ||
-        area->verticalScrollBarPolicy() == Qt::ScrollBarAlwaysOff) {
+        area->verticalScrollBarPolicy() == Qt::ScrollBarAlwaysOff || outer != dialog ||
+        area->maximumHeight() < QWIDGETSIZE_MAX) {
       continue;
     }
     const int width  = area->viewport()->width();
@@ -284,7 +296,7 @@ void growForShortScroll(QDialog* dialog)
   const int maxHeight =
       std::min(maxSize(available).height(), available.height() - std::max(frame, 0));
   const int height = dialog->height() + extra;
-  if (height > maxHeight) {
+  if (height > maxHeight || height > dialog->maximumHeight()) {
     return;
   }
 

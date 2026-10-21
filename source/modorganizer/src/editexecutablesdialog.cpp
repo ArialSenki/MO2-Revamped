@@ -1055,7 +1055,10 @@ void EditExecutablesDialog::on_buttons_clicked(QAbstractButton* b)
       accept();
     }
   } else if (b == ui->buttons->button(QDialogButtonBox::Apply)) {
-    commitChanges();
+    if (commitChanges()) {
+      // a new or renamed program is saved now, so it can get a shortcut
+      refreshFluent();
+    }
   } else {
     reject();
   }
@@ -1242,10 +1245,11 @@ QWidget* EditExecutablesDialog::createFluentDetails()
   layout->addWidget(scroll, 1);
 
   // the browse buttons become glyph buttons beside their field
+  ui->browseBinary->setAccessibleName(tr("Browse for the program"));
+  ui->browseWorkingDirectory->setAccessibleName(tr("Browse for the start folder"));
   for (QPushButton* browse : {ui->browseBinary, ui->browseWorkingDirectory}) {
     browse->setText(QString());
-    browse->setToolTip(tr("Browse"));
-    browse->setAccessibleName(tr("Browse"));
+    browse->setToolTip(browse->accessibleName());
     browse->setIcon(FluentIcons::glyph(0xE8DA));
     browse->setFixedWidth(40);
     browse->setProperty("fluentKeepIcon", true);
@@ -1269,7 +1273,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
                ui->overwriteSteamAppID, ui->steamAppID);
   ui->mods->setMinimumWidth(180);
   addSwitchRow(rows, 0xE74E, tr("Save new files to a mod"),
-               tr("Files the program creates go to this mod instead of Overwrite"),
+               tr("New files go here instead of Overwrite"),
                ui->createFilesInMod, ui->mods);
   ui->configureLibraries->setText(tr("Configure..."));
   addSwitchRow(rows, 0xE8F1, tr("Force load libraries"),

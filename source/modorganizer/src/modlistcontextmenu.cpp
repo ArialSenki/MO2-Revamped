@@ -465,7 +465,7 @@ void ModListContextMenu::addSendToContextMenu()
     }
   }
 
-  QMenu* menu = new QMenu(m_view);
+  QMenu* menu = new QMenu(this);
   menu->setTitle(tr("Send to"));
   menu->setIcon(menuGlyph(MenuGlyphs::Move));
   menu->addAction(tr("Lowest priority"), [this] {
@@ -530,6 +530,12 @@ void ModListContextMenu::addEnableActions()
   for (auto& idx : m_selected) {
     auto index = idx.data(ModList::IndexRole);
     if (!index.isValid()) {
+      continue;
+    }
+    // Overwrite and DLCs are always on, separators and backups never: they
+    // don't decide which command is offered
+    const auto info = ModInfo::getByIndex(index.toInt());
+    if (info->alwaysEnabled() || !info->canBeEnabled()) {
       continue;
     }
     if (m_core.currentProfile()->modEnabled(index.toInt())) {

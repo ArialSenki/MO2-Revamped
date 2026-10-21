@@ -1081,6 +1081,18 @@ Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste ne
       <source>Choose OK or Apply first, so the shortcut finds the program</source>
       <translation>Wähle zuerst OK oder Übernehmen, damit die Verknüpfung das Programm findet</translation>
     </message>
+    <message>
+      <source>Browse for the program</source>
+      <translation>Programm suchen</translation>
+    </message>
+    <message>
+      <source>Browse for the start folder</source>
+      <translation>Startordner suchen</translation>
+    </message>
+    <message>
+      <source>New files go here instead of Overwrite</source>
+      <translation>Neue Dateien landen hier statt in Overwrite</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -5969,6 +5981,18 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     <message>
       <source>Choose a regular mod and move all files from Overwrite into it</source>
       <translation>Wähle einen Mod und verschiebe alle Dateien aus Overwrite hinein</translation>
+    </message>
+    <message>
+      <source>More than %1 files, not part of any mod</source>
+      <translation>Mehr als %1 Dateien, in keinem Mod</translation>
+    </message>
+    <message>
+      <source>1 file, %1, not part of any mod</source>
+      <translation>1 Datei, %1, in keinem Mod</translation>
+    </message>
+    <message>
+      <source>%1 files, %2, not part of any mod</source>
+      <translation>%1 Dateien, %2, in keinem Mod</translation>
     </message>
   </context>
   <context>

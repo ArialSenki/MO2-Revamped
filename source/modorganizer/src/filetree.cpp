@@ -670,7 +670,10 @@ void FileTree::addDirectoryMenus(QMenu& menu, FileTreeItem& item)
   const QString relative = item.dataRelativeFilePath();
   addCopyMenu(&menu, {{tr("Name"), item.filename()},
                       {tr("Path in the game's data"), nativePath(relative)},
-                      {tr("Full path"), nativePath(gameDataPath(relative))}});
+                      // a folder that only exists inside mods has no real path
+                      {tr("Full path"), QFileInfo::exists(gameDataPath(relative))
+                                            ? nativePath(gameDataPath(relative))
+                                            : QString()}});
 }
 
 QString FileTree::gameDataPath(const QString& relative) const

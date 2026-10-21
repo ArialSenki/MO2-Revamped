@@ -289,6 +289,7 @@ QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
   box->setParent(frame);
   box->setText(QString());
   box->setAccessibleName(title);
+  box->setAccessibleDescription(description);
   box->setProperty("fluentSwitch", true);
   box->setCursor(Qt::PointingHandCursor);
   if (FluentIcons::active()) {

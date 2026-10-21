@@ -216,16 +216,25 @@ void OverwriteInfoDialog::buildFluentLayout()
 
 void OverwriteInfoDialog::updateSummary()
 {
-  if (m_summary == nullptr || !m_ModInfo) {
+  // the dialog stays alive between uses; a hidden one counts again when shown
+  if (m_summary == nullptr || !m_ModInfo || !isVisible()) {
     return;
   }
 
+  // a huge Overwrite (shader caches, years of logs) stops the count early
+  // instead of stalling the window
+  constexpr qint64 CountLimit = 20000;
   qint64 files = 0, folders = 0, bytes = 0;
+  bool more = false;
   QDirIterator it(m_ModInfo->absolutePath(),
                   QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden |
                       QDir::System,
                   QDirIterator::Subdirectories);
   while (it.hasNext()) {
+    if (files + folders >= CountLimit) {
+      more = true;
+      break;
+    }
     it.next();
     if (it.fileInfo().isDir()) {
       ++folders;
@@ -235,10 +244,10 @@ void OverwriteInfoDialog::updateSummary()
     }
   }
 
-  // nothing to keep without files
+  // the same test as the mod list's Overwrite menu: anything in it
   if (m_createMod != nullptr) {
-    m_createMod->setEnabled(files > 0);
-    m_moveToMod->setEnabled(files > 0);
+    m_createMod->setEnabled(files > 0 || folders > 0);
+    m_moveToMod->setEnabled(files > 0 || folders > 0);
   }
 
   // the same words as the main window's Overwrite card
@@ -247,9 +256,15 @@ void OverwriteInfoDialog::updateSummary()
   } else if (files == 0) {
     m_summary->setText(tr("Only empty folders, safe to clear"));
   } else {
-    m_summary->setText(tr("%n file(s), %1, not part of any mod", nullptr,
-                          static_cast<int>(files))
-                           .arg(QLocale().formattedDataSize(bytes)));
+    const QString size = QLocale().formattedDataSize(bytes);
+    if (more) {
+      m_summary->setText(tr("More than %1 files, not part of any mod")
+                             .arg(QLocale().toString(files)));
+      return;
+    }
+    m_summary->setText(files == 1 ? tr("1 file, %1, not part of any mod").arg(size)
+                                  : tr("%1 files, %2, not part of any mod")
+                                        .arg(QLocale().toString(files), size));
   }
 }
 
@@ -268,6 +283,7 @@ void OverwriteInfoDialog::showEvent(QShowEvent* e)
     ui->filesView->sortByColumn(0, Qt::AscendingOrder);
   }
   QDialog::showEvent(e);
+  updateSummary();
 }
 
 void OverwriteInfoDialog::done(int r)
@@ -285,6 +301,7 @@ void OverwriteInfoDialog::setModInfo(ModInfo::Ptr modInfo)
   m_ModInfo = modInfo;
   if (QDir(modInfo->absolutePath()).exists()) {
     m_FileSystemModel->setRootPath(modInfo->absolutePath());
+    updateSummary();
   } else {
     throw MyException(
         tr("mod not found: %1").arg(qUtf8Printable(modInfo->absolutePath())));

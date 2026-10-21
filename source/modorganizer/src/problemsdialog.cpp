@@ -123,6 +123,8 @@ QWidget* ProblemsDialog::createListCard()
 
   connect(m_list, &QListWidget::itemSelectionChanged, this,
           &ProblemsDialog::selectionChanged);
+  // Enter or a double-click runs the fix when the notification has one
+  connect(m_list, &QListWidget::itemActivated, this, &ProblemsDialog::startFix);
 
   return card;
 }
@@ -352,8 +354,19 @@ void ProblemsDialog::startFix()
     return;
   }
 
-  plugin->startGuidedFix(item->data(KeyRole).toUInt());
+  const unsigned int key = item->data(KeyRole).toUInt();
+  plugin->startGuidedFix(key);
   runDiagnosis();
+
+  // stay on the same notification when it is still there
+  for (int i = 0; i < m_list->count(); ++i) {
+    QListWidgetItem* row = m_list->item(i);
+    if (row->data(PluginRole).value<void*>() == reinterpret_cast<void*>(plugin) &&
+        row->data(KeyRole).toUInt() == key) {
+      m_list->setCurrentItem(row);
+      break;
+    }
+  }
 }
 
 void ProblemsDialog::copyText()
