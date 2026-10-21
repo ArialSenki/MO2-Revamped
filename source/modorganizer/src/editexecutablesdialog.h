@@ -35,6 +35,8 @@ class EditExecutablesDialog;
 }
 
 class ModList;
+class QLabel;
+class QPushButton;
 class OrganizerCore;
 
 /** helper class to manage custom overwrites within the edit executables
@@ -230,6 +232,24 @@ private:
   void addEmpty();
   void clone();
   void addNew(Executable e);
+
+  // Fluent: the instance manager's list and details cards around the same
+  // widgets, see buildFluentLayout()
+  bool m_fluent = false;
+  QLabel* m_fluentCount     = nullptr;
+  QLabel* m_fluentIcon      = nullptr;
+  QLabel* m_fluentName      = nullptr;
+  QLabel* m_fluentCaption   = nullptr;
+  QPushButton* m_fluentDuplicate = nullptr;
+  QPushButton* m_fluentRemove    = nullptr;
+
+  void buildFluentLayout();
+  QWidget* createFluentListCard();
+  QWidget* createFluentDetails();
+  void refreshFluent();
+  void refreshFluentItem(QListWidgetItem* item);
+  void showFluentListMenu(const QPoint& pos);
+  void showFluentHelp();
 
   QFileInfo browseBinary(const QString& initial);
   void setBinary(const QFileInfo& binary);

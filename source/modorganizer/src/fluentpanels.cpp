@@ -3,10 +3,13 @@
 #include "fluentswitch.h"
 
 #include <QCheckBox>
+#include <QComboBox>
+#include <QLineEdit>
 #include <QEvent>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QPainter>
+#include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -219,10 +222,12 @@ DetailRow addDetailRow(QWidget* parent, char16_t glyph, const QString& title,
   return row;
 }
 
-QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
-                     const QString& description, QCheckBox* box)
+namespace
 {
-  auto* frame = new QFrame(parent);
+// the left part of a Settings row: the frame, its glyph and its texts
+QHBoxLayout* rowWithText(QFrame* frame, char16_t glyph, const QString& title,
+                         const QString& description)
+{
   frame->setObjectName(QStringLiteral("fluentSettingRow"));
   frame->setMinimumHeight(62);
 
@@ -243,6 +248,42 @@ QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
     text->addWidget(descriptionLabel);
   }
   layout->addLayout(text, 1);
+  return layout;
+}
+}  // namespace
+
+QFrame* addEditRow(QWidget* parent, char16_t glyph, const QString& title,
+                   const QString& description, const QList<QWidget*>& widgets)
+{
+  auto* frame  = new QFrame(parent);
+  auto* layout = rowWithText(frame, glyph, title, description);
+
+  // the field takes the room the texts leave; buttons keep their size
+  for (QWidget* w : widgets) {
+    w->setParent(frame);
+    const bool field = qobject_cast<QLineEdit*>(w) || qobject_cast<QComboBox*>(w);
+    if (field) {
+      w->setMinimumWidth(300);
+    }
+    layout->addWidget(w, field ? 2 : 0, Qt::AlignVCenter);
+    w->show();
+  }
+
+  parent->layout()->addWidget(frame);
+  return frame;
+}
+
+QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
+                     const QString& description, QCheckBox* box, QWidget* value)
+{
+  auto* frame  = new QFrame(parent);
+  auto* layout = rowWithText(frame, glyph, title, description);
+
+  if (value != nullptr) {
+    value->setParent(frame);
+    layout->addWidget(value, 0, Qt::AlignVCenter);
+    value->show();
+  }
 
   // the box keeps its name for screen readers and for plugins that look it up
   box->setParent(frame);
@@ -252,6 +293,11 @@ QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
   box->setCursor(Qt::PointingHandCursor);
   if (FluentIcons::active()) {
     box->setProperty("fluentAnimated", true);
+  }
+  // the properties select the switch rules, so the style must look again
+  box->style()->unpolish(box);
+  box->style()->polish(box);
+  if (FluentIcons::active()) {
     FluentSwitch::animate(box);
   }
   layout->addWidget(box, 0, Qt::AlignVCenter | Qt::AlignRight);
