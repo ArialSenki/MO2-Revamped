@@ -16,7 +16,8 @@ from PyQt6.QtCore import Qt, qCritical, qInfo
 class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     """Choose how supported Elden Ring archive contents are installed."""
 
-    _game_short_name = "eldenring"
+    # Elden Ring and Nightreign share the archive layouts
+    _game_short_names = frozenset({"eldenring", "nightreign"})
     _archive_wrapper_depth_limit = 16
     _default_game_plugin_name = "Elden Ring MO2 Support"
     _game_override_key = "_archive_layout_override"
@@ -112,7 +113,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         return mobase.VersionInfo(0, 5, 0, 72)
 
     def requirements(self):
-        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING"})]
+        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
 
     def settings(self) -> list[mobase.PluginSetting]:
         # MO2's plugin manager already provides the enable/disable switch.
@@ -126,7 +127,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         game = organizer.managedGame()
         if game is None:
             return False
-        if game.gameShortName().casefold() != self._game_short_name:
+        if game.gameShortName().casefold() not in self._game_short_names:
             return False
 
         game_plugin_name = game.name()
@@ -374,6 +375,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     _game_file_names = frozenset(
         {
             "eldenring.exe",
+            "nightreign.exe",
             "start_protected_game.exe",
             "steam_api64.dll",
             "regulation.bin",
@@ -400,7 +402,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             "shader", "sound", "system", "texture", "textures", "time", "wp",
             "config", "configs", "dlls", "external_dlls", "fonts", "mod", "mods",
             "mo2_dlls", "native", "natives", "plugins", "seamlesscoop",
-            "modengine2", "bin", "locale", "game", "elden ring", "eldenring",
+            "modengine2", "bin", "locale", "game", "elden ring", "eldenring", "nightreign",
             "drag files into here", "fomod",
         }
     )

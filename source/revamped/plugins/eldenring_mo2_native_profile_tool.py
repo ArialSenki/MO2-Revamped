@@ -171,7 +171,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         return mobase.VersionInfo(0, 5, 0, 80)
 
     def requirements(self):
-        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING"})]
+        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
 
     def settings(self) -> list[mobase.PluginSetting]:
         return []
@@ -197,7 +197,10 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
     def display(self) -> None:
         try:
             game = self.__organizer.managedGame()
-            if game is None or game.gameShortName().casefold() != "eldenring":
+            if game is None or game.gameShortName().casefold() not in {
+                "eldenring",
+                "nightreign",
+            }:
                 return
         except Exception:
             return

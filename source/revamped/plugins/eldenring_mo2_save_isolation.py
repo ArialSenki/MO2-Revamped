@@ -148,6 +148,39 @@ class _Mo2DialogShowEventFilter(QObject):
         return self.__plugin._handle_dialog_show_event(watched, event)
 
 
+# The names that differ between the games this tool serves. "stem" is the
+# save's file name without extension (ER0000.sl2, NR0000.co2...).
+_GAMES = {
+    "eldenring": {
+        "process": "eldenring.exe",
+        "save_dir": "EldenRing",
+        "stem": "ER0000",
+        "shared": "Elden Ring Shared Saves",
+        "global_backups": "Elden Ring Global Save Backups",
+        "scope": "",
+        "button": "elden ring",
+    },
+    "nightreign": {
+        "process": "nightreign.exe",
+        "save_dir": "Nightreign",
+        "stem": "NR0000",
+        "shared": "Nightreign Shared Saves",
+        "global_backups": "Nightreign Global Save Backups",
+        "scope": "|nightreign",
+        "button": "nightreign",
+    },
+}
+
+
+def _game() -> dict:
+    return _GAMES[EldenRingMo2SaveIsolation._game_key]
+
+
+def _trs(text: str) -> str:
+    # a translated text that names the Elden Ring save file, for this game
+    return _tr(text).replace("ER0000", _game()["stem"])
+
+
 class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     ConfigFilename = "eldenring_mo2_saves.ini"
     ProfileIsolated = "profile"
@@ -155,6 +188,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     GlobalShared = "global"
     CreateInstanceCardName = "eldenRingSaveModeCard"
     PendingModesFilename = "pending_instance_modes.json"
+    # the managed game's key in _GAMES, set when the instance is known
+    _game_key = "eldenring"
     # this MO2 instance's folder, for the instance-shared saves
     _path_instance_base: Path | None = None
     CreateInstanceSaveCopyCheckboxName = "eldenRingCreateInstanceSaveCopy"
@@ -269,7 +304,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return mobase.VersionInfo(0, 5, 0, 77)
 
     def requirements(self):
-        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING"})]
+        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
 
     def settings(self) -> list[mobase.PluginSetting]:
         return []
@@ -589,13 +624,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return routes, current_id
     @staticmethod
     def _transfer_blocked_reason() -> str:
+        process = _game()["process"]
         names = _running_process_names()
         if names is not None:
-            running = "eldenring.exe" in names
+            running = process in names
         else:
             try:
                 result = subprocess.run(
-                    ["tasklist", "/FI", "IMAGENAME eq eldenring.exe", "/FO", "CSV", "/NH"],
+                    ["tasklist", "/FI", f"IMAGENAME eq {process}", "/FO", "CSV", "/NH"],
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
@@ -605,7 +641,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 )
                 running = result.returncode != 0 or any(
-                    line.lstrip().casefold().startswith('"eldenring.exe"')
+                    line.lstrip().casefold().startswith(f'"{process}"')
                     for line in result.stdout.splitlines()
                 )
             except (OSError, subprocess.SubprocessError):
@@ -804,7 +840,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         source_combo.blockSignals(True)
         source_combo.clear()
-        for label, source_path, relative_path in self._create_instance_save_sources():
+        # the saves found are this instance's game's: a new instance of the
+        # other game (Elden Ring / Nightreign) is offered none
+        target_game = self._create_dialog_game_key(dialog)
+        same_game = target_game is None or target_game == EldenRingMo2SaveIsolation._game_key
+        sources = self._create_instance_save_sources() if same_game else []
+        for label, source_path, relative_path in sources:
             index = source_combo.count()
             source_combo.addItem(label, (str(source_path), relative_path))
             source_combo.setItemData(
@@ -919,7 +960,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             elif checkbox.isChecked():
                 note.setText(
-                    _tr("This name appears in Tools > Elden Ring Save Isolation. If "
+                    _trs("This name appears in Tools > Elden Ring Save Isolation. If "
                     "you choose a starting save below, it will be copied into "
                     "this named save profile. "
                     "Elden Ring loads the selected file as ER0000.sl2.")
@@ -982,7 +1023,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _auto_backup_root(route_root: Path, instance_base: Path, is_global: bool) -> Path:
         # the same place the game plugin writes its automatic backups to
         if is_global:
-            return instance_base / "Elden Ring Global Save Backups" / "auto"
+            return instance_base / _game()["global_backups"] / "auto"
         return route_root.parent / f"{route_root.name} Backups" / "auto"
 
     @staticmethod
@@ -1051,7 +1092,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     if (
                         current.is_file()
                         and not self._is_reparse_point(current)
-                        and current.name.casefold().startswith("er0000.")
+                        and current.name.casefold().startswith(_game()["stem"].casefold() + ".")
                         and family(current.name) in account_families
                     ):
                         target = replaced / account / current.name
@@ -1257,7 +1298,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             "S",
         )
         intro = QLabel(
-            _tr("Copy one save between storage routes: a vanilla .sl2 or a Seamless "
+            _trs("Copy one save between storage routes: a vanilla .sl2 or a Seamless "
             "Co-op .co2. The selected MO2 profile is {profile}. Its account folder is "
             "preserved, and the copy is named ER0000 at the destination with the "
             "same extension.").format(profile=profile_name),
@@ -1471,7 +1512,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return
 
             destination_relative_path = (
-                relative_path.parent / f"ER0000{source_path_resolved.suffix.lower()}"
+                relative_path.parent / f"{_game()['stem']}{source_path_resolved.suffix.lower()}"
             )
             destination_path = destination_root_resolved / destination_relative_path
             if source_path_resolved == destination_path.resolve():
@@ -1537,7 +1578,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if instance_base is not None and self._normalized_path(
                 destination_root_resolved
             ) == self._normalized_path(self._global_save_directory()):
-                transfer_backup_root = instance_base / "Elden Ring Global Save Backups"
+                transfer_backup_root = instance_base / _game()["global_backups"]
             else:
                 transfer_backup_root = destination_root_resolved.parent / (
                     destination_root_resolved.name + " Backups"
@@ -1617,7 +1658,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         if backup_path is not None
                         else transfer_backup_root
                         / destination_relative_path.parent
-                        / f"ER0000.{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}{destination_path.suffix}.bak"
+                        / f"{_game()['stem']}.{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}{destination_path.suffix}.bak"
                     )
                     bak_backup.parent.mkdir(parents=True, exist_ok=True)
                     os.replace(destination_bak, bak_backup)
@@ -1718,24 +1759,38 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 for button in games_container.findChildren(QCommandLinkButton)
                 if button.isCheckable() and button.isChecked()
             ]
-            return any(
-                "elden ring" in button.text().casefold()
-                for button in game_buttons
-            )
+            return self._create_dialog_game_key(dialog) is not None
 
         # Older MO2 variants may not expose the game picker widget.
-        try:
-            game = self.__organizer.managedGame()
-            return bool(game and game.gameShortName().casefold() == "eldenring")
-        except Exception:
-            return False
+        return self._active_instance_is_elden_ring()
+
+    def _create_dialog_game_key(self, dialog) -> str | None:
+        # the game picked in the new-instance wizard: Nightreign's name also
+        # contains "elden ring", so it is checked first
+        games_container = dialog.findChild(QWidget, "games")
+        if games_container is None:
+            return None
+        for button in games_container.findChildren(QCommandLinkButton):
+            if not (button.isCheckable() and button.isChecked()):
+                continue
+            text = button.text().casefold()
+            if _GAMES["nightreign"]["button"] in text:
+                return "nightreign"
+            if _GAMES["eldenring"]["button"] in text:
+                return "eldenring"
+        return None
 
     def _active_instance_is_elden_ring(self) -> bool:
+        # Elden Ring or Nightreign; the table follows the managed game
         try:
             game = self.__organizer.managedGame()
-            return bool(game and game.gameShortName().casefold() == "eldenring")
+            key = game.gameShortName().casefold() if game else ""
         except Exception:
             return False
+        if key in _GAMES:
+            EldenRingMo2SaveIsolation._game_key = key
+            return True
+        return False
 
     def _inject_create_instance_dialog(self, dialog, save_checkbox) -> None:
         existing_card = dialog.findChild(QGroupBox, self.CreateInstanceCardName)
@@ -1826,7 +1881,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
         game_save_profile_name.setToolTip(
-            _tr("This name distinguishes the Elden Ring save profile in MO2. "
+            _trs("This name distinguishes the Elden Ring save profile in MO2. "
             "The game loads the selected file as ER0000.sl2.")
         )
         game_save_profile_name.setEnabled(False)
@@ -1850,7 +1905,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         copy_checkbox.setObjectName(self.CreateInstanceSaveCopyCheckboxName)
         copy_checkbox.setToolTip(
-            _tr("Choose a save from Steam or a detected Elden Ring MO2 profile. "
+            _trs("Choose a save from Steam or a detected Elden Ring MO2 profile. "
             "The file is copied as ER0000.sl2 after the new instance is opened.")
         )
         card.layout().addWidget(copy_checkbox)
@@ -2298,7 +2353,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             destination_root = self._global_save_directory()
         else:
             destination_root = profile_directory / "saves"
-        destination_path = destination_root / relative_path.parent / "ER0000.sl2"
+        destination_path = destination_root / relative_path.parent / f"{_game()['stem']}.sl2"
 
         if self._normalized_path(source_path) == self._normalized_path(destination_path):
             return "same"
@@ -2705,11 +2760,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # path was customised (two instances could then share it); such a
         # folder that already holds saves is kept so nothing goes missing.
         # The same rule as the game plugin's instance_shared_directory().
-        legacy = profile_directory.parent.parent / "Elden Ring Shared Saves"
+        legacy = profile_directory.parent.parent / _game()["shared"]
         base = cls._path_instance_base
         if base is None:
             return legacy
-        anchored = base / "Elden Ring Shared Saves"
+        anchored = base / _game()["shared"]
         if os.path.normcase(os.path.abspath(anchored)) == os.path.normcase(os.path.abspath(legacy)):
             return anchored
         try:
@@ -2731,7 +2786,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         appdata = os.environ.get("APPDATA")
         if not appdata:
             appdata = str(Path.home() / "AppData" / "Roaming")
-        return Path(appdata) / "EldenRing"
+        return Path(appdata) / _game()["save_dir"]
 
     @classmethod
     def _read_mode(cls, profile) -> str:
@@ -3056,7 +3111,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     source_parent = source_parent.parent
 
                 extension = relative_path.suffix.lower()
-                canonical_relative = relative_path.parent / f"ER0000{extension}"
+                canonical_relative = relative_path.parent / f"{_game()['stem']}{extension}"
                 canonical_path = temporary_directory / canonical_relative
                 canonical_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source_path_resolved, canonical_path)
@@ -3065,7 +3120,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     source_path_resolved.name + ".bak"
                 )
                 if backup_source.is_file() and not self._is_reparse_point(backup_source):
-                    backup_relative = relative_path.parent / f"ER0000{extension}.bak"
+                    backup_relative = relative_path.parent / f"{_game()['stem']}{extension}.bak"
                     backup_destination = temporary_directory / backup_relative
                     backup_destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(backup_source, backup_destination)
@@ -3167,7 +3222,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_heading.setObjectName("saveProfileCardTitle")
         source_layout.addWidget(source_heading)
         source_note = QLabel(
-            _tr("Choose a new empty save or import an existing one: a vanilla .sl2 or "
+            _trs("Choose a new empty save or import an existing one: a vanilla .sl2 or "
             "a Seamless Co-op .co2. Imports are copied as ER0000 with the same "
             "extension, with their .bak when there is one. The source is left "
             "unchanged. Close Elden Ring before importing."),
@@ -3465,7 +3520,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         save_profile_row.addWidget(create_save_profile_button)
         save_profile_layout.addLayout(save_profile_row)
         save_profile_note = QLabel(
-            _tr("Every choice has its own save folder. MO2 presents the selected save "
+            _trs("Every choice has its own save folder. MO2 presents the selected save "
             "to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing "
             "a save leaves its source intact."),
             save_profile_group,
@@ -3530,7 +3585,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         safety_caption = QLabel(_tr("Safety"), safety_card)
         safety_caption.setObjectName("saveIsolationSafetyCaption")
         safety_note = QLabel(
-            _tr("This only routes save files. It does not change Easy Anti-Cheat or "
+            _trs("This only routes save files. It does not change Easy Anti-Cheat or "
             "network mode, and it cannot make modded saves safe for online play. "
             "The global folder can contain separate subfolders for multiple "
             "Steam IDs; identical ER0000.sl2 names under different IDs are "
@@ -3633,7 +3688,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "or instance-shared saves.")
                 if mode == self.GlobalShared
                 else (
-                    _tr("Each named game save profile has its own folder. MO2 presents "
+                    _trs("Each named game save profile has its own folder. MO2 presents "
                     "the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with "
                     "Seamless Co-op); importing a save leaves its source intact.")
                 )
@@ -3998,7 +4053,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         return mobase.VersionInfo(1, 0, 0, mobase.ReleaseType.FINAL)
 
     def requirements(self) -> list:
-        return [mobase.PluginRequirementFactory.gameDependency("ELDEN RING")]
+        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
 
     def settings(self) -> list[mobase.PluginSetting]:
         return []
@@ -4019,7 +4074,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         try:
             for account in EldenRingMo2SaveDiagnose._account_folders(root):
                 for entry in account.iterdir():
-                    if entry.is_file() and entry.name.casefold().startswith("er0000."):
+                    if entry.is_file() and entry.name.casefold().startswith(_game()["stem"].casefold() + "."):
                         return True
         except OSError:
             pass
@@ -4029,7 +4084,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
     def _pending_sessions() -> list[Path]:
         # while the game runs its own session hides the saves on purpose
         names = _running_process_names()
-        if names is None or "eldenring.exe" in names:
+        if names is None or _game()["process"] in names:
             return []
         appdata = os.environ.get("APPDATA")
         if not appdata:
@@ -4040,7 +4095,9 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
             identity = os.path.normcase(str(install_root.resolve()))
         except (IndexError, OSError, RuntimeError):
             return []
-        token = hashlib.sha256(identity.encode("utf-8", errors="replace")).hexdigest()[:24]
+        token = hashlib.sha256(
+            (identity + _game()["scope"]).encode("utf-8", errors="replace")
+        ).hexdigest()[:24]
         recovery = Path(appdata) / ".MO2RevampedSaveRecovery" / token
         sessions = []
         try:

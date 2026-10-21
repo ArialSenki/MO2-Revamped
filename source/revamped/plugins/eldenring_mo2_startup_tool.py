@@ -98,7 +98,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return mobase.VersionInfo(0, 5, 0, 64)
 
     def requirements(self):
-        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING"})]
+        return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
 
     def settings(self) -> list[mobase.PluginSetting]:
         return []
@@ -121,8 +121,12 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
     def display(self) -> None:
         try:
             game = self.__organizer.managedGame()
-            if game is None or game.gameShortName().casefold() != "eldenring":
+            if game is None or game.gameShortName().casefold() not in {
+                "eldenring",
+                "nightreign",
+            }:
                 return
+            nightreign = game.gameShortName().casefold() == "nightreign"
         except Exception:
             return
 
@@ -378,7 +382,11 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             "game-rendered frames, videos, or graphics-mode transitions."),
         )
         skip_logos_box = QCheckBox(_tr("Skip the intro logo screens"))
-        skip_logos_box.setChecked(skip_intro_logos)
+        skip_logos_box.setChecked(skip_intro_logos and not nightreign)
+        if nightreign:
+            # the patch matches Elden Ring's game code only
+            skip_logos_box.setEnabled(False)
+            skip_logos_box.setToolTip(_tr("Not available for Nightreign yet."))
         add_option(
             startup_layout,
             skip_logos_box,

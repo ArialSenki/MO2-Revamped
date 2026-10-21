@@ -3264,6 +3264,10 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>Impossibile leggere il file delle impostazioni del profilo, quindi è stato lasciato invariato:
 {path}</translation>
     </message>
+    <message>
+      <source>Not available for Nightreign yet.</source>
+      <translation>Non ancora disponibile per Nightreign.</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeModel</name>

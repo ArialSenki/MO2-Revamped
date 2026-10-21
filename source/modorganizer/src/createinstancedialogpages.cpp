@@ -995,9 +995,8 @@ std::vector<IPluginGame*> GamePage::sortedGamePlugins() const
   // of asking the dialog to gather a partial CreationInfo here.
   // all game plugins
   for (auto* game : m_pc.plugins<IPluginGame>()) {
-    if (m_isolatedModeActive &&
-        game->gameShortName().compare(QStringLiteral("eldenring"),
-                                      Qt::CaseInsensitive) != 0) {
+    // the Elden Ring edition offers the games its plugins support
+    if (m_isolatedModeActive && !EldenRingSaveSettings::supports(game)) {
       continue;
     }
 
@@ -1263,9 +1262,7 @@ GamePage::Game* GamePage::checkInstallation(const QString& path, Game* g)
   IPluginGame* otherGame = nullptr;
 
   for (auto* gg : m_pc.plugins<IPluginGame>()) {
-    if (m_isolatedModeActive &&
-        gg->gameShortName().compare(QStringLiteral("eldenring"),
-                                    Qt::CaseInsensitive) != 0) {
+    if (m_isolatedModeActive && !EldenRingSaveSettings::supports(gg)) {
       continue;
     }
     if (gg->looksValid(path)) {

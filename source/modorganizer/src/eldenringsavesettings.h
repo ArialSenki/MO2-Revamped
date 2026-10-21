@@ -16,11 +16,14 @@ inline constexpr auto InstanceShared  = "instance_shared";
 inline constexpr auto GlobalShared    = "global";
 inline constexpr auto ConfigFilename  = "eldenring_mo2_saves.ini";
 
+// Elden Ring and Nightreign: the Revamped plugins route both games' saves
 inline bool supports(const MOBase::IPluginGame* game)
 {
   return game != nullptr &&
-         game->gameShortName().compare(QStringLiteral("eldenring"),
-                                       Qt::CaseInsensitive) == 0;
+         (game->gameShortName().compare(QStringLiteral("eldenring"),
+                                        Qt::CaseInsensitive) == 0 ||
+          game->gameShortName().compare(QStringLiteral("nightreign"),
+                                        Qt::CaseInsensitive) == 0);
 }
 
 inline QString normalizeMode(const QString& mode,

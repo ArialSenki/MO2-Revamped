@@ -3234,6 +3234,10 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <translation>No se pudo leer el archivo de ajustes del perfil, así que se dejó sin cambios:
 {path}</translation>
     </message>
+    <message>
+      <source>Not available for Nightreign yet.</source>
+      <translation>Aún no disponible para Nightreign.</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeModel</name>

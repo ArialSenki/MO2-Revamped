@@ -3222,6 +3222,10 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>Die Einstellungsdatei des Profils konnte nicht gelesen werden und wurde daher nicht geändert:
 {path}</translation>
     </message>
+    <message>
+      <source>Not available for Nightreign yet.</source>
+      <translation>Für Nightreign noch nicht verfügbar.</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeModel</name>
