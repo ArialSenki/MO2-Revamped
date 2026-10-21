@@ -1244,6 +1244,14 @@ Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste ne
       <source>Open MO2's manual installer to choose the files and folders yourself.</source>
       <translation>Öffnet den manuellen Installer von MO2, um Dateien und Ordner selbst auszuwählen.</translation>
     </message>
+    <message>
+      <source>This archive replaces the game's regulation.bin. Only one active mod can provide it: the one with the highest priority wins.</source>
+      <translation>Dieses Archiv ersetzt die regulation.bin des Spiels. Nur ein aktiver Mod kann sie bereitstellen: Der mit der höchsten Priorität gewinnt.</translation>
+    </message>
+    <message>
+      <source>This archive contains game files ({0}). Installed through MO2 they replace the game's own copies; most mods do not need that.</source>
+      <translation>Dieses Archiv enthält Spieldateien ({0}). Über MO2 installiert ersetzen sie die eigenen Kopien des Spiels; die meisten Mods brauchen das nicht.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>

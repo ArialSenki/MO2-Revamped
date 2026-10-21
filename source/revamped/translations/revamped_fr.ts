@@ -1248,6 +1248,14 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
       <source>Open MO2's manual installer to choose the files and folders yourself.</source>
       <translation>Ouvre l'installateur manuel de MO2 pour choisir vous-même les fichiers et dossiers.</translation>
     </message>
+    <message>
+      <source>This archive replaces the game's regulation.bin. Only one active mod can provide it: the one with the highest priority wins.</source>
+      <translation>Cette archive remplace le regulation.bin du jeu. Un seul mod actif peut le fournir : celui qui a la priorité la plus haute l'emporte.</translation>
+    </message>
+    <message>
+      <source>This archive contains game files ({0}). Installed through MO2 they replace the game's own copies; most mods do not need that.</source>
+      <translation>Cette archive contient des fichiers du jeu ({0}). Installés via MO2, ils remplacent les copies du jeu ; la plupart des mods n'en ont pas besoin.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
