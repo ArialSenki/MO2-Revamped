@@ -31,6 +31,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QLabel>
 #include <QLocale>
 #include <QMenu>
+#include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QIcon>
@@ -154,6 +155,17 @@ void OverwriteInfoDialog::buildFluentLayout()
   names->addWidget(title);
   names->addWidget(m_summary);
   head->addLayout(names, 1);
+  // what to do with the files: keep them in a mod, or look at them
+  m_createMod = new QPushButton(FluentIcons::glyph(0xE8F4), tr("Create mod..."), card);
+  m_createMod->setToolTip(tr("Move all files from Overwrite into a new regular mod"));
+  m_createMod->setAutoDefault(false);
+  m_moveToMod = new QPushButton(FluentIcons::glyph(0xEA3C), tr("Move to a mod..."), card);
+  m_moveToMod->setToolTip(tr("Choose a regular mod and move all files from Overwrite into it"));
+  m_moveToMod->setAutoDefault(false);
+  head->addWidget(m_createMod, 0, Qt::AlignVCenter);
+  head->addWidget(m_moveToMod, 0, Qt::AlignVCenter);
+  connect(m_createMod, &QPushButton::clicked, this, &OverwriteInfoDialog::createModRequested);
+  connect(m_moveToMod, &QPushButton::clicked, this, &OverwriteInfoDialog::moveToModRequested);
   ui->explorerButton->setParent(card);
   head->addWidget(ui->explorerButton, 0, Qt::AlignVCenter);
   ui->explorerButton->show();
@@ -221,6 +233,12 @@ void OverwriteInfoDialog::updateSummary()
       ++files;
       bytes += it.fileInfo().size();
     }
+  }
+
+  // nothing to keep without files
+  if (m_createMod != nullptr) {
+    m_createMod->setEnabled(files > 0);
+    m_moveToMod->setEnabled(files > 0);
   }
 
   // the same words as the main window's Overwrite card

@@ -1103,6 +1103,26 @@ I programmi non nascosti compaiono nell’elenco Programma della finestra princi
       <source>OK</source>
       <translation>OK</translation>
     </message>
+    <message>
+      <source>Desktop shortcut</source>
+      <translation>Collegamento sul desktop</translation>
+    </message>
+    <message>
+      <source>Remove desktop shortcut</source>
+      <translation>Rimuovi collegamento</translation>
+    </message>
+    <message>
+      <source>Delete the shortcut on the desktop</source>
+      <translation>Elimina il collegamento dal desktop</translation>
+    </message>
+    <message>
+      <source>Start this program with Mod Organizer from the desktop</source>
+      <translation>Avvia questo programma con Mod Organizer dal desktop</translation>
+    </message>
+    <message>
+      <source>Choose OK or Apply first, so the shortcut finds the program</source>
+      <translation>Scegli prima OK o Applica, così il collegamento trova il programma</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -5688,6 +5708,14 @@ p, li { white-space: pre-wrap; }
       <source>Use the Nexus category</source>
       <translation>Usa la categoria Nexus</translation>
     </message>
+    <message>
+      <source>Enable its mods</source>
+      <translation>Attiva le sue mod</translation>
+    </message>
+    <message>
+      <source>Disable its mods</source>
+      <translation>Disattiva le sue mod</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -6087,6 +6115,22 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
         <numerusform>%n file, %1, fuori da ogni mod</numerusform>
         <numerusform>%n file, %1, fuori da ogni mod</numerusform>
       </translation>
+    </message>
+    <message>
+      <source>Create mod...</source>
+      <translation>Crea mod...</translation>
+    </message>
+    <message>
+      <source>Move all files from Overwrite into a new regular mod</source>
+      <translation>Sposta tutti i file di Overwrite in una nuova mod</translation>
+    </message>
+    <message>
+      <source>Move to a mod...</source>
+      <translation>Sposta in una mod...</translation>
+    </message>
+    <message>
+      <source>Choose a regular mod and move all files from Overwrite into it</source>
+      <translation>Scegli una mod e spostaci tutti i file di Overwrite</translation>
     </message>
   </context>
   <context>

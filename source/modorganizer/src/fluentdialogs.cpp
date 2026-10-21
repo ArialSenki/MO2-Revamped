@@ -17,6 +17,9 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QRegularExpression>
+#include <QScreen>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QTimer>
 
 #ifdef Q_OS_WIN
@@ -234,6 +237,66 @@ void polish(QDialog* dialog)
   }
 
   matchTitleBar(dialog);
+
+  // once the layouts have settled, a short scroll becomes a taller window
+  QTimer::singleShot(0, dialog, [dialog] {
+    growForShortScroll(dialog);
+  });
+}
+
+void growForShortScroll(QDialog* dialog)
+{
+  // a window that scrolls only a little reads better a little taller, as
+  // long as it still fits the size dialogs open at; long pages keep their
+  // scroll bar
+  constexpr int ShortScroll = 240;
+
+  if (dialog == nullptr || !dialog->isVisible() ||
+      (dialog->windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen))) {
+    return;
+  }
+  const QScreen* screen = dialog->screen();
+  if (screen == nullptr) {
+    return;
+  }
+
+  int extra = 0;
+  for (QScrollArea* area : dialog->findChildren<QScrollArea*>()) {
+    QWidget* content = area->widget();
+    if (content == nullptr || !area->isVisible() || !area->widgetResizable() ||
+        area->verticalScrollBarPolicy() == Qt::ScrollBarAlwaysOff) {
+      continue;
+    }
+    const int width  = area->viewport()->width();
+    const int needed = content->hasHeightForWidth() ? content->heightForWidth(width)
+                                                    : content->sizeHint().height();
+    const int overflow = needed - area->viewport()->height();
+    if (overflow > 0 && overflow <= ShortScroll) {
+      extra = std::max(extra, overflow);
+    }
+  }
+  if (extra == 0) {
+    return;
+  }
+
+  const QRect available = screen->availableGeometry();
+  const int frame       = dialog->frameGeometry().height() - dialog->geometry().height();
+  const int maxHeight =
+      std::min(maxSize(available).height(), available.height() - std::max(frame, 0));
+  const int height = dialog->height() + extra;
+  if (height > maxHeight) {
+    return;
+  }
+
+  // grow around the middle, but never above the work area's top
+  QRect geometry = dialog->geometry();
+  geometry.setTop(std::max(available.top() + std::max(frame, 0),
+                           geometry.top() - extra / 2));
+  geometry.setHeight(height);
+  if (geometry.bottom() > available.bottom()) {
+    geometry.moveBottom(available.bottom());
+  }
+  dialog->setGeometry(geometry);
 }
 
 void polishMessageBox(QMessageBox* box)

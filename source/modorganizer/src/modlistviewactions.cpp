@@ -828,8 +828,15 @@ void ModListViewActions::displayModInformation(ModInfo::Ptr modInfo,
     QDialog* dialog = m_parent->findChild<QDialog*>("__overwriteDialog");
     try {
       if (dialog == nullptr) {
-        dialog = new OverwriteInfoDialog(modInfo, m_parent);
-        dialog->setObjectName("__overwriteDialog");
+        auto* overwrite = new OverwriteInfoDialog(modInfo, m_parent);
+        overwrite->setObjectName("__overwriteDialog");
+        connect(overwrite, &OverwriteInfoDialog::createModRequested, this, [this] {
+          createModFromOverwrite();
+        });
+        connect(overwrite, &OverwriteInfoDialog::moveToModRequested, this, [this] {
+          moveOverwriteContentToExistingMod();
+        });
+        dialog = overwrite;
       } else {
         qobject_cast<OverwriteInfoDialog*>(dialog)->setModInfo(modInfo);
       }

@@ -1069,6 +1069,26 @@ Los programas que no están ocultos aparecen en la lista Programa de la ventana 
       <source>OK</source>
       <translation>Aceptar</translation>
     </message>
+    <message>
+      <source>Desktop shortcut</source>
+      <translation>Acceso directo</translation>
+    </message>
+    <message>
+      <source>Remove desktop shortcut</source>
+      <translation>Quitar acceso directo</translation>
+    </message>
+    <message>
+      <source>Delete the shortcut on the desktop</source>
+      <translation>Elimina el acceso directo del escritorio</translation>
+    </message>
+    <message>
+      <source>Start this program with Mod Organizer from the desktop</source>
+      <translation>Inicia este programa con Mod Organizer desde el escritorio</translation>
+    </message>
+    <message>
+      <source>Choose OK or Apply first, so the shortcut finds the program</source>
+      <translation>Pulsa Aceptar o Aplicar primero para que el acceso directo encuentre el programa</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -5538,6 +5558,14 @@ p, li { white-space: pre-wrap; }
       <source>Use the Nexus category</source>
       <translation>Usar la categoría de Nexus</translation>
     </message>
+    <message>
+      <source>Enable its mods</source>
+      <translation>Activar sus mods</translation>
+    </message>
+    <message>
+      <source>Disable its mods</source>
+      <translation>Desactivar sus mods</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -5933,6 +5961,22 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
         <numerusform>%n archivo, %1, fuera de cualquier mod</numerusform>
         <numerusform>%n archivos, %1, fuera de cualquier mod</numerusform>
       </translation>
+    </message>
+    <message>
+      <source>Create mod...</source>
+      <translation>Crear mod...</translation>
+    </message>
+    <message>
+      <source>Move all files from Overwrite into a new regular mod</source>
+      <translation>Mueve todos los archivos de Overwrite a un mod nuevo</translation>
+    </message>
+    <message>
+      <source>Move to a mod...</source>
+      <translation>Mover a un mod...</translation>
+    </message>
+    <message>
+      <source>Choose a regular mod and move all files from Overwrite into it</source>
+      <translation>Elige un mod y mueve a él todos los archivos de Overwrite</translation>
     </message>
   </context>
   <context>

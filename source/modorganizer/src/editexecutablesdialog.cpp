@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentpanels.h"
 #include "menuutils.h"
 #include "filedialogmemory.h"
+#include "envshortcut.h"
 #include "forcedloaddialog.h"
 #include "modlist.h"
 #include "organizercore.h"
@@ -1293,7 +1294,10 @@ QWidget* EditExecutablesDialog::createFluentDetails()
                                    tr("Remove"), actions);
   m_fluentRemove->setAutoDefault(false);
   m_fluentRemove->setToolTip(tr("Remove the program from the list (Delete)"));
+  m_fluentShortcut = new QPushButton(FluentIcons::glyph(0xE718), tr("Desktop shortcut"), actions);
+  m_fluentShortcut->setAutoDefault(false);
   actionsLayout->addWidget(m_fluentDuplicate);
+  actionsLayout->addWidget(m_fluentShortcut);
   actionsLayout->addStretch(1);
   actionsLayout->addWidget(m_fluentRemove);
   layout->addWidget(actions);
@@ -1303,6 +1307,17 @@ QWidget* EditExecutablesDialog::createFluentDetails()
   });
   connect(m_fluentRemove, &QPushButton::clicked, this,
           &EditExecutablesDialog::on_remove_clicked);
+  connect(m_fluentShortcut, &QPushButton::clicked, this, [this] {
+    // the shortcut starts the saved program, so it uses the saved entry
+    if (const Executable* exe = selectedExe()) {
+      const ExecutablesList& committed = *m_organizerCore.executablesList();
+      auto saved = committed.find(exe->title());
+      if (saved != committed.end()) {
+        env::Shortcut(*saved).toggle(env::Shortcut::Desktop);
+        refreshFluent();
+      }
+    }
+  });
 
   auto* del = new QShortcut(QKeySequence(Qt::Key_Delete), ui->list);
   del->setContext(Qt::WidgetShortcut);
@@ -1348,6 +1363,19 @@ void EditExecutablesDialog::refreshFluent()
   const Executable* exe = selectedExe();
   m_fluentDuplicate->setEnabled(exe != nullptr);
   m_fluentRemove->setEnabled(exe != nullptr);
+
+  // a shortcut needs the program saved under this title
+  const ExecutablesList& committed = *m_organizerCore.executablesList();
+  const bool saved = exe != nullptr && committed.find(exe->title()) != committed.end();
+  const bool hasShortcut =
+      saved && env::Shortcut(*committed.find(exe->title())).exists(env::Shortcut::Desktop);
+  m_fluentShortcut->setEnabled(saved);
+  m_fluentShortcut->setText(hasShortcut ? tr("Remove desktop shortcut")
+                                        : tr("Desktop shortcut"));
+  m_fluentShortcut->setToolTip(
+      saved ? (hasShortcut ? tr("Delete the shortcut on the desktop")
+                           : tr("Start this program with Mod Organizer from the desktop"))
+            : tr("Choose OK or Apply first, so the shortcut finds the program"));
   if (exe == nullptr) {
     m_fluentName->setText(tr("No program selected"));
     m_fluentCaption->setText(tr("Add one, or pick one in the list"));
