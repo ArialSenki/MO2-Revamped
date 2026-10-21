@@ -4124,6 +4124,24 @@ Percorso: %3</translation>
       <source>Delete instance…</source>
       <translation>Elimina istanza…</translation>
     </message>
+    <message>
+      <source>Open instance</source>
+      <translation>Apri istanza</translation>
+    </message>
+    <message>
+      <source>This instance's folder or settings file no longer exists:
+%1</source>
+      <translation>La cartella o il file delle impostazioni di questa istanza non esiste più:
+%1</translation>
+    </message>
+    <message>
+      <source>This portable instance keeps the instances in the GlobalInstances folder listed, so it can't be deleted.</source>
+      <translation>Questa istanza portatile mantiene nell'elenco le istanze della cartella GlobalInstances, quindi non può essere eliminata.</translation>
+    </message>
+    <message>
+      <source>This portable instance keeps the instances in the GlobalInstances folder listed; it can't be deleted</source>
+      <translation>Questa istanza portatile mantiene nell'elenco le istanze della cartella GlobalInstances; non può essere eliminata</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>

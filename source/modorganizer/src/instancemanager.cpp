@@ -485,9 +485,10 @@ void Instance::getProfile(const Settings& s)
 //
 std::vector<Instance::Object> Instance::objectsForDeletion() const
 {
-  // native separators and ending slash
-  auto prettyDir = [](auto s) {
-    if (!s.endsWith("/") || !s.endsWith("\\")) {
+  // native separators and one ending slash (a drive root keeps its own)
+  auto prettyDir = [](QString s) {
+    s = QDir::cleanPath(s);
+    if (!s.endsWith("/")) {
       s += "/";
     }
 
@@ -499,11 +500,11 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
     return QDir::toNativeSeparators(s);
   };
 
-  // lowercase, native separators and ending slash
+  // lowercase, native separators and one ending slash
   auto canonicalDir = [](QString s) {
-    s = s.toLower();
+    s = QDir::cleanPath(s).toLower();
 
-    if (!s.endsWith("/") || !s.endsWith("\\")) {
+    if (!s.endsWith("/")) {
       s += "/";
     }
 
@@ -525,15 +526,29 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
     return canonicalFile(file).startsWith(canonicalDir(root));
   };
 
+  const QString loc = directory();
+  const auto& manager = InstanceManager::singleton();
+  const bool isInstallationRoot =
+      isPortable() && samePath(loc, manager.portablePath());
+
   Settings settings(iniPath());
 
   if (settings.iniStatus() != QSettings::NoError) {
     log::error("can't read ini {}", iniPath());
+    // the instance folder can still go; nothing else is known about it
+    if (!isInstallationRoot && QDir(loc).exists()) {
+      return {{prettyDir(loc), true}};
+    }
     return {};
   }
 
-  const QString loc  = directory();
-  const QString base = settings.paths().base();
+  // a folder that holds the MO2 installation, or a whole drive, is never
+  // offered for deletion, even when an instance's paths point at it
+  const QString installation = manager.portablePath();
+  auto mustKeep = [&](const QString& dir) {
+    const QString clean = QDir::cleanPath(dir);
+    return clean.size() <= 3 || dirInRoot(dir, installation);
+  };
 
   // directories that might contain the individual files and directories
   // set in the path settings
@@ -541,22 +556,14 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
 
   // The original portable instance uses the application directory and must
   // never delete that directory. Named portable instances own their folders.
-  const auto& manager = InstanceManager::singleton();
-  const bool isInstallationRoot =
-      isPortable() && samePath(loc, manager.portablePath());
   if (!isInstallationRoot) {
-    if (QDir(loc).exists()) {
+    if (QDir(loc).exists() && !mustKeep(loc)) {
       roots.push_back({loc, true});
     }
   }
 
-  // the base directory is the location directory by default, don't add it
-  // if it's the same
-  if (canonicalDir(base) != canonicalDir(loc)) {
-    if (QDir(base).exists()) {
-      roots.push_back({base, false});
-    }
-  }
+  // a base folder elsewhere is not offered as a whole: it may hold other
+  // things or be shared; its MO2 folders below are listed one by one
 
   // all the directories that are part of an instance; none of them are
   // mandatory for deletion
@@ -592,7 +599,7 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
     if (!inRoots) {
       // not in roots, this is a path that was changed by the user; make
       // sure it exists
-      if (QDir(f.path).exists()) {
+      if (QDir(f.path).exists() && !mustKeep(f.path)) {
         cleanDirs.push_back({prettyDir(f.path), f.mandatoryDelete});
       }
     }

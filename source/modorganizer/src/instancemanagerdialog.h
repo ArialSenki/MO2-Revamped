@@ -74,6 +74,8 @@ public:
 
   // deletes the selected instance
   //
+  // the root portable instance whose ini keeps GlobalInstances listed
+  bool rootPortableKeepsGlobalInstances() const;
   void deleteInstance();
 
   // copies the selected instance, with its profiles, mods and settings, to a

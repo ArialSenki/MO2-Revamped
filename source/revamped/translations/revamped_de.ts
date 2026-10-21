@@ -4059,6 +4059,24 @@ Ort: %3</translation>
       <source>Delete instance…</source>
       <translation>Instanz löschen…</translation>
     </message>
+    <message>
+      <source>Open instance</source>
+      <translation>Instanz öffnen</translation>
+    </message>
+    <message>
+      <source>This instance's folder or settings file no longer exists:
+%1</source>
+      <translation>Der Ordner oder die Einstellungsdatei dieser Instanz existiert nicht mehr:
+%1</translation>
+    </message>
+    <message>
+      <source>This portable instance keeps the instances in the GlobalInstances folder listed, so it can't be deleted.</source>
+      <translation>Diese portable Instanz sorgt dafür, dass die Instanzen im Ordner GlobalInstances aufgelistet werden; sie kann daher nicht gelöscht werden.</translation>
+    </message>
+    <message>
+      <source>This portable instance keeps the instances in the GlobalInstances folder listed; it can't be deleted</source>
+      <translation>Diese portable Instanz hält die Instanzen im Ordner GlobalInstances in der Liste; sie kann nicht gelöscht werden</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
