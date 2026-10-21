@@ -4659,6 +4659,21 @@ QMenu::right-arrow {
     width: 10px;
     height: 10px;
 }
+/* check boxes and radio buttons inside menus (categories) get the height,
+   padding and hover of a menu row */
+QMenu QCheckBox,
+QMenu QRadioButton {
+    min-height: 22px;
+    padding: 5px 28px 5px 10px;
+    margin: 1px 0px;
+    border-radius: 4px;
+    spacing: 10px;
+    background-color: transparent;
+}
+QMenu QCheckBox:hover,
+QMenu QRadioButton:hover {
+    background-color: #2F3237;
+}
 
 QToolTip {
     color: #FFFFFF;

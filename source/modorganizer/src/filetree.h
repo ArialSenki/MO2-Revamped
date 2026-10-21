@@ -64,6 +64,8 @@ private:
   bool showShellMenu(QPoint pos);
 
   void addDirectoryMenus(QMenu& menu, FileTreeItem& item);
+  // the absolute path of a path relative to the game's data folder
+  QString gameDataPath(const QString& relative) const;
   void addFileMenus(QMenu& menu, const MOShared::FileEntry& file, int originID);
   void addOpenMenus(QMenu& menu, const MOShared::FileEntry& file);
   void addCommonMenus(QMenu& menu);

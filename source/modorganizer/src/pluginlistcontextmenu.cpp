@@ -1,5 +1,6 @@
 #include "pluginlistcontextmenu.h"
 #include "fluenticons.h"
+#include "menuutils.h"
 
 #include <report.h>
 #include <utility.h>
@@ -22,6 +23,26 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
     m_selected = {index};
   }
 
+  // the default command first, the selection's commands next and the whole
+  // list's last, as the mod list orders them
+  ModInfo::Ptr origin;
+  if (m_index.isValid()) {
+    unsigned int modInfoIndex =
+        ModInfo::getIndex(m_core.pluginList()->origin(m_index.data().toString()));
+    // this is to avoid showing the option on game files like skyrim.esm
+    if (modInfoIndex != UINT_MAX) {
+      origin = ModInfo::getByIndex(modInfoIndex);
+      if (!origin->isForeign() && m_selected.size() == 1) {
+        QAction* infoAction = addAction(tr("Origin information..."), [=]() {
+          openOriginInformation(index);
+        });
+        infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
+        setDefaultMenuAction(this, infoAction);
+        addSeparator();
+      }
+    }
+  }
+
   if (!m_selected.isEmpty()) {
     QAction* enableSelectedAction = addAction(tr("Enable selected"), [=]() {
       m_core.pluginList()->setEnabled(m_selected, true);
@@ -31,32 +52,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       m_core.pluginList()->setEnabled(m_selected, false);
     });
     disableSelectedAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
-
-    addSeparator();
-  }
-
-  QAction* enableAllAction = addAction(tr("Enable all"), [=]() {
-    if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
-                              tr("Really enable all plugins?"),
-                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-      m_core.pluginList()->setEnabledAll(true);
-    }
-  });
-  enableAllAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
-  QAction* disableAllAction = addAction(tr("Disable all"), [=]() {
-    if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
-                              tr("Really disable all plugins?"),
-                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-      m_core.pluginList()->setEnabledAll(false);
-    }
-  });
-  disableAllAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
-
-  if (!m_selected.isEmpty()) {
-    addSeparator();
     addMenu(createSendToContextMenu());
-
-    addSeparator();
 
     bool hasLocked   = false;
     bool hasUnlocked = false;
@@ -86,33 +82,47 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
 
   if (m_index.isValid()) {
     addSeparator();
-
-    unsigned int modInfoIndex =
-        ModInfo::getIndex(m_core.pluginList()->origin(m_index.data().toString()));
-    // this is to avoid showing the option on game files like skyrim.esm
-    if (modInfoIndex != UINT_MAX) {
-      QAction* openOriginAction = addAction(tr("Open Origin in Explorer"), [=]() {
+    if (origin) {
+      QAction* openOriginAction = addAction(tr("Open origin folder"), [=]() {
         openOriginExplorer(m_selected);
       });
-      openOriginAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
-      ModInfo::Ptr modInfo              = ModInfo::getByIndex(modInfoIndex);
-      std::vector<ModInfo::EFlag> flags = modInfo->getFlags();
-
-      if (!modInfo->isForeign() && m_selected.size() == 1) {
-        QAction* infoAction = addAction(tr("Open Origin Info..."), [=]() {
-          openOriginInformation(index);
-        });
-        infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
-        setDefaultAction(infoAction);
-      }
+      openOriginAction->setIcon(menuGlyph(MenuGlyphs::Folder));
+    }
+    const QString plugin = m_index.data().toString();
+    if (origin) {
+      addCopyMenu(this, {{tr("Plugin name"), plugin},
+                         {tr("Origin name"), origin->name()},
+                         {tr("Plugin path"),
+                          nativePath(QDir(origin->absolutePath()).absoluteFilePath(plugin))}});
+    } else {
+      addCopyAction(this, tr("Copy plugin name"), plugin);
     }
   }
+
+  addSeparator();
+  QAction* enableAllAction = addAction(tr("Enable all"), [=]() {
+    if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
+                              tr("Really enable all plugins?"),
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+      m_core.pluginList()->setEnabledAll(true);
+    }
+  });
+  enableAllAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
+  QAction* disableAllAction = addAction(tr("Disable all"), [=]() {
+    if (QMessageBox::question(m_view->topLevelWidget(), tr("Confirm"),
+                              tr("Really disable all plugins?"),
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+      m_core.pluginList()->setEnabledAll(false);
+    }
+  });
+  disableAllAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
 }
 
 QMenu* PluginListContextMenu::createSendToContextMenu()
 {
   QMenu* menu = new QMenu(m_view);
-  menu->setTitle(tr("Send to... "));
+  menu->setTitle(tr("Send to"));
+  menu->setIcon(menuGlyph(MenuGlyphs::Move));
   menu->addAction(tr("Top"), [=]() {
     m_core.pluginList()->sendToPriority(m_selected, 0);
   });

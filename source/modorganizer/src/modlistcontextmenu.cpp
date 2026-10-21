@@ -7,7 +7,11 @@
 #include "modlist.h"
 #include "modlistview.h"
 #include "modlistviewactions.h"
+#include "downloadmanager.h"
+#include "nexusinterface.h"
 #include "organizercore.h"
+#include "profile.h"
+#include "settings.h"
 
 #include <QIcon>
 #include <QSize>
@@ -116,13 +120,13 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
 
       // the mod are not created/installed at the same position depending
       // on the clicked mod and the sort order
-      QString installText = tr("Install mod above... ");
+      QString installText = tr("Install mod above...");
       QString createText  = tr("Create empty mod above");
       if (info->isSeparator()) {
-        installText = tr("Install mod inside... ");
+        installText = tr("Install mod inside...");
         createText  = tr("Create empty mod inside");
       } else if (view->sortOrder() == Qt::DescendingOrder) {
-        installText = tr("Install mod below... ");
+        installText = tr("Install mod below...");
         createText  = tr("Create empty mod below");
       }
 
@@ -192,7 +196,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
   categoriesAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
   QAction* refreshAction = addAction(tr("Refresh"), &core, &OrganizerCore::refresh);
   refreshAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/refresh.svg"));
-  QAction* exportAction = addAction(tr("Export to csv..."), [=]() {
+  QAction* exportAction = addAction(tr("Export to CSV..."), [=]() {
     view->actions().exportModListCSV();
   });
   exportAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/export.svg"));
@@ -388,19 +392,16 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
 
   ModInfo::Ptr info = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
 
-  auto viewIndex = view->indexModelToView(m_index);
-  if (view->model()->hasChildren(viewIndex)) {
-    bool expanded = view->isExpanded(viewIndex);
-    addSeparator();
-    addAction(tr("Collapse all"), view, &QTreeView::collapseAll);
-    addAction(tr("Collapse others"), [=]() {
-      m_view->collapseAll();
-      m_view->setExpanded(viewIndex, expanded);
-    });
-    addAction(tr("Expand all"), view, &QTreeView::expandAll);
+  // Windows 11 order: the default command first, the everyday ones next, the
+  // folders and the clipboard after them and the destructive command last
+  if (!info->isForeign() && !info->isOverwrite()) {
+    QAction* infoAction = addAction(menuGlyph(MenuGlyphs::Information),
+                                    tr("Information..."), [=]() {
+                                      view->actions().displayModInformation(
+                                          m_index.data(ModList::IndexRole).toInt());
+                                    });
+    setDefaultMenuAction(this, infoAction);
   }
-
-  addSeparator();
 
   // Add type-specific items
   if (info->isOverwrite()) {
@@ -415,25 +416,25 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
     addRegularActions(info);
   }
 
-  // add information for all except foreign
-  if (!info->isForeign() && !info->isOverwrite()) {
-    QAction* infoAction = addAction(tr("Information..."), [=]() {
-      view->actions().displayModInformation(m_index.data(ModList::IndexRole).toInt());
+  auto viewIndex = view->indexModelToView(m_index);
+  if (view->model()->hasChildren(viewIndex)) {
+    bool expanded = view->isExpanded(viewIndex);
+    addSeparator();
+    addAction(menuGlyph(MenuGlyphs::Collapse), tr("Collapse all"), view,
+              &QTreeView::collapseAll);
+    addAction(tr("Collapse others"), [=]() {
+      m_view->collapseAll();
+      m_view->setExpanded(viewIndex, expanded);
     });
-    infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
-    setDefaultAction(infoAction);
+    addAction(menuGlyph(MenuGlyphs::Expand), tr("Expand all"), view,
+              &QTreeView::expandAll);
   }
-}
 
-void ModListContextMenu::addMenuAsPushButton(QMenu* menu)
-{
-  QPushButton* pushBtn = new QPushButton(menu->title());
-  pushBtn->setIcon(menu->icon());
-  pushBtn->setIconSize(QSize(16, 16));
-  pushBtn->setMenu(menu);
-  QWidgetAction* action = new QWidgetAction(this);
-  action->setDefaultWidget(pushBtn);
-  addAction(action);
+  // the remove command of each type goes last, after the list commands
+  if (m_remove != nullptr) {
+    addSeparator();
+    addAction(m_remove);
+  }
 }
 
 void ModListContextMenu::addSendToContextMenu()
@@ -465,7 +466,8 @@ void ModListContextMenu::addSendToContextMenu()
   }
 
   QMenu* menu = new QMenu(m_view);
-  menu->setTitle(tr("Send to... "));
+  menu->setTitle(tr("Send to"));
+  menu->setIcon(menuGlyph(MenuGlyphs::Move));
   menu->addAction(tr("Lowest priority"), [this] {
     m_actions.sendModsToTop(m_selected);
   });
@@ -493,104 +495,205 @@ void ModListContextMenu::addSendToContextMenu()
 
 void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
 {
+  // plain submenus: the check boxes inside keep the menu open while several
+  // categories are picked, the choice applies when the submenu closes
   ModListChangeCategoryMenu* categoriesMenu =
       new ModListChangeCategoryMenu(m_categories, mod, this);
-  categoriesMenu->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
+  categoriesMenu->setTitle(tr("Categories"));
+  categoriesMenu->setIcon(menuGlyph(MenuGlyphs::Tag));
   connect(categoriesMenu, &QMenu::aboutToHide, [=]() {
     m_actions.setCategories(m_selected, m_index, categoriesMenu->categories());
   });
-  addMenuAsPushButton(categoriesMenu);
+  addMenu(categoriesMenu);
 
   // A primary category can only be changed when the mod has alternatives.
   // Avoid adding an empty menu for uncategorized mods or a no-op menu for one category.
   if (mod->getCategories().size() > 1) {
     ModListPrimaryCategoryMenu* primaryCategoryMenu =
         new ModListPrimaryCategoryMenu(m_categories, mod, this);
-    primaryCategoryMenu->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/primary-category.svg"));
+    primaryCategoryMenu->setTitle(tr("Primary category"));
+    primaryCategoryMenu->setIcon(menuGlyph(MenuGlyphs::Star));
     connect(primaryCategoryMenu, &QMenu::aboutToHide, [=]() {
       int category = primaryCategoryMenu->primaryCategory();
       if (category != -1) {
         m_actions.setPrimaryCategory(m_selected, category);
       }
     });
-    addMenuAsPushButton(primaryCategoryMenu);
+    addMenu(primaryCategoryMenu);
   }
+}
+
+void ModListContextMenu::addEnableActions()
+{
+  // only the commands that change something for the selection
+  bool anyActive = false, anyInactive = false;
+  for (auto& idx : m_selected) {
+    auto index = idx.data(ModList::IndexRole);
+    if (!index.isValid()) {
+      continue;
+    }
+    if (m_core.currentProfile()->modEnabled(index.toInt())) {
+      anyActive = true;
+    } else {
+      anyInactive = true;
+    }
+  }
+
+  const bool several = m_selected.size() > 1;
+  if (anyInactive) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"),
+              several ? tr("Enable selected") : tr("Enable"), [=]() {
+                m_core.modList()->setActive(m_selected, true);
+              });
+  }
+  if (anyActive) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"),
+              several ? tr("Disable selected") : tr("Disable"), [=]() {
+                m_core.modList()->setActive(m_selected, false);
+              });
+  }
+}
+
+void ModListContextMenu::addVisitActions(ModInfo::Ptr mod)
+{
+  if (mod->nexusId() > 0) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/visit.svg"), tr("Visit on Nexus"),
+              [=]() {
+                m_actions.visitOnNexus(m_selected);
+              });
+  }
+
+  const auto url = mod->parseCustomURL();
+  if (url.isValid()) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/visit.svg"),
+              tr("Visit on %1").arg(url.host()), [=]() {
+                m_actions.visitWebPage(m_selected);
+              });
+  }
+}
+
+void ModListContextMenu::addColorActions(ModInfo::Ptr mod)
+{
+  addAction(menuGlyph(MenuGlyphs::Color), tr("Select color..."), [=]() {
+    m_actions.setColor(m_selected, m_index);
+  });
+  if (mod->color().isValid()) {
+    addAction(tr("Reset color"), [=]() {
+      m_actions.resetColor(m_selected);
+    });
+  }
+}
+
+QString ModListContextMenu::downloadPath(ModInfo::Ptr mod) const
+{
+  // the same lookup Reinstall uses: an absolute path that still exists, else
+  // the file name in the downloads folder
+  const QString file = mod->installationFile();
+  if (file.isEmpty()) {
+    return {};
+  }
+  const QFileInfo info(file);
+  if (info.isAbsolute() && info.exists()) {
+    return file;
+  }
+  return m_core.downloadManager()->getOutputDirectory() + "/" +
+         (info.isAbsolute() ? info.fileName() : file);
+}
+
+void ModListContextMenu::addFolderActions(ModInfo::Ptr mod)
+{
+  const QString download = downloadPath(mod);
+  addOpenFolderMenu(this, {{tr("Mod folder"), mod->absolutePath()},
+                           {tr("Downloaded archive"), download}});
+
+  std::vector<std::pair<QString, QString>> copies{
+      {tr("Name"), mod->name()}, {tr("Folder path"), nativePath(mod->absolutePath())}};
+  if (mod->nexusId() > 0) {
+    copies.push_back({tr("Nexus link"), NexusInterface::instance().getModURL(
+                                            mod->nexusId(), mod->gameName())});
+  }
+  if (!download.isEmpty()) {
+    copies.push_back({tr("Archive name"), QFileInfo(download).fileName()});
+  }
+  addCopyMenu(this, copies);
 }
 
 void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
 {
   setToolTipsVisible(true);
 
-  QAction* manageAction = addAction(tr("Review and manage files..."), [=]() {
-    m_actions.displayModInformation(mod, ModInfo::getIndex(mod->name()));
-  });
+  QAction* manageAction = addAction(menuGlyph(MenuGlyphs::Document),
+                                    tr("Review and manage files..."), [=]() {
+                                      m_actions.displayModInformation(
+                                          mod, ModInfo::getIndex(mod->name()));
+                                    });
   manageAction->setToolTip(
       tr("Browse files in Overwrite, create folders, rename items, or move files "
          "into regular mods."));
-  setDefaultAction(manageAction);
+  setDefaultMenuAction(this, manageAction);
 
   if (QDir(mod->absolutePath()).count() > 2) {
     addMenuSection(this, tr("Organize files"));
-    QAction* syncAction = addAction(tr("Sync to Mods..."), [=]() {
-      m_core.syncOverwrite();
-    });
+    QAction* syncAction = addAction(menuGlyph(MenuGlyphs::Sync), tr("Sync to mods..."),
+                                    [=]() {
+                                      m_core.syncOverwrite();
+                                    });
     syncAction->setToolTip(
         tr("Review and assign files from Overwrite to regular mods."));
 
-    QAction* createModAction = addAction(tr("Create mod from Overwrite..."), [=]() {
-      m_actions.createModFromOverwrite();
-    });
+    QAction* createModAction =
+        addAction(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"),
+                  tr("Create mod from Overwrite..."), [=]() {
+                    m_actions.createModFromOverwrite();
+                  });
     createModAction->setToolTip(
         tr("Move all files from Overwrite into a new regular mod."));
 
-    QAction* moveAction = addAction(tr("Move files to an existing mod..."), [=]() {
-      m_actions.moveOverwriteContentToExistingMod();
-    });
+    QAction* moveAction = addAction(menuGlyph(MenuGlyphs::Merge),
+                                    tr("Move files to an existing mod..."), [=]() {
+                                      m_actions.moveOverwriteContentToExistingMod();
+                                    });
     moveAction->setToolTip(
         tr("Choose a regular mod and move all files from Overwrite into it."));
 
-    addMenuSection(this, tr("Cleanup"));
-    QAction* clearAction = addAction(tr("Clear Overwrite..."), [=]() {
+    m_remove = new QAction(menuGlyph(MenuGlyphs::Clear), tr("Clear Overwrite..."), this);
+    connect(m_remove, &QAction::triggered, this, [=]() {
       m_actions.clearOverwrite();
     });
-    clearAction->setToolTip(
+    m_remove->setToolTip(
         tr("Permanently delete every file and folder currently in Overwrite."));
   }
 
   addSeparator();
-  addAction(tr("Open Overwrite folder in Explorer"), [=]() {
+  addAction(menuGlyph(MenuGlyphs::Folder), tr("Open folder"), [=]() {
     m_actions.openExplorer(m_selected);
   });
+  addCopyAction(this, tr("Copy folder path"), nativePath(mod->absolutePath()));
 }
 
 void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
 {
+  addSeparator();
+  addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"),
+            [=]() {
+              m_actions.renameMod(m_index);
+            });
+  addColorActions(mod);
   addCategoryContextMenus(mod);
-  addSeparator();
-
-  addAction(tr("Rename Separator..."), [=]() {
-    m_actions.renameMod(m_index);
-  });
-  addAction(tr("Remove Separator..."), [=]() {
-    m_actions.removeMods(m_selected);
-  });
-  addSeparator();
-
   if (m_view->sortColumn() == ModList::COL_PRIORITY) {
     addSendToContextMenu();
-    addSeparator();
-  }
-  addAction(tr("Select Color..."), [=]() {
-    m_actions.setColor(m_selected, m_index);
-  });
-
-  if (mod->color().isValid()) {
-    addAction(tr("Reset Color"), [=]() {
-      m_actions.resetColor(m_selected);
-    });
   }
 
   addSeparator();
+  addCopyAction(this, tr("Copy name"), mod->name());
+
+  m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                         m_selected.size() > 1 ? tr("Remove separators...")
+                                               : tr("Remove separator..."),
+                         this);
+  connect(m_remove, &QAction::triggered, this, [=]() {
+    m_actions.removeMods(m_selected);
+  });
 }
 
 void ModListContextMenu::addForeignActions(ModInfo::Ptr mod)
@@ -598,20 +701,21 @@ void ModListContextMenu::addForeignActions(ModInfo::Ptr mod)
   if (m_view->sortColumn() == ModList::COL_PRIORITY) {
     addSendToContextMenu();
   }
+  addSeparator();
+  addCopyAction(this, tr("Copy name"), mod->name());
 }
 
 void ModListContextMenu::addBackupActions(ModInfo::Ptr mod)
 {
   auto flags = mod->getFlags();
-  addAction(tr("Restore Backup"), [=]() {
-    m_actions.restoreBackup(m_index);
-  });
-  addAction(tr("Remove Backup..."), [=]() {
-    m_actions.removeMods(m_selected);
-  });
+  addVisitActions(mod);
   addSeparator();
+  addAction(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"), tr("Restore backup"),
+            [=]() {
+              m_actions.restoreBackup(m_index);
+            });
   if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_INVALID) != flags.end()) {
-    addAction(tr("Ignore missing data"), [=]() {
+    addAction(menuGlyph(MenuGlyphs::Warning), tr("Ignore missing data"), [=]() {
       m_actions.ignoreMissingData(m_selected);
     });
   }
@@ -621,22 +725,14 @@ void ModListContextMenu::addBackupActions(ModInfo::Ptr mod)
       m_actions.markConverted(m_selected);
     });
   }
+
   addSeparator();
-  if (mod->nexusId() > 0) {
-    addAction(tr("Visit on Nexus"), [=]() {
-      m_actions.visitOnNexus(m_selected);
-    });
-  }
+  addFolderActions(mod);
 
-  const auto url = mod->parseCustomURL();
-  if (url.isValid()) {
-    addAction(tr("Visit on %1").arg(url.host()), [=]() {
-      m_actions.visitWebPage(m_selected);
-    });
-  }
-
-  addAction(tr("Open in Explorer"), [=]() {
-    m_actions.openExplorer(m_selected);
+  m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                         tr("Remove backup..."), this);
+  connect(m_remove, &QAction::triggered, this, [=]() {
+    m_actions.removeMods(m_selected);
   });
 }
 
@@ -644,9 +740,53 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
 {
   auto flags = mod->getFlags();
 
-  addCategoryContextMenus(mod);
+  addVisitActions(mod);
   addSeparator();
 
+  addEnableActions();
+  if (m_view->sortColumn() == ModList::COL_PRIORITY) {
+    addSendToContextMenu();
+  }
+  addCategoryContextMenus(mod);
+
+  addSeparator();
+
+  addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"), [=]() {
+    m_actions.renameMod(m_index);
+  });
+  addAction(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"), tr("Reinstall"),
+            [=]() {
+              m_actions.reinstallMod(m_index);
+            });
+  addAction(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"), tr("Create backup"),
+            [=]() {
+              m_actions.createBackup(m_index);
+            });
+  if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_HIDDEN_FILES) !=
+      flags.end()) {
+    addAction(menuGlyph(MenuGlyphs::Show), tr("Restore hidden files"), [=]() {
+      m_actions.restoreHiddenFiles(m_selected);
+    });
+  }
+  addColorActions(mod);
+
+  // updates and the Nexus account commands
+  addSeparator();
+  if (mod->nexusId() > 0) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/updates.svg"),
+              tr("Check for updates"), [=]() {
+                m_actions.checkModsForUpdates(m_selected);
+              });
+  }
+  if (mod->updateIgnored()) {
+    addAction(tr("Un-ignore update"), [=]() {
+      m_actions.setIgnoreUpdate(m_selected, false);
+    });
+  } else if (mod->updateAvailable() || mod->downgradeAvailable()) {
+    addAction(tr("Ignore update"), [=]() {
+      m_actions.setIgnoreUpdate(m_selected, true);
+    });
+  }
   if (mod->downgradeAvailable()) {
     addAction(tr("Change versioning scheme"), [=]() {
       m_actions.changeVersioningScheme(m_index);
@@ -654,146 +794,11 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
   }
 
   if (mod->nexusId() > 0) {
-    QAction* forceCheckAction = addAction(tr("Force-check updates"), [=]() {
-      m_actions.checkModsForUpdates(m_selected);
-    });
-    forceCheckAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/updates.svg"));
+    addNexusMenu(mod);
   }
-  if (mod->updateIgnored()) {
-    addAction(tr("Un-ignore update"), [=]() {
-      m_actions.setIgnoreUpdate(m_selected, false);
-    });
-  } else {
-    if (mod->updateAvailable() || mod->downgradeAvailable()) {
-      addAction(tr("Ignore update"), [=]() {
-        m_actions.setIgnoreUpdate(m_selected, true);
-      });
-    }
-  }
-  addSeparator();
-
-  QAction* enableAction = addAction(tr("Enable selected"), [=]() {
-    m_core.modList()->setActive(m_selected, true);
-  });
-  enableAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
-  QAction* disableAction = addAction(tr("Disable selected"), [=]() {
-    m_core.modList()->setActive(m_selected, false);
-  });
-  disableAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
-
-  addSeparator();
-
-  if (m_view->sortColumn() == ModList::COL_PRIORITY) {
-    addSendToContextMenu();
-    addSeparator();
-  }
-
-  QAction* renameAction = addAction(tr("Rename Mod..."), [=]() {
-    m_actions.renameMod(m_index);
-  });
-  renameAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"));
-  QAction* reinstallAction = addAction(tr("Reinstall Mod"), [=]() {
-    m_actions.reinstallMod(m_index);
-  });
-  reinstallAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"));
-  QAction* removeAction = addAction(tr("Remove Mod..."), [=]() {
-    m_actions.removeMods(m_selected);
-  });
-  removeAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
-  QAction* backupAction = addAction(tr("Create Backup"), [=]() {
-    m_actions.createBackup(m_index);
-  });
-  backupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"));
-
-  if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_HIDDEN_FILES) !=
-      flags.end()) {
-    addAction(tr("Restore hidden files"), [=]() {
-      m_actions.restoreHiddenFiles(m_selected);
-    });
-  }
-
-  addSeparator();
-
-  if (m_index.column() == ModList::COL_NOTES) {
-    addAction(tr("Select Color..."), [=]() {
-      m_actions.setColor(m_selected, m_index);
-    });
-    if (mod->color().isValid()) {
-      addAction(tr("Reset Color"), [=]() {
-        m_actions.resetColor(m_selected);
-      });
-    }
-    addSeparator();
-  }
-
-  if (mod->nexusId() > 0 && Settings::instance().nexus().endorsementIntegration()) {
-    switch (mod->endorsedState()) {
-    case EndorsedState::ENDORSED_TRUE: {
-      QAction* unendorseAction = addAction(tr("Un-Endorse"), [=]() {
-        m_actions.setEndorsed(m_selected, false);
-      });
-      unendorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"));
-    } break;
-    case EndorsedState::ENDORSED_FALSE: {
-      QAction* endorseAction = addAction(tr("Endorse"), [=]() {
-        m_actions.setEndorsed(m_selected, true);
-      });
-      endorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"));
-      QAction* wontEndorseAction = addAction(tr("Won't endorse"), [=]() {
-        m_actions.willNotEndorsed(m_selected);
-      });
-      wontEndorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/wont-endorse.svg"));
-    } break;
-    case EndorsedState::ENDORSED_NEVER: {
-      QAction* endorseAction = addAction(tr("Endorse"), [=]() {
-        m_actions.setEndorsed(m_selected, true);
-      });
-      endorseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"));
-    } break;
-    default: {
-      QAction* action = new QAction(tr("Endorsement state unknown"), this);
-      action->setEnabled(false);
-      addAction(action);
-    } break;
-    }
-  }
-
-  if (mod->nexusId() > 0 &&
-      (mod->getNexusCategory() > 0 || !mod->installationFile().isEmpty()) &&
-      !mod->isSeparator()) {
-    QAction* remapCategoryAction =
-        addAction(tr("Remap Category (From Nexus)"), [=]() {
-          m_actions.remapCategory(m_selected);
-        });
-    remapCategoryAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"));
-  }
-
-  if (mod->nexusId() > 0 && Settings::instance().nexus().trackedIntegration()) {
-    switch (mod->trackedState()) {
-    case TrackedState::TRACKED_FALSE: {
-      QAction* startTrackingAction = addAction(tr("Start tracking"), [=]() {
-        m_actions.setTracked(m_selected, true);
-      });
-      startTrackingAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/tracking.svg"));
-    } break;
-    case TrackedState::TRACKED_TRUE: {
-      QAction* stopTrackingAction = addAction(tr("Stop tracking"), [=]() {
-        m_actions.setTracked(m_selected, false);
-      });
-      stopTrackingAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/tracking.svg"));
-    } break;
-    default: {
-      QAction* action = new QAction(tr("Tracked state unknown"), this);
-      action->setEnabled(false);
-      addAction(action);
-    } break;
-    }
-  }
-
-  addSeparator();
 
   if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_INVALID) != flags.end()) {
-    addAction(tr("Ignore missing data"), [=]() {
+    addAction(menuGlyph(MenuGlyphs::Warning), tr("Ignore missing data"), [=]() {
       m_actions.ignoreMissingData(m_selected);
     });
   }
@@ -806,25 +811,82 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
   }
 
   addSeparator();
+  addFolderActions(mod);
 
-  if (mod->nexusId() > 0) {
-    QAction* visitNexusAction = addAction(tr("Visit on Nexus"), [=]() {
-      m_actions.visitOnNexus(m_selected);
-    });
-    visitNexusAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visit.svg"));
-  }
-
-  const auto url = mod->parseCustomURL();
-  if (url.isValid()) {
-    QAction* visitCustomUrlAction =
-        addAction(tr("Visit on %1").arg(url.host()), [=]() {
-          m_actions.visitWebPage(m_selected);
-        });
-    visitCustomUrlAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/visit.svg"));
-  }
-
-  QAction* openExplorerAction = addAction(tr("Open in Explorer"), [=]() {
-    m_actions.openExplorer(m_selected);
+  m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                         m_selected.size() > 1 ? tr("Remove mods...") : tr("Remove..."),
+                         this);
+  connect(m_remove, &QAction::triggered, this, [=]() {
+    m_actions.removeMods(m_selected);
   });
-  openExplorerAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/explorer.svg"));
+}
+
+void ModListContextMenu::addNexusMenu(ModInfo::Ptr mod)
+{
+  // endorsement, tracking and the Nexus category in one submenu
+  auto* nexus = new QMenu(tr("Nexus"), this);
+  nexus->setIcon(menuGlyph(MenuGlyphs::Web));
+
+  if (Settings::instance().nexus().endorsementIntegration()) {
+    switch (mod->endorsedState()) {
+    case EndorsedState::ENDORSED_TRUE: {
+      nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"),
+                       tr("Un-endorse"), [=]() {
+                         m_actions.setEndorsed(m_selected, false);
+                       });
+    } break;
+    case EndorsedState::ENDORSED_FALSE: {
+      nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"),
+                       tr("Endorse"), [=]() {
+                         m_actions.setEndorsed(m_selected, true);
+                       });
+      nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/wont-endorse.svg"),
+                       tr("Won't endorse"), [=]() {
+                         m_actions.willNotEndorsed(m_selected);
+                       });
+    } break;
+    case EndorsedState::ENDORSED_NEVER: {
+      nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/endorse.svg"),
+                       tr("Endorse"), [=]() {
+                         m_actions.setEndorsed(m_selected, true);
+                       });
+    } break;
+    default: {
+      nexus->addAction(tr("Endorsement state unknown"))->setEnabled(false);
+    } break;
+    }
+  }
+
+  if (Settings::instance().nexus().trackedIntegration()) {
+    switch (mod->trackedState()) {
+    case TrackedState::TRACKED_FALSE: {
+      nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/tracking.svg"),
+                       tr("Start tracking"), [=]() {
+                         m_actions.setTracked(m_selected, true);
+                       });
+    } break;
+    case TrackedState::TRACKED_TRUE: {
+      nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/tracking.svg"),
+                       tr("Stop tracking"), [=]() {
+                         m_actions.setTracked(m_selected, false);
+                       });
+    } break;
+    default: {
+      nexus->addAction(tr("Tracked state unknown"))->setEnabled(false);
+    } break;
+    }
+  }
+
+  if (mod->getNexusCategory() > 0 || !mod->installationFile().isEmpty()) {
+    nexus->addAction(FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"),
+                     tr("Use the Nexus category"), [=]() {
+                       m_actions.remapCategory(m_selected);
+                     });
+  }
+
+  if (nexus->isEmpty()) {
+    delete nexus;
+    return;
+  }
+  addMenu(nexus);
 }

@@ -2187,15 +2187,21 @@ QMenu* MainWindow::createPopupMenu()
 {
   auto* m = new QMenu;
 
-  // add all the actions from the toolbars menu
-  for (auto* a : ui->menuToolbars->actions()) {
-    m->addAction(a);
-  }
-
+  // what is shown first, then the command bar's look in two submenus
+  m->addAction(ui->actionToolBarMainToggle);
+  m->addAction(ui->actionStatusBarToggle);
+  m->addAction(ui->actionViewLog);
   m->addSeparator();
 
-  // other actions
-  m->addAction(ui->actionViewLog);
+  auto* size = m->addMenu(tr("Icon size"));
+  size->addAction(ui->actionToolBarSmallIcons);
+  size->addAction(ui->actionToolBarMediumIcons);
+  size->addAction(ui->actionToolBarLargeIcons);
+
+  auto* labels = m->addMenu(tr("Labels"));
+  labels->addAction(ui->actionToolBarIconsOnly);
+  labels->addAction(ui->actionToolBarTextOnly);
+  labels->addAction(ui->actionToolBarIconsAndText);
 
   // make sure the actions are updated
   updateToolbarMenu();

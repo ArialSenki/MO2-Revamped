@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "overwriteinfodialog.h"
+#include "menuutils.h"
 #include "fluenticons.h"
 #include "mo2foldericonprovider.h"
 #include "organizercore.h"
@@ -83,7 +84,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   m_DeleteAction    = new QAction(tr("&Delete…"), ui->filesView);
   m_RenameAction    = new QAction(tr("&Rename"), ui->filesView);
   m_OpenAction      = new QAction(tr("&Open file"), ui->filesView);
-  m_NewFolderAction = new QAction(tr("&New Folder"), ui->filesView);
+  m_NewFolderAction = new QAction(tr("&New folder"), ui->filesView);
   m_NewFolderAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg"));
   m_RenameAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"));
   m_OpenAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/file.svg"));
@@ -312,6 +313,14 @@ void OverwriteInfoDialog::on_filesView_customContextMenuRequested(const QPoint& 
     menu.addSeparator();
     if (hasFiles) {
       menu.addAction(m_OpenAction);
+    }
+    if (m_FileSelection.size() == 1) {
+      const QString path = m_FileSystemModel->filePath(m_FileSelection[0]);
+      menu.addAction(menuGlyph(MenuGlyphs::Folder), tr("Show in folder"), [path] {
+        shell::Explore(path);
+      });
+      addCopyMenu(&menu, {{tr("Name"), QFileInfo(path).fileName()},
+                          {tr("Full path"), nativePath(path)}});
     }
     menu.addAction(m_RenameAction);
     menu.addSeparator();
