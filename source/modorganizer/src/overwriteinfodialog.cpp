@@ -253,7 +253,7 @@ void OverwriteInfoDialog::updateSummary()
   // the same words as the main window's Overwrite card
   if (files == 0 && folders == 0) {
     m_summary->setText(tr("Empty: nothing here belongs outside the mods"));
-  } else if (files == 0) {
+  } else if (files == 0 && !more) {
     m_summary->setText(tr("Only empty folders, safe to clear"));
   } else {
     const QString size = QLocale().formattedDataSize(bytes);

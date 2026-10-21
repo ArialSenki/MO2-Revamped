@@ -4004,12 +4004,12 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1422"/>
+        <location filename="moapplication.cpp" line="1423"/>
         <source>an error occurred: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1427"/>
+        <location filename="moapplication.cpp" line="1428"/>
         <source>an error occurred</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9121,79 +9121,79 @@ Continue?</source>
 <context>
     <name>ProblemsDialog</name>
     <message>
-        <location filename="problemsdialog.cpp" line="56"/>
-        <location filename="problemsdialog.cpp" line="106"/>
-        <location filename="problemsdialog.cpp" line="121"/>
+        <location filename="problemsdialog.cpp" line="60"/>
+        <location filename="problemsdialog.cpp" line="110"/>
+        <location filename="problemsdialog.cpp" line="125"/>
         <source>Notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="216"/>
+        <location filename="problemsdialog.cpp" line="220"/>
         <source>Manage Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="83"/>
+        <location filename="problemsdialog.cpp" line="87"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="148"/>
+        <location filename="problemsdialog.cpp" line="152"/>
         <source>You&apos;re all caught up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="75"/>
+        <location filename="problemsdialog.cpp" line="79"/>
         <source>Check again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="76"/>
+        <location filename="problemsdialog.cpp" line="80"/>
         <source>Ask every plugin again whether something needs attention</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="152"/>
+        <location filename="problemsdialog.cpp" line="156"/>
         <source>No plugin has anything for you to review right now.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="211"/>
+        <location filename="problemsdialog.cpp" line="215"/>
         <source>Fix it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="219"/>
+        <location filename="problemsdialog.cpp" line="223"/>
         <source>Copy text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="221"/>
+        <location filename="problemsdialog.cpp" line="225"/>
         <source>Copy the notification, to paste it in a bug report or a post</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="309"/>
+        <location filename="problemsdialog.cpp" line="317"/>
         <source>From %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="312"/>
+        <location filename="problemsdialog.cpp" line="320"/>
         <source>Files here are not assigned to a regular mod yet. Review them and move anything you want to keep into a mod. Deleting files here removes them from this instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="315"/>
+        <location filename="problemsdialog.cpp" line="323"/>
         <source>Review the details below to understand this notification and choose an available action.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="322"/>
+        <location filename="problemsdialog.cpp" line="330"/>
         <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="334"/>
+        <location filename="problemsdialog.cpp" line="342"/>
         <source>The plugin that reported this notification did not provide additional details.</source>
         <translation type="unfinished"></translation>
     </message>

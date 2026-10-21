@@ -1316,8 +1316,9 @@ bool MOApplication::setStyleFile(const QString& styleName)
     setStyle(new ProxyStyle(QStyleFactory::create(m_defaultStyle)));
     m_activeBaseStyle = m_defaultStyle;
     setStyleSheet("");
-    // no style sheet: the glyph inks follow the system palette, not the
-    // theme that was active before
+    // no style sheet: the system palette comes back, and the glyph inks
+    // follow it rather than the theme that was active before
+    setPalette(style()->standardPalette());
     setProperty("revampedFluent", false);
     setProperty("revampedDarkBlack", false);
     setProperty("revampedDark", palette().color(QPalette::Window).lightness() < 128);
