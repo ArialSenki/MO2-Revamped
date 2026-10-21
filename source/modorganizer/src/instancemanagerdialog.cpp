@@ -1093,11 +1093,17 @@ void InstanceManagerDialog::select(std::size_t i)
 
 void InstanceManagerDialog::select(const QString& name)
 {
-  // a named portable instance shows as "Portable - name": its folder name
-  // matches too
   for (std::size_t i = 0; i < m_instances.size(); ++i) {
-    if (m_instances[i]->displayName() == name ||
-        QFileInfo(m_instances[i]->directory()).fileName() == name) {
+    if (m_instances[i]->displayName() == name) {
+      select(i);
+      return;
+    }
+  }
+
+  // a named portable instance shows as "Portable - name": its folder name
+  // matches when no shown name does
+  for (std::size_t i = 0; i < m_instances.size(); ++i) {
+    if (QFileInfo(m_instances[i]->directory()).fileName() == name) {
       select(i);
       return;
     }

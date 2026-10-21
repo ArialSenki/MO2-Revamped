@@ -103,8 +103,7 @@ void ThemeSettingsTab::update()
 
   // only a theme the user picked here: a stored style the list doesn't
   // know leaves the box on its first entry, which is not a choice
-  const bool picked = ui->styleBox->currentIndex() !=
-                      ui->styleBox->property("mo2InitialIndex").toInt();
+  const bool picked = ui->styleBox->property("mo2Picked").toBool();
 
   if (picked && oldStyle != newStyle) {
     settings().interface().setStyleName(newStyle);
@@ -161,7 +160,11 @@ void ThemeSettingsTab::selectStyle()
   if (currentID != -1) {
     ui->styleBox->setCurrentIndex(currentID);
   }
-  ui->styleBox->setProperty("mo2InitialIndex", ui->styleBox->currentIndex());
+  // set once the user chooses an entry, even the one already shown
+  QObject::connect(ui->styleBox, &QComboBox::activated, ui->styleBox,
+                   [box = ui->styleBox] {
+                     box->setProperty("mo2Picked", true);
+                   });
 }
 
 void ThemeSettingsTab::onExploreStyles()

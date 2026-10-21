@@ -200,7 +200,7 @@ public:
     }
 
     const auto start = static_cast<std::size_t>(row);
-    if (start >= m_esps.size()) {
+    if (count <= 0 || start >= m_esps.size()) {
       return false;
     }
 

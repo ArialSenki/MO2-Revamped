@@ -536,7 +536,9 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
   if (settings.iniStatus() != QSettings::NoError) {
     log::error("can't read ini {}", iniPath());
     // the instance folder can still go; nothing else is known about it
-    if (!isInstallationRoot && QDir(loc).exists()) {
+    const QString clean = QDir::cleanPath(loc);
+    if (!isInstallationRoot && QDir(loc).exists() && clean.size() > 3 &&
+        !dirInRoot(loc, manager.portablePath())) {
       return {{prettyDir(loc), true}};
     }
     return {};
