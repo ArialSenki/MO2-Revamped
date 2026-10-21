@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include "activatemodsdialog.h"
+#include "eldenringsavesettings.h"
 #include "organizercore.h"
 #include "ui_mainwindow.h"
 #include <iplugingame.h>
@@ -77,6 +78,9 @@ void SavesTab::createFooter()
 
   connect(open, &QPushButton::clicked, this, [this] {
     if (!m_routePath.isEmpty()) {
+      // a route without saves yet has no folder: Explore would open its
+      // parent instead
+      QDir().mkpath(m_routePath);
       shell::Explore(m_routePath);
     }
   });
@@ -224,6 +228,12 @@ QDir SavesTab::currentSavesDir() const
         }
       }
     }
+    // Elden Ring maps its route itself: without a mapping (the route was
+    // switched to the Steam saves and MO2 not restarted yet, or the game
+    // plugin did not load) the game uses its own save folder
+    if (EldenRingSaveSettings::supports(m_core.managedGame())) {
+      return m_core.managedGame()->savesDirectory();
+    }
     savesDir.setPath(currentProfile->savePath());
   } else {
     auto iniFiles = m_core.managedGame()->iniFiles();
@@ -337,22 +347,39 @@ void SavesTab::deleteSavegame()
   QStringList deleteFiles;
 
   int count = 0;
+  const QDir savesDir = currentSavesDir();
+  const bool eldenRing = EldenRingSaveSettings::supports(m_core.managedGame());
 
   for (const QModelIndex& idx : ui.list->selectionModel()->selectedRows()) {
 
     auto& saveGame = m_SaveGames[idx.row()];
 
     if (count < 10) {
-      savesMsgLabel +=
-          "<li>" + QFileInfo(saveGame->getFilepath()).completeBaseName() + "</li>";
+      // every Elden Ring save is ER0000: its account folder tells them apart
+      const QString name =
+          eldenRing ? savesDir.relativeFilePath(saveGame->getFilepath())
+                    : QFileInfo(saveGame->getFilepath()).completeBaseName();
+      savesMsgLabel += "<li>" + name.toHtmlEscaped() + "</li>";
     }
     ++count;
 
     deleteFiles += saveGame->allFiles();
   }
 
+  if (count == 0) {
+    return;
+  }
+
   if (count > 10) {
     savesMsgLabel += "<li><i>... " + tr("%1 more").arg(count - 10) + "</i></li>";
+  }
+
+  // the Steam route: these are the saves the game uses outside MO2 too
+  if (eldenRing && QDir::cleanPath(savesDir.absolutePath()) ==
+                       QDir::cleanPath(
+                           m_core.managedGame()->savesDirectory().absolutePath())) {
+    savesMsgLabel += "<br>" + tr("These are the game's own Steam saves, also used "
+                                 "when Elden Ring starts outside MO2.");
   }
 
   if (QMessageBox::question(
@@ -362,7 +389,7 @@ void SavesTab::deleteSavegame()
              "Removed saves will be sent to the Recycle Bin.",
              "", count)
               .arg(savesMsgLabel),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+          QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
     shellDelete(deleteFiles, true);  // recycle bin delete.
     refreshSaveList();
   }

@@ -1078,11 +1078,14 @@ QString Profile::savePath() const
   return QDir::cleanPath(m_Directory.absoluteFilePath("saves"));
 }
 
-void Profile::rename(const QString& newName)
+bool Profile::rename(const QString& newName)
 {
   QDir profileDir(Settings::instance().paths().profiles());
-  profileDir.rename(name(), newName);
+  if (!profileDir.rename(name(), newName)) {
+    return false;
+  }
   m_Directory.setPath(profileDir.absoluteFilePath(newName));
+  return true;
 }
 
 QString keyName(const QString& section, const QString& name)

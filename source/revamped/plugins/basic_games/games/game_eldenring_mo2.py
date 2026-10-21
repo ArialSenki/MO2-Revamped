@@ -3541,13 +3541,14 @@ class EldenRingMo2Game(BasicGame):
         return self.documentsDirectory()
 
     def listSaves(self, folder: QDir) -> list[mobase.ISaveGame]:
-        # only the saves the game reads: <account>/ER0000.sl2 or a Seamless
-        # Co-op .co2. A recursive search would also list the named save
-        # profiles and backups kept inside the shared route.
+        # only the saves the game reads: <account>/ER0000.sl2, a Seamless
+        # Co-op .co2 or a Convergence .cnv. A recursive search would also
+        # list the named save profiles and backups kept inside the shared
+        # route.
         return [
             BasicGameSaveGame(file)
             for file in self._route_save_files(Path(folder.absolutePath()))
-            if file.suffix.casefold() in {".sl2", ".co2"}
+            if file.suffix.casefold() in {".sl2", ".co2", ".cnv"}
         ]
 
     def executables(self) -> list[mobase.ExecutableInfo]:

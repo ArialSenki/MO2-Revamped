@@ -231,7 +231,8 @@ public:
    * @brief rename profile
    * @param newName new name of profile
    */
-  void rename(const QString& newName);
+  // false when the profile folder could not be renamed (nothing changes then)
+  bool rename(const QString& newName);
 
   /**
    * @brief create the ini file to be used by the game
