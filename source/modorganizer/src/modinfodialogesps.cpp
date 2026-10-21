@@ -206,7 +206,8 @@ public:
 
     const auto end = std::min(start + static_cast<std::size_t>(count), m_esps.size());
 
-    beginRemoveRows({}, static_cast<int>(start), static_cast<int>(end));
+    // the last row is inclusive: end is one past it
+    beginRemoveRows({}, static_cast<int>(start), static_cast<int>(end) - 1);
     m_esps.erase(m_esps.begin() + start, m_esps.begin() + end);
     endRemoveRows();
 

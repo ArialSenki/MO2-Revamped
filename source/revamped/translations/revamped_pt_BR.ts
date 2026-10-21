@@ -767,6 +767,22 @@
       <source>Delete downloads</source>
       <translation>Excluir downloads</translation>
     </message>
+    <message>
+      <source>Un-hide all</source>
+      <translation>Mostrar todos</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to delete this download?</source>
+      <translation>Tem certeza de que deseja excluir este download?</translation>
+    </message>
+    <message>
+      <source>No downloads to show</source>
+      <translation>Nenhum download para mostrar</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
+      <translation>Aqui aparecem os arquivos baixados pelo Nexus ou adicionados com Instalar. Os downloads ocultos aparecem quando os downloads ocultos são exibidos.</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -4153,6 +4169,10 @@ Local: %3</translation>
     <message>
       <source>Dark Black</source>
       <translation>Preto escuro</translation>
+    </message>
+    <message>
+      <source>Dark</source>
+      <translation>Escuro</translation>
     </message>
   </context>
   <context>

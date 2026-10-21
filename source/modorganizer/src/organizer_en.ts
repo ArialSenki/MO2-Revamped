@@ -970,7 +970,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="downloadlistview.cpp" line="347"/>
-        <location filename="downloadlistview.cpp" line="473"/>
+        <location filename="downloadlistview.cpp" line="478"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1051,7 +1051,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="downloadlistview.cpp" line="393"/>
-        <source>Un-hide all...</source>
+        <source>Un-hide all</source>
+        <oldsource>Un-hide all...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1060,73 +1061,78 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="468"/>
+        <location filename="downloadlistview.cpp" line="473"/>
         <source>Delete download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="472"/>
+        <location filename="downloadlistview.cpp" line="474"/>
+        <source>Are you sure you want to delete this download?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="downloadlistview.cpp" line="477"/>
         <source>Move to the Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="537"/>
-        <location filename="downloadlistview.cpp" line="548"/>
-        <location filename="downloadlistview.cpp" line="559"/>
+        <location filename="downloadlistview.cpp" line="542"/>
+        <location filename="downloadlistview.cpp" line="553"/>
+        <location filename="downloadlistview.cpp" line="564"/>
         <source>Delete Files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="538"/>
+        <location filename="downloadlistview.cpp" line="543"/>
         <source>This will remove all finished downloads from this list and from disk.
 
 Are you absolutely sure you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="549"/>
+        <location filename="downloadlistview.cpp" line="554"/>
         <source>This will remove all installed downloads from this list and from disk.
 
 Are you absolutely sure you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="560"/>
+        <location filename="downloadlistview.cpp" line="565"/>
         <source>This will remove all uninstalled downloads from this list and from disk.
 
 Are you absolutely sure you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="569"/>
-        <location filename="downloadlistview.cpp" line="579"/>
-        <location filename="downloadlistview.cpp" line="589"/>
+        <location filename="downloadlistview.cpp" line="574"/>
+        <location filename="downloadlistview.cpp" line="584"/>
+        <location filename="downloadlistview.cpp" line="594"/>
         <source>Hide Files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="570"/>
+        <location filename="downloadlistview.cpp" line="575"/>
         <source>This will remove all finished downloads from this list (but NOT from disk).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="580"/>
+        <location filename="downloadlistview.cpp" line="585"/>
         <source>This will remove all installed downloads from this list (but NOT from disk).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="590"/>
+        <location filename="downloadlistview.cpp" line="595"/>
         <source>This will remove all uninstalled downloads from this list (but NOT from disk).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="628"/>
-        <source>No downloads yet</source>
+        <location filename="downloadlistview.cpp" line="633"/>
+        <source>No downloads to show</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="634"/>
-        <source>Archives you download with Nexus or add with Install appear here.</source>
+        <location filename="downloadlistview.cpp" line="639"/>
+        <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1480,12 +1486,12 @@ Canceling download &quot;%2&quot;...</source>
 <context>
     <name>ESPsTab</name>
     <message>
-        <location filename="modinfodialogesps.cpp" line="257"/>
+        <location filename="modinfodialogesps.cpp" line="258"/>
         <source>No optional plugins in this mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogesps.cpp" line="259"/>
+        <location filename="modinfodialogesps.cpp" line="260"/>
         <source>No plugin files are available.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4015,37 +4021,42 @@ This is likely due to a corrupted or incompatible download or unrecognized archi
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="907"/>
+        <location filename="moapplication.cpp" line="908"/>
         <source>Dark Blue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="907"/>
+        <location filename="moapplication.cpp" line="908"/>
         <source>Dark Black</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="977"/>
+        <location filename="moapplication.cpp" line="908"/>
+        <source>Dark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="moapplication.cpp" line="979"/>
         <source>Download started</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="994"/>
+        <location filename="moapplication.cpp" line="996"/>
         <source>This shortcut or command line is for instance &apos;%1&apos;, but the current instance is &apos;%2&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1006"/>
+        <location filename="moapplication.cpp" line="1008"/>
         <source>This shortcut or command line is for profile &apos;%1&apos;, but the current profile is &apos;%2&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1423"/>
+        <location filename="moapplication.cpp" line="1425"/>
         <source>an error occurred: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1428"/>
+        <location filename="moapplication.cpp" line="1430"/>
         <source>an error occurred</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10788,33 +10799,33 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1036"/>
+        <location filename="moapplication.cpp" line="1038"/>
         <source>Instance at &apos;%1&apos; not found. Select another instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1040"/>
+        <location filename="moapplication.cpp" line="1042"/>
         <source>Instance at &apos;%1&apos; not found. You must create a new instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogesps.cpp" line="342"/>
+        <location filename="modinfodialogesps.cpp" line="343"/>
         <source>File Exists</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogesps.cpp" line="343"/>
+        <location filename="modinfodialogesps.cpp" line="344"/>
         <source>A file with that name exists, please enter a new one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogesps.cpp" line="362"/>
-        <location filename="modinfodialogesps.cpp" line="410"/>
+        <location filename="modinfodialogesps.cpp" line="363"/>
+        <location filename="modinfodialogesps.cpp" line="411"/>
         <source>Failed to move file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogesps.cpp" line="394"/>
+        <location filename="modinfodialogesps.cpp" line="395"/>
         <source>Failed to create directory &quot;optional&quot;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11083,12 +11094,12 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialoggeneral.cpp" line="375"/>
+        <location filename="settingsdialoggeneral.cpp" line="395"/>
         <source>Confirm?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialoggeneral.cpp" line="376"/>
+        <location filename="settingsdialoggeneral.cpp" line="396"/>
         <source>This will reset all the choices you made to dialogs and make them all visible again. Continue?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11869,22 +11880,22 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogtheme.cpp" line="142"/>
+        <location filename="settingsdialogtheme.cpp" line="147"/>
         <source>Light</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogtheme.cpp" line="143"/>
+        <location filename="settingsdialogtheme.cpp" line="148"/>
         <source>Dark Black</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogtheme.cpp" line="144"/>
+        <location filename="settingsdialogtheme.cpp" line="149"/>
         <source>Dark</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogtheme.cpp" line="145"/>
+        <location filename="settingsdialogtheme.cpp" line="150"/>
         <source>Dark Blue</source>
         <translation type="unfinished"></translation>
     </message>

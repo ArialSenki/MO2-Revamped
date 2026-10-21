@@ -204,8 +204,10 @@ private:
   void updateShortcutActionIcons();
 
   void updatePinnedExecutables();
-  void setToolbarSize(const QSize& s);
-  void setToolbarButtonStyle(Qt::ToolButtonStyle s);
+  // invokable: the Settings dialog changes the toolbar through these, which
+  // also reset the buttons' fixed sizes and the notification badge
+  Q_INVOKABLE void setToolbarSize(const QSize& s);
+  Q_INVOKABLE void setToolbarButtonStyle(Qt::ToolButtonStyle s);
   void stabilizeToolbarButtonGeometry(bool recapture);
 
   // Fluent v4 layer, see fluentmainwindow.cpp
