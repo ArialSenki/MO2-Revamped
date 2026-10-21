@@ -1593,6 +1593,10 @@ Il gioco non è stato avviato.</translation>
       <source>Could not search MO2 layout DLLs for '{0}': {1}</source>
       <translation>Impossibile cercare le DLL della struttura MO2 per '{0}': {1}</translation>
     </message>
+    <message>
+      <source>How many automatic backups of the active Elden Ring save route to keep. A copy is made before each launch when the saves changed since the last one; 0 turns the backups off.</source>
+      <translation>Quanti backup automatici del percorso dei salvataggi attivo di Elden Ring conservare. Prima di ogni avvio viene fatta una copia se i salvataggi sono cambiati dall’ultima; 0 disattiva i backup.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -2771,6 +2775,136 @@ The save was copied, but its .bak could not be updated: {error}</source>
 
 Il salvataggio è stato copiato, ma il suo .bak non è stato aggiornato: {error}</translation>
     </message>
+    <message>
+      <source>Elden Ring save checks</source>
+      <translation>Controlli dei salvataggi di Elden Ring</translation>
+    </message>
+    <message>
+      <source>Warns about Elden Ring save routes that need attention.</source>
+      <translation>Avvisa dei percorsi dei salvataggi di Elden Ring che richiedono attenzione.</translation>
+    </message>
+    <message>
+      <source>This profile has no Elden Ring saves of its own yet</source>
+      <translation>Questo profilo non ha ancora salvataggi propri di Elden Ring</translation>
+    </message>
+    <message>
+      <source>Restore an Elden Ring save backup</source>
+      <translation>Ripristina un backup dei salvataggi di Elden Ring</translation>
+    </message>
+    <message>
+      <source>Before each launch MO2 copies the saves of the route the game will use, when they changed since the last copy. Choose a route and a copy to bring back; the saves it replaces are kept in the backups' "replaced" folder.</source>
+      <translation>Prima di ogni avvio MO2 copia i salvataggi del percorso che userà il gioco, se sono cambiati dall’ultima copia. Scegli un percorso e una copia da recuperare; i salvataggi sostituiti restano nella cartella "replaced" dei backup.</translation>
+    </message>
+    <message>
+      <source>Open backups folder</source>
+      <translation>Apri cartella dei backup</translation>
+    </message>
+    <message>
+      <source>Restore selected backup</source>
+      <translation>Ripristina il backup selezionato</translation>
+    </message>
+    <message>
+      <source>Restore a backup…</source>
+      <translation>Ripristina un backup…</translation>
+    </message>
+    <message>
+      <source>Bring back one of the automatic copies MO2 makes of a save route before each launch.</source>
+      <translation>Recupera una delle copie automatiche che MO2 fa di un percorso dei salvataggi prima di ogni avvio.</translation>
+    </message>
+    <message>
+      <source>Steam saves from an earlier launch are still hidden</source>
+      <translation>I salvataggi Steam di un avvio precedente sono ancora nascosti</translation>
+    </message>
+    <message>
+      <source>{when} — {count} file(s), {size} MB, account {accounts}</source>
+      <translation>{when} — {count} file, {size} MB, account {accounts}</translation>
+    </message>
+    <message>
+      <source>The backup is empty.</source>
+      <translation>Il backup è vuoto.</translation>
+    </message>
+    <message>
+      <source>Save route:</source>
+      <translation>Percorso dei salvataggi:</translation>
+    </message>
+    <message>
+      <source>Backup restored</source>
+      <translation>Backup ripristinato</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Il percorso dei salvataggi di questo profilo non ha ancora salvataggi di Elden Ring, mentre la cartella di Steam sì. Il gioco partirà senza i tuoi personaggi, e un nuovo personaggio verrà salvato solo in questo percorso.&lt;/p&gt;&lt;p&gt;Per giocare qui un personaggio esistente, apri Strumenti &amp;gt; Save Isolation e usa Trasferisci un salvataggio, oppure crea o importa un profilo di salvataggio con nome. Per usare direttamente i salvataggi di Steam, scegli lì il percorso globale.&lt;/p&gt;&lt;p&gt;Percorso: {folder}&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
+      <translation>Nessun backup automatico di questo percorso per ora. MO2 ne farà uno prima del prossimo avvio che lo usa.</translation>
+    </message>
+    <message>
+      <source>Backup not restored</source>
+      <translation>Backup non ripristinato</translation>
+    </message>
+    <message>
+      <source>Restore this backup?</source>
+      <translation>Ripristinare questo backup?</translation>
+    </message>
+    <message>
+      <source>Restore</source>
+      <translation>Ripristina</translation>
+    </message>
+    <message>
+      <source>The save route now holds the selected backup.</source>
+      <translation>Il percorso dei salvataggi ora contiene il backup selezionato.</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;MO2 hides the Steam save folders while the game runs with isolated saves and brings them back when it closes. A launch that did not finish (MO2 or Windows closed while playing, a crash) left them hidden.&lt;/p&gt;&lt;p&gt;Close Elden Ring and start MO2 again: it restores them on its own before the next launch. Until then they are safe in:&lt;/p&gt;&lt;p&gt;{sessions}&lt;/p&gt;&lt;p&gt;Don't start the game from Steam meanwhile: it would not see those characters.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;MO2 nasconde le cartelle dei salvataggi di Steam mentre il gioco è in esecuzione con salvataggi isolati e le rimette alla chiusura. Un avvio che non è terminato (MO2 o Windows chiusi mentre giocavi, un crash) le ha lasciate nascoste.&lt;/p&gt;&lt;p&gt;Chiudi Elden Ring e riavvia MO2: le ripristinerà da solo prima del prossimo avvio. Nel frattempo sono al sicuro in:&lt;/p&gt;&lt;p&gt;{sessions}&lt;/p&gt;&lt;p&gt;Non avviare il gioco da Steam nel frattempo: non vedrebbe quei personaggi.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>
+
+The saves it replaced are in:
+{path}</source>
+      <translation>
+
+I salvataggi sostituiti sono in:
+{path}</translation>
+    </message>
+    <message>
+      <source>{count} backup(s), newest first.</source>
+      <translation>{count} backup, il più recente per primo.</translation>
+    </message>
+    <message>
+      <source>{backup}
+
+The current saves of this route are moved to the backups' "replaced" folder first, so nothing is lost.
+
+Route:
+{route}</source>
+      <translation>{backup}
+
+I salvataggi attuali di questo percorso vengono prima spostati nella cartella "replaced" dei backup, così non si perde nulla.
+
+Percorso:
+{route}</translation>
+    </message>
+    <message>
+      <source>{error}
+
+The route could not be put back as it was. The saves that were set aside are in:
+{path}</source>
+      <translation>{error}
+
+Non è stato possibile riportare il percorso com’era. I salvataggi messi da parte sono in:
+{path}</translation>
+    </message>
+    <message>
+      <source>The backup could not be restored.
+
+{error}</source>
+      <translation>Non è stato possibile ripristinare il backup.
+
+{error}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
@@ -3909,6 +4043,22 @@ Percorso: %3</translation>
     <message>
       <source>Copy folder path</source>
       <translation>Copia percorso della cartella</translation>
+    </message>
+    <message>
+      <source>Rename…</source>
+      <translation>Rinomina…</translation>
+    </message>
+    <message>
+      <source>Duplicate…</source>
+      <translation>Duplica…</translation>
+    </message>
+    <message>
+      <source>Folder path</source>
+      <translation>Percorso della cartella</translation>
+    </message>
+    <message>
+      <source>Delete instance…</source>
+      <translation>Elimina istanza…</translation>
     </message>
   </context>
   <context>
