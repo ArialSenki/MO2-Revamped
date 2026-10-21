@@ -1466,23 +1466,16 @@ class EldenRingMo2Game(BasicGame):
             "modengine2_launcher.exe",
             "me3.exe",
             "me3-launcher.exe",
+            # the launcher of older Seamless Co-op releases
+            "launch_elden_ring_seamlesscoop.exe",
         }
     )
-    # other launchers are recognised by name: Mod Engine 2's
-    # launchmod_eldenring.bat, older Seamless Co-op launchers, a Convergence
-    # launcher, or a script host running one of them
-    LauncherNameHints = (
-        "launch",
-        "modengine",
-        "seamless",
-        "ersc",
-        "convergence",
-        "eldenring",
-        "elden ring",
-        "elden_ring",
-    )
+    # Mod Engine 2 starts the game from launchmod_eldenring.bat (Convergence
+    # ships its own launchmod_*.bat); MO2 may run it through a script host
+    LauncherScriptPrefix = "launchmod"
     ScriptHosts = frozenset({"cmd.exe", "powershell.exe", "pwsh.exe"})
     LauncherStartGrace = 90  # seconds a launcher may take to start the game
+    LauncherWaitLimit = 600  # a launcher still open after this is not waited for
     GameWatchInterval = 5000  # milliseconds between checks for the game process
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
@@ -1534,12 +1527,15 @@ class EldenRingMo2Game(BasicGame):
         )
         return True
 
+    def _install_root(self) -> Path:
+        try:
+            return Path(__file__).resolve().parents[3]
+        except (IndexError, OSError, RuntimeError):
+            return Path(self._organizer.basePath())
+
     def _save_quarantine_root(self) -> Path:
         global_save_root = Path(self.savesDirectory().absolutePath())
-        try:
-            install_root = Path(__file__).resolve().parents[3]
-        except (IndexError, OSError, RuntimeError):
-            install_root = Path(self._organizer.basePath())
+        install_root = self._install_root()
         try:
             install_identity = os.path.normcase(str(install_root.resolve()))
         except (OSError, RuntimeError):
@@ -1564,10 +1560,21 @@ class EldenRingMo2Game(BasicGame):
                 if not install.is_dir() or os.path.normcase(str(install)) == os.path.normcase(str(own)):
                     continue
                 for session in install.iterdir():
-                    if session.is_dir() and any(
+                    if not session.is_dir() or not any(
                         child.is_dir() and child.name != "unrouted-global"
                         for child in session.iterdir()
                     ):
+                        continue
+                    # an install that was moved or removed can never put
+                    # them back: it must not block every launch forever
+                    try:
+                        manifest = json.loads(
+                            (session / self.SaveRecoveryManifestName).read_text(encoding="utf-8")
+                        )
+                        owner = Path(str(manifest.get("install_root", "")))
+                    except (OSError, UnicodeError, ValueError, AttributeError):
+                        continue
+                    if str(owner) and owner.is_dir():
                         sessions.append(session)
         except OSError:
             pass
@@ -1604,17 +1611,24 @@ class EldenRingMo2Game(BasicGame):
         return False
 
     @classmethod
+    def _is_launcher_script(cls, name: str) -> bool:
+        name = name.casefold()
+        return name.startswith(cls.LauncherScriptPrefix) and name.endswith((".bat", ".cmd"))
+
+    @classmethod
     def _is_game_launch(cls, app_path: str, args: str = "") -> bool:
+        # exact names only: a save tool or another program with a similar
+        # name must not hide the Steam saves
         name = Path(app_path).name.casefold()
-        if name in cls.GameLaunchers:
-            return True
-        if Path(name).suffix in {".bat", ".cmd"}:
+        if name in cls.GameLaunchers or cls._is_launcher_script(name):
             return True
         if name in cls.ScriptHosts:
-            text = args.casefold()
-            return any(hint in text for hint in cls.LauncherNameHints)
-        stem = Path(name).stem
-        return any(hint in stem for hint in cls.LauncherNameHints)
+            return any(
+                cls._is_launcher_script(Path(part.strip("\"'")).name)
+                or Path(part.strip("\"'")).name.casefold() in cls.GameLaunchers
+                for part in args.split()
+            )
+        return False
 
     def _restore_global_save_quarantine(
         self, session_directory: Path, global_save_root: Path
@@ -1761,11 +1775,7 @@ class EldenRingMo2Game(BasicGame):
         if names is None:
             return False
         return any(
-            name != "eldenring.exe"
-            and name.endswith(".exe")
-            and name not in cls.ScriptHosts
-            and cls._is_game_launch(name)
-            for name in names
+            name in cls.GameLaunchers and name != "eldenring.exe" for name in names
         )
 
     @staticmethod
@@ -1841,6 +1851,8 @@ class EldenRingMo2Game(BasicGame):
         manifest = {
             "version": 1,
             "global_save_root": str(global_save_root),
+            # other installs block their launches only while this one exists
+            "install_root": str(self._install_root()),
             "directories": [{"name": directory.name} for directory in save_directories],
         }
         self._write_save_quarantine_manifest(session_directory, manifest)
@@ -1888,7 +1900,13 @@ class EldenRingMo2Game(BasicGame):
             self._game_seen_run = self._game_run
             self._launch_pending_until = 0.0
             return
-        if state is False and (remaining > 0 or self._launcher_running()):
+        if state is False and (
+            remaining > 0
+            or (
+                remaining > self.LauncherStartGrace - self.LauncherWaitLimit
+                and self._launcher_running()
+            )
+        ):
             if remaining <= 0:
                 # keep new launches waiting while the launcher is still open
                 self._launch_pending_until = time.monotonic() + self.GameWatchInterval / 1000 + 1
@@ -2252,6 +2270,7 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: about-to-run save guard received "
             f"'{Path(app_path).name}'."
         )
+        self._guarded_launch = None
         if not self._is_game_launch(app_path, _args or ""):
             # tools (save editors and the like) run without touching the
             # hidden Steam saves of a game that may still be running
@@ -2649,7 +2668,10 @@ class EldenRingMo2Game(BasicGame):
         game_closed = state is False and (
             seen
             or not via_launcher
-            or (waited >= self.LauncherStartGrace and not self._launcher_running())
+            or (
+                waited >= self.LauncherStartGrace
+                and (waited >= self.LauncherWaitLimit or not self._launcher_running())
+            )
         )
         if not game_closed:
             if waited == 0:

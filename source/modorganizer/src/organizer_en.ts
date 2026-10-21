@@ -9394,57 +9394,57 @@ Missing files:
 <context>
     <name>ProfilesDialog</name>
     <message>
-        <location filename="profilesdialog.cpp" line="214"/>
-        <location filename="profilesdialog.cpp" line="288"/>
-        <location filename="profilesdialog.cpp" line="304"/>
+        <location filename="profilesdialog.cpp" line="215"/>
+        <location filename="profilesdialog.cpp" line="289"/>
+        <location filename="profilesdialog.cpp" line="305"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="362"/>
+        <location filename="profilesdialog.cpp" line="363"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="245"/>
+        <location filename="profilesdialog.cpp" line="246"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="517"/>
-        <location filename="profilesdialog.cpp" line="773"/>
+        <location filename="profilesdialog.cpp" line="518"/>
+        <location filename="profilesdialog.cpp" line="774"/>
         <source>failed to create profile: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="793"/>
-        <location filename="profilesdialog.cpp" line="905"/>
+        <location filename="profilesdialog.cpp" line="794"/>
+        <location filename="profilesdialog.cpp" line="930"/>
         <source>Choose a valid name for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="815"/>
-        <location filename="profilesdialog.cpp" line="892"/>
+        <location filename="profilesdialog.cpp" line="816"/>
+        <location filename="profilesdialog.cpp" line="917"/>
         <source>This profile is currently active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="816"/>
+        <location filename="profilesdialog.cpp" line="817"/>
         <source>Switch to another profile before removing it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="821"/>
+        <location filename="profilesdialog.cpp" line="822"/>
         <source>Remove profile &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="841"/>
+        <location filename="profilesdialog.cpp" line="842"/>
         <source>This profile appears to be broken.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="846"/>
+        <location filename="profilesdialog.cpp" line="847"/>
         <source>The folder below will be deleted:
 %1
 
@@ -9452,145 +9452,145 @@ Proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="893"/>
+        <location filename="profilesdialog.cpp" line="918"/>
         <source>Switch to another profile before renaming it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="800"/>
+        <location filename="profilesdialog.cpp" line="801"/>
         <source>failed to copy profile: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="157"/>
+        <location filename="profilesdialog.cpp" line="158"/>
         <source>Today at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="160"/>
+        <location filename="profilesdialog.cpp" line="161"/>
         <source>Yesterday at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="233"/>
-        <location filename="profilesdialog.cpp" line="740"/>
+        <location filename="profilesdialog.cpp" line="234"/>
+        <location filename="profilesdialog.cpp" line="741"/>
         <source>What is a profile?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="308"/>
+        <location filename="profilesdialog.cpp" line="309"/>
         <source>New profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="311"/>
+        <location filename="profilesdialog.cpp" line="312"/>
         <source>Create a profile with its own mod list (Ctrl+N)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="335"/>
+        <location filename="profilesdialog.cpp" line="336"/>
         <source>Select a profile to see its mods and options.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="382"/>
+        <location filename="profilesdialog.cpp" line="383"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="383"/>
+        <location filename="profilesdialog.cpp" line="384"/>
         <source>Profile folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="384"/>
+        <location filename="profilesdialog.cpp" line="385"/>
         <source>Open the profile folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="392"/>
+        <location filename="profilesdialog.cpp" line="393"/>
         <source>Saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="397"/>
+        <location filename="profilesdialog.cpp" line="398"/>
         <source>Profile-specific saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="398"/>
+        <location filename="profilesdialog.cpp" line="399"/>
         <source>This profile keeps its own save games instead of sharing the game&apos;s.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="404"/>
+        <location filename="profilesdialog.cpp" line="405"/>
         <source>Profile-specific game INI files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="405"/>
+        <location filename="profilesdialog.cpp" line="406"/>
         <source>This profile keeps its own copy of the game&apos;s INI files, so its settings don&apos;t change other profiles.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="411"/>
+        <location filename="profilesdialog.cpp" line="412"/>
         <source>Automatic archive invalidation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="412"/>
+        <location filename="profilesdialog.cpp" line="413"/>
         <source>Makes the game load loose files over the ones in its archives.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="443"/>
+        <location filename="profilesdialog.cpp" line="444"/>
         <source>Duplicate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="446"/>
+        <location filename="profilesdialog.cpp" line="447"/>
         <source>Create a profile with the same mods and options (Ctrl+D)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="448"/>
-        <location filename="profilesdialog.cpp" line="719"/>
+        <location filename="profilesdialog.cpp" line="449"/>
+        <location filename="profilesdialog.cpp" line="720"/>
         <source>Transfer saves...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="451"/>
-        <location filename="profilesdialog.cpp" line="662"/>
+        <location filename="profilesdialog.cpp" line="452"/>
+        <location filename="profilesdialog.cpp" line="663"/>
         <source>Copy or move saves between this profile and the game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="454"/>
+        <location filename="profilesdialog.cpp" line="455"/>
         <source>Delete profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="535"/>
+        <location filename="profilesdialog.cpp" line="536"/>
         <source>Can&apos;t be read</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="538"/>
+        <location filename="profilesdialog.cpp" line="539"/>
         <source>%1 of %2 mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="540"/>
+        <location filename="profilesdialog.cpp" line="541"/>
         <source>In use</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="580"/>
+        <location filename="profilesdialog.cpp" line="581"/>
         <source>The copy is incomplete</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="profilesdialog.cpp" line="581"/>
+        <location filename="profilesdialog.cpp" line="582"/>
         <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -9598,179 +9598,179 @@ Proceed?</source>
         </translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="602"/>
-        <location filename="profilesdialog.cpp" line="612"/>
-        <location filename="profilesdialog.cpp" line="711"/>
+        <location filename="profilesdialog.cpp" line="603"/>
+        <location filename="profilesdialog.cpp" line="613"/>
+        <location filename="profilesdialog.cpp" line="712"/>
         <source>Use this profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="609"/>
+        <location filename="profilesdialog.cpp" line="610"/>
         <source>In use by the main window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="610"/>
+        <location filename="profilesdialog.cpp" line="611"/>
         <source>Not in use</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="612"/>
+        <location filename="profilesdialog.cpp" line="613"/>
         <source>Current profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="614"/>
+        <location filename="profilesdialog.cpp" line="615"/>
         <source>Switch the main window to this profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="618"/>
+        <location filename="profilesdialog.cpp" line="619"/>
         <source>Switch to another profile before renaming this one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="619"/>
+        <location filename="profilesdialog.cpp" line="620"/>
         <source>Rename (F2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="621"/>
+        <location filename="profilesdialog.cpp" line="622"/>
         <source>Switch to another profile before deleting this one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="622"/>
+        <location filename="profilesdialog.cpp" line="623"/>
         <source>Delete the profile and its own saves (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="633"/>
+        <location filename="profilesdialog.cpp" line="634"/>
         <source>This profile can&apos;t be read</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="151"/>
-        <location filename="profilesdialog.cpp" line="636"/>
+        <location filename="profilesdialog.cpp" line="152"/>
+        <location filename="profilesdialog.cpp" line="637"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="387"/>
+        <location filename="profilesdialog.cpp" line="388"/>
         <source>Last used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="641"/>
+        <location filename="profilesdialog.cpp" line="642"/>
         <source>%1 of %2 mods enabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="645"/>
+        <location filename="profilesdialog.cpp" line="646"/>
         <source>Chosen in Tools &gt; Save Isolation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="663"/>
+        <location filename="profilesdialog.cpp" line="664"/>
         <source>Turn on profile-specific saves to transfer saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="685"/>
+        <location filename="profilesdialog.cpp" line="686"/>
         <source>New profile...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="687"/>
+        <location filename="profilesdialog.cpp" line="688"/>
         <source>Open profiles folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="714"/>
+        <location filename="profilesdialog.cpp" line="715"/>
         <source>Rename...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="716"/>
+        <location filename="profilesdialog.cpp" line="717"/>
         <source>Duplicate...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="727"/>
+        <location filename="profilesdialog.cpp" line="728"/>
         <source>Open folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="729"/>
+        <location filename="profilesdialog.cpp" line="730"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="729"/>
+        <location filename="profilesdialog.cpp" line="730"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="731"/>
+        <location filename="profilesdialog.cpp" line="732"/>
         <source>Delete profile...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="741"/>
+        <location filename="profilesdialog.cpp" line="742"/>
         <source>A profile is one setup of the same instance: which mods are enabled, their order and, if you want, its own saves and game INI files. Profiles share the instance&apos;s mods and downloads, so a second profile costs no disk space.
 
 Use one per playthrough or per mod list you want to try. The profile in use is chosen next to Program in the main window.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="746"/>
+        <location filename="profilesdialog.cpp" line="747"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="792"/>
-        <location filename="profilesdialog.cpp" line="904"/>
+        <location filename="profilesdialog.cpp" line="793"/>
+        <location filename="profilesdialog.cpp" line="929"/>
         <source>Invalid profile name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="829"/>
+        <location filename="profilesdialog.cpp" line="830"/>
         <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="832"/>
+        <location filename="profilesdialog.cpp" line="833"/>
         <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="864"/>
+        <location filename="profilesdialog.cpp" line="878"/>
         <source>The profile could not be moved to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="869"/>
+        <location filename="profilesdialog.cpp" line="883"/>
         <source>Delete this folder permanently instead? Its saves cannot be recovered afterwards.
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="912"/>
+        <location filename="profilesdialog.cpp" line="937"/>
         <source>The profile was not renamed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="913"/>
+        <location filename="profilesdialog.cpp" line="938"/>
         <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="947"/>
+        <location filename="profilesdialog.cpp" line="972"/>
         <source>failed to change archive invalidation state: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="668"/>
+        <location filename="profilesdialog.cpp" line="669"/>
         <source>failed to determine if invalidation is active: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10941,7 +10941,7 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="487"/>
+        <location filename="profilesdialog.cpp" line="488"/>
         <source>Before you can use ModOrganizer, you need to create at least one profile. ATTENTION: Run the game at least once before creating a profile!</source>
         <translation type="unfinished"></translation>
     </message>

@@ -399,9 +399,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         # Leave archives with their own scripted installer to that installer.
         if tree.find("fomod/ModuleConfig.xml", mobase.FileTreeEntry.FILE):
             return False
-        # MO2's FOMOD installer also finds one inside a single top folder
+        # MO2's FOMOD installer also finds one inside a top folder that is
+        # the archive's only entry
         folders = [entry for entry in tree if entry.isDir()]
-        if len(folders) == 1 and folders[0].find(
+        if len(folders) == 1 and len(tree) == 1 and folders[0].find(
             "fomod/ModuleConfig.xml", mobase.FileTreeEntry.FILE
         ):
             return False

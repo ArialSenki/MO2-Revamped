@@ -61,6 +61,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QWhatsThis>
 
 #include <Windows.h>
+#include <shellapi.h>
 
 #include <exception>
 
@@ -857,9 +858,22 @@ void ProfilesDialog::removeProfile()
     if (item != nullptr) {
       delete item;
     }
-    if (!shellDelete(QStringList(profilePath), true, this)) {
-      log::warn("Failed to move \"{}\" to the Recycle Bin (errorcode {})", profilePath,
-                ::GetLastError());
+    // FOF_WANTNUKEWARNING: Windows asks first when the folder cannot go to
+    // the Recycle Bin (no bin on that drive, too large for it) instead of
+    // deleting it for good without a word, as uibase's shellDelete() does
+    std::wstring from = QDir::toNativeSeparators(profilePath).toStdWString();
+    from.push_back(L'\0');
+    SHFILEOPSTRUCTW operation{};
+    operation.hwnd   = reinterpret_cast<HWND>(winId());
+    operation.wFunc  = FO_DELETE;
+    operation.pFrom  = from.c_str();
+    operation.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_WANTNUKEWARNING;
+    const int result = ::SHFileOperationW(&operation);
+    bool removed     = result == 0 && !operation.fAnyOperationsAborted;
+
+    if (!removed && !operation.fAnyOperationsAborted) {
+      log::warn("Failed to move \"{}\" to the Recycle Bin (error {})", profilePath,
+                result);
       QMessageBox permanentBox(QMessageBox::Warning, "MO2 Revamped",
                                tr("The profile could not be moved to the Recycle Bin."),
                                QMessageBox::Yes | QMessageBox::No, this);
@@ -870,9 +884,20 @@ void ProfilesDialog::removeProfile()
              "recovered afterwards.\n%1")
               .arg(QDir::toNativeSeparators(profilePath)));
       styleProfilePrompt(permanentBox, QMessageBox::Yes, true);
-      if (permanentBox.exec() == QMessageBox::Yes && !removeDir(profilePath)) {
-        log::warn("regular delete failed too");
+      if (permanentBox.exec() == QMessageBox::Yes) {
+        removed = removeDir(profilePath);
+        if (!removed) {
+          log::warn("regular delete failed too");
+        }
       }
+    }
+
+    if (!removed && QDir(profilePath).exists()) {
+      // kept (the user declined, or Windows refused): it stays in the list
+      QListWidgetItem* kept = addItem(profilePath);
+      updateItem(kept);
+      m_list->setCurrentItem(kept);
+      return;
     }
 
     m_count->setText(QString::number(m_list->count()));
