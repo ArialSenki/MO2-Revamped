@@ -14,7 +14,10 @@ using namespace MOBase;
 PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
                                              OrganizerCore& core, PluginListView* view)
     : QMenu(view), m_core(core),
-      m_index(index.model() == view->model() ? view->indexViewToModel(index) : index),
+      // the name column whichever column was clicked: the origin lookup and
+      // Copy plugin name read the plugin's name from it
+      m_index((index.model() == view->model() ? view->indexViewToModel(index) : index)
+                  .siblingAtColumn(PluginList::COL_NAME)),
       m_view(view)
 {
   if (view->selectionModel()->hasSelection()) {
@@ -34,7 +37,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       origin = ModInfo::getByIndex(modInfoIndex);
       if (!origin->isForeign() && m_selected.size() == 1) {
         QAction* infoAction = addAction(tr("Origin information..."), [=]() {
-          openOriginInformation(index);
+          openOriginInformation(m_index);
         });
         infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
         setDefaultMenuAction(this, infoAction);

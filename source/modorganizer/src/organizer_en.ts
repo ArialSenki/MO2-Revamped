@@ -7132,7 +7132,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListChangeCategoryMenu</name>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="268"/>
+        <location filename="modlistcontextmenu.cpp" line="274"/>
         <source>Change Categories</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7140,355 +7140,360 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListContextMenu</name>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="423"/>
+        <location filename="modlistcontextmenu.cpp" line="429"/>
         <source>Collapse all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="425"/>
+        <location filename="modlistcontextmenu.cpp" line="431"/>
         <source>Collapse others</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="429"/>
+        <location filename="modlistcontextmenu.cpp" line="435"/>
         <source>Expand all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="399"/>
+        <location filename="modlistcontextmenu.cpp" line="405"/>
         <source>Information...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="471"/>
+        <location filename="modlistcontextmenu.cpp" line="486"/>
         <source>Lowest priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="474"/>
+        <location filename="modlistcontextmenu.cpp" line="489"/>
         <source>Highest priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="477"/>
+        <location filename="modlistcontextmenu.cpp" line="492"/>
         <source>Priority...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="480"/>
+        <location filename="modlistcontextmenu.cpp" line="495"/>
         <source>Separator...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="484"/>
+        <location filename="modlistcontextmenu.cpp" line="499"/>
         <source>First conflict</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="489"/>
+        <location filename="modlistcontextmenu.cpp" line="504"/>
         <source>Last conflict</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="673"/>
+        <location filename="modlistcontextmenu.cpp" line="688"/>
         <source>Clear Overwrite...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="640"/>
+        <location filename="modlistcontextmenu.cpp" line="655"/>
         <source>Review and manage files...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="645"/>
+        <location filename="modlistcontextmenu.cpp" line="660"/>
         <source>Browse files in Overwrite, create folders, rename items, or move files into regular mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="650"/>
+        <location filename="modlistcontextmenu.cpp" line="665"/>
         <source>Organize files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="656"/>
+        <location filename="modlistcontextmenu.cpp" line="671"/>
         <source>Review and assign files from Overwrite to regular mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="660"/>
+        <location filename="modlistcontextmenu.cpp" line="675"/>
         <source>Create mod from Overwrite...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="664"/>
+        <location filename="modlistcontextmenu.cpp" line="679"/>
         <source>Move all files from Overwrite into a new regular mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="667"/>
+        <location filename="modlistcontextmenu.cpp" line="682"/>
         <source>Move files to an existing mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="671"/>
+        <location filename="modlistcontextmenu.cpp" line="686"/>
         <source>Choose a regular mod and move all files from Overwrite into it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="678"/>
+        <location filename="modlistcontextmenu.cpp" line="693"/>
         <source>Permanently delete every file and folder currently in Overwrite.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="786"/>
-        <location filename="modlistcontextmenu.cpp" line="869"/>
+        <location filename="modlistcontextmenu.cpp" line="810"/>
+        <location filename="modlistcontextmenu.cpp" line="893"/>
         <source>Ignore missing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="792"/>
-        <location filename="modlistcontextmenu.cpp" line="876"/>
+        <location filename="modlistcontextmenu.cpp" line="816"/>
+        <location filename="modlistcontextmenu.cpp" line="900"/>
         <source>Mark as converted/working</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="566"/>
+        <location filename="modlistcontextmenu.cpp" line="581"/>
         <source>Visit on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="469"/>
+        <location filename="modlistcontextmenu.cpp" line="444"/>
+        <source>Add to list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistcontextmenu.cpp" line="484"/>
         <source>Send to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="502"/>
+        <location filename="modlistcontextmenu.cpp" line="517"/>
         <source>Categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="514"/>
+        <location filename="modlistcontextmenu.cpp" line="529"/>
         <source>Primary category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="551"/>
+        <location filename="modlistcontextmenu.cpp" line="566"/>
         <source>Enable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="557"/>
+        <location filename="modlistcontextmenu.cpp" line="572"/>
         <source>Disable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="575"/>
+        <location filename="modlistcontextmenu.cpp" line="590"/>
         <source>Visit on %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="583"/>
+        <location filename="modlistcontextmenu.cpp" line="598"/>
         <source>Select color...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="587"/>
+        <location filename="modlistcontextmenu.cpp" line="602"/>
         <source>Reset color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="612"/>
+        <location filename="modlistcontextmenu.cpp" line="627"/>
         <source>Mod folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="613"/>
+        <location filename="modlistcontextmenu.cpp" line="628"/>
         <source>Downloaded archive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="617"/>
+        <location filename="modlistcontextmenu.cpp" line="632"/>
         <source>Folders of the %1 selected mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="624"/>
+        <location filename="modlistcontextmenu.cpp" line="639"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="624"/>
+        <location filename="modlistcontextmenu.cpp" line="639"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="626"/>
+        <location filename="modlistcontextmenu.cpp" line="641"/>
         <source>Nexus link</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="630"/>
+        <location filename="modlistcontextmenu.cpp" line="645"/>
         <source>Archive name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="651"/>
+        <location filename="modlistcontextmenu.cpp" line="666"/>
         <source>Sync to mods...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="682"/>
+        <location filename="modlistcontextmenu.cpp" line="698"/>
         <source>Open folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="685"/>
+        <location filename="modlistcontextmenu.cpp" line="701"/>
         <source>Copy folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="733"/>
+        <location filename="modlistcontextmenu.cpp" line="749"/>
         <source>Enable its mods</source>
         <oldsource>Enable the %n mod(s) in it</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="739"/>
+        <location filename="modlistcontextmenu.cpp" line="755"/>
         <source>Disable its mods</source>
         <oldsource>Disable the %n mod(s) in it</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="745"/>
-        <location filename="modlistcontextmenu.cpp" line="822"/>
+        <location filename="modlistcontextmenu.cpp" line="761"/>
+        <location filename="modlistcontextmenu.cpp" line="846"/>
         <source>Rename</source>
         <oldsource>Rename...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="756"/>
-        <location filename="modlistcontextmenu.cpp" line="773"/>
+        <location filename="modlistcontextmenu.cpp" line="772"/>
+        <location filename="modlistcontextmenu.cpp" line="797"/>
         <source>Copy name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="759"/>
+        <location filename="modlistcontextmenu.cpp" line="775"/>
         <source>Remove separators...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="760"/>
+        <location filename="modlistcontextmenu.cpp" line="776"/>
         <source>Remove separator...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="781"/>
+        <location filename="modlistcontextmenu.cpp" line="805"/>
         <source>Restore backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="801"/>
+        <location filename="modlistcontextmenu.cpp" line="825"/>
         <source>Remove backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="825"/>
+        <location filename="modlistcontextmenu.cpp" line="849"/>
         <source>Reinstall</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="829"/>
+        <location filename="modlistcontextmenu.cpp" line="853"/>
         <source>Create backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="845"/>
+        <location filename="modlistcontextmenu.cpp" line="869"/>
         <source>Check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="859"/>
+        <location filename="modlistcontextmenu.cpp" line="883"/>
         <source>Change versioning scheme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="885"/>
+        <location filename="modlistcontextmenu.cpp" line="909"/>
         <source>Remove mods...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="885"/>
+        <location filename="modlistcontextmenu.cpp" line="909"/>
         <source>Remove...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="895"/>
+        <location filename="modlistcontextmenu.cpp" line="919"/>
         <source>Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="902"/>
+        <location filename="modlistcontextmenu.cpp" line="926"/>
         <source>Un-endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="950"/>
+        <location filename="modlistcontextmenu.cpp" line="974"/>
         <source>Use the Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="850"/>
+        <location filename="modlistcontextmenu.cpp" line="874"/>
         <source>Un-ignore update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="854"/>
+        <location filename="modlistcontextmenu.cpp" line="878"/>
         <source>Ignore update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="551"/>
+        <location filename="modlistcontextmenu.cpp" line="566"/>
         <source>Enable selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="557"/>
+        <location filename="modlistcontextmenu.cpp" line="572"/>
         <source>Disable selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="835"/>
+        <location filename="modlistcontextmenu.cpp" line="859"/>
         <source>Restore hidden files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="908"/>
-        <location filename="modlistcontextmenu.cpp" line="918"/>
+        <location filename="modlistcontextmenu.cpp" line="932"/>
+        <location filename="modlistcontextmenu.cpp" line="942"/>
         <source>Endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="912"/>
+        <location filename="modlistcontextmenu.cpp" line="936"/>
         <source>Won&apos;t endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="923"/>
+        <location filename="modlistcontextmenu.cpp" line="947"/>
         <source>Endorsement state unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="932"/>
+        <location filename="modlistcontextmenu.cpp" line="956"/>
         <source>Start tracking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="938"/>
+        <location filename="modlistcontextmenu.cpp" line="962"/>
         <source>Stop tracking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="943"/>
+        <location filename="modlistcontextmenu.cpp" line="967"/>
         <source>Tracked state unknown</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7496,193 +7501,193 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListGlobalContextMenu</name>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="119"/>
-        <location filename="modlistcontextmenu.cpp" line="147"/>
+        <location filename="modlistcontextmenu.cpp" line="149"/>
+        <location filename="modlistcontextmenu.cpp" line="153"/>
         <source>Add to list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="124"/>
+        <location filename="modlistcontextmenu.cpp" line="117"/>
         <source>Create empty mod above</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="127"/>
+        <location filename="modlistcontextmenu.cpp" line="120"/>
         <source>Create empty mod inside</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="123"/>
+        <location filename="modlistcontextmenu.cpp" line="116"/>
         <source>Install mod above...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="126"/>
+        <location filename="modlistcontextmenu.cpp" line="119"/>
         <source>Install mod inside...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="129"/>
+        <location filename="modlistcontextmenu.cpp" line="122"/>
         <source>Install mod below...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="130"/>
+        <location filename="modlistcontextmenu.cpp" line="123"/>
         <source>Create empty mod below</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="141"/>
+        <location filename="modlistcontextmenu.cpp" line="134"/>
         <source>Create separator above</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="148"/>
+        <location filename="modlistcontextmenu.cpp" line="154"/>
         <source>Install mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="152"/>
+        <location filename="modlistcontextmenu.cpp" line="158"/>
         <source>Create empty mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="156"/>
+        <location filename="modlistcontextmenu.cpp" line="162"/>
         <source>Create separator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="163"/>
+        <location filename="modlistcontextmenu.cpp" line="169"/>
         <source>List display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="164"/>
+        <location filename="modlistcontextmenu.cpp" line="170"/>
         <source>Collapse all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="166"/>
+        <location filename="modlistcontextmenu.cpp" line="172"/>
         <source>Expand all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="170"/>
+        <location filename="modlistcontextmenu.cpp" line="176"/>
         <source>Bulk actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="172"/>
+        <location filename="modlistcontextmenu.cpp" line="178"/>
         <source>Enable all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="172"/>
+        <location filename="modlistcontextmenu.cpp" line="178"/>
         <source>Disable all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="175"/>
+        <location filename="modlistcontextmenu.cpp" line="181"/>
         <source>Enable all matching mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="176"/>
+        <location filename="modlistcontextmenu.cpp" line="182"/>
         <source>Disable all matching mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="188"/>
+        <location filename="modlistcontextmenu.cpp" line="194"/>
         <source>Maintenance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="189"/>
+        <location filename="modlistcontextmenu.cpp" line="195"/>
         <source>Check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="193"/>
+        <location filename="modlistcontextmenu.cpp" line="199"/>
         <source>Auto assign categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="197"/>
+        <location filename="modlistcontextmenu.cpp" line="203"/>
         <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="199"/>
+        <location filename="modlistcontextmenu.cpp" line="205"/>
         <source>Export to CSV...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="206"/>
+        <location filename="modlistcontextmenu.cpp" line="212"/>
         <source>Mod list backups</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="208"/>
+        <location filename="modlistcontextmenu.cpp" line="214"/>
         <source>Create mod list backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="211"/>
+        <location filename="modlistcontextmenu.cpp" line="217"/>
         <source>Save a backup of this profile&apos;s current mod list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="217"/>
+        <location filename="modlistcontextmenu.cpp" line="223"/>
         <source>Restore mod list backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="220"/>
+        <location filename="modlistcontextmenu.cpp" line="226"/>
         <source>Choose a saved backup for this profile&apos;s mod list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="225"/>
+        <location filename="modlistcontextmenu.cpp" line="231"/>
         <source>Delete mod list backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="228"/>
+        <location filename="modlistcontextmenu.cpp" line="234"/>
         <source>Choose and permanently delete a saved mod list backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="236"/>
+        <location filename="modlistcontextmenu.cpp" line="242"/>
         <source>Plugin order backups</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="238"/>
+        <location filename="modlistcontextmenu.cpp" line="244"/>
         <source>Create plugin order backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="241"/>
+        <location filename="modlistcontextmenu.cpp" line="247"/>
         <source>Save this profile&apos;s current plugin load order.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="247"/>
+        <location filename="modlistcontextmenu.cpp" line="253"/>
         <source>Restore plugin order backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="250"/>
+        <location filename="modlistcontextmenu.cpp" line="256"/>
         <source>Choose a saved plugin load order for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="256"/>
+        <location filename="modlistcontextmenu.cpp" line="262"/>
         <source>Delete plugin order backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="259"/>
+        <location filename="modlistcontextmenu.cpp" line="265"/>
         <source>Choose and permanently delete a saved plugin load order.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7690,7 +7695,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListPrimaryCategoryMenu</name>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="337"/>
+        <location filename="modlistcontextmenu.cpp" line="343"/>
         <source>Primary Category</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7706,38 +7711,38 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListView</name>
     <message>
-        <location filename="modlistview.cpp" line="646"/>
+        <location filename="modlistview.cpp" line="658"/>
         <source>&lt;table cellspacing=&quot;5&quot;&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;All&lt;/th&gt;&lt;th&gt;Visible&lt;/th&gt;&lt;tr&gt;&lt;td&gt;Enabled mods:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%1 / %2&lt;/td&gt;&lt;td align=right&gt;%3 / %4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Unmanaged/DLCs:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%5&lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Mod backups:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%7&lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Separators:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%9&lt;/td&gt;&lt;td align=right&gt;%10&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="703"/>
+        <location filename="modlistview.cpp" line="715"/>
         <source>Copy Folder...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="704"/>
+        <location filename="modlistview.cpp" line="716"/>
         <source>This will copy the content of %1 to a new mod.
 Please enter the name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="715"/>
+        <location filename="modlistview.cpp" line="727"/>
         <source>A mod with this name already exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1126"/>
+        <location filename="modlistview.cpp" line="1141"/>
         <source>Exception: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1128"/>
+        <location filename="modlistview.cpp" line="1143"/>
         <source>Unknown exception</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1499"/>
+        <location filename="modlistview.cpp" line="1514"/>
         <source>&lt;Multiple&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8949,108 +8954,108 @@ Continue?</source>
 <context>
     <name>PluginListContextMenu</name>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="47"/>
+        <location filename="pluginlistcontextmenu.cpp" line="50"/>
         <source>Enable selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="51"/>
+        <location filename="pluginlistcontextmenu.cpp" line="54"/>
         <source>Disable selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="86"/>
+        <location filename="pluginlistcontextmenu.cpp" line="89"/>
         <source>Open origin folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="93"/>
+        <location filename="pluginlistcontextmenu.cpp" line="96"/>
         <source>Plugin name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="94"/>
+        <location filename="pluginlistcontextmenu.cpp" line="97"/>
         <source>Origin name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="95"/>
+        <location filename="pluginlistcontextmenu.cpp" line="98"/>
         <source>Plugin path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="98"/>
+        <location filename="pluginlistcontextmenu.cpp" line="101"/>
         <source>Copy plugin name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="103"/>
+        <location filename="pluginlistcontextmenu.cpp" line="106"/>
         <source>Enable all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="104"/>
-        <location filename="pluginlistcontextmenu.cpp" line="112"/>
+        <location filename="pluginlistcontextmenu.cpp" line="107"/>
+        <location filename="pluginlistcontextmenu.cpp" line="115"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="105"/>
+        <location filename="pluginlistcontextmenu.cpp" line="108"/>
         <source>Really enable all plugins?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="111"/>
+        <location filename="pluginlistcontextmenu.cpp" line="114"/>
         <source>Disable all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="113"/>
+        <location filename="pluginlistcontextmenu.cpp" line="116"/>
         <source>Really disable all plugins?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="124"/>
+        <location filename="pluginlistcontextmenu.cpp" line="127"/>
         <source>Send to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="70"/>
+        <location filename="pluginlistcontextmenu.cpp" line="73"/>
         <source>Unlock load order</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="36"/>
+        <location filename="pluginlistcontextmenu.cpp" line="39"/>
         <source>Origin information...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="76"/>
+        <location filename="pluginlistcontextmenu.cpp" line="79"/>
         <source>Lock load order</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="126"/>
+        <location filename="pluginlistcontextmenu.cpp" line="129"/>
         <source>Top</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="129"/>
+        <location filename="pluginlistcontextmenu.cpp" line="132"/>
         <source>Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="132"/>
+        <location filename="pluginlistcontextmenu.cpp" line="135"/>
         <source>Priority...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="141"/>
+        <location filename="pluginlistcontextmenu.cpp" line="144"/>
         <source>Set Priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistcontextmenu.cpp" line="142"/>
+        <location filename="pluginlistcontextmenu.cpp" line="145"/>
         <source>Set the priority of the selected plugins</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9286,8 +9291,8 @@ Continue?</source>
         <location filename="profile.cpp" line="552"/>
         <location filename="profile.cpp" line="590"/>
         <location filename="profile.cpp" line="682"/>
-        <location filename="profile.cpp" line="740"/>
-        <location filename="profile.cpp" line="749"/>
+        <location filename="profile.cpp" line="742"/>
+        <location filename="profile.cpp" line="751"/>
         <source>invalid mod index: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9297,22 +9302,22 @@ Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="957"/>
+        <location filename="profile.cpp" line="959"/>
         <source>Delete profile-specific save games?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="958"/>
+        <location filename="profile.cpp" line="960"/>
         <source>Do you want to delete the profile-specific save games? (If you select &quot;No&quot;, the save games will show up again if you re-enable profile-specific save games)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="993"/>
+        <location filename="profile.cpp" line="995"/>
         <source>Missing profile-specific game INI files!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="994"/>
+        <location filename="profile.cpp" line="996"/>
         <source>Some of your profile-specific game INI files were missing.  They will now be copied from the vanilla game folder.  You might want to double-check your settings.
 
 Missing files:
@@ -9320,12 +9325,12 @@ Missing files:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="1013"/>
+        <location filename="profile.cpp" line="1015"/>
         <source>Delete profile-specific game INI files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="1014"/>
+        <location filename="profile.cpp" line="1016"/>
         <source>Do you want to delete the profile-specific game INI files? (If you select &quot;No&quot;, the INI files will be used again if you re-enable profile-specific game INI files.)</source>
         <translation type="unfinished"></translation>
     </message>

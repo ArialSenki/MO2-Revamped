@@ -126,6 +126,18 @@ public:
     paintSwitch(painter, opt, index);
   }
 
+  // a refresh renumbers the mods: the states painted before belong to
+  // other mods now, which would animate as if toggled
+  void forgetSwitchStates()
+  {
+    for (auto* animation : std::as_const(m_switchAnimations)) {
+      animation->stop();
+      animation->deleteLater();
+    }
+    m_switchAnimations.clear();
+    m_paintedStates.clear();
+  }
+
 private:
   // keyed by mod index: toggling a mod makes the list refresh its rows, so
   // row indexes would not survive until the next frame
@@ -845,6 +857,9 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
   });
   connect(core.modList(), &ModList::modelReset, [=] {
     clearOverwriteMarkers();
+    if (auto* delegate = dynamic_cast<ModListStyledItemDelegate*>(itemDelegate())) {
+      delegate->forgetSwitchStates();
+    }
   });
 
   // proxy for various group by
