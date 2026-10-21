@@ -1605,6 +1605,14 @@ Il gioco non è stato avviato.</translation>
       <source>How many automatic backups of the active Elden Ring save route to keep. A copy is made before each launch when the saves changed since the last one; 0 turns the backups off.</source>
       <translation>Quanti backup automatici del percorso dei salvataggi attivo di Elden Ring conservare. Prima di ogni avvio viene fatta una copia se i salvataggi sono cambiati dall’ultima; 0 disattiva i backup.</translation>
     </message>
+    <message>
+      <source>Another MO2 Revamped installation still holds Steam saves it hid for its own launch. Start that installation once with Elden Ring closed so it puts them back. The game was not started.
+
+{0}</source>
+      <translation>Un'altra installazione di MO2 Revamped trattiene ancora i salvataggi Steam che ha nascosto per il proprio avvio. Avvia quell'installazione una volta con Elden Ring chiuso perché li rimetta al loro posto. Il gioco non è stato avviato.
+
+{0}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
