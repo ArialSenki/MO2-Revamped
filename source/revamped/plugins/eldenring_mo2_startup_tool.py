@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 
 import mobase
-from PyQt6.QtCore import QCoreApplication, Qt
+from PyQt6.QtCore import QCoreApplication, Qt, QTimer
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -142,7 +142,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         # nothing is written back, so those sections are never lost
         read_error = None
         try:
-            with config_path.open("r", encoding="utf-8") as stream:
+            with config_path.open("r", encoding="utf-8-sig") as stream:
                 config.read_file(stream)
         except FileNotFoundError:
             pass
@@ -640,6 +640,32 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         else:
             dialog.resize(preferred_dialog_width, dialog.height())
 
+        def grow_past_short_scroll() -> None:
+            # once shown, the wrapped text has its real height: grow the
+            # dialog instead of leaving a short scroll, as far as the screen
+            # allows
+            if available_geometry is None:
+                return
+            viewport = options_scroll.viewport()
+            needed = max(
+                options_content.height(),
+                options_content.minimumSizeHint().height(),
+                options_content.heightForWidth(viewport.width())
+                if options_content.hasHeightForWidth()
+                else 0,
+            )
+            extra = needed - viewport.height()
+            if extra <= 0:
+                return
+            height = min(dialog.height() + extra, available_geometry.height() - 40)
+            if height <= dialog.height():
+                return
+            frame = dialog.frameGeometry()
+            top = min(frame.top(), available_geometry.bottom() - (frame.height() - dialog.height() + height))
+            dialog.resize(dialog.width(), height)
+            dialog.move(frame.left(), max(available_geometry.top(), top))
+
+        QTimer.singleShot(50, grow_past_short_scroll)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         if read_error is not None:
