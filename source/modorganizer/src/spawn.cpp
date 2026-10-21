@@ -63,6 +63,30 @@ std::wstring makeRightsDetails(const env::FileSecurity& fs)
   return s;
 }
 
+// Windows' own text for an error code. uibase's formatSystemMessage() drops
+// every space ("%1isnotavalidWin32application."); this keeps the text as
+// written and names the program in place of %1
+QString readableSystemMessage(DWORD code, const QString& program)
+{
+  wchar_t* buffer = nullptr;
+  const DWORD length = ::FormatMessageW(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+      nullptr, code, 0, reinterpret_cast<LPWSTR>(&buffer), 0, nullptr);
+
+  QString text;
+  if (length > 0 && buffer != nullptr) {
+    text = QString::fromWCharArray(buffer, static_cast<int>(length)).trimmed();
+  }
+  if (buffer != nullptr) {
+    ::LocalFree(buffer);
+  }
+  text.replace(QStringLiteral("%1"), program);
+
+  const QString hex = QStringLiteral("0x") + QString::number(code, 16);
+  return text.isEmpty() ? hex : text + QStringLiteral(" (") + hex + QStringLiteral(")");
+}
+
 QString makeDetails(const SpawnParameters& sp, DWORD code, const QString& more = {})
 {
   std::wstring owner, rights;
@@ -116,7 +140,7 @@ QString makeDetails(const SpawnParameters& sp, DWORD code, const QString& more =
                        L" . stdout: {}, stderr: {}, hooked: {}\n"
                        L" . MO elevated: {}",
                        code, errorCodeName(code), (more.isEmpty() ? more : ", " + more),
-                       formatSystemMessage(code),
+                       readableSystemMessage(code, sp.binary.fileName()).toStdWString(),
                        QDir::toNativeSeparators(sp.binary.absoluteFilePath()), owner,
                        rights, sp.arguments,
                        QDir::toNativeSeparators(sp.currentDirectory.absolutePath()),
@@ -157,7 +181,7 @@ QString makeContent(const SpawnParameters& sp, DWORD code)
     }
   }
 
-  return QString::fromStdWString(formatSystemMessage(code));
+  return readableSystemMessage(code, sp.binary.fileName());
 }
 
 QMessageBox::StandardButton badSteamReg(QWidget* parent, const QString& keyName,

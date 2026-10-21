@@ -1244,6 +1244,14 @@ Os programas que não estão ocultos aparecem na lista Programa da janela princi
       <source>Open MO2's manual installer to choose the files and folders yourself.</source>
       <translation>Abre o instalador manual do MO2 para você escolher os arquivos e pastas.</translation>
     </message>
+    <message>
+      <source>This archive replaces the game's regulation.bin. Only one active mod can provide it: the one with the highest priority wins.</source>
+      <translation>Este arquivo substitui o regulation.bin do jogo. Apenas um mod ativo pode fornecê-lo: vence o de maior prioridade.</translation>
+    </message>
+    <message>
+      <source>This archive contains game files ({0}). Installed through MO2 they replace the game's own copies; most mods do not need that.</source>
+      <translation>Este arquivo contém arquivos do jogo ({0}). Instalados pelo MO2, eles substituem as cópias do próprio jogo; a maioria dos mods não precisa disso.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>

@@ -371,6 +371,26 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 f"data checks after installation ({error})."
             )
 
+    _game_file_names = frozenset(
+        {
+            "eldenring.exe",
+            "start_protected_game.exe",
+            "steam_api64.dll",
+            "regulation.bin",
+        }
+    )
+
+    def _game_files_in(self, filetree: mobase.IFileTree, depth: int = 0) -> set[str]:
+        found: set[str] = set()
+        if depth > self._archive_wrapper_depth_limit:
+            return found
+        for entry in filetree:
+            if entry.isDir():
+                found |= self._game_files_in(entry, depth + 1)
+            elif entry.name().casefold() in self._game_file_names:
+                found.add(entry.name().casefold())
+        return found
+
     def isArchiveSupported(self, tree: mobase.IFileTree) -> bool:
         organizer = self._organizer
         if organizer is None or not self.isActive():
@@ -641,6 +661,38 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         name_card_layout.addWidget(mod_name_label)
         name_card_layout.addWidget(mod_name_edit, 1)
         content_layout.addWidget(name_card)
+
+        # game files a mod rarely means to replace, and regulation.bin, which
+        # only one active mod can provide
+        found_game_files = self._game_files_in(archive_tree)
+        if found_game_files:
+            notice_lines = []
+            if "regulation.bin" in found_game_files:
+                notice_lines.append(
+                    self.tr(
+                        "This archive replaces the game's regulation.bin. Only one "
+                        "active mod can provide it: the one with the highest "
+                        "priority wins."
+                    )
+                )
+            executables = sorted(found_game_files - {"regulation.bin"})
+            if executables:
+                notice_lines.append(
+                    self.tr(
+                        "This archive contains game files ({0}). Installed through "
+                        "MO2 they replace the game's own copies; most mods do not "
+                        "need that."
+                    ).format(", ".join(executables))
+                )
+            game_file_notice = QtWidgets.QLabel("\n".join(notice_lines), content)
+            game_file_notice.setObjectName("archiveGameFileNotice")
+            game_file_notice.setWordWrap(True)
+            game_file_notice.setStyleSheet(
+                "QLabel#archiveGameFileNotice { background: rgba(255, 185, 0, 0.14);"
+                " border: 1px solid rgba(255, 185, 0, 0.45); border-radius: 6px;"
+                " padding: 8px 10px; }"
+            )
+            content_layout.addWidget(game_file_notice)
 
         selected: dict[str, Optional[tuple[bool, bool, bool, bool, str]]] = {
             "choice": None
