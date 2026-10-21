@@ -812,9 +812,15 @@ void ProfilesDialog::removeProfile()
                          QMessageBox::Yes | QMessageBox::No, this);
   confirmBox.setDefaultButton(QMessageBox::No);
   confirmBox.setEscapeButton(QMessageBox::No);
+  // an Elden Ring profile folder also holds its named save profiles and the
+  // automatic backups of its saves
   confirmBox.setInformativeText(
-      tr("This removes the profile, including any profile-specific save games. "
-         "This action cannot be undone."));
+      m_eldenRing
+          ? tr("This removes the profile, including its own saves, its named save "
+               "profiles and their automatic backups. Instance-shared and Steam "
+               "saves are not touched. The folder goes to the Recycle Bin.")
+          : tr("This removes the profile, including any profile-specific save "
+               "games. The folder goes to the Recycle Bin."));
   styleProfilePrompt(confirmBox, QMessageBox::Yes, true);
 
   if (confirmBox.exec() == QMessageBox::Yes) {
@@ -841,10 +847,20 @@ void ProfilesDialog::removeProfile()
     if (item != nullptr) {
       delete item;
     }
-    if (!shellDelete(QStringList(profilePath))) {
-      log::warn("Failed to shell-delete \"{}\" (errorcode {}), trying regular delete",
-                profilePath, ::GetLastError());
-      if (!removeDir(profilePath)) {
+    if (!shellDelete(QStringList(profilePath), true, this)) {
+      log::warn("Failed to move \"{}\" to the Recycle Bin (errorcode {})", profilePath,
+                ::GetLastError());
+      QMessageBox permanentBox(QMessageBox::Warning, "MO2 Revamped",
+                               tr("The profile could not be moved to the Recycle Bin."),
+                               QMessageBox::Yes | QMessageBox::No, this);
+      permanentBox.setDefaultButton(QMessageBox::No);
+      permanentBox.setEscapeButton(QMessageBox::No);
+      permanentBox.setInformativeText(
+          tr("Delete this folder permanently instead? Its saves cannot be "
+             "recovered afterwards.\n%1")
+              .arg(QDir::toNativeSeparators(profilePath)));
+      styleProfilePrompt(permanentBox, QMessageBox::Yes, true);
+      if (permanentBox.exec() == QMessageBox::Yes && !removeDir(profilePath)) {
         log::warn("regular delete failed too");
       }
     }
@@ -880,10 +896,15 @@ void ProfilesDialog::renameProfile()
     return;
   }
 
-  m_list->currentItem()->setText(name);
-
   QString oldName = profile->name();
-  profile->rename(name);
+  // a file open inside the profile (a save, a backup) blocks the rename
+  if (!profile->rename(name)) {
+    showProfileNotice(this, QMessageBox::Warning, tr("The profile was not renamed"),
+                      tr("Windows could not rename the profile folder. Close any "
+                         "program using files in it and try again."));
+    return;
+  }
+  m_list->currentItem()->setText(name);
 
   updateItem(m_list->currentItem());
   fillDetails();

@@ -9418,13 +9418,13 @@ Missing files:
     </message>
     <message>
         <location filename="profilesdialog.cpp" line="783"/>
-        <location filename="profilesdialog.cpp" line="879"/>
+        <location filename="profilesdialog.cpp" line="895"/>
         <source>Choose a valid name for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="profilesdialog.cpp" line="805"/>
-        <location filename="profilesdialog.cpp" line="866"/>
+        <location filename="profilesdialog.cpp" line="882"/>
         <source>This profile is currently active</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9439,17 +9439,12 @@ Missing files:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="816"/>
-        <source>This removes the profile, including any profile-specific save games. This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="profilesdialog.cpp" line="825"/>
+        <location filename="profilesdialog.cpp" line="831"/>
         <source>This profile appears to be broken.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="830"/>
+        <location filename="profilesdialog.cpp" line="836"/>
         <source>The folder below will be deleted:
 %1
 
@@ -9457,7 +9452,7 @@ Proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="867"/>
+        <location filename="profilesdialog.cpp" line="883"/>
         <source>Switch to another profile before renaming it.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9721,12 +9716,43 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
     </message>
     <message>
         <location filename="profilesdialog.cpp" line="782"/>
-        <location filename="profilesdialog.cpp" line="878"/>
+        <location filename="profilesdialog.cpp" line="894"/>
         <source>Invalid profile name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="916"/>
+        <location filename="profilesdialog.cpp" line="819"/>
+        <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="822"/>
+        <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="854"/>
+        <source>The profile could not be moved to the Recycle Bin.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="859"/>
+        <source>Delete this folder permanently instead? Its saves cannot be recovered afterwards.
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="902"/>
+        <source>The profile was not renamed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="903"/>
+        <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="937"/>
         <source>failed to change archive invalidation state: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10058,13 +10084,13 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
         <location filename="settingsdialognexus.cpp" line="364"/>
         <location filename="settingsdialognexus.cpp" line="371"/>
         <location filename="settingsdialogworkarounds.cpp" line="349"/>
-        <location filename="spawn.cpp" line="181"/>
         <location filename="spawn.cpp" line="205"/>
-        <location filename="spawn.cpp" line="274"/>
-        <location filename="spawn.cpp" line="297"/>
-        <location filename="spawn.cpp" line="324"/>
+        <location filename="spawn.cpp" line="229"/>
+        <location filename="spawn.cpp" line="298"/>
+        <location filename="spawn.cpp" line="321"/>
         <location filename="spawn.cpp" line="348"/>
-        <location filename="spawn.cpp" line="379"/>
+        <location filename="spawn.cpp" line="372"/>
+        <location filename="spawn.cpp" line="403"/>
         <location filename="uilocker.cpp" line="366"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
@@ -10506,8 +10532,8 @@ Destination:<byte value="xd"/>
     </message>
     <message>
         <location filename="instancemanagerdialog.cpp" line="320"/>
-        <location filename="spawn.cpp" line="220"/>
-        <location filename="spawn.cpp" line="241"/>
+        <location filename="spawn.cpp" line="244"/>
+        <location filename="spawn.cpp" line="265"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11247,202 +11273,202 @@ Example:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="139"/>
+        <location filename="spawn.cpp" line="163"/>
         <source>This error typically happens because an antivirus has deleted critical files from Mod Organizer&apos;s installation folder or has made them generally inaccessible. Add an exclusion for Mod Organizer&apos;s installation folder in your antivirus, reinstall Mod Organizer and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="146"/>
+        <location filename="spawn.cpp" line="170"/>
         <source>This error typically happens because an antivirus is preventing Mod Organizer from starting programs. Add an exclusion for Mod Organizer&apos;s installation folder in your antivirus and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="151"/>
+        <location filename="spawn.cpp" line="175"/>
         <source>The file &apos;%1&apos; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="155"/>
+        <location filename="spawn.cpp" line="179"/>
         <source>The working directory &apos;%1&apos; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="172"/>
-        <location filename="spawn.cpp" line="173"/>
-        <location filename="spawn.cpp" line="198"/>
-        <location filename="spawn.cpp" line="199"/>
+        <location filename="spawn.cpp" line="196"/>
+        <location filename="spawn.cpp" line="197"/>
+        <location filename="spawn.cpp" line="222"/>
+        <location filename="spawn.cpp" line="223"/>
         <source>Cannot start Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="175"/>
+        <location filename="spawn.cpp" line="199"/>
         <source>The path to the Steam executable cannot be found. You might try reinstalling Steam.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="179"/>
         <location filename="spawn.cpp" line="203"/>
-        <location filename="spawn.cpp" line="295"/>
+        <location filename="spawn.cpp" line="227"/>
+        <location filename="spawn.cpp" line="319"/>
         <source>Continue without starting Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="180"/>
         <location filename="spawn.cpp" line="204"/>
+        <location filename="spawn.cpp" line="228"/>
         <source>The program may fail to launch.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="214"/>
+        <location filename="spawn.cpp" line="238"/>
         <source>Cannot launch program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="216"/>
-        <location filename="spawn.cpp" line="237"/>
-        <location filename="spawn.cpp" line="252"/>
+        <location filename="spawn.cpp" line="240"/>
+        <location filename="spawn.cpp" line="261"/>
+        <location filename="spawn.cpp" line="276"/>
         <source>Cannot start %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="219"/>
-        <location filename="spawn.cpp" line="240"/>
+        <location filename="spawn.cpp" line="243"/>
+        <location filename="spawn.cpp" line="264"/>
         <source>Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="235"/>
+        <location filename="spawn.cpp" line="259"/>
         <source>Cannot launch helper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="250"/>
-        <location filename="spawn.cpp" line="305"/>
+        <location filename="spawn.cpp" line="274"/>
+        <location filename="spawn.cpp" line="329"/>
         <source>Elevation required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="254"/>
+        <location filename="spawn.cpp" line="278"/>
         <source>This program is requesting to run as administrator but Mod Organizer itself is not running as administrator. Running programs as administrator is typically unnecessary as long as the game and Mod Organizer have been installed outside &quot;Program Files&quot;.<byte value="xd"/>
 <byte value="xd"/>
 You can restart Mod Organizer as administrator and try launching the program again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="270"/>
-        <location filename="spawn.cpp" line="319"/>
+        <location filename="spawn.cpp" line="294"/>
+        <location filename="spawn.cpp" line="343"/>
         <source>Restart Mod Organizer as administrator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="271"/>
-        <location filename="spawn.cpp" line="320"/>
+        <location filename="spawn.cpp" line="295"/>
+        <location filename="spawn.cpp" line="344"/>
         <source>You must allow &quot;helper.exe&quot; to make changes to the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="283"/>
+        <location filename="spawn.cpp" line="307"/>
         <source>Launch Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="284"/>
+        <location filename="spawn.cpp" line="308"/>
         <source>This program requires Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="285"/>
+        <location filename="spawn.cpp" line="309"/>
         <source>Mod Organizer has detected that this program likely requires Steam to be running to function properly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="294"/>
+        <location filename="spawn.cpp" line="318"/>
         <source>Start Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="296"/>
-        <location filename="spawn.cpp" line="322"/>
+        <location filename="spawn.cpp" line="320"/>
+        <location filename="spawn.cpp" line="346"/>
         <source>The program might fail to run.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="306"/>
+        <location filename="spawn.cpp" line="330"/>
         <source>Steam is running as administrator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="307"/>
+        <location filename="spawn.cpp" line="331"/>
         <source>Running Steam as administrator is typically unnecessary and can cause problems when Mod Organizer itself is not running as administrator.<byte value="xd"/>
 <byte value="xd"/>
 You can restart Mod Organizer as administrator and try launching the program again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="322"/>
         <location filename="spawn.cpp" line="346"/>
-        <location filename="spawn.cpp" line="376"/>
+        <location filename="spawn.cpp" line="370"/>
+        <location filename="spawn.cpp" line="400"/>
         <source>Continue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="332"/>
+        <location filename="spawn.cpp" line="356"/>
         <source>Event Log not running</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="333"/>
+        <location filename="spawn.cpp" line="357"/>
         <source>The Event Log service is not running</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="334"/>
+        <location filename="spawn.cpp" line="358"/>
         <source>The Windows Event Log service is not running. This can prevent USVFS from running properly and your mods may not be recognized by the program being launched.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="346"/>
-        <location filename="spawn.cpp" line="377"/>
+        <location filename="spawn.cpp" line="370"/>
+        <location filename="spawn.cpp" line="401"/>
         <source>Your mods might not work.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="357"/>
+        <location filename="spawn.cpp" line="381"/>
         <source>Blacklisted program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="359"/>
+        <location filename="spawn.cpp" line="383"/>
         <source>The program %1 is blacklisted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="360"/>
+        <location filename="spawn.cpp" line="384"/>
         <source>The program you are attempting to launch is blacklisted in the virtual filesystem. This will likely prevent it from seeing any mods, INI files or any other virtualized files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="378"/>
+        <location filename="spawn.cpp" line="402"/>
         <source>Change the blacklist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="599"/>
+        <location filename="spawn.cpp" line="623"/>
         <source>Waiting</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="600"/>
+        <location filename="spawn.cpp" line="624"/>
         <source>Please press OK once you&apos;re logged into steam.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="888"/>
+        <location filename="spawn.cpp" line="912"/>
         <source>Select binary</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="spawn.cpp" line="889"/>
+        <location filename="spawn.cpp" line="913"/>
         <source>Binary</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11956,53 +11982,58 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>SavesTab</name>
     <message>
-        <location filename="savestab.cpp" line="66"/>
+        <location filename="savestab.cpp" line="67"/>
         <source>Open folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="68"/>
+        <location filename="savestab.cpp" line="69"/>
         <source>Open the folder these saves are read from</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="72"/>
         <location filename="savestab.cpp" line="73"/>
+        <location filename="savestab.cpp" line="74"/>
         <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="104"/>
+        <location filename="savestab.cpp" line="108"/>
         <source>This profile&apos;s own saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="106"/>
+        <location filename="savestab.cpp" line="110"/>
         <source>The game&apos;s saves, shared with Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="108"/>
+        <location filename="savestab.cpp" line="112"/>
         <source>Shared saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="308"/>
+        <location filename="savestab.cpp" line="318"/>
         <source>Modified</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="355"/>
+        <location filename="savestab.cpp" line="374"/>
         <source>%1 more</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="359"/>
+        <location filename="savestab.cpp" line="381"/>
+        <source>These are the game&apos;s own Steam saves, also used when Elden Ring starts outside MO2.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="386"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="savestab.cpp" line="360"/>
+        <location filename="savestab.cpp" line="387"/>
         <source>Are you sure you want to remove the following %n save(s)?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;&lt;br&gt;Removed saves will be sent to the Recycle Bin.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -12010,43 +12041,43 @@ p, li { white-space: pre-wrap; }
         </translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="388"/>
+        <location filename="savestab.cpp" line="415"/>
         <source>Restore required plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="391"/>
+        <location filename="savestab.cpp" line="418"/>
         <source>Choose installed mods to activate the plugins required by this save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="400"/>
+        <location filename="savestab.cpp" line="427"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="404"/>
+        <location filename="savestab.cpp" line="431"/>
         <source>File name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="405"/>
+        <location filename="savestab.cpp" line="432"/>
         <source>File path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="406"/>
+        <location filename="savestab.cpp" line="433"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="411"/>
+        <location filename="savestab.cpp" line="438"/>
         <source>Delete...</source>
         <oldsource>Delete %n save(s)...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="412"/>
+        <location filename="savestab.cpp" line="439"/>
         <source>Delete %1 saves...</source>
         <translation type="unfinished"></translation>
     </message>

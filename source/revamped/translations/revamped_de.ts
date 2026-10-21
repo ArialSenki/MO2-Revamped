@@ -6712,6 +6712,32 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>Last used</source>
       <translation>Zuletzt verwendet</translation>
     </message>
+    <message>
+      <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
+      <translation>Dadurch wird das Profil entfernt, einschließlich seiner eigenen Spielstände, seiner benannten Spielstandprofile und deren automatischer Sicherungen. Instanzweit geteilte und Steam-Spielstände bleiben unberührt. Der Ordner wird in den Papierkorb verschoben.</translation>
+    </message>
+    <message>
+      <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
+      <translation>Dadurch wird das Profil entfernt, einschließlich profilspezifischer Spielstände. Der Ordner wird in den Papierkorb verschoben.</translation>
+    </message>
+    <message>
+      <source>The profile could not be moved to the Recycle Bin.</source>
+      <translation>Das Profil konnte nicht in den Papierkorb verschoben werden.</translation>
+    </message>
+    <message>
+      <source>Delete this folder permanently instead? Its saves cannot be recovered afterwards.
+%1</source>
+      <translation>Diesen Ordner stattdessen endgültig löschen? Seine Spielstände lassen sich danach nicht wiederherstellen.
+%1</translation>
+    </message>
+    <message>
+      <source>The profile was not renamed</source>
+      <translation>Das Profil wurde nicht umbenannt</translation>
+    </message>
+    <message>
+      <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
+      <translation>Windows konnte den Profilordner nicht umbenennen. Schließe alle Programme, die Dateien darin verwenden, und versuche es erneut.</translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>
@@ -7381,6 +7407,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Shared saves</source>
       <translation>Geteilte Spielstände</translation>
+    </message>
+    <message>
+      <source>These are the game's own Steam saves, also used when Elden Ring starts outside MO2.</source>
+      <translation>Das sind die eigenen Steam-Spielstände des Spiels, die auch verwendet werden, wenn Elden Ring außerhalb von MO2 startet.</translation>
     </message>
   </context>
   <context>

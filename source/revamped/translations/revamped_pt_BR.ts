@@ -6712,6 +6712,32 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <source>Last used</source>
       <translation>Último uso</translation>
     </message>
+    <message>
+      <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
+      <translation>Isso remove o perfil, incluindo os próprios saves, os perfis de save nomeados e os backups automáticos deles. Os saves compartilhados da instância e os da Steam não são alterados. A pasta vai para a Lixeira.</translation>
+    </message>
+    <message>
+      <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
+      <translation>Isso remove o perfil, incluindo os saves específicos do perfil. A pasta vai para a Lixeira.</translation>
+    </message>
+    <message>
+      <source>The profile could not be moved to the Recycle Bin.</source>
+      <translation>Não foi possível mover o perfil para a Lixeira.</translation>
+    </message>
+    <message>
+      <source>Delete this folder permanently instead? Its saves cannot be recovered afterwards.
+%1</source>
+      <translation>Excluir esta pasta permanentemente? Os saves dela não poderão ser recuperados depois.
+%1</translation>
+    </message>
+    <message>
+      <source>The profile was not renamed</source>
+      <translation>O perfil não foi renomeado</translation>
+    </message>
+    <message>
+      <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
+      <translation>O Windows não conseguiu renomear a pasta do perfil. Feche qualquer programa que esteja usando arquivos dela e tente novamente.</translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>
@@ -7381,6 +7407,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Shared saves</source>
       <translation>Saves compartilhados</translation>
+    </message>
+    <message>
+      <source>These are the game's own Steam saves, also used when Elden Ring starts outside MO2.</source>
+      <translation>Estes são os saves da Steam do próprio jogo, também usados quando o Elden Ring é iniciado fora do MO2.</translation>
     </message>
   </context>
   <context>
