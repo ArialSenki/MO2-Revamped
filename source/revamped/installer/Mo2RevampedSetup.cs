@@ -83,6 +83,8 @@ namespace Mo2RevampedSetup
         public bool ForceCloseMo2;
         public bool RemoveAllRemainingContents;
         public bool RemoveRevampedAppData;
+        // a new installation into a folder that kept its data after an uninstall
+        public bool ReinstallOverKeptData;
     }
 
     internal static class Program
@@ -387,7 +389,9 @@ namespace Mo2RevampedSetup
             Directory.CreateDirectory(target);
             if (request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable || request.Mode == SetupMode.Migrate)
             {
-                if (Directory.GetFileSystemEntries(target).Length > 0)
+                if (Directory.GetFileSystemEntries(target).Length > 0 &&
+                    !(request.ReinstallOverKeptData && request.Mode != SetupMode.Migrate &&
+                      !File.Exists(Path.Combine(target, "ModOrganizer.exe")) && HasPortableUserData(target)))
                     throw new InvalidOperationException(InstallerText.T("La carpeta de destino dejó de estar vacía. No se modificó."));
             }
 
@@ -456,6 +460,13 @@ namespace Mo2RevampedSetup
                     RemovedByUpdate = true
                 });
             }
+
+            // the kept data stays as it is: a program file already there (with no
+            // backup made for a new installation) stops the reinstall instead
+            if (request.ReinstallOverKeptData)
+                foreach (InstallFileState existing in states)
+                    if (existing.ExistedBefore && !existing.IsUserData)
+                        throw new InvalidOperationException(InstallerText.T("La carpeta contiene archivos del programa. Usa «Actualizar MO2 Revamped» o elige otra carpeta: ") + existing.Path);
 
             if (request.Mode == SetupMode.Migrate)
             {
@@ -531,6 +542,7 @@ namespace Mo2RevampedSetup
 
             if (request.Mode == SetupMode.Update)
             {
+                EnsureInstallationFree(target, false, worker);
                 Directory.CreateDirectory(backup);
                 int n = 0;
                 foreach (InstallFileState fileState in states)
@@ -595,6 +607,8 @@ namespace Mo2RevampedSetup
                 CreateShortcuts(request, state);
                 state.Status = "Completed";
                 SaveState(state);
+                // Restore only uses this update's copy: earlier ones just took space
+                if (request.Mode == SetupMode.Update) PruneOlderBackups(target, state.BackupDirectory);
                 Report(worker, 100, InstallerText.T("Instalación preparada correctamente."));
             }
             catch (Exception installError)
@@ -780,7 +794,7 @@ namespace Mo2RevampedSetup
             }
             bool removeAllContents = !restoreMode && request.RemoveAllRemainingContents;
             bool forceCloseMo2 = !restoreMode && request.ForceCloseMo2;
-            EnsureMo2Closed(target, forceCloseMo2, worker);
+            EnsureInstallationFree(target, forceCloseMo2, worker);
             if (!restoreMode) EnsureRevampedGlobalDataNotInUse(request);
 
             bool deferredCleanup;
@@ -901,7 +915,7 @@ namespace Mo2RevampedSetup
             if (!Directory.Exists(target) || !File.Exists(executable))
                 throw new InvalidOperationException(InstallerText.T("Selecciona la carpeta de una instalación que contenga ModOrganizer.exe."));
             ValidateSafeUninstallTarget(target);
-            EnsureMo2Closed(target, request.ForceCloseMo2, worker);
+            EnsureInstallationFree(target, request.ForceCloseMo2, worker);
             EnsureRevampedGlobalDataNotInUse(request);
 
             List<string> notes;
@@ -1715,12 +1729,120 @@ namespace Mo2RevampedSetup
         private static void CheckSpace(string target, long payloadBytes, long backupBytes)
         {
             string root = Path.GetPathRoot(Path.GetFullPath(target));
+            // an update's backup goes to AppData, usually on another drive
+            string backupDrive = backupBytes > 0 ? Path.GetPathRoot(Path.GetFullPath(BackupRoot(target))) : root;
+            bool sameDrive = String.Equals(root, backupDrive, StringComparison.OrdinalIgnoreCase);
+            RequireSpace(root, payloadBytes + (sameDrive ? backupBytes : 0));
+            if (!sameDrive) RequireSpace(backupDrive, backupBytes);
+        }
+
+        private static void RequireSpace(string root, long required)
+        {
             DriveInfo drive = new DriveInfo(root);
-            long required = payloadBytes + backupBytes;
             if (drive.AvailableFreeSpace < required)
                 throw new InvalidOperationException(String.Format(
                     InstallerText.T("No hay espacio libre suficiente. Se necesitan aproximadamente {0} y hay {1} disponibles."),
-                    FormatBytes(required), FormatBytes(drive.AvailableFreeSpace)));
+                    FormatBytes(required), FormatBytes(drive.AvailableFreeSpace)) + " (" + root + ")");
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RmUniqueProcess
+        {
+            public int dwProcessId;
+            public System.Runtime.InteropServices.ComTypes.FILETIME ProcessStartTime;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct RmProcessInfo
+        {
+            public RmUniqueProcess Process;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string strAppName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string strServiceShortName;
+            public int ApplicationType;
+            public uint AppStatus;
+            public uint TSSessionId;
+            [MarshalAs(UnmanagedType.Bool)] public bool bRestartable;
+        }
+
+        [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
+        private static extern int RmStartSession(out uint pSessionHandle, int dwSessionFlags, StringBuilder strSessionKey);
+        [DllImport("rstrtmgr.dll")]
+        private static extern int RmEndSession(uint pSessionHandle);
+        [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
+        private static extern int RmRegisterResources(uint pSessionHandle, uint nFiles, string[] rgsFilenames,
+            uint nApplications, IntPtr rgApplications, uint nServices, string[] rgsServiceNames);
+        [DllImport("rstrtmgr.dll")]
+        private static extern int RmGetList(uint dwSessionHandle, out uint pnProcInfoNeeded, ref uint pnProcInfo,
+            [In, Out] RmProcessInfo[] rgAffectedApps, ref uint lpdwRebootReasons);
+
+        // The programs Windows reports as holding the installation's program
+        // files (an Explorer preview, a game started from MO2, another tool),
+        // so setup can name them instead of failing half-way.
+        private static List<string> ProgramsUsingInstallation(string target)
+        {
+            List<string> names = new List<string>();
+            List<string> files = new List<string>();
+            try
+            {
+                foreach (string file in Directory.GetFiles(target, "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    string extension = Path.GetExtension(file);
+                    if (String.Equals(extension, ".exe", StringComparison.OrdinalIgnoreCase) ||
+                        String.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase)) files.Add(file);
+                }
+                string dlls = Path.Combine(target, "dlls");
+                if (Directory.Exists(dlls))
+                    foreach (string file in Directory.GetFiles(dlls, "*.dll", SearchOption.TopDirectoryOnly))
+                        files.Add(file);
+            }
+            catch { return names; }
+            if (files.Count == 0) return names;
+
+            uint session;
+            StringBuilder key = new StringBuilder(64);
+            if (RmStartSession(out session, 0, key) != 0) return names;
+            try
+            {
+                if (RmRegisterResources(session, (uint)files.Count, files.ToArray(), 0, IntPtr.Zero, 0, null) != 0) return names;
+                uint needed;
+                uint count = 0;
+                uint reasons = 0;
+                int result = RmGetList(session, out needed, ref count, null, ref reasons);
+                if (result == 234 && needed > 0) // ERROR_MORE_DATA
+                {
+                    RmProcessInfo[] processes = new RmProcessInfo[needed];
+                    count = needed;
+                    int self = Process.GetCurrentProcess().Id;
+                    if (RmGetList(session, out needed, ref count, processes, ref reasons) == 0)
+                        for (int i = 0; i < count; i++)
+                        {
+                            // the uninstaller itself runs from the installation
+                            if (processes[i].Process.dwProcessId == self) continue;
+                            string name = processes[i].strAppName;
+                            if (!String.IsNullOrEmpty(name) && !names.Contains(name)) names.Add(name);
+                        }
+                }
+            }
+            catch (Exception ex) { SetupDiagnostics.Error("Restart Manager could not list the programs using the installation.", ex); }
+            finally { RmEndSession(session); }
+            return names;
+        }
+
+        // backups of earlier updates of this installation; the one Restore uses is kept
+        private static void PruneOlderBackups(string target, string keep)
+        {
+            try
+            {
+                string root = BackupRoot(target);
+                if (!Directory.Exists(root) || String.IsNullOrEmpty(keep)) return;
+                foreach (string folder in Directory.GetDirectories(root))
+                {
+                    if (PathsEqual(folder, keep)) continue;
+                    try { Directory.Delete(folder, true); }
+                    catch (Exception ex) { SetupDiagnostics.Error("Could not remove an older update backup '" + folder + "'.", ex); }
+                }
+            }
+            catch (Exception ex) { SetupDiagnostics.Error("Could not prune older update backups.", ex); }
         }
 
         private static List<string> GetShortcutPaths(SetupRequest request)
@@ -1938,6 +2060,17 @@ namespace Mo2RevampedSetup
             string dataDirectory = RevampedAppDataDirectory();
             if (Directory.Exists(dataDirectory) && IsAnyRevampedGlobalMo2Running())
                 throw new InvalidOperationException(InstallerText.T("Cierra todas las instancias no portables de MO2 Revamped antes de borrar sus datos globales."));
+        }
+
+        // MO2 of this folder closed (or refused), the games closed, and no
+        // other program holding the program files
+        private static void EnsureInstallationFree(string target, bool forceClose, BackgroundWorker worker)
+        {
+            EnsureMo2Closed(target, forceClose, worker);
+            List<string> users = ProgramsUsingInstallation(target);
+            if (users.Count > 0)
+                throw new InvalidOperationException(InstallerText.T("Estos programas están usando archivos de la instalación: ") +
+                    String.Join(", ", users.ToArray()) + InstallerText.T(". Ciérralos y vuelve a intentarlo."));
         }
 
         private static List<Process> FindMo2Processes(string expectedExecutable)
