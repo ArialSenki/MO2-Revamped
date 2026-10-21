@@ -2875,6 +2875,14 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
 
 {error}</translation>
     </message>
+    <message>
+      <source>Choose a new empty save or import an existing one: a vanilla .sl2 or a Seamless Co-op .co2. Imports are copied as ER0000 with the same extension, with their .bak when there is one. The source is left unchanged. Close Elden Ring before importing.</source>
+      <translation>Elige una partida nueva vacía o importa una existente: un .sl2 normal o un .co2 de Seamless Co-op. Las importaciones se copian como ER0000 con la misma extensión, con su .bak si lo tienen. El origen no se modifica. Cierra Elden Ring antes de importar.</translation>
+    </message>
+    <message>
+      <source>The selected save is no longer available: {path}</source>
+      <translation>La partida seleccionada ya no está disponible: {path}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

@@ -2905,6 +2905,14 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
 
 {error}</translation>
     </message>
+    <message>
+      <source>Choose a new empty save or import an existing one: a vanilla .sl2 or a Seamless Co-op .co2. Imports are copied as ER0000 with the same extension, with their .bak when there is one. The source is left unchanged. Close Elden Ring before importing.</source>
+      <translation>Scegli un nuovo salvataggio vuoto o importane uno esistente: un .sl2 normale o un .co2 di Seamless Co-op. Le importazioni vengono copiate come ER0000 con la stessa estensione, con il loro .bak se c’è. L’origine non viene modificata. Chiudi Elden Ring prima di importare.</translation>
+    </message>
+    <message>
+      <source>The selected save is no longer available: {path}</source>
+      <translation>Il salvataggio selezionato non è più disponibile: {path}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

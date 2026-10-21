@@ -2867,6 +2867,14 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
 
 {error}</translation>
     </message>
+    <message>
+      <source>Choose a new empty save or import an existing one: a vanilla .sl2 or a Seamless Co-op .co2. Imports are copied as ER0000 with the same extension, with their .bak when there is one. The source is left unchanged. Close Elden Ring before importing.</source>
+      <translation>Choisissez une nouvelle sauvegarde vide ou importez-en une existante : un .sl2 classique ou un .co2 de Seamless Co-op. Les imports sont copiés en ER0000 avec la même extension, avec leur .bak s’il existe. La source n’est pas modifiée. Fermez Elden Ring avant d’importer.</translation>
+    </message>
+    <message>
+      <source>The selected save is no longer available: {path}</source>
+      <translation>La sauvegarde sélectionnée n’est plus disponible : {path}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

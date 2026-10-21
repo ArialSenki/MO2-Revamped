@@ -2863,6 +2863,14 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
 
 {error}</translation>
     </message>
+    <message>
+      <source>Choose a new empty save or import an existing one: a vanilla .sl2 or a Seamless Co-op .co2. Imports are copied as ER0000 with the same extension, with their .bak when there is one. The source is left unchanged. Close Elden Ring before importing.</source>
+      <translation>Escolha um save novo vazio ou importe um existente: um .sl2 normal ou um .co2 do Seamless Co-op. As importações são copiadas como ER0000 com a mesma extensão, com o .bak se houver. A origem não é alterada. Feche o Elden Ring antes de importar.</translation>
+    </message>
+    <message>
+      <source>The selected save is no longer available: {path}</source>
+      <translation>O save selecionado não está mais disponível: {path}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
