@@ -6786,6 +6786,17 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
       <translation>Windows no pudo cambiar el nombre de la carpeta del perfil. Cierra cualquier programa que use archivos de ella y vuelve a intentarlo.</translation>
     </message>
+    <message>
+      <source>The copy is incomplete</source>
+      <translation>La copia está incompleta</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
+      <translation>
+        <numerusform>No se pudo copiar %n archivo, normalmente porque un programa como el juego lo tenía abierto. Ciérralo, elimina el perfil nuevo y vuelve a copiarlo.</numerusform>
+        <numerusform>No se pudieron copiar %n archivos, normalmente porque un programa como el juego los tenía abiertos. Ciérralo, elimina el perfil nuevo y vuelve a copiarlo.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>

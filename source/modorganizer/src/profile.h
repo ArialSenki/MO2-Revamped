@@ -105,9 +105,11 @@ public:
   /**
    * @param name of the new profile
    * @param reference profile to copy from
+   * @param failedCopies receives the number of files that could not be copied
    **/
   static Profile* createPtrFrom(const QString& name, const Profile& reference,
-                                MOBase::IPluginGame const* gamePlugin);
+                                MOBase::IPluginGame const* gamePlugin,
+                                int* failedCopies = nullptr);
 
   static void renameModInAllProfiles(const QString& oldName, const QString& newName);
 
@@ -387,7 +389,8 @@ private:
 private:
   void updateIndices();
 
-  void copyFilesTo(QString& target) const;
+  // the number of files that could not be copied
+  int copyFilesTo(QString& target) const;
 
   std::vector<std::wstring> splitDZString(const wchar_t* buffer) const;
   void mergeTweak(const QString& tweakName, const QString& tweakedIni) const;

@@ -6738,6 +6738,17 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
       <translation>O Windows não conseguiu renomear a pasta do perfil. Feche qualquer programa que esteja usando arquivos dela e tente novamente.</translation>
     </message>
+    <message>
+      <source>The copy is incomplete</source>
+      <translation>A cópia está incompleta</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
+      <translation>
+        <numerusform>Não foi possível copiar %n arquivo, geralmente porque um programa como o jogo estava com ele aberto. Feche-o, remova o novo perfil e copie novamente.</numerusform>
+        <numerusform>Não foi possível copiar %n arquivos, geralmente porque um programa como o jogo estava com eles abertos. Feche-o, remova o novo perfil e copie novamente.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>

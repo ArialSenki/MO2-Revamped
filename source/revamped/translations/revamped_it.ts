@@ -6942,6 +6942,17 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
       <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
       <translation>Windows non è riuscito a rinominare la cartella del profilo. Chiudi i programmi che usano file al suo interno e riprova.</translation>
     </message>
+    <message>
+      <source>The copy is incomplete</source>
+      <translation>La copia è incompleta</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
+      <translation>
+        <numerusform>Impossibile copiare %n file, di solito perché un programma come il gioco lo teneva aperto. Chiudilo, rimuovi il nuovo profilo e ripeti la copia.</numerusform>
+        <numerusform>Impossibile copiare %n file, di solito perché un programma come il gioco li teneva aperti. Chiudilo, rimuovi il nuovo profilo e ripeti la copia.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>
