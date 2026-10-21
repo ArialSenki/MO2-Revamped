@@ -2708,7 +2708,24 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
     @classmethod
     def _read_mode(cls, profile) -> str:
-        return cls._read_mode_directory(cls._profile_directory(profile))
+        directory = cls._profile_directory(profile)
+        mode = cls._read_mode_directory(directory)
+        if mode == cls.ProfileIsolated:
+            # no valid stored mode: MO2 and the game plugin follow the
+            # profile's LocalSaves setting (the Steam saves when it is off)
+            try:
+                stored = cls._read_save_config_directory(directory).get(
+                    "Saves", "mode", fallback=""
+                ).strip().lower()
+            except (OSError, UnicodeError, configparser.Error, ValueError):
+                stored = ""
+            if stored not in {cls.ProfileIsolated, cls.InstanceShared, cls.GlobalShared}:
+                try:
+                    if not profile.localSavesEnabled():
+                        return cls.GlobalShared
+                except (AttributeError, RuntimeError):
+                    pass
+        return mode
 
     @classmethod
     def _read_save_config_directory(
