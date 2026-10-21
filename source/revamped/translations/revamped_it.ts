@@ -2719,6 +2719,58 @@ Errore di ripristino: {error}</translation>
       <source>&lt;b&gt;Profile-isolated save selected.&lt;/b&gt; Game save profile: {save}.</source>
       <translation>&lt;b&gt;Salvataggio isolato per profilo selezionato.&lt;/b&gt; Profilo di salvataggio: {save}.</translation>
     </message>
+    <message>
+      <source>Elden Ring is running, or MO2 could not confirm that it is closed. Close the game and try again; nothing was copied.</source>
+      <translation>Elden Ring è in esecuzione, o MO2 non ha potuto confermare che sia chiuso. Chiudi il gioco e riprova; non è stato copiato nulla.</translation>
+    </message>
+    <message>
+      <source>The Steam saves of an earlier launch are still waiting to be restored. Start MO2 again with Elden Ring closed so it can restore them, then copy the save; nothing was copied.</source>
+      <translation>I salvataggi Steam di un avvio precedente attendono ancora di essere ripristinati. Riavvia MO2 con Elden Ring chiuso perché li ripristini, poi copia il salvataggio; non è stato copiato nulla.</translation>
+    </message>
+    <message>
+      <source>Copy one save between storage routes: a vanilla .sl2 or a Seamless Co-op .co2. The selected MO2 profile is {profile}. Its account folder is preserved, and the copy is named ER0000 at the destination with the same extension.</source>
+      <translation>Copia un salvataggio tra percorsi di archiviazione: un .sl2 normale o un .co2 di Seamless Co-op. Il profilo MO2 selezionato è {profile}. La sua cartella dell’account viene mantenuta e la copia si chiama ER0000 nella destinazione, con la stessa estensione.</translation>
+    </message>
+    <message>
+      <source>Choose a regular .sl2 or .co2 save file.</source>
+      <translation>Scegli un normale file di salvataggio .sl2 o .co2.</translation>
+    </message>
+    <message>
+      <source>Save not copied</source>
+      <translation>Salvataggio non copiato</translation>
+    </message>
+    <message>
+      <source>No .sl2 or .co2 save files were found in this source folder.</source>
+      <translation>Nessun salvataggio .sl2 o .co2 trovato in questa cartella di origine.</translation>
+    </message>
+    <message>
+      <source>{prompt}
+
+From:
+{source}
+
+To:
+{destination}
+
+Close Elden Ring before copying. This operation copies only the selected save and its .bak, if it has one.</source>
+      <translation>{prompt}
+
+Da:
+{source}
+
+A:
+{destination}
+
+Chiudi Elden Ring prima di copiare. Viene copiato solo il salvataggio selezionato e il suo .bak, se c’è.</translation>
+    </message>
+    <message>
+      <source>
+
+The save was copied, but its .bak could not be updated: {error}</source>
+      <translation>
+
+Il salvataggio è stato copiato, ma il suo .bak non è stato aggiornato: {error}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

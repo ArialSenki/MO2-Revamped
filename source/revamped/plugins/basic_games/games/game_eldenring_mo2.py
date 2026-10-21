@@ -12,6 +12,7 @@ import shutil
 import stat
 import subprocess
 import tempfile
+import time
 import uuid
 
 import mobase
@@ -1335,6 +1336,21 @@ class EldenRingMo2Game(BasicGame):
     SaveRecoveryDirectoryName = ".MO2RevampedSaveRecovery"
     SaveRecoveryManifestName = "session.json"
     UnroutedSaveDirectoryName = "unrouted-global"
+    # Programs that start eldenring.exe themselves (Seamless Co-op, ModEngine2,
+    # me3) get the same save guard as the game, and the guard waits for the
+    # game they start instead of for the launcher.
+    GameLaunchers = frozenset(
+        {
+            "eldenring.exe",
+            "start_protected_game.exe",
+            "ersc_launcher.exe",
+            "modengine2_launcher.exe",
+            "me3.exe",
+            "me3-launcher.exe",
+        }
+    )
+    LauncherStartGrace = 90  # seconds a launcher may take to start the game
+    GameWatchInterval = 5000  # milliseconds between checks for the game process
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         if not super().init(organizer):
@@ -1349,6 +1365,14 @@ class EldenRingMo2Game(BasicGame):
         self._overwrite_cleanup_armed = False
         self._overwrite_cleanup_path: Path | None = None
         self._active_save_quarantine: Path | None = None
+        self._launch_via_launcher = False
+        # each game launch gets a number; watchers of an older launch leave the
+        # newer one alone
+        self._game_run = 0
+        self._game_seen_run = -1
+        # a launcher may take a while to start the game; until then a new
+        # launch must not treat the game as closed
+        self._launch_pending_until = 0.0
 
         self._local_savegames_feature = EldenRingLocalSavegames(self, organizer)
         self._register_feature(self._local_savegames_feature)
@@ -1408,14 +1432,26 @@ class EldenRingMo2Game(BasicGame):
 
     @staticmethod
     def _save_directory_contains_elden_ring_saves(directory: Path) -> bool:
+        # A SteamID64 folder is an account's save folder even when it only holds
+        # files of mods with their own extension (Seamless Co-op .co2,
+        # alt-saves/Convergence .mod, a custom save_file_extension), so the name
+        # alone is enough; other folders count when they hold Elden Ring saves.
+        name = directory.name
+        if len(name) == 17 and name.isdigit() and name.startswith("7656119"):
+            return True
         for entry in directory.iterdir():
             if not entry.is_file():
                 continue
-            if entry.name.casefold().endswith(
-                (".sl2", ".sl2.bak", ".co2", ".co2.bak")
-            ):
+            entry_name = entry.name.casefold()
+            if entry_name == "steam_autocloud.vdf" or entry_name.startswith("er0000."):
+                return True
+            if entry_name.endswith((".sl2", ".sl2.bak", ".co2", ".co2.bak")):
                 return True
         return False
+
+    @classmethod
+    def _is_game_launch(cls, app_path: str) -> bool:
+        return Path(app_path).name.casefold() in cls.GameLaunchers
 
     def _restore_global_save_quarantine(
         self, session_directory: Path, global_save_root: Path
@@ -1644,13 +1680,40 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: temporarily isolated "
             f"{len(save_directories)} existing global save folder(s) for this launch."
         )
+        grace = self.LauncherStartGrace if self._launch_via_launcher else 5
+        self._launch_pending_until = time.monotonic() + grace
         QTimer.singleShot(
-            5000,
-            lambda session=session_directory, save_root=global_save_root: self._restore_quarantine_if_launch_failed(
-                session, save_root
+            self.GameWatchInterval,
+            lambda session=session_directory, save_root=global_save_root, left=grace - 5: self._watch_launch_start(
+                session, save_root, left
             ),
         )
         return session_directory
+
+    def _watch_launch_start(
+        self, session_directory: Path, global_save_root: Path, remaining: float
+    ) -> None:
+        # A launcher can take a while to start eldenring.exe. Until the game
+        # shows up, or the time runs out, the Steam saves stay hidden.
+        if self._active_save_quarantine != session_directory:
+            self._launch_pending_until = 0.0
+            return
+        state = self._elden_ring_process_state()
+        if state is True:
+            # the game is up: the finish watcher knows it was seen
+            self._game_seen_run = self._game_run
+            self._launch_pending_until = 0.0
+            return
+        if state is False and remaining > 0:
+            QTimer.singleShot(
+                self.GameWatchInterval,
+                lambda session=session_directory, save_root=global_save_root, left=remaining - self.GameWatchInterval / 1000: self._watch_launch_start(
+                    session, save_root, left
+                ),
+            )
+            return
+        self._launch_pending_until = 0.0
+        self._restore_quarantine_if_launch_failed(session_directory, global_save_root)
 
     def _initialize_elden_ring_ui(self, _main_window) -> None:
         if not self.isActive():
@@ -1874,8 +1937,13 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: about-to-run save guard received "
             f"'{Path(app_path).name}'."
         )
+        if not self._is_game_launch(app_path):
+            # tools (save editors and the like) run without touching the
+            # hidden Steam saves of a game that may still be running
+            return True
         if self._active_save_quarantine is not None:
-            if self._elden_ring_process_state() is not False:
+            starting = time.monotonic() < self._launch_pending_until
+            if starting or self._elden_ring_process_state() is not False:
                 qCritical(
                     "Elden Ring MO2: a previous save quarantine is still active; "
                     "launch was blocked to protect the global save."
@@ -1894,10 +1962,27 @@ class EldenRingMo2Game(BasicGame):
             return True
 
         profile = self._organizer.profile()
-        if profile is None or Path(app_path).name.casefold() != "eldenring.exe":
+        if profile is None:
             return True
+        if not self._recover_stale_global_save_quarantines():
+            QMessageBox.critical(
+                None,
+                _tr("Elden Ring save recovery needed"),
+                _tr("MO2 could not restore an earlier global save folder. "
+                "The game was not started. Restore the files from the "
+                "MO2 Revamped recovery folder before continuing."),
+            )
+            return False
+        direct_game = Path(app_path).name.casefold() == "eldenring.exe"
+        self._launch_via_launcher = not direct_game
+        self._game_run += 1
 
-        revamped_native_profile = self._resolve_revamped_native_profile(profile)
+        # the native profile's checks run when MO2 starts eldenring.exe
+        # itself; for a launcher MO2 still injects the forced DLLs into the
+        # eldenring.exe it starts, but the launcher decides how the game runs
+        revamped_native_profile = (
+            self._resolve_revamped_native_profile(profile) if direct_game else None
+        )
         if revamped_native_profile is not None and revamped_native_profile.get("error"):
             message = str(revamped_native_profile["error"])
             QMessageBox.warning(
@@ -2177,13 +2262,64 @@ class EldenRingMo2Game(BasicGame):
             "Elden Ring MO2: finished-run save cleanup received "
             f"'{Path(app_path).name}'."
         )
-        if Path(app_path).name.casefold() != "eldenring.exe":
+        if not self._is_game_launch(app_path):
             self._overwrite_cleanup_armed = False
             self._overwrite_cleanup_path = None
             return
         self._restore_profile_config_environment()
-        session_directory = self._active_save_quarantine
-        if session_directory is not None:
+        # MO2 reports the run as finished when its lock is off or unlocked, and
+        # a launcher finishes while the game it started keeps running; the
+        # Steam saves come back and Overwrite is cleared only once the game is
+        # closed
+        self._finish_when_game_closes(
+            Path(app_path).name.casefold() != "eldenring.exe",
+            self._active_save_quarantine,
+            self._overwrite_cleanup_armed,
+            self._overwrite_cleanup_path,
+            0.0,
+            self._game_seen_run == self._game_run,
+            self._game_run,
+        )
+        self._overwrite_cleanup_path = None
+        self._overwrite_cleanup_armed = False
+
+    def _finish_when_game_closes(
+        self,
+        via_launcher: bool,
+        session_directory: Path | None,
+        cleanup_armed: bool,
+        overwrite_path: Path | None,
+        waited: float,
+        seen: bool,
+        run: int = 0,
+    ) -> None:
+        state = self._elden_ring_process_state()
+        seen = seen or state is True
+        game_closed = state is False and (
+            seen or not via_launcher or waited >= self.LauncherStartGrace
+        )
+        if not game_closed:
+            if waited == 0:
+                qInfo(
+                    "Elden Ring MO2: waiting for Elden Ring to close before "
+                    "restoring the Steam saves."
+                )
+            QTimer.singleShot(
+                self.GameWatchInterval,
+                lambda: self._finish_when_game_closes(
+                    via_launcher,
+                    session_directory,
+                    cleanup_armed,
+                    overwrite_path,
+                    waited + self.GameWatchInterval / 1000,
+                    seen,
+                    run,
+                ),
+            )
+            return
+
+        # a later launch may have restored this session and started its own
+        if session_directory is not None and self._active_save_quarantine == session_directory:
             try:
                 restored_cleanly = self._restore_global_save_quarantine(
                     session_directory, Path(self.savesDirectory().absolutePath())
@@ -2206,11 +2342,8 @@ class EldenRingMo2Game(BasicGame):
                     "The files remain in the MO2 Revamped recovery folder. Do not "
                     "launch Elden Ring or Steam until recovery is complete."),
                 )
-        overwrite_path = self._overwrite_cleanup_path
-        cleanup_armed = self._overwrite_cleanup_armed
-        self._overwrite_cleanup_path = None
-        self._overwrite_cleanup_armed = False
-        if cleanup_armed and overwrite_path is not None:
+        # a newer launch owns Overwrite now; its own cleanup runs after it
+        if cleanup_armed and overwrite_path is not None and run == self._game_run:
             self._clear_overwrite_contents(overwrite_path)
 
     @staticmethod
