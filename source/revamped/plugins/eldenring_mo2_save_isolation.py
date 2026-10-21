@@ -680,7 +680,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             saves.sort(key=lambda path: str(path).casefold())
         return saves
 
-    def _create_instance_save_sources(self) -> list[tuple[str, Path, str]]:
+    def _create_instance_save_sources(
+        self, suffixes: tuple[str, ...] = (".sl2",)
+    ) -> list[tuple[str, Path, str]]:
         """Find Elden Ring saves in Steam and this MO2 instance only."""
         discovered_roots: list[tuple[str, Path]] = []
 
@@ -699,7 +701,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         seen_files: set[str] = set()
 
         def add_save_files(label: str, root: Path) -> None:
-            for save_path in self._list_transferable_saves(root):
+            for save_path in self._list_transferable_saves(root, suffixes):
                 try:
                     relative_path = save_path.relative_to(root)
                 except ValueError:
@@ -2937,12 +2939,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if source_root is None:
                     raise ValueError(_tr("The selected save source has no known folder."))
                 if (
-                    source_path.suffix.casefold() != ".sl2"
+                    source_path.suffix.casefold() not in (".sl2", ".co2")
                     or self._is_reparse_point(source_path)
                     or not source_path.is_file()
                 ):
                     raise FileNotFoundError(
-                        _tr("The selected .sl2 save is no longer available: {path}").format(path=source_path)
+                        _tr("The selected save is no longer available: {path}").format(path=source_path)
                     )
                 source_root_resolved = source_root.resolve(strict=True)
                 source_path_resolved = source_path.resolve(strict=True)
@@ -2950,7 +2952,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if (
                     relative_path.is_absolute()
                     or ".." in relative_path.parts
-                    or relative_path.suffix.casefold() != ".sl2"
+                    or relative_path.suffix.casefold() not in (".sl2", ".co2")
                 ):
                     raise ValueError(_tr("The selected save path is outside its source folder."))
                 source_parent = source_path.parent
@@ -2963,7 +2965,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         break
                     source_parent = source_parent.parent
 
-                canonical_relative = relative_path.parent / "ER0000.sl2"
+                extension = relative_path.suffix.lower()
+                canonical_relative = relative_path.parent / f"ER0000{extension}"
                 canonical_path = temporary_directory / canonical_relative
                 canonical_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source_path_resolved, canonical_path)
@@ -2972,7 +2975,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     source_path_resolved.name + ".bak"
                 )
                 if backup_source.is_file() and not self._is_reparse_point(backup_source):
-                    backup_relative = relative_path.parent / "ER0000.sl2.bak"
+                    backup_relative = relative_path.parent / f"ER0000{extension}.bak"
                     backup_destination = temporary_directory / backup_relative
                     backup_destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(backup_source, backup_destination)
@@ -3074,9 +3077,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_heading.setObjectName("saveProfileCardTitle")
         source_layout.addWidget(source_heading)
         source_note = QLabel(
-            _tr("Choose a new empty save or import an existing .sl2 file. Imports are "
-            "copied as ER0000.sl2; a matching .bak is copied as ER0000.sl2.bak. "
-            "The source is left unchanged. Close Elden Ring before importing."),
+            _tr("Choose a new empty save or import an existing one: a vanilla .sl2 or "
+            "a Seamless Co-op .co2. Imports are copied as ER0000 with the same "
+            "extension, with their .bak when there is one. The source is left "
+            "unchanged. Close Elden Ring before importing."),
             source_group,
         )
         source_note.setObjectName("saveProfileSourceNote")
@@ -3094,7 +3098,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_combo.setMinimumContentsLength(34)
         source_combo.view().setMinimumWidth(480)
         try:
-            sources = self._create_instance_save_sources()
+            sources = self._create_instance_save_sources((".sl2", ".co2"))
         except (OSError, RuntimeError, ValueError):
             sources = []
         for label, source_path, relative_path in sources:

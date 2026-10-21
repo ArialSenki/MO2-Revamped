@@ -2863,6 +2863,14 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
 
 {error}</translation>
     </message>
+    <message>
+      <source>Choose a new empty save or import an existing one: a vanilla .sl2 or a Seamless Co-op .co2. Imports are copied as ER0000 with the same extension, with their .bak when there is one. The source is left unchanged. Close Elden Ring before importing.</source>
+      <translation>Wähle einen neuen leeren Spielstand oder importiere einen vorhandenen: ein normales .sl2 oder ein .co2 von Seamless Co-op. Importe werden als ER0000 mit derselben Endung kopiert, mit ihrer .bak, falls vorhanden. Die Quelle bleibt unverändert. Schließe Elden Ring vor dem Import.</translation>
+    </message>
+    <message>
+      <source>The selected save is no longer available: {path}</source>
+      <translation>Der gewählte Spielstand ist nicht mehr verfügbar: {path}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
