@@ -1,5 +1,6 @@
 #include "instancemanagerdialog.h"
 #include "fluentpanels.h"
+#include "menuutils.h"
 #include "createinstancedialog.h"
 #include "envshortcut.h"
 #include "filesystemutilities.h"
@@ -17,7 +18,6 @@
 #include <utility.h>
 
 #include <QActionGroup>
-#include <QClipboard>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGuiApplication>
@@ -73,7 +73,6 @@ constexpr char16_t PlayGlyph     = 0xE768;
 constexpr char16_t DocumentOpenGlyph = 0xE8E5;  // OpenFile
 constexpr char16_t TagGlyph      = 0xE8EC;
 constexpr char16_t NoteGlyph     = 0xE70B;  // QuickNote
-constexpr char16_t CopyPathGlyph = 0xE77F;  // Paste, the clipboard
 
 using FluentPanels::CaptionRole;
 using FluentPanels::ElidedLabel;
@@ -698,21 +697,22 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
   QMenu menu(this);
   auto add = [&](char16_t glyph, const QString& text, const QWidget* twin, auto slot,
                  const QKeySequence& keys = {}) {
-    auto* action = menu.addAction(FluentIcons::glyph(glyph), text, this, slot);
+    // the key shows at the menu's right edge; the dialog's own shortcut
+    // handles it, a second one on the action would make both ambiguous
+    const QString label =
+        keys.isEmpty() ? text
+                       : text + QLatin1Char('	') + keys.toString(QKeySequence::NativeText);
+    auto* action = menu.addAction(FluentIcons::glyph(glyph), label, this, slot);
     action->setEnabled(twin == nullptr || twin->isEnabled());
     action->setVisible(twin == nullptr || !twin->isHidden());
-    if (!keys.isEmpty()) {
-      action->setShortcut(keys);
-      action->setShortcutVisibleInContextMenu(true);
-    }
     return action;
   };
   add(PlayGlyph, m_switch->text(), m_switch, &InstanceManagerDialog::openSelectedInstance,
       QKeySequence(Qt::Key_Enter));
   menu.addSeparator();
-  add(RenameGlyph, tr("Rename"), m_rename, &InstanceManagerDialog::rename,
+  add(RenameGlyph, tr("Rename…"), m_rename, &InstanceManagerDialog::rename,
       QKeySequence(Qt::Key_F2));
-  add(CopyGlyph, tr("Duplicate"), m_duplicate, &InstanceManagerDialog::duplicateInstance,
+  add(CopyGlyph, tr("Duplicate…"), m_duplicate, &InstanceManagerDialog::duplicateInstance,
       QKeySequence(Qt::CTRL | Qt::Key_D));
   add(PinGlyph, m_shortcut->text(), m_shortcut, &InstanceManagerDialog::toggleShortcut);
   add(TagGlyph, tr("Move to group\u2026"), nullptr, &InstanceManagerDialog::changeGroup);
@@ -720,7 +720,7 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
   menu.addSeparator();
 
   // every folder of the instance, as the main window's Open folder lists them
-  auto* folders = menu.addMenu(FluentIcons::glyph(FolderGlyph), tr("Open folder"));
+  auto* folders = menu.addMenu(menuGlyph(MenuGlyphs::Folder), tr("Open folder"));
   {
     const Settings settings(i->iniPath());
     auto addFolder = [&](const QString& text, const QString& path) {
@@ -739,13 +739,12 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
     folders->addSeparator();
     folders->addAction(tr("ModOrganizer.ini"), this, &InstanceManagerDialog::openINI);
   }
-  add(CopyPathGlyph, tr("Copy folder path"), nullptr, [this] {
-    if (const auto* i = singleSelection()) {
-      QGuiApplication::clipboard()->setText(QDir::toNativeSeparators(i->directory()));
-    }
-  });
+  // the same Copy submenu as the other lists
+  addCopyMenu(&menu, {{tr("Name"), i->displayName()},
+                      {tr("Folder path"), QDir::toNativeSeparators(i->directory())},
+                      {tr("ModOrganizer.ini"), QDir::toNativeSeparators(i->iniPath())}});
   menu.addSeparator();
-  add(DeleteGlyph, tr("Delete instance"), m_delete, &InstanceManagerDialog::deleteInstance,
+  add(DeleteGlyph, tr("Delete instance…"), m_delete, &InstanceManagerDialog::deleteInstance,
       QKeySequence(Qt::Key_Delete));
 
   FluentIcons::apply(&menu);
