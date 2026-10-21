@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import stat
+import subprocess
 import tempfile
 import traceback
 import uuid
@@ -524,6 +525,52 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         return routes, current_id
     @staticmethod
+    def _transfer_blocked_reason() -> str:
+        try:
+            result = subprocess.run(
+                ["tasklist", "/FI", "IMAGENAME eq eldenring.exe", "/FO", "CSV", "/NH"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=5,
+                check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            running = result.returncode != 0 or any(
+                line.lstrip().casefold().startswith('"eldenring.exe"')
+                for line in result.stdout.splitlines()
+            )
+        except (OSError, subprocess.SubprocessError):
+            running = True
+        if running:
+            return _tr("Elden Ring is running, or MO2 could not confirm that it is "
+                       "closed. Close the game and try again; nothing was copied.")
+
+        appdata = os.environ.get("APPDATA")
+        recovery = Path(appdata) / ".MO2RevampedSaveRecovery" if appdata else None
+        try:
+            # a session still hiding account folders is pending; one that only
+            # kept unrouted output for review is not
+            pending = recovery is not None and recovery.is_dir() and any(
+                session.is_dir()
+                and any(
+                    child.name not in ("unrouted-global", "session.json")
+                    for child in session.iterdir()
+                )
+                for instance in recovery.iterdir()
+                if instance.is_dir()
+                for session in instance.iterdir()
+            )
+        except OSError:
+            pending = True
+        if pending:
+            return _tr("The Steam saves of an earlier launch are still waiting to be "
+                       "restored. Start MO2 again with Elden Ring closed so it can "
+                       "restore them, then copy the save; nothing was copied.")
+        return ""
+
+    @staticmethod
     def _is_reparse_point(path: Path) -> bool:
         try:
             item_stat = os.lstat(path)
@@ -535,7 +582,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         ) or stat.S_ISLNK(item_stat.st_mode)
 
     @classmethod
-    def _list_transferable_saves(cls, root: Path) -> list[Path]:
+    def _list_transferable_saves(
+        cls, root: Path, suffixes: tuple[str, ...] = (".sl2",)
+    ) -> list[Path]:
         if not root.is_dir():
             return []
 
@@ -549,7 +598,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if not cls._is_reparse_point(current_path / name)
             ]
             for filename in filenames:
-                if Path(filename).suffix.casefold() != ".sl2":
+                if Path(filename).suffix.casefold() not in suffixes:
                     continue
                 save_path = current_path / filename
                 if cls._is_reparse_point(save_path):
@@ -864,9 +913,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             "S",
         )
         intro = QLabel(
-            _tr("Copy one .sl2 save between storage routes. "
-            "The selected MO2 profile is {profile}. Its account folder is preserved, "
-            "and the copy is named ER0000.sl2 at the destination.").format(profile=profile_name),
+            _tr("Copy one save between storage routes: a vanilla .sl2 or a Seamless "
+            "Co-op .co2. The selected MO2 profile is {profile}. Its account folder is "
+            "preserved, and the copy is named ER0000 at the destination with the "
+            "same extension.").format(profile=profile_name),
             header,
         )
         intro.setObjectName("saveTransferSubtitle")
@@ -1003,7 +1053,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
 
             save_list.clear()
-            files = self._list_transferable_saves(source_root)
+            files = self._list_transferable_saves(source_root, (".sl2", ".co2"))
             for save_path in files:
                 try:
                     relative_path = save_path.relative_to(source_root)
@@ -1028,7 +1078,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     _tr("Source and destination are the same folder. Nothing will be copied.")
                 )
             elif not files:
-                status_label.setText(_tr("No .sl2 save files were found in this source folder."))
+                status_label.setText(_tr("No .sl2 or .co2 save files were found in this source folder."))
             else:
                 status_label.setText(
                     _tr("{count} save file(s) found. Select exactly one file to copy.").format(count=len(files))
@@ -1045,11 +1095,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return
 
             source_path = Path(item.data(Qt.ItemDataRole.UserRole))
-            if source_path.suffix.casefold() != ".sl2" or self._is_reparse_point(source_path):
+            if source_path.suffix.casefold() not in (".sl2", ".co2") or self._is_reparse_point(
+                source_path
+            ):
                 self._show_notice(
                     dialog,
                     _tr("Invalid save file"),
-                    _tr("Choose a regular .sl2 save file."),
+                    _tr("Choose a regular .sl2 or .co2 save file."),
                     "warning",
                 )
                 return
@@ -1067,7 +1119,16 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
                 return
 
-            destination_relative_path = relative_path.parent / "ER0000.sl2"
+            # a running game, or Steam saves still hidden by an unfinished
+            # launch, would undo or misplace the copy
+            busy_reason = self._transfer_blocked_reason()
+            if busy_reason:
+                self._show_notice(dialog, _tr("Save not copied"), busy_reason, "warning")
+                return
+
+            destination_relative_path = (
+                relative_path.parent / f"ER0000{source_path_resolved.suffix.lower()}"
+            )
             destination_path = destination_root_resolved / destination_relative_path
             if source_path_resolved == destination_path.resolve():
                 self._show_notice(
@@ -1113,7 +1174,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 _tr("{prompt}\n\nFrom:\n{source}\n\n"
                 "To:\n{destination}\n\n"
                 "Close Elden Ring before copying. This operation copies only "
-                "the selected .sl2 file.").format(
+                "the selected save and its .bak, if it has one.").format(
                     prompt=prompt, source=source_path_resolved, destination=destination_path
                 ),
                 _tr("Replace save") if destination_path.exists() else _tr("Copy save"),
@@ -1188,6 +1249,36 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     except OSError:
                         pass
 
+            # the destination's old .bak belongs to the replaced character: it
+            # goes to the backups, and the source's .bak comes along
+            bak_note = ""
+            try:
+                destination_bak = destination_path.with_name(destination_path.name + ".bak")
+                source_bak = source_path_resolved.with_name(source_path_resolved.name + ".bak")
+                bak_is_plain = not os.path.lexists(destination_bak) or (
+                    destination_bak.is_file() and not self._is_reparse_point(destination_bak)
+                )
+                if bak_is_plain and destination_bak.is_file():
+                    bak_backup = (
+                        backup_path.with_name(backup_path.name + ".bak")
+                        if backup_path is not None
+                        else destination_root_resolved.parent
+                        / (destination_root_resolved.name + " Backups")
+                        / destination_relative_path.parent
+                        / f"ER0000.{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}{destination_path.suffix}.bak"
+                    )
+                    bak_backup.parent.mkdir(parents=True, exist_ok=True)
+                    os.replace(destination_bak, bak_backup)
+                if (
+                    bak_is_plain
+                    and source_bak.is_file()
+                    and not self._is_reparse_point(source_bak)
+                ):
+                    shutil.copy2(source_bak, destination_bak)
+            except OSError as error:
+                bak_note = _tr("\n\nThe save was copied, but its .bak could not be "
+                               "updated: {error}").format(error=error)
+
             backup_note = (
                 _tr("\n\nThe previous destination was moved to:\n{path}").format(path=backup_path)
                 if backup_path is not None
@@ -1196,7 +1287,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             self._show_notice(
                 dialog,
                 _tr("Save copied"),
-                _tr("Copied and prepared the game save:\n{path}").format(path=destination_path) + backup_note,
+                _tr("Copied and prepared the game save:\n{path}").format(path=destination_path)
+                + backup_note
+                + bak_note,
                 "success",
             )
             refresh_transfer_choices()

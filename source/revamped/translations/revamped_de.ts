@@ -2677,6 +2677,58 @@ Wiederherstellungsfehler: {error}</translation>
       <source>&lt;b&gt;Profile-isolated save selected.&lt;/b&gt; Game save profile: {save}.</source>
       <translation>&lt;b&gt;Profilgetrennter Spielstand ausgewählt.&lt;/b&gt; Speicherprofil: {save}.</translation>
     </message>
+    <message>
+      <source>Elden Ring is running, or MO2 could not confirm that it is closed. Close the game and try again; nothing was copied.</source>
+      <translation>Elden Ring läuft, oder MO2 konnte nicht bestätigen, dass es geschlossen ist. Schließe das Spiel und versuche es erneut; es wurde nichts kopiert.</translation>
+    </message>
+    <message>
+      <source>The Steam saves of an earlier launch are still waiting to be restored. Start MO2 again with Elden Ring closed so it can restore them, then copy the save; nothing was copied.</source>
+      <translation>Die Steam-Spielstände eines früheren Starts warten noch auf ihre Wiederherstellung. Starte MO2 bei geschlossenem Elden Ring neu, damit es sie wiederherstellt, und kopiere dann den Spielstand; es wurde nichts kopiert.</translation>
+    </message>
+    <message>
+      <source>Copy one save between storage routes: a vanilla .sl2 or a Seamless Co-op .co2. The selected MO2 profile is {profile}. Its account folder is preserved, and the copy is named ER0000 at the destination with the same extension.</source>
+      <translation>Kopiert einen Spielstand zwischen Speicherrouten: ein normales .sl2 oder ein .co2 von Seamless Co-op. Das gewählte MO2-Profil ist {profile}. Sein Kontoordner bleibt erhalten, und die Kopie heißt am Ziel ER0000 mit derselben Endung.</translation>
+    </message>
+    <message>
+      <source>Choose a regular .sl2 or .co2 save file.</source>
+      <translation>Wähle eine normale .sl2- oder .co2-Spielstanddatei.</translation>
+    </message>
+    <message>
+      <source>Save not copied</source>
+      <translation>Spielstand nicht kopiert</translation>
+    </message>
+    <message>
+      <source>No .sl2 or .co2 save files were found in this source folder.</source>
+      <translation>In diesem Quellordner wurden keine .sl2- oder .co2-Spielstände gefunden.</translation>
+    </message>
+    <message>
+      <source>{prompt}
+
+From:
+{source}
+
+To:
+{destination}
+
+Close Elden Ring before copying. This operation copies only the selected save and its .bak, if it has one.</source>
+      <translation>{prompt}
+
+Von:
+{source}
+
+Nach:
+{destination}
+
+Schließe Elden Ring vor dem Kopieren. Kopiert wird nur der gewählte Spielstand und seine .bak, falls vorhanden.</translation>
+    </message>
+    <message>
+      <source>
+
+The save was copied, but its .bak could not be updated: {error}</source>
+      <translation>
+
+Der Spielstand wurde kopiert, aber seine .bak konnte nicht aktualisiert werden: {error}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
