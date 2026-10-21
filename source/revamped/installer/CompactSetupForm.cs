@@ -950,7 +950,7 @@ namespace Mo2RevampedSetup
         {
             ActionBox.Items.Clear();
 #if ELDENRING_ONLY_INSTALLER
-            ActionBox.Items.Add(new ModeChoice(SetupMode.EldenRingPortable, "Instalar Elden Ring aislado", "Copia separada de MO2, dedicada a Elden Ring."));
+            ActionBox.Items.Add(new ModeChoice(SetupMode.EldenRingPortable, "Instalar Elden Ring y Nightreign aislado", "Copia separada de MO2, dedicada a Elden Ring y Nightreign."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Update, "Actualizar instalación aislada", "Actualiza solo la copia aislada y conserva sus datos."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Restore, "Restaurar copia anterior", "Recupera la copia previa de una actualización."));
             ActionBox.Items.Add(new ModeChoice(SetupMode.Uninstall, "Desinstalar instalación aislada", "Retira esta copia; puedes conservar o borrar sus datos."));
@@ -1398,7 +1398,7 @@ namespace Mo2RevampedSetup
             switch (mode)
             {
                 case SetupMode.Update: return "Actualizar MO2 Revamped";
-                case SetupMode.EldenRingPortable: return "Instalar MO2 para Elden Ring";
+                case SetupMode.EldenRingPortable: return "Instalar MO2 para Elden Ring y Nightreign";
                 case SetupMode.Migrate: return "Instalar y copiar datos";
                 case SetupMode.Restore: return "Restaurar la versión anterior";
                 case SetupMode.Uninstall: return "Desinstalar MO2";
@@ -2032,7 +2032,7 @@ namespace Mo2RevampedSetup
                 title = InstallerText.T("Desinstalar MO2 Revamped");
                 body = InstallerText.T("Se desinstalará esta instalación de MO2 Revamped:") + "\n\n" + target +
                     (RemoveAllContentsCheck != null && RemoveAllContentsCheck.Checked
-                        ? InstallerText.T("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes y archivos añadidos. También se quitará la carpeta seleccionada y las contenedoras que queden vacías, hasta llegar a una carpeta con contenido o protegida por Windows. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer.")
+                        ? InstallerText.T("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes, guardados compartidos, copias de seguridad de guardados y archivos añadidos. También se quitará la carpeta seleccionada y las contenedoras que queden vacías, hasta llegar a una carpeta con contenido o protegida por Windows. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer.")
                         : InstallerText.T("\n\nSe quitarán las carpetas de componentes reconocidas y se conservarán los datos de usuario, como perfiles, mods, descargas, overwrite y ajustes. Los demás archivos fuera de esas carpetas también se mantienen. ") + (trackedInstall ? InstallerText.T("Si hay una copia previa, se restaurará la versión original.") : InstallerText.T("Los datos de usuario se mantendrán en su ubicación actual.")));
                 if (RemoveRevampedAppDataCheck != null && RemoveRevampedAppDataCheck.Checked)
                     body += String.Format(
@@ -2057,9 +2057,9 @@ namespace Mo2RevampedSetup
             }
             else if (mode == SetupMode.EldenRingPortable)
             {
-                title = InstallerText.T("Instalación portable solo para Elden Ring");
+                title = InstallerText.T("Instalación portable solo para Elden Ring y Nightreign");
                 body = InstallerText.T("La edición portable aislada de MO2 se instalará en:") + "\n\n" + target +
-                    InstallerText.T("\n\nSolo incluirá soporte para Elden Ring y no leerá ni modificará las instancias globales de otras copias de MO2. ¿Continuar?");
+                    InstallerText.T("\n\nSolo incluirá soporte para Elden Ring y Nightreign y no leerá ni modificará las instancias globales de otras copias de MO2. ¿Continuar?");
             }
             else
             {

@@ -17,7 +17,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$version = '1.0.1'
+$version = '1.0.2'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
 $runtimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory).TrimEnd('\')
 $organizerPath = [System.IO.Path]::GetFullPath($OrganizerExecutable)
@@ -166,7 +166,8 @@ function Build-QtInstallerRuntime {
             "-DCMAKE_PREFIX_PATH=$qtPrefix" `
             "-DCMAKE_MAKE_PROGRAM=$ninja" `
             "-DCMAKE_CXX_COMPILER=$compiler" `
-            '-DCMAKE_BUILD_TYPE=Release'
+            '-DCMAKE_BUILD_TYPE=Release' `
+            "-DMO2R_VERSION=$version"
         if ($LASTEXITCODE -ne 0) { throw 'CMake configuration for the Qt installer failed.' }
         & $cmake --build $buildPath --config Release
         if ($LASTEXITCODE -ne 0) { throw 'Building the Qt installer interface failed.' }

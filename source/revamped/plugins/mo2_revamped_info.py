@@ -665,7 +665,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             (
                 "MO2 Revamped diagnostic report",
                 f"Created UTC: {datetime.now(timezone.utc).isoformat()}",
-                "Package: MO2 Revamped 1.0.1 (based on MO2 2.5.2)",
+                "Package: MO2 Revamped 1.0.2 (based on MO2 2.5.2)",
                 "Base: Mod Organizer 2.5.2",
                 "USVFS: 0.5.7.2",
                 f"Windows: {platform.platform()}",

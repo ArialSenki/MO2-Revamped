@@ -56,6 +56,12 @@ namespace Mo2RevampedSetup
         public string OriginalSha256 { get; set; }
         public bool IsPortableMarker { get; set; }
         public bool IsUserData { get; set; }
+        // Installed by an earlier MO2 Revamped setup (kept across updates):
+        // uninstalling removes it instead of putting the older version back.
+        public bool OwnedByRevamped { get; set; }
+        // A file of the previous version that the update removed; Restore
+        // puts it back from the update's backup.
+        public bool RemovedByUpdate { get; set; }
     }
 
     internal sealed class SetupRequest
@@ -173,7 +179,7 @@ namespace Mo2RevampedSetup
                 lock (Sync) CurrentLog = Path.Combine(root, "setup-" + suffix + ".log");
 
                 Info("Installer session started.");
-                Info("Product: MO2 Revamped setup 1.0.1; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
+                Info("Product: MO2 Revamped setup 1.0.2; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
                     "; OS: " + Environment.OSVersion.VersionString +
                     "; .NET: " + Environment.Version +
                     "; 64-bit process: " + Environment.Is64BitProcess + ".");
@@ -358,10 +364,10 @@ namespace Mo2RevampedSetup
 #if ELDENRING_ONLY_INSTALLER
             if (request.Mode != SetupMode.EldenRingPortable && request.Mode != SetupMode.Update &&
                 request.Mode != SetupMode.Restore && request.Mode != SetupMode.Uninstall)
-                throw new InvalidOperationException(InstallerText.T("Este instalador solo administra la edición portable aislada de Elden Ring."));
+                throw new InvalidOperationException(InstallerText.T("Este instalador solo administra la edición portable aislada de Elden Ring y Nightreign."));
             if (request.Mode != SetupMode.EldenRingPortable &&
                 !IsEldenRingOnlyInstallation(request.TargetDirectory))
-                throw new InvalidOperationException(InstallerText.T("El instalador de Elden Ring solo puede actualizar, restaurar o quitar una instalación marcada como aislada para Elden Ring."));
+                throw new InvalidOperationException(InstallerText.T("El instalador de Elden Ring y Nightreign solo puede actualizar, restaurar o quitar una instalación marcada como aislada para Elden Ring y Nightreign."));
 #endif
             if (request.Mode == SetupMode.Update && !IsRevampedInstallation(request.TargetDirectory))
                 throw new InvalidOperationException(InstallerText.T("La actualización solo se admite en una instalación identificada de MO2 Revamped. No se modificó la carpeta seleccionada."));
@@ -398,18 +404,56 @@ namespace Mo2RevampedSetup
             string backupRoot = BackupRoot(target);
             string backup = Path.Combine(backupRoot, DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
             List<InstallFileState> states = new List<InstallFileState>();
+            // what the earlier MO2 Revamped setup installed: those files stay
+            // Revamped's own after this update
+            InstallState earlierState = request.Mode == SetupMode.Update ? LoadState(target) : null;
+            Dictionary<string, InstallFileState> earlierFiles = new Dictionary<string, InstallFileState>(StringComparer.OrdinalIgnoreCase);
+            if (earlierState != null && earlierState.Files != null)
+                foreach (InstallFileState earlier in earlierState.Files)
+                    if (!String.IsNullOrEmpty(earlier.Path) && !earlierFiles.ContainsKey(earlier.Path)) earlierFiles.Add(earlier.Path, earlier);
+            HashSet<string> payloadPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (PayloadFile file in manifest.Files)
             {
                 string destination = SafeCombine(target, file.Path);
                 bool existed = File.Exists(destination);
                 if (Directory.Exists(destination))
                     throw new InvalidOperationException(InstallerText.T("La instalación contiene una carpeta donde debería ir un archivo del programa: ") + file.Path);
+                InstallFileState earlier;
+                bool owned = earlierFiles.TryGetValue(file.Path, out earlier) &&
+                    (!earlier.ExistedBefore || earlier.OwnedByRevamped) && !earlier.IsUserData;
+                payloadPaths.Add(file.Path);
                 states.Add(new InstallFileState
                 {
                     Path = file.Path,
                     ExistedBefore = existed,
                     InstalledSha256 = file.Sha256,
-                    OriginalSha256 = existed ? HashFile(destination) : null
+                    OriginalSha256 = existed ? HashFile(destination) : null,
+                    OwnedByRevamped = owned
+                });
+            }
+            // program files of the previous version that this one no longer
+            // ships: removed (an old plugin would keep loading), backed up so
+            // Restore can bring them back. Only unchanged ones are removed.
+            List<string> staleFiles = new List<string>();
+            foreach (InstallFileState earlier in earlierFiles.Values)
+            {
+                if (payloadPaths.Contains(earlier.Path) || earlier.IsUserData || earlier.IsPortableMarker ||
+                    !(!earlier.ExistedBefore || earlier.OwnedByRevamped)) continue;
+                string stale;
+                try { stale = SafeCombine(target, earlier.Path); }
+                catch { continue; }
+                if (!File.Exists(stale)) continue;
+                string staleHash = HashFile(stale);
+                if (!HashEquals(staleHash, earlier.InstalledSha256)) continue;
+                staleFiles.Add(earlier.Path);
+                states.Add(new InstallFileState
+                {
+                    Path = earlier.Path,
+                    ExistedBefore = true,
+                    InstalledSha256 = null,
+                    OriginalSha256 = staleHash,
+                    OwnedByRevamped = true,
+                    RemovedByUpdate = true
                 });
             }
 
@@ -513,6 +557,14 @@ namespace Mo2RevampedSetup
                     index++;
                     Report(worker, 10 + (int)(65.0 * index / manifest.Files.Count), String.Format(InstallerText.T("Instalando componentes ({0} / {1})…"), index, manifest.Files.Count));
                 }
+                // the previous version's files this one dropped (backed up above)
+                foreach (string stalePath in staleFiles)
+                {
+                    string stale = SafeCombine(target, stalePath);
+                    if (!File.Exists(stale)) continue;
+                    File.Delete(stale);
+                    RemoveEmptyParents(Path.GetDirectoryName(stale), target);
+                }
 
                 int dataIndex = 0;
                 foreach (CopyEntry copy in dataCopies)
@@ -582,11 +634,11 @@ namespace Mo2RevampedSetup
             if (request.Mode == SetupMode.Migrate)
                 details.Append(InstallerText.T("Origen conservado: ")).Append(request.SourceDataDirectory).Append(Environment.NewLine);
             if (request.Mode == SetupMode.Update && eldenRingOnly)
-                details.Append(InstallerText.T("Se conservó la edición portable aislada de Elden Ring y sus datos locales."));
+                details.Append(InstallerText.T("Se conservó la edición portable aislada de Elden Ring y Nightreign y sus datos locales."));
             else if (request.Mode == SetupMode.Update)
                 details.Append(InstallerText.T("Se mantuvo la configuración de instancia y datos que ya tenía MO2."));
             else if (request.Mode == SetupMode.EldenRingPortable)
-                details.Append(InstallerText.T("MO2 se configuró como portable y aislado para Elden Ring; sus datos y preferencias se guardan junto a esta copia, sin consultar las instancias globales de otras instalaciones."));
+                details.Append(InstallerText.T("MO2 se configuró como portable y aislado para Elden Ring y Nightreign; sus datos y preferencias se guardan junto a esta copia, sin consultar las instancias globales de otras instalaciones."));
             else if (request.Mode == SetupMode.Migrate || request.InstanceKind == InstanceKind.Portable)
                 details.Append(InstallerText.T("MO2 se configuró como portable."));
             else
@@ -595,7 +647,9 @@ namespace Mo2RevampedSetup
                 details.Append(Environment.NewLine).Append(uninstallWarning).Append(InstallerText.T(" El asistente de instalación todavía permite restaurar esta operación."));
             return new OperationResult
             {
-                Success = String.IsNullOrEmpty(uninstallWarning),
+                // MO2 is installed and works; only the Windows entry is missing, so
+                // the window must not offer to retry (the folder is no longer empty)
+                Success = true,
                 Message = !String.IsNullOrEmpty(uninstallWarning) ? "La instalación terminó, pero sin entrada de desinstalación." :
                     request.Mode == SetupMode.Update ? "Se actualizaron los archivos del programa." :
                     request.Mode == SetupMode.Migrate ? "La instalación nueva recibió los datos seleccionados." : "La instalación nueva está lista.",
@@ -693,7 +747,7 @@ namespace Mo2RevampedSetup
                 throw new InvalidOperationException(InstallerText.T("La restauración o desinstalación solo se admite en una instalación identificada de MO2 Revamped. Las instalaciones originales de MO2 no se modifican."));
 #if ELDENRING_ONLY_INSTALLER
             if (!IsEldenRingOnlyInstallation(target))
-                throw new InvalidOperationException(InstallerText.T("El instalador aislado solo administra una instalación portable marcada para Elden Ring."));
+                throw new InvalidOperationException(InstallerText.T("El instalador aislado solo administra una instalación portable marcada para Elden Ring y Nightreign."));
 #endif
             InstallState state = LoadState(target);
             if (state == null || String.Equals(state.Status, "Restored", StringComparison.OrdinalIgnoreCase) ||
@@ -936,6 +990,24 @@ namespace Mo2RevampedSetup
                         {
                             Directory.Delete(full, false);
                         }
+                        else if (UserExtensibleDirectories.Contains(name))
+                        {
+                            // users add their own plugins and themes here: without an
+                            // install record only the files this setup ships are removed,
+                            // and with no package list at hand the folder is kept
+                            HashSet<string> known = KnownPayloadPaths();
+                            if (known == null) continue;
+                            foreach (string file in Directory.GetFiles(full, "*", SearchOption.AllDirectories))
+                            {
+                                string relative = file.Substring(target.Length).TrimStart('\\', '/');
+                                if (!known.Contains(relative.Replace('\\', '/')) || PathsEqual(file, runningExecutable)) continue;
+                                FileAttributes fileAttributes = File.GetAttributes(file);
+                                if ((fileAttributes & FileAttributes.ReadOnly) != 0)
+                                    File.SetAttributes(file, fileAttributes & ~FileAttributes.ReadOnly);
+                                File.Delete(file);
+                                RemoveEmptyParents(Path.GetDirectoryName(file), target);
+                            }
+                        }
                         else
                         {
                             DeleteDirectoryContents(full, runningExecutable, notes);
@@ -962,6 +1034,30 @@ namespace Mo2RevampedSetup
                 Report(worker, Math.Min(80, 10 + index * 70 / Math.Max(1, entries.Length)), InstallerText.T("Quitando archivos del programa…"));
             }
             return notes;
+        }
+
+        private static readonly HashSet<string> UserExtensibleDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "plugins", "stylesheets"
+        };
+
+        // every file path this setup's packages contain (forward slashes), or
+        // null when the running copy carries no package list (the uninstallers)
+        private static HashSet<string> KnownPayloadPaths()
+        {
+            HashSet<string> paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (bool eldenRingOnly in new bool[] { false, true })
+            {
+                try
+                {
+                    PayloadManifest manifest = ReadManifest(eldenRingOnly);
+                    if (manifest == null || manifest.Files == null) continue;
+                    foreach (PayloadFile file in manifest.Files)
+                        if (!String.IsNullOrEmpty(file.Path)) paths.Add(file.Path.Replace('\\', '/'));
+                }
+                catch { }
+            }
+            return paths.Count == 0 ? null : paths;
         }
 
         private static bool IsKnownMo2ProgramFile(string name)
@@ -1070,7 +1166,8 @@ namespace Mo2RevampedSetup
                     {
                         try
                         {
-                            if (!file.ExistedBefore || !PathsEqual(SafeCombine(target, file.Path), runningExecutable)) continue;
+                            if (!file.ExistedBefore || file.OwnedByRevamped ||
+                                !PathsEqual(SafeCombine(target, file.Path), runningExecutable)) continue;
                             string backup = SafeCombine(state.BackupDirectory, file.Path);
                             if (File.Exists(backup)) restoreRunningUninstaller = backup;
                             break;
@@ -1093,6 +1190,9 @@ namespace Mo2RevampedSetup
                     continue;
                 }
                 if (preserveUserData && (file.IsUserData || IsMigrationDataPath(file.Path))) continue;
+                // uninstalling removes what an earlier Revamped setup installed,
+                // instead of putting that older version back from an update's backup
+                bool existedBefore = file.ExistedBefore && !(uninstallMode && file.OwnedByRevamped);
                 string destination;
                 try { destination = SafeCombine(target, file.Path); }
                 catch { notes.Add(InstallerText.T("ruta ignorada: ") + file.Path); continue; }
@@ -1112,7 +1212,7 @@ namespace Mo2RevampedSetup
                         continue;
                     }
                     string currentHash = exists ? HashFile(destination) : null;
-                    if (exists && !String.IsNullOrEmpty(file.OriginalSha256) && HashEquals(currentHash, file.OriginalSha256))
+                    if (existedBefore && exists && !String.IsNullOrEmpty(file.OriginalSha256) && HashEquals(currentHash, file.OriginalSha256))
                         continue;
                     if (exists && !HashEquals(currentHash, file.InstalledSha256))
                     {
@@ -1125,9 +1225,9 @@ namespace Mo2RevampedSetup
                         notes.Add(file.Path + InstallerText.T(" (modificado; se conservó)"));
                         continue;
                     }
-                    if (!exists && !file.ExistedBefore) continue;
+                    if (!exists && !existedBefore) continue;
 
-                    if (file.ExistedBefore)
+                    if (existedBefore)
                     {
                         if (String.IsNullOrEmpty(state.BackupDirectory))
                         {
@@ -1209,7 +1309,11 @@ namespace Mo2RevampedSetup
             string[] files = new string[] { "ModOrganizer.ini", "categories.dat", "nexuscatmap.dat" };
             foreach (string name in files)
                 if (File.Exists(Path.Combine(target, name))) return true;
-            string[] directories = new string[] { "profiles", "mods", "downloads", "overwrite", "cache" };
+            // the Elden Ring / Nightreign plugins keep shared saves and save
+            // backups here: they can be a save's only copy
+            string[] directories = new string[] { "profiles", "mods", "downloads", "overwrite", "cache",
+                "Elden Ring Shared Saves", "Elden Ring Global Save Backups",
+                "Nightreign Shared Saves", "Nightreign Global Save Backups" };
             foreach (string name in directories)
             {
                 string path = Path.Combine(target, name);
@@ -1775,6 +1879,19 @@ namespace Mo2RevampedSetup
         private static void EnsureMo2Closed(string target, bool forceClose, BackgroundWorker worker)
         {
             string expected = Path.GetFullPath(Path.Combine(target, "ModOrganizer.exe"));
+            // a game started from this MO2 holds its files (usvfs) and, while it
+            // runs, the Steam saves MO2 set aside: it is never closed by setup
+            if (File.Exists(expected))
+            {
+                foreach (string game in new string[] { "eldenring", "nightreign" })
+                {
+                    Process[] running = Process.GetProcessesByName(game);
+                    bool found = running.Length > 0;
+                    foreach (Process process in running) process.Dispose();
+                    if (found)
+                        throw new InvalidOperationException(InstallerText.T("Elden Ring o Nightreign siguen abiertos. Ciérralos antes de continuar; al cerrar el juego, MO2 devuelve los guardados de Steam a su sitio."));
+                }
+            }
             List<Process> matches = FindMo2Processes(expected);
             if (matches.Count == 0) return;
             if (!forceClose)

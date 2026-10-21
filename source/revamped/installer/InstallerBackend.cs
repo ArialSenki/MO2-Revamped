@@ -467,15 +467,9 @@ namespace Mo2RevampedSetup
             Exception shellError;
             if (TryShellExecute(path, directory, out shellError)) return true;
             if (shellError != null) SetupDiagnostics.Error("The desktop shell could not start MO2 unelevated.", shellError);
-            try
-            {
-                using (Process.Start(new ProcessStartInfo(path) { WorkingDirectory = directory, UseShellExecute = false })) return true;
-            }
-            catch (Exception ex)
-            {
-                SetupDiagnostics.Error("MO2 could not be started after setup.", ex);
-                return false;
-            }
+            // no fallback: started from this elevated setup, MO2 and every game
+            // and mod it runs would run as administrator too
+            return false;
         }
 
         private static bool TryShellExecute(string path, string directory, out Exception error)
