@@ -2746,6 +2746,10 @@ class EldenRingMo2Game(BasicGame):
                     session_directory, Path(self.savesDirectory().absolutePath())
                 )
                 self._active_save_quarantine = None
+                qInfo(
+                    "Elden Ring MO2: the game closed; the Steam saves are back "
+                    "in their folder."
+                )
                 if not restored_cleanly:
                     QMessageBox.warning(
                         None,
