@@ -2723,7 +2723,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         config = configparser.ConfigParser(interpolation=None)
         config_path = profile_directory / cls.ConfigFilename
         try:
-            with config_path.open("r", encoding="utf-8") as stream:
+            with config_path.open("r", encoding="utf-8-sig") as stream:
                 config.read_file(stream)
         except FileNotFoundError:
             # A profile can be created before its first save-route setting.

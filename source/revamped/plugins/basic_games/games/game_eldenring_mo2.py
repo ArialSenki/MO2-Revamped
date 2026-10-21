@@ -1234,7 +1234,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
         config_path = profile_directory / cls.ConfigFilename
         config = configparser.ConfigParser(interpolation=None)
         try:
-            config.read(config_path, encoding="utf-8")
+            config.read(config_path, encoding="utf-8-sig")
             mode = config.get("Saves", "mode", fallback=cls.ProfileIsolated).strip().lower()
         except (OSError, UnicodeError, configparser.Error, ValueError):
             mode = cls.ProfileIsolated
@@ -1257,7 +1257,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 
         config = configparser.ConfigParser(interpolation=None)
         try:
-            config.read(profile_directory / cls.ConfigFilename, encoding="utf-8")
+            config.read(profile_directory / cls.ConfigFilename, encoding="utf-8-sig")
             profile_id = config.get("Saves", key, fallback="").strip().lower()
         except (OSError, UnicodeError, configparser.Error, ValueError):
             return ""
@@ -2602,7 +2602,7 @@ class EldenRingMo2Game(BasicGame):
     def _read_clear_overwrite_after_game(path: Path) -> bool:
         config = configparser.ConfigParser()
         try:
-            with path.open("r", encoding="utf-8") as stream:
+            with path.open("r", encoding="utf-8-sig") as stream:
                 config.read_file(stream)
             return config.getboolean("Cleanup", "clear_overwrite_after_game", fallback=False)
         except (OSError, UnicodeError, configparser.Error, ValueError):
@@ -2613,7 +2613,7 @@ class EldenRingMo2Game(BasicGame):
     def _read_skip_intro_logos(path: Path) -> bool:
         config = configparser.ConfigParser()
         try:
-            config.read(path, encoding="utf-8")
+            config.read(path, encoding="utf-8-sig")
             return config.getboolean("Startup", "skip_intro_logos", fallback=False)
         except (OSError, UnicodeError, configparser.Error, ValueError):
             return False
@@ -2623,7 +2623,7 @@ class EldenRingMo2Game(BasicGame):
     ) -> tuple[bool, bool, bool, bool, bool, int, int]:
         config = configparser.ConfigParser()
         try:
-            config.read(path, encoding="utf-8")
+            config.read(path, encoding="utf-8-sig")
             start_minimized = config.getboolean(
                 "Startup", "start_minimized", fallback=None
             )
@@ -2742,7 +2742,13 @@ class EldenRingMo2Game(BasicGame):
             profile_root = Path(profile.absolutePath()).resolve()
             profile_config = profile_root / self.ProfileLaunchConfig
             config = configparser.ConfigParser(interpolation=None)
-            config.read(profile_config, encoding="utf-8")
+            # a file that exists but cannot be read is reported, not taken
+            # as "no native profile"
+            try:
+                with profile_config.open("r", encoding="utf-8-sig") as stream:
+                    config.read_file(stream)
+            except FileNotFoundError:
+                return None
             section = "RevampedNativeProfile"
             if not config.has_section(section):
                 return None
@@ -2789,7 +2795,9 @@ class EldenRingMo2Game(BasicGame):
                         raise ValueError(
                             _tr("Native entry {0} has more than one initializer.").format(index)
                         )
-                    entry["initializer"] = {"function": value.strip()}
+                    # an empty value (a hand edit) means no initializer
+                    if value.strip():
+                        entry["initializer"] = {"function": value.strip()}
 
             natives = [natives_by_index[index] for index in sorted(natives_by_index)]
             if not natives:
@@ -2812,6 +2820,9 @@ class EldenRingMo2Game(BasicGame):
             entries = []
             declared_names: set[str] = set()
             declared_libraries: set[str] = set()
+            # (mod, DLL name) of entries switched off in the tool: the
+            # general DLL scan must not load them either
+            disabled_libraries: set[tuple[str, str]] = set()
             seen_routes: set[tuple[str, str]] = set()
             seen_virtual_paths: set[str] = set()
             scope_priorities: set[int] = set()
@@ -2848,6 +2859,12 @@ class EldenRingMo2Game(BasicGame):
                 if not isinstance(enabled, bool):
                     raise ValueError(_tr("A native profile entry's enabled value must be true or false."))
                 if not enabled:
+                    disabled_mod = str(native.get("mod_name") or mo2_mod_name).strip()
+                    disabled_route = str(native.get("path") or "").replace("\\", "/")
+                    if disabled_mod and disabled_route:
+                        disabled_libraries.add(
+                            (disabled_mod.casefold(), disabled_route.rsplit("/", 1)[-1].casefold())
+                        )
                     continue
 
                 native_mod_name = str(native.get("mod_name") or mo2_mod_name).strip()
@@ -3040,7 +3057,9 @@ class EldenRingMo2Game(BasicGame):
                     raise ValueError(
                         _tr("MO2 could not resolve the winning origin for '{0}': {1}").format(virtual_path, error)
                     ) from error
-                winner = min(
+                # the highest priority wins the file in MO2, as in the
+                # general DLL scan
+                winner = max(
                     (
                         name
                         for name in origins
@@ -3134,6 +3153,7 @@ class EldenRingMo2Game(BasicGame):
                 "entries": entries,
                 "declared_names": declared_names,
                 "declared_libraries": declared_libraries,
+                "disabled_libraries": disabled_libraries,
             }
         except (OSError, UnicodeError, configparser.Error, ValueError) as error:
             return {
@@ -3147,10 +3167,30 @@ class EldenRingMo2Game(BasicGame):
         """Apply the Revamped profile's declared native DLL order."""
         scope_root = profile_data.get("scope_root")
         declared_libraries = profile_data.get("declared_libraries", set())
-        if scope_root is None and not declared_libraries:
+        disabled_libraries = profile_data.get("disabled_libraries", set())
+        if scope_root is None and not declared_libraries and not disabled_libraries:
             return libraries
         scope_root = Path(scope_root) if scope_root is not None else None
         declared_names = profile_data.get("declared_names", set())
+        mod_list = self._organizer.modList()
+        active_mods = [
+            name
+            for name in mod_list.allModsByProfilePriority()
+            if mod_list.state(name) & mobase.ModState.ACTIVE
+        ]
+
+        def library_priority(library: Path) -> int:
+            for index, mod_name in enumerate(active_mods):
+                mod = mod_list.getMod(mod_name)
+                if mod is None:
+                    continue
+                try:
+                    library.relative_to(Path(mod.absolutePath()).resolve())
+                    return index
+                except (OSError, ValueError):
+                    continue
+            return len(active_mods)
+
         retained: list[Path] = []
         for library in libraries:
             library_path = Path(library)
@@ -3168,27 +3208,20 @@ class EldenRingMo2Game(BasicGame):
                 library_key = os.path.normcase(os.path.abspath(str(library_path)))
             if library_key in declared_libraries:
                 continue
+            if disabled_libraries:
+                owner = library_priority(library_path)
+                if owner < len(active_mods) and (
+                    active_mods[owner].casefold(),
+                    library_path.name.casefold(),
+                ) in disabled_libraries:
+                    qInfo(
+                        f"Elden Ring MO2: not loading '{library_path.name}' from "
+                        f"'{active_mods[owner]}'; it is switched off in the native profile."
+                    )
+                    continue
             retained.append(library_path)
 
-        mod_list = self._organizer.modList()
-        active_mods = [
-            name
-            for name in mod_list.allModsByProfilePriority()
-            if mod_list.state(name) & mobase.ModState.ACTIVE
-        ]
         scope_priority = int(profile_data.get("scope_priority", len(active_mods)))
-
-        def library_priority(library: Path) -> int:
-            for index, mod_name in enumerate(active_mods):
-                mod = mod_list.getMod(mod_name)
-                if mod is None:
-                    continue
-                try:
-                    library.relative_to(Path(mod.absolutePath()).resolve())
-                    return index
-                except (OSError, ValueError):
-                    continue
-            return len(active_mods)
 
         insertion = next(
             (
@@ -3483,6 +3516,26 @@ class EldenRingMo2Game(BasicGame):
         root_layout_libraries = (
             self._active_root_layout_dlls(active_mods) if native_loading else []
         )
+        if (
+            root_layout_libraries
+            and revamped_native_profile is not None
+            and not revamped_native_profile.get("error")
+        ):
+            # a root DLL listed in the native profile loads once, in its order
+            declared = revamped_native_profile.get("declared_libraries", set())
+            disabled = revamped_native_profile.get("disabled_libraries", set())
+
+            def queued_elsewhere(mod_name: str, library: Path) -> bool:
+                return (
+                    os.path.normcase(str(library)) in declared
+                    or (mod_name.casefold(), library.name.casefold()) in disabled
+                )
+
+            root_layout_libraries = [
+                item
+                for item in root_layout_libraries
+                if not queued_elsewhere(item[0], Path(item[2]))
+            ]
         if not native_loading:
             qInfo("Elden Ring MO2: native DLL loading is disabled in plugin settings.")
         if not libraries and not root_layout_libraries and active_mods:
@@ -3565,6 +3618,15 @@ class EldenRingMo2Game(BasicGame):
         forced_loads.extend(mod_forced_loads)
         return forced_loads
 
+    @staticmethod
+    def _is_game_runtime_dll(name: str) -> bool:
+        # libraries the game itself imports: a copy in a mod is never
+        # force-loaded ahead of the game's own
+        name = name.casefold()
+        return name == "steam_api64.dll" or (
+            name.startswith("oo2core_") and name.endswith("_win64.dll")
+        )
+
     def _active_root_layout_dlls(
         self, active_mods: list[str]
     ) -> list[tuple[str, str, Path, bool]]:
@@ -3613,6 +3675,7 @@ class EldenRingMo2Game(BasicGame):
                 if (
                     len(relative_path.parts) != 1
                     or relative_path.suffix.casefold() != ".dll"
+                    or self._is_game_runtime_dll(file_name)
                 ):
                     continue
 
@@ -3726,6 +3789,7 @@ class EldenRingMo2Game(BasicGame):
                 virtual_path.suffix.casefold() != ".dll"
                 or virtual_path.name.casefold()
                 in EldenRingModDataChecker._root_loader_dlls
+                or self._is_game_runtime_dll(virtual_path.name)
             ):
                 continue
 

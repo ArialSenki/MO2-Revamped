@@ -591,7 +591,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
     def _read_profile_entries(self, config_path: Path) -> list[dict]:
         config = configparser.ConfigParser(interpolation=None)
-        config.read(config_path, encoding="utf-8")
+        config.read(config_path, encoding="utf-8-sig")
         if not config.has_section(self.NativeSection):
             return []
 
@@ -1263,7 +1263,13 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         config_path = profile_root / self.ConfigFilename
         config = configparser.ConfigParser(interpolation=None)
         try:
-            config.read(config_path, encoding="utf-8")
+            # the file also holds the startup options: one that cannot be
+            # read is reported, not replaced by this section alone
+            try:
+                with config_path.open("r", encoding="utf-8-sig") as stream:
+                    config.read_file(stream)
+            except FileNotFoundError:
+                pass
             if config.has_section(self.NativeSection):
                 config.remove_section(self.NativeSection)
             if entries:
