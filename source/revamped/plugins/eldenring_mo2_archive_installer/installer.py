@@ -379,6 +379,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         # Leave archives with their own scripted installer to that installer.
         if tree.find("fomod/ModuleConfig.xml", mobase.FileTreeEntry.FILE):
             return False
+        # MO2's FOMOD installer also finds one inside a single top folder
+        folders = [entry for entry in tree if entry.isDir()]
+        if len(folders) == 1 and folders[0].find(
+            "fomod/ModuleConfig.xml", mobase.FileTreeEntry.FILE
+        ):
+            return False
 
         supported = self._contains_supported_payload(tree)
         if supported:
@@ -424,6 +430,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         choice = self._ask_archive_layout(default_mod_name, tree)
         if choice is None:
             return mobase.InstallResult.CANCELED
+        if choice == "manual":
+            return mobase.InstallResult.MANUAL_REQUESTED
 
         (
             preserve,
@@ -927,6 +935,21 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
         buttons.setObjectName("archiveDialogButtons")
         buttons.rejected.connect(dialog.reject)
+        # hands the archive to MO2's manual installer, for layouts neither
+        # choice fits (several options to pick from, for example)
+        manual_button = buttons.addButton(
+            self.tr("Manual..."), QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
+        manual_button.setObjectName("archiveManualButton")
+        manual_button.setToolTip(
+            self.tr("Open MO2's manual installer to choose the files and folders yourself.")
+        )
+
+        def choose_manual() -> None:
+            selected["choice"] = "manual"
+            dialog.accept()
+
+        manual_button.clicked.connect(choose_manual)
         layout.addWidget(buttons)
 
         default_button = preserve_button if self._default_preserve else standard_button

@@ -652,10 +652,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         seen = set()
         for current, directories, filenames in os.walk(root, followlinks=False):
             current_path = Path(current)
+            # the game reads <account>/ER0000.* (or loose files in the root);
+            # deeper files belong to named save profiles or backups kept
+            # inside the shared route, which are routes of their own
+            if current_path != root:
+                directories[:] = []
             directories[:] = [
                 name
                 for name in directories
                 if not cls._is_reparse_point(current_path / name)
+                and name.casefold() != cls.SaveProfilesDirectoryName
+                and not name.startswith(".")
             ]
             for filename in filenames:
                 if Path(filename).suffix.casefold() not in suffixes:
@@ -884,8 +891,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 copy_checkbox.setText(
                     _tr("Copy an existing .sl2 save into the new instance")
                 )
+            # Global mode plays from the Steam folder; nothing is copied into it
             copy_checkbox.setEnabled(
-                source_combo is not None and source_combo.count() > 0
+                mode != self.GlobalShared
+                and source_combo is not None
+                and source_combo.count() > 0
             )
             if source_combo is not None:
                 source_combo.setEnabled(
@@ -1953,6 +1963,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         profiles_edit = dialog.findChild(QLineEdit, "profiles")
         base_edit = dialog.findChild(QLineEdit, "base")
+        advanced = dialog.findChild(QCheckBox, "advancedPathOptions")
+        if advanced is not None and not advanced.isChecked():
+            # the simple page creates <location>/profiles; the advanced
+            # fields keep whatever they held and are not used
+            base_edit = dialog.findChild(QLineEdit, "location")
+            profiles_edit = base_edit
         if profiles_edit is None:
             qInfo(
                 "Elden Ring MO2 Save Isolation: could not read the new instance's "
@@ -1962,7 +1978,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             return
 
         base_text = base_edit.text().strip() if base_edit is not None else ""
-        profiles_text = profiles_edit.text().strip()
+        profiles_text = (
+            profiles_edit.text().strip() if profiles_edit is not base_edit else ""
+        )
         if not profiles_text:
             profiles_text = "%BASE_DIR%/profiles"
         profiles_text = profiles_text.replace("%BASE_DIR%", base_text)
@@ -2027,7 +2045,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     "had no valid name; using 'Elden Ring Save'."
                 )
 
-        if copy_checkbox is not None and copy_checkbox.isChecked():
+        if (
+            copy_checkbox is not None
+            and copy_checkbox.isChecked()
+            and copy_checkbox.isEnabled()
+        ):
             selected_data = (
                 source_combo.currentData() if source_combo is not None else None
             )
@@ -2091,49 +2113,36 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         except (OSError, RuntimeError):
             return os.path.normcase(os.path.abspath(str(path)))
 
-    def _pending_modes_path(
-        self, profile_directory: Path | None = None
-    ) -> Path:
-        """Store queued choices beside the profile they will configure."""
-        if profile_directory is not None:
-            profiles_root = profile_directory.parent
+    @staticmethod
+    def _pending_modes_path() -> Path:
+        """Queued choices for instances that have not started yet. They live
+        outside every instance: a folder beside the new instance's profiles
+        would be listed by MO2 as a profile, and MO2 would then not create
+        the Default profile the choice is meant for."""
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        if local_appdata:
+            root = Path(local_appdata) / "MO2 Revamped"
         else:
             try:
-                active_profile = self.__organizer.profile()
-                if active_profile is not None:
-                    profiles_root = Path(active_profile.absolutePath()).parent
-                else:
-                    profiles_root = None
-            except (AttributeError, OSError, RuntimeError, TypeError):
-                profiles_root = None
+                root = Path(__file__).resolve().parents[1]
+            except (OSError, RuntimeError, IndexError):
+                root = Path(__file__).parent
+        return root / "EldenRingMO2SaveIsolation" / EldenRingMo2SaveIsolation.PendingModesFilename
 
-        if profiles_root is not None:
-            return (
-                profiles_root
-                / "EldenRingMO2SaveIsolation"
-                / self.PendingModesFilename
-            )
-
-        # Startup can briefly run before MO2 exposes its active profile. Use
-        # the plugin's own installation directory as a local fallback.
-        try:
-            mo2_directory = Path(__file__).resolve().parents[1]
-        except (OSError, RuntimeError, IndexError):
-            mo2_directory = Path(__file__).parent
+    @staticmethod
+    def _legacy_pending_modes_path(profile_directory: Path | None) -> Path | None:
+        # earlier builds kept the queue in <profiles>/EldenRingMO2SaveIsolation
+        if profile_directory is None:
+            return None
         return (
-            mo2_directory
+            profile_directory.parent
             / "EldenRingMO2SaveIsolation"
-            / self.PendingModesFilename
+            / EldenRingMo2SaveIsolation.PendingModesFilename
         )
 
-    def _read_pending_modes(
-        self, profile_directory: Path | None = None
-    ) -> list[dict[str, str]]:
-        pending_path = self._pending_modes_path(profile_directory)
+    def _read_pending_file(self, pending_path: Path) -> list[dict[str, str]]:
         try:
             data = json.loads(pending_path.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            return []
         except (OSError, UnicodeError, json.JSONDecodeError):
             return []
         if not isinstance(data, list):
@@ -2146,12 +2155,24 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             and item.get("mode") in {self.ProfileIsolated, self.InstanceShared, self.GlobalShared}
         ]
 
+    def _read_pending_modes(
+        self, profile_directory: Path | None = None
+    ) -> list[dict[str, str]]:
+        entries = self._read_pending_file(self._pending_modes_path())
+        legacy_path = self._legacy_pending_modes_path(profile_directory)
+        if legacy_path is not None:
+            known = {self._normalized_path(Path(item["profile_path"])) for item in entries}
+            for item in self._read_pending_file(legacy_path):
+                if self._normalized_path(Path(item["profile_path"])) not in known:
+                    entries.append(item)
+        return entries
+
     def _write_pending_modes(
         self,
         entries: list[dict[str, str]],
         profile_directory: Path | None = None,
     ) -> None:
-        pending_path = self._pending_modes_path(profile_directory)
+        pending_path = self._pending_modes_path()
         pending_path.parent.mkdir(parents=True, exist_ok=True)
         temporary_path = None
         try:
@@ -2171,6 +2192,19 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         finally:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()
+        self._remove_legacy_pending_modes(profile_directory)
+
+    def _remove_legacy_pending_modes(self, profile_directory: Path | None) -> None:
+        # its entries are now in the shared queue; the folder only made MO2
+        # show a profile that is not one
+        legacy_path = self._legacy_pending_modes_path(profile_directory)
+        if legacy_path is None:
+            return
+        try:
+            legacy_path.unlink(missing_ok=True)
+            legacy_path.parent.rmdir()
+        except OSError:
+            pass
 
     def _queue_pending_mode(
         self,
@@ -2251,6 +2285,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
         source_path = source_path.resolve(strict=True)
 
+        if mode == self.GlobalShared:
+            # the global route is the real Steam folder: the new instance
+            # does not write into it
+            return "global"
         if mode == self.InstanceShared:
             destination_root = profile_directory.parent.parent / "Elden Ring Shared Saves"
         elif mode == self.GlobalShared:
@@ -2377,8 +2415,16 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         if item.get("save_source_path") and item.get(
                             "save_relative_path"
                         ):
-                            source_path = Path(item["save_source_path"])
-                            source_root = self._queued_save_source_root(item)
+                            try:
+                                source_root = self._queued_save_source_root(item)
+                                source_path = Path(item["save_source_path"])
+                            except (OSError, ValueError) as error:
+                                # the profile is still created, empty, so the
+                                # chosen mode is not held back by a lost save
+                                qInfo(
+                                    "Elden Ring MO2 Save Isolation: the selected "
+                                    f"save was not imported: {error}"
+                                )
                         selected_save_profile_id = self._create_named_save_profile(
                             profile_directory,
                             mode,
@@ -2424,6 +2470,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                             qInfo(
                                 "Elden Ring MO2 Save Isolation: copied one "
                                 "selected .sl2 save into the new instance."
+                            )
+                        elif result == "global":
+                            qInfo(
+                                "Elden Ring MO2 Save Isolation: the new instance "
+                                "uses the Steam saves directly; nothing was copied "
+                                "into the Steam folder."
                             )
                         elif result == "identical":
                             qInfo(
@@ -2684,7 +2736,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _read_mode_directory(cls, profile_directory: Path) -> str:
         try:
             config = cls._read_save_config_directory(profile_directory)
-            mode = config.get("Saves", "mode", fallback=cls.ProfileIsolated)
+            mode = config.get("Saves", "mode", fallback=cls.ProfileIsolated).strip().lower()
         except (OSError, UnicodeError, configparser.Error, ValueError) as error:
             qInfo(
                 "Elden Ring MO2 Save Isolation: could not read the saved route "

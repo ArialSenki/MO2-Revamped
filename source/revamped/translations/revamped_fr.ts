@@ -1240,6 +1240,14 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
       <source>Showing all {0} archive entries.</source>
       <translation>Affichage des {0} entrées de l'archive.</translation>
     </message>
+    <message>
+      <source>Manual...</source>
+      <translation>Manuel...</translation>
+    </message>
+    <message>
+      <source>Open MO2's manual installer to choose the files and folders yourself.</source>
+      <translation>Ouvre l'installateur manuel de MO2 pour choisir vous-même les fichiers et dossiers.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -3153,6 +3161,22 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>MO2 n'a pas pu ouvrir le Gestionnaire des tâches.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read. Defaults will be shown, and changes cannot be saved until the file is fixed or removed:
+{path}
+
+{error}</source>
+      <translation>Le fichier de paramètres du profil n'a pas pu être lu. Les valeurs par défaut sont affichées et les modifications ne pourront pas être enregistrées tant que le fichier n'aura pas été corrigé ou supprimé :
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read, so it was left unchanged:
+{path}</source>
+      <translation>Le fichier de paramètres du profil n'a pas pu être lu ; il a donc été laissé tel quel :
+{path}</translation>
     </message>
   </context>
   <context>

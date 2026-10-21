@@ -1248,6 +1248,14 @@ Los programas que no están ocultos aparecen en la lista Programa de la ventana 
       <source>Showing all {0} archive entries.</source>
       <translation>Mostrando las {0} entradas del archivo.</translation>
     </message>
+    <message>
+      <source>Manual...</source>
+      <translation>Manual...</translation>
+    </message>
+    <message>
+      <source>Open MO2's manual installer to choose the files and folders yourself.</source>
+      <translation>Abre el instalador manual de MO2 para elegir tú mismo los archivos y carpetas.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -3161,6 +3169,22 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <translation>MO2 no pudo abrir el Administrador de tareas.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read. Defaults will be shown, and changes cannot be saved until the file is fixed or removed:
+{path}
+
+{error}</source>
+      <translation>No se pudo leer el archivo de ajustes del perfil. Se muestran los valores predeterminados y no se podrán guardar cambios hasta que el archivo se corrija o se elimine:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read, so it was left unchanged:
+{path}</source>
+      <translation>No se pudo leer el archivo de ajustes del perfil, así que se dejó sin cambios:
+{path}</translation>
     </message>
   </context>
   <context>
