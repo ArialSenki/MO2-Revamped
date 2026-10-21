@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import configparser
+import ctypes
+from ctypes import wintypes
 from datetime import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -47,6 +50,59 @@ _TR_CONTEXT = "EldenRingSaveIsolation"
 
 def _tr(text: str) -> str:
     return QCoreApplication.translate(_TR_CONTEXT, text)
+
+
+class _ProcessEntry32W(ctypes.Structure):
+    _fields_ = [
+        ("dwSize", wintypes.DWORD),
+        ("cntUsage", wintypes.DWORD),
+        ("th32ProcessID", wintypes.DWORD),
+        ("th32DefaultHeapID", ctypes.c_size_t),
+        ("th32ModuleID", wintypes.DWORD),
+        ("cntThreads", wintypes.DWORD),
+        ("th32ParentProcessID", wintypes.DWORD),
+        ("pcPriClassBase", ctypes.c_long),
+        ("dwFlags", wintypes.DWORD),
+        ("szExeFile", ctypes.c_wchar * 260),
+    ]
+
+
+def _running_process_names() -> set[str] | None:
+    """The lowercased executable names of every running process, read from
+    Windows directly (a few milliseconds, no console process), or None when
+    the list can't be read."""
+    try:
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        snapshot_fn = kernel32.CreateToolhelp32Snapshot
+        snapshot_fn.argtypes = (wintypes.DWORD, wintypes.DWORD)
+        snapshot_fn.restype = wintypes.HANDLE
+        first = kernel32.Process32FirstW
+        first.argtypes = (wintypes.HANDLE, ctypes.POINTER(_ProcessEntry32W))
+        first.restype = wintypes.BOOL
+        following = kernel32.Process32NextW
+        following.argtypes = (wintypes.HANDLE, ctypes.POINTER(_ProcessEntry32W))
+        following.restype = wintypes.BOOL
+        close = kernel32.CloseHandle
+        close.argtypes = (wintypes.HANDLE,)
+        snapshot = snapshot_fn(0x00000002, 0)  # TH32CS_SNAPPROCESS
+        if not snapshot or snapshot == wintypes.HANDLE(-1).value:
+            return None
+        try:
+            entry = _ProcessEntry32W()
+            entry.dwSize = ctypes.sizeof(_ProcessEntry32W)
+            names: set[str] = set()
+            ok = first(snapshot, ctypes.byref(entry))
+            while ok:
+                names.add(entry.szExeFile.casefold())
+                ok = following(snapshot, ctypes.byref(entry))
+            # the walk ends with ERROR_NO_MORE_FILES; anything else cut it short
+            if ctypes.get_last_error() != 18:
+                return None
+            return names or None
+        finally:
+            close(snapshot)
+    except (OSError, AttributeError, ValueError):
+        return None
 
 
 def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
@@ -526,23 +582,27 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return routes, current_id
     @staticmethod
     def _transfer_blocked_reason() -> str:
-        try:
-            result = subprocess.run(
-                ["tasklist", "/FI", "IMAGENAME eq eldenring.exe", "/FO", "CSV", "/NH"],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=5,
-                check=False,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-            running = result.returncode != 0 or any(
-                line.lstrip().casefold().startswith('"eldenring.exe"')
-                for line in result.stdout.splitlines()
-            )
-        except (OSError, subprocess.SubprocessError):
-            running = True
+        names = _running_process_names()
+        if names is not None:
+            running = "eldenring.exe" in names
+        else:
+            try:
+                result = subprocess.run(
+                    ["tasklist", "/FI", "IMAGENAME eq eldenring.exe", "/FO", "CSV", "/NH"],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=5,
+                    check=False,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+                running = result.returncode != 0 or any(
+                    line.lstrip().casefold().startswith('"eldenring.exe"')
+                    for line in result.stdout.splitlines()
+                )
+            except (OSError, subprocess.SubprocessError):
+                running = True
         if running:
             return _tr("Elden Ring is running, or MO2 could not confirm that it is "
                        "closed. Close the game and try again; nothing was copied.")
@@ -882,6 +942,283 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     return False
                 if not first_chunk:
                     return True
+
+    def _refresh_save_checks(self) -> None:
+        diagnose = getattr(self, "_save_diagnose", None)
+        if diagnose is not None:
+            try:
+                diagnose._invalidate()
+            except (AttributeError, RuntimeError):
+                pass
+
+    def _instance_base(self) -> Path | None:
+        try:
+            return Path(self.__organizer.basePath())
+        except (AttributeError, RuntimeError, TypeError):
+            return None
+
+    @staticmethod
+    def _auto_backup_root(route_root: Path, instance_base: Path, is_global: bool) -> Path:
+        # the same place the game plugin writes its automatic backups to
+        if is_global:
+            return instance_base / "Elden Ring Global Save Backups" / "auto"
+        return route_root.parent / f"{route_root.name} Backups" / "auto"
+
+    @staticmethod
+    def _backup_label(backup: Path) -> str:
+        try:
+            stamp = datetime.strptime(backup.name[:15], "%Y%m%d-%H%M%S")
+            when = stamp.strftime("%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            when = backup.name
+        files = [file for file in backup.rglob("*") if file.is_file()]
+        accounts = sorted({file.relative_to(backup).parts[0] for file in files if len(file.relative_to(backup).parts) > 1})
+        size = sum(file.stat().st_size for file in files)
+        return _tr("{when} — {count} file(s), {size} MB, account {accounts}").format(
+            when=when,
+            count=len(files),
+            size=f"{size / (1024 * 1024):.1f}",
+            accounts=", ".join(accounts) or "—",
+        )
+
+    def _restore_backup(self, backup: Path, route_root: Path, replaced_root: Path) -> Path | None:
+        """Puts a backup's saves into the route as one step: the backup's files
+        are copied beside their destinations first, then the route's files of
+        the same save families move to replaced_root/<now> (also across
+        drives) and the copies take their place. If anything fails, the moved
+        files go back and the copies are removed. Returns the folder holding
+        the replaced files, or None when nothing was replaced."""
+        backup_files = [file for file in backup.rglob("*") if file.is_file()]
+        if not backup_files:
+            raise OSError(_tr("The backup is empty."))
+
+        # a save and its .bak are one family (ER0000.sl2, ER0000.co2, a
+        # Convergence ER0000.cnv...); only the families the backup holds are
+        # replaced, in the account folders it has, so a backup of the vanilla
+        # save leaves a Seamless Co-op or Convergence save where it is
+        def family(name: str) -> str:
+            name = name.casefold()
+            return name[:-4] if name.endswith(".bak") else name
+
+        families: dict[Path, set[str]] = {}
+        for file in backup_files:
+            relative = file.relative_to(backup)
+            families.setdefault(relative.parent, set()).add(family(relative.name))
+
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        replaced = replaced_root / stamp
+        suffix = 2
+        while replaced.exists():
+            replaced = replaced_root / f"{stamp}-{suffix}"
+            suffix += 1
+
+        staged: list[tuple[Path, Path]] = []  # (temporary copy, destination)
+        moved: list[tuple[Path, Path]] = []  # (original place, place in replaced)
+        try:
+            for file in backup_files:
+                destination = route_root / file.relative_to(backup)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                temporary = destination.with_name(f".{destination.name}.restoring")
+                shutil.copy2(file, temporary)
+                staged.append((temporary, destination))
+
+            for account, account_families in families.items():
+                folder = route_root / account
+                if not folder.is_dir():
+                    continue
+                for current in list(folder.iterdir()):
+                    if (
+                        current.is_file()
+                        and not self._is_reparse_point(current)
+                        and current.name.casefold().startswith("er0000.")
+                        and family(current.name) in account_families
+                    ):
+                        target = replaced / account / current.name
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.move(str(current), str(target))
+                        moved.append((current, target))
+
+            for temporary, destination in staged:
+                os.replace(temporary, destination)
+            staged = []
+        except OSError as error:
+            rollback_problems = []
+            for temporary, _destination in staged:
+                try:
+                    temporary.unlink(missing_ok=True)
+                except OSError as cleanup_error:
+                    rollback_problems.append(str(cleanup_error))
+            for original, target in reversed(moved):
+                try:
+                    if not original.exists():
+                        shutil.move(str(target), str(original))
+                except OSError as move_error:
+                    rollback_problems.append(str(move_error))
+            if rollback_problems:
+                raise OSError(
+                    _tr("{error}\n\nThe route could not be put back as it was. The "
+                        "saves that were set aside are in:\n{path}").format(
+                        error=error, path=replaced
+                    )
+                ) from error
+            raise
+        return replaced if moved else None
+
+    @staticmethod
+    def _prune_replaced(replaced_root: Path, keep: int = 10) -> None:
+        # the saves a restore set aside: the newest ones are kept
+        try:
+            folders = sorted(
+                (entry for entry in replaced_root.iterdir() if entry.is_dir()),
+                key=lambda entry: entry.name,
+            )
+        except OSError:
+            return
+        for old in folders[:-keep]:
+            shutil.rmtree(old, ignore_errors=True)
+
+    def _display_restore_dialog(self, profile_directory: Path, parent=None) -> None:
+        base = self._instance_base()
+        if base is None:
+            return
+        dialog = QDialog(parent or self.__parent_widget)
+        dialog.setObjectName("EldenRingSaveRestoreDialog")
+        dialog.setWindowTitle(_tr("Restore an Elden Ring save backup"))
+        dialog.setMinimumSize(720, 460)
+        dialog.resize(820, 520)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(9)
+
+        intro = QLabel(
+            _tr("Before each launch MO2 copies the saves of the route the game "
+            "will use, when they changed since the last copy. Choose a route and "
+            "a copy to bring back; the saves it replaces are kept in the "
+            "backups' \"replaced\" folder."),
+            dialog,
+        )
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
+        routes, current_route = self._save_transfer_routes(profile_directory)
+        route_row = QHBoxLayout()
+        route_row.addWidget(QLabel(_tr("Save route:"), dialog))
+        route_combo = QComboBox(dialog)
+        for label, route_id, route_path in routes:
+            route_combo.addItem(label, (route_id, str(route_path)))
+            if route_id == current_route:
+                route_combo.setCurrentIndex(route_combo.count() - 1)
+        route_row.addWidget(route_combo, 1)
+        layout.addLayout(route_row)
+
+        backup_list = QListWidget(dialog)
+        backup_list.setObjectName("saveRestoreBackupList")
+        layout.addWidget(backup_list, 1)
+        status = QLabel(dialog)
+        status.setWordWrap(True)
+        layout.addWidget(status)
+
+        buttons = QHBoxLayout()
+        open_button = QPushButton(_tr("Open backups folder"), dialog)
+        restore_button = QPushButton(_tr("Restore selected backup"), dialog)
+        close_button = QPushButton(_tr("Close"), dialog)
+        buttons.addWidget(open_button)
+        buttons.addStretch(1)
+        buttons.addWidget(restore_button)
+        buttons.addWidget(close_button)
+        layout.addLayout(buttons)
+
+        def selected_route() -> tuple[str, Path, Path]:
+            route_id, route_path = route_combo.currentData()
+            route_root = Path(route_path)
+            root = self._auto_backup_root(route_root, base, route_id == self.GlobalShared)
+            return route_id, route_root, root
+
+        def refresh() -> None:
+            backup_list.clear()
+            _route_id, _route_root, root = selected_route()
+            backups = []
+            if root.is_dir():
+                backups = sorted(
+                    (entry for entry in root.iterdir() if entry.is_dir() and not entry.name.startswith(".")),
+                    key=lambda entry: entry.name,
+                    reverse=True,
+                )
+            for backup in backups:
+                try:
+                    label = self._backup_label(backup)
+                except OSError:
+                    continue
+                item = QListWidgetItem(label, backup_list)
+                item.setData(Qt.ItemDataRole.UserRole, str(backup))
+                item.setToolTip(str(backup))
+            if backups:
+                backup_list.setCurrentRow(0)
+                status.setText(_tr("{count} backup(s), newest first.").format(count=len(backups)))
+            else:
+                status.setText(_tr("No automatic backups of this route yet. MO2 makes one "
+                                   "before the next launch that uses it."))
+            restore_button.setEnabled(bool(backups))
+            open_button.setEnabled(root.is_dir())
+
+        def restore() -> None:
+            item = backup_list.currentItem()
+            if item is None:
+                return
+            busy_reason = self._transfer_blocked_reason()
+            if busy_reason:
+                self._show_notice(dialog, _tr("Backup not restored"), busy_reason, "warning")
+                return
+            route_id, route_root, root = selected_route()
+            backup = Path(item.data(Qt.ItemDataRole.UserRole))
+            if not self._ask_confirmation(
+                dialog,
+                _tr("Restore this backup?"),
+                _tr("{backup}\n\nThe current saves of this route are moved to the "
+                "backups' \"replaced\" folder first, so nothing is lost.\n\n"
+                "Route:\n{route}").format(backup=item.text(), route=route_root),
+                _tr("Restore"),
+                _tr("Cancel"),
+                "warning",
+                default_accept=False,
+            ):
+                return
+            try:
+                replaced = self._restore_backup(backup, route_root, root.parent / "replaced")
+                self._prune_replaced(root.parent / "replaced")
+                self._refresh_save_checks()
+            except OSError as error:
+                self._show_notice(
+                    dialog,
+                    _tr("Backup not restored"),
+                    _tr("The backup could not be restored.\n\n{error}").format(error=error),
+                    "warning",
+                )
+                return
+            qInfo(
+                f"Elden Ring MO2 Save Isolation: restored backup '{backup}' into '{route_root}'."
+            )
+            note = (
+                _tr("\n\nThe saves it replaced are in:\n{path}").format(path=replaced)
+                if replaced is not None
+                else ""
+            )
+            self._show_notice(
+                dialog,
+                _tr("Backup restored"),
+                _tr("The save route now holds the selected backup.") + note,
+                "success",
+            )
+            refresh()
+
+        route_combo.currentIndexChanged.connect(lambda _index: refresh())
+        restore_button.clicked.connect(restore)
+        open_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(selected_route()[2])))
+        )
+        close_button.clicked.connect(dialog.accept)
+        refresh()
+        dialog.exec()
 
     def _display_transfer_dialog(
         self, profile_directory: Path, profile_name: str, parent=None
@@ -1292,6 +1629,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 + bak_note,
                 "success",
             )
+            self._refresh_save_checks()
             refresh_transfer_choices()
 
         source_combo.currentIndexChanged.connect(refresh_transfer_choices)
@@ -3145,8 +3483,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             _tr("Choose one .sl2 file and copy it once between MO2 profile, "
             "instance-shared, or global save routes.")
         )
+        restore_button = QPushButton(_tr("Restore a backup…"), actions_group)
+        restore_button.setObjectName("saveIsolationRestoreButton")
+        restore_button.setToolTip(
+            _tr("Bring back one of the automatic copies MO2 makes of a save route "
+            "before each launch.")
+        )
         tool_buttons.addWidget(copy_report_button)
         tool_buttons.addWidget(transfer_button)
+        tool_buttons.addWidget(restore_button)
         actions_layout.addLayout(tool_buttons)
         # Keep the heading level with the Routing status card beside it.
         actions_layout.addStretch(1)
@@ -3486,6 +3831,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 self._profile_directory(profile), profile.name(), dialog
             )
         )
+        restore_button.clicked.connect(
+            lambda: self._display_restore_dialog(
+                self._profile_directory(profile), dialog
+            )
+        )
         button_box.rejected.connect(dialog.reject)
 
         refresh_details()
@@ -3498,6 +3848,169 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         dialog.exec()
 
 
-def createPlugin() -> EldenRingMo2SaveIsolation:
-    """Return the save-isolation tool instance expected by MO2."""
-    return EldenRingMo2SaveIsolation()
+class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
+    """Notifications about the Elden Ring save routes: Steam saves still hidden
+    by an earlier launch, and a profile route that has no saves of its own
+    while the Steam folder has some."""
+
+    PendingRecovery = 0
+    EmptyRoute = 1
+
+    def __init__(self, tool: EldenRingMo2SaveIsolation) -> None:
+        super().__init__()
+        self.__organizer = None
+        self.__tool = tool
+
+    def init(self, organizer: mobase.IOrganizer) -> bool:
+        self.__organizer = organizer
+        return True
+
+    def name(self) -> str:
+        return "Elden Ring MO2 Save Diagnose"
+
+    def localizedName(self) -> str:
+        return _tr("Elden Ring save checks")
+
+    def author(self) -> str:
+        return "ArialSenki"
+
+    def description(self) -> str:
+        return _tr("Warns about Elden Ring save routes that need attention.")
+
+    def version(self) -> mobase.VersionInfo:
+        return mobase.VersionInfo(1, 0, 0, mobase.ReleaseType.FINAL)
+
+    def requirements(self) -> list:
+        return [mobase.PluginRequirementFactory.gameDependency("ELDEN RING")]
+
+    def settings(self) -> list[mobase.PluginSetting]:
+        return []
+
+    @staticmethod
+    def _account_folders(root: Path) -> list[Path]:
+        try:
+            return [
+                entry
+                for entry in root.iterdir()
+                if entry.is_dir() and len(entry.name) == 17 and entry.name.isdigit()
+            ]
+        except OSError:
+            return []
+
+    @staticmethod
+    def _has_saves(root: Path) -> bool:
+        try:
+            for account in EldenRingMo2SaveDiagnose._account_folders(root):
+                for entry in account.iterdir():
+                    if entry.is_file() and entry.name.casefold().startswith("er0000."):
+                        return True
+        except OSError:
+            pass
+        return False
+
+    @staticmethod
+    def _pending_sessions() -> list[Path]:
+        # while the game runs its own session hides the saves on purpose
+        names = _running_process_names()
+        if names is None or "eldenring.exe" in names:
+            return []
+        appdata = os.environ.get("APPDATA")
+        if not appdata:
+            return []
+        # this install's recovery folder, named as the game plugin names it
+        try:
+            install_root = Path(__file__).resolve().parents[1]
+            identity = os.path.normcase(str(install_root.resolve()))
+        except (IndexError, OSError, RuntimeError):
+            return []
+        token = hashlib.sha256(identity.encode("utf-8", errors="replace")).hexdigest()[:24]
+        recovery = Path(appdata) / ".MO2RevampedSaveRecovery" / token
+        sessions = []
+        try:
+            for instance in [recovery]:
+                if not instance.is_dir():
+                    continue
+                for session in instance.iterdir():
+                    if session.is_dir() and any(
+                        child.name not in ("unrouted-global", "session.json")
+                        for child in session.iterdir()
+                    ):
+                        sessions.append(session)
+        except OSError:
+            pass
+        return sessions
+
+    def _active_route(self) -> tuple[str, Path] | None:
+        try:
+            profile = self.__organizer.profile()
+            if profile is None:
+                return None
+            directory = Path(profile.absolutePath())
+        except (AttributeError, RuntimeError):
+            return None
+        tool = EldenRingMo2SaveIsolation
+        mode = tool._read_mode_directory(directory)
+        return mode, tool._save_directory_for_selection(directory, mode, None)
+
+    def activeProblems(self) -> list[int]:
+        problems = []
+        if self._pending_sessions():
+            problems.append(self.PendingRecovery)
+        route = self._active_route()
+        if route is not None:
+            mode, root = route
+            if (
+                mode != EldenRingMo2SaveIsolation.GlobalShared
+                and not self._has_saves(root)
+                and self._has_saves(EldenRingMo2SaveIsolation._global_save_directory())
+            ):
+                problems.append(self.EmptyRoute)
+        return problems
+
+    def shortDescription(self, key: int) -> str:
+        if key == self.PendingRecovery:
+            return _tr("Steam saves from an earlier launch are still hidden")
+        return _tr("This profile has no Elden Ring saves of its own yet")
+
+    def fullDescription(self, key: int) -> str:
+        if key == self.PendingRecovery:
+            sessions = "<br>".join(str(session) for session in self._pending_sessions())
+            return _tr(
+                "<p>MO2 hides the Steam save folders while the game runs with "
+                "isolated saves and brings them back when it closes. A launch that "
+                "did not finish (MO2 or Windows closed while playing, a crash) left "
+                "them hidden.</p>"
+                "<p>Close Elden Ring and start MO2 again: it restores them on its "
+                "own before the next launch. Until then they are safe in:</p>"
+                "<p>{sessions}</p>"
+                "<p>Don't start the game from Steam meanwhile: it would not see "
+                "those characters.</p>"
+            ).format(sessions=sessions)
+        route = self._active_route()
+        folder = str(route[1]) if route is not None else ""
+        return _tr(
+            "<p>The save route this profile uses has no Elden Ring saves yet, "
+            "while the Steam save folder has some. The game will start without "
+            "your existing characters, and a new character is saved only to this "
+            "route.</p>"
+            "<p>To play an existing character here, open Tools &gt; Save Isolation "
+            "and use Transfer one save, or create or import a named save "
+            "profile. To use the Steam saves directly, choose the global route "
+            "there.</p>"
+            "<p>Route: {folder}</p>"
+        ).format(folder=folder)
+
+    def hasGuidedFix(self, key: int) -> bool:
+        return key == self.EmptyRoute
+
+    def startGuidedFix(self, key: int) -> None:
+        if key == self.EmptyRoute:
+            self.__tool.display()
+
+
+def createPlugins() -> list:
+    """The save-isolation tool and its save checks, as MO2 expects them."""
+    tool = EldenRingMo2SaveIsolation()
+    diagnose = EldenRingMo2SaveDiagnose(tool)
+    tool._save_diagnose = diagnose
+    return [tool, diagnose]

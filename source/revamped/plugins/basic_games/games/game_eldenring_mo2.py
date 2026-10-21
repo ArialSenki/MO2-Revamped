@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import ctypes
+from ctypes import wintypes
 import configparser
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import stat
@@ -47,6 +49,59 @@ _TR_CONTEXT = "EldenRingGame"
 
 def _tr(text: str) -> str:
     return QCoreApplication.translate(_TR_CONTEXT, text)
+
+
+class _ProcessEntry32W(ctypes.Structure):
+    _fields_ = [
+        ("dwSize", wintypes.DWORD),
+        ("cntUsage", wintypes.DWORD),
+        ("th32ProcessID", wintypes.DWORD),
+        ("th32DefaultHeapID", ctypes.c_size_t),
+        ("th32ModuleID", wintypes.DWORD),
+        ("cntThreads", wintypes.DWORD),
+        ("th32ParentProcessID", wintypes.DWORD),
+        ("pcPriClassBase", ctypes.c_long),
+        ("dwFlags", wintypes.DWORD),
+        ("szExeFile", ctypes.c_wchar * 260),
+    ]
+
+
+def _running_process_names() -> set[str] | None:
+    """The lowercased executable names of every running process, read from
+    Windows directly (a few milliseconds, no console process), or None when
+    the list can't be read."""
+    try:
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        snapshot_fn = kernel32.CreateToolhelp32Snapshot
+        snapshot_fn.argtypes = (wintypes.DWORD, wintypes.DWORD)
+        snapshot_fn.restype = wintypes.HANDLE
+        first = kernel32.Process32FirstW
+        first.argtypes = (wintypes.HANDLE, ctypes.POINTER(_ProcessEntry32W))
+        first.restype = wintypes.BOOL
+        following = kernel32.Process32NextW
+        following.argtypes = (wintypes.HANDLE, ctypes.POINTER(_ProcessEntry32W))
+        following.restype = wintypes.BOOL
+        close = kernel32.CloseHandle
+        close.argtypes = (wintypes.HANDLE,)
+        snapshot = snapshot_fn(0x00000002, 0)  # TH32CS_SNAPPROCESS
+        if not snapshot or snapshot == wintypes.HANDLE(-1).value:
+            return None
+        try:
+            entry = _ProcessEntry32W()
+            entry.dwSize = ctypes.sizeof(_ProcessEntry32W)
+            names: set[str] = set()
+            ok = first(snapshot, ctypes.byref(entry))
+            while ok:
+                names.add(entry.szExeFile.casefold())
+                ok = following(snapshot, ctypes.byref(entry))
+            # the walk ends with ERROR_NO_MORE_FILES; anything else cut it short
+            if ctypes.get_last_error() != 18:
+                return None
+            return names or None
+        finally:
+            close(snapshot)
+    except (OSError, AttributeError, ValueError):
+        return None
 
 
 class _RunButtonEnabledMirror(QObject):
@@ -1325,6 +1380,8 @@ class EldenRingMo2Game(BasicGame):
     GameDataPath = "Game"
     GameSaveExtension = "sl2"
     NativeDllSetting = "load_native_dlls"
+    SaveBackupsSetting = "save_backups_kept"
+    SaveBackupsDefault = 5
     ArchiveLayoutOverrideSetting = "_archive_layout_override"
     ArchiveLayoutInstallerName = "Elden Ring Archive Layout Installer"
     PreserveArchiveLayoutSetting = "preserve_archive_layout"
@@ -1589,6 +1646,9 @@ class EldenRingMo2Game(BasicGame):
 
     @staticmethod
     def _elden_ring_process_state() -> bool | None:
+        names = _running_process_names()
+        if names is not None:
+            return "eldenring.exe" in names
         try:
             result = subprocess.run(
                 ["tasklist", "/FI", "IMAGENAME eq eldenring.exe", "/FO", "CSV", "/NH"],
@@ -1925,7 +1985,135 @@ class EldenRingMo2Game(BasicGame):
                 True,
             )
         )
+        settings.append(
+            mobase.PluginSetting(
+                self.SaveBackupsSetting,
+                _tr("How many automatic backups of the active Elden Ring save "
+                "route to keep. A copy is made before each launch when the saves "
+                "changed since the last one; 0 turns the backups off."),
+                self.SaveBackupsDefault,
+            )
+        )
         return settings
+
+    @staticmethod
+    def save_backup_root(route_root: Path, instance_base: Path, is_global: bool) -> Path:
+        """Where the automatic backups of a save route live: beside the route
+        ("<folder> Backups/auto"), or inside the MO2 instance for the global
+        Steam route, so nothing is ever written next to the Steam saves."""
+        if is_global:
+            return instance_base / "Elden Ring Global Save Backups" / "auto"
+        return route_root.parent / f"{route_root.name} Backups" / "auto"
+
+    @staticmethod
+    def _route_save_files(route_root: Path) -> list[Path]:
+        """The ER0000.* files of a route: in its account folders and loose in
+        its root, without following links."""
+        files: list[Path] = []
+        if not route_root.is_dir():
+            return files
+        for entry in route_root.iterdir():
+            try:
+                if entry.is_symlink() or EldenRingMo2Game._is_link_or_junction(entry):
+                    continue
+                if entry.is_dir():
+                    for child in entry.iterdir():
+                        if child.is_file() and not child.is_symlink() and child.name.casefold().startswith("er0000."):
+                            files.append(child)
+                elif entry.is_file() and entry.name.casefold().startswith("er0000."):
+                    files.append(entry)
+            except OSError:
+                continue
+        return files
+
+    @staticmethod
+    def _is_link_or_junction(path: Path) -> bool:
+        try:
+            attributes = os.lstat(path).st_file_attributes
+        except (OSError, AttributeError):
+            return False
+        return bool(attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+
+    BackupNamePattern = re.compile(r"^\d{8}-\d{6}(-\d+)?$")
+
+    @staticmethod
+    def _file_signature(path: Path) -> tuple[int, int]:
+        info = path.stat()
+        return info.st_size, info.st_mtime_ns
+
+    def _backup_route_saves(self, route_root: Path, backup_root: Path, keep: int) -> None:
+        """Copies the route's saves into backup_root/<timestamp>, unless they
+        match the newest backup (size and time; a copy keeps the file's time,
+        so nothing is read twice), then keeps only the newest `keep` copies.
+        Failures are logged; they never stop the launch."""
+        if keep <= 0:
+            return
+        staging = None
+        try:
+            files = self._route_save_files(route_root)
+            if not files:
+                return
+            current = {
+                file.relative_to(route_root).as_posix(): self._file_signature(file)
+                for file in files
+            }
+            backup_root.mkdir(parents=True, exist_ok=True)
+            # copies a failed run left behind
+            for leftover in backup_root.glob(".*.copying"):
+                shutil.rmtree(leftover, ignore_errors=True)
+            backups = sorted(
+                (
+                    entry
+                    for entry in backup_root.iterdir()
+                    if entry.is_dir() and self.BackupNamePattern.match(entry.name)
+                ),
+                key=lambda entry: entry.name,
+            )
+            if backups:
+                newest = backups[-1]
+                previous = {
+                    file.relative_to(newest).as_posix(): self._file_signature(file)
+                    for file in newest.rglob("*")
+                    if file.is_file()
+                }
+                if previous == current:
+                    qInfo("Elden Ring MO2: saves unchanged since the last automatic backup.")
+                    return
+
+            stamp = time.strftime("%Y%m%d-%H%M%S")
+            target = backup_root / stamp
+            suffix = 2
+            while target.exists():
+                target = backup_root / f"{stamp}-{suffix}"
+                suffix += 1
+            staging = backup_root / f".{target.name}.copying"
+            for file in files:
+                destination = staging / file.relative_to(route_root)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(file, destination)
+            os.replace(staging, target)
+            staging = None
+            backups.append(target)
+            qInfo(
+                f"Elden Ring MO2: backed up {len(files)} save file(s) to '{target}'."
+            )
+
+            for old in backups[:-keep]:
+                shutil.rmtree(old, ignore_errors=True)
+        except Exception as error:  # a backup must never stop the launch
+            qCritical(f"Elden Ring MO2: the automatic save backup failed: {error}")
+        finally:
+            if staging is not None:
+                shutil.rmtree(staging, ignore_errors=True)
+
+    def _save_backups_kept(self) -> int:
+        try:
+            value = int(
+                self._organizer.pluginSetting(self.name(), self.SaveBackupsSetting)
+            )
+        except (TypeError, ValueError):
+            value = self.SaveBackupsDefault
+        return max(0, min(value, 50))
 
     def _prepare_profile_launch(
         self, app_path: str, _working_directory, _args: str
@@ -2127,6 +2315,16 @@ class EldenRingMo2Game(BasicGame):
             f"profile saves='{profile_save_dir}'; "
             f"game save root='{game_save_dir}'."
         )
+        if active_save_dir is not None and self._elden_ring_process_state() is False:
+            self._backup_route_saves(
+                active_save_dir,
+                self.save_backup_root(
+                    active_save_dir,
+                    Path(self._organizer.basePath()),
+                    save_mode == EldenRingLocalSavegames.GlobalShared,
+                ),
+                self._save_backups_kept(),
+            )
         (
             start_minimized,
             black_startup_background,

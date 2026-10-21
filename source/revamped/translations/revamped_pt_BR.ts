@@ -1551,6 +1551,10 @@ O jogo não foi iniciado.</translation>
       <source>Could not search MO2 layout DLLs for '{0}': {1}</source>
       <translation>Não foi possível pesquisar as DLLs da estrutura do MO2 para '{0}': {1}</translation>
     </message>
+    <message>
+      <source>How many automatic backups of the active Elden Ring save route to keep. A copy is made before each launch when the saves changed since the last one; 0 turns the backups off.</source>
+      <translation>Quantos backups automáticos da rota de saves ativa do Elden Ring manter. Uma cópia é feita antes de cada inicialização se os saves mudaram desde a última; 0 desativa os backups.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -2729,6 +2733,136 @@ The save was copied, but its .bak could not be updated: {error}</source>
 
 O save foi copiado, mas o .bak não pôde ser atualizado: {error}</translation>
     </message>
+    <message>
+      <source>Elden Ring save checks</source>
+      <translation>Verificações de saves do Elden Ring</translation>
+    </message>
+    <message>
+      <source>Warns about Elden Ring save routes that need attention.</source>
+      <translation>Avisa sobre rotas de saves do Elden Ring que precisam de atenção.</translation>
+    </message>
+    <message>
+      <source>This profile has no Elden Ring saves of its own yet</source>
+      <translation>Este perfil ainda não tem saves próprios do Elden Ring</translation>
+    </message>
+    <message>
+      <source>Restore an Elden Ring save backup</source>
+      <translation>Restaurar um backup de saves do Elden Ring</translation>
+    </message>
+    <message>
+      <source>Before each launch MO2 copies the saves of the route the game will use, when they changed since the last copy. Choose a route and a copy to bring back; the saves it replaces are kept in the backups' "replaced" folder.</source>
+      <translation>Antes de cada inicialização o MO2 copia os saves da rota que o jogo vai usar, se mudaram desde a última cópia. Escolha uma rota e uma cópia para recuperar; os saves substituídos ficam na pasta "replaced" dos backups.</translation>
+    </message>
+    <message>
+      <source>Open backups folder</source>
+      <translation>Abrir pasta de backups</translation>
+    </message>
+    <message>
+      <source>Restore selected backup</source>
+      <translation>Restaurar o backup selecionado</translation>
+    </message>
+    <message>
+      <source>Restore a backup…</source>
+      <translation>Restaurar um backup…</translation>
+    </message>
+    <message>
+      <source>Bring back one of the automatic copies MO2 makes of a save route before each launch.</source>
+      <translation>Recupera uma das cópias automáticas que o MO2 faz de uma rota de saves antes de cada inicialização.</translation>
+    </message>
+    <message>
+      <source>Steam saves from an earlier launch are still hidden</source>
+      <translation>Os saves da Steam de uma inicialização anterior ainda estão ocultos</translation>
+    </message>
+    <message>
+      <source>{when} — {count} file(s), {size} MB, account {accounts}</source>
+      <translation>{when} — {count} arquivo(s), {size} MB, conta {accounts}</translation>
+    </message>
+    <message>
+      <source>The backup is empty.</source>
+      <translation>O backup está vazio.</translation>
+    </message>
+    <message>
+      <source>Save route:</source>
+      <translation>Rota de saves:</translation>
+    </message>
+    <message>
+      <source>Backup restored</source>
+      <translation>Backup restaurado</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <translation>&lt;p&gt;A rota de saves deste perfil ainda não tem saves do Elden Ring, enquanto a pasta da Steam tem. O jogo vai começar sem seus personagens, e um personagem novo será salvo só nesta rota.&lt;/p&gt;&lt;p&gt;Para jogar aqui com um personagem existente, abra Ferramentas &amp;gt; Save Isolation e use Transferir um save, ou crie ou importe um perfil de saves nomeado. Para usar os saves da Steam diretamente, escolha a rota global lá.&lt;/p&gt;&lt;p&gt;Rota: {folder}&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
+      <translation>Ainda não há backups automáticos desta rota. O MO2 fará um antes da próxima inicialização que a usar.</translation>
+    </message>
+    <message>
+      <source>Backup not restored</source>
+      <translation>Backup não restaurado</translation>
+    </message>
+    <message>
+      <source>Restore this backup?</source>
+      <translation>Restaurar este backup?</translation>
+    </message>
+    <message>
+      <source>Restore</source>
+      <translation>Restaurar</translation>
+    </message>
+    <message>
+      <source>The save route now holds the selected backup.</source>
+      <translation>A rota de saves agora tem o backup selecionado.</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;MO2 hides the Steam save folders while the game runs with isolated saves and brings them back when it closes. A launch that did not finish (MO2 or Windows closed while playing, a crash) left them hidden.&lt;/p&gt;&lt;p&gt;Close Elden Ring and start MO2 again: it restores them on its own before the next launch. Until then they are safe in:&lt;/p&gt;&lt;p&gt;{sessions}&lt;/p&gt;&lt;p&gt;Don't start the game from Steam meanwhile: it would not see those characters.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;O MO2 oculta as pastas de saves da Steam enquanto o jogo roda com saves isolados e as devolve quando ele fecha. Uma inicialização que não terminou (MO2 ou Windows fechados durante o jogo, um travamento) as deixou ocultas.&lt;/p&gt;&lt;p&gt;Feche o Elden Ring e abra o MO2 de novo: ele as restaura sozinho antes da próxima inicialização. Até lá elas estão seguras em:&lt;/p&gt;&lt;p&gt;{sessions}&lt;/p&gt;&lt;p&gt;Não inicie o jogo pela Steam enquanto isso: ele não veria esses personagens.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>
+
+The saves it replaced are in:
+{path}</source>
+      <translation>
+
+Os saves substituídos estão em:
+{path}</translation>
+    </message>
+    <message>
+      <source>{count} backup(s), newest first.</source>
+      <translation>{count} backup(s), o mais recente primeiro.</translation>
+    </message>
+    <message>
+      <source>{backup}
+
+The current saves of this route are moved to the backups' "replaced" folder first, so nothing is lost.
+
+Route:
+{route}</source>
+      <translation>{backup}
+
+Os saves atuais desta rota vão primeiro para a pasta "replaced" dos backups, assim nada se perde.
+
+Rota:
+{route}</translation>
+    </message>
+    <message>
+      <source>{error}
+
+The route could not be put back as it was. The saves that were set aside are in:
+{path}</source>
+      <translation>{error}
+
+Não foi possível deixar a rota como estava. Os saves separados estão em:
+{path}</translation>
+    </message>
+    <message>
+      <source>The backup could not be restored.
+
+{error}</source>
+      <translation>Não foi possível restaurar o backup.
+
+{error}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
@@ -3844,6 +3978,22 @@ Local: %3</translation>
     <message>
       <source>Copy folder path</source>
       <translation>Copiar caminho da pasta</translation>
+    </message>
+    <message>
+      <source>Rename…</source>
+      <translation>Renomear…</translation>
+    </message>
+    <message>
+      <source>Duplicate…</source>
+      <translation>Duplicar…</translation>
+    </message>
+    <message>
+      <source>Folder path</source>
+      <translation>Caminho da pasta</translation>
+    </message>
+    <message>
+      <source>Delete instance…</source>
+      <translation>Excluir instância…</translation>
     </message>
   </context>
   <context>

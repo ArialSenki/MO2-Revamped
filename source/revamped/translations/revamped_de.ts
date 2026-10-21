@@ -1551,6 +1551,10 @@ Das Spiel wurde nicht gestartet.</translation>
       <source>Could not search MO2 layout DLLs for '{0}': {1}</source>
       <translation>MO2-Layout-DLLs für '{0}' konnten nicht durchsucht werden: {1}</translation>
     </message>
+    <message>
+      <source>How many automatic backups of the active Elden Ring save route to keep. A copy is made before each launch when the saves changed since the last one; 0 turns the backups off.</source>
+      <translation>Wie viele automatische Sicherungen der aktiven Elden-Ring-Spielstandroute behalten werden. Vor jedem Start wird eine Kopie erstellt, wenn sich die Spielstände seit der letzten geändert haben; 0 schaltet die Sicherungen ab.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -2729,6 +2733,136 @@ The save was copied, but its .bak could not be updated: {error}</source>
 
 Der Spielstand wurde kopiert, aber seine .bak konnte nicht aktualisiert werden: {error}</translation>
     </message>
+    <message>
+      <source>Elden Ring save checks</source>
+      <translation>Elden-Ring-Spielstandprüfungen</translation>
+    </message>
+    <message>
+      <source>Warns about Elden Ring save routes that need attention.</source>
+      <translation>Warnt vor Elden-Ring-Spielstandrouten, die Aufmerksamkeit brauchen.</translation>
+    </message>
+    <message>
+      <source>This profile has no Elden Ring saves of its own yet</source>
+      <translation>Dieses Profil hat noch keine eigenen Elden-Ring-Spielstände</translation>
+    </message>
+    <message>
+      <source>Restore an Elden Ring save backup</source>
+      <translation>Elden-Ring-Spielstandsicherung wiederherstellen</translation>
+    </message>
+    <message>
+      <source>Before each launch MO2 copies the saves of the route the game will use, when they changed since the last copy. Choose a route and a copy to bring back; the saves it replaces are kept in the backups' "replaced" folder.</source>
+      <translation>Vor jedem Start kopiert MO2 die Spielstände der Route, die das Spiel nutzt, wenn sie sich seit der letzten Kopie geändert haben. Wähle eine Route und eine Kopie zum Wiederherstellen; ersetzte Spielstände bleiben im Ordner "replaced" der Sicherungen.</translation>
+    </message>
+    <message>
+      <source>Open backups folder</source>
+      <translation>Sicherungsordner öffnen</translation>
+    </message>
+    <message>
+      <source>Restore selected backup</source>
+      <translation>Gewählte Sicherung wiederherstellen</translation>
+    </message>
+    <message>
+      <source>Restore a backup…</source>
+      <translation>Sicherung wiederherstellen…</translation>
+    </message>
+    <message>
+      <source>Bring back one of the automatic copies MO2 makes of a save route before each launch.</source>
+      <translation>Holt eine der automatischen Kopien zurück, die MO2 vor jedem Start von einer Spielstandroute macht.</translation>
+    </message>
+    <message>
+      <source>Steam saves from an earlier launch are still hidden</source>
+      <translation>Steam-Spielstände eines früheren Starts sind noch ausgeblendet</translation>
+    </message>
+    <message>
+      <source>{when} — {count} file(s), {size} MB, account {accounts}</source>
+      <translation>{when} — {count} Datei(en), {size} MB, Konto {accounts}</translation>
+    </message>
+    <message>
+      <source>The backup is empty.</source>
+      <translation>Die Sicherung ist leer.</translation>
+    </message>
+    <message>
+      <source>Save route:</source>
+      <translation>Spielstandroute:</translation>
+    </message>
+    <message>
+      <source>Backup restored</source>
+      <translation>Sicherung wiederhergestellt</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Die Spielstandroute dieses Profils hat noch keine Elden-Ring-Spielstände, der Steam-Ordner aber schon. Das Spiel startet ohne deine Charaktere, und ein neuer Charakter wird nur in dieser Route gespeichert.&lt;/p&gt;&lt;p&gt;Um hier mit einem vorhandenen Charakter zu spielen, öffne Werkzeuge &amp;gt; Save Isolation und nutze „Einen Spielstand übertragen“ oder erstelle bzw. importiere ein benanntes Spielstandprofil. Für die Steam-Spielstände wähle dort die globale Route.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
+      <translation>Noch keine automatischen Sicherungen dieser Route. MO2 erstellt eine vor dem nächsten Start, der sie nutzt.</translation>
+    </message>
+    <message>
+      <source>Backup not restored</source>
+      <translation>Sicherung nicht wiederhergestellt</translation>
+    </message>
+    <message>
+      <source>Restore this backup?</source>
+      <translation>Diese Sicherung wiederherstellen?</translation>
+    </message>
+    <message>
+      <source>Restore</source>
+      <translation>Wiederherstellen</translation>
+    </message>
+    <message>
+      <source>The save route now holds the selected backup.</source>
+      <translation>Die Spielstandroute enthält jetzt die gewählte Sicherung.</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;MO2 hides the Steam save folders while the game runs with isolated saves and brings them back when it closes. A launch that did not finish (MO2 or Windows closed while playing, a crash) left them hidden.&lt;/p&gt;&lt;p&gt;Close Elden Ring and start MO2 again: it restores them on its own before the next launch. Until then they are safe in:&lt;/p&gt;&lt;p&gt;{sessions}&lt;/p&gt;&lt;p&gt;Don't start the game from Steam meanwhile: it would not see those characters.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;MO2 blendet die Steam-Spielstandordner aus, während das Spiel mit isolierten Spielständen läuft, und holt sie beim Beenden zurück. Ein Start, der nicht zu Ende ging (MO2 oder Windows während des Spielens geschlossen, ein Absturz), hat sie ausgeblendet gelassen.&lt;/p&gt;&lt;p&gt;Schließe Elden Ring und starte MO2 neu: Es stellt sie vor dem nächsten Start selbst wieder her. Bis dahin sind sie sicher in:&lt;/p&gt;&lt;p&gt;{sessions}&lt;/p&gt;&lt;p&gt;Starte das Spiel währenddessen nicht über Steam: Es würde diese Charaktere nicht sehen.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>
+
+The saves it replaced are in:
+{path}</source>
+      <translation>
+
+Die ersetzten Spielstände liegen in:
+{path}</translation>
+    </message>
+    <message>
+      <source>{count} backup(s), newest first.</source>
+      <translation>{count} Sicherung(en), neueste zuerst.</translation>
+    </message>
+    <message>
+      <source>{backup}
+
+The current saves of this route are moved to the backups' "replaced" folder first, so nothing is lost.
+
+Route:
+{route}</source>
+      <translation>{backup}
+
+Die aktuellen Spielstände dieser Route werden zuerst in den Ordner "replaced" der Sicherungen verschoben, so geht nichts verloren.
+
+Route:
+{route}</translation>
+    </message>
+    <message>
+      <source>{error}
+
+The route could not be put back as it was. The saves that were set aside are in:
+{path}</source>
+      <translation>{error}
+
+Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstände liegen in:
+{path}</translation>
+    </message>
+    <message>
+      <source>The backup could not be restored.
+
+{error}</source>
+      <translation>Die Sicherung konnte nicht wiederhergestellt werden.
+
+{error}</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
@@ -3844,6 +3978,22 @@ Ort: %3</translation>
     <message>
       <source>Copy folder path</source>
       <translation>Ordnerpfad kopieren</translation>
+    </message>
+    <message>
+      <source>Rename…</source>
+      <translation>Umbenennen…</translation>
+    </message>
+    <message>
+      <source>Duplicate…</source>
+      <translation>Duplizieren…</translation>
+    </message>
+    <message>
+      <source>Folder path</source>
+      <translation>Ordnerpfad</translation>
+    </message>
+    <message>
+      <source>Delete instance…</source>
+      <translation>Instanz löschen…</translation>
     </message>
   </context>
   <context>
