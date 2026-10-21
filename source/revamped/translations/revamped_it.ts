@@ -1123,6 +1123,18 @@ I programmi non nascosti compaiono nell’elenco Programma della finestra princi
       <source>Choose OK or Apply first, so the shortcut finds the program</source>
       <translation>Scegli prima OK o Applica, così il collegamento trova il programma</translation>
     </message>
+    <message>
+      <source>Browse for the program</source>
+      <translation>Cerca il programma</translation>
+    </message>
+    <message>
+      <source>Browse for the start folder</source>
+      <translation>Cerca la cartella di avvio</translation>
+    </message>
+    <message>
+      <source>New files go here instead of Overwrite</source>
+      <translation>I nuovi file vanno qui invece che in Overwrite</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -6135,6 +6147,18 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
     <message>
       <source>Choose a regular mod and move all files from Overwrite into it</source>
       <translation>Scegli una mod e spostaci tutti i file di Overwrite</translation>
+    </message>
+    <message>
+      <source>More than %1 files, not part of any mod</source>
+      <translation>Più di %1 file, fuori da ogni mod</translation>
+    </message>
+    <message>
+      <source>1 file, %1, not part of any mod</source>
+      <translation>1 file, %1, fuori da ogni mod</translation>
+    </message>
+    <message>
+      <source>%1 files, %2, not part of any mod</source>
+      <translation>%1 file, %2, fuori da ogni mod</translation>
     </message>
   </context>
   <context>

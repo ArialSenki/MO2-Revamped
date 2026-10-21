@@ -120,7 +120,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
 
 QMenu* PluginListContextMenu::createSendToContextMenu()
 {
-  QMenu* menu = new QMenu(m_view);
+  QMenu* menu = new QMenu(this);
   menu->setTitle(tr("Send to"));
   menu->setIcon(menuGlyph(MenuGlyphs::Move));
   menu->addAction(tr("Top"), [=]() {

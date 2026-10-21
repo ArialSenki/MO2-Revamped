@@ -1316,6 +1316,11 @@ bool MOApplication::setStyleFile(const QString& styleName)
     setStyle(new ProxyStyle(QStyleFactory::create(m_defaultStyle)));
     m_activeBaseStyle = m_defaultStyle;
     setStyleSheet("");
+    // no style sheet: the glyph inks follow the system palette, not the
+    // theme that was active before
+    setProperty("revampedFluent", false);
+    setProperty("revampedDarkBlack", false);
+    setProperty("revampedDark", palette().color(QPalette::Window).lightness() < 128);
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   return true;

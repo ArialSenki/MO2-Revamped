@@ -1085,6 +1085,18 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
       <source>Choose OK or Apply first, so the shortcut finds the program</source>
       <translation>Choisissez d’abord OK ou Appliquer pour que le raccourci trouve le programme</translation>
     </message>
+    <message>
+      <source>Browse for the program</source>
+      <translation>Rechercher le programme</translation>
+    </message>
+    <message>
+      <source>Browse for the start folder</source>
+      <translation>Rechercher le dossier de départ</translation>
+    </message>
+    <message>
+      <source>New files go here instead of Overwrite</source>
+      <translation>Les nouveaux fichiers vont ici au lieu d’Overwrite</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -6073,6 +6085,18 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     <message>
       <source>Choose a regular mod and move all files from Overwrite into it</source>
       <translation>Choisissez un mod et déplacez-y tous les fichiers d’Overwrite</translation>
+    </message>
+    <message>
+      <source>More than %1 files, not part of any mod</source>
+      <translation>Plus de %1 fichiers, hors de tout mod</translation>
+    </message>
+    <message>
+      <source>1 file, %1, not part of any mod</source>
+      <translation>1 fichier, %1, hors de tout mod</translation>
+    </message>
+    <message>
+      <source>%1 files, %2, not part of any mod</source>
+      <translation>%1 fichiers, %2, hors de tout mod</translation>
     </message>
   </context>
   <context>
