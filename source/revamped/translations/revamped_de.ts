@@ -1236,6 +1236,14 @@ Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste ne
       <source>Showing all {0} archive entries.</source>
       <translation>Alle {0} Archiveinträge werden angezeigt.</translation>
     </message>
+    <message>
+      <source>Manual...</source>
+      <translation>Manuell...</translation>
+    </message>
+    <message>
+      <source>Open MO2's manual installer to choose the files and folders yourself.</source>
+      <translation>Öffnet den manuellen Installer von MO2, um Dateien und Ordner selbst auszuwählen.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -3149,6 +3157,22 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>MO2 konnte den Task-Manager nicht öffnen.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read. Defaults will be shown, and changes cannot be saved until the file is fixed or removed:
+{path}
+
+{error}</source>
+      <translation>Die Einstellungsdatei des Profils konnte nicht gelesen werden. Es werden Standardwerte angezeigt; Änderungen können erst gespeichert werden, wenn die Datei repariert oder entfernt wurde:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read, so it was left unchanged:
+{path}</source>
+      <translation>Die Einstellungsdatei des Profils konnte nicht gelesen werden und wurde daher nicht geändert:
+{path}</translation>
     </message>
   </context>
   <context>

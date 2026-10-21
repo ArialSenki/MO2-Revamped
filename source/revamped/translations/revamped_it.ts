@@ -1278,6 +1278,14 @@ I programmi non nascosti compaiono nell’elenco Programma della finestra princi
       <source>Showing all {0} archive entries.</source>
       <translation>Visualizzazione di tutte le {0} voci dell'archivio.</translation>
     </message>
+    <message>
+      <source>Manual...</source>
+      <translation>Manuale...</translation>
+    </message>
+    <message>
+      <source>Open MO2's manual installer to choose the files and folders yourself.</source>
+      <translation>Apre il programma di installazione manuale di MO2 per scegliere tu stesso file e cartelle.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -3191,6 +3199,22 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>MO2 non è riuscito ad aprire Gestione attività.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read. Defaults will be shown, and changes cannot be saved until the file is fixed or removed:
+{path}
+
+{error}</source>
+      <translation>Impossibile leggere il file delle impostazioni del profilo. Vengono mostrati i valori predefiniti e le modifiche non potranno essere salvate finché il file non sarà corretto o rimosso:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read, so it was left unchanged:
+{path}</source>
+      <translation>Impossibile leggere il file delle impostazioni del profilo, quindi è stato lasciato invariato:
+{path}</translation>
     </message>
   </context>
   <context>

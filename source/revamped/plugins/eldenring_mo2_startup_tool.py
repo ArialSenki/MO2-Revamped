@@ -138,8 +138,18 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         profile_path = Path(profile.absolutePath())
         config_path = profile_path / self.ConfigFilename
         config = configparser.ConfigParser()
+        # the file also holds the native DLL profile: if it cannot be read,
+        # nothing is written back, so those sections are never lost
+        read_error = None
         try:
-            config.read(config_path, encoding="utf-8")
+            with config_path.open("r", encoding="utf-8") as stream:
+                config.read_file(stream)
+        except FileNotFoundError:
+            pass
+        except (OSError, UnicodeError, configparser.Error) as error:
+            read_error = error
+            config = configparser.ConfigParser()
+        try:
             start_minimized = config.getboolean(
                 "Startup", "start_minimized", fallback=None
             )
@@ -184,13 +194,14 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             )
             if cpu0_delay not in self.Cpu0DelayChoices:
                 cpu0_delay = 30
-        except (OSError, UnicodeError, configparser.Error, ValueError) as error:
+        except (configparser.Error, ValueError) as error:
+            # a bad value: defaults are shown, and saving rewrites only this
+            # dialog's own keys
             QMessageBox.warning(
                 self.__parent_widget,
                 _tr("Could not read profile options"),
                 _tr("The profile settings file could not be read. Defaults will be shown.\n\n{error}").format(error=error),
             )
-            config = configparser.ConfigParser()
             start_minimized = False
             black_startup_background = False
             skip_intro_logos = False
@@ -200,6 +211,15 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             cpu0_delay = 30
             clear_overwrite_after_game = False
             clear_overwrite_logs_before_game = False
+
+        if read_error is not None:
+            QMessageBox.warning(
+                self.__parent_widget,
+                _tr("Could not read profile options"),
+                _tr("The profile settings file could not be read. Defaults will be "
+                    "shown, and changes cannot be saved until the file is fixed or "
+                    "removed:\n{path}\n\n{error}").format(path=config_path, error=read_error),
+            )
 
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingStartupOptionsDialog")
@@ -622,6 +642,14 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
 
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
+        if read_error is not None:
+            QMessageBox.warning(
+                self.__parent_widget,
+                _tr("Could not save profile options"),
+                _tr("The profile settings file could not be read, so it was left "
+                    "unchanged:\n{path}").format(path=config_path),
+            )
+            return
 
         if not config.has_section("Startup"):
             config.add_section("Startup")
@@ -663,8 +691,10 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 config.remove_section("Installation")
         try:
             profile_path.mkdir(parents=True, exist_ok=True)
-            with config_path.open("w", encoding="utf-8", newline="\n") as stream:
+            temporary_path = config_path.with_name(f".{config_path.name}.saving")
+            with temporary_path.open("w", encoding="utf-8", newline="\n") as stream:
                 config.write(stream)
+            os.replace(temporary_path, config_path)
         except OSError as error:
             QMessageBox.critical(
                 self.__parent_widget,

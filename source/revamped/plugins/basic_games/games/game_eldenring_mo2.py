@@ -40,6 +40,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ..basic_features import BasicModDataChecker, GlobPatterns
+from ..basic_features.basic_save_game_info import BasicGameSaveGame
 from ..basic_features.utils import is_directory
 from ..basic_game import BasicGame
 from PyQt6.QtCore import QCoreApplication
@@ -420,8 +421,45 @@ class EldenRingModDataChecker(BasicModDataChecker):
         folder is an install container, not an in-game path component: lift its
         contents to MO2's virtual game root while leaving their internal paths
         intact. Native roots such as ``natives/`` remain in the archive layout.
+
+        Only folders that cannot be part of the layout are lifted: the
+        archive's own top folder, ``Game``/``ELDEN RING`` folders and the
+        FRZN staging folder. A level holding game files, a launcher or its
+        ``.toml`` is the payload root (Seamless Co-op keeps ``SeamlessCoop/``
+        beside ``ersc_launcher.exe``, Mod Engine 2 keeps ``modengine2/bin``).
         """
-        self._unwrap_package_folders(filetree)
+        game_folders = {"<game>", "game", "elden ring", "elden-ring", "eldenring", "elden_ring"}
+        for _ in range(self._archive_wrapper_depth_limit):
+            entries = [
+                entry
+                for entry in filetree
+                if not self._regex_patterns.delete.match(entry.name().casefold())
+            ]
+            # screenshots or notes beside the top folder do not count
+            if any(
+                not is_directory(entry)
+                and Path(entry.name()).suffix.casefold()
+                in {".bdt", ".bhd", ".bin", ".dcx", ".dll", ".exe", ".ini", ".toml"}
+                for entry in entries
+            ):
+                return filetree
+            folders = [
+                entry
+                for entry in entries
+                if is_directory(entry) and self._contains_supported_payload(entry)
+            ]
+            if len(folders) != 1:
+                return filetree
+            folder = folders[0]
+            name = folder.name().casefold()
+            if name == "drag files into here" or name in game_folders:
+                pass
+            elif name in self._content_directories or name in {"seamlesscoop", "modengine2"}:
+                return filetree
+            if not self._package_folders_merge_without_conflicts(filetree, [folder]):
+                return filetree
+            if not self._merge_package_folder(filetree, folder):
+                return filetree
         return filetree
 
     def _unwrap_mod_engine_paths(self, filetree: mobase.IFileTree) -> None:
@@ -730,6 +768,10 @@ class EldenRingModDataChecker(BasicModDataChecker):
                     destination = self._dll_resource_directory(
                         matched[0][0], target_directories[id(matched[0][0])]
                     )
+                elif not candidate_dlls:
+                    # no DLL beside it moves (a ReShade preset, a loader's
+                    # settings): it stays where the archive puts it
+                    continue
                 else:
                     destination = self._sidecar_destination(
                         entry, parent_path, records
@@ -1193,7 +1235,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
         config = configparser.ConfigParser(interpolation=None)
         try:
             config.read(config_path, encoding="utf-8")
-            mode = config.get("Saves", "mode", fallback=cls.ProfileIsolated)
+            mode = config.get("Saves", "mode", fallback=cls.ProfileIsolated).strip().lower()
         except (OSError, UnicodeError, configparser.Error, ValueError):
             mode = cls.ProfileIsolated
         return mode if mode in cls.Modes else cls.ProfileIsolated
@@ -1427,6 +1469,7 @@ class EldenRingMo2Game(BasicGame):
         # newer one alone
         self._game_run = 0
         self._game_seen_run = -1
+        self._overwrite_cleanup_config: Path | None = None
         # a launcher may take a while to start the game; until then a new
         # launch must not treat the game as closed
         self._launch_pending_until = 0.0
@@ -2162,8 +2205,6 @@ class EldenRingMo2Game(BasicGame):
             )
             return False
         direct_game = Path(app_path).name.casefold() == "eldenring.exe"
-        self._launch_via_launcher = not direct_game
-        self._game_run += 1
 
         # the native profile's checks run when MO2 starts eldenring.exe
         # itself; for a launcher MO2 still injects the forced DLLs into the
@@ -2398,10 +2439,15 @@ class EldenRingMo2Game(BasicGame):
             else []
         )
         self._activate_profile_config_environment(profile_config, initializer_entries)
+        # a new run only once nothing above blocked the launch: a blocked
+        # attempt must not disown the watch of a game that is still running
+        self._launch_via_launcher = not direct_game
+        self._game_run += 1
         if clear_overwrite_logs_before_game and not clear_overwrite_after_game:
             self._clear_overwrite_logs_before_game()
         if clear_overwrite_after_game:
             self._arm_overwrite_cleanup()
+            self._overwrite_cleanup_config = profile_config
         self._preserve_previous_bridge_log(bridge_log_history)
         return True
 
@@ -2542,7 +2588,26 @@ class EldenRingMo2Game(BasicGame):
                 )
         # a newer launch owns Overwrite now; its own cleanup runs after it
         if cleanup_armed and overwrite_path is not None and run == self._game_run:
-            self._clear_overwrite_contents(overwrite_path)
+            # the option may have been turned off while the game ran
+            config_path = getattr(self, "_overwrite_cleanup_config", None)
+            if config_path is not None and not self._read_clear_overwrite_after_game(config_path):
+                qInfo(
+                    "Elden Ring MO2: Overwrite cleanup was turned off while the "
+                    "game ran; Overwrite was left as it is."
+                )
+            else:
+                self._clear_overwrite_contents(overwrite_path)
+
+    @staticmethod
+    def _read_clear_overwrite_after_game(path: Path) -> bool:
+        config = configparser.ConfigParser()
+        try:
+            with path.open("r", encoding="utf-8") as stream:
+                config.read_file(stream)
+            return config.getboolean("Cleanup", "clear_overwrite_after_game", fallback=False)
+        except (OSError, UnicodeError, configparser.Error, ValueError):
+            # unreadable: nothing is deleted
+            return False
 
     @staticmethod
     def _read_skip_intro_logos(path: Path) -> bool:
@@ -2708,6 +2773,11 @@ class EldenRingMo2Game(BasicGame):
                     if value.strip().casefold() not in {"true", "false"}:
                         raise ValueError(
                             _tr("'{0}' must be set to true or false.").format(key)
+                        )
+                    # optional_1 and optional_01 name the same entry
+                    if prefix in entry:
+                        raise ValueError(
+                            _tr("Native entry {0} is declared more than once.").format(index)
                         )
                     entry[prefix] = value.strip().casefold() == "true"
                 elif prefix == "mod":
@@ -3137,6 +3207,13 @@ class EldenRingMo2Game(BasicGame):
         return [*retained[:insertion], *ordered, *retained[insertion:]]
 
     def _clear_overwrite_logs_before_game(self) -> None:
+        # a running game (or a tool) may still be writing its logs there
+        if self._elden_ring_process_state() is not False:
+            qInfo(
+                "Elden Ring MO2: Elden Ring is already running; old logs in "
+                "Overwrite were left in place."
+            )
+            return
         try:
             overwrite_path = Path(self._organizer.overwritePath())
             if overwrite_path.name.casefold() != "overwrite":
@@ -3178,7 +3255,12 @@ class EldenRingMo2Game(BasicGame):
                 if stat.S_ISDIR(entry_stat.st_mode):
                     removed += EldenRingMo2Game._remove_overwrite_logs(path)
                 elif path.suffix.casefold() == ".log":
-                    os.unlink(path)
+                    try:
+                        os.unlink(path)
+                    except OSError as error:
+                        # a log still open elsewhere: the others are removed
+                        qInfo(f"Elden Ring MO2: kept '{path.name}' in Overwrite: {error}")
+                        continue
                     removed += 1
         return removed
 
@@ -3315,6 +3397,16 @@ class EldenRingMo2Game(BasicGame):
 
     def savesDirectory(self) -> QDir:
         return self.documentsDirectory()
+
+    def listSaves(self, folder: QDir) -> list[mobase.ISaveGame]:
+        # only the saves the game reads: <account>/ER0000.sl2 or a Seamless
+        # Co-op .co2. A recursive search would also list the named save
+        # profiles and backups kept inside the shared route.
+        return [
+            BasicGameSaveGame(file)
+            for file in self._route_save_files(Path(folder.absolutePath()))
+            if file.suffix.casefold() in {".sl2", ".co2"}
+        ]
 
     def executables(self) -> list[mobase.ExecutableInfo]:
         game_exe = QFileInfo(
@@ -3644,12 +3736,14 @@ class EldenRingMo2Game(BasicGame):
                 # subdirectory below the searched managed root so support
                 # DLLs can be recognized and excluded from forced loading.
                 if virtual_path.is_absolute():
+                    # the last match: the physical path starts with MO2's
+                    # own "mods" folder (or a mod named like a DLL folder)
                     path_parts = virtual_path.parts
                     root_index = next(
                         (
                             index
-                            for index, part in enumerate(path_parts)
-                            if part.casefold() == search_directory.casefold()
+                            for index in range(len(path_parts) - 2, -1, -1)
+                            if path_parts[index].casefold() == search_directory.casefold()
                         ),
                         None,
                     )

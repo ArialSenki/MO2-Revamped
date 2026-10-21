@@ -1236,6 +1236,14 @@ Os programas que não estão ocultos aparecem na lista Programa da janela princi
       <source>Showing all {0} archive entries.</source>
       <translation>Mostrando todas as {0} entradas do pacote.</translation>
     </message>
+    <message>
+      <source>Manual...</source>
+      <translation>Manual...</translation>
+    </message>
+    <message>
+      <source>Open MO2's manual installer to choose the files and folders yourself.</source>
+      <translation>Abre o instalador manual do MO2 para você escolher os arquivos e pastas.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -3149,6 +3157,22 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>O MO2 não conseguiu abrir o Gerenciador de Tarefas.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read. Defaults will be shown, and changes cannot be saved until the file is fixed or removed:
+{path}
+
+{error}</source>
+      <translation>Não foi possível ler o arquivo de configurações do perfil. Os valores padrão são exibidos, e as alterações não poderão ser salvas até que o arquivo seja corrigido ou removido:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The profile settings file could not be read, so it was left unchanged:
+{path}</source>
+      <translation>Não foi possível ler o arquivo de configurações do perfil, então ele foi mantido sem alterações:
+{path}</translation>
     </message>
   </context>
   <context>
