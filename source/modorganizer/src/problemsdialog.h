@@ -5,13 +5,16 @@
 #include <QUrl>
 #include <iplugindiagnose.h>
 
-namespace Ui
-{
-class ProblemsDialog;
-}
-
 class PluginContainer;
+class QLabel;
+class QListWidget;
+class QPushButton;
+class QStackedWidget;
+class QTextBrowser;
 
+// the Notifications window: the active notifications in a list card on the
+// left, the selected one's text and actions in a details card on the right,
+// laid out like the instance manager
 class ProblemsDialog : public QDialog
 {
   Q_OBJECT
@@ -30,19 +33,30 @@ signals:
   void manageOverwriteRequested();
 
 private:
-  void runDiagnosis();
+  void setupUi();
+  QWidget* createListCard();
+  QWidget* createDetails();
 
-private slots:
+  void runDiagnosis();
   void selectionChanged();
   void urlClicked(const QUrl& url);
-
   void startFix();
+  void copyText();
 
-private:
-  Ui::ProblemsDialog* ui;
   const PluginContainer& m_PluginContainer;
   bool m_hasProblems;
   unsigned int m_problemCount;
+
+  QListWidget* m_list;
+  QLabel* m_count;
+  QStackedWidget* m_details;
+  QLabel* m_title;
+  QLabel* m_caption;
+  QLabel* m_context;
+  QTextBrowser* m_description;
+  QPushButton* m_fix;
+  QPushButton* m_manageOverwrite;
+  QPushButton* m_copy;
 };
 
 #endif  // PROBLEMSDIALOG_H

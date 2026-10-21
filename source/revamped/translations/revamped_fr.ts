@@ -216,6 +216,18 @@
       <source>Could not refresh the Nexus list. Check your connection and Nexus access.</source>
       <translation>Impossible d'actualiser la liste Nexus. Vérifiez votre connexion et votre accès à Nexus.</translation>
     </message>
+    <message>
+      <source>Copy name</source>
+      <translation>Copier le nom</translation>
+    </message>
+    <message>
+      <source>Remove Nexus mappings</source>
+      <translation>Retirer les correspondances Nexus</translation>
+    </message>
+    <message>
+      <source>Remove category</source>
+      <translation>Supprimer la catégorie</translation>
+    </message>
   </context>
   <context>
     <name>CategoryImportDialog</name>
@@ -5995,6 +6007,25 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
       <source>Full path</source>
       <translation>Chemin complet</translation>
     </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>Empty: nothing here belongs outside the mods</source>
+      <translation>Vide : rien hors des mods</translation>
+    </message>
+    <message>
+      <source>Only empty folders, safe to clear</source>
+      <translation>Seulement des dossiers vides, vous pouvez vider</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s), %1, not part of any mod</source>
+      <translation>
+        <numerusform>%n fichier, %1, hors de tout mod</numerusform>
+        <numerusform>%n fichiers, %1, hors de tout mod</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>PluginList</name>
@@ -6124,6 +6155,34 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     <message>
       <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Overwrite contient les fichiers que le jeu et les outils ont créés en s'exécutant via MO2 : journaux et paramètres écrits par des mods DLL, fichiers enregistrés par des outils de mods et sorties semblables. Ils n'appartiennent encore à aucun mod.&lt;/p&gt;&lt;p&gt;Les fichiers dans &lt;b&gt;Overwrite&lt;/b&gt; sont prioritaires sur tous les mods du profil. Déplacez dans un mod les fichiers que vous voulez garder : faites-les glisser depuis la fenêtre Gérer Overwrite vers un mod, ou faites un clic droit sur Overwrite dans la liste des mods et créez un mod à partir de son contenu. Supprimez ce dont vous n'avez plus besoin, comme les anciens journaux.&lt;/p&gt;&lt;p&gt;Les options de démarrage peuvent vider les anciens journaux de mods d'Overwrite avant chaque lancement.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Check again</source>
+      <translation>Vérifier à nouveau</translation>
+    </message>
+    <message>
+      <source>Ask every plugin again whether something needs attention</source>
+      <translation>Redemande à chaque plugin si quelque chose demande votre attention</translation>
+    </message>
+    <message>
+      <source>No plugin has anything for you to review right now.</source>
+      <translation>Aucun plugin n’a rien à vous signaler pour l’instant.</translation>
+    </message>
+    <message>
+      <source>Fix it</source>
+      <translation>Corriger</translation>
+    </message>
+    <message>
+      <source>Copy text</source>
+      <translation>Copier le texte</translation>
+    </message>
+    <message>
+      <source>Copy the notification, to paste it in a bug report or a post</source>
+      <translation>Copie la notification pour la coller dans un rapport de bug ou un message</translation>
+    </message>
+    <message>
+      <source>From %1</source>
+      <translation>De %1</translation>
     </message>
   </context>
   <context>

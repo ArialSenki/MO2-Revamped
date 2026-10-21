@@ -347,6 +347,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="106"/>
+        <location filename="categoriesdialog.cpp" line="948"/>
         <source>Add category</source>
         <translation type="unfinished"></translation>
     </message>
@@ -378,7 +379,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="160"/>
-        <location filename="categoriesdialog.cpp" line="173"/>
+        <location filename="categoriesdialog.cpp" line="174"/>
         <source>Add the categories currently listed here to your MO2 category list.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -389,7 +390,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="166"/>
-        <location filename="categoriesdialog.cpp" line="171"/>
+        <location filename="categoriesdialog.cpp" line="172"/>
         <source>Load the latest category list for the active game from Nexus.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -404,85 +405,89 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="125"/>
+        <location filename="categoriesdialog.cpp" line="126"/>
         <source>Manage Categories - %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="127"/>
+        <location filename="categoriesdialog.cpp" line="128"/>
         <source>Organize categories for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="199"/>
+        <location filename="categoriesdialog.cpp" line="200"/>
         <source>Nexus category mapping is disabled in Settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="444"/>
-        <location filename="categoriesdialog.cpp" line="714"/>
+        <location filename="categoriesdialog.cpp" line="445"/>
+        <location filename="categoriesdialog.cpp" line="715"/>
         <source>Nexus category ID: %1. Drag this entry onto a local category to map it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="498"/>
+        <location filename="categoriesdialog.cpp" line="499"/>
         <source>No Nexus categories loaded. Refresh the list to fetch categories for this game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="499"/>
+        <location filename="categoriesdialog.cpp" line="500"/>
         <source>%1 Nexus categories available; full category names are shown in the mappings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="547"/>
+        <location filename="categoriesdialog.cpp" line="548"/>
         <source>Loading the active game&apos;s categories from Nexus…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="555"/>
+        <location filename="categoriesdialog.cpp" line="556"/>
         <source>The Nexus list is empty. Refresh it before importing categories.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="669"/>
+        <location filename="categoriesdialog.cpp" line="670"/>
         <source>Category list updated. Review the MO2 categories, then choose OK to save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="703"/>
+        <location filename="categoriesdialog.cpp" line="704"/>
         <source>Nexus returned no valid categories. The current list and mappings were kept.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="924"/>
+        <location filename="categoriesdialog.cpp" line="925"/>
         <source>Loaded %1 Nexus categories for %2. Kept %3 existing assignments and added %4 exact-name mappings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="935"/>
+        <location filename="categoriesdialog.cpp" line="936"/>
         <source>Could not refresh the Nexus list. Check your connection and Nexus access.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="937"/>
+        <location filename="categoriesdialog.cpp" line="938"/>
         <source>Error %1: Request to Nexus failed: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="945"/>
-        <source>Add</source>
+        <location filename="categoriesdialog.cpp" line="954"/>
+        <source>Copy name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="categoriesdialog.cpp" line="960"/>
+        <source>Remove Nexus mappings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="categoriesdialog.cpp" line="968"/>
+        <source>Remove category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="112"/>
-        <location filename="categoriesdialog.cpp" line="948"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="categoriesdialog.cpp" line="952"/>
-        <source>Remove Nexus Mapping(s)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8434,103 +8439,126 @@ Continue?</source>
 <context>
     <name>OverwriteInfoDialog</name>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="85"/>
+        <location filename="overwriteinfodialog.cpp" line="92"/>
         <source>&amp;Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="77"/>
+        <location filename="overwriteinfodialog.cpp" line="84"/>
         <source>Open the Overwrite folder in Windows File Explorer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="84"/>
+        <location filename="overwriteinfodialog.cpp" line="91"/>
         <source>&amp;Delete…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="86"/>
+        <location filename="overwriteinfodialog.cpp" line="93"/>
         <source>&amp;Open file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="87"/>
+        <location filename="overwriteinfodialog.cpp" line="94"/>
         <source>&amp;New folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="92"/>
+        <location filename="overwriteinfodialog.cpp" line="99"/>
         <source>Create a folder inside Overwrite.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="93"/>
+        <location filename="overwriteinfodialog.cpp" line="100"/>
         <source>Open the selected file with its associated application.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="94"/>
+        <location filename="overwriteinfodialog.cpp" line="101"/>
         <source>Rename the selected file or folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="96"/>
+        <location filename="overwriteinfodialog.cpp" line="103"/>
         <source>Permanently remove the selected file or folder from Overwrite.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="141"/>
+        <location filename="overwriteinfodialog.cpp" line="150"/>
+        <source>Overwrite</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="overwriteinfodialog.cpp" line="228"/>
+        <source>Empty: nothing here belongs outside the mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="overwriteinfodialog.cpp" line="230"/>
+        <source>Only empty folders, safe to clear</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="overwriteinfodialog.cpp" line="232"/>
+        <source>%n file(s), %1, not part of any mod</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="overwriteinfodialog.cpp" line="272"/>
         <source>mod not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="175"/>
+        <location filename="overwriteinfodialog.cpp" line="306"/>
         <source>Failed to delete &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="191"/>
-        <location filename="overwriteinfodialog.cpp" line="198"/>
-        <location filename="overwriteinfodialog.cpp" line="219"/>
-        <location filename="overwriteinfodialog.cpp" line="225"/>
+        <location filename="overwriteinfodialog.cpp" line="322"/>
+        <location filename="overwriteinfodialog.cpp" line="329"/>
+        <location filename="overwriteinfodialog.cpp" line="350"/>
+        <location filename="overwriteinfodialog.cpp" line="356"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="192"/>
-        <location filename="overwriteinfodialog.cpp" line="220"/>
+        <location filename="overwriteinfodialog.cpp" line="323"/>
+        <location filename="overwriteinfodialog.cpp" line="351"/>
         <source>Are you sure you want to delete &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="199"/>
-        <location filename="overwriteinfodialog.cpp" line="226"/>
+        <location filename="overwriteinfodialog.cpp" line="330"/>
+        <location filename="overwriteinfodialog.cpp" line="357"/>
         <source>Are you sure you want to delete the selected files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="268"/>
-        <location filename="overwriteinfodialog.cpp" line="274"/>
+        <location filename="overwriteinfodialog.cpp" line="399"/>
+        <location filename="overwriteinfodialog.cpp" line="405"/>
         <source>New Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="280"/>
+        <location filename="overwriteinfodialog.cpp" line="411"/>
         <source>Failed to create &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="319"/>
+        <location filename="overwriteinfodialog.cpp" line="450"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="322"/>
+        <location filename="overwriteinfodialog.cpp" line="453"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="323"/>
+        <location filename="overwriteinfodialog.cpp" line="454"/>
         <source>Full path</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9018,96 +9046,79 @@ Continue?</source>
 <context>
     <name>ProblemsDialog</name>
     <message>
-        <location filename="problemsdialog.ui" line="20"/>
-        <location filename="problemsdialog.ui" line="68"/>
+        <location filename="problemsdialog.cpp" line="56"/>
+        <location filename="problemsdialog.cpp" line="106"/>
+        <location filename="problemsdialog.cpp" line="121"/>
         <source>Notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.ui" line="75"/>
-        <source>Review messages from MO2 and its plugins. Select an item to see what it means and what you can do.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="127"/>
-        <source>Active notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="147"/>
-        <source>0 active notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="208"/>
-        <source>Details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="215"/>
-        <source>Select a notification</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="225"/>
-        <source>Choose a notification from the list to read its details.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="250"/>
-        <source>Apply fix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.ui" line="257"/>
+        <location filename="problemsdialog.cpp" line="214"/>
         <source>Manage Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.ui" line="298"/>
+        <location filename="problemsdialog.cpp" line="83"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <location filename="problemsdialog.cpp" line="81"/>
-        <source>%n active notification(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
-        <location filename="problemsdialog.cpp" line="86"/>
-        <source>No active notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="problemsdialog.cpp" line="111"/>
+        <location filename="problemsdialog.cpp" line="146"/>
         <source>You&apos;re all caught up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="113"/>
-        <source>There are no active notifications to review.</source>
+        <location filename="problemsdialog.cpp" line="75"/>
+        <source>Check again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="126"/>
+        <location filename="problemsdialog.cpp" line="76"/>
+        <source>Ask every plugin again whether something needs attention</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="problemsdialog.cpp" line="150"/>
+        <source>No plugin has anything for you to review right now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="problemsdialog.cpp" line="209"/>
+        <source>Fix it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="problemsdialog.cpp" line="217"/>
+        <source>Copy text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="problemsdialog.cpp" line="219"/>
+        <source>Copy the notification, to paste it in a bug report or a post</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="problemsdialog.cpp" line="307"/>
+        <source>From %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="problemsdialog.cpp" line="310"/>
         <source>Files here are not assigned to a regular mod yet. Review them and move anything you want to keep into a mod. Deleting files here removes them from this instance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="129"/>
+        <location filename="problemsdialog.cpp" line="313"/>
         <source>Review the details below to understand this notification and choose an available action.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="136"/>
+        <location filename="problemsdialog.cpp" line="320"/>
         <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="problemsdialog.cpp" line="148"/>
+        <location filename="problemsdialog.cpp" line="332"/>
         <source>The plugin that reported this notification did not provide additional details.</source>
         <translation type="unfinished"></translation>
     </message>

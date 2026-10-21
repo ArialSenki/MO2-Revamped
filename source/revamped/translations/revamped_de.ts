@@ -216,6 +216,18 @@
       <source>Could not refresh the Nexus list. Check your connection and Nexus access.</source>
       <translation>Die Nexus-Liste konnte nicht aktualisiert werden. Prüfe deine Verbindung und den Nexus-Zugang.</translation>
     </message>
+    <message>
+      <source>Copy name</source>
+      <translation>Namen kopieren</translation>
+    </message>
+    <message>
+      <source>Remove Nexus mappings</source>
+      <translation>Nexus-Zuordnungen entfernen</translation>
+    </message>
+    <message>
+      <source>Remove category</source>
+      <translation>Kategorie entfernen</translation>
+    </message>
   </context>
   <context>
     <name>CategoryImportDialog</name>
@@ -5891,6 +5903,25 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
       <source>Full path</source>
       <translation>Vollständiger Pfad</translation>
     </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>Empty: nothing here belongs outside the mods</source>
+      <translation>Leer: nichts liegt außerhalb der Mods</translation>
+    </message>
+    <message>
+      <source>Only empty folders, safe to clear</source>
+      <translation>Nur leere Ordner, kann gefahrlos geleert werden</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s), %1, not part of any mod</source>
+      <translation>
+        <numerusform>%n Datei, %1, in keinem Mod</numerusform>
+        <numerusform>%n Dateien, %1, in keinem Mod</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>PluginTypeName</name>
@@ -5982,6 +6013,34 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     <message>
       <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Overwrite enthält Dateien, die das Spiel und Werkzeuge beim Ausführen über MO2 erstellt haben: Protokolle und Einstellungen von DLL-Mods, von Mod-Werkzeugen gespeicherte Dateien und ähnliche Ausgaben. Sie gehören noch zu keinem Mod.&lt;/p&gt;&lt;p&gt;Dateien in &lt;b&gt;Overwrite&lt;/b&gt; haben Vorrang vor allen Mods des Profils. Verschiebe die Dateien, die du behalten willst, in einen Mod: Ziehe sie aus dem Fenster Overwrite verwalten auf einen Mod, oder klicke in der Modliste mit rechts auf Overwrite und erstelle einen Mod aus seinem Inhalt. Lösche, was du nicht mehr brauchst, etwa alte Protokolle.&lt;/p&gt;&lt;p&gt;Die Startoptionen können alte Mod-Protokolle vor jedem Start aus Overwrite entfernen.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Check again</source>
+      <translation>Erneut prüfen</translation>
+    </message>
+    <message>
+      <source>Ask every plugin again whether something needs attention</source>
+      <translation>Fragt alle Plugins erneut, ob etwas Aufmerksamkeit braucht</translation>
+    </message>
+    <message>
+      <source>No plugin has anything for you to review right now.</source>
+      <translation>Kein Plugin hat gerade etwas zum Prüfen.</translation>
+    </message>
+    <message>
+      <source>Fix it</source>
+      <translation>Beheben</translation>
+    </message>
+    <message>
+      <source>Copy text</source>
+      <translation>Text kopieren</translation>
+    </message>
+    <message>
+      <source>Copy the notification, to paste it in a bug report or a post</source>
+      <translation>Kopiert die Meldung für einen Fehlerbericht oder Beitrag</translation>
+    </message>
+    <message>
+      <source>From %1</source>
+      <translation>Von %1</translation>
     </message>
   </context>
   <context>

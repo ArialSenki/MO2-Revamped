@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "categoriesdialog.h"
+#include "menuutils.h"
 #include "fluenticons.h"
 #include "categories.h"
 #include "categoryimportdialog.h"
@@ -942,16 +943,30 @@ void CategoriesDialog::on_categoriesTable_customContextMenuRequested(const QPoin
 {
   m_ContextRow = ui->categoriesTable->rowAt(pos.y());
   QMenu menu;
-  QAction* addAction = menu.addAction(tr("Add"), this, SLOT(addCategory_clicked()));
+  // adding first, the row's own commands next and removing last
+  QAction* addAction =
+      menu.addAction(tr("Add category"), this, SLOT(addCategory_clicked()));
   addAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
-  QAction* removeAction =
-      menu.addAction(tr("Remove"), this, SLOT(removeCategory_clicked()));
-  removeAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
-  if (Settings::instance().nexus().categoryMappings()) {
+
+  if (m_ContextRow >= 0) {
+    if (auto* name = ui->categoriesTable->item(m_ContextRow, 1)) {
+      menu.addSeparator();
+      addCopyAction(&menu, tr("Copy name"), name->text());
+    }
+  }
+
+  if (Settings::instance().nexus().categoryMappings() && m_ContextRow >= 0) {
     QAction* removeMappingAction = menu.addAction(
-        tr("Remove Nexus Mapping(s)"), this, SLOT(removeNexusMap_clicked()));
+        tr("Remove Nexus mappings"), this, SLOT(removeNexusMap_clicked()));
     removeMappingAction->setIcon(
         FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"));
+  }
+
+  if (m_ContextRow >= 0) {
+    menu.addSeparator();
+    QAction* removeAction =
+        menu.addAction(tr("Remove category"), this, SLOT(removeCategory_clicked()));
+    removeAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   }
 
   menu.exec(ui->categoriesTable->mapToGlobal(pos));
