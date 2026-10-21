@@ -2887,6 +2887,14 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <source>The selected save is no longer available: {path}</source>
       <translation>O save selecionado não está mais disponível: {path}</translation>
     </message>
+    <message>
+      <source>Every choice has its own save folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Cada opção tem sua própria pasta de saves. O MO2 apresenta o save escolhido ao Elden Ring como ER0000.sl2 (ER0000.co2 com o Seamless Co-op); importar um save mantém o original intacto.</translation>
+    </message>
+    <message>
+      <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Cada perfil de save nomeado tem sua própria pasta. O MO2 apresenta o save escolhido ao Elden Ring como ER0000.sl2 (ER0000.co2 com o Seamless Co-op); importar um save mantém o original intacto.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

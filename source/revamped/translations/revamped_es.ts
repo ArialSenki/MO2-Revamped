@@ -2899,6 +2899,14 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <source>The selected save is no longer available: {path}</source>
       <translation>La partida seleccionada ya no está disponible: {path}</translation>
     </message>
+    <message>
+      <source>Every choice has its own save folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Cada opción tiene su propia carpeta de guardados. MO2 presenta el guardado elegido a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar un guardado deja intacto el original.</translation>
+    </message>
+    <message>
+      <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Cada perfil de guardado con nombre tiene su propia carpeta. MO2 presenta el guardado elegido a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar un guardado deja intacto el original.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>

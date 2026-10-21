@@ -2891,6 +2891,14 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <source>The selected save is no longer available: {path}</source>
       <translation>La sauvegarde sélectionnée n’est plus disponible : {path}</translation>
     </message>
+    <message>
+      <source>Every choice has its own save folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Chaque choix a son propre dossier de sauvegardes. MO2 présente la sauvegarde choisie à Elden Ring sous le nom ER0000.sl2 (ER0000.co2 avec Seamless Co-op) ; l'importation laisse la source intacte.</translation>
+    </message>
+    <message>
+      <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
+      <translation>Chaque profil de sauvegarde nommé a son propre dossier. MO2 présente la sauvegarde choisie à Elden Ring sous le nom ER0000.sl2 (ER0000.co2 avec Seamless Co-op) ; l'importation laisse la source intacte.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingStartupOptions</name>
