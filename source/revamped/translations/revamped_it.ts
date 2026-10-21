@@ -3590,6 +3590,34 @@ Percorso: %3</translation>
       <source>The instances stay; they move to No group</source>
       <translation>Le istanze restano; passano a Nessun gruppo</translation>
     </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Apri cartella</translation>
+    </message>
+    <message>
+      <source>Instance</source>
+      <translation>Istanza</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <translation>Download</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>ModOrganizer.ini</source>
+      <translation>ModOrganizer.ini</translation>
+    </message>
+    <message>
+      <source>Copy folder path</source>
+      <translation>Copia percorso della cartella</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -4801,6 +4829,18 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
     <message>
       <source>Open the game's save folder.</source>
       <translation>Apre la cartella dei salvataggi del gioco.</translation>
+    </message>
+    <message>
+      <source>Unknown game</source>
+      <translation>Gioco sconosciuto</translation>
+    </message>
+    <message>
+      <source>New instance…</source>
+      <translation>Nuova istanza…</translation>
+    </message>
+    <message>
+      <source>Manage instances…</source>
+      <translation>Gestisci istanze…</translation>
     </message>
   </context>
   <context>

@@ -3536,6 +3536,34 @@ Emplacement : %3</translation>
       <source>The instances stay; they move to No group</source>
       <translation>Les instances restent ; elles passent dans Aucun groupe</translation>
     </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Ouvrir le dossier</translation>
+    </message>
+    <message>
+      <source>Instance</source>
+      <translation>Instance</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <translation>Téléchargements</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mods</translation>
+    </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>ModOrganizer.ini</source>
+      <translation>ModOrganizer.ini</translation>
+    </message>
+    <message>
+      <source>Copy folder path</source>
+      <translation>Copier le chemin du dossier</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -4739,6 +4767,18 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
     <message>
       <source>Open the game's save folder.</source>
       <translation>Ouvre le dossier des sauvegardes du jeu.</translation>
+    </message>
+    <message>
+      <source>Unknown game</source>
+      <translation>Jeu inconnu</translation>
+    </message>
+    <message>
+      <source>New instance…</source>
+      <translation>Nouvelle instance…</translation>
+    </message>
+    <message>
+      <source>Manage instances…</source>
+      <translation>Gérer les instances…</translation>
     </message>
   </context>
   <context>

@@ -47,6 +47,11 @@ public:
   //
   void openSelectedInstance();
 
+  // asks the user before Mod Organizer restarts with another instance; also
+  // used by the command bar's instance menu
+  //
+  static bool confirmSwitch(QWidget* parent, const Instance& to);
+
   // renames the currently selected instance
   //
   void rename();
@@ -192,9 +197,6 @@ private:
   //
   void createNew();
 
-  // shows a confirmation to the user before switching
-  //
-  bool confirmSwitch(const Instance& to);
 
   // the list row of the instance with the given index
   //

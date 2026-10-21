@@ -3525,6 +3525,34 @@ Local: %3</translation>
       <source>The instances stay; they move to No group</source>
       <translation>As instâncias continuam; passam para Sem grupo</translation>
     </message>
+    <message>
+      <source>Open folder</source>
+      <translation>Abrir pasta</translation>
+    </message>
+    <message>
+      <source>Instance</source>
+      <translation>Instância</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <translation>Downloads</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mods</translation>
+    </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>ModOrganizer.ini</source>
+      <translation>ModOrganizer.ini</translation>
+    </message>
+    <message>
+      <source>Copy folder path</source>
+      <translation>Copiar caminho da pasta</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -4647,6 +4675,18 @@ Os snapshots de recuperação foram mantidos em: %2</translation>
     <message>
       <source>Open the game's save folder.</source>
       <translation>Abre a pasta de saves do jogo.</translation>
+    </message>
+    <message>
+      <source>Unknown game</source>
+      <translation>Jogo desconhecido</translation>
+    </message>
+    <message>
+      <source>New instance…</source>
+      <translation>Nova instância…</translation>
+    </message>
+    <message>
+      <source>Manage instances…</source>
+      <translation>Gerenciar instâncias…</translation>
     </message>
   </context>
   <context>
