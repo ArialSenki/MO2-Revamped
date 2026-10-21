@@ -3,6 +3,7 @@
 #include "fluenticons.h"
 #include "fluentsettings.h"
 #include "revampedtheme.h"
+#include "settings.h"
 
 #include <QAbstractItemView>
 #include <QDialog>
@@ -307,6 +308,14 @@ void growForShortScroll(QDialog* dialog)
       (dialog->windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen))) {
     return;
   }
+
+  // a dialog grows once; after that MO2 keeps the size it had when it
+  // closed, so a window the user made smaller stays smaller
+  const QString grownKey =
+      QStringLiteral("FluentDialogs/grown/") + dialog->objectName();
+  if (dialog->objectName().isEmpty() || GlobalSettings::value(grownKey, false).toBool()) {
+    return;
+  }
   // the screen fitDialogToAvailableScreen() used for the same dialog
   const QScreen* screen = QGuiApplication::screenAt(dialog->geometry().center());
   if (screen == nullptr) {
@@ -360,6 +369,7 @@ void growForShortScroll(QDialog* dialog)
     geometry.moveBottom(available.bottom());
   }
   dialog->setGeometry(geometry);
+  GlobalSettings::setValue(grownKey, true);
 }
 
 void polishMessageBox(QMessageBox* box)
