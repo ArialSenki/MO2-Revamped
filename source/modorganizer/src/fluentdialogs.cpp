@@ -150,7 +150,7 @@ void alignHeaders(QDialog* dialog)
 bool isOptionsDialog(const QDialog* dialog)
 {
   static const QStringList names = {
-      QStringLiteral("ProfilesDialog"),        QStringLiteral("EditExecutablesDialog"),
+      QStringLiteral("EditExecutablesDialog"),
       QStringLiteral("TransferSavesDialog"),
       QStringLiteral("LootDialog"),            QStringLiteral("ProblemsDialog"),
   };

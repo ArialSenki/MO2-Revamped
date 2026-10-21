@@ -209,6 +209,7 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	fluentdialogs
 	fluenticons
 	fluentnavigation
+	fluentpanels
 	fluentsettings
 	fluentstatusdelegate
 	fluentswitch

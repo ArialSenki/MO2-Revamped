@@ -22,16 +22,18 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QObject>
 
+#include "fluentpanels.h"
+#include "profile.h"
 #include "tutorabledialog.h"
 
+class QCheckBox;
+class QLabel;
 class QListWidget;
 class QListWidgetItem;
+class QPushButton;
+class QStackedWidget;
 class QString;
-
-namespace Ui
-{
-class ProfilesDialog;
-}
+class QToolButton;
 
 namespace MOBase
 {
@@ -39,11 +41,15 @@ class IPluginGame;
 }
 
 class GameFeatures;
-class Profile;
 class OrganizerCore;
 
 /**
  * @brief Dialog that can be used to create/delete/modify profiles
+ *
+ * Laid out like the instance manager: the profiles in a list card on the left,
+ * the selected profile's details and options as Settings rows on the right.
+ * The widget names profilesList, localSavesBox, localIniFilesBox,
+ * invalidationBox and transferButton are kept for plugins that look them up.
  **/
 class ProfilesDialog : public MOBase::TutorableDialog
 {
@@ -96,45 +102,63 @@ signals:
 protected:
   virtual void showEvent(QShowEvent* event);
 
-private slots:
-  void on_localIniFilesBox_stateChanged(int state);
-
 private:
+  void setupUi();
+  QWidget* createListCard();
+  QWidget* createDetails();
+
   QListWidgetItem* addItem(const QString& name);
   void createProfile(const QString& name, bool useDefaultSettings);
   void createProfile(const QString& name, const Profile& reference);
 
-private slots:
+  // the selected profile, null without one or when it failed to load
+  Profile::Ptr currentProfile() const;
 
-  void on_close_clicked();
-  void on_select_clicked();
+  // the list row's caption and the details card follow the profile
+  void updateItem(QListWidgetItem* item);
+  void fillDetails();
+  void showListMenu(const QPoint& pos);
+  void showHelp();
 
-  void on_addProfileButton_clicked();
+  void addProfile();
+  void copyProfile();
+  void removeProfile();
+  void renameProfile();
+  void selectProfile();
+  void transferSaves();
+  void exploreProfile();
 
-  void on_invalidationBox_stateChanged(int arg1);
+  void onCurrentChanged(QListWidgetItem* current);
+  void onInvalidationChanged(bool checked);
+  void onLocalSavesChanged(bool checked);
+  void onLocalIniFilesChanged(bool checked);
 
-  void on_copyProfileButton_clicked();
-
-  void on_profilesList_currentItemChanged(QListWidgetItem* current,
-                                          QListWidgetItem* previous);
-  void on_profilesList_itemActivated(QListWidgetItem* item);
-
-  void on_removeProfileButton_clicked();
-
-  void on_localSavesBox_stateChanged(int arg1);
-
-  void on_transferButton_clicked();
-
-  void on_renameButton_clicked();
-
-private:
-  Ui::ProfilesDialog* ui;
   GameFeatures& m_GameFeatures;
-  QListWidget* m_ProfilesList;
   bool m_FailState;
   MOBase::IPluginGame const* m_Game;
   QString m_ActiveProfileName;
   std::optional<QString> m_Selected;
+  bool m_eldenRing;
+
+  QListWidget* m_list;
+  QLabel* m_count;
+  QPushButton* m_new;
+
+  QStackedWidget* m_details;
+  QLabel* m_name;
+  QLabel* m_caption;
+  QToolButton* m_rename;
+  FluentPanels::DetailRow m_modsRow;
+  FluentPanels::DetailRow m_folderRow;
+  FluentPanels::DetailRow m_changedRow;
+  FluentPanels::DetailRow m_savesRow;
+  QCheckBox* m_localSaves;
+  QCheckBox* m_localIniFiles;
+  QCheckBox* m_invalidation;
+  QPushButton* m_copy;
+  QPushButton* m_transfer;
+  QPushButton* m_remove;
+  QPushButton* m_select;
 };
 
 #endif  // PROFILESDIALOG_H
