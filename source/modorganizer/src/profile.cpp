@@ -790,16 +790,47 @@ bool Profile::setModPriority(unsigned int index, int& newPriority)
 }
 
 Profile* Profile::createPtrFrom(const QString& name, const Profile& reference,
-                                MOBase::IPluginGame const* gamePlugin)
+                                MOBase::IPluginGame const* gamePlugin,
+                                int* failedCopies)
 {
   QString profileDirectory = Settings::instance().paths().profiles() + "/" + name;
-  reference.copyFilesTo(profileDirectory);
+  const int failed         = reference.copyFilesTo(profileDirectory);
+  if (failedCopies != nullptr) {
+    *failedCopies = failed;
+  }
   return new Profile(QDir(profileDirectory), gamePlugin, reference.m_GameFeatures);
 }
 
-void Profile::copyFilesTo(QString& target) const
+namespace
 {
-  copyDir(m_Directory.absolutePath(), target, false);
+// copies a folder tree like uibase's copyDir(), but counts the files that
+// failed (a save the game holds open) instead of skipping them silently
+int copyProfileTree(const QString& source, const QString& destination)
+{
+  int failed = 0;
+  QDir().mkpath(destination);
+  const QDir sourceDir(source);
+  for (const QString& file : sourceDir.entryList(QDir::Files | QDir::Hidden)) {
+    if (!QFile::copy(source + "/" + file, destination + "/" + file)) {
+      log::warn("could not copy '{}' to the new profile", source + "/" + file);
+      ++failed;
+    }
+  }
+  // symlinks are left out: they could make the copy endless
+  for (const QString& folder : sourceDir.entryList(
+           QDir::AllDirs | QDir::NoDotAndDotDot | QDir::NoSymLinks | QDir::Hidden)) {
+    failed += copyProfileTree(source + "/" + folder, destination + "/" + folder);
+  }
+  return failed;
+}
+}  // namespace
+
+int Profile::copyFilesTo(QString& target) const
+{
+  if (QDir(target).exists()) {
+    return 0;
+  }
+  return copyProfileTree(m_Directory.absolutePath(), target);
 }
 
 std::vector<std::wstring> Profile::splitDZString(const wchar_t* buffer) const

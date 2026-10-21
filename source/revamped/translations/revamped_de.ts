@@ -6738,6 +6738,17 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
       <translation>Windows konnte den Profilordner nicht umbenennen. Schließe alle Programme, die Dateien darin verwenden, und versuche es erneut.</translation>
     </message>
+    <message>
+      <source>The copy is incomplete</source>
+      <translation>Die Kopie ist unvollständig</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
+      <translation>
+        <numerusform>%n Datei konnte nicht kopiert werden, meist weil ein Programm wie das Spiel sie geöffnet hatte. Schließe es, entferne das neue Profil und kopiere erneut.</numerusform>
+        <numerusform>%n Dateien konnten nicht kopiert werden, meist weil ein Programm wie das Spiel sie geöffnet hatte. Schließe es, entferne das neue Profil und kopiere erneut.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>

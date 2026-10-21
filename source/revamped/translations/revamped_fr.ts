@@ -6880,6 +6880,17 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
       <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
       <translation>Windows n'a pas pu renommer le dossier du profil. Fermez tout programme qui utilise des fichiers qu'il contient et réessayez.</translation>
     </message>
+    <message>
+      <source>The copy is incomplete</source>
+      <translation>La copie est incomplète</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
+      <translation>
+        <numerusform>%n fichier n'a pas pu être copié, généralement parce qu'un programme comme le jeu l'avait ouvert. Fermez-le, supprimez le nouveau profil et recommencez la copie.</numerusform>
+        <numerusform>%n fichiers n'ont pas pu être copiés, généralement parce qu'un programme comme le jeu les avait ouverts. Fermez-le, supprimez le nouveau profil et recommencez la copie.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>

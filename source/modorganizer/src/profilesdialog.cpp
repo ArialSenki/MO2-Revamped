@@ -565,7 +565,9 @@ void ProfilesDialog::createProfile(const QString& name, bool useDefaultSettings)
 void ProfilesDialog::createProfile(const QString& name, const Profile& reference)
 {
   try {
-    auto profile = Profile::Ptr(Profile::createPtrFrom(name, reference, m_Game));
+    int failedCopies = 0;
+    auto profile =
+        Profile::Ptr(Profile::createPtrFrom(name, reference, m_Game, &failedCopies));
     QListWidgetItem* newItem = new QListWidgetItem(name, m_list);
     newItem->setData(Qt::UserRole, QVariant::fromValue(profile));
     m_list->addItem(newItem);
@@ -573,6 +575,14 @@ void ProfilesDialog::createProfile(const QString& name, const Profile& reference
     updateItem(newItem);
     m_list->setCurrentItem(newItem);
     emit profileCreated(profile.get());
+    if (failedCopies > 0) {
+      showProfileNotice(
+          this, QMessageBox::Warning, tr("The copy is incomplete"),
+          tr("%n file(s) could not be copied, usually because a program such as "
+             "the game had them open. Close it, remove the new profile and copy "
+             "again.",
+             "", failedCopies));
+    }
   } catch (const std::exception&) {
     m_FailState = true;
     throw;
