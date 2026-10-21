@@ -10058,7 +10058,8 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
     </message>
     <message>
         <location filename="createinstancedialogpages.cpp" line="762"/>
-        <source>Isolated MO2 copies currently support Elden Ring. Choose its installed folder to continue.</source>
+        <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
+        <oldsource>Isolated MO2 copies currently support Elden Ring. Choose its installed folder to continue.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13984,7 +13985,8 @@ Remaining this hour: %3</source>
     </message>
     <message>
         <location filename="createinstancedialogui.cpp" line="368"/>
-        <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring is supported for now.</source>
+        <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
+        <oldsource>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring is supported for now.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>

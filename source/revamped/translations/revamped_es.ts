@@ -7418,6 +7418,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <source>Unknown</source>
       <translation>Desconocido</translation>
     </message>
+    <message>
+      <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
+      <translation>Por ahora, las copias aisladas de MO2 admiten Elden Ring y Nightreign. Elige el juego y su carpeta de instalación para continuar.</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -8804,6 +8808,13 @@ Restantes esta hora: %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Información del origen...</translation>
+    </message>
+  </context>
+  <context>
+    <name>Ui::CreateInstanceDialog</name>
+    <message>
+      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
+      <translation>Una copia aparte de Mod Organizer con sus propios ajustes y datos, para un solo juego. Por ahora admite Elden Ring y Nightreign.</translation>
     </message>
   </context>
 </TS>
