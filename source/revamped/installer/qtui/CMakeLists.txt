@@ -16,6 +16,10 @@ qt_add_executable(MO2RevampedSetupQt
 )
 
 target_link_libraries(MO2RevampedSetupQt PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+# DWM (dark title bar) and the taskbar progress (COM)
+if(WIN32)
+    target_link_libraries(MO2RevampedSetupQt PRIVATE dwmapi ole32 uuid)
+endif()
 target_compile_definitions(MO2RevampedSetupQt PRIVATE UNICODE _UNICODE NOMINMAX)
 # the release version, shown in the window's header
 if(MO2R_VERSION)

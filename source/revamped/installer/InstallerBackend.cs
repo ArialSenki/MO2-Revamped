@@ -70,6 +70,12 @@ namespace Mo2RevampedSetup
                     RunBackend(args);
                     return true;
                 }
+                if (String.Equals(args[0], "--open-url", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (args.Length < 2) return true;
+                    Environment.ExitCode = UnelevatedLauncher.OpenProjectPage(args[1]) ? 0 : 1;
+                    return true;
+                }
                 if (String.Equals(args[0], "--launch", StringComparison.OrdinalIgnoreCase))
                 {
                     if (args.Length < 2) return true;
@@ -469,6 +475,21 @@ namespace Mo2RevampedSetup
             if (shellError != null) SetupDiagnostics.Error("The desktop shell could not start MO2 unelevated.", shellError);
             // no fallback: started from this elevated setup, MO2 and every game
             // and mod it runs would run as administrator too
+            return false;
+        }
+
+        // the project's pages only (release notes), opened by the desktop shell
+        // so the browser does not run as administrator
+        public static bool OpenProjectPage(string url)
+        {
+            Uri uri;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out uri) || uri.Scheme != Uri.UriSchemeHttps ||
+                !String.Equals(uri.Host, "github.com", StringComparison.OrdinalIgnoreCase) ||
+                !uri.AbsolutePath.StartsWith("/ArialSenki/MO2-Revamped", StringComparison.OrdinalIgnoreCase))
+                return false;
+            Exception shellError;
+            if (TryShellExecute(uri.AbsoluteUri, "", out shellError)) return true;
+            if (shellError != null) SetupDiagnostics.Error("The desktop shell could not open the release notes.", shellError);
             return false;
         }
 

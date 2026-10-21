@@ -40,6 +40,15 @@
 #include <QToolButton>
 #include <QUuid>
 #include <QVBoxLayout>
+#include <cmath>
+#include <QDesktopServices>
+#include <QStyleHints>
+#include <QUrl>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <dwmapi.h>
+#include <shobjidl.h>
+#endif
 #include <QVariantAnimation>
 #include <QVector>
 #include <QWidget>
@@ -80,6 +89,24 @@ Theme makeTheme(bool dark) {
         t.tile = QColor(226, 238, 247); t.tileInk = QColor(30, 110, 160);
     }
     return t;
+}
+
+// Windows' accent colour (Settings > Personalization > Colors), used for the
+// main buttons and highlights when white text keeps a 4.5:1 contrast on it
+QColor windowsAccent() {
+#ifdef Q_OS_WIN
+    QSettings settings(QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM"), QSettings::NativeFormat);
+    bool ok = false;
+    const uint abgr = settings.value(QStringLiteral("AccentColor")).toUInt(&ok);
+    if (!ok) return QColor();
+    const QColor accent(int(abgr & 0xff), int((abgr >> 8) & 0xff), int((abgr >> 16) & 0xff));
+    auto channel = [](qreal c) { return c <= 0.03928 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4); };
+    const qreal luminance = 0.2126 * channel(accent.redF()) + 0.7152 * channel(accent.greenF()) + 0.0722 * channel(accent.blueF());
+    if ((1.05) / (luminance + 0.05) < 4.5) return QColor();
+    return accent;
+#else
+    return QColor();
+#endif
 }
 
 QColor mix(const QColor &from, const QColor &to, qreal amount) {
@@ -455,9 +482,20 @@ public:
         }
         // the installations Update, Restore and Uninstall offer
         if (fixedMode_ < 0) QTimer::singleShot(0, this, [this] { startPrefetch(); });
+        applyTitleBar();
+        connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, [this] {
+            if (!themeOverride_.isEmpty()) return;
+            detectTheme(QString());
+            applyStyle();
+            applyTitleBar();
+            update();
+        });
     }
 
     ~SetupWindow() override {
+#ifdef Q_OS_WIN
+        if (taskbar_) { taskbar_->Release(); taskbar_ = nullptr; }
+#endif
         if (inspectProcess_) { inspectProcess_->disconnect(); inspectProcess_->kill(); inspectProcess_->waitForFinished(1000); }
         if (!inspectFolder_.isEmpty()) QDir(inspectFolder_).removeRecursively();
         if (!jobDirectory_.isEmpty()) QDir(jobDirectory_).removeRecursively();
@@ -489,6 +527,39 @@ private:
             dark = settings.value(QStringLiteral("AppsUseLightTheme"), 1).toInt() == 0;
         }
         theme_ = makeTheme(dark);
+        const QColor accent = windowsAccent();
+        if (accent.isValid()) {
+            theme_.accent = accent;
+            theme_.accentHover = dark ? accent.lighter(112) : accent.darker(112);
+            theme_.tileInk = dark ? mix(accent, Qt::white, 0.45) : accent.darker(105);
+            theme_.selected = mix(theme_.selected, accent, dark ? 0.22 : 0.12);
+        }
+        themeOverride_ = themeOverride;
+    }
+
+    // the title bar follows the window's light or dark theme (Windows 10 2004+)
+    void applyTitleBar() {
+#ifdef Q_OS_WIN
+        const BOOL dark = theme_.dark ? TRUE : FALSE;
+        DwmSetWindowAttribute(reinterpret_cast<HWND>(winId()), 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark, sizeof(dark));
+#endif
+    }
+
+    // progress on the taskbar button: state 0 none, 1 normal, 2 error
+    void setTaskbarProgress(int state, int value = 0) {
+#ifdef Q_OS_WIN
+        if (!taskbar_) {
+            if (FAILED(CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList3,
+                                        reinterpret_cast<void **>(&taskbar_))) || !taskbar_)
+                return;
+            if (FAILED(taskbar_->HrInit())) { taskbar_->Release(); taskbar_ = nullptr; return; }
+        }
+        const HWND window = reinterpret_cast<HWND>(winId());
+        taskbar_->SetProgressState(window, state == 0 ? TBPF_NOPROGRESS : state == 2 ? TBPF_ERROR : TBPF_NORMAL);
+        if (state != 0) taskbar_->SetProgressValue(window, ULONGLONG(qBound(0, value, 1000)), 1000);
+#else
+        Q_UNUSED(state); Q_UNUSED(value);
+#endif
     }
 
     QString tempFile(const QString &pattern) const {
@@ -693,6 +764,16 @@ private:
         statusLabel_->setObjectName(QStringLiteral("statusLabel"));
         statusLabel_->setWordWrap(true);
         footerLayout->addWidget(statusLabel_, 1);
+        footerLayout->addWidget(whatsNewButton_ = new QPushButton(tr(QStringLiteral("Novedades de esta versión"))));
+        whatsNewButton_->setObjectName(QStringLiteral("secondaryButton"));
+        whatsNewButton_->setCursor(Qt::PointingHandCursor);
+        whatsNewButton_->hide();
+        connect(whatsNewButton_, &QPushButton::clicked, this, [this] {
+            // opened by the desktop shell through the engine, so the browser
+            // does not run as administrator like this window
+            QProcess::startDetached(host_, {QStringLiteral("--open-url"),
+                                            QStringLiteral("https://github.com/ArialSenki/MO2-Revamped/releases")});
+        });
         footerLayout->addWidget(closeButton_ = new QPushButton(tr(QStringLiteral("Cerrar"))));
         footerLayout->addWidget(actionButton_ = new QPushButton(tr(QStringLiteral("Instalar"))));
         closeButton_->setObjectName(QStringLiteral("secondaryButton"));
@@ -1281,7 +1362,18 @@ private:
         return within(left, right) || within(right, left);
     }
 
+    // profiles, mods or settings left by an uninstall that kept the data
+    static bool hasKeptData(const QString &folder) {
+        const QDir dir(folder);
+        if (QFileInfo(dir.filePath(QStringLiteral("ModOrganizer.exe"))).exists()) return false;
+        if (QFileInfo(dir.filePath(QStringLiteral("ModOrganizer.ini"))).isFile()) return true;
+        for (const QString &name : {QStringLiteral("profiles"), QStringLiteral("mods"), QStringLiteral("downloads"), QStringLiteral("overwrite")})
+            if (!QDir(dir.filePath(name)).isEmpty(QDir::AllEntries | QDir::NoDotAndDotDot)) return true;
+        return false;
+    }
+
     bool validate() {
+        reinstall_ = false;
         const QString target = target_ ? QDir::cleanPath(target_->text().trimmed()) : QString();
         if (target.isEmpty() || !QDir::isAbsolutePath(target) || target.size() < 3)
             return showError(tr(QStringLiteral("Falta la ubicación")), tr(QStringLiteral("Indica una carpeta válida.")));
@@ -1312,8 +1404,14 @@ private:
             if (QDir(target).exists()) {
                 if (QFileInfo(QDir(target).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
                     return showError(tr(QStringLiteral("La carpeta ya contiene MO2")), tr(QStringLiteral("Esta carpeta ya contiene MO2. Elige «Actualizar MO2 Revamped» si está marcada como Revamped o crea otra carpeta.")));
-                if (!QDir(target).entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System).isEmpty())
+                if (!QDir(target).entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System).isEmpty()) {
+                    // the data an uninstall kept: MO2 is installed back next to it
+                    if (mode_ == 0 && hasKeptData(target)) {
+                        reinstall_ = true;
+                        return true;
+                    }
                     return showError(tr(QStringLiteral("El destino no está vacío")), tr(QStringLiteral("El destino contiene archivos. Elige una carpeta vacía para evitar sobrescribirlos.")));
+                }
             }
         }
         if (mode_ == 2 || mode_ == 4 || mode_ == 5) {
@@ -1359,7 +1457,11 @@ private:
         QString title;
         QString body;
         bool destructive = false;
-        if (mode_ == 0) {
+        if (mode_ == 0 && reinstall_) {
+            title = tr(QStringLiteral("Reinstalar sobre los datos conservados"));
+            body = tr(QStringLiteral("Esta carpeta tiene los datos de una instalación anterior (perfiles, mods, ajustes). MO2 Revamped se instalará de nuevo junto a ellos, sin modificarlos:")) +
+                   QStringLiteral("\n\n") + target + tr(QStringLiteral("\n\n¿Continuar?"));
+        } else if (mode_ == 0) {
             title = tr(QStringLiteral("Instalación nueva"));
             body = tr(QStringLiteral("MO2 Revamped se instalará en:")) + QStringLiteral("\n\n") + target + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 1) {
@@ -1424,8 +1526,14 @@ private:
         events.close();
 
         QJsonObject request;
-        request.insert(QStringLiteral("Mode"), mode_);
-        request.insert(QStringLiteral("InstanceKind"), (mode_ == 1 || mode_ == 3) ? 0 : 1);
+        // a reinstall keeps the kind of copy it was: isolated, portable or standard
+        const QDir kept(QDir::cleanPath(target_->text().trimmed()));
+        const bool keptIsolated = reinstall_ && QFileInfo(kept.filePath(QStringLiteral("eldenring-only.portable"))).isFile();
+        const bool keptPortable = reinstall_ && (keptIsolated || QFileInfo(kept.filePath(QStringLiteral("portable.txt"))).isFile() ||
+                                                 QFileInfo(kept.filePath(QStringLiteral("ModOrganizer.ini"))).isFile());
+        request.insert(QStringLiteral("Mode"), keptIsolated ? 1 : mode_);
+        request.insert(QStringLiteral("InstanceKind"), (mode_ == 1 || mode_ == 3 || keptPortable) ? 0 : 1);
+        request.insert(QStringLiteral("ReinstallOverKeptData"), reinstall_);
         request.insert(QStringLiteral("TargetDirectory"), QDir::toNativeSeparators(QDir::cleanPath(target_->text().trimmed())));
         request.insert(QStringLiteral("SourceInstallDirectory"), sourceInstall_ ? QDir::toNativeSeparators(sourceInstall_->text().trimmed()) : QString());
         request.insert(QStringLiteral("SourceDataDirectory"), sourceData_ ? QDir::toNativeSeparators(sourceData_->text().trimmed()) : QString());
@@ -1514,6 +1622,7 @@ private:
         const int target = qBound(0, percent, 100) * 10;
         if (target <= progressTarget_) return;
         progressTarget_ = target;
+        setTaskbarProgress(1, target);
         progressAnimation_->stop();
         progressAnimation_->setStartValue(progress_->value());
         progressAnimation_->setEndValue(target);
@@ -1579,10 +1688,14 @@ private:
         closeButton_->setEnabled(true);
         actionButton_->setEnabled(true);
 
+        setTaskbarProgress(success ? 0 : 2, success ? 0 : 1000);
         if (success) {
             progressAnimation_->stop();
             progressTarget_ = 0;
             animateProgress(100);
+            setTaskbarProgress(0);
+            // what this version brings, after installing or updating it
+            if (whatsNewButton_ && (mode_ == 0 || mode_ == 1 || mode_ == 2 || mode_ == 3)) whatsNewButton_->show();
             hasCompleted_ = true;
             setInputsEnabled(false);
             setStatus(message, QStringLiteral("success"));
@@ -1620,6 +1733,12 @@ private:
     bool pageBuilt_ = false;
     bool registeredLoaded_ = false;
     bool prefetchDone_ = false;
+    bool reinstall_ = false;
+    QString themeOverride_;
+    QPushButton *whatsNewButton_ = nullptr;
+#ifdef Q_OS_WIN
+    ITaskbarList3 *taskbar_ = nullptr;
+#endif
     QStringList prefetchQueue_;
     QStringList prefetchOrder_;
     QHash<QString, QJsonObject> prefetched_;

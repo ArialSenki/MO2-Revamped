@@ -66,6 +66,16 @@ will join that list as their support is added.
 - Refuses to update or uninstall while Elden Ring or Nightreign runs; a
   missing Windows uninstall entry no longer reports a failed install; MO2 is
   never started as administrator after setup.
+- Installing into a folder that still holds the data an uninstall kept
+  (profiles, mods, settings) reinstalls MO2 Revamped next to it, as the same
+  kind of copy, without touching that data.
+- Before updating or uninstalling, any program still using the installation's
+  files is named and nothing is changed until it closes.
+- Checks the free space on the backup drive too, and keeps only the latest
+  update backup once an update finishes.
+- Follows the Windows accent colour and switches between light and dark with
+  Windows; dark title bar in dark mode; progress shows on the taskbar button;
+  "What's new in this version" opens the release notes when it finishes.
 
 ## 1.0.1 — Interface, installer, and package refresh
 
