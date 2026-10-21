@@ -155,6 +155,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     GlobalShared = "global"
     CreateInstanceCardName = "eldenRingSaveModeCard"
     PendingModesFilename = "pending_instance_modes.json"
+    # this MO2 instance's folder, for the instance-shared saves
+    _path_instance_base: Path | None = None
     CreateInstanceSaveCopyCheckboxName = "eldenRingCreateInstanceSaveCopy"
     CreateInstanceSaveSourceComboName = "eldenRingCreateInstanceSaveSource"
     CreateInstanceSaveStatusName = "eldenRingCreateInstanceSaveStatus"
@@ -186,6 +188,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self.__organizer = organizer
+        try:
+            base = organizer.basePath()
+            EldenRingMo2SaveIsolation._path_instance_base = Path(base) if base else None
+        except (AttributeError, RuntimeError, TypeError):
+            pass
         # Plugin init is called while MO2 is discovering plugins, including in
         # non-Elden-Ring instances. Defer UI hooks until the managed game is
         # known. Profile changes are event-driven so queued choices can be
@@ -554,7 +561,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     )
                 )
 
-        shared_root = profiles_root.parent / "Elden Ring Shared Saves"
+        shared_root = cls._instance_shared_directory_from_path(current_profile_directory)
         routes.append(
             (
                 _tr("Shared saves for this MO2 instance (standard)"),
@@ -759,7 +766,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     )
 
             shared_profile_directory = profiles_root / "__EldenRingSharedSaves__"
-            shared_root = profiles_root.parent / "Elden Ring Shared Saves"
+            shared_root = self._instance_shared_directory_from_path(
+                profiles_root / "Default"
+            )
             add_save_files(_tr("MO2 — {instance} / shared saves").format(instance=display_instance), shared_root)
             for profile_id, profile_name in self._read_named_save_profiles(
                 shared_profile_directory, self.InstanceShared
@@ -2284,7 +2293,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             # does not write into it
             return "global"
         if mode == self.InstanceShared:
-            destination_root = profile_directory.parent.parent / "Elden Ring Shared Saves"
+            destination_root = self._instance_shared_directory_from_path(profile_directory)
         elif mode == self.GlobalShared:
             destination_root = self._global_save_directory()
         else:
@@ -2691,7 +2700,25 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
     @classmethod
     def _instance_shared_directory_from_path(cls, profile_directory: Path) -> Path:
-        return profile_directory.parent.parent / "Elden Ring Shared Saves"
+        # The folder belongs to the MO2 instance. Earlier builds put it beside
+        # the profiles folder, which is the same place unless the profiles
+        # path was customised (two instances could then share it); such a
+        # folder that already holds saves is kept so nothing goes missing.
+        # The same rule as the game plugin's instance_shared_directory().
+        legacy = profile_directory.parent.parent / "Elden Ring Shared Saves"
+        base = cls._path_instance_base
+        if base is None:
+            return legacy
+        anchored = base / "Elden Ring Shared Saves"
+        if os.path.normcase(os.path.abspath(anchored)) == os.path.normcase(os.path.abspath(legacy)):
+            return anchored
+        try:
+            anchored_used = anchored.is_dir() and any(anchored.iterdir())
+            if not anchored_used and legacy.is_dir() and any(legacy.iterdir()):
+                return legacy
+        except OSError:
+            pass
+        return anchored
 
     @classmethod
     def _instance_shared_directory(cls, profile) -> Path:

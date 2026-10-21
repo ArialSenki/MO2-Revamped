@@ -391,6 +391,63 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 found.add(entry.name().casefold())
         return found
 
+    # folders that are part of a layout, never one option among several
+    _layout_folder_names = frozenset(
+        {
+            "action", "animation", "animations", "asset", "assets", "chr",
+            "common", "cutscene", "event", "facegen", "map", "material", "menu",
+            "msg", "movie", "movie_dlc", "param", "parts", "script", "sd", "sfx",
+            "shader", "sound", "system", "texture", "textures", "time", "wp",
+            "config", "configs", "dlls", "external_dlls", "fonts", "mod", "mods",
+            "mo2_dlls", "native", "natives", "plugins", "seamlesscoop",
+            "modengine2", "bin", "locale", "game", "elden ring", "eldenring",
+            "drag files into here", "fomod",
+        }
+    )
+
+    def _duplicate_dll_names(self, filetree: mobase.IFileTree) -> list[str]:
+        folders_by_name: dict[str, set[str]] = {}
+
+        def walk(tree: mobase.IFileTree, path: str, depth: int) -> None:
+            if depth > self._archive_wrapper_depth_limit:
+                return
+            for entry in tree:
+                if entry.isDir():
+                    walk(entry, f"{path}/{entry.name()}".casefold(), depth + 1)
+                elif entry.name().casefold().endswith(".dll"):
+                    folders_by_name.setdefault(entry.name(), set()).add(path)
+
+        walk(filetree, "", 0)
+        return sorted(
+            name for name, folders in folders_by_name.items() if len(folders) > 1
+        )
+
+    def _option_folders(self, filetree: mobase.IFileTree) -> list[str]:
+        level = filetree
+        for _ in range(self._archive_wrapper_depth_limit):
+            folders = [entry for entry in level if entry.isDir()]
+            files = [
+                entry
+                for entry in level
+                if entry.isFile()
+                and f".{entry.name().rsplit('.', 1)[-1].casefold()}"
+                in self._supported_payload_extensions
+            ]
+            # lift a lone wrapper folder (the archive's own top folder)
+            if len(folders) == 1 and not files:
+                if folders[0].name().casefold() in self._layout_folder_names:
+                    return []
+                level = folders[0]
+                continue
+            options = [
+                folder.name()
+                for folder in folders
+                if folder.name().casefold() not in self._layout_folder_names
+                and self._contains_supported_payload(folder)
+            ]
+            return options if len(options) > 1 else []
+        return []
+
     def isArchiveSupported(self, tree: mobase.IFileTree) -> bool:
         organizer = self._organizer
         if organizer is None or not self.isActive():
@@ -666,8 +723,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         # game files a mod rarely means to replace, and regulation.bin, which
         # only one active mod can provide
         found_game_files = self._game_files_in(archive_tree)
+        notice_lines = []
         if found_game_files:
-            notice_lines = []
             if "regulation.bin" in found_game_files:
                 notice_lines.append(
                     self.tr(
@@ -685,7 +742,28 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                         "need that."
                     ).format(", ".join(executables))
                 )
-            game_file_notice = QtWidgets.QLabel("\n".join(notice_lines), content)
+        # several copies of one DLL, or several option folders: both layouts
+        # would install every copy, and the game would use only one or none
+        duplicate_dlls = self._duplicate_dll_names(archive_tree)
+        if duplicate_dlls:
+            notice_lines.append(
+                self.tr(
+                    "Several folders contain {0}. Only one copy of a DLL can load; "
+                    "if they are alternatives, choose Manual... and keep the one "
+                    "you want."
+                ).format(", ".join(duplicate_dlls))
+            )
+        option_folders = self._option_folders(archive_tree)
+        if option_folders:
+            notice_lines.append(
+                self.tr(
+                    "This archive looks like it offers options ({0}). Both "
+                    "layouts install all of them; choose Manual... to keep only "
+                    "the one you want."
+                ).format(", ".join(option_folders))
+            )
+        if notice_lines:
+            game_file_notice = QtWidgets.QLabel("\n\n".join(notice_lines), content)
             game_file_notice.setObjectName("archiveGameFileNotice")
             game_file_notice.setWordWrap(True)
             game_file_notice.setStyleSheet(

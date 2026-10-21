@@ -1215,10 +1215,14 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
     InstanceSaveProfileKey = "instance_save_profile"
     Modes = {ProfileIsolated, InstanceShared, GlobalShared}
 
+    # the organizer of this MO2 instance, for its base folder
+    _path_organizer: mobase.IOrganizer | None = None
+
     def __init__(self, game, organizer: mobase.IOrganizer):
         super().__init__()
         self._game = game
         self._organizer = organizer
+        EldenRingLocalSavegames._path_organizer = organizer
         self._prepared_profile_routes: dict[str, tuple[str, bool, str]] = {}
 
     @staticmethod
@@ -1340,12 +1344,29 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
             return profile_directory / cls.SaveProfilesDirectoryName / profile_id
         return profile_directory / "saves"
 
-    @staticmethod
-    def instance_shared_directory(profile_path: Path) -> Path:
-        # MO2 keeps profiles below an instance-specific profiles directory.
-        # Placing shared modded saves beside that directory keeps them separate
-        # from profile saves and from the global Roaming save folder.
-        return profile_path.parent.parent / "Elden Ring Shared Saves"
+    @classmethod
+    def instance_shared_directory(cls, profile_path: Path) -> Path:
+        # The folder belongs to the MO2 instance. Earlier builds put it beside
+        # the profiles folder, which is the same place unless the profiles
+        # path was customised (two instances could then share it); such a
+        # folder that already holds saves is kept so nothing goes missing.
+        legacy = profile_path.parent.parent / "Elden Ring Shared Saves"
+        try:
+            base = Path(cls._path_organizer.basePath()) if cls._path_organizer else None
+        except (AttributeError, RuntimeError, TypeError):
+            base = None
+        if base is None or not str(base):
+            return legacy
+        anchored = base / "Elden Ring Shared Saves"
+        if os.path.normcase(os.path.abspath(anchored)) == os.path.normcase(os.path.abspath(legacy)):
+            return anchored
+        try:
+            anchored_used = anchored.is_dir() and any(anchored.iterdir())
+            if not anchored_used and legacy.is_dir() and any(legacy.iterdir()):
+                return legacy
+        except OSError:
+            pass
+        return anchored
 
     def prepareProfile(self, profile: mobase.IProfile) -> bool:
         mode = self.mode_for_profile(profile)

@@ -1256,6 +1256,14 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
       <source>This archive contains game files ({0}). Installed through MO2 they replace the game's own copies; most mods do not need that.</source>
       <translation>Cette archive contient des fichiers du jeu ({0}). Installés via MO2, ils remplacent les copies du jeu ; la plupart des mods n'en ont pas besoin.</translation>
     </message>
+    <message>
+      <source>Several folders contain {0}. Only one copy of a DLL can load; if they are alternatives, choose Manual... and keep the one you want.</source>
+      <translation>Plusieurs dossiers contiennent {0}. Une seule copie d'une DLL peut être chargée ; s'il s'agit de variantes, choisissez Manuel... et gardez celle que vous voulez.</translation>
+    </message>
+    <message>
+      <source>This archive looks like it offers options ({0}). Both layouts install all of them; choose Manual... to keep only the one you want.</source>
+      <translation>Cette archive semble proposer des options ({0}). Les deux structures les installent toutes ; choisissez Manuel... pour ne garder que celle que vous voulez.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
