@@ -5566,6 +5566,10 @@ p, li { white-space: pre-wrap; }
       <source>Disable its mods</source>
       <translation>Desactivar sus mods</translation>
     </message>
+    <message>
+      <source>Folders of the %1 selected mods</source>
+      <translation>Carpetas de los %1 mods seleccionados</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -6433,6 +6437,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     <message>
       <source>OK</source>
       <translation>Aceptar</translation>
+    </message>
+    <message>
+      <source>Last used</source>
+      <translation>Último uso</translation>
     </message>
   </context>
   <context>

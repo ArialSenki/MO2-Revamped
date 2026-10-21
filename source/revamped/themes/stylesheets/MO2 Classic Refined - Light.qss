@@ -1797,15 +1797,6 @@ QDialog#ModInfoDialog QToolButton#openInExplorer:hover {
 QDialog#ModInfoDialog QToolButton#openInExplorer:pressed {
     background-color: #DCEAF3;
 }
-
-QDialog#ProfilesDialog QLabel#profilesPageTitle {
-
-    padding: 1px 2px 0;
-}
-QDialog#ProfilesDialog QLabel#profilesPageSubtitle {
-
-    padding: 0 3px 1px;
-}
 /* MO2 Revamped: mod overwrite choices */
 QDialog#QueryOverwriteDialog QLabel#overwritePageTitle,
 QDialog#SyncOverwriteDialog QLabel#syncPageTitle {
@@ -4494,110 +4485,6 @@ QDialog#CreateInstanceDialog QCheckBox#advancedPathOptions:hover {
 }
 
 /* MO2 Revamped profile management dialog. */
-QDialog#ProfilesDialog QWidget#profilesHeader {
-    color: #30495D;
-    background-color: #F0F6FA;
-    border: 1px solid #D5DEE7;
-    border-radius: 8px;
-}
-QDialog#ProfilesDialog QWidget#widget {
-    background-color: transparent;
-    border: none;
-}
-QDialog#ProfilesDialog QLabel#profilesPageTitle {
-    color: #233F58;
-    font-size: 16pt;
-    font-weight: 600;
-}
-QDialog#ProfilesDialog QLabel#profilesPageSubtitle {
-    color: #566B7C;
-    font-size: 9pt;
-}
-QDialog#ProfilesDialog QLabel#profilesSectionTitle {
-    color: #29435B;
-    font-size: 11pt;
-    font-weight: 600;
-    padding-left: 2px;
-}
-QDialog#ProfilesDialog QWidget#profileOptionsPanel {
-    color: #30495D;
-    background-color: #F5F8FB;
-    border: 1px solid #D5DEE7;
-    border-radius: 7px;
-}
-QDialog#ProfilesDialog QLabel#profileOptionsTitle {
-    color: #6F8190;
-    background-color: transparent;
-    border: none;
-    font-size: 8pt;
-    font-weight: 600;
-}
-QDialog#ProfilesDialog QListWidget#profilesList {
-    color: #293847;
-    background-color: #FFFFFF;
-    alternate-background-color: #F7F9FB;
-    border: 1px solid #D5DEE7;
-    border-radius: 7px;
-    padding: 4px;
-    selection-background-color: #D5E8F6;
-}
-QDialog#ProfilesDialog QListWidget#profilesList::item {
-    min-height: 28px;
-    padding: 5px 8px;
-    border-radius: 4px;
-}
-QDialog#ProfilesDialog QListWidget#profilesList::item:selected {
-    color: #214866;
-    background-color: #DCECF7;
-    border: 1px solid #A8C8DE;
-}
-QDialog#ProfilesDialog QPushButton {
-    min-height: 34px;
-    padding: 4px 10px;
-    border-radius: 6px;
-}
-QDialog#ProfilesDialog QPushButton#addProfileButton,
-QDialog#ProfilesDialog QPushButton#select {
-    color: #FFFFFF;
-    background-color: #2E719A;
-    border: 1px solid #2E719A;
-    font-weight: 600;
-}
-QDialog#ProfilesDialog QPushButton#addProfileButton:hover,
-QDialog#ProfilesDialog QPushButton#select:hover {
-    background-color: #3A83AD;
-    border-color: #3A83AD;
-}
-QDialog#ProfilesDialog QPushButton#removeProfileButton {
-    color: #8E5555;
-    background-color: #FFF6F5;
-    border-color: #E8CCCA;
-}
-QDialog#ProfilesDialog QPushButton#removeProfileButton:hover {
-    color: #773F3F;
-    background-color: #FCEBE9;
-    border-color: #D6A9A5;
-}
-QDialog#ProfilesDialog QPushButton#close {
-    color: #536A7D;
-    background-color: #F1F5F8;
-    border-color: #CFDAE4;
-}
-QDialog#ProfilesDialog QPushButton#close:hover {
-    background-color: #E6F0F6;
-    border-color: #8AAEC8;
-}
-QDialog#ProfilesDialog QWidget#widget_2 {
-    background-color: transparent;
-    border-top: 1px solid #D5DEE7;
-    padding-top: 8px;
-}
-QDialog#ProfilesDialog QWidget#profileOptionsPanel QCheckBox {
-    min-height: 28px;
-    padding: 3px 5px;
-    background-color: transparent;
-    border: none;
-}
 
 /* MO2 Revamped: finish the executable management flow. */
 QDialog#EditExecutablesDialog QFrame#headerCard {
@@ -5268,9 +5155,6 @@ QDialog#EldenRingSaveIsolationConfirmDialog QDialogButtonBox#saveIsolationConfir
 /* Flat icon marks for the refreshed dialog and card headings. */
 QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
 QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon,
-QDialog#ProfilesDialog QLabel#profilesHeaderIcon,
-QDialog#ProfilesDialog QLabel#profilesSectionIcon,
-QDialog#ProfilesDialog QLabel#profileOptionsIcon,
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
 QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
@@ -5302,7 +5186,6 @@ QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
 QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon {
     border-radius: 20px;
 }
-QDialog#ProfilesDialog QLabel#profilesHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EldenRingStartupOptionsDialog QLabel#startupHeaderIcon,
 QDialog#EldenRingNativeProfileDialog QLabel#nativeHeaderIcon,
@@ -5312,7 +5195,6 @@ QDialog#EldenRingSaveTransferDialog QLabel#saveTransferHeaderIcon,
 QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileHeaderIcon {
     border-radius: 16px;
 }
-QDialog#ProfilesDialog QLabel#profilesSectionIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
 QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
 QDialog#EldenRingStartupOptionsDialog QLabel#startupProfileIcon,
@@ -5328,9 +5210,6 @@ QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationGameProfileIcon,
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationStatusIcon,
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationActionsIcon {
     border-radius: 13px;
-}
-QDialog#ProfilesDialog QLabel#profileOptionsIcon {
-    border-radius: 11px;
 }
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSafetyIcon {
     color: #80580D;

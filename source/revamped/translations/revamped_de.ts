@@ -5554,6 +5554,10 @@ p, li { white-space: pre-wrap; }
       <source>Disable its mods</source>
       <translation>Seine Mods deaktivieren</translation>
     </message>
+    <message>
+      <source>Folders of the %1 selected mods</source>
+      <translation>Ordner der %1 ausgewählten Mods</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -6421,6 +6425,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
     <message>
       <source>OK</source>
       <translation>OK</translation>
+    </message>
+    <message>
+      <source>Last used</source>
+      <translation>Zuletzt verwendet</translation>
     </message>
   </context>
   <context>

@@ -1697,16 +1697,6 @@ QDialog#ModInfoDialog QLabel#modInfoPageSubtitle {
     padding: 0 0px 1px;
 }
 
-QDialog#ProfilesDialog QLabel#profilesPageTitle {
-
-padding: 1px 0px 0;
-}
-
-QDialog#ProfilesDialog QLabel#profilesPageSubtitle {
-
-padding: 0 0px 1px;
-}
-
 QDialog#QueryOverwriteDialog QLabel#overwritePageTitle,
 QDialog#SyncOverwriteDialog QLabel#syncPageTitle {
     color: #EDEDED;
@@ -3156,52 +3146,6 @@ QDialog#revampedCategorySetupPrompt QLabel#promptDescription {
     border: none;
 }
 
-QDialog#ProfilesDialog QWidget#profilesHeader { background-color: transparent; border: none; }
-
-QDialog#ProfilesDialog QWidget#widget {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#ProfilesDialog QLabel#profilesPageTitle {
-    color: #EDEDED;
-    font-size: 16pt;
-    font-weight: 600;
-}
-
-QDialog#ProfilesDialog QLabel#profilesPageSubtitle {
-    color: #BDBDBD;
-    font-size: 9pt;
-}
-
-QDialog#ProfilesDialog QLabel#profilesSectionTitle {
-    color: #EDEDED;
-    font-size: 11pt;
-    font-weight: 600;
-    padding-left: 0px;
-}
-
-QDialog#ProfilesDialog QWidget#profileOptionsPanel {
-    color: #EDEDED;
-    background-color: #2D2D2D;
-    border: 1px solid #474747;
-    border-radius: 8px;
-}
-
-QDialog#ProfilesDialog QLabel#profileOptionsTitle {
-    color: #BDBDBD;
-    background-color: transparent;
-    border: none;
-    font-size: 8pt;
-    font-weight: 600;
-}
-
-QDialog#ProfilesDialog QWidget#widget_2 {
-    background-color: transparent;
-    border-top: 1px solid #484848;
-    padding-top: 8px;
-}
-
 QDialog#EditExecutablesDialog QFrame#headerCard { background-color: transparent; border: none; }
 
 QDialog#EditExecutablesDialog QLabel#dialogHeading {
@@ -3519,9 +3463,6 @@ QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptMessage {
 
 QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
 QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon,
-QDialog#ProfilesDialog QLabel#profilesHeaderIcon,
-QDialog#ProfilesDialog QLabel#profilesSectionIcon,
-QDialog#ProfilesDialog QLabel#profileOptionsIcon,
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
 QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
@@ -3549,7 +3490,6 @@ QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileHeaderIcon { backgrou
 QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
 QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#ProfilesDialog QLabel#profilesHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EldenRingStartupOptionsDialog QLabel#startupHeaderIcon,
 QDialog#EldenRingNativeProfileDialog QLabel#nativeHeaderIcon,
@@ -3558,7 +3498,6 @@ QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationHeaderIcon,
 QDialog#EldenRingSaveTransferDialog QLabel#saveTransferHeaderIcon,
 QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileHeaderIcon { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#ProfilesDialog QLabel#profilesSectionIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
 QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
 QDialog#EldenRingStartupOptionsDialog QLabel#startupProfileIcon,
@@ -3573,8 +3512,6 @@ QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationModeIcon,
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationGameProfileIcon,
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationStatusIcon,
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationActionsIcon { background-color: transparent; border: none; padding: 0px; }
-
-QDialog#ProfilesDialog QLabel#profileOptionsIcon { background-color: transparent; border: none; padding: 0px; }
 
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSafetyIcon { background-color: transparent; border: none; padding: 0px; }
 
