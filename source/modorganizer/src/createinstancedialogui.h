@@ -70,6 +70,8 @@ public:
   QCheckBox* showAllGames;
   QScrollArea* scrollArea_3;
   QWidget* games;
+  // the chosen game sits in Program Files, where Windows blocks writes
+  QLabel* gameProtectedWarning;
   // where to look when a game isn't listed
   QLabel* gameMissingHint;
 
@@ -94,6 +96,9 @@ public:
   // the instances that already manage this game; its row hides with none
   QLabel* instanceSiblings;
   QCheckBox* desktopShortcut;
+  // launchers found in the game folder, each with a switch; filled when the
+  // step opens, hidden with none
+  QWidget* detectedPrograms;
 
   // profile settings
   QWidget* page;
@@ -109,6 +114,8 @@ public:
   // where the game keeps its INI files and saves now, under the switches
   QLabel* gameInisPath;
   QLabel* gameSavesPath;
+  // those folders are synced by OneDrive; its link turns both switches on
+  QLabel* oneDriveWarning;
 
   // folders
   QWidget* page_6;

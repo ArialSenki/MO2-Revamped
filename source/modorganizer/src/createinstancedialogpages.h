@@ -363,6 +363,10 @@ private:
   //
   bool detectMicrosoftStore(const QString& path);
 
+  // shows the Program Files warning for the selected game
+  //
+  void updateProtectedWarning();
+
   // tells the user that the path probably contains a Microsoft Store game that
   // is not supported, returns true if the user decides to accept anyway.
   //
@@ -462,6 +466,9 @@ private:
 
   // updates the preview of the folder that will hold this instance
   void updatePathHint();
+
+  // lists the launchers found in the game folder, each with a switch
+  void fillPrograms();
 
   // check if the entered name is valid, sets m_okay and calls checkName()
   //

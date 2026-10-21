@@ -449,6 +449,16 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     gamesLayout->addStretch(1);
     scrollArea_3->setWidget(games);
     rows->addWidget(scrollArea_3, 1);
+    QVBoxLayout* warningBox = nullptr;
+    paddedBox(page_3, rows, warningBox);
+    gameProtectedWarning = infoBar(
+        page_3, "gameProtectedWarning",
+        tr("%1 is in Program Files. Windows protects that folder, and some mods and "
+           "tools fail when they write to it. Moving the game to another library avoids "
+           "it (in Steam: Properties, Installed Files, Move install folder)."),
+        "caution");
+    warningBox->addWidget(gameProtectedWarning);
+    warningBox->parentWidget()->hide();
     gameMissingHint =
         infoRow(page_3, rows, HelpGlyph, tr("Is your game missing?"),
                 tr("Choose Browse… and select its folder, or turn on Show all "
@@ -533,6 +543,13 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     desktopShortcut = toggle(shortcutRow, "desktopShortcut",
                              tr("Add a desktop shortcut that opens it"));
     shortcutLayout->addWidget(desktopShortcut);
+
+    detectedPrograms = named(new QWidget(widget_9), "detectedPrograms");
+    auto* programs   = new QVBoxLayout(detectedPrograms);
+    programs->setContentsMargins(0, 0, 0, 0);
+    programs->setSpacing(0);
+    detectedPrograms->hide();
+    fields->addWidget(detectedPrograms);
     rows->addWidget(widget_9);
   }
 
@@ -577,6 +594,19 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     // what the switches move: the game's own folders
     gameInisPath  = infoRow(page, rows, SettingsGlyph, tr("The game's INI files now"), {});
     gameSavesPath = infoRow(page, rows, SaveGlyph, tr("The game's saves now"), {});
+
+    QVBoxLayout* warningBox = nullptr;
+    paddedBox(page, rows, warningBox);
+    oneDriveWarning = infoBar(
+        page, "oneDriveWarning",
+        tr("OneDrive syncs these folders. It can lock the INI files and saves, or bring "
+           "back older copies, while the game runs. With profile-specific INI files and "
+           "saves they stay inside the instance, away from OneDrive. "
+           "<a href=\"both\">Turn both on</a>"),
+        "caution");
+    oneDriveWarning->setTextFormat(Qt::RichText);
+    warningBox->addWidget(oneDriveWarning);
+    warningBox->parentWidget()->hide();
   }
 
   // folders

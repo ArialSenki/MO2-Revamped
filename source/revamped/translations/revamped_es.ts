@@ -650,6 +650,14 @@
       <source>Next</source>
       <translation>Siguiente</translation>
     </message>
+    <message>
+      <source>%1 is in Program Files. Windows protects that folder, and some mods and tools fail when they write to it. Moving the game to another library avoids it (in Steam: Properties, Installed Files, Move install folder).</source>
+      <translation>%1 está en Program Files. Windows protege esa carpeta y algunos mods y herramientas fallan al escribir en ella. Para evitarlo, mueve el juego a otra biblioteca (en Steam: Propiedades, Archivos instalados, Mover carpeta de instalación).</translation>
+    </message>
+    <message>
+      <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href="both"&gt;Turn both on&lt;/a&gt;</source>
+      <translation>OneDrive sincroniza estas carpetas. Puede bloquear los archivos INI y las partidas, o devolver copias antiguas, mientras el juego está abierto. Con archivos INI y partidas por perfil se quedan dentro de la instancia, fuera de OneDrive. &lt;a href="both"&gt;Activar los dos&lt;/a&gt;</translation>
+    </message>
   </context>
   <context>
     <name>DisableProxyPluginDialog</name>
@@ -6237,6 +6245,30 @@ Proceed?</source>
     <message>
       <source>Automatic Archive Invalidation: %1</source>
       <translation>Invalidación automática de archivos: %1</translation>
+    </message>
+    <message>
+      <source>In Program Files</source>
+      <translation>En Program Files</translation>
+    </message>
+    <message>
+      <source>Programs found</source>
+      <translation>Programas encontrados</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables.</source>
+      <translation>Los que estén activados se añaden a Ejecutables.</translation>
+    </message>
+    <message>
+      <source>The ones turned on are added to Executables, after %1.</source>
+      <translation>Los que estén activados se añaden a Ejecutables, después de %1.</translation>
+    </message>
+    <message>
+      <source>Add %1</source>
+      <translation>Añadir %1</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programas</translation>
     </message>
   </context>
   <context>
