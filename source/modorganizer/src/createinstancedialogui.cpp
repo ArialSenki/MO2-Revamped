@@ -366,7 +366,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
                                "instance travel together."));
     createIsolated = choice(widget_15, "createIsolated", tr("Isolated copy"),
                             tr("A separate copy of Mod Organizer with its own settings and "
-                               "data, for one game. Elden Ring is supported for now."));
+                               "data, for one game. Elden Ring and Nightreign are supported for now."));
     choices->addWidget(createGlobal);
     choices->addWidget(createPortable);
     choices->addWidget(createIsolated);

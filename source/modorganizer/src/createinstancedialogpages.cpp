@@ -759,7 +759,7 @@ void GamePage::doActivated(bool firstTime)
   if (ui->gameSelectionHint != nullptr) {
     ui->gameSelectionHint->setText(
         isolatedCopy
-            ? QObject::tr("Isolated MO2 copies currently support Elden Ring. Choose its installed folder to continue.")
+            ? QObject::tr("Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.")
             : QObject::tr("Choose an installed game, or browse to its folder. The selected game and path are shown on each card."));
   }
 

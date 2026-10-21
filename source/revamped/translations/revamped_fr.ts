@@ -7558,6 +7558,10 @@ Exemple :
       <source>Unknown</source>
       <translation>Inconnu</translation>
     </message>
+    <message>
+      <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
+      <translation>Les copies isolées de MO2 prennent actuellement en charge Elden Ring et Nightreign. Choisissez le jeu et son dossier d'installation pour continuer.</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -8948,6 +8952,13 @@ Restantes cette heure : %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Informations de l’origine...</translation>
+    </message>
+  </context>
+  <context>
+    <name>Ui::CreateInstanceDialog</name>
+    <message>
+      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
+      <translation>Une copie séparée de Mod Organizer avec ses propres paramètres et données, pour un seul jeu. Elden Ring et Nightreign sont pris en charge pour l'instant.</translation>
     </message>
   </context>
 </TS>

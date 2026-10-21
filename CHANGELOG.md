@@ -2,9 +2,11 @@
 
 ## 1.0.2 — Elden Ring Nightreign, safer saves, Fluent dialogs
 
-Released on October 22, 2026. The isolated edition now covers ELDEN RING
-NIGHTREIGN as well as Elden Ring: each portable copy manages the game chosen
-when it is first opened.
+Released on October 22, 2026. The setup's main task is now the complete
+installation of MO2 Revamped, for every game; isolated copies for one game are
+made inside MO2 from the New instance wizard, which offers them for the games
+with their own support: Elden Ring and, new, ELDEN RING NIGHTREIGN. More games
+will join that list as their support is added.
 
 ### Elden Ring Nightreign
 
@@ -50,8 +52,12 @@ when it is first opened.
 
 ### Installer
 
-- Names the edition "Elden Ring and Nightreign" in all six languages and
-  shows its version in the header; Enter starts the task, Esc closes.
+- "Install MO2 Revamped" (the complete installation) is the main task again,
+  and "Copy data" is available; existing isolated Elden Ring installations
+  are still updated, restored and uninstalled as before.
+- Installations are found in the background when the window opens, so
+  switching between tasks no longer pauses.
+- Shows its version in the header; Enter starts the task, Esc closes.
 - Uninstalling after an update removes the program instead of putting the
   previous version back; files an update drops are removed (Restore brings
   them back).

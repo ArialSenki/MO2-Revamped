@@ -451,8 +451,10 @@ public:
             setMode(fixedMode_);
             if (sidebar_) sidebar_->hide();
         } else {
-            setMode(1);
+            setMode(isolated_ ? 1 : 0);
         }
+        // the installations Update, Restore and Uninstall offer
+        if (fixedMode_ < 0) QTimer::singleShot(0, this, [this] { startPrefetch(); });
     }
 
     ~SetupWindow() override {
@@ -528,8 +530,7 @@ private:
                                {2, QStringLiteral("Actualizar instalación aislada"), QStringLiteral("Actualiza solo la copia aislada y conserva sus datos."), QStringLiteral("update")},
                                {4, QStringLiteral("Restaurar copia anterior"), QStringLiteral("Recupera la copia previa de una actualización."), QStringLiteral("restore")},
                                {5, QStringLiteral("Desinstalar instalación aislada"), QStringLiteral("Retira esta copia; puedes conservar o borrar sus datos."), QStringLiteral("remove")}};
-        return {{1, QStringLiteral("Instalar Elden Ring y Nightreign aislado"), QStringLiteral("Crea una copia portable dedicada a Elden Ring y Nightreign."), QStringLiteral("install")},
-                {0, QStringLiteral("Nueva instalación"), QStringLiteral("Instala MO2 Revamped. Después podrás crear tus instancias desde la aplicación."), QStringLiteral("install")},
+        return {{0, QStringLiteral("Instalar MO2 Revamped"), QStringLiteral("Instalación completa. Dentro de MO2 eliges tus instancias, también aisladas por juego."), QStringLiteral("install")},
                 {2, QStringLiteral("Actualizar MO2 Revamped"), QStringLiteral("Actualiza una copia reconocida y crea una copia de seguridad."), QStringLiteral("update")},
                 {3, QStringLiteral("Copiar datos"), QStringLiteral("Elige qué datos copiar; el origen permanece intacto."), QStringLiteral("copy")},
                 {4, QStringLiteral("Restaurar copia anterior"), QStringLiteral("Recupera la copia previa de una actualización."), QStringLiteral("restore")},
@@ -539,7 +540,7 @@ private:
     // The standard multi-instance setup (and "Copiar datos", which installs the
     // same Complete payload) stays unavailable until its support is extended;
     // the isolated Elden Ring edition is the only new installation for now.
-    bool modeBlocked(int id) const { return !isolated_ && (id == 0 || id == 3); }
+    bool modeBlocked(int) const { return false; }
 
     void applyBlockedTiles() {
         for (TaskCard *tile : taskTiles_) {
@@ -826,6 +827,86 @@ private:
         return candidates;
     }
 
+    // Finding the installations (and what each one allows) takes a run of the
+    // setup engine per folder. It runs in the background from the start, so
+    // switching tasks never waits for it; the folder fills in when it is done.
+    void startPrefetch() {
+        auto *process = new QProcess(this);
+        const QString output = tempFile(QStringLiteral("installations-%1.json"));
+        auto done = [this, process, output] {
+            if (!registeredLoaded_) {
+                registeredLoaded_ = true;
+                QFile file(output);
+                if (file.open(QIODevice::ReadOnly)) {
+                    const QJsonObject result = QJsonDocument::fromJson(file.readAll()).object();
+                    for (const QJsonValue &value : result.value(QStringLiteral("paths")).toArray())
+                        if (!value.toString().isEmpty()) registered_ << QDir::toNativeSeparators(value.toString());
+                }
+            }
+            QFile::remove(output);
+            process->deleteLater();
+            prefetchQueue_.clear();
+            for (const QString &candidate : installCandidates())
+                if (QFileInfo(QDir(candidate).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
+                    prefetchQueue_ << candidate;
+            prefetchOrder_ = prefetchQueue_;
+            prefetchNext();
+        };
+        connect(process, &QProcess::finished, this, done);
+        connect(process, &QProcess::errorOccurred, this, [process, done](QProcess::ProcessError error) {
+            if (error == QProcess::FailedToStart) done();
+        });
+        QTimer::singleShot(10000, process, [process] { process->kill(); });
+        process->start(host_, {QStringLiteral("--installations"), output});
+    }
+
+    void prefetchNext() {
+        if (prefetchQueue_.isEmpty()) {
+            prefetchDone_ = true;
+            if (autofillTarget()) refreshInspection();
+            return;
+        }
+        const QString candidate = prefetchQueue_.takeFirst();
+        const QString output = tempFile(QStringLiteral("prefetch-%1.json"));
+        auto *process = new QProcess(this);
+        auto done = [this, process, output, candidate] {
+            QFile file(output);
+            if (file.open(QIODevice::ReadOnly)) prefetched_.insert(candidate, QJsonDocument::fromJson(file.readAll()).object());
+            file.close();
+            QFile::remove(output);
+            process->deleteLater();
+            prefetchNext();
+        };
+        connect(process, &QProcess::finished, this, done);
+        connect(process, &QProcess::errorOccurred, this, [done](QProcess::ProcessError error) {
+            if (error == QProcess::FailedToStart) done();
+        });
+        QTimer::singleShot(8000, process, [process] { process->kill(); });
+        process->start(host_, {QStringLiteral("--inspect"), candidate, output, language_});
+    }
+
+    // the first installation the current task can use, once the background
+    // search has found them; false when nothing changed
+    bool autofillTarget() {
+        if (!target_ || !(mode_ == 2 || mode_ == 4 || mode_ == 5) || fixedMode_ >= 0 || !prefetchDone_ ||
+            savedPaths_.value(mode_).contains(QStringLiteral("target")) ||
+            target_->text().trimmed() != defaultTarget(mode_))
+            return false;
+        for (const QString &candidate : prefetchOrder_) {
+            const QJsonObject found = prefetched_.value(candidate);
+            bool eligible = found.value(QStringLiteral("recognized")).toBool();
+            if (mode_ == 2) eligible = eligible && found.value(QStringLiteral("compatibleVersion")).toBool();
+            if (mode_ == 4) eligible = eligible && found.value(QStringLiteral("pendingRestore")).toBool() && found.value(QStringLiteral("validBackup")).toBool();
+            if (!eligible) continue;
+            const QString path = QDir::toNativeSeparators(candidate);
+            if (target_->text().trimmed() == path) return false;
+            const QSignalBlocker blocker(target_);
+            target_->setText(path);
+            return true;
+        }
+        return false;
+    }
+
     void setMode(int id, bool force = false) {
         if (busy_ || (hasCompleted_ && !force) || modeBlocked(id)) return;
         const bool changed = id != mode_ || !pageBuilt_;
@@ -834,23 +915,7 @@ private:
         for (TaskCard *tile : taskTiles_) tile->setChecked(tile->mode() == mode_);
         buildPage(changed || force);
         pageBuilt_ = true;
-        if (target_ && (mode_ == 2 || mode_ == 4 || mode_ == 5) && fixedMode_ < 0 &&
-            !savedPaths_.value(mode_).contains(QStringLiteral("target"))) {
-            QApplication::setOverrideCursor(Qt::WaitCursor);
-            for (const QString &candidate : installCandidates()) {
-                if (!QFileInfo(QDir(candidate).filePath(QStringLiteral("ModOrganizer.exe"))).isFile()) continue;
-                const QJsonObject found = inspect(candidate);
-                bool eligible = found.value(QStringLiteral("recognized")).toBool();
-                if (mode_ == 2) eligible = eligible && found.value(QStringLiteral("compatibleVersion")).toBool();
-                if (mode_ == 4) eligible = eligible && found.value(QStringLiteral("pendingRestore")).toBool() && found.value(QStringLiteral("validBackup")).toBool();
-                if (eligible) {
-                    const QSignalBlocker blocker(target_);
-                    target_->setText(QDir::toNativeSeparators(candidate));
-                    break;
-                }
-            }
-            QApplication::restoreOverrideCursor();
-        }
+        autofillTarget();
         if (target_) refreshInspection();
     }
 
@@ -1160,11 +1225,12 @@ private:
         if (!target_ || busy_) return;
         if (inspectTimer_) inspectTimer_->stop();
         if (inspectProcess_) {
-            inspectProcess_->disconnect();
-            inspectProcess_->kill();
-            inspectProcess_->waitForFinished(500);
-            inspectProcess_->deleteLater();
+            QProcess *stale = inspectProcess_;
             inspectProcess_ = nullptr;
+            stale->disconnect();
+            connect(stale, &QProcess::finished, stale, &QObject::deleteLater);
+            if (stale->state() == QProcess::NotRunning) stale->deleteLater();
+            else stale->kill();
         }
         if (!inspectFolder_.isEmpty()) QDir(inspectFolder_).removeRecursively();
         inspectFolder_ = QFileInfo(tempFile(QStringLiteral("inspect-%1/result.json"))).absolutePath();
@@ -1553,6 +1619,10 @@ private:
     bool hasCompleted_ = false;
     bool pageBuilt_ = false;
     bool registeredLoaded_ = false;
+    bool prefetchDone_ = false;
+    QStringList prefetchQueue_;
+    QStringList prefetchOrder_;
+    QHash<QString, QJsonObject> prefetched_;
     int fixedMode_ = -1;
     int mode_ = 0;
     int progressTarget_ = 0;

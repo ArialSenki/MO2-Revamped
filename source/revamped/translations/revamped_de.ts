@@ -7350,6 +7350,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>Unknown</source>
       <translation>Unbekannt</translation>
     </message>
+    <message>
+      <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
+      <translation>Isolierte MO2-Kopien unterstützen derzeit Elden Ring und Nightreign. Wähle das Spiel und seinen Installationsordner, um fortzufahren.</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -8716,6 +8720,13 @@ In dieser Stunde verbleibend: %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Ursprungsinformationen...</translation>
+    </message>
+  </context>
+  <context>
+    <name>Ui::CreateInstanceDialog</name>
+    <message>
+      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
+      <translation>Eine separate Kopie von Mod Organizer mit eigenen Einstellungen und Daten für ein Spiel. Derzeit werden Elden Ring und Nightreign unterstützt.</translation>
     </message>
   </context>
 </TS>
