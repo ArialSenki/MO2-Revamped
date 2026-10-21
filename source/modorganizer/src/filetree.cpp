@@ -657,7 +657,8 @@ void FileTree::addDirectoryMenus(QMenu& menu, FileTreeItem& item)
 {
   // a virtual folder can come from many mods, so it has no single real
   // folder; it can still be expanded at once and its path copied
-  const QModelIndex index = m_tree->currentIndex();
+  // the row the menu was built for, not whatever row has the focus frame
+  const QModelIndex index = m_tree->selectionModel()->selectedRows().value(0);
 
   MenuItem(tr("Expand all below"))
       .icon(menuGlyph(MenuGlyphs::Expand))

@@ -5716,6 +5716,10 @@ p, li { white-space: pre-wrap; }
       <source>Disable its mods</source>
       <translation>Disattiva le sue mod</translation>
     </message>
+    <message>
+      <source>Folders of the %1 selected mods</source>
+      <translation>Cartelle delle %1 mod selezionate</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -6625,6 +6629,10 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
     <message>
       <source>OK</source>
       <translation>OK</translation>
+    </message>
+    <message>
+      <source>Last used</source>
+      <translation>Ultimo utilizzo</translation>
     </message>
   </context>
   <context>

@@ -1106,7 +1106,6 @@ void EditExecutablesDialog::buildFluentLayout()
   // the Designer layout stays for the classic themes; Fluent moves the same
   // widgets into the instance manager's list and details cards, so all the
   // handlers above keep working on them
-  m_fluent   = true;
   auto* root = qobject_cast<QVBoxLayout*>(layout());
   if (root == nullptr) {
     return;
@@ -1145,6 +1144,8 @@ void EditExecutablesDialog::buildFluentLayout()
   setMinimumSize(900, 600);
   resize(std::max(width(), 1000), std::max(height(), 700));
 
+  // only now: the refresh functions need the cards built above
+  m_fluent = true;
   for (int i = 0; i < ui->list->count(); ++i) {
     refreshFluentItem(ui->list->item(i));
   }
@@ -1266,7 +1267,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
   addSwitchRow(rows, 0xE7FC, tr("Steam app ID"),
                tr("Starts the program as another Steam app, for tools that need it"),
                ui->overwriteSteamAppID, ui->steamAppID);
-  ui->mods->setMinimumWidth(220);
+  ui->mods->setMinimumWidth(180);
   addSwitchRow(rows, 0xE74E, tr("Save new files to a mod"),
                tr("Files the program creates go to this mod instead of Overwrite"),
                ui->createFilesInMod, ui->mods);
@@ -1433,10 +1434,11 @@ void EditExecutablesDialog::showFluentListMenu(const QPoint& pos)
                       {tr("Program path"), QDir::toNativeSeparators(file)},
                       {tr("Arguments"), exe->arguments()}});
   menu.addSeparator();
-  auto* remove = menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                                tr("Remove"), this,
-                                &EditExecutablesDialog::on_remove_clicked);
-  remove->setShortcut(QKeySequence(Qt::Key_Delete));
+  // the key shows at the menu's right edge; the list's shortcut handles it
+  menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                 tr("Remove") + QLatin1Char('	') +
+                     QKeySequence(Qt::Key_Delete).toString(QKeySequence::NativeText),
+                 this, &EditExecutablesDialog::on_remove_clicked);
 
   menu.exec(ui->list->viewport()->mapToGlobal(pos));
 }

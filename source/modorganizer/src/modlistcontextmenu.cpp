@@ -603,8 +603,16 @@ QString ModListContextMenu::downloadPath(ModInfo::Ptr mod) const
 void ModListContextMenu::addFolderActions(ModInfo::Ptr mod)
 {
   const QString download = downloadPath(mod);
-  addOpenFolderMenu(this, {{tr("Mod folder"), mod->absolutePath()},
-                           {tr("Downloaded archive"), download}});
+  QMenu* folders = addOpenFolderMenu(this, {{tr("Mod folder"), mod->absolutePath()},
+                                            {tr("Downloaded archive"), download}});
+  if (m_selected.size() > 1) {
+    // every selected mod's folder, as Open in Explorer did
+    folders->addSeparator();
+    folders->addAction(tr("Folders of the %1 selected mods").arg(m_selected.size()),
+                       [this] {
+                         m_actions.openExplorer(m_selected);
+                       });
+  }
 
   std::vector<std::pair<QString, QString>> copies{
       {tr("Name"), mod->name()}, {tr("Folder path"), nativePath(mod->absolutePath())}};

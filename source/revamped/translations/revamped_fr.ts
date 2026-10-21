@@ -5654,6 +5654,10 @@ p, li { white-space: pre-wrap; }
       <source>Disable its mods</source>
       <translation>Désactiver ses mods</translation>
     </message>
+    <message>
+      <source>Folders of the %1 selected mods</source>
+      <translation>Dossiers des %1 mods sélectionnés</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -6563,6 +6567,10 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
     <message>
       <source>OK</source>
       <translation>OK</translation>
+    </message>
+    <message>
+      <source>Last used</source>
+      <translation>Dernière utilisation</translation>
     </message>
   </context>
   <context>

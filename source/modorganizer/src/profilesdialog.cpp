@@ -148,7 +148,7 @@ std::pair<int, int> enabledMods(const Profile& profile)
 QString whenText(const QDateTime& time)
 {
   if (!time.isValid()) {
-    return QObject::tr("Unknown");
+    return ProfilesDialog::tr("Unknown");
   }
   const QLocale locale;
   const QDate today = QDate::currentDate();
@@ -382,7 +382,9 @@ QWidget* ProfilesDialog::createDetails()
   m_modsRow    = FluentPanels::addDetailRow(rows, ModsGlyph, tr("Mods"));
   m_folderRow  = FluentPanels::addDetailRow(rows, FolderGlyph, tr("Profile folder"),
                                             tr("Open the profile folder"));
-  m_changedRow = FluentPanels::addDetailRow(rows, ClockGlyph, tr("Mod list changed"));
+  // MO2 writes the mod list whenever it loads the profile, so its date is
+  // when the profile was last used
+  m_changedRow = FluentPanels::addDetailRow(rows, ClockGlyph, tr("Last used"));
   connect(m_folderRow.action, &QToolButton::clicked, this, &ProfilesDialog::exploreProfile);
 
   // Elden Ring saves follow the Save Isolation tool, so the row only says so;
@@ -611,6 +613,13 @@ void ProfilesDialog::fillDetails()
   m_copy->setEnabled(static_cast<bool>(profile));
 
   if (!profile) {
+    // nothing of the previous profile may stay switchable
+    for (QCheckBox* box : {m_localSaves, m_localIniFiles, m_invalidation}) {
+      QSignalBlocker blocker(box);
+      box->setChecked(false);
+      box->setEnabled(false);
+    }
+    m_transfer->setEnabled(false);
     m_modsRow.value->setFullText(tr("This profile can't be read"));
     m_folderRow.value->setFullText(QDir::toNativeSeparators(
         Settings::instance().paths().profiles() + "/" + item->text()));
@@ -625,6 +634,8 @@ void ProfilesDialog::fillDetails()
       whenText(QFileInfo(profile->getModlistFileName()).lastModified()));
   m_savesRow.value->setFullText(tr("Chosen in Tools > Save Isolation"));
 
+  m_localSaves->setEnabled(true);
+  m_localIniFiles->setEnabled(true);
   try {
     bool invalidationSupported = false;
     QSignalBlocker invalidation(m_invalidation);
@@ -674,8 +685,12 @@ void ProfilesDialog::showListMenu(const QPoint& pos)
   QMenu menu(this);
   auto add = [&](char16_t glyph, const QString& text, QAbstractButton* mirror,
                  void (ProfilesDialog::*slot)(), const QKeySequence& keys = {}) {
-    auto* action = menu.addAction(FluentIcons::glyph(glyph), text, this, slot);
-    action->setShortcut(keys);
+    // the key shows at the menu's right edge; the dialog's own shortcut
+    // handles it, a second one on the action would make both ambiguous
+    const QString label =
+        keys.isEmpty() ? text
+                       : text + QLatin1Char('	') + keys.toString(QKeySequence::NativeText);
+    auto* action = menu.addAction(FluentIcons::glyph(glyph), label, this, slot);
     if (mirror != nullptr) {
       action->setEnabled(mirror->isEnabled());
       action->setVisible(!mirror->isHidden());
