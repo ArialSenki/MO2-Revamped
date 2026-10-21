@@ -775,6 +775,10 @@
       <source>Delete downloads</source>
       <translation>Eliminar descargas</translation>
     </message>
+    <message>
+      <source>Visit on Nexus</source>
+      <translation>Visitar en Nexus</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -5582,6 +5586,22 @@ p, li { white-space: pre-wrap; }
       <source>Folders of the %1 selected mods</source>
       <translation>Carpetas de los %1 mods seleccionados</translation>
     </message>
+    <message>
+      <source>Information...</source>
+      <translation>Información...</translation>
+    </message>
+    <message>
+      <source>Ignore missing data</source>
+      <translation>Ignorar datos que faltan</translation>
+    </message>
+    <message>
+      <source>Clear Overwrite...</source>
+      <translation>Vaciar Overwrite...</translation>
+    </message>
+    <message>
+      <source>Visit on Nexus</source>
+      <translation>Visitar en Nexus</translation>
+    </message>
   </context>
   <context>
     <name>ModListGlobalContextMenu</name>
@@ -5672,6 +5692,22 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Export to CSV...</source>
       <translation>Exportar a CSV...</translation>
+    </message>
+    <message>
+      <source>Create empty mod</source>
+      <translation>Crear mod vacío</translation>
+    </message>
+    <message>
+      <source>Create empty mod above</source>
+      <translation>Crear mod vacío encima</translation>
+    </message>
+    <message>
+      <source>Create empty mod below</source>
+      <translation>Crear mod vacío debajo</translation>
+    </message>
+    <message>
+      <source>Create empty mod inside</source>
+      <translation>Crear mod vacío dentro</translation>
     </message>
   </context>
   <context>
@@ -8299,6 +8335,14 @@ Restantes esta hora: %3</translation>
     <message>
       <source>&amp;Collapse all</source>
       <translation>&amp;Contraer todo</translation>
+    </message>
+    <message>
+      <source>Open with &amp;VFS</source>
+      <translation>Abrir con &amp;VFS</translation>
+    </message>
+    <message>
+      <source>Execute with &amp;VFS</source>
+      <translation>Ejecutar con &amp;VFS</translation>
     </message>
   </context>
   <context>

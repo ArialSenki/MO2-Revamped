@@ -18,6 +18,7 @@
 #include <iplugindiagnose.h>
 #include <utility.h>
 
+#include "eldenringsavesettings.h"
 #include "plugincontainer.h"
 
 using namespace MOBase;
@@ -38,6 +39,9 @@ constexpr int PluginRole    = Qt::UserRole + 11;  // the IPluginDiagnose*
 constexpr int KeyRole       = Qt::UserRole + 12;  // the problem's key
 constexpr int FixRole       = Qt::UserRole + 13;  // has a guided fix
 constexpr int OverwriteRole = Qt::UserRole + 14;  // about Overwrite
+
+// diagnose_basic's "files in your Overwrite mod directory" problem
+constexpr unsigned int BasicOverwriteProblem = 2;
 }  // namespace
 
 ProblemsDialog::ProblemsDialog(const PluginContainer& pluginContainer, QWidget* parent)
@@ -261,7 +265,11 @@ void ProblemsDialog::runDiagnosis()
     for (unsigned int key : activeProblems) {
       const QString shortDescription = diagnose->shortDescription(key);
       const QString fullDescription  = diagnose->fullDescription(key);
+      // the basic diagnosis plugin's Overwrite notice, recognized by its key
+      // so translated texts are recognized too
       const bool isOverwrite =
+          (plugin != nullptr && plugin->name() == QLatin1String("Basic diagnosis plugin") &&
+           key == BasicOverwriteProblem) ||
           (shortDescription + fullDescription).contains("overwrite", Qt::CaseInsensitive);
 
       auto* item = new QListWidgetItem(shortDescription, m_list);
@@ -315,9 +323,9 @@ void ProblemsDialog::selectionChanged()
           : tr("Review the details below to understand this notification and choose an "
                "available action."));
 
-  if (isOverwrite && text.contains(QLatin1String("Creation Club"))) {
+  if (isOverwrite && EldenRingSaveSettings::supports(m_PluginContainer.managedGame())) {
     // the basic diagnosis text is written for the Bethesda games (Wrye Bash,
-    // xEdit, ESL files); this build manages Elden Ring
+    // xEdit, ESL files); Elden Ring gets its own
     m_description->setHtml(
         tr("<p>Overwrite holds files that the game and tools created while running "
            "through MO2: logs and settings written by DLL mods, files saved by mod "
