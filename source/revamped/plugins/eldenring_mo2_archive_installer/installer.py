@@ -1130,8 +1130,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         else:
             dialog.resize(dialog.sizeHint().expandedTo(dialog.minimumSizeHint()))
         dialog.exec()
+        accepted = dialog.result() == QtWidgets.QDialog.DialogCode.Accepted
+        # a child of MO2's window: freed, not kept for every install
+        dialog.deleteLater()
 
-        if dialog.result() != QtWidgets.QDialog.DialogCode.Accepted:
+        if not accepted:
             return None
         return selected["choice"]
 

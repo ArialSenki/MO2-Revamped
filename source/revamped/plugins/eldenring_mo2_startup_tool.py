@@ -29,10 +29,15 @@ from PyQt6.QtWidgets import (
 
 # MO2 installs translations/revamped_<language>.qm; the source text is English.
 _TR_CONTEXT = "EldenRingStartupOptions"
+# the managed game's name, for texts that name Elden Ring; set when the tool opens
+_game_name = "Elden Ring"
 
 
 def _tr(text: str) -> str:
-    return QCoreApplication.translate(_TR_CONTEXT, text)
+    text = QCoreApplication.translate(_TR_CONTEXT, text)
+    if _game_name != "Elden Ring":
+        text = text.replace("Elden Ring", _game_name).replace("eldenring.exe", "nightreign.exe")
+    return text
 
 
 def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
@@ -126,6 +131,12 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 "nightreign",
             }:
                 return
+            global _game_name
+            _game_name = (
+                "Nightreign"
+                if game.gameShortName().casefold() == "nightreign"
+                else "Elden Ring"
+            )
             nightreign = game.gameShortName().casefold() == "nightreign"
         except Exception:
             return
@@ -674,7 +685,11 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             dialog.move(frame.left(), max(available_geometry.top(), top))
 
         QTimer.singleShot(50, grow_past_short_scroll)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        # a child of MO2's window: freed once this call returns to MO2's event
+        # loop (the choices below are read before that), not kept per opening
+        dialog.deleteLater()
+        if not accepted:
             return
         if read_error is not None:
             QMessageBox.warning(

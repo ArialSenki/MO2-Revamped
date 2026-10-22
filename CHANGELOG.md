@@ -1,5 +1,49 @@
 # Changelog
 
+## Unreleased
+
+### Saves (Elden Ring and Nightreign)
+
+- If the game was started from Steam while MO2 had the Steam saves set aside,
+  the newer save folder is kept and named in a warning and in Notifications,
+  instead of being set aside silently.
+- MO2 started while the game runs waits for it to close and then puts the
+  Steam saves back; two MO2 windows of one install no longer restore at the
+  same time; a moved install or an older recovery record no longer blocks
+  launches; a save folder linked to another drive works.
+- Restoring a backup that fails halfway puts every original file back;
+  backups are kept and pruned in the right order.
+- Nightreign guards `start_protected_game.exe`, and launchers shared with
+  other games no longer block a launch.
+
+### Game support
+
+- Bethesda games: plugin names are no longer cut to "..."; setting up an
+  instance of a game with editions (Skyrim SE, Fallout 4) no longer reopens
+  the same dialog forever.
+- Nightreign tools show Nightreign names; the native profile can't list one
+  DLL for two mods; Overwrite cleanup skips a locked file and continues.
+
+### Interface
+
+- Help has the Mod Organizer 2 documentation, Help on the Interface and About
+  Qt again; plugin-order backups are in the plugin list menu and All Mods in
+  each mod's menu.
+- The command bar can't be hidden any more; hovering over category submenus
+  no longer changes the selected mods; dashboard tiles stay current.
+
+### Instances
+
+- Deleting an instance warns when other instances use its folders.
+- Crash dumps are written again; an isolated copy made at first start is
+  launched; portable instances get working shortcuts and forwarded commands.
+
+### Installer
+
+- Uninstalling after an update without an install record removes the program;
+  a failed update keeps a correct record; reinstalling before a reboot keeps
+  the uninstaller; Copy data handles large folders and trailing slashes.
+
 ## 1.0.2 — Elden Ring Nightreign, safer saves, Fluent dialogs
 
 Released on October 22, 2026. The setup's main task is now the complete

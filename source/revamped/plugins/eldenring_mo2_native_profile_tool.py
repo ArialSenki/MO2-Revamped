@@ -34,10 +34,15 @@ from PyQt6.QtWidgets import (
 
 # MO2 installs translations/revamped_<language>.qm; the source text is English.
 _TR_CONTEXT = "EldenRingNativeProfile"
+# the managed game's name, for texts that name Elden Ring; set when the tool opens
+_game_name = "Elden Ring"
 
 
 def _tr(text: str) -> str:
-    return QCoreApplication.translate(_TR_CONTEXT, text)
+    text = QCoreApplication.translate(_TR_CONTEXT, text)
+    if _game_name != "Elden Ring":
+        text = text.replace("Elden Ring", _game_name).replace("eldenring.exe", "nightreign.exe")
+    return text
 
 
 def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
@@ -202,6 +207,12 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 "nightreign",
             }:
                 return
+            global _game_name
+            _game_name = (
+                "Nightreign"
+                if game.gameShortName().casefold() == "nightreign"
+                else "Elden Ring"
+            )
         except Exception:
             return
 
@@ -543,6 +554,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         layout.activate()
         dialog.ensurePolished()
         dialog.exec()
+        # a child of MO2's window: freed, not kept per opening
+        dialog.deleteLater()
 
     @staticmethod
     def _show_notice(parent, title: str, message: str, kind: str = "info") -> None:
@@ -591,6 +604,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         layout.addWidget(buttons)
         dialog.adjustSize()
         dialog.exec()
+        dialog.deleteLater()
 
     def _read_profile_entries(self, config_path: Path) -> list[dict]:
         config = configparser.ConfigParser(interpolation=None)
@@ -677,6 +691,11 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         mod_list = self.__organizer.modList()
         candidates = []
         seen = set()
+        active_priority = {
+            name.casefold(): priority
+            for priority, name in enumerate(mod_list.allModsByProfilePriority())
+            if mod_list.state(name) & mobase.ModState.ACTIVE
+        }
         for mod_name in mod_list.allModsByProfilePriority():
             if not (mod_list.state(mod_name) & mobase.ModState.ACTIVE):
                 continue
@@ -702,11 +721,19 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                     origins = list(self.__organizer.getFileOrigins(route))
                 except Exception:
                     continue
-                if not any(
-                    isinstance(origin, str)
-                    and origin.casefold() == mod_name.casefold()
-                    for origin in origins
-                ):
+                # only the mod that wins the file, as the game plugin loads it:
+                # listing the overridden copies too would let the profile name
+                # one game path twice, which blocks the launch
+                winner = max(
+                    (
+                        origin.casefold()
+                        for origin in origins
+                        if isinstance(origin, str) and origin.casefold() in active_priority
+                    ),
+                    key=lambda origin: active_priority[origin],
+                    default=None,
+                )
+                if winner != mod_name.casefold():
                     continue
                 key = (mod_name.casefold(), route.casefold())
                 if key in seen:
@@ -1063,7 +1090,10 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
 
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        # freed once this call returns to MO2's event loop; the choice is read first
+        dialog.deleteLater()
+        if accepted:
             entries[row]["initializer"] = export_combo.currentText().strip()
             self._populate_profile_table(table, entries)
             table.selectRow(row)
@@ -1198,6 +1228,9 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
     ) -> None:
         entries = self._entries_from_table(table)
         seen = set()
+        # enabled entries by game path: the game plugin refuses a profile that
+        # loads one path from two mods
+        enabled_paths: dict[str, str] = {}
         for index, entry in enumerate(entries, start=1):
             if not entry["mod"] or not entry["path"]:
                 self._show_notice(
@@ -1227,6 +1260,20 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 )
                 return
             seen.add(key)
+            if entry["enabled"]:
+                other_mod = enabled_paths.setdefault(route.casefold(), entry["mod"])
+                if other_mod.casefold() != entry["mod"].casefold():
+                    self._show_notice(
+                        dialog,
+                        _tr("Duplicate DLL entry"),
+                        _tr("'{path}' is enabled for both '{first}' and '{mod}'. MO2 "
+                            "loads only the copy that wins the file; disable or "
+                            "remove one of the entries.").format(
+                            path=route, first=other_mod, mod=entry["mod"]
+                        ),
+                        "warning",
+                    )
+                    return
             initializer = entry["initializer"]
             if initializer and (
                 not initializer.isascii() or not initializer.isidentifier()
