@@ -128,6 +128,9 @@ function Invoke-SetupCompile {
     )
     if (Test-Path -LiteralPath $iconPath -PathType Leaf) {
         $arguments += "/win32icon:$iconPath"
+        # every size of the icon for the Qt window and taskbar button, which
+        # an icon read back from the executable would reduce to 32 px
+        $arguments += "/resource:$iconPath,Mo2RevampedSetup.icon.ico"
     }
     if ($Defines.Count -gt 0) {
         $arguments += '/define:' + [string]::Join(';', $Defines)
@@ -725,7 +728,9 @@ function Test-EmbeddedResources {
     param([string]$InstallerPath, [string[]]$ExpectedResources)
     $assembly = [Reflection.Assembly]::LoadFrom($InstallerPath)
     $actual = @($assembly.GetManifestResourceNames() | Sort-Object)
-    $expected = @($ExpectedResources | Sort-Object)
+    $withIcon = @($ExpectedResources)
+    if (Test-Path -LiteralPath $iconPath -PathType Leaf) { $withIcon += 'Mo2RevampedSetup.icon.ico' }
+    $expected = @($withIcon | Sort-Object)
     if ([string]::Join("`n", $actual) -cne [string]::Join("`n", $expected)) {
         throw "Embedded resources do not match the requested package in $InstallerPath. Found: $([string]::Join(', ', $actual))"
     }

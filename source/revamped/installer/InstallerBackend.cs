@@ -127,8 +127,19 @@ namespace Mo2RevampedSetup
                     string iconPath = Path.Combine(extractionRoot, "MO2RevampedSetup.ico");
                     try
                     {
-                        System.Drawing.Icon hostIcon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-                        if (hostIcon != null) using (FileStream iconFile = new FileStream(iconPath, FileMode.Create, FileAccess.Write, FileShare.Read)) hostIcon.Save(iconFile);
+                        using (Stream embeddedIcon = assembly.GetManifestResourceStream("Mo2RevampedSetup.icon.ico"))
+                        {
+                            if (embeddedIcon != null)
+                            {
+                                using (FileStream iconFile = new FileStream(iconPath, FileMode.Create, FileAccess.Write, FileShare.Read)) embeddedIcon.CopyTo(iconFile);
+                            }
+                            else
+                            {
+                                // Icon.Save keeps only 32 px in 16 colors: a last resort
+                                System.Drawing.Icon hostIcon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+                                if (hostIcon != null) using (FileStream iconFile = new FileStream(iconPath, FileMode.Create, FileAccess.Write, FileShare.Read)) hostIcon.Save(iconFile);
+                            }
+                        }
                     }
                     catch { }
 
