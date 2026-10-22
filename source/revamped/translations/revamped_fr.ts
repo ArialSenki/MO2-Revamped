@@ -487,8 +487,8 @@
       <translation>Copie isolée</translation>
     </message>
     <message>
-      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring is supported for now.</source>
-      <translation>Une copie séparée de Mod Organizer avec ses propres paramètres et données, pour un jeu. Elden Ring est pris en charge pour l'instant.</translation>
+      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
+      <translation>Une copie séparée de Mod Organizer avec ses propres paramètres et données, pour un seul jeu. Elden Ring et Nightreign sont pris en charge pour l'instant.</translation>
     </message>
     <message>
       <source>What changes</source>
@@ -665,6 +665,10 @@
     <message>
       <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href="both"&gt;Turn both on&lt;/a&gt;</source>
       <translation>OneDrive synchronise ces dossiers. Il peut verrouiller les fichiers INI et les sauvegardes, ou remettre d'anciennes copies, pendant que le jeu tourne. Avec des fichiers INI et des sauvegardes propres à chaque profil, ils restent dans l'instance, hors de OneDrive. &lt;a href="both"&gt;Activer les deux&lt;/a&gt;</translation>
+    </message>
+    <message>
+      <source>Browse</source>
+      <translation>Parcourir</translation>
     </message>
   </context>
   <context>
@@ -4108,6 +4112,18 @@ Emplacement : %3</translation>
       <source>This portable instance keeps the instances in the GlobalInstances folder listed; it can't be deleted</source>
       <translation>Cette instance portable maintient les instances du dossier GlobalInstances dans la liste ; elle ne peut pas être supprimée</translation>
     </message>
+    <message>
+      <source>today at %1</source>
+      <translation>aujourd'hui à %1</translation>
+    </message>
+    <message>
+      <source>yesterday</source>
+      <translation>hier</translation>
+    </message>
+    <message>
+      <source>%1 days ago</source>
+      <translation>il y a %1 jours</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -5556,8 +5572,8 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Interface et diagnostic</translation>
     </message>
     <message>
-      <source>Includes the light and dark MO2 Classic Refined themes, plus tools to prepare diagnostic reports.</source>
-      <translation>Inclut les thèmes MO2 Classic Refined clair et sombre, ainsi que des outils pour préparer des rapports de diagnostic.</translation>
+      <source>Includes Windows 11 style themes (Light, Dark and Dark Black) with Fluent icons, plus tools to prepare diagnostic reports.</source>
+      <translation>Inclut des thèmes de style Windows 11 (Clair, Sombre et Noir foncé) avec des icônes Fluent, ainsi que des outils pour préparer des rapports de diagnostic.</translation>
     </message>
     <message>
       <source>Included components</source>
@@ -5688,10 +5704,10 @@ Installateur d'archives · {installer}</translation>
     <message>
       <source>Save isolation · {saves}
 Startup options · {startup}
-MO2 Classic Refined · Light and Dark</source>
+Fluent themes · Light, Dark and Dark Black</source>
       <translation>Isolation des sauvegardes · {saves}
 Options de lancement · {startup}
-MO2 Classic Refined · Clair et Sombre</translation>
+Thèmes Fluent · Clair, Sombre et Noir foncé</translation>
     </message>
     <message>
       <source>Location:
@@ -8952,13 +8968,6 @@ Restantes cette heure : %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Informations de l’origine...</translation>
-    </message>
-  </context>
-  <context>
-    <name>Ui::CreateInstanceDialog</name>
-    <message>
-      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
-      <translation>Une copie séparée de Mod Organizer avec ses propres paramètres et données, pour un seul jeu. Elden Ring et Nightreign sont pris en charge pour l'instant.</translation>
     </message>
   </context>
 </TS>

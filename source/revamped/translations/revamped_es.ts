@@ -491,8 +491,8 @@
       <translation>Copia aislada</translation>
     </message>
     <message>
-      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring is supported for now.</source>
-      <translation>Una copia aparte de Mod Organizer con sus propios ajustes y datos, para un juego. De momento se admite Elden Ring.</translation>
+      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
+      <translation>Una copia aparte de Mod Organizer con sus propios ajustes y datos, para un solo juego. Por ahora admite Elden Ring y Nightreign.</translation>
     </message>
     <message>
       <source>What changes</source>
@@ -669,6 +669,10 @@
     <message>
       <source>OneDrive syncs these folders. It can lock the INI files and saves, or bring back older copies, while the game runs. With profile-specific INI files and saves they stay inside the instance, away from OneDrive. &lt;a href="both"&gt;Turn both on&lt;/a&gt;</source>
       <translation>OneDrive sincroniza estas carpetas. Puede bloquear los archivos INI y las partidas, o devolver copias antiguas, mientras el juego está abierto. Con archivos INI y partidas por perfil se quedan dentro de la instancia, fuera de OneDrive. &lt;a href="both"&gt;Activar los dos&lt;/a&gt;</translation>
+    </message>
+    <message>
+      <source>Browse</source>
+      <translation>Examinar</translation>
     </message>
   </context>
   <context>
@@ -4109,6 +4113,18 @@ Ubicación: %3</translation>
       <source>This portable instance keeps the instances in the GlobalInstances folder listed; it can't be deleted</source>
       <translation>Esta instancia portable mantiene en la lista las instancias de la carpeta GlobalInstances; no se puede eliminar</translation>
     </message>
+    <message>
+      <source>today at %1</source>
+      <translation>hoy a las %1</translation>
+    </message>
+    <message>
+      <source>yesterday</source>
+      <translation>ayer</translation>
+    </message>
+    <message>
+      <source>%1 days ago</source>
+      <translation>hace %1 días</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -5480,8 +5496,8 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Interfaz y diagnóstico</translation>
     </message>
     <message>
-      <source>Includes the light and dark MO2 Classic Refined themes, plus tools to prepare diagnostic reports.</source>
-      <translation>Incluye los temas MO2 Classic Refined claro y oscuro, además de herramientas para preparar informes de diagnóstico.</translation>
+      <source>Includes Windows 11 style themes (Light, Dark and Dark Black) with Fluent icons, plus tools to prepare diagnostic reports.</source>
+      <translation>Incluye temas al estilo de Windows 11 (Claro, Oscuro y Negro oscuro) con iconos Fluent, además de herramientas para preparar informes de diagnóstico.</translation>
     </message>
     <message>
       <source>Included components</source>
@@ -5612,10 +5628,10 @@ Instalador de archivos · {installer}</translation>
     <message>
       <source>Save isolation · {saves}
 Startup options · {startup}
-MO2 Classic Refined · Light and Dark</source>
+Fluent themes · Light, Dark and Dark Black</source>
       <translation>Aislamiento de partidas · {saves}
 Opciones de inicio · {startup}
-MO2 Classic Refined · Claro y Oscuro</translation>
+Temas Fluent · Claro, Oscuro y Negro oscuro</translation>
     </message>
     <message>
       <source>Location:
@@ -8808,13 +8824,6 @@ Restantes esta hora: %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Información del origen...</translation>
-    </message>
-  </context>
-  <context>
-    <name>Ui::CreateInstanceDialog</name>
-    <message>
-      <source>A separate copy of Mod Organizer with its own settings and data, for one game. Elden Ring and Nightreign are supported for now.</source>
-      <translation>Una copia aparte de Mod Organizer con sus propios ajustes y datos, para un solo juego. Por ahora admite Elden Ring y Nightreign.</translation>
     </message>
   </context>
 </TS>
