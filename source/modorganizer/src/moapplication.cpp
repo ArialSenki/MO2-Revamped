@@ -654,6 +654,13 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
 
   // figuring out the current instance
   m_instance = getCurrentInstance(forceSelect);
+  if (!RestartExecutable().isEmpty()) {
+    // an isolated copy was created from the startup dialogs and starts in
+    // place of this process, see main()
+    writeStartupDiagnosticEvent("application.setup.hand_off");
+    m_instance = {};
+    return RestartExitCode;
+  }
   if (!m_instance) {
     writeStartupDiagnosticEvent("application.setup.no_instance_selected");
     return 1;
@@ -991,12 +998,19 @@ void MOApplication::externalMessage(const QString& message)
     if (auto i = cl.instance()) {
       const auto ci = InstanceManager::singleton().currentInstance();
 
-      if (*i != ci->displayName()) {
+      // shortcuts give the identifier ("portable/<name>" for portable
+      // instances), people may type the name shown in the instance list
+      const bool same =
+          ci && (i->compare(ci->commandLineIdentifier(), Qt::CaseInsensitive) == 0 ||
+                 i->compare(ci->instanceIdentifier(), Qt::CaseInsensitive) == 0 ||
+                 i->compare(ci->displayName(), Qt::CaseInsensitive) == 0);
+
+      if (!same) {
         reportError(
             tr("This shortcut or command line is for instance '%1', but the current "
                "instance is '%2'.")
                 .arg(*i)
-                .arg(ci->displayName()));
+                .arg(ci ? ci->displayName() : QString()));
 
         return;
       }

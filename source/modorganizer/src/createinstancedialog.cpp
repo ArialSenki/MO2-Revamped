@@ -58,17 +58,35 @@ bool copyIsolatedApplication(const QString& sourcePath,
                              const QString& destinationPath,
                              const std::function<void(QString)>& log)
 {
+  // user data and leftovers, as the release builder leaves them out
+  // (source/revamped/installer/Build-Release.ps1): these folders at any depth
   const QSet<QString> excludedDirectories = {
-      QStringLiteral(".git"),           QStringLiteral("__pycache__"),
-      QStringLiteral("crashdumps"),     QStringLiteral("downloads"),
-      QStringLiteral("globalinstances"), QStringLiteral("isolatedinstances"),
-      QStringLiteral("logs"),           QStringLiteral("mods"),
-      QStringLiteral("overwrite"),      QStringLiteral("profiles"),
+      QStringLiteral("__pycache__"),       QStringLiteral("_revampedupdatebackups"),
+      QStringLiteral("crashdumps"),        QStringLiteral("crashes"),
+      QStringLiteral("diagnostics"),       QStringLiteral("downloads"),
+      QStringLiteral("globalinstances"),   QStringLiteral("isolatedinstances"),
+      QStringLiteral("logs"),              QStringLiteral("mods"),
+      QStringLiteral("overwrite"),         QStringLiteral("profiles"),
       QStringLiteral("portableinstances"), QStringLiteral("webcache")};
+  // these only at the top
+  const QSet<QString> excludedTopDirectories = {
+      QStringLiteral(".git"), QStringLiteral("cache"),
+      QStringLiteral("elden ring shared saves"),
+      QStringLiteral("elden ring global save backups"),
+      QStringLiteral("nightreign shared saves"),
+      QStringLiteral("nightreign global save backups")};
   const QSet<QString> excludedFiles = {
-      QStringLiteral("modorganizer.ini"), QStringLiteral("portable.txt"),
+      QStringLiteral("modorganizer.ini"),        QStringLiteral("portable.txt"),
       QStringLiteral("eldenring-only.portable"), QStringLiteral("unins000.exe"),
-      QStringLiteral("unins000.dat")};
+      QStringLiteral("unins000.dat"),            QStringLiteral("nxmhandler.ini"),
+      QStringLiteral("mo2-revamped.ini"),        QStringLiteral("mo2-revamped.install"),
+      QStringLiteral("mo2-revamped-global.ini"), QStringLiteral("eldenringonly.ini"),
+      QStringLiteral("categories.dat"),          QStringLiteral("nexuscatmap.dat"),
+      QStringLiteral("mo2forkuninstaller.exe")};
+  const QSet<QString> excludedSuffixes = {
+      QStringLiteral("log"), QStringLiteral("dmp"), QStringLiteral("mdmp"),
+      QStringLiteral("tmp"), QStringLiteral("lock"), QStringLiteral("pyc"),
+      QStringLiteral("pyo")};
 
   std::function<bool(const QDir&, const QDir&, bool)> copyDirectory;
   copyDirectory = [&](const QDir& source, const QDir& destination,
@@ -83,10 +101,13 @@ bool copyIsolatedApplication(const QString& sourcePath,
       }
 
       const QString key = entry.fileName().toCaseFolded();
-      if (topLevel && entry.isDir() && excludedDirectories.contains(key)) {
+      if (entry.isDir() && (excludedDirectories.contains(key) ||
+                            (topLevel && excludedTopDirectories.contains(key)))) {
         continue;
       }
-      if (entry.isFile() && excludedFiles.contains(key)) {
+      if (entry.isFile() &&
+          (excludedFiles.contains(key) ||
+           excludedSuffixes.contains(entry.suffix().toCaseFolded()))) {
         continue;
       }
 
@@ -642,14 +663,15 @@ void CreateInstanceDialog::finish()
           logCreation(tr("Close Mod Organizer, then start the isolated copy: %1")
                           .arg(QDir::toNativeSeparators(executable)));
         }
-      } else {
+      } else if (!mustRestart) {
         InstanceManager::singleton().setCurrentInstance(
             Instance(ci.dataPath, ci.type == Portable));
-
-        if (mustRestart) {
-          ExitModOrganizer(Exit::Restart);
-          m_switching = true;
-        }
+      } else if (ExitModOrganizer(Exit::Restart)) {
+        // only once closing is certain; a cancelled exit keeps the current
+        // instance for the next start too
+        InstanceManager::singleton().setCurrentInstance(
+            Instance(ci.dataPath, ci.type == Portable));
+        m_switching = true;
       }
     }
 

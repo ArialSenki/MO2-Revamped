@@ -553,6 +553,7 @@ void ProfilesDialog::createProfile(const QString& name, bool useDefaultSettings)
     QListWidgetItem* newItem = new QListWidgetItem(name, m_list);
     newItem->setData(Qt::UserRole, QVariant::fromValue(profile));
     m_list->addItem(newItem);
+    m_list->sortItems();
     m_FailState = false;
     updateItem(newItem);
     m_list->setCurrentItem(newItem);
@@ -572,6 +573,7 @@ void ProfilesDialog::createProfile(const QString& name, const Profile& reference
     QListWidgetItem* newItem = new QListWidgetItem(name, m_list);
     newItem->setData(Qt::UserRole, QVariant::fromValue(profile));
     m_list->addItem(newItem);
+    m_list->sortItems();
     m_FailState = false;
     updateItem(newItem);
     m_list->setCurrentItem(newItem);
@@ -667,6 +669,15 @@ void ProfilesDialog::fillDetails()
     m_localIniFiles->setChecked(profile->localSettingsEnabled());
   } catch (const std::exception& e) {
     reportError(tr("failed to determine if invalidation is active: %1").arg(e.what()));
+
+    // the switches would still show the previous profile, and toggling one
+    // would apply it to this one
+    for (QCheckBox* option : {m_invalidation, m_localSaves, m_localIniFiles}) {
+      QSignalBlocker blocker(option);
+      option->setChecked(false);
+      option->setEnabled(false);
+    }
+    m_transfer->setEnabled(false);
     m_copy->setEnabled(false);
     m_remove->setEnabled(false);
     m_rename->setEnabled(false);
@@ -895,6 +906,7 @@ void ProfilesDialog::removeProfile()
     if (!removed && QDir(profilePath).exists()) {
       // kept (the user declined, or Windows refused): it stays in the list
       QListWidgetItem* kept = addItem(profilePath);
+      m_list->sortItems();
       updateItem(kept);
       m_list->setCurrentItem(kept);
       return;
@@ -940,6 +952,7 @@ void ProfilesDialog::renameProfile()
     return;
   }
   m_list->currentItem()->setText(name);
+  m_list->sortItems();
 
   updateItem(m_list->currentItem());
   fillDetails();

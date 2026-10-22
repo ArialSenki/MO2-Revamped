@@ -265,8 +265,14 @@ void DownloadListView::onHeaderCustomContextMenu(const QPoint& point)
 void DownloadListView::resizeEvent(QResizeEvent* event)
 {
   QTreeView::resizeEvent(event);
-  qobject_cast<DownloadListHeader*>(header())->customResizeSections();
-  qobject_cast<DownloadListHeader*>(header())->ensureReadableSections();
+  auto* listHeader = qobject_cast<DownloadListHeader*>(header());
+  listHeader->customResizeSections();
+
+  // once, when the list first gets a usable width
+  if (!listHeader->m_readableChecked && event->size().width() >= 400) {
+    listHeader->m_readableChecked = true;
+    listHeader->ensureReadableSections();
+  }
 }
 
 void DownloadListView::onCustomContextMenu(const QPoint& point)

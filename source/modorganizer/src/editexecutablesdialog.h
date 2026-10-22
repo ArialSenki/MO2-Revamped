@@ -206,6 +206,9 @@ private:
   // the executable's data into the UI, not from a user change
   bool m_settingUI;
 
+  // a refresh of the header is queued; typing in a field saves on every key
+  bool m_fluentRefreshQueued = false;
+
   void loadCustomOverwrites();
   void loadForcedLibraries();
 

@@ -30,6 +30,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "spawn.h"
 #include "ui_editexecutablesdialog.h"
 
+#include <QTimer>
 #include <QAbstractButton>
 #include <QAction>
 #include <QBoxLayout>
@@ -715,7 +716,15 @@ void EditExecutablesDialog::save()
 
   setDirty(true);
 
-  refreshFluent();
+  // the header checks the shortcut on disk and loads the icon: once after the
+  // typing stops, not on every key
+  if (!m_fluentRefreshQueued) {
+    m_fluentRefreshQueued = true;
+    QTimer::singleShot(200, this, [this] {
+      m_fluentRefreshQueued = false;
+      refreshFluent();
+    });
+  }
 }
 
 void EditExecutablesDialog::saveOrder()

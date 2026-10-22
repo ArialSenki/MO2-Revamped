@@ -23,6 +23,7 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QUrl>
+#include <algorithm>
 #include <numeric>
 #include <QDateTime>
 #include <QFile>
@@ -41,6 +42,7 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QPlainTextEdit>
+#include <QSaveFile>
 #include <QScrollArea>
 #include <QShortcut>
 #include <QStackedWidget>
@@ -161,12 +163,18 @@ void moveInstanceValues(const QString& from, const QString& to, bool keepSource)
 }
 
 // points the paths of an instance's settings file that lead into `source`
-// at `destination` instead (a duplicated or renamed instance folder)
-void retargetInstancePaths(const QString& ini, const QString& source,
+// at `destination` instead (a duplicated or renamed instance folder); false
+// when the file couldn't be read or written, in which case it is unchanged
+bool retargetInstancePaths(const QString& ini, const QString& source,
                            const QString& destination)
 {
   QFile file(ini);
-  if (file.open(QIODevice::ReadOnly)) {
+  if (!file.open(QIODevice::ReadOnly)) {
+    log::error("can't read {} to update its paths: {}", ini, file.errorString());
+    return false;
+  }
+
+  {
     QString contents = QString::fromUtf8(file.readAll());
     file.close();
     const QString forward = source;
@@ -199,13 +207,18 @@ void retargetInstancePaths(const QString& ini, const QString& source,
                                  .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
       replaceFolder(contents, from, to);
     }
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-      file.write(contents.toUtf8());
-      // written to disk before the list reads the instance back
-      file.close();
+    // written whole or not at all, and on disk before the list reads the
+    // instance back
+    QSaveFile out(ini);
+    const QByteArray bytes = contents.toUtf8();
+    if (!out.open(QIODevice::WriteOnly) || out.write(bytes) != bytes.size() ||
+        !out.commit()) {
+      log::error("can't write {} to update its paths: {}", ini, out.errorString());
+      return false;
     }
   }
 
+  return true;
 }
 
 }  // namespace
@@ -1167,11 +1180,13 @@ void InstanceManagerDialog::openSelectedInstance()
     return;
   }
 
-  InstanceManager::singleton().setCurrentInstance(to);
-
-  if (m_restartOnSelect) {
-    ExitModOrganizer(Exit::Restart);
+  // the current instance only changes once Mod Organizer is sure to close;
+  // otherwise the next start would open the other instance unasked
+  if (m_restartOnSelect && !ExitModOrganizer(Exit::Restart)) {
+    return;
   }
+
+  InstanceManager::singleton().setCurrentInstance(to);
 
   accept();
 }
@@ -1267,6 +1282,9 @@ void InstanceManagerDialog::rename()
 
   log::info("renaming {} to {}", src, dest);
 
+  // the desktop shortcut names the instance and opens it by name
+  const bool hadShortcut = shortcutExists(*i);
+
   const auto r = shell::Rename(QFileInfo(src), QFileInfo(dest), false);
 
   if (!r) {
@@ -1280,14 +1298,28 @@ void InstanceManagerDialog::rename()
   }
 
   // its settings still pointed into the old folder
-  retargetInstancePaths(QDir(dest).filePath(QFileInfo(i->iniPath()).fileName()),
-                        QDir::cleanPath(QDir::fromNativeSeparators(src)),
-                        QDir::fromNativeSeparators(dest));
+  const QString newIni = QDir(dest).filePath(QFileInfo(i->iniPath()).fileName());
+  if (!retargetInstancePaths(newIni, QDir::cleanPath(QDir::fromNativeSeparators(src)),
+                             QDir::fromNativeSeparators(dest))) {
+    QMessageBox::warning(
+        this, tr("Rename instance"),
+        tr("The folder was renamed, but its settings file could not be updated "
+           "and may still point to the old folder:\n%1")
+            .arg(QDir::toNativeSeparators(newIni)));
+  }
 
   // updating ui; the group follows the new name
   auto newInstance = std::make_unique<Instance>(dest, i->isPortable());
   newInstance->readFromIni();
   moveInstanceValues(i->instanceIdentifier(), newInstance->instanceIdentifier(), false);
+
+  // the old shortcut would open an instance that no longer exists
+  if (hadShortcut) {
+    env::instanceShortcut(*i).remove(env::Shortcut::Desktop);
+    if (!env::instanceShortcut(*newInstance).add(env::Shortcut::Desktop)) {
+      log::warn("the desktop shortcut of {} could not be renamed", dest);
+    }
+  }
 
   m_instances[selIndex] = std::move(newInstance);
   updateList();
@@ -1449,6 +1481,56 @@ void InstanceManagerDialog::deleteInstance()
     QMessageBox::information(this, tr("Delete instance"), tr("Nothing to delete."));
 
     return;
+  }
+
+  // another instance can use folders in this list, such as downloads shared
+  // with this instance when it was created; deleting them takes its files too
+  {
+    auto folderKey = [](const QString& path) {
+      QString s = QDir::cleanPath(QDir::fromNativeSeparators(path)).toLower();
+      if (!s.endsWith(QLatin1Char('/'))) {
+        s += QLatin1Char('/');
+      }
+      return s;
+    };
+
+    QStringList usedElsewhere;
+    for (const auto& other : m_instances) {
+      if (!other || other.get() == i) {
+        continue;
+      }
+
+      Settings s(other->iniPath());
+      if (s.iniStatus() != QSettings::NoError) {
+        continue;
+      }
+
+      const QStringList used = {s.paths().downloads(), s.paths().mods(),
+                                s.paths().profiles(), s.paths().overwrite()};
+      for (const auto& path : selected) {
+        const QString root = folderKey(path);
+        const bool inside  = std::any_of(used.begin(), used.end(), [&](const QString& u) {
+          return !u.isEmpty() && folderKey(u).startsWith(root);
+        });
+        if (inside) {
+          usedElsewhere.append(tr("%1 (used by %2)")
+                                   .arg(QDir::toNativeSeparators(path))
+                                   .arg(other->displayName()));
+        }
+      }
+    }
+
+    if (!usedElsewhere.isEmpty()) {
+      const auto answer = QMessageBox::warning(
+          this, tr("Delete instance"),
+          tr("Other instances use these folders:\n\n%1\n\nDeleting them also "
+             "removes those instances' files. Delete anyway?")
+              .arg(usedElsewhere.join(QLatin1Char('\n'))),
+          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+      if (answer != QMessageBox::Yes) {
+        return;
+      }
+    }
   }
 
   // deleting
@@ -1820,8 +1902,38 @@ void InstanceManagerDialog::duplicateInstance()
 
   // paths in the copied settings that pointed into the original now point
   // into the copy
-  retargetInstancePaths(QDir(destination).filePath(QFileInfo(i->iniPath()).fileName()),
-                        source, destination);
+  const QString newIni =
+      QDir(destination).filePath(QFileInfo(i->iniPath()).fileName());
+  if (!retargetInstancePaths(newIni, source, destination)) {
+    QMessageBox::warning(
+        this, tr("Duplicate instance"),
+        tr("The instance was copied, but the copy's settings file could not be "
+           "updated and may still point to the original's folders:\n%1")
+            .arg(QDir::toNativeSeparators(newIni)));
+  } else if (!sameBase) {
+    // with the base folder elsewhere the profiles are usually there too; the
+    // copy gets its own, or both instances would change the same mod lists
+    const Settings original(i->iniPath());
+    const QString profiles =
+        QDir::cleanPath(QDir::fromNativeSeparators(original.paths().profiles()));
+    const QString copied = QDir(destination).filePath(QStringLiteral("profiles"));
+    const bool inSource =
+        (profiles + QStringLiteral("/")).startsWith(source + QStringLiteral("/"),
+                                                    Qt::CaseInsensitive);
+
+    if (!inSource && QDir(profiles).exists() && !QFileInfo::exists(copied)) {
+      if (shellCopy(QStringList{QDir::toNativeSeparators(profiles)},
+                    QStringList{QDir::toNativeSeparators(copied)}, this)) {
+        Settings s(newIni);
+        s.paths().setProfiles(copied);
+        if (s.sync() != QSettings::NoError) {
+          log::error("can't set the profiles folder of {}", newIni);
+        }
+      } else {
+        log::error("can't copy the profiles {} to {}", profiles, copied);
+      }
+    }
+  }
 
   moveInstanceValues(i->instanceIdentifier(),
                      Instance(destination, i->isPortable()).instanceIdentifier(), true);

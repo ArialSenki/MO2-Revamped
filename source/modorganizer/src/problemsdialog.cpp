@@ -266,11 +266,11 @@ void ProblemsDialog::runDiagnosis()
       const QString shortDescription = diagnose->shortDescription(key);
       const QString fullDescription  = diagnose->fullDescription(key);
       // the basic diagnosis plugin's Overwrite notice, recognized by its key
-      // so translated texts are recognized too
+      // so translated texts are recognized too; other notices that merely
+      // mention Overwrite keep their own text
       const bool isOverwrite =
-          (plugin != nullptr && plugin->name() == QLatin1String("Basic diagnosis plugin") &&
-           key == BasicOverwriteProblem) ||
-          (shortDescription + fullDescription).contains("overwrite", Qt::CaseInsensitive);
+          plugin != nullptr && plugin->name() == QLatin1String("Basic diagnosis plugin") &&
+          key == BasicOverwriteProblem;
 
       auto* item = new QListWidgetItem(shortDescription, m_list);
       item->setData(FluentPanels::CaptionRole, source);

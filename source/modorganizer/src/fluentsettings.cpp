@@ -360,7 +360,7 @@ void stackCardRows(QWidget* root)
   }
 }
 
-// grids of "label | option rowsâ€¦" (several switches per line) become a list:
+// grids of "label | option rows…" (several switches per line) become a list:
 // the label as a small heading, then one row per option
 void flattenOptionGrids(QWidget* root)
 {

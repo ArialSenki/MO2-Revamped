@@ -2500,9 +2500,13 @@ QSettings GlobalSettings::settings()
         QSettings::IniFormat);
   }
 
+  // settings already kept beside the program stay there, also once its
+  // portable instance is deleted; otherwise the groups, notes and last used
+  // instances would be swapped for those in the user's AppData
   const bool portable =
       QFileInfo::exists(localDirectory.filePath("portable.txt")) ||
-      QFileInfo::exists(localDirectory.filePath("ModOrganizer.ini"));
+      QFileInfo::exists(localDirectory.filePath("ModOrganizer.ini")) ||
+      QFileInfo::exists(localDirectory.filePath("MO2-Revamped-Global.ini"));
   const QString settingsDirectory = portable
       ? applicationDirectory
       : QDir(QStandardPaths::writableLocation(

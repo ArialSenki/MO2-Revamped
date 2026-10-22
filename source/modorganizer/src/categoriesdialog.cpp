@@ -586,6 +586,29 @@ void CategoriesDialog::nexusImport_clicked()
       return -1;
     };
 
+    // a Nexus ID belongs to one local category; remapping takes it off the
+    // others, as dropping it on a row does
+    const auto unmapNexusID = [table](int nexusID, int keepRow) {
+      for (int row = 0; row < table->rowCount(); ++row) {
+        auto* mappingItem = table->item(row, 3);
+        if (row == keepRow || !mappingItem) {
+          continue;
+        }
+        QVariantList keptMappings;
+        QStringList names;
+        for (const QVariant& entry : mappingItem->data(Qt::UserRole).toList()) {
+          const QVariantList mapping = entry.toList();
+          if (mapping.size() < 2 || mapping[1].toInt() == nexusID) {
+            continue;
+          }
+          keptMappings.append(QVariant::fromValue(mapping));
+          names.append(mapping[0].toString());
+        }
+        mappingItem->setData(Qt::UserRole, keptMappings);
+        mappingItem->setData(Qt::DisplayRole, names.join(", "));
+      }
+    };
+
     for (int i = 0; i < list->count(); ++i) {
       QString name = list->item(i)->data(Qt::DisplayRole).toString();
       int nexusID  = list->item(i)->data(Qt::UserRole).toInt();
@@ -631,12 +654,14 @@ void CategoriesDialog::nexusImport_clicked()
         table->setItem(row, 1, nameItem.take());
         table->setItem(row, 2, parentIDItem.take());
         if (importDialog.assign()) {
+          unmapNexusID(nexusID, row);
           table->setItem(row, 3, nexusCatItem.take());
         } else {
           table->setItem(row, 3, new QTableWidgetItem());
         }
       } else if (importDialog.assign()) {
         if (importDialog.remap()) {
+          unmapNexusID(nexusID, existingRow);
           table->setItem(existingRow, 3, nexusCatItem.take());
         } else if (mappedRow < 0 || mappedRow == existingRow) {
           auto* mappingItem = table->item(existingRow, 3);

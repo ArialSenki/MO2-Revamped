@@ -445,6 +445,13 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
     ModListGlobalContextMenu::addInsertActions(insertMenu, view, info, index);
   }
 
+  // the list-wide commands (install, enable or disable all, check for updates,
+  // export) as upstream had them, also when sorted by something else
+  addSeparator();
+  auto* allMods = new ModListGlobalContextMenu(core, view, this);
+  allMods->setTitle(tr("All Mods"));
+  addMenu(allMods);
+
   // the remove command of each type goes last, after the list commands
   if (m_remove != nullptr) {
     addSeparator();
@@ -516,8 +523,14 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
       new ModListChangeCategoryMenu(m_categories, mod, this);
   categoriesMenu->setTitle(tr("Categories"));
   categoriesMenu->setIcon(menuGlyph(MenuGlyphs::Tag));
+  // the submenu also closes when the pointer only passes over it, so the
+  // selection is changed only when a box was actually toggled
+  const auto initialCategories = categoriesMenu->categories();
   connect(categoriesMenu, &QMenu::aboutToHide, [=]() {
-    m_actions.setCategories(m_selected, m_index, categoriesMenu->categories());
+    const auto categories = categoriesMenu->categories();
+    if (categories != initialCategories) {
+      m_actions.setCategories(m_selected, m_index, categories);
+    }
   });
   addMenu(categoriesMenu);
 
@@ -528,9 +541,12 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
         new ModListPrimaryCategoryMenu(m_categories, mod, this);
     primaryCategoryMenu->setTitle(tr("Primary category"));
     primaryCategoryMenu->setIcon(menuGlyph(MenuGlyphs::Star));
+    // as above: hovering over the submenu must not give every selected mod
+    // this mod's primary category
+    const int initialPrimary = mod->primaryCategory();
     connect(primaryCategoryMenu, &QMenu::aboutToHide, [=]() {
       int category = primaryCategoryMenu->primaryCategory();
-      if (category != -1) {
+      if (category != -1 && category != initialPrimary) {
         m_actions.setPrimaryCategory(m_selected, category);
       }
     });

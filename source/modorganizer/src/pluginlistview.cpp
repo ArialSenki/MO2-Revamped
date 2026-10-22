@@ -244,6 +244,13 @@ void PluginListView::setup(OrganizerCore& core, MainWindow* mw, Ui::MainWindow* 
   });
 }
 
+void PluginListView::setBackupActions(std::function<void()> create,
+                                      std::function<void()> restore)
+{
+  m_createBackup  = std::move(create);
+  m_restoreBackup = std::move(restore);
+}
+
 void PluginListView::onCustomContextMenuRequested(const QPoint& pos)
 {
   try {
@@ -251,9 +258,22 @@ void PluginListView::onCustomContextMenuRequested(const QPoint& pos)
     connect(&menu, &PluginListContextMenu::openModInformation, [=](auto&& modIndex) {
       m_modActions->displayModInformation(modIndex);
     });
+
+    // upstream had these as buttons over the list; the Mods menu has them too
+    if (m_createBackup && m_restoreBackup) {
+      menu.addSeparator();
+      QMenu* backups = menu.addMenu(tr("Plugin order backups"));
+      backups->addAction(tr("Create plugin order backup"), this, [this] {
+        m_createBackup();
+      });
+      backups->addAction(tr("Restore plugin order backup..."), this, [this] {
+        m_restoreBackup();
+      });
+    }
+
     menu.exec(viewport()->mapToGlobal(pos));
   } catch (const std::exception& e) {
-    reportError(tr("Exception: ").arg(e.what()));
+    reportError(tr("Exception: %1").arg(e.what()));
   } catch (...) {
     reportError(tr("Unknown exception"));
   }
