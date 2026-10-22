@@ -407,7 +407,7 @@ DWORD UILocker::Session::pid() const
   return m_pid;
 }
 
-const QString& UILocker::Session::name() const
+QString UILocker::Session::name() const
 {
   std::scoped_lock lock(m_mutex);
   return m_name;

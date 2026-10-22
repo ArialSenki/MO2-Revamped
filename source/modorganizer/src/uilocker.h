@@ -53,11 +53,12 @@ public:
     Results result() const;
 
     DWORD pid() const;
-    const QString& name() const;
+    // a copy: the waiting thread changes the name while the UI reads it
+    QString name() const;
 
   private:
     mutable std::mutex m_mutex;
-    DWORD m_pid;
+    DWORD m_pid = 0;
     QString m_name;
   };
 
