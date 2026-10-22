@@ -5042,6 +5042,24 @@ void MainWindow::on_actionExit_triggered()
   ExitModOrganizer();
 }
 
+// the listing lives under Elden Ring on Nexus; without the Elden Ring plugin the
+// request would go to the same mod id of the managed game
+
+static bool revampedListingReachable(PluginContainer& plugins)
+{
+  const auto games = plugins.plugins<IPluginGame>();
+  const bool found = std::any_of(games.begin(), games.end(), [](IPluginGame* game) {
+    return game != nullptr && game->gameShortName().compare(QStringLiteral("eldenring"),
+                                                            Qt::CaseInsensitive) == 0;
+  });
+  if (!found) {
+    log::warn("the Elden Ring game plugin isn't loaded, the MO2 Revamped listing "
+              "can't be reached");
+    return false;
+  }
+  return true;
+}
+
 void MainWindow::actionEndorseMO()
 {
   if (askNexusEndorsement(
@@ -5049,6 +5067,9 @@ void MainWindow::actionEndorseMO()
           tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
           tr("Endorse"), tr("Cancel"),
           FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/endorse.svg")))) {
+    if (!revampedListingReachable(m_PluginContainer)) {
+      return;
+    }
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
         m_OrganizerCore.getVersion().canonicalString(), true, this, QVariant(),
@@ -5063,6 +5084,9 @@ void MainWindow::actionWontEndorseMO()
           tr("This will record your choice not to endorse the listing on Nexus Mods."),
           tr("Won't Endorse"), tr("Cancel"),
           FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/wont-endorse.svg")))) {
+    if (!revampedListingReachable(m_PluginContainer)) {
+      return;
+    }
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
         m_OrganizerCore.getVersion().canonicalString(), false, this, QVariant(),

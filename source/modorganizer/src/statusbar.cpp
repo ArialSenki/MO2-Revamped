@@ -95,7 +95,12 @@ void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
     apiState = QStringLiteral("offline");
   } else {
     // one short figure in the bar, the full breakdown on hover
-    text = tr("Nexus API: %1 left today").arg(user.limits().remainingDailyRequests);
+    // once the daily allowance is used up Nexus still answers from the hourly
+    // one, which is then what limits MO2
+    text = user.limits().remainingDailyRequests > 0
+               ? tr("Nexus API: %1 left today").arg(user.limits().remainingDailyRequests)
+               : tr("Nexus API: %1 left this hour")
+                     .arg(user.limits().remainingHourlyRequests);
     m_api->setToolTip(tr("Queued requests: %1\nRemaining today: %2\nRemaining this hour: %3")
                           .arg(stats.requestsQueued)
                           .arg(user.limits().remainingDailyRequests)

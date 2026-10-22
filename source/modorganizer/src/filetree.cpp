@@ -1,6 +1,7 @@
 #include "filetree.h"
 #include "fluenticons.h"
 #include "menuutils.h"
+#include <functional>
 #include "envshell.h"
 #include "filetreeitem.h"
 #include "filetreemodel.h"
@@ -663,7 +664,22 @@ void FileTree::addDirectoryMenus(QMenu& menu, FileTreeItem& item)
   MenuItem(tr("Expand all below"))
       .icon(menuGlyph(MenuGlyphs::Expand))
       .callback([this, index] {
+        // the model loads folders when they are first shown; load everything
+        // below first or only the folders already opened would expand, and
+        // keep sorting off meanwhile, as expandAll() does
+        std::function<void(const QModelIndex&)> load = [&](const QModelIndex& i) {
+          if (m_model->canFetchMore(i)) {
+            m_model->fetchMore(i);
+          }
+          for (int row = 0; row < m_model->rowCount(i); ++row) {
+            load(m_model->index(row, 0, i));
+          }
+        };
+
+        m_model->aboutToExpandAll();
+        load(proxiedIndex(index));
         m_tree->expandRecursively(index);
+        m_model->expandedAll();
       })
       .addTo(menu);
 

@@ -166,7 +166,10 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
         styleIndex = ui->toolbarButtonStyleCombo->count() - 1;
       }
       ui->toolbarButtonStyleCombo->setCurrentIndex(styleIndex);
-      ui->mainToolbarVisibleBox->setChecked(mainToolbar->isVisible());
+      // the command bar holds every main command since the menu bar is gone,
+      // so it always stays visible
+      ui->mainToolbarVisibleBox->setChecked(true);
+      ui->mainToolbarVisibleBox->setEnabled(false);
     } else {
       ui->toolbarIconSizeCombo->setEnabled(false);
       ui->toolbarButtonStyleCombo->setEnabled(false);
@@ -266,11 +269,6 @@ void GeneralSettingsTab::update()
     auto changed = [](QCheckBox* box) {
       return box->isChecked() != box->property("mo2InitialChecked").toBool();
     };
-    if (auto* mainToolbar = mainWindow->findChild<QToolBar*>(
-            QStringLiteral("toolBar"));
-        mainToolbar && changed(ui->mainToolbarVisibleBox)) {
-      mainToolbar->setVisible(ui->mainToolbarVisibleBox->isChecked());
-    }
     if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
             QStringLiteral("statusBar"));
         statusBar && changed(ui->statusBarVisibleBox)) {

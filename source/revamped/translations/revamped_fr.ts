@@ -8593,6 +8593,10 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
       <translation>API Nexus : %1 restantes aujourd'hui</translation>
     </message>
     <message>
+      <source>Nexus API: %1 left this hour</source>
+      <translation>API Nexus : %1 restantes cette heure</translation>
+    </message>
+    <message>
       <source>Queued requests: %1
 Remaining today: %2
 Remaining this hour: %3</source>
