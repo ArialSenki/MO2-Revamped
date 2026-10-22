@@ -408,7 +408,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     )
 
     def _duplicate_dll_names(self, filetree: mobase.IFileTree) -> list[str]:
+        # Windows names are case-insensitive: Foo.dll and foo.dll are one DLL
         folders_by_name: dict[str, set[str]] = {}
+        shown_names: dict[str, str] = {}
 
         def walk(tree: mobase.IFileTree, path: str, depth: int) -> None:
             if depth > self._archive_wrapper_depth_limit:
@@ -417,11 +419,18 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 if entry.isDir():
                     walk(entry, f"{path}/{entry.name()}".casefold(), depth + 1)
                 elif entry.name().casefold().endswith(".dll"):
-                    folders_by_name.setdefault(entry.name(), set()).add(path)
+                    key = entry.name().casefold()
+                    shown_names.setdefault(key, entry.name())
+                    folders_by_name.setdefault(key, set()).add(path)
 
         walk(filetree, "", 0)
         return sorted(
-            name for name, folders in folders_by_name.items() if len(folders) > 1
+            (
+                shown_names[key]
+                for key, folders in folders_by_name.items()
+                if len(folders) > 1
+            ),
+            key=str.casefold,
         )
 
     def _option_folders(self, filetree: mobase.IFileTree) -> list[str]:
@@ -652,7 +661,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         header_layout.setContentsMargins(14, 12, 16, 12)
         header_layout.setSpacing(12)
 
-        header_badge = QtWidgets.QLabel("ER", header)
+        header_badge = QtWidgets.QLabel(
+            "NR" if self._nightreign_active() else "ER", header
+        )
         header_badge.setObjectName("archiveHeaderBadge")
         header_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header_badge.setFixedSize(42, 42)
@@ -1138,7 +1149,16 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             return None
         return selected["choice"]
 
+    def _nightreign_active(self) -> bool:
+        try:
+            game = self._organizer.managedGame() if self._organizer else None
+            return game is not None and game.gameShortName().casefold() == "nightreign"
+        except Exception:
+            return False
+
     def tr(self, value: str) -> str:
-        return QtWidgets.QApplication.translate(
-            "EldenRingArchiveInstaller", value
-        )
+        text = QtWidgets.QApplication.translate("EldenRingArchiveInstaller", value)
+        # the texts name Elden Ring; a Nightreign instance gets its own name
+        if self._nightreign_active():
+            text = text.replace("Elden Ring", "Nightreign")
+        return text

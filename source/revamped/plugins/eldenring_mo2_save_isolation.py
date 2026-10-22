@@ -49,7 +49,13 @@ _TR_CONTEXT = "EldenRingSaveIsolation"
 
 
 def _tr(text: str) -> str:
-    return QCoreApplication.translate(_TR_CONTEXT, text)
+    text = QCoreApplication.translate(_TR_CONTEXT, text)
+    # the texts name Elden Ring; a Nightreign instance gets its own name
+    # (looked up when called: the class is defined below this helper)
+    tool = globals().get("EldenRingMo2SaveIsolation")
+    if tool is not None and tool._game_key == "nightreign":
+        text = text.replace("Elden Ring", "Nightreign").replace("eldenring.exe", "nightreign.exe")
+    return text
 
 
 class _ProcessEntry32W(ctypes.Structure):
@@ -449,8 +455,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _dialog_mode_card(
         parent,
         object_name: str,
-        title: str = _tr("Elden Ring profile options"),
+        title: str | None = None,
     ):
+        # translated when the card is made, not once when the plugin loads
+        if title is None:
+            title = _tr("Elden Ring profile options")
         card = QGroupBox(title, parent)
         card.setObjectName(object_name)
         layout = QVBoxLayout(card)
@@ -650,17 +659,33 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             return _tr("Elden Ring is running, or MO2 could not confirm that it is "
                        "closed. Close the game and try again; nothing was copied.")
 
-        appdata = os.environ.get("APPDATA")
-        recovery = Path(appdata) / ".MO2RevampedSaveRecovery" if appdata else None
-        try:
+        # every install's recovery folders sit together, beside the Steam
+        # save folder (or beside its target on another drive), for both games
+        own_recovery = EldenRingMo2SaveDiagnose._recovery_folder()
+        recovery = own_recovery.parent if own_recovery is not None else None
+        global_saves = os.path.normcase(
+            os.path.abspath(EldenRingMo2SaveIsolation._global_save_directory())
+        )
+
+        def hides_this_game(session: Path) -> bool:
             # a session still hiding account folders is pending; one that only
-            # kept unrouted output for review is not
+            # kept unrouted output for review (beside its record and lock
+            # file) is not, nor one that hid the other game's saves
+            if not session.is_dir() or not any(
+                child.is_dir() and child.name != "unrouted-global"
+                for child in session.iterdir()
+            ):
+                return False
+            try:
+                manifest = json.loads((session / "session.json").read_text(encoding="utf-8"))
+                hidden_from = str(manifest.get("global_save_root", ""))
+            except (OSError, UnicodeError, ValueError, AttributeError):
+                return True
+            return not hidden_from or os.path.normcase(os.path.abspath(hidden_from)) == global_saves
+
+        try:
             pending = recovery is not None and recovery.is_dir() and any(
-                session.is_dir()
-                and any(
-                    child.name not in ("unrouted-global", "session.json")
-                    for child in session.iterdir()
-                )
+                hides_this_game(session)
                 for instance in recovery.iterdir()
                 if instance.is_dir()
                 for session in instance.iterdir()
@@ -891,7 +916,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             else None
         )
         if checked and name_edit is not None and not name_edit.text().strip():
-            name_edit.setText("Elden Ring Save")
+            name_edit.setText(self._default_save_profile_name(dialog))
             name_edit.selectAll()
         self._sync_create_instance_game_save_profile_controls(dialog)
 
@@ -1801,6 +1826,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return "eldenring"
         return None
 
+    def _default_save_profile_name(self, dialog) -> str:
+        # named after the game the new instance is for
+        key = self._create_dialog_game_key(dialog) or EldenRingMo2SaveIsolation._game_key
+        return "Nightreign Save" if key == "nightreign" else "Elden Ring Save"
+
     def _active_instance_is_elden_ring(self) -> bool:
         # Elden Ring or Nightreign; the table follows the managed game
         try:
@@ -2118,10 +2148,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     requested_name
                 )
             except ValueError:
-                game_save_profile_name = "Elden Ring Save"
+                game_save_profile_name = self._default_save_profile_name(dialog)
                 qInfo(
                     "Elden Ring MO2 Save Isolation: the named game save profile "
-                    "had no valid name; using 'Elden Ring Save'."
+                    f"had no valid name; using '{game_save_profile_name}'."
                 )
 
         if (
@@ -4186,7 +4216,22 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         mode = tool._read_mode_directory(directory)
         return mode, tool._save_directory_for_selection(directory, mode, None)
 
+    def _follow_managed_game(self) -> bool:
+        # MO2 may ask before the tool has seen the managed game: without this
+        # a Nightreign instance would be checked against Elden Ring's folders
+        try:
+            game = self.__organizer.managedGame() if self.__organizer else None
+            key = game.gameShortName().casefold() if game else ""
+        except Exception:
+            return False
+        if key not in _GAMES:
+            return False
+        EldenRingMo2SaveIsolation._game_key = key
+        return True
+
     def activeProblems(self) -> list[int]:
+        if not self._follow_managed_game():
+            return []
         problems = []
         if self._pending_sessions():
             problems.append(self.PendingRecovery)
@@ -4204,6 +4249,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         return problems
 
     def shortDescription(self, key: int) -> str:
+        self._follow_managed_game()
         if key == self.PendingRecovery:
             return _tr("Steam saves from an earlier launch are still hidden")
         if key == self.SetAsideSaves:
@@ -4211,6 +4257,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         return _tr("This profile has no Elden Ring saves of its own yet")
 
     def fullDescription(self, key: int) -> str:
+        self._follow_managed_game()
         if key == self.PendingRecovery:
             sessions = "<br>".join(str(session) for session in self._pending_sessions())
             return _tr(

@@ -59,6 +59,7 @@ private:
   QColor m_on, m_off, m_border, m_knobOn, m_knobOff;
 
   void place();
+  qreal position() const;
 };
 
 #endif  // FLUENTSWITCH_H

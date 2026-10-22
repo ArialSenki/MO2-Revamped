@@ -738,13 +738,18 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             config["Installation"].pop("skip_md_files", None)
             if not config["Installation"]:
                 config.remove_section("Installation")
+        temporary_path = config_path.with_name(f".{config_path.name}.saving")
         try:
             profile_path.mkdir(parents=True, exist_ok=True)
-            temporary_path = config_path.with_name(f".{config_path.name}.saving")
             with temporary_path.open("w", encoding="utf-8", newline="\n") as stream:
                 config.write(stream)
             os.replace(temporary_path, config_path)
         except OSError as error:
+            # a half-written copy is not left in the profile folder
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
             QMessageBox.critical(
                 self.__parent_widget,
                 _tr("Could not save profile options"),

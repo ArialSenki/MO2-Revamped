@@ -1138,7 +1138,7 @@ void ModListView::onCustomContextMenuRequested(const QPoint& pos)
           .exec(viewport()->mapToGlobal(pos));
     }
   } catch (const std::exception& e) {
-    reportError(tr("Exception: ").arg(e.what()));
+    reportError(tr("Exception: %1").arg(e.what()));
   } catch (...) {
     reportError(tr("Unknown exception"));
   }

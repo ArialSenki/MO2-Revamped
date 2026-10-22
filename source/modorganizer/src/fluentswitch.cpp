@@ -85,8 +85,11 @@ FluentSwitchPainter::FluentSwitchPainter(QCheckBox* box)
   connect(m_hover, &QVariantAnimation::valueChanged, this, [this] { update(); });
 
   connect(box, &QCheckBox::toggled, this, [this](bool on) {
-    FluentMotion::start(m_position, m_position->currentValue().toReal(), on ? 1.0 : 0.0,
-                        ToggleDuration);
+    // position() already reads the new state; start from the shown one
+    const qreal from = m_position->state() == QAbstractAnimation::Running
+                           ? m_position->currentValue().toReal()
+                           : (on ? 0.0 : 1.0);
+    FluentMotion::start(m_position, from, on ? 1.0 : 0.0, ToggleDuration);
   });
 
   box->installEventFilter(this);
@@ -147,6 +150,16 @@ void FluentSwitchPainter::paintEvent(QPaintEvent*)
 
   QPainter painter(this);
   // cover the theme's still image of the switch underneath
-  FluentSwitch::paint(&painter, QRectF(rect()), m_position->currentValue().toReal(),
+  FluentSwitch::paint(&painter, QRectF(rect()), position(),
                       m_hover->currentValue().toReal(), colors, m_box->isEnabled());
+}
+
+qreal FluentSwitchPainter::position() const
+{
+  // the box's state wins once the slide is over: code that sets it with its
+  // signals blocked (the profiles dialog) sends no toggled() to follow
+  if (m_position->state() == QAbstractAnimation::Running) {
+    return m_position->currentValue().toReal();
+  }
+  return m_box->isChecked() ? 1.0 : 0.0;
 }

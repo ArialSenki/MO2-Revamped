@@ -258,7 +258,7 @@ QMenu* LogList::createMenu(QWidget* parent)
   });
   openLogsAction->setIcon(menuGlyph(MenuGlyphs::Folder));
 
-  auto* levels = new QMenu(tr("&Level"));
+  auto* levels = new QMenu(tr("&Level"), menu);
   levels->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/status/info.svg"));
   menu->addMenu(levels);
 
@@ -297,8 +297,9 @@ QMenu* LogList::createMenu(QWidget* parent)
 
 void LogList::onContextMenu(const QPoint& pos)
 {
-  auto* menu = createMenu(this);
-  menu->popup(viewport()->mapToGlobal(pos));
+  // a new menu per click; it used to stay alive, hidden, until the list went
+  std::unique_ptr<QMenu> menu(createMenu(this));
+  menu->exec(viewport()->mapToGlobal(pos));
 }
 
 log::Levels convertQtLevel(QtMsgType t)
