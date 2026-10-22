@@ -7797,7 +7797,8 @@ Please enter the name:</source>
     </message>
     <message>
         <location filename="modlistview.cpp" line="1141"/>
-        <source>Exception: </source>
+        <source>Exception: %1</source>
+        <oldsource>Exception: </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10670,7 +10671,7 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="390"/>
+        <location filename="loglist.cpp" line="391"/>
         <location filename="loot.cpp" line="396"/>
         <location filename="organizercore.cpp" line="380"/>
         <location filename="settingsdialogdiagnostics.cpp" line="118"/>
@@ -10683,7 +10684,7 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="391"/>
+        <location filename="loglist.cpp" line="392"/>
         <location filename="organizercore.cpp" line="381"/>
         <source>Failed to create &quot;%1&quot;. Your user account probably lacks permission.</source>
         <translation type="unfinished"></translation>

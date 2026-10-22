@@ -723,9 +723,16 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             candidates.append(("logs/mo_interface.log", main_log))
 
         if log_dir.is_dir():
+            def modified(path: Path) -> float:
+                # a log removed meanwhile sorts last instead of failing the report
+                try:
+                    return path.stat().st_mtime
+                except OSError:
+                    return 0.0
+
             usvfs_logs = sorted(
                 log_dir.glob("usvfs-*.log"),
-                key=lambda path: path.stat().st_mtime,
+                key=modified,
                 reverse=True,
             )
             candidates.extend(
@@ -833,23 +840,31 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         if not destination.casefold().endswith(".zip"):
             destination += ".zip"
 
+        archive_started = False
         try:
             included = []
             collection_errors = []
             with zipfile.ZipFile(
                 destination, "w", compression=zipfile.ZIP_DEFLATED
             ) as archive:
+                archive_started = True
                 archive.writestr("diagnostics.txt", self._diagnostics_context())
                 for archive_name, source_path in self._diagnostic_log_files():
                     try:
-                        metadata = source_path.stat()
-                        data = source_path.read_bytes()
-                        original_size = len(data)
-                        truncated = original_size > 2 * 1024 * 1024
+                        limit = 2 * 1024 * 1024
+                        # only the end of a large log is read: mo_interface.log
+                        # can grow to hundreds of MiB in a long session
+                        with source_path.open("rb") as stream:
+                            metadata = os.fstat(stream.fileno())
+                            original_size = metadata.st_size
+                            truncated = original_size > limit
+                            if truncated:
+                                stream.seek(original_size - limit)
+                            data = stream.read(limit)
                         if truncated:
                             data = (
                                 b"[MO2 Revamped report: only the last 2 MiB are included]\n"
-                                + data[-(2 * 1024 * 1024):]
+                                + data
                             )
                         archive.writestr(archive_name, data)
                         modified = datetime.fromtimestamp(
@@ -887,6 +902,13 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 "MO2 Revamped: could not create diagnostic report.\n"
                 + traceback.format_exc()
             )
+            # an unfinished ZIP is not left behind to be shared by mistake
+            # (a file MO2 could not even open is left alone)
+            if archive_started:
+                try:
+                    Path(destination).unlink(missing_ok=True)
+                except OSError:
+                    pass
             self._show_report_notice(
                 parent,
                 "MO2RevampedReportErrorDialog",

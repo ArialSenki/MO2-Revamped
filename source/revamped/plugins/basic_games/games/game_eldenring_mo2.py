@@ -176,6 +176,10 @@ class EldenRingModDataChecker(BasicModDataChecker):
     _dll_directory = "DLLs"
     _archive_wrapper_depth_limit = 16
     _legacy_dll_directories = {"external_dlls", "mo2_dlls", "mods"}
+    # folders whose DLLs are already where the standard layout puts them
+    _managed_dll_directories = frozenset(
+        {_dll_directory.casefold(), *_legacy_dll_directories, "plugins"}
+    )
 
     _asset_directories = {
         "action",
@@ -328,6 +332,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
             extension.casefold() for extension in preserve_extensions
         )
         self._saved_archive_layout_signatures: set[tuple[str, ...]] | None = None
+        self._saved_archive_layout_roots: set[frozenset[str]] = set()
         self._saved_archive_layout_cache_epoch = None
         # only the game plugin's own checker follows the mod list: MO2 never
         # drops these callbacks, so the short-lived checker the archive
@@ -966,16 +971,58 @@ class EldenRingModDataChecker(BasicModDataChecker):
         )
 
     def _is_saved_archive_layout_tree(self, filetree: mobase.IFileTree) -> bool:
-        target_signature = self._file_tree_signature(filetree)
-        if not target_signature:
+        # MO2 asks for every mod at startup and on refreshes, on its GUI
+        # thread. Most setups keep no archive layout, so answer those without
+        # walking the tree; otherwise compare the root names before the full
+        # path signature. Both shortcuts only skip trees that cannot match.
+        signatures, roots = self._saved_archive_layout_signature_set()
+        if not signatures:
             return False
+        if not self._root_names_may_match(filetree, roots):
+            return False
+        target_signature = self._file_tree_signature(filetree)
+        return bool(target_signature) and target_signature in signatures
 
+    @classmethod
+    def _signature_root_names(
+        cls, filetree: mobase.IFileTree
+    ) -> tuple[set[str], set[str]]:
+        """First path parts of the root files a signature counts, and of the
+        root folders (which count only when they hold such a file)."""
+        files: set[str] = set()
+        folders: set[str] = set()
+        for entry in filetree:
+            name = entry.name().replace("\\", "/")
+            key = name.casefold().split("/", 1)[0]
+            if is_directory(entry):
+                folders.add(key)
+            elif cls._signature_counts_file(name):
+                files.add(key)
+        return files, folders
+
+    @classmethod
+    def _root_names_may_match(
+        cls, filetree: mobase.IFileTree, roots: set[frozenset[str]]
+    ) -> bool:
+        files, folders = cls._signature_root_names(filetree)
+        present = files | folders
+        return any(files <= root and root <= present for root in roots)
+
+    def _saved_archive_layout_signature_set(
+        self,
+    ) -> tuple[set[tuple[str, ...]], set[frozenset[str]]]:
+        """Path signatures of the mods installed with their archive layout
+        kept, and the first path parts of each (cached until a mod is
+        installed or removed, or the installer bumps the cache epoch)."""
         cache_epoch = self._archive_layout_cache_epoch()
         if (
             self._saved_archive_layout_signatures is not None
             and cache_epoch == self._saved_archive_layout_cache_epoch
         ):
-            return target_signature in self._saved_archive_layout_signatures
+            return (
+                self._saved_archive_layout_signatures,
+                self._saved_archive_layout_roots,
+            )
 
         self._saved_archive_layout_signatures = None
 
@@ -983,7 +1030,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
             mod_list = self._organizer.modList()
             mod_names = mod_list.allMods()
         except Exception:
-            return False
+            return set(), set()
 
         signatures: set[tuple[str, ...]] = set()
         complete = True
@@ -1005,11 +1052,16 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 # checking other entries and avoid retaining a partial cache.
                 complete = False
                 continue
+        roots = {
+            frozenset(path.split("/", 1)[0] for path in signature)
+            for signature in signatures
+        }
         current_epoch = self._archive_layout_cache_epoch()
         if complete and current_epoch == cache_epoch:
             self._saved_archive_layout_signatures = signatures
+            self._saved_archive_layout_roots = roots
             self._saved_archive_layout_cache_epoch = current_epoch
-        return target_signature in signatures
+        return signatures, roots
 
     def _archive_layout_cache_epoch(self):
         try:
@@ -1024,7 +1076,23 @@ class EldenRingModDataChecker(BasicModDataChecker):
         self._saved_archive_layout_signatures = None
 
     @staticmethod
-    def _file_tree_signature(filetree: mobase.IFileTree) -> tuple[str, ...]:
+    def _name_suffix(name: str) -> str:
+        """``Path(name).suffix`` for one entry name, without building a Path
+        (this runs for every file of every mod)."""
+        if "/" in name or "\\" in name or ":" in name:
+            return Path(name).suffix
+        index = name.rfind(".")
+        return name[index:] if 0 < index < len(name) - 1 else ""
+
+    @classmethod
+    def _signature_counts_file(cls, name: str) -> bool:
+        return (
+            name.casefold() != "meta.ini"
+            and cls._name_suffix(name).casefold() != ".mohidden"
+        )
+
+    @classmethod
+    def _file_tree_signature(cls, filetree: mobase.IFileTree) -> tuple[str, ...]:
         paths: list[str] = []
 
         def collect(tree: mobase.IFileTree, prefix: str = "") -> None:
@@ -1033,10 +1101,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 relative_path = f"{prefix}/{name}" if prefix else name
                 if is_directory(entry):
                     collect(entry, relative_path)
-                elif (
-                    name.casefold() != "meta.ini"
-                    and Path(name).suffix.casefold() != ".mohidden"
-                ):
+                elif cls._signature_counts_file(name):
                     paths.append(relative_path.casefold())
 
         collect(filetree)
@@ -1099,34 +1164,25 @@ class EldenRingModDataChecker(BasicModDataChecker):
     ) -> bool:
         if depth > self._archive_wrapper_depth_limit:
             return False
+        managed = self._managed_dll_directories
+        # a DLL in this folder is misplaced unless the folder is a managed one
+        dll_misplaced_here = bool(parent_name) and parent_name not in managed
+        name_suffix = self._name_suffix
         for entry in filetree:
             name = entry.name().casefold()
             if is_directory(entry):
                 # Managed DLL directories are already in a valid destination.
-                if name in {
-                    self._dll_directory.casefold(),
-                    *self._legacy_dll_directories,
-                    "plugins",
-                }:
+                if name in managed:
                     continue
                 if name in {"mod", "native", "natives"} and any(
                     not is_directory(child)
-                    and Path(child.name()).suffix.casefold() == ".dll"
+                    and name_suffix(child.name()).casefold() == ".dll"
                     for child in entry
                 ):
                     return True
                 if self._has_misplaced_dll(entry, name, depth + 1):
                     return True
-            elif (
-                Path(name).suffix.casefold() == ".dll"
-                and bool(parent_name)
-                and parent_name
-                not in {
-                    self._dll_directory.casefold(),
-                    *self._legacy_dll_directories,
-                    "plugins",
-                }
-            ):
+            elif dll_misplaced_here and name_suffix(name).casefold() == ".dll":
                 return True
         return False
 
@@ -1835,13 +1891,13 @@ class EldenRingMo2Game(BasicGame):
             try:
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             except (OSError, UnicodeError, json.JSONDecodeError) as error:
-                raise OSError(_tr("The Elden Ring save-recovery record could not be read.")) from error
+                raise OSError(self._game_text(_tr("The Elden Ring save-recovery record could not be read."))) from error
             if not isinstance(manifest, dict):
-                raise OSError(_tr("The Elden Ring save-recovery record has an invalid format."))
+                raise OSError(self._game_text(_tr("The Elden Ring save-recovery record has an invalid format.")))
             recorded_root = manifest.get("global_save_root")
             if not isinstance(recorded_root, str) or not recorded_root.strip():
                 raise OSError(
-                    _tr("The Elden Ring save-recovery record has no valid save-folder path.")
+                    self._game_text(_tr("The Elden Ring save-recovery record has no valid save-folder path."))
                 )
             try:
                 same_root = os.path.normcase(os.path.abspath(recorded_root)) == os.path.normcase(
@@ -1851,7 +1907,7 @@ class EldenRingMo2Game(BasicGame):
                 same_root = False
             if not same_root:
                 raise OSError(
-                    _tr("The save-recovery record points to a different Elden Ring save folder.")
+                    self._game_text(_tr("The save-recovery record points to a different Elden Ring save folder."))
                 )
             names = manifest.get("directories", [])
         else:
@@ -1865,7 +1921,7 @@ class EldenRingMo2Game(BasicGame):
             manifest = {"global_save_root": str(global_save_root), "directories": names}
 
         if not isinstance(names, list):
-            raise OSError(_tr("The Elden Ring save-recovery record has an invalid directory list."))
+            raise OSError(self._game_text(_tr("The Elden Ring save-recovery record has an invalid directory list.")))
 
         validated_directories = []
         seen_names = set()
@@ -2093,7 +2149,7 @@ class EldenRingMo2Game(BasicGame):
         if not global_save_root.is_dir():
             return None
         if not self._recover_stale_global_save_quarantines():
-            raise OSError(_tr("A previous Elden Ring save session still needs recovery."))
+            raise OSError(self._game_text(_tr("A previous Elden Ring save session still needs recovery.")))
 
         save_directories = [
             child
@@ -2657,9 +2713,9 @@ class EldenRingMo2Game(BasicGame):
             QMessageBox.critical(
                 None,
                 self._game_text(_tr("Elden Ring save recovery needed")),
-                _tr("Another MO2 Revamped installation still holds Steam saves it "
+                self._game_text(_tr("Another MO2 Revamped installation still holds Steam saves it "
                 "hid for its own launch. Start that installation once with Elden "
-                "Ring closed so it puts them back. The game was not started.\n\n{0}").format(
+                "Ring closed so it puts them back. The game was not started.\n\n{0}")).format(
                     foreign_sessions[0]
                 ),
             )
