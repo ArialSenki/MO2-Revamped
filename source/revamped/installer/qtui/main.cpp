@@ -346,6 +346,7 @@ public:
     int mode() const { return mode_; }
     // A second, muted line under the title; used to mark unavailable tasks.
     void setBadge(const QString &badge) { badge_ = badge; update(); }
+    void setTheme(const Theme &theme) { theme_ = theme; update(); }
     QSize sizeHint() const override { return {236, 58}; }
 protected:
     void enterEvent(QEnterEvent *event) override { animateTo(hoverAnimation_, hover_, 1.0); QAbstractButton::enterEvent(event); }
@@ -488,6 +489,13 @@ public:
             detectTheme(QString());
             applyStyle();
             applyTitleBar();
+            // the cards, the globe and the page's icons keep a copy of the colors
+            for (TaskCard *tile : taskTiles_) tile->setTheme(theme_);
+            if (languageButton_) languageButton_->setIcon(glyphIcon(QStringLiteral("globe"), theme_.tileInk, 20));
+            if (!busy_ && !asking_ && !hasCompleted_) {
+                savePageState();
+                setMode(mode_, true);
+            }
             update();
         });
     }
@@ -496,7 +504,15 @@ public:
 #ifdef Q_OS_WIN
         if (taskbar_) { taskbar_->Release(); taskbar_ = nullptr; }
 #endif
-        if (inspectProcess_) { inspectProcess_->disconnect(); inspectProcess_->kill(); inspectProcess_->waitForFinished(1000); }
+        // A QProcess destroyed while running kills its program and emits
+        // finished(); its handlers would then run on this half-destroyed window
+        // (closing during the startup search did that). Cut them off first.
+        for (QProcess *process : findChildren<QProcess *>()) {
+            process->disconnect();
+            if (process->state() != QProcess::NotRunning) { process->kill(); process->waitForFinished(1000); }
+        }
+        inspectProcess_ = nullptr;
+        backend_ = nullptr;
         if (!inspectFolder_.isEmpty()) QDir(inspectFolder_).removeRecursively();
         if (!jobDirectory_.isEmpty()) QDir(jobDirectory_).removeRecursively();
     }
@@ -793,7 +809,17 @@ private:
         for (const auto key : {Qt::Key_Return, Qt::Key_Enter}) {
             auto *enter = new QShortcut(QKeySequence(key), this);
             connect(enter, &QShortcut::activated, this, [this] {
-                if (!busy_ && actionButton_ && actionButton_->isVisible() && actionButton_->isEnabled())
+                if (busy_) return;
+                // the shortcut sees Enter before the focused control: a focused
+                // button (Close, Browse, a task) is what Enter presses, as
+                // elsewhere in Windows, not the task's main action
+                QWidget *focus = QApplication::focusWidget();
+                if (focus && focus != actionButton_ && focus->isEnabled() &&
+                    (qobject_cast<QPushButton *>(focus) || dynamic_cast<TaskCard *>(focus))) {
+                    static_cast<QAbstractButton *>(focus)->click();
+                    return;
+                }
+                if (actionButton_ && actionButton_->isVisible() && actionButton_->isEnabled())
                     actionButton_->click();
             });
         }
@@ -969,7 +995,9 @@ private:
     // the first installation the current task can use, once the background
     // search has found them; false when nothing changed
     bool autofillTarget() {
-        if (!target_ || !(mode_ == 2 || mode_ == 4 || mode_ == 5) || fixedMode_ >= 0 || !prefetchDone_ ||
+        // never while a task runs or after it: the folder shown is the one the
+        // task worked on (the search can finish after Update was started)
+        if (!target_ || busy_ || asking_ || hasCompleted_ || !(mode_ == 2 || mode_ == 4 || mode_ == 5) || fixedMode_ >= 0 || !prefetchDone_ ||
             savedPaths_.value(mode_).contains(QStringLiteral("target")) ||
             target_->text().trimmed() != defaultTarget(mode_))
             return false;
@@ -993,6 +1021,10 @@ private:
         const bool changed = id != mode_ || !pageBuilt_;
         if (pageBuilt_ && !force) savePageState();
         mode_ = id;
+#ifdef Q_OS_WIN
+        // a failed run left the taskbar button red; the new page starts clean
+        if (taskbar_) setTaskbarProgress(0);
+#endif
         for (TaskCard *tile : taskTiles_) tile->setChecked(tile->mode() == mode_);
         buildPage(changed || force);
         pageBuilt_ = true;
@@ -1379,11 +1411,13 @@ private:
             return showError(tr(QStringLiteral("Falta la ubicación")), tr(QStringLiteral("Indica una carpeta válida.")));
         const bool fresh = mode_ == 0 || mode_ == 1;
         if (mode_ == 3) {
-            const QString source = sourceInstall_->text().trimmed();
-            const QString data = sourceData_->text().trimmed();
-            if (source.isEmpty() || !QFileInfo(QDir(source).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
+            // relative paths would be read against the working folder here and
+            // in the elevated backend; only full paths are accepted (and sent)
+            const QString source = QDir::cleanPath(sourceInstall_->text().trimmed());
+            const QString data = QDir::cleanPath(sourceData_->text().trimmed());
+            if (source.isEmpty() || !QDir::isAbsolutePath(source) || !QFileInfo(QDir(source).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
                 return showError(tr(QStringLiteral("Origen no encontrado")), tr(QStringLiteral("Selecciona la carpeta de origen que contiene ModOrganizer.exe.")));
-            if (data.isEmpty() || !QDir(data).exists())
+            if (data.isEmpty() || !QDir::isAbsolutePath(data) || !QDir(data).exists())
                 return showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista.")));
             int mask = 0;
             const QStringList keys = {QStringLiteral("profiles"), QStringLiteral("mods"), QStringLiteral("downloads"),
@@ -1391,7 +1425,7 @@ private:
             for (int i = 0; i < keys.size(); ++i) if (checks_.value(keys.at(i))->isChecked()) mask |= (1 << i);
             const QString output = tempFile(QStringLiteral("migration-%1.json"));
             QApplication::setOverrideCursor(Qt::WaitCursor);
-            const QJsonObject check = runHost({QStringLiteral("--migration-data"), data, QString::number(mask), output, language_}, output, 15000);
+            const QJsonObject check = runHost({QStringLiteral("--migration-data"), QDir::toNativeSeparators(data), QString::number(mask), output, language_}, output, 15000);
             QApplication::restoreOverrideCursor();
             if (!check.value(QStringLiteral("hasData")).toBool())
                 return showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista.")));
@@ -1514,7 +1548,14 @@ private:
     }
 
     void beginOperation() {
-        if (busy_ || hasCompleted_ || !target_ || modeBlocked(mode_) || !validate() || !confirm()) return;
+        if (busy_ || asking_ || hasCompleted_ || !target_ || modeBlocked(mode_)) return;
+        // the question boxes run an event loop: the background search must not
+        // swap the folder (or a theme change rebuild the page) under them, or
+        // the backend would get another folder than the one confirmed
+        asking_ = true;
+        const bool confirmed = validate() && confirm();
+        asking_ = false;
+        if (!confirmed) return;
         savePageState();
         if (!jobDirectory_.isEmpty()) QDir(jobDirectory_).removeRecursively();
         jobDirectory_ = QFileInfo(tempFile(QStringLiteral("job-%1/request.json"))).absolutePath();
@@ -1535,8 +1576,8 @@ private:
         request.insert(QStringLiteral("InstanceKind"), (mode_ == 1 || mode_ == 3 || keptPortable) ? 0 : 1);
         request.insert(QStringLiteral("ReinstallOverKeptData"), reinstall_);
         request.insert(QStringLiteral("TargetDirectory"), QDir::toNativeSeparators(QDir::cleanPath(target_->text().trimmed())));
-        request.insert(QStringLiteral("SourceInstallDirectory"), sourceInstall_ ? QDir::toNativeSeparators(sourceInstall_->text().trimmed()) : QString());
-        request.insert(QStringLiteral("SourceDataDirectory"), sourceData_ ? QDir::toNativeSeparators(sourceData_->text().trimmed()) : QString());
+        request.insert(QStringLiteral("SourceInstallDirectory"), sourceInstall_ ? QDir::toNativeSeparators(QDir::cleanPath(sourceInstall_->text().trimmed())) : QString());
+        request.insert(QStringLiteral("SourceDataDirectory"), sourceData_ ? QDir::toNativeSeparators(QDir::cleanPath(sourceData_->text().trimmed())) : QString());
         const auto checked = [this](const QString &key) { return checks_.contains(key) && checks_.value(key)->isChecked(); };
         request.insert(QStringLiteral("CopyProfiles"), checked(QStringLiteral("profiles")));
         request.insert(QStringLiteral("CopyMods"), checked(QStringLiteral("mods")));
@@ -1729,6 +1770,7 @@ private:
     QString fixedTarget_;
     bool isolated_ = false;
     bool busy_ = false;
+    bool asking_ = false;
     bool hasCompleted_ = false;
     bool pageBuilt_ = false;
     bool registeredLoaded_ = false;

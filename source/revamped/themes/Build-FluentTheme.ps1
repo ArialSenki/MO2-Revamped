@@ -19,6 +19,9 @@ $styles = Join-Path $root 'stylesheets'
 $template = [IO.File]::ReadAllText((Join-Path $root 'Fluent-v4.template.qss'))
 $utf8 = New-Object Text.UTF8Encoding $false
 
+# faint is the disabled/placeholder ink; caption is the lightest gray that still
+# reads at 4.5:1 on bg and row hover (descriptions, counters); accentBusy is the
+# Run button fill while mounting, dark enough for its text at 4.5:1.
 $themes = @(
     @{
         Name = 'Light'; Source = 'MO2 Classic Refined - Light.qss'
@@ -30,8 +33,8 @@ $themes = @(
             field = '#FFFFFF'; fieldHover = '#F9F9F9'; fieldLine = '#E5E5E5'; fieldBottom = '#8A8A8A'
             btn = '#FBFBFB'; btnHover = '#F6F6F6'; btnPressed = '#F2F2F2'; btnLine = '#E5E5E5'; btnBottom = '#CCCCCC'
             disabledBg = '#F5F5F5'
-            text = '#1A1A1A'; muted = '#5D5D5D'; faint = '#8A8A8A'
-            accent = '#005FB8'; accentHover = '#1A6FC0'; accentPressed = '#3B82C8'
+            text = '#1A1A1A'; muted = '#5D5D5D'; faint = '#8A8A8A'; caption = '#6E6E6E'
+            accent = '#005FB8'; accentHover = '#1A6FC0'; accentPressed = '#3B82C8'; accentBusy = '#2A77C4'
             accentFg = '#FFFFFF'; accentFgPressed = '#D6E6F5'; accentText = '#005FB8'
             accentDivider = '#4D8FCD'; accentSubtle = '#DCE8F5'
             warnBg = '#FFF4CE'; warnFg = '#6B4A00'; critBg = '#FDE7E9'; critFg = '#C42B1C'; running = '#0F7B0F'; runningFg = '#FFFFFF'
@@ -50,8 +53,8 @@ $themes = @(
             field = '#2F2F2F'; fieldHover = '#343434'; fieldLine = '#3D3D3D'; fieldBottom = '#9A9A9A'
             btn = '#2D2D2D'; btnHover = '#323232'; btnPressed = '#272727'; btnLine = '#3D3D3D'; btnBottom = '#454545'
             disabledBg = '#2A2A2A'
-            text = '#FFFFFF'; muted = '#C5C5C5'; faint = '#9A9A9A'
-            accent = '#4CC2FF'; accentHover = '#48B1E8'; accentPressed = '#42A0D2'
+            text = '#FFFFFF'; muted = '#C5C5C5'; faint = '#9A9A9A'; caption = '#9A9A9A'
+            accent = '#4CC2FF'; accentHover = '#48B1E8'; accentPressed = '#42A0D2'; accentBusy = '#42A0D2'
             accentFg = '#000000'; accentFgPressed = '#1B3A4C'; accentText = '#60CDFF'
             accentDivider = '#2E7EA8'; accentSubtle = '#1F3443'
             warnBg = '#433519'; warnFg = '#F5D58C'; critBg = '#442726'; critFg = '#FF99A4'; running = '#6CCB5F'; runningFg = '#000000'
@@ -72,8 +75,8 @@ $themes = @(
             field = '#262626'; fieldHover = '#2B2B2B'; fieldLine = '#353535'; fieldBottom = '#8F8F8F'
             btn = '#252525'; btnHover = '#2B2B2B'; btnPressed = '#1F1F1F'; btnLine = '#353535'; btnBottom = '#3E3E3E'
             disabledBg = '#212121'
-            text = '#EDEDED'; muted = '#BDBDBD'; faint = '#8F8F8F'
-            accent = '#D6D6D6'; accentHover = '#C6C6C6'; accentPressed = '#B3B3B3'
+            text = '#EDEDED'; muted = '#BDBDBD'; faint = '#8F8F8F'; caption = '#929292'
+            accent = '#D6D6D6'; accentHover = '#C6C6C6'; accentPressed = '#B3B3B3'; accentBusy = '#B3B3B3'
             accentFg = '#000000'; accentFgPressed = '#2A2A2A'; accentText = '#E6E6E6'
             accentDivider = '#6A6A6A'; accentSubtle = '#333333'
             warnBg = '#3D3218'; warnFg = '#F5D58C'; critBg = '#3A2627'; critFg = '#F0A0A0'; running = '#6CCB5F'; runningFg = '#000000'
@@ -271,12 +274,14 @@ function Expand-Tokens([string]$text, $tokens) {
 function Write-Svg([string]$dir, [string]$name, [int]$w, [int]$h, [string]$body) {
     $svg = "<svg xmlns=""http://www.w3.org/2000/svg"" width=""$w"" height=""$h"" viewBox=""0 0 $w $h"">$body</svg>`n"
     [IO.File]::WriteAllText((Join-Path $dir $name), $svg, $utf8)
+    [void]$script:drawnAssets.Add($name)
 }
 
 function Write-Assets($theme) {
     $t = $theme.Tokens
     $dir = Join-Path $styles $theme.Assets
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    $script:drawnAssets = New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
     $check = '<path d="M5 9.2 7.8 12 13 6.4" fill="none" stroke="{0}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
     Write-Svg $dir 'checkbox-unchecked.svg' 18 18 "<rect x=""1.5"" y=""1.5"" width=""15"" height=""15"" rx=""3.5"" fill=""$($t.boxFill)"" stroke=""$($t.boxLine)""/>"
     Write-Svg $dir 'checkbox-unchecked-hover.svg' 18 18 "<rect x=""1.5"" y=""1.5"" width=""15"" height=""15"" rx=""3.5"" fill=""$($t.boxHover)"" stroke=""$($t.boxLine)""/>"
@@ -309,12 +314,14 @@ function Write-Assets($theme) {
     Write-Svg $dir 'sort-down.svg' 16 12 ($chevron -f 'M4 4l4 4 4-4', $t.faint)
     Write-Svg $dir 'spin-up.svg' 8 6 ($chevron -f 'M1.5 4.5 4 2l2.5 2.5', $t.muted)
     Write-Svg $dir 'spin-down.svg' 8 6 ($chevron -f 'M1.5 1.5 4 4l2.5-2.5', $t.muted)
-    # Remaining base-theme assets (dock buttons, legacy sort arrows) are recolored copies.
+    # Remaining base-theme assets (dock buttons, legacy sort arrows) are recolored
+    # copies, rewritten on every run so they follow the palette; only the files
+    # drawn above are skipped (an existence check kept stale blue copies).
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $styles 'mo2-classic-refined-light') -Filter '*.svg') {
         $target = Join-Path $dir $file.Name
-        if (Test-Path -LiteralPath $target) { continue }
+        if ($script:drawnAssets.Contains($file.Name)) { continue }
         $svg = [IO.File]::ReadAllText($file.FullName)
-        $svg = [regex]::Replace($svg, '#([0-9A-Fa-f]{6})', [Text.RegularExpressions.MatchEvaluator]{
+        $svg = [regex]::Replace($svg, '#([0-9A-Fa-f]{6})\b', [Text.RegularExpressions.MatchEvaluator]{
             param($c)
             $hex = $c.Groups[1].Value
             $mapped = Convert-Color ([Convert]::ToInt32($hex.Substring(0, 2), 16)) ([Convert]::ToInt32($hex.Substring(2, 2), 16)) ([Convert]::ToInt32($hex.Substring(4, 2), 16)) $false $theme

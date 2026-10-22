@@ -272,6 +272,9 @@ QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
 }
 
 /* Check boxes, radio buttons, and switches. */
+/* Every state repeats border and fill: the dark bases give the indicator
+   states their own border and fill, which outrank the plain ::indicator rule
+   and showed as a ring behind the drawn radio and box. */
 QCheckBox::indicator, QGroupBox::indicator, QTreeView::indicator, QTableView::indicator, QListView::indicator {
     width: 18px;
     height: 18px;
@@ -282,47 +285,71 @@ QCheckBox::indicator, QGroupBox::indicator, QTreeView::indicator, QTableView::in
 QCheckBox::indicator:unchecked, QGroupBox::indicator:unchecked,
 QTreeView::indicator:unchecked, QTableView::indicator:unchecked, QListView::indicator:unchecked {
     image: url(./@assets@/checkbox-unchecked.svg);
+    border: none;
+    background-color: transparent;
 }
 QCheckBox::indicator:unchecked:hover, QGroupBox::indicator:unchecked:hover,
 QTreeView::indicator:unchecked:hover, QTableView::indicator:unchecked:hover, QListView::indicator:unchecked:hover {
     image: url(./@assets@/checkbox-unchecked-hover.svg);
+    border: none;
+    background-color: transparent;
 }
 QCheckBox::indicator:checked, QGroupBox::indicator:checked,
 QTreeView::indicator:checked, QTableView::indicator:checked, QListView::indicator:checked {
     image: url(./@assets@/checkbox-checked.svg);
+    border: none;
+    background-color: transparent;
 }
 QCheckBox::indicator:indeterminate, QGroupBox::indicator:indeterminate,
 QTreeView::indicator:indeterminate, QTableView::indicator:indeterminate, QListView::indicator:indeterminate {
     image: url(./@assets@/checkbox-indeterminate.svg);
+    border: none;
+    background-color: transparent;
 }
 QCheckBox::indicator:unchecked:disabled, QGroupBox::indicator:unchecked:disabled,
 QTreeView::indicator:unchecked:disabled, QTableView::indicator:unchecked:disabled, QListView::indicator:unchecked:disabled {
     image: url(./@assets@/checkbox-disabled.svg);
+    border: none;
+    background-color: transparent;
 }
 QCheckBox::indicator:checked:disabled, QGroupBox::indicator:checked:disabled,
 QTreeView::indicator:checked:disabled, QTableView::indicator:checked:disabled, QListView::indicator:checked:disabled,
 QCheckBox::indicator:indeterminate:disabled, QGroupBox::indicator:indeterminate:disabled,
 QTreeView::indicator:indeterminate:disabled, QTableView::indicator:indeterminate:disabled, QListView::indicator:indeterminate:disabled {
     image: url(./@assets@/checkbox-checked-disabled.svg);
+    border: none;
+    background-color: transparent;
 }
 QRadioButton::indicator {
     width: 18px;
     height: 18px;
+    border: none;
+    background-color: transparent;
 }
 QRadioButton::indicator:unchecked {
     image: url(./@assets@/radio-unchecked.svg);
+    border: none;
+    background-color: transparent;
 }
 QRadioButton::indicator:unchecked:hover {
     image: url(./@assets@/radio-unchecked-hover.svg);
+    border: none;
+    background-color: transparent;
 }
 QRadioButton::indicator:checked {
     image: url(./@assets@/radio-checked.svg);
+    border: none;
+    background-color: transparent;
 }
 QRadioButton::indicator:unchecked:disabled {
     image: url(./@assets@/radio-disabled.svg);
+    border: none;
+    background-color: transparent;
 }
 QRadioButton::indicator:checked:disabled {
     image: url(./@assets@/radio-checked-disabled.svg);
+    border: none;
+    background-color: transparent;
 }
 
 /* Lists, trees, and headers. */
@@ -1051,8 +1078,8 @@ QMainWindow#MainWindow QLabel#activeModslabel {
 QToolButton#startButton[runState="busy"],
 QToolButton#startButton[runState="busy"]:disabled {
     color: @accentFg@;
-    background-color: @accentPressed@;
-    border-color: @accentPressed@;
+    background-color: @accentBusy@;
+    border-color: @accentBusy@;
 }
 QToolButton#startButton[runState="running"],
 QToolButton#startButton[runState="running"]:disabled {
@@ -1239,7 +1266,7 @@ QLabel#fluentStatBadge[tone="critical"] {
     background-color: @critBg@;
 }
 QLabel#fluentStatCaption {
-    color: @faint@;
+    color: @caption@;
 }
 QLabel#fluentStatValue {
     color: @text@;
@@ -1310,7 +1337,7 @@ QLabel#fluentSettingTitle {
     background-color: transparent;
 }
 QLabel#fluentSettingDescription {
-    color: @faint@;
+    color: @caption@;
     font-size: 8.5pt;
     background-color: transparent;
 }
@@ -1684,7 +1711,7 @@ QLabel#instanceRowGlyph {
     background-color: transparent;
 }
 QLabel#instanceEmptyText {
-    color: @faint@;
+    color: @caption@;
     background-color: transparent;
 }
 
@@ -1808,7 +1835,7 @@ QLabel[wizardRowText="true"],
 QLabel#wizardNamePath,
 QLabel#diskSpace,
 QLabel#label_11 {
-    color: @faint@;
+    color: @caption@;
     font-size: 8.5pt;
     background-color: transparent;
 }
@@ -1864,7 +1891,7 @@ QDialog#CreateInstanceDialog QCheckBox[wizardOption="true"] {
     border-top: 1px solid @line@;
 }
 QLabel[wizardOptionText="true"] {
-    color: @faint@;
+    color: @caption@;
     font-size: 8.5pt;
     padding: 0px 20px 12px 72px;
     background-color: transparent;
