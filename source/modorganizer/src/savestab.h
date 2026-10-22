@@ -3,6 +3,7 @@
 
 #include "savegameinfo.h"
 #include <filterwidget.h>
+#include <QDateTime>
 
 namespace Ui
 {
@@ -61,6 +62,11 @@ private:
 
   QTimer m_SavesWatcherTimer;
   QFileSystemWatcher m_SavesWatcher;
+
+  // the profile folder watched for Save Isolation's route file, and that
+  // file's last change; empty when only the saves folder is watched
+  QString m_routeWatchFolder;
+  QDateTime m_routeStamp;
 
   void onContextMenu(const QPoint& pos);
   void deleteSavegame();

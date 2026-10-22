@@ -8345,6 +8345,10 @@ Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für de
       <translation>Nexus-API: heute noch %1</translation>
     </message>
     <message>
+      <source>Nexus API: %1 left this hour</source>
+      <translation>Nexus-API: noch %1 in dieser Stunde</translation>
+    </message>
+    <message>
       <source>Queued requests: %1
 Remaining today: %2
 Remaining this hour: %3</source>

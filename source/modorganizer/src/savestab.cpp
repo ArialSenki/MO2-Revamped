@@ -12,6 +12,8 @@
 #include <iplugingame.h>
 #include <localsavegames.h>
 #include <isavegameinfowidget.h>
+#include <QDir>
+#include <QFileInfo>
 #include <QHeaderView>
 #include <QIcon>
 #include <QLocale>
@@ -29,9 +31,23 @@ SavesTab::SavesTab(QWidget* window, OrganizerCore& core, Ui::MainWindow* mwui)
   ui.list->installEventFilter(this);
   ui.list->setMouseTracking(true);
 
-  connect(&m_SavesWatcher, &QFileSystemWatcher::directoryChanged, [&] {
-    m_SavesWatcherTimer.start();
-  });
+  connect(&m_SavesWatcher, &QFileSystemWatcher::directoryChanged,
+          [&](const QString& path) {
+            // the profile folder changes on every mod toggle (modlist.txt);
+            // only a new save route there means the saves list changed
+            if (!m_routeWatchFolder.isEmpty() &&
+                QDir::cleanPath(path) == QDir::cleanPath(m_routeWatchFolder)) {
+              const QDateTime stamp =
+                  QFileInfo(QDir(m_routeWatchFolder)
+                                .filePath(QLatin1String(EldenRingSaveSettings::ConfigFilename)))
+                      .lastModified();
+              if (stamp == m_routeStamp) {
+                return;
+              }
+              m_routeStamp = stamp;
+            }
+            m_SavesWatcherTimer.start();
+          });
 
   connect(&m_SavesWatcherTimer, &QTimer::timeout, [&] {
     refreshSavesIfOpen();
@@ -262,10 +278,16 @@ void SavesTab::startMonitorSaves(const QDir& savesDir)
 {
   stopMonitorSaves();
   m_SavesWatcher.addPath(savesDir.absolutePath());
+  m_routeWatchFolder.clear();
   if (m_core.currentProfile()->localSavesEnabled() &&
-      m_core.gameFeatures().gameFeature<LocalSavegames>() != nullptr) {
+      m_core.gameFeatures().gameFeature<LocalSavegames>() != nullptr &&
+      EldenRingSaveSettings::supports(m_core.managedGame())) {
     // Save Isolation atomically replaces its route INI in the profile folder.
-    m_SavesWatcher.addPath(m_core.currentProfile()->absolutePath());
+    m_routeWatchFolder = m_core.currentProfile()->absolutePath();
+    m_routeStamp       = QFileInfo(QDir(m_routeWatchFolder)
+                                 .filePath(QLatin1String(EldenRingSaveSettings::ConfigFilename)))
+                       .lastModified();
+    m_SavesWatcher.addPath(m_routeWatchFolder);
   }
 }
 

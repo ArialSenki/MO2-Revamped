@@ -476,6 +476,10 @@ void DownloadListView::issueQueryInfoMd5(int index)
 
 void DownloadListView::issueDelete(int index)
 {
+  // the list is rebuilt when a download finishes, possibly while the question
+  // is open; delete the archive that was asked about, found again by name
+  const QString fileName = m_Manager->getFileName(index);
+
   const auto r = MOBase::TaskDialog(this, tr("Delete download"))
                      .main(tr("Are you sure you want to delete this download?"))
                      .content(m_Manager->getFilePath(index))
@@ -488,7 +492,12 @@ void DownloadListView::issueDelete(int index)
     return;
   }
 
-  emit removeDownload(index, true);
+  const int current = m_Manager->indexByName(fileName);
+  if (current < 0) {
+    return;
+  }
+
+  emit removeDownload(current, true);
 }
 
 void DownloadListView::issueRemoveFromView(int index)

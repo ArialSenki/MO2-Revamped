@@ -106,6 +106,14 @@ void ModListSettingsTab::updateCollapsibleSeparatorsGroup()
     sectionIcon->setEnabled(true);
   }
   ui->collapsibleSeparatorsLabel->setEnabled(true);
-  ui->collapsibleSeparatorsAscBox->setEnabled(true);
-  ui->collapsibleSeparatorsDscBox->setEnabled(true);
+
+  // the Fluent layout puts each box in a row of its own; a box in a disabled
+  // row stays disabled, so its rows are turned back on too
+  for (QWidget* box : {static_cast<QWidget*>(ui->collapsibleSeparatorsAscBox),
+                       static_cast<QWidget*>(ui->collapsibleSeparatorsDscBox)}) {
+    for (QWidget* w = box; w != nullptr && w != ui->collapsibleSeparatorsWidget;
+         w = w->parentWidget()) {
+      w->setEnabled(true);
+    }
+  }
 }

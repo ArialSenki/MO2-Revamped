@@ -8425,6 +8425,10 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
       <translation>API de Nexus: quedan %1 hoy</translation>
     </message>
     <message>
+      <source>Nexus API: %1 left this hour</source>
+      <translation>API de Nexus: quedan %1 esta hora</translation>
+    </message>
+    <message>
       <source>Queued requests: %1
 Remaining today: %2
 Remaining this hour: %3</source>
