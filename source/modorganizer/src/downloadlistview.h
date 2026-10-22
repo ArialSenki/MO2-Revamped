@@ -63,6 +63,10 @@ public:
   void customResizeSections();
   void ensureReadableSections();
 
+  // whether the first real layout already widened status and date; later
+  // resizes keep the widths the user chose
+  bool m_readableChecked = false;
+
 private:
   void mouseReleaseEvent(QMouseEvent* event) override;
 };

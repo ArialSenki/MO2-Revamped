@@ -1645,6 +1645,8 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   setStartupDiagnosticPhase("mainwindow.setup_mod_lists");
   setupModList();
   ui->espList->setup(m_OrganizerCore, this, ui);
+  ui->espList->setBackupActions([this] { createPluginOrderBackup(); },
+                                [this] { restorePluginOrderBackup(); });
   ui->bsaList->setLocalMoveOnly(true);
   ui->bsaList->setHeaderHidden(true);
 
@@ -2037,10 +2039,18 @@ void MainWindow::resizeLists(bool pluginListCustom)
 void MainWindow::allowListResize()
 {
   // allow resize on plugin list
-  for (int i = 0; i < ui->espList->header()->count(); ++i) {
-    ui->espList->header()->setSectionResizeMode(i, QHeaderView::Interactive);
+  auto* header = ui->espList->header();
+
+  // without a saved layout the name stretches (resizeLists()); it keeps doing
+  // so, since its width at the first paint comes from a panel that isn't laid
+  // out yet and would leave the names cut down to "..."
+  const bool nameStretches =
+      header->count() > 0 && header->sectionResizeMode(0) == QHeaderView::Stretch;
+
+  for (int i = nameStretches ? 1 : 0; i < header->count(); ++i) {
+    header->setSectionResizeMode(i, QHeaderView::Interactive);
   }
-  ui->espList->header()->setStretchLastSection(true);
+  header->setStretchLastSection(!nameStretches);
 }
 
 void MainWindow::updateStyle(const QString& fileName)
@@ -2188,8 +2198,8 @@ QMenu* MainWindow::createPopupMenu()
 {
   auto* m = new QMenu;
 
-  // what is shown first, then the command bar's look in two submenus
-  m->addAction(ui->actionToolBarMainToggle);
+  // what is shown first, then the command bar's look in two submenus; the
+  // command bar itself can't be hidden, it holds every main command
   m->addAction(ui->actionStatusBarToggle);
   m->addAction(ui->actionViewLog);
   m->addSeparator();
@@ -2673,6 +2683,29 @@ void MainWindow::createHelpMenu()
           SLOT(revampedRepositoryTriggered()));
   menu->addAction(repositoryAction);
 
+  // the original MO2 documentation still covers everything Revamped keeps
+  QAction* documentationAction = new QAction(tr("Mod Organizer 2 Documentation"), menu);
+  documentationAction->setObjectName(QStringLiteral("mo2DocumentationAction"));
+  documentationAction->setIcon(
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
+  documentationAction->setToolTip(
+      tr("Open the Mod Organizer 2 documentation and guides."));
+  connect(documentationAction, &QAction::triggered, this, [] {
+    shell::Open(QUrl("https://modorganizer2.github.io/"));
+  });
+  menu->addAction(documentationAction);
+
+  QAction* whatsThisAction = new QAction(tr("Help on the Interface"), menu);
+  whatsThisAction->setObjectName(QStringLiteral("whatsThisAction"));
+  whatsThisAction->setIcon(
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
+  whatsThisAction->setToolTip(
+      tr("Click this, then any part of the window to read what it does."));
+  connect(whatsThisAction, &QAction::triggered, this, [] {
+    QWhatsThis::enterWhatsThisMode();
+  });
+  menu->addAction(whatsThisAction);
+
   if (game && !game->getSupportURL().isEmpty()) {
     QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
     gameSupportAction->setObjectName(QStringLiteral("gameSupportWikiAction"));
@@ -2703,6 +2736,10 @@ void MainWindow::createHelpMenu()
       FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/status/about-revamped.svg")));
   revampedAboutAction->setToolTip(
       tr("Show MO2 Revamped information, components, and credits."));
+
+  QAction* aboutQtAction = menu->addAction(tr("About Qt"), qApp, &QApplication::aboutQt);
+  aboutQtAction->setObjectName(QStringLiteral("aboutQtAction"));
+  aboutQtAction->setToolTip(tr("Show the version and license of the Qt framework."));
 }
 
 bool MainWindow::addProfile()
@@ -3732,6 +3769,9 @@ void MainWindow::readSettings()
   s.geometry().restoreState(this);
   s.geometry().restoreDocks(this);
   s.geometry().restoreToolbars(this);
+  // the command bar holds every main command now that the menu bar is gone, so
+  // it can't stay hidden from an older session
+  ui->toolBar->show();
   applyFluentToolbarDefaults(SmallToolbarSize);
   if (FluentIcons::active() && ui->toolBar->iconSize() != toolbarIconSize(ui->toolBar->iconSize())) {
     setToolbarSize(ui->toolBar->iconSize());
@@ -4958,6 +4998,12 @@ void MainWindow::languageChange(const QString& newLanguage)
     m_DownloadsTab->update();
   }
 
+  // the buttons don't own their menus, the previous ones go with the language
+  for (QPushButton* button : {ui->listOptionsBtn, ui->openFolderMenu}) {
+    if (QMenu* old = button->menu()) {
+      old->deleteLater();
+    }
+  }
   ui->listOptionsBtn->setMenu(createModListOptionsMenu());
   ui->openFolderMenu->setMenu(openFolderMenu());
   updateMoreActionsMenu();

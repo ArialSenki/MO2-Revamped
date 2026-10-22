@@ -164,6 +164,11 @@ public:
   // instances are encoded separately from global instances
   QString instanceIdentifier() const;
 
+  // the value given to -i to open this instance; the same as
+  // instanceIdentifier(), except for the installation-root portable instance,
+  // whose identifier is empty and is opened with "portable/"
+  QString commandLineIdentifier() const;
+
   // returns the selected game plugin; will return null if setup() hasn't been
   // called, or if it failed
   //

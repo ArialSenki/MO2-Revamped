@@ -483,9 +483,8 @@ int main(int argc, char* argv[])
 {
   MOShared::SetThisThreadName("main");
   configureDiagnosticsFromEnvironment();
-  if (diagnosticsEnabled()) {
-    setExceptionHandlers();
-  }
+  // crash dumps for everyone; the detailed memory hooks only with diagnostics
+  setExceptionHandlers();
   setStartupDiagnosticPhase("process.main.entry");
   writeStartupDiagnosticEvent("process.start");
 
@@ -695,11 +694,10 @@ void onTerminate() noexcept
 
 void setExceptionHandlers()
 {
-  if (!diagnosticsEnabled()) {
-    return;
-  }
-
-  if (InterlockedCompareExchange(&g_memoryDiagnosticHandlersInstalled, 1, 0) == 0) {
+  // the first-chance memory hook is opt-in (MO2_REVAMPED_DIAGNOSTICS=1, see
+  // docs/DIAGNOSTICS.md); the crash dump handlers below are always installed
+  if (diagnosticsEnabled() &&
+      InterlockedCompareExchange(&g_memoryDiagnosticHandlersInstalled, 1, 0) == 0) {
     prepareMemoryDiagnosticPath();
     AddVectoredExceptionHandler(1, onFirstChanceMemoryException);
   }

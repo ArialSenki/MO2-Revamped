@@ -345,7 +345,9 @@ QString toString(Shortcut::Locations loc)
 
 Shortcut instanceShortcut(const Instance& i)
 {
-  const QString id = i.instanceIdentifier();
+  // the root portable instance too, or the shortcut would open whichever
+  // instance was used last
+  const QString id = i.commandLineIdentifier();
   Shortcut shortcut;
   shortcut.name(QStringLiteral("Mod Organizer - %1").arg(i.displayName()))
       .target(QFileInfo(qApp->applicationFilePath()).absoluteFilePath())

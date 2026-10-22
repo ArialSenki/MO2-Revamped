@@ -858,7 +858,7 @@ void GamePage::select(IPluginGame* game, const QString& dir)
         bool accepted = false;
         const QString choice = QInputDialog::getItem(
             &m_dlg, QObject::tr("Choose game installation"),
-            QObject::tr("Several Elden Ring installations were found. Choose the one this instance should use:"),
+            QObject::tr("Several installations of %1 were found. Choose the one this instance should use:").arg(game->displayGameName()),
             choices, 0, false, &accepted);
         const int selected = choices.indexOf(choice);
         if (!accepted || selected < 0) {
@@ -1028,6 +1028,12 @@ void GamePage::createGames()
 
 GamePage::Game* GamePage::findGame(IPluginGame* game)
 {
+  // the list is built when the page is first shown; setting up an existing
+  // instance selects its game before that (only the variant page is shown)
+  if (m_games.empty()) {
+    createGames();
+  }
+
   for (auto& g : m_games) {
     if (g->game == game) {
       return g.get();

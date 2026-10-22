@@ -182,6 +182,12 @@ QString Instance::instanceIdentifier() const
   return PortableInstanceKeyPrefix + relative;
 }
 
+QString Instance::commandLineIdentifier() const
+{
+  const QString id = instanceIdentifier();
+  return id.isEmpty() && isPortable() ? PortableInstanceKeyPrefix : id;
+}
+
 bool Instance::isActive() const
 {
   auto& m = InstanceManager::singleton();
@@ -526,6 +532,18 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
     return canonicalFile(file).startsWith(canonicalDir(root));
   };
 
+  // a whole drive (C:\) or network share (\\server\share)
+  auto isDriveOrShare = [](const QString& dir) {
+    const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(dir));
+    if (clean.size() <= 3) {
+      return true;
+    }
+    if (clean.startsWith(QStringLiteral("//"))) {
+      return clean.mid(2).split(QLatin1Char('/'), Qt::SkipEmptyParts).size() <= 2;
+    }
+    return false;
+  };
+
   const QString loc = directory();
   const auto& manager = InstanceManager::singleton();
   const bool isInstallationRoot =
@@ -536,8 +554,7 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
   if (settings.iniStatus() != QSettings::NoError) {
     log::error("can't read ini {}", iniPath());
     // the instance folder can still go; nothing else is known about it
-    const QString clean = QDir::cleanPath(loc);
-    if (!isInstallationRoot && QDir(loc).exists() && clean.size() > 3 &&
+    if (!isInstallationRoot && QDir(loc).exists() && !isDriveOrShare(loc) &&
         !dirInRoot(loc, manager.portablePath())) {
       return {{prettyDir(loc), true}};
     }
@@ -548,8 +565,7 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
   // offered for deletion, even when an instance's paths point at it
   const QString installation = manager.portablePath();
   auto mustKeep = [&](const QString& dir) {
-    const QString clean = QDir::cleanPath(dir);
-    return clean.size() <= 3 || dirInRoot(dir, installation);
+    return isDriveOrShare(dir) || dirInRoot(dir, installation);
   };
 
   // directories that might contain the individual files and directories
@@ -698,6 +714,13 @@ std::unique_ptr<Instance> InstanceManager::currentInstance() const
 
     if (identifier.startsWith(PortableInstanceKeyPrefix)) {
       const QString name = identifier.mid(PortableInstanceKeyPrefix.size());
+      if (name.isEmpty()) {
+        // "portable/" alone, as on the root portable instance's shortcut
+        if (portableInstanceExists()) {
+          return std::make_unique<Instance>(portablePath(), true, profile);
+        }
+        return {};
+      }
       const QString path = portableInstancePath(name);
       if (portableInstanceExists(path)) {
         return std::make_unique<Instance>(path, true, profile);

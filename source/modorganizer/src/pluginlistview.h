@@ -4,6 +4,7 @@
 #include "viewmarkingscrollbar.h"
 #include <QDragEnterEvent>
 #include <QTreeView>
+#include <functional>
 
 namespace Ui
 {
@@ -22,6 +23,10 @@ public:
   explicit PluginListView(QWidget* parent = nullptr);
 
   void setup(OrganizerCore& core, MainWindow* mw, Ui::MainWindow* mwui);
+
+  // the plugin-order backup commands, also offered in this list's menu
+  //
+  void setBackupActions(std::function<void()> create, std::function<void()> restore);
 
   // the column by which the plugin list is currently sorted
   //
@@ -80,6 +85,8 @@ private:
   ViewMarkingScrollBar* m_Scrollbar;
 
   bool m_didUpdateMasterList;
+  std::function<void()> m_createBackup;
+  std::function<void()> m_restoreBackup;
 };
 
 #endif  // PLUGINLISTVIEW_H

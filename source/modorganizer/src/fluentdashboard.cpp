@@ -2,6 +2,7 @@
 
 #include "categories.h"
 #include "modinfo.h"
+#include "modlist.h"
 #include "modlistview.h"
 #include "modlistviewactions.h"
 #include "organizercore.h"
@@ -126,6 +127,13 @@ FluentDashboard::FluentDashboard(Ui::MainWindow* mainUi, OrganizerCore& core,
   // directory refresh or a profile switch, not on every enable/disable
   connect(&m_core, &OrganizerCore::directoryStructureReady, this,
           &FluentDashboard::refreshDisk);
+
+  // conflicts are known only once the directory refresh is done, and update
+  // checks change mod data without changing the count
+  connect(&m_core, &OrganizerCore::directoryStructureReady, this,
+          &FluentDashboard::scheduleRefresh);
+  connect(m_core.modList(), &QAbstractItemModel::dataChanged, this,
+          &FluentDashboard::scheduleRefresh);
   connect(&m_core, &OrganizerCore::profileChanged, this, &FluentDashboard::refreshDisk);
 
   refreshGame();

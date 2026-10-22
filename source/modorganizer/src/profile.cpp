@@ -1262,8 +1262,26 @@ Profile::determineForcedLibraries(const QString& executable) const
 void Profile::storeForcedLibraries(const QString& executable,
                                    const QList<ExecutableForcedLoadSetting>& values)
 {
+  // the game plugin's own entries are stored only where they differ from its
+  // defaults; a stored copy would keep a library injecting after a newer
+  // plugin disables or drops it, see determineForcedLibraries()
+  const auto defaults = m_GamePlugin->executableForcedLoads();
+
   QList<QVariantMap> rawSettings;
   for (auto setting : values) {
+    bool isDefault = false;
+    for (const auto& forcedLoad : defaults) {
+      if ((forcedLoad.process().compare(setting.process(), Qt::CaseInsensitive) == 0) &&
+          (forcedLoad.library().compare(setting.library(), Qt::CaseInsensitive) == 0) &&
+          forcedLoad.enabled() == setting.enabled()) {
+        isDefault = true;
+        break;
+      }
+    }
+    if (isDefault) {
+      continue;
+    }
+
     QVariantMap rawSetting;
     rawSetting["enabled"] = setting.enabled();
     rawSetting["process"] = setting.process();
