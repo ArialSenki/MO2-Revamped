@@ -1607,6 +1607,34 @@ Das Spiel wurde nicht gestartet.</translation>
 
 {0}</translation>
     </message>
+    <message>
+      <source>Steam saves still hidden</source>
+      <translation>Steam-Spielstände noch ausgeblendet</translation>
+    </message>
+    <message>
+      <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>Ein früherer Start hat die Steam-Spielstandordner ausgeblendet, und das Spiel oder einer seiner Launcher läuft noch, oder ein anderes MO2-Fenster wartet auf sein Spiel. MO2 stellt die Spielstände wieder her, sobald es geschlossen wird. Starte das Spiel bis dahin nicht über Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: the game or one of its launchers is still running, or another MO2 window is waiting for its game. Close it and try again. The game was not started.</source>
+      <translation>Die Steam-Spielstandordner, die ein früherer Start ausgeblendet hat, können noch nicht wiederhergestellt werden: Das Spiel oder einer seiner Launcher läuft noch, oder ein anderes MO2-Fenster wartet auf sein Spiel. Schließe es und versuche es erneut. Das Spiel wurde nicht gestartet.</translation>
+    </message>
+    <message>
+      <source>Newer saves set aside</source>
+      <translation>Neuere Spielstände beiseitegelegt</translation>
+    </message>
+    <message>
+      <source>MO2 put back the Steam saves an earlier launch had hidden, but a save folder had appeared in their place with newer saves (the game started from Steam meanwhile, or a save written outside the MO2 route). MO2 did not delete it; it is kept here:
+
+{0}
+
+If it holds progress you want, close the game and copy its files back.</source>
+      <translation>MO2 hat die Steam-Spielstände wiederhergestellt, die ein früherer Start ausgeblendet hatte, aber an ihrer Stelle war ein Spielstandordner mit neueren Spielständen aufgetaucht (das Spiel wurde inzwischen über Steam gestartet, oder ein Spielstand wurde außerhalb der MO2-Route geschrieben). MO2 hat ihn nicht gelöscht; er liegt hier:
+
+{0}
+
+Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und kopiere seine Dateien zurück.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -1953,6 +1981,10 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <translation>Die Exporttabelle von '{route}' konnte nicht gelesen werden.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>&apos;{path}&apos; is enabled for both &apos;{first}&apos; and &apos;{mod}&apos;. MO2 loads only the copy that wins the file; disable or remove one of the entries.</source>
+      <translation>„{path}“ ist sowohl für „{first}“ als auch für „{mod}“ aktiviert. MO2 lädt nur die Kopie, die die Datei gewinnt; deaktiviere oder entferne einen der Einträge.</translation>
     </message>
   </context>
   <context>
@@ -2930,6 +2962,18 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
     <message>
       <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
       <translation>Jedes benannte Spielstandprofil hat einen eigenen Ordner. MO2 stellt Elden Ring den gewählten Spielstand als ER0000.sl2 bereit (ER0000.co2 mit Seamless Co-op); beim Importieren bleibt die Quelle unverändert.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; Close the game, then restart MO2 before launching it again to apply the Steam save route.</source>
+      <translation>&lt;b&gt;Route für {profile} gespeichert.&lt;/b&gt; Schließe das Spiel und starte MO2 neu, bevor du es wieder startest, damit die Steam-Spielstandroute gilt.</translation>
+    </message>
+    <message>
+      <source>Save folders were set aside in the recovery folder</source>
+      <translation>Spielstandordner wurden in den Wiederherstellungsordner verschoben</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;When MO2 put back the Steam saves it had hidden for a launch, a save folder had appeared in their place: the game started from Steam meanwhile, or wrote a save outside the MO2 route. MO2 did not delete it; it is kept in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;If it holds progress you want, close the game and copy its files back. Delete the folder once you no longer need it to clear this notice.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Als MO2 die Steam-Spielstände wiederhergestellt hat, die es für einen Start ausgeblendet hatte, war an ihrer Stelle ein Spielstandordner aufgetaucht: Das Spiel wurde inzwischen über Steam gestartet oder hat außerhalb der MO2-Route gespeichert. MO2 hat ihn nicht gelöscht; er liegt in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und kopiere seine Dateien zurück. Lösche den Ordner, wenn du ihn nicht mehr brauchst, damit dieser Hinweis verschwindet.&lt;/p&gt;</translation>
     </message>
   </context>
   <context>
@@ -4113,6 +4157,34 @@ Ort: %3</translation>
       <source>%1 days ago</source>
       <translation>vor %1 Tagen</translation>
     </message>
+    <message>
+      <source>%1 (used by %2)</source>
+      <translation>%1 (verwendet von %2)</translation>
+    </message>
+    <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>Andere Instanzen verwenden diese Ordner:
+
+%1
+
+Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzdem löschen?</translation>
+    </message>
+    <message>
+      <source>The folder was renamed, but its settings file could not be updated and may still point to the old folder:
+%1</source>
+      <translation>Der Ordner wurde umbenannt, aber seine Einstellungsdatei konnte nicht aktualisiert werden und verweist möglicherweise noch auf den alten Ordner:
+%1</translation>
+    </message>
+    <message>
+      <source>The instance was copied, but the copy&apos;s settings file could not be updated and may still point to the original&apos;s folders:
+%1</source>
+      <translation>Die Instanz wurde kopiert, aber die Einstellungsdatei der Kopie konnte nicht aktualisiert werden und verweist möglicherweise noch auf die Ordner des Originals:
+%1</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -5287,6 +5359,26 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
     <message>
       <source>Labels</source>
       <translation>Beschriftungen</translation>
+    </message>
+    <message>
+      <source>Mod Organizer 2 Documentation</source>
+      <translation>Mod Organizer 2-Dokumentation</translation>
+    </message>
+    <message>
+      <source>Open the Mod Organizer 2 documentation and guides.</source>
+      <translation>Öffnet die Dokumentation und Anleitungen von Mod Organizer 2.</translation>
+    </message>
+    <message>
+      <source>Help on the Interface</source>
+      <translation>Hilfe zur Oberfläche</translation>
+    </message>
+    <message>
+      <source>Click this, then any part of the window to read what it does.</source>
+      <translation>Klicke hierauf und dann auf einen beliebigen Teil des Fensters, um zu lesen, was er tut.</translation>
+    </message>
+    <message>
+      <source>Show the version and license of the Qt framework.</source>
+      <translation>Zeigt die Version und Lizenz des Qt-Frameworks.</translation>
     </message>
   </context>
   <context>
@@ -7370,6 +7462,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
       <translation>Isolierte MO2-Kopien unterstützen derzeit Elden Ring und Nightreign. Wähle das Spiel und seinen Installationsordner, um fortzufahren.</translation>
     </message>
+    <message>
+      <source>Several installations of %1 were found. Choose the one this instance should use:</source>
+      <translation>Es wurden mehrere Installationen von %1 gefunden. Wähle die, die diese Instanz verwenden soll:</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -8736,6 +8832,25 @@ In dieser Stunde verbleibend: %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Ursprungsinformationen...</translation>
+    </message>
+  </context>
+  <context>
+    <name>PluginListView</name>
+    <message>
+      <source>Exception: %1</source>
+      <translation>Ausnahme: %1</translation>
+    </message>
+    <message>
+      <source>Plugin order backups</source>
+      <translation>Sicherungen der Plugin-Reihenfolge</translation>
+    </message>
+    <message>
+      <source>Create plugin order backup</source>
+      <translation>Sicherung der Plugin-Reihenfolge erstellen</translation>
+    </message>
+    <message>
+      <source>Restore plugin order backup...</source>
+      <translation>Sicherung der Plugin-Reihenfolge wiederherstellen...</translation>
     </message>
   </context>
 </TS>

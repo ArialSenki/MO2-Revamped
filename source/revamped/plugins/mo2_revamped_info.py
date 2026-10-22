@@ -641,7 +641,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         except Exception:
             pass
 
-        mode = "Standard"
+        mode = "Standard (global instance)"
         if (app_dir / "eldenring-only.portable").is_file():
             mode = "Isolated portable - Elden Ring only"
         elif (app_dir / "portable.txt").is_file():
@@ -675,6 +675,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 f"Qt: {qt_version}",
                 f"PyQt: {pyqt_version}",
                 f"Application directory: {app_dir}",
+                f"Instance directory: {self._organizer_path('basePath')}",
                 f"Mods directory: {self._organizer_path('modsPath')}",
                 f"Downloads directory: {self._organizer_path('downloadsPath')}",
                 f"Overwrite directory: {self._organizer_path('overwritePath')}",
@@ -703,10 +704,19 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         except Exception:
             return "Not available"
 
-    @staticmethod
-    def _diagnostic_log_files() -> list[tuple[str, Path]]:
-        app_dir = Path(QApplication.applicationDirPath())
-        log_dir = app_dir / "logs"
+    def _diagnostic_log_dir(self) -> Path:
+        # MO2 writes its logs into the instance folder: beside the program for
+        # a portable instance, under %LOCALAPPDATA%\ModOrganizer for a global one
+        try:
+            log_dir = Path(self._organizer.basePath()) / "logs"
+            if log_dir.is_dir():
+                return log_dir
+        except Exception:
+            pass
+        return Path(QApplication.applicationDirPath()) / "logs"
+
+    def _diagnostic_log_files(self) -> list[tuple[str, Path]]:
+        log_dir = self._diagnostic_log_dir()
         candidates: list[tuple[str, Path]] = []
         main_log = log_dir / "mo_interface.log"
         if main_log.is_file():

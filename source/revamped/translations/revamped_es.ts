@@ -1619,6 +1619,34 @@ El juego no se inició.</translation>
 
 {0}</translation>
     </message>
+    <message>
+      <source>Steam saves still hidden</source>
+      <translation>Las partidas de Steam siguen ocultas</translation>
+    </message>
+    <message>
+      <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>Un inicio anterior ocultó las carpetas de partidas de Steam, y el juego o uno de sus lanzadores sigue abierto, o hay otra ventana de MO2 esperando a su juego. MO2 devolverá las partidas en cuanto se cierre. Hasta entonces, no inicies el juego desde Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: the game or one of its launchers is still running, or another MO2 window is waiting for its game. Close it and try again. The game was not started.</source>
+      <translation>Todavía no se pueden devolver las carpetas de partidas de Steam que ocultó un inicio anterior: el juego o uno de sus lanzadores sigue abierto, o hay otra ventana de MO2 esperando a su juego. Ciérralo y vuelve a intentarlo. El juego no se ha iniciado.</translation>
+    </message>
+    <message>
+      <source>Newer saves set aside</source>
+      <translation>Partidas más recientes apartadas</translation>
+    </message>
+    <message>
+      <source>MO2 put back the Steam saves an earlier launch had hidden, but a save folder had appeared in their place with newer saves (the game started from Steam meanwhile, or a save written outside the MO2 route). MO2 did not delete it; it is kept here:
+
+{0}
+
+If it holds progress you want, close the game and copy its files back.</source>
+      <translation>MO2 devolvió las partidas de Steam que había ocultado un inicio anterior, pero en su lugar había aparecido una carpeta de partidas con partidas más recientes (el juego se inició desde Steam mientras tanto, o se guardó fuera de la ruta de MO2). MO2 no la ha borrado; está aquí:
+
+{0}
+
+Si contiene progreso que quieres conservar, cierra el juego y vuelve a copiar sus archivos.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -1965,6 +1993,10 @@ Las DLL detectadas de los mods activos aparecerán en el panel izquierdo.</trans
       <translation>No se pudo leer la tabla de exportaciones de '{route}'.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>&apos;{path}&apos; is enabled for both &apos;{first}&apos; and &apos;{mod}&apos;. MO2 loads only the copy that wins the file; disable or remove one of the entries.</source>
+      <translation>«{path}» está activado tanto para «{first}» como para «{mod}». MO2 solo carga la copia que gana el archivo; desactiva o quita una de las entradas.</translation>
     </message>
   </context>
   <context>
@@ -2942,6 +2974,18 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
     <message>
       <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
       <translation>Cada perfil de guardado con nombre tiene su propia carpeta. MO2 presenta el guardado elegido a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar un guardado deja intacto el original.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; Close the game, then restart MO2 before launching it again to apply the Steam save route.</source>
+      <translation>&lt;b&gt;Ruta guardada para {profile}.&lt;/b&gt; Cierra el juego y reinicia MO2 antes de volver a iniciarlo para aplicar la ruta de partidas de Steam.</translation>
+    </message>
+    <message>
+      <source>Save folders were set aside in the recovery folder</source>
+      <translation>Se apartaron carpetas de partidas en la carpeta de recuperación</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;When MO2 put back the Steam saves it had hidden for a launch, a save folder had appeared in their place: the game started from Steam meanwhile, or wrote a save outside the MO2 route. MO2 did not delete it; it is kept in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;If it holds progress you want, close the game and copy its files back. Delete the folder once you no longer need it to clear this notice.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Cuando MO2 devolvió las partidas de Steam que había ocultado para un inicio, en su lugar había aparecido una carpeta de partidas: el juego se inició desde Steam mientras tanto, o guardó fuera de la ruta de MO2. MO2 no la ha borrado; está en:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Si contiene progreso que quieres conservar, cierra el juego y vuelve a copiar sus archivos. Borra la carpeta cuando ya no la necesites para quitar este aviso.&lt;/p&gt;</translation>
     </message>
   </context>
   <context>
@@ -4125,6 +4169,34 @@ Ubicación: %3</translation>
       <source>%1 days ago</source>
       <translation>hace %1 días</translation>
     </message>
+    <message>
+      <source>%1 (used by %2)</source>
+      <translation>%1 (la usa %2)</translation>
+    </message>
+    <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>Otras instancias usan estas carpetas:
+
+%1
+
+Si las borras, también se borran los archivos de esas instancias. ¿Borrar de todos modos?</translation>
+    </message>
+    <message>
+      <source>The folder was renamed, but its settings file could not be updated and may still point to the old folder:
+%1</source>
+      <translation>Se cambió el nombre de la carpeta, pero no se pudo actualizar su archivo de ajustes y puede que siga apuntando a la carpeta anterior:
+%1</translation>
+    </message>
+    <message>
+      <source>The instance was copied, but the copy&apos;s settings file could not be updated and may still point to the original&apos;s folders:
+%1</source>
+      <translation>Se copió la instancia, pero no se pudo actualizar el archivo de ajustes de la copia y puede que siga apuntando a las carpetas de la original:
+%1</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -5303,6 +5375,26 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
     <message>
       <source>Labels</source>
       <translation>Etiquetas</translation>
+    </message>
+    <message>
+      <source>Mod Organizer 2 Documentation</source>
+      <translation>Documentación de Mod Organizer 2</translation>
+    </message>
+    <message>
+      <source>Open the Mod Organizer 2 documentation and guides.</source>
+      <translation>Abre la documentación y las guías de Mod Organizer 2.</translation>
+    </message>
+    <message>
+      <source>Help on the Interface</source>
+      <translation>Ayuda sobre la interfaz</translation>
+    </message>
+    <message>
+      <source>Click this, then any part of the window to read what it does.</source>
+      <translation>Haz clic aquí y después en cualquier parte de la ventana para leer qué hace.</translation>
+    </message>
+    <message>
+      <source>Show the version and license of the Qt framework.</source>
+      <translation>Muestra la versión y la licencia del framework Qt.</translation>
     </message>
   </context>
   <context>
@@ -6776,7 +6868,7 @@ Proceed?</source>
     </message>
     <message>
       <source>Chosen in Tools &gt; Save Isolation</source>
-      <translation>Se eligen en Herramientas &gt; Save Isolation</translation>
+      <translation>Se eligen en Herramientas &gt; Aislamiento de partidas</translation>
     </message>
     <message>
       <source>Turn on profile-specific saves to transfer saves</source>
@@ -7437,6 +7529,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     <message>
       <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
       <translation>Por ahora, las copias aisladas de MO2 admiten Elden Ring y Nightreign. Elige el juego y su carpeta de instalación para continuar.</translation>
+    </message>
+    <message>
+      <source>Several installations of %1 were found. Choose the one this instance should use:</source>
+      <translation>Se encontraron varias instalaciones de %1. Elige la que debe usar esta instancia:</translation>
     </message>
   </context>
   <context>
@@ -8824,6 +8920,25 @@ Restantes esta hora: %3</translation>
     <message>
       <source>Origin information...</source>
       <translation>Información del origen...</translation>
+    </message>
+  </context>
+  <context>
+    <name>PluginListView</name>
+    <message>
+      <source>Exception: %1</source>
+      <translation>Excepción: %1</translation>
+    </message>
+    <message>
+      <source>Plugin order backups</source>
+      <translation>Copias del orden de plugins</translation>
+    </message>
+    <message>
+      <source>Create plugin order backup</source>
+      <translation>Crear copia del orden de plugins</translation>
+    </message>
+    <message>
+      <source>Restore plugin order backup...</source>
+      <translation>Restaurar copia del orden de plugins...</translation>
     </message>
   </context>
 </TS>

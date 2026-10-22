@@ -1027,6 +1027,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return route_root.parent / f"{route_root.name} Backups" / "auto"
 
     @staticmethod
+    def _backup_age_key(entry: Path) -> tuple[int, str, int]:
+        # as the game plugin orders them: by when the copy was made (the names
+        # use local time, which repeats an hour when summer time ends), then
+        # by name with the "-N" suffix as a number
+        try:
+            made = entry.stat().st_mtime_ns
+        except OSError:
+            made = 0
+        _stamp, _separator, suffix = entry.name[15:].partition("-")
+        return made, entry.name[:15], int(suffix) if suffix.isdigit() else 1
+
+    @staticmethod
     def _backup_label(backup: Path) -> str:
         try:
             stamp = datetime.strptime(backup.name[:15], "%Y%m%d-%H%M%S")
@@ -1076,6 +1088,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         staged: list[tuple[Path, Path]] = []  # (temporary copy, destination)
         moved: list[tuple[Path, Path]] = []  # (original place, place in replaced)
+        placed: list[Path] = []  # destinations that already hold a backup copy
         try:
             for file in backup_files:
                 destination = route_root / file.relative_to(backup)
@@ -1102,12 +1115,20 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             for temporary, destination in staged:
                 os.replace(temporary, destination)
+                placed.append(destination)
             staged = []
         except OSError as error:
             rollback_problems = []
             for temporary, _destination in staged:
                 try:
                     temporary.unlink(missing_ok=True)
+                except OSError as cleanup_error:
+                    rollback_problems.append(str(cleanup_error))
+            # copies that already took their place go, so the files set aside
+            # can come back: the route is never left half old, half restored
+            for destination in placed:
+                try:
+                    destination.unlink(missing_ok=True)
                 except OSError as cleanup_error:
                     rollback_problems.append(str(cleanup_error))
             for original, target in reversed(moved):
@@ -1190,7 +1211,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if root.is_dir():
                 backups = sorted(
                     (entry for entry in root.iterdir() if entry.is_dir() and not entry.name.startswith(".")),
-                    key=lambda entry: entry.name,
+                    key=self._backup_age_key,
                     reverse=True,
                 )
             for backup in backups:
@@ -3936,6 +3957,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
                 return
 
+            running = _running_process_names()
+            if running is not None and _game()["process"] in running:
+                # a restart now would find the Steam saves still hidden by the
+                # game's own launch
+                status_label.setText(
+                    _tr("<b>Route saved for {profile}.</b> Close the game, then "
+                    "restart MO2 before launching it again to apply the Steam "
+                    "save route.").format(profile=profile.name())
+                )
+                return
+
             restart_now = self._ask_confirmation(
                 dialog,
                 _tr("Restart MO2 to apply Steam save routing?"),
@@ -4027,6 +4059,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
 
     PendingRecovery = 0
     EmptyRoute = 1
+    SetAsideSaves = 2
 
     def __init__(self, tool: EldenRingMo2SaveIsolation) -> None:
         super().__init__()
@@ -4081,38 +4114,65 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         return False
 
     @staticmethod
+    def _recovery_folder() -> Path | None:
+        # this install's recovery folder, found as the game plugin finds it:
+        # beside the Steam save folder, or beside its target when that folder
+        # links to another drive
+        global_saves = EldenRingMo2SaveIsolation._global_save_directory()
+        parent = global_saves.parent
+        try:
+            target = global_saves.resolve()
+            if (
+                os.path.splitdrive(str(target))[0].casefold()
+                != os.path.splitdrive(str(parent.resolve()))[0].casefold()
+            ):
+                parent = target.parent
+            install_root = Path(__file__).resolve().parents[1]
+            identity = os.path.normcase(str(install_root.resolve()))
+        except (IndexError, OSError, RuntimeError):
+            return None
+        token = hashlib.sha256(
+            (identity + _game()["scope"]).encode("utf-8", errors="replace")
+        ).hexdigest()[:24]
+        return parent / ".MO2RevampedSaveRecovery" / token
+
+    @staticmethod
     def _pending_sessions() -> list[Path]:
         # while the game runs its own session hides the saves on purpose
         names = _running_process_names()
         if names is None or _game()["process"] in names:
             return []
-        appdata = os.environ.get("APPDATA")
-        if not appdata:
-            return []
-        # this install's recovery folder, named as the game plugin names it
-        try:
-            install_root = Path(__file__).resolve().parents[1]
-            identity = os.path.normcase(str(install_root.resolve()))
-        except (IndexError, OSError, RuntimeError):
-            return []
-        token = hashlib.sha256(
-            (identity + _game()["scope"]).encode("utf-8", errors="replace")
-        ).hexdigest()[:24]
-        recovery = Path(appdata) / ".MO2RevampedSaveRecovery" / token
+        recovery = EldenRingMo2SaveDiagnose._recovery_folder()
         sessions = []
         try:
-            for instance in [recovery]:
-                if not instance.is_dir():
-                    continue
-                for session in instance.iterdir():
+            if recovery is not None and recovery.is_dir():
+                for session in recovery.iterdir():
+                    # hidden account folders; the record, its lock file and
+                    # output set aside are not
                     if session.is_dir() and any(
-                        child.name not in ("unrouted-global", "session.json")
+                        child.is_dir() and child.name != "unrouted-global"
                         for child in session.iterdir()
                     ):
                         sessions.append(session)
         except OSError:
             pass
         return sessions
+
+    @staticmethod
+    def _set_aside_folders() -> list[Path]:
+        """Save folders a restore found in the way of the Steam saves and kept
+        in the recovery folder (unrouted-global) for the user to look at."""
+        recovery = EldenRingMo2SaveDiagnose._recovery_folder()
+        folders = []
+        try:
+            if recovery is not None and recovery.is_dir():
+                for session in recovery.iterdir():
+                    unrouted = session / "unrouted-global"
+                    if unrouted.is_dir() and any(unrouted.iterdir()):
+                        folders.append(unrouted)
+        except OSError:
+            pass
+        return folders
 
     def _active_route(self) -> tuple[str, Path] | None:
         try:
@@ -4130,6 +4190,8 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         problems = []
         if self._pending_sessions():
             problems.append(self.PendingRecovery)
+        if self._set_aside_folders():
+            problems.append(self.SetAsideSaves)
         route = self._active_route()
         if route is not None:
             mode, root = route
@@ -4144,6 +4206,8 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
     def shortDescription(self, key: int) -> str:
         if key == self.PendingRecovery:
             return _tr("Steam saves from an earlier launch are still hidden")
+        if key == self.SetAsideSaves:
+            return _tr("Save folders were set aside in the recovery folder")
         return _tr("This profile has no Elden Ring saves of its own yet")
 
     def fullDescription(self, key: int) -> str:
@@ -4160,6 +4224,18 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
                 "<p>Don't start the game from Steam meanwhile: it would not see "
                 "those characters.</p>"
             ).format(sessions=sessions)
+        if key == self.SetAsideSaves:
+            folders = "<br>".join(str(folder) for folder in self._set_aside_folders())
+            return _tr(
+                "<p>When MO2 put back the Steam saves it had hidden for a "
+                "launch, a save folder had appeared in their place: the game "
+                "started from Steam meanwhile, or wrote a save outside the MO2 "
+                "route. MO2 did not delete it; it is kept in:</p>"
+                "<p>{folders}</p>"
+                "<p>If it holds progress you want, close the game and copy its "
+                "files back. Delete the folder once you no longer need it to "
+                "clear this notice.</p>"
+            ).format(folders=folders)
         route = self._active_route()
         folder = str(route[1]) if route is not None else ""
         return _tr(

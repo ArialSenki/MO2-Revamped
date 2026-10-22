@@ -1649,6 +1649,34 @@ Il gioco non è stato avviato.</translation>
 
 {0}</translation>
     </message>
+    <message>
+      <source>Steam saves still hidden</source>
+      <translation>Salvataggi Steam ancora nascosti</translation>
+    </message>
+    <message>
+      <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>Un avvio precedente ha nascosto le cartelle dei salvataggi di Steam, e il gioco o uno dei suoi launcher è ancora in esecuzione, oppure un&apos;altra finestra di MO2 sta aspettando il suo gioco. MO2 rimette a posto i salvataggi appena si chiude. Fino ad allora non avviare il gioco da Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: the game or one of its launchers is still running, or another MO2 window is waiting for its game. Close it and try again. The game was not started.</source>
+      <translation>Le cartelle dei salvataggi di Steam nascoste da un avvio precedente non possono ancora essere rimesse a posto: il gioco o uno dei suoi launcher è ancora in esecuzione, oppure un&apos;altra finestra di MO2 sta aspettando il suo gioco. Chiudilo e riprova. Il gioco non è stato avviato.</translation>
+    </message>
+    <message>
+      <source>Newer saves set aside</source>
+      <translation>Salvataggi più recenti messi da parte</translation>
+    </message>
+    <message>
+      <source>MO2 put back the Steam saves an earlier launch had hidden, but a save folder had appeared in their place with newer saves (the game started from Steam meanwhile, or a save written outside the MO2 route). MO2 did not delete it; it is kept here:
+
+{0}
+
+If it holds progress you want, close the game and copy its files back.</source>
+      <translation>MO2 ha rimesso a posto i salvataggi di Steam che un avvio precedente aveva nascosto, ma al loro posto era comparsa una cartella con salvataggi più recenti (nel frattempo il gioco è stato avviato da Steam, oppure un salvataggio è stato scritto fuori dal percorso di MO2). MO2 non l&apos;ha eliminata; si trova qui:
+
+{0}
+
+Se contiene progressi che vuoi tenere, chiudi il gioco e ricopia i suoi file.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -1995,6 +2023,10 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>Impossibile leggere la tabella degli export di '{route}'.
 
 {error}</translation>
+    </message>
+    <message>
+      <source>&apos;{path}&apos; is enabled for both &apos;{first}&apos; and &apos;{mod}&apos;. MO2 loads only the copy that wins the file; disable or remove one of the entries.</source>
+      <translation>&apos;{path}&apos; è attivo sia per &apos;{first}&apos; sia per &apos;{mod}&apos;. MO2 carica solo la copia che vince il file; disattiva o rimuovi una delle voci.</translation>
     </message>
   </context>
   <context>
@@ -2972,6 +3004,18 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
     <message>
       <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
       <translation>Ogni profilo di salvataggio con nome ha la propria cartella. MO2 presenta il salvataggio scelto a Elden Ring come ER0000.sl2 (ER0000.co2 con Seamless Co-op); l'importazione lascia intatta l'origine.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; Close the game, then restart MO2 before launching it again to apply the Steam save route.</source>
+      <translation>&lt;b&gt;Percorso salvato per {profile}.&lt;/b&gt; Chiudi il gioco, poi riavvia MO2 prima di avviarlo di nuovo per applicare il percorso dei salvataggi di Steam.</translation>
+    </message>
+    <message>
+      <source>Save folders were set aside in the recovery folder</source>
+      <translation>Alcune cartelle di salvataggio sono state messe da parte nella cartella di ripristino</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;When MO2 put back the Steam saves it had hidden for a launch, a save folder had appeared in their place: the game started from Steam meanwhile, or wrote a save outside the MO2 route. MO2 did not delete it; it is kept in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;If it holds progress you want, close the game and copy its files back. Delete the folder once you no longer need it to clear this notice.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Quando MO2 ha rimesso a posto i salvataggi di Steam che aveva nascosto per un avvio, al loro posto era comparsa una cartella di salvataggio: nel frattempo il gioco è stato avviato da Steam, oppure ha salvato fuori dal percorso di MO2. MO2 non l&apos;ha eliminata; si trova in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Se contiene progressi che vuoi tenere, chiudi il gioco e ricopia i suoi file. Elimina la cartella quando non ti serve più per far sparire questo avviso.&lt;/p&gt;</translation>
     </message>
   </context>
   <context>
@@ -4177,6 +4221,34 @@ Percorso: %3</translation>
     <message>
       <source>%1 days ago</source>
       <translation>%1 giorni fa</translation>
+    </message>
+    <message>
+      <source>%1 (used by %2)</source>
+      <translation>%1 (usata da %2)</translation>
+    </message>
+    <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>Altre istanze usano queste cartelle:
+
+%1
+
+Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translation>
+    </message>
+    <message>
+      <source>The folder was renamed, but its settings file could not be updated and may still point to the old folder:
+%1</source>
+      <translation>La cartella è stata rinominata, ma il suo file delle impostazioni non è stato aggiornato e potrebbe puntare ancora alla cartella precedente:
+%1</translation>
+    </message>
+    <message>
+      <source>The instance was copied, but the copy&apos;s settings file could not be updated and may still point to the original&apos;s folders:
+%1</source>
+      <translation>L&apos;istanza è stata copiata, ma il file delle impostazioni della copia non è stato aggiornato e potrebbe puntare ancora alle cartelle dell&apos;originale:
+%1</translation>
     </message>
   </context>
   <context>
@@ -5442,6 +5514,26 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <source>Labels</source>
       <translation>Etichette</translation>
     </message>
+    <message>
+      <source>Mod Organizer 2 Documentation</source>
+      <translation>Documentazione di Mod Organizer 2</translation>
+    </message>
+    <message>
+      <source>Open the Mod Organizer 2 documentation and guides.</source>
+      <translation>Apre la documentazione e le guide di Mod Organizer 2.</translation>
+    </message>
+    <message>
+      <source>Help on the Interface</source>
+      <translation>Guida all&apos;interfaccia</translation>
+    </message>
+    <message>
+      <source>Click this, then any part of the window to read what it does.</source>
+      <translation>Fai clic qui, poi su qualsiasi parte della finestra per leggere a cosa serve.</translation>
+    </message>
+    <message>
+      <source>Show the version and license of the Qt framework.</source>
+      <translation>Mostra la versione e la licenza del framework Qt.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -6526,6 +6618,22 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
       <source>&lt;table cellspacing="6"&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;Active      &lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;All plugins:&lt;/td&gt;&lt;td align=right&gt;%1    &lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESMs:&lt;/td&gt;&lt;td align=right&gt;%3    &lt;/td&gt;&lt;td align=right&gt;%4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESPs:&lt;/td&gt;&lt;td align=right&gt;%7    &lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESMs+ESPs:&lt;/td&gt;&lt;td align=right&gt;%9    &lt;/td&gt;&lt;td align=right&gt;%10&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESHs:&lt;/td&gt;&lt;td align=right&gt;%11   &lt;/td&gt;&lt;td align=right&gt;%12&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESLs:&lt;/td&gt;&lt;td align=right&gt;%5    &lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
       <translation>&lt;table cellspacing="6"&gt;&lt;tr&gt;&lt;th&gt;Tipo&lt;/th&gt;&lt;th&gt;Attivi      &lt;/th&gt;&lt;th&gt;Totale&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Tutti i plugin:&lt;/td&gt;&lt;td align=right&gt;%1    &lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESM:&lt;/td&gt;&lt;td align=right&gt;%3    &lt;/td&gt;&lt;td align=right&gt;%4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESP:&lt;/td&gt;&lt;td align=right&gt;%7    &lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESM+ESP:&lt;/td&gt;&lt;td align=right&gt;%9    &lt;/td&gt;&lt;td align=right&gt;%10&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESH:&lt;/td&gt;&lt;td align=right&gt;%11   &lt;/td&gt;&lt;td align=right&gt;%12&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESL:&lt;/td&gt;&lt;td align=right&gt;%5    &lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</translation>
     </message>
+    <message>
+      <source>Exception: %1</source>
+      <translation>Eccezione: %1</translation>
+    </message>
+    <message>
+      <source>Plugin order backups</source>
+      <translation>Backup dell'ordine dei plugin</translation>
+    </message>
+    <message>
+      <source>Create plugin order backup</source>
+      <translation>Crea backup dell'ordine dei plugin</translation>
+    </message>
+    <message>
+      <source>Restore plugin order backup...</source>
+      <translation>Ripristina backup dell'ordine dei plugin...</translation>
+    </message>
   </context>
   <context>
     <name>PluginTypeName</name>
@@ -6932,7 +7040,7 @@ Procedere?</translation>
     </message>
     <message>
       <source>Chosen in Tools &gt; Save Isolation</source>
-      <translation>Si scelgono in Strumenti &gt; Save Isolation</translation>
+      <translation>Si scelgono in Strumenti &gt; Isolamento salvataggi</translation>
     </message>
     <message>
       <source>Turn on profile-specific saves to transfer saves</source>
@@ -7639,6 +7747,10 @@ Esempio:
     <message>
       <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
       <translation>Al momento le copie isolate di MO2 supportano Elden Ring e Nightreign. Scegli il gioco e la sua cartella di installazione per continuare.</translation>
+    </message>
+    <message>
+      <source>Several installations of %1 were found. Choose the one this instance should use:</source>
+      <translation>Sono state trovate diverse installazioni di %1. Scegli quella che questa istanza deve usare:</translation>
     </message>
   </context>
   <context>
