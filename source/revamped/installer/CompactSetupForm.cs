@@ -2197,8 +2197,8 @@ namespace Mo2RevampedSetup
                 string logPath = SetupDiagnostics.CurrentPath;
                 ProgressLog.Text = e.Error.GetBaseException().Message +
                     (String.IsNullOrEmpty(logPath)
-                        ? Environment.NewLine + "No se pudo guardar el registro detallado."
-                        : Environment.NewLine + Environment.NewLine + "Registro detallado: " + logPath);
+                        ? Environment.NewLine + InstallerText.T("No se pudo guardar el registro detallado.")
+                        : Environment.NewLine + Environment.NewLine + InstallerText.T("Registro detallado: ") + logPath);
                 ProgressLog.Visible = true;
                 return;
             }
@@ -2211,8 +2211,8 @@ namespace Mo2RevampedSetup
             string logPathOnSuccess = SetupDiagnostics.CurrentPath;
             ProgressLog.Text = result.Details +
                 (String.IsNullOrEmpty(logPathOnSuccess)
-                    ? Environment.NewLine + Environment.NewLine + "No se pudo guardar el registro detallado."
-                    : Environment.NewLine + Environment.NewLine + "Registro detallado: " + logPathOnSuccess);
+                    ? Environment.NewLine + Environment.NewLine + InstallerText.T("No se pudo guardar el registro detallado.")
+                    : Environment.NewLine + Environment.NewLine + InstallerText.T("Registro detallado: ") + logPathOnSuccess);
             ProgressLog.Visible = true;
             if (!String.IsNullOrEmpty(result.LaunchPath))
             {

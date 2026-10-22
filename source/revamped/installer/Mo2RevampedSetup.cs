@@ -423,8 +423,14 @@ namespace Mo2RevampedSetup
                 if (Directory.Exists(destination))
                     throw new InvalidOperationException(InstallerText.T("La instalación contiene una carpeta donde debería ir un archivo del programa: ") + file.Path);
                 InstallFileState earlier;
-                bool owned = earlierFiles.TryGetValue(file.Path, out earlier) &&
-                    (!earlier.ExistedBefore || earlier.OwnedByRevamped) && !earlier.IsUserData;
+                // with no earlier record, the program files of the recognized
+                // MO2 Revamped folder being updated are Revamped's own: an
+                // uninstall removes them instead of bringing them back from
+                // this update's backup (as the record-less uninstall does)
+                bool owned = earlierState == null
+                    ? request.Mode == SetupMode.Update && existed
+                    : earlierFiles.TryGetValue(file.Path, out earlier) &&
+                      (!earlier.ExistedBefore || earlier.OwnedByRevamped) && !earlier.IsUserData;
                 payloadPaths.Add(file.Path);
                 states.Add(new InstallFileState
                 {
@@ -629,6 +635,22 @@ namespace Mo2RevampedSetup
                 List<string> rollbackNotes = RestoreFiles(rollbackState, false, false, false, false, worker, out deferredCleanup);
                 state.Status = "Failed";
                 SaveState(state);
+                // a cleanly reverted update leaves the folder as the earlier
+                // version: its record goes back (or none, as before), so a later
+                // uninstall or restore works from what is really installed
+                if (request.Mode == SetupMode.Update && rollbackNotes.Count == 0 && !deferredCleanup)
+                {
+                    try
+                    {
+                        if (earlierState != null) SaveState(earlierState);
+                        else DeleteState(target);
+                        if (Directory.Exists(backup)) Directory.Delete(backup, true);
+                    }
+                    catch (Exception recordError)
+                    {
+                        SetupDiagnostics.Error("Could not put back the earlier install record of '" + target + "' after a reverted update.", recordError);
+                    }
+                }
                 if (rollbackNotes.Count > 0)
                     throw new InvalidOperationException(installError.Message + Environment.NewLine + InstallerText.T("Revisión de recuperación: ") + String.Join("; ", rollbackNotes.ToArray()), installError);
                 throw new InvalidOperationException(installError.Message + Environment.NewLine + InstallerText.T("Los archivos tocados se revirtieron a su estado previo."), installError);
@@ -1015,6 +1037,9 @@ namespace Mo2RevampedSetup
                             {
                                 string relative = file.Substring(target.Length).TrimStart('\\', '/');
                                 if (!known.Contains(relative.Replace('\\', '/')) || PathsEqual(file, runningExecutable)) continue;
+                                // not through a junction inside the folder
+                                try { SafeCombine(target, relative); }
+                                catch { continue; }
                                 FileAttributes fileAttributes = File.GetAttributes(file);
                                 if ((fileAttributes & FileAttributes.ReadOnly) != 0)
                                     File.SetAttributes(file, fileAttributes & ~FileAttributes.ReadOnly);
@@ -1050,9 +1075,11 @@ namespace Mo2RevampedSetup
             return notes;
         }
 
+        // users add their own plugins, themes and translations, and Explorer++
+        // keeps its settings next to it
         private static readonly HashSet<string> UserExtensibleDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "plugins", "stylesheets"
+            "plugins", "stylesheets", "translations", "explorer++"
         };
 
         // every file path this setup's packages contain (forward slashes), or
@@ -1363,12 +1390,11 @@ namespace Mo2RevampedSetup
                     restoreCopy = Path.Combine(Path.GetTempPath(), "MO2RevampedUninstallerRestore-" + Guid.NewGuid().ToString("N") + ".exe");
                     File.Copy(backup, restoreCopy, true);
                 }
+                // the helper deletes the file once this process exits and queues
+                // the reboot deletion only if that fails: queued here, it would
+                // also delete the uninstaller of a reinstall made before rebooting
                 if (StartPostExitCleanup(destination, restoreCopy, emptyDirectory))
-                {
-                    if (String.IsNullOrEmpty(restoreCopy))
-                        ScheduleDeleteOnReboot(destination, emptyDirectory, MoveFileDelayUntilReboot);
                     return true;
-                }
                 if (restoreCopy != null && File.Exists(restoreCopy)) File.Delete(restoreCopy);
             }
             catch
@@ -1421,7 +1447,8 @@ namespace Mo2RevampedSetup
             if (!String.IsNullOrEmpty(restoreCopy))
                 script += "$src = '" + EscapePowerShellLiteral(restoreCopy) + "'; try { [System.IO.File]::Copy($src, $exe, $true); [System.IO.File]::Delete($src) } catch { exit 2 }; ";
             else
-                script += "for ($attempt = 0; $attempt -lt 30 -and [System.IO.File]::Exists($exe); $attempt++) { try { [System.IO.File]::SetAttributes($exe, [System.IO.FileAttributes]::Normal); [System.IO.File]::Delete($exe) } catch {}; if ([System.IO.File]::Exists($exe)) { Start-Sleep -Milliseconds 500 } }; if ([System.IO.File]::Exists($exe)) { exit 2 }; ";
+                script += "for ($attempt = 0; $attempt -lt 30 -and [System.IO.File]::Exists($exe); $attempt++) { try { [System.IO.File]::SetAttributes($exe, [System.IO.FileAttributes]::Normal); [System.IO.File]::Delete($exe) } catch {}; if ([System.IO.File]::Exists($exe)) { Start-Sleep -Milliseconds 500 } }; " +
+                    "if ([System.IO.File]::Exists($exe)) { try { Add-Type -Namespace Mo2Revamped -Name Reboot -MemberDefinition '[System.Runtime.InteropServices.DllImport(\"kernel32.dll\", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] public static extern bool MoveFileEx(string existingName, string newName, int flags);'; [void][Mo2Revamped.Reboot]::MoveFileEx($exe, [NullString]::Value, 4) } catch {}; exit 2 }; ";
             if (!String.IsNullOrEmpty(emptyDirectory))
             {
                 foreach (string directory in GetSafeDirectoryCleanupCandidates(emptyDirectory))
@@ -1595,8 +1622,38 @@ namespace Mo2RevampedSetup
 
         public static bool HasSelectedMigrationData(SetupRequest request)
         {
-            try { return EnumerateMigrationFiles(request).Count > 0; }
+            // stops at the first file found: the window waits on this answer,
+            // and a full list of a large mods or downloads folder takes minutes
+            try
+            {
+                string root = Path.GetFullPath(request.SourceDataDirectory);
+                if (request.CopyProfiles && TreeHasFile(ResolveConfiguredDirectory(root, "profiles_directory", "profiles"))) return true;
+                if (request.CopyMods && TreeHasFile(ResolveConfiguredDirectory(root, "mod_directory", "mods"))) return true;
+                if (request.CopyDownloads && TreeHasFile(ResolveConfiguredDirectory(root, "download_directory", "downloads"))) return true;
+                if (request.CopyOverwrite && TreeHasFile(ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"))) return true;
+                if (request.CopySettings && File.Exists(Path.Combine(root, "ModOrganizer.ini"))) return true;
+                return request.CopyCategories && (File.Exists(Path.Combine(root, "categories.dat")) ||
+                    File.Exists(Path.Combine(root, "nexuscatmap.dat")));
+            }
             catch { return false; }
+        }
+
+        // the same files AddSelectedTree would copy: any one of them is enough
+        private static bool TreeHasFile(string start)
+        {
+            if (!Directory.Exists(start)) return false;
+            Stack<string> pending = new Stack<string>();
+            pending.Push(start);
+            while (pending.Count > 0)
+            {
+                DirectoryInfo di = new DirectoryInfo(pending.Pop());
+                if ((di.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                foreach (FileInfo file in di.EnumerateFiles())
+                    if ((file.Attributes & FileAttributes.ReparsePoint) == 0) return true;
+                foreach (DirectoryInfo child in di.EnumerateDirectories())
+                    if ((child.Attributes & FileAttributes.ReparsePoint) == 0) pending.Push(child.FullName);
+            }
+            return false;
         }
 
         private static void AddSelectedFile(List<CopyEntry> result, string root, string name)
@@ -1716,7 +1773,9 @@ namespace Mo2RevampedSetup
                 foreach (FileInfo file in di.GetFiles())
                 {
                     if ((file.Attributes & FileAttributes.ReparsePoint) != 0) continue;
-                    string relative = destinationName + file.FullName.Substring(start.Length);
+                    // a configured path may end in a separator ("D:\Mods\")
+                    string relative = destinationName + Path.DirectorySeparatorChar +
+                        file.FullName.Substring(start.Length).TrimStart(Path.DirectorySeparatorChar);
                     result.Add(new CopyEntry { SourcePath = file.FullName, RelativePath = relative });
                 }
                 foreach (DirectoryInfo child in di.GetDirectories())
@@ -1736,13 +1795,26 @@ namespace Mo2RevampedSetup
             if (!sameDrive) RequireSpace(backupDrive, backupBytes);
         }
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool GetDiskFreeSpaceEx(string directoryName, out ulong freeBytesAvailable,
+            out ulong totalNumberOfBytes, out ulong totalNumberOfFreeBytes);
+
         private static void RequireSpace(string root, long required)
         {
-            DriveInfo drive = new DriveInfo(root);
-            if (drive.AvailableFreeSpace < required)
+            // DriveInfo rejects network shares (\\server\share); Windows answers for both
+            ulong available, total, totalFree;
+            string directory = root.EndsWith("\\", StringComparison.Ordinal) ? root : root + "\\";
+            if (!GetDiskFreeSpaceEx(directory, out available, out total, out totalFree))
+            {
+                SetupDiagnostics.Error("Could not read the free space of '" + root + "'; the check was skipped.",
+                    new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
+                return;
+            }
+            long free = available > (ulong)Int64.MaxValue ? Int64.MaxValue : (long)available;
+            if (free < required)
                 throw new InvalidOperationException(String.Format(
                     InstallerText.T("No hay espacio libre suficiente. Se necesitan aproximadamente {0} y hay {1} disponibles."),
-                    FormatBytes(required), FormatBytes(drive.AvailableFreeSpace)) + " (" + root + ")");
+                    FormatBytes(required), FormatBytes(free)) + " (" + root + ")");
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -1790,10 +1862,30 @@ namespace Mo2RevampedSetup
                     if (String.Equals(extension, ".exe", StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase)) files.Add(file);
                 }
-                string dlls = Path.Combine(target, "dlls");
-                if (Directory.Exists(dlls))
-                    foreach (string file in Directory.GetFiles(dlls, "*.dll", SearchOption.TopDirectoryOnly))
-                        files.Add(file);
+                // the program folders too (plugins, Python modules, Qt
+                // platforms...): a file held there also stops the update half-way
+                foreach (string directoryName in Mo2ProgramDirectories)
+                {
+                    Stack<string> pending = new Stack<string>();
+                    pending.Push(Path.Combine(target, directoryName));
+                    while (pending.Count > 0)
+                    {
+                        try
+                        {
+                            DirectoryInfo directory = new DirectoryInfo(pending.Pop());
+                            if (!directory.Exists || (directory.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                            foreach (FileInfo file in directory.GetFiles())
+                            {
+                                string extension = file.Extension;
+                                if (String.Equals(extension, ".exe", StringComparison.OrdinalIgnoreCase) ||
+                                    String.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase) ||
+                                    String.Equals(extension, ".pyd", StringComparison.OrdinalIgnoreCase)) files.Add(file.FullName);
+                            }
+                            foreach (DirectoryInfo child in directory.GetDirectories()) pending.Push(child.FullName);
+                        }
+                        catch { }
+                    }
+                }
             }
             catch { return names; }
             if (files.Count == 0) return names;
@@ -2057,9 +2149,46 @@ namespace Mo2RevampedSetup
         private static void EnsureRevampedGlobalDataNotInUse(SetupRequest request)
         {
             if (request == null || !request.RemoveRevampedAppData) return;
+            // elevated with another administrator's account, AppData\Local is
+            // that account's, not the one of the person at the screen
+            if (RunsAsAnotherAccount())
+                throw new InvalidOperationException(InstallerText.T("El instalador se está ejecutando con otra cuenta de administrador y no puede borrar los datos globales de tu cuenta. Desmarca esa opción o desinstala desde una cuenta de administrador."));
             string dataDirectory = RevampedAppDataDirectory();
             if (Directory.Exists(dataDirectory) && IsAnyRevampedGlobalMo2Running())
                 throw new InvalidOperationException(InstallerText.T("Cierra todas las instancias no portables de MO2 Revamped antes de borrar sus datos globales."));
+        }
+
+        [DllImport("wtsapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool WTSQuerySessionInformation(IntPtr server, int sessionId, int infoClass, out IntPtr buffer, out int bytesReturned);
+        [DllImport("wtsapi32.dll")]
+        private static extern void WTSFreeMemory(IntPtr memory);
+
+        private static string SessionText(int infoClass)
+        {
+            IntPtr buffer;
+            int bytes;
+            // the session this process runs in (-1): its signed-in user
+            if (!WTSQuerySessionInformation(IntPtr.Zero, -1, infoClass, out buffer, out bytes) || buffer == IntPtr.Zero) return null;
+            try { return Marshal.PtrToStringUni(buffer); }
+            finally { WTSFreeMemory(buffer); }
+        }
+
+        // true when the user signed in to this session is not the account
+        // this process runs as (an administrator's credentials typed at the
+        // elevation prompt); unknown counts as the same account
+        private static bool RunsAsAnotherAccount()
+        {
+            try
+            {
+                const int WtsUserName = 5;
+                const int WtsDomainName = 7;
+                string user = SessionText(WtsUserName);
+                string domain = SessionText(WtsDomainName);
+                if (String.IsNullOrEmpty(user)) return false;
+                return !String.Equals(user, Environment.UserName, StringComparison.OrdinalIgnoreCase) ||
+                    (!String.IsNullOrEmpty(domain) && !String.Equals(domain, Environment.UserDomainName, StringComparison.OrdinalIgnoreCase));
+            }
+            catch { return false; }
         }
 
         // MO2 of this folder closed (or refused), the games closed, and no
@@ -2222,8 +2351,20 @@ namespace Mo2RevampedSetup
 
         private static void RemoveEmptyDirectories(string target)
         {
+            // only inside the program folders: an empty folder elsewhere may be
+            // the user's own (an empty profile, mod or downloads folder)
             string root = Path.GetFullPath(target).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            RemoveEmptyDirectoriesBelow(root);
+            foreach (string name in Mo2ProgramDirectories)
+            {
+                string directory = Path.Combine(root, name);
+                try
+                {
+                    if (!Directory.Exists(directory) || (File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) continue;
+                    RemoveEmptyDirectoriesBelow(directory);
+                    if (Directory.GetFileSystemEntries(directory).Length == 0) Directory.Delete(directory, false);
+                }
+                catch { }
+            }
         }
 
         private static bool IsPathWithinDirectory(string path, string directory)
@@ -2731,6 +2872,15 @@ namespace Mo2RevampedSetup
             string full = Path.GetFullPath(Path.Combine(fullRoot, relative.Replace('/', '\\')));
             if (!full.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(InstallerText.T("La ruta de archivo sale de su carpeta: ") + relative);
+            // a junction or link inside the folder would carry the write or the
+            // deletion somewhere else
+            for (string directory = Path.GetDirectoryName(full);
+                 directory != null && directory.Length >= fullRoot.Length;
+                 directory = Path.GetDirectoryName(directory))
+            {
+                if (Directory.Exists(directory) && (File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+                    throw new InvalidOperationException(InstallerText.T("La ruta de archivo sale de su carpeta: ") + relative);
+            }
             return full;
         }
 

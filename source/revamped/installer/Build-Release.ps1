@@ -215,11 +215,18 @@ function Test-ExcludedRuntimeFile {
         'webcache', 'portableinstances', 'globalinstances', 'isolatedinstances', '_revampedupdatebackups', 'crashes',
         'diagnostics', '__pycache__', 'work', 'build'
     )
+    # user data a portable runtime keeps at its top level: the cache, and the
+    # Elden Ring / Nightreign shared saves and save backups
+    $excludedTopDirectories = @(
+        'cache', 'elden ring shared saves', 'elden ring global save backups',
+        'nightreign shared saves', 'nightreign global save backups'
+    )
     foreach ($part in $parts[0..([Math]::Max(0, $parts.Length - 2))]) {
         if ($excludedDirectories -contains $part.ToLowerInvariant()) { return $true }
     }
+    if ($parts.Length -gt 1 -and $excludedTopDirectories -contains $parts[0].ToLowerInvariant()) { return $true }
     $leaf = $parts[$parts.Length - 1]
-    if ($parts.Length -eq 1 -and $leaf -match '^(ModOrganizer\.ini|MO2-Revamped\.ini|MO2-Revamped\.install|MO2-Revamped-Global\.ini|EldenRingOnly\.ini|categories\.dat|nexuscatmap\.dat|portable\.txt|eldenring-only\.portable|unins000\.exe|MO2ForkUninstaller\.exe)$') {
+    if ($parts.Length -eq 1 -and $leaf -match '^(ModOrganizer\.ini|nxmhandler\.ini|MO2-Revamped\.ini|MO2-Revamped\.install|MO2-Revamped-Global\.ini|EldenRingOnly\.ini|categories\.dat|nexuscatmap\.dat|portable\.txt|eldenring-only\.portable|unins000\.exe|MO2ForkUninstaller\.exe)$') {
         return $true
     }
     if ($normalized -match '^stylesheets\\\+(dark|light)\.qss$') {
@@ -512,6 +519,13 @@ function Test-NoLocalBuildPaths {
         } |
         Select-Object -Unique
     $repoLeaf = [IO.Path]::GetFileName($repoRoot.TrimEnd('\', '/'))
+    # a checkout named after the product ("MO2-Revamped") would match the
+    # product's own files (MO2-Revamped.ini, the install marker, the
+    # uninstaller's strings); the full checkout paths above still catch it
+    $productNames = @('MO2-Revamped-Installation-Marker', 'ModOrganizer', 'Mod Organizer')
+    if ($repoLeaf -and ($productNames | Where-Object { $_.IndexOf($repoLeaf, [StringComparison]::OrdinalIgnoreCase) -ge 0 })) {
+        $repoLeaf = $null
+    }
     if ($repoLeaf) {
         $needles += $repoLeaf
         $needles = @($needles | Select-Object -Unique)
