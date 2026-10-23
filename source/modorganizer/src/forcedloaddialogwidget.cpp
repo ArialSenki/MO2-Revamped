@@ -22,7 +22,6 @@ QString browseForExistingFile(QWidget* parent, const QString& caption,
   dialog.setObjectName(objectName);
   dialog.setFileMode(QFileDialog::ExistingFile);
   dialog.setOption(QFileDialog::ReadOnly);
-  dialog.setOption(QFileDialog::DontUseNativeDialog);
   return dialog.exec() == QDialog::Accepted ? dialog.selectedFiles().value(0)
                                             : QString();
 }
