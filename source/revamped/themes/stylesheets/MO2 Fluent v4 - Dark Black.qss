@@ -5476,6 +5476,15 @@ QFrame[fluentCard="true"] {
 QFrame[fluentCard="true"] QLabel {
     background-color: transparent;
 }
+/* Active filter cue: ModListView sets filterActive on the Mods card while a
+   search, quick filter or category filter hides mods; PluginListView sets it
+   on the plugin list while its search has text. */
+QFrame[fluentCard="true"][filterActive="true"] {
+    border: 1px solid #D6D6D6;
+}
+QWidget#espTab PluginListView#espList[filterActive="true"] {
+    border: 1px solid #D6D6D6;
+}
 QMainWindow#MainWindow QFrame[fluentCard="true"] QTreeView#modList {
     background-color: #222222;
     border: none;

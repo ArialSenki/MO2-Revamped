@@ -324,7 +324,7 @@ void ModListViewActions::installMod(const QString& archivePath,
           "installMod", m_parent, tr("Choose Mod"),
           QStandardPaths::writableLocation(QStandardPaths::DownloadLocation),
           tr("Mod Archive").append(QString(" (%1)").arg(extensions.join(" "))),
-          nullptr, QFileDialog::DontUseNativeDialog, QSize(900, 650), true);
+          nullptr, QFileDialog::Options(), QSize(), true);
     }
 
     if (path.isEmpty()) {

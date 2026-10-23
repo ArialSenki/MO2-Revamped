@@ -1027,7 +1027,7 @@ void EditExecutablesDialog::on_browseWorkingDirectory_clicked()
   QString dirName = FileDialogMemory::getExistingDirectory(
       "editExecutableDirectory", this, tr("Select a directory"),
       ui->workingDirectory->text(),
-      QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
+      QFileDialog::ShowDirsOnly);
 
   if (dirName.isNull()) {
     // cancelled
@@ -1080,7 +1080,7 @@ QFileInfo EditExecutablesDialog::browseBinary(const QString& initial)
 
   const auto f = FileDialogMemory::getOpenFileName(
       "editExecutableBinary", this, tr("Select an executable"), initial, Filters,
-      nullptr, QFileDialog::DontUseNativeDialog);
+      nullptr);
 
   if (f.isNull()) {
     return {};

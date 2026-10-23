@@ -182,6 +182,9 @@ void makeRow(QCheckBox* box, bool takeDetail = false)
   titleLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
   titleLabel->setTextFormat(Qt::PlainText);
   titleLabel->setWordWrap(true);
+  // the title keeps the box's &-mnemonic: Alt+letter toggles the switch as it
+  // did when the text was on the box itself
+  titleLabel->setBuddy(box);
   text->addWidget(titleLabel);
   QList<QLabel*> labels = {titleLabel};
   if (detail != nullptr) {

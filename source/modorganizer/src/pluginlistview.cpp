@@ -1,12 +1,14 @@
 #include "pluginlistview.h"
 
 #include <QMimeData>
+#include <QStyle>
 #include <QUrl>
 
 #include <report.h>
 #include <widgetutility.h>
 
 #include "copyeventfilter.h"
+#include "fluenticons.h"
 #include "genericicondelegate.h"
 #include "mainwindow.h"
 #include "modelutils.h"
@@ -124,7 +126,16 @@ void PluginListView::updatePluginCount()
 
 void PluginListView::onFilterChanged(const QString& filter)
 {
-  if (!filter.isEmpty()) {
+  if (FluentIcons::active()) {
+    // Fluent: the theme draws an accent edge around a filtered list
+    const bool active = !filter.isEmpty();
+    if (property("filterActive").toBool() != active) {
+      setProperty("filterActive", active);
+      style()->unpolish(this);
+      style()->polish(this);
+      update();
+    }
+  } else if (!filter.isEmpty()) {
     setStyleSheet("QTreeView { border: 2px ridge #f00; }");
     ui.counter->setStyleSheet("QLCDNumber { border: 2px ridge #f00; }");
   } else {

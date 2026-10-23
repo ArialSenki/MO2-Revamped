@@ -609,6 +609,20 @@ void ModListView::onModInstalled(const QString& modName)
 void ModListView::onModFilterActive(bool filterActive)
 {
   ui.clearFilters->setVisible(filterActive);
+
+  // Fluent: the theme draws an accent edge around the Mods card while a search,
+  // quick filter or category filter hides mods
+  for (QWidget* w = parentWidget(); w != nullptr; w = w->parentWidget()) {
+    if (w->property("fluentCard").toBool()) {
+      if (w->property("filterActive").toBool() != filterActive) {
+        w->setProperty("filterActive", filterActive);
+        w->style()->unpolish(w);
+        w->style()->polish(w);
+        w->update();
+      }
+      break;
+    }
+  }
 }
 
 ModListView::ModCounters ModListView::counters() const
@@ -1025,18 +1039,18 @@ void ModListView::restoreState(const Settings& s)
 {
   s.geometry().restoreState(header());
 
-  // Fluent v4 table, applied once over the saved layout: # · name · status ·
-  // version. Every other column stays one right-click away in the header.
+  // Fluent v4 table, applied once over the saved layout: # · name · flags ·
+  // status · version. Every other column stays one right-click away in the
+  // header; a layout saved after this first run is never touched again.
   QSettings layout(s.filename(), QSettings::IniFormat);
   constexpr auto columnsAppliedKey = "Settings/fluent_v4_mod_columns_applied";
   if (FluentIcons::active() && !layout.value(columnsAppliedKey, false).toBool()) {
     QHeaderView* h = header();
-    for (int column : {ModList::COL_FLAGS, ModList::COL_CONTENT, ModList::COL_CATEGORY,
-                       ModList::COL_MODID, ModList::COL_GAME, ModList::COL_INSTALLTIME,
-                       ModList::COL_NOTES}) {
+    for (int column : {ModList::COL_CONTENT, ModList::COL_CATEGORY, ModList::COL_MODID,
+                       ModList::COL_GAME, ModList::COL_INSTALLTIME, ModList::COL_NOTES}) {
       h->setSectionHidden(column, true);
     }
-    const int order[] = {ModList::COL_PRIORITY, ModList::COL_NAME,
+    const int order[] = {ModList::COL_PRIORITY, ModList::COL_NAME, ModList::COL_FLAGS,
                          ModList::COL_CONFLICTFLAGS, ModList::COL_VERSION};
     for (int position = 0; position < static_cast<int>(std::size(order)); ++position) {
       h->setSectionHidden(order[position], false);
@@ -1046,11 +1060,27 @@ void ModListView::restoreState(const Settings& s)
       h->setSectionResizeMode(column, QHeaderView::Interactive);
     }
     h->resizeSection(ModList::COL_PRIORITY, 52);
+    h->resizeSection(ModList::COL_FLAGS, 72);
     h->resizeSection(ModList::COL_CONFLICTFLAGS, 170);
     h->resizeSection(ModList::COL_VERSION, 140);
     h->setSectionResizeMode(ModList::COL_NAME, QHeaderView::Stretch);
 
     layout.setValue(columnsAppliedKey, true);
+    layout.sync();
+  }
+
+  // the first Fluent layouts hid Flags (invalid game data, hidden files, notes);
+  // show it once to them too, after that hiding it is the user's choice
+  constexpr auto flagsShownKey = "Settings/fluent_v4_mod_flags_shown";
+  if (FluentIcons::active() && !layout.value(flagsShownKey, false).toBool()) {
+    QHeaderView* h = header();
+    if (h->isSectionHidden(ModList::COL_FLAGS)) {
+      h->setSectionHidden(ModList::COL_FLAGS, false);
+      h->moveSection(h->visualIndex(ModList::COL_FLAGS),
+                     h->visualIndex(ModList::COL_NAME) + 1);
+      h->resizeSection(ModList::COL_FLAGS, 72);
+    }
+    layout.setValue(flagsShownKey, true);
     layout.sync();
   }
 

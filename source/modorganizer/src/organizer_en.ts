@@ -2803,22 +2803,22 @@ The programs that are not hidden appear in the main window&apos;s Program list, 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="107"/>
+        <location filename="forcedloaddialogwidget.cpp" line="106"/>
         <source>Select a library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="108"/>
+        <location filename="forcedloaddialogwidget.cpp" line="107"/>
         <source>Dynamic link libraries (*.dll)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="130"/>
+        <location filename="forcedloaddialogwidget.cpp" line="129"/>
         <source>Select a process</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialogwidget.cpp" line="131"/>
+        <location filename="forcedloaddialogwidget.cpp" line="130"/>
         <source>Executable files (*.exe)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7767,7 +7767,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListSortProxy</name>
     <message>
-        <location filename="modlistsortproxy.cpp" line="654"/>
+        <location filename="modlistsortproxy.cpp" line="665"/>
         <source>Drag&amp;Drop is only supported when sorting by priority</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7775,39 +7775,39 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListView</name>
     <message>
-        <location filename="modlistview.cpp" line="658"/>
+        <location filename="modlistview.cpp" line="672"/>
         <source>&lt;table cellspacing=&quot;5&quot;&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;All&lt;/th&gt;&lt;th&gt;Visible&lt;/th&gt;&lt;tr&gt;&lt;td&gt;Enabled mods:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%1 / %2&lt;/td&gt;&lt;td align=right&gt;%3 / %4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Unmanaged/DLCs:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%5&lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Mod backups:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%7&lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Separators:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%9&lt;/td&gt;&lt;td align=right&gt;%10&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="715"/>
+        <location filename="modlistview.cpp" line="729"/>
         <source>Copy Folder...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="716"/>
+        <location filename="modlistview.cpp" line="730"/>
         <source>This will copy the content of %1 to a new mod.
 Please enter the name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="727"/>
+        <location filename="modlistview.cpp" line="741"/>
         <source>A mod with this name already exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1141"/>
+        <location filename="modlistview.cpp" line="1171"/>
         <source>Exception: %1</source>
         <oldsource>Exception: </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1143"/>
+        <location filename="modlistview.cpp" line="1173"/>
         <source>Unknown exception</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1514"/>
+        <location filename="modlistview.cpp" line="1544"/>
         <source>&lt;Multiple&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9136,50 +9136,50 @@ Continue?</source>
 <context>
     <name>PluginListView</name>
     <message>
-        <location filename="pluginlistview.cpp" line="100"/>
+        <location filename="pluginlistview.cpp" line="102"/>
         <source>&lt;table cellspacing=&quot;6&quot;&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;Active      &lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;All plugins:&lt;/td&gt;&lt;td align=right&gt;%1    &lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESMs:&lt;/td&gt;&lt;td align=right&gt;%3    &lt;/td&gt;&lt;td align=right&gt;%4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESPs:&lt;/td&gt;&lt;td align=right&gt;%7    &lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESMs+ESPs:&lt;/td&gt;&lt;td align=right&gt;%9    &lt;/td&gt;&lt;td align=right&gt;%10&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESHs:&lt;/td&gt;&lt;td align=right&gt;%11   &lt;/td&gt;&lt;td align=right&gt;%12&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESLs:&lt;/td&gt;&lt;td align=right&gt;%5    &lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
         <oldsource>&lt;table cellspacing=&quot;6&quot;&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;Active      &lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;All plugins:&lt;/td&gt;&lt;td align=right&gt;%1    &lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESMs:&lt;/td&gt;&lt;td align=right&gt;%3    &lt;/td&gt;&lt;td align=right&gt;%4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESPs:&lt;/td&gt;&lt;td align=right&gt;%7    &lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESMs+ESPs:&lt;/td&gt;&lt;td align=right&gt;%9    &lt;/td&gt;&lt;td align=right&gt;%10&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ESLs:&lt;/td&gt;&lt;td align=right&gt;%5    &lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Overlay:&lt;/td&gt;&lt;td align=right&gt;%11   &lt;/td&gt;&lt;td align=right&gt;%12&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="144"/>
-        <location filename="pluginlistview.cpp" line="151"/>
+        <location filename="pluginlistview.cpp" line="155"/>
+        <location filename="pluginlistview.cpp" line="162"/>
         <source>Sorting plugins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="145"/>
-        <location filename="pluginlistview.cpp" line="152"/>
+        <location filename="pluginlistview.cpp" line="156"/>
+        <location filename="pluginlistview.cpp" line="163"/>
         <source>Are you sure you want to sort your plugins list?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="147"/>
+        <location filename="pluginlistview.cpp" line="158"/>
         <source>Note: You are currently in offline mode and LOOT will not update the master list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="265"/>
+        <location filename="pluginlistview.cpp" line="276"/>
         <source>Plugin order backups</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="266"/>
+        <location filename="pluginlistview.cpp" line="277"/>
         <source>Create plugin order backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="269"/>
+        <location filename="pluginlistview.cpp" line="280"/>
         <source>Restore plugin order backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="276"/>
+        <location filename="pluginlistview.cpp" line="287"/>
         <source>Exception: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="pluginlistview.cpp" line="278"/>
+        <location filename="pluginlistview.cpp" line="289"/>
         <source>Unknown exception</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11922,22 +11922,22 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentstatusdelegate.cpp" line="39"/>
+        <location filename="fluentstatusdelegate.cpp" line="95"/>
         <source>New version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentstatusdelegate.cpp" line="45"/>
+        <location filename="fluentstatusdelegate.cpp" line="100"/>
         <source>Fully overwritten</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentstatusdelegate.cpp" line="54"/>
+        <location filename="fluentstatusdelegate.cpp" line="129"/>
         <source>1 conflict</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentstatusdelegate.cpp" line="55"/>
+        <location filename="fluentstatusdelegate.cpp" line="130"/>
         <source>%1 conflicts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12107,7 +12107,7 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savetextasdialog.cpp" line="45"/>
+        <location filename="savetextasdialog.cpp" line="44"/>
         <source>failed to open &quot;%1&quot; for writing</source>
         <translation type="unfinished"></translation>
     </message>
