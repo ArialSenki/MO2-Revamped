@@ -48,8 +48,7 @@ if (-not (Test-Path -LiteralPath $nxmHandlerPath -PathType Leaf) -or
 }
 # the upstream nxmhandler from the runtime would bring back the old window
 if ((Get-Item -LiteralPath $nxmHandlerPath).VersionInfo.ProductName -notlike '*MO2 Revamped*') {
-    throw "nxmhandler.exe is not the MO2 Revamped build from source
-xmhandler: $nxmHandlerPath"
+    throw "nxmhandler.exe is not the MO2 Revamped build from source\nxmhandler: $nxmHandlerPath"
 }
 if (-not (Test-Path -LiteralPath $openSslRuntimeRoot -PathType Container)) {
     throw "The OpenSSL runtime directory was not found: $openSslRuntimeRoot"
