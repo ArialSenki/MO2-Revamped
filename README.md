@@ -2,68 +2,78 @@
 
 **MO2 Revamped** is an independent community edition of
 [Mod Organizer 2](https://github.com/ModOrganizer2/modorganizer), built on
-MO2 v2.5.2 and focused on modding **Elden Ring**. It keeps the MO2 workflow you
-already know and adds Elden Ring tools, a refreshed interface, and a guided
-installer. It is maintained by **ArialSenki**.
+MO2 v2.5.2. It keeps the MO2 workflow you already know for every game MO2
+supports, and adds a refreshed interface, a guided installer and dedicated
+tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
+**ArialSenki**.
 
 > MO2 Revamped is not an official Mod Organizer 2 release and is not affiliated
 > with Nexus Mods, FromSoftware, or Bandai Namco Entertainment.
 
 ## Download
 
-**Latest: [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)**
-— `MO2-Revamped-Setup-1.0.1.exe` with its `SHA256SUMS.txt`.
+**Latest: [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2)**
+— `MO2-Revamped-Setup-1.0.2.exe` with its `SHA256SUMS.txt`.
 
-The previous release, [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0),
-remains available.
+Earlier releases, [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)
+and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0),
+remain available.
 
 ### Installing
 
-1. Run `MO2-Revamped-Setup-1.0.1.exe` and pick your language.
-2. Choose **Install isolated Elden Ring**. This creates a self-contained,
-   portable MO2 for Elden Ring that keeps all of its data (profiles, mods,
-   downloads, settings) beside the installation.
-3. When setup finishes, MO2 starts in the language you chose.
+1. Run `MO2-Revamped-Setup-1.0.2.exe` and pick your language.
+2. Choose **Install MO2 Revamped** and the installation folder.
+3. When setup finishes, MO2 starts in the language you chose. Create an
+   instance for your game; for Elden Ring or Nightreign the New instance
+   wizard also offers an **isolated** instance that keeps its profiles, mods,
+   downloads and settings in its own folder.
 
-Run the same setup again to **update**, **restore** or **uninstall** an
-existing installation; updates keep your data and back up the previous files
-first. The Standard multi-instance installation and "Copy data" are shown as
-*coming soon* in this version.
+Run the same setup again to **update**, **restore**, **copy data** or
+**uninstall**. Updates keep your data and back up the previous files first;
+isolated Elden Ring installations from 1.0.1 are updated the same way.
 
-## What's new in 1.0.1
+## What's new in 1.0.2
 
-- **Isolated installer.** One setup file installs, updates, restores and
-  uninstalls the Elden Ring edition, and starts MO2 afterwards without
-  administrator rights.
-- **Six languages.** English, Spanish, German, French, Italian and Brazilian
-  Portuguese across the interface, tutorials and every Revamped tool.
-- **Reliable startup options.** "Start minimized" and "Black background" now
-  apply on every launch.
-- **Skip the intro logos.** A new Startup option goes straight to the title
-  screen. To also avoid the online connection notices, set
-  **System > Network > Launch Setting** to **Play Offline** in the game.
-- **Refreshed interface.** Light, Dark Blue and Dark Black themes, redesigned
-  dialogs and prompts, and translated tool names.
+- **Elden Ring Nightreign.** Save isolation, named save profiles, save
+  backups, the launch save guard, native DLL loading, the Native DLL Profile,
+  startup options and the archive installer, as in Elden Ring.
+- **Safer saves.** While the game runs from an isolated profile, the Steam
+  save folders are set aside and come back unchanged when it closes, with
+  every launcher (Mod Engine 2, Seamless Co-op, me3). Saves are backed up
+  before each launch and can be restored from Save Isolation.
+- **Complete installation.** One MO2 Revamped for every game MO2 supports;
+  isolated copies for one game are made from the New instance wizard.
+- **Fluent dialogs.** Profiles, Executables, Notifications, Manage Overwrite,
+  notices and the Nexus links window follow the instance manager's card
+  layout and Windows 11 menus.
+- **A more careful installer.** Names programs still using the files,
+  reinstalls next to data an uninstall kept, follows the Windows accent colour
+  and light or dark mode, and stays responsive while it checks.
 
 The full list is in the [changelog](CHANGELOG.md).
 
 ## Features
 
-- **Elden Ring archive installer** — keep a mod's original folder layout or use
-  MO2's standard layout.
+- **Archive installer** (Elden Ring, Nightreign) — keep a mod's original
+  folder layout or use MO2's standard layout.
 - **Native DLL Profile** — per-profile order of native DLL mods, loaded through
-  the Revamped native bridge.
-- **Startup Options** — launch minimized, black background, and skip the intro logos.
-- **Save Isolation** — separate Elden Ring save routes per MO2 instance or
-  profile, so playthroughs never overwrite each other.
+  the Revamped native bridge, also with Seamless Co-op, Mod Engine 2 and me3.
+- **Startup Options** — launch minimized, black background, and skip the
+  intro logos (Elden Ring).
+- **Save Isolation** — separate save routes per profile or instance, named
+  save profiles, automatic backups and restore, so playthroughs never
+  overwrite each other.
+- **Six languages** — English, Spanish, German, French, Italian and Brazilian
+  Portuguese.
 - **Themes** — Light, Dark Blue and Dark Black.
 
 ### Where your data lives
 
-The isolated edition keeps everything inside its own folder. MO2 Revamped
-never reads the original MO2 global instance folder. The optional Steam save
-route still uses Elden Ring's own Windows save directory, and data migration
-only reads a folder you select yourself.
+MO2 Revamped keeps its global instances in `%LOCALAPPDATA%\MO2 Revamped` and
+never reads the original MO2 global instance folder. Isolated instances keep
+everything inside their own folder. The optional Steam save route still uses
+the game's own Windows save directory, and data migration only reads a folder
+you select yourself.
 
 ## Repository layout
 

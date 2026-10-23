@@ -1,52 +1,8 @@
 # Changelog
 
-## Unreleased
-
-### Saves (Elden Ring and Nightreign)
-
-- If the game was started from Steam while MO2 had the Steam saves set aside,
-  the newer save folder is kept and named in a warning and in Notifications,
-  instead of being set aside silently.
-- MO2 started while the game runs waits for it to close and then puts the
-  Steam saves back; two MO2 windows of one install no longer restore at the
-  same time; a moved install or an older recovery record no longer blocks
-  launches; a save folder linked to another drive works.
-- Restoring a backup that fails halfway puts every original file back;
-  backups are kept and pruned in the right order.
-- Nightreign guards `start_protected_game.exe`, and launchers shared with
-  other games no longer block a launch.
-
-### Game support
-
-- Bethesda games: plugin names are no longer cut to "..."; setting up an
-  instance of a game with editions (Skyrim SE, Fallout 4) no longer reopens
-  the same dialog forever.
-- Nightreign tools show Nightreign names; the native profile can't list one
-  DLL for two mods; Overwrite cleanup skips a locked file and continues.
-
-### Interface
-
-- Help has the Mod Organizer 2 documentation, Help on the Interface and About
-  Qt again; plugin-order backups are in the plugin list menu and All Mods in
-  each mod's menu.
-- The command bar can't be hidden any more; hovering over category submenus
-  no longer changes the selected mods; dashboard tiles stay current.
-
-### Instances
-
-- Deleting an instance warns when other instances use its folders.
-- Crash dumps are written again; an isolated copy made at first start is
-  launched; portable instances get working shortcuts and forwarded commands.
-
-### Installer
-
-- Uninstalling after an update without an install record removes the program;
-  a failed update keeps a correct record; reinstalling before a reboot keeps
-  the uninstaller; Copy data handles large folders and trailing slashes.
-
 ## 1.0.2 — Elden Ring Nightreign, safer saves, Fluent dialogs
 
-Released on October 22, 2026. The setup's main task is now the complete
+Released on October 23, 2026. The setup's main task is now the complete
 installation of MO2 Revamped, for every game; isolated copies for one game are
 made inside MO2 from the New instance wizard, which offers them for the games
 with their own support: Elden Ring and, new, ELDEN RING NIGHTREIGN. More games
@@ -81,6 +37,43 @@ will join that list as their support is added.
   no longer share them between instances).
 - Removing a profile sends it to the Recycle Bin; Windows asks first when it
   cannot go there.
+- If the game was started from Steam while MO2 had the Steam saves set aside,
+  the newer save folder is kept and named in a warning and in Notifications,
+  instead of being set aside silently.
+- MO2 started while the game runs waits for it to close and then puts the
+  Steam saves back; two MO2 windows of one install no longer restore at the
+  same time; a moved install or an older recovery record no longer blocks
+  launches; a save folder linked to another drive works.
+- Restoring a backup that fails halfway puts every original file back;
+  backups are kept and pruned in the right order.
+- Nightreign guards `start_protected_game.exe`, and launchers shared with
+  other games no longer block a launch.
+- Seamless Co-op, Mod Engine 2, me3 and `nrsc_launcher` launches use the
+  Native DLL profile too (initializers, switched-off DLLs left out); a broken
+  profile is logged and no longer blocks a launcher launch.
+
+### Game support
+
+- Bethesda games: plugin names are no longer cut to "..."; setting up an
+  instance of a game with editions (Skyrim SE, Fallout 4) no longer reopens
+  the same dialog forever.
+- Nightreign tools show Nightreign names; the native profile can't list one
+  DLL for two mods; Overwrite cleanup skips a locked file and continues.
+
+### Instances
+
+- Deleting an instance warns when other instances use its folders.
+- Crash dumps are written again; an isolated copy made at first start is
+  launched; portable instances get working shortcuts and forwarded commands.
+
+### Nexus links
+
+- The "How to handle Nexus links" window (nxmhandler, built from source as
+  1.2.0.1) follows Windows light or dark mode and the accent colour: programs
+  as rows with game chips and status, priority by drag or arrows, Remove
+  missing, and Test a link, which shows the target and starts nothing.
+- After a No at MO2 start it doesn't ask again until the registration
+  changes; a link for a game without a program offers to choose one.
 
 ### Interface
 
@@ -93,6 +86,20 @@ will join that list as their support is added.
   no longer switches the theme or closes the log, Space pauses the selected
   download, "Add to list" is back in a mod's menu.
 - Long plugin messages wrap instead of being cut; launch errors read normally.
+- Help has the Mod Organizer 2 documentation, Help on the Interface and About
+  Qt again; plugin-order backups are in the plugin list menu and All Mods in
+  each mod's menu.
+- The command bar can't be hidden any more; hovering over category submenus
+  no longer changes the selected mods; dashboard tiles stay current.
+- The conflict pill shows whether a mod wins, is overwritten or both, and an
+  available update has its own pill; the Flags column is back; the Mods card
+  and plugin list get an accent border while a filter is active.
+- Install mod, Save text/CSV and the executable pickers use the Windows file
+  dialog; Alt+letter toggles settings switches again.
+- Short notices ("Signed in to Nexus Mods") are Fluent toasts that never take
+  focus; category setup and the theme chooser use option cards with previews.
+- Dropping files from another program on the mod or plugin list no longer
+  crashes when no MO2 window is active.
 
 ### Installer
 
@@ -120,6 +127,11 @@ will join that list as their support is added.
 - Follows the Windows accent colour and switches between light and dark with
   Windows; dark title bar in dark mode; progress shows on the taskbar button;
   "What's new in this version" opens the release notes when it finishes.
+- Uninstalling after an update without an install record removes the program;
+  a failed update keeps a correct record; reinstalling before a reboot keeps
+  the uninstaller; Copy data handles large folders and trailing slashes.
+- Installation checks, Copy data checks, changing language and opening MO2
+  after setup run in the background, so the window no longer freezes.
 
 ## 1.0.1 — Interface, installer, and package refresh
 
