@@ -367,6 +367,11 @@ namespace Mo2RevampedSetup
             add("MO2 Revamped AppData (no se pudo determinar la ruta: ", "MO2 Revamped AppData (the path could not be determined: ", "MO2 Revamped AppData (chemin introuvable : ", "MO2 Revamped AppData (Pfad konnte nicht ermittelt werden: ", "MO2 Revamped AppData (impossibile determinare il percorso: ", "MO2 Revamped AppData (não foi possível determinar o caminho: ");
             add("MO2 Revamped AppData (quedaron elementos en ", "MO2 Revamped AppData (items remain in ", "MO2 Revamped AppData (des éléments restent dans ", "MO2 Revamped AppData (Elemente verbleiben in ", "MO2 Revamped AppData (restano elementi in ", "MO2 Revamped AppData (restaram itens em ");
             add("entrada de MO2 ", "MO2 entry ", "entrée MO2 ", "MO2-Eintrag ", "voce MO2 ", "entrada do MO2 ");
+            // short status texts while the Qt window waits on the engine
+            add("Comprobando la instalación…", "Checking the installation…", "Vérification de l’installation…", "Installation wird geprüft…", "Verifica dell’installazione…", "Verificando a instalação…");
+            add("Comprobando los datos de origen…", "Checking the source data…", "Vérification des données source…", "Quelldaten werden geprüft…", "Verifica dei dati di origine…", "Verificando os dados de origem…");
+            add("Cargando el idioma…", "Loading the language…", "Chargement de la langue…", "Sprache wird geladen…", "Caricamento della lingua…", "Carregando o idioma…");
+            add("Abriendo Mod Organizer 2…", "Opening Mod Organizer 2…", "Ouverture de Mod Organizer 2…", "Mod Organizer 2 wird geöffnet…", "Apertura di Mod Organizer 2…", "Abrindo o Mod Organizer 2…");
 
             return result;
         }
