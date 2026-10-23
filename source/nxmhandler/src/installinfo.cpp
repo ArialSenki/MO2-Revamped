@@ -173,8 +173,13 @@ QString gameDisplayName(const QString& id)
       return std::get<0>(game);
     }
   }
+  // the games Revamped's own plugins add, which upstream's list doesn't know
   if (key.compare(QLatin1String("eldenring"), Qt::CaseInsensitive) == 0) {
     return QStringLiteral("Elden Ring");
+  }
+  if (key.compare(QLatin1String("nightreign"), Qt::CaseInsensitive) == 0 ||
+      key.compare(QLatin1String("eldenringnightreign"), Qt::CaseInsensitive) == 0) {
+    return QStringLiteral("Elden Ring Nightreign");
   }
   return key;
 }
