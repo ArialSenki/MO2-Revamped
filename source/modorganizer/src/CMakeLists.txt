@@ -205,6 +205,7 @@ mo2_add_filter(NAME src/loot GROUPS
 mo2_add_filter(NAME src/mainwindow GROUPS
 	datatab
 	downloadstab
+	fluentchoices
 	fluentdashboard
 	fluentdialogs
 	fluenticons

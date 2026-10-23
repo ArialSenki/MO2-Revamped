@@ -4266,6 +4266,10 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
       <source>Dark</source>
       <translation>Dunkel</translation>
     </message>
+    <message>
+      <source>Use this theme</source>
+      <translation>Dieses Design verwenden</translation>
+    </message>
   </context>
   <context>
     <name>MainWindow</name>
@@ -5380,6 +5384,34 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <source>Show the version and license of the Qt framework.</source>
       <translation>Zeigt die Version und Lizenz des Qt-Frameworks.</translation>
     </message>
+    <message>
+      <source>Set up category mappings</source>
+      <translation>Kategoriezuordnungen einrichten</translation>
+    </message>
+    <message>
+      <source>Since version 2.5, Mod Organizer gives mods their category by mapping the Nexus categories to yours. This instance was made with an older version and has no mappings yet.</source>
+      <translation>Seit Version 2.5 ordnet Mod Organizer Mods ihre Kategorie zu, indem es die Nexus-Kategorien deinen zuordnet. Diese Instanz wurde mit einer älteren Version erstellt und hat noch keine Zuordnungen.</translation>
+    </message>
+    <message>
+      <source>Map this game&apos;s Nexus categories to yours automatically.</source>
+      <translation>Ordnet die Nexus-Kategorien dieses Spiels automatisch deinen zu.</translation>
+    </message>
+    <message>
+      <source>Set up the mappings yourself in the category editor.</source>
+      <translation>Richte die Zuordnungen selbst im Kategorie-Editor ein.</translation>
+    </message>
+    <message>
+      <source>Keep categories as they are. You can turn mappings back on in Settings.</source>
+      <translation>Lässt die Kategorien, wie sie sind. Du kannst die Zuordnungen in den Einstellungen wieder einschalten.</translation>
+    </message>
+    <message>
+      <source>Start with the categories Mod Organizer has always come with.</source>
+      <translation>Beginnt mit den Kategorien, die Mod Organizer schon immer mitbringt.</translation>
+    </message>
+    <message>
+      <source>Start without categories and set them up yourself.</source>
+      <translation>Beginnt ohne Kategorien; du richtest sie selbst ein.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -6295,6 +6327,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     <message>
       <source>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to "Script Extender", in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
       <translation>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; wurde im Spielordner gefunden (Rechtsklick kopiert den vollständigen Pfad). Wahrscheinlich ist das ein Überbleibsel davon, dass der Lademechanismus von ModOrganizer 1 auf "Script Extender" gestellt war. Entferne die Datei dann, indem du den Lademechanismus in ModOrganizer 1 änderst oder sie manuell löschst. Sonst startet das Spiel möglicherweise nicht oder stürzt ab.</translation>
+    </message>
+    <message>
+      <source>Signed in to Nexus Mods</source>
+      <translation>Bei Nexus Mods angemeldet</translation>
     </message>
   </context>
   <context>
@@ -8855,6 +8891,413 @@ In dieser Stunde verbleibend: %3</translation>
     <message>
       <source>Restore plugin order backup...</source>
       <translation>Sicherung der Plugin-Reihenfolge wiederherstellen...</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModListView</name>
+    <message>
+      <source>Exception: %1</source>
+      <translation>Ausnahme: %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>HandlerEditDialog</name>
+    <message>
+      <source>Add a program</source>
+      <translation>Programm hinzufügen</translation>
+    </message>
+    <message>
+      <source>Edit program</source>
+      <translation>Programm bearbeiten</translation>
+    </message>
+    <message>
+      <source>Pick the program that should open Nexus links, usually a ModOrganizer.exe, and the games it handles.</source>
+      <translation>Wähle das Programm, das Nexus-Links öffnen soll, meist eine ModOrganizer.exe, und die Spiele, für die es zuständig ist.</translation>
+    </message>
+    <message>
+      <source>Program</source>
+      <translation>Programm</translation>
+    </message>
+    <message>
+      <source>Path to ModOrganizer.exe</source>
+      <translation>Pfad zur ModOrganizer.exe</translation>
+    </message>
+    <message>
+      <source>Browse...</source>
+      <translation>Durchsuchen...</translation>
+    </message>
+    <message>
+      <source>Arguments (optional)</source>
+      <translation>Argumente (optional)</translation>
+    </message>
+    <message>
+      <source>Passed to the program before the link</source>
+      <translation>Werden vor dem Link an das Programm übergeben</translation>
+    </message>
+    <message>
+      <source>Games</source>
+      <translation>Spiele</translation>
+    </message>
+    <message>
+      <source>Links for these games go to this program.</source>
+      <translation>Links für diese Spiele gehen an dieses Programm.</translation>
+    </message>
+    <message>
+      <source>Other games (any game not handled above)</source>
+      <translation>Andere Spiele (jedes Spiel, das oben nicht zugeordnet ist)</translation>
+    </message>
+    <message>
+      <source>Other game IDs</source>
+      <translation>Weitere Spiel-IDs</translation>
+    </message>
+    <message>
+      <source>For example: eldenring, starfield</source>
+      <translation>Zum Beispiel: eldenring, starfield</translation>
+    </message>
+    <message>
+      <source>Nexus game IDs that are not in the list, separated by commas. Mod Organizer adds its own game here when it registers.</source>
+      <translation>Nexus-Spiel-IDs, die nicht in der Liste stehen, durch Kommas getrennt. Mod Organizer trägt hier bei der Registrierung sein eigenes Spiel ein.</translation>
+    </message>
+    <message>
+      <source>Add</source>
+      <translation>Hinzufügen</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Speichern</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Select Executable</source>
+      <translation>Ausführbare Datei auswählen</translation>
+    </message>
+    <message>
+      <source>Executable (*.exe)</source>
+      <translation>Ausführbare Datei (*.exe)</translation>
+    </message>
+    <message>
+      <source>This file does not exist. Links sent to it cannot be opened.</source>
+      <translation>Diese Datei existiert nicht. An sie gesendete Links können nicht geöffnet werden.</translation>
+    </message>
+  </context>
+  <context>
+    <name>HandlerWindow</name>
+    <message>
+      <source>NXM Handler</source>
+      <translation>NXM Handler</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Remove</source>
+      <translation>Entfernen</translation>
+    </message>
+    <message>
+      <source>Missing</source>
+      <translation>Fehlt</translation>
+    </message>
+    <message>
+      <source>Registered</source>
+      <translation>Registriert</translation>
+    </message>
+    <message>
+      <source>Ready</source>
+      <translation>Bereit</translation>
+    </message>
+    <message>
+      <source>This program no longer exists. Links for its games cannot be opened until you remove or fix it.</source>
+      <translation>Dieses Programm existiert nicht mehr. Links für seine Spiele können erst geöffnet werden, wenn du es entfernst oder korrigierst.</translation>
+    </message>
+    <message>
+      <source>Windows sends Nexus links to the nxmhandler in this program's folder, which passes them on using this list.</source>
+      <translation>Windows sendet Nexus-Links an den nxmhandler im Ordner dieses Programms, der sie anhand dieser Liste weitergibt.</translation>
+    </message>
+    <message>
+      <source>This program can receive links for its games.</source>
+      <translation>Dieses Programm kann Links für seine Spiele empfangen.</translation>
+    </message>
+    <message>
+      <source>No programs yet. Add the Mod Organizer that should open Nexus links.</source>
+      <translation>Noch keine Programme. Füge den Mod Organizer hinzu, der Nexus-Links öffnen soll.</translation>
+    </message>
+    <message>
+      <source>Arguments: %1</source>
+      <translation>Argumente: %1</translation>
+    </message>
+    <message>
+      <source>No games</source>
+      <translation>Keine Spiele</translation>
+    </message>
+    <message>
+      <source>How to handle Nexus links</source>
+      <translation>Umgang mit Nexus-Links</translation>
+    </message>
+    <message>
+      <source>Choose which program opens Nexus Mods download links for each game. When several programs handle a game, the one highest in the list gets the link.</source>
+      <translation>Wähle, welches Programm Nexus-Mods-Downloadlinks für jedes Spiel öffnet. Sind mehrere Programme für ein Spiel zuständig, bekommt das oberste in der Liste den Link.</translation>
+    </message>
+    <message>
+      <source>Windows sends Nexus links to</source>
+      <translation>Windows sendet Nexus-Links an</translation>
+    </message>
+    <message>
+      <source>Register this installation</source>
+      <translation>Diese Installation registrieren</translation>
+    </message>
+    <message>
+      <source>Makes Windows send Nexus links to this installation's nxmhandler, which passes them on using the list below.</source>
+      <translation>Sorgt dafür, dass Windows Nexus-Links an den nxmhandler dieser Installation sendet, der sie anhand der Liste unten weitergibt.</translation>
+    </message>
+    <message>
+      <source>Remove missing</source>
+      <translation>Fehlende entfernen</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programme</translation>
+    </message>
+    <message>
+      <source>Drag a program up or down to change which one gets the link.</source>
+      <translation>Ziehe ein Programm nach oben oder unten, um festzulegen, welches den Link bekommt.</translation>
+    </message>
+    <message>
+      <source>Test a link...</source>
+      <translation>Link testen...</translation>
+    </message>
+    <message>
+      <source>Add program...</source>
+      <translation>Programm hinzufügen...</translation>
+    </message>
+    <message>
+      <source>Edit...</source>
+      <translation>Bearbeiten...</translation>
+    </message>
+    <message>
+      <source>Use for all games</source>
+      <translation>Für alle Spiele verwenden</translation>
+    </message>
+    <message>
+      <source>Gives this program every game in the list and moves it to the top, so it receives all Nexus links.</source>
+      <translation>Gibt diesem Programm alle Spiele der Liste und verschiebt es ganz nach oben, sodass es alle Nexus-Links bekommt.</translation>
+    </message>
+    <message>
+      <source>Move up</source>
+      <translation>Nach oben</translation>
+    </message>
+    <message>
+      <source>Move down</source>
+      <translation>Nach unten</translation>
+    </message>
+    <message>
+      <source>Changes are saved when you close this window.</source>
+      <translation>Änderungen werden beim Schließen dieses Fensters gespeichert.</translation>
+    </message>
+    <message>
+      <source>Change handler registration?</source>
+      <translation>Registrierung des Link-Handlers ändern?</translation>
+    </message>
+    <message>
+      <source>This will make the nxmhandler.exe you called the primary handler registered in the system.
+That has no immediate impact on how links are handled.
+Use this if you moved Mod Organizer or if you uninstalled the Mod Organizer installation that was previously registered. Continue?</source>
+      <translation>Dadurch wird die aufgerufene nxmhandler.exe zum primären Handler, der im System registriert ist.
+Das hat keine unmittelbare Auswirkung darauf, wie Links behandelt werden.
+Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-Organizer-Installation deinstalliert hast. Fortfahren?</translation>
+    </message>
+    <message>
+      <source>no program</source>
+      <translation>kein Programm</translation>
+    </message>
+    <message>
+      <source>No program</source>
+      <translation>Kein Programm</translation>
+    </message>
+    <message>
+      <source>Not registered</source>
+      <translation>Nicht registriert</translation>
+    </message>
+    <message>
+      <source>This installation</source>
+      <translation>Diese Installation</translation>
+    </message>
+    <message>
+      <source>A program that no longer exists</source>
+      <translation>Ein Programm, das nicht mehr existiert</translation>
+    </message>
+    <message>
+      <source>Another Mod Organizer installation</source>
+      <translation>Eine andere Mod-Organizer-Installation</translation>
+    </message>
+    <message>
+      <source>Other installation</source>
+      <translation>Andere Installation</translation>
+    </message>
+    <message>
+      <source>Another program</source>
+      <translation>Ein anderes Programm</translation>
+    </message>
+    <message>
+      <source>Take links back</source>
+      <translation>Links zurückholen</translation>
+    </message>
+    <message>
+      <source>A program in this list no longer exists. Links for its games cannot be opened.</source>
+      <translation>Ein Programm in dieser Liste existiert nicht mehr. Links für seine Spiele können nicht geöffnet werden.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n programs in this list no longer exist. Links for their games cannot be opened.</source>
+      <translation>
+        <numerusform>%n Programm in dieser Liste existiert nicht mehr. Links für seine Spiele können nicht geöffnet werden.</numerusform>
+        <numerusform>%n Programme in dieser Liste existieren nicht mehr. Links für ihre Spiele können nicht geöffnet werden.</numerusform>
+      </translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallInfo</name>
+    <message>
+      <source>Global instances</source>
+      <translation>Globale Instanzen</translation>
+    </message>
+    <message>
+      <source>Portable</source>
+      <translation>Portabel</translation>
+    </message>
+    <message>
+      <source>Isolated copy</source>
+      <translation>Isolierte Kopie</translation>
+    </message>
+    <message>
+      <source>Other games</source>
+      <translation>Andere Spiele</translation>
+    </message>
+  </context>
+  <context>
+    <name>LinkTestDialog</name>
+    <message>
+      <source>Test a Nexus link</source>
+      <translation>Nexus-Link testen</translation>
+    </message>
+    <message>
+      <source>See which program a Nexus link for a game would open in. This is only a preview: nothing is downloaded and no program is started.</source>
+      <translation>Sieh nach, in welchem Programm ein Nexus-Link für ein Spiel geöffnet würde. Das ist nur eine Vorschau: Es wird nichts heruntergeladen und kein Programm gestartet.</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Spiel</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Test link: %1</source>
+      <translation>Testlink: %1</translation>
+    </message>
+    <message>
+      <source>This link would open in</source>
+      <translation>Dieser Link würde geöffnet in</translation>
+    </message>
+    <message>
+      <source>Not a valid game ID</source>
+      <translation>Keine gültige Spiel-ID</translation>
+    </message>
+    <message>
+      <source>Nexus game IDs use only letters and digits, for example "skyrimspecialedition".</source>
+      <translation>Nexus-Spiel-IDs bestehen nur aus Buchstaben und Ziffern, zum Beispiel „skyrimspecialedition“.</translation>
+    </message>
+    <message>
+      <source>No program</source>
+      <translation>Kein Programm</translation>
+    </message>
+    <message>
+      <source>Nothing in the list handles %1, and nothing handles "Other games". Windows would show "No handler found".</source>
+      <translation>Nichts in der Liste ist für %1 zuständig, und nichts für „Andere Spiele“. Windows würde „Kein Handler gefunden“ anzeigen.</translation>
+    </message>
+    <message>
+      <source>It is the first program in the list that handles %1.</source>
+      <translation>Es ist das erste Programm in der Liste, das für %1 zuständig ist.</translation>
+    </message>
+    <message>
+      <source>No program handles %1 directly, so the first program for "Other games" gets it.</source>
+      <translation>Kein Programm ist direkt für %1 zuständig, daher bekommt ihn das erste Programm für „Andere Spiele“.</translation>
+    </message>
+    <message>
+      <source>This program no longer exists, so the link would fail.</source>
+      <translation>Dieses Programm existiert nicht mehr, daher würde der Link fehlschlagen.</translation>
+    </message>
+    <message>
+      <source>Windows currently sends Nexus links to %1, not to this list. Register this installation for the list to be used.</source>
+      <translation>Windows sendet Nexus-Links derzeit an %1, nicht an diese Liste. Registriere diese Installation, damit die Liste verwendet wird.</translation>
+    </message>
+  </context>
+  <context>
+    <name>NxmHandler</name>
+    <message>
+      <source>Change Handler?</source>
+      <translation>Handler ändern?</translation>
+    </message>
+    <message>
+      <source>A nxm handler from a different Mod Organizer installation has been registered. Do you want to replace it? This is usually not necessary unless the other installation is defective.</source>
+      <translation>Ein nxm-Handler einer anderen Mod-Organizer-Installation ist registriert. Möchtest du ihn ersetzen? Das ist meist nicht nötig, außer die andere Installation ist defekt.</translation>
+    </message>
+    <message>
+      <source>Register?</source>
+      <translation>Registrieren?</translation>
+    </message>
+    <message>
+      <source>Mod Organizer is not set up to handle nxm links. Associate it with nxm links?</source>
+      <translation>Mod Organizer ist nicht für nxm-Links eingerichtet. Mit nxm-Links verknüpfen?</translation>
+    </message>
+    <message>
+      <source>No, don't ask again</source>
+      <translation>Nein, nicht mehr fragen</translation>
+    </message>
+    <message>
+      <source>Apply Chrome fix</source>
+      <translation>Chrome-Korrektur anwenden</translation>
+    </message>
+    <message>
+      <source>Chrome may not support nexus links even though the association is set up correctly. Do you want to apply a fix for that (You have to close chrome before pressing yes or this will have no effect!)?</source>
+      <translation>Chrome unterstützt Nexus-Links möglicherweise nicht, obwohl die Verknüpfung richtig eingerichtet ist. Möchtest du dafür eine Korrektur anwenden? (Schließe Chrome, bevor du auf Ja klickst, sonst hat das keine Wirkung!)</translation>
+    </message>
+    <message>
+      <source>No handler found</source>
+      <translation>Kein Handler gefunden</translation>
+    </message>
+    <message>
+      <source>Windows sent a Nexus link for "%1", but no program in the list handles that game, so the link cannot be opened yet.</source>
+      <translation>Windows hat einen Nexus-Link für „%1“ gesendet, aber kein Programm in der Liste ist für dieses Spiel zuständig, daher kann der Link noch nicht geöffnet werden.</translation>
+    </message>
+    <message>
+      <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click "Associate with ... links".</source>
+      <translation>Wähle den Mod Organizer, der Links für dieses Spiel öffnen soll, und der Link wird sofort an ihn weitergegeben. Soll Mod Organizer ihn übernehmen, kannst du dort auch unter Einstellungen &gt; Nexus auf „Mit ...-Links verknüpfen“ klicken.</translation>
+    </message>
+    <message>
+      <source>Choose a program...</source>
+      <translation>Programm auswählen...</translation>
+    </message>
+    <message>
+      <source>Error</source>
+      <translation>Fehler</translation>
+    </message>
+    <message>
+      <source>Invalid number of parameters</source>
+      <translation>Ungültige Anzahl von Parametern</translation>
+    </message>
+    <message>
+      <source>Invalid Arguments</source>
+      <translation>Ungültige Argumente</translation>
+    </message>
+    <message>
+      <source>Uncaught exception:
+%1</source>
+      <translation>Nicht abgefangene Ausnahme:
+%1</translation>
     </message>
   </context>
 </TS>

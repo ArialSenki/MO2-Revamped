@@ -69,7 +69,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "report.h"
 #include "savegameinfo.h"
 #include "savestab.h"
+#include "fluentchoices.h"
 #include "fluentdashboard.h"
+#include "fluentdialogs.h"
 #include "selectiondialog.h"
 #include "serverinfo.h"
 #include "settingsdialog.h"
@@ -255,6 +257,13 @@ bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
 namespace {
 
 constexpr int kRevampedNexusModId = 11290;
+
+// the category setup choices (Segoe Fluent Icons)
+constexpr char16_t ImportNexusGlyph      = 0xE896;  // Download
+constexpr char16_t OldDefaultsGlyph      = 0xE81C;  // History
+constexpr char16_t ManualCategoriesGlyph = 0xE70F;  // Edit
+constexpr char16_t CategoryEditorGlyph   = 0xE8EC;  // Tag
+constexpr char16_t DisableMappingsGlyph  = 0xE711;  // Cancel
 
 // QtWebEngineProcess.exe imports Qt6WebEngineCore.dll and the other Qt dlls in
 // dlls/. A copy in MO's folder only finds them through the PATH set by
@@ -1359,15 +1368,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 {
   setStartupDiagnosticPhase("mainwindow.construct.begin");
   writeStartupDiagnosticEvent("mainwindow.construct.begin");
-
-  // Qt's own popup effects (a slow fade, a roll-down) are replaced by the
-  // Fluent entrance in MOApplication::notify; classic themes keep the roll
-  const bool fluentPopups = qApp->property("revampedFluent").toBool();
-  QApplication::setEffectEnabled(Qt::UI_FadeMenu, false);
-  QApplication::setEffectEnabled(Qt::UI_AnimateMenu, !fluentPopups);
-  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, !fluentPopups);
-  QApplication::setEffectEnabled(Qt::UI_AnimateTooltip, false);
-  QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
 
   setStartupDiagnosticPhase("mainwindow.webengine.configure");
   {
@@ -2852,70 +2852,98 @@ void MainWindow::showEvent(QShowEvent* event)
         }
       }
 
-      const auto categoryChoice = RevampedPrompts::chooseCategorySetup(
-          this, tr("Category Setup"),
-          tr("Please choose how to handle the default category setup."),
+      // first start: how the categories begin
+      enum
+      {
+        ImportNexus = 101,
+        OldDefaults,
+        DoNothing
+      };
+      FluentContentDialog setup(
+          this, QStringLiteral("CategorySetupDialog"), tr("Category Setup"),
           tr("If you've already connected to Nexus, you can automatically import Nexus "
              "categories for this game (if applicable). Otherwise, use the old Mod "
              "Organizer default category structure, or leave the categories blank (for "
-             "manual setup)."),
-          NexusInterface::instance().getAccessManager()->validated(),
-          tr("&Import Nexus Categories"), tr("Use &Old Category Defaults"),
-          tr("Do &Nothing"));
-      if (categoryChoice == RevampedPrompts::CategorySetupChoice::ImportNexus) {
+             "manual setup)."));
+      const bool nexus = NexusInterface::instance().getAccessManager()->validated();
+      if (nexus) {
+        FluentChoices::addOption(setup, ImportNexusGlyph, tr("&Import Nexus Categories"),
+                                 tr("Map this game's Nexus categories to yours "
+                                    "automatically."),
+                                 ImportNexus)
+            ->setRecommended(true);
+      }
+      FluentChoices::addOption(setup, OldDefaultsGlyph, tr("Use &Old Category Defaults"),
+                               tr("Start with the categories Mod Organizer has always "
+                                  "come with."),
+                               OldDefaults)
+          ->setRecommended(!nexus);
+      FluentChoices::addOption(setup, ManualCategoriesGlyph, tr("Do &Nothing"),
+                               tr("Start without categories and set them up yourself."),
+                               DoNothing);
+      auto* later = setup.addButton(tr("&Close"));
+      connect(later, &QPushButton::clicked, &setup, &QDialog::reject);
+      setup.resize(560, setup.sizeHint().height());
+
+      const int categoryChoice = setup.exec();
+      if (categoryChoice == ImportNexus) {
         importCategories(false);
-      } else if (categoryChoice ==
-                 RevampedPrompts::CategorySetupChoice::DoNothing) {
+      } else if (categoryChoice == DoNothing) {
         m_CategoryFactory.reset();
-      } else if (categoryChoice ==
-                 RevampedPrompts::CategorySetupChoice::OldDefaults) {
+      } else if (categoryChoice == OldDefaults) {
         m_CategoryFactory.loadCategories();
       }
       m_CategoryFactory.saveCategories();
 
       m_OrganizerCore.settings().setFirstStart(false);
     } else {
-      auto& settings = m_OrganizerCore.settings();
       if (m_LastVersion < QVersionNumber(2, 5) &&
           !GlobalSettings::hideCategoryReminder()) {
-        QMessageBox migrateCatDialog;
-        migrateCatDialog.setWindowTitle("Category Migration");
-        migrateCatDialog.setText(
-            tr("This is your first time running version 2.5 or higher with an old MO2 "
-               "instance. The category system now relies on an updated system to map "
-               "Nexus categories.\n\n"
-               "In order to assign Nexus categories automatically, you will need to "
-               "import the Nexus categories for the currently managed game and map "
-               "them to your preferred category structure.\n\n"
-               "You can either manually open the category editor, via the Settings "
-               "dialog or the category filter sidebar, and set up the mappings as you "
-               "see fit, or you can automatically import and map the categories as "
-               "defined on Nexus.\n\n"
-               "As a final option, you can disable Nexus category mapping altogether, "
-               "which can be changed at any time in the Settings dialog."));
-        QPushButton importBtn(tr("&Import Nexus Categories"));
-        QPushButton openSettingsBtn(tr("&Open Categories Dialog"));
-        QPushButton disableBtn(tr("&Disable Nexus Mappings"));
-        QPushButton closeBtn(tr("&Close"));
-        QCheckBox dontShow(tr("&Don't show this again"));
+        // an instance from before 2.5: categories now follow Nexus through
+        // mappings, which it doesn't have yet
+        enum
+        {
+          ImportNexus = 101,
+          OpenEditor,
+          DisableMappings
+        };
+        FluentContentDialog migrate(
+            this, QStringLiteral("CategoryMigrationDialog"), tr("Set up category mappings"),
+            tr("Since version 2.5, Mod Organizer gives mods their category by mapping the "
+               "Nexus categories to yours. This instance was made with an older version "
+               "and has no mappings yet."));
         if (NexusInterface::instance().getAccessManager()->validated()) {
-          migrateCatDialog.addButton(&importBtn, QMessageBox::ButtonRole::AcceptRole);
+          FluentChoices::addOption(migrate, ImportNexusGlyph,
+                                   tr("&Import Nexus Categories"),
+                                   tr("Map this game's Nexus categories to yours "
+                                      "automatically."),
+                                   ImportNexus)
+              ->setRecommended(true);
         }
-        migrateCatDialog.addButton(&openSettingsBtn,
-                                   QMessageBox::ButtonRole::ActionRole);
-        migrateCatDialog.addButton(&disableBtn,
-                                   QMessageBox::ButtonRole::DestructiveRole);
-        migrateCatDialog.addButton(&closeBtn, QMessageBox::ButtonRole::RejectRole);
-        migrateCatDialog.setCheckBox(&dontShow);
-        migrateCatDialog.exec();
-        if (migrateCatDialog.clickedButton() == &importBtn) {
-          importCategories(dontShow.isChecked());
-        } else if (migrateCatDialog.clickedButton() == &openSettingsBtn) {
+        FluentChoices::addOption(migrate, CategoryEditorGlyph, tr("&Open Categories Dialog"),
+                                 tr("Set up the mappings yourself in the category editor."),
+                                 OpenEditor);
+        FluentChoices::addOption(migrate, DisableMappingsGlyph,
+                                 tr("&Disable Nexus Mappings"),
+                                 tr("Keep categories as they are. You can turn mappings "
+                                    "back on in Settings."),
+                                 DisableMappings);
+        auto* dontShow = new QCheckBox(tr("&Don't show this again"), &migrate);
+        migrate.body()->addSpacing(4);
+        migrate.body()->addWidget(dontShow);
+        auto* close = migrate.addButton(tr("&Close"));
+        connect(close, &QPushButton::clicked, &migrate, &QDialog::reject);
+        migrate.resize(560, migrate.sizeHint().height());
+
+        const int choice = migrate.exec();
+        if (choice == ImportNexus) {
+          importCategories(dontShow->isChecked());
+        } else if (choice == OpenEditor) {
           this->ui->filtersEdit->click();
-        } else if (migrateCatDialog.clickedButton() == &disableBtn) {
+        } else if (choice == DisableMappings) {
           Settings::instance().nexus().setCategoryMappings(false);
         }
-        if (dontShow.isChecked()) {
+        if (dontShow->isChecked()) {
           GlobalSettings::setHideCategoryReminder(true);
         }
       }

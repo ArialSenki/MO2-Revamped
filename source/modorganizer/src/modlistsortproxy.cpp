@@ -660,7 +660,9 @@ bool ModListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction action
   ModListDropInfo dropInfo(data, *m_Organizer);
 
   if (!dropInfo.isLocalFileDrop() && sortColumn() != ModList::COL_PRIORITY) {
-    QWidget* wid = qApp->activeWindow()->findChild<QTreeView*>("modList");
+    // a drop from another program can arrive while no MO2 window is active
+    QWidget* active = qApp->activeWindow();
+    QWidget* wid    = active ? active->findChild<QTreeView*>("modList") : nullptr;
     MessageDialog::showMessage(
         tr("Drag&Drop is only supported when sorting by priority"), wid);
     return false;

@@ -188,7 +188,6 @@ FORMS    += \
     overwriteinfodialog.ui \
     motddialog.ui \
     modinfodialog.ui \
-    messagedialog.ui \
     mainwindow.ui \
     lockeddialog.ui \
     installdialog.ui \

@@ -116,7 +116,9 @@ bool PluginListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction act
 {
   if ((sortColumn() != PluginList::COL_PRIORITY) &&
       (sortColumn() != PluginList::COL_MODINDEX)) {
-    QWidget* wid = qApp->activeWindow()->findChild<QTreeView*>("espList");
+    // a drop from another program can arrive while no MO2 window is active
+    QWidget* active = qApp->activeWindow();
+    QWidget* wid    = active ? active->findChild<QTreeView*>("espList") : nullptr;
     MessageDialog::showMessage(
         tr("Drag&Drop is only supported when sorting by priority or mod index"), wid);
     return false;

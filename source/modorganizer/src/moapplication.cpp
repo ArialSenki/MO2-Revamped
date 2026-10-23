@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "moapplication.h"
 #include "revampedtheme.h"
+#include "fluentchoices.h"
 #include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
@@ -31,7 +32,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "organizercore.h"
-#include "revampedprompts.h"
 #include "sanitychecks.h"
 #include "settings.h"
 #include "shared/appconfig.h"
@@ -903,25 +903,21 @@ int MOApplication::run(MOMultiProcess& multiProcess)
       const QString currentTheme = interfaceSettings.styleName().value_or(
           Settings::defaultInterfaceStyleName());
 
-      const auto currentChoice =
-          currentTheme == "Light.qss" ? RevampedPrompts::ThemeChoice::Light
-          : currentTheme == "dark-black.qss" ? RevampedPrompts::ThemeChoice::DarkBlack
-                                             : RevampedPrompts::ThemeChoice::Dark;
-      const auto selectedChoice = RevampedPrompts::chooseTheme(
-          &mainWindow, tr("MO2 Revamped"),
-          tr("Choose a theme for this instance."),
+      using FluentChoices::Theme;
+      const Theme currentChoice = currentTheme == "Light.qss"        ? Theme::Light
+                                  : currentTheme == "dark-black.qss" ? Theme::DarkBlack
+                                                                     : Theme::Dark;
+      const auto selectedChoice = FluentChoices::chooseTheme(
+          &mainWindow, tr("MO2 Revamped"), tr("Choose a theme for this instance."),
           tr("You can change it later in Settings > Theme."), tr("Light"),
           // the name Settings > Theme gives the same file
           FluentIcons::active() ? tr("Dark") : tr("Dark Blue"), tr("Dark Black"),
-          currentChoice);
-      const QString selectedTheme = !selectedChoice
-                                        ? currentTheme
-                                        : (*selectedChoice ==
-                                                   RevampedPrompts::ThemeChoice::Light
-                                               ? QStringLiteral("Light.qss")
-                                               : (*selectedChoice == RevampedPrompts::ThemeChoice::DarkBlack
-                                                      ? QStringLiteral("dark-black.qss")
-                                                      : QStringLiteral("dark.qss")));
+          tr("Use this theme"), currentChoice);
+      const QString selectedTheme =
+          !selectedChoice                    ? currentTheme
+          : *selectedChoice == Theme::Light     ? QStringLiteral("Light.qss")
+          : *selectedChoice == Theme::DarkBlack ? QStringLiteral("dark-black.qss")
+                                                : QStringLiteral("dark.qss");
 
       if (selectedTheme != currentTheme) {
         interfaceSettings.setStyleName(selectedTheme);
@@ -1308,6 +1304,21 @@ void applyNativeTitleBarThemeToVisibleMainWindows(const QString& styleName)
   }
 }
 
+// Qt's own popup effects (a slow fade, the combo box roll-down) follow the
+// theme: Fluent replaces them with its entrance in MOApplication::dispatch,
+// classic themes keep the roll. This has to happen with the theme, not with
+// the main window: the instance wizard and the instance manager open before
+// it, and there Qt rolled a grabbed picture of a combo box list down and then
+// showed the real list, which the Fluent entrance faded and slid in again.
+void applyPopupEffects(bool fluent)
+{
+  QApplication::setEffectEnabled(Qt::UI_FadeMenu, false);
+  QApplication::setEffectEnabled(Qt::UI_AnimateMenu, !fluent);
+  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, !fluent);
+  QApplication::setEffectEnabled(Qt::UI_AnimateTooltip, false);
+  QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
+}
+
 }  // namespace
 
 bool MOApplication::setStyleFile(const QString& styleName)
@@ -1338,6 +1349,7 @@ bool MOApplication::setStyleFile(const QString& styleName)
     setProperty("revampedFluent", false);
     setProperty("revampedDarkBlack", false);
     setProperty("revampedDark", palette().color(QPalette::Window).lightness() < 128);
+    applyPopupEffects(false);
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   return true;
@@ -1415,8 +1427,10 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
       useRoundedRegionFallback = FAILED(result);
 #endif
 
-      // Fluent v4: menus and lists slide in, tooltips fade in
-      if (property("revampedFluent").toBool() && !event->spontaneous()) {
+      // Fluent v4: menus and lists slide in, tooltips fade in; Qt's own effect
+      // windows (a picture of a popup it rolls or fades in) are left alone
+      if (property("revampedFluent").toBool() && !event->spontaneous() &&
+          !popup->inherits("QRollEffect") && !popup->inherits("QAlphaWidget")) {
         FluentMotion::popIn(popup, isToolTip ? 0 : 6);
       }
 
@@ -1532,6 +1546,7 @@ void MOApplication::updateStyle(const QString& fileName)
                   styleFile.compare("fluent-v4-black.qss", Qt::CaseInsensitive) == 0);
   setProperty("revampedDark", stylePrefersDarkTitleBar(fileName));
   setProperty("revampedFluent", styleIsFluent(fileName));
+  applyPopupEffects(property("revampedFluent").toBool());
   const auto applyBaseStyle = [this](const QString& baseStyleName) {
     if (m_activeBaseStyle.compare(baseStyleName, Qt::CaseInsensitive) == 0) {
       return;

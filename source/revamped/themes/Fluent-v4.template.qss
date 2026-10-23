@@ -1745,6 +1745,14 @@ QFrame#fluentDialogFooter {
     border: none;
     border-top: 1px solid @line@;
 }
+
+/* Short notices (MessageDialog): a flyout card that paints itself in these
+   colors, with the info glyph in the accent. */
+MessageDialog {
+    qproperty-cardColor: @menu@;
+    qproperty-lineColor: @menuLine@;
+    qproperty-textColor: @text@;
+}
 QLabel#instanceNameValidation {
     color: @critFg@;
     background-color: transparent;
