@@ -2299,17 +2299,6 @@ QDialog#CreateInstanceDialog QRadioButton::indicator {
     height: 18px;
 }
 /* MO2 Revamped message, announcement, and update dialogs. */
-QDialog#MessageDialog {
-    background-color: transparent;
-}
-
-QFrame#messageCard {
-    color: #E5F0F7;
-    background-color: #2D3944;
-    border: 1px solid #45515D;
-    border-left: 3px solid #4B9CD3;
-    border-radius: 8px;
-}
 
 QLabel#message {
     color: #E5F0F7;
@@ -4246,16 +4235,6 @@ QDialog#ModInfoDialog QLabel#modInfoEmptyListState {
 }
 
 /* MO2 Revamped first-run prompts */
-QMessageBox#revampedCategorySetupPrompt,
-QMessageBox#revampedThemeChoicePrompt {
-    min-width: 420px;
-}
-QMessageBox#revampedCategorySetupPrompt QLabel#qt_msgbox_label,
-QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_label,
-QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_informativelabel {
-    min-width: 360px;
-    padding: 5px 8px;
-}
 
 /* MO2 Revamped: unified, fixed-size instance wizard */
 QDialog#CreateInstanceDialog QStackedWidget#pages {
@@ -4453,79 +4432,58 @@ QDialog#CreateInstanceDialog QTextEdit#review {
 }
 
 /* MO2 Revamped startup prompts. */
-QDialog#revampedThemeChoicePrompt,
 QDialog#revampedChoicePrompt,
-QDialog#revampedErrorPrompt,
-QDialog#revampedCategorySetupPrompt {
+QDialog#revampedErrorPrompt {
     color: #D3DCE4;
     background-color: #242424;
 }
-QDialog#revampedThemeChoicePrompt QFrame#promptHeaderPanel,
 QDialog#revampedChoicePrompt QFrame#promptHeaderPanel,
-QDialog#revampedErrorPrompt QFrame#promptHeaderPanel,
-QDialog#revampedCategorySetupPrompt QFrame#promptHeaderPanel {
+QDialog#revampedErrorPrompt QFrame#promptHeaderPanel {
     background-color: #29343C;
     border: 1px solid #414D55;
     border-radius: 8px;
 }
-QDialog#revampedThemeChoicePrompt QLabel#promptHeading,
 QDialog#revampedChoicePrompt QLabel#promptHeading,
-QDialog#revampedErrorPrompt QLabel#promptHeading,
-QDialog#revampedCategorySetupPrompt QLabel#promptHeading {
+QDialog#revampedErrorPrompt QLabel#promptHeading {
     color: #E5F0F7;
     background-color: transparent;
     border: none;
     font-size: 14pt;
     font-weight: 600;
 }
-QDialog#revampedThemeChoicePrompt QLabel#promptDescription,
 QDialog#revampedChoicePrompt QLabel#promptDescription,
-QDialog#revampedErrorPrompt QLabel#promptDescription,
-QDialog#revampedCategorySetupPrompt QLabel#promptDescription {
+QDialog#revampedErrorPrompt QLabel#promptDescription {
     color: #AAB5BD;
     background-color: transparent;
     border: none;
 }
-QDialog#revampedThemeChoicePrompt QPushButton#promptChoiceButton,
 QDialog#revampedChoicePrompt QPushButton#promptChoiceButton,
-QDialog#revampedErrorPrompt QPushButton#promptChoiceButton,
-QDialog#revampedCategorySetupPrompt QPushButton#promptChoiceButton {
+QDialog#revampedErrorPrompt QPushButton#promptChoiceButton {
     color: #D3DCE4;
     background-color: #2B3034;
     border: 1px solid #454D52;
     border-radius: 7px;
     padding: 7px 12px;
 }
-QDialog#revampedThemeChoicePrompt QPushButton#promptChoiceButton {
-    min-height: 44px;
-    font-size: 11pt;
-    font-weight: 600;
-}
 QDialog#revampedChoicePrompt QPushButton#promptChoiceButton,
-QDialog#revampedErrorPrompt QPushButton#promptChoiceButton,
-QDialog#revampedCategorySetupPrompt QPushButton#promptChoiceButton {
+QDialog#revampedErrorPrompt QPushButton#promptChoiceButton {
     min-height: 30px;
     text-align: left;
     padding-left: 14px;
 }
-QDialog#revampedThemeChoicePrompt QPushButton#promptChoiceButton:hover,
 QDialog#revampedChoicePrompt QPushButton#promptChoiceButton:hover,
-QDialog#revampedErrorPrompt QPushButton#promptChoiceButton:hover,
-QDialog#revampedCategorySetupPrompt QPushButton#promptChoiceButton:hover {
+QDialog#revampedErrorPrompt QPushButton#promptChoiceButton:hover {
     background-color: #30383D;
     border-color: #526B7B;
 }
-QDialog#revampedThemeChoicePrompt QPushButton#promptChoiceButton:checked,
 QDialog#revampedChoicePrompt QPushButton#promptChoiceButton[preferredChoice="true"],
-QDialog#revampedErrorPrompt QPushButton#promptChoiceButton[preferredChoice="true"],
-QDialog#revampedCategorySetupPrompt QPushButton#promptChoiceButton[preferredChoice="true"] {
+QDialog#revampedErrorPrompt QPushButton#promptChoiceButton[preferredChoice="true"] {
     color: #E5F0F7;
     background-color: #293D4A;
     border-color: #4C89AA;
 }
 QDialog#revampedChoicePrompt QPushButton#promptChoiceButton[secondaryChoice="true"],
-QDialog#revampedErrorPrompt QPushButton#promptChoiceButton[secondaryChoice="true"],
-QDialog#revampedCategorySetupPrompt QPushButton#promptChoiceButton[secondaryChoice="true"] {
+QDialog#revampedErrorPrompt QPushButton#promptChoiceButton[secondaryChoice="true"] {
     color: #B9C2C8;
     background-color: #272B2E;
 }

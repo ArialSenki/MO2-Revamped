@@ -1807,14 +1807,6 @@ QDialog#CreateInstanceDialog QLabel#typeSelectionHint {
 padding-left: 0px;
 }
 
-QFrame#messageCard {
-    color: #1A1A1A;
-    background-color: #F1F1F1;
-    border: 1px solid #DBDBDB;
-    border-left: 3px solid #005FB8;
-    border-radius: 8px;
-}
-
 QLabel#message {
     color: #1A1A1A;
     background-color: transparent;
@@ -2959,13 +2951,6 @@ QDialog#ModInfoDialog QLabel#modInfoEmptyListState {
     padding: 6px 0px;
 }
 
-QMessageBox#revampedCategorySetupPrompt QLabel#qt_msgbox_label,
-QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_label,
-QMessageBox#revampedThemeChoicePrompt QLabel#qt_msgbox_informativelabel {
-    min-width: 360px;
-    padding: 5px 0px;
-}
-
 QDialog#CreateInstanceDialog QStackedWidget#pages {
     color: #1A1A1A;
     background-color: #FFFFFF;
@@ -3065,15 +3050,11 @@ QDialog#CreateInstanceDialog QWidget#widget_19 {
     padding: 0px;
 }
 
-QDialog#revampedThemeChoicePrompt QFrame#promptHeaderPanel,
 QDialog#revampedChoicePrompt QFrame#promptHeaderPanel,
-QDialog#revampedErrorPrompt QFrame#promptHeaderPanel,
-QDialog#revampedCategorySetupPrompt QFrame#promptHeaderPanel { background-color: transparent; border: none; }
+QDialog#revampedErrorPrompt QFrame#promptHeaderPanel { background-color: transparent; border: none; }
 
-QDialog#revampedThemeChoicePrompt QLabel#promptHeading,
 QDialog#revampedChoicePrompt QLabel#promptHeading,
-QDialog#revampedErrorPrompt QLabel#promptHeading,
-QDialog#revampedCategorySetupPrompt QLabel#promptHeading {
+QDialog#revampedErrorPrompt QLabel#promptHeading {
     color: #1A1A1A;
     background-color: transparent;
     border: none;
@@ -3081,10 +3062,8 @@ QDialog#revampedCategorySetupPrompt QLabel#promptHeading {
     font-weight: 600;
 }
 
-QDialog#revampedThemeChoicePrompt QLabel#promptDescription,
 QDialog#revampedChoicePrompt QLabel#promptDescription,
-QDialog#revampedErrorPrompt QLabel#promptDescription,
-QDialog#revampedCategorySetupPrompt QLabel#promptDescription {
+QDialog#revampedErrorPrompt QLabel#promptDescription {
     color: #5D5D5D;
     background-color: transparent;
     border: none;
@@ -6156,6 +6135,14 @@ QFrame#fluentDialogFooter {
     background-color: #EFF1F4;
     border: none;
     border-top: 1px solid #EBEBEB;
+}
+
+/* Short notices (MessageDialog): a flyout card that paints itself in these
+   colors, with the info glyph in the accent. */
+MessageDialog {
+    qproperty-cardColor: #F9F9F9;
+    qproperty-lineColor: #E0E0E0;
+    qproperty-textColor: #1A1A1A;
 }
 QLabel#instanceNameValidation {
     color: #C42B1C;

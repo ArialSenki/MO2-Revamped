@@ -1783,7 +1783,7 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 void OrganizerCore::loginSuccessful(bool necessary)
 {
   if (necessary) {
-    MessageDialog::showMessage(tr("login successful"), qApp->activeWindow());
+    MessageDialog::showMessage(tr("Signed in to Nexus Mods"), qApp->activeWindow());
   }
   for (QString url : m_PendingDownloads) {
     downloadRequestedNXM(url);
