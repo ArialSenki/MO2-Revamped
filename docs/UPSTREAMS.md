@@ -8,6 +8,7 @@ Git histories.
 | --- | --- | --- |
 | Mod Organizer 2 | v2.5.2 plus commits `9581744` and `aaad42f` | Revamped changes are layered onto this source. [Upstream repository](https://github.com/ModOrganizer2/modorganizer) |
 | USVFS | v0.5.7.2, commit `a50d84c64c9244f80dc67e9fe7af209bfe514d5b` | [Upstream repository](https://github.com/ModOrganizer2/usvfs) |
+| NXM handler | modorganizer-nxmhandler 1.2.0, commit `9876f57cd508c56028ec16ba0967ef1ead6fc47d` (the `master` used for MO2 2.5.2; its `nxmhandler.exe` reports file version 1.2.0.0) | Source in `source/nxmhandler/`; the handler window is rebuilt in the Fluent style, the command line, registration and `nxmhandler.ini` format are kept. [Upstream repository](https://github.com/ModOrganizer2/modorganizer-nxmhandler) |
 | YAFSML Elden Ring resolver | Upstream patch by Soar Qin, 2024 | Adaptation and MIT notice are documented in [`../THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md). |
 | MinHook | Vendored source under `source/revamped/plugins/basic_games/games/vendor/minhook/` | BSD 2-Clause notice is preserved beside the source and in `licenses/`. |
 
