@@ -1,6 +1,24 @@
 # Release audit
 
-## Published release — October 12, 2026 (v1.0.1, rc12h)
+## Published release — October 23, 2026 (v1.0.2)
+
+- Installer: `MO2-Revamped-Setup-1.0.2.exe`, 377,820,160 bytes, SHA-256
+  `4F5E1F599095117A81871F391CEC2E7E7680DB8F18FBA6398A408ACBAFA30B25`.
+- Built from commit 19df444 (design/fluent-v4 with the October 22–23 audits)
+  with ModOrganizer.exe and nxmhandler.exe 1.2.0.1 compiled from that tree.
+- The main task is the complete installation for every game; isolated Elden
+  Ring installations from 1.0.1 are still updated, restored and uninstalled.
+- Complete payload: 1,426 files; Elden Ring Isolated payload: 1,326 files.
+  Elden Ring game plugin 0.5.0-alpha.75, native bridge 0.5.0-alpha.35.
+- Tested with administrator rights: a fresh install with the earlier 1.0.2
+  candidate (1c031d4), an update with this build (new ModOrganizer.exe and the
+  Revamped nxmhandler in place, backup made), and an uninstall that removed
+  the folder and its Windows uninstall entry. Dark title bar, taskbar
+  progress, the full-size window icon and "What's new in this version"
+  (opens the releases page without administrator rights) checked in a real
+  install. Not Authenticode signed.
+
+## Earlier release — October 12, 2026 (v1.0.1, rc12h)
 
 - Installer: `MO2-Revamped-Setup-1.0.1.exe`, 683,894,272 bytes, SHA-256
   `8AE75917426AF3CAA563A0D7B8AA149907CE3E950204B731BA5306DB4BB9CF48`.

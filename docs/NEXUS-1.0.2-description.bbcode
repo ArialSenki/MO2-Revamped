@@ -1,0 +1,77 @@
+[size=5][b]Description[/b][/size]
+[b]MO2 Revamped[/b] is an unofficial community edition of [url=https://github.com/ModOrganizer2/modorganizer]Mod Organizer 2[/url] v2.5.2 (USVFS 0.5.7.2). It keeps the MO2 workflow you know (virtual file system, profiles, plugin and mod lists) and adds a refreshed interface, a guided installer and dedicated tools for [b]Elden Ring[/b] and, new in 1.0.2, [b]ELDEN RING NIGHTREIGN[/b].
+
+[b]This project is not affiliated with, or endorsed by, the Mod Organizer 2 team, Nexus Mods, FromSoftware or Bandai Namco.[/b] All upstream names, copyrights and licenses are preserved.
+
+[b]Play offline.[/b] Mods are for offline play only. In Elden Ring, set [b]System > Network > Launch Setting[/b] to [b]Play Offline[/b] to avoid the online connection notices.
+
+[b]Verify the download[/b]
+The installer is [b]not digitally signed[/b], so Windows SmartScreen may show a warning. SHA-256 of [i]MO2-Revamped-Setup-1.0.2.exe[/i]:
+[code]4F5E1F599095117A81871F391CEC2E7E7680DB8F18FBA6398A408ACBAFA30B25[/code]In PowerShell:
+[code]Get-FileHash .\MO2-Revamped-Setup-1.0.2.exe[/code]
+[size=5][b]What's new in 1.0.2[/b][/size]
+[list]
+[*][b]Elden Ring Nightreign support[/b]: save isolation, named save profiles, automatic save backups, the launch save guard, native DLL loading, the Native DLL Profile, startup options and the archive installer, as in Elden Ring. Works with Seamless Co-op and me3.[/*]
+[*][b]The complete installation is back[/b]: one MO2 Revamped for every game MO2 supports, with its own instances. Isolated copies for one game (Elden Ring or Nightreign) are now made inside MO2 from the [i]New instance[/i] wizard.[/*]
+[*][b]Safer saves[/b]: while the game runs from an isolated profile, the Steam save folders are set aside and come back unchanged when it closes, with every launcher (Mod Engine 2, Seamless Co-op, me3). Saves are backed up automatically before each launch and can be restored from Save Isolation.[/*]
+[*][b]Fluent dialogs[/b]: Profiles, Executables, Notifications and Manage Overwrite use the instance manager's card layout; context menus follow Windows 11.[/*]
+[*][b]A more careful installer[/b]: names any program still using the files before an update or uninstall, reinstalls next to the data an uninstall kept, follows your Windows accent colour and light or dark mode, and shows progress on the taskbar.[/*]
+[/list]
+The full list is in the [url=https://github.com/ArialSenki/MO2-Revamped/blob/main/CHANGELOG.md]changelog[/url].
+
+[size=5][b]Installation[/b][/size]
+[list=1]
+[*]Download the main file, extract the ZIP and run [i]MO2-Revamped-Setup-1.0.2.exe[/i].[/*]
+[*]Pick your language and choose [b]Install MO2 Revamped[/b].[/*]
+[*]Choose the installation folder. MO2 Revamped starts when setup finishes, in the language you chose.[/*]
+[*]Create an instance for your game. For Elden Ring or Nightreign the wizard also offers an [b]isolated[/b] instance that keeps its profiles, mods, downloads and settings in its own folder.[/*]
+[/list]
+MO2 Revamped keeps its global data in [i]%LOCALAPPDATA%\MO2 Revamped[/i] and never reads or changes an existing Mod Organizer 2 installation, so both can be used side by side.
+
+[b]Updating from 1.0.1:[/b] run the new setup and choose [b]Update MO2 Revamped[/b]. Isolated Elden Ring installations are updated as before; your data is kept and the previous files are backed up first.
+[b]Uninstalling:[/b] run the setup and choose [b]Uninstall MO2 Revamped[/b]. The options to erase your data start unchecked.
+
+[size=5][b]Main features[/b][/size]
+[b]Elden Ring and Nightreign tools[/b]
+[list]
+[*][b]Archive installer[/b]: keep a mod's original folder layout or use MO2's standard layout; optionally omit .txt and .md files.[/*]
+[*][b]Native DLL Profile[/b]: per-profile load order for native DLL mods, loaded through the Revamped native bridge.[/*]
+[*][b]Startup Options[/b]: start minimized, black background, [b]skip the intro logo screens[/b] (Elden Ring only), and optional cleanup after the game closes.[/*]
+[*][b]Save Isolation[/b] ([i]Tools > Save Isolation[/i]): separate saves per profile, shared saves within the instance, or the global Steam save, with named save profiles, automatic backups and restore.[/*]
+[/list]
+[b]Interface[/b]
+[list]
+[*][b]Six languages[/b]: English, Spanish, German, French, Italian and Brazilian Portuguese, across the interface, tutorials and every Revamped tool.[/*]
+[*]Three themes: [b]Light[/b], [b]Dark Blue[/b] and [b]Dark Black[/b].[/*]
+[*]Reworked main window, menus, file panes, log area, filters, category manager, Overwrite view and dialogs.[/*]
+[/list]
+[b]Installer[/b]
+[list]
+[*]One setup file to install, update, restore, copy data and uninstall, in six languages.[/*]
+[*]Integrity checks and backups before updates; only maintains folders it recognizes as MO2 Revamped; refuses to change files while Elden Ring or Nightreign runs.[/*]
+[*]Starts MO2 without administrator rights after installing.[/*]
+[/list]
+[spoiler]
+[b]Bundled runtime:[/b] Mod Organizer 2 2.5.2 · USVFS 0.5.7.2 · Qt/PyQt 6.7.1 · Python 3.12.15 · OpenSSL 3.5.9 · 7-Zip 24.05 · LOOT CLI 1.6.0 / libloot 0.23.0 · Explorer++ 1.4.0
+[b]Elden Ring game plugin:[/b] 0.5.0-alpha.75. [b]Native bridge:[/b] 0.5.0-alpha.35. The product version (1.0.2) does not mean each component has reached 1.0.
+[b]Logo skip:[/b] off for Nightreign; in Elden Ring, if the game version is not recognized, the logos simply play as usual.[/spoiler]
+
+[size=5][b]Requirements[/b][/size]
+[list]
+[*]Windows 10 or 11, 64-bit.[/*]
+[*]Elden Ring or Elden Ring Nightreign (Steam) for the dedicated tools; any game MO2 supports for the rest.[/*]
+[*][url=https://aka.ms/vs/17/release/vc_redist.x64.exe]Microsoft Visual C++ 2015–2022 Redistributable (x64)[/url] (usually already installed).[/*]
+[*]No other mods required.[/*]
+[/list]
+[size=5][b]Source code, license and bugs[/b][/size]
+Free software under the [b]GNU General Public License v3[/b]. Source code and releases: [url=https://github.com/ArialSenki/MO2-Revamped]github.com/ArialSenki/MO2-Revamped[/url]
+To report a bug, use the [b]Bugs[/b] tab and include your Windows version, the steps to reproduce it and the bug-report ZIP that MO2 Revamped can create (or [i]logs/mo_interface.log[/i]). Remove personal paths before posting, and never attach saves or account data.
+
+[size=5][b]Shout outs[/b][/size]
+[list]
+[*][b]Mod Organizer 2 team and contributors[/b] — [url=https://github.com/ModOrganizer2/modorganizer]Mod Organizer 2[/url] and [url=https://github.com/ModOrganizer2/usvfs]USVFS[/url] (GPLv3). This project would not exist without their work.[/*]
+[*][b]Soar Qin[/b] — [url=https://github.com/soarqin/YAFSML]YAFSML[/url], whose Elden Ring resolver is adapted here (MIT).[/*]
+[*][b]TechieW / Marius Storvik[/b] — [url=https://github.com/e5h/ME2_EldenRingMods]SkipTheIntro[/url], whose intro-logo pattern is used by the logo skip (MIT).[/*]
+[*][b]TsudaKageyu[/b] — [url=https://github.com/TsudaKageyu/minhook]MinHook[/url] (BSD 2-Clause).[/*]
+[*]OpenSSL, Qt, Python, 7-Zip, LOOT, Explorer++ and all other bundled projects (see [i]THIRD-PARTY-NOTICES.md[/i] and the [i]licenses[/i] folder).[/*]
+[/list]
