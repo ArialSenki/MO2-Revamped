@@ -32,6 +32,7 @@ from PyQt6.QtCore import (
     Qt,
     qCritical,
     qInfo,
+    qWarning,
 )
 from PyQt6.QtWidgets import (
     QAbstractButton,
@@ -2728,35 +2729,14 @@ class EldenRingMo2Game(BasicGame):
         # read by the save hiding below (how long a launcher may take)
         self._launch_via_launcher = not direct_game
 
-        # the native profile's checks run when MO2 starts eldenring.exe
-        # itself; for a launcher MO2 still injects the forced DLLs into the
-        # eldenring.exe it starts, but the launcher decides how the game runs
-        revamped_native_profile = (
-            self._resolve_revamped_native_profile(profile) if direct_game else None
+        # the native profile applies to every game launch: its switched-off
+        # entries stay out of the forced loads and its initializers go to
+        # the bridge. A profile problem blocks eldenring.exe started
+        # directly; a launcher run goes ahead as before without it.
+        launch_allowed, revamped_native_profile = self._native_profile_for_launch(
+            profile, direct_game
         )
-        if revamped_native_profile is not None and revamped_native_profile.get("error"):
-            message = str(revamped_native_profile["error"])
-            QMessageBox.warning(
-                None,
-                _tr("Revamped native profile could not be prepared"),
-                _tr("{0}\n\nThe game was not started.").format(message),
-            )
-            qCritical(
-                "Elden Ring MO2: blocked launch for invalid Revamped native "
-                f"profile: {message}"
-            )
-            return False
-        if revamped_native_profile is not None and revamped_native_profile.get("entries") and not bool(
-            self._organizer.pluginSetting(self.name(), self.NativeDllSetting)
-        ):
-            QMessageBox.warning(
-                None,
-                _tr("Native DLL loading is disabled"),
-                self._game_text(_tr("This MO2 profile declares native DLLs in its Revamped native "
-                "profile, but "
-                "Elden Ring native DLL loading is disabled in plugin settings. "
-                "The game was not started.")),
-            )
+        if not launch_allowed:
             return False
 
         profile_config = Path(profile.absolutePath()) / self.ProfileLaunchConfig
@@ -2965,6 +2945,55 @@ class EldenRingMo2Game(BasicGame):
             self._overwrite_cleanup_config = profile_config
         self._preserve_previous_bridge_log(bridge_log_history)
         return True
+
+    def _native_profile_for_launch(self, profile, direct_game: bool) -> tuple[bool, dict | None]:
+        """Resolves the Revamped native profile for a game launch.
+
+        Returns (launch allowed, profile data). A problem blocks a direct
+        launch; a launcher launch goes ahead without the profile's
+        initializers (forced loads then fall back to every active DLL)."""
+        revamped_native_profile = self._resolve_revamped_native_profile(profile)
+        if revamped_native_profile is not None and revamped_native_profile.get("error"):
+            message = str(revamped_native_profile["error"])
+            if not direct_game:
+                qWarning(
+                    "Elden Ring MO2: the Revamped native profile could not be "
+                    f"prepared for this launcher run: {message}. The launcher "
+                    "was started anyway; switched-off entries and initializers "
+                    "are not applied."
+                )
+                return True, None
+            QMessageBox.warning(
+                None,
+                _tr("Revamped native profile could not be prepared"),
+                _tr("{0}\n\nThe game was not started.").format(message),
+            )
+            qCritical(
+                "Elden Ring MO2: blocked launch for invalid Revamped native "
+                f"profile: {message}"
+            )
+            return False, None
+        if revamped_native_profile is not None and revamped_native_profile.get("entries") and not bool(
+            self._organizer.pluginSetting(self.name(), self.NativeDllSetting)
+        ):
+            if not direct_game:
+                qWarning(
+                    "Elden Ring MO2: this profile declares native DLLs in its "
+                    "Revamped native profile, but native DLL loading is "
+                    "disabled in plugin settings. The launcher was started "
+                    "anyway; no native DLLs or initializers are passed."
+                )
+                return True, None
+            QMessageBox.warning(
+                None,
+                _tr("Native DLL loading is disabled"),
+                self._game_text(_tr("This MO2 profile declares native DLLs in its Revamped native "
+                "profile, but "
+                "Elden Ring native DLL loading is disabled in plugin settings. "
+                "The game was not started.")),
+            )
+            return False, None
+        return True, revamped_native_profile
 
     @staticmethod
     def _preserve_previous_bridge_log(previous_sessions: int = 1) -> None:
@@ -4083,6 +4112,14 @@ class EldenRingMo2Game(BasicGame):
             self._organizer.pluginSetting(self.name(), self.NativeDllSetting)
         )
         libraries = self._active_native_dlls() if native_loading else []
+        if native_loading and revamped_native_profile is not None and revamped_native_profile.get("error"):
+            # a direct eldenring.exe launch is then blocked in onAboutToRun;
+            # a launcher run keeps every active DLL, as before the native profile
+            qWarning(
+                "Elden Ring MO2: the Revamped native profile could not be "
+                f"read ({revamped_native_profile['error']}); its load order and "
+                "switched-off entries are not applied to these forced loads."
+            )
         if (
             native_loading
             and revamped_native_profile is not None
