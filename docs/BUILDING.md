@@ -37,6 +37,33 @@ USVFS source is in `source/usvfs/`. Its upstream README and CMake files list
 component build options. The source snapshot is USVFS v0.5.7.2, matching the
 included MO2 runtime.
 
+## NXM handler
+
+`source/nxmhandler/` holds the nxm link handler (`nxmhandler.exe`), based on
+upstream modorganizer-nxmhandler at the commit shipped with MO2 2.5.2 (see
+[`UPSTREAMS.md`](UPSTREAMS.md)). MO2 Revamped replaces its handler list window
+with a Fluent version; the command line, the registration and the
+`nxmhandler.ini` format stay compatible. It builds like the Organizer target,
+against the `mob` dependency tree (`cmake_common`, `uibase`) and Qt 6.7.1, in
+a build directory of its own:
+
+```bat
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+cmake -G "Visual Studio 17 2022" -A x64 -S source/nxmhandler -B C:\path\to\nxmhandler-build ^
+  -DDEPENDENCIES_DIR=C:/path/to/mo/build -DBOOST_ROOT=C:/path/to/mo/build/boost_1_85_0 ^
+  -DQT_ROOT=C:/path/to/Qt/6.7.1/msvc2019_64 -DPYTHON_ROOT=C:/path/to/mo/build/python-3.12.3 ^
+  -DCMAKE_INSTALL_PREFIX:PATH=C:/path/to/nxmhandler-install
+cmake --build C:\path\to\nxmhandler-build --config Release --target nxmhandler
+```
+
+The Release build maps the source, dependency and profile paths with
+`/pathmap` like the Organizer target. The result is
+`<build>\src\Release\nxmhandler.exe`; `Build-Release.ps1` takes it as
+`-NxmHandlerExecutable` and refuses the upstream `nxmhandler.exe`. Building
+also refreshes `src/nxmhandler_en.ts` with `lupdate`. The handler loads
+`translations/revamped_<language>.qm` (after `qtbase_` and `nxmhandler_`), so
+translations of its strings belong in `source/revamped/translations/`.
+
 ## Revamped components
 
 The Elden Ring bridge source is under
@@ -67,7 +94,8 @@ the build machine's directory. Executable code and PDB identifiers stay
 unchanged; the resulting manifest is calculated after this metadata cleanup.
 
 The release builder requires a complete MO2 runtime directory, the newly
-compiled `ModOrganizer.exe`, Zig 0.13.0, the verified OpenSSL 3.5.9 runtime,
+compiled `ModOrganizer.exe` and `nxmhandler.exe` (both overlaid onto the
+runtime), Zig 0.13.0, the verified OpenSSL 3.5.9 runtime,
 and this Python overlay. It checks the overlay hashes and versions, then
 creates one general single-file installer and its checksum in a new or empty
 output directory. The installer embeds both the Elden Ring Isolated payload
@@ -80,9 +108,11 @@ SDK's `lrelease`. Example:
 powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release.ps1 `
   -RuntimeDirectory C:\path\to\Complete `
   -OrganizerExecutable C:\path\to\ModOrganizer.exe `
+  -NxmHandlerExecutable C:\path\to\nxmhandler-build\src\Release\nxmhandler.exe `
   -ZigPath C:\path\to\zig.exe `
   -OpenSslRuntimeDirectory C:\path\to\openssl-3.5.9 `
   -PythonRuntimeDirectory C:\path\to\python-3.12.15-overlay `
+  -QtSdkDirectory C:\path\to\QtSdk `
   -OutputDirectory C:\path\to\new-release-directory
 ```
 

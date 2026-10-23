@@ -3,6 +3,9 @@ param(
     [string]$RuntimeDirectory,
     [Parameter(Mandatory = $true)]
     [string]$OrganizerExecutable,
+    # nxmhandler.exe built from source/nxmhandler (the Fluent handler window)
+    [Parameter(Mandatory = $true)]
+    [string]$NxmHandlerExecutable,
     [Parameter(Mandatory = $true)]
     [string]$ZigPath,
     [Parameter(Mandatory = $true)]
@@ -21,12 +24,13 @@ $version = '1.0.2'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
 $runtimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory).TrimEnd('\')
 $organizerPath = [System.IO.Path]::GetFullPath($OrganizerExecutable)
+$nxmHandlerPath = [System.IO.Path]::GetFullPath($NxmHandlerExecutable)
 $openSslRuntimeRoot = [System.IO.Path]::GetFullPath($OpenSslRuntimeDirectory).TrimEnd('\')
 $pythonRuntimeRoot = [System.IO.Path]::GetFullPath($PythonRuntimeDirectory).TrimEnd('\')
 $outputRoot = [System.IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
 $qtSdkRoot = [System.IO.Path]::GetFullPath($QtSdkDirectory).TrimEnd('\')
 
-foreach ($path in @($runtimeRoot, $organizerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $CscPath)) {
+foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $CscPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf) -and
         -not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Required build input was not found: $path"
@@ -37,6 +41,15 @@ if (-not (Test-Path -LiteralPath (Join-Path $runtimeRoot 'ModOrganizer.exe') -Pa
 }
 if (-not (Test-Path -LiteralPath $organizerPath -PathType Leaf)) {
     throw "The rebuilt ModOrganizer.exe was not found: $organizerPath"
+}
+if (-not (Test-Path -LiteralPath $nxmHandlerPath -PathType Leaf) -or
+    [IO.Path]::GetFileName($nxmHandlerPath) -ine 'nxmhandler.exe') {
+    throw "The rebuilt nxmhandler.exe was not found: $nxmHandlerPath"
+}
+# the upstream nxmhandler from the runtime would bring back the old window
+if ((Get-Item -LiteralPath $nxmHandlerPath).VersionInfo.ProductName -notlike '*MO2 Revamped*') {
+    throw "nxmhandler.exe is not the MO2 Revamped build from source
+xmhandler: $nxmHandlerPath"
 }
 if (-not (Test-Path -LiteralPath $openSslRuntimeRoot -PathType Container)) {
     throw "The OpenSSL runtime directory was not found: $openSslRuntimeRoot"
@@ -358,6 +371,8 @@ function Copy-RevampedSources {
     }
 
     Copy-Item -LiteralPath $organizerPath -Destination (Join-Path $DestinationRoot 'ModOrganizer.exe') -Force
+    # the Fluent nxm handler replaces the runtime's upstream nxmhandler.exe
+    Copy-Item -LiteralPath $nxmHandlerPath -Destination (Join-Path $DestinationRoot 'nxmhandler.exe') -Force
     [IO.File]::WriteAllText((Join-Path $DestinationRoot 'MO2-Revamped.ini'), "[Settings]`r`nlanguage=en_US`r`n", [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllText((Join-Path $DestinationRoot 'MO2-Revamped.install'), "MO2-REVAMPED-INSTALLATION-MARKER`r`n", [Text.UTF8Encoding]::new($false))
 }
