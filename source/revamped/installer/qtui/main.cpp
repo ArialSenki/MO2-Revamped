@@ -41,6 +41,8 @@
 #include <QUuid>
 #include <QVBoxLayout>
 #include <cmath>
+#include <functional>
+#include <memory>
 #include <QDesktopServices>
 #include <QStyleHints>
 #include <QUrl>
@@ -492,7 +494,7 @@ public:
             // the cards, the globe and the page's icons keep a copy of the colors
             for (TaskCard *tile : taskTiles_) tile->setTheme(theme_);
             if (languageButton_) languageButton_->setIcon(glyphIcon(QStringLiteral("globe"), theme_.tileInk, 20));
-            if (!busy_ && !asking_ && !hasCompleted_) {
+            if (!busy_ && !asking_ && !waiting_ && !hasCompleted_) {
                 savePageState();
                 setMode(mode_, true);
             }
@@ -509,8 +511,14 @@ public:
         // (closing during the startup search did that). Cut them off first.
         for (QProcess *process : findChildren<QProcess *>()) {
             process->disconnect();
-            if (process->state() != QProcess::NotRunning) { process->kill(); process->waitForFinished(1000); }
+            if (process->state() == QProcess::NotRunning) continue;
+            // the request that opens MO2 after a task finishes its job even
+            // when the window closes first; it is left running on its own
+            if (process->property("keepOnClose").toBool()) { process->setParent(nullptr); continue; }
+            process->kill();
+            process->waitForFinished(1000);
         }
+        if (waiting_) QApplication::restoreOverrideCursor();
         inspectProcess_ = nullptr;
         backend_ = nullptr;
         if (!inspectFolder_.isEmpty()) QDir(inspectFolder_).removeRecursively();
@@ -604,12 +612,80 @@ private:
         return result;
     }
 
-    void loadTranslations(const QString &language) {
-        const QString output = tempFile(QStringLiteral("localization/%1.json"));
-        const QJsonObject loaded = runHost({QStringLiteral("--translations"), language, output}, output);
+    // The engine run without blocking the window: `done` gets, on the UI
+    // thread, whether it exited normally with code 0 in time and the JSON it
+    // wrote to `output` (empty on failure or timeout). The process is a child
+    // of this window, and the destructor disconnects every child process
+    // first, so closing the window during a wait never calls back into it.
+    void runHostAsync(const QStringList &arguments, const QString &output, int timeout,
+                      std::function<void(bool, const QJsonObject &)> done, bool keepOnClose = false) {
+        auto *process = new QProcess(this);
+        process->setProperty("keepOnClose", keepOnClose);
+        auto handled = std::make_shared<bool>(false);
+        auto finish = [process, output, handled, done = std::move(done)](bool ran, bool exitOk) {
+            if (*handled) return;
+            *handled = true;
+            process->disconnect();
+            QJsonObject result;
+            if (ran && !output.isEmpty()) {
+                QFile file(output);
+                if (file.open(QIODevice::ReadOnly)) {
+                    QJsonParseError error;
+                    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &error);
+                    if (error.error == QJsonParseError::NoError && document.isObject()) result = document.object();
+                }
+            }
+            if (!output.isEmpty()) QFile::remove(output);
+            process->deleteLater();
+            done(ran && exitOk, result);
+        };
+        connect(process, &QProcess::finished, this, [finish](int exitCode, QProcess::ExitStatus exitStatus) {
+            finish(true, exitStatus == QProcess::NormalExit && exitCode == 0);
+        });
+        connect(process, &QProcess::errorOccurred, this, [finish](QProcess::ProcessError error) {
+            if (error == QProcess::FailedToStart) finish(false, false);
+        });
+        // the same limit as the blocking version: 3 s to start plus `timeout`
+        QTimer::singleShot(timeout + 3000, process, [process, finish] {
+            if (process->state() == QProcess::NotRunning) return;
+            process->kill();
+            finish(false, false);
+        });
+        process->start(host_, arguments);
+    }
+
+    void applyTranslations(const QJsonObject &loaded) {
         if (loaded.isEmpty()) return;
         translations_.clear();
         for (auto it = loaded.constBegin(); it != loaded.constEnd(); ++it) translations_.insert(it.key(), it.value().toString());
+    }
+
+    // only before the window is shown; a later change uses runHostAsync
+    void loadTranslations(const QString &language) {
+        const QString output = tempFile(QStringLiteral("localization/%1.json"));
+        applyTranslations(runHost({QStringLiteral("--translations"), language, output}, output));
+    }
+
+    // While the window waits on the engine it stays responsive (it repaints,
+    // moves and can be closed) but takes no new input: tasks, folders,
+    // options, the language and the main button are disabled, and the footer
+    // says what it is waiting for. The previous footer text comes back after.
+    void setWaiting(bool on, const QString &status = QString()) {
+        if (on == waiting_) return;
+        waiting_ = on;
+        if (on) {
+            waitStatus_ = statusLabel_->text();
+            waitState_ = statusLabel_->property("state").toString();
+            QApplication::setOverrideCursor(Qt::BusyCursor);
+            setInputsEnabled(false);
+            actionButton_->setEnabled(false);
+            setStatus(status, QStringLiteral("busy"));
+        } else {
+            QApplication::restoreOverrideCursor();
+            setStatus(waitStatus_, waitState_);
+            setInputsEnabled(true);
+            actionButton_->setEnabled(true);
+        }
     }
 
     QVector<ModeInfo> modes() const {
@@ -709,7 +785,7 @@ private:
             action->setChecked(language.first == language_);
             connect(action, &QAction::triggered, this, [this, action] {
                 const QString nextLanguage = action->data().toString();
-                if (busy_ || nextLanguage == language_) {
+                if (busy_ || waiting_ || nextLanguage == language_) {
                     action->setChecked(nextLanguage == language_);
                     return;
                 }
@@ -718,11 +794,15 @@ private:
                 languageButton_->setText(languageName(language_));
                 for (QAction *item : languageMenu_->actions())
                     item->setChecked(item->data().toString() == language_);
-                QApplication::setOverrideCursor(Qt::WaitCursor);
-                loadTranslations(language_);
-                QApplication::restoreOverrideCursor();
-                rebuildShellText();
-                setMode(mode_, true);
+                setWaiting(true, tr(QStringLiteral("Cargando el idioma…")));
+                const QString output = tempFile(QStringLiteral("localization/%1.json"));
+                runHostAsync({QStringLiteral("--translations"), language_, output}, output, 8000,
+                             [this](bool, const QJsonObject &loaded) {
+                    applyTranslations(loaded);
+                    setWaiting(false);
+                    rebuildShellText();
+                    setMode(mode_, true);
+                });
             });
         }
         languageButton_->setMenu(languageMenu_);
@@ -809,7 +889,7 @@ private:
         for (const auto key : {Qt::Key_Return, Qt::Key_Enter}) {
             auto *enter = new QShortcut(QKeySequence(key), this);
             connect(enter, &QShortcut::activated, this, [this] {
-                if (busy_) return;
+                if (busy_ || waiting_) return;
                 // the shortcut sees Enter before the focused control: a focused
                 // button (Close, Browse, a task) is what Enter presses, as
                 // elsewhere in Windows, not the task's main action
@@ -997,7 +1077,7 @@ private:
     bool autofillTarget() {
         // never while a task runs or after it: the folder shown is the one the
         // task worked on (the search can finish after Update was started)
-        if (!target_ || busy_ || asking_ || hasCompleted_ || !(mode_ == 2 || mode_ == 4 || mode_ == 5) || fixedMode_ >= 0 || !prefetchDone_ ||
+        if (!target_ || busy_ || asking_ || waiting_ || hasCompleted_ || !(mode_ == 2 || mode_ == 4 || mode_ == 5) || fixedMode_ >= 0 || !prefetchDone_ ||
             savedPaths_.value(mode_).contains(QStringLiteral("target")) ||
             target_->text().trimmed() != defaultTarget(mode_))
             return false;
@@ -1017,7 +1097,7 @@ private:
     }
 
     void setMode(int id, bool force = false) {
-        if (busy_ || (hasCompleted_ && !force) || modeBlocked(id)) return;
+        if (busy_ || waiting_ || (hasCompleted_ && !force) || modeBlocked(id)) return;
         const bool changed = id != mode_ || !pageBuilt_;
         if (pageBuilt_ && !force) savePageState();
         mode_ = id;
@@ -1319,11 +1399,6 @@ private:
         setPalette(p);
     }
 
-    QJsonObject inspect(const QString &path) {
-        const QString output = tempFile(QStringLiteral("inspect-%1.json"));
-        return runHost({QStringLiteral("--inspect"), path, output, language_}, output, 7000);
-    }
-
     void scheduleInspect() {
         if (!inspectTimer_) {
             inspectTimer_ = new QTimer(this);
@@ -1376,7 +1451,7 @@ private:
         if (appDataCheck_) {
             const bool available = inspection_.value(QStringLiteral("globalData")).toBool();
             if (!available) appDataCheck_->setChecked(false);
-            appDataCheck_->setEnabled(available && !busy_ && !hasCompleted_);
+            appDataCheck_->setEnabled(available && !busy_ && !waiting_ && !hasCompleted_);
             appDataCheck_->setText(tr(available
                 ? QStringLiteral("Borrar también los datos globales de MO2 Revamped (AppData\\Local)")
                 : QStringLiteral("Solo disponible para instalaciones no portables de MO2 Revamped")));
@@ -1404,65 +1479,85 @@ private:
         return false;
     }
 
-    bool validate() {
+    // Checks the page before a task. The engine checks (Copy data's source
+    // data, the installation for Update, Restore and Uninstall) run without
+    // blocking the window; `done` gets the outcome, possibly later. Nothing on
+    // the page can change meanwhile: the wait disables its inputs, and asking_
+    // keeps the background search and a theme change from touching it.
+    void validate(std::function<void(bool)> done) {
         reinstall_ = false;
         const QString target = target_ ? QDir::cleanPath(target_->text().trimmed()) : QString();
         if (target.isEmpty() || !QDir::isAbsolutePath(target) || target.size() < 3)
-            return showError(tr(QStringLiteral("Falta la ubicación")), tr(QStringLiteral("Indica una carpeta válida.")));
-        const bool fresh = mode_ == 0 || mode_ == 1;
+            return done(showError(tr(QStringLiteral("Falta la ubicación")), tr(QStringLiteral("Indica una carpeta válida."))));
         if (mode_ == 3) {
             // relative paths would be read against the working folder here and
             // in the elevated backend; only full paths are accepted (and sent)
             const QString source = QDir::cleanPath(sourceInstall_->text().trimmed());
             const QString data = QDir::cleanPath(sourceData_->text().trimmed());
             if (source.isEmpty() || !QDir::isAbsolutePath(source) || !QFileInfo(QDir(source).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
-                return showError(tr(QStringLiteral("Origen no encontrado")), tr(QStringLiteral("Selecciona la carpeta de origen que contiene ModOrganizer.exe.")));
+                return done(showError(tr(QStringLiteral("Origen no encontrado")), tr(QStringLiteral("Selecciona la carpeta de origen que contiene ModOrganizer.exe."))));
             if (data.isEmpty() || !QDir::isAbsolutePath(data) || !QDir(data).exists())
-                return showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista.")));
+                return done(showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista."))));
             int mask = 0;
             const QStringList keys = {QStringLiteral("profiles"), QStringLiteral("mods"), QStringLiteral("downloads"),
                                       QStringLiteral("overwrite"), QStringLiteral("settings"), QStringLiteral("categories")};
             for (int i = 0; i < keys.size(); ++i) if (checks_.value(keys.at(i))->isChecked()) mask |= (1 << i);
             const QString output = tempFile(QStringLiteral("migration-%1.json"));
-            QApplication::setOverrideCursor(Qt::WaitCursor);
-            const QJsonObject check = runHost({QStringLiteral("--migration-data"), QDir::toNativeSeparators(data), QString::number(mask), output, language_}, output, 15000);
-            QApplication::restoreOverrideCursor();
-            if (!check.value(QStringLiteral("hasData")).toBool())
-                return showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista.")));
-            if (pathsOverlap(target, source) || pathsOverlap(target, data))
-                return showError(tr(QStringLiteral("Carpetas solapadas")), tr(QStringLiteral("El origen y el destino deben ser carpetas separadas.")));
+            setWaiting(true, tr(QStringLiteral("Comprobando los datos de origen…")));
+            runHostAsync({QStringLiteral("--migration-data"), QDir::toNativeSeparators(data), QString::number(mask), output, language_}, output, 15000,
+                         [this, target, source, data, done](bool, const QJsonObject &check) {
+                setWaiting(false);
+                if (!check.value(QStringLiteral("hasData")).toBool())
+                    return done(showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista."))));
+                if (pathsOverlap(target, source) || pathsOverlap(target, data))
+                    return done(showError(tr(QStringLiteral("Carpetas solapadas")), tr(QStringLiteral("El origen y el destino deben ser carpetas separadas."))));
+                done(validateNewTarget(target));
+            });
+            return;
         }
-        if (fresh || mode_ == 3) {
-            if (QFileInfo(target).exists() && !QFileInfo(target).isDir())
-                return showError(tr(QStringLiteral("Ubicación no válida")), tr(QStringLiteral("La ruta indicada no es válida.")));
-            if (QDir(target).exists()) {
-                if (QFileInfo(QDir(target).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
-                    return showError(tr(QStringLiteral("La carpeta ya contiene MO2")), tr(QStringLiteral("Esta carpeta ya contiene MO2. Elige «Actualizar MO2 Revamped» si está marcada como Revamped o crea otra carpeta.")));
-                if (!QDir(target).entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System).isEmpty()) {
-                    // the data an uninstall kept: MO2 is installed back next to it
-                    if (mode_ == 0 && hasKeptData(target)) {
-                        reinstall_ = true;
-                        return true;
-                    }
-                    return showError(tr(QStringLiteral("El destino no está vacío")), tr(QStringLiteral("El destino contiene archivos. Elige una carpeta vacía para evitar sobrescribirlos.")));
-                }
-            }
-        }
-        if (mode_ == 2 || mode_ == 4 || mode_ == 5) {
-            QApplication::setOverrideCursor(Qt::WaitCursor);
-            inspection_ = inspect(target);
-            QApplication::restoreOverrideCursor();
+        if (mode_ == 0 || mode_ == 1) return done(validateNewTarget(target));
+        // Update, Restore and Uninstall need what the engine knows of the folder
+        const QString output = tempFile(QStringLiteral("inspect-%1.json"));
+        setWaiting(true, tr(QStringLiteral("Comprobando la instalación…")));
+        runHostAsync({QStringLiteral("--inspect"), target, output, language_}, output, 7000,
+                     [this, done](bool, const QJsonObject &result) {
+            setWaiting(false);
+            inspection_ = result;
             applyInspection();
-            if (mode_ == 2) {
-                if (!inspection_.value(QStringLiteral("recognized")).toBool())
-                    return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("La actualización solo se admite en una instalación identificada de MO2 Revamped. No se modificó la carpeta seleccionada.")));
-                if (!inspection_.value(QStringLiteral("compatibleVersion")).toBool())
-                    return showError(tr(QStringLiteral("Versión no compatible")), tr(QStringLiteral("La actualización directa admite MO2 Revamped basado en MO2 2.5.0 a 2.5.2. Usa «Copiar datos» para pasar tus datos a una instalación nueva.")));
-            } else if (!inspection_.value(QStringLiteral("recognized")).toBool()) {
-                return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("Selecciona una carpeta que contenga una instalación identificada de MO2 Revamped. Las instalaciones originales de MO2 no se modifican.")));
-            } else if (mode_ == 4 && (!inspection_.value(QStringLiteral("pendingRestore")).toBool() || !inspection_.value(QStringLiteral("validBackup")).toBool())) {
-                return showError(tr(QStringLiteral("Copia previa no encontrada")), tr(QStringLiteral("Esta instalación no tiene una copia previa válida. «Restaurar copia anterior» solo está disponible después de una actualización con copia de seguridad.")));
+            done(validateInspection());
+        });
+    }
+
+    // the folder a new installation (or Copy data) goes to
+    bool validateNewTarget(const QString &target) {
+        if (QFileInfo(target).exists() && !QFileInfo(target).isDir())
+            return showError(tr(QStringLiteral("Ubicación no válida")), tr(QStringLiteral("La ruta indicada no es válida.")));
+        if (QDir(target).exists()) {
+            if (QFileInfo(QDir(target).filePath(QStringLiteral("ModOrganizer.exe"))).isFile())
+                return showError(tr(QStringLiteral("La carpeta ya contiene MO2")), tr(QStringLiteral("Esta carpeta ya contiene MO2. Elige «Actualizar MO2 Revamped» si está marcada como Revamped o crea otra carpeta.")));
+            if (!QDir(target).entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System).isEmpty()) {
+                // the data an uninstall kept: MO2 is installed back next to it
+                if (mode_ == 0 && hasKeptData(target)) {
+                    reinstall_ = true;
+                    return true;
+                }
+                return showError(tr(QStringLiteral("El destino no está vacío")), tr(QStringLiteral("El destino contiene archivos. Elige una carpeta vacía para evitar sobrescribirlos.")));
             }
+        }
+        return true;
+    }
+
+    // Update, Restore and Uninstall, once inspection_ holds the folder's state
+    bool validateInspection() {
+        if (mode_ == 2) {
+            if (!inspection_.value(QStringLiteral("recognized")).toBool())
+                return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("La actualización solo se admite en una instalación identificada de MO2 Revamped. No se modificó la carpeta seleccionada.")));
+            if (!inspection_.value(QStringLiteral("compatibleVersion")).toBool())
+                return showError(tr(QStringLiteral("Versión no compatible")), tr(QStringLiteral("La actualización directa admite MO2 Revamped basado en MO2 2.5.0 a 2.5.2. Usa «Copiar datos» para pasar tus datos a una instalación nueva.")));
+        } else if (!inspection_.value(QStringLiteral("recognized")).toBool()) {
+            return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("Selecciona una carpeta que contenga una instalación identificada de MO2 Revamped. Las instalaciones originales de MO2 no se modifican.")));
+        } else if (mode_ == 4 && (!inspection_.value(QStringLiteral("pendingRestore")).toBool() || !inspection_.value(QStringLiteral("validBackup")).toBool())) {
+            return showError(tr(QStringLiteral("Copia previa no encontrada")), tr(QStringLiteral("Esta instalación no tiene una copia previa válida. «Restaurar copia anterior» solo está disponible después de una actualización con copia de seguridad.")));
         }
         return true;
     }
@@ -1548,14 +1643,20 @@ private:
     }
 
     void beginOperation() {
-        if (busy_ || asking_ || hasCompleted_ || !target_ || modeBlocked(mode_)) return;
-        // the question boxes run an event loop: the background search must not
-        // swap the folder (or a theme change rebuild the page) under them, or
-        // the backend would get another folder than the one confirmed
+        if (busy_ || asking_ || waiting_ || hasCompleted_ || !target_ || modeBlocked(mode_)) return;
+        // the question boxes and the engine checks let events run: the
+        // background search must not swap the folder (or a theme change
+        // rebuild the page) under them, or the backend would get another
+        // folder than the one confirmed
         asking_ = true;
-        const bool confirmed = validate() && confirm();
-        asking_ = false;
-        if (!confirmed) return;
+        validate([this](bool valid) {
+            const bool confirmed = valid && confirm();
+            asking_ = false;
+            if (confirmed) startOperation();
+        });
+    }
+
+    void startOperation() {
         savePageState();
         if (!jobDirectory_.isEmpty()) QDir(jobDirectory_).removeRecursively();
         jobDirectory_ = QFileInfo(tempFile(QStringLiteral("job-%1/request.json"))).absolutePath();
@@ -1691,20 +1792,20 @@ private:
         }
     }
 
-    bool launchMo2(const QString &path) {
+    void launchMo2(const QString &path, std::function<void(bool)> done) {
         // The setup runs elevated. The host asks the desktop shell to start
         // ModOrganizer.exe with the user's normal token, so drag and drop and
         // file ownership behave. explorer.exe is not used: it can open the
         // installation folder instead of running the program.
-        QProcess launcher;
-        launcher.start(host_, {QStringLiteral("--launch"), QDir::toNativeSeparators(path)});
-        if (launcher.waitForStarted(3000) && launcher.waitForFinished(15000) &&
-            launcher.exitStatus() == QProcess::NormalExit && launcher.exitCode() == 0)
-            return true;
-        if (launcher.state() != QProcess::NotRunning) { launcher.kill(); launcher.waitForFinished(1000); }
-        // no fallback from this elevated window: MO2, its games and mods
-        // would all run as administrator
-        return false;
+        // No fallback from this elevated window on failure: MO2, its games and
+        // mods would all run as administrator. Closing the window meanwhile
+        // leaves the request running (keepOnClose), so MO2 still opens.
+        setWaiting(true, tr(QStringLiteral("Abriendo Mod Organizer 2…")));
+        runHostAsync({QStringLiteral("--launch"), QDir::toNativeSeparators(path)}, QString(), 15000,
+                     [this, done = std::move(done)](bool launched, const QJsonObject &) {
+            setWaiting(false);
+            done(launched);
+        }, true);
     }
 
     void completeOperation(int exitCode, bool normalExit) {
@@ -1746,14 +1847,20 @@ private:
             repolish(closeButton_);
             closeButton_->setFocus();
             if (!details.isEmpty() && !detailsButton_->isChecked()) progressStatus_->setText(message + QStringLiteral("\n") + details);
-            if (!launchPath.isEmpty() && QFileInfo(launchPath).isFile() && !launchMo2(launchPath)) {
-                actionButton_->setText(tr(QStringLiteral("Abrir MO2")));
-                actionButton_->setObjectName(QStringLiteral("secondaryButton"));
-                repolish(actionButton_);
-                actionButton_->show();
-                connect(actionButton_, &QPushButton::clicked, this, [this, launchPath] {
-                    if (launchMo2(launchPath)) close();
-                    else showError(tr(QStringLiteral("Estado")), tr(QStringLiteral("No se pudo abrir Mod Organizer 2.")));
+            if (!launchPath.isEmpty() && QFileInfo(launchPath).isFile()) {
+                launchMo2(launchPath, [this, launchPath](bool launched) {
+                    if (launched) return;
+                    actionButton_->setText(tr(QStringLiteral("Abrir MO2")));
+                    actionButton_->setObjectName(QStringLiteral("secondaryButton"));
+                    repolish(actionButton_);
+                    actionButton_->show();
+                    connect(actionButton_, &QPushButton::clicked, this, [this, launchPath] {
+                        if (waiting_) return;
+                        launchMo2(launchPath, [this](bool opened) {
+                            if (opened) close();
+                            else showError(tr(QStringLiteral("Estado")), tr(QStringLiteral("No se pudo abrir Mod Organizer 2.")));
+                        });
+                    });
                 });
             }
         } else {
@@ -1776,6 +1883,8 @@ private:
     bool registeredLoaded_ = false;
     bool prefetchDone_ = false;
     bool reinstall_ = false;
+    bool waiting_ = false;
+    QString waitStatus_, waitState_;
     QString themeOverride_;
     QPushButton *whatsNewButton_ = nullptr;
 #ifdef Q_OS_WIN
