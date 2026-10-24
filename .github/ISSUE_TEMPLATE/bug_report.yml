@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in MO2 Revamped doesn't work the way it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The more of the fields below you fill in, the faster I can reproduce it.
+        Please remove your Windows username, Steam ID and any personal paths from logs before pasting them.
+
+  - type: input
+    id: version
+    attributes:
+      label: MO2 Revamped version
+      description: Shown in the title bar, for example v2.5.2.
+      placeholder: v2.5.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Install type
+      options:
+        - Standard (global instances)
+        - Isolated / portable
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: game
+    attributes:
+      label: Game and game version
+      placeholder: Elden Ring 2.7.2.0 (Steam)
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. ...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log
+      description: The relevant part of the log panel or of `logs\mo_interface.log` in the instance folder.
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, other mod managers or tools involved, whether it worked in an earlier version.

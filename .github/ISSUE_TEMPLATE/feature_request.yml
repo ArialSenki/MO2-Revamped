@@ -1,0 +1,17 @@
+name: Suggestion
+description: An idea or a change you'd like to see.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like
+      description: Describe the change and the situation where you'd use it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: now
+    attributes:
+      label: How you do it today
+      description: Optional. Workarounds you use now, or how other tools handle it.
