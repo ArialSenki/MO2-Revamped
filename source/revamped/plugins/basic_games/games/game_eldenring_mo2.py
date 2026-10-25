@@ -28,6 +28,7 @@ from PyQt6.QtCore import (
     QFileInfo,
     QDir,
     QObject,
+    QProcess,
     QTimer,
     Qt,
     qCritical,
@@ -1621,6 +1622,25 @@ class EldenRingMo2Game(BasicGame):
     # launcher; Easy Anti-Cheat's launcher has the same name in every game, so
     # only the one in this game's folder counts
     SharedLaunchers = frozenset({"me3.exe", "me3-launcher.exe"})
+    # Launchers that fail under MO2's virtual file system (Seamless Co-op's
+    # mod stays inactive, me3 crashes the game): MO2 starts them itself,
+    # outside the VFS, and swaps the route's saves into the Steam folder for
+    # the run. Each executable can be switched either way in Save Isolation.
+    AutoSwapLaunchers = frozenset(
+        {
+            "ersc_launcher.exe",
+            "launch_elden_ring_seamlesscoop.exe",
+            "nrsc_launcher.exe",
+            "me3.exe",
+            "me3-launcher.exe",
+        }
+    )
+    LaunchMethodsFilename = "eldenring_mo2_launch_methods.json"
+    LaunchMethodVfs = "vfs"
+    LaunchMethodSwap = "swap"
+    # in a swap session's recovery folder: the Steam folder's own loose
+    # files (GraphicsConfig.xml) while the route's copies stand in for them
+    SwapRootFilesDirectoryName = "steam-root-files"
     AntiCheatLauncher = "start_protected_game.exe"
     FromSoftwareGameProcesses = frozenset({"eldenring.exe", "nightreign.exe"})
     LauncherScriptPrefix = "launchmod"
@@ -1628,6 +1648,10 @@ class EldenRingMo2Game(BasicGame):
     LauncherStartGrace = 90  # seconds a launcher may take to start the game
     LauncherWaitLimit = 600  # a launcher still open after this is not waited for
     GameWatchInterval = 5000  # milliseconds between checks for the game process
+    # while a launch waits for the game to appear: a game that crashes at
+    # start lives about two seconds, and once seen its close restores the
+    # saves without the launcher grace
+    LaunchWatchInterval = 1000
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         if not super().init(organizer):
@@ -1658,6 +1682,7 @@ class EldenRingMo2Game(BasicGame):
         # set when recovery waits for the game, a launcher or another MO2
         # window rather than failing
         self._recovery_waiting = False
+        self._recovered_sessions = 0
         self._recovery_retry_pending = False
         # folders with newer saves that a restore had to move aside
         self._displaced_newer_saves: list[Path] = []
@@ -1881,6 +1906,173 @@ class EldenRingMo2Game(BasicGame):
             )
         return False
 
+    @classmethod
+    def launch_methods_path(cls, instance_base: Path) -> Path:
+        return instance_base / cls.LaunchMethodsFilename
+
+    @classmethod
+    def read_launch_methods(cls, instance_base: Path) -> dict[str, str]:
+        """The executables switched by hand in Save Isolation, keyed by their
+        normalised binary path."""
+        try:
+            data = json.loads(cls.launch_methods_path(instance_base).read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError):
+            return {}
+        methods = data.get("methods") if isinstance(data, dict) else None
+        if not isinstance(methods, dict):
+            return {}
+        return {
+            str(key): value
+            for key, value in methods.items()
+            if value in {cls.LaunchMethodVfs, cls.LaunchMethodSwap}
+        }
+
+    @classmethod
+    def launch_method_for(cls, binary: str, methods: dict[str, str]) -> tuple[str, bool]:
+        """(method, chosen by hand) for one executable."""
+        key = os.path.normcase(os.path.abspath(binary)) if binary else ""
+        if key in methods:
+            return methods[key], True
+        automatic = Path(binary).name.casefold() in cls.AutoSwapLaunchers
+        return (cls.LaunchMethodSwap if automatic else cls.LaunchMethodVfs), False
+
+    def _launch_method(self, app_path: str) -> str:
+        try:
+            methods = self.read_launch_methods(Path(self._organizer.basePath()))
+        except (AttributeError, RuntimeError, TypeError):
+            methods = {}
+        return self.launch_method_for(app_path, methods)[0]
+
+    def _swap_route_saves_in(
+        self, session_directory: Path, manifest: dict, global_save_root: Path, route: Path
+    ) -> None:
+        """Puts the route's saves where the game looks without the VFS: its
+        account folders into the (now empty) Steam folder, and its loose files
+        (GraphicsConfig.xml) in place of the Steam ones, which wait in the
+        session. The manifest records each step first, so recovery after a
+        crash can take everything back."""
+        swap = {"route": str(route), "directories": [], "steam_root_files": [], "route_root_files": []}
+        manifest["swap"] = swap
+        self._write_save_quarantine_manifest(session_directory, manifest)
+        held = session_directory / self.SwapRootFilesDirectoryName
+        for child in list(global_save_root.iterdir()):
+            if child.is_file():
+                held.mkdir(exist_ok=True)
+                os.replace(child, held / child.name)
+                swap["steam_root_files"].append(child.name)
+                self._write_save_quarantine_manifest(session_directory, manifest)
+        if not route.is_dir():
+            return
+        for child in route.iterdir():
+            if child.is_file():
+                shutil.copy2(child, global_save_root / child.name)
+                swap["route_root_files"].append(child.name)
+            elif (
+                child.is_dir()
+                and child.name not in {"save_profiles"}
+                and self._save_directory_contains_elden_ring_saves(child)
+            ):
+                shutil.copytree(child, global_save_root / child.name)
+                swap["directories"].append(child.name)
+            self._write_save_quarantine_manifest(session_directory, manifest)
+        qInfo(
+            "Elden Ring MO2: swapped the route's saves into the Steam folder for "
+            f"a launch outside the VFS: {len(swap['directories'])} account folder(s), "
+            f"{len(swap['route_root_files'])} loose file(s)."
+        )
+
+    def _swap_route_saves_out(
+        self, session_directory: Path, swap: dict, global_save_root: Path
+    ) -> None:
+        """Takes what the game wrote in the Steam folder back to the route (the
+        route was backed up before the launch), then puts the Steam folder's
+        own loose files back."""
+        route = Path(str(swap.get("route", "")))
+        if not route.is_absolute():
+            raise OSError(_tr("The save-recovery record has no valid route for the swapped saves."))
+        route.mkdir(parents=True, exist_ok=True)
+        if global_save_root.is_dir():
+            for child in list(global_save_root.iterdir()):
+                if child.is_dir() and self._save_directory_contains_elden_ring_saves(child):
+                    target = route / child.name
+                    target.mkdir(parents=True, exist_ok=True)
+                    for entry in child.rglob("*"):
+                        destination = target / entry.relative_to(child)
+                        if entry.is_dir():
+                            destination.mkdir(parents=True, exist_ok=True)
+                        else:
+                            destination.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(entry, destination)
+                    shutil.rmtree(child)
+                elif child.is_file():
+                    shutil.copy2(child, route / child.name)
+                    child.unlink()
+        held = session_directory / self.SwapRootFilesDirectoryName
+        if held.is_dir():
+            global_save_root.mkdir(parents=True, exist_ok=True)
+            for entry in list(held.iterdir()):
+                os.replace(entry, global_save_root / entry.name)
+            held.rmdir()
+        qInfo(
+            "Elden Ring MO2: the saves of the launch outside the VFS are back in "
+            f"the route '{route}'."
+        )
+
+    @staticmethod
+    def _split_arguments(args: str) -> list[str]:
+        """Splits an executable's argument line as Windows does: spaces part
+        the arguments, double quotes keep one together (and are dropped), and
+        \\" is a literal quote. PyQt6 has no QProcess.splitCommand."""
+        arguments: list[str] = []
+        current: list[str] = []
+        quoted = False
+        started = False
+        index = 0
+        while index < len(args):
+            character = args[index]
+            if character == "\\" and index + 1 < len(args) and args[index + 1] == '"':
+                current.append('"')
+                started = True
+                index += 2
+                continue
+            if character == '"':
+                quoted = not quoted
+                started = True
+            elif character.isspace() and not quoted:
+                if started:
+                    arguments.append("".join(current))
+                    current, started = [], False
+            else:
+                current.append(character)
+                started = True
+            index += 1
+        if started:
+            arguments.append("".join(current))
+        return arguments
+
+    def _start_outside_vfs(self, app_path: str, working_directory, args: str) -> bool:
+        """Starts a launcher without MO2's hooks (QProcess runs it as a plain
+        child of MO2, which itself is not hooked)."""
+        try:
+            directory = (
+                working_directory.absolutePath()
+                if hasattr(working_directory, "absolutePath")
+                else str(working_directory or "")
+            )
+        except RuntimeError:
+            directory = ""
+        if not directory:
+            directory = str(Path(app_path).parent)
+        started, pid = QProcess.startDetached(app_path, self._split_arguments(args), directory)
+        if started:
+            qInfo(
+                f"Elden Ring MO2: started '{Path(app_path).name}' outside the VFS "
+                f"(process {pid}); MO2's own run of it was cancelled."
+            )
+        else:
+            qCritical(f"Elden Ring MO2: could not start '{app_path}' outside the VFS.")
+        return bool(started)
+
     def _restore_global_save_quarantine(
         self, session_directory: Path, global_save_root: Path
     ) -> bool:
@@ -1943,6 +2135,14 @@ class EldenRingMo2Game(BasicGame):
             seen_names.add(normalized_name)
             validated_directories.append((item, name))
 
+        swap = manifest.get("swap")
+        if isinstance(swap, dict) and not swap.get("returned"):
+            # a launch outside the VFS played from the Steam folder: its
+            # saves go back to the route before the Steam ones return
+            self._swap_route_saves_out(session_directory, swap, global_save_root)
+            swap["returned"] = True
+            self._write_save_quarantine_manifest(session_directory, manifest)
+
         global_save_root.mkdir(parents=True, exist_ok=True)
         for item, name in validated_directories:
             backup_directory = session_directory / name
@@ -2002,6 +2202,9 @@ class EldenRingMo2Game(BasicGame):
 
     def _recover_stale_global_save_quarantines(self) -> bool:
         self._recovery_waiting = False
+        # whether this call put any session back (a launch may have done it
+        # before a queued retry runs)
+        self._recovered_sessions = 0
         recovery_root = self._save_quarantine_root()
         sessions: list[Path] = []
         try:
@@ -2047,6 +2250,7 @@ class EldenRingMo2Game(BasicGame):
                 restored_cleanly = self._restore_global_save_quarantine(
                     session_directory, global_save_root
                 )
+                self._recovered_sessions += 1
                 if not restored_cleanly:
                     qInfo(
                         "Elden Ring MO2: previous Steam saves were restored; "
@@ -2145,8 +2349,43 @@ class EldenRingMo2Game(BasicGame):
                 f"needs attention: {error}"
             )
 
-    def _hide_existing_global_save_directories(self) -> Path | None:
+    @staticmethod
+    def _seed_route_root_files(global_save_root: Path, route: Path) -> None:
+        """Copies loose files at the top of the Steam save folder (the game's
+        GraphicsConfig.xml) into an isolated route that lacks them. The VFS
+        sends only new files to the route: a file that exists just in the
+        Steam folder would be opened and rewritten there."""
+        try:
+            files = [child for child in global_save_root.iterdir() if child.is_file()]
+        except OSError:
+            return
+        for source in files:
+            target = route / source.name
+            if target.exists():
+                continue
+            try:
+                route.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
+                qInfo(
+                    f"Elden Ring MO2: copied {source.name} into the save route so "
+                    "the game writes the route's copy, not the Steam one."
+                )
+            except OSError as error:
+                qWarning(
+                    f"Elden Ring MO2: could not copy {source.name} into the save "
+                    f"route; the game may change the Steam copy: {error}"
+                )
+
+    def _hide_existing_global_save_directories(
+        self, swap_route: Path | None = None
+    ) -> Path | None:
+        """Moves the Steam account folders into a recovery session for the
+        launch. With swap_route (a launch outside the VFS) the route's saves
+        then take their place, and the session exists even when Steam had no
+        saves, so the route gets its saves back after the run."""
         global_save_root = Path(self.savesDirectory().absolutePath())
+        if swap_route is not None:
+            global_save_root.mkdir(parents=True, exist_ok=True)
         if not global_save_root.is_dir():
             return None
         if not self._recover_stale_global_save_quarantines():
@@ -2157,7 +2396,7 @@ class EldenRingMo2Game(BasicGame):
             for child in global_save_root.iterdir()
             if child.is_dir() and self._save_directory_contains_elden_ring_saves(child)
         ]
-        if not save_directories:
+        if not save_directories and swap_route is None:
             return None
 
         recovery_root = self._save_quarantine_root()
@@ -2177,6 +2416,10 @@ class EldenRingMo2Game(BasicGame):
             for directory in save_directories:
                 os.replace(directory, session_directory / directory.name)
                 self._write_save_quarantine_manifest(session_directory, manifest)
+            if swap_route is not None:
+                self._swap_route_saves_in(
+                    session_directory, manifest, global_save_root, swap_route
+                )
         except OSError:
             try:
                 self._restore_global_save_quarantine(session_directory, global_save_root)
@@ -2194,9 +2437,10 @@ class EldenRingMo2Game(BasicGame):
         )
         grace = self.LauncherStartGrace if self._launch_via_launcher else 5
         self._launch_pending_until = time.monotonic() + grace
+        step = self.LaunchWatchInterval / 1000
         QTimer.singleShot(
-            self.GameWatchInterval,
-            lambda session=session_directory, save_root=global_save_root, left=grace - 5: self._watch_launch_start(
+            self.LaunchWatchInterval,
+            lambda session=session_directory, save_root=global_save_root, left=grace - step: self._watch_launch_start(
                 session, save_root, left
             ),
         )
@@ -2225,10 +2469,10 @@ class EldenRingMo2Game(BasicGame):
         ):
             if remaining <= 0:
                 # keep new launches waiting while the launcher is still open
-                self._launch_pending_until = time.monotonic() + self.GameWatchInterval / 1000 + 1
+                self._launch_pending_until = time.monotonic() + self.LaunchWatchInterval / 1000 + 1
             QTimer.singleShot(
-                self.GameWatchInterval,
-                lambda session=session_directory, save_root=global_save_root, left=remaining - self.GameWatchInterval / 1000: self._watch_launch_start(
+                self.LaunchWatchInterval,
+                lambda session=session_directory, save_root=global_save_root, left=remaining - self.LaunchWatchInterval / 1000: self._watch_launch_start(
                     session, save_root, left
                 ),
             )
@@ -2324,10 +2568,11 @@ class EldenRingMo2Game(BasicGame):
     def _retry_recovery(self) -> None:
         self._recovery_retry_pending = False
         if self._recover_stale_global_save_quarantines():
-            qInfo(
-                "Elden Ring MO2: the game closed; the Steam saves an earlier "
-                "launch hid are back in their folder."
-            )
+            if self._recovered_sessions:
+                qInfo(
+                    "Elden Ring MO2: the game closed; the Steam saves an earlier "
+                    "launch hid are back in their folder."
+                )
             self._report_displaced_saves()
         elif self._recovery_waiting:
             self._retry_recovery_later()
@@ -2728,6 +2973,11 @@ class EldenRingMo2Game(BasicGame):
         direct_game = Path(app_path).name.casefold() == self.GameProcess
         # read by the save hiding below (how long a launcher may take)
         self._launch_via_launcher = not direct_game
+        # a launcher run outside the VFS (the game itself always runs inside:
+        # started bare it would restart through Steam with Easy Anti-Cheat)
+        swap_launch = (
+            not direct_game and self._launch_method(app_path) == self.LaunchMethodSwap
+        )
 
         # the native profile applies to every game launch: its switched-off
         # entries stay out of the forced loads and its initializers go to
@@ -2891,7 +3141,9 @@ class EldenRingMo2Game(BasicGame):
                 )
                 return False
             try:
-                self._active_save_quarantine = self._hide_existing_global_save_directories()
+                self._active_save_quarantine = self._hide_existing_global_save_directories(
+                    active_save_dir if swap_launch else None
+                )
             except OSError as error:
                 qCritical(f"Elden Ring MO2: save isolation could not begin: {error}")
                 QMessageBox.critical(
@@ -2902,6 +3154,8 @@ class EldenRingMo2Game(BasicGame):
                     "recovery folder if a partial move had already begun."),
                 )
                 return False
+            if active_save_dir is not None and not swap_launch:
+                self._seed_route_root_files(game_save_dir, active_save_dir)
 
         settings_file_state = (
             "found" if profile_config.is_file() else "missing; using defaults"
@@ -2933,6 +3187,8 @@ class EldenRingMo2Game(BasicGame):
             if revamped_native_profile is not None
             else []
         )
+        if swap_launch:
+            return self._run_swap_launch(app_path, _working_directory, _args or "")
         self._activate_profile_config_environment(profile_config, initializer_entries)
         # a new run only once nothing above blocked the launch: a blocked
         # attempt must not disown the watch of a game that is still running
@@ -2945,6 +3201,42 @@ class EldenRingMo2Game(BasicGame):
             self._overwrite_cleanup_config = profile_config
         self._preserve_previous_bridge_log(bridge_log_history)
         return True
+
+    def _run_swap_launch(self, app_path: str, working_directory, args: str) -> bool:
+        """Starts a launcher outside the VFS and cancels MO2's own run of it.
+        The route's saves are already in the Steam folder; they go back when
+        the game closes, as for any launcher run."""
+        session = self._active_save_quarantine
+        self._game_run += 1
+        try:
+            started = self._start_outside_vfs(app_path, working_directory, args)
+        except Exception as error:
+            # the saves are already swapped: any failure puts them back now
+            qCritical(f"Elden Ring MO2: the launch outside the VFS failed: {error}")
+            started = False
+        if not started:
+            if session is not None:
+                try:
+                    self._restore_global_save_quarantine(
+                        session, Path(self.savesDirectory().absolutePath())
+                    )
+                    self._active_save_quarantine = None
+                except (OSError, RuntimeError, ValueError) as error:
+                    qCritical(
+                        "Elden Ring MO2: the launch outside the VFS did not start "
+                        f"and its saves need recovery: {error}"
+                    )
+            QMessageBox.warning(
+                None,
+                _tr("Could not start the launcher"),
+                _tr("MO2 could not start {0} outside its virtual file system. "
+                "The game was not started.").format(Path(app_path).name),
+            )
+            return False
+        if session is not None:
+            self._finish_when_game_closes(True, session, False, None, 0.0, False, self._game_run)
+        # MO2 must not start it a second time under its hooks
+        return False
 
     def _native_profile_for_launch(self, profile, direct_game: bool) -> tuple[bool, dict | None]:
         """Resolves the Revamped native profile for a game launch.

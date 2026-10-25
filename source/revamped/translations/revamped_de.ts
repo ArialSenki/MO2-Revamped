@@ -1635,6 +1635,18 @@ If it holds progress you want, close the game and copy its files back.</source>
 
 Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und kopiere seine Dateien zurück.</translation>
     </message>
+    <message>
+      <source>The save-recovery record has no valid route for the swapped saves.</source>
+      <translation>Der Wiederherstellungseintrag hat keine gültige Route für die getauschten Spielstände.</translation>
+    </message>
+    <message>
+      <source>Could not start the launcher</source>
+      <translation>Der Starter konnte nicht gestartet werden</translation>
+    </message>
+    <message>
+      <source>MO2 could not start {0} outside its virtual file system. The game was not started.</source>
+      <translation>MO2 konnte {0} nicht außerhalb seines virtuellen Dateisystems starten. Das Spiel wurde nicht gestartet.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -2974,6 +2986,310 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
     <message>
       <source>&lt;p&gt;When MO2 put back the Steam saves it had hidden for a launch, a save folder had appeared in their place: the game started from Steam meanwhile, or wrote a save outside the MO2 route. MO2 did not delete it; it is kept in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;If it holds progress you want, close the game and copy its files back. Delete the folder once you no longer need it to clear this notice.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Als MO2 die Steam-Spielstände wiederhergestellt hat, die es für einen Start ausgeblendet hatte, war an ihrer Stelle ein Spielstandordner aufgetaucht: Das Spiel wurde inzwischen über Steam gestartet oder hat außerhalb der MO2-Route gespeichert. MO2 hat ihn nicht gelöscht; er liegt in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und kopiere seine Dateien zurück. Lösche den Ordner, wenn du ihn nicht mehr brauchst, damit dieser Hinweis verschwindet.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Elden Ring Saves</source>
+      <translation>Elden-Ring-Spielstände</translation>
+    </message>
+    <message>
+      <source>Pages</source>
+      <translation>Seiten</translation>
+    </message>
+    <message>
+      <source>How do saves work here?</source>
+      <translation>Wie funktionieren Spielstände hier?</translation>
+    </message>
+    <message>
+      <source>Location</source>
+      <translation>Speicherort</translation>
+    </message>
+    <message>
+      <source>Where this MO2 profile keeps its saves, apart from Steam's.</source>
+      <translation>Wo dieses MO2-Profil seine Spielstände ablegt, getrennt von denen in Steam.</translation>
+    </message>
+    <message>
+      <source>Save route</source>
+      <translation>Spielstand-Route</translation>
+    </message>
+    <message>
+      <source>Only this profile (recommended)</source>
+      <translation>Nur dieses Profil (empfohlen)</translation>
+    </message>
+    <message>
+      <source>Shared by this instance's profiles</source>
+      <translation>Geteilt von den Profilen dieser Instanz</translation>
+    </message>
+    <message>
+      <source>Steam's saves (not isolated)</source>
+      <translation>Die von Steam (nicht isoliert)</translation>
+    </message>
+    <message>
+      <source>Keep saves for</source>
+      <translation>Spielstände ablegen für</translation>
+    </message>
+    <message>
+      <source>Save profile actions</source>
+      <translation>Aktionen für das Spielstandprofil</translation>
+    </message>
+    <message>
+      <source>New save profile…</source>
+      <translation>Neues Spielstandprofil…</translation>
+    </message>
+    <message>
+      <source>Rename…</source>
+      <translation>Umbenennen…</translation>
+    </message>
+    <message>
+      <source>Delete…</source>
+      <translation>Löschen…</translation>
+    </message>
+    <message>
+      <source>Save profile</source>
+      <translation>Spielstandprofil</translation>
+    </message>
+    <message>
+      <source>Separate playthroughs inside this MO2 profile.</source>
+      <translation>Getrennte Durchgänge innerhalb dieses MO2-Profils.</translation>
+    </message>
+    <message>
+      <source>Open the folder</source>
+      <translation>Ordner öffnen</translation>
+    </message>
+    <message>
+      <source>Folder</source>
+      <translation>Ordner</translation>
+    </message>
+    <message>
+      <source>Right now</source>
+      <translation>Gerade jetzt</translation>
+    </message>
+    <message>
+      <source>Open Steam's save folder</source>
+      <translation>Spielstandordner von Steam öffnen</translation>
+    </message>
+    <message>
+      <source>Steam's saves</source>
+      <translation>Spielstände von Steam</translation>
+    </message>
+    <message>
+      <source>Save files in this route</source>
+      <translation>Spielstanddateien in dieser Route</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programme</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op and me3 do not work inside MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Seamless Co-op und me3 funktionieren nicht im virtuellen Ordner von MO2 (VFS). MO2 startet sie außerhalb davon, legt die Spielstände dieses Profils für die Sitzung bereit und holt sie zurück, wenn das Spiel geschlossen wird.</translation>
+    </message>
+    <message>
+      <source>Start outside the VFS</source>
+      <translation>Außerhalb des VFS starten</translation>
+    </message>
+    <message>
+      <source>Backups</source>
+      <translation>Sicherungen</translation>
+    </message>
+    <message>
+      <source>MO2 copies this route's saves before every launch.</source>
+      <translation>MO2 kopiert die Spielstände dieser Route vor jedem Start.</translation>
+    </message>
+    <message>
+      <source>Latest backups</source>
+      <translation>Letzte Sicherungen</translation>
+    </message>
+    <message>
+      <source>Tools</source>
+      <translation>Werkzeuge</translation>
+    </message>
+    <message>
+      <source>Transfer…</source>
+      <translation>Übertragen…</translation>
+    </message>
+    <message>
+      <source>Transfer a save</source>
+      <translation>Einen Spielstand übertragen</translation>
+    </message>
+    <message>
+      <source>Copy one save between this profile, the shared route and Steam's folder.</source>
+      <translation>Kopiert einen Spielstand zwischen diesem Profil, der geteilten Route und dem Ordner von Steam.</translation>
+    </message>
+    <message>
+      <source>Open…</source>
+      <translation>Öffnen…</translation>
+    </message>
+    <message>
+      <source>All backups</source>
+      <translation>Alle Sicherungen</translation>
+    </message>
+    <message>
+      <source>Browse every backup of a route and restore one.</source>
+      <translation>Alle Sicherungen einer Route durchsehen und eine wiederherstellen.</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <translation>Kopieren</translation>
+    </message>
+    <message>
+      <source>Diagnostics</source>
+      <translation>Diagnose</translation>
+    </message>
+    <message>
+      <source>Copies the routes and settings for a bug report.</source>
+      <translation>Kopiert die Routen und Einstellungen für einen Fehlerbericht.</translation>
+    </message>
+    <message>
+      <source>The MO2 instance folder is unknown.</source>
+      <translation>Der Ordner der MO2-Instanz ist unbekannt.</translation>
+    </message>
+    <message>
+      <source>Elden Ring</source>
+      <translation>Elden Ring</translation>
+    </message>
+    <message>
+      <source>Standard save</source>
+      <translation>Normaler Spielstand</translation>
+    </message>
+    <message>
+      <source>Set aside while the game runs; they come back when it closes.</source>
+      <translation>Beiseitegelegt, solange das Spiel läuft; sie kehren zurück, wenn es geschlossen wird.</translation>
+    </message>
+    <message>
+      <source>How saves work here</source>
+      <translation>Wie Spielstände hier funktionieren</translation>
+    </message>
+    <message>
+      <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
+
+Mods with their own save file (Seamless Co-op's .co2, Convergence's .cnv) keep it next to the normal one, in the same route.
+
+Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the route's saves in Steam's folder for the run and takes them back afterwards. A backup of the route is made before every launch.</source>
+      <translation>Jedes MO2-Profil kann eigene Spielstände haben, sodass das Spielen mit Mods deinen Steam-Charakter nie berührt. Solange das Spiel läuft, wird der Spielstandordner von Steam beiseitegelegt; er kehrt unverändert zurück, wenn das Spiel geschlossen wird.
+
+Mods mit eigener Spielstanddatei (die .co2 von Seamless Co-op, die .cnv von Convergence) legen sie neben die normale, in derselben Route.
+
+Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
+    </message>
+    <message>
+      <source>Rename save profile</source>
+      <translation>Spielstandprofil umbenennen</translation>
+    </message>
+    <message>
+      <source>New name:</source>
+      <translation>Neuer Name:</translation>
+    </message>
+    <message>
+      <source>Found in the game folder</source>
+      <translation>Im Spielordner gefunden</translation>
+    </message>
+    <message>
+      <source>Not installed</source>
+      <translation>Nicht installiert</translation>
+    </message>
+    <message>
+      <source>Today, {time}</source>
+      <translation>Heute, {time}</translation>
+    </message>
+    <message>
+      <source>A game save profile with this name already exists.</source>
+      <translation>Es gibt bereits ein Spielstandprofil mit diesem Namen.</translation>
+    </message>
+    <message>
+      <source>no save yet</source>
+      <translation>noch kein Spielstand</translation>
+    </message>
+    <message>
+      <source>The game itself always starts inside the VFS.</source>
+      <translation>Das Spiel selbst startet immer innerhalb des VFS.</translation>
+    </message>
+    <message>
+      <source>No game programs in this instance.</source>
+      <translation>Diese Instanz hat keine Spielprogramme.</translation>
+    </message>
+    <message>
+      <source>Restore…</source>
+      <translation>Wiederherstellen…</translation>
+    </message>
+    <message>
+      <source>No backups yet</source>
+      <translation>Noch keine Sicherungen</translation>
+    </message>
+    <message>
+      <source>The first one is made when you launch the game.</source>
+      <translation>Die erste entsteht, wenn du das Spiel startest.</translation>
+    </message>
+    <message>
+      <source>Still set aside by an earlier launch: MO2 puts them back once the game is closed.</source>
+      <translation>Noch von einem früheren Start beiseitegelegt: MO2 legt sie zurück, sobald das Spiel geschlossen ist.</translation>
+    </message>
+    <message>
+      <source>In their folder, untouched.</source>
+      <translation>In ihrem Ordner, unberührt.</translation>
+    </message>
+    <message>
+      <source>Delete this save profile?</source>
+      <translation>Dieses Spielstandprofil löschen?</translation>
+    </message>
+    <message>
+      <source>Delete</source>
+      <translation>Löschen</translation>
+    </message>
+    <message>
+      <source>Mod not active</source>
+      <translation>Mod nicht aktiv</translation>
+    </message>
+    <message>
+      <source>Could not rename</source>
+      <translation>Umbenennen nicht möglich</translation>
+    </message>
+    <message>
+      <source>Could not delete</source>
+      <translation>Löschen nicht möglich</translation>
+    </message>
+    <message>
+      <source>From the mod {mod}</source>
+      <translation>Aus der Mod {mod}</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS; me3 loads its own packages.</source>
+      <translation>Das Spiel stürzt mit me3 innerhalb des VFS ab; me3 lädt eigene Pakete.</translation>
+    </message>
+    <message>
+      <source>Outside the VFS, MO2's mods and native DLLs are not loaded.</source>
+      <translation>Außerhalb des VFS werden die Mods und nativen DLLs von MO2 nicht geladen.</translation>
+    </message>
+    <message>
+      <source>Chosen by hand.</source>
+      <translation>Von Hand gewählt.</translation>
+    </message>
+    <message>
+      <source>Set automatically.</source>
+      <translation>Automatisch gesetzt.</translation>
+    </message>
+    <message>
+      <source>{count} file(s)</source>
+      <translation>{count} Datei(en)</translation>
+    </message>
+    <message>
+      <source>{name} is moved, with its saves, to a 'deleted' folder beside the save profiles; nothing is erased. This MO2 profile goes back to its standard saves.</source>
+      <translation>{name} wird mit seinen Spielständen in einen Ordner „deleted“ neben den Spielstandprofilen verschoben; nichts wird gelöscht. Dieses MO2-Profil kehrt zu seinen normalen Spielständen zurück.</translation>
+    </message>
+    <message>
+      <source>last saved today at {time}</source>
+      <translation>heute um {time} gespeichert</translation>
+    </message>
+    <message>
+      <source>last saved {when}</source>
+      <translation>gespeichert am {when}</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op stays inactive inside the VFS. Uses {file}.</source>
+      <translation>Seamless Co-op bleibt innerhalb des VFS inaktiv. Verwendet {file}.</translation>
+    </message>
+    <message>
+      <source>Could not save</source>
+      <translation>Speichern nicht möglich</translation>
     </message>
   </context>
   <context>
