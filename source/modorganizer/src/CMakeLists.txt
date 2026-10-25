@@ -214,6 +214,7 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	fluentsettings
 	fluentstatusdelegate
 	fluentswitch
+	fluentscrollbar
 	fluentmotion
 	fluenttabwidget
 	iconfetcher

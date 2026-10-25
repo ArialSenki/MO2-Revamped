@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
+#include "fluentscrollbar.h"
 #include "commandline.h"
 #include "instancemanager.h"
 #include "loglist.h"
@@ -60,6 +61,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QRectF>
 #include <QRegion>
 #include <QScreen>
+#include <QScrollBar>
 #include <QStyle>
 #include <QStyleHintReturnMask>
 #include <QVariant>
@@ -1370,6 +1372,10 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
   if (event->type() == QEvent::Polish && property("revampedFluent").toBool()) {
     if (auto* tree = qobject_cast<QTreeView*>(receiver)) {
       tree->setAnimated(FluentMotion::enabled());
+    }
+    // Fluent v4: scroll bars that widen under the mouse, as in Windows 11
+    if (auto* bar = qobject_cast<QScrollBar*>(receiver)) {
+      FluentScrollBar::attach(bar);
     }
   }
 
