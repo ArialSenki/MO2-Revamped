@@ -1601,6 +1601,11 @@ class EldenRingMo2Game(BasicGame):
     UnroutedSaveDirectoryName = "unrouted-global"
     # the game's name in messages that name Elden Ring
     DisplayName = "Elden Ring"
+    # Seamless Co-op for this game: its launchers and the DLL they inject; me3
+    # names the game so (a Seamless mod that only lives in MO2 runs through me3)
+    SeamlessLaunchers = frozenset({"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe"})
+    SeamlessDll = "ersc.dll"
+    Me3GameId = "eldenring"
     # Programs that start eldenring.exe themselves (Seamless Co-op, ModEngine2,
     # me3) get the same save guard as the game, and the guard waits for the
     # game they start instead of for the launcher.
@@ -2007,6 +2012,12 @@ class EldenRingMo2Game(BasicGame):
                 elif child.is_file():
                     shutil.copy2(child, route / child.name)
                     child.unlink()
+        tidy = swap.get("seamless_game_folder")
+        if isinstance(tidy, dict):
+            try:
+                self.tidy_seamless_game_folder(tidy)
+            except OSError as error:
+                qWarning(f"Elden Ring MO2: the Seamless folder in the game folder was not tidied: {error}")
         held = session_directory / self.SwapRootFilesDirectoryName
         if held.is_dir():
             global_save_root.mkdir(parents=True, exist_ok=True)
@@ -2049,6 +2060,175 @@ class EldenRingMo2Game(BasicGame):
         if started:
             arguments.append("".join(current))
         return arguments
+
+    @classmethod
+    def seamless_dll_in_mods(
+        cls, mods: list[tuple[str, Path, bool]]
+    ) -> tuple[str, Path] | None:
+        """The Seamless Co-op DLL of a mod (name, folder, active), highest
+        priority first: an active mod wins, an inactive one will do (the mod
+        needs no VFS when me3 loads it)."""
+        for want_active in (True, False):
+            for name, folder, active in reversed(mods):
+                if active != want_active:
+                    continue
+                dll = folder / "SeamlessCoop" / cls.SeamlessDll
+                if dll.is_file():
+                    return name, dll
+        return None
+
+    @staticmethod
+    def find_me3(candidates: list[Path]) -> Path | None:
+        for candidate in candidates:
+            try:
+                if candidate.name.casefold() == "me3.exe" and candidate.is_file():
+                    return candidate
+            except OSError:
+                continue
+        return None
+
+    @classmethod
+    def write_seamless_me3_profile(cls, folder: Path, dll: Path) -> Path:
+        """A me3 profile that loads Seamless Co-op from its MO2 mod folder."""
+        folder.mkdir(parents=True, exist_ok=True)
+        profile = folder / "seamless-coop.me3"
+        profile.write_text(
+            "# Written by MO2 Revamped for Seamless Co-op from its MO2 mod.\n"
+            'profileVersion = "v1"\n\n'
+            "[[supports]]\n"
+            f"game = {json.dumps(cls.Me3GameId)}\n\n"
+            "[[natives]]\n"
+            f"path = {json.dumps(str(dll))}\n",
+            encoding="utf-8",
+        )
+        return profile
+
+    def _me3_candidates(self) -> list[Path]:
+        candidates: list[Path] = []
+        try:
+            ini = Path(self._organizer.basePath()) / "ModOrganizer.ini"
+            config = configparser.ConfigParser(interpolation=None, strict=False)
+            config.read(ini, encoding="utf-8")
+            if config.has_section("customExecutables"):
+                for key, value in config.items("customExecutables"):
+                    if key.endswith("\\binary") and value.strip():
+                        candidates.append(Path(value.strip()))
+        except (AttributeError, RuntimeError, OSError, configparser.Error, UnicodeError):
+            pass
+        found = shutil.which("me3")
+        if found:
+            candidates.append(Path(found))
+        for root, parts in (
+            ("LOCALAPPDATA", ("Programs", "me3", "bin")),
+            ("ProgramFiles", ("me3", "bin")),
+            ("ProgramFiles", ("garyttierney", "me3", "bin")),
+        ):
+            base = os.environ.get(root)
+            if base:
+                candidates.append(Path(base, *parts, "me3.exe"))
+        return candidates
+
+    def _mod_folders(self) -> list[tuple[str, Path, bool]]:
+        mods = []
+        try:
+            mod_list = self._organizer.modList()
+            for name in mod_list.allModsByProfilePriority():
+                mod = mod_list.getMod(name)
+                if mod is None:
+                    continue
+                active = bool(mod_list.state(name) & mobase.ModState.ACTIVE)
+                mods.append((name, Path(mod.absolutePath()), active))
+        except (AttributeError, RuntimeError):
+            pass
+        return mods
+
+    def _launch_target(self, app_path: str, working_directory, args: str):
+        """What a launch outside the VFS starts: the program itself, or, for
+        Seamless Co-op that is not installed in the game folder, me3 loading
+        it from its MO2 mod. None when it cannot start (the user was told)."""
+        name = Path(app_path).name.casefold()
+        if name not in self.SeamlessLaunchers:
+            return app_path, working_directory, args
+        game_folder = Path(self.dataDirectory().absolutePath())
+        installed = (game_folder / "SeamlessCoop" / self.SeamlessDll).is_file() and (
+            game_folder / name
+        ).is_file()
+        if installed and os.path.normcase(str(Path(app_path).parent)) == os.path.normcase(str(game_folder)):
+            return app_path, working_directory, args
+        seamless = self.seamless_dll_in_mods(self._mod_folders())
+        me3 = self.find_me3(self._me3_candidates())
+        if seamless is None or me3 is None:
+            missing = (
+                _tr("No MO2 mod holds SeamlessCoop/{0}.").format(self.SeamlessDll)
+                if seamless is None
+                else _tr("me3 was not found (add it as an executable of this instance).")
+            )
+            QMessageBox.warning(
+                None,
+                _tr("Seamless Co-op cannot start"),
+                _tr("Seamless Co-op is not installed in the game folder, so MO2 starts it "
+                "through me3 from its mod. {0} The game was not started.").format(missing),
+            )
+            qWarning(f"Elden Ring MO2: Seamless Co-op cannot start through me3: {missing}")
+            return None
+        profile = self.write_seamless_me3_profile(
+            Path(self._organizer.basePath()) / "eldenring_mo2_me3", seamless[1]
+        )
+        # Seamless still writes its crash dumps beside the game
+        # (Game/SeamlessCoop/crashdumps): the session remembers to tidy that up
+        self._record_seamless_tidy(
+            game_folder / "SeamlessCoop", seamless[1].parent / "crashdumps"
+        )
+        qInfo(
+            f"Elden Ring MO2: Seamless Co-op starts through me3 ('{me3}') from the mod "
+            f"'{seamless[0]}'; the game folder is left alone."
+        )
+        return str(me3), str(me3.parent), f'launch -p "{profile}"'
+
+    def _record_seamless_tidy(self, folder: Path, dumps_to: Path) -> None:
+        session = self._active_save_quarantine
+        if session is None:
+            return
+        manifest_path = session / self.SaveRecoveryManifestName
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            swap = manifest.get("swap")
+            if not isinstance(swap, dict):
+                return
+            swap["seamless_game_folder"] = {
+                "folder": str(folder),
+                "existed": folder.exists(),
+                "dumps_to": str(dumps_to),
+            }
+            self._write_save_quarantine_manifest(session, manifest)
+        except (OSError, UnicodeError, ValueError, AttributeError) as error:
+            qWarning(f"Elden Ring MO2: could not note the Seamless folder to tidy: {error}")
+
+    @staticmethod
+    def tidy_seamless_game_folder(record: dict) -> None:
+        """After a Seamless run through me3: its crash dumps move to the mod,
+        and the SeamlessCoop folder it made in the game folder goes away (only
+        when it did not exist before and holds no other file)."""
+        folder = Path(str(record.get("folder", "")))
+        dumps_to = Path(str(record.get("dumps_to", "")))
+        if not folder.is_absolute() or not folder.is_dir() or folder.name != "SeamlessCoop":
+            return
+        dumps = folder / "crashdumps"
+        if dumps.is_dir() and dumps_to.is_absolute():
+            for entry in list(dumps.rglob("*")):
+                if entry.is_file():
+                    target = dumps_to / entry.relative_to(dumps)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    if target.exists():
+                        target = target.with_name(f"{target.stem}.{uuid.uuid4().hex[:8]}{target.suffix}")
+                    shutil.move(str(entry), str(target))
+        if record.get("existed"):
+            return
+        if any(entry.is_file() for entry in folder.rglob("*")):
+            qWarning(f"Elden Ring MO2: '{folder}' holds other files; it was left in place.")
+            return
+        shutil.rmtree(folder)
+        qInfo(f"Elden Ring MO2: removed '{folder}', which Seamless Co-op made in the game folder.")
 
     def _start_outside_vfs(self, app_path: str, working_directory, args: str) -> bool:
         """Starts a launcher without MO2's hooks (QProcess runs it as a plain
@@ -3209,11 +3389,23 @@ class EldenRingMo2Game(BasicGame):
         session = self._active_save_quarantine
         self._game_run += 1
         try:
-            started = self._start_outside_vfs(app_path, working_directory, args)
+            target = self._launch_target(app_path, working_directory, args)
+            started = target is not None and self._start_outside_vfs(*target)
         except Exception as error:
             # the saves are already swapped: any failure puts them back now
             qCritical(f"Elden Ring MO2: the launch outside the VFS failed: {error}")
-            started = False
+            target, started = (app_path, working_directory, args), False
+        if not started and target is None:
+            # nothing to start (the user was told why): only the saves go back
+            if session is not None:
+                try:
+                    self._restore_global_save_quarantine(
+                        session, Path(self.savesDirectory().absolutePath())
+                    )
+                    self._active_save_quarantine = None
+                except (OSError, RuntimeError, ValueError) as error:
+                    qCritical(f"Elden Ring MO2: the swapped saves need recovery: {error}")
+            return False
         if not started:
             if session is not None:
                 try:
@@ -4819,6 +5011,9 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     LocalSavegamesClass = NightreignLocalSavegames
     RecoveryScope = "|nightreign"
     DisplayName = "Nightreign"
+    SeamlessLaunchers = frozenset({"nrsc_launcher.exe"})
+    SeamlessDll = "nrsc.dll"
+    Me3GameId = "nightreign"
     GameLaunchers = frozenset(
         {
             "nightreign.exe",

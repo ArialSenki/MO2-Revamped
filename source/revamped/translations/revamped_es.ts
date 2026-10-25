@@ -1659,6 +1659,22 @@ Si contiene progreso que quieres conservar, cierra el juego y vuelve a copiar su
       <source>MO2 could not start {0} outside its virtual file system. The game was not started.</source>
       <translation>MO2 no pudo iniciar {0} fuera de su sistema de archivos virtual. No se inició el juego.</translation>
     </message>
+    <message>
+      <source>me3 was not found (add it as an executable of this instance).</source>
+      <translation>No se encontró me3 (añádelo como ejecutable de esta instancia).</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op cannot start</source>
+      <translation>Seamless Co-op no puede iniciarse</translation>
+    </message>
+    <message>
+      <source>No MO2 mod holds SeamlessCoop/{0}.</source>
+      <translation>Ningún mod de MO2 tiene SeamlessCoop/{0}.</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op is not installed in the game folder, so MO2 starts it through me3 from its mod. {0} The game was not started.</source>
+      <translation>Seamless Co-op no está instalado en la carpeta del juego, así que MO2 lo inicia con me3 desde su mod. {0} No se inició el juego.</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -3302,6 +3318,14 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     <message>
       <source>Could not save</source>
       <translation>No se pudo guardar</translation>
+    </message>
+    <message>
+      <source>Not in the game folder: me3 loads it from the mod {mod}.</source>
+      <translation>No está en la carpeta del juego: me3 lo carga desde el mod {mod}.</translation>
+    </message>
+    <message>
+      <source>To start it from the mod {mod}, add me3 as an executable.</source>
+      <translation>Para iniciarlo desde el mod {mod}, añade me3 como ejecutable.</translation>
     </message>
   </context>
   <context>

@@ -3667,6 +3667,51 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         except (AttributeError, RuntimeError):
             return []
 
+    def _seamless_route(self) -> tuple[str, str]:
+        """How Seamless Co-op starts: ("game", "") when it is installed in the
+        game folder, ("me3", mod) when me3 loads it from an MO2 mod (as the
+        game plugin does), ("needs_me3", mod) when me3 is missing, ("", "")
+        when there is no Seamless at all."""
+        dll_name = "nrsc.dll" if EldenRingMo2SaveIsolation._game_key == "nightreign" else "ersc.dll"
+        game_directory = self._game_directory()
+        if game_directory is not None and (game_directory / "SeamlessCoop" / dll_name).is_file():
+            return "game", ""
+        mod_name = ""
+        try:
+            mod_list = self.__organizer.modList()
+            names = list(mod_list.allModsByProfilePriority())
+            for want_active in (True, False):
+                for name in reversed(names):
+                    active = bool(mod_list.state(name) & mobase.ModState.ACTIVE)
+                    mod = mod_list.getMod(name)
+                    if active == want_active and mod is not None and (
+                        Path(mod.absolutePath()) / "SeamlessCoop" / dll_name
+                    ).is_file():
+                        mod_name = name
+                        break
+                if mod_name:
+                    break
+        except (AttributeError, RuntimeError):
+            pass
+        if not mod_name:
+            return "", ""
+        candidates = [Path(binary) for _title, binary in self._read_executables()]
+        found = shutil.which("me3")
+        if found:
+            candidates.append(Path(found))
+        for root, parts in (
+            ("LOCALAPPDATA", ("Programs", "me3", "bin")),
+            ("ProgramFiles", ("me3", "bin")),
+            ("ProgramFiles", ("garyttierney", "me3", "bin")),
+        ):
+            base = os.environ.get(root)
+            if base:
+                candidates.append(Path(base, *parts, "me3.exe"))
+        has_me3 = any(
+            candidate.name.casefold() == "me3.exe" and candidate.is_file() for candidate in candidates
+        )
+        return ("me3" if has_me3 else "needs_me3"), mod_name
+
     def _detect_save_formats(self) -> list[dict]:
         """The save formats this instance can produce: the game's own, Seamless
         Co-op's (found in the game folder or an active mod) and alt-saves'
@@ -4118,6 +4163,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     reason = _tr("Seamless Co-op stays inactive inside the VFS. Uses {file}.").format(
                         file=f"{_game()['stem']}.co2"
                     )
+                    route, seamless_mod = self._seamless_route()
+                    if route == "me3":
+                        reason += " " + _tr("Not in the game folder: me3 loads it from the mod {mod}.").format(
+                            mod=seamless_mod
+                        )
+                    elif route == "needs_me3":
+                        reason += " " + _tr("To start it from the mod {mod}, add me3 as an executable.").format(
+                            mod=seamless_mod
+                        )
                 elif binary_name in {"me3.exe", "me3-launcher.exe"}:
                     reason = _tr("The game crashes with me3 inside the VFS; me3 loads its own packages.")
                 else:
