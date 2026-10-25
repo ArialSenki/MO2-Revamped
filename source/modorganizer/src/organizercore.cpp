@@ -1576,6 +1576,19 @@ void OrganizerCore::refreshDirectoryStructure()
   QTimer::singleShot(0, m_DirectoryRefresher.get(), &DirectoryRefresher::refresh);
 }
 
+void OrganizerCore::waitForDirectoryRefresh()
+{
+  if (!m_DirectoryUpdate) {
+    return;
+  }
+
+  log::debug("waiting until the directory refresh finishes");
+  QEventLoop loop;
+  connect(this, &OrganizerCore::directoryStructureReady, &loop, &QEventLoop::quit,
+          Qt::ConnectionType::QueuedConnection);
+  loop.exec();
+}
+
 void OrganizerCore::onDirectoryRefreshed()
 {
   log::debug("directory refreshed, finishing up");
@@ -1957,13 +1970,7 @@ bool OrganizerCore::beforeRun(
 {
   saveCurrentProfile();
 
-  // need to wait until directory structure is ready
-  if (m_DirectoryUpdate) {
-    QEventLoop loop;
-    connect(this, &OrganizerCore::directoryStructureReady, &loop, &QEventLoop::quit,
-            Qt::ConnectionType::QueuedConnection);
-    loop.exec();
-  }
+  waitForDirectoryRefresh();
 
   // need to make sure all data is saved before we start the application
   if (m_CurrentProfile != nullptr) {
@@ -2022,13 +2029,7 @@ ProcessRunner::Results OrganizerCore::waitForAllUSVFSProcesses(UILocker::Reasons
 std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
                                                 const QString& customOverwrite)
 {
-  // need to wait until directory structure is ready
-  if (m_DirectoryUpdate) {
-    QEventLoop loop;
-    connect(this, &OrganizerCore::directoryStructureReady, &loop, &QEventLoop::quit,
-            Qt::ConnectionType::QueuedConnection);
-    loop.exec();
-  }
+  waitForDirectoryRefresh();
 
   IPluginGame* game = qApp->property("managed_game").value<IPluginGame*>();
   Profile profile(QDir(m_Settings.paths().profiles() + "/" + profileName), game,

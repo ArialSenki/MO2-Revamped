@@ -310,6 +310,11 @@ public:
   void refreshBSAList();
 
   void refreshDirectoryStructure();
+
+  // returns once a directory refresh in progress has finished; plugins that
+  // look up file origins (forced loads, for one) need the finished structure
+  void waitForDirectoryRefresh();
+
   void updateModInDirectoryStructure(unsigned int index, ModInfo::Ptr modInfo);
   void updateModsInDirectoryStructure(QMap<unsigned int, ModInfo::Ptr> modInfos);
 

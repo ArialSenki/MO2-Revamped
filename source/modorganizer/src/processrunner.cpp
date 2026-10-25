@@ -554,6 +554,9 @@ ProcessRunner& ProcessRunner::setFromExecutable(const Executable& exe)
 
   ForcedLibraries forcedLibraries;
   if (profile->forcedLibrariesEnabled(exe.title())) {
+    // a shortcut runs right after startup, while the first refresh may still
+    // be going; game plugins resolve their forced loads against its result
+    m_core.waitForDirectoryRefresh();
     forcedLibraries = profile->determineForcedLibraries(exe.title());
   }
 
@@ -641,6 +644,7 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
       setCustomOverwrite(profile->setting("custom_overwrites", exe.title()).toString());
 
       if (profile->forcedLibrariesEnabled(exe.title())) {
+        m_core.waitForDirectoryRefresh();
         setForcedLibraries(profile->determineForcedLibraries(exe.title()));
       }
     } catch (const std::runtime_error&) {
@@ -655,6 +659,7 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
       setCustomOverwrite(profile->setting("custom_overwrites", exe.title()).toString());
 
       if (profile->forcedLibrariesEnabled(exe.title())) {
+        m_core.waitForDirectoryRefresh();
         setForcedLibraries(profile->determineForcedLibraries(exe.title()));
       }
 
