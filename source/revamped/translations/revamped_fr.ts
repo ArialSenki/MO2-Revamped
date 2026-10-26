@@ -3220,10 +3220,6 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <translation>pas encore de sauvegarde</translation>
     </message>
     <message>
-      <source>The game itself always starts inside the VFS.</source>
-      <translation>Le jeu lui-même démarre toujours dans le VFS.</translation>
-    </message>
-    <message>
       <source>No game programs in this instance.</source>
       <translation>Aucun programme du jeu dans cette instance.</translation>
     </message>
@@ -3272,10 +3268,6 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <translation>Du mod {mod}</translation>
     </message>
     <message>
-      <source>The game crashes with me3 inside the VFS; me3 loads its own packages.</source>
-      <translation>Le jeu plante avec me3 dans le VFS ; me3 charge ses propres paquets.</translation>
-    </message>
-    <message>
       <source>Outside the VFS, MO2's mods and native DLLs are not loaded.</source>
       <translation>Hors du VFS, les mods et DLL natives de MO2 ne sont pas chargés.</translation>
     </message>
@@ -3312,12 +3304,28 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <translation>Impossible d'enregistrer</translation>
     </message>
     <message>
-      <source>Not in the game folder: me3 loads it from the mod {mod}.</source>
-      <translation>Absent du dossier du jeu : me3 le charge depuis le mod {mod}.</translation>
-    </message>
-    <message>
       <source>To start it from the mod {mod}, add me3 as an executable.</source>
       <translation>Pour le lancer depuis le mod {mod}, ajoutez me3 comme exécutable.</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS, so MO2 hands it the profile's mod list and native DLLs (and Seamless Co-op when its mod is active); me3's own profile is not used.</source>
+      <translation>Le jeu plante avec me3 dans le VFS : MO2 lui transmet donc la liste de mods et les DLL natives du profil (et Seamless Co-op si son mod est actif) ; le profil propre de me3 n'est pas utilisé.</translation>
+    </message>
+    <message>
+      <source>me3 starts it with MO2's mod list, from the mod {mod}.</source>
+      <translation>me3 le lance avec la liste de mods de MO2, depuis le mod {mod}.</translation>
+    </message>
+    <message>
+      <source>me3 starts it with MO2's mod list.</source>
+      <translation>me3 le lance avec la liste de mods de MO2.</translation>
+    </message>
+    <message>
+      <source>Starts inside the VFS with every MO2 mod. Activate a Seamless Co-op mod and it starts with the game too.</source>
+      <translation>Démarre dans le VFS avec tous les mods de MO2. Activez un mod Seamless Co-op et il démarrera aussi avec le jeu.</translation>
+    </message>
+    <message>
+      <source>Starts inside the VFS with every MO2 mod, and with Seamless Co-op from the mod {mod}.</source>
+      <translation>Démarre dans le VFS avec tous les mods de MO2, et avec Seamless Co-op depuis le mod {mod}.</translation>
     </message>
   </context>
   <context>

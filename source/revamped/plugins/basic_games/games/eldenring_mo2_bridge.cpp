@@ -1466,6 +1466,42 @@ bool all_native_initializers_started() {
 
 using NativeInitializerFunction = bool(__cdecl*)();
 
+// Mod Engine 2's extension entry point, as Seamless Co-op's ersc.dll exports
+// it: bool modengine_ext_init(connector, ModEngineExtension** extension).
+// Like me3's compatibility shim, the bridge hands it an empty connector; the
+// extensions MO2 loads do their setup in this call and use no connector API.
+using ModEngineExtensionInit = bool(__cdecl*)(void* connector, void** extension);
+constexpr char kModEngineExtensionInit[] = "modengine_ext_init";
+alignas(16) unsigned char g_mod_engine_connector[64] = {};
+
+BOOL CALLBACK find_game_window(HWND window, LPARAM parameter);
+
+// Mod Engine 2 calls its extensions once the game is running its own code
+// (after the executable's protection has unpacked it), not while MO2 is
+// still injecting into the suspended process. The game's first window is
+// the earliest point the bridge can see that.
+void run_mod_engine_extension(NativeInitializerRequest* request, FARPROC symbol) {
+  bool window = false;
+  for (unsigned int attempt = 0; attempt < 6000 && !window; ++attempt) {
+    EnumWindows(find_game_window, reinterpret_cast<LPARAM>(&window));
+    if (!window) {
+      Sleep(10);
+    }
+  }
+  if (!window) {
+    log_line("Mod Engine 2 extension skipped: the game window did not appear within 60 seconds:",
+             request->module_path.c_str());
+    return;
+  }
+  void* extension = nullptr;
+  log_line("Calling Mod Engine 2 extension entry point:", request->module_path.c_str());
+  const bool ready = reinterpret_cast<ModEngineExtensionInit>(symbol)(
+      g_mod_engine_connector, &extension);
+  log_line(ready ? "Mod Engine 2 extension reported ready:"
+                 : "Mod Engine 2 extension reported failure:",
+           request->module_path.c_str());
+}
+
 DWORD WINAPI run_native_initializer(void* context) {
   auto* request = static_cast<NativeInitializerRequest*>(context);
   if (request == nullptr || request->module == nullptr) {
@@ -1476,6 +1512,10 @@ DWORD WINAPI run_native_initializer(void* context) {
   if (symbol == nullptr) {
     log_line("Revamped native initializer export was not found:",
              request->module_path.c_str());
+    return 0;
+  }
+  if (request->function_name == kModEngineExtensionInit) {
+    run_mod_engine_extension(request, symbol);
     return 0;
   }
 
@@ -1537,10 +1577,10 @@ void inspect_loaded_mods() {
         log_line("No Mod Engine 2 initializer export:", entry.szModule);
         continue;
       }
-      // The Mod Engine 2 extension API needs a connector object this bridge
-      // does not implement. Only explicitly configured Revamped initializers are called.
+      // MO2 lists the Mod Engine 2 extensions it wants started (Seamless
+      // Co-op); others are left alone.
       log_line(
-          "Mod Engine 2 initializer detected but skipped: full connector is unavailable:",
+          "Mod Engine 2 initializer detected but not requested by MO2:",
           entry.szModule);
     } while (Module32NextW(snapshot, &entry));
   }
@@ -1787,7 +1827,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.35.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.36.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.

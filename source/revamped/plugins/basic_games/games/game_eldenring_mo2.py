@@ -1564,7 +1564,7 @@ class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
     Version = "0.5.0-alpha.75"
-    NativeBridgeVersion = "0.5.0-alpha.35"
+    NativeBridgeVersion = "0.5.0-alpha.36"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -2088,18 +2088,101 @@ class EldenRingMo2Game(BasicGame):
         return None
 
     @classmethod
-    def write_seamless_me3_profile(cls, folder: Path, dll: Path) -> Path:
-        """A me3 profile that loads Seamless Co-op from its MO2 mod folder."""
+    def build_me3_profile(
+        cls,
+        packages: list[tuple[str, Path]],
+        natives: list[tuple[Path, str | None]],
+        note: str,
+    ) -> str:
+        """A me3 profile (TOML) for this game. Packages go in MO2's priority
+        order, lowest first: me3 lets a later package's file replace an
+        earlier one's, as a higher MO2 priority wins in the VFS. Natives load
+        in the given order."""
+        lines = [f"# {note}", 'profileVersion = "v1"', "", "[[supports]]", f"game = {json.dumps(cls.Me3GameId)}"]
+        used_ids: set[str] = set()
+        for name, folder in packages:
+            base = re.sub(r"[^A-Za-z0-9_.-]+", "-", name).strip("-").lower() or "mod"
+            package_id, number = base, 2
+            while package_id in used_ids:
+                package_id, number = f"{base}-{number}", number + 1
+            used_ids.add(package_id)
+            lines += ["", "[[packages]]", f"id = {json.dumps(package_id)}", f"path = {json.dumps(str(folder))}"]
+        for library, initializer in natives:
+            lines += ["", "[[natives]]", f"path = {json.dumps(str(library))}"]
+            if initializer:
+                lines.append(f"initializer = {{ function = {json.dumps(initializer)} }}")
+        return "\n".join(lines) + "\n"
+
+    def _me3_packages(self) -> list[tuple[str, Path]]:
+        """The active mods (separators left out) and Overwrite, lowest
+        priority first."""
+        packages = []
+        for name, folder, active in self._mod_folders():
+            if active and not name.casefold().endswith("_separator") and folder.is_dir():
+                packages.append((name, folder))
+        try:
+            overwrite = Path(self._organizer.overwritePath())
+            if overwrite.is_dir() and any(overwrite.iterdir()):
+                packages.append(("Overwrite", overwrite))
+        except (AttributeError, RuntimeError, OSError):
+            pass
+        return packages
+
+    def _me3_natives(self) -> list[tuple[Path, str | None]]:
+        """The DLLs MO2 would force-load into the game, in the native
+        profile's order and without its switched-off entries, as me3 natives:
+        not the bridge (it serves the VFS) nor root proxy loaders such as
+        dinput8.dll (they would fight me3 for the same hooks)."""
+        initializers: dict[str, str] = {}
+        try:
+            profile = self._organizer.profile()
+            resolved = self._resolve_revamped_native_profile(profile) if profile is not None else None
+            for entry in (resolved or {}).get("entries", []) if not (resolved or {}).get("error") else []:
+                initializer = entry.get("initializer")
+                if isinstance(initializer, dict):
+                    initializer = initializer.get("function")
+                if initializer and entry.get("library") is not None:
+                    initializers[os.path.normcase(str(Path(entry["library"])))] = str(initializer)
+        except (AttributeError, RuntimeError, OSError, ValueError):
+            pass
+        natives = []
+        bridge = os.path.normcase(str(Path(__file__).with_name("eldenring_mo2_bridge.dll")))
+        for load in self.executableForcedLoads():
+            library = Path(load.library())
+            key = os.path.normcase(str(library))
+            if key == bridge:
+                continue
+            if library.name.casefold() in EldenRingModDataChecker._root_loader_dlls:
+                qInfo(
+                    f"Elden Ring MO2: '{library.name}' is a root loader DLL; me3 does not "
+                    "load it (it would compete with me3 for the game's hooks)."
+                )
+                continue
+            natives.append((library, initializers.get(key)))
+        return natives
+
+    def _write_me3_profile(self, name: str, seamless: Path | None) -> Path:
+        natives = self._me3_natives()
+        if seamless is not None and all(
+            os.path.normcase(str(path)) != os.path.normcase(str(seamless)) for path, _ in natives
+        ):
+            natives.append((seamless, None))
+        packages = self._me3_packages()
+        folder = Path(self._organizer.basePath()) / "eldenring_mo2_me3"
         folder.mkdir(parents=True, exist_ok=True)
-        profile = folder / "seamless-coop.me3"
+        profile = folder / name
         profile.write_text(
-            "# Written by MO2 Revamped for Seamless Co-op from its MO2 mod.\n"
-            'profileVersion = "v1"\n\n'
-            "[[supports]]\n"
-            f"game = {json.dumps(cls.Me3GameId)}\n\n"
-            "[[natives]]\n"
-            f"path = {json.dumps(str(dll))}\n",
+            self.build_me3_profile(
+                packages,
+                natives,
+                "Written by MO2 Revamped from the MO2 profile's mod list for this launch.",
+            ),
             encoding="utf-8",
+        )
+        qInfo(
+            f"Elden Ring MO2: me3 profile '{profile.name}' written from MO2: "
+            f"{len(packages)} package(s), {len(natives)} native DLL(s)"
+            f"{', with Seamless Co-op' if seamless is not None else ''}."
         )
         return profile
 
@@ -2143,45 +2226,68 @@ class EldenRingMo2Game(BasicGame):
         return mods
 
     def _launch_target(self, app_path: str, working_directory, args: str):
-        """What a launch outside the VFS starts: the program itself, or, for
-        Seamless Co-op that is not installed in the game folder, me3 loading
-        it from its MO2 mod. None when it cannot start (the user was told)."""
+        """What a launch outside the VFS starts. me3 and Seamless Co-op get a
+        me3 profile written from the MO2 profile (its mods, Overwrite and
+        native DLLs), so MO2's mod list stays the one place to choose mods;
+        me3 adds Seamless when its mod is active, Seamless Co-op always does
+        (from its mod, or from the game folder). Without me3, a Seamless that
+        is installed in the game folder starts from its own launcher. None
+        when it cannot start (the user was told)."""
         name = Path(app_path).name.casefold()
-        if name not in self.SeamlessLaunchers:
+        is_me3 = name == "me3.exe"
+        is_seamless = name in self.SeamlessLaunchers
+        if not (is_me3 or is_seamless):
             return app_path, working_directory, args
         game_folder = Path(self.dataDirectory().absolutePath())
-        installed = (game_folder / "SeamlessCoop" / self.SeamlessDll).is_file() and (
-            game_folder / name
-        ).is_file()
-        if installed and os.path.normcase(str(Path(app_path).parent)) == os.path.normcase(str(game_folder)):
-            return app_path, working_directory, args
-        seamless = self.seamless_dll_in_mods(self._mod_folders())
-        me3 = self.find_me3(self._me3_candidates())
-        if seamless is None or me3 is None:
-            missing = (
-                _tr("No MO2 mod holds SeamlessCoop/{0}.").format(self.SeamlessDll)
-                if seamless is None
-                else _tr("me3 was not found (add it as an executable of this instance).")
-            )
-            QMessageBox.warning(
-                None,
-                _tr("Seamless Co-op cannot start"),
-                _tr("Seamless Co-op is not installed in the game folder, so MO2 starts it "
-                "through me3 from its mod. {0} The game was not started.").format(missing),
-            )
-            qWarning(f"Elden Ring MO2: Seamless Co-op cannot start through me3: {missing}")
-            return None
-        profile = self.write_seamless_me3_profile(
-            Path(self._organizer.basePath()) / "eldenring_mo2_me3", seamless[1]
+        mods = self._mod_folders()
+        seamless_dll: Path | None = None
+        seamless_mod = ""
+        if is_me3:
+            me3 = Path(app_path)
+            found = self.seamless_dll_in_mods([mod for mod in mods if mod[2]])
+            if found is not None:
+                seamless_mod, seamless_dll = found
+        else:
+            me3 = self.find_me3(self._me3_candidates())
+            installed_dll = game_folder / "SeamlessCoop" / self.SeamlessDll
+            found = self.seamless_dll_in_mods(mods)
+            if found is not None:
+                seamless_mod, seamless_dll = found
+            elif installed_dll.is_file():
+                seamless_dll = installed_dll
+            if me3 is None and installed_dll.is_file() and (game_folder / name).is_file():
+                qInfo(
+                    "Elden Ring MO2: me3 was not found; Seamless Co-op starts from its "
+                    "own launcher in the game folder, without MO2's mods."
+                )
+                return str(game_folder / name), str(game_folder), args
+            if me3 is None or seamless_dll is None:
+                missing = (
+                    _tr("No MO2 mod holds SeamlessCoop/{0}.").format(self.SeamlessDll)
+                    if seamless_dll is None
+                    else _tr("me3 was not found (add it as an executable of this instance).")
+                )
+                QMessageBox.warning(
+                    None,
+                    _tr("Seamless Co-op cannot start"),
+                    _tr("Seamless Co-op is not installed in the game folder, so MO2 starts it "
+                    "through me3 from its mod. {0} The game was not started.").format(missing),
+                )
+                qWarning(f"Elden Ring MO2: Seamless Co-op cannot start through me3: {missing}")
+                return None
+        profile = self._write_me3_profile(
+            "mo2-seamless.me3" if seamless_dll is not None else "mo2.me3", seamless_dll
         )
-        # Seamless still writes its crash dumps beside the game
-        # (Game/SeamlessCoop/crashdumps): the session remembers to tidy that up
-        self._record_seamless_tidy(
-            game_folder / "SeamlessCoop", seamless[1].parent / "crashdumps"
-        )
+        if seamless_dll is not None and seamless_mod:
+            # Seamless still writes its crash dumps beside the game
+            # (Game/SeamlessCoop/crashdumps): the session remembers to tidy that up
+            self._record_seamless_tidy(
+                game_folder / "SeamlessCoop", seamless_dll.parent / "crashdumps"
+            )
         qInfo(
-            f"Elden Ring MO2: Seamless Co-op starts through me3 ('{me3}') from the mod "
-            f"'{seamless[0]}'; the game folder is left alone."
+            f"Elden Ring MO2: '{Path(app_path).name}' starts me3 ('{me3}') with MO2's mod list"
+            + (f" and Seamless Co-op from '{seamless_mod or game_folder}'" if seamless_dll else "")
+            + "; the game folder is left alone."
         )
         return str(me3), str(me3.parent), f'launch -p "{profile}"'
 
@@ -3153,8 +3259,9 @@ class EldenRingMo2Game(BasicGame):
         direct_game = Path(app_path).name.casefold() == self.GameProcess
         # read by the save hiding below (how long a launcher may take)
         self._launch_via_launcher = not direct_game
-        # a launcher run outside the VFS (the game itself always runs inside:
-        # started bare it would restart through Steam with Easy Anti-Cheat)
+        # a launcher run outside the VFS (the game itself always runs inside,
+        # Seamless Co-op included: started bare it would restart through Steam
+        # with Easy Anti-Cheat)
         swap_launch = (
             not direct_game and self._launch_method(app_path) == self.LaunchMethodSwap
         )
@@ -3369,6 +3476,7 @@ class EldenRingMo2Game(BasicGame):
         )
         if swap_launch:
             return self._run_swap_launch(app_path, _working_directory, _args or "")
+        initializer_entries = initializer_entries + self._seamless_initializer()
         self._activate_profile_config_environment(profile_config, initializer_entries)
         # a new run only once nothing above blocked the launch: a blocked
         # attempt must not disown the watch of a game that is still running
@@ -4715,7 +4823,34 @@ class EldenRingMo2Game(BasicGame):
         # so proxy loaders can discover their root-level companion files.
         forced_loads.extend(root_forced_loads)
         forced_loads.extend(mod_forced_loads)
+        # Seamless Co-op from its active mod: loaded with the others, and
+        # started by the bridge through its Mod Engine 2 entry point once
+        # the game runs (see _seamless_initializer)
+        seamless = self._active_seamless_dll() if native_loading else None
+        if seamless is not None and all(
+            os.path.normcase(str(Path(load.library()))) != os.path.normcase(str(seamless))
+            for load in forced_loads
+        ):
+            qInfo(f"Elden Ring MO2: queued Seamless Co-op ({seamless.name}) from its MO2 mod.")
+            forced_loads.append(
+                mobase.ExecutableForcedLoadSetting(self.GameProcess, str(seamless)).withEnabled(True)
+            )
         return forced_loads
+
+    def _active_seamless_dll(self) -> Path | None:
+        found = self.seamless_dll_in_mods([mod for mod in self._mod_folders() if mod[2]])
+        return found[1] if found is not None else None
+
+    def _seamless_initializer(self) -> list[dict]:
+        """The bridge entry that starts Seamless Co-op's DLL: it exports Mod
+        Engine 2's modengine_ext_init, which the bridge calls once the game
+        runs its own code, as Mod Engine 2 and me3 do."""
+        if not bool(self._organizer.pluginSetting(self.name(), self.NativeDllSetting)):
+            return []
+        seamless = self._active_seamless_dll()
+        if seamless is None:
+            return []
+        return [{"library": seamless, "initializer": "modengine_ext_init"}]
 
     @staticmethod
     def _is_game_runtime_dll(name: str) -> bool:

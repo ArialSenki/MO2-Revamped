@@ -3667,34 +3667,27 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         except (AttributeError, RuntimeError):
             return []
 
-    def _seamless_route(self) -> tuple[str, str]:
-        """How Seamless Co-op starts: ("game", "") when it is installed in the
-        game folder, ("me3", mod) when me3 loads it from an MO2 mod (as the
-        game plugin does), ("needs_me3", mod) when me3 is missing, ("", "")
-        when there is no Seamless at all."""
+    def _seamless_mod(self, active_only: bool = False) -> str:
+        """The MO2 mod that holds Seamless Co-op's DLL, highest priority
+        first: an active one before an inactive one (unless active_only)."""
         dll_name = "nrsc.dll" if EldenRingMo2SaveIsolation._game_key == "nightreign" else "ersc.dll"
-        game_directory = self._game_directory()
-        if game_directory is not None and (game_directory / "SeamlessCoop" / dll_name).is_file():
-            return "game", ""
-        mod_name = ""
         try:
             mod_list = self.__organizer.modList()
             names = list(mod_list.allModsByProfilePriority())
-            for want_active in (True, False):
+            for want_active in ((True,) if active_only else (True, False)):
                 for name in reversed(names):
                     active = bool(mod_list.state(name) & mobase.ModState.ACTIVE)
                     mod = mod_list.getMod(name)
                     if active == want_active and mod is not None and (
                         Path(mod.absolutePath()) / "SeamlessCoop" / dll_name
                     ).is_file():
-                        mod_name = name
-                        break
-                if mod_name:
-                    break
+                        return name
         except (AttributeError, RuntimeError):
             pass
-        if not mod_name:
-            return "", ""
+        return ""
+
+    def _has_me3(self) -> bool:
+        """Whether me3 is at hand, where the game plugin looks for it."""
         candidates = [Path(binary) for _title, binary in self._read_executables()]
         found = shutil.which("me3")
         if found:
@@ -3707,10 +3700,25 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             base = os.environ.get(root)
             if base:
                 candidates.append(Path(base, *parts, "me3.exe"))
-        has_me3 = any(
+        return any(
             candidate.name.casefold() == "me3.exe" and candidate.is_file() for candidate in candidates
         )
-        return ("me3" if has_me3 else "needs_me3"), mod_name
+
+    def _seamless_route(self) -> tuple[str, str]:
+        """How the Seamless Co-op program starts, as the game plugin decides:
+        ("me3", mod) through me3 with MO2's mods (mod is "" for a Seamless
+        installed in the game folder), ("game", "") from its own launcher in
+        the game folder when there is no me3, ("needs_me3", mod) when only a
+        mod has it and me3 is missing, ("", "") when there is no Seamless."""
+        dll_name = "nrsc.dll" if EldenRingMo2SaveIsolation._game_key == "nightreign" else "ersc.dll"
+        game_directory = self._game_directory()
+        installed = game_directory is not None and (game_directory / "SeamlessCoop" / dll_name).is_file()
+        mod_name = self._seamless_mod()
+        if not mod_name and not installed:
+            return "", ""
+        if self._has_me3():
+            return "me3", mod_name
+        return ("game", "") if installed else ("needs_me3", mod_name)
 
     def _detect_save_formats(self) -> list[dict]:
         """The save formats this instance can produce: the game's own, Seamless
@@ -4158,22 +4166,32 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 method, by_hand = self._launch_method_of(binary, methods)
                 direct_game = binary_name == _game()["process"]
                 if direct_game:
-                    reason = _tr("The game itself always starts inside the VFS.")
+                    active_seamless = self._seamless_mod(active_only=True)
+                    if active_seamless:
+                        reason = _tr("Starts inside the VFS with every MO2 mod, and with Seamless Co-op "
+                                     "from the mod {mod}.").format(mod=active_seamless)
+                    else:
+                        reason = _tr("Starts inside the VFS with every MO2 mod. Activate a Seamless Co-op "
+                                     "mod and it starts with the game too.")
                 elif binary_name in seamless_names:
                     reason = _tr("Seamless Co-op stays inactive inside the VFS. Uses {file}.").format(
                         file=f"{_game()['stem']}.co2"
                     )
                     route, seamless_mod = self._seamless_route()
-                    if route == "me3":
-                        reason += " " + _tr("Not in the game folder: me3 loads it from the mod {mod}.").format(
+                    if route == "me3" and seamless_mod:
+                        reason += " " + _tr("me3 starts it with MO2's mod list, from the mod {mod}.").format(
                             mod=seamless_mod
                         )
+                    elif route == "me3":
+                        reason += " " + _tr("me3 starts it with MO2's mod list.")
                     elif route == "needs_me3":
                         reason += " " + _tr("To start it from the mod {mod}, add me3 as an executable.").format(
                             mod=seamless_mod
                         )
                 elif binary_name in {"me3.exe", "me3-launcher.exe"}:
-                    reason = _tr("The game crashes with me3 inside the VFS; me3 loads its own packages.")
+                    reason = _tr("The game crashes with me3 inside the VFS, so MO2 hands it the profile's "
+                                 "mod list and native DLLs (and Seamless Co-op when its mod is active); "
+                                 "me3's own profile is not used.")
                 else:
                     reason = _tr("Outside the VFS, MO2's mods and native DLLs are not loaded.")
                 if not direct_game:

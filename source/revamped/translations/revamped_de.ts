@@ -3216,10 +3216,6 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <translation>noch kein Spielstand</translation>
     </message>
     <message>
-      <source>The game itself always starts inside the VFS.</source>
-      <translation>Das Spiel selbst startet immer innerhalb des VFS.</translation>
-    </message>
-    <message>
       <source>No game programs in this instance.</source>
       <translation>Diese Instanz hat keine Spielprogramme.</translation>
     </message>
@@ -3268,10 +3264,6 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <translation>Aus der Mod {mod}</translation>
     </message>
     <message>
-      <source>The game crashes with me3 inside the VFS; me3 loads its own packages.</source>
-      <translation>Das Spiel stürzt mit me3 innerhalb des VFS ab; me3 lädt eigene Pakete.</translation>
-    </message>
-    <message>
       <source>Outside the VFS, MO2's mods and native DLLs are not loaded.</source>
       <translation>Außerhalb des VFS werden die Mods und nativen DLLs von MO2 nicht geladen.</translation>
     </message>
@@ -3308,12 +3300,28 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <translation>Speichern nicht möglich</translation>
     </message>
     <message>
-      <source>Not in the game folder: me3 loads it from the mod {mod}.</source>
-      <translation>Nicht im Spielordner: me3 lädt es aus der Mod {mod}.</translation>
-    </message>
-    <message>
       <source>To start it from the mod {mod}, add me3 as an executable.</source>
       <translation>Um es aus der Mod {mod} zu starten, füge me3 als Programm hinzu.</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS, so MO2 hands it the profile's mod list and native DLLs (and Seamless Co-op when its mod is active); me3's own profile is not used.</source>
+      <translation>Das Spiel stürzt mit me3 innerhalb des VFS ab, daher übergibt MO2 ihm die Modliste und nativen DLLs des Profils (und Seamless Co-op, wenn dessen Mod aktiv ist); das eigene Profil von me3 wird nicht verwendet.</translation>
+    </message>
+    <message>
+      <source>me3 starts it with MO2's mod list, from the mod {mod}.</source>
+      <translation>me3 startet es mit der Modliste von MO2, aus der Mod {mod}.</translation>
+    </message>
+    <message>
+      <source>me3 starts it with MO2's mod list.</source>
+      <translation>me3 startet es mit der Modliste von MO2.</translation>
+    </message>
+    <message>
+      <source>Starts inside the VFS with every MO2 mod. Activate a Seamless Co-op mod and it starts with the game too.</source>
+      <translation>Startet innerhalb des VFS mit allen MO2-Mods. Aktiviere eine Seamless-Co-op-Mod, dann startet sie mit dem Spiel.</translation>
+    </message>
+    <message>
+      <source>Starts inside the VFS with every MO2 mod, and with Seamless Co-op from the mod {mod}.</source>
+      <translation>Startet innerhalb des VFS mit allen MO2-Mods und mit Seamless Co-op aus der Mod {mod}.</translation>
     </message>
   </context>
   <context>
