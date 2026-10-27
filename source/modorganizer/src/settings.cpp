@@ -224,6 +224,43 @@ void Settings::setUsePrereleases(bool b)
   set(m_Settings, "Settings", "use_prereleases", b);
 }
 
+bool Settings::betaMe3() const
+{
+  // beta_features held both before they had a switch each
+  return get<bool>(m_Settings, "Settings", "beta_me3",
+                   get<bool>(m_Settings, "Settings", "beta_features", false));
+}
+
+void Settings::setBetaMe3(bool b)
+{
+  set(m_Settings, "Settings", "beta_me3", b);
+}
+
+bool Settings::betaMe2() const
+{
+  return get<bool>(m_Settings, "Settings", "beta_me2",
+                   get<bool>(m_Settings, "Settings", "beta_features", false));
+}
+
+void Settings::setBetaMe2(bool b)
+{
+  set(m_Settings, "Settings", "beta_me2", b);
+}
+
+QString Settings::revampedValue(const QString& key) const
+{
+  return get<QString>(m_Settings, "Settings", key, QString());
+}
+
+void Settings::setRevampedValue(const QString& key, const QString& value)
+{
+  if (value.isEmpty()) {
+    remove(m_Settings, "Settings", key);
+  } else {
+    set(m_Settings, "Settings", key, value);
+  }
+}
+
 bool Settings::profileLocalInis() const
 {
   return get<bool>(m_Settings, "Settings", "profile_local_inis", true);

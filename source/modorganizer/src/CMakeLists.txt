@@ -213,6 +213,7 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	fluentmotion
 	fluenttabwidget
 	iconfetcher
+	revampedmodes
 	filetree
 	filetreeitem
 	filetreemodel

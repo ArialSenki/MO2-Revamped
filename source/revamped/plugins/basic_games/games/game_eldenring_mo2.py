@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 import shutil
 import stat
+import struct
 import subprocess
 import tempfile
 import time
@@ -25,6 +26,7 @@ except ImportError:  # not Windows
 import mobase
 from PyQt6.QtCore import (
     QEvent,
+    QUrl,
     QFileInfo,
     QDir,
     QObject,
@@ -35,12 +37,19 @@ from PyQt6.QtCore import (
     qInfo,
     qWarning,
 )
+from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QAbstractButton,
     QApplication,
     QBoxLayout,
+    QCheckBox,
     QComboBox,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
     QMessageBox,
+    QPlainTextEdit,
+    QVBoxLayout,
     QSizePolicy,
     QPushButton,
     QToolButton,
@@ -689,6 +698,10 @@ class EldenRingModDataChecker(BasicModDataChecker):
                     f"{parent_path}/{entry.name()}" if parent_path else entry.name()
                 )
                 if is_directory(entry):
+                    # Seamless Co-op reads its settings, locale and crash
+                    # reporter beside its DLL: its folder stays whole
+                    if entry.name().casefold() == "seamlesscoop":
+                        continue
                     if entry.name().casefold() == "fonts":
                         font_directories.append((entry, parent_path))
                     if entry.name().casefold() == "assets":
@@ -1646,6 +1659,14 @@ class EldenRingMo2Game(BasicGame):
     SeamlessLaunchers = frozenset({"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe"})
     SeamlessDll = "ersc.dll"
     Me3GameId = "eldenring"
+    # Mod Engine 2 knows Elden Ring by this target; it has none for Nightreign
+    Me2Target: str | None = "er"
+    Me2Launcher = "modengine2_launcher.exe"
+    # set while a Mod Engine 2 run starts again with MO2's config
+    _me2_relaunch_pending = False
+    # titles of the launchers MO2 adds itself with beta features on
+    Me3BetaTitle = "me3 (beta)"
+    Me2BetaTitle = "Mod Engine 2 (beta)"
     # Programs that start eldenring.exe themselves (Seamless Co-op, ModEngine2,
     # me3) get the same save guard as the game, and the guard waits for the
     # game they start instead of for the launcher.
@@ -2255,19 +2276,32 @@ class EldenRingMo2Game(BasicGame):
         return mods
 
     def _launch_target(self, app_path: str, working_directory, args: str):
-        """What a launch outside the VFS starts: me3 gets a me3 profile
-        written from the MO2 profile (its mods, Overwrite and native DLLs), so
-        MO2's mod list stays the one place to choose mods, plus the natives of
-        the me3 profile the executable names; any other launcher starts as it
-        is."""
-        if Path(app_path).name.casefold() != "me3.exe":
+        """What a launch outside the VFS starts. With beta features on, me3
+        gets a me3 profile written from the MO2 profile (its mods, Overwrite,
+        native DLLs and an active Seamless Co-op), so MO2's mod list stays the
+        one place to choose mods, plus the natives of the me3 profile the
+        executable names; otherwise, and for any other launcher, it starts as
+        it is."""
+        if Path(app_path).name.casefold() != "me3.exe" or not self._beta("me3"):
             return app_path, working_directory, args
         me3 = Path(app_path)
         extra = self.me3_profile_natives(args)
+        seamless = (
+            self._active_seamless_dll()
+            if bool(self._organizer.pluginSetting(self.name(), self.NativeDllSetting))
+            else None
+        )
+        if seamless is not None and all(
+            library.name.casefold() != self.SeamlessDll for library, _ in extra
+        ):
+            extra.append((seamless, None))
+        else:
+            seamless = None
         profile = self._write_me3_profile("mo2.me3", extra)
         qInfo(
             f"Elden Ring MO2: '{me3.name}' starts with MO2's mod list"
-            + (f" and {len(extra)} native DLL(s) from its own profile" if extra else "")
+            + (" and Seamless Co-op from its mod" if seamless is not None else "")
+            + (f"; {len(extra)} native DLL(s) besides MO2's" if extra else "")
             + "; the game folder is left alone."
         )
         return str(me3), str(me3.parent), f'launch -p "{profile}"'
@@ -3150,6 +3184,12 @@ class EldenRingMo2Game(BasicGame):
             # hidden Steam saves of a game that may still be running, nor the
             # Overwrite cleanup and save restore that wait for that game
             return True
+        if not self._seamless_password_ready():
+            return False
+        if self._beta("me2") and self._is_me2_launch(app_path):
+            # before any save is moved, so a cancelled run leaves nothing behind
+            if not self._prepare_me2_launch(app_path, _working_directory, _args or ""):
+                return False
         if Path(app_path).name.casefold() in self.SeamlessLaunchers and self._seamless_initializer():
             # Seamless Co-op from its MO2 mod starts with the game run inside
             # the VFS, so its launcher hands over to the game's own executable
@@ -3422,9 +3462,16 @@ class EldenRingMo2Game(BasicGame):
         if swap_launch:
             return self._run_swap_launch(app_path, _working_directory, _args or "")
         if direct_game:
-            # Seamless Co-op only with the game run from MO2: Mod Engine 2
-            # starts without it unless its own config adds it
+            # Seamless Co-op with the game run from MO2
             initializer_entries = initializer_entries + self._seamless_initializer()
+        elif self._is_me2_launch(app_path):
+            # Mod Engine 2 starts its extensions itself; the bridge calling
+            # modengine_ext_init as well crashes the game
+            initializer_entries = [
+                entry
+                for entry in initializer_entries
+                if str(entry.get("initializer", "")).casefold() != "modengine_ext_init"
+            ]
         self._activate_profile_config_environment(profile_config, initializer_entries)
         # a new run only once nothing above blocked the launch: a blocked
         # attempt must not disown the watch of a game that is still running
@@ -4596,7 +4643,542 @@ class EldenRingMo2Game(BasicGame):
         executable = mobase.ExecutableInfo(f"{self.GameName} (MO2)", game_exe)
         executable = executable.withWorkingDirectory(self.dataDirectory())
         executable = executable.withSteamAppId(str(self.GameSteamId))
-        return [executable]
+        executables = [executable]
+        if self._beta("me3") or self._beta("me2"):
+            executables.extend(self._beta_launcher_executables())
+        return executables
+
+    @staticmethod
+    def _beta(feature: str) -> bool:
+        """Settings > General > Beta features, as MO2 started: "me3" or "me2"
+        (Mod Engine 2), each on its own switch."""
+        application = QApplication.instance()
+        name = {"me3": "revampedBetaMe3", "me2": "revampedBetaMe2"}[feature]
+        return bool(application is not None and application.property(name))
+
+    def _beta_launcher_executables(self) -> list[mobase.ExecutableInfo]:
+        """me3 and Mod Engine 2 when the user installed them (beta): each
+        starts with MO2's mods and Seamless Co-op, without editing its own
+        profile or config. me3 already among the executables gets MO2's mods
+        as it is, so it is not added twice; Mod Engine 2 is, with MO2's config
+        (its own config keeps deciding for its own entry)."""
+        # MO2 asks for the executables many times in a row (each refresh, each
+        # list it fills): the search runs again only after a few seconds
+        cached = getattr(self, "_beta_launchers", None)
+        if cached is None or time.monotonic() - cached[0] > 5:
+            cached = (time.monotonic(), self._search_beta_launchers())
+            if cached[1] != getattr(self, "_beta_launchers_logged", None):
+                self._beta_launchers_logged = cached[1]
+                for title, *_ in cached[1]:
+                    qInfo(f"Elden Ring MO2: beta features add '{title}' to the executables.")
+            self._beta_launchers = cached
+        return [
+            mobase.ExecutableInfo(title, QFileInfo(binary))
+            .withArgument(arguments)
+            .withWorkingDirectory(QDir(directory))
+            for title, binary, arguments, directory in cached[1]
+        ]
+
+    def _mode_launcher(self, file_name: str) -> Path | None:
+        """In a game mode's instance (see MO2's revampedmodes.h), the
+        launcher MO2 stored for it when it made the instance."""
+        try:
+            ini = Path(self._organizer.basePath()) / "ModOrganizer.ini"
+            config = configparser.ConfigParser(interpolation=None, strict=False)
+            config.read(ini, encoding="utf-8")
+            stored = config.get("Settings", "revamped_mode_launcher", fallback="").strip().strip('"')
+        except (AttributeError, RuntimeError, OSError, configparser.Error, UnicodeError):
+            return None
+        launcher = Path(stored) if stored else None
+        if launcher is not None and launcher.name.casefold() == file_name and launcher.is_file():
+            return launcher
+        return None
+
+    def _search_beta_launchers(self) -> list[tuple[str, str, str, str]]:
+        listed, listed_paths = self._listed_executables()
+        found = []
+        me3 = (self._mode_launcher("me3.exe") or self._find_me3()) if self._beta("me3") else None
+        if me3 is not None and not listed.get(me3.name.casefold(), set()) - {self.Me3BetaTitle}:
+            found.append(
+                (self.Me3BetaTitle, str(me3), f"launch --game {self.Me3GameId}", str(me3.parent))
+            )
+        # Mod Engine 2 already among the executables with its own config still
+        # gets an entry with MO2's config, the one that follows MO2's mod list
+        me2 = None
+        if self.Me2Target and self._beta("me2"):
+            me2 = (
+                self._mode_launcher(self.Me2Launcher)
+                or next(iter(sorted(listed_paths.get(self.Me2Launcher, set()))), None)
+                or self._find_me2()
+            )
+        if me2 is not None:
+            config = self._write_me2_config(create_only=True)
+            if config is not None:
+                found.append(
+                    (self.Me2BetaTitle, str(me2), f'-t {self.Me2Target} -c "{config}"', str(me2.parent))
+                )
+        return found
+
+    def _listed_executables(self) -> tuple[dict[str, set[str]], dict[str, set[Path]]]:
+        """The instance's executables: binary file name -> titles, and binary
+        file name -> paths (only the files that exist)."""
+        listed: dict[str, set[str]] = {}
+        paths: dict[str, set[Path]] = {}
+        try:
+            ini = Path(self._organizer.basePath()) / "ModOrganizer.ini"
+            config = configparser.ConfigParser(interpolation=None, strict=False)
+            config.read(ini, encoding="utf-8")
+            if config.has_section("customExecutables"):
+                section = dict(config.items("customExecutables"))
+                for key, value in section.items():
+                    if key.endswith("\\binary") and value.strip():
+                        title = section.get(key[: -len("binary")] + "title", "").strip()
+                        binary = Path(value.strip())
+                        listed.setdefault(binary.name.casefold(), set()).add(title)
+                        if binary.is_file():
+                            paths.setdefault(binary.name.casefold(), set()).add(binary)
+        except (AttributeError, RuntimeError, OSError, configparser.Error, UnicodeError):
+            pass
+        return listed, paths
+
+    @staticmethod
+    def _find_me3() -> Path | None:
+        """me3 where its installer puts it, or on PATH."""
+        candidates = []
+        found = shutil.which("me3")
+        if found:
+            candidates.append(Path(found))
+        for root, parts in (
+            ("LOCALAPPDATA", ("Programs", "me3", "bin")),
+            ("ProgramFiles", ("me3", "bin")),
+            ("ProgramFiles", ("garyttierney", "me3", "bin")),
+        ):
+            base = os.environ.get(root)
+            if base:
+                candidates.append(Path(base, *parts, "me3.exe"))
+        for candidate in candidates:
+            try:
+                if candidate.name.casefold() == "me3.exe" and candidate.is_file():
+                    return candidate
+            except OSError:
+                continue
+        return None
+
+    def _find_me2(self) -> Path | None:
+        """Mod Engine 2's launcher in the game folder or in an MO2 mod. MO2
+        asks for the executables before it loads a profile, so the mods
+        folder is read from disk rather than through the mod list."""
+        try:
+            game = Path(self.gameDirectory().absolutePath())
+            data = Path(self.dataDirectory().absolutePath())
+            mods_root = Path(self._organizer.modsPath())
+        except (AttributeError, RuntimeError):
+            return None
+        folders = [game, game / "ModEngine2", data, data / "ModEngine2"]
+        try:
+            for mod in sorted(mods_root.iterdir()):
+                if mod.is_dir():
+                    folders += [mod, mod / "ModEngine2"]
+        except OSError:
+            pass
+        for folder in folders:
+            launcher = folder / self.Me2Launcher
+            try:
+                if launcher.is_file():
+                    return launcher
+            except OSError:
+                continue
+        return None
+
+    def _me2_config_path(self) -> Path:
+        return Path(self._organizer.basePath()) / "eldenring_mo2_me2" / f"config_{self.Me3GameId}.toml"
+
+    def _me2_config_text(self, extensions: list[Path]) -> str:
+        """Mod Engine 2's config for a run from MO2: no mod folders of its own
+        (the VFS brings MO2's mods, and MO2 loads the native DLLs), only the
+        extensions (DLLs that export modengine_ext_init, Seamless Co-op among
+        them) of the active mods, which Mod Engine 2 must start itself."""
+        mod_folder = self._me2_config_path().parent / "mod"
+        external = self._me2_dll_list(extensions)
+        return (
+            "# Written by MO2 Revamped for Mod Engine 2 runs from MO2 (beta).\n"
+            "# MO2's virtual folder brings the mods and MO2 loads their native DLLs;\n"
+            "# the extensions of the active mods (Seamless Co-op, for one) are here.\n"
+            "[modengine]\n"
+            "debug = false\n"
+            f"external_dlls = {external}\n"
+            "\n"
+            "[extension.mod_loader]\n"
+            "enabled = true\n"
+            "loose_params = false\n"
+            "mods = [\n"
+            f"    {{ enabled = true, name = \"default\", path = '{mod_folder}' }}\n"
+            "]\n"
+            "\n"
+            "[extension.scylla_hide]\n"
+            "enabled = false\n"
+        )
+
+    @staticmethod
+    def _me2_dll_list(libraries: list[Path]) -> str:
+        """A TOML array as Mod Engine 2's own configs write it: one line,
+        double-quoted paths, no trailing comma (a list over several lines
+        with a trailing comma loaded nothing)."""
+        if not libraries:
+            return "[]"
+        quoted = (
+            '"' + str(library).replace("\\", "\\\\").replace('"', '\\"') + '"' for library in libraries
+        )
+        return "[ " + ", ".join(quoted) + " ]"
+
+    def _write_me2_config(self, text: str | None = None, create_only: bool = False) -> Path | None:
+        config = self._me2_config_path()
+        if text is None:
+            text = self._me2_config_text([])
+        try:
+            (config.parent / "mod").mkdir(parents=True, exist_ok=True)
+            if create_only and config.is_file():
+                return config
+            if not config.is_file() or config.read_text(encoding="utf-8") != text:
+                config.write_text(text, encoding="utf-8")
+        except (OSError, UnicodeError) as error:
+            qWarning(f"Elden Ring MO2: could not write the Mod Engine 2 config '{config}': {error}")
+            return None
+        return config
+
+    def _me2_named_config(self, working_directory, args: str) -> Path | None:
+        """The config a Mod Engine 2 run names (-c), resolved against its
+        working directory."""
+        parts = self._split_arguments(args)
+        named = next(
+            (parts[i + 1] for i, part in enumerate(parts[:-1]) if part in {"-c", "--modengine-config"}),
+            "",
+        )
+        if not named:
+            return None
+        config = Path(named)
+        if not config.is_absolute():
+            try:
+                base = (
+                    working_directory.absolutePath()
+                    if hasattr(working_directory, "absolutePath")
+                    else str(working_directory or "")
+                )
+            except RuntimeError:
+                base = ""
+            config = Path(base) / config
+        return config
+
+    def _me2_extensions(self) -> list[Path]:
+        """The native DLLs MO2 loads for this profile (its order, without
+        switched-off entries) that are Mod Engine 2 extensions."""
+        bridge = os.path.normcase(str(Path(__file__).with_name("eldenring_mo2_bridge.dll")))
+        found = []
+        for load in self.executableForcedLoads():
+            library = Path(load.library())
+            if os.path.normcase(str(library)) == bridge:
+                continue
+            if "modengine_ext_init" in self._dll_exports(library):
+                found.append(library)
+        return found
+
+    _export_cache: dict = {}
+
+    @classmethod
+    def _dll_exports(cls, path: Path) -> set[str]:
+        """The names a DLL exports (an empty set when it cannot be read)."""
+        try:
+            stat_result = path.stat()
+        except OSError:
+            return set()
+        key = (os.path.normcase(str(path)), stat_result.st_mtime_ns, stat_result.st_size)
+        if key not in cls._export_cache:
+            try:
+                cls._export_cache[key] = cls._read_pe_exports(path, stat_result.st_size)
+            except (OSError, ValueError, struct.error):
+                cls._export_cache[key] = set()
+        return cls._export_cache[key]
+
+    @staticmethod
+    def _read_pe_exports(path: Path, file_size: int) -> set[str]:
+        with path.open("rb") as stream:
+            def read_at(offset: int, size: int) -> bytes:
+                if offset < 0 or size < 0 or size > 4 * 1024 * 1024 or offset + size > file_size:
+                    raise ValueError("bad PE offset")
+                stream.seek(offset)
+                data = stream.read(size)
+                if len(data) != size:
+                    raise ValueError("short PE read")
+                return data
+
+            if read_at(0, 2) != b"MZ":
+                return set()
+            pe_offset = struct.unpack_from("<I", read_at(0x3C, 4))[0]
+            coff = read_at(pe_offset, 24)
+            if coff[:4] != b"PE\0\0":
+                return set()
+            section_count, = struct.unpack_from("<H", coff, 6)
+            optional_size, = struct.unpack_from("<H", coff, 20)
+            optional = read_at(pe_offset + 24, optional_size)
+            magic, = struct.unpack_from("<H", optional, 0)
+            directory = {0x10B: 96, 0x20B: 112}.get(magic)
+            if directory is None or len(optional) < directory + 8:
+                return set()
+            export_rva, export_size = struct.unpack_from("<II", optional, directory)
+            if not export_rva or export_size < 40:
+                return set()
+            table = pe_offset + 24 + optional_size
+            sections = [
+                struct.unpack_from("<IIII", read_at(table + index * 40, 40), 8)
+                for index in range(min(section_count, 96))
+            ]
+
+            def to_offset(rva: int) -> int:
+                for virtual_size, virtual_address, raw_size, raw_offset in sections:
+                    if virtual_address <= rva < virtual_address + max(virtual_size, raw_size):
+                        return raw_offset + rva - virtual_address
+                raise ValueError("unmapped PE address")
+
+            export = read_at(to_offset(export_rva), 40)
+            count, names_rva = struct.unpack_from("<I", export, 24)[0], struct.unpack_from("<I", export, 32)[0]
+            if not count or not names_rva or count > 16384:
+                return set()
+            name_rvas = read_at(to_offset(names_rva), count * 4)
+            names = set()
+            for index in range(count):
+                offset = to_offset(struct.unpack_from("<I", name_rvas, index * 4)[0])
+                raw = read_at(offset, min(256, file_size - offset)).split(b"\0", 1)[0]
+                try:
+                    names.add(raw.decode("ascii"))
+                except UnicodeDecodeError:
+                    continue
+            return names
+
+    def _is_me2_launch(self, app_path: str) -> bool:
+        return (
+            self.Me2Target is not None
+            and Path(app_path).name.casefold() == self.Me2Launcher
+        )
+
+    def _me2_preferences(self) -> dict:
+        try:
+            return json.loads((self._me2_config_path().parent / "preferences.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+
+    def _set_me2_preference(self, key: str, value) -> None:
+        preferences = self._me2_preferences()
+        preferences[key] = value
+        try:
+            path = self._me2_config_path().parent / "preferences.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(preferences, indent=2), encoding="utf-8")
+        except OSError as error:
+            qWarning(f"Elden Ring MO2: could not save the Mod Engine 2 preferences: {error}")
+
+    def _prepare_me2_launch(self, app_path: str, working_directory, args: str) -> bool:
+        """Before a Mod Engine 2 run (beta): with MO2's config, writes it from
+        the active mods and shows it first (start, edit for this run,
+        cancel); with its own config, says which active extensions it leaves
+        out and offers MO2's config for this run. False cancels this run."""
+        extensions = self._me2_extensions()
+        named = self._me2_named_config(working_directory, args)
+        ours = named is not None and os.path.normcase(str(named)) == os.path.normcase(
+            str(self._me2_config_path())
+        )
+        if ours:
+            text = self._me2_config_text(extensions)
+            if self._me2_relaunch_pending or not self._me2_preferences().get("preview", True):
+                self._me2_relaunch_pending = False
+            else:
+                text = self._show_me2_preview(text, extensions)
+                if text is None:
+                    qInfo("Elden Ring MO2: the Mod Engine 2 run was cancelled at its config preview.")
+                    return False
+            if self._write_me2_config(text) is None:
+                return False
+            qInfo(
+                "Elden Ring MO2: Mod Engine 2 starts with MO2's config"
+                + (f" and {len(extensions)} extension(s): {', '.join(e.name for e in extensions)}."
+                   if extensions else ".")
+            )
+            return True
+
+        listed: set[str] = set()
+        if named is not None:
+            try:
+                import tomllib
+
+                data = tomllib.loads(named.read_text(encoding="utf-8-sig"))
+                listed = {
+                    Path(dll).name.casefold()
+                    for dll in data.get("modengine", {}).get("external_dlls", [])
+                    if isinstance(dll, str)
+                }
+            except (ImportError, OSError, UnicodeError, ValueError):
+                listed = set()
+        missing = [library for library in extensions if library.name.casefold() not in listed]
+        if not missing:
+            return True
+        choice = self._show_me2_suggestion(named, missing)
+        if choice == "mo2":
+            config = self._write_me2_config(self._me2_config_text(extensions))
+            if config is None:
+                return False
+            # this run stops; the same launcher starts again with MO2's config
+            self._me2_relaunch_pending = True
+            launcher, directory = str(app_path), str(Path(app_path).parent)
+            QTimer.singleShot(
+                0,
+                lambda: self._organizer.startApplication(
+                    launcher, ["-t", str(self.Me2Target), "-c", str(config)], directory
+                ),
+            )
+            qInfo("Elden Ring MO2: Mod Engine 2 starts again with MO2's config for this run.")
+            return False
+        if choice == "cancel":
+            return False
+        qInfo(
+            "Elden Ring MO2: Mod Engine 2 starts with its own config, without "
+            + ", ".join(library.name for library in missing) + "."
+        )
+        return True
+
+    @staticmethod
+    def _me2_dialog(title: str, text: str) -> tuple[QDialog, QVBoxLayout]:
+        dialog = QDialog(QApplication.activeWindow())
+        dialog.setWindowTitle(_tr("Mod Engine 2 (beta)"))
+        dialog.setMinimumWidth(620)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(10)
+        heading = QLabel(title, dialog)
+        heading.setProperty("wizardPageTitle", True)
+        heading.setWordWrap(True)
+        layout.addWidget(heading)
+        body = QLabel(text, dialog)
+        body.setProperty("wizardPageText", True)
+        body.setWordWrap(True)
+        layout.addWidget(body)
+        return dialog, layout
+
+    @staticmethod
+    def _me2_text_box(dialog: QDialog, text: str) -> QPlainTextEdit:
+        box = QPlainTextEdit(dialog)
+        box.setPlainText(text)
+        box.setReadOnly(True)
+        box.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        # the theme sets every widget's font family; a config reads in a
+        # monospaced one
+        box.setStyleSheet("QPlainTextEdit { font-family: 'Cascadia Mono', 'Consolas'; }")
+        # as tall as the text (and a scroll bar's height), up to a screenful
+        lines = text.count("\n") + 1
+        box.setFixedHeight(min(18 * lines + 40, 360))
+        return box
+
+    def _show_me2_preview(self, text: str, extensions: list[Path]) -> str | None:
+        """The config MO2 is about to give Mod Engine 2; the text to use, or
+        None when the run is cancelled."""
+        summary = (
+            _tr("Extensions from your active mods: {0}.").format(", ".join(e.name for e in extensions))
+            if extensions
+            else _tr("None of your active mods has a Mod Engine 2 extension.")
+        )
+        dialog, layout = self._me2_dialog(
+            _tr("Mod Engine 2 starts with this config"),
+            _tr("MO2 wrote it from your active mods: their files come through MO2's virtual "
+                "folder and MO2 loads their native DLLs, so only Mod Engine 2 extensions are "
+                "listed. You can edit it for this run; MO2 writes it again next time.")
+            + "\n\n" + summary,
+        )
+        box = self._me2_text_box(dialog, text)
+        layout.addWidget(box)
+        error = QLabel(dialog)
+        error.setWordWrap(True)
+        error.setProperty("wizardPageText", True)
+        error.hide()
+        layout.addWidget(error)
+        again = QCheckBox(_tr("Show this before every Mod Engine 2 run"), dialog)
+        again.setChecked(True)
+        layout.addWidget(again)
+        buttons = QHBoxLayout()
+        edit = QPushButton(_tr("Edit for this run"), dialog)
+        cancel = QPushButton(_tr("Cancel"), dialog)
+        start = QPushButton(_tr("Start"), dialog)
+        start.setDefault(True)
+        buttons.addWidget(edit)
+        buttons.addStretch(1)
+        buttons.addWidget(start)
+        buttons.addWidget(cancel)
+        layout.addLayout(buttons)
+
+        def start_run() -> None:
+            try:
+                import tomllib
+
+                tomllib.loads(box.toPlainText())
+            except ValueError as problem:
+                error.setText(_tr("This config is not valid TOML: {0}").format(problem))
+                error.show()
+                return
+            dialog.accept()
+
+        def edit_run() -> None:
+            box.setReadOnly(False)
+            box.setFocus()
+            edit.setEnabled(False)
+            start.setText(_tr("Start with these changes"))
+
+        edit.clicked.connect(edit_run)
+        start.clicked.connect(start_run)
+        cancel.clicked.connect(dialog.reject)
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        if not again.isChecked():
+            self._set_me2_preference("preview", False)
+            qInfo("Elden Ring MO2: the Mod Engine 2 config preview is turned off.")
+        return box.toPlainText() if accepted else None
+
+    def _show_me2_suggestion(self, config: Path | None, missing: list[Path]) -> str:
+        """Says which active extensions a launcher's own config leaves out;
+        "mo2" (MO2's config for this run), "own" or "cancel"."""
+        names = ", ".join(library.name for library in missing)
+        suggestion = (
+            "# " + _tr("Add to external_dlls in {0}:").format(config.name if config else "config_eldenring.toml")
+            + "\n[modengine]\nexternal_dlls = " + self._me2_dll_list(missing) + "\n"
+        )
+        dialog, layout = self._me2_dialog(
+            _tr("Your Mod Engine 2 config leaves out active extensions"),
+            _tr("These DLLs are active in MO2 and only work when Mod Engine 2 starts them: {0}. "
+                "Your config ({1}) does not list them, so they stay off. Add them as shown, or "
+                "start this run with the config MO2 writes from your mods.").format(
+                names, str(config) if config else "-"
+            ),
+        )
+        layout.addWidget(self._me2_text_box(dialog, suggestion))
+        buttons = QHBoxLayout()
+        copy = QPushButton(_tr("Copy the suggestion"), dialog)
+        use_mo2 = QPushButton(_tr("Use MO2's config this time"), dialog)
+        own = QPushButton(_tr("Start with my config"), dialog)
+        cancel = QPushButton(_tr("Cancel"), dialog)
+        use_mo2.setDefault(True)
+        buttons.addWidget(copy)
+        buttons.addStretch(1)
+        buttons.addWidget(use_mo2)
+        buttons.addWidget(own)
+        buttons.addWidget(cancel)
+        layout.addLayout(buttons)
+        result = {"choice": "cancel"}
+
+        def choose(value: str) -> None:
+            result["choice"] = value
+            dialog.accept()
+
+        copy.clicked.connect(lambda: QApplication.clipboard().setText(suggestion))
+        use_mo2.clicked.connect(lambda: choose("mo2"))
+        own.clicked.connect(lambda: choose("own"))
+        cancel.clicked.connect(dialog.reject)
+        dialog.exec()
+        return result["choice"]
 
     def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
         if not self.isActive():
@@ -4808,9 +5390,61 @@ class EldenRingMo2Game(BasicGame):
         if handle:
             ctypes.windll.kernel32.CloseHandle(wintypes.HANDLE(int(handle)))
 
+    def _seamless_password_ready(self) -> bool:
+        """Seamless Co-op quits the game at start without a session password
+        in its settings file: MO2 says so before the launch instead."""
+        seamless = self._active_seamless_dll()
+        if seamless is None:
+            return True
+        settings = seamless.with_name(f"{seamless.stem}_settings.ini")
+        if not settings.is_file():
+            return True
+        try:
+            config = configparser.ConfigParser(interpolation=None, strict=False)
+            config.read(settings, encoding="utf-8-sig")
+            password = config.get("PASSWORD", "cooppassword", fallback="").strip()
+        except (OSError, UnicodeError, configparser.Error):
+            return True
+        if password:
+            return True
+        qWarning(f"Elden Ring MO2: Seamless Co-op has no session password in '{settings}'; launch stopped.")
+        box = QMessageBox(QApplication.activeWindow())
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(_tr("Seamless Co-op"))
+        box.setText(_tr("Seamless Co-op needs a session password"))
+        box.setInformativeText(
+            _tr("Set cooppassword in its settings file; everyone who plays together uses the "
+                "same one. Without it Seamless Co-op closes the game as it starts, so the "
+                "game was not started.\n\n{0}").format(settings)
+        )
+        open_file = box.addButton(_tr("Open the settings file"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(open_file)
+        box.exec()
+        if box.clickedButton() is open_file:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(settings)))
+        return False
+
     def _active_seamless_dll(self) -> Path | None:
+        """Seamless Co-op's DLL from the highest-priority active mod, unless
+        the native profile switches it off (as it can any other DLL)."""
         found = self.seamless_dll_in_mods([mod for mod in self._mod_folders() if mod[2]])
-        return found[1] if found is not None else None
+        if found is None:
+            return None
+        mod_name, dll = found
+        profile = self._organizer.profile()
+        native_profile = self._resolve_revamped_native_profile(profile) if profile is not None else None
+        if (
+            native_profile is not None
+            and not native_profile.get("error")
+            and (mod_name.casefold(), dll.name.casefold()) in native_profile.get("disabled_libraries", set())
+        ):
+            qInfo(
+                f"Elden Ring MO2: not loading '{dll.name}' from '{mod_name}'; "
+                "it is switched off in the native profile."
+            )
+            return None
+        return dll
 
     def _seamless_initializer(self) -> list[dict]:
         """The bridge entry that starts Seamless Co-op's DLL: it exports Mod
@@ -5120,6 +5754,7 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     SeamlessLaunchers = frozenset({"nrsc_launcher.exe"})
     SeamlessDll = "nrsc.dll"
     Me3GameId = "nightreign"
+    Me2Target = None
     GameLaunchers = frozenset(
         {
             "nightreign.exe",

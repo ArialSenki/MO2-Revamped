@@ -744,6 +744,13 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   }
   log::getDefault().setLevel(m_settings->diagnostics().logLevel());
   log::debug("using ini at '{}'", m_settings->filename());
+  // read by plugins before they add executables or hook a launch
+  setProperty("revampedBetaMe3", m_settings->betaMe3());
+  setProperty("revampedBetaMe2", m_settings->betaMe2());
+  if (m_settings->betaMe3() || m_settings->betaMe2()) {
+    log::info("beta features on: me3 integration {}, Mod Engine 2 integration {}",
+              m_settings->betaMe3() ? "on" : "off", m_settings->betaMe2() ? "on" : "off");
+  }
 
   OrganizerCore::setGlobalCoreDumpType(m_settings->diagnostics().coreDumpType());
   writeStartupDiagnosticEvent("application.setup.settings.ready");

@@ -5,6 +5,8 @@
 #include "settings.h"
 #include "settingsdialog.h"
 
+class QCheckBox;
+
 class GeneralSettingsTab : public SettingsTab
 {
 public:
@@ -20,6 +22,9 @@ private:
 
   void onEditCategories();
   void onResetDialogs();
+
+  QCheckBox* m_betaMe3 = nullptr;
+  QCheckBox* m_betaMe2 = nullptr;
 };
 
 #endif  // SETTINGSDIALOGGENERAL_H

@@ -1891,6 +1891,94 @@ Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und ko
       <source>MO2 could not start {0} outside its virtual file system. The game was not started.</source>
       <translation>MO2 konnte {0} nicht außerhalb seines virtuellen Dateisystems starten. Das Spiel wurde nicht gestartet.</translation>
     </message>
+    <message>
+      <source>Mod Engine 2 (beta)</source>
+      <translation>Mod Engine 2 (Beta)</translation>
+    </message>
+    <message>
+      <source>Extensions from your active mods: {0}.</source>
+      <translation>Erweiterungen aus deinen aktiven Mods: {0}.</translation>
+    </message>
+    <message>
+      <source>None of your active mods has a Mod Engine 2 extension.</source>
+      <translation>Keine deiner aktiven Mods hat eine Mod-Engine-2-Erweiterung.</translation>
+    </message>
+    <message>
+      <source>Mod Engine 2 starts with this config</source>
+      <translation>Mod Engine 2 startet mit dieser Konfiguration</translation>
+    </message>
+    <message>
+      <source>MO2 wrote it from your active mods: their files come through MO2&apos;s virtual folder and MO2 loads their native DLLs, so only Mod Engine 2 extensions are listed. You can edit it for this run; MO2 writes it again next time.</source>
+      <translation>MO2 hat sie aus deinen aktiven Mods geschrieben: Ihre Dateien kommen über den virtuellen Ordner von MO2 und MO2 lädt ihre nativen DLLs, daher sind nur Mod-Engine-2-Erweiterungen aufgeführt. Du kannst sie für diesen Start bearbeiten; MO2 schreibt sie beim nächsten Mal neu.</translation>
+    </message>
+    <message>
+      <source>Show this before every Mod Engine 2 run</source>
+      <translation>Dies vor jedem Start mit Mod Engine 2 anzeigen</translation>
+    </message>
+    <message>
+      <source>Edit for this run</source>
+      <translation>Für diesen Start bearbeiten</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Start</source>
+      <translation>Starten</translation>
+    </message>
+    <message>
+      <source>This config is not valid TOML: {0}</source>
+      <translation>Diese Konfiguration ist kein gültiges TOML: {0}</translation>
+    </message>
+    <message>
+      <source>Start with these changes</source>
+      <translation>Mit diesen Änderungen starten</translation>
+    </message>
+    <message>
+      <source>Add to external_dlls in {0}:</source>
+      <translation>Zu external_dlls in {0} hinzufügen:</translation>
+    </message>
+    <message>
+      <source>Your Mod Engine 2 config leaves out active extensions</source>
+      <translation>Deine Mod-Engine-2-Konfiguration lässt aktive Erweiterungen aus</translation>
+    </message>
+    <message>
+      <source>These DLLs are active in MO2 and only work when Mod Engine 2 starts them: {0}. Your config ({1}) does not list them, so they stay off. Add them as shown, or start this run with the config MO2 writes from your mods.</source>
+      <translation>Diese DLLs sind in MO2 aktiv und funktionieren nur, wenn Mod Engine 2 sie startet: {0}. Deine Konfiguration ({1}) führt sie nicht auf, daher bleiben sie aus. Füge sie wie gezeigt hinzu oder starte diesen Lauf mit der Konfiguration, die MO2 aus deinen Mods schreibt.</translation>
+    </message>
+    <message>
+      <source>Copy the suggestion</source>
+      <translation>Vorschlag kopieren</translation>
+    </message>
+    <message>
+      <source>Use MO2&apos;s config this time</source>
+      <translation>Diesmal die Konfiguration von MO2 verwenden</translation>
+    </message>
+    <message>
+      <source>Start with my config</source>
+      <translation>Mit meiner Konfiguration starten</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op</source>
+      <translation>Seamless Co-op</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op needs a session password</source>
+      <translation>Seamless Co-op braucht ein Sitzungspasswort</translation>
+    </message>
+    <message>
+      <source>Set cooppassword in its settings file; everyone who plays together uses the same one. Without it Seamless Co-op closes the game as it starts, so the game was not started.
+
+{0}</source>
+      <translation>Setze cooppassword in seiner Einstellungsdatei; alle, die zusammen spielen, nutzen dasselbe. Ohne es schließt Seamless Co-op das Spiel beim Start, daher wurde das Spiel nicht gestartet.
+
+{0}</translation>
+    </message>
+    <message>
+      <source>Open the settings file</source>
+      <translation>Einstellungsdatei öffnen</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -2253,6 +2341,34 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     <message>
       <source>Show in folder</source>
       <translation>Im Ordner anzeigen</translation>
+    </message>
+    <message>
+      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads them all in the mod list&apos;s order.</source>
+      <translation>Alle nativen DLLs deiner aktiven Mods in Ladereihenfolge, Seamless Co-op eingeschlossen. Schalte eine aus, damit sie nicht geladen wird, ohne ihre Mod zu deaktivieren, oder verschiebe sie, um die Reihenfolge zu ändern. Ohne Änderungen lädt MO2 alle in der Reihenfolge der Mod-Liste.</translation>
+    </message>
+    <message>
+      <source>Load order</source>
+      <translation>Ladereihenfolge</translation>
+    </message>
+    <message>
+      <source>DLLs that are switched on load in the order shown. A new mod&apos;s DLLs show up here switched on. Initializers are optional named exports, for DLLs that need one.</source>
+      <translation>Eingeschaltete DLLs werden in der angezeigten Reihenfolge geladen. Die DLLs einer neuen Mod erscheinen hier eingeschaltet. Initialisierer sind optionale benannte Exporte für DLLs, die einen brauchen.</translation>
+    </message>
+    <message>
+      <source>None of your active mods has a native DLL.</source>
+      <translation>Keine deiner aktiven Mods hat eine native DLL.</translation>
+    </message>
+    <message>
+      <source>Reset</source>
+      <translation>Zurücksetzen</translation>
+    </message>
+    <message>
+      <source>Switch every DLL on again, in the mod list&apos;s order. Initializers are kept.</source>
+      <translation>Schaltet alle DLLs wieder ein, in der Reihenfolge der Mod-Liste. Initialisierer bleiben erhalten.</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op starts by itself once the game runs; its place in the order does not matter. Switch it off here or turn its mod off.</source>
+      <translation>Seamless Co-op startet von selbst, sobald das Spiel läuft; seine Position in der Reihenfolge spielt keine Rolle. Schalte es hier aus oder deaktiviere seine Mod.</translation>
     </message>
   </context>
   <context>
@@ -3552,8 +3668,16 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <translation>Startet das Spiel über MO2, im VFS mit allen MO2-Mods und Seamless Co-op aus der Mod {mod}.</translation>
     </message>
     <message>
-      <source>The game crashes with me3 inside the VFS, so MO2 hands it the profile's mod list and native DLLs, plus the native DLLs of the me3 profile this program names (add Seamless Co-op there to play with it).</source>
-      <translation>Das Spiel stürzt mit me3 im VFS ab, daher übergibt MO2 ihm die Modliste und die nativen DLLs des Profils sowie die nativen DLLs des me3-Profils, das dieses Programm nennt (füge dort Seamless Co-op hinzu, um damit zu spielen).</translation>
+      <source>Beta: the game crashes with me3 inside the VFS, so MO2 hands it the profile&apos;s mod list and native DLLs, Seamless Co-op when its mod is active, and the native DLLs of the me3 profile this program names.</source>
+      <translation>Beta: Das Spiel stürzt mit me3 im VFS ab, daher übergibt MO2 ihm die Mod-Liste und die nativen DLLs des Profils, Seamless Co-op, wenn dessen Mod aktiv ist, und die nativen DLLs des me3-Profils, das dieses Programm angibt.</translation>
+    </message>
+    <message>
+      <source>Beta: Mod Engine 2 runs inside the VFS with every MO2 mod and native DLL. With the config MO2 writes (Mod Engine 2 (beta)) it also starts the extensions of your active mods, Seamless Co-op among them; with its own config, MO2 says before the run which ones it leaves out.</source>
+      <translation>Beta: Mod Engine 2 läuft im VFS mit allen Mods und nativen DLLs von MO2. Mit der Konfiguration, die MO2 schreibt (Mod Engine 2 (Beta)), startet es auch die Erweiterungen deiner aktiven Mods, darunter Seamless Co-op; mit seiner eigenen Konfiguration sagt MO2 vor dem Start, welche sie auslässt.</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; General &gt; Beta features to hand it MO2&apos;s mods.</source>
+      <translation>Das Spiel stürzt mit me3 im VFS ab, daher startet MO2 es außerhalb mit seinem eigenen Profil. Aktiviere die me3-Integration unter Einstellungen &gt; Allgemein &gt; Beta-Funktionen, um ihm die Mods von MO2 zu übergeben.</translation>
     </message>
   </context>
   <context>
@@ -4126,6 +4250,18 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
     <message>
       <source>Search files</source>
       <translation>Dateien suchen</translation>
+    </message>
+    <message>
+      <source>Mode</source>
+      <translation>Modus</translation>
+    </message>
+    <message>
+      <source>%1 (beta)</source>
+      <translation>%1 (Beta)</translation>
+    </message>
+    <message>
+      <source>MO2, me3 or Mod Engine 2, each with an instance of its own. Changing it restarts MO2 in that mode&apos;s instance.</source>
+      <translation>MO2, me3 oder Mod Engine 2, jeweils mit eigener Instanz. Beim Wechsel startet MO2 in der Instanz dieses Modus neu.</translation>
     </message>
   </context>
   <context>
@@ -8544,6 +8680,26 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>Several installations of %1 were found. Choose the one this instance should use:</source>
       <translation>Es wurden mehrere Installationen von %1 gefunden. Wähle die, die diese Instanz verwenden soll:</translation>
     </message>
+    <message>
+      <source>Beta features</source>
+      <translation>Beta-Funktionen</translation>
+    </message>
+    <message>
+      <source>me3 integration</source>
+      <translation>me3-Integration</translation>
+    </message>
+    <message>
+      <source>Mod Engine 2 integration</source>
+      <translation>Mod-Engine-2-Integration</translation>
+    </message>
+    <message>
+      <source>me3 starts Elden Ring with MO2&apos;s mods, native DLLs and Seamless Co-op, and shows up among the executables when it is installed. Takes effect after a restart.</source>
+      <translation>me3 startet Elden Ring mit den Mods, nativen DLLs und Seamless Co-op von MO2 und erscheint unter den ausführbaren Dateien, wenn es installiert ist. Wirkt nach einem Neustart.</translation>
+    </message>
+    <message>
+      <source>Mod Engine 2 gets a config MO2 writes from your active mods, with its extensions such as Seamless Co-op, shown before the game starts. Takes effect after a restart.</source>
+      <translation>Mod Engine 2 erhält eine Konfiguration, die MO2 aus deinen aktiven Mods schreibt, mit deren Erweiterungen wie Seamless Co-op; sie wird vor dem Spielstart angezeigt. Wirkt nach einem Neustart.</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10403,6 +10559,51 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
       <source>Uncaught exception:
 %1</source>
       <translation>Nicht abgefangene Ausnahme:
+%1</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedModes</name>
+    <message>
+      <source>Make the %1 instance?</source>
+      <translation>Instanz für %1 erstellen?</translation>
+    </message>
+    <message>
+      <source>%1 gets an instance of its own, &quot;%2&quot;: the same game and the same downloads, but its own mods, profiles, native DLLs, settings and saves, so nothing in it touches this instance. It starts empty; install there the mods to play with %1. MO2 restarts in it, and the mode selector brings you back.</source>
+      <translation>%1 erhält eine eigene Instanz, „%2“: dasselbe Spiel und dieselben Downloads, aber eigene Mods, Profile, native DLLs, Einstellungen und Spielstände, sodass nichts davon diese Instanz berührt. Sie beginnt leer; installiere dort die Mods, mit denen du über %1 spielen willst. MO2 startet darin neu, und die Modusauswahl bringt dich zurück.</translation>
+    </message>
+    <message>
+      <source>Copy this profile&apos;s saves into it</source>
+      <translation>Die Spielstände dieses Profils hineinkopieren</translation>
+    </message>
+    <message>
+      <source>Make it and restart</source>
+      <translation>Erstellen und neu starten</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>MO2 could not find %1 (%2). Install it, or add it to this instance&apos;s executables, then choose the mode again.</source>
+      <translation>MO2 hat %1 (%2) nicht gefunden. Installiere es oder füge es den ausführbaren Dateien dieser Instanz hinzu und wähle den Modus dann erneut.</translation>
+    </message>
+    <message>
+      <source>Could not make the folder %1.</source>
+      <translation>Der Ordner %1 konnte nicht erstellt werden.</translation>
+    </message>
+    <message>
+      <source>Could not write %1.</source>
+      <translation>%1 konnte nicht geschrieben werden.</translation>
+    </message>
+    <message>
+      <source>Close the game before you change the game mode.</source>
+      <translation>Schließe das Spiel, bevor du den Spielmodus änderst.</translation>
+    </message>
+    <message>
+      <source>The instance this mode was made from is gone:
+%1</source>
+      <translation>Die Instanz, aus der dieser Modus erstellt wurde, existiert nicht mehr:
 %1</translation>
     </message>
   </context>

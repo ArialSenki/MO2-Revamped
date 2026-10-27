@@ -3924,6 +3924,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         page_subtitle = QLabel(dialog)
         page_subtitle.setObjectName("saveIsolationPageSubtitle")
         page_subtitle.setWordWrap(True)
+        # the root has no right margin (the pages scroll at the window's
+        # edge), so the header keeps the cards' gap itself
+        page_title.setContentsMargins(0, 0, 16, 0)
+        page_subtitle.setContentsMargins(0, 0, 16, 0)
         page_column.addWidget(page_title)
         page_column.addWidget(page_subtitle)
         page_column.addSpacing(8)
@@ -4168,6 +4172,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             methods = self._launch_methods()
             seamless_names = {"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe", "nrsc_launcher.exe"}
             shown = 0
+            # Settings > General > Beta features, as MO2 started
+            application = QApplication.instance()
+            beta_me3 = bool(application is not None and application.property("revampedBetaMe3"))
+            beta_me2 = bool(application is not None and application.property("revampedBetaMe2"))
             for title, binary in self._read_executables():
                 binary_name = Path(binary).name.casefold()
                 if not self._is_game_launch_binary(binary):
@@ -4191,10 +4199,19 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     reason = _tr("Starts the Seamless Co-op installed in the game folder, without MO2's "
                                  "mods. Activate a Seamless Co-op mod and it starts the game through MO2 "
                                  "instead.")
+                elif binary_name in {"me3.exe", "me3-launcher.exe"} and beta_me3:
+                    reason = _tr("Beta: the game crashes with me3 inside the VFS, so MO2 hands it the "
+                                 "profile's mod list and native DLLs, Seamless Co-op when its mod is "
+                                 "active, and the native DLLs of the me3 profile this program names.")
                 elif binary_name in {"me3.exe", "me3-launcher.exe"}:
-                    reason = _tr("The game crashes with me3 inside the VFS, so MO2 hands it the profile's "
-                                 "mod list and native DLLs, plus the native DLLs of the me3 profile this "
-                                 "program names (add Seamless Co-op there to play with it).")
+                    reason = _tr("The game crashes with me3 inside the VFS, so MO2 starts it outside "
+                                 "with its own profile. Turn on the me3 integration in Settings > "
+                                 "General > Beta features to hand it MO2's mods.")
+                elif binary_name == "modengine2_launcher.exe" and beta_me2 and method != "swap":
+                    reason = _tr("Beta: Mod Engine 2 runs inside the VFS with every MO2 mod and native "
+                                 "DLL. With the config MO2 writes (Mod Engine 2 (beta)) it also starts "
+                                 "the extensions of your active mods, Seamless Co-op among them; with its "
+                                 "own config, MO2 says before the run which ones it leaves out.")
                 else:
                     reason = _tr("Outside the VFS, MO2's mods and native DLLs are not loaded.")
                 if not (direct_game or hands_over):

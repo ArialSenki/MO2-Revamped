@@ -179,7 +179,11 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         "external_dlls",
         "mo2_dlls",
         "mods",
+        # Seamless Co-op keeps its DLL there; listed so it can be switched off
+        # like any other DLL
+        "seamlesscoop",
     }
+    SeamlessDlls = {"ersc.dll", "nrsc.dll"}
 
     def __init__(self):
         super().__init__()
@@ -298,8 +302,9 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         page_title = QLabel(_tr("Native DLL profile"), dialog)
         page_title.setProperty("wizardPageTitle", True)
         subtitle = QLabel(
-            _tr("Choose the native DLLs for this MO2 profile, set their load order, "
-            "and select optional initializer exports."),
+            _tr("Every native DLL of your active mods, in load order, Seamless Co-op included. "
+            "Switch one off to keep it from loading without turning its mod off, or move it "
+            "to change the order. Without changes, MO2 loads them all in the mod list's order."),
             dialog,
         )
         subtitle.setProperty("wizardPageText", True)
@@ -369,27 +374,19 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         profile_layout = QVBoxLayout(profile_group)
         profile_layout.setContentsMargins(12, 11, 12, 12)
         profile_layout.setSpacing(7)
-        load_order_heading = QLabel(_tr("Profile load order"), profile_group)
+        load_order_heading = QLabel(_tr("Load order"), profile_group)
         load_order_heading.setObjectName("fluentCardTitle")
         profile_layout.addWidget(load_order_heading)
         profile_note = QLabel(
-            _tr("Enabled entries load in the order shown. Initializers are optional "
-            "named exports and do not change whether a mod is enabled."),
+            _tr("DLLs that are switched on load in the order shown. A new mod's DLLs show up "
+            "here switched on. Initializers are optional named exports, for DLLs that need "
+            "one."),
             profile_group,
         )
         profile_note.setObjectName("fluentSettingDescription")
         profile_note.setWordWrap(True)
         profile_layout.addWidget(profile_note)
-        if candidates:
-            empty_table_message = (
-                _tr("No DLLs are assigned to this profile yet.\n"
-                "Select detected DLLs on the left and add them to set their load order.")
-            )
-        else:
-            empty_table_message = (
-                _tr("No DLLs are assigned to this profile yet.\n"
-                "Detected DLLs from enabled mods will appear in the left panel.")
-            )
+        empty_table_message = _tr("None of your active mods has a native DLL.")
         table = NativeProfileTable(empty_table_message, profile_group)
         table.setObjectName("nativeLoadOrderTable")
         table.setHorizontalHeaderLabels(
@@ -421,11 +418,10 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         row_buttons = QHBoxLayout()
         row_buttons.setSpacing(7)
-        remove_button = QPushButton(_glyph_icon(0xE74D), _tr("Remove entry"), profile_group)
-        remove_button.setObjectName("removeNativeEntryButton")
-        remove_button.setEnabled(False)
+        remove_button = QPushButton(_glyph_icon(0xE72C), _tr("Reset"), profile_group)
+        remove_button.setObjectName("resetNativeProfileButton")
         remove_button.setToolTip(
-            _tr("Remove the selected route from this profile. The MO2 mod stays installed.")
+            _tr("Switch every DLL on again, in the mod list's order. Initializers are kept.")
         )
         up_button = QPushButton(_glyph_icon(0xE74A), _tr("Move up"), profile_group)
         up_button.setObjectName("moveNativeEntryUpButton")
@@ -446,11 +442,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         row_buttons.addWidget(exports_button)
         profile_layout.addLayout(row_buttons)
 
-        splitter.addWidget(detected_group)
+        detected_group.hide()
         splitter.addWidget(profile_group)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 1)
-        splitter.setSizes([370, 680])
         layout.addWidget(splitter, 1)
 
         footer_layout = QHBoxLayout()
@@ -479,6 +472,28 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         footer_layout.addWidget(buttons)
         layout.addLayout(footer_layout)
 
+        # one list: the profile's entries for active mods in their order, then
+        # every other DLL of the active mods, switched on. Entries of mods that
+        # are off now stay in the file for when they come back.
+        active_keys = {
+            (str(candidate["mod"]).casefold(), str(candidate["path"]).casefold())
+            for candidate in candidates
+        }
+        active_mods = {str(candidate["mod"]).casefold() for candidate in candidates}
+        shown = [entry for entry in entries if str(entry.get("mod", "")).casefold() in active_mods]
+        table.stale_entries = [
+            entry for entry in entries if str(entry.get("mod", "")).casefold() not in active_mods
+        ]
+        listed = {(str(e.get("mod", "")).casefold(), str(e.get("path", "")).casefold()) for e in shown}
+        default_entries = [
+            {"enabled": True, "mod": candidate["mod"], "path": candidate["path"], "initializer": "", "optional": False}
+            for candidate in candidates
+        ]
+        entries = shown + [
+            entry for entry in default_entries
+            if (str(entry["mod"]).casefold(), str(entry["path"]).casefold()) not in listed
+        ]
+        del active_keys
         self._populate_detected_tree(detected_tree, candidates)
         mod_count = len({str(candidate["mod"]).casefold() for candidate in candidates})
         detected_status.setText(
@@ -491,7 +506,6 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         def update_controls(*_args) -> None:
             selected_row = table.currentRow()
             valid_row = 0 <= selected_row < table.rowCount()
-            remove_button.setEnabled(valid_row)
             up_button.setEnabled(valid_row and selected_row > 0)
             down_button.setEnabled(
                 valid_row and selected_row < table.rowCount() - 1
@@ -516,8 +530,20 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             update_controls()
             update_profile_metrics()
 
-        def remove_selected(_checked=False) -> None:
-            self._remove_selected_entry(table)
+        def reset_profile(_checked=False) -> None:
+            initializers = {
+                (entry["mod"].casefold(), entry["path"].casefold()): entry["initializer"]
+                for entry in self._entries_from_table(table)
+            }
+            self._populate_profile_table(
+                table,
+                [
+                    dict(entry, initializer=initializers.get(
+                        (str(entry["mod"]).casefold(), str(entry["path"]).casefold()), ""
+                    ))
+                    for entry in default_entries
+                ],
+            )
             update_controls()
             update_profile_metrics()
 
@@ -534,12 +560,21 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             update_profile_metrics()
 
         add_button.clicked.connect(add_selected)
-        remove_button.clicked.connect(remove_selected)
+        remove_button.clicked.connect(reset_profile)
         up_button.clicked.connect(move_selected_up)
         down_button.clicked.connect(move_selected_down)
         exports_button.clicked.connect(choose_exports)
         detected_tree.itemSelectionChanged.connect(update_controls)
         detected_tree.itemDoubleClicked.connect(lambda *_args: add_selected())
+        # Seamless Co-op starts itself later: its place in the order does not
+        # matter, and the row says so
+        for row in range(table.rowCount()):
+            path_item = table.item(row, 2)
+            if path_item is not None and Path(path_item.text()).name.casefold() in self.SeamlessDlls:
+                path_item.setToolTip(
+                    _tr("Seamless Co-op starts by itself once the game runs; its place in the "
+                        "order does not matter. Switch it off here or turn its mod off.")
+                )
 
         def show_table_menu(position) -> None:
             row = table.rowAt(position.y())
@@ -565,8 +600,6 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 lambda: QApplication.clipboard().setText(str(entry.get("path", ""))),
             )
             copy.setEnabled(bool(entry.get("path")))
-            menu.addSeparator()
-            menu.addAction(_glyph_icon(0xE74D), _tr("Remove entry"), remove_selected)
             menu.exec(table.viewport().mapToGlobal(position))
 
         table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -794,13 +827,18 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         except (OSError, TypeError, ValueError, json.JSONDecodeError):
             routes = []
 
+        seamless = [
+            f"SeamlessCoop/{name}"
+            for name in sorted(self.SeamlessDlls)
+            if (mod_root / "SeamlessCoop" / name).is_file()
+        ]
         if routes:
-            return routes
+            return routes + [route for route in seamless if route not in routes]
 
         for entry in mod_root.iterdir():
             if entry.is_file() and entry.suffix.casefold() == ".dll":
                 routes.append(entry.relative_to(mod_root).as_posix())
-        for directory_name in sorted(self.ManagedDllDirectories):
+        for directory_name in sorted(self.ManagedDllDirectories - {"seamlesscoop"}):
             directory = mod_root / directory_name
             if not directory.is_dir() or directory.is_symlink():
                 continue
@@ -816,7 +854,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                         routes.append(
                             (current_path / filename).relative_to(mod_root).as_posix()
                         )
-        return routes
+        return routes + seamless
 
     def _normalize_native_route(self, route: str) -> str | None:
         normalized = route.replace("\\", "/").strip("/")
@@ -1257,7 +1295,9 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
     def _save_and_close(
         self, dialog: QDialog, profile_root: Path, table: QTableWidget
     ) -> None:
-        entries = self._entries_from_table(table)
+        entries = self._entries_from_table(table) + [
+            dict(entry) for entry in getattr(table, "stale_entries", [])
+        ]
         seen = set()
         # enabled entries by game path: the game plugin refuses a profile that
         # loads one path from two mods

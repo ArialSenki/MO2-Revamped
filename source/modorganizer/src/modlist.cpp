@@ -846,6 +846,11 @@ QStringList ModList::allModsByProfilePriority(MOBase::IProfile* profile) const
                                            : static_cast<Profile*>(profile);
 
   QStringList res;
+  // plugins may ask before a profile is loaded (while MO2 reads the
+  // executables, for one)
+  if (mo2Profile == nullptr) {
+    return res;
+  }
   for (auto& [priority, index] : mo2Profile->getAllIndexesByPriority()) {
     auto modInfo = ModInfo::getByIndex(index);
     if (!modInfo->isBackup() && !modInfo->isOverwrite()) {

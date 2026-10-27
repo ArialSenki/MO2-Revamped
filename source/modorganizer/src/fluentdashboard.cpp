@@ -7,12 +7,15 @@
 #include "modlistviewactions.h"
 #include "organizercore.h"
 #include "profile.h"
+#include "revampedmodes.h"
+#include "settings.h"
 #include "runmenutoolbutton.h"
 #include "ui_mainwindow.h"
 
 #include <iplugingame.h>
 
 #include <QBoxLayout>
+#include <QComboBox>
 #include <QDir>
 #include <QDirIterator>
 #include <QFileInfo>
@@ -160,6 +163,36 @@ void FluentDashboard::setupBanner(QWidget* central)
   row->addWidget(m_logo);
   row->addWidget(m_title);
   row->addSpacing(18);
+
+  // the game mode (beta): MO2, me3 or Mod Engine 2, each in its own instance
+  if (RevampedModes::available(Settings::instance())) {
+    using RevampedModes::Mode;
+    auto* modeLabel = new QLabel(tr("Mode"), m_banner);
+    modeLabel->setObjectName(QStringLiteral("fluentHeroLabel"));
+    m_mode = new QComboBox(m_banner);
+    m_mode->setObjectName(QStringLiteral("gameModeBox"));
+    m_mode->setToolTip(tr("MO2, me3 or Mod Engine 2, each with an instance of its own. "
+                          "Changing it restarts MO2 in that mode's instance."));
+    for (const Mode mode : {Mode::MO2, Mode::Me3, Mode::Me2}) {
+      m_mode->addItem(mode == Mode::MO2 ? RevampedModes::title(mode)
+                                        : tr("%1 (beta)").arg(RevampedModes::title(mode)),
+                      static_cast<int>(mode));
+    }
+    auto showCurrent = [this] {
+      m_mode->setCurrentIndex(
+          m_mode->findData(static_cast<int>(RevampedModes::current(Settings::instance()))));
+    };
+    showCurrent();
+    connect(m_mode, &QComboBox::activated, this, [this, showCurrent](int index) {
+      const auto mode = static_cast<Mode>(m_mode->itemData(index).toInt());
+      if (!RevampedModes::switchTo(m_banner->window(), m_core, mode)) {
+        showCurrent();
+      }
+    });
+    row->addWidget(modeLabel);
+    row->addWidget(m_mode);
+    row->addSpacing(12);
+  }
 
   auto* profileLabel = new QLabel(tr("Profile"), m_banner);
   profileLabel->setObjectName(QStringLiteral("fluentHeroLabel"));

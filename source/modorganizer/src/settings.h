@@ -831,6 +831,21 @@ public:
   bool usePrereleases() const;
   void setUsePrereleases(bool b);
 
+  // features still in testing, each switched on by itself (off by default);
+  // plugins read them from the application's "revampedBetaMe3" and
+  // "revampedBetaMe2" properties
+  //
+  bool betaMe3() const;
+  void setBetaMe3(bool b);
+  bool betaMe2() const;
+  void setBetaMe2(bool b);
+
+  // the game mode links between an instance and the ones MO2 makes for me3
+  // and Mod Engine 2 (see revampedmodes.h), under [Settings] revamped_*
+  //
+  QString revampedValue(const QString& key) const;
+  void setRevampedValue(const QString& key, const QString& value);
+
   // whether profiles should default to local INIs
   //
   bool profileLocalInis() const;

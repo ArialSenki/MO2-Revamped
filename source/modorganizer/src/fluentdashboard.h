@@ -17,6 +17,7 @@
 class OrganizerCore;
 class ModListView;
 class QBoxLayout;
+class QComboBox;
 class QLabel;
 class QPushButton;
 
@@ -71,6 +72,7 @@ private:
   QLabel* m_logo;
   QLabel* m_title;
   QLabel* m_lastPlayed;
+  QComboBox* m_mode = nullptr;
   std::function<QDir()> m_savesDirectory;
   FluentStatTile* m_active;
   FluentStatTile* m_conflicts;

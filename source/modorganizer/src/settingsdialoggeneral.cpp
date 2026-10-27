@@ -10,6 +10,7 @@
 #include <utility.h>
 #include <algorithm>
 #include <QDockWidget>
+#include <QGroupBox>
 #include <QIcon>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -102,6 +103,40 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   // updates
   ui->checkForUpdates->setChecked(settings().checkForUpdates());
   ui->usePrereleaseBox->setChecked(settings().usePrereleases());
+
+  // features still in testing, kept apart from the stable ones and each on
+  // its own switch, so one that fails can be turned off alone
+  auto* betaGroup = new QGroupBox(QObject::tr("Beta features"), ui->groupBox_6->parentWidget());
+  betaGroup->setObjectName(QStringLiteral("betaFeaturesGroup"));
+  auto* betaLayout = new QVBoxLayout(betaGroup);
+  auto addBeta = [&](const QString& name, const QString& title, const QString& text,
+                     bool checked) {
+    auto* box = new QCheckBox(title, betaGroup);
+    box->setObjectName(name);
+    box->setToolTip(text);
+    box->setWhatsThis(text);
+    box->setChecked(checked);
+    betaLayout->addWidget(box);
+    return box;
+  };
+  m_betaMe3 = addBeta(
+      QStringLiteral("betaMe3Box"), QObject::tr("me3 integration"),
+      QObject::tr("me3 starts Elden Ring with MO2's mods, native DLLs and Seamless Co-op, "
+                  "and shows up among the executables when it is installed. Takes "
+                  "effect after a restart."),
+      settings().betaMe3());
+  m_betaMe2 = addBeta(
+      QStringLiteral("betaMe2Box"), QObject::tr("Mod Engine 2 integration"),
+      QObject::tr("Mod Engine 2 gets a config MO2 writes from your active mods, with its "
+                  "extensions such as Seamless Co-op, shown before the game starts. Takes "
+                  "effect after a restart."),
+      settings().betaMe2());
+  CircularUi::addGroupHeading(
+      betaGroup, ":/MO/gui/mainwindow/settings.svg", QStringLiteral("generalBetaIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("B"));
+  if (auto* pageLayout = qobject_cast<QBoxLayout*>(ui->groupBox_6->parentWidget()->layout())) {
+    pageLayout->insertWidget(pageLayout->indexOf(ui->groupBox_6) + 1, betaGroup);
+  }
 
   // profile defaults
   ui->localINIs->setChecked(settings().profileLocalInis());
@@ -228,6 +263,13 @@ void GeneralSettingsTab::update()
   // updates
   settings().setCheckForUpdates(ui->checkForUpdates->isChecked());
   settings().setUsePrereleases(ui->usePrereleaseBox->isChecked());
+  if (m_betaMe3->isChecked() != settings().betaMe3() ||
+      m_betaMe2->isChecked() != settings().betaMe2()) {
+    settings().setBetaMe3(m_betaMe3->isChecked());
+    settings().setBetaMe2(m_betaMe2->isChecked());
+    // plugins add their executables and hooks as MO2 starts
+    dialog().setExitNeeded(dialog().exitNeeded() | Exit::Restart);
+  }
 
   // profile defaults
   settings().setProfileLocalInis(ui->localINIs->isChecked());
