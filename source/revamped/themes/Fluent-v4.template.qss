@@ -372,6 +372,12 @@ QTreeView, QTreeWidget, QListView, QListWidget, QTableView, QTableWidget {
     selection-background-color: @sel@;
     selection-color: @text@;
 }
+/* Settings > Plugins: list rows as tall as the other lists' */
+QTreeWidget#pluginsList::item,
+QTreeWidget#pluginSettingsList::item,
+QListWidget#pluginBlacklist::item {
+    padding: 4px 2px;
+}
 QTreeView::item:hover:!selected, QTreeWidget::item:hover:!selected,
 QListView::item:hover:!selected, QListWidget::item:hover:!selected,
 QTableView::item:hover:!selected, QTableWidget::item:hover:!selected {

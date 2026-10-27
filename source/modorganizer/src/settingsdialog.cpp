@@ -227,20 +227,12 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   }
   m_tabs.resize(m_tabFactories.size());
   constexpr int PluginsTabIndex = 5;
-  constexpr int WorkaroundsTabIndex = 6;
+  // a page is built before it first paints: painted first, a page picked
+  // before the background preparation reached it showed its Designer layout
+  // and then jumped (the Paths buttons moved); opening Settings still waits
+  // only for the current page
   connect(ui->tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
-    if (index == PluginsTabIndex || index == WorkaroundsTabIndex) {
-      initializeTab(index);
-      return;
-    }
-
-    // Let the dialog paint the selected page before building it. This keeps
-    // other lazy pages from delaying Settings when first opened.
-    QTimer::singleShot(0, this, [this, index] {
-      if (ui->tabWidget->currentIndex() == index) {
-        initializeTab(index);
-      }
-    });
+    initializeTab(index);
   });
   // the Plugins page is built on its first visit and has no scroll area; its
   // full height would otherwise set the dialog's minimum height

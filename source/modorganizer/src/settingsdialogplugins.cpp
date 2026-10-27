@@ -145,6 +145,9 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
                                       QSizePolicy::Maximum);
   ui->pluginDescriptionLayout->setVerticalSpacing(4);
   ui->pluginDescriptionLayout->setHorizontalSpacing(12);
+  // room inside the details card, so the enable switch is not pressed
+  // against its edge
+  ui->pluginDescriptionLayout->setContentsMargins(12, 8, 12, 8);
   ui->pluginSettingsList->setEditTriggers(QAbstractItemView::DoubleClicked |
                                           QAbstractItemView::EditKeyPressed);
   ui->pluginSettingsList->viewport()->installEventFilter(
