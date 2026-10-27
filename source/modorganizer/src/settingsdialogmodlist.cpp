@@ -21,6 +21,12 @@ ModListSettingsTab::ModListSettingsTab(Settings& s, SettingsDialog& d)
   CircularUi::addIconToHeading(
       ui->modListPageTitle, ":/MO/gui/mainwindow/settings.svg",
       QStringLiteral("modListPageIcon"), 36, QStringLiteral("M"));
+  // the sub-headings start where the rows' titles do, with room above them
+  for (QLabel* label : {ui->collapsibleSeparatorsLabel,
+                        ui->collapsibleSeparatorsHighlightLabel,
+                        ui->collapsibleSeparatorsIconsLabel}) {
+    label->setContentsMargins(4, 8, 4, 0);
+  }
   CircularUi::addGroupHeading(
       ui->modListDisplayGroup, ":/MO/gui/mainwindow/filter.svg",
       QStringLiteral("modListDisplayIcon"), 26,

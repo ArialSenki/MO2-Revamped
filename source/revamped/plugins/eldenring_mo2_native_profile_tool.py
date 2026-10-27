@@ -198,7 +198,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         return "Elden Ring MO2 Native Profile"
 
     def localizedName(self) -> str:
-        return self.name()
+        # Settings > Plugins lists it by the name its menu shows
+        return self.displayName()
 
     def author(self) -> str:
         return "ArialSenki"

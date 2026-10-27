@@ -7755,7 +7755,39 @@ Para conservar algunos archivos, muévelos antes a un mod.</translation>
       <source>Plugin</source>
       <translation>Plugin</translation>
     </message>
-  </context>
+      <message>
+      <source>Diagnose</source>
+      <translation>Diagnóstico</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Juego</translation>
+    </message>
+    <message>
+      <source>Installer</source>
+      <translation>Instalador</translation>
+    </message>
+    <message>
+      <source>Mod Page</source>
+      <translation>Página de mods</translation>
+    </message>
+    <message>
+      <source>Preview</source>
+      <translation>Vista previa</translation>
+    </message>
+    <message>
+      <source>Tool</source>
+      <translation>Herramienta</translation>
+    </message>
+    <message>
+      <source>Proxy</source>
+      <translation>Proxy</translation>
+    </message>
+    <message>
+      <source>File Mapper</source>
+      <translation>Asignador de archivos</translation>
+    </message>
+</context>
   <context>
     <name>PreviewDialog</name>
     <message>
@@ -8249,6 +8281,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
   <context>
     <name>QObject</name>
     <message>
+      <source>Connect to Nexus</source>
+      <translation>Conectarse a Nexus</translation>
+    </message>
+    <message>
       <source>Is overwritten (loose files)</source>
       <translation>Es sobrescrito (archivos sueltos)</translation>
     </message>
@@ -8542,7 +8578,7 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     </message>
     <message>
       <source>Enter API Key Manually</source>
-      <translation>Introduce la clave API manualmente</translation>
+      <translation>Introducir la clave API manualmente</translation>
     </message>
     <message>
       <source>Browse</source>
@@ -9090,8 +9126,56 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SettingsDialog</name>
     <message>
+      <source>User ID:</source>
+      <translation>ID de usuario:</translation>
+    </message>
+    <message>
+      <source>Use %BASE_DIR% to refer to the Base Directory.</source>
+      <translation>Usa %BASE_DIR% para referirte a la carpeta base.</translation>
+    </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>Base Directory</source>
+      <translation>Carpeta base</translation>
+    </message>
+    <message>
+      <source>Save the current filters when closing MO2 and restore them on startup.</source>
+      <translation>Guarda los filtros actuales al cerrar MO2 y los restaura al iniciar.</translation>
+    </message>
+    <message>
+      <source>Miscellaneous</source>
+      <translation>Otros</translation>
+    </message>
+    <message>
+      <source>Update to non-stable releases.</source>
+      <translation>Actualiza también a versiones no estables.</translation>
+    </message>
+    <message>
+      <source>Automatically hide downloads after successful installation.</source>
+      <translation>Oculta automáticamente las descargas que se instalan correctamente.</translation>
+    </message>
+    <message>
+      <source>Make the download list more compact.</source>
+      <translation>Hace más compacta la lista de descargas.</translation>
+    </message>
+    <message>
+      <source>Show meta information instead of file names in the download list.</source>
+      <translation>Muestra la metainformación en lugar de los nombres de archivo en la lista de descargas.</translation>
+    </message>
+    <message>
+      <source>Download List</source>
+      <translation>Lista de descargas</translation>
+    </message>
+    <message>
+      <source>Mod List</source>
+      <translation>Lista de mods</translation>
+    </message>
+    <message>
       <source>Settings</source>
-      <translation>Configuración</translation>
+      <translation>Ajustes</translation>
     </message>
     <message>
       <source>General preferences</source>
@@ -9103,7 +9187,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Check for MO2 Revamped updates on GitHub on startup.</source>
-      <translation>Buscar actualizaciones de MO2 Revamped en GitHub al iniciar.</translation>
+      <translation>Busca actualizaciones de MO2 Revamped en GitHub al iniciar.</translation>
     </message>
     <message>
       <source>Check for MO2 Revamped updates</source>
@@ -10894,4 +10978,25 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
       <translation>El nombre que has escrito no es válido; escribe otro.</translation>
     </message>
   </context>
+  <context>
+    <name>DiagnoseBasic</name>
+      <message>
+      <source>Basic diagnosis plugin</source>
+      <translation>Diagnóstico básico</translation>
+    </message>
+</context>
+  <context>
+    <name>Form43Checker</name>
+      <message>
+      <source>Form 43 Plugin Checker</source>
+      <translation>Comprobador de plugins Form 43</translation>
+    </message>
+</context>
+  <context>
+    <name>ScriptExtenderPluginChecker</name>
+      <message>
+      <source>Script Extender Plugin Load Checker</source>
+      <translation>Comprobador de carga de plugins de Script Extender</translation>
+    </message>
+</context>
 </TS>

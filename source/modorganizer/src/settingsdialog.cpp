@@ -176,6 +176,16 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
     }
     FluentNavigation::attach(ui->tabWidget, glyphs);
     perf.lap("navigation");
+    // each page is titled as the rail names it, like Windows 11 Settings and
+    // the tools' own pages; the subtitle keeps saying what it holds
+    for (int i = 0; i < ui->tabWidget->count(); ++i) {
+      for (QLabel* title : ui->tabWidget->widget(i)->findChildren<QLabel*>()) {
+        if (title->objectName().endsWith(QLatin1String("PageTitle"))) {
+          title->setText(ui->tabWidget->tabText(i).remove(QLatin1Char('&')));
+          break;
+        }
+      }
+    }
     // the pages scroll at the window's edge; OK and Cancel keep their margin
     if (QLayout* root = layout()) {
       QMargins margins = root->contentsMargins();

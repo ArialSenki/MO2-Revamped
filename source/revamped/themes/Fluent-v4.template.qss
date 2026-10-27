@@ -1869,7 +1869,7 @@ QLabel[wizardPageText="true"] {
 QLabel[wizardRowText="true"],
 QLabel#wizardNamePath,
 QLabel#diskSpace,
-QLabel#label_11 {
+QDialog#CreateInstanceDialog QLabel#label_11 {
     color: @caption@;
     font-size: 8.5pt;
     background-color: transparent;

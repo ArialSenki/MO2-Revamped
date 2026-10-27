@@ -221,7 +221,8 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         return "MO2 Revamped Information"
 
     def localizedName(self) -> str:
-        return self.name()
+        # Settings > Plugins lists it by the name its menu shows
+        return self.displayName()
 
     def author(self) -> str:
         return "ArialSenki"

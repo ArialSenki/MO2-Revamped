@@ -161,7 +161,22 @@ void makeRow(QCheckBox* box, bool takeDetail = false)
   auto* row = new QFrame(parent);
   row->setObjectName(QStringLiteral("fluentSettingRow"));
   row->setProperty("fluentGridRow", qobject_cast<QGridLayout*>(parent->layout()) != nullptr);
-  if (parent->layout()->replaceWidget(box, row) == nullptr) {
+
+  // a box alone on a form row sat in the label column, which then took the
+  // whole row's width and squeezed the fields above it; the row spans both
+  bool placed = false;
+  if (auto* form = qobject_cast<QFormLayout*>(parent->layout())) {
+    int formRow                 = -1;
+    QFormLayout::ItemRole role  = QFormLayout::LabelRole;
+    form->getWidgetPosition(box, &formRow, &role);
+    if (formRow >= 0 && role == QFormLayout::LabelRole &&
+        form->itemAt(formRow, QFormLayout::FieldRole) == nullptr) {
+      form->removeWidget(box);
+      form->setWidget(formRow, QFormLayout::SpanningRole, row);
+      placed = true;
+    }
+  }
+  if (!placed && parent->layout()->replaceWidget(box, row) == nullptr) {
     delete row;
     return;
   }

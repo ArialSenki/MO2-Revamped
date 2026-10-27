@@ -63,7 +63,8 @@ QWidget* wrapNexusGroupInCard(QGroupBox* group, const QString& cardObjectName,
   card->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
   auto* cardLayout = new QVBoxLayout(card);
-  cardLayout->setContentsMargins(12, 10, 12, 10);
+  // the inset of the other Settings pages' cards
+  cardLayout->setContentsMargins(18, 16, 18, 14);
   cardLayout->setSpacing(8);
 
   auto* heading = new QLabel(group->title(), card);
@@ -478,6 +479,19 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
     serversLayout->setSpacing(12);
     serversLayout->setStretch(0, 1);
     serversLayout->setStretch(1, 1);
+  }
+
+  // the account and usage cards stack: their values start in one column
+  {
+    const QList<QLabel*> labels = {ui->label_2, ui->label_3, ui->label_11, ui->label_30,
+                                   ui->label_31};
+    int width = 0;
+    for (QLabel* label : labels) {
+      width = std::max(width, label->sizeHint().width());
+    }
+    for (QLabel* label : labels) {
+      label->setMinimumWidth(width);
+    }
   }
 
   ui->nexusActivityPanel->setMinimumWidth(0);

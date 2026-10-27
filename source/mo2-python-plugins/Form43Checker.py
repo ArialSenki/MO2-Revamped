@@ -18,7 +18,7 @@ class Form43Checker(mobase.IPluginDiagnose):
         return "Form 43 Plugin Checker"
 
     def localizedName(self):
-        return "Form 43 Plugin Checker"
+        return self.tr("Form 43 Plugin Checker")
 
     def author(self):
         return "AnyOldName3"
