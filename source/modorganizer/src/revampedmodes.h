@@ -48,6 +48,14 @@ bool available(const Settings& settings);
 // MO2 there; false when nothing changed (cancelled, game running, ...)
 bool switchTo(QWidget* parent, OrganizerCore& core, Mode target);
 
+// the folder of the mode's instance, made from this instance's main one;
+// empty when it has none
+QString instanceFolder(Settings& settings, Mode mode);
+
+// moves the mode's instance to the Recycle Bin and forgets it; never the
+// instance in use (false then, or when it failed)
+bool removeInstance(QWidget* parent, Settings& settings, Mode mode);
+
 }  // namespace RevampedModes
 
 #endif  // REVAMPEDMODES_H

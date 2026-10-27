@@ -1,4 +1,5 @@
 #include "organizercore.h"
+#include "revampedmodes.h"
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
@@ -210,6 +211,14 @@ void OrganizerCore::updateExecutablesList()
   }
 
   m_ExecutablesList.load(managedGame(), m_Settings);
+
+  // a mod manager whose beta feature is off keeps no entry MO2 added for it
+  if (!m_Settings.betaMe3()) {
+    m_ExecutablesList.remove(RevampedModes::launcherTitle(RevampedModes::Mode::Me3));
+  }
+  if (!m_Settings.betaMe2()) {
+    m_ExecutablesList.remove(RevampedModes::launcherTitle(RevampedModes::Mode::Me2));
+  }
 }
 
 void OrganizerCore::updateModInfoFromDisc()

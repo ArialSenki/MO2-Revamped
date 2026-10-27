@@ -227,7 +227,8 @@ void Settings::setUsePrereleases(bool b)
 bool Settings::betaMe3() const
 {
   // beta_features held both before they had a switch each
-  return get<bool>(m_Settings, "Settings", "beta_me3",
+  return GlobalSettings::developerMode() &&
+         get<bool>(m_Settings, "Settings", "beta_me3",
                    get<bool>(m_Settings, "Settings", "beta_features", false));
 }
 
@@ -238,7 +239,8 @@ void Settings::setBetaMe3(bool b)
 
 bool Settings::betaMe2() const
 {
-  return get<bool>(m_Settings, "Settings", "beta_me2",
+  return GlobalSettings::developerMode() &&
+         get<bool>(m_Settings, "Settings", "beta_me2",
                    get<bool>(m_Settings, "Settings", "beta_features", false));
 }
 
@@ -2569,6 +2571,20 @@ void GlobalSettings::setValue(const QString& key, const QVariant& value)
 void GlobalSettings::remove(const QString& key)
 {
   settings().remove(key);
+}
+
+bool GlobalSettings::developerMode()
+{
+  return value(QStringLiteral("developer_mode"), false).toBool();
+}
+
+void GlobalSettings::setDeveloperMode(bool on)
+{
+  if (on) {
+    setValue(QStringLiteral("developer_mode"), true);
+  } else {
+    remove(QStringLiteral("developer_mode"));
+  }
 }
 
 namespace

@@ -831,9 +831,9 @@ public:
   bool usePrereleases() const;
   void setUsePrereleases(bool b);
 
-  // features still in testing, each switched on by itself (off by default);
-  // plugins read them from the application's "revampedBetaMe3" and
-  // "revampedBetaMe2" properties
+  // features still in testing, each switched on by itself (off by default),
+  // and only while the developer mode is on; plugins read them from the
+  // application's "revampedBetaMe3" and "revampedBetaMe2" properties
   //
   bool betaMe3() const;
   void setBetaMe3(bool b);
@@ -1008,6 +1008,11 @@ public:
   static QString instanceValue(const QString& section, const QString& identifier);
   static void setInstanceValue(const QString& section, const QString& identifier,
                                const QString& value);
+
+  // the hidden developer mode (seven taps on the version in About): it shows
+  // Settings > Developer, and beta features only work while it is on
+  static bool developerMode();
+  static void setDeveloperMode(bool on);
 
 private:
   static QSettings settings();

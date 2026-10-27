@@ -313,6 +313,7 @@ mo2_add_filter(NAME src/settings GROUPS
 
 mo2_add_filter(NAME src/settingsdialog GROUPS
 	settingsdialog
+	settingsdialogdeveloper
 	settingsdialogdiagnostics
 	settingsdialoggeneral
 	settingsdialognexus

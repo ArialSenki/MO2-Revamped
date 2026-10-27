@@ -8,6 +8,7 @@
 #include "shared/util.h"
 #include <iplugingame.h>
 #include <log.h>
+#include <utility.h>
 
 #include <QCheckBox>
 #include <QCoreApplication>
@@ -315,6 +316,72 @@ Mode current(const Settings& settings)
 bool available(const Settings& settings)
 {
   return settings.betaMe3() || settings.betaMe2() || current(settings) != Mode::MO2;
+}
+
+namespace
+{
+// the main instance's settings: these, or those of the instance this mode
+// instance was made from
+Settings* mainSettings(Settings& settings, std::unique_ptr<Settings>& owned)
+{
+  if (current(settings) == Mode::MO2) {
+    return &settings;
+  }
+  const QString ini =
+      iniFile(settings.revampedValue(QStringLiteral("revamped_mode_parent_dir")));
+  if (!QFileInfo(ini).isFile()) {
+    return nullptr;
+  }
+  owned = std::make_unique<Settings>(ini);
+  return owned.get();
+}
+}  // namespace
+
+QString instanceFolder(Settings& settings, Mode mode)
+{
+  std::unique_ptr<Settings> owned;
+  Settings* main = mainSettings(settings, owned);
+  if (main == nullptr || mode == Mode::MO2) {
+    return {};
+  }
+  const QString id = main->revampedValue(QStringLiteral("revamped_mode_") + key(mode));
+  if (id.isEmpty()) {
+    return {};
+  }
+  const QString folder =
+      QDir(InstanceManager::singleton().globalInstancesRootPath()).filePath(id);
+  return QFileInfo(iniFile(folder)).isFile() ? folder : QString();
+}
+
+bool removeInstance(QWidget* parent, Settings& settings, Mode mode)
+{
+  if (current(settings) == mode) {
+    QMessageBox::information(parent, title(mode),
+                             tr("This is the %1 instance. Switch the mode back to MO2 "
+                                "first, then remove it from there.")
+                                 .arg(title(mode)));
+    return false;
+  }
+  const QString folder = instanceFolder(settings, mode);
+  std::unique_ptr<Settings> owned;
+  Settings* main = mainSettings(settings, owned);
+  if (!folder.isEmpty() && !shellDelete(QStringList(folder), true, parent)) {
+    QMessageBox::warning(parent, title(mode),
+                         tr("Could not move %1 to the Recycle Bin.")
+                             .arg(QDir::toNativeSeparators(folder)));
+    return false;
+  }
+  if (main != nullptr) {
+    main->setRevampedValue(QStringLiteral("revamped_mode_") + key(mode), {});
+    main->sync();
+  }
+  if (!folder.isEmpty()) {
+    GlobalSettings::setInstanceValue(QStringLiteral("InstanceGroups"),
+                                     QDir(folder).dirName(), {});
+    log::info("game modes: moved the {} instance '{}' to the Recycle Bin", key(mode),
+              folder);
+  }
+  return true;
 }
 
 bool switchTo(QWidget* parent, OrganizerCore& core, Mode target)

@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentperf.h"
 #include "fluentnavigation.h"
 #include "fluentsettings.h"
+#include "settingsdialogdeveloper.h"
 #include "settingsdialogdiagnostics.h"
 #include "settingsdialoggeneral.h"
 #include "settingsdialogmodlist.h"
@@ -150,18 +151,30 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   tabPolicy.setVerticalPolicy(QSizePolicy::Ignored);
   ui->tabWidget->setSizePolicy(tabPolicy);
 
+  // Settings > Developer, only while the developer mode is on
+  QWidget* developerPage = nullptr;
+  if (GlobalSettings::developerMode()) {
+    developerPage = new QWidget;
+    developerPage->setObjectName(QStringLiteral("developerTab"));
+    ui->tabWidget->addTab(developerPage, tr("Developer"));
+  }
+
   // Fluent v4: pages listed on the left, like Windows 11 Settings
   if (FluentIcons::active()) {
-    FluentNavigation::attach(ui->tabWidget, {
-                                                0xE713,  // General: Settings
-                                                0xE790,  // Theme: Color
-                                                0xE8FD,  // Mod List: BulletedList
-                                                0xE8B7,  // Paths: Folder
-                                                0xE774,  // Nexus: Globe
-                                                0xEA86,  // Plugins: Puzzle
-                                                0xE90F,  // Workarounds: Repair
-                                                0xE9D9,  // Diagnostics: Diagnostic
-                                            });
+    QList<char16_t> glyphs = {
+        0xE713,  // General: Settings
+        0xE790,  // Theme: Color
+        0xE8FD,  // Mod List: BulletedList
+        0xE8B7,  // Paths: Folder
+        0xE774,  // Nexus: Globe
+        0xEA86,  // Plugins: Puzzle
+        0xE90F,  // Workarounds: Repair
+        0xE9D9,  // Diagnostics: Diagnostic
+    };
+    if (developerPage != nullptr) {
+      glyphs.append(0xEC7A);  // Developer: DeveloperTools
+    }
+    FluentNavigation::attach(ui->tabWidget, glyphs);
     perf.lap("navigation");
     // the pages scroll at the window's edge; OK and Cancel keep their margin
     if (QLayout* root = layout()) {
@@ -197,6 +210,11 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
         return std::make_unique<DiagnosticsSettingsTab>(m_settings, *this);
       },
   };
+  if (developerPage != nullptr) {
+    m_tabFactories.push_back([this, developerPage] {
+      return std::make_unique<DeveloperSettingsTab>(m_settings, *this, developerPage);
+    });
+  }
   m_tabs.resize(m_tabFactories.size());
   constexpr int PluginsTabIndex = 5;
   constexpr int WorkaroundsTabIndex = 6;

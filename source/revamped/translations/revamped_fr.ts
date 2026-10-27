@@ -6845,6 +6845,22 @@ Qt et PyQt · {qt}
 Python · {python}
 OpenSSL · {openssl}</translation>
     </message>
+    <message>
+      <source>The developer mode is already on: Settings &gt; Developer.</source>
+      <translation>Le mode développeur est déjà activé : Paramètres &gt; Développeur.</translation>
+    </message>
+    <message>
+      <source>You are now a developer. Settings &gt; Developer has the beta features; open Settings again to see it.</source>
+      <translation>Vous êtes maintenant développeur. Paramètres &gt; Développeur contient les fonctionnalités bêta ; rouvrez les paramètres pour le voir.</translation>
+    </message>
+    <message>
+      <source>1 more tap to turn the developer mode on.</source>
+      <translation>Encore 1 appui pour activer le mode développeur.</translation>
+    </message>
+    <message>
+      <source>{0} more taps to turn the developer mode on.</source>
+      <translation>Encore {0} appuis pour activer le mode développeur.</translation>
+    </message>
   </context>
   <context>
     <name>ModInfoDialog</name>
@@ -8924,6 +8940,62 @@ Exemple :
       <source>Mod Engine 2 gets a config MO2 writes from your active mods, with its extensions such as Seamless Co-op, shown before the game starts. Takes effect after a restart.</source>
       <translation>Mod Engine 2 reçoit une configuration que MO2 écrit à partir de vos mods actifs, avec leurs extensions comme Seamless Co-op, affichée avant le lancement du jeu. Prend effet après un redémarrage.</translation>
     </message>
+    <message>
+      <source>Developer</source>
+      <translation>Développeur</translation>
+    </message>
+    <message>
+      <source>Features still in testing. They may change or go away, and none of them is needed to play.</source>
+      <translation>Fonctionnalités encore en test. Elles peuvent changer ou disparaître, et aucune n&apos;est nécessaire pour jouer.</translation>
+    </message>
+    <message>
+      <source>Developer mode</source>
+      <translation>Mode développeur</translation>
+    </message>
+    <message>
+      <source>Shows this page. Turning it off switches every beta feature off and restarts MO2; seven taps on the version in About turn it on again.</source>
+      <translation>Affiche cette page. Le désactiver désactive toutes les fonctionnalités bêta et redémarre MO2 ; sept appuis sur la version dans À propos le réactivent.</translation>
+    </message>
+    <message>
+      <source>Mod managers (beta)</source>
+      <translation>Gestionnaires de mods (bêta)</translation>
+    </message>
+    <message>
+      <source>Remove me3…</source>
+      <translation>Retirer me3…</translation>
+    </message>
+    <message>
+      <source>Remove Mod Engine 2…</source>
+      <translation>Retirer Mod Engine 2…</translation>
+    </message>
+    <message>
+      <source>Turns the integration off, takes its entry out of the executables and, if you want, its mode&apos;s instance too, then restarts MO2.</source>
+      <translation>Désactive l&apos;intégration, retire son entrée des exécutables et, si vous le voulez, l&apos;instance de son mode, puis redémarre MO2.</translation>
+    </message>
+    <message>
+      <source>Remove %1?</source>
+      <translation>Retirer %1 ?</translation>
+    </message>
+    <message>
+      <source>The %1 integration turns off and its entry leaves the executables. %1 itself stays installed. MO2 restarts.</source>
+      <translation>L&apos;intégration de %1 se désactive et son entrée quitte les exécutables. %1 reste installé. MO2 redémarre.</translation>
+    </message>
+    <message>
+      <source>Remove and restart</source>
+      <translation>Retirer et redémarrer</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annuler</translation>
+    </message>
+    <message>
+      <source>Also move &quot;%1&quot; to the Recycle Bin</source>
+      <translation>Déplacer aussi « %1 » dans la Corbeille</translation>
+    </message>
+    <message>
+      <source>The instance of this mode, with its mods, profiles and saves.</source>
+      <translation>L&apos;instance de ce mode, avec ses mods, profils et sauvegardes.</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -9842,6 +9914,10 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
     <message>
       <source>Collapsible separators</source>
       <translation>Séparateurs réductibles</translation>
+    </message>
+    <message>
+      <source>Developer</source>
+      <translation>Développeur</translation>
     </message>
   </context>
   <context>
@@ -10834,6 +10910,14 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
 %1</source>
       <translation>L&apos;instance à partir de laquelle ce mode a été créé n&apos;existe plus :
 %1</translation>
+    </message>
+    <message>
+      <source>This is the %1 instance. Switch the mode back to MO2 first, then remove it from there.</source>
+      <translation>Ceci est l&apos;instance %1. Revenez d&apos;abord au mode MO2, puis retirez-la depuis là.</translation>
+    </message>
+    <message>
+      <source>Could not move %1 to the Recycle Bin.</source>
+      <translation>Impossible de déplacer %1 dans la Corbeille.</translation>
     </message>
   </context>
 </TS>

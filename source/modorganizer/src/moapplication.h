@@ -70,6 +70,9 @@ public:
   //
   bool notify(QObject* receiver, QEvent* event) override;
 
+  // keeps the developer mode the About plugin turns on (a property it sets)
+  bool event(QEvent* event) override;
+
 public slots:
   bool setStyleFile(const QString& style);
 

@@ -5885,6 +5885,7 @@ QDialog#SettingsDialog QTabWidget#tabWidget QWidget#nexusTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QWidget#pluginsTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QWidget#workaroundTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QWidget#diagnosticsTab,
+QDialog#SettingsDialog QTabWidget#tabWidget QWidget#developerTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QStackedWidget#qt_tabwidget_stackedwidget,
 QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea,
 QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea > QWidget#qt_scrollarea_viewport,
@@ -6482,4 +6483,15 @@ QScrollBar[fluentScroll=true]::right-arrow {
 QScrollBar[fluentScroll=true]::add-page,
 QScrollBar[fluentScroll=true]::sub-page {
     background: transparent;
+}
+
+/* Settings > Developer: built in code, with the section titles and card
+   spacing of the General page */
+QDialog#SettingsDialog QWidget#developerTab QLabel#generalSectionTitle {
+    color: #FFFFFF;
+    font-size: 10pt;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#developerTab QGroupBox {
+    margin-top: 3px;
 }

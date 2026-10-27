@@ -745,6 +745,7 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   log::getDefault().setLevel(m_settings->diagnostics().logLevel());
   log::debug("using ini at '{}'", m_settings->filename());
   // read by plugins before they add executables or hook a launch
+  setProperty("revampedDeveloperMode", GlobalSettings::developerMode());
   setProperty("revampedBetaMe3", m_settings->betaMe3());
   setProperty("revampedBetaMe2", m_settings->betaMe2());
   if (m_settings->betaMe3() || m_settings->betaMe2()) {
@@ -1357,6 +1358,20 @@ bool MOApplication::setStyleFile(const QString& styleName)
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   return true;
+}
+
+bool MOApplication::event(QEvent* event)
+{
+  if (event->type() == QEvent::DynamicPropertyChange &&
+      static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName() ==
+          "revampedDeveloperMode") {
+    const bool on = property("revampedDeveloperMode").toBool();
+    if (on != GlobalSettings::developerMode()) {
+      GlobalSettings::setDeveloperMode(on);
+      log::info("developer mode {}", on ? "on" : "off");
+    }
+  }
+  return QApplication::event(event);
 }
 
 bool MOApplication::notify(QObject* receiver, QEvent* event)

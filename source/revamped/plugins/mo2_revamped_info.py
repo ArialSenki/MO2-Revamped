@@ -14,7 +14,7 @@ from pathlib import Path
 
 import mobase
 from PyQt6 import QtCore
-from PyQt6.QtCore import QCoreApplication, QRectF, QSize, Qt, QUrl, qCritical
+from PyQt6.QtCore import QCoreApplication, QEvent, QObject, QRectF, QSize, Qt, QUrl, qCritical
 from PyQt6.QtGui import (
     QAction,
     QColor,
@@ -154,6 +154,52 @@ class _NavigationDelegate(QStyledItemDelegate):
             ),
         )
         painter.restore()
+
+
+class _DeveloperTaps(QObject):
+    """Seven taps on the MO2 version turn the developer mode on, as on a
+    phone's build number. MO2 keeps it from the application's
+    revampedDeveloperMode property (see MOApplication::event)."""
+
+    Needed = 7
+
+    def __init__(self, targets: list, status: QLabel):
+        super().__init__(status)
+        self._taps = 0
+        self._last = None
+        self._status = status
+        for target in targets:
+            target.installEventFilter(self)
+
+    def eventFilter(self, watched, event) -> bool:
+        if event.type() != QEvent.Type.MouseButtonRelease:
+            return False
+        # a click a label lets through reaches its row as well: count it once
+        if event.timestamp() == self._last:
+            return False
+        self._last = event.timestamp()
+        application = QApplication.instance()
+        if application is None:
+            return False
+        if application.property("revampedDeveloperMode"):
+            self._show(_tr("The developer mode is already on: Settings > Developer."))
+            return False
+        self._taps += 1
+        left = self.Needed - self._taps
+        if left <= 0:
+            application.setProperty("revampedDeveloperMode", True)
+            self._show(_tr("You are now a developer. Settings > Developer has the beta "
+                           "features; open Settings again to see it."))
+        elif left <= 4:
+            self._show(
+                (_tr("1 more tap to turn the developer mode on.") if left == 1
+                 else _tr("{0} more taps to turn the developer mode on.").format(left))
+            )
+        return False
+
+    def _show(self, text: str) -> None:
+        self._status.setText(text)
+        self._status.show()
 
 
 class Mo2RevampedInfo(mobase.IPluginTool):
@@ -541,9 +587,9 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 "necessarily the latest versions available."),
         )
         parts = add_card(components)
-        add_row(parts, 0xE737, _tr("MO2 base"),
-                _tr("Mod Organizer 2 · {mo2}\nQt and PyQt · {qt}\nPython · {python}\n"
-                    "OpenSSL · {openssl}").format(**versions))
+        base_row = add_row(parts, 0xE737, _tr("MO2 base"),
+                           _tr("Mod Organizer 2 · {mo2}\nQt and PyQt · {qt}\nPython · {python}\n"
+                               "OpenSSL · {openssl}").format(**versions))
         add_row(parts, 0xE8B7, _tr("Virtual file system"),
                 "USVFS · 0.5.7.2\n"
                 + _tr("Deploys mods virtually without changing the game's "
@@ -554,6 +600,14 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         add_row(parts, 0xE771, _tr("Profiles and interface"),
                 _tr("Save isolation · {saves}\nStartup options · {startup}\n"
                     "Fluent themes · Light and Dark").format(**versions))
+        developer_status = QLabel()
+        developer_status.setObjectName("fluentSettingDescription")
+        developer_status.setWordWrap(True)
+        developer_status.setContentsMargins(4, 0, 4, 0)
+        developer_status.hide()
+        components.addWidget(developer_status)
+        # the version's row, and its description where the version is shown
+        _DeveloperTaps([base_row, *base_row.findChildren(QLabel)], developer_status)
         components.addStretch(1)
 
         # --- Credits and licenses -------------------------------------------
