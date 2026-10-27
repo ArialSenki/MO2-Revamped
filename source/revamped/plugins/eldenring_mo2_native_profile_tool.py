@@ -517,12 +517,18 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             current_entries = self._entries_from_table(table)
             enabled_count = sum(entry["enabled"] for entry in current_entries)
             initializer_count = sum(bool(entry["initializer"]) for entry in current_entries)
+            initializers = (
+                _tr("1 initializer")
+                if initializer_count == 1
+                else _tr("{initializers} initializers").format(initializers=initializer_count)
+            )
             profile_metrics.setText(
-                _tr("{configured} configured · {enabled} enabled · {initializers} initializer(s)").format(
+                _tr("{configured} configured · {enabled} enabled").format(
                     configured=len(current_entries),
                     enabled=enabled_count,
-                    initializers=initializer_count,
                 )
+                + " · "
+                + initializers
             )
 
         def add_selected(_checked=False) -> None:

@@ -2003,6 +2003,18 @@ Se ela tiver progresso que você quer manter, feche o jogo e copie os arquivos d
   <context>
     <name>EldenRingNativeProfile</name>
     <message>
+      <source>{configured} configured · {enabled} enabled</source>
+      <translation>{configured} configuradas · {enabled} ativadas</translation>
+    </message>
+    <message>
+      <source>1 initializer</source>
+      <translation>1 inicializador</translation>
+    </message>
+    <message>
+      <source>{initializers} initializers</source>
+      <translation>{initializers} inicializadores</translation>
+    </message>
+    <message>
       <source>Detect installed Elden Ring native DLLs and manage their load order and optional initializer exports for each MO2 profile.</source>
       <translation>Detecta as DLLs nativas do Elden Ring instaladas e gerencia a ordem de carregamento e os exports de inicialização opcionais para cada perfil do MO2.</translation>
     </message>
@@ -2393,6 +2405,14 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
   </context>
   <context>
     <name>EldenRingSaveIsolation</name>
+    <message>
+      <source>{count} files</source>
+      <translation>{count} arquivos</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; Developer to hand it MO2&apos;s mods.</source>
+      <translation>O jogo trava com o me3 dentro do VFS, então o MO2 o inicia fora com o próprio perfil. Ative a integração do me3 em Configurações &gt; Desenvolvedor para passar a ele os mods do MO2.</translation>
+    </message>
     <message>
       <source>Name this profile.</source>
       <translation>Dê um nome a este perfil.</translation>

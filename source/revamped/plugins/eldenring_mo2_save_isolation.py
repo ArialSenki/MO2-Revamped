@@ -4069,7 +4069,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     row_layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight)
                 else:
                     if isinstance(widget, QComboBox):
-                        widget.setMinimumWidth(260)
+                        widget.setFixedWidth(300)
                     row_layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignVCenter)
                 widget.show()
             card.layout().addWidget(row)
@@ -4107,8 +4107,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         mode_box.addItem(_tr("Shared by this instance's profiles"), self.InstanceShared)
         mode_box.addItem(_tr("Steam's saves (not isolated)"), self.GlobalShared)
         mode_box.setCurrentIndex(max(0, mode_box.findData(self._read_mode(profile))))
+        # the room of the save profile row's button, so both lists line up
+        mode_spacer = QWidget()
+        mode_spacer.setFixedSize(30, 30)
+        mode_spacer.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        mode_spacer.setStyleSheet("background: transparent; border: none;")
         _row, _title, mode_description = add_row(
-            route_card, 0xE8B7, _tr("Keep saves for"), "", (mode_box,)
+            route_card, 0xE8B7, _tr("Keep saves for"), "", (mode_box, mode_spacer)
         )
         save_profile_combo = QComboBox()
         save_profile_combo.setObjectName("saveIsolationGameProfileCombo")
@@ -4227,7 +4232,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             methods = self._launch_methods()
             seamless_names = {"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe", "nrsc_launcher.exe"}
             shown = 0
-            # Settings > General > Beta features, as MO2 started
+            # Settings > Developer, as MO2 started
             application = QApplication.instance()
             beta_me3 = bool(application is not None and application.property("revampedBetaMe3"))
             beta_me2 = bool(application is not None and application.property("revampedBetaMe2"))
@@ -4261,7 +4266,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 elif binary_name in {"me3.exe", "me3-launcher.exe"}:
                     reason = _tr("The game crashes with me3 inside the VFS, so MO2 starts it outside "
                                  "with its own profile. Turn on the me3 integration in Settings > "
-                                 "General > Beta features to hand it MO2's mods.")
+                                 "Developer to hand it MO2's mods.")
                 elif binary_name == "modengine2_launcher.exe" and beta_me2 and method != "swap":
                     reason = _tr("Beta: Mod Engine 2 runs inside the VFS with every MO2 mod and native "
                                  "DLL. With the config MO2 writes (Mod Engine 2 (beta)) it also starts "
@@ -4317,7 +4322,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
                 add_row(
                     backups_card, 0xE81C, when,
-                    _tr("{count} file(s)").format(count=count), (restore,),
+                    _tr("1 file") if count == 1 else _tr("{count} files").format(count=count),
+                    (restore,),
                 )
             if not backups:
                 add_row(backups_card, 0xE946, _tr("No backups yet"),

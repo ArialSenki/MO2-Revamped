@@ -4650,7 +4650,7 @@ class EldenRingMo2Game(BasicGame):
 
     @staticmethod
     def _beta(feature: str) -> bool:
-        """Settings > General > Beta features, as MO2 started: "me3" or "me2"
+        """Settings > Developer, as MO2 started: "me3" or "me2"
         (Mod Engine 2), each on its own switch."""
         application = QApplication.instance()
         name = {"me3": "revampedBetaMe3", "me2": "revampedBetaMe2"}[feature]

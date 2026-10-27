@@ -255,6 +255,7 @@ QIcon MainWindow::fluentToolIcon(const QString& name)
       {"startup", 0xE768},  // Play
       {"save", 0xE74E},     // Save
       {"dll", 0xE943},      // Code
+      {"native", 0xE943},   // Code
       {"ini", 0xE70F},      // Edit
   };
 

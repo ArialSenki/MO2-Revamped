@@ -2019,6 +2019,18 @@ Si contiene progreso que quieres conservar, cierra el juego y vuelve a copiar su
   <context>
     <name>EldenRingNativeProfile</name>
     <message>
+      <source>{configured} configured · {enabled} enabled</source>
+      <translation>{configured} configuradas · {enabled} activadas</translation>
+    </message>
+    <message>
+      <source>1 initializer</source>
+      <translation>1 inicializador</translation>
+    </message>
+    <message>
+      <source>{initializers} initializers</source>
+      <translation>{initializers} inicializadores</translation>
+    </message>
+    <message>
       <source>Detect installed Elden Ring native DLLs and manage their load order and optional initializer exports for each MO2 profile.</source>
       <translation>Detecta las DLL nativas de Elden Ring instaladas y gestiona su orden de carga y exportaciones de inicialización opcionales para cada perfil de MO2.</translation>
     </message>
@@ -2409,6 +2421,14 @@ Las DLL detectadas de los mods activos aparecerán en el panel izquierdo.</trans
   </context>
   <context>
     <name>EldenRingSaveIsolation</name>
+    <message>
+      <source>{count} files</source>
+      <translation>{count} archivos</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; Developer to hand it MO2&apos;s mods.</source>
+      <translation>El juego se cierra con me3 dentro de la VFS, así que MO2 lo inicia fuera con su propio perfil. Activa la integración con me3 en Ajustes &gt; Desarrollador para pasarle los mods de MO2.</translation>
+    </message>
     <message>
       <source>Name this profile.</source>
       <translation>Pon nombre a este perfil.</translation>
@@ -3665,7 +3685,7 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     </message>
     <message>
       <source>Set automatically.</source>
-      <translation>Puesto automáticamente.</translation>
+      <translation>Elegido automáticamente.</translation>
     </message>
     <message>
       <source>{count} file(s)</source>
@@ -3705,19 +3725,19 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     </message>
     <message>
       <source>Starts the game through MO2, inside the VFS with every MO2 mod and Seamless Co-op from the mod {mod}.</source>
-      <translation>Inicia el juego a través de MO2, dentro del VFS con todos los mods de MO2 y Seamless Co-op del mod {mod}.</translation>
+      <translation>Inicia el juego a través de MO2, dentro de la VFS con todos los mods de MO2 y Seamless Co-op del mod {mod}.</translation>
     </message>
     <message>
       <source>Beta: the game crashes with me3 inside the VFS, so MO2 hands it the profile&apos;s mod list and native DLLs, Seamless Co-op when its mod is active, and the native DLLs of the me3 profile this program names.</source>
-      <translation>Beta: el juego se cierra con me3 dentro del VFS, así que MO2 le pasa la lista de mods y las DLL nativas del perfil, Seamless Co-op cuando su mod está activo y las DLL nativas del perfil de me3 que nombra este programa.</translation>
+      <translation>Beta: el juego se cierra con me3 dentro de la VFS, así que MO2 le pasa la lista de mods y las DLL nativas del perfil, Seamless Co-op cuando su mod está activo y las DLL nativas del perfil de me3 que nombra este programa.</translation>
     </message>
     <message>
       <source>Beta: Mod Engine 2 runs inside the VFS with every MO2 mod and native DLL. With the config MO2 writes (Mod Engine 2 (beta)) it also starts the extensions of your active mods, Seamless Co-op among them; with its own config, MO2 says before the run which ones it leaves out.</source>
-      <translation>Beta: Mod Engine 2 funciona dentro del VFS con todos los mods y DLL nativas de MO2. Con la configuración que escribe MO2 (Mod Engine 2 (beta)) también inicia las extensiones de tus mods activos, entre ellas Seamless Co-op; con su propia configuración, MO2 avisa antes de iniciar de las que deja fuera.</translation>
+      <translation>Beta: Mod Engine 2 funciona dentro de la VFS con todos los mods y DLL nativas de MO2. Con la configuración que escribe MO2 (Mod Engine 2 (beta)) también inicia las extensiones de tus mods activos, entre ellas Seamless Co-op; con su propia configuración, MO2 avisa antes de iniciar de las que deja fuera.</translation>
     </message>
     <message>
       <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; General &gt; Beta features to hand it MO2&apos;s mods.</source>
-      <translation>El juego se cierra con me3 dentro del VFS, así que MO2 lo inicia fuera con su propio perfil. Activa la integración con me3 en Ajustes &gt; General &gt; Funciones beta para pasarle los mods de MO2.</translation>
+      <translation>El juego se cierra con me3 dentro de la VFS, así que MO2 lo inicia fuera con su propio perfil. Activa la integración con me3 en Ajustes &gt; General &gt; Funciones beta para pasarle los mods de MO2.</translation>
     </message>
   </context>
   <context>

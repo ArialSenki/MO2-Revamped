@@ -3104,7 +3104,9 @@ void MainWindow::registerPluginTool(IPluginTool* tool, QString name, QMenu* menu
   if (name.isEmpty())
     name = tool->displayName();
 
-  const QIcon icon = tool->icon().isNull() ? fluentToolIcon(name) : tool->icon();
+  // the internal name: the shown one is translated ("Opciones de inicio"
+  // read as an INI tool)
+  const QIcon icon = tool->icon().isNull() ? fluentToolIcon(tool->name()) : tool->icon();
   QAction* action  = new QAction(icon, name, menu);
   action->setToolTip(tool->tooltip());
   tool->setParentWidget(this);

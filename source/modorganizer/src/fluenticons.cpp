@@ -382,6 +382,33 @@ const QHash<size_t, Glyph>& fingerprintTable()
 QPixmap recolor(const QPixmap& source, const QColor& ink)
 {
   QImage image = source.toImage().convertToFormat(QImage::Format_ARGB32);
+
+  // a glyph drawn in one color (the plugins paint theirs in the text color,
+  // white on Dark) keeps its whole shape: only drawings with several colors
+  // have pale fills to drop
+  bool singleColor = true;
+  QRgb first       = 0;
+  bool seen        = false;
+  for (int y = 0; y < image.height() && singleColor; ++y) {
+    const auto* line = reinterpret_cast<const QRgb*>(image.constScanLine(y));
+    for (int x = 0; x < image.width(); ++x) {
+      if (qAlpha(line[x]) < 128) {
+        continue;
+      }
+      // antialiased edges round a little differently
+      const QRgb color = line[x];
+      if (!seen) {
+        first = color;
+        seen  = true;
+      } else if (std::abs(qRed(color) - qRed(first)) > 4 ||
+                 std::abs(qGreen(color) - qGreen(first)) > 4 ||
+                 std::abs(qBlue(color) - qBlue(first)) > 4) {
+        singleColor = false;
+        break;
+      }
+    }
+  }
+
   for (int y = 0; y < image.height(); ++y) {
     auto* line = reinterpret_cast<QRgb*>(image.scanLine(y));
     for (int x = 0; x < image.width(); ++x) {
@@ -394,7 +421,8 @@ QPixmap recolor(const QPixmap& source, const QColor& ink)
       // as fills (almost white) nearly vanish
       const double luminance =
           (0.2126 * qRed(px) + 0.7152 * qGreen(px) + 0.0722 * qBlue(px)) / 255.0;
-      const double strength = std::clamp((1.0 - luminance) / 0.55, 0.0, 1.0);
+      const double strength =
+          singleColor ? 1.0 : std::clamp((1.0 - luminance) / 0.55, 0.0, 1.0);
       line[x] = qRgba(ink.red(), ink.green(), ink.blue(),
                       static_cast<int>(alpha * strength));
     }
