@@ -649,10 +649,13 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   MOBase::details::setPluginDataPath(OrganizerCore::pluginDataPath());
 
   // the instance dialogs below run before any instance settings are loaded;
-  // show them in the language that was last chosen
-  if (const QString language = GlobalSettings::language(); !language.isEmpty()) {
-    InstallLanguageTranslators(language);
+  // show them in the language that was last chosen, or on a first start in
+  // the Windows language
+  QString language = GlobalSettings::language();
+  if (language.isEmpty()) {
+    language = GlobalSettings::systemLanguage();
   }
+  InstallLanguageTranslators(language);
 
   // figuring out the current instance
   m_instance = getCurrentInstance(forceSelect);

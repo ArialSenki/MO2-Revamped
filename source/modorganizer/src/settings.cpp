@@ -32,6 +32,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QLocale>
 #include <QStandardPaths>
 #include <QUrl>
 
@@ -2372,12 +2373,8 @@ QString InterfaceSettings::language()
   }
 
   if (result.isEmpty()) {
-    // The system default used to be QLocale::uiLanguages(), which returns
-    // BCP 47 tags such as "es-ES". Translation files are named "organizer_es",
-    // and QTranslator only strips "_" suffixes, so nothing loaded: the UI stayed
-    // English while Settings showed the system language as selected. Use the
-    // language that is actually displayed until the user picks another one.
-    result = QStringLiteral("en_US");
+    // a first start follows Windows when MO2 is translated into its language
+    result = GlobalSettings::systemLanguage();
   }
 
   // Accept BCP 47 tags written by older versions or edited by hand.
@@ -2632,6 +2629,36 @@ QString GlobalSettings::language()
 void GlobalSettings::setLanguage(const QString& language)
 {
   settings().setValue("Language", language);
+}
+
+QString GlobalSettings::systemLanguage()
+{
+  // QLocale::uiLanguages() returns BCP 47 tags such as "es-ES", while the
+  // translation files are named "organizer_es" or "organizer_pt_BR", and
+  // QTranslator only strips "_" suffixes: passing the tag on loaded nothing.
+  // Look for the file of the full tag, of the language alone, and then of any
+  // territory of that language.
+  const QDir translations(QCoreApplication::applicationDirPath() + "/translations");
+  const QString prefix = QString::fromStdWString(AppConfig::translationPrefix()) + "_";
+  for (const QString& tag : QLocale::system().uiLanguages()) {
+    const QLocale locale(tag);
+    if (locale.language() == QLocale::English) {
+      break;
+    }
+    const QString name     = locale.name();  // "es_ES"
+    const QString language = name.section('_', 0, 0);
+    for (const QString& code : {name, language}) {
+      if (translations.exists(prefix + code + ".qm")) {
+        return code;
+      }
+    }
+    const QStringList variants =
+        translations.entryList({prefix + language + "_*.qm"}, QDir::Files, QDir::Name);
+    if (!variants.isEmpty()) {
+      return QFileInfo(variants.first()).completeBaseName().mid(prefix.size());
+    }
+  }
+  return QStringLiteral("en_US");
 }
 
 bool GlobalSettings::hideTutorialQuestion()

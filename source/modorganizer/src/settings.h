@@ -967,6 +967,10 @@ public:
   static QString language();
   static void setLanguage(const QString& language);
 
+  // the Windows display language when MO2 ships a translation for it, else
+  // "en_US"; the language of a first start, before any was chosen
+  static QString systemLanguage();
+
   static bool hideTutorialQuestion();
   static void setHideTutorialQuestion(bool b);
 
