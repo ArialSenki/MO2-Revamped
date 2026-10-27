@@ -1,5 +1,61 @@
 # Changelog
 
+## Unreleased
+
+### Seamless Co-op and launchers
+
+- Seamless Co-op runs from its MO2 mod inside the VFS, with every other mod:
+  the bridge starts its DLL the way Mod Engine 2 does once the game runs. Its
+  launcher hands over to the game started from MO2; a Seamless installed in
+  the game folder still starts outside the VFS with the save swap. Its `.co2`
+  save stays in the profile's route.
+- The archive installer keeps Seamless Co-op's `SeamlessCoop` folder whole
+  (settings, language file and crash reporter beside its DLL).
+- A launch with Seamless Co-op active but no session password in its settings
+  file stops with a prompt that opens the file, instead of the game closing.
+- Each launcher starts the way its own tool expects; nothing is bundled, and
+  MO2 integrates only with what the user installed.
+
+### Saves
+
+- Launchers that fail inside the VFS start outside it while the profile's
+  saves are swapped into the Steam folder for the run; each program can be
+  switched either way in Save Isolation > Programs.
+- Save Isolation follows the Settings layout (Location, Programs, Backups) and
+  recognizes the save formats of each route.
+- Desktop and instance shortcuts wait for MO2's first refresh, so native DLLs
+  load when the game is started from one.
+
+### Interface
+
+- Fluent redesign of the remaining dialogs in the Executables style:
+  Categories, Forced load, Mod information, Overwrite, Already installed,
+  Transfer saves, Import categories, New profile, About, Startup options and
+  the Native DLL profile, with new options in each (search, sorting,
+  duplicate, show in folder, context menus).
+- Windows 11 scroll bars, flush with the window's edge.
+- The themes are Light and Dark (blue); Dark Black is retired and a stored
+  Dark Black choice becomes Dark.
+- Native DLL profile: one list of every native DLL of the active mods,
+  Seamless Co-op included, switched on by default, with Reset.
+- Fixes: opening Executables failed when a log message had an accented
+  character; regenerating the themes wiped their scroll bar rules; rows
+  overlapped while a list refreshed; the log no longer shows harmless
+  DirectWrite font warnings.
+
+### Developer mode (hidden)
+
+- Seven taps on the MO2 version in About > Components turn on a developer
+  mode with Settings > Developer: beta integrations for me3 and Mod Engine 2
+  (MO2's mods, native DLLs and Seamless Co-op without editing their own
+  profile or config), game modes that give each manager an instance of its
+  own, and a way to remove each again. Off by default; none of it is needed
+  to play.
+
+### Project
+
+- Issue forms, a security policy and a code of conduct on GitHub.
+
 ## 1.0.2 — Elden Ring Nightreign, safer saves, Fluent dialogs
 
 Released on October 23, 2026. The setup's main task is now the complete
