@@ -1528,6 +1528,22 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
       <source>This archive looks like it offers options ({0}). Both layouts install all of them; choose Manual... to keep only the one you want.</source>
       <translation>Cette archive semble proposer des options ({0}). Les deux structures les installent toutes ; choisissez Manuel... pour ne garder que celle que vous voulez.</translation>
     </message>
+    <message>
+      <source>Layout</source>
+      <translation>Structure</translation>
+    </message>
+    <message>
+      <source>Archive contents</source>
+      <translation>Contenu de l&apos;archive</translation>
+    </message>
+    <message>
+      <source>Show</source>
+      <translation>Afficher</translation>
+    </message>
+    <message>
+      <source>Hide</source>
+      <translation>Masquer</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -4530,6 +4546,42 @@ La plupart des mods n&apos;en ont pas besoin : les extenseurs de scripts et les 
     <message>
       <source>This Nexus category has not yet been mapped. Do you wish to proceed without setting a category, proceed and disable automatic Nexus mappings, or stop and configure your category mappings?</source>
       <translation>Cette catégorie Nexus n'est pas encore associée. Voulez-vous continuer sans définir de catégorie, continuer en désactivant les correspondances Nexus automatiques, ou arrêter et configurer vos correspondances de catégories ?</translation>
+    </message>
+    <message>
+      <source>This archive is protected with a password.</source>
+      <translation>Cette archive est protégée par un mot de passe.</translation>
+    </message>
+    <message>
+      <source>Install as a new mod</source>
+      <translation>Installer comme nouveau mod</translation>
+    </message>
+    <message>
+      <source>The installed mod stays as it is; this one is added beside it with another name.</source>
+      <translation>Le mod installé reste tel quel ; celui-ci est ajouté à côté sous un autre nom.</translation>
+    </message>
+    <message>
+      <source>A mod with this name is already installed.</source>
+      <translation>Un mod portant ce nom est déjà installé.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nom</translation>
+    </message>
+    <message>
+      <source>Password</source>
+      <translation>Mot de passe</translation>
+    </message>
+    <message>
+      <source>Password required</source>
+      <translation>Mot de passe requis</translation>
+    </message>
+    <message>
+      <source>Invalid name</source>
+      <translation>Nom non valide</translation>
+    </message>
+    <message>
+      <source>The name you entered is invalid, please enter a different one.</source>
+      <translation>Le nom saisi n&apos;est pas valide ; saisissez-en un autre.</translation>
     </message>
   </context>
   <context>
@@ -9008,6 +9060,10 @@ Exemple :
       <source>Use the global Steam save</source>
       <translation>Utiliser la sauvegarde Steam globale</translation>
     </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -9039,7 +9095,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>&quot;%1&quot; is already installed</source>
-      <translation>&quot;%1&quot; est déjà installé</translation>
+      <translation>« %1 » est déjà installé</translation>
     </message>
     <message>
       <source>Adds the new files to the installed mod; files with the same name are replaced</source>
@@ -9068,6 +9124,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Saves a copy you can restore before any file changes</source>
       <translation>Enregistre une copie restaurable avant toute modification de fichier</translation>
+    </message>
+    <message>
+      <source>Mod Exists</source>
+      <translation>Le mod existe déjà</translation>
     </message>
   </context>
   <context>

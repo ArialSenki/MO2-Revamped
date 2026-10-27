@@ -1536,6 +1536,22 @@ Los programas que no están ocultos aparecen en la lista Programa de la ventana 
       <source>This archive looks like it offers options ({0}). Both layouts install all of them; choose Manual... to keep only the one you want.</source>
       <translation>Este archivo parece ofrecer opciones ({0}). Las dos estructuras las instalan todas; elige Manual... para quedarte solo con la que quieras.</translation>
     </message>
+    <message>
+      <source>Layout</source>
+      <translation>Estructura</translation>
+    </message>
+    <message>
+      <source>Archive contents</source>
+      <translation>Contenido del archivo</translation>
+    </message>
+    <message>
+      <source>Show</source>
+      <translation>Mostrar</translation>
+    </message>
+    <message>
+      <source>Hide</source>
+      <translation>Ocultar</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -8852,6 +8868,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <source>Use the global Steam save</source>
       <translation>Usar la partida global de Steam</translation>
     </message>
+    <message>
+      <source>OK</source>
+      <translation>Aceptar</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -8883,7 +8903,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>&quot;%1&quot; is already installed</source>
-      <translation>&quot;%1&quot; ya está instalado</translation>
+      <translation>«%1» ya está instalado</translation>
     </message>
     <message>
       <source>Adds the new files to the installed mod; files with the same name are replaced</source>
@@ -8912,6 +8932,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Saves a copy you can restore before any file changes</source>
       <translation>Guarda una copia que puedes restaurar antes de cambiar ningún archivo</translation>
+    </message>
+    <message>
+      <source>Mod Exists</source>
+      <translation>El mod ya existe</translation>
     </message>
   </context>
   <context>
@@ -10789,6 +10813,45 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
     <message>
       <source>Could not move %1 to the Recycle Bin.</source>
       <translation>No se pudo mover %1 a la Papelera de reciclaje.</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallationManager</name>
+    <message>
+      <source>This archive is protected with a password.</source>
+      <translation>Este archivo está protegido con contraseña.</translation>
+    </message>
+    <message>
+      <source>Install as a new mod</source>
+      <translation>Instalar como mod nuevo</translation>
+    </message>
+    <message>
+      <source>The installed mod stays as it is; this one is added beside it with another name.</source>
+      <translation>El mod instalado se queda como está; este se añade a su lado con otro nombre.</translation>
+    </message>
+    <message>
+      <source>A mod with this name is already installed.</source>
+      <translation>Ya hay un mod instalado con este nombre.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nombre</translation>
+    </message>
+    <message>
+      <source>Password</source>
+      <translation>Contraseña</translation>
+    </message>
+    <message>
+      <source>Password required</source>
+      <translation>Se necesita contraseña</translation>
+    </message>
+    <message>
+      <source>Invalid name</source>
+      <translation>Nombre no válido</translation>
+    </message>
+    <message>
+      <source>The name you entered is invalid, please enter a different one.</source>
+      <translation>El nombre que has escrito no es válido; escribe otro.</translation>
     </message>
   </context>
 </TS>

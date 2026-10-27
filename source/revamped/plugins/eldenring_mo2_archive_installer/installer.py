@@ -9,7 +9,7 @@ import os
 import uuid
 
 import mobase
-from PyQt6 import QtWidgets
+from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import Qt, qCritical, qInfo
 
 
@@ -692,84 +692,103 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         scroll_area.setWidget(content)
         layout.addWidget(scroll_area, 1)
 
-        header = QtWidgets.QFrame(content)
-        header.setObjectName("archiveHeaderPanel")
-        header.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        header_layout = QtWidgets.QHBoxLayout(header)
-        header_layout.setContentsMargins(14, 12, 16, 12)
-        header_layout.setSpacing(12)
-
-        header_badge = QtWidgets.QLabel(
-            "NR" if self._nightreign_active() else "ER", header
-        )
-        header_badge.setObjectName("archiveHeaderBadge")
-        header_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        header_badge.setFixedSize(42, 42)
-        header_icon = dialog.windowIcon()
-        if not header_icon.isNull():
-            header_badge.setText("")
-            header_badge.setPixmap(header_icon.pixmap(26, 26))
-        header_layout.addWidget(
-            header_badge, 0, Qt.AlignmentFlag.AlignVCenter
-        )
-
-        header_text = QtWidgets.QVBoxLayout()
-        header_text.setContentsMargins(0, 0, 0, 0)
-        header_text.setSpacing(3)
+        # a Windows 11 page: its title and text, then cards of rows, as in
+        # MO2's Settings and the Save Isolation and Startup options dialogs
         heading = QtWidgets.QLabel(
-            self.tr("Choose how to install this mod."), header
+            self.tr("Choose how to install this mod.").rstrip(". "), content
         )
         heading.setObjectName("archivePageTitle")
+        heading.setProperty("wizardPageTitle", True)
         heading.setWordWrap(True)
-        header_text.addWidget(heading)
+        content_layout.addWidget(heading)
         subtitle = QtWidgets.QLabel(
-            self.tr(
-                "Review the archive and choose how its files should be arranged."
-            ),
-            header,
+            self.tr("Review the archive and choose how its files should be arranged."),
+            content,
         )
         subtitle.setObjectName("archivePageSubtitle")
+        subtitle.setProperty("wizardPageText", True)
         subtitle.setWordWrap(True)
-        header_text.addWidget(subtitle)
-        header_layout.addLayout(header_text, 1)
-        content_layout.addWidget(header)
+        content_layout.addWidget(subtitle)
+        content_layout.addSpacing(4)
 
-        def add_section_card(
-            object_name: str, title: str
-        ) -> tuple[QtWidgets.QFrame, QtWidgets.QVBoxLayout]:
+        glyph_font = QtGui.QFont()
+        glyph_font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])
+        glyph_font.setPixelSize(16)
+
+        def add_card(object_name: str, title: str = "") -> QtWidgets.QFrame:
             card = QtWidgets.QFrame(content)
             card.setObjectName(object_name)
-            card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            card.setProperty("fluentCard", True)
             card_layout = QtWidgets.QVBoxLayout(card)
-            card_layout.setContentsMargins(12, 10, 12, 10)
-            card_layout.setSpacing(7)
-            section_title = QtWidgets.QLabel(self.tr(title), card)
-            section_title.setObjectName("archiveSectionTitle")
-            card_layout.addWidget(section_title)
-            return card, card_layout
+            card_layout.setContentsMargins(0, 10 if title else 0, 0, 0)
+            card_layout.setSpacing(0)
+            if title:
+                card_title = QtWidgets.QLabel(title, card)
+                card_title.setObjectName("fluentCardTitle")
+                card_title.setContentsMargins(18, 0, 18, 8)
+                card_layout.addWidget(card_title)
+            content_layout.addWidget(card)
+            return card
 
-        name_card = QtWidgets.QFrame(content)
-        name_card.setObjectName("archiveNameCard")
-        name_card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        name_card_layout = QtWidgets.QHBoxLayout(name_card)
-        name_card_layout.setContentsMargins(12, 9, 12, 9)
-        name_card_layout.setSpacing(10)
+        def add_row(
+            card: QtWidgets.QFrame,
+            glyph: int,
+            title: str,
+            description: str = "",
+            controls: tuple = (),
+        ) -> QtWidgets.QFrame:
+            row = QtWidgets.QFrame(card)
+            row.setObjectName("fluentSettingRow")
+            row_layout = QtWidgets.QHBoxLayout(row)
+            row_layout.setContentsMargins(18, 10, 14, 10)
+            row_layout.setSpacing(14)
+            icon = QtWidgets.QLabel(chr(glyph), row)
+            icon.setObjectName("instanceRowGlyph")
+            icon.setFont(glyph_font)
+            icon.setFixedWidth(24)
+            icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            row_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
+            texts = QtWidgets.QVBoxLayout()
+            texts.setSpacing(2)
+            title_label = QtWidgets.QLabel(title, row)
+            title_label.setObjectName("fluentSettingTitle")
+            title_label.setWordWrap(True)
+            texts.addWidget(title_label)
+            if description:
+                description_label = QtWidgets.QLabel(description, row)
+                description_label.setObjectName("fluentSettingDescription")
+                description_label.setWordWrap(True)
+                texts.addWidget(description_label)
+            row_layout.addLayout(texts, 1)
+            for control in controls:
+                control.setParent(row)
+                row_layout.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
+            card.layout().addWidget(row)
+            return row
 
-        mod_name_label = QtWidgets.QLabel(self.tr("Mod name:"), name_card)
-        mod_name_label.setObjectName("archiveFieldLabel")
+        def switch(box: QtWidgets.QCheckBox) -> QtWidgets.QCheckBox:
+            # the theme draws a check box with this property as a switch; its
+            # row shows the text
+            box.setAccessibleName(box.text())
+            box.setText("")
+            box.setProperty("fluentSwitch", True)
+            box.setCursor(Qt.CursorShape.PointingHandCursor)
+            return box
+
+        # --- the mod ---------------------------------------------------------
+        name_card = add_card("archiveNameCard")
         mod_name_edit = QtWidgets.QLineEdit(mod_name)
         mod_name_edit.setObjectName("archiveModNameEdit")
         mod_name_edit.setClearButtonEnabled(True)
-        mod_name_edit.setToolTip(
-            self.tr(
-                "This is how the mod will appear in MO2. It does not rename "
-                "the archive or downloaded file."
-            )
+        mod_name_edit.setMinimumWidth(320)
+        name_help = self.tr(
+            "This is how the mod will appear in MO2. It does not rename "
+            "the archive or downloaded file."
         )
-        mod_name_label.setBuddy(mod_name_edit)
-        name_card_layout.addWidget(mod_name_label)
-        name_card_layout.addWidget(mod_name_edit, 1)
-        content_layout.addWidget(name_card)
+        mod_name_edit.setToolTip(name_help)
+        add_row(
+            name_card, 0xE8AC, self.tr("Mod name:").rstrip(": "), name_help, (mod_name_edit,)
+        )
 
         # game files a mod rarely means to replace, and regulation.bin, which
         # only one active mod can provide
@@ -843,95 +862,111 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
             dialog.accept()
 
-        filters_card, filters_layout = add_section_card(
-            "archiveTextFilesCard", "Text files"
-        )
+        # --- standard layout options -----------------------------------------
+        # text files and Mod Engine 2 paths apply to the standard layout only;
+        # the card says so once
+        options_card = add_card("archiveTextFilesCard", self.tr("Text files"))
         filters_label = QtWidgets.QLabel(
             self.tr(
                 "Text-file exclusions apply only to standard layout. Keep original "
                 "always installs every archive file; choices are remembered for reinstall."
             ),
-            filters_card,
+            options_card,
         )
-        filters_label.setObjectName("archiveSectionDescription")
+        filters_label.setObjectName("fluentSettingDescription")
         filters_label.setWordWrap(True)
-        filters_label.setToolTip(
-            self.tr(
-                "These exclusions apply only when you choose standard MO2 layout. "
-                "Keep original always retains .txt and .md files, even if these "
-                "boxes are checked. New mods keep them by default."
-            )
-        )
-        filters_layout.addWidget(filters_label)
-        filter_options = QtWidgets.QHBoxLayout()
-        filter_options.setContentsMargins(0, 0, 0, 0)
-        filter_options.setSpacing(16)
-        omit_txt_box = QtWidgets.QCheckBox(
-            self.tr("Skip .txt files"), filters_card
-        )
+        filters_label.setContentsMargins(18, 0, 18, 8)
+        options_card.layout().addWidget(filters_label)
+        omit_txt_box = switch(QtWidgets.QCheckBox(self.tr("Skip .txt files")))
         omit_txt_box.setObjectName("archiveSkipTxtCheck")
         omit_txt_box.setChecked(self._default_omit_txt)
-        omit_txt_box.setToolTip(
-            self.tr("Skips every .txt file in this archive before installation.")
+        add_row(
+            options_card, 0xE8A5, self.tr("Skip .txt files"),
+            self.tr("Skips every .txt file in this archive before installation."),
+            (omit_txt_box,),
         )
-        filter_options.addWidget(omit_txt_box)
-        omit_md_box = QtWidgets.QCheckBox(
-            self.tr("Skip .md files"), filters_card
-        )
+        omit_md_box = switch(QtWidgets.QCheckBox(self.tr("Skip .md files")))
         omit_md_box.setObjectName("archiveSkipMarkdownCheck")
         omit_md_box.setChecked(self._default_omit_md)
-        omit_md_box.setToolTip(
-            self.tr(
-                "Skips every Markdown .md file in this archive before installation."
-            )
+        add_row(
+            options_card, 0xE8A5, self.tr("Skip .md files"),
+            self.tr("Skips every Markdown .md file in this archive before installation."),
+            (omit_md_box,),
         )
-        filter_options.addWidget(omit_md_box)
-        filter_options.addStretch(1)
-        filters_layout.addLayout(filter_options)
-        content_layout.addWidget(filters_card)
 
-        routes_card, routes_layout = add_section_card(
-            "archivePackagePathsCard", "Elden Ring package paths"
-        )
-        mod_engine_paths_box = QtWidgets.QCheckBox(
-            self.tr("Recognize Mod Engine 2 paths (standard layout only)"),
-            routes_card,
+        routes_card = add_card("archivePackagePathsCard", self.tr("Elden Ring package paths"))
+        mod_engine_paths_box = switch(
+            QtWidgets.QCheckBox(self.tr("Recognize Mod Engine 2 paths (standard layout only)"))
         )
         mod_engine_paths_box.setObjectName("archiveModEnginePathsCheck")
-        mod_engine_paths_box.setChecked(
-            self._default_recognize_mod_engine_paths
-        )
-        routes_layout.addWidget(mod_engine_paths_box)
-        routes_description = QtWidgets.QLabel(
+        mod_engine_paths_box.setChecked(self._default_recognize_mod_engine_paths)
+        add_row(
+            routes_card, 0xE8B7,
+            self.tr("Recognize Mod Engine 2 paths (standard layout only)"),
             self.tr(
                 "With standard layout, maps Mod Engine 2 menu files and external "
                 "DLLs to MO2's game folders. Keep original leaves every path in place."
             ),
-            routes_card,
+            (mod_engine_paths_box,),
         )
-        routes_description.setObjectName("archiveSectionDescription")
-        routes_description.setWordWrap(True)
-        routes_description.setToolTip(
-            self.tr(
-                "Only standard layout maps mod/menu to menu and routes native files "
-                "from mod/external_dlls to MO2's DLLs folder. Keep original does not "
-                "move files or change paths."
-            )
-        )
-        routes_layout.addWidget(routes_description)
-        content_layout.addWidget(routes_card)
 
-        preview_button = QtWidgets.QPushButton(
-            self.tr("Show archive contents"), content
+        # --- the layout ------------------------------------------------------
+        layout_card = add_card("archiveLayoutCard", self.tr("Layout"))
+
+        def add_layout_option(
+            glyph: int, title: str, description: str, details: str, preserve: bool
+        ) -> QtWidgets.QPushButton:
+            preferred = preserve == self._default_preserve
+            choose_button = QtWidgets.QPushButton(self.tr("Choose this layout"))
+            choose_button.setObjectName("archiveLayoutChoiceButton")
+            choose_button.setProperty("preferredChoice", preferred)
+            choose_button.setToolTip(self.tr(details))
+            choose_button.clicked.connect(
+                lambda _checked=False, value=preserve: choose_layout(value)
+            )
+            row = add_row(
+                layout_card, glyph, self.tr(title), self.tr(description), (choose_button,)
+            )
+            row.setToolTip(self.tr(details))
+            return choose_button
+
+        standard_button = add_layout_option(
+            0xE8FD,
+            "Use standard MO2 layout",
+            "Finds mod files inside wrappers and routes DLLs, settings, fonts, "
+            "and game assets to MO2's standard folders.",
+            "Finds mod files inside package folders, moves native-mod DLLs and "
+            "their INI files into the game's DLLs folder, puts FreecamMod's "
+            "settings and fonts in DLLs/Freecam, keeps other mods' fonts "
+            "beside a moved DLL when their location is unambiguous, and "
+            "keeps Elden Ring asset folders such as action, chr, common, event, "
+            "assets, map, menu, msg, param, parts, script, sd, and sfx at their game "
+            "paths. Windows proxy loaders and their matching settings stay at "
+            "the game root so MO2 can load them there.",
+            False,
         )
+        preserve_button = add_layout_option(
+            0xE8B7,
+            "Keep original archive structure",
+            "Maps install-source folders such as 'Drag Files Into Here' to the "
+            "game root, then keeps every file's internal path, including DLL locations.",
+            "For FRZN Merge, the contents of 'Drag Files Into Here' land at the "
+            "game root as intended; its natives/ tree stays unchanged. Keeps .txt "
+            "and .md files and does not move DLLs into MO2's DLLs folder.",
+            True,
+        )
+
+        # the archive's files, under the choices, shown on request
+        preview_button = QtWidgets.QPushButton(self.tr("Show"))
         preview_button.setObjectName("archivePreviewButton")
         preview_button.setCheckable(True)
-        preview_button.setMinimumHeight(34)
-        content_layout.addWidget(preview_button)
-        preview_note = QtWidgets.QLabel(content)
-        preview_note.setObjectName("archivePreviewNote")
+        preview_button.setAccessibleName(self.tr("Show archive contents"))
+        add_row(layout_card, 0xE8B9, self.tr("Archive contents"), "", (preview_button,))
+        preview_note = QtWidgets.QLabel(layout_card)
+        preview_note.setObjectName("fluentSettingDescription")
         preview_note.setWordWrap(True)
-        preview_tree = QtWidgets.QTreeWidget(content)
+        preview_note.setContentsMargins(18, 4, 18, 4)
+        preview_tree = QtWidgets.QTreeWidget(layout_card)
         preview_tree.setObjectName("archivePreviewTree")
         preview_tree.setHeaderLabels(
             [self.tr("Original archive path"), self.tr("Type")]
@@ -946,13 +981,14 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
         preview_tree.setColumnWidth(1, 130)
         preview_tree.setAlternatingRowColors(True)
+        preview_tree.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         preview_tree.setMinimumHeight(0)
         preview_tree.setMaximumHeight(260)
         preview_tree.setUniformRowHeights(True)
         preview_tree.setVisible(False)
         preview_note.setVisible(False)
-        content_layout.addWidget(preview_note)
-        content_layout.addWidget(preview_tree)
+        layout_card.layout().addWidget(preview_note)
+        layout_card.layout().addWidget(preview_tree)
         preview_state = {"populated": False}
 
         def add_preview_entries(
@@ -1006,7 +1042,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 preview_tree.setMinimumHeight(0)
             preview_tree.setVisible(visible)
             preview_note.setVisible(visible)
-            preview_button.setText(
+            preview_button.setText(self.tr("Hide") if visible else self.tr("Show"))
+            preview_button.setAccessibleName(
                 self.tr("Hide archive contents")
                 if visible
                 else self.tr("Show archive contents")
@@ -1018,82 +1055,6 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
         preview_button.toggled.connect(toggle_archive_preview)
 
-        def add_layout_option(
-            title: str,
-            description: str,
-            details: str,
-            preserve: bool,
-        ) -> QtWidgets.QPushButton:
-            card = QtWidgets.QFrame(content)
-            card.setObjectName("archiveLayoutChoiceCard")
-            card.setProperty(
-                "preferredChoice",
-                preserve == self._default_preserve,
-            )
-            card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-            group_layout = QtWidgets.QVBoxLayout(card)
-            group_layout.setContentsMargins(13, 12, 13, 12)
-            group_layout.setSpacing(8)
-
-            title_label = QtWidgets.QLabel(self.tr(title), card)
-            title_label.setObjectName("archiveLayoutChoiceTitle")
-            title_label.setWordWrap(True)
-            group_layout.addWidget(title_label)
-
-            description_label = QtWidgets.QLabel(self.tr(description), card)
-            description_label.setObjectName("archiveLayoutChoiceDescription")
-            description_label.setWordWrap(True)
-            description_label.setToolTip(self.tr(details))
-            # Let the card size itself to its contents. A stretch factor here
-            # makes the description absorb the dialog's spare height and
-            # pushes the action button to the bottom of an oversized card.
-            group_layout.addWidget(description_label)
-
-            choose_button = QtWidgets.QPushButton(
-                self.tr("Choose this layout"), card
-            )
-            choose_button.setObjectName("archiveLayoutChoiceButton")
-            choose_button.setMinimumHeight(34)
-            choose_button.setProperty(
-                "preferredChoice",
-                preserve == self._default_preserve,
-            )
-            choose_button.clicked.connect(
-                lambda _checked=False, value=preserve: choose_layout(value)
-            )
-            group_layout.addWidget(choose_button)
-            layout_choices.addWidget(card, 1)
-            return choose_button
-
-        layout_choices = QtWidgets.QHBoxLayout()
-        layout_choices.setContentsMargins(0, 0, 0, 0)
-        layout_choices.setSpacing(10)
-        content_layout.addLayout(layout_choices)
-
-        preserve_button = add_layout_option(
-            "Keep original archive structure",
-            "Maps install-source folders such as 'Drag Files Into Here' to the "
-            "game root, then keeps every file's internal path, including DLL locations.",
-            "For FRZN Merge, the contents of 'Drag Files Into Here' land at the "
-            "game root as intended; its natives/ tree stays unchanged. Keeps .txt "
-            "and .md files and does not move DLLs into MO2's DLLs folder.",
-            True,
-        )
-        standard_button = add_layout_option(
-            "Use standard MO2 layout",
-            "Finds mod files inside wrappers and routes DLLs, settings, fonts, "
-            "and game assets to MO2's standard folders.",
-            "Finds mod files inside package folders, moves native-mod DLLs and "
-            "their INI files into the game's DLLs folder, puts FreecamMod's "
-            "settings and fonts in DLLs/Freecam, keeps other mods' fonts "
-            "beside a moved DLL when their location is unambiguous, and "
-            "keeps Elden Ring asset folders such as action, chr, common, event, "
-            "assets, map, menu, msg, param, parts, script, sd, and sfx at their game "
-            "paths. Windows proxy loaders and their matching settings stay at "
-            "the game root so MO2 can load them there.",
-            False,
-        )
-
         default_label = QtWidgets.QLabel(
             self.tr(
                 "Shown for each supported install; existing mods reopen with "
@@ -1101,8 +1062,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             ),
             content,
         )
-        default_label.setObjectName("archiveFooterNote")
+        default_label.setObjectName("fluentSettingDescription")
         default_label.setWordWrap(True)
+        default_label.setContentsMargins(4, 0, 4, 0)
         default_label.setToolTip(
             self.tr(
                 "MO2 asks on every supported installation. For an existing mod, "
@@ -1111,6 +1073,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
         )
         content_layout.addWidget(default_label)
+        content_layout.addStretch(1)
 
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Cancel, dialog

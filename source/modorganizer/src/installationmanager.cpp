@@ -20,6 +20,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 
 #include "installationmanager.h"
+#include "fluenticons.h"
+#include "fluentdialogs.h"
 
 #include "categories.h"
 #include "filesystemutilities.h"
@@ -37,6 +39,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility.h>
 
 #include <QApplication>
+#include <QLabel>
+#include <QLineEdit>
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
@@ -53,6 +57,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <Shellapi.h>
 
 #include <boost/assign.hpp>
+#include <functional>
+#include <optional>
 #include <boost/scoped_ptr.hpp>
 
 #include "archivefiletree.h"
@@ -121,10 +127,67 @@ void InstallationManager::setPluginContainer(const PluginContainer* pluginContai
   m_PluginContainer = pluginContainer;
 }
 
+namespace
+{
+// asks for one line of text: a Fluent content dialog with the field and what
+// is wrong with the text under it (problem returns that, or nothing), or a
+// QInputDialog without the Fluent themes; nullopt when cancelled
+std::optional<QString> askText(QWidget* parent, const QString& title, const QString& text,
+                               const QString& label, const QString& value,
+                               bool password = false,
+                               std::function<QString(const QString&)> problem = {})
+{
+  if (!FluentIcons::active()) {
+    bool ok             = false;
+    const QString typed = QInputDialog::getText(
+        parent, title, text.isEmpty() ? label : text,
+        password ? QLineEdit::Password : QLineEdit::Normal, value, &ok);
+    return ok ? std::optional<QString>(typed) : std::nullopt;
+  }
+
+  FluentContentDialog dlg(parent, QStringLiteral("InstallTextDialog"), title, text);
+  auto* caption = new QLabel(label, &dlg);
+  caption->setObjectName(QStringLiteral("instanceNameLabel"));
+  auto* edit = new QLineEdit(value, &dlg);
+  edit->setEchoMode(password ? QLineEdit::Password : QLineEdit::Normal);
+  edit->selectAll();
+  caption->setBuddy(edit);
+  auto* error = new QLabel(&dlg);
+  error->setObjectName(QStringLiteral("instanceNameValidation"));
+  error->setWordWrap(true);
+  error->hide();
+  dlg.body()->addWidget(caption);
+  dlg.body()->addWidget(edit);
+  dlg.body()->addWidget(error);
+
+  auto* ok     = dlg.addButton(QObject::tr("OK"), true);
+  auto* cancel = dlg.addButton(QObject::tr("Cancel"));
+  QObject::connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+  QObject::connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+
+  auto check = [&] {
+    const QString wrong = problem ? problem(edit->text().trimmed()) : QString();
+    error->setText(wrong);
+    error->setVisible(!wrong.isEmpty());
+    ok->setEnabled(wrong.isEmpty() && (password || !edit->text().trimmed().isEmpty()));
+  };
+  QObject::connect(edit, &QLineEdit::textChanged, &dlg, check);
+  check();
+
+  dlg.resize(460, dlg.sizeHint().height());
+  if (dlg.exec() != QDialog::Accepted) {
+    return std::nullopt;
+  }
+  return password ? edit->text() : edit->text().trimmed();
+}
+}  // namespace
+
 void InstallationManager::queryPassword()
 {
-  m_Password = QInputDialog::getText(m_ParentWidget, tr("Password required"),
-                                     tr("Password"), QLineEdit::Password);
+  m_Password = askText(m_ParentWidget, tr("Password required"),
+                       tr("This archive is protected with a password."), tr("Password"),
+                       {}, true)
+                   .value_or(QString());
 }
 
 bool InstallationManager::extractFiles(QString extractPath, QString title,
@@ -406,10 +469,22 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
       result.m_backup   = overwriteDialog.backup();
 
       if (overwriteDialog.action() == QueryOverwriteDialog::ACT_RENAME) {
-        bool ok      = false;
-        QString name = QInputDialog::getText(m_ParentWidget, tr("Mod Name"), tr("Name"),
-                                             QLineEdit::Normal, modName, &ok);
-        if (ok && !name.isEmpty()) {
+        // a free name to start from: "<name> (2)", "<name> (3)"...
+        const QDir mods(m_ModsDirectory);
+        QString suggested = modName;
+        for (int n = 2; mods.exists(suggested); ++n) {
+          suggested = QStringLiteral("%1 (%2)").arg(static_cast<QString>(modName)).arg(n);
+        }
+        const auto answer = askText(
+            m_ParentWidget, tr("Install as a new mod"),
+            tr("The installed mod stays as it is; this one is added beside it with "
+               "another name."),
+            tr("Name"), suggested, false, [&mods](const QString& typed) {
+              return mods.exists(typed) ? tr("A mod with this name is already installed.")
+                                        : QString();
+            });
+        const QString name = answer.value_or(QString());
+        if (answer && !name.isEmpty()) {
           modName.update(name, GUESS_USER);
           if (!ensureValidModName(modName)) {
             return {IPluginInstaller::RESULT_FAILED};
@@ -467,16 +542,14 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
 bool InstallationManager::ensureValidModName(GuessedValue<QString>& name) const
 {
   while (name->isEmpty()) {
-    bool ok;
-    name.update(
-        QInputDialog::getText(
-            m_ParentWidget, tr("Invalid name"),
-            tr("The name you entered is invalid, please enter a different one."),
-            QLineEdit::Normal, "", &ok),
-        GUESS_USER);
-    if (!ok) {
+    const auto answer = askText(
+        m_ParentWidget, tr("Invalid name"),
+        tr("The name you entered is invalid, please enter a different one."), tr("Name"),
+        {});
+    if (!answer) {
       return false;
     }
+    name.update(*answer, GUESS_USER);
   }
   return true;
 }

@@ -1524,6 +1524,22 @@ Os programas que não estão ocultos aparecem na lista Programa da janela princi
       <source>This archive looks like it offers options ({0}). Both layouts install all of them; choose Manual... to keep only the one you want.</source>
       <translation>Este arquivo parece oferecer opções ({0}). As duas estruturas instalam todas; escolha Manual... para manter só a que quiser.</translation>
     </message>
+    <message>
+      <source>Layout</source>
+      <translation>Estrutura</translation>
+    </message>
+    <message>
+      <source>Archive contents</source>
+      <translation>Conteúdo do arquivo</translation>
+    </message>
+    <message>
+      <source>Show</source>
+      <translation>Mostrar</translation>
+    </message>
+    <message>
+      <source>Hide</source>
+      <translation>Ocultar</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingGame</name>
@@ -8784,6 +8800,10 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <source>Use the global Steam save</source>
       <translation>Usar o save global da Steam</translation>
     </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -8815,7 +8835,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>&quot;%1&quot; is already installed</source>
-      <translation>&quot;%1&quot; já está instalado</translation>
+      <translation>“%1” já está instalado</translation>
     </message>
     <message>
       <source>Adds the new files to the installed mod; files with the same name are replaced</source>
@@ -8844,6 +8864,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Saves a copy you can restore before any file changes</source>
       <translation>Salva uma cópia que você pode restaurar antes de alterar qualquer arquivo</translation>
+    </message>
+    <message>
+      <source>Mod Exists</source>
+      <translation>O mod já existe</translation>
     </message>
   </context>
   <context>
@@ -10701,6 +10725,45 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
     <message>
       <source>Could not move %1 to the Recycle Bin.</source>
       <translation>Não foi possível mover %1 para a Lixeira.</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallationManager</name>
+    <message>
+      <source>This archive is protected with a password.</source>
+      <translation>Este arquivo está protegido por senha.</translation>
+    </message>
+    <message>
+      <source>Install as a new mod</source>
+      <translation>Instalar como novo mod</translation>
+    </message>
+    <message>
+      <source>The installed mod stays as it is; this one is added beside it with another name.</source>
+      <translation>O mod instalado fica como está; este é adicionado ao lado com outro nome.</translation>
+    </message>
+    <message>
+      <source>A mod with this name is already installed.</source>
+      <translation>Já existe um mod instalado com este nome.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Password</source>
+      <translation>Senha</translation>
+    </message>
+    <message>
+      <source>Password required</source>
+      <translation>Senha necessária</translation>
+    </message>
+    <message>
+      <source>Invalid name</source>
+      <translation>Nome inválido</translation>
+    </message>
+    <message>
+      <source>The name you entered is invalid, please enter a different one.</source>
+      <translation>O nome digitado é inválido; digite outro.</translation>
     </message>
   </context>
 </TS>
