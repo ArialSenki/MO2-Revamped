@@ -803,7 +803,9 @@ private:
         return std::max(widths[column], naturalMinimum);
       }
     } else if (objectName == QStringLiteral("dataTree")) {
-      constexpr int widths[] = {220, 120, 90, 90, 145};
+      // name and origin fit the side panel at its usual width without a
+      // horizontal scroll bar
+      constexpr int widths[] = {180, 110, 90, 90, 145};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -813,7 +815,8 @@ private:
         return std::max(widths[column], naturalMinimum);
       }
     } else if (objectName == QStringLiteral("downloadView")) {
-      constexpr int widths[] = {240, 115, 90, 150, 130, 95, 80, 125};
+      // name and status fit the side panel; more columns scroll
+      constexpr int widths[] = {180, 105, 90, 150, 130, 95, 80, 125};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }

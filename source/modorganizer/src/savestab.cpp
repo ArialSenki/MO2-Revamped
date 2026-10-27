@@ -353,8 +353,12 @@ void SavesTab::refreshSaveListNow()
           ui.list, {display, relpath,
                     locale.toString(save->getCreationTime(), QLocale::ShortFormat)});
       item->setIcon(0, FluentIcons::file(save->getFilepath(), false));
+      item->setToolTip(0, QDir::toNativeSeparators(relpath));
       ui.list->addTopLevelItem(item);
     }
+    // the side panel has room for the name and the date; the file's path,
+    // squeezed to "..." there, shows on the name
+    ui.list->setColumnHidden(1, true);
   } catch (std::exception& e) {
     // listSaves() can throw
     log::error("{}", e.what());

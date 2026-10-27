@@ -126,7 +126,7 @@ void DownloadListHeader::ensureReadableSections()
 {
   constexpr int statusTargetWidth   = 120;
   constexpr int filetimeTargetWidth = 155;
-  constexpr int minimumNameWidth    = 240;
+  constexpr int minimumNameWidth    = 180;
 
   const int statusGrowth = isSectionHidden(DownloadList::COL_STATUS)
                                ? 0

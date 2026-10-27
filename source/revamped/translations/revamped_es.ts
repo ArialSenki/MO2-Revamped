@@ -5302,6 +5302,14 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Saves</source>
+      <translation>Partidas</translation>
+    </message>
+    <message>
+      <source>Hidden files</source>
+      <translation>Archivos ocultos</translation>
+    </message>
+    <message>
       <source>Filter state: off, included, or excluded.</source>
       <translation>Estado del filtro: desactivado, incluido o excluido.</translation>
     </message>
@@ -7029,6 +7037,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>ModList</name>
+    <message>
+      <source>Flags</source>
+      <translation>Indicadores</translation>
+    </message>
     <message>
       <source>Status</source>
       <translation>Estado</translation>
