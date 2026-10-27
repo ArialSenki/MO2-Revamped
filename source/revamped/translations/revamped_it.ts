@@ -9058,6 +9058,18 @@ Esempio:
       <source>The instance of this mode, with its mods, profiles and saves.</source>
       <translation>L&apos;istanza di questa modalità, con mod, profili e salvataggi.</translation>
     </message>
+    <message>
+      <source>Separate saves per MO2 profile</source>
+      <translation>Salvataggi separati per profilo MO2</translation>
+    </message>
+    <message>
+      <source>Share modded saves in this instance</source>
+      <translation>Condividi i salvataggi con mod in questa istanza</translation>
+    </message>
+    <message>
+      <source>Use the global Steam save</source>
+      <translation>Usa il salvataggio globale di Steam</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>

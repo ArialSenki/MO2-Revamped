@@ -250,12 +250,12 @@ QString create(QWidget* parent, OrganizerCore& core, Settings& main, const QStri
     }
   }
 
-  // listed beside the main instance in the instance manager
-  QString group = GlobalSettings::instanceValue(QStringLiteral("InstanceGroups"), mainId);
-  if (group.isEmpty()) {
-    group = QDir(mainDir).dirName();
+  // in the main instance's group, when it has one; its name already says
+  // which instance it belongs to
+  const QString group = GlobalSettings::instanceValue(QStringLiteral("InstanceGroups"), mainId);
+  if (!group.isEmpty()) {
+    GlobalSettings::setInstanceValue(QStringLiteral("InstanceGroups"), name, group);
   }
-  GlobalSettings::setInstanceValue(QStringLiteral("InstanceGroups"), name, group);
 
   main.setRevampedValue(QStringLiteral("revamped_mode_") + key(mode), name);
   main.sync();

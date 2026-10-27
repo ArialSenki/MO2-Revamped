@@ -8772,6 +8772,18 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>The instance of this mode, with its mods, profiles and saves.</source>
       <translation>Die Instanz dieses Modus mit ihren Mods, Profilen und Spielständen.</translation>
     </message>
+    <message>
+      <source>Separate saves per MO2 profile</source>
+      <translation>Getrennte Spielstände pro MO2-Profil</translation>
+    </message>
+    <message>
+      <source>Share modded saves in this instance</source>
+      <translation>Gemoddete Spielstände in dieser Instanz teilen</translation>
+    </message>
+    <message>
+      <source>Use the global Steam save</source>
+      <translation>Globalen Steam-Spielstand verwenden</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>

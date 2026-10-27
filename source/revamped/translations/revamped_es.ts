@@ -8840,6 +8840,18 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <source>The instance of this mode, with its mods, profiles and saves.</source>
       <translation>La instancia de este modo, con sus mods, perfiles y partidas.</translation>
     </message>
+    <message>
+      <source>Separate saves per MO2 profile</source>
+      <translation>Partidas separadas por perfil de MO2</translation>
+    </message>
+    <message>
+      <source>Share modded saves in this instance</source>
+      <translation>Compartir partidas con mods en esta instancia</translation>
+    </message>
+    <message>
+      <source>Use the global Steam save</source>
+      <translation>Usar la partida global de Steam</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>

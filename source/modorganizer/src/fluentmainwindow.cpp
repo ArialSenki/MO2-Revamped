@@ -381,7 +381,9 @@ void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
     for (const auto& entry : entries) {
       // the group shows where a shortcut would, at the menu's right edge
       QString text = QString(entry.name).replace('&', QStringLiteral("&&"));
-      if (!entry.group.isEmpty()) {
+      // a game mode's instance is named after its group's instance already
+      if (!entry.group.isEmpty() &&
+          !entry.name.startsWith(entry.group + QStringLiteral(" ("))) {
         text += QLatin1Char('\t') + entry.group;
       }
       auto* action = menu->addAction(text);

@@ -41,12 +41,13 @@ inline QString normalizeMode(const QString& mode,
 inline QString modeName(const QString& mode)
 {
   if (mode == QLatin1String(InstanceShared)) {
-    return QObject::tr("Share modded saves within this MO2 instance");
+    return QObject::tr("Share modded saves in this instance");
   }
   if (mode == QLatin1String(GlobalShared)) {
-    return QObject::tr("Use global Steam / Elden Ring saves");
+    return QObject::tr("Use the global Steam save");
   }
-  return QObject::tr("Isolate saves for this profile (recommended)");
+  // the names the Save Isolation card of the wizard gives the same modes
+  return QObject::tr("Separate saves per MO2 profile");
 }
 
 inline QString modeDescription(const QString& mode)

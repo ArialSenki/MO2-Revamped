@@ -6191,6 +6191,7 @@ QDialog#CreateInstanceDialog QWidget#widget_13,
 QDialog#CreateInstanceDialog QWidget#widget_15,
 QDialog#CreateInstanceDialog QWidget#widget_19,
 QDialog#CreateInstanceDialog QWidget#widget_25,
+QDialog#CreateInstanceDialog QWidget#eldenRingSaveModeCard,
 QDialog#CreateInstanceDialog QWidget#review,
 QDialog#CreateInstanceDialog QDialogButtonBox#editions {
     background-color: transparent;
@@ -6440,4 +6441,16 @@ QDialog#SettingsDialog QWidget#developerTab QLabel#generalSectionTitle {
 }
 QDialog#SettingsDialog QWidget#developerTab QGroupBox {
     margin-top: 3px;
+}
+
+/* the Elden Ring save rows of the New instance wizard (Save Isolation): their
+   texts read as the other rows' descriptions */
+QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_description,
+QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_status,
+QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceSaveStatus,
+QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceGameSaveProfileNote {
+    color: #6E6E6E;
+    background-color: transparent;
+    font-size: 8.5pt;
+    padding: 0px;
 }

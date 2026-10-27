@@ -242,6 +242,9 @@ QCommandLinkButton* choice(QWidget* parent, const char* name, const QString& tex
 {
   auto* b = named(new QCommandLinkButton(text, description, parent), name);
   b->setProperty("wizardChoice", true);
+  // its icon is drawn for the row (padded, the game's colours): the Fluent
+  // pass would turn it into a one-colour shape
+  b->setProperty("fluentKeepIcon", true);
   b->setCheckable(true);
   b->setAutoDefault(false);
   b->setIconSize(QSize(24, 24));
@@ -276,7 +279,13 @@ QString plainHeading(const QString& text)
 {
   static const QRegularExpression tags(QStringLiteral("</?h\\d[^>]*>"),
                                        QRegularExpression::CaseInsensitiveOption);
-  return QString(text).remove(tags).trimmed();
+  QString heading = QString(text).remove(tags).trimmed();
+  // a title ends without a full stop, as on every other page; the texts come
+  // from upstream translations, so it goes here rather than in each of them
+  if (heading.endsWith(QLatin1Char('.')) && !heading.endsWith(QLatin1String(".."))) {
+    heading.chop(1);
+  }
+  return heading;
 }
 }  // namespace cid
 

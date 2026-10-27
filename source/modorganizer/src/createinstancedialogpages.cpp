@@ -65,9 +65,64 @@ constexpr char16_t LockGlyph    = 0xE72E;
 constexpr char16_t GameGlyph    = 0xE7FC;
 constexpr char16_t EditionGlyph = 0xE8F1;  // Library
 
+// a command link draws its icon 9 px in; the wizard's other rows put their
+// glyph's centre 32 px in and their text 59 px in (infoRow), so a choice's
+// icon carries the difference as transparent margins
+constexpr int ChoiceIconWidth = 45;
+
+QSize choiceIconSize(int glyph)
+{
+  return {ChoiceIconWidth, glyph};
+}
+
+QIcon paddedChoiceIcon(const QIcon& source, int size)
+{
+  const int left = 23 - size / 2;
+  QIcon icon;
+  for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
+    QPixmap pixmap((QSizeF(ChoiceIconWidth, size) * ratio).toSize());
+    pixmap.setDevicePixelRatio(ratio);
+    pixmap.fill(Qt::transparent);
+    // the icon's own pixmap: painting a glyph or an executable's icon
+    // straight into another pixmap draws nothing or a placeholder
+    // the largest size the icon has, scaled down: an executable's small one is
+    // a plainer drawing on a white square
+    QSize best(qRound(size * ratio), qRound(size * ratio));
+    for (const QSize& available : source.availableSizes()) {
+      if (available.width() > best.width()) {
+        best = available;
+      }
+    }
+    const QPixmap inner = source.pixmap(best);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    painter.drawPixmap(QRectF(left, 0, size, size), inner, QRectF(inner.rect()));
+    painter.end();
+    icon.addPixmap(pixmap);
+  }
+  return icon;
+}
+
 QIcon choiceIcon(char16_t glyph)
 {
-  return FluentIcons::glyph(glyph, FluentIcons::Tone::Accent);
+  // the glyph drawn as text in the icon font, as FluentIcons does: its own
+  // engine gives no pixmap outside a widget
+  constexpr int size = 16;
+  const int left     = 23 - size / 2;
+  QIcon icon;
+  for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
+    QPixmap pixmap((QSizeF(ChoiceIconWidth, size) * ratio).toSize());
+    pixmap.setDevicePixelRatio(ratio);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::TextAntialiasing, true);
+    painter.setFont(FluentIcons::font(size));
+    painter.setPen(FluentIcons::color(FluentIcons::Tone::Ink));
+    painter.drawText(QRectF(left, 0, size, size), Qt::AlignCenter, QString(QChar(glyph)));
+    painter.end();
+    icon.addPixmap(pixmap);
+  }
+  return icon;
 }
 
 QString decodeSteamPath(QString path)
@@ -551,6 +606,9 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
   ui->createGlobal->setIcon(choiceIcon(HomeGlyph));
   ui->createPortable->setIcon(choiceIcon(DriveGlyph));
   ui->createIsolated->setIcon(choiceIcon(LockGlyph));
+  for (auto* choice : {ui->createGlobal, ui->createPortable, ui->createIsolated}) {
+    choice->setIconSize(choiceIconSize(16));
+  }
 
   // each kind with the folder it goes to and the instances already there
   {
@@ -1048,9 +1106,10 @@ void GamePage::createGameButton(Game* g)
 {
   g->button = new QCommandLinkButton;
   g->button->setObjectName(QStringLiteral("gameChoice"));
+  g->button->setProperty("fluentKeepIcon", true);
   g->button->setCheckable(true);
   g->button->setAutoDefault(false);
-  g->button->setIconSize(QSize(28, 28));
+  g->button->setIconSize(choiceIconSize(28));
   g->button->setCursor(Qt::PointingHandCursor);
 
   updateButton(g);
@@ -1086,13 +1145,10 @@ void GamePage::updateButton(Game* g)
     displayName = g->game->gameShortName().trimmed();
   }
   g->button->setText(displayName.replace("&", "&&"));
+  // the game's own icon, as the main window's bar shows it
   QIcon gameIcon = g->game->gameIcon();
-  if (gameIcon.isNull()) {
-    gameIcon = choiceIcon(GameGlyph);
-  }
-  gameIcon = MOBase::makeRunStyleGameIcon(gameIcon, g->button,
-                                          g->button->iconSize());
-  g->button->setIcon(gameIcon);
+  g->button->setIcon(gameIcon.isNull() ? choiceIcon(GameGlyph)
+                                       : paddedChoiceIcon(gameIcon, 28));
 
   QStringList description;
   if (g->installed) {
@@ -1103,7 +1159,13 @@ void GamePage::updateButton(Game* g)
         break;
       }
     }
-    description << QDir::toNativeSeparators(g->dir);
+    // a drive letter as Windows writes it (a Steam library can list it in
+    // lower case)
+    QString shown = QDir::toNativeSeparators(g->dir);
+    if (shown.size() > 1 && shown[1] == QLatin1Char(':')) {
+      shown[0] = shown[0].toUpper();
+    }
+    description << shown;
     if (inProtectedFolder(g->dir)) {
       description << QObject::tr("In Program Files");
     }
@@ -1487,8 +1549,9 @@ void VariantsPage::fillList()
     b->setAutoDefault(false);
     b->setObjectName(QStringLiteral("editionChoice"));
     b->setProperty("wizardChoice", true);
+    b->setProperty("fluentKeepIcon", true);
     b->setIcon(choiceIcon(EditionGlyph));
-    b->setIconSize(QSize(24, 24));
+    b->setIconSize(choiceIconSize(16));
     b->setCursor(Qt::PointingHandCursor);
 
     QObject::connect(b, &QAbstractButton::clicked, [v, this] {
@@ -1905,15 +1968,16 @@ void ProfilePage::doActivated(bool firstTime)
   const bool isEldenRing =
       gamePage != nullptr && EldenRingSaveSettings::supports(gamePage->selectedGame());
 
-  // the plugin's save card (or the native one) sits inside the rows' padding;
-  // the switch rows run edge to edge
-  ui->widget_25->layout()->setContentsMargins(isEldenRing ? 20 : 0, isEldenRing ? 4 : 0,
-                                              isEldenRing ? 20 : 0, isEldenRing ? 12 : 0);
-
   const bool pluginOwnsSaveControls =
       m_eldenRingSaveGroup
           ->property("_eldenRingSaveUiPluginControlsActive")
           .toBool();
+
+  // the native save card sits inside the rows' padding; the plugin's rows,
+  // like the switch rows, run edge to edge with their own
+  const bool padded = isEldenRing && !pluginOwnsSaveControls;
+  ui->widget_25->layout()->setContentsMargins(padded ? 20 : 0, padded ? 4 : 0, padded ? 20 : 0,
+                                              padded ? 12 : 0);
   m_eldenRingSaveGroup->setVisible(isEldenRing && !pluginOwnsSaveControls);
   ui->profileInisCheckbox->setVisible(!isEldenRing);
   ui->profileSavesCheckbox->setVisible(!isEldenRing);
@@ -2071,6 +2135,8 @@ void PathsPage::doActivated(bool firstTime)
   if (firstTime) {
     ui->location->setFocus();
   }
+  // a long path shows its drive and first folders, not its end
+  ui->location->setCursorPosition(0);
 }
 
 CreateInstanceDialog::Paths PathsPage::selectedPaths() const

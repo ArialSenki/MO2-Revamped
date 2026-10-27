@@ -8772,6 +8772,18 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <source>The instance of this mode, with its mods, profiles and saves.</source>
       <translation>A instância deste modo, com mods, perfis e saves.</translation>
     </message>
+    <message>
+      <source>Separate saves per MO2 profile</source>
+      <translation>Saves separados por perfil do MO2</translation>
+    </message>
+    <message>
+      <source>Share modded saves in this instance</source>
+      <translation>Compartilhar saves com mods nesta instância</translation>
+    </message>
+    <message>
+      <source>Use the global Steam save</source>
+      <translation>Usar o save global da Steam</translation>
+    </message>
   </context>
   <context>
     <name>QueryOverwriteDialog</name>
