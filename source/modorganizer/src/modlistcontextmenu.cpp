@@ -450,6 +450,7 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
   addSeparator();
   auto* allMods = new ModListGlobalContextMenu(core, view, this);
   allMods->setTitle(tr("All Mods"));
+  allMods->setIcon(menuGlyph(MenuGlyphs::List));
   addMenu(allMods);
 
   // the remove command of each type goes last, after the list commands

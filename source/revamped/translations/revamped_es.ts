@@ -7013,6 +7013,14 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>All Mods</source>
+      <translation>Todos los mods</translation>
+    </message>
+    <message>
+      <source>Endorsement state unknown</source>
+      <translation>Estado del aval desconocido</translation>
+    </message>
+    <message>
       <source>Review and manage files...</source>
       <translation>Revisar y gestionar archivos...</translation>
     </message>

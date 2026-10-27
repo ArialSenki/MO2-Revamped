@@ -62,6 +62,7 @@ constexpr char16_t Star        = 0xE734;
 constexpr char16_t Heart       = 0xEB51;
 constexpr char16_t Restore     = 0xE777;
 constexpr char16_t Backup      = 0xEA35;
+constexpr char16_t List        = 0xEA37;
 }  // namespace MenuGlyphs
 
 inline QIcon menuGlyph(char16_t codepoint)
