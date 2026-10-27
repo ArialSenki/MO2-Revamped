@@ -1651,22 +1651,6 @@ S&apos;il contient une progression que vous voulez garder, fermez le jeu et reco
       <source>MO2 could not start {0} outside its virtual file system. The game was not started.</source>
       <translation>MO2 n'a pas pu lancer {0} hors de son système de fichiers virtuel. Le jeu n'a pas été lancé.</translation>
     </message>
-    <message>
-      <source>me3 was not found (add it as an executable of this instance).</source>
-      <translation>me3 est introuvable (ajoutez-le comme exécutable de cette instance).</translation>
-    </message>
-    <message>
-      <source>Seamless Co-op cannot start</source>
-      <translation>Seamless Co-op ne peut pas démarrer</translation>
-    </message>
-    <message>
-      <source>No MO2 mod holds SeamlessCoop/{0}.</source>
-      <translation>Aucun mod de MO2 ne contient SeamlessCoop/{0}.</translation>
-    </message>
-    <message>
-      <source>Seamless Co-op is not installed in the game folder, so MO2 starts it through me3 from its mod. {0} The game was not started.</source>
-      <translation>Seamless Co-op n'est pas installé dans le dossier du jeu : MO2 le lance donc avec me3 depuis son mod. {0} Le jeu n'a pas été lancé.</translation>
-    </message>
   </context>
   <context>
     <name>EldenRingNativeProfile</name>
@@ -3100,10 +3084,6 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>Programmes</translation>
     </message>
     <message>
-      <source>Seamless Co-op and me3 do not work inside MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's saves in place for the run, then collects them when the game closes.</source>
-      <translation>Seamless Co-op et me3 ne fonctionnent pas dans le dossier virtuel de MO2 (VFS). MO2 les lance en dehors, met en place les sauvegardes de ce profil pour la session, puis les récupère à la fermeture du jeu.</translation>
-    </message>
-    <message>
       <source>Start outside the VFS</source>
       <translation>Lancer hors du VFS</translation>
     </message>
@@ -3296,28 +3276,8 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <translation>enregistrée le {when}</translation>
     </message>
     <message>
-      <source>Seamless Co-op stays inactive inside the VFS. Uses {file}.</source>
-      <translation>Seamless Co-op reste inactif dans le VFS. Utilise {file}.</translation>
-    </message>
-    <message>
       <source>Could not save</source>
       <translation>Impossible d'enregistrer</translation>
-    </message>
-    <message>
-      <source>To start it from the mod {mod}, add me3 as an executable.</source>
-      <translation>Pour le lancer depuis le mod {mod}, ajoutez me3 comme exécutable.</translation>
-    </message>
-    <message>
-      <source>The game crashes with me3 inside the VFS, so MO2 hands it the profile's mod list and native DLLs (and Seamless Co-op when its mod is active); me3's own profile is not used.</source>
-      <translation>Le jeu plante avec me3 dans le VFS : MO2 lui transmet donc la liste de mods et les DLL natives du profil (et Seamless Co-op si son mod est actif) ; le profil propre de me3 n'est pas utilisé.</translation>
-    </message>
-    <message>
-      <source>me3 starts it with MO2's mod list, from the mod {mod}.</source>
-      <translation>me3 le lance avec la liste de mods de MO2, depuis le mod {mod}.</translation>
-    </message>
-    <message>
-      <source>me3 starts it with MO2's mod list.</source>
-      <translation>me3 le lance avec la liste de mods de MO2.</translation>
     </message>
     <message>
       <source>Starts inside the VFS with every MO2 mod. Activate a Seamless Co-op mod and it starts with the game too.</source>
@@ -3326,6 +3286,22 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
     <message>
       <source>Starts inside the VFS with every MO2 mod, and with Seamless Co-op from the mod {mod}.</source>
       <translation>Démarre dans le VFS avec tous les mods de MO2, et avec Seamless Co-op depuis le mod {mod}.</translation>
+    </message>
+    <message>
+      <source>me3, and a Seamless Co-op installed in the game folder, do not work inside MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>me3, ainsi qu'un Seamless Co-op installé dans le dossier du jeu, ne fonctionnent pas dans le dossier virtuel de MO2 (VFS). MO2 les lance en dehors, met en place les sauvegardes de ce profil pour la session, puis les récupère à la fermeture du jeu.</translation>
+    </message>
+    <message>
+      <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>
+      <translation>Lance le Seamless Co-op installé dans le dossier du jeu, sans les mods de MO2. Activez un mod Seamless Co-op et il lancera plutôt le jeu via MO2.</translation>
+    </message>
+    <message>
+      <source>Starts the game through MO2, inside the VFS with every MO2 mod and Seamless Co-op from the mod {mod}.</source>
+      <translation>Lance le jeu via MO2, dans le VFS avec tous les mods de MO2 et Seamless Co-op depuis le mod {mod}.</translation>
+    </message>
+    <message>
+      <source>The game crashes with me3 inside the VFS, so MO2 hands it the profile's mod list and native DLLs, plus the native DLLs of the me3 profile this program names (add Seamless Co-op there to play with it).</source>
+      <translation>Le jeu plante avec me3 dans le VFS : MO2 lui transmet donc la liste de mods et les DLL natives du profil, ainsi que les DLL natives du profil me3 que ce programme indique (ajoutez-y Seamless Co-op pour jouer avec).</translation>
     </message>
   </context>
   <context>

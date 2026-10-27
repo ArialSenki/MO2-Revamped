@@ -51,6 +51,45 @@ from ..basic_features.basic_save_game_info import BasicGameSaveGame
 from ..basic_features.utils import is_directory
 from ..basic_game import BasicGame
 from PyQt6.QtCore import QCoreApplication
+
+
+# PyQt passes Qt's log functions ASCII only: a message with any other
+# character (a path with an accent, a Windows error in Spanish) raised
+# UnicodeEncodeError and stopped the code that logged it. Such messages go
+# through Python's logging, which MO2's Python plugin writes to the same log.
+import logging  # noqa: E402
+import sys  # noqa: E402
+
+
+_QT_LOG_CALLS: dict = {}
+
+
+def _safe_qt_log(qt_function, level):
+    def log(message) -> None:
+        text = "" if message is None else str(message)
+        caller = sys._getframe(1)
+        filename, line = caller.f_code.co_filename, caller.f_lineno
+        if not text.isascii():
+            logging.getLogger("mo2revamped").log(
+                level, f"[{os.path.basename(filename)}:{line}] {text}"
+            )
+            return
+        # Qt logs the file and line of the code that calls it; a call compiled
+        # at the caller's place keeps the log pointing there instead of here
+        code = _QT_LOG_CALLS.get((filename, line))
+        if code is None:
+            code = compile("\n" * (line - 1) + "_qt(_text)", filename, "exec")
+            _QT_LOG_CALLS[(filename, line)] = code
+        exec(code, {"_qt": qt_function, "_text": text})
+
+    return log
+
+
+qCritical = _safe_qt_log(qCritical, logging.CRITICAL)
+qInfo = _safe_qt_log(qInfo, logging.INFO)
+qWarning = _safe_qt_log(qWarning, logging.WARNING)
+
+
 # MO2 installs translations/revamped_<language>.qm; the source text is English.
 _TR_CONTEXT = "EldenRingGame"
 
@@ -1601,8 +1640,9 @@ class EldenRingMo2Game(BasicGame):
     UnroutedSaveDirectoryName = "unrouted-global"
     # the game's name in messages that name Elden Ring
     DisplayName = "Elden Ring"
-    # Seamless Co-op for this game: its launchers and the DLL they inject; me3
-    # names the game so (a Seamless mod that only lives in MO2 runs through me3)
+    # Seamless Co-op for this game: its launchers and the DLL they inject (a
+    # launcher run with a Seamless mod active starts the game through MO2);
+    # me3 names the game so
     SeamlessLaunchers = frozenset({"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe"})
     SeamlessDll = "ersc.dll"
     Me3GameId = "eldenring"
@@ -1627,8 +1667,9 @@ class EldenRingMo2Game(BasicGame):
     # launcher; Easy Anti-Cheat's launcher has the same name in every game, so
     # only the one in this game's folder counts
     SharedLaunchers = frozenset({"me3.exe", "me3-launcher.exe"})
-    # Launchers that fail under MO2's virtual file system (Seamless Co-op's
-    # mod stays inactive, me3 crashes the game): MO2 starts them itself,
+    # Launchers that fail under MO2's virtual file system (Seamless Co-op
+    # installed in the game folder stays inactive, me3 crashes the game): MO2
+    # starts them itself,
     # outside the VFS, and swaps the route's saves into the Steam folder for
     # the run. Each executable can be switched either way in Save Isolation.
     AutoSwapLaunchers = frozenset(
@@ -2012,12 +2053,6 @@ class EldenRingMo2Game(BasicGame):
                 elif child.is_file():
                     shutil.copy2(child, route / child.name)
                     child.unlink()
-        tidy = swap.get("seamless_game_folder")
-        if isinstance(tidy, dict):
-            try:
-                self.tidy_seamless_game_folder(tidy)
-            except OSError as error:
-                qWarning(f"Elden Ring MO2: the Seamless folder in the game folder was not tidied: {error}")
         held = session_directory / self.SwapRootFilesDirectoryName
         if held.is_dir():
             global_save_root.mkdir(parents=True, exist_ok=True)
@@ -2065,26 +2100,12 @@ class EldenRingMo2Game(BasicGame):
     def seamless_dll_in_mods(
         cls, mods: list[tuple[str, Path, bool]]
     ) -> tuple[str, Path] | None:
-        """The Seamless Co-op DLL of a mod (name, folder, active), highest
-        priority first: an active mod wins, an inactive one will do (the mod
-        needs no VFS when me3 loads it)."""
-        for want_active in (True, False):
-            for name, folder, active in reversed(mods):
-                if active != want_active:
-                    continue
-                dll = folder / "SeamlessCoop" / cls.SeamlessDll
-                if dll.is_file():
-                    return name, dll
-        return None
-
-    @staticmethod
-    def find_me3(candidates: list[Path]) -> Path | None:
-        for candidate in candidates:
-            try:
-                if candidate.name.casefold() == "me3.exe" and candidate.is_file():
-                    return candidate
-            except OSError:
-                continue
+        """The Seamless Co-op DLL of the highest-priority active mod (name,
+        folder, active) that holds one."""
+        for name, folder, active in reversed(mods):
+            dll = folder / "SeamlessCoop" / cls.SeamlessDll
+            if active and dll.is_file():
+                return name, dll
         return None
 
     @classmethod
@@ -2131,8 +2152,9 @@ class EldenRingMo2Game(BasicGame):
     def _me3_natives(self) -> list[tuple[Path, str | None]]:
         """The DLLs MO2 would force-load into the game, in the native
         profile's order and without its switched-off entries, as me3 natives:
-        not the bridge (it serves the VFS) nor root proxy loaders such as
-        dinput8.dll (they would fight me3 for the same hooks)."""
+        not the bridge (it serves the VFS), root proxy loaders such as
+        dinput8.dll (they would fight me3 for the same hooks) nor Seamless
+        Co-op, which me3 loads only when its own profile names it."""
         initializers: dict[str, str] = {}
         try:
             profile = self._organizer.profile()
@@ -2150,7 +2172,7 @@ class EldenRingMo2Game(BasicGame):
         for load in self.executableForcedLoads():
             library = Path(load.library())
             key = os.path.normcase(str(library))
-            if key == bridge:
+            if key == bridge or library.name.casefold() == self.SeamlessDll:
                 continue
             if library.name.casefold() in EldenRingModDataChecker._root_loader_dlls:
                 qInfo(
@@ -2161,12 +2183,45 @@ class EldenRingMo2Game(BasicGame):
             natives.append((library, initializers.get(key)))
         return natives
 
-    def _write_me3_profile(self, name: str, seamless: Path | None) -> Path:
+    @classmethod
+    def me3_profile_natives(cls, args: str) -> list[tuple[Path, str | None]]:
+        """The natives of the me3 profile an executable's arguments name
+        (launch -p <profile>), relative paths resolved against the profile's
+        folder: what the user added by hand, Seamless Co-op for example."""
+        parts = cls._split_arguments(args)
+        named = next(
+            (parts[i + 1] for i, part in enumerate(parts[:-1]) if part in {"-p", "--profile"}), ""
+        )
+        if not named.casefold().endswith((".me3", ".toml")):
+            return []
+        try:
+            import tomllib
+
+            profile = Path(named)
+            data = tomllib.loads(profile.read_text(encoding="utf-8-sig"))
+        except (ImportError, OSError, UnicodeError, ValueError) as error:
+            qWarning(f"Elden Ring MO2: could not read the me3 profile '{named}': {error}")
+            return []
+        natives = []
+        for entry in data.get("natives", []):
+            if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+                continue
+            library = Path(entry["path"])
+            if not library.is_absolute():
+                library = profile.parent / library
+            initializer = entry.get("initializer")
+            if isinstance(initializer, dict):
+                initializer = initializer.get("function")
+            natives.append((library, initializer if isinstance(initializer, str) else None))
+        return natives
+
+    def _write_me3_profile(self, name: str, extra: list[tuple[Path, str | None]]) -> Path:
         natives = self._me3_natives()
-        if seamless is not None and all(
-            os.path.normcase(str(path)) != os.path.normcase(str(seamless)) for path, _ in natives
-        ):
-            natives.append((seamless, None))
+        known = {os.path.normcase(str(path)) for path, _ in natives}
+        for library, initializer in extra:
+            if os.path.normcase(str(library)) not in known:
+                known.add(os.path.normcase(str(library)))
+                natives.append((library, initializer))
         packages = self._me3_packages()
         folder = Path(self._organizer.basePath()) / "eldenring_mo2_me3"
         folder.mkdir(parents=True, exist_ok=True)
@@ -2181,35 +2236,9 @@ class EldenRingMo2Game(BasicGame):
         )
         qInfo(
             f"Elden Ring MO2: me3 profile '{profile.name}' written from MO2: "
-            f"{len(packages)} package(s), {len(natives)} native DLL(s)"
-            f"{', with Seamless Co-op' if seamless is not None else ''}."
+            f"{len(packages)} package(s), {len(natives)} native DLL(s)."
         )
         return profile
-
-    def _me3_candidates(self) -> list[Path]:
-        candidates: list[Path] = []
-        try:
-            ini = Path(self._organizer.basePath()) / "ModOrganizer.ini"
-            config = configparser.ConfigParser(interpolation=None, strict=False)
-            config.read(ini, encoding="utf-8")
-            if config.has_section("customExecutables"):
-                for key, value in config.items("customExecutables"):
-                    if key.endswith("\\binary") and value.strip():
-                        candidates.append(Path(value.strip()))
-        except (AttributeError, RuntimeError, OSError, configparser.Error, UnicodeError):
-            pass
-        found = shutil.which("me3")
-        if found:
-            candidates.append(Path(found))
-        for root, parts in (
-            ("LOCALAPPDATA", ("Programs", "me3", "bin")),
-            ("ProgramFiles", ("me3", "bin")),
-            ("ProgramFiles", ("garyttierney", "me3", "bin")),
-        ):
-            base = os.environ.get(root)
-            if base:
-                candidates.append(Path(base, *parts, "me3.exe"))
-        return candidates
 
     def _mod_folders(self) -> list[tuple[str, Path, bool]]:
         mods = []
@@ -2226,115 +2255,22 @@ class EldenRingMo2Game(BasicGame):
         return mods
 
     def _launch_target(self, app_path: str, working_directory, args: str):
-        """What a launch outside the VFS starts. me3 and Seamless Co-op get a
-        me3 profile written from the MO2 profile (its mods, Overwrite and
-        native DLLs), so MO2's mod list stays the one place to choose mods;
-        me3 adds Seamless when its mod is active, Seamless Co-op always does
-        (from its mod, or from the game folder). Without me3, a Seamless that
-        is installed in the game folder starts from its own launcher. None
-        when it cannot start (the user was told)."""
-        name = Path(app_path).name.casefold()
-        is_me3 = name == "me3.exe"
-        is_seamless = name in self.SeamlessLaunchers
-        if not (is_me3 or is_seamless):
+        """What a launch outside the VFS starts: me3 gets a me3 profile
+        written from the MO2 profile (its mods, Overwrite and native DLLs), so
+        MO2's mod list stays the one place to choose mods, plus the natives of
+        the me3 profile the executable names; any other launcher starts as it
+        is."""
+        if Path(app_path).name.casefold() != "me3.exe":
             return app_path, working_directory, args
-        game_folder = Path(self.dataDirectory().absolutePath())
-        mods = self._mod_folders()
-        seamless_dll: Path | None = None
-        seamless_mod = ""
-        if is_me3:
-            me3 = Path(app_path)
-            found = self.seamless_dll_in_mods([mod for mod in mods if mod[2]])
-            if found is not None:
-                seamless_mod, seamless_dll = found
-        else:
-            me3 = self.find_me3(self._me3_candidates())
-            installed_dll = game_folder / "SeamlessCoop" / self.SeamlessDll
-            found = self.seamless_dll_in_mods(mods)
-            if found is not None:
-                seamless_mod, seamless_dll = found
-            elif installed_dll.is_file():
-                seamless_dll = installed_dll
-            if me3 is None and installed_dll.is_file() and (game_folder / name).is_file():
-                qInfo(
-                    "Elden Ring MO2: me3 was not found; Seamless Co-op starts from its "
-                    "own launcher in the game folder, without MO2's mods."
-                )
-                return str(game_folder / name), str(game_folder), args
-            if me3 is None or seamless_dll is None:
-                missing = (
-                    _tr("No MO2 mod holds SeamlessCoop/{0}.").format(self.SeamlessDll)
-                    if seamless_dll is None
-                    else _tr("me3 was not found (add it as an executable of this instance).")
-                )
-                QMessageBox.warning(
-                    None,
-                    _tr("Seamless Co-op cannot start"),
-                    _tr("Seamless Co-op is not installed in the game folder, so MO2 starts it "
-                    "through me3 from its mod. {0} The game was not started.").format(missing),
-                )
-                qWarning(f"Elden Ring MO2: Seamless Co-op cannot start through me3: {missing}")
-                return None
-        profile = self._write_me3_profile(
-            "mo2-seamless.me3" if seamless_dll is not None else "mo2.me3", seamless_dll
-        )
-        if seamless_dll is not None and seamless_mod:
-            # Seamless still writes its crash dumps beside the game
-            # (Game/SeamlessCoop/crashdumps): the session remembers to tidy that up
-            self._record_seamless_tidy(
-                game_folder / "SeamlessCoop", seamless_dll.parent / "crashdumps"
-            )
+        me3 = Path(app_path)
+        extra = self.me3_profile_natives(args)
+        profile = self._write_me3_profile("mo2.me3", extra)
         qInfo(
-            f"Elden Ring MO2: '{Path(app_path).name}' starts me3 ('{me3}') with MO2's mod list"
-            + (f" and Seamless Co-op from '{seamless_mod or game_folder}'" if seamless_dll else "")
+            f"Elden Ring MO2: '{me3.name}' starts with MO2's mod list"
+            + (f" and {len(extra)} native DLL(s) from its own profile" if extra else "")
             + "; the game folder is left alone."
         )
         return str(me3), str(me3.parent), f'launch -p "{profile}"'
-
-    def _record_seamless_tidy(self, folder: Path, dumps_to: Path) -> None:
-        session = self._active_save_quarantine
-        if session is None:
-            return
-        manifest_path = session / self.SaveRecoveryManifestName
-        try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            swap = manifest.get("swap")
-            if not isinstance(swap, dict):
-                return
-            swap["seamless_game_folder"] = {
-                "folder": str(folder),
-                "existed": folder.exists(),
-                "dumps_to": str(dumps_to),
-            }
-            self._write_save_quarantine_manifest(session, manifest)
-        except (OSError, UnicodeError, ValueError, AttributeError) as error:
-            qWarning(f"Elden Ring MO2: could not note the Seamless folder to tidy: {error}")
-
-    @staticmethod
-    def tidy_seamless_game_folder(record: dict) -> None:
-        """After a Seamless run through me3: its crash dumps move to the mod,
-        and the SeamlessCoop folder it made in the game folder goes away (only
-        when it did not exist before and holds no other file)."""
-        folder = Path(str(record.get("folder", "")))
-        dumps_to = Path(str(record.get("dumps_to", "")))
-        if not folder.is_absolute() or not folder.is_dir() or folder.name != "SeamlessCoop":
-            return
-        dumps = folder / "crashdumps"
-        if dumps.is_dir() and dumps_to.is_absolute():
-            for entry in list(dumps.rglob("*")):
-                if entry.is_file():
-                    target = dumps_to / entry.relative_to(dumps)
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    if target.exists():
-                        target = target.with_name(f"{target.stem}.{uuid.uuid4().hex[:8]}{target.suffix}")
-                    shutil.move(str(entry), str(target))
-        if record.get("existed"):
-            return
-        if any(entry.is_file() for entry in folder.rglob("*")):
-            qWarning(f"Elden Ring MO2: '{folder}' holds other files; it was left in place.")
-            return
-        shutil.rmtree(folder)
-        qInfo(f"Elden Ring MO2: removed '{folder}', which Seamless Co-op made in the game folder.")
 
     def _start_outside_vfs(self, app_path: str, working_directory, args: str) -> bool:
         """Starts a launcher without MO2's hooks (QProcess runs it as a plain
@@ -3214,6 +3150,15 @@ class EldenRingMo2Game(BasicGame):
             # hidden Steam saves of a game that may still be running, nor the
             # Overwrite cleanup and save restore that wait for that game
             return True
+        if Path(app_path).name.casefold() in self.SeamlessLaunchers and self._seamless_initializer():
+            # Seamless Co-op from its MO2 mod starts with the game run inside
+            # the VFS, so its launcher hands over to the game's own executable
+            QTimer.singleShot(0, self._start_game_for_seamless)
+            qInfo(
+                f"Elden Ring MO2: '{Path(app_path).name}' hands over to {self.GameProcess}, "
+                "which MO2 starts with Seamless Co-op from its mod."
+            )
+            return False
         if self._active_save_quarantine is not None:
             starting = time.monotonic() < self._launch_pending_until
             if starting or self._elden_ring_process_state() is not False:
@@ -3476,7 +3421,10 @@ class EldenRingMo2Game(BasicGame):
         )
         if swap_launch:
             return self._run_swap_launch(app_path, _working_directory, _args or "")
-        initializer_entries = initializer_entries + self._seamless_initializer()
+        if direct_game:
+            # Seamless Co-op only with the game run from MO2: Mod Engine 2
+            # starts without it unless its own config adds it
+            initializer_entries = initializer_entries + self._seamless_initializer()
         self._activate_profile_config_environment(profile_config, initializer_entries)
         # a new run only once nothing above blocked the launch: a blocked
         # attempt must not disown the watch of a game that is still running
@@ -4653,6 +4601,9 @@ class EldenRingMo2Game(BasicGame):
     def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
         if not self.isActive():
             return []
+        # MO2 asks again for every executable and refresh; the summary is
+        # logged only when it changes
+        notes: list[str] = []
 
         mod_list = self._organizer.modList()
         profile_order = list(mod_list.allModsByProfilePriority())
@@ -4689,13 +4640,14 @@ class EldenRingMo2Game(BasicGame):
             )
 
         if not active_mods and not bridge_startup_options:
-            qInfo(
+            notes.append(
                 "Elden Ring MO2: no active mods or bridge-dependent profile "
                 "options; no native or asset bridge needed."
             )
+            self._log_forced_load_notes(notes)
             return []
         if not active_mods:
-            qInfo(
+            notes.append(
                 "Elden Ring MO2: no active mods; loading the native bridge "
                 "because bridge-dependent profile options are enabled."
             )
@@ -4744,20 +4696,20 @@ class EldenRingMo2Game(BasicGame):
                 if not queued_elsewhere(item[0], Path(item[2]))
             ]
         if not native_loading:
-            qInfo("Elden Ring MO2: native DLL loading is disabled in plugin settings.")
+            notes.append("Elden Ring MO2: native DLL loading is disabled in plugin settings.")
         if not libraries and not root_layout_libraries and active_mods:
-            qInfo(
+            notes.append(
                 "Elden Ring MO2: no active winning DLLs found under "
                 "Game/DLLs/, legacy managed folders, or preserved root layouts."
             )
 
         if libraries:
-            qInfo(
+            notes.append(
                 "Elden Ring MO2: requesting MO2 forced loads for "
                 f"{len(libraries)} active mod DLL(s)."
             )
             for library in libraries:
-                qInfo(f"Elden Ring MO2: queued native DLL {library.name}.")
+                notes.append(f"Elden Ring MO2: queued native DLL {library.name}.")
         mod_forced_loads = [
             mobase.ExecutableForcedLoadSetting(
                 self.GameProcess, str(library)
@@ -4765,7 +4717,7 @@ class EldenRingMo2Game(BasicGame):
             for library in libraries
         ]
         if root_layout_libraries:
-            qInfo(
+            notes.append(
                 "Elden Ring MO2: requesting MO2 forced loads for "
                 f"{len(root_layout_libraries)} active root-layout DLL(s)."
             )
@@ -4778,7 +4730,7 @@ class EldenRingMo2Game(BasicGame):
                     kind = "root loader DLL"
                 else:
                     kind = "standard root DLL"
-                qInfo(
+                notes.append(
                     f"Elden Ring MO2: queued {kind} {virtual_name} "
                     f"from active mod {mod_name}."
                 )
@@ -4792,19 +4744,19 @@ class EldenRingMo2Game(BasicGame):
         bridge_load = None
         if bridge.is_file():
             if active_mods:
-                qInfo(
+                notes.append(
                     "Elden Ring MO2: queued native and loose-asset bridge "
                     f"{bridge.name} for {len(active_mods)} active mod(s)."
                 )
             else:
-                qInfo(
+                notes.append(
                     "Elden Ring MO2: queued native bridge "
                     f"{bridge.name} for profile startup options."
                 )
             bridge_load = mobase.ExecutableForcedLoadSetting(
                 Path(self.GameBinary).name, str(bridge)
             ).withEnabled(True)
-            qInfo(
+            notes.append(
                 "Elden Ring MO2: placing the bridge before mod DLLs so its "
                 "startup window hooks are installed as early as possible."
             )
@@ -4825,17 +4777,36 @@ class EldenRingMo2Game(BasicGame):
         forced_loads.extend(mod_forced_loads)
         # Seamless Co-op from its active mod: loaded with the others, and
         # started by the bridge through its Mod Engine 2 entry point once
-        # the game runs (see _seamless_initializer)
+        # the game runs (see _seamless_initializer); launchers such as Mod
+        # Engine 2 get no initializer, so there it stays inactive
         seamless = self._active_seamless_dll() if native_loading else None
         if seamless is not None and all(
             os.path.normcase(str(Path(load.library()))) != os.path.normcase(str(seamless))
             for load in forced_loads
         ):
-            qInfo(f"Elden Ring MO2: queued Seamless Co-op ({seamless.name}) from its MO2 mod.")
+            notes.append(f"Elden Ring MO2: queued Seamless Co-op ({seamless.name}) from its MO2 mod.")
             forced_loads.append(
                 mobase.ExecutableForcedLoadSetting(self.GameProcess, str(seamless)).withEnabled(True)
             )
+        self._log_forced_load_notes(notes)
         return forced_loads
+
+    def _log_forced_load_notes(self, notes: list[str]) -> None:
+        if notes == getattr(self, "_last_forced_load_notes", None):
+            return
+        self._last_forced_load_notes = list(notes)
+        for note in notes:
+            qInfo(note)
+
+    def _start_game_for_seamless(self) -> None:
+        game = Path(self.gameDirectory().absolutePath(), self.GameBinary)
+        try:
+            handle = self._organizer.startApplication(str(game))
+        except (AttributeError, RuntimeError) as error:
+            qCritical(f"Elden Ring MO2: could not start {game.name} for Seamless Co-op: {error}")
+            return
+        if handle:
+            ctypes.windll.kernel32.CloseHandle(wintypes.HANDLE(int(handle)))
 
     def _active_seamless_dll(self) -> Path | None:
         found = self.seamless_dll_in_mods([mod for mod in self._mod_folders() if mod[2]])
