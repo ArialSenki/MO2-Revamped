@@ -258,19 +258,24 @@ void ProblemsDialog::runDiagnosis()
     }
 
     const auto* plugin = dynamic_cast<const IPlugin*>(diagnose);
-    const QString source =
-        plugin != nullptr ? plugin->localizedName() : QStringLiteral("Mod Organizer");
+    // the basic diagnosis plugin has no translated name of its own
+    const bool basic =
+        plugin != nullptr && plugin->name() == QLatin1String("Basic diagnosis plugin");
+    const QString source = plugin == nullptr ? QStringLiteral("Mod Organizer")
+                           : basic           ? tr("Basic diagnosis")
+                                             : plugin->localizedName();
 
     std::vector<unsigned int> activeProblems = diagnose->activeProblems();
     for (unsigned int key : activeProblems) {
-      const QString shortDescription = diagnose->shortDescription(key);
-      const QString fullDescription  = diagnose->fullDescription(key);
       // the basic diagnosis plugin's Overwrite notice, recognized by its key
       // so translated texts are recognized too; other notices that merely
       // mention Overwrite keep their own text
-      const bool isOverwrite =
-          plugin != nullptr && plugin->name() == QLatin1String("Basic diagnosis plugin") &&
-          key == BasicOverwriteProblem;
+      const bool isOverwrite = basic && key == BasicOverwriteProblem;
+      // its title names Overwrite as the rest of MO2 does (the translations
+      // called it "directorio mod Sobrescribir")
+      const QString shortDescription = isOverwrite ? tr("There are files in Overwrite")
+                                                   : diagnose->shortDescription(key);
+      const QString fullDescription  = diagnose->fullDescription(key);
 
       auto* item = new QListWidgetItem(shortDescription, m_list);
       item->setData(FluentPanels::CaptionRole, source);

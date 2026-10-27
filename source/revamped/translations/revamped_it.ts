@@ -7970,6 +7970,14 @@ Per conservare alcuni file, spostali prima in una mod.</translation>
   <context>
     <name>ProblemsDialog</name>
     <message>
+      <source>Basic diagnosis</source>
+      <translation>Diagnostica di base</translation>
+    </message>
+    <message>
+      <source>There are files in Overwrite</source>
+      <translation>Ci sono file in Overwrite</translation>
+    </message>
+    <message>
       <source>Review messages from MO2 and its plugins. Select an item to see what it means and what you can do.</source>
       <translation>Consulta i messaggi di MO2 e dei suoi plugin. Seleziona un elemento per capire cosa significa e cosa puoi fare.</translation>
     </message>

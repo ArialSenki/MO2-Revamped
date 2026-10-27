@@ -7908,6 +7908,14 @@ Pour garder certains fichiers, déplacez-les d&apos;abord dans un mod.</translat
   <context>
     <name>ProblemsDialog</name>
     <message>
+      <source>Basic diagnosis</source>
+      <translation>Diagnostic de base</translation>
+    </message>
+    <message>
+      <source>There are files in Overwrite</source>
+      <translation>Overwrite contient des fichiers</translation>
+    </message>
+    <message>
       <source>Review messages from MO2 and its plugins. Select an item to see what it means and what you can do.</source>
       <translation>Consultez les messages de MO2 et de ses plugins. Sélectionnez un élément pour savoir ce qu'il signifie et ce que vous pouvez faire.</translation>
     </message>

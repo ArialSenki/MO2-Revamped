@@ -434,7 +434,7 @@ void MainWindow::applyFluentActionIcons()
       {ui->actionSettings, 0xE713},            // Settings
       {ui->actionEndorseMO, 0xEB51},           // Heart
       {ui->actionNotifications, 0xEA8F},       // Ringer
-      {ui->actionUpdate, 0xE895},              // Sync
+      {ui->actionUpdate, 0xE8A7},              // OpenInNewWindow: the repository
       {ui->actionHelp, 0xE897},                // Help
       {m_fluentOverflowAction, MoreGlyph},
   };

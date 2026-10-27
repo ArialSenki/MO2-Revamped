@@ -7050,7 +7050,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Endorsement state unknown</source>
-      <translation>Estado del aval desconocido</translation>
+      <translation>Estado del respaldo desconocido</translation>
     </message>
     <message>
       <source>Review and manage files...</source>
@@ -7805,6 +7805,14 @@ Para conservar algunos archivos, muévelos antes a un mod.</translation>
   </context>
   <context>
     <name>ProblemsDialog</name>
+    <message>
+      <source>Basic diagnosis</source>
+      <translation>Diagnóstico básico</translation>
+    </message>
+    <message>
+      <source>There are files in Overwrite</source>
+      <translation>Hay archivos en Overwrite</translation>
+    </message>
     <message>
       <source>Review messages from MO2 and its plugins. Select an item to see what it means and what you can do.</source>
       <translation>Revisa los mensajes de MO2 y sus plugins. Selecciona un elemento para ver qué significa y qué puedes hacer.</translation>

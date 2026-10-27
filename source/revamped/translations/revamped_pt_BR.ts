@@ -7714,6 +7714,14 @@ Para manter alguns arquivos, mova-os para um mod antes.</translation>
   <context>
     <name>ProblemsDialog</name>
     <message>
+      <source>Basic diagnosis</source>
+      <translation>Diagnóstico básico</translation>
+    </message>
+    <message>
+      <source>There are files in Overwrite</source>
+      <translation>Há arquivos em Overwrite</translation>
+    </message>
+    <message>
       <source>Review messages from MO2 and its plugins. Select an item to see what it means and what you can do.</source>
       <translation>Revise as mensagens do MO2 e dos plugins. Selecione um item para ver o que significa e o que você pode fazer.</translation>
     </message>
