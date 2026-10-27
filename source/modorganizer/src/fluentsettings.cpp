@@ -8,6 +8,7 @@
 #include <QKeySequenceEdit>
 #include <QLineEdit>
 #include <QScrollArea>
+#include <QSplitter>
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <QEvent>
@@ -694,6 +695,188 @@ void switchRows(QWidget* root)
   }
   root->setProperty("fluentSwitchRows", true);
   makeRows(root, true);
+}
+
+}  // namespace FluentSettings
+
+namespace
+{
+// one geometry for every Settings page: the pages were built at different
+// times and each set its own margins, so headers and cards sat a few pixels
+// apart from page to page
+constexpr int PageMargin    = 9;
+constexpr int HeaderSpacing = 6;
+constexpr int CardGap       = 12;
+constexpr int CardMargin    = 9;
+constexpr int CardSpacing   = 6;
+
+bool layoutHolds(QLayout* layout, const QWidget* w)
+{
+  for (int i = 0; i < layout->count(); ++i) {
+    QLayoutItem* item = layout->itemAt(i);
+    if (item->widget() == w || (item->layout() != nullptr && layoutHolds(item->layout(), w))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+QLabel* pageLabel(QWidget* page, std::initializer_list<QLatin1String> suffixes)
+{
+  for (QLabel* label : page->findChildren<QLabel*>()) {
+    for (const QLatin1String& suffix : suffixes) {
+      if (label->objectName().endsWith(suffix)) {
+        return label;
+      }
+    }
+  }
+  return nullptr;
+}
+
+// puts the page's title and subtitle in one header, so the gap between them
+// no longer depends on the spacing between the cards; returns the layout the
+// header sits in, or nothing when the page has no such pair
+QBoxLayout* makeHeader(QWidget* page)
+{
+  QLabel* title    = pageLabel(page, {QLatin1String("PageTitle")});
+  QLabel* subtitle = pageLabel(page, {QLatin1String("PageSubtitle"), QLatin1String("PageDescription")});
+  if (title == nullptr || subtitle == nullptr) {
+    return nullptr;
+  }
+
+  QList<QBoxLayout*> layouts = page->findChildren<QBoxLayout*>();
+  if (auto* own = qobject_cast<QBoxLayout*>(page->layout())) {
+    layouts.prepend(own);
+  }
+  for (QBoxLayout* layout : layouts) {
+    int first = -1, last = -1;
+    for (int i = 0; i < layout->count(); ++i) {
+      QLayoutItem* item = layout->itemAt(i);
+      auto holds = [item](const QWidget* w) {
+        return item->widget() == w ||
+               (item->layout() != nullptr && layoutHolds(item->layout(), w));
+      };
+      if (holds(title)) {
+        first = i;
+      } else if (first >= 0 && holds(subtitle)) {
+        last = i;
+        break;
+      }
+    }
+    if (first < 0 || last < 0) {
+      continue;
+    }
+
+    auto* header = new QWidget;
+    header->setObjectName(QStringLiteral("fluentPageHeader"));
+    auto* headerLayout = new QVBoxLayout(header);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+    headerLayout->setSpacing(HeaderSpacing);
+    for (int i = first; i <= last; ++i) {
+      QLayoutItem* item = layout->takeAt(first);
+      if (QWidget* w = item->widget()) {
+        headerLayout->addWidget(w);
+        delete item;
+      } else if (QLayout* inner = item->layout()) {
+        inner->setParent(nullptr);
+        headerLayout->addLayout(inner);
+      } else {
+        delete item;
+      }
+    }
+    layout->insertWidget(first, header);
+    return layout;
+  }
+  return nullptr;
+}
+
+// the same gap between all cards, however a page nests them; returns whether
+// the layout holds a card
+bool spaceCards(QLayout* layout)
+{
+  bool holds = false;
+  for (int i = 0; i < layout->count(); ++i) {
+    QLayoutItem* item = layout->itemAt(i);
+    QLayout* inner    = item->layout();
+    if (QWidget* w = item->widget()) {
+      if (asCard(w) != nullptr) {
+        holds = true;
+        continue;
+      }
+      if (auto* scroll = qobject_cast<QScrollArea*>(w)) {
+        inner = scroll->widget() != nullptr ? scroll->widget()->layout() : nullptr;
+      } else if (qobject_cast<QSplitter*>(w) == nullptr) {
+        inner = w->layout();
+      }
+    }
+    if (inner != nullptr && spaceCards(inner)) {
+      // a scroll area below the header keeps the page margin on its right,
+      // where the cards of the pages that scroll whole end
+      const bool scrolls = qobject_cast<QScrollArea*>(item->widget()) != nullptr;
+      inner->setContentsMargins(0, 0, scrolls ? PageMargin : 0, 0);
+      holds = true;
+    }
+  }
+  if (holds) {
+    if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+      grid->setHorizontalSpacing(CardGap);
+      grid->setVerticalSpacing(CardGap);
+    } else {
+      layout->setSpacing(CardGap);
+    }
+  }
+  return holds;
+}
+}  // namespace
+
+namespace FluentSettings
+{
+
+void normalizePage(QWidget* page)
+{
+  if (page == nullptr || page->property("fluentNormalized").toBool()) {
+    return;
+  }
+  page->setProperty("fluentNormalized", true);
+
+  QBoxLayout* content = makeHeader(page);
+  if (content == nullptr) {
+    return;
+  }
+
+  // the header's layout alone keeps the page margin; the layouts and scroll
+  // areas holding it add none
+  content->setContentsMargins(PageMargin, PageMargin, PageMargin, PageMargin);
+  QWidget* holder = content->parentWidget();
+  for (QWidget* w = holder; w != nullptr && w != page->parentWidget(); w = w->parentWidget()) {
+    if (w != holder && w->layout() != nullptr) {
+      w->layout()->setContentsMargins(0, 0, 0, 0);
+    }
+    if (w == page) {
+      break;
+    }
+  }
+  spaceCards(content);
+  // the header keeps the cards' gap below it
+  content->setSpacing(CardGap);
+
+  // and the same inner margins in every card; cards inside cards keep theirs
+  for (QGroupBox* group : page->findChildren<QGroupBox*>()) {
+    bool nested = false;
+    for (QWidget* w = group->parentWidget(); w != nullptr && w != page; w = w->parentWidget()) {
+      if (asCard(w) != nullptr) {
+        nested = true;
+        break;
+      }
+    }
+    if (nested || group->layout() == nullptr) {
+      continue;
+    }
+    group->layout()->setContentsMargins(CardMargin, CardMargin, CardMargin, CardMargin);
+    if (qobject_cast<QBoxLayout*>(group->layout()) != nullptr) {
+      group->layout()->setSpacing(CardSpacing);
+    }
+  }
 }
 
 }  // namespace FluentSettings

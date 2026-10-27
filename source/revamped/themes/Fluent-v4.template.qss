@@ -2066,6 +2066,15 @@ QDialog#SettingsDialog QWidget#developerTab QLabel#generalSectionTitle {
 QDialog#SettingsDialog QWidget#developerTab QGroupBox {
     margin-top: 3px;
 }
+/* the Developer page is built in code: its title and subtitle sit like the
+   other pages' ones */
+QDialog#SettingsDialog QWidget#developerTab QLabel#developerPageTitle {
+    padding: 2px 0px 0px 0px;
+}
+QDialog#SettingsDialog QWidget#developerTab QLabel#developerPageSubtitle {
+    font-size: 9pt;
+    padding: 1px 0px 3px 0px;
+}
 
 /* the Elden Ring save rows of the New instance wizard (Save Isolation): their
    texts read as the other rows' descriptions */

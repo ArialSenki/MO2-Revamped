@@ -21,10 +21,12 @@ DeveloperSettingsTab::DeveloperSettingsTab(Settings& s, SettingsDialog& d, QWidg
   layout->setSpacing(12);
 
   auto* heading = new QLabel(QObject::tr("Developer"), page);
+  heading->setObjectName(QStringLiteral("developerPageTitle"));
   heading->setProperty("wizardPageTitle", true);
   auto* text = new QLabel(QObject::tr("Features still in testing. They may change or go away, "
                                       "and none of them is needed to play."),
                           page);
+  text->setObjectName(QStringLiteral("developerPageSubtitle"));
   text->setProperty("wizardPageText", true);
   text->setWordWrap(true);
   layout->addWidget(heading);

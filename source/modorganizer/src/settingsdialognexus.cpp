@@ -64,8 +64,8 @@ QWidget* wrapNexusGroupInCard(QGroupBox* group, const QString& cardObjectName,
 
   auto* cardLayout = new QVBoxLayout(card);
   // the inset of the other Settings pages' cards
-  cardLayout->setContentsMargins(18, 16, 18, 14);
-  cardLayout->setSpacing(8);
+  cardLayout->setContentsMargins(20, 22, 20, 18);
+  cardLayout->setSpacing(6);
 
   auto* heading = new QLabel(group->title(), card);
   heading->setObjectName(headingObjectName);

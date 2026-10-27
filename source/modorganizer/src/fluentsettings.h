@@ -23,6 +23,11 @@ void restyle(QWidget* root, bool allowScroll = true);
 // label placed right below a check box becomes the row's description.
 void switchRows(QWidget* root);
 
+// gives a Settings page the shared geometry: one header for its title and
+// subtitle, and the same page margin, gap between cards and card margins on
+// every page; call after restyle() and before scrollAtEdge()
+void normalizePage(QWidget* page);
+
 // puts a page without a scroll area into one; restyle() does this too, but
 // pages built lazily need it up front so they do not inflate the dialog
 void wrapInScrollArea(QWidget* page);

@@ -321,6 +321,7 @@ void SettingsDialog::initializeTab(int index)
   perf.lap(qPrintable(ui->tabWidget->widget(index)->objectName()));
   if (FluentIcons::active()) {
     FluentSettings::restyle(ui->tabWidget->widget(index));
+    FluentSettings::normalizePage(ui->tabWidget->widget(index));
     FluentSettings::scrollAtEdge(ui->tabWidget->widget(index));
     perf.lap("restyle");
   }
