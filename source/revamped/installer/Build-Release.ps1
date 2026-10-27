@@ -244,6 +244,11 @@ function Test-ExcludedRuntimeFile {
     if ($normalized -match '^stylesheets\\\+(dark|light)\.qss$') {
         return $true
     }
+    # Dark Black is retired (a stored choice becomes Dark); the 1.0.1 runtime
+    # still carries it and its icon folder
+    if ($normalized -match '^stylesheets\\(dark-black\.qss$|mo2-classic-refined-black\\)') {
+        return $true
+    }
     if ($normalized -match '^plugins\\plugin_python\\data\\settings\.json$') {
         return $true
     }
