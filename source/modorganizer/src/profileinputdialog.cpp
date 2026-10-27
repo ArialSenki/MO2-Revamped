@@ -25,8 +25,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluenticons.h"
 #include "fluentpanels.h"
 #include <QCheckBox>
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QVBoxLayout>
 
 ProfileInputDialog::ProfileInputDialog(QWidget* parent)
     : ProfileInputDialog(parent, Purpose::Create, QString())
@@ -37,7 +41,6 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
     : QDialog(parent), ui(new Ui::ProfileInputDialog)
 {
   ui->setupUi(this);
-  setWindowTitle(tr("MO2 Revamped"));
   setMinimumWidth(520);
   ui->nameEdit->setClearButtonEnabled(true);
 
@@ -94,6 +97,11 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
     cancelButton->setObjectName("profileCancelButton");
   }
 
+  setWindowTitle(ui->profilePageTitle->text());
+  if (FluentIcons::active()) {
+    useContentDialogLayout();
+  }
+
   connect(ui->nameEdit, &QLineEdit::textChanged, this,
           [this]() { updateAcceptState(); });
   ui->nameEdit->setFocus(Qt::OtherFocusReason);
@@ -117,14 +125,79 @@ bool ProfileInputDialog::getPreferDefaultSettings() const
   return ui->defaultSettingsBox->checkState() == Qt::Checked;
 }
 
+// Fluent v4: the same shape as FluentContentDialog (title, text, the fields,
+// then the buttons on the footer band), so it matches the other prompts; the
+// widgets keep their names for the themes and for the plugins that look them
+// up
+void ProfileInputDialog::useContentDialogLayout()
+{
+  m_accept = ui->buttonBox->button(QDialogButtonBox::Ok);
+  QPushButton* cancel = ui->buttonBox->button(QDialogButtonBox::Cancel);
+  for (QPushButton* button : {m_accept, cancel}) {
+    ui->buttonBox->removeButton(button);
+    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    button->setMinimumWidth(110);
+  }
+  m_accept->setProperty("fluentPrimary", true);
+  connect(m_accept, &QPushButton::clicked, this, &QDialog::accept);
+  connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+  ui->buttonBox->hide();
+  ui->profileInputDivider->hide();
+  ui->profileHeaderLayout->removeWidget(ui->profilePageTitle);
+  ui->profileHeaderLayout->removeWidget(ui->profilePageSubtitle);
+  ui->profileHeader->hide();
+
+  // deleting the layouts keeps their widgets, which the new ones take
+  delete layout();
+  setProperty("fluentContentDialog", true);
+  ui->profilePageTitle->setObjectName(QStringLiteral("fluentDialogTitle"));
+  ui->profilePageSubtitle->setObjectName(QStringLiteral("fluentDialogText"));
+  ui->profileNameLabel->setObjectName(QStringLiteral("instanceNameLabel"));
+
+  auto* outer = new QVBoxLayout(this);
+  outer->setContentsMargins(0, 0, 0, 0);
+  outer->setSpacing(0);
+
+  auto* content = new QWidget(this);
+  content->setObjectName(QStringLiteral("fluentDialogContent"));
+  auto* contentLayout = new QVBoxLayout(content);
+  contentLayout->setContentsMargins(24, 20, 24, 24);
+  contentLayout->setSpacing(8);
+  contentLayout->addWidget(ui->profilePageTitle);
+  contentLayout->addWidget(ui->profilePageSubtitle);
+  contentLayout->addSpacing(8);
+  contentLayout->addWidget(ui->profileNameLabel);
+  contentLayout->addWidget(ui->nameEdit);
+  contentLayout->addSpacing(8);
+  contentLayout->addWidget(ui->profileSettingsCard);
+  contentLayout->addStretch(1);
+  outer->addWidget(content, 1);
+
+  auto* band = new QFrame(this);
+  band->setObjectName(QStringLiteral("fluentDialogFooter"));
+  auto* buttons = new QHBoxLayout(band);
+  buttons->setContentsMargins(24, 24, 24, 24);
+  buttons->setSpacing(8);
+  buttons->addWidget(m_accept);
+  buttons->addWidget(cancel);
+  outer->addWidget(band);
+
+  // on the content, so adjustSize() wraps the text at the width it gets
+  // (on the dialog it measured a narrower wrap and left a blank line)
+  setMinimumWidth(0);
+  content->setMinimumWidth(460);
+  adjustSize();
+}
+
 void ProfileInputDialog::updateAcceptState()
 {
   const QString name = ui->nameEdit->text();
   QString normalizedName = name;
   const bool valid = MOBase::fixDirectoryName(normalizedName) &&
                      !normalizedName.isEmpty();
-  if (QPushButton* acceptButton =
-          ui->buttonBox->button(QDialogButtonBox::Ok)) {
+  QPushButton* acceptButton =
+      m_accept != nullptr ? m_accept : ui->buttonBox->button(QDialogButtonBox::Ok);
+  if (acceptButton != nullptr) {
     acceptButton->setEnabled(valid);
   }
 }

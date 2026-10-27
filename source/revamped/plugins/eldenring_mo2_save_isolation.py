@@ -2891,6 +2891,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if default_ini_checkbox is None:
             return False
         settings_card = dialog.findChild(QFrame, "profileSettingsCard")
+        # the Fluent layout renames the subtitle as the content dialogs' text
+        subtitle = dialog.findChild(QLabel, "fluentDialogText") or dialog.findChild(
+            QLabel, "profilePageSubtitle"
+        )
 
         should_hide = (
             self._dialog_ui_enabled() and self._active_instance_is_elden_ring()
@@ -2906,9 +2910,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             if not default_ini_checkbox.isHidden():
                 default_ini_checkbox.hide()
-                # its card holds only this option and its explanation
+                # its card holds only this option and its explanation; the
+                # create subtitle (the card shows only then) then no longer
+                # offers a choice of game settings
+                card_shown = settings_card is not None and not settings_card.isHidden()
                 if settings_card is not None:
                     settings_card.hide()
+                if card_shown and subtitle is not None:
+                    subtitle.setProperty("_eldenRingOriginalSubtitle", subtitle.text())
+                    subtitle.setText(_tr("Name this profile."))
                 layout = dialog.layout()
                 if layout is not None:
                     layout.invalidate()
@@ -2917,6 +2927,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             default_ini_checkbox.setVisible(bool(original_visible))
             if settings_card is not None:
                 settings_card.setVisible(bool(original_visible))
+            if subtitle is not None:
+                original_subtitle = subtitle.property("_eldenRingOriginalSubtitle")
+                if original_subtitle:
+                    subtitle.setText(original_subtitle)
+                    subtitle.setProperty("_eldenRingOriginalSubtitle", None)
             default_ini_checkbox.setProperty(
                 "_eldenRingOriginalDefaultIniVisible", None
             )

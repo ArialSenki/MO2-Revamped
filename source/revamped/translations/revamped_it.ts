@@ -2432,6 +2432,10 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
   <context>
     <name>EldenRingSaveIsolation</name>
     <message>
+      <source>Name this profile.</source>
+      <translation>Dai un nome a questo profilo.</translation>
+    </message>
+    <message>
       <source>Choose Elden Ring save routes and named game save profiles, inspect the active save path, and import or transfer .sl2 saves.</source>
       <translation>Scegli i percorsi dei salvataggi di Elden Ring e i profili di salvataggio con nome, controlla il percorso attivo e importa o trasferisci salvataggi .sl2.</translation>
     </message>

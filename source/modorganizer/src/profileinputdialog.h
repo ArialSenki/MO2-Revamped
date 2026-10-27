@@ -23,6 +23,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDialog>
 #include <QString>
 
+class QPushButton;
+
 namespace Ui
 {
 class ProfileInputDialog;
@@ -50,8 +52,10 @@ public:
 
 private:
   void updateAcceptState();
+  void useContentDialogLayout();
 
   Ui::ProfileInputDialog* ui;
+  QPushButton* m_accept = nullptr;
 };
 
 #endif  // PROFILEINPUTDIALOG_H
