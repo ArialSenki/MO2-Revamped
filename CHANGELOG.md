@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased
+## 1.1.0-beta.1 (pre-release) — October 27, 2026
+
+A pre-release: some details are still under review.
+
+### Design review (October 27)
+
+- Every window checked in Light and Dark: the plugins' glyph buttons no
+  longer vanish on Dark, tool menu entries get their own icons, and lists,
+  combo boxes and fields line up in Executables, Save Isolation and Settings.
+- Prompts (profile name, install as a new mod, archive password) use the
+  Fluent dialog layout with their own window titles; the Elden Ring archive
+  installer is laid out in cards.
+- Settings: pages are titled as the side menu, Nexus cards align, paths show
+  Windows separators, and a plugin's description is no longer cut off.
+- Main window: the Saves list shows name and date, the side lists fit without
+  a needless horizontal scroll bar, and the Overwrite notification has a
+  readable title.
+- Spanish texts revised throughout (Ajustes, Overwrite, plurals, one voice
+  in descriptions); new strings in German, French, Italian and Portuguese.
 
 ### Seamless Co-op and launchers
 

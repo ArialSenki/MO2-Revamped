@@ -181,7 +181,7 @@ namespace Mo2RevampedSetup
                 lock (Sync) CurrentLog = Path.Combine(root, "setup-" + suffix + ".log");
 
                 Info("Installer session started.");
-                Info("Product: MO2 Revamped setup 1.0.2; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
+                Info("Product: MO2 Revamped setup 1.1.0-beta.1; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
                     "; OS: " + Environment.OSVersion.VersionString +
                     "; .NET: " + Environment.Version +
                     "; 64-bit process: " + Environment.Is64BitProcess + ".");
