@@ -1058,6 +1058,14 @@ Los cambios se guardan al elegir Aceptar.</translation>
   <context>
     <name>EditExecutablesDialog</name>
     <message>
+      <source>Executables</source>
+      <translation>Ejecutables</translation>
+    </message>
+    <message>
+      <source>Title</source>
+      <translation>Título</translation>
+    </message>
+    <message>
       <source>Configure launch targets</source>
       <translation>Configurar destinos de ejecución</translation>
     </message>

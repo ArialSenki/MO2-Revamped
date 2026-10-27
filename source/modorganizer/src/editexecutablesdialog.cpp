@@ -1153,6 +1153,8 @@ void EditExecutablesDialog::buildFluentLayout()
   root->addLayout(footer);
   connect(help, &QToolButton::clicked, this, &EditExecutablesDialog::showFluentHelp);
 
+  // the toolbar's name for it, as Profiles shows its own
+  setWindowTitle(tr("Executables"));
   setMinimumSize(900, 600);
   resize(std::max(width(), 1000), std::max(height(), 700));
 
@@ -1203,8 +1205,16 @@ QWidget* EditExecutablesDialog::createFluentListCard()
   add->setObjectName(QStringLiteral("executableAddButton"));
   add->setAutoDefault(false);
   if (QMenu* menu = ui->add->menu()) {
+    // the glyphs and names of the list's menu and the Duplicate button
+    const QList<QAction*> actions = menu->actions();
+    if (actions.size() >= 3) {
+      actions[0]->setIcon(FluentIcons::glyph(0xE710));
+      actions[1]->setIcon(FluentIcons::glyph(0xE7C3));
+      actions[2]->setIcon(FluentIcons::glyph(0xE8C8));
+      actions[2]->setText(tr("Duplicate"));
+    }
     menu->addSeparator();
-    menu->addAction(tr("Restore the game's programs..."), this,
+    menu->addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs..."), this,
                     &EditExecutablesDialog::on_reset_clicked);
     add->setMenu(menu);
   }
@@ -1263,6 +1273,13 @@ QWidget* EditExecutablesDialog::createFluentDetails()
     browse->setFixedWidth(40);
     browse->setProperty("fluentKeepIcon", true);
   }
+
+  // one column for the fields: a path and its browse button take the width
+  // of a field alone (the row's spacing is 14)
+  ui->title->setFixedWidth(380);
+  ui->arguments->setFixedWidth(380);
+  ui->binary->setFixedWidth(380 - 14 - 40);
+  ui->workingDirectory->setFixedWidth(380 - 14 - 40);
 
   using FluentPanels::addEditRow;
   addEditRow(rows, 0xE8AC, tr("Title"), tr("The name in the Program list"), {ui->title});
@@ -1416,7 +1433,8 @@ void EditExecutablesDialog::showFluentListMenu(const QPoint& pos)
   if (item == nullptr) {
     menu.addAction(FluentIcons::glyph(0xE710), tr("Add from file..."), this,
                    [this] { addFromFile(); });
-    menu.addAction(tr("Add empty"), this, [this] { addEmpty(); });
+    menu.addAction(FluentIcons::glyph(0xE7C3), tr("Add empty"), this,
+                   [this] { addEmpty(); });
     menu.addSeparator();
     menu.addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs..."), this,
                    &EditExecutablesDialog::on_reset_clicked);

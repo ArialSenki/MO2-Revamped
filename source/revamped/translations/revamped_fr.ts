@@ -1050,6 +1050,10 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
   <context>
     <name>EditExecutablesDialog</name>
     <message>
+      <source>Executables</source>
+      <translation>Exécutables</translation>
+    </message>
+    <message>
       <source>Configure launch targets</source>
       <translation>Configurer les cibles de lancement</translation>
     </message>

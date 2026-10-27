@@ -1046,6 +1046,10 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
   <context>
     <name>EditExecutablesDialog</name>
     <message>
+      <source>Executables</source>
+      <translation>Ausführbare Dateien</translation>
+    </message>
+    <message>
       <source>Configure launch targets</source>
       <translation>Startziele einrichten</translation>
     </message>

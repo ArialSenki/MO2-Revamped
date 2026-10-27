@@ -1088,6 +1088,10 @@ Le modifiche vengono salvate quando scegli OK.</translation>
   <context>
     <name>EditExecutablesDialog</name>
     <message>
+      <source>Executables</source>
+      <translation>Eseguibili</translation>
+    </message>
+    <message>
       <source>Configure launch targets</source>
       <translation>Configura le destinazioni di avvio</translation>
     </message>
