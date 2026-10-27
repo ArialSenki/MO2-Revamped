@@ -1,5 +1,19 @@
 # Release audit
 
+## Pre-release — October 27, 2026 (v1.1.0-beta.1)
+
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.1.exe`, 378 MB, SHA-256
+  `475058056B6EFEDE779EECAD98E68514A36C3103F1556D048F906538BDC226B0`.
+- Built from commit 574bc8f (design/fluent-v4 after the October 27 design
+  review) with ModOrganizer.exe compiled from that tree (Release) and the
+  1.0.2 nxmhandler.exe (its source is unchanged).
+- Complete payload: 1,376 files; Elden Ring Isolated payload: 1,276 files.
+  The retired Dark Black theme is left out of both. No personal paths found
+  in the payload's text files.
+- Each window was checked in Light and Dark on the development build; the
+  installer itself was not run (install, update, uninstall) for this
+  pre-release. Not Authenticode signed.
+
 ## Published release — October 23, 2026 (v1.0.2)
 
 - Installer: `MO2-Revamped-Setup-1.0.2.exe`, 377,820,160 bytes, SHA-256
