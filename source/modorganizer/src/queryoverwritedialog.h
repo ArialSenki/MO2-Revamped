@@ -49,6 +49,9 @@ public:
   QueryOverwriteDialog(QWidget* parent, Backup b);
   ~QueryOverwriteDialog();
   bool backup() const;
+
+  // names the mod in the title
+  void setModName(const QString& name);
   Action action() const { return m_Action; }
 private slots:
   void on_mergeBtn_clicked();
@@ -57,6 +60,8 @@ private slots:
   void on_cancelBtn_clicked();
 
 private:
+  void buildFluentLayout();
+
   Ui::QueryOverwriteDialog* ui;
   Action m_Action;
 };

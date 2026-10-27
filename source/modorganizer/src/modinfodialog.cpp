@@ -21,6 +21,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluenticons.h"
 #include "fluentperf.h"
 #include "fluentnavigation.h"
+#include "fluentpanels.h"
+#include "nexusinterface.h"
+#include "profile.h"
 #include "modinfodialogcategories.h"
 #include "modinfodialogconflicts.h"
 #include "modinfodialogesps.h"
@@ -37,7 +40,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/filesorigin.h"
 #include "ui_modinfodialog.h"
 #include <filesystem>
+#include <QClipboard>
+#include <QFrame>
+#include <QGuiApplication>
+#include <QLabel>
+#include <QPushButton>
 #include <QTabBar>
+#include <QToolButton>
+#include <QUrl>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -212,6 +222,7 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       return 0xE915;
     });
     FluentNavigation::setHeader(ui->tabWidget, ui->modInfoHeader);
+    buildFluentPages();
     setMinimumSize(1200, 620);
     resize(1300, 720);
   }
@@ -408,6 +419,7 @@ void ModInfoDialog::update(bool firstTime)
   const int oldTab = ui->tabWidget->currentIndex();
 
   setWindowTitle(m_mod->name());
+  updateModCard();
 
   // rebuilding the tab widget if needed depending on what tabs are valid for
   // the current mod
@@ -927,4 +939,226 @@ void ModInfoDialog::onPreviousMod()
   update();
 
   emit modChanged(*index);
+}
+
+namespace
+{
+// a card of Settings rows with an optional title, added to a page's layout
+QFrame* addRowsCard(QBoxLayout* page, int index, QWidget* parent, const QString& title = {})
+{
+  auto* card = new QFrame(parent);
+  card->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(0, title.isEmpty() ? 0 : 10, 0, 0);
+  layout->setSpacing(0);
+  if (!title.isEmpty()) {
+    auto* heading = new QLabel(title, card);
+    heading->setObjectName(QStringLiteral("fluentCardTitle"));
+    heading->setContentsMargins(18, 0, 18, 8);
+    layout->addWidget(heading);
+  }
+  page->insertWidget(index, card);
+  return card;
+}
+
+// a column of rows inside a card, for two short rows side by side
+QWidget* rowColumn(QHBoxLayout* columns, QWidget* parent)
+{
+  auto* column = new QWidget(parent);
+  auto* layout = new QVBoxLayout(column);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+  columns->addWidget(column, 1);
+  return column;
+}
+}  // namespace
+
+void ModInfoDialog::buildFluentPages()
+{
+  // the mod above the page list: its name, what it is and two shortcuts
+  auto* modCard = new QFrame(this);
+  modCard->setObjectName(QStringLiteral("modInfoModCard"));
+  modCard->setProperty("fluentCard", true);
+  auto* modLayout = new QVBoxLayout(modCard);
+  modLayout->setContentsMargins(14, 12, 8, 8);
+  modLayout->setSpacing(2);
+  m_modCardName = new QLabel(modCard);
+  m_modCardName->setObjectName(QStringLiteral("instanceDetailName"));
+  m_modCardName->setWordWrap(true);
+  m_modCardCaption = new QLabel(modCard);
+  m_modCardCaption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  m_modCardCaption->setWordWrap(true);
+  modLayout->addWidget(m_modCardName);
+  modLayout->addWidget(m_modCardCaption);
+  auto* modButtons = new QHBoxLayout;
+  modButtons->setContentsMargins(0, 4, 0, 0);
+  modButtons->setSpacing(2);
+  auto* folder = FluentPanels::iconButton(0xE838, tr("Open the mod's folder"), modCard);
+  connect(folder, &QToolButton::clicked, this, [this] {
+    shell::Explore(m_mod->absolutePath());
+  });
+  m_modCardNexus = FluentPanels::iconButton(0xE774, tr("Open the mod's page"), modCard);
+  connect(m_modCardNexus, &QToolButton::clicked, this, [this] {
+    if (m_mod->nexusId() > 0) {
+      shell::Open(QUrl(NexusInterface::instance().getModURL(m_mod->nexusId(),
+                                                            m_mod->gameName())));
+    } else if (m_mod->hasCustomURL()) {
+      shell::Open(m_mod->parseCustomURL());
+    }
+  });
+  auto* copyName = FluentPanels::iconButton(0xE8C8, tr("Copy the mod's name"), modCard);
+  connect(copyName, &QToolButton::clicked, this, [this] {
+    QGuiApplication::clipboard()->setText(m_mod->name());
+  });
+  modButtons->addWidget(folder);
+  modButtons->addWidget(m_modCardNexus);
+  modButtons->addWidget(copyName);
+  modButtons->addStretch(1);
+  modLayout->addLayout(modButtons);
+  FluentNavigation::setNavigationHeader(ui->tabWidget, modCard);
+
+  using FluentPanels::addEditRow;
+
+  // Nexus: the page's facts in two columns, the custom page, the commands and
+  // the description below
+  if (auto* page = qobject_cast<QVBoxLayout*>(ui->tabNexus->layout())) {
+    ui->widget_14->hide();
+    ui->widget_13->hide();
+    auto* card    = addRowsCard(page, 0, ui->tabNexus, tr("Nexus Mods"));
+    auto* columns = new QHBoxLayout;
+    columns->setContentsMargins(0, 0, 0, 0);
+    columns->setSpacing(0);
+    static_cast<QVBoxLayout*>(card->layout())->addLayout(columns);
+    QWidget* left  = rowColumn(columns, card);
+    QWidget* right = rowColumn(columns, card);
+    ui->modID->setAccessibleName(tr("Mod ID"));
+    addEditRow(left, 0xE8C8, tr("Mod ID"), tr("The number in the mod's Nexus address"),
+               {ui->modID});
+    addEditRow(left, 0xE7FC, tr("Game"), tr("The Nexus game the page belongs to"),
+               {ui->sourceGame});
+    addEditRow(right, 0xE81C, tr("Version"), tr("Red when Nexus has a newer one"),
+               {ui->version});
+    addEditRow(right, 0xE8EC, tr("Nexus category"), tr("The category number on Nexus"),
+               {ui->category});
+    for (QWidget* field : std::initializer_list<QWidget*>{ui->modID, ui->sourceGame,
+                                                         ui->version, ui->category}) {
+      field->setMinimumWidth(150);
+    }
+
+    auto* custom       = new QWidget(card);
+    auto* customLayout = new QHBoxLayout(custom);
+    customLayout->setContentsMargins(0, 0, 0, 0);
+    customLayout->setSpacing(6);
+    for (QWidget* w : std::initializer_list<QWidget*>{ui->customURL, ui->visitCustomURL}) {
+      w->setParent(custom);
+      customLayout->addWidget(w);
+      w->show();
+    }
+    ui->customURL->setMinimumWidth(300);
+    ui->customURL->setPlaceholderText(QStringLiteral("https://"));
+    ui->visitCustomURL->setText(QString());
+    ui->visitCustomURL->setIcon(FluentIcons::glyph(0xE8A7));
+    ui->visitCustomURL->setToolTip(tr("Open the custom page"));
+    ui->visitCustomURL->setAccessibleName(ui->visitCustomURL->toolTip());
+    ui->visitCustomURL->setProperty("fluentKeepIcon", true);
+    FluentPanels::addSwitchRow(card, 0xE71B, tr("Custom web page"),
+                               tr("For mods from elsewhere: the page Open opens instead "
+                                  "of Nexus"),
+                               ui->hasCustomURL, custom);
+
+    auto* actions = new QFrame(card);
+    actions->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* actionsLayout = new QHBoxLayout(actions);
+    actionsLayout->setContentsMargins(12, 12, 12, 12);
+    actionsLayout->setSpacing(8);
+    for (QPushButton* button : {ui->visitNexus, ui->refresh, ui->endorse, ui->track}) {
+      button->setParent(actions);
+      button->setAutoDefault(false);
+      actionsLayout->addWidget(button);
+    }
+    ui->visitNexus->show();
+    ui->refresh->show();
+    ui->endorse->setVisible(m_core.settings().nexus().endorsementIntegration());
+    ui->track->setVisible(m_core.settings().nexus().trackedIntegration());
+    actionsLayout->addStretch(1);
+    card->layout()->addWidget(actions);
+
+    // the description fills the rest of the page
+    ui->frame->setProperty("fluentCard", true);
+    page->setSpacing(10);
+  }
+
+  // Notes: the list comment and color as rows, the notes in their own card
+  if (auto* page = qobject_cast<QVBoxLayout*>(ui->tabNotes->layout())) {
+    auto* card = addRowsCard(page, 0, ui->tabNotes);
+    ui->comments->setPlaceholderText(tr("A short note shown in the mod list"));
+    addEditRow(card, 0xE90A, tr("Comment"), tr("Shown in the mod list's Notes column"),
+               {ui->comments});
+    for (QPushButton* button : {ui->setColorButton, ui->resetColorButton}) {
+      button->setAutoDefault(false);
+    }
+    addEditRow(card, 0xE790, tr("Color"), tr("Marks the mod's row in the mod list"),
+               {ui->setColorButton, ui->resetColorButton});
+    auto* heading = new QLabel(tr("Notes"), ui->tabNotes);
+    heading->setObjectName(QStringLiteral("fluentCardTitle"));
+    heading->setContentsMargins(2, 6, 0, 0);
+    page->insertWidget(1, heading);
+    page->setSpacing(8);
+  }
+
+  // Categories: the primary one as a row above the list of all of them
+  if (auto* page = qobject_cast<QVBoxLayout*>(ui->tabCategories->layout())) {
+    ui->label_12->hide();
+    auto* card = addRowsCard(page, 0, ui->tabCategories);
+    addEditRow(card, 0xE734, tr("Primary category"),
+               tr("The one the mod list shows and groups by"), {ui->primaryCategories});
+    auto* heading = new QLabel(tr("Categories of this mod"), ui->tabCategories);
+    heading->setObjectName(QStringLiteral("fluentCardTitle"));
+    heading->setContentsMargins(2, 6, 0, 0);
+    page->insertWidget(1, heading);
+    page->setSpacing(8);
+    ui->categories->setFrameShape(QFrame::NoFrame);
+  }
+
+  // the file list's own "Text files" label repeats the page title
+  ui->label_5->hide();
+  ui->label_6->hide();
+
+  ui->previousMod->setIcon(FluentIcons::glyph(0xE76B));
+  ui->nextMod->setIcon(FluentIcons::glyph(0xE76C));
+  ui->nextMod->setLayoutDirection(Qt::RightToLeft);
+  ui->previousMod->setToolTip(tr("The mod above this one in the list (Page Up)"));
+  ui->nextMod->setToolTip(tr("The mod below this one in the list (Page Down)"));
+}
+
+void ModInfoDialog::updateModCard()
+{
+  if (m_modCardName == nullptr || !m_mod) {
+    return;
+  }
+
+  m_modCardName->setText(m_mod->name());
+
+  QStringList facts;
+  if (m_mod->isSeparator()) {
+    facts << tr("Separator");
+  } else if (m_mod->isOverwrite()) {
+    facts << tr("Files outside any mod");
+  } else {
+    const QString version = m_mod->version().displayString();
+    if (!version.isEmpty()) {
+      facts << tr("Version %1").arg(version);
+    }
+    const unsigned int index = ModInfo::getIndex(m_mod->name());
+    if (const Profile* profile = m_core.currentProfile();
+        profile != nullptr && index != UINT_MAX && !m_mod->isForeign()) {
+      facts << (profile->modEnabled(index) ? tr("Active") : tr("Inactive"));
+      facts << tr("Priority %1").arg(profile->getModPriority(index));
+    }
+    if (m_mod->isForeign()) {
+      facts << tr("Not managed by Mod Organizer");
+    }
+  }
+  m_modCardCaption->setText(facts.join(QStringLiteral(" · ")));
+  m_modCardNexus->setEnabled(m_mod->nexusId() > 0 || m_mod->hasCustomURL());
 }

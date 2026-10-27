@@ -61,6 +61,7 @@ private:
   void buildFluentLayout();
   // "12 files, 3.4 MB" for the card's caption
   void updateSummary();
+  void emptyOverwrite();
 
   void openFile(const QModelIndex& index);
   bool recursiveDelete(const QModelIndex& index);
@@ -91,6 +92,7 @@ private:
   class QLabel* m_summary          = nullptr;
   class QPushButton* m_createMod   = nullptr;
   class QPushButton* m_moveToMod   = nullptr;
+  class QPushButton* m_empty       = nullptr;
 };
 
 #endif  // OVERWRITEINFODIALOG_H

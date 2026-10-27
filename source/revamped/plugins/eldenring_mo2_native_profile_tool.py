@@ -10,9 +10,11 @@ import struct
 import tempfile
 
 import mobase
-from PyQt6.QtCore import QCoreApplication, QEvent, Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QCoreApplication, QEvent, QProcess, QRectF, Qt
+from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import (
+    QApplication,
+    QMenu,
     QToolTip,
     QAbstractItemView,
     QComboBox,
@@ -43,6 +45,37 @@ def _tr(text: str) -> str:
     if _game_name != "Elden Ring":
         text = text.replace("Elden Ring", _game_name).replace("eldenring.exe", "nightreign.exe")
     return text
+
+
+_GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
+
+
+def _glyph_font(pixels: int) -> QFont:
+    font = QFont()
+    font.setFamilies(_GLYPH_FAMILIES)
+    font.setPixelSize(pixels)
+    return font
+
+
+def _glyph_icon(glyph: int, muted: bool = False) -> QIcon:
+    application = QApplication.instance()
+    palette = application.palette() if application is not None else None
+    color = (
+        palette.color(QPalette.ColorGroup.Disabled if muted else QPalette.ColorGroup.Active,
+                      QPalette.ColorRole.WindowText)
+        if palette is not None
+        else QColor("#808080")
+    )
+    pixmap = QPixmap(32, 32)
+    pixmap.setDevicePixelRatio(2.0)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setFont(_glyph_font(16))
+    painter.setPen(color)
+    painter.drawText(QRectF(0, 0, 16, 16), Qt.AlignmentFlag.AlignCenter, chr(glyph))
+    painter.end()
+    return QIcon(pixmap)
 
 
 def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
@@ -257,56 +290,36 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         layout.setContentsMargins(16, 16, 16, 14)
         layout.setSpacing(9)
 
-        header_panel = QFrame(dialog)
-        header_panel.setObjectName("nativeHeaderPanel")
-        header_layout = QVBoxLayout(header_panel)
-        header_layout.setContentsMargins(15, 11, 15, 11)
-        header_layout.setSpacing(3)
-        _add_circular_heading(
-            header_layout,
-            header_panel,
-            _tr("Native DLL profile"),
-            "nativePageTitle",
-            ":/MO/gui/mainwindow/files/library.svg",
-            "nativeHeaderIcon",
-            30,
-            "D",
-        )
+        # a Windows 11 page title, with the profile and its counts beside it
+        title_row = QHBoxLayout()
+        title_row.setSpacing(12)
+        titles = QVBoxLayout()
+        titles.setSpacing(2)
+        page_title = QLabel(_tr("Native DLL profile"), dialog)
+        page_title.setProperty("wizardPageTitle", True)
         subtitle = QLabel(
             _tr("Choose the native DLLs for this MO2 profile, set their load order, "
             "and select optional initializer exports."),
-            header_panel,
+            dialog,
         )
-        subtitle.setObjectName("nativePageSubtitle")
+        subtitle.setProperty("wizardPageText", True)
         subtitle.setWordWrap(True)
-        header_layout.addWidget(subtitle)
-        layout.addWidget(header_panel)
-
-        profile_panel = QFrame(dialog)
-        profile_panel.setObjectName("nativeProfilePanel")
-        profile_layout = QHBoxLayout(profile_panel)
-        profile_layout.setContentsMargins(12, 8, 12, 8)
-        profile_layout.setSpacing(10)
-        profile_layout.addWidget(
-            _make_circular_icon(
-                profile_panel,
-                "nativeProfileIcon",
-                ":/MO/gui/mainwindow/profile.svg",
-                24,
-                "P",
-            )
-        )
-        profile_caption = QLabel(_tr("Active profile"), profile_panel)
-        profile_caption.setObjectName("nativeProfileCaption")
-        profile_name = QLabel(profile.name(), profile_panel)
-        profile_name.setObjectName("nativeProfileName")
+        titles.addWidget(page_title)
+        titles.addWidget(subtitle)
+        title_row.addLayout(titles, 1)
+        profile_box = QVBoxLayout()
+        profile_box.setSpacing(2)
+        profile_name = QLabel(_tr("MO2 profile: {profile}").format(profile=profile.name()), dialog)
+        profile_name.setObjectName("fluentSettingTitle")
+        profile_name.setAlignment(Qt.AlignmentFlag.AlignRight)
         profile_name.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        profile_layout.addWidget(profile_caption)
-        profile_layout.addWidget(profile_name, 1)
-        profile_metrics = QLabel(profile_panel)
-        profile_metrics.setObjectName("nativeProfileMetrics")
-        profile_layout.addWidget(profile_metrics)
-        layout.addWidget(profile_panel)
+        profile_metrics = QLabel(dialog)
+        profile_metrics.setObjectName("fluentSettingDescription")
+        profile_metrics.setAlignment(Qt.AlignmentFlag.AlignRight)
+        profile_box.addWidget(profile_name)
+        profile_box.addWidget(profile_metrics)
+        title_row.addLayout(profile_box)
+        layout.addLayout(title_row)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, dialog)
         splitter.setObjectName("nativeProfileSplitter")
@@ -314,24 +327,18 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         splitter.setHandleWidth(7)
         detected_group = QFrame(splitter)
         detected_group.setObjectName("detectedDllCard")
+        detected_group.setProperty("fluentCard", True)
         detected_layout = QVBoxLayout(detected_group)
         detected_layout.setContentsMargins(12, 11, 12, 12)
         detected_layout.setSpacing(7)
-        _add_circular_heading(
-            detected_layout,
-            detected_group,
-            _tr("Detected DLLs"),
-            "nativePanelTitle",
-            ":/MO/gui/mainwindow/files/library.svg",
-            "nativeDetectedIcon",
-            26,
-            "D",
-        )
+        detected_heading = QLabel(_tr("Detected DLLs"), detected_group)
+        detected_heading.setObjectName("fluentCardTitle")
+        detected_layout.addWidget(detected_heading)
         detected_note = QLabel(
             _tr("Found in enabled MO2 mods and verified against the virtual file system."),
             detected_group,
         )
-        detected_note.setObjectName("nativeSectionNote")
+        detected_note.setObjectName("fluentSettingDescription")
         detected_note.setWordWrap(True)
         detected_layout.addWidget(detected_note)
         detected_tree = QTreeWidget(detected_group)
@@ -348,7 +355,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         detected_status.setObjectName("detectedDllStatus")
         detected_status.setWordWrap(True)
         detected_layout.addWidget(detected_status)
-        add_button = QPushButton(_tr("Add selected DLLs"), detected_group)
+        add_button = QPushButton(_glyph_icon(0xE710), _tr("Add selected DLLs"), detected_group)
         add_button.setObjectName("addDetectedDllsButton")
         add_button.setEnabled(False)
         add_button.setToolTip(
@@ -358,25 +365,19 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         profile_group = QFrame(splitter)
         profile_group.setObjectName("nativeLoadOrderCard")
+        profile_group.setProperty("fluentCard", True)
         profile_layout = QVBoxLayout(profile_group)
         profile_layout.setContentsMargins(12, 11, 12, 12)
         profile_layout.setSpacing(7)
-        _add_circular_heading(
-            profile_layout,
-            profile_group,
-            _tr("Profile load order"),
-            "nativePanelTitle",
-            ":/MO/gui/mainwindow/executables.svg",
-            "nativeLoadOrderIcon",
-            26,
-            "↕",
-        )
+        load_order_heading = QLabel(_tr("Profile load order"), profile_group)
+        load_order_heading.setObjectName("fluentCardTitle")
+        profile_layout.addWidget(load_order_heading)
         profile_note = QLabel(
             _tr("Enabled entries load in the order shown. Initializers are optional "
             "named exports and do not change whether a mod is enabled."),
             profile_group,
         )
-        profile_note.setObjectName("nativeSectionNote")
+        profile_note.setObjectName("fluentSettingDescription")
         profile_note.setWordWrap(True)
         profile_layout.addWidget(profile_note)
         if candidates:
@@ -420,19 +421,19 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         row_buttons = QHBoxLayout()
         row_buttons.setSpacing(7)
-        remove_button = QPushButton(_tr("Remove entry"), profile_group)
+        remove_button = QPushButton(_glyph_icon(0xE74D), _tr("Remove entry"), profile_group)
         remove_button.setObjectName("removeNativeEntryButton")
         remove_button.setEnabled(False)
         remove_button.setToolTip(
             _tr("Remove the selected route from this profile. The MO2 mod stays installed.")
         )
-        up_button = QPushButton(_tr("Move up"), profile_group)
+        up_button = QPushButton(_glyph_icon(0xE74A), _tr("Move up"), profile_group)
         up_button.setObjectName("moveNativeEntryUpButton")
         up_button.setEnabled(False)
-        down_button = QPushButton(_tr("Move down"), profile_group)
+        down_button = QPushButton(_glyph_icon(0xE74B), _tr("Move down"), profile_group)
         down_button.setObjectName("moveNativeEntryDownButton")
         down_button.setEnabled(False)
-        exports_button = QPushButton(_tr("Detect exports…"), profile_group)
+        exports_button = QPushButton(_glyph_icon(0xE721), _tr("Detect exports…"), profile_group)
         exports_button.setObjectName("detectNativeExportsButton")
         exports_button.setEnabled(False)
         exports_button.setToolTip(
@@ -452,19 +453,16 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         splitter.setSizes([370, 680])
         layout.addWidget(splitter, 1)
 
-        footer_panel = QFrame(dialog)
-        footer_panel.setObjectName("nativeFooterPanel")
-        footer_layout = QHBoxLayout(footer_panel)
-        footer_layout.setContentsMargins(12, 7, 12, 7)
+        footer_layout = QHBoxLayout()
+        footer_layout.setSpacing(12)
         footer = QLabel(
             _tr("Entries are saved in this profile's eldenring_mo2_startup.ini. "
             "Startup, performance, and cleanup settings in that file are preserved."),
-            footer_panel,
+            dialog,
         )
-        footer.setObjectName("nativeFooterNote")
+        footer.setObjectName("fluentSettingDescription")
         footer.setWordWrap(True)
-        footer_layout.addWidget(footer)
-        layout.addWidget(footer_panel)
+        footer_layout.addWidget(footer, 1)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
             | QDialogButtonBox.StandardButton.Cancel,
@@ -478,7 +476,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             save_button.setDefault(True)
         if cancel_button is not None:
             cancel_button.setObjectName("nativeCancelButton")
-        layout.addWidget(buttons)
+        footer_layout.addWidget(buttons)
+        layout.addLayout(footer_layout)
 
         self._populate_detected_tree(detected_tree, candidates)
         mod_count = len({str(candidate["mod"]).casefold() for candidate in candidates})
@@ -540,6 +539,38 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         down_button.clicked.connect(move_selected_down)
         exports_button.clicked.connect(choose_exports)
         detected_tree.itemSelectionChanged.connect(update_controls)
+        detected_tree.itemDoubleClicked.connect(lambda *_args: add_selected())
+
+        def show_table_menu(position) -> None:
+            row = table.rowAt(position.y())
+            if row < 0:
+                return
+            table.selectRow(row)
+            entry = self._entries_from_table(table)[row]
+            menu = QMenu(table)
+            menu.addAction(_glyph_icon(0xE74A), _tr("Move up"), move_selected_up).setEnabled(row > 0)
+            menu.addAction(_glyph_icon(0xE74B), _tr("Move down"), move_selected_down).setEnabled(
+                row < table.rowCount() - 1
+            )
+            menu.addAction(_glyph_icon(0xE721), _tr("Detect exports…"), choose_exports)
+            menu.addSeparator()
+            physical = self._physical_dll_path(str(entry.get("mod", "")), str(entry.get("path", "")))
+            show = menu.addAction(
+                _glyph_icon(0xE838), _tr("Show in folder"),
+                lambda: QProcess.startDetached("explorer.exe", ["/select,", str(physical)]),
+            )
+            show.setEnabled(physical is not None)
+            copy = menu.addAction(
+                _glyph_icon(0xE8C8), _tr("Copy route"),
+                lambda: QApplication.clipboard().setText(str(entry.get("path", ""))),
+            )
+            copy.setEnabled(bool(entry.get("path")))
+            menu.addSeparator()
+            menu.addAction(_glyph_icon(0xE74D), _tr("Remove entry"), remove_selected)
+            menu.exec(table.viewport().mapToGlobal(position))
+
+        table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        table.customContextMenuRequested.connect(show_table_menu)
         table.itemSelectionChanged.connect(update_controls)
         table.itemChanged.connect(update_profile_metrics)
         table.model().rowsInserted.connect(update_profile_metrics)

@@ -19,7 +19,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "categoriesdialog.h"
 #include "menuutils.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
+#include "fluentpanels.h"
+#include "modinfo.h"
 #include "categories.h"
 #include "categoryimportdialog.h"
 #include "circularuihelpers.h"
@@ -28,8 +31,18 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "settings.h"
 #include "ui_categoriesdialog.h"
 #include "utility.h"
+#include <QClipboard>
+#include <QComboBox>
+#include <QGuiApplication>
 #include <QItemDelegate>
 #include <QHeaderView>
+#include <QPushButton>
+#include <QScrollArea>
+#include <QShortcut>
+#include <QTimer>
+#include <QToolButton>
+#include <QTreeWidget>
+#include <QVBoxLayout>
 #include <QHash>
 #include <QIcon>
 #include <QLineEdit>
@@ -41,6 +54,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStyle>
 #include <QStyleOptionViewItem>
 #include <QVector>
+#include <functional>
 
 class NewIDValidator : public QIntValidator
 {
@@ -200,6 +214,10 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
         tr("Nexus category mapping is disabled in Settings."));
     ui->nexusRefresh->setDisabled(true);
     ui->nexusImportButton->setDisabled(true);
+  }
+
+  if (FluentIcons::active()) {
+    buildFluentLayout();
   }
 }
 
@@ -527,6 +545,18 @@ void CategoriesDialog::addCategory_clicked()
 
 void CategoriesDialog::removeCategory_clicked()
 {
+  if (m_ContextRow >= 0 && m_fluent) {
+    // the subcategories move up to the removed category's parent
+    QTableWidget* table = ui->categoriesTable;
+    const int id     = table->item(m_ContextRow, 0) ? table->item(m_ContextRow, 0)->text().toInt() : 0;
+    const int parent = table->item(m_ContextRow, 2) ? table->item(m_ContextRow, 2)->text().toInt() : 0;
+    for (int row = 0; row < table->rowCount(); ++row) {
+      if (id > 0 && row != m_ContextRow && table->item(row, 2) &&
+          table->item(row, 2)->text().toInt() == id) {
+        table->item(row, 2)->setData(Qt::DisplayRole, parent);
+      }
+    }
+  }
   if (m_ContextRow >= 0) {
     ui->categoriesTable->removeRow(m_ContextRow);
     m_ContextRow = -1;
@@ -995,4 +1025,854 @@ void CategoriesDialog::on_categoriesTable_customContextMenuRequested(const QPoin
   }
 
   menu.exec(ui->categoriesTable->mapToGlobal(pos));
+}
+
+namespace
+{
+constexpr int CategoryIDRole = Qt::UserRole + 10;
+
+// the Nexus categories a row maps, without broken or repeated entries
+QVariantList validMappings(const QTableWidgetItem* item)
+{
+  QVariantList result;
+  if (item == nullptr) {
+    return result;
+  }
+  QSet<int> seen;
+  for (const QVariant& entry : item->data(Qt::UserRole).toList()) {
+    const QVariantList mapping = entry.toList();
+    if (mapping.size() < 2) {
+      continue;
+    }
+    bool idValid      = false;
+    const int nexusID = mapping.at(1).toInt(&idValid);
+    if (!idValid || nexusID <= 0 || mapping.at(0).toString().trimmed().isEmpty() ||
+        seen.contains(nexusID)) {
+      continue;
+    }
+    seen.insert(nexusID);
+    result.append(QVariant::fromValue(mapping));
+  }
+  return result;
+}
+}  // namespace
+
+void CategoriesDialog::buildFluentLayout()
+{
+  // the Designer layout stays for the classic themes; Fluent keeps its table
+  // and Nexus list hidden as the data the cards edit, so loading, importing,
+  // refreshing from Nexus and saving work as before
+  auto* root = qobject_cast<QVBoxLayout*>(layout());
+  if (root == nullptr) {
+    return;
+  }
+
+  ui->categoriesHeaderPanel->hide();
+  ui->localCategoriesCard->hide();
+  ui->nexusCategoriesCard->hide();
+  root->removeWidget(ui->categoriesHeaderPanel);
+  root->removeItem(ui->contentLayout);
+  root->removeItem(ui->actionsLayout);
+  ui->actionsLayout->removeWidget(ui->buttonBox);
+  root->setContentsMargins(12, 12, 12, 12);
+  root->setSpacing(10);
+
+  // how many mods use each category, for the captions
+  for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+    if (auto mod = ModInfo::getByIndex(i)) {
+      for (int id : mod->getCategories()) {
+        ++m_modCounts[id];
+      }
+    }
+  }
+
+  auto* body = new QHBoxLayout;
+  body->setSpacing(8);
+  body->addWidget(createFluentList());
+  body->addWidget(createFluentDetails(), 1);
+  root->addLayout(body, 1);
+
+  // help on the left, OK and Cancel on the right
+  auto* footer = new QHBoxLayout;
+  footer->setSpacing(8);
+  auto* help = new QToolButton(this);
+  help->setObjectName(QStringLiteral("instanceHelpButton"));
+  help->setText(tr("What are categories for?"));
+  help->setIcon(FluentIcons::glyph(0xE897, FluentIcons::Tone::Muted));
+  help->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  help->setAutoRaise(true);
+  help->setCursor(Qt::PointingHandCursor);
+  connect(help, &QToolButton::clicked, this, &CategoriesDialog::showFluentHelp);
+  footer->addWidget(help);
+  footer->addStretch(1);
+  footer->addWidget(ui->buttonBox);
+  root->addLayout(footer);
+
+  setMinimumSize(900, 600);
+  resize(std::max(width(), 1000), std::max(height(), 700));
+
+  // every change to the data, from the cards, an import or a Nexus refresh,
+  // redraws the cards once
+  auto* model = ui->categoriesTable->model();
+  connect(model, &QAbstractItemModel::dataChanged, this, [this] { queueFluentRefresh(); });
+  connect(model, &QAbstractItemModel::rowsInserted, this, [this] { queueFluentRefresh(); });
+  connect(model, &QAbstractItemModel::rowsRemoved, this, [this] { queueFluentRefresh(); });
+  connect(model, &QAbstractItemModel::modelReset, this, [this] { queueFluentRefresh(); });
+  connect(ui->categoriesTable->verticalHeader(), &QHeaderView::sectionMoved, this,
+          [this] { queueFluentRefresh(); });
+  auto* nexusModel = ui->nexusCategoryList->model();
+  connect(nexusModel, &QAbstractItemModel::rowsInserted, this, [this] { queueFluentRefresh(); });
+  connect(nexusModel, &QAbstractItemModel::rowsRemoved, this, [this] { queueFluentRefresh(); });
+  connect(nexusModel, &QAbstractItemModel::modelReset, this, [this] { queueFluentRefresh(); });
+
+  m_fluent = true;
+  refreshFluentTree();
+  if (m_fluentTree->topLevelItemCount() > 0) {
+    m_fluentTree->setCurrentItem(m_fluentTree->topLevelItem(0));
+  }
+  refreshFluentDetails();
+}
+
+QWidget* CategoriesDialog::createFluentList()
+{
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("categoryListCard"));
+  card->setProperty("fluentCard", true);
+  card->setFixedWidth(320);
+
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(8, 10, 8, 8);
+  layout->setSpacing(6);
+
+  auto* title = new QHBoxLayout;
+  title->setContentsMargins(6, 0, 6, 2);
+  auto* heading = new QLabel(tr("Categories"), card);
+  heading->setObjectName(QStringLiteral("fluentCardTitle"));
+  m_fluentCount = new QLabel(card);
+  m_fluentCount->setObjectName(QStringLiteral("fluentStatCaption"));
+  title->addWidget(heading);
+  title->addStretch(1);
+  title->addWidget(m_fluentCount);
+  layout->addLayout(title);
+
+  m_fluentSearch = new QLineEdit(card);
+  m_fluentSearch->setObjectName(QStringLiteral("instanceFilter"));
+  m_fluentSearch->setPlaceholderText(tr("Search categories"));
+  m_fluentSearch->setClearButtonEnabled(true);
+  layout->addWidget(m_fluentSearch);
+  connect(m_fluentSearch, &QLineEdit::textChanged, this, [this] { refreshFluentTree(); });
+
+  m_fluentTree = new QTreeWidget(card);
+  m_fluentTree->setObjectName(QStringLiteral("categoryTree"));
+  m_fluentTree->setHeaderHidden(true);
+  m_fluentTree->setColumnCount(1);
+  m_fluentTree->setItemDelegate(new FluentPanels::RowDelegate(m_fluentTree, 48, 0));
+  m_fluentTree->setFrameShape(QFrame::NoFrame);
+  m_fluentTree->setMouseTracking(true);
+  m_fluentTree->setIndentation(18);
+  m_fluentTree->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_fluentTree->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_fluentTree->setAccessibleName(tr("Categories"));
+  layout->addWidget(m_fluentTree, 1);
+  connect(m_fluentTree, &QTreeWidget::customContextMenuRequested, this,
+          &CategoriesDialog::showFluentListMenu);
+  connect(m_fluentTree, &QTreeWidget::currentItemChanged, this, [this] {
+    if (!m_fluentSyncing) {
+      refreshFluentDetails();
+    }
+  });
+
+  auto* add = new QPushButton(FluentIcons::glyph(0xE710), tr("New category"), card);
+  add->setObjectName(QStringLiteral("categoryAddButton"));
+  add->setAutoDefault(false);
+  add->setToolTip(tr("Add a category at the top level (Ctrl+N)"));
+  connect(add, &QPushButton::clicked, this, [this] { addFluentCategory(0); });
+  layout->addWidget(add);
+
+  // the Nexus list the import and the Nexus categories below use
+  auto* nexus = new QHBoxLayout;
+  nexus->setSpacing(6);
+  for (QPushButton* button : {ui->nexusRefresh, ui->nexusImportButton}) {
+    button->setParent(card);
+    button->setAutoDefault(false);
+    nexus->addWidget(button, 1);
+    button->show();
+  }
+  ui->nexusRefresh->setText(tr("Load from Nexus"));
+  ui->nexusImportButton->setText(tr("Import..."));
+  layout->addLayout(nexus);
+  ui->nexusStatus->setParent(card);
+  ui->nexusStatus->setObjectName(QStringLiteral("fluentSettingDescription"));
+  ui->nexusStatus->setWordWrap(true);
+  ui->nexusStatus->setContentsMargins(4, 0, 4, 0);
+  layout->addWidget(ui->nexusStatus);
+  ui->nexusStatus->show();
+
+  auto* newShortcut = new QShortcut(QKeySequence::New, this);
+  connect(newShortcut, &QShortcut::activated, this, [this] { addFluentCategory(0); });
+  auto* del = new QShortcut(QKeySequence(Qt::Key_Delete), m_fluentTree);
+  del->setContext(Qt::WidgetShortcut);
+  connect(del, &QShortcut::activated, this, [this] {
+    if (selectedID() > 0) {
+      m_ContextRow = rowForID(selectedID());
+      removeCategory_clicked();
+    }
+  });
+  auto* rename = new QShortcut(QKeySequence(Qt::Key_F2), this);
+  connect(rename, &QShortcut::activated, this, [this] {
+    if (selectedID() > 0) {
+      m_fluentNameEdit->setFocus();
+      m_fluentNameEdit->selectAll();
+    }
+  });
+  auto* find = new QShortcut(QKeySequence::Find, this);
+  connect(find, &QShortcut::activated, this, [this] {
+    m_fluentSearch->setFocus();
+    m_fluentSearch->selectAll();
+  });
+
+  return card;
+}
+
+QWidget* CategoriesDialog::createFluentDetails()
+{
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("categoryDetailsCard"));
+  card->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(card);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  // the category's name and where it sits
+  auto* head = new QHBoxLayout;
+  head->setContentsMargins(18, 14, 12, 14);
+  head->setSpacing(12);
+  auto* glyph = new QLabel(QString(QChar(char16_t(0xE8EC))), card);
+  glyph->setObjectName(QStringLiteral("instanceRowGlyph"));
+  glyph->setFont(FluentIcons::font(24));
+  glyph->setFixedSize(32, 32);
+  glyph->setAlignment(Qt::AlignCenter);
+  head->addWidget(glyph, 0, Qt::AlignVCenter);
+  auto* names = new QVBoxLayout;
+  names->setSpacing(2);
+  m_fluentName = new QLabel(card);
+  m_fluentName->setObjectName(QStringLiteral("instanceDetailName"));
+  m_fluentCaption = new QLabel(card);
+  m_fluentCaption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  names->addWidget(m_fluentName);
+  names->addWidget(m_fluentCaption);
+  head->addLayout(names, 1);
+  layout->addLayout(head);
+
+  m_fluentScroll = new QScrollArea(card);
+  m_fluentScroll->setObjectName(QStringLiteral("instanceDetailsScroll"));
+  m_fluentScroll->setFrameShape(QFrame::NoFrame);
+  m_fluentScroll->setWidgetResizable(true);
+  m_fluentScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_fluentDetailRows = new QWidget(m_fluentScroll);
+  m_fluentDetailRows->setObjectName(QStringLiteral("instanceDetailRows"));
+  auto* rows = new QVBoxLayout(m_fluentDetailRows);
+  rows->setContentsMargins(0, 0, 0, 0);
+  rows->setSpacing(0);
+  m_fluentScroll->setWidget(m_fluentDetailRows);
+  layout->addWidget(m_fluentScroll, 1);
+
+  m_fluentEmpty = new QLabel(tr("Choose a category in the list, or add one."), card);
+  m_fluentEmpty->setObjectName(QStringLiteral("instanceEmptyText"));
+  m_fluentEmpty->setAlignment(Qt::AlignCenter);
+  m_fluentEmpty->setWordWrap(true);
+  layout->addWidget(m_fluentEmpty, 1);
+
+  m_fluentNameEdit = new QLineEdit(m_fluentDetailRows);
+  m_fluentNameEdit->setObjectName(QStringLiteral("categoryNameEdit"));
+  m_fluentNameEdit->setAccessibleName(tr("Name"));
+  FluentPanels::addEditRow(m_fluentDetailRows, 0xE8AC, tr("Name"),
+                           tr("Shown in the mod list, its filters and the mod's menu"),
+                           {m_fluentNameEdit});
+  connect(m_fluentNameEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
+    const int row = rowForID(selectedID());
+    if (row >= 0 && ui->categoriesTable->item(row, 1) != nullptr) {
+      ui->categoriesTable->item(row, 1)->setText(text);
+    }
+  });
+
+  m_fluentParent = new QComboBox(m_fluentDetailRows);
+  m_fluentParent->setObjectName(QStringLiteral("categoryParentBox"));
+  m_fluentParent->setAccessibleName(tr("Inside"));
+  m_fluentParent->setMaxVisibleItems(14);
+  FluentPanels::addEditRow(m_fluentDetailRows, 0xE8B7, tr("Inside"),
+                           tr("A subcategory is listed under the category it belongs to"),
+                           {m_fluentParent});
+  connect(m_fluentParent, &QComboBox::activated, this, [this](int index) {
+    const int row = rowForID(selectedID());
+    if (row >= 0 && ui->categoriesTable->item(row, 2) != nullptr) {
+      ui->categoriesTable->item(row, 2)->setData(Qt::DisplayRole,
+                                                 m_fluentParent->itemData(index).toInt());
+    }
+  });
+
+  auto idRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE8C8, tr("ID"),
+                                          tr("Copy the ID"), 0xE8C8);
+  m_fluentID = idRow.value;
+  connect(idRow.action, &QToolButton::clicked, this, [this] {
+    QGuiApplication::clipboard()->setText(QString::number(selectedID()));
+  });
+  auto modsRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE74C, tr("Mods"));
+  m_fluentMods = modsRow.value;
+
+  // the Nexus categories that turn into this one when a mod is installed
+  auto* nexusHeading = new QLabel(tr("Nexus categories"), m_fluentDetailRows);
+  nexusHeading->setObjectName(QStringLiteral("fluentCardTitle"));
+  nexusHeading->setContentsMargins(18, 16, 18, 8);
+  rows->addWidget(nexusHeading);
+  m_fluentMappings = new QWidget(m_fluentDetailRows);
+  auto* mappingRows = new QVBoxLayout(m_fluentMappings);
+  mappingRows->setContentsMargins(0, 0, 0, 0);
+  mappingRows->setSpacing(0);
+  rows->addWidget(m_fluentMappings);
+
+  m_fluentNexusPicker = new QComboBox(m_fluentDetailRows);
+  m_fluentNexusPicker->setObjectName(QStringLiteral("categoryNexusPicker"));
+  m_fluentNexusPicker->setAccessibleName(tr("Add a Nexus category"));
+  m_fluentNexusPicker->setMaxVisibleItems(16);
+  FluentPanels::addEditRow(
+      m_fluentDetailRows, 0xE710, tr("Add a Nexus category"),
+      tr("Mods from Nexus in that category get this one when they are installed"),
+      {m_fluentNexusPicker});
+  connect(m_fluentNexusPicker, &QComboBox::activated, this, [this](int index) {
+    const int nexusID = m_fluentNexusPicker->itemData(index).toInt();
+    const int row     = rowForID(selectedID());
+    if (nexusID > 0 && row >= 0) {
+      mapNexusCategory(row,
+                       m_fluentNexusPicker->itemData(index, Qt::UserRole + 1).toString(),
+                       nexusID);
+    }
+  });
+  rows->addStretch(1);
+
+  // a subcategory on the left, remove on the right
+  auto* actions = new QFrame(card);
+  actions->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* actionsLayout = new QHBoxLayout(actions);
+  actionsLayout->setContentsMargins(12, 12, 12, 12);
+  actionsLayout->setSpacing(8);
+  m_fluentAddSub =
+      new QPushButton(FluentIcons::glyph(0xE710), tr("New subcategory"), actions);
+  m_fluentAddSub->setAutoDefault(false);
+  m_fluentRemove = new QPushButton(FluentIcons::glyph(0xE74D, FluentIcons::Tone::Critical),
+                                   tr("Remove"), actions);
+  m_fluentRemove->setAutoDefault(false);
+  m_fluentRemove->setToolTip(
+      tr("Remove the category; its subcategories move up a level (Delete)"));
+  actionsLayout->addWidget(m_fluentAddSub);
+  actionsLayout->addStretch(1);
+  actionsLayout->addWidget(m_fluentRemove);
+  layout->addWidget(actions);
+
+  connect(m_fluentAddSub, &QPushButton::clicked, this, [this] {
+    addFluentCategory(selectedID());
+  });
+  connect(m_fluentRemove, &QPushButton::clicked, this, [this] {
+    m_ContextRow = rowForID(selectedID());
+    removeCategory_clicked();
+  });
+
+  return card;
+}
+
+void CategoriesDialog::queueFluentRefresh()
+{
+  if (!m_fluent || m_fluentRefreshQueued) {
+    return;
+  }
+  m_fluentRefreshQueued = true;
+  QTimer::singleShot(0, this, [this] {
+    m_fluentRefreshQueued = false;
+    refreshFluentTree();
+    refreshFluentDetails();
+  });
+}
+
+int CategoriesDialog::rowForID(int id) const
+{
+  if (id <= 0) {
+    return -1;
+  }
+  for (int row = 0; row < ui->categoriesTable->rowCount(); ++row) {
+    const auto* item = ui->categoriesTable->item(row, 0);
+    if (item != nullptr && item->text().toInt() == id) {
+      return row;
+    }
+  }
+  return -1;
+}
+
+int CategoriesDialog::selectedID() const
+{
+  if (m_fluentTree == nullptr || m_fluentTree->currentItem() == nullptr) {
+    return 0;
+  }
+  return m_fluentTree->currentItem()->data(0, CategoryIDRole).toInt();
+}
+
+void CategoriesDialog::selectID(int id)
+{
+  QTreeWidgetItemIterator it(m_fluentTree);
+  while (*it) {
+    if ((*it)->data(0, CategoryIDRole).toInt() == id) {
+      m_fluentTree->setCurrentItem(*it);
+      m_fluentTree->scrollToItem(*it);
+      return;
+    }
+    ++it;
+  }
+}
+
+void CategoriesDialog::refreshFluentTree()
+{
+  if (!m_fluent) {
+    return;
+  }
+
+  QTableWidget* table = ui->categoriesTable;
+  struct Entry
+  {
+    int id;
+    int parent;
+    QString name;
+    QString caption;
+  };
+
+  // the rows in the order they are saved in
+  std::vector<Entry> entries;
+  QHash<int, int> parents;
+  for (int visual = 0; visual < table->rowCount(); ++visual) {
+    const int row      = table->verticalHeader()->logicalIndex(visual);
+    const auto* idItem = table->item(row, 0);
+    if (idItem == nullptr || idItem->text().toInt() <= 0) {
+      continue;
+    }
+    Entry entry;
+    entry.id     = idItem->text().toInt();
+    entry.parent = table->item(row, 2) ? table->item(row, 2)->text().toInt() : 0;
+    entry.name   = table->item(row, 1) ? table->item(row, 1)->text() : QString();
+
+    QStringList parts;
+    const int mods = m_modCounts.value(entry.id);
+    parts << (mods == 1 ? tr("1 mod") : tr("%1 mods").arg(mods));
+    const int mapped = validMappings(table->item(row, 3)).size();
+    if (mapped > 0) {
+      parts << (mapped == 1 ? tr("1 Nexus category") : tr("%1 Nexus categories").arg(mapped));
+    }
+    entry.caption = parts.join(QStringLiteral(" · "));
+    parents.insert(entry.id, entry.parent);
+    entries.push_back(entry);
+  }
+
+  // a parent that is missing or loops back makes the category a top one
+  const auto validParent = [&parents](int id) {
+    const int parent = parents.value(id);
+    QSet<int> seen{id};
+    for (int walk = parent; walk > 0; walk = parents.value(walk)) {
+      if (!parents.contains(walk) || seen.contains(walk)) {
+        return 0;
+      }
+      seen.insert(walk);
+    }
+    return parent;
+  };
+
+  const int current    = selectedID();
+  const QString search = m_fluentSearch->text().trimmed();
+  m_fluentSyncing      = true;
+  m_fluentTree->clear();
+  QHash<int, QTreeWidgetItem*> items;
+  for (const Entry& entry : entries) {
+    auto* item = new QTreeWidgetItem;
+    item->setText(0, entry.name.isEmpty() ? tr("(no name)") : entry.name);
+    item->setData(0, FluentPanels::CaptionRole, entry.caption);
+    item->setData(0, CategoryIDRole, entry.id);
+    item->setToolTip(0, entry.name);
+    items.insert(entry.id, item);
+  }
+  for (const Entry& entry : entries) {
+    const int parent = validParent(entry.id);
+    if (parent > 0 && items.contains(parent)) {
+      items[parent]->addChild(items[entry.id]);
+    } else {
+      m_fluentTree->addTopLevelItem(items[entry.id]);
+    }
+  }
+
+  // a search shows the matches and the categories they are inside
+  if (!search.isEmpty()) {
+    std::function<bool(QTreeWidgetItem*)> filter = [&](QTreeWidgetItem* item) {
+      bool any = item->text(0).contains(search, Qt::CaseInsensitive);
+      for (int i = 0; i < item->childCount(); ++i) {
+        any = filter(item->child(i)) || any;
+      }
+      item->setHidden(!any);
+      return any;
+    };
+    for (int i = 0; i < m_fluentTree->topLevelItemCount(); ++i) {
+      filter(m_fluentTree->topLevelItem(i));
+    }
+  }
+  m_fluentTree->expandAll();
+  if (current > 0 && items.contains(current)) {
+    m_fluentTree->setCurrentItem(items[current]);
+  }
+  m_fluentSyncing = false;
+
+  m_fluentCount->setText(QString::number(entries.size()));
+}
+
+void CategoriesDialog::refreshFluentDetails()
+{
+  if (!m_fluent) {
+    return;
+  }
+
+  QTableWidget* table = ui->categoriesTable;
+  const int id        = selectedID();
+  const int row       = rowForID(id);
+  const bool has      = row >= 0;
+  m_fluentScroll->setVisible(has);
+  m_fluentEmpty->setVisible(!has);
+  m_fluentAddSub->setEnabled(has);
+  m_fluentRemove->setEnabled(has);
+  if (!has) {
+    m_fluentName->setText(tr("No category selected"));
+    m_fluentCaption->setText(tr("Add one, or pick one in the list"));
+    return;
+  }
+
+  const QString name  = table->item(row, 1) ? table->item(row, 1)->text() : QString();
+  const int parent    = table->item(row, 2) ? table->item(row, 2)->text().toInt() : 0;
+  const int parentRow = rowForID(parent);
+  const QString parentName = parentRow >= 0 && table->item(parentRow, 1)
+                                 ? table->item(parentRow, 1)->text()
+                                 : QString();
+
+  m_fluentName->setText(name.isEmpty() ? tr("(no name)") : name);
+  m_fluentCaption->setText(parentName.isEmpty() ? tr("Top-level category")
+                                                : tr("Inside %1").arg(parentName));
+  if (m_fluentNameEdit->text() != name) {
+    m_fluentNameEdit->setText(name);
+  }
+  m_fluentID->setFullText(QString::number(id));
+  const int mods = m_modCounts.value(id);
+  m_fluentMods->setFullText(mods == 0 ? tr("No mod uses this category")
+                       : (mods == 1 ? tr("1 mod uses this category")
+                                    : tr("%1 mods use this category").arg(mods)));
+
+  // the parent can be any category but this one and the ones inside it
+  QSet<int> excluded{id};
+  for (bool grew = true; grew;) {
+    grew = false;
+    for (int r = 0; r < table->rowCount(); ++r) {
+      const int childID  = table->item(r, 0) ? table->item(r, 0)->text().toInt() : 0;
+      const int childPar = table->item(r, 2) ? table->item(r, 2)->text().toInt() : 0;
+      if (childID > 0 && excluded.contains(childPar) && !excluded.contains(childID)) {
+        excluded.insert(childID);
+        grew = true;
+      }
+    }
+  }
+  QList<std::pair<QString, int>> choices;
+  for (int r = 0; r < table->rowCount(); ++r) {
+    const int choiceID = table->item(r, 0) ? table->item(r, 0)->text().toInt() : 0;
+    if (choiceID > 0 && !excluded.contains(choiceID)) {
+      choices.append({table->item(r, 1) ? table->item(r, 1)->text() : QString(), choiceID});
+    }
+  }
+  std::sort(choices.begin(), choices.end(), [](const auto& a, const auto& b) {
+    return a.first.localeAwareCompare(b.first) < 0;
+  });
+  m_fluentParent->blockSignals(true);
+  m_fluentParent->clear();
+  m_fluentParent->addItem(tr("Nothing (top level)"), 0);
+  for (const auto& [choiceName, choiceID] : choices) {
+    m_fluentParent->addItem(choiceName, choiceID);
+  }
+  m_fluentParent->setCurrentIndex(std::max(0, m_fluentParent->findData(parent)));
+  m_fluentParent->blockSignals(false);
+
+  // one row per Nexus category, with a button that takes it off
+  QLayout* mappingRows = m_fluentMappings->layout();
+  while (QLayoutItem* item = mappingRows->takeAt(0)) {
+    if (item->widget() != nullptr) {
+      // out of the layout it would still paint where it was until deleted
+      item->widget()->hide();
+      item->widget()->deleteLater();
+    }
+    delete item;
+  }
+  const bool mappingsOn       = Settings::instance().nexus().categoryMappings();
+  const QVariantList mappings = validMappings(table->item(row, 3));
+  QSet<int> mapped;
+  for (const QVariant& entry : mappings) {
+    const QVariantList mapping = entry.toList();
+    const int nexusID          = mapping.at(1).toInt();
+    mapped.insert(nexusID);
+    auto detail = FluentPanels::addDetailRow(m_fluentMappings, 0xE774,
+                                             mapping.at(0).toString().trimmed(),
+                                             tr("Take this Nexus category off"), 0xE711);
+    detail.value->setFullText(tr("Nexus ID %1").arg(nexusID));
+    detail.action->setEnabled(mappingsOn);
+    connect(detail.action, &QToolButton::clicked, this, [this, nexusID] {
+      const int r = rowForID(selectedID());
+      if (r < 0) {
+        return;
+      }
+      QVariantList kept;
+      for (const QVariant& e : validMappings(ui->categoriesTable->item(r, 3))) {
+        if (e.toList().at(1).toInt() != nexusID) {
+          kept.append(e);
+        }
+      }
+      setRowMappings(r, kept);
+    });
+  }
+  if (mappings.isEmpty()) {
+    auto detail = FluentPanels::addDetailRow(m_fluentMappings, 0xE774, tr("None"));
+    detail.value->setFullText(
+        mappingsOn ? tr("Mods from Nexus do not get this category by themselves")
+                   : tr("Nexus category mapping is disabled in Settings."));
+  }
+
+  // the picker names the category a Nexus one belongs to now
+  QHash<int, QString> owners;
+  for (int r = 0; r < table->rowCount(); ++r) {
+    for (const QVariant& entry : validMappings(table->item(r, 3))) {
+      owners.insert(entry.toList().at(1).toInt(),
+                    table->item(r, 1) ? table->item(r, 1)->text() : QString());
+    }
+  }
+  const int available = ui->nexusCategoryList->count();
+  QList<std::pair<QString, int>> nexus;
+  for (int i = 0; i < available; ++i) {
+    const auto* item  = ui->nexusCategoryList->item(i);
+    const int nexusID = item->data(Qt::UserRole).toInt();
+    if (nexusID > 0 && !mapped.contains(nexusID)) {
+      nexus.append({item->data(Qt::DisplayRole).toString().trimmed(), nexusID});
+    }
+  }
+  std::sort(nexus.begin(), nexus.end(), [](const auto& a, const auto& b) {
+    return a.first.localeAwareCompare(b.first) < 0;
+  });
+  m_fluentNexusPicker->blockSignals(true);
+  m_fluentNexusPicker->clear();
+  m_fluentNexusPicker->addItem(available == 0 ? tr("Load the list from Nexus first")
+                                              : tr("Choose a Nexus category"),
+                               0);
+  for (const auto& [nexusName, nexusID] : nexus) {
+    const QString owner = owners.value(nexusID);
+    m_fluentNexusPicker->addItem(
+        owner.isEmpty() ? nexusName : tr("%1 (now in %2)").arg(nexusName, owner), nexusID);
+    m_fluentNexusPicker->setItemData(m_fluentNexusPicker->count() - 1, nexusName,
+                                     Qt::UserRole + 1);
+  }
+  m_fluentNexusPicker->setCurrentIndex(0);
+  m_fluentNexusPicker->setEnabled(mappingsOn && available > 0);
+  m_fluentNexusPicker->blockSignals(false);
+}
+
+void CategoriesDialog::setRowMappings(int row, const QVariantList& mappings)
+{
+  QTableWidgetItem* item = ui->categoriesTable->item(row, 3);
+  if (item == nullptr) {
+    item = new QTableWidgetItem();
+    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+    ui->categoriesTable->setItem(row, 3, item);
+  }
+  QStringList names;
+  for (const QVariant& entry : mappings) {
+    names.append(entry.toList().at(0).toString());
+  }
+  item->setData(Qt::UserRole, mappings);
+  item->setData(Qt::DisplayRole, names.join(", "));
+}
+
+void CategoriesDialog::mapNexusCategory(int row, const QString& name, int nexusID)
+{
+  // a Nexus category belongs to one category, as when it is dragged onto a row
+  for (int r = 0; r < ui->categoriesTable->rowCount(); ++r) {
+    if (r == row) {
+      continue;
+    }
+    QVariantList kept;
+    bool changed = false;
+    for (const QVariant& entry : validMappings(ui->categoriesTable->item(r, 3))) {
+      if (entry.toList().at(1).toInt() == nexusID) {
+        changed = true;
+      } else {
+        kept.append(entry);
+      }
+    }
+    if (changed) {
+      setRowMappings(r, kept);
+    }
+  }
+
+  QVariantList mappings = validMappings(ui->categoriesTable->item(row, 3));
+  QVariantList mapping;
+  mapping.append(name);
+  mapping.append(nexusID);
+  mappings.append(QVariant::fromValue(mapping));
+  setRowMappings(row, mappings);
+}
+
+void CategoriesDialog::addFluentCategory(int parentID)
+{
+  // new categories go at the end, so the order of the others stays
+  m_ContextRow = ui->categoriesTable->rowCount();
+  addCategory_clicked();
+  const int row = ui->categoriesTable->rowCount() - 1;
+  const int id  = ui->categoriesTable->item(row, 0)->text().toInt();
+  ui->categoriesTable->item(row, 1)->setText(tr("New category"));
+  if (parentID > 0) {
+    ui->categoriesTable->item(row, 2)->setData(Qt::DisplayRole, parentID);
+  }
+  m_fluentSearch->clear();
+  refreshFluentTree();
+  selectID(id);
+  refreshFluentDetails();
+  m_fluentNameEdit->setFocus();
+  m_fluentNameEdit->selectAll();
+}
+
+void CategoriesDialog::moveCategory(int delta)
+{
+  // swaps the category with the one above or below it inside the same parent
+  QTreeWidgetItem* item = m_fluentTree->currentItem();
+  if (item == nullptr) {
+    return;
+  }
+  QTreeWidgetItem* parent = item->parent();
+  const int index = parent ? parent->indexOfChild(item) : m_fluentTree->indexOfTopLevelItem(item);
+  const int count = parent ? parent->childCount() : m_fluentTree->topLevelItemCount();
+  const int other = index + delta;
+  if (other < 0 || other >= count) {
+    return;
+  }
+  QTreeWidgetItem* neighbour =
+      parent ? parent->child(other) : m_fluentTree->topLevelItem(other);
+  const int id        = item->data(0, CategoryIDRole).toInt();
+  QHeaderView* header = ui->categoriesTable->verticalHeader();
+  const int from      = header->visualIndex(rowForID(id));
+  const int to = header->visualIndex(rowForID(neighbour->data(0, CategoryIDRole).toInt()));
+  header->moveSection(from, to);
+  refreshFluentTree();
+  selectID(id);
+}
+
+void CategoriesDialog::sortCategories()
+{
+  QTableWidget* table = ui->categoriesTable;
+  QHeaderView* header = table->verticalHeader();
+  std::vector<int> rows;
+  for (int row = 0; row < table->rowCount(); ++row) {
+    rows.push_back(row);
+  }
+  std::sort(rows.begin(), rows.end(), [table](int a, int b) {
+    const QString left  = table->item(a, 1) ? table->item(a, 1)->text() : QString();
+    const QString right = table->item(b, 1) ? table->item(b, 1)->text() : QString();
+    return left.localeAwareCompare(right) < 0;
+  });
+  for (int visual = 0; visual < static_cast<int>(rows.size()); ++visual) {
+    header->moveSection(header->visualIndex(rows[visual]), visual);
+  }
+  const int id = selectedID();
+  refreshFluentTree();
+  selectID(id);
+}
+
+void CategoriesDialog::showFluentListMenu(const QPoint& pos)
+{
+  QTreeWidgetItem* item = m_fluentTree->itemAt(pos);
+  QMenu menu(this);
+
+  menu.addAction(FluentIcons::glyph(0xE710),
+                 tr("New category") + QLatin1Char('\t') +
+                     QKeySequence(QKeySequence::New).toString(QKeySequence::NativeText),
+                 this, [this] {
+                   addFluentCategory(0);
+                 });
+  if (item == nullptr) {
+    menu.addSeparator();
+    menu.addAction(FluentIcons::glyph(0xE8CB), tr("Sort A to Z"), this,
+                   &CategoriesDialog::sortCategories);
+    menu.exec(m_fluentTree->viewport()->mapToGlobal(pos));
+    return;
+  }
+
+  m_fluentTree->setCurrentItem(item);
+  const int id  = selectedID();
+  const int row = rowForID(id);
+  if (row < 0) {
+    return;
+  }
+  menu.addAction(FluentIcons::glyph(0xE710), tr("New subcategory"), this, [this, id] {
+    addFluentCategory(id);
+  });
+  menu.addAction(FluentIcons::glyph(0xE8AC),
+                 tr("Rename") + QLatin1Char('\t') +
+                     QKeySequence(Qt::Key_F2).toString(QKeySequence::NativeText),
+                 this, [this] {
+                   m_fluentNameEdit->setFocus();
+                   m_fluentNameEdit->selectAll();
+                 });
+  menu.addSeparator();
+
+  QTreeWidgetItem* parent = item->parent();
+  const int index = parent ? parent->indexOfChild(item) : m_fluentTree->indexOfTopLevelItem(item);
+  const int count = parent ? parent->childCount() : m_fluentTree->topLevelItemCount();
+  menu.addAction(FluentIcons::glyph(0xE74A), tr("Move up"), this, [this] {
+        moveCategory(-1);
+      })->setEnabled(index > 0);
+  menu.addAction(FluentIcons::glyph(0xE74B), tr("Move down"), this, [this] {
+        moveCategory(1);
+      })->setEnabled(index + 1 < count);
+  menu.addAction(FluentIcons::glyph(0xE8CB), tr("Sort A to Z"), this,
+                 &CategoriesDialog::sortCategories);
+  menu.addSeparator();
+
+  const QString name =
+      ui->categoriesTable->item(row, 1) ? ui->categoriesTable->item(row, 1)->text() : QString();
+  addCopyMenu(&menu, {{tr("Name"), name}, {tr("ID"), QString::number(id)}});
+  if (Settings::instance().nexus().categoryMappings()) {
+    auto* unmap = menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"),
+                                 tr("Remove Nexus mappings"), this, [this, row] {
+                                   setRowMappings(row, {});
+                                 });
+    unmap->setEnabled(!validMappings(ui->categoriesTable->item(row, 3)).isEmpty());
+  }
+  menu.addSeparator();
+  // the key shows at the menu's right edge; the list's shortcut handles it
+  menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                 tr("Remove") + QLatin1Char('\t') +
+                     QKeySequence(Qt::Key_Delete).toString(QKeySequence::NativeText),
+                 this, [this, row] {
+                   m_ContextRow = row;
+                   removeCategory_clicked();
+                 });
+
+  menu.exec(m_fluentTree->viewport()->mapToGlobal(pos));
+}
+
+void CategoriesDialog::showFluentHelp()
+{
+  FluentContentDialog dlg(
+      this, QStringLiteral("CategoryHelpDialog"), tr("What are categories for?"),
+      tr("Categories sort your mods: the mod list can group and filter by them, and a "
+         "mod can have several. A subcategory is listed inside another one.\n\nNexus "
+         "categories link a category to the ones mods have on Nexus Mods, so a mod "
+         "installed from Nexus gets the matching category by itself. Load the list from "
+         "Nexus to pick them, or import it to create the categories Nexus uses.\n\n"
+         "Changes are saved when you choose OK."));
+  auto* ok = dlg.addButton(tr("OK"), true);
+  connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+  dlg.resize(540, dlg.sizeHint().height());
+  dlg.exec();
 }

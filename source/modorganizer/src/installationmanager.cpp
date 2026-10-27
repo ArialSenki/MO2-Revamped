@@ -388,6 +388,7 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
     QueryOverwriteDialog overwriteDialog(m_ParentWidget,
                                          backup ? QueryOverwriteDialog::BACKUP_YES
                                                 : QueryOverwriteDialog::BACKUP_NO);
+    overwriteDialog.setModName(QFileInfo(targetDirectory).fileName());
 
     if (overwriteDialog.exec()) {
       settings.setKeepBackupOnInstall(overwriteDialog.backup());

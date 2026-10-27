@@ -324,6 +324,14 @@ log::Levels convertQtLevel(QtMsgType t)
 void qtLogCallback(QtMsgType type, const QMessageLogContext& context,
                    const QString& message)
 {
+  // Windows' old bitmap fonts (Fixedsys, Modern, MS Sans Serif...) cannot be
+  // opened by DirectWrite; Qt warns about each one the first time it looks for
+  // a fallback font, which is harmless
+  if (type == QtWarningMsg &&
+      message.startsWith(QLatin1String("DirectWrite: CreateFontFaceFromHDC() failed"))) {
+    type = QtDebugMsg;
+  }
+
   std::string_view file = "";
 
   if (type != QtDebugMsg) {

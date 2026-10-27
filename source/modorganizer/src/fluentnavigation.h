@@ -31,6 +31,10 @@ QListWidget* attach(QTabWidget* tabs, const QList<char16_t>& glyphs);
 // lines up with the content like a Windows 11 Settings page
 void setHeader(QTabWidget* tabs, QWidget* header);
 
+// puts a widget above the page list, like the account card at the top of
+// Windows 11 Settings
+void setNavigationHeader(QTabWidget* tabs, QWidget* header);
+
 // rebuilds the list after the tabs were added, removed, reordered, renamed
 // or recolored (a tab whose text color is set shows dimmed)
 void sync(QTabWidget* tabs);

@@ -345,11 +345,8 @@ protected:
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     const QColor accent = palette().color(QPalette::ButtonText);
-    const QColor hoverSurface = RevampedTheme::isBlack()
-                                    ? QColor(51, 51, 51)
-                                    : (accent.lightness() > 128
-                                           ? QColor(48, 58, 65)
-                                           : QColor(237, 244, 249));
+    const QColor hoverSurface =
+        accent.lightness() > 128 ? QColor(48, 58, 65) : QColor(237, 244, 249);
     if (underMouse() || isDown()) {
       QColor fill = isDown() ? accent : hoverSurface;
       fill.setAlpha(isDown() ? 42 : 255);
@@ -1695,6 +1692,8 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   }
   if (!features.gameFeature<DataArchives>()) {
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->bsaTab));
+    // nothing in archives to show in the Data tab either
+    ui->dataTabShowFromArchives->hide();
   }
 
   settings.geometry().restoreState(ui->downloadView->header());
@@ -2053,12 +2052,8 @@ void MainWindow::allowListResize()
   header->setStretchLastSection(!nameStretches);
 }
 
-void MainWindow::updateStyle(const QString& fileName)
+void MainWindow::updateStyle(const QString&)
 {
-  const QString styleFile = QFileInfo(fileName).fileName();
-  qApp->setProperty("revampedDarkBlack",
-                    styleFile.compare("dark-black.qss", Qt::CaseInsensitive) == 0 ||
-                        styleFile.compare("fluent-v4-black.qss", Qt::CaseInsensitive) == 0);
   refreshExecutablesList();
   resetActionIcons();
   createEndorseMenu();

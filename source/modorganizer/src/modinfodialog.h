@@ -39,6 +39,8 @@ class OrganizerCore;
 class Settings;
 class ModInfoDialogTab;
 class ModListView;
+class QLabel;
+class QToolButton;
 
 /**
  * this is a larger dialog used to visualise information about the mod.
@@ -243,6 +245,16 @@ private:
   // updates the large page title and short explanation for the selected tab
   //
   void updatePageHeader();
+
+  // Fluent v4: the mod's card above the page list, and the Nexus, notes and
+  // categories pages as cards of Settings rows; the Designer widgets move
+  // into them, so the tabs' code works on them as before
+  void buildFluentPages();
+  void updateModCard();
+
+  QLabel* m_modCardName       = nullptr;
+  QLabel* m_modCardCaption    = nullptr;
+  QToolButton* m_modCardNexus = nullptr;
 
   // called when the user re-orders tabs; sets the correct TabInfo::realPos for
   // all tabs

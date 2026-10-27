@@ -193,16 +193,13 @@ _GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
 
 def _theme_kind() -> str:
     application = QApplication.instance()
-    sheet = application.styleSheet() if application is not None else ""
-    if "v4-black" in sheet or "refined-black" in sheet:
-        return "black"
     if application is not None and application.palette().window().color().lightness() < 128:
         return "dark"
     return "light"
 
 
 def _accent_color() -> QColor:
-    return QColor({"black": "#D6D6D6", "dark": "#4CC2FF"}.get(_theme_kind(), "#005FB8"))
+    return QColor({"dark": "#4CC2FF"}.get(_theme_kind(), "#005FB8"))
 
 
 def _glyph_font(pixels: int) -> QFont:
@@ -2853,6 +2850,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         default_ini_checkbox = dialog.findChild(QCheckBox, "defaultSettingsBox")
         if default_ini_checkbox is None:
             return False
+        settings_card = dialog.findChild(QFrame, "profileSettingsCard")
 
         should_hide = (
             self._dialog_ui_enabled() and self._active_instance_is_elden_ring()
@@ -2868,12 +2866,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             if not default_ini_checkbox.isHidden():
                 default_ini_checkbox.hide()
+                # its card holds only this option and its explanation
+                if settings_card is not None:
+                    settings_card.hide()
                 layout = dialog.layout()
                 if layout is not None:
                     layout.invalidate()
                 dialog.adjustSize()
         elif original_visible is not None:
             default_ini_checkbox.setVisible(bool(original_visible))
+            if settings_card is not None:
+                settings_card.setVisible(bool(original_visible))
             default_ini_checkbox.setProperty(
                 "_eldenRingOriginalDefaultIniVisible", None
             )
@@ -4019,6 +4022,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             while layout.count() > 1:
                 item = layout.takeAt(1)
                 if item.widget() is not None:
+                    # out of the layout it would still paint until deleted
+                    item.widget().hide()
                     item.widget().deleteLater()
 
         def icon_button(glyph: int, tip: str) -> QToolButton:
@@ -4126,6 +4131,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 page_subtitle.setText(page_texts[index][1])
 
         nav.currentRowChanged.connect(show_page)
+        # accessibility tools select a page without moving the current row
+        nav.itemSelectionChanged.connect(
+            lambda: show_page(nav.row(nav.selectedItems()[0])) if nav.selectedItems() else None
+        )
 
         def selected_route() -> Path:
             return self._save_directory_for_selection(

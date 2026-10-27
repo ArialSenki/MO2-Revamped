@@ -22,6 +22,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_profileinputdialog.h"
 
 #include <QDialogButtonBox>
+#include "fluenticons.h"
+#include "fluentpanels.h"
+#include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
 
@@ -37,6 +40,18 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
   setWindowTitle(tr("MO2 Revamped"));
   setMinimumWidth(520);
   ui->nameEdit->setClearButtonEnabled(true);
+
+  // Fluent v4: the option is a Settings row with a switch, its explanation
+  // as the row's description
+  if (FluentIcons::active()) {
+    ui->defaultSettingsDescription->hide();
+    ui->profileSettingsLayout->setContentsMargins(0, 0, 0, 0);
+    ui->profileSettingsCard->setProperty("fluentCard", true);
+    FluentPanels::addSwitchRow(ui->profileSettingsCard, 0xE713,
+                               ui->defaultSettingsBox->text(),
+                               ui->defaultSettingsDescription->text(),
+                               ui->defaultSettingsBox);
+  }
 
   if (purpose == Purpose::Copy || purpose == Purpose::Rename) {
     ui->profileSettingsCard->hide();

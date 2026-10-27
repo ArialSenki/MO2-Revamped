@@ -128,25 +128,21 @@ void ThemeSettingsTab::addStyles()
       QCoreApplication::applicationDirPath() + "/" +
       QString::fromStdWString(AppConfig::stylesheetsPath()));
   const QStringList allowedStyles = {QStringLiteral("Light.qss"),
-                                     QStringLiteral("dark.qss"),
-                                     QStringLiteral("dark-black.qss")};
+                                     QStringLiteral("dark.qss")};
 
   for (const QString& fileName : allowedStyles) {
     if (!styleDirectory.exists(fileName)) {
       continue;
     }
 
-    // the Fluent themes install under the same file names; their dark theme
-    // is neutral rather than blue
+    // the Fluent themes install under the same file names
     QFile file(styleDirectory.filePath(fileName));
     const bool fluent = file.open(QIODevice::ReadOnly) &&
                         QString::fromUtf8(file.read(512)).contains(
                             QStringLiteral("MO2 Revamped Fluent v4"));
-    const QString displayName =
-        fileName == QStringLiteral("Light.qss") ? QObject::tr("Light")
-        : fileName == QStringLiteral("dark-black.qss") ? QObject::tr("Dark Black")
-        : fluent                                       ? QObject::tr("Dark")
-                                                       : QObject::tr("Dark Blue");
+    const QString displayName = fileName == QStringLiteral("Light.qss")
+                                    ? QObject::tr("Light")
+                                    : QObject::tr("Dark");
     ui->styleBox->addItem(displayName, fileName);
     ui->styleBox->setItemData(ui->styleBox->count() - 1, fluent, FluentRole);
   }

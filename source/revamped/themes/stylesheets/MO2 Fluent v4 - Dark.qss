@@ -5427,6 +5427,13 @@ QStatusBar {
 }
 QStatusBar QLabel#apistats {
     border-radius: 4px;
+    font-weight: 400;
+}
+/* a healthy quota is a plain caption; only a low one asks for attention */
+QStatusBar QLabel#apistats[apiState="healthy"] {
+    color: #9A9A9A;
+    background-color: transparent;
+    border: 1px solid transparent;
 }
 QStatusBar QLabel#apistats[apiState="warning"] {
     color: #F5D58C;
@@ -6203,7 +6210,7 @@ QLabel#instanceNameValidation {
     background-color: transparent;
 }
 QScrollArea#deleteInstanceScroll {
-    background-color: #202226;
+    background-color: #2E2E2E;
     border: 1px solid #363636;
     border-radius: 8px;
 }
@@ -6212,7 +6219,7 @@ QFrame#deleteInstanceList {
     background-color: transparent;
 }
 QFrame#instanceHelpExample {
-    background-color: #202226;
+    background-color: #2E2E2E;
     border: 1px solid #363636;
     border-radius: 6px;
 }

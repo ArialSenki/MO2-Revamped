@@ -81,6 +81,9 @@ private:
   };
 
 private:
+  // Fluent v4: commands under each card, a folder button per card
+  void buildFluentLayout();
+
   void refreshGlobalCharacters();
   void refreshLocalCharacters();
   void refreshGlobalSaves();

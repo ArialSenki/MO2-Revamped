@@ -304,14 +304,12 @@ function Copy-RevampedSources {
         $relative = $file.FullName.Substring($themeSource.Length).TrimStart('\')
         if ($file.Extension -ieq '.qss') {
             switch -CaseSensitive ($file.Name) {
-                # MO offers Light.qss, dark.qss and dark-black.qss; the Fluent
+                # MO offers Light.qss and dark.qss; the Fluent
                 # themes are the default under those names
                 'MO2 Fluent v4 - Light.qss' { $relative = 'Light.qss' }
                 'MO2 Fluent v4 - Dark.qss' { $relative = 'dark.qss' }
-                'MO2 Fluent v4 - Dark Black.qss' { $relative = 'dark-black.qss' }
                 'MO2 Classic Refined - Light.qss' { $relative = 'classic-refined-light.qss' }
                 'MO2 Classic Refined - Dark.qss' { $relative = 'classic-refined-dark.qss' }
-                'MO2 Classic Refined - Dark Black.qss' { $relative = 'classic-refined-black.qss' }
                 default { throw "Unexpected Revamped theme stylesheet: $($file.Name)" }
             }
         }
@@ -322,8 +320,7 @@ function Copy-RevampedSources {
 
     foreach ($theme in @(
         @{ Source = 'MO2 Fluent v4 - Light.qss'; Destination = 'Light.qss' },
-        @{ Source = 'MO2 Fluent v4 - Dark.qss'; Destination = 'dark.qss' },
-        @{ Source = 'MO2 Fluent v4 - Dark Black.qss'; Destination = 'dark-black.qss' }
+        @{ Source = 'MO2 Fluent v4 - Dark.qss'; Destination = 'dark.qss' }
     )) {
         $source = Join-Path $themeSource $theme.Source
         $destination = Join-Path $themeDestination $theme.Destination

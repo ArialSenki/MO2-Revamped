@@ -982,6 +982,13 @@ QStatusBar {
 }
 QStatusBar QLabel#apistats {
     border-radius: 4px;
+    font-weight: 400;
+}
+/* a healthy quota is a plain caption; only a low one asks for attention */
+QStatusBar QLabel#apistats[apiState="healthy"] {
+    color: @caption@;
+    background-color: transparent;
+    border: 1px solid transparent;
 }
 QStatusBar QLabel#apistats[apiState="warning"] {
     color: @warnFg@;
@@ -1758,7 +1765,7 @@ QLabel#instanceNameValidation {
     background-color: transparent;
 }
 QScrollArea#deleteInstanceScroll {
-    background-color: @bg@;
+    background-color: @rowAlt@;
     border: 1px solid @cardLine@;
     border-radius: 8px;
 }
@@ -1767,7 +1774,7 @@ QFrame#deleteInstanceList {
     background-color: transparent;
 }
 QFrame#instanceHelpExample {
-    background-color: @bg@;
+    background-color: @rowAlt@;
     border: 1px solid @cardLine@;
     border-radius: 6px;
 }
@@ -1963,4 +1970,71 @@ QDialog#CreateInstanceDialog QTextEdit#creationLog {
     background-color: @bg@;
     border: 1px solid @cardLine@;
     border-radius: 6px;
+}
+
+/* Windows 11 scroll bars: FluentScrollBarPainter draws the line, thumb, track
+   and arrows over each bar ([fluentScroll=true]); the theme sizes the bar,
+   leaves room for the arrows and hides its own handle. */
+QScrollBar[fluentScroll=true]:vertical {
+    width: 12px;
+    margin: 0px;
+    border: none;
+    background-color: transparent;
+}
+QScrollBar[fluentScroll=true]:horizontal {
+    height: 12px;
+    margin: 0px;
+    border: none;
+    background-color: transparent;
+}
+QScrollBar[fluentScroll=true]::handle:vertical {
+    background-color: transparent;
+    border: none;
+    min-height: 32px;
+}
+QScrollBar[fluentScroll=true]::handle:horizontal {
+    background-color: transparent;
+    border: none;
+    min-width: 32px;
+}
+QScrollBar[fluentScroll=true]::sub-line:vertical {
+    height: 12px;
+    subcontrol-origin: margin;
+    subcontrol-position: top;
+    background: transparent;
+    border: none;
+}
+QScrollBar[fluentScroll=true]::add-line:vertical {
+    height: 12px;
+    subcontrol-origin: margin;
+    subcontrol-position: bottom;
+    background: transparent;
+    border: none;
+}
+QScrollBar[fluentScroll=true]::sub-line:horizontal {
+    width: 12px;
+    subcontrol-origin: margin;
+    subcontrol-position: left;
+    background: transparent;
+    border: none;
+}
+QScrollBar[fluentScroll=true]::add-line:horizontal {
+    width: 12px;
+    subcontrol-origin: margin;
+    subcontrol-position: right;
+    background: transparent;
+    border: none;
+}
+QScrollBar[fluentScroll=true]::up-arrow,
+QScrollBar[fluentScroll=true]::down-arrow,
+QScrollBar[fluentScroll=true]::left-arrow,
+QScrollBar[fluentScroll=true]::right-arrow {
+    image: none;
+    background: none;
+    width: 0px;
+    height: 0px;
+}
+QScrollBar[fluentScroll=true]::add-page,
+QScrollBar[fluentScroll=true]::sub-page {
+    background: transparent;
 }

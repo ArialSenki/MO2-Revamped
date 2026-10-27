@@ -163,6 +163,14 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
                                                 0xE9D9,  // Diagnostics: Diagnostic
                                             });
     perf.lap("navigation");
+    // the pages scroll at the window's edge; OK and Cancel keep their margin
+    if (QLayout* root = layout()) {
+      QMargins margins = root->contentsMargins();
+      ui->buttonBox->setContentsMargins(0, 0, std::max(16, margins.right()), 0);
+      margins.setRight(0);
+      root->setContentsMargins(margins);
+    }
+
     // room for the navigation rail, still inside the available screen width
     const int maxWidth = qMax(320, availableSize.width() - 48);
     setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
@@ -293,6 +301,7 @@ void SettingsDialog::initializeTab(int index)
   perf.lap(qPrintable(ui->tabWidget->widget(index)->objectName()));
   if (FluentIcons::active()) {
     FluentSettings::restyle(ui->tabWidget->widget(index));
+    FluentSettings::scrollAtEdge(ui->tabWidget->widget(index));
     perf.lap("restyle");
   }
   const QString activeStyle = m_settings.interface().styleName().value_or("");

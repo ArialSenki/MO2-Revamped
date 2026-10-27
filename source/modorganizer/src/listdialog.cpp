@@ -18,6 +18,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "listdialog.h"
 #include "settings.h"
 #include "ui_listdialog.h"
+#include "fluenticons.h"
+#include "fluentpanels.h"
 
 ListDialog::ListDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::ListDialog), m_Choices()
@@ -25,6 +27,15 @@ ListDialog::ListDialog(QWidget* parent)
   ui->setupUi(this);
   resize(420, 540);
   ui->filterEdit->setFocus();
+  ui->filterEdit->setClearButtonEnabled(true);
+
+  // Fluent v4: the choices are list rows with the hover fill and the accent
+  // pill of the selected one, like the manager dialogs
+  if (FluentIcons::active()) {
+    ui->choiceList->setItemDelegate(new FluentPanels::RowDelegate(ui->choiceList, 40, 0));
+    ui->choiceList->setMouseTracking(true);
+    ui->choiceList->setFrameShape(QFrame::NoFrame);
+  }
   connect(ui->choiceList, &QListWidget::itemDoubleClicked, this, &QDialog::accept);
 }
 
@@ -35,6 +46,10 @@ ListDialog::~ListDialog()
 
 int ListDialog::exec()
 {
+  // the page title says what is chosen, as the window title does
+  if (!windowTitle().isEmpty()) {
+    ui->titleLabel->setText(windowTitle());
+  }
   GeometrySaver gs(Settings::instance(), this);
   return QDialog::exec();
 }

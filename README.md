@@ -65,7 +65,7 @@ The full list is in the [changelog](CHANGELOG.md).
   overwrite each other.
 - **Six languages** — English, Spanish, German, French, Italian and Brazilian
   Portuguese.
-- **Themes** — Light, Dark Blue and Dark Black.
+- **Themes** — Light and Dark.
 
 ### Where your data lives
 

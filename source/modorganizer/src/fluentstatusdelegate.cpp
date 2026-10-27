@@ -141,14 +141,10 @@ std::vector<Status> statusesFor(const QModelIndex& index)
 std::pair<QColor, QColor> colorsFor(Tone tone)
 {
   using namespace MOBase;
-  const bool dark  = RevampedTheme::isDark();
-  const bool black = RevampedTheme::isBlack();
+  const bool dark = RevampedTheme::isDark();
 
   switch (tone) {
   case Tone::Accent:
-    if (black) {
-      return {QColor("#333333"), QColor("#E6E6E6")};
-    }
     return dark ? std::pair{QColor("#1F3443"), QColor("#60CDFF")}
                 : std::pair{QColor("#DCE8F5"), QColor("#005FB8")};
   case Tone::Success:

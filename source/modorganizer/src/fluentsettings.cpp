@@ -686,6 +686,45 @@ void switchRows(QWidget* root)
 namespace FluentSettings
 {
 
+void scrollAtEdge(QWidget* page, int gap)
+{
+  if (page == nullptr) {
+    return;
+  }
+  for (QScrollArea* scroll : page->findChildren<QScrollArea*>()) {
+    // only the page's own scroll areas, not ones inside its cards
+    bool nested = false;
+    for (QWidget* w = scroll->parentWidget(); w != nullptr && w != page;
+         w = w->parentWidget()) {
+      if (qobject_cast<QScrollArea*>(w) != nullptr) {
+        nested = true;
+        break;
+      }
+    }
+    QWidget* content = scroll->widget();
+    if (nested || content == nullptr || content->layout() == nullptr ||
+        content->property("fluentEdgeGap").toBool()) {
+      continue;
+    }
+    QMargins margins = content->layout()->contentsMargins();
+    margins.setRight(margins.right() + gap);
+    content->layout()->setContentsMargins(margins);
+    content->setProperty("fluentEdgeGap", true);
+
+    // and the layouts holding the scroll area leave no gap of their own
+    for (QWidget* w = scroll->parentWidget(); w != nullptr; w = w->parentWidget()) {
+      if (QLayout* holder = w->layout()) {
+        QMargins outer = holder->contentsMargins();
+        outer.setRight(0);
+        holder->setContentsMargins(outer);
+      }
+      if (w == page) {
+        break;
+      }
+    }
+  }
+}
+
 void wrapInScrollArea(QWidget* page)
 {
   if (page != nullptr) {

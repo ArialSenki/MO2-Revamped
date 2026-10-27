@@ -27,6 +27,11 @@ void switchRows(QWidget* root);
 // pages built lazily need it up front so they do not inflate the dialog
 void wrapInScrollArea(QWidget* page);
 
+// Windows 11 puts a page's scroll bar at the window's edge: the page's own
+// scroll areas keep their gap to the edge inside, with the bar beyond it.
+// The dialog sets its right margin to 0; calling it again is harmless.
+void scrollAtEdge(QWidget* page, int gap = 16);
+
 }  // namespace FluentSettings
 
 #endif  // FLUENTSETTINGS_H

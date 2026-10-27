@@ -27,6 +27,58 @@
       <source>Mod Organizer 2: Revamped</source>
       <translation>Mod Organizer 2: Revamped</translation>
     </message>
+    <message>
+      <source>Build</source>
+      <translation>Build</translation>
+    </message>
+    <message>
+      <source>Copied</source>
+      <translation>Kopiert</translation>
+    </message>
+    <message>
+      <source>Copies the version, build and system to paste in an issue</source>
+      <translation>Kopiert Version, Build und System zum Einfügen in ein Issue</translation>
+    </message>
+    <message>
+      <source>Copy for a bug report</source>
+      <translation>Für einen Fehlerbericht kopieren</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped on GitHub</source>
+      <translation>MO2 Revamped auf GitHub</translation>
+    </message>
+    <message>
+      <source>Qt</source>
+      <translation>Qt</translation>
+    </message>
+    <message>
+      <source>Report a problem</source>
+      <translation>Problem melden</translation>
+    </message>
+    <message>
+      <source>Version</source>
+      <translation>Version</translation>
+    </message>
+    <message>
+      <source>Version %1</source>
+      <translation>Version %1</translation>
+    </message>
+    <message>
+      <source>Virtual file system</source>
+      <translation>Virtuelles Dateisystem</translation>
+    </message>
+    <message>
+      <source>Windows</source>
+      <translation>Windows</translation>
+    </message>
+    <message>
+      <source>unknown</source>
+      <translation>unbekannt</translation>
+    </message>
+    <message>
+      <source>usvfs %1</source>
+      <translation>usvfs %1</translation>
+    </message>
   </context>
   <context>
     <name>ActivateModsDialog</name>
@@ -227,6 +279,198 @@
     <message>
       <source>Remove category</source>
       <translation>Kategorie entfernen</translation>
+    </message>
+    <message>
+      <source>%1 (now in %2)</source>
+      <translation>%1 (jetzt in %2)</translation>
+    </message>
+    <message>
+      <source>%1 Nexus categories</source>
+      <translation>%1 Nexus-Kategorien</translation>
+    </message>
+    <message>
+      <source>%1 mods</source>
+      <translation>%1 Mods</translation>
+    </message>
+    <message>
+      <source>%1 mods use this category</source>
+      <translation>%1 Mods verwenden diese Kategorie</translation>
+    </message>
+    <message>
+      <source>(no name)</source>
+      <translation>(ohne Namen)</translation>
+    </message>
+    <message>
+      <source>1 Nexus category</source>
+      <translation>1 Nexus-Kategorie</translation>
+    </message>
+    <message>
+      <source>1 mod</source>
+      <translation>1 Mod</translation>
+    </message>
+    <message>
+      <source>1 mod uses this category</source>
+      <translation>1 Mod verwendet diese Kategorie</translation>
+    </message>
+    <message>
+      <source>A subcategory is listed under the category it belongs to</source>
+      <translation>Eine Unterkategorie steht unter der Kategorie, zu der sie gehört</translation>
+    </message>
+    <message>
+      <source>Add a Nexus category</source>
+      <translation>Nexus-Kategorie hinzufügen</translation>
+    </message>
+    <message>
+      <source>Add a category at the top level (Ctrl+N)</source>
+      <translation>Fügt eine Kategorie auf oberster Ebene hinzu (Strg+N)</translation>
+    </message>
+    <message>
+      <source>Add one, or pick one in the list</source>
+      <translation>Füge eine hinzu oder wähle eine aus der Liste</translation>
+    </message>
+    <message>
+      <source>Categories</source>
+      <translation>Kategorien</translation>
+    </message>
+    <message>
+      <source>Categories sort your mods: the mod list can group and filter by them, and a mod can have several. A subcategory is listed inside another one.
+
+Nexus categories link a category to the ones mods have on Nexus Mods, so a mod installed from Nexus gets the matching category by itself. Load the list from Nexus to pick them, or import it to create the categories Nexus uses.
+
+Changes are saved when you choose OK.</source>
+      <translation>Kategorien ordnen deine Mods: Die Mod-Liste kann nach ihnen gruppieren und filtern, und eine Mod kann mehrere haben. Eine Unterkategorie steht in einer anderen.
+
+Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods haben, sodass eine von Nexus installierte Mod automatisch die passende Kategorie erhält. Lade die Liste von Nexus, um sie auszuwählen, oder importiere sie, um die Kategorien von Nexus anzulegen.
+
+Änderungen werden gespeichert, wenn du OK wählst.</translation>
+    </message>
+    <message>
+      <source>Choose a Nexus category</source>
+      <translation>Nexus-Kategorie wählen</translation>
+    </message>
+    <message>
+      <source>Choose a category in the list, or add one.</source>
+      <translation>Wähle eine Kategorie aus der Liste oder füge eine hinzu.</translation>
+    </message>
+    <message>
+      <source>Copy the ID</source>
+      <translation>ID kopieren</translation>
+    </message>
+    <message>
+      <source>ID</source>
+      <translation>ID</translation>
+    </message>
+    <message>
+      <source>Import...</source>
+      <translation>Importieren...</translation>
+    </message>
+    <message>
+      <source>Inside</source>
+      <translation>Enthalten in</translation>
+    </message>
+    <message>
+      <source>Inside %1</source>
+      <translation>In %1</translation>
+    </message>
+    <message>
+      <source>Load from Nexus</source>
+      <translation>Von Nexus laden</translation>
+    </message>
+    <message>
+      <source>Load the list from Nexus first</source>
+      <translation>Lade zuerst die Liste von Nexus</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mods</translation>
+    </message>
+    <message>
+      <source>Mods from Nexus do not get this category by themselves</source>
+      <translation>Mods von Nexus erhalten diese Kategorie nicht automatisch</translation>
+    </message>
+    <message>
+      <source>Mods from Nexus in that category get this one when they are installed</source>
+      <translation>Mods von Nexus in dieser Kategorie erhalten diese beim Installieren</translation>
+    </message>
+    <message>
+      <source>Move down</source>
+      <translation>Nach unten</translation>
+    </message>
+    <message>
+      <source>Move up</source>
+      <translation>Nach oben</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Name</translation>
+    </message>
+    <message>
+      <source>New category</source>
+      <translation>Neue Kategorie</translation>
+    </message>
+    <message>
+      <source>New subcategory</source>
+      <translation>Neue Unterkategorie</translation>
+    </message>
+    <message>
+      <source>Nexus ID %1</source>
+      <translation>Nexus-ID %1</translation>
+    </message>
+    <message>
+      <source>No category selected</source>
+      <translation>Keine Kategorie ausgewählt</translation>
+    </message>
+    <message>
+      <source>No mod uses this category</source>
+      <translation>Keine Mod verwendet diese Kategorie</translation>
+    </message>
+    <message>
+      <source>None</source>
+      <translation>Keine</translation>
+    </message>
+    <message>
+      <source>Nothing (top level)</source>
+      <translation>Keine (oberste Ebene)</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Remove</source>
+      <translation>Entfernen</translation>
+    </message>
+    <message>
+      <source>Remove the category; its subcategories move up a level (Delete)</source>
+      <translation>Entfernt die Kategorie; ihre Unterkategorien rücken eine Ebene auf (Entf)</translation>
+    </message>
+    <message>
+      <source>Rename</source>
+      <translation>Umbenennen</translation>
+    </message>
+    <message>
+      <source>Search categories</source>
+      <translation>Kategorien suchen</translation>
+    </message>
+    <message>
+      <source>Shown in the mod list, its filters and the mod&apos;s menu</source>
+      <translation>Wird in der Mod-Liste, ihren Filtern und im Menü der Mod angezeigt</translation>
+    </message>
+    <message>
+      <source>Sort A to Z</source>
+      <translation>Von A bis Z sortieren</translation>
+    </message>
+    <message>
+      <source>Take this Nexus category off</source>
+      <translation>Diese Nexus-Kategorie entfernen</translation>
+    </message>
+    <message>
+      <source>Top-level category</source>
+      <translation>Kategorie der obersten Ebene</translation>
+    </message>
+    <message>
+      <source>What are categories for?</source>
+      <translation>Wozu dienen Kategorien?</translation>
     </message>
   </context>
   <context>
@@ -1998,6 +2242,18 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <source>&apos;{path}&apos; is enabled for both &apos;{first}&apos; and &apos;{mod}&apos;. MO2 loads only the copy that wins the file; disable or remove one of the entries.</source>
       <translation>„{path}“ ist sowohl für „{first}“ als auch für „{mod}“ aktiviert. MO2 lädt nur die Kopie, die die Datei gewinnt; deaktiviere oder entferne einen der Einträge.</translation>
     </message>
+    <message>
+      <source>Copy route</source>
+      <translation>Route kopieren</translation>
+    </message>
+    <message>
+      <source>MO2 profile: {profile}</source>
+      <translation>MO2-Profil: {profile}</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Im Ordner anzeigen</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingSaveIsolation</name>
@@ -3598,6 +3854,98 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <source>Not available for Nightreign yet.</source>
       <translation>Für Nightreign noch nicht verfügbar.</translation>
     </message>
+    <message>
+      <source>Cleanup</source>
+      <translation>Bereinigung</translation>
+    </message>
+    <message>
+      <source>Copies of earlier launches kept next to the current log</source>
+      <translation>Kopien früherer Starts neben dem aktuellen Protokoll</translation>
+    </message>
+    <message>
+      <source>Delay after bridge loads</source>
+      <translation>Verzögerung nach dem Laden der Bridge</translation>
+    </message>
+    <message>
+      <source>Good to know</source>
+      <translation>Gut zu wissen</translation>
+    </message>
+    <message>
+      <source>How Elden Ring appears when MO2 starts it. Character save files are not changed.</source>
+      <translation>Wie Elden Ring erscheint, wenn MO2 es startet. Spielstände der Charaktere werden nicht geändert.</translation>
+    </message>
+    <message>
+      <source>How long the game runs on every processor first</source>
+      <translation>Wie lange das Spiel zuerst auf allen Prozessoren läuft</translation>
+    </message>
+    <message>
+      <source>Intro</source>
+      <translation>Intro</translation>
+    </message>
+    <message>
+      <source>Last bridge log</source>
+      <translation>Letztes Bridge-Protokoll</translation>
+    </message>
+    <message>
+      <source>Launch</source>
+      <translation>Start</translation>
+    </message>
+    <message>
+      <source>Log folder</source>
+      <translation>Protokollordner</translation>
+    </message>
+    <message>
+      <source>Options for this MO2 profile</source>
+      <translation>Optionen für dieses MO2-Profil</translation>
+    </message>
+    <message>
+      <source>Pages</source>
+      <translation>Seiten</translation>
+    </message>
+    <message>
+      <source>Previous bridge log</source>
+      <translation>Vorheriges Bridge-Protokoll</translation>
+    </message>
+    <message>
+      <source>Previous sessions to keep</source>
+      <translation>Zu behaltende frühere Sitzungen</translation>
+    </message>
+    <message>
+      <source>Priority</source>
+      <translation>Priorität</translation>
+    </message>
+    <message>
+      <source>Process priority</source>
+      <translation>Prozesspriorität</translation>
+    </message>
+    <message>
+      <source>Processor</source>
+      <translation>Prozessor</translation>
+    </message>
+    <message>
+      <source>Processors</source>
+      <translation>Prozessoren</translation>
+    </message>
+    <message>
+      <source>Restore defaults</source>
+      <translation>Standardwerte wiederherstellen</translation>
+    </message>
+    <message>
+      <source>The launch before that one</source>
+      <translation>Der Start davor</translation>
+    </message>
+    <message>
+      <source>Turns every option off again; nothing changes until you save</source>
+      <translation>Schaltet alle Optionen wieder aus; nichts ändert sich, bis du speicherst</translation>
+    </message>
+    <message>
+      <source>Window</source>
+      <translation>Fenster</translation>
+    </message>
+    <message>
+      <source>Written while the game ran last</source>
+      <translation>Beim letzten Spielstart geschrieben</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeModel</name>
@@ -3771,6 +4119,14 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <source>Last played %1</source>
       <translation>Zuletzt gespielt %1</translation>
     </message>
+    <message>
+      <source>Search downloads</source>
+      <translation>Downloads suchen</translation>
+    </message>
+    <message>
+      <source>Search files</source>
+      <translation>Dateien suchen</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
@@ -3805,6 +4161,158 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
     <message>
       <source>Remove rule</source>
       <translation>Regel entfernen</translation>
+    </message>
+    <message>
+      <source>A DLL, relative to the game folder</source>
+      <translation>Eine DLL, relativ zum Spielordner</translation>
+    </message>
+    <message>
+      <source>A rule that is off stays saved but is not applied</source>
+      <translation>Eine ausgeschaltete Regel bleibt gespeichert, wird aber nicht angewendet</translation>
+    </message>
+    <message>
+      <source>Add library</source>
+      <translation>Bibliothek hinzufügen</translation>
+    </message>
+    <message>
+      <source>Add one to load it into a program</source>
+      <translation>Füge eine hinzu, um sie in ein Programm zu laden</translation>
+    </message>
+    <message>
+      <source>Browse for the library</source>
+      <translation>Nach der Bibliothek suchen</translation>
+    </message>
+    <message>
+      <source>Browse for the program</source>
+      <translation>Nach dem Programm suchen</translation>
+    </message>
+    <message>
+      <source>Choose the library first</source>
+      <translation>Wähle zuerst die Bibliothek</translation>
+    </message>
+    <message>
+      <source>Choose the program it goes into</source>
+      <translation>Wähle das Programm, in das sie geladen wird</translation>
+    </message>
+    <message>
+      <source>Duplicate</source>
+      <translation>Duplizieren</translation>
+    </message>
+    <message>
+      <source>File</source>
+      <translation>Datei</translation>
+    </message>
+    <message>
+      <source>For example %1</source>
+      <translation>Zum Beispiel %1</translation>
+    </message>
+    <message>
+      <source>Game plugin</source>
+      <translation>Spiel-Plugin</translation>
+    </message>
+    <message>
+      <source>Libraries</source>
+      <translation>Bibliotheken</translation>
+    </message>
+    <message>
+      <source>Library</source>
+      <translation>Bibliothek</translation>
+    </message>
+    <message>
+      <source>Library path</source>
+      <translation>Bibliothekspfad</translation>
+    </message>
+    <message>
+      <source>Load another DLL into a program (Ctrl+N)</source>
+      <translation>Lädt eine weitere DLL in ein Programm (Strg+N)</translation>
+    </message>
+    <message>
+      <source>Load this library</source>
+      <translation>Diese Bibliothek laden</translation>
+    </message>
+    <message>
+      <source>Loaded into %1</source>
+      <translation>Wird in %1 geladen</translation>
+    </message>
+    <message>
+      <source>New library</source>
+      <translation>Neue Bibliothek</translation>
+    </message>
+    <message>
+      <source>No library is forced into a program yet. Add one to load a DLL that a program does not load by itself.</source>
+      <translation>Noch wird keine Bibliothek zwangsweise in ein Programm geladen. Füge eine hinzu, um eine DLL zu laden, die ein Programm nicht selbst lädt.</translation>
+    </message>
+    <message>
+      <source>No library selected</source>
+      <translation>Keine Bibliothek ausgewählt</translation>
+    </message>
+    <message>
+      <source>No program</source>
+      <translation>Kein Programm</translation>
+    </message>
+    <message>
+      <source>Not found: %1</source>
+      <translation>Nicht gefunden: %1</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Off</source>
+      <translation>Aus</translation>
+    </message>
+    <message>
+      <source>Program</source>
+      <translation>Programm</translation>
+    </message>
+    <message>
+      <source>Remove</source>
+      <translation>Entfernen</translation>
+    </message>
+    <message>
+      <source>Remove the rule (Delete)</source>
+      <translation>Entfernt die Regel (Entf)</translation>
+    </message>
+    <message>
+      <source>Show in folder</source>
+      <translation>Im Ordner anzeigen</translation>
+    </message>
+    <message>
+      <source>Show the library in its folder</source>
+      <translation>Zeigt die Bibliothek in ihrem Ordner</translation>
+    </message>
+    <message>
+      <source>Some mods come as a DLL that the game does not load by itself, and some tools need a library loaded before they start. A rule here makes Mod Organizer load that DLL into the named program each time it starts from this entry.
+
+Most mods do not need it: script extenders and DLL loaders already load their plugins.</source>
+      <translation>Manche Mods kommen als DLL, die das Spiel nicht selbst lädt, und manche Tools brauchen eine geladene Bibliothek, bevor sie starten. Eine Regel hier lässt Mod Organizer diese DLL bei jedem Start über diesen Eintrag in das genannte Programm laden.
+
+Die meisten Mods brauchen das nicht: Script Extender und DLL-Loader laden ihre Plugins bereits.</translation>
+    </message>
+    <message>
+      <source>The DLL Mod Organizer loads into the program</source>
+      <translation>Die DLL, die Mod Organizer in das Programm lädt</translation>
+    </message>
+    <message>
+      <source>The game plugin needs this library, so it cannot be changed or removed. You can still turn it off.</source>
+      <translation>Das Spiel-Plugin braucht diese Bibliothek, daher kann sie nicht geändert oder entfernt werden. Du kannst sie aber ausschalten.</translation>
+    </message>
+    <message>
+      <source>The process it is loaded into, by file name</source>
+      <translation>Der Prozess, in den sie geladen wird, nach Dateiname</translation>
+    </message>
+    <message>
+      <source>Turn off</source>
+      <translation>Ausschalten</translation>
+    </message>
+    <message>
+      <source>Turn on</source>
+      <translation>Einschalten</translation>
+    </message>
+    <message>
+      <source>When do I need this?</source>
+      <translation>Wann brauche ich das?</translation>
     </message>
   </context>
   <context>
@@ -5928,8 +6436,8 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Oberfläche und Diagnose</translation>
     </message>
     <message>
-      <source>Includes Windows 11 style themes (Light, Dark and Dark Black) with Fluent icons, plus tools to prepare diagnostic reports.</source>
-      <translation>Enthält Designs im Stil von Windows 11 (Hell, Dunkel und Dunkelschwarz) mit Fluent-Symbolen sowie Werkzeuge zum Erstellen von Diagnoseberichten.</translation>
+      <source>Includes Windows 11 style themes (Light and Dark) with Fluent icons, plus tools to prepare diagnostic reports.</source>
+      <translation>Enthält Designs im Stil von Windows 11 (Hell und Dunkel) mit Fluent-Symbolen sowie Werkzeuge zum Erstellen von Diagnoseberichten.</translation>
     </message>
     <message>
       <source>Included components</source>
@@ -6060,10 +6568,10 @@ Archiv-Installer · {installer}</translation>
     <message>
       <source>Save isolation · {saves}
 Startup options · {startup}
-Fluent themes · Light, Dark and Dark Black</source>
+Fluent themes · Light and Dark</source>
       <translation>Spielstandtrennung · {saves}
 Startoptionen · {startup}
-Fluent-Designs · Hell, Dunkel und Dunkelschwarz</translation>
+Fluent-Designs · Hell und Dunkel</translation>
     </message>
     <message>
       <source>Location:
@@ -6086,6 +6594,28 @@ Check the MO2 log for details.</source>
       <translation>{error}
 
 Details findest du im MO2-Protokoll.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped on GitHub</source>
+      <translation>MO2 Revamped auf GitHub</translation>
+    </message>
+    <message>
+      <source>Open the licenses folder</source>
+      <translation>Lizenzordner öffnen</translation>
+    </message>
+    <message>
+      <source>Pages</source>
+      <translation>Seiten</translation>
+    </message>
+    <message>
+      <source>Mod Organizer 2 · {mo2}
+Qt and PyQt · {qt}
+Python · {python}
+OpenSSL · {openssl}</source>
+      <translation>Mod Organizer 2 · {mo2}
+Qt und PyQt · {qt}
+Python · {python}
+OpenSSL · {openssl}</translation>
     </message>
   </context>
   <context>
@@ -6147,6 +6677,138 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Inspect the mod's folder structure and manage its files.</source>
       <translation>Prüfe die Ordnerstruktur der Mod und verwalte ihre Dateien.</translation>
+    </message>
+    <message>
+      <source>A short note shown in the mod list</source>
+      <translation>Eine kurze Notiz, die in der Mod-Liste angezeigt wird</translation>
+    </message>
+    <message>
+      <source>Active</source>
+      <translation>Aktiv</translation>
+    </message>
+    <message>
+      <source>Categories of this mod</source>
+      <translation>Kategorien dieser Mod</translation>
+    </message>
+    <message>
+      <source>Color</source>
+      <translation>Farbe</translation>
+    </message>
+    <message>
+      <source>Comment</source>
+      <translation>Kommentar</translation>
+    </message>
+    <message>
+      <source>Copy the mod&apos;s name</source>
+      <translation>Namen der Mod kopieren</translation>
+    </message>
+    <message>
+      <source>Custom web page</source>
+      <translation>Eigene Webseite</translation>
+    </message>
+    <message>
+      <source>Files outside any mod</source>
+      <translation>Dateien außerhalb jeder Mod</translation>
+    </message>
+    <message>
+      <source>For mods from elsewhere: the page Open opens instead of Nexus</source>
+      <translation>Für Mods von anderswo: die Seite, die Öffnen statt Nexus öffnet</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Spiel</translation>
+    </message>
+    <message>
+      <source>Inactive</source>
+      <translation>Inaktiv</translation>
+    </message>
+    <message>
+      <source>Marks the mod&apos;s row in the mod list</source>
+      <translation>Markiert die Zeile der Mod in der Mod-Liste</translation>
+    </message>
+    <message>
+      <source>Mod ID</source>
+      <translation>Mod-ID</translation>
+    </message>
+    <message>
+      <source>Nexus Mods</source>
+      <translation>Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Nexus category</source>
+      <translation>Nexus-Kategorie</translation>
+    </message>
+    <message>
+      <source>Not managed by Mod Organizer</source>
+      <translation>Nicht von Mod Organizer verwaltet</translation>
+    </message>
+    <message>
+      <source>Notes</source>
+      <translation>Notizen</translation>
+    </message>
+    <message>
+      <source>Open the custom page</source>
+      <translation>Eigene Seite öffnen</translation>
+    </message>
+    <message>
+      <source>Open the mod&apos;s folder</source>
+      <translation>Ordner der Mod öffnen</translation>
+    </message>
+    <message>
+      <source>Open the mod&apos;s page</source>
+      <translation>Seite der Mod öffnen</translation>
+    </message>
+    <message>
+      <source>Primary category</source>
+      <translation>Hauptkategorie</translation>
+    </message>
+    <message>
+      <source>Priority %1</source>
+      <translation>Priorität %1</translation>
+    </message>
+    <message>
+      <source>Red when Nexus has a newer one</source>
+      <translation>Rot, wenn Nexus eine neuere hat</translation>
+    </message>
+    <message>
+      <source>Separator</source>
+      <translation>Trenner</translation>
+    </message>
+    <message>
+      <source>Shown in the mod list&apos;s Notes column</source>
+      <translation>Wird in der Spalte Notizen der Mod-Liste angezeigt</translation>
+    </message>
+    <message>
+      <source>The Nexus game the page belongs to</source>
+      <translation>Das Nexus-Spiel, zu dem die Seite gehört</translation>
+    </message>
+    <message>
+      <source>The category number on Nexus</source>
+      <translation>Die Nummer der Kategorie auf Nexus</translation>
+    </message>
+    <message>
+      <source>The mod above this one in the list (Page Up)</source>
+      <translation>Die Mod über dieser in der Liste (Bild auf)</translation>
+    </message>
+    <message>
+      <source>The mod below this one in the list (Page Down)</source>
+      <translation>Die Mod unter dieser in der Liste (Bild ab)</translation>
+    </message>
+    <message>
+      <source>The number in the mod&apos;s Nexus address</source>
+      <translation>Die Nummer in der Nexus-Adresse der Mod</translation>
+    </message>
+    <message>
+      <source>The one the mod list shows and groups by</source>
+      <translation>Die, die die Mod-Liste anzeigt und nach der sie gruppiert</translation>
+    </message>
+    <message>
+      <source>Version</source>
+      <translation>Version</translation>
+    </message>
+    <message>
+      <source>Version %1</source>
+      <translation>Version %1</translation>
     </message>
   </context>
   <context>
@@ -6606,6 +7268,10 @@ Move anything you want to keep into a mod before continuing.</source>
 
 Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     </message>
+    <message>
+      <source>Choose a separator</source>
+      <translation>Trenner wählen</translation>
+    </message>
   </context>
   <context>
     <name>NexusManualKeyDialog</name>
@@ -6773,6 +7439,58 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     <message>
       <source>%1 files, %2, not part of any mod</source>
       <translation>%1 Dateien, %2, in keinem Mod</translation>
+    </message>
+    <message>
+      <source>%1 file</source>
+      <translation>%1-Datei</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Collapse all</source>
+      <translation>Alle reduzieren</translation>
+    </message>
+    <message>
+      <source>Empty Overwrite?</source>
+      <translation>Overwrite leeren?</translation>
+    </message>
+    <message>
+      <source>Empty to Recycle Bin...</source>
+      <translation>In den Papierkorb leeren...</translation>
+    </message>
+    <message>
+      <source>Everything in Overwrite goes to the Recycle Bin: %1. Logs and settings that DLL mods and tools wrote there are gone from the game until you restore them.
+
+To keep some files, move them to a mod first.</source>
+      <translation>Alles in Overwrite wandert in den Papierkorb: %1. Protokolle und Einstellungen, die DLL-Mods und Tools dort geschrieben haben, fehlen dem Spiel, bis du sie wiederherstellst.
+
+Um einige Dateien zu behalten, verschiebe sie vorher in eine Mod.</translation>
+    </message>
+    <message>
+      <source>Expand all</source>
+      <translation>Alle erweitern</translation>
+    </message>
+    <message>
+      <source>File</source>
+      <translation>Datei</translation>
+    </message>
+    <message>
+      <source>Folder</source>
+      <translation>Ordner</translation>
+    </message>
+    <message>
+      <source>Move everything in Overwrite to the Recycle Bin</source>
+      <translation>Verschiebt alles in Overwrite in den Papierkorb</translation>
+    </message>
+    <message>
+      <source>Move to Recycle Bin</source>
+      <translation>In den Papierkorb verschieben</translation>
+    </message>
+    <message>
+      <source>Search files</source>
+      <translation>Dateien suchen</translation>
     </message>
   </context>
   <context>
@@ -7855,6 +8573,38 @@ p, li { white-space: pre-wrap; }
       <source>Creates a recoverable copy before files are changed.</source>
       <translation>Erstellt eine wiederherstellbare Kopie, bevor Dateien geändert werden.</translation>
     </message>
+    <message>
+      <source>&quot;%1&quot; is already installed</source>
+      <translation>&quot;%1&quot; ist bereits installiert</translation>
+    </message>
+    <message>
+      <source>Adds the new files to the installed mod; files with the same name are replaced</source>
+      <translation>Fügt die neuen Dateien zur installierten Mod hinzu; Dateien mit gleichem Namen werden ersetzt</translation>
+    </message>
+    <message>
+      <source>Deletes the installed mod&apos;s files and installs this one in their place</source>
+      <translation>Löscht die Dateien der installierten Mod und installiert diese an ihrer Stelle</translation>
+    </message>
+    <message>
+      <source>Install as a new mod</source>
+      <translation>Als neue Mod installieren</translation>
+    </message>
+    <message>
+      <source>Keeps the installed mod and adds this one under another name (recommended)</source>
+      <translation>Behält die installierte Mod und fügt diese unter einem anderen Namen hinzu (empfohlen)</translation>
+    </message>
+    <message>
+      <source>Merge</source>
+      <translation>Zusammenführen</translation>
+    </message>
+    <message>
+      <source>Replace</source>
+      <translation>Ersetzen</translation>
+    </message>
+    <message>
+      <source>Saves a copy you can restore before any file changes</source>
+      <translation>Speichert eine wiederherstellbare Kopie, bevor Dateien geändert werden</translation>
+    </message>
   </context>
   <context>
     <name>SaveTextAsDialog</name>
@@ -8837,6 +9587,38 @@ In dieser Stunde verbleibend: %3</translation>
     <message>
       <source>Close</source>
       <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>%1 saves</source>
+      <translation>%1 Spielstände</translation>
+    </message>
+    <message>
+      <source>1 save</source>
+      <translation>1 Spielstand</translation>
+    </message>
+    <message>
+      <source>Copy to the game</source>
+      <translation>Ins Spiel kopieren</translation>
+    </message>
+    <message>
+      <source>Copy to the profile</source>
+      <translation>Ins Profil kopieren</translation>
+    </message>
+    <message>
+      <source>Move to the game</source>
+      <translation>Ins Spiel verschieben</translation>
+    </message>
+    <message>
+      <source>Move to the profile</source>
+      <translation>Ins Profil verschieben</translation>
+    </message>
+    <message>
+      <source>Open the game&apos;s save folder</source>
+      <translation>Spielstandordner des Spiels öffnen</translation>
+    </message>
+    <message>
+      <source>Open the profile&apos;s save folder</source>
+      <translation>Spielstandordner des Profils öffnen</translation>
     </message>
   </context>
   <context>

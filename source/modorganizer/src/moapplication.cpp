@@ -712,10 +712,10 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   QString selectedStyle;
   if (configuredStyle.compare("Light.qss", Qt::CaseInsensitive) == 0) {
     selectedStyle = "Light.qss";
-  } else if (configuredStyle.compare("dark.qss", Qt::CaseInsensitive) == 0) {
+  } else if (configuredStyle.compare("dark.qss", Qt::CaseInsensitive) == 0 ||
+             configuredStyle.compare("dark-black.qss", Qt::CaseInsensitive) == 0) {
+    // Dark Black was retired; its users get Dark
     selectedStyle = "dark.qss";
-  } else if (configuredStyle.compare("dark-black.qss", Qt::CaseInsensitive) == 0) {
-    selectedStyle = "dark-black.qss";
   } else {
     selectedStyle = Settings::defaultInterfaceStyleName();
   }
@@ -739,7 +739,7 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
                 selectedStyle);
     }
   } else {
-    log::error("Revamped Light, Dark Blue and Dark Black stylesheets are missing from '{}'",
+    log::error("Revamped Light and Dark stylesheets are missing from '{}'",
                stylesheetsPath);
   }
   log::getDefault().setLevel(m_settings->diagnostics().logLevel());
@@ -906,20 +906,16 @@ int MOApplication::run(MOMultiProcess& multiProcess)
           Settings::defaultInterfaceStyleName());
 
       using FluentChoices::Theme;
-      const Theme currentChoice = currentTheme == "Light.qss"        ? Theme::Light
-                                  : currentTheme == "dark-black.qss" ? Theme::DarkBlack
-                                                                     : Theme::Dark;
+      const Theme currentChoice =
+          currentTheme == "Light.qss" ? Theme::Light : Theme::Dark;
       const auto selectedChoice = FluentChoices::chooseTheme(
           &mainWindow, tr("MO2 Revamped"), tr("Choose a theme for this instance."),
-          tr("You can change it later in Settings > Theme."), tr("Light"),
-          // the name Settings > Theme gives the same file
-          FluentIcons::active() ? tr("Dark") : tr("Dark Blue"), tr("Dark Black"),
+          tr("You can change it later in Settings > Theme."), tr("Light"), tr("Dark"),
           tr("Use this theme"), currentChoice);
       const QString selectedTheme =
-          !selectedChoice                    ? currentTheme
-          : *selectedChoice == Theme::Light     ? QStringLiteral("Light.qss")
-          : *selectedChoice == Theme::DarkBlack ? QStringLiteral("dark-black.qss")
-                                                : QStringLiteral("dark.qss");
+          !selectedChoice                ? currentTheme
+          : *selectedChoice == Theme::Light ? QStringLiteral("Light.qss")
+                                            : QStringLiteral("dark.qss");
 
       if (selectedTheme != currentTheme) {
         interfaceSettings.setStyleName(selectedTheme);
@@ -1349,7 +1345,6 @@ bool MOApplication::setStyleFile(const QString& styleName)
     // follow it rather than the theme that was active before
     setPalette(style()->standardPalette());
     setProperty("revampedFluent", false);
-    setProperty("revampedDarkBlack", false);
     setProperty("revampedDark", palette().color(QPalette::Window).lightness() < 128);
     applyPopupEffects(false);
   }
@@ -1546,10 +1541,6 @@ QString extractBaseStyleFromStyleSheet(QFile& stylesheet, const QString& default
 
 void MOApplication::updateStyle(const QString& fileName)
 {
-  const QString styleFile = QFileInfo(fileName).fileName();
-  setProperty("revampedDarkBlack",
-              styleFile.compare("dark-black.qss", Qt::CaseInsensitive) == 0 ||
-                  styleFile.compare("fluent-v4-black.qss", Qt::CaseInsensitive) == 0);
   setProperty("revampedDark", stylePrefersDarkTitleBar(fileName));
   setProperty("revampedFluent", styleIsFluent(fileName));
   applyPopupEffects(property("revampedFluent").toBool());
@@ -1571,24 +1562,7 @@ void MOApplication::updateStyle(const QString& fileName)
       applyBaseStyle(
           extractBaseStyleFromStyleSheet(stylesheet, m_defaultStyle));
       QPalette themePalette = style()->standardPalette();
-      if (MOBase::RevampedTheme::isBlack()) {
-        themePalette.setColor(QPalette::Window, QColor("#242424"));
-        themePalette.setColor(QPalette::WindowText, QColor("#D3D3D3"));
-        themePalette.setColor(QPalette::Base, QColor("#202020"));
-        themePalette.setColor(QPalette::AlternateBase, QColor("#272727"));
-        themePalette.setColor(QPalette::Text, QColor("#D3D3D3"));
-        themePalette.setColor(QPalette::Button, QColor("#2A2A2A"));
-        themePalette.setColor(QPalette::ButtonText, QColor("#E0E0E0"));
-        themePalette.setColor(QPalette::Highlight, QColor("#454545"));
-        themePalette.setColor(QPalette::HighlightedText, QColor("#FFFFFF"));
-        themePalette.setColor(QPalette::Link, QColor("#D0D0D0"));
-        themePalette.setColor(QPalette::LinkVisited, QColor("#B0B0B0"));
-        themePalette.setColor(QPalette::ToolTipBase, QColor("#2A2A2A"));
-        themePalette.setColor(QPalette::ToolTipText, QColor("#E0E0E0"));
-        for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
-          themePalette.setColor(QPalette::Disabled, role, QColor("#909090"));
-        }
-      } else if (property("revampedFluent").toBool() && property("revampedDark").toBool()) {
+      if (property("revampedFluent").toBool() && property("revampedDark").toBool()) {
         // Fluent Dark tokens. A dark palette also keeps Qt from switching the
         // native frame (and the Mica backdrop) back to light when it repolishes.
         themePalette.setColor(QPalette::Window, QColor("#202226"));

@@ -13,6 +13,42 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, qCritical, qInfo
 
 
+# PyQt passes Qt's log functions ASCII only: a message with any other
+# character (a path with an accent, a Windows error in Spanish) raised
+# UnicodeEncodeError and stopped the code that logged it. Such messages go
+# through Python's logging, which MO2's Python plugin writes to the same log.
+import logging  # noqa: E402
+import sys  # noqa: E402
+
+
+_QT_LOG_CALLS: dict = {}
+
+
+def _safe_qt_log(qt_function, level):
+    def log(message) -> None:
+        text = "" if message is None else str(message)
+        caller = sys._getframe(1)
+        filename, line = caller.f_code.co_filename, caller.f_lineno
+        if not text.isascii():
+            logging.getLogger("mo2revamped").log(
+                level, f"[{os.path.basename(filename)}:{line}] {text}"
+            )
+            return
+        # Qt logs the file and line of the code that calls it; a call compiled
+        # at the caller's place keeps the log pointing there instead of here
+        code = _QT_LOG_CALLS.get((filename, line))
+        if code is None:
+            code = compile("\n" * (line - 1) + "_qt(_text)", filename, "exec")
+            _QT_LOG_CALLS[(filename, line)] = code
+        exec(code, {"_qt": qt_function, "_text": text})
+
+    return log
+
+
+qCritical = _safe_qt_log(qCritical, logging.CRITICAL)
+qInfo = _safe_qt_log(qInfo, logging.INFO)
+
+
 class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     """Choose how supported Elden Ring archive contents are installed."""
 
@@ -634,7 +670,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
         layout = QtWidgets.QVBoxLayout(dialog)
         layout.setObjectName("archiveDialogLayout")
-        layout.setContentsMargins(16, 16, 16, 14)
+        # no right margin: the content scrolls at the window's edge, as in
+        # Windows 11, and keeps its gap from it inside the scroll area
+        layout.setContentsMargins(16, 16, 0, 14)
         layout.setSpacing(10)
         layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetNoConstraint)
 
@@ -649,7 +687,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         content = QtWidgets.QWidget(scroll_area)
         content.setObjectName("archiveDialogContent")
         content_layout = QtWidgets.QVBoxLayout(content)
-        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setContentsMargins(0, 0, 16, 0)
         content_layout.setSpacing(10)
         scroll_area.setWidget(content)
         layout.addWidget(scroll_area, 1)
@@ -1078,6 +1116,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             QtWidgets.QDialogButtonBox.StandardButton.Cancel, dialog
         )
         buttons.setObjectName("archiveDialogButtons")
+        buttons.setContentsMargins(0, 0, 16, 0)
         buttons.rejected.connect(dialog.reject)
         # hands the archive to MO2's manual installer, for layouts neither
         # choice fits (several options to pick from, for example)

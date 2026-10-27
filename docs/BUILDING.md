@@ -19,9 +19,8 @@ repository root. The Elden Ring bridge build applies Zig's
 `-ffile-prefix-map` and strips linked debug metadata, including paths from Zig's
 bundled unwind library. The release builder checks staged payloads and installer
 binaries for local profile and checkout paths before producing the installers.
-It maps the reviewed Light, Dark Blue, and Dark Black styles to
-`stylesheets/Light.qss`, `stylesheets/dark.qss`, and
-`stylesheets/dark-black.qss`, which are the names the application loads.
+It maps the reviewed Light and Dark styles to `stylesheets/Light.qss` and
+`stylesheets/dark.qss`, which are the names the application loads.
 
 ## Mod Organizer 2
 

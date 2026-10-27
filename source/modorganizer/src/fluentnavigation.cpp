@@ -29,9 +29,6 @@ const char* const StateObjectName = "fluentNavigationState";
 QColor accentColor()
 {
   using namespace MOBase;
-  if (RevampedTheme::isBlack()) {
-    return QColor("#D6D6D6");
-  }
   return RevampedTheme::isDark() ? QColor("#4CC2FF") : QColor("#005FB8");
 }
 
@@ -366,6 +363,30 @@ void setHeader(QTabWidget* tabs, QWidget* header)
   column->addWidget(header);
   column->addWidget(tabs, 1);
   row->addLayout(column, 1);
+}
+
+void setNavigationHeader(QTabWidget* tabs, QWidget* header)
+{
+  NavigationState* state = stateOf(tabs);
+  if (header == nullptr || state == nullptr) {
+    return;
+  }
+  QListWidget* nav = state->list;
+  auto* row = qobject_cast<QHBoxLayout*>(
+      nav->parentWidget() != nullptr ? nav->parentWidget()->layout() : nullptr);
+  if (row == nullptr) {
+    return;
+  }
+
+  auto* column = new QVBoxLayout;
+  column->setContentsMargins(0, 0, 0, 0);
+  column->setSpacing(8);
+  const int index = row->indexOf(nav);
+  row->removeWidget(nav);
+  header->setFixedWidth(nav->width());
+  column->addWidget(header);
+  column->addWidget(nav, 1);
+  row->insertLayout(index, column);
 }
 
 void sync(QTabWidget* tabs)

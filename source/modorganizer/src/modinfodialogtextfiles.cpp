@@ -158,6 +158,20 @@ void GenericFilesTab::update()
 {
   m_model->finished();
   setHasData(m_model->rowCount() > 0);
+
+  // opens a file right away instead of an empty editor, the readme first
+  auto* model = m_list->model();
+  if (!m_list->currentIndex().isValid() && model != nullptr && model->rowCount() > 0) {
+    QModelIndex first = model->index(0, 0);
+    for (int row = 0; row < model->rowCount(); ++row) {
+      const QModelIndex index = model->index(row, 0);
+      if (index.data().toString().contains(QStringLiteral("readme"), Qt::CaseInsensitive)) {
+        first = index;
+        break;
+      }
+    }
+    m_list->selectionModel()->setCurrentIndex(first, QItemSelectionModel::ClearAndSelect);
+  }
 }
 
 void GenericFilesTab::saveState(Settings& s)

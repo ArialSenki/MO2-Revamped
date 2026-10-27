@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 import sys
 import tempfile
 import traceback
@@ -13,22 +14,36 @@ from pathlib import Path
 
 import mobase
 from PyQt6 import QtCore
-from PyQt6.QtCore import QCoreApplication, Qt, qCritical
-from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
+from PyQt6.QtCore import QCoreApplication, QRectF, QSize, Qt, QUrl, qCritical
+from PyQt6.QtGui import (
+    QAction,
+    QColor,
+    QDesktopServices,
+    QFont,
+    QFontMetrics,
+    QIcon,
+    QPainter,
+    QPalette,
+    QPixmap,
+)
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
+    QListWidget,
+    QListWidgetItem,
     QMenu,
     QMessageBox,
     QPushButton,
-    QTabWidget,
-    QTextBrowser,
+    QScrollArea,
+    QStackedWidget,
+    QStyle,
+    QStyledItemDelegate,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -39,6 +54,106 @@ _TR_CONTEXT = "Mo2RevampedInfo"
 
 def _tr(text: str) -> str:
     return QCoreApplication.translate(_TR_CONTEXT, text)
+
+
+_GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
+
+
+def _theme_kind() -> str:
+    application = QApplication.instance()
+    if application is not None and application.palette().window().color().lightness() < 128:
+        return "dark"
+    return "light"
+
+
+def _accent_color() -> QColor:
+    return QColor({"dark": "#4CC2FF"}.get(_theme_kind(), "#005FB8"))
+
+
+def _glyph_font(pixels: int) -> QFont:
+    font = QFont()
+    font.setFamilies(_GLYPH_FAMILIES)
+    font.setPixelSize(pixels)
+    return font
+
+
+def _glyph_label(glyph: int, parent) -> QLabel:
+    label = QLabel(chr(glyph), parent)
+    label.setObjectName("instanceRowGlyph")
+    label.setFont(_glyph_font(16))
+    label.setFixedWidth(24)
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return label
+
+
+def _glyph_icon(glyph: int, muted: bool = False) -> QIcon:
+    application = QApplication.instance()
+    palette = application.palette() if application is not None else None
+    color = (
+        palette.color(QPalette.ColorGroup.Disabled if muted else QPalette.ColorGroup.Active,
+                      QPalette.ColorRole.WindowText)
+        if palette is not None
+        else QColor("#808080")
+    )
+    pixmap = QPixmap(32, 32)
+    pixmap.setDevicePixelRatio(2.0)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setFont(_glyph_font(16))
+    painter.setPen(color)
+    painter.drawText(QRectF(0, 0, 16, 16), Qt.AlignmentFlag.AlignCenter, chr(glyph))
+    painter.end()
+    return QIcon(pixmap)
+
+
+class _NavigationDelegate(QStyledItemDelegate):
+    """The page list of MO2's Settings window: a soft fill under the hovered
+    and selected page, an accent pill beside the selected one, a glyph and
+    the page's name (the glyph is the item's UserRole data)."""
+
+    ItemHeight = 36
+
+    def sizeHint(self, option, index) -> QSize:
+        return QSize(super().sizeHint(option, index).width(), self.ItemHeight + 4)
+
+    def paint(self, painter, option, index) -> None:
+        selected = bool(option.state & QStyle.StateFlag.State_Selected)
+        hovered = bool(option.state & QStyle.StateFlag.State_MouseOver)
+        text = option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText)
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        row = QRectF(option.rect).adjusted(2, 2, -2, -2)
+        alpha = 26 if selected else (15 if hovered else 0)
+        if alpha:
+            fill = QColor(text)
+            fill.setAlpha(alpha)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(fill)
+            painter.drawRoundedRect(row, 4, 4)
+        if selected:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(_accent_color())
+            painter.drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5)
+        painter.setFont(_glyph_font(16))
+        painter.setPen(text)
+        painter.drawText(
+            QRectF(row.left() + 14, row.top(), 20, row.height()),
+            Qt.AlignmentFlag.AlignCenter,
+            str(index.data(Qt.ItemDataRole.UserRole) or ""),
+        )
+        label = QFont(option.font)
+        label.setWeight(QFont.Weight.DemiBold if selected else QFont.Weight.Normal)
+        painter.setFont(label)
+        text_rect = row.adjusted(46, 0, -8, 0)
+        painter.drawText(
+            text_rect,
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            QFontMetrics(label).elidedText(
+                str(index.data() or ""), Qt.TextElideMode.ElideRight, int(text_rect.width())
+            ),
+        )
+        painter.restore()
 
 
 class Mo2RevampedInfo(mobase.IPluginTool):
@@ -180,77 +295,83 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             game=game_name, profile=profile_name
         )
 
-    @staticmethod
-    def _browser(html: str, parent) -> QTextBrowser:
-        browser = QTextBrowser(parent)
-        browser.setOpenExternalLinks(False)
-        browser.setOpenLinks(False)
-        browser.setReadOnly(True)
-        browser.setHtml(html)
-        browser.anchorClicked.connect(QDesktopServices.openUrl)
-        return browser
+    def _component_versions(self) -> dict:
+        """The versions this copy really has: read from the plugins next to
+        this one and from the running program, so the page does not go stale
+        when a plugin is updated."""
+        plugins_dir = Path(__file__).resolve().parent
 
-    @staticmethod
-    def _about_page_intro(title: str, description: str, parent: QWidget) -> QFrame:
-        intro = QFrame(parent)
-        intro.setObjectName("mo2RevampedAboutPageIntro")
-        intro_layout = QVBoxLayout(intro)
-        intro_layout.setContentsMargins(14, 10, 14, 10)
-        intro_layout.setSpacing(3)
+        def read(relative: str, pattern: str, shape, default: str) -> str:
+            try:
+                text = (plugins_dir / relative).read_text(encoding="utf-8")
+            except OSError:
+                return default
+            match = re.search(pattern, text, re.MULTILINE)
+            return shape(match.group(1)) if match else default
 
-        heading = QLabel(title, intro)
-        heading.setObjectName("mo2RevampedAboutPageTitle")
-        intro_layout.addWidget(heading)
+        game = "basic_games/games/game_eldenring_mo2.py"
+        versions = {
+            "plugin": read(game, r'^\s*Version = "([^"]+)"', str, "0.5.0-alpha.75"),
+            "bridge": read(game, r'NativeBridgeVersion = "([^"]+)"', str, "0.5.0-alpha.36"),
+            "installer": read(
+                "eldenring_mo2_archive_installer/installer.py",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.72",
+            ),
+            "saves": read(
+                "eldenring_mo2_save_isolation.py",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.77",
+            ),
+            "startup": read(
+                "eldenring_mo2_startup_tool.py",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"0.5.0.{n}", "0.5.0.64",
+            ),
+            "mo2": "2.5.2",
+            "qt": QtCore.qVersion(),
+            "python": platform.python_version(),
+            "openssl": "3.5.9",
+        }
+        try:
+            versions["mo2"] = self._organizer.appVersion().displayString(3)
+        except Exception:
+            pass
+        try:
+            from PyQt6.QtNetwork import QSslSocket
 
-        text = QLabel(description, intro)
-        text.setObjectName("mo2RevampedAboutPageDescription")
-        text.setWordWrap(True)
-        intro_layout.addWidget(text)
-        return intro
-
-    @staticmethod
-    def _about_feature(title: str, description: str, parent: QWidget) -> QFrame:
-        card = QFrame(parent)
-        card.setObjectName("mo2RevampedAboutFeatureCard")
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(13, 11, 13, 11)
-        card_layout.setSpacing(5)
-
-        heading = QLabel(title, card)
-        heading.setObjectName("mo2RevampedAboutFeatureTitle")
-        heading.setWordWrap(True)
-        card_layout.addWidget(heading)
-
-        text = QLabel(description, card)
-        text.setObjectName("mo2RevampedAboutFeatureText")
-        text.setWordWrap(True)
-        # the text starts under the title instead of floating in the card
-        text.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        card_layout.addWidget(text, 1)
-        return card
+            library = QSslSocket.sslLibraryVersionString()
+            if library:
+                versions["openssl"] = library.replace("OpenSSL", "").split()[0]
+        except Exception:
+            pass
+        return versions
 
     def _show_about(self, parent) -> None:
+        # Laid out like MO2's Settings window: the program's card above the
+        # pages on the left, cards of rows on the right; the themes' global
+        # Fluent rules (fluentNav, fluentCard, fluentSettingRow) style it
         dialog = QDialog(parent)
         dialog.setObjectName("MO2RevampedAboutDialog")
         dialog.setWindowTitle(_tr("About MO2 Revamped"))
-        dialog.setMinimumSize(820, 620)
-        dialog.resize(920, 700)
+        dialog.setMinimumSize(860, 580)
+        dialog.resize(960, 660)
         dialog.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
 
+        # no right margin: the pages scroll at the window's edge
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setContentsMargins(16, 16, 0, 12)
         layout.setSpacing(12)
 
-        header_card = QFrame(dialog)
-        header_card.setObjectName("mo2RevampedAboutHeaderCard")
-        header_layout = QHBoxLayout(header_card)
-        header_layout.setContentsMargins(14, 12, 16, 12)
-        header_layout.setSpacing(14)
+        body = QHBoxLayout()
+        body.setSpacing(16)
+        side = QVBoxLayout()
+        side.setSpacing(8)
 
-        logo = QLabel(header_card)
-        logo.setObjectName("mo2RevampedAboutLogo")
-        logo.setFixedSize(62, 62)
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        program_card = QFrame(dialog)
+        program_card.setProperty("fluentCard", True)
+        program_card.setFixedWidth(232)
+        program_layout = QVBoxLayout(program_card)
+        program_layout.setContentsMargins(14, 14, 14, 12)
+        program_layout.setSpacing(4)
+        logo = QLabel(program_card)
         try:
             # the large logo built into ModOrganizer.exe first, so it always
             # matches the program; the loose files are older builds' fallback
@@ -262,341 +383,264 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 pixmap = QPixmap(os.path.join(app_dir, "splash.png"))
             if not pixmap.isNull():
                 logo.setPixmap(pixmap.scaled(
-                    42,
-                    42,
+                    40, 40,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 ))
         except Exception:
             pass
-        header_layout.addWidget(logo)
-
-        header_text = QWidget(header_card)
-        header_text.setObjectName("mo2RevampedAboutHeaderText")
-        header_text_layout = QVBoxLayout(header_text)
-        header_text_layout.setContentsMargins(0, 0, 0, 0)
-        header_text_layout.setSpacing(3)
-
-        title = QLabel("Mod Organizer 2: Revamped", header_text)
-        title.setObjectName("mo2RevampedAboutHeaderTitle")
-        header_text_layout.addWidget(title)
-
-        subtitle = QLabel(
-            _tr("A community edition with interface improvements and tools "
-                "specialized for Elden Ring."),
-            header_text,
-        )
-        subtitle.setObjectName("mo2RevampedAboutHeaderSubtitle")
-        subtitle.setWordWrap(True)
-        header_text_layout.addWidget(subtitle)
-
-        metadata = QHBoxLayout()
-        metadata.setContentsMargins(0, 2, 0, 0)
-        metadata.setSpacing(14)
-        edition = QLabel(_tr("Revamped edition  ·  ArialSenki"), header_text)
-        edition.setObjectName("mo2RevampedAboutHeaderMeta")
-        metadata.addWidget(edition)
-
-        context = QLabel(
-            self._context_text().replace("<br>", "  ·  "), header_text
-        )
-        context.setObjectName("mo2RevampedAboutHeaderContext")
+        program_layout.addWidget(logo)
+        title = QLabel("Mod Organizer 2: Revamped", program_card)
+        title.setObjectName("instanceDetailName")
+        title.setWordWrap(True)
+        program_layout.addWidget(title)
+        edition = QLabel(_tr("Revamped edition  ·  ArialSenki"), program_card)
+        edition.setObjectName("instanceDetailCaption")
+        edition.setWordWrap(True)
+        program_layout.addWidget(edition)
+        context = QLabel(self._context_text().replace("<br>", "\n"), program_card)
+        context.setObjectName("instanceDetailCaption")
         context.setTextFormat(Qt.TextFormat.PlainText)
         context.setWordWrap(True)
-        metadata.addWidget(context, 1)
-        header_text_layout.addLayout(metadata)
-        header_layout.addWidget(header_text, 1)
-        layout.addWidget(header_card)
+        program_layout.addWidget(context)
+        side.addWidget(program_card)
 
-        tabs = QTabWidget(dialog)
-        tabs.setObjectName("mo2RevampedAboutTabs")
-        overview_page = QWidget(dialog)
-        overview_page.setObjectName("mo2RevampedAboutOverviewPage")
-        overview_layout = QVBoxLayout(overview_page)
-        overview_layout.setContentsMargins(14, 14, 14, 12)
-        overview_layout.setSpacing(11)
+        nav = QListWidget(dialog)
+        nav.setObjectName("fluentNav")
+        nav.setItemDelegate(_NavigationDelegate(nav))
+        nav.setFrameShape(QFrame.Shape.NoFrame)
+        nav.setMouseTracking(True)
+        nav.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        nav.setFixedWidth(232)
+        nav.setAccessibleName(_tr("Pages"))
+        side.addWidget(nav, 1)
+        body.addLayout(side)
 
-        overview_layout.addWidget(
-            self._about_page_intro(
-                _tr("What Revamped adds"),
-                _tr("Keeps the Mod Organizer 2 workflow and adds tools to install "
-                    "mods, separate setups and recognize each environment more easily."),
-                overview_page,
-            )
+        page_column = QVBoxLayout()
+        page_column.setSpacing(4)
+        page_title = QLabel(dialog)
+        page_title.setProperty("wizardPageTitle", True)
+        page_subtitle = QLabel(dialog)
+        page_subtitle.setProperty("wizardPageText", True)
+        page_subtitle.setWordWrap(True)
+        page_subtitle.setContentsMargins(0, 0, 16, 0)
+        page_column.addWidget(page_title)
+        page_column.addWidget(page_subtitle)
+        page_column.addSpacing(8)
+        pages = QStackedWidget(dialog)
+        page_column.addWidget(pages, 1)
+        body.addLayout(page_column, 1)
+        layout.addLayout(body, 1)
+
+        page_texts: list[tuple[str, str]] = []
+
+        def add_page(glyph: int, name: str, heading: str, subtitle: str) -> QVBoxLayout:
+            scroll = QScrollArea(pages)
+            scroll.setObjectName("instanceDetailsScroll")
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
+            scroll.setWidgetResizable(True)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            content = QWidget(scroll)
+            content.setObjectName("fluentPageContent")
+            content_layout = QVBoxLayout(content)
+            # the gap to the window's edge, with the scroll bar inside it
+            content_layout.setContentsMargins(0, 0, 16, 0)
+            content_layout.setSpacing(12)
+            scroll.setWidget(content)
+            pages.addWidget(scroll)
+            item = QListWidgetItem(name, nav)
+            item.setData(Qt.ItemDataRole.UserRole, chr(glyph))
+            page_texts.append((heading, subtitle))
+            return content_layout
+
+        def add_card(page: QVBoxLayout) -> QFrame:
+            card = QFrame()
+            card.setProperty("fluentCard", True)
+            card_layout = QVBoxLayout(card)
+            card_layout.setContentsMargins(0, 0, 0, 0)
+            card_layout.setSpacing(0)
+            page.addWidget(card)
+            return card
+
+        def add_row(card: QFrame, glyph: int, title: str, description: str = "",
+                    widgets: tuple = ()) -> QFrame:
+            row = QFrame(card)
+            row.setObjectName("fluentSettingRow")
+            row.setMinimumHeight(62)
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(18, 10, 12, 10)
+            row_layout.setSpacing(14)
+            row_layout.addWidget(_glyph_label(glyph, row), 0, Qt.AlignmentFlag.AlignTop)
+            texts = QVBoxLayout()
+            texts.setSpacing(2)
+            title_label = QLabel(title, row)
+            title_label.setObjectName("fluentSettingTitle")
+            title_label.setWordWrap(True)
+            texts.addWidget(title_label)
+            if description:
+                description_label = QLabel(description, row)
+                description_label.setObjectName("fluentSettingDescription")
+                description_label.setWordWrap(True)
+                description_label.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse
+                )
+                texts.addWidget(description_label)
+            row_layout.addLayout(texts, 1)
+            for widget in widgets:
+                widget.setParent(row)
+                row_layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignVCenter)
+                widget.show()
+            card.layout().addWidget(row)
+            return row
+
+        def link_button(glyph: int, tip: str, url: str) -> QToolButton:
+            button = QToolButton()
+            button.setObjectName("instanceIconButton")
+            button.setIcon(_glyph_icon(glyph))
+            button.setAutoRaise(True)
+            button.setToolTip(tip)
+            button.setAccessibleName(tip)
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda _checked=False: QDesktopServices.openUrl(QUrl(url)))
+            return button
+
+        # --- Revamped --------------------------------------------------------
+        overview = add_page(
+            0xE946, _tr("Revamped"), _tr("What Revamped adds"),
+            _tr("Keeps the Mod Organizer 2 workflow and adds tools to install "
+                "mods, separate setups and recognize each environment more easily."),
         )
-
-        feature_grid = QGridLayout()
-        feature_grid.setContentsMargins(0, 0, 0, 0)
-        feature_grid.setHorizontalSpacing(10)
-        feature_grid.setVerticalSpacing(10)
-        feature_grid.addWidget(
-            self._about_feature(
-                _tr("Mod installation"),
+        features = add_card(overview)
+        add_row(features, 0xE896, _tr("Mod installation"),
                 _tr("Detects Elden Ring paths and recognizes nested folders to "
-                    "install mods and native add-ons."),
-                overview_page,
-            ),
-            0,
-            0,
-        )
-        feature_grid.addWidget(
-            self._about_feature(
-                _tr("Profiles and saves"),
+                    "install mods and native add-ons."))
+        add_row(features, 0xE77B, _tr("Profiles and saves"),
                 _tr("Organizes profiles and, for Elden Ring, can route saves per "
-                    "profile."),
-                overview_page,
-            ),
-            0,
-            1,
-        )
-        feature_grid.addWidget(
-            self._about_feature(
-                _tr("Independent instances"),
+                    "profile."))
+        add_row(features, 0xE8B7, _tr("Independent instances"),
                 _tr("Choose global or portable setups. You can also create an "
-                    "isolated MO2 copy for Elden Ring."),
-                overview_page,
-            ),
-            1,
-            0,
-        )
-        feature_grid.addWidget(
-            self._about_feature(
-                _tr("Interface and diagnostics"),
-                _tr("Includes Windows 11 style themes (Light, Dark and Dark Black) "
-                    "with Fluent icons, plus tools to prepare diagnostic reports."),
-                overview_page,
-            ),
-            1,
-            1,
-        )
-        # cards keep their natural height; spare room goes below them
-        overview_layout.addLayout(feature_grid)
-        overview_layout.addStretch(1)
-
-        compatibility_note = QLabel(
+                    "isolated MO2 copy for Elden Ring."))
+        add_row(features, 0xE790, _tr("Interface and diagnostics"),
+                _tr("Includes Windows 11 style themes (Light and Dark) "
+                    "with Fluent icons, plus tools to prepare diagnostic reports."))
+        note = QLabel(
             _tr("Elden Ring-specific features are only enabled in an instance "
                 "for that game."),
-            overview_page,
         )
-        compatibility_note.setObjectName("mo2RevampedAboutCompatibilityNote")
-        compatibility_note.setWordWrap(True)
-        overview_layout.addWidget(compatibility_note)
-        tabs.addTab(overview_page, _tr("Revamped"))
-        components_page = QWidget(dialog)
-        components_page.setObjectName("mo2RevampedAboutComponentsPage")
-        components_layout = QVBoxLayout(components_page)
-        components_layout.setContentsMargins(14, 14, 14, 12)
-        components_layout.setSpacing(11)
+        note.setObjectName("fluentSettingDescription")
+        note.setWordWrap(True)
+        note.setContentsMargins(4, 0, 4, 0)
+        overview.addWidget(note)
+        overview.addStretch(1)
 
-        components_layout.addWidget(
-            self._about_page_intro(
-                _tr("Included components"),
-                _tr("Versions and tools that are part of this copy of MO2 Revamped."),
-                components_page,
-            )
-        )
-
-        components_grid = QGridLayout()
-        components_grid.setContentsMargins(0, 0, 0, 0)
-        components_grid.setHorizontalSpacing(10)
-        components_grid.setVerticalSpacing(10)
-        components_grid.addWidget(
-            self._about_feature(
-                _tr("MO2 base"),
-                _tr("Mod Organizer 2 · 2.5.2\nQt and PyQt · 6.7.1\nPython · 3.12.15\nOpenSSL · 3.5.9"),
-                components_page,
-            ),
-            0,
-            0,
-        )
-        components_grid.addWidget(
-            self._about_feature(
-                _tr("Virtual file system"),
-                "USVFS · 0.5.7.2\n"
-                + _tr("Deploys mods virtually without changing the game's "
-                      "original files."),
-                components_page,
-            ),
-            0,
-            1,
-        )
-        components_grid.addWidget(
-            self._about_feature(
-                _tr("Elden Ring tools"),
-                _tr("Game plugin · {plugin}\nNative bridge · {bridge}\n"
-                    "Archive installer · {installer}").format(
-                    plugin="0.5.0-alpha.75", bridge="0.5.0-alpha.35", installer="alpha.72"
-                ),
-                components_page,
-            ),
-            1,
-            0,
-        )
-        components_grid.addWidget(
-            self._about_feature(
-                _tr("Profiles and interface"),
-                _tr("Save isolation · {saves}\nStartup options · {startup}\n"
-                    "Fluent themes · Light, Dark and Dark Black").format(
-                    saves="alpha.76", startup="0.5.0.64"
-                ),
-                components_page,
-            ),
-            1,
-            1,
-        )
-        # cards keep their natural height; spare room goes below them
-        components_layout.addLayout(components_grid)
-        components_layout.addStretch(1)
-
-        component_versions_note = QLabel(
+        # --- Components ------------------------------------------------------
+        versions = self._component_versions()
+        components = add_page(
+            0xE950, _tr("Components"), _tr("Included components"),
             _tr("These are the versions included in this build; they are not "
                 "necessarily the latest versions available."),
-            components_page,
         )
-        component_versions_note.setObjectName("mo2RevampedAboutVersionsNote")
-        component_versions_note.setWordWrap(True)
-        components_layout.addWidget(component_versions_note)
-        tabs.addTab(components_page, _tr("Components"))
-        credits_page = QWidget(dialog)
-        credits_page.setObjectName("mo2RevampedAboutCreditsPage")
-        credits_layout = QVBoxLayout(credits_page)
-        credits_layout.setContentsMargins(14, 14, 14, 12)
-        credits_layout.setSpacing(11)
+        parts = add_card(components)
+        add_row(parts, 0xE737, _tr("MO2 base"),
+                _tr("Mod Organizer 2 · {mo2}\nQt and PyQt · {qt}\nPython · {python}\n"
+                    "OpenSSL · {openssl}").format(**versions))
+        add_row(parts, 0xE8B7, _tr("Virtual file system"),
+                "USVFS · 0.5.7.2\n"
+                + _tr("Deploys mods virtually without changing the game's "
+                      "original files."))
+        add_row(parts, 0xE7FC, _tr("Elden Ring tools"),
+                _tr("Game plugin · {plugin}\nNative bridge · {bridge}\n"
+                    "Archive installer · {installer}").format(**versions))
+        add_row(parts, 0xE771, _tr("Profiles and interface"),
+                _tr("Save isolation · {saves}\nStartup options · {startup}\n"
+                    "Fluent themes · Light and Dark").format(**versions))
+        components.addStretch(1)
 
-        credits_layout.addWidget(
-            self._about_page_intro(
-                _tr("Credits and licenses"),
-                _tr("Information about this community edition, the base project and its legal notices."),
-                credits_page,
-            )
+        # --- Credits and licenses -------------------------------------------
+        credits = add_page(
+            0xE716, _tr("Credits and licenses"), _tr("Credits and licenses"),
+            _tr("Information about this community edition, the base project and its legal notices."),
         )
-
-        credits_grid = QGridLayout()
-        credits_grid.setContentsMargins(0, 0, 0, 0)
-        credits_grid.setHorizontalSpacing(10)
-        credits_grid.setVerticalSpacing(10)
-        credits_grid.addWidget(
-            self._about_feature(
-                _tr("Revamped authorship"),
+        people = add_card(credits)
+        add_row(people, 0xE77B, _tr("Revamped authorship"),
                 "MO2 Revamped · ArialSenki\n" + _tr("Independent community edition."),
-                credits_page,
-            ),
-            0,
-            0,
-        )
-        credits_grid.addWidget(
-            self._about_feature(
-                _tr("Base project"),
+                (link_button(0xE8A7, _tr("MO2 Revamped on GitHub"),
+                             "https://github.com/ArialSenki/MO2-Revamped"),))
+        add_row(people, 0xE8F1, _tr("Base project"),
                 _tr("Based on Mod Organizer 2 and its contributions. Revamped is not "
                     "an official release from the MO2 team."),
-                credits_page,
-            ),
-            0,
-            1,
+                (link_button(0xE8A7, _tr("Original Mod Organizer 2 project and source code"),
+                             "https://github.com/ModOrganizer2/modorganizer"),))
+        licenses_folder = os.path.join(QApplication.applicationDirPath(), "licenses")
+        folder_button = QToolButton()
+        folder_button.setObjectName("instanceIconButton")
+        folder_button.setIcon(_glyph_icon(0xE838))
+        folder_button.setAutoRaise(True)
+        folder_button.setToolTip(_tr("Open the licenses folder"))
+        folder_button.setAccessibleName(folder_button.toolTip())
+        folder_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        folder_button.setEnabled(os.path.isdir(licenses_folder))
+        folder_button.clicked.connect(
+            lambda _checked=False: QDesktopServices.openUrl(QUrl.fromLocalFile(licenses_folder))
         )
-        credits_layout.addLayout(credits_grid)
+        add_row(people, 0xE8A5, _tr("Licenses and source code"),
+                _tr("The authorship notices and licenses of MO2 and its dependencies are "
+                    "kept. See the licenses folder next to the program."),
+                (folder_button,))
+        add_row(people, 0xE8B7, _tr("USVFS source code"), "github.com/ModOrganizer2/usvfs",
+                (link_button(0xE8A7, _tr("USVFS source code"),
+                             "https://github.com/ModOrganizer2/usvfs"),))
+        credits.addStretch(1)
 
-        license_card = QFrame(credits_page)
-        license_card.setObjectName("mo2RevampedAboutLicenseCard")
-        license_layout = QVBoxLayout(license_card)
-        license_layout.setContentsMargins(13, 11, 13, 10)
-        license_layout.setSpacing(5)
-        license_title = QLabel(_tr("Licenses and source code"), license_card)
-        license_title.setObjectName("mo2RevampedAboutLicenseTitle")
-        license_layout.addWidget(license_title)
-        license_note = QLabel(
-            _tr("The authorship notices and licenses of MO2 and its dependencies are "
-                "kept. See the licenses folder next to the program."),
-            license_card,
+        # --- Diagnostics -----------------------------------------------------
+        diagnostics = add_page(
+            0xE9D9, _tr("Diagnostics"), _tr("Bug reports"),
+            _tr("Collects the logs needed to help locate MO2 Revamped problems."),
         )
-        license_note.setObjectName("mo2RevampedAboutLicenseText")
-        license_note.setWordWrap(True)
-        license_layout.addWidget(license_note)
-        source_links = self._browser(
-            "<p><a href=\"https://github.com/ModOrganizer2/modorganizer\">"
-            + _tr("Original Mod Organizer 2 project and source code")
-            + "</a><br/><a href=\"https://github.com/ModOrganizer2/usvfs\">"
-            + _tr("USVFS source code")
-            + "</a></p>",
-            license_card,
-        )
-        source_links.setObjectName("mo2RevampedAboutSourceLinks")
-        source_links.setFrameShape(QFrame.Shape.NoFrame)
-        source_links.setMinimumHeight(58)
-        license_layout.addWidget(source_links)
-        credits_layout.addWidget(license_card, 1)
-        tabs.addTab(credits_page, _tr("Credits and licenses"))
-
-        diagnostics_page = QWidget(dialog)
-        diagnostics_page.setObjectName("mo2RevampedAboutDiagnosticsPage")
-        diagnostics_layout = QVBoxLayout(diagnostics_page)
-        diagnostics_layout.setContentsMargins(14, 14, 14, 12)
-        diagnostics_layout.setSpacing(11)
-
-        diagnostics_layout.addWidget(
-            self._about_page_intro(
-                _tr("Bug reports"),
-                _tr("Collects the logs needed to help locate MO2 Revamped problems."),
-                diagnostics_page,
-            )
-        )
-
-        diagnostics_grid = QGridLayout()
-        diagnostics_grid.setContentsMargins(0, 0, 0, 0)
-        diagnostics_grid.setHorizontalSpacing(10)
-        diagnostics_grid.setVerticalSpacing(10)
-        diagnostics_grid.addWidget(
-            self._about_feature(
-                _tr("Report contents"),
+        report = add_card(diagnostics)
+        add_row(report, 0xE8A5, _tr("Report contents"),
                 _tr("Includes the main MO2 log, recent USVFS logs and the current and "
                     "previous Elden Ring bridge logs when available, along with program, "
-                    "system, game and instance versions."),
-                diagnostics_page,
-            ),
-            0,
-            0,
-        )
-        diagnostics_grid.addWidget(
-            self._about_feature(
-                _tr("Privacy"),
+                    "system, game and instance versions."))
+        add_row(report, 0xE72E, _tr("Privacy"),
                 _tr("Mods, downloads, saves, Nexus keys and memory dumps are not included. "
                     "Logs can contain Windows paths and profile names; review them "
-                    "before sharing."),
-                diagnostics_page,
-            ),
-            0,
-            1,
-        )
-        diagnostics_grid.addWidget(
-            self._about_feature(
-                _tr("If MO2 does not start"),
+                    "before sharing."))
+        add_row(report, 0xE7BA, _tr("If MO2 does not start"),
                 _tr("Attach the latest installer log shown in its error message. "
-                    "If MO2 closes unexpectedly, also keep the file from crashDumps."),
-                diagnostics_page,
-            ),
-            1,
-            0,
-            1,
-            2,
-        )
-        diagnostics_layout.addLayout(diagnostics_grid, 1)
-
+                    "If MO2 closes unexpectedly, also keep the file from crashDumps."))
+        actions = QFrame(report)
+        actions.setObjectName("fluentSettingRow")
+        actions_layout = QHBoxLayout(actions)
+        actions_layout.setContentsMargins(12, 12, 12, 12)
         create_report_button = QPushButton(
-            _tr("Create MO2 Revamped bug report…"), diagnostics_page
+            _glyph_icon(0xEBE8), _tr("Create MO2 Revamped bug report…"), actions
         )
         create_report_button.setObjectName("mo2RevampedAboutDiagnosticsButton")
+        create_report_button.setAutoDefault(False)
         create_report_button.clicked.connect(
             lambda _checked=False: self._create_diagnostics_bundle(dialog)
         )
-        report_button_row = QHBoxLayout()
-        report_button_row.setContentsMargins(0, 0, 0, 0)
-        report_button_row.addStretch(1)
-        report_button_row.addWidget(create_report_button)
-        diagnostics_layout.addLayout(report_button_row)
-        tabs.addTab(diagnostics_page, _tr("Diagnostics"))
-        layout.addWidget(tabs, 1)
+        actions_layout.addWidget(create_report_button)
+        actions_layout.addStretch(1)
+        report.layout().addWidget(actions)
+        diagnostics.addStretch(1)
+
+        def show_page(index: int) -> None:
+            if 0 <= index < len(page_texts):
+                pages.setCurrentIndex(index)
+                page_title.setText(page_texts[index][0])
+                page_subtitle.setText(page_texts[index][1])
+
+        nav.currentRowChanged.connect(show_page)
+        # accessibility tools select a page without moving the current row
+        nav.itemSelectionChanged.connect(
+            lambda: show_page(nav.row(nav.selectedItems()[0])) if nav.selectedItems() else None
+        )
+        nav.setCurrentRow(0)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, dialog)
+        buttons.setContentsMargins(0, 0, 16, 0)
         buttons.rejected.connect(dialog.reject)
         buttons.accepted.connect(dialog.accept)
         buttons.button(QDialogButtonBox.StandardButton.Close).clicked.connect(
@@ -898,9 +942,13 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 ),
             )
         except Exception as error:
+            # PyQt passes Qt's log functions ASCII only; a path with an accent
+            # in the traceback must not stop this handler
             qCritical(
-                "MO2 Revamped: could not create diagnostic report.\n"
-                + traceback.format_exc()
+                (
+                    "MO2 Revamped: could not create diagnostic report.\n"
+                    + traceback.format_exc()
+                ).encode("ascii", "backslashreplace").decode("ascii")
             )
             # an unfinished ZIP is not left behind to be shared by mistake
             # (a file MO2 could not even open is left alone)

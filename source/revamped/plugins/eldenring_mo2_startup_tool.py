@@ -8,9 +8,10 @@ from pathlib import Path
 import tempfile
 
 import mobase
-from PyQt6.QtCore import QCoreApplication, Qt, QTimer
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QCoreApplication, QRectF, QSize, Qt
+from PyQt6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -18,10 +19,15 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
+    QStackedWidget,
+    QStyle,
+    QStyledItemDelegate,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -40,36 +46,114 @@ def _tr(text: str) -> str:
     return text
 
 
-def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
-                        fallback: str = "•") -> QLabel:
-    icon = QLabel(parent)
-    icon.setObjectName(object_name)
-    icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    icon.setFixedSize(size, size)
-    pixmap = QIcon(icon_path).pixmap(max(12, size // 2), max(12, size // 2))
-    if pixmap.isNull():
-        icon.setText(fallback)
-    else:
-        icon.setPixmap(pixmap)
-    return icon
+_GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
 
 
-def _add_circular_heading(layout, parent, text: str, title_object_name: str,
-                          icon_path: str, icon_object_name: str,
-                          size: int = 26, fallback: str = "•") -> QLabel:
-    row = QHBoxLayout()
-    row.setContentsMargins(0, 0, 0, 0)
-    row.setSpacing(8)
-    row.addWidget(
-        _make_circular_icon(parent, icon_object_name, icon_path, size, fallback),
-        0,
-        Qt.AlignmentFlag.AlignVCenter,
+def _theme_kind() -> str:
+    application = QApplication.instance()
+    if application is not None and application.palette().window().color().lightness() < 128:
+        return "dark"
+    return "light"
+
+
+def _accent_color() -> QColor:
+    return QColor({"dark": "#4CC2FF"}.get(_theme_kind(), "#005FB8"))
+
+
+def _glyph_font(pixels: int) -> QFont:
+    font = QFont()
+    font.setFamilies(_GLYPH_FAMILIES)
+    font.setPixelSize(pixels)
+    return font
+
+
+def _glyph_label(glyph: int, parent) -> QLabel:
+    label = QLabel(chr(glyph), parent)
+    label.setObjectName("instanceRowGlyph")
+    label.setFont(_glyph_font(16))
+    label.setFixedWidth(24)
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return label
+
+
+def _glyph_icon(glyph: int, muted: bool = False) -> QIcon:
+    application = QApplication.instance()
+    palette = application.palette() if application is not None else None
+    color = (
+        palette.color(QPalette.ColorGroup.Disabled if muted else QPalette.ColorGroup.Active,
+                      QPalette.ColorRole.WindowText)
+        if palette is not None
+        else QColor("#808080")
     )
-    heading = QLabel(text, parent)
-    heading.setObjectName(title_object_name)
-    row.addWidget(heading, 1, Qt.AlignmentFlag.AlignVCenter)
-    layout.addLayout(row)
-    return heading
+    pixmap = QPixmap(32, 32)
+    pixmap.setDevicePixelRatio(2.0)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setFont(_glyph_font(16))
+    painter.setPen(color)
+    painter.drawText(QRectF(0, 0, 16, 16), Qt.AlignmentFlag.AlignCenter, chr(glyph))
+    painter.end()
+    return QIcon(pixmap)
+
+
+def _make_switch(box: QCheckBox, title: str, description: str) -> None:
+    box.setText("")
+    box.setAccessibleName(title)
+    box.setAccessibleDescription(description)
+    box.setProperty("fluentSwitch", True)
+    box.setCursor(Qt.CursorShape.PointingHandCursor)
+    box.style().unpolish(box)
+    box.style().polish(box)
+
+
+class _NavigationDelegate(QStyledItemDelegate):
+    """The page list of MO2's Settings window: a soft fill under the hovered
+    and selected page, an accent pill beside the selected one, a glyph and
+    the page's name (the glyph is the item's UserRole data)."""
+
+    ItemHeight = 36
+
+    def sizeHint(self, option, index) -> QSize:
+        return QSize(super().sizeHint(option, index).width(), self.ItemHeight + 4)
+
+    def paint(self, painter, option, index) -> None:
+        selected = bool(option.state & QStyle.StateFlag.State_Selected)
+        hovered = bool(option.state & QStyle.StateFlag.State_MouseOver)
+        text = option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText)
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        row = QRectF(option.rect).adjusted(2, 2, -2, -2)
+        alpha = 26 if selected else (15 if hovered else 0)
+        if alpha:
+            fill = QColor(text)
+            fill.setAlpha(alpha)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(fill)
+            painter.drawRoundedRect(row, 4, 4)
+        if selected:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(_accent_color())
+            painter.drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5)
+        painter.setFont(_glyph_font(16))
+        painter.setPen(text)
+        painter.drawText(
+            QRectF(row.left() + 14, row.top(), 20, row.height()),
+            Qt.AlignmentFlag.AlignCenter,
+            str(index.data(Qt.ItemDataRole.UserRole) or ""),
+        )
+        label = QFont(option.font)
+        label.setWeight(QFont.Weight.DemiBold if selected else QFont.Weight.Normal)
+        painter.setFont(label)
+        text_rect = row.adjusted(46, 0, -8, 0)
+        painter.drawText(
+            text_rect,
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            QFontMetrics(label).elidedText(
+                str(index.data() or ""), Qt.TextElideMode.ElideRight, int(text_rect.width())
+            ),
+        )
+        painter.restore()
 
 
 class EldenRingMo2StartupTool(mobase.IPluginTool):
@@ -236,220 +320,279 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                     "removed:\n{path}\n\n{error}").format(path=config_path, error=read_error),
             )
 
+        # Laid out like MO2's Settings window and the Saves dialog: the pages
+        # on the left, cards of setting rows on the right, the themes' global
+        # Fluent rules (fluentNav, fluentCard, fluentSettingRow, fluentSwitch)
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingStartupOptionsDialog")
         dialog.setWindowTitle(_tr("Elden Ring startup options"))
-        screen = dialog.screen()
-        available_geometry = (
-            screen.availableGeometry() if screen is not None else None
-        )
-        available_width = (
-            available_geometry.width() if available_geometry is not None else 1048
-        )
-        preferred_dialog_width = min(1000, max(520, available_width - 48))
-        dialog.setMinimumWidth(min(760, preferred_dialog_width))
+        dialog.setMinimumSize(860, 560)
+        dialog.resize(980, 640)
         dialog.setSizeGripEnabled(True)
-        layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(12)
+        # no right margin: the pages scroll at the window's edge, as in
+        # Windows 11, and keep their gap from it inside the scroll area
+        root = QVBoxLayout(dialog)
+        root.setContentsMargins(16, 16, 0, 12)
+        root.setSpacing(12)
 
-        def compact_note(label: QLabel) -> None:
-            label.setWordWrap(True)
-            label.setAlignment(
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
-            )
-            label.setSizePolicy(
-                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
-            )
+        body = QHBoxLayout()
+        body.setSpacing(16)
+        side = QVBoxLayout()
+        side.setSpacing(8)
+        profile_card = QFrame(dialog)
+        profile_card.setProperty("fluentCard", True)
+        profile_card.setFixedWidth(232)
+        profile_card_layout = QVBoxLayout(profile_card)
+        profile_card_layout.setContentsMargins(14, 12, 14, 12)
+        profile_card_layout.setSpacing(2)
+        profile_name = QLabel(profile.name(), profile_card)
+        profile_name.setObjectName("instanceDetailName")
+        profile_name.setWordWrap(True)
+        profile_caption = QLabel(_tr("Options for this MO2 profile"), profile_card)
+        profile_caption.setObjectName("instanceDetailCaption")
+        profile_caption.setWordWrap(True)
+        profile_card_layout.addWidget(profile_name)
+        profile_card_layout.addWidget(profile_caption)
+        side.addWidget(profile_card)
+        nav = QListWidget(dialog)
+        nav.setObjectName("fluentNav")
+        nav.setItemDelegate(_NavigationDelegate(nav))
+        nav.setFrameShape(QFrame.Shape.NoFrame)
+        nav.setMouseTracking(True)
+        nav.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        nav.setFixedWidth(232)
+        nav.setAccessibleName(_tr("Pages"))
+        side.addWidget(nav, 1)
+        body.addLayout(side)
 
-        header_panel = QFrame(dialog)
-        header_panel.setObjectName("startupHeaderPanel")
-        header_panel.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        header_layout = QVBoxLayout(header_panel)
-        header_layout.setContentsMargins(14, 10, 14, 10)
-        header_layout.setSpacing(3)
-        _add_circular_heading(
-            header_layout,
-            header_panel,
-            _tr("Elden Ring startup options"),
-            "startupPageTitle",
-            ":/MO/gui/mainwindow/executables.svg",
-            "startupHeaderIcon",
-            30,
-            "S",
-        )
-        header_subtitle = QLabel(
-            _tr("Configure launch behavior for the active MO2 profile."), header_panel
-        )
-        header_subtitle.setObjectName("startupPageSubtitle")
-        header_subtitle.setWordWrap(True)
-        header_layout.addWidget(header_subtitle)
-        layout.addWidget(header_panel, 0)
+        page_column = QVBoxLayout()
+        page_column.setSpacing(4)
+        # the themes' generic page title and text, as in the New instance wizard
+        page_title = QLabel(dialog)
+        page_title.setProperty("wizardPageTitle", True)
+        page_subtitle = QLabel(dialog)
+        page_subtitle.setProperty("wizardPageText", True)
+        page_subtitle.setWordWrap(True)
+        page_subtitle.setContentsMargins(0, 0, 16, 0)
+        page_column.addWidget(page_title)
+        page_column.addWidget(page_subtitle)
+        page_column.addSpacing(8)
+        pages = QStackedWidget(dialog)
+        page_column.addWidget(pages, 1)
+        body.addLayout(page_column, 1)
+        root.addLayout(body, 1)
 
-        def add_option(
-            section_layout: QVBoxLayout, checkbox: QCheckBox, description: str
-        ) -> None:
-            section_layout.addWidget(checkbox)
-            detail = QLabel(description)
-            compact_note(detail)
-            detail.setContentsMargins(24, 0, 4, 4)
-            section_layout.addWidget(detail)
+        page_texts: list[tuple[str, str]] = []
 
-        profile_group = QFrame(dialog)
-        profile_group.setObjectName("profileCard")
-        profile_group.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        profile_layout = QVBoxLayout(profile_group)
-        profile_layout.setContentsMargins(13, 10, 13, 10)
-        profile_layout.setSpacing(7)
-        _add_circular_heading(
-            profile_layout,
-            profile_group,
-            _tr("Active profile"),
-            "startupCardTitle",
-            ":/MO/gui/mainwindow/profile.svg",
-            "startupProfileIcon",
-            26,
-            "P",
-        )
-        profile_details = QHBoxLayout()
-        profile_details.setContentsMargins(0, 0, 0, 0)
-        profile_details.setSpacing(16)
-        profile_label = QLabel(_tr("MO2 profile: {profile}").format(profile=profile.name()))
-        profile_label.setObjectName("activeProfileName")
-        profile_details.addWidget(profile_label)
-        profile_note = QLabel(
-            _tr("Options are stored per profile and apply to Elden Ring launched "
-            "through MO2. Character save files are not changed.")
-        )
-        profile_note.setObjectName("profileNote")
-        profile_note.setWordWrap(True)
-        profile_details.addWidget(profile_note, 1)
-        profile_layout.addLayout(profile_details)
+        def add_page(glyph: int, name: str, subtitle: str) -> QVBoxLayout:
+            scroll = QScrollArea(pages)
+            scroll.setObjectName("instanceDetailsScroll")
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
+            scroll.setWidgetResizable(True)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            content = QWidget(scroll)
+            content.setObjectName("fluentPageContent")
+            content_layout = QVBoxLayout(content)
+            # the gap to the window's edge, with the scroll bar inside it
+            content_layout.setContentsMargins(0, 0, 16, 0)
+            content_layout.setSpacing(12)
+            scroll.setWidget(content)
+            pages.addWidget(scroll)
+            item = QListWidgetItem(name, nav)
+            item.setData(Qt.ItemDataRole.UserRole, chr(glyph))
+            page_texts.append((name, subtitle))
+            return content_layout
 
-        options_scroll = QScrollArea(dialog)
-        options_scroll.setObjectName("startupOptionsScrollArea")
-        options_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        options_scroll.setWidgetResizable(True)
-        options_scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        options_content = QWidget(options_scroll)
-        options_content.setObjectName("startupOptionsContent")
-        options_scroll.setWidget(options_content)
+        def add_card(page: QVBoxLayout, title: str) -> QFrame:
+            card = QFrame()
+            card.setProperty("fluentCard", True)
+            card_layout = QVBoxLayout(card)
+            card_layout.setContentsMargins(0, 10, 0, 0)
+            card_layout.setSpacing(0)
+            heading = QLabel(title, card)
+            heading.setObjectName("fluentCardTitle")
+            heading.setContentsMargins(18, 0, 18, 8)
+            card_layout.addWidget(heading)
+            page.addWidget(card)
+            return card
 
-        options_columns = QHBoxLayout(options_content)
-        options_columns.setContentsMargins(0, 0, 0, 0)
-        options_columns.setSpacing(12)
-        left_options_column = QVBoxLayout()
-        left_options_column.setSpacing(12)
-        right_options_column = QVBoxLayout()
-        right_options_column.setSpacing(12)
+        def add_row(card: QFrame, glyph: int, title: str, description: str = "",
+                    widgets: tuple = ()) -> QFrame:
+            row = QFrame(card)
+            row.setObjectName("fluentSettingRow")
+            row.setMinimumHeight(62)
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(18, 8, 12, 8)
+            row_layout.setSpacing(14)
+            row_layout.addWidget(_glyph_label(glyph, row))
+            texts = QVBoxLayout()
+            texts.setSpacing(2)
+            title_label = QLabel(title, row)
+            title_label.setObjectName("fluentSettingTitle")
+            title_label.setWordWrap(True)
+            texts.addWidget(title_label)
+            if description:
+                description_label = QLabel(description, row)
+                description_label.setObjectName("fluentSettingDescription")
+                description_label.setWordWrap(True)
+                texts.addWidget(description_label)
+            row_layout.addLayout(texts, 1)
+            for widget in widgets:
+                widget.setParent(row)
+                if isinstance(widget, QCheckBox):
+                    _make_switch(widget, title, description)
+                    row_layout.addWidget(
+                        widget, 0, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight
+                    )
+                else:
+                    if isinstance(widget, QComboBox):
+                        widget.setMinimumWidth(200)
+                    row_layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignVCenter)
+                widget.show()
+            card.layout().addWidget(row)
+            return row
 
-        startup_group = QFrame(options_content)
-        startup_group.setObjectName("startupCard")
-        startup_group.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+        def icon_button(glyph: int, tip: str) -> QToolButton:
+            button = QToolButton()
+            button.setObjectName("instanceIconButton")
+            button.setIcon(_glyph_icon(glyph))
+            button.setAutoRaise(True)
+            button.setToolTip(tip)
+            button.setAccessibleName(tip)
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            return button
+
+        # --- Launch ----------------------------------------------------------
+        launch_page = add_page(
+            0xE768, _tr("Launch"),
+            _tr("How Elden Ring appears when MO2 starts it. Character save files are "
+                "not changed."),
         )
-        startup_layout = QVBoxLayout(startup_group)
-        startup_layout.setContentsMargins(13, 11, 13, 11)
-        startup_layout.setSpacing(6)
-        _add_circular_heading(
-            startup_layout,
-            startup_group,
-            _tr("Launch behavior"),
-            "startupCardTitle",
-            ":/MO/gui/mainwindow/files/executable.svg",
-            "startupLaunchIcon",
-            26,
-            "L",
-        )
-        minimized_box = QCheckBox(_tr("Start Elden Ring minimized"))
+        window_card = add_card(launch_page, _tr("Window"))
+        minimized_box = QCheckBox()
         minimized_box.setChecked(start_minimized)
-        add_option(
-            startup_layout,
-            minimized_box,
+        add_row(
+            window_card, 0xE921, _tr("Start Elden Ring minimized"),
             _tr("Defers the first window display and starts Elden Ring minimized. "
-            "Use Alt+Tab, Win+Tab, or the game's main taskbar icon to restore it."),
+                "Use Alt+Tab, Win+Tab, or the game's main taskbar icon to restore it."),
+            (minimized_box,),
         )
-        options_note = QLabel(
-            _tr("Window behavior depends on Windows and the game's display mode. "
-            "The taskbar thumbnail may leave the game behind other windows.")
-        )
-        options_note.setObjectName("startupCompatibilityNote")
-        compact_note(options_note)
-        options_note.setContentsMargins(24, 4, 4, 4)
-        startup_layout.addWidget(options_note)
-        black_background_box = QCheckBox(_tr("Use a black startup background"))
+        black_background_box = QCheckBox()
         black_background_box.setChecked(black_startup_background)
-        add_option(
-            startup_layout,
-            black_background_box,
+        add_row(
+            window_card, 0xE7B3, _tr("Use a black startup background"),
             _tr("Sets the Windows window-class background to black before the first "
-            "visible display. This covers a blank client area; it cannot cover "
-            "game-rendered frames, videos, or graphics-mode transitions."),
+                "visible display. This covers a blank client area; it cannot cover "
+                "game-rendered frames, videos, or graphics-mode transitions."),
+            (black_background_box,),
         )
-        skip_logos_box = QCheckBox(_tr("Skip the intro logo screens"))
+        add_row(
+            window_card, 0xE946, _tr("Good to know"),
+            _tr("Window behavior depends on Windows and the game's display mode. "
+                "The taskbar thumbnail may leave the game behind other windows."),
+        )
+        intro_card = add_card(launch_page, _tr("Intro"))
+        skip_logos_box = QCheckBox()
         skip_logos_box.setChecked(skip_intro_logos and not nightreign)
+        skip_logos_row = add_row(
+            intro_card, 0xE893, _tr("Skip the intro logo screens"),
+            _tr("Goes straight to the title screen. If the game version is not "
+                "recognized, the logos play normally. To avoid the online connection "
+                "messages, set Launch Setting to Play Offline in the game's "
+                "System > Network options."),
+            (skip_logos_box,),
+        )
         if nightreign:
             # the patch matches Elden Ring's game code only
             skip_logos_box.setEnabled(False)
-            skip_logos_box.setToolTip(_tr("Not available for Nightreign yet."))
-        add_option(
-            startup_layout,
-            skip_logos_box,
-            _tr("Goes straight to the title screen. If the game version is not "
-            "recognized, the logos play normally. To avoid the online connection "
-            "messages, set Launch Setting to Play Offline in the game's "
-            "System > Network options."),
-        )
-        left_options_column.addWidget(startup_group)
+            skip_logos_row.setToolTip(_tr("Not available for Nightreign yet."))
+        launch_page.addStretch(1)
 
-        cleanup_group = QFrame(options_content)
-        cleanup_group.setObjectName("cleanupCard")
-        cleanup_group.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+        # --- Performance ---------------------------------------------------
+        performance_page = add_page(
+            0xEC4A, _tr("Performance"),
+            _tr("Only affects Elden Ring launched through MO2; resets when the game closes."),
         )
-        cleanup_layout = QVBoxLayout(cleanup_group)
-        cleanup_layout.setContentsMargins(13, 11, 13, 11)
-        cleanup_layout.setSpacing(6)
-        _add_circular_heading(
-            cleanup_layout,
-            cleanup_group,
-            _tr("Overwrite cleanup"),
-            "startupCardTitle",
-            ":/MO/gui/mainwindow/status/cleanup.svg",
-            "startupCleanupIcon",
-            26,
-            "C",
+        processor_card = add_card(performance_page, _tr("Processor"))
+        cpu0_box = QCheckBox()
+        cpu0_box.setChecked(exclude_cpu0)
+        add_row(
+            processor_card, 0xE950, _tr("Exclude logical CPU 0 after startup"),
+            _tr("After the selected delay from bridge loading, excludes logical "
+                "processor 0 from Elden Ring's current process affinity. This can "
+                "help or hurt performance depending on the CPU and system; compare "
+                "with the option off if you notice stutter."),
+            (cpu0_box,),
         )
-        clear_overwrite_logs_box = QCheckBox(
-            _tr("Clear previous mod logs before launch")
+        delay_combo = QComboBox()
+        for seconds in self.Cpu0DelayChoices:
+            delay_combo.addItem(_tr("{count} seconds").format(count=seconds), seconds)
+        delay_index = delay_combo.findData(cpu0_delay)
+        delay_combo.setCurrentIndex(delay_index if delay_index >= 0 else 1)
+        delay_combo.setEnabled(exclude_cpu0)
+        cpu0_box.toggled.connect(delay_combo.setEnabled)
+        add_row(
+            processor_card, 0xE916, _tr("Delay after bridge loads"),
+            _tr("How long the game runs on every processor first"),
+            (delay_combo,),
         )
+        logical_processors = os.cpu_count()
+        task_manager_button = QPushButton(_tr("Open Task Manager"))
+        task_manager_button.setObjectName("openTaskManager")
+        task_manager_button.setAutoDefault(False)
+        task_manager_button.clicked.connect(
+            lambda _checked=False: self._open_task_manager()
+        )
+        add_row(
+            processor_card, 0xE9D9, _tr("Processors"),
+            _tr("The affinity change applies only to Elden Ring and resets when "
+                "the game closes.")
+            if logical_processors is None
+            else _tr("Windows reports {count} logical processors. "
+                     "The affinity change applies only to Elden Ring and resets "
+                     "when the game closes.").format(count=logical_processors),
+            (task_manager_button,),
+        )
+        priority_card = add_card(performance_page, _tr("Priority"))
+        priority_combo = QComboBox()
+        priority_combo.addItem(_tr("System default"), 0)
+        priority_combo.addItem(_tr("Above normal"), 1)
+        priority_index = priority_combo.findData(process_priority)
+        priority_combo.setCurrentIndex(priority_index if priority_index >= 0 else 0)
+        add_row(
+            priority_card, 0xE7C1, _tr("Process priority"),
+            _tr("Above normal may not improve performance and can make other apps "
+                "less responsive while Elden Ring is running."),
+            (priority_combo,),
+        )
+        performance_page.addStretch(1)
+
+        # --- Overwrite -----------------------------------------------------
+        cleanup_page = add_page(
+            0xE74D, _tr("Overwrite cleanup"),
+            _tr("Only one cleanup option can be active at a time. Both are off by default."),
+        )
+        cleanup_card = add_card(cleanup_page, _tr("Cleanup"))
+        clear_overwrite_logs_box = QCheckBox()
         clear_overwrite_logs_box.setObjectName("clearOverwriteLogsBeforeLaunch")
         clear_overwrite_logs_box.setChecked(clear_overwrite_logs_before_game)
-        add_option(
-            cleanup_layout,
-            clear_overwrite_logs_box,
+        add_row(
+            cleanup_card, 0xE8A5, _tr("Clear previous mod logs before launch"),
             _tr("At launch, removes existing .log files from Overwrite and its "
-            "subfolders. Other files are kept, and logs created during the "
-            "new session remain available."),
+                "subfolders. Other files are kept, and logs created during the "
+                "new session remain available."),
+            (clear_overwrite_logs_box,),
         )
-        clear_overwrite_box = QCheckBox(
-            _tr("Delete all Overwrite contents after the game closes")
-        )
+        clear_overwrite_box = QCheckBox()
         clear_overwrite_box.setObjectName("clearOverwriteAfterGame")
         clear_overwrite_box.setChecked(clear_overwrite_after_game)
-        add_option(
-            cleanup_layout,
-            clear_overwrite_box,
+        add_row(
+            cleanup_card, 0xE74D, _tr("Delete all Overwrite contents after the game closes"),
             _tr("After eldenring.exe exits, removes all files and subfolders in "
-            "Overwrite, including new logs and output from other mods or tools. "
-            "The Overwrite folder itself remains. Enable only if you do not "
-            "need any of its contents."),
+                "Overwrite, including new logs and output from other mods or tools. "
+                "The Overwrite folder itself remains. Enable only if you do not "
+                "need any of its contents."),
+            (clear_overwrite_box,),
         )
 
         def update_overwrite_cleanup_controls() -> None:
@@ -465,126 +608,16 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         clear_overwrite_box.toggled.connect(update_overwrite_cleanup_controls)
         clear_overwrite_logs_box.toggled.connect(update_overwrite_cleanup_controls)
         update_overwrite_cleanup_controls()
-        cleanup_note = QLabel(
-            _tr("Only one cleanup option can be active at a time. Both are off by default.")
-        )
-        cleanup_note.setObjectName("cleanupNote")
-        compact_note(cleanup_note)
-        cleanup_layout.addWidget(cleanup_note)
-        right_options_column.addWidget(cleanup_group)
+        cleanup_page.addStretch(1)
 
-        performance_group = QFrame(options_content)
-        performance_group.setObjectName("performanceCard")
-        performance_group.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
-        )
-        performance_layout = QVBoxLayout(performance_group)
-        performance_layout.setContentsMargins(13, 11, 13, 11)
-        performance_layout.setSpacing(6)
-        _add_circular_heading(
-            performance_layout,
-            performance_group,
-            _tr("Performance"),
-            "startupCardTitle",
-            ":/MO/gui/mainwindow/settings.svg",
-            "startupPerformanceIcon",
-            26,
-            "P",
-        )
-        cpu0_box = QCheckBox(_tr("Exclude logical CPU 0 after startup"))
-        cpu0_box.setChecked(exclude_cpu0)
-        add_option(
-            performance_layout,
-            cpu0_box,
-            _tr("After the selected delay from bridge loading, excludes logical "
-            "processor 0 from Elden Ring's current process affinity. This can "
-            "help or hurt performance depending on the CPU and system; compare "
-            "with the option off if you notice stutter."),
-        )
-        delay_row = QHBoxLayout()
-        delay_row.addWidget(QLabel(_tr("Delay after bridge loads:")))
-        delay_combo = QComboBox()
-        for seconds in self.Cpu0DelayChoices:
-            delay_combo.addItem(_tr("{count} seconds").format(count=seconds), seconds)
-        delay_index = delay_combo.findData(cpu0_delay)
-        delay_combo.setCurrentIndex(delay_index if delay_index >= 0 else 1)
-        delay_combo.setEnabled(exclude_cpu0)
-        cpu0_box.toggled.connect(delay_combo.setEnabled)
-        delay_row.addWidget(delay_combo)
-        task_manager_button = QPushButton(_tr("Open Task Manager"))
-        task_manager_button.setObjectName("openTaskManager")
-        task_manager_button.setMinimumHeight(30)
-        task_manager_button.clicked.connect(
-            lambda _checked=False: self._open_task_manager()
-        )
-        delay_row.addWidget(task_manager_button)
-        delay_row.addStretch(1)
-        performance_layout.addLayout(delay_row)
-        priority_row = QHBoxLayout()
-        priority_row.addWidget(QLabel(_tr("Process priority:")))
-        priority_combo = QComboBox()
-        priority_combo.addItem(_tr("System default"), 0)
-        priority_combo.addItem(_tr("Above normal"), 1)
-        priority_index = priority_combo.findData(process_priority)
-        priority_combo.setCurrentIndex(priority_index if priority_index >= 0 else 0)
-        priority_combo.setToolTip(
-            _tr("Only affects Elden Ring launched through MO2; resets when the game closes.")
-        )
-        priority_row.addWidget(priority_combo)
-        priority_row.addStretch(1)
-        performance_layout.addLayout(priority_row)
-        priority_note = QLabel(
-            _tr("Above normal may not improve performance and can make other apps "
-            "less responsive while Elden Ring is running.")
-        )
-        compact_note(priority_note)
-        priority_note.setContentsMargins(24, 0, 4, 4)
-        performance_layout.addWidget(priority_note)
-        logical_processors = os.cpu_count()
-        if logical_processors is None:
-            processor_note_text = (
-                _tr("The affinity change applies only to Elden Ring and resets when "
-                "the game closes.")
-            )
-        else:
-            processor_note_text = (
-                _tr("Windows reports {count} logical processors. "
-                "The affinity change applies only to Elden Ring and resets "
-                "when the game closes.").format(count=logical_processors)
-            )
-        processor_note = QLabel(processor_note_text)
-        compact_note(processor_note)
-        processor_note.setContentsMargins(24, 0, 4, 4)
-        performance_layout.addWidget(processor_note)
-        left_options_column.addWidget(performance_group)
-
-        bridge_group = QFrame(options_content)
-        bridge_group.setObjectName("bridgeLogCard")
-        bridge_group.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
-        )
-        bridge_layout = QVBoxLayout(bridge_group)
-        bridge_layout.setContentsMargins(13, 11, 13, 11)
-        bridge_layout.setSpacing(8)
-        _add_circular_heading(
-            bridge_layout,
-            bridge_group,
-            _tr("Bridge logs"),
-            "startupCardTitle",
-            ":/MO/gui/mainwindow/files/text.svg",
-            "startupBridgeIcon",
-            26,
-            "B",
-        )
-        bridge_note = QLabel(
+        # --- Logs ----------------------------------------------------------
+        logs_page = add_page(
+            0xE9F9, _tr("Bridge logs"),
             _tr("Choose how many previous bridge sessions to rotate. Older copies "
-            "stay in the log folder; the current log is recreated when the "
-            "bridge loads.")
+                "stay in the log folder; the current log is recreated when the "
+                "bridge loads."),
         )
-        compact_note(bridge_note)
-        bridge_layout.addWidget(bridge_note)
-        history_row = QHBoxLayout()
-        history_row.addWidget(QLabel(_tr("Previous sessions to keep:")))
+        logs_card = add_card(logs_page, _tr("Bridge logs"))
         bridge_history_combo = QComboBox()
         for sessions in self.BridgeLogHistoryChoices:
             bridge_history_combo.addItem(
@@ -594,45 +627,72 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 sessions,
             )
         history_index = bridge_history_combo.findData(bridge_log_history)
-        bridge_history_combo.setCurrentIndex(
-            history_index if history_index >= 0 else 0
+        bridge_history_combo.setCurrentIndex(history_index if history_index >= 0 else 0)
+        add_row(
+            logs_card, 0xE81C, _tr("Previous sessions to keep"),
+            _tr("Copies of earlier launches kept next to the current log"),
+            (bridge_history_combo,),
         )
-        history_row.addWidget(bridge_history_combo)
-        history_row.addStretch(1)
-        bridge_layout.addLayout(history_row)
-        bridge_buttons = QHBoxLayout()
-        log_button = QPushButton(_tr("Open last bridge log"))
+        log_button = icon_button(0xE8A7, _tr("Open last bridge log"))
         log_button.setObjectName("openCurrentBridgeLog")
-        log_button.setMinimumHeight(34)
-        log_button.clicked.connect(
-            lambda _checked=False: self._open_latest_bridge_log()
+        log_button.clicked.connect(lambda _checked=False: self._open_latest_bridge_log())
+        add_row(
+            logs_card, 0xE8A5, _tr("Last bridge log"),
+            _tr("Written while the game ran last"), (log_button,),
         )
-        previous_log_button = QPushButton(_tr("Open previous bridge log"))
+        previous_log_button = icon_button(0xE8A7, _tr("Open previous bridge log"))
         previous_log_button.setObjectName("openPreviousBridgeLog")
-        previous_log_button.setMinimumHeight(34)
         previous_log_button.clicked.connect(
             lambda _checked=False: self._open_previous_bridge_log()
         )
-        bridge_buttons.addWidget(log_button)
-        bridge_buttons.addWidget(previous_log_button)
-        bridge_layout.addLayout(bridge_buttons)
-        log_folder_button = QPushButton(_tr("Open log folder"))
+        add_row(
+            logs_card, 0xE81C, _tr("Previous bridge log"),
+            _tr("The launch before that one"), (previous_log_button,),
+        )
+        log_folder_button = icon_button(0xE838, _tr("Open log folder"))
         log_folder_button.setObjectName("openBridgeLogFolder")
-        log_folder_button.setMinimumHeight(34)
         log_folder_button.clicked.connect(
             lambda _checked=False: self._open_bridge_log_folder()
         )
-        bridge_layout.addWidget(log_folder_button)
-        right_options_column.addWidget(bridge_group)
+        add_row(
+            logs_card, 0xE8B7, _tr("Log folder"),
+            str(Path(tempfile.gettempdir())), (log_folder_button,),
+        )
+        logs_page.addStretch(1)
 
-        left_options_column.addStretch(1)
-        right_options_column.addStretch(1)
-        options_columns.addLayout(left_options_column, 1)
-        options_columns.addLayout(right_options_column, 1)
+        def show_page(index: int) -> None:
+            if 0 <= index < len(page_texts):
+                pages.setCurrentIndex(index)
+                page_title.setText(page_texts[index][0])
+                page_subtitle.setText(page_texts[index][1])
 
-        layout.addWidget(profile_group, 0)
-        layout.addWidget(options_scroll, 1)
+        nav.currentRowChanged.connect(show_page)
+        # accessibility tools select a page without moving the current row
+        nav.itemSelectionChanged.connect(
+            lambda: show_page(nav.row(nav.selectedItems()[0])) if nav.selectedItems() else None
+        )
+        nav.setCurrentRow(0)
 
+        # defaults on the left, Save and Cancel on the right
+        footer = QHBoxLayout()
+        footer.setSpacing(8)
+        footer.setContentsMargins(0, 0, 16, 0)
+        defaults_button = QPushButton(_glyph_icon(0xE777), _tr("Restore defaults"))
+        defaults_button.setObjectName("restoreStartupDefaults")
+        defaults_button.setAutoDefault(False)
+        defaults_button.setToolTip(_tr("Turns every option off again; nothing changes until you save"))
+
+        def restore_defaults() -> None:
+            for box in (minimized_box, black_background_box, skip_logos_box, cpu0_box,
+                        clear_overwrite_logs_box, clear_overwrite_box):
+                box.setChecked(False)
+            delay_combo.setCurrentIndex(max(0, delay_combo.findData(30)))
+            priority_combo.setCurrentIndex(0)
+            bridge_history_combo.setCurrentIndex(0)
+
+        defaults_button.clicked.connect(lambda _checked=False: restore_defaults())
+        footer.addWidget(defaults_button)
+        footer.addStretch(1)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
             | QDialogButtonBox.StandardButton.Cancel
@@ -640,51 +700,9 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         buttons.setObjectName("dialogButtons")
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
+        footer.addWidget(buttons)
+        root.addLayout(footer)
 
-        layout.activate()
-        dialog.ensurePolished()
-        dialog.adjustSize()
-        if available_geometry is not None:
-            available_height = available_geometry.height()
-            max_dialog_height = max(420, available_height - 40)
-            options_scroll.setMinimumHeight(
-                max(160, min(500, max_dialog_height - 300))
-            )
-            dialog.adjustSize()
-            dialog.resize(
-                preferred_dialog_width,
-                min(dialog.height(), max_dialog_height),
-            )
-        else:
-            dialog.resize(preferred_dialog_width, dialog.height())
-
-        def grow_past_short_scroll() -> None:
-            # once shown, the wrapped text has its real height: grow the
-            # dialog instead of leaving a short scroll, as far as the screen
-            # allows
-            if available_geometry is None:
-                return
-            viewport = options_scroll.viewport()
-            needed = max(
-                options_content.height(),
-                options_content.minimumSizeHint().height(),
-                options_content.heightForWidth(viewport.width())
-                if options_content.hasHeightForWidth()
-                else 0,
-            )
-            extra = needed - viewport.height()
-            if extra <= 0:
-                return
-            height = min(dialog.height() + extra, available_geometry.height() - 40)
-            if height <= dialog.height():
-                return
-            frame = dialog.frameGeometry()
-            top = min(frame.top(), available_geometry.bottom() - (frame.height() - dialog.height() + height))
-            dialog.resize(dialog.width(), height)
-            dialog.move(frame.left(), max(available_geometry.top(), top))
-
-        QTimer.singleShot(50, grow_past_short_scroll)
         accepted = dialog.exec() == QDialog.DialogCode.Accepted
         # a child of MO2's window: freed once this call returns to MO2's event
         # loop (the choices below are read before that), not kept per opening

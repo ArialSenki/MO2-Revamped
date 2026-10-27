@@ -68,6 +68,7 @@ private:
 
 private:
   void addLicense(const QString& name, Licenses license);
+  void buildFluentLayout(const QString& applicationName, const QString& version);
 
 private slots:
   void on_creditsList_currentItemChanged(QListWidgetItem* current,

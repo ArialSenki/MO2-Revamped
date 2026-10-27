@@ -202,7 +202,6 @@ private:
 bool isOptionsDialog(const QDialog* dialog)
 {
   static const QStringList names = {
-      QStringLiteral("TransferSavesDialog"),
       QStringLiteral("LootDialog"),
   };
   return names.contains(dialog->objectName());

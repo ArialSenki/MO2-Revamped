@@ -27,7 +27,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 #include <QDirIterator>
 #include <QFrame>
+#include "fluentdialogs.h"
+#include "fluentpanels.h"
 #include <QHBoxLayout>
+#include <QLineEdit>
+#include <QToolButton>
 #include <QLabel>
 #include <QLocale>
 #include <QMenu>
@@ -39,6 +43,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QShortcut>
 #include <QVariant>
 #include <Shlwapi.h>
+#include <log.h>
 
 using namespace MOBase;
 
@@ -62,6 +67,24 @@ public:
     }
 
     return QFileSystemModel::headerData(section, orientation, role);
+  }
+
+  QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override
+  {
+    // Windows' type names come in the system language, or in English when Qt
+    // has no translation; the type column names folders and file extensions
+    if (index.column() == 2 && role == Qt::DisplayRole) {
+      const QFileInfo info = fileInfo(index);
+      if (info.isDir()) {
+        return QCoreApplication::translate("OverwriteInfoDialog", "Folder");
+      }
+      const QString suffix = info.suffix();
+      return suffix.isEmpty()
+                 ? QCoreApplication::translate("OverwriteInfoDialog", "File")
+                 : QCoreApplication::translate("OverwriteInfoDialog", "%1 file")
+                       .arg(suffix.toUpper());
+    }
+    return QFileSystemModel::data(index, role);
   }
 };
 }  // namespace
@@ -171,6 +194,44 @@ void OverwriteInfoDialog::buildFluentLayout()
   ui->explorerButton->show();
   layout->addLayout(head);
 
+  // search, expand and collapse, and emptying everything
+  auto* tools = new QFrame(card);
+  tools->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* toolsLayout = new QHBoxLayout(tools);
+  toolsLayout->setContentsMargins(12, 8, 12, 8);
+  toolsLayout->setSpacing(6);
+  auto* search = new QLineEdit(tools);
+  search->setObjectName(QStringLiteral("instanceFilter"));
+  search->setPlaceholderText(tr("Search files"));
+  search->setClearButtonEnabled(true);
+  search->setMaximumWidth(320);
+  toolsLayout->addWidget(search, 1);
+  auto* expand = FluentPanels::iconButton(0xF164, tr("Expand all"), tools);
+  auto* collapse = FluentPanels::iconButton(0xF165, tr("Collapse all"), tools);
+  toolsLayout->addWidget(expand);
+  toolsLayout->addWidget(collapse);
+  toolsLayout->addStretch(1);
+  m_empty = new QPushButton(FluentIcons::glyph(0xE74D, FluentIcons::Tone::Critical),
+                            tr("Empty to Recycle Bin..."), tools);
+  m_empty->setAutoDefault(false);
+  m_empty->setToolTip(tr("Move everything in Overwrite to the Recycle Bin"));
+  toolsLayout->addWidget(m_empty);
+  layout->addWidget(tools);
+  connect(expand, &QToolButton::clicked, ui->filesView, &QTreeView::expandAll);
+  connect(collapse, &QToolButton::clicked, ui->filesView, &QTreeView::collapseAll);
+  m_FileSystemModel->setNameFilterDisables(false);
+  connect(search, &QLineEdit::textChanged, this, [this](const QString& text) {
+    const QString pattern = text.trimmed();
+    m_FileSystemModel->setNameFilters(pattern.isEmpty()
+                                          ? QStringList()
+                                          : QStringList{QLatin1Char('*') + pattern +
+                                                        QLatin1Char('*')});
+    if (!pattern.isEmpty()) {
+      ui->filesView->expandAll();
+    }
+  });
+  connect(m_empty, &QPushButton::clicked, this, &OverwriteInfoDialog::emptyOverwrite);
+
   auto* files = new QFrame(card);
   files->setObjectName(QStringLiteral("fluentSettingRow"));
   auto* filesLayout = new QVBoxLayout(files);
@@ -248,6 +309,7 @@ void OverwriteInfoDialog::updateSummary()
   if (m_createMod != nullptr) {
     m_createMod->setEnabled(files > 0 || folders > 0);
     m_moveToMod->setEnabled(files > 0 || folders > 0);
+    m_empty->setEnabled(files > 0 || folders > 0);
   }
 
   // the same words as the main window's Overwrite card
@@ -266,6 +328,46 @@ void OverwriteInfoDialog::updateSummary()
                                   : tr("%1 files, %2, not part of any mod")
                                         .arg(QLocale().toString(files), size));
   }
+}
+
+void OverwriteInfoDialog::emptyOverwrite()
+{
+  if (!m_ModInfo) {
+    return;
+  }
+  const QDir root(m_ModInfo->absolutePath());
+  QStringList entries;
+  for (const QFileInfo& info :
+       root.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden |
+                          QDir::System)) {
+    entries.append(QDir::toNativeSeparators(info.absoluteFilePath()));
+  }
+  if (entries.isEmpty()) {
+    return;
+  }
+
+  FluentContentDialog dlg(
+      this, QStringLiteral("OverwriteEmptyDialog"), tr("Empty Overwrite?"),
+      tr("Everything in Overwrite goes to the Recycle Bin: %1. Logs and settings that "
+         "DLL mods and tools wrote there are gone from the game until you restore "
+         "them.\n\nTo keep some files, move them to a mod first.")
+          .arg(m_summary != nullptr ? m_summary->text() : QString()));
+  auto* recycle = dlg.addButton(tr("Move to Recycle Bin"), true);
+  auto* cancel  = dlg.addButton(tr("Cancel"));
+  connect(recycle, &QPushButton::clicked, &dlg, &QDialog::accept);
+  connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+  dlg.resize(520, dlg.sizeHint().height());
+  if (dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  if (!shellDelete(entries, true, this)) {
+    const auto e = GetLastError();
+    if (e != ERROR_CANCELLED) {
+      log::error("failed to empty Overwrite, {}", formatSystemMessage(e));
+    }
+  }
+  updateSummary();
 }
 
 OverwriteInfoDialog::~OverwriteInfoDialog()

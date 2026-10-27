@@ -22,7 +22,19 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "categories.h"
 #include "tutorabledialog.h"
+#include <QMap>
 #include <set>
+
+class QComboBox;
+class QLabel;
+class QScrollArea;
+namespace FluentPanels
+{
+class ElidedLabel;
+}
+class QLineEdit;
+class QPushButton;
+class QTreeWidget;
 
 namespace Ui
 {
@@ -68,12 +80,52 @@ private:
   void refreshIDs();
   void fillTable();
 
+  // Fluent v4: a list card of the categories as a tree and a details card of
+  // Settings rows; the table and the Nexus list stay as the data behind them
+  void buildFluentLayout();
+  QWidget* createFluentList();
+  QWidget* createFluentDetails();
+  void queueFluentRefresh();
+  void refreshFluentTree();
+  void refreshFluentDetails();
+  void showFluentListMenu(const QPoint& pos);
+  void showFluentHelp();
+  int rowForID(int id) const;
+  int selectedID() const;
+  void selectID(int id);
+  void addFluentCategory(int parentID);
+  void setRowMappings(int row, const QVariantList& mappings);
+  void mapNexusCategory(int row, const QString& name, int nexusID);
+  void moveCategory(int delta);
+  void sortCategories();
+
 private:
   Ui::CategoriesDialog* ui;
   int m_ContextRow;
 
   int m_HighestID;
   std::set<int> m_IDs;
+
+  bool m_fluent              = false;
+  bool m_fluentRefreshQueued = false;
+  bool m_fluentSyncing       = false;
+  QMap<int, int> m_modCounts;
+  QTreeWidget* m_fluentTree        = nullptr;
+  QLineEdit* m_fluentSearch        = nullptr;
+  QLabel* m_fluentCount            = nullptr;
+  QLabel* m_fluentName             = nullptr;
+  QLabel* m_fluentCaption          = nullptr;
+  QLineEdit* m_fluentNameEdit      = nullptr;
+  QComboBox* m_fluentParent        = nullptr;
+  FluentPanels::ElidedLabel* m_fluentID   = nullptr;
+  FluentPanels::ElidedLabel* m_fluentMods = nullptr;
+  QScrollArea* m_fluentScroll      = nullptr;
+  QWidget* m_fluentMappings        = nullptr;
+  QComboBox* m_fluentNexusPicker   = nullptr;
+  QWidget* m_fluentDetailRows      = nullptr;
+  QLabel* m_fluentEmpty            = nullptr;
+  QPushButton* m_fluentAddSub      = nullptr;
+  QPushButton* m_fluentRemove      = nullptr;
 };
 
 #endif  // CATEGORIESDIALOG_H

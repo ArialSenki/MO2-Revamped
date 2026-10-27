@@ -940,7 +940,7 @@ void ModListViewActions::sendModsToSeparator(const QModelIndexList& indexes) con
   }
 
   ListDialog dialog(m_parent);
-  dialog.setWindowTitle("Select a separator...");
+  dialog.setWindowTitle(tr("Choose a separator"));
   dialog.setChoices(separators);
 
   if (dialog.exec() != QDialog::Accepted) {

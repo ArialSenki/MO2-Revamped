@@ -58,6 +58,7 @@ namespace
 // Segoe Fluent Icons code points
 constexpr char16_t AddGlyph      = 0xE710;
 constexpr char16_t RenameGlyph   = 0xE8AC;
+constexpr char16_t EditGlyph     = 0xE70F;  // pencil, for group and notes
 constexpr char16_t OpenGlyph     = 0xE838;  // FolderOpen
 constexpr char16_t DocumentGlyph = 0xE8A5;
 constexpr char16_t DeleteGlyph   = 0xE74D;
@@ -386,7 +387,12 @@ void showInstanceExample(QWidget* parent)
 
   auto* close = dlg.addButton(QObject::tr("Close"), true);
   QObject::connect(close, &QPushButton::clicked, &dlg, &QDialog::accept);
-  dlg.resize(520, dlg.sizeHint().height());
+  // the wrapped texts are shorter at the final width than at the size hint's
+  constexpr int width = 520;
+  auto* layout        = dlg.layout();
+  dlg.resize(width, layout != nullptr && layout->hasHeightForWidth()
+                        ? layout->totalHeightForWidth(width)
+                        : dlg.sizeHint().height());
   dlg.exec();
 }
 
@@ -674,8 +680,8 @@ QWidget* InstanceManagerDialog::createDetails()
                                tr("Open ModOrganizer.ini in its editor"), DocumentOpenGlyph);
   m_storageRow  = addDetailRow(rows, HomeGlyph, tr("Storage"), {});
   m_groupRow    = addDetailRow(rows, TagGlyph, tr("Group"), tr("Move to another group"),
-                               RenameGlyph);
-  m_notesRow    = addDetailRow(rows, NoteGlyph, tr("Notes"), tr("Edit the notes"), RenameGlyph);
+                               EditGlyph);
+  m_notesRow    = addDetailRow(rows, NoteGlyph, tr("Notes"), tr("Edit the notes"), EditGlyph);
   rowsLayout->addStretch(1);
 
   // the rows only scroll when the screen is too short for all of them
@@ -1440,7 +1446,8 @@ void InstanceManagerDialog::deleteInstance()
   scroll->setWidget(list);
   scroll->setWidgetResizable(true);
   scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  scroll->setMinimumHeight(qMin(60 + 40 * static_cast<int>(checks.size()), 260));
+  // as tall as its rows, so one folder leaves no empty well below it
+  scroll->setFixedHeight(qMin(list->sizeHint().height() + 2, 260));
   dlg.body()->addWidget(scroll, 1);
 
   enum Choice

@@ -683,7 +683,8 @@ void GamePage::doActivated(bool firstTime)
     if (browseButton != ui->browseGameFolderButton ||
         gamesFilter != ui->gamesFilter || showAllGames != ui->showAllGames ||
         games != ui->games || selectionHint != ui->gameSelectionHint) {
-      log::warn("Create Instance wizard: refreshed game-page widget references from the dialog tree");
+      // expected whenever the Fluent layout rebuilt the page
+      log::debug("Create Instance wizard: refreshed game-page widget references from the dialog tree");
     }
 
     ui->browseGameFolderButton = browseButton;

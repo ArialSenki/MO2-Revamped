@@ -19,6 +19,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "transfersavesdialog.h"
 
+#include "fluenticons.h"
+#include "fluentpanels.h"
 #include "iplugingame.h"
 #include "isavegame.h"
 #include "savegameinfo.h"
@@ -27,6 +29,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility.h>
 
 #include <QDateTime>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLocale>
+#include <QToolButton>
+#include <QVBoxLayout>
+#include <functional>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -50,10 +58,78 @@ TransferSavesDialog::TransferSavesDialog(const Profile& profile,
 {
   ui->setupUi(this);
   ui->label_2->setText(tr("Characters for profile %1").arg(m_Profile.name()));
+  if (FluentIcons::active()) {
+    buildFluentLayout();
+  }
+
   refreshGlobalSaves();
   refreshLocalSaves();
   refreshGlobalCharacters();
   refreshLocalCharacters();
+}
+
+void TransferSavesDialog::buildFluentLayout()
+{
+  // the arrows column goes: each card has its own commands under its lists,
+  // the characters show how many saves they have and when the last one was
+  // made, and each card opens its folder
+  ui->transferActionsPanel->hide();
+  const auto setUp = [this](QGroupBox* panel, QLabel* heading, QListWidget* characters,
+                            QListWidget* saves, QPushButton* copy, QPushButton* move,
+                            const QString& folderTip, std::function<QString()> folder) {
+    panel->setProperty("fluentCard", true);
+    characters->setItemDelegate(new FluentPanels::RowDelegate(characters, 52, 24));
+    characters->setMouseTracking(true);
+    characters->setFrameShape(QFrame::NoFrame);
+    saves->setFrameShape(QFrame::NoFrame);
+
+    auto* layout = qobject_cast<QVBoxLayout*>(panel->layout());
+    if (layout == nullptr) {
+      return;
+    }
+    // the heading gets the folder button at its right
+    const int index = layout->indexOf(heading);
+    if (index >= 0) {
+      layout->removeWidget(heading);
+      auto* row = new QHBoxLayout;
+      row->addWidget(heading, 1);
+      auto* open = FluentPanels::iconButton(0xE838, folderTip, panel);
+      connect(open, &QToolButton::clicked, this, [folder] {
+        shell::Explore(folder());
+      });
+      row->addWidget(open);
+      layout->insertLayout(index, row);
+    }
+
+    auto* buttons = new QHBoxLayout;
+    buttons->setSpacing(8);
+    for (QPushButton* button : {copy, move}) {
+      button->setParent(panel);
+      button->setAutoDefault(false);
+      buttons->addWidget(button, 1);
+      button->show();
+    }
+    layout->addLayout(buttons);
+  };
+
+  ui->copyToLocalBtn->setText(tr("Copy to the profile"));
+  ui->copyToLocalBtn->setIcon(FluentIcons::glyph(0xE8C8));
+  ui->moveToLocalBtn->setText(tr("Move to the profile"));
+  ui->moveToLocalBtn->setIcon(FluentIcons::glyph(0xE8DE));
+  ui->copyToGlobalBtn->setText(tr("Copy to the game"));
+  ui->copyToGlobalBtn->setIcon(FluentIcons::glyph(0xE8C8));
+  ui->moveToGlobalBtn->setText(tr("Move to the game"));
+  ui->moveToGlobalBtn->setIcon(FluentIcons::glyph(0xE8DE));
+
+  setUp(ui->globalSavesPanel, ui->label, ui->globalCharacterList, ui->globalSavesList,
+        ui->copyToLocalBtn, ui->moveToLocalBtn, tr("Open the game's save folder"), [this] {
+          return m_GamePlugin->savesDirectory().absolutePath();
+        });
+  setUp(ui->profileSavesPanel, ui->label_2, ui->localCharacterList, ui->localSavesList,
+        ui->copyToGlobalBtn, ui->moveToGlobalBtn, tr("Open the profile's save folder"),
+        [this] {
+          return m_Profile.savePath();
+        });
 }
 
 TransferSavesDialog::~TransferSavesDialog()
@@ -230,7 +306,20 @@ void TransferSavesDialog::refreshCharacters(const SaveCollection& saveCollection
 {
   charList->clear();
   for (SaveCollection::value_type const& val : saveCollection) {
-    charList->addItem(val.first);
+    auto* item = new QListWidgetItem(val.first, charList);
+    // how many saves and the newest one, below the name (Fluent rows)
+    const auto& saves = val.second;
+    QString caption = saves.size() == 1
+                          ? tr("1 save")
+                          : tr("%1 saves").arg(static_cast<qulonglong>(saves.size()));
+    if (!saves.empty()) {
+      caption += QStringLiteral(" · ") +
+                 QLocale().toString(saves.front()->getCreationTime(), QLocale::ShortFormat);
+    }
+    item->setData(FluentPanels::CaptionRole, caption);
+    if (FluentIcons::active()) {
+      item->setIcon(FluentIcons::glyph(0xE77B));
+    }
   }
   if (charList->count() > 0) {
     charList->setCurrentRow(0);

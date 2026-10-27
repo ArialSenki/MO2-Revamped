@@ -316,12 +316,6 @@ void NexusTab::onModChanged()
   <body>%1</body>
 </html>)";
 
-  if (MOBase::RevampedTheme::isBlack()) {
-    descriptionAsHTML.replace("#404040", "#242424");
-    descriptionAsHTML.replace("#57a5cc", "#777777");
-    descriptionAsHTML.replace("rgb(87,165,204)", "rgb(119,119,119)");
-    descriptionAsHTML.replace("#8197ec", "#D0D0D0");
-  }
   if (nexusDescription.isEmpty()) {
     descriptionAsHTML = descriptionAsHTML.arg(tr(R"(
       <div style="text-align: center;">

@@ -285,21 +285,34 @@ void FluentDashboard::setupModsHeader()
   ui->activeModslabel->hide();
   ui->activeModsCounter->hide();
 
-  // the Data tab's refresh joins the filter row, so the tree starts right
-  // under the tabs
-  ui->horizontalLayout_13->addWidget(ui->dataTabRefresh);
+  // the Data tab searches at the top, like the Downloads tab, with refresh
+  // beside the field; the switches stay below the tree, where they no longer
+  // squeeze the field in a narrow panel
+  ui->horizontalLayout_13->removeWidget(ui->dataTabFilter);
+  ui->horizontalLayout_13->addStretch(1);
+  ui->horizontalLayout_12->removeWidget(ui->dataTabRefresh);
+  ui->horizontalSpacer_4->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
+  ui->horizontalLayout_12->addWidget(ui->dataTabFilter, 1);
+  ui->horizontalLayout_12->addWidget(ui->dataTabRefresh);
+  ui->dataTabFilter->setPlaceholderText(tr("Search files"));
+  ui->dataTabFilter->setAccessibleName(tr("Search files"));
   ui->dataTabRefresh->setText(QString());
   ui->dataTabRefresh->setFixedWidth(32);
   ui->dataTabRefresh->setAccessibleName(tr("Refresh"));
-  ui->horizontalSpacer_4->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
   ui->horizontalLayout_12->invalidate();
 
-  // the same for the Downloads tab
-  ui->horizontalLayout_16->addWidget(ui->btnRefreshDownloads);
+  // the same for the Downloads tab: search and refresh on top, the hidden
+  // downloads switch below the list
+  ui->horizontalLayout_16->removeWidget(ui->downloadFilterEdit);
+  ui->horizontalLayout->removeWidget(ui->btnRefreshDownloads);
+  ui->horizontalSpacer_7->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
+  ui->horizontalLayout->addWidget(ui->downloadFilterEdit, 1);
+  ui->horizontalLayout->addWidget(ui->btnRefreshDownloads);
+  ui->downloadFilterEdit->setPlaceholderText(tr("Search downloads"));
+  ui->downloadFilterEdit->setAccessibleName(tr("Search downloads"));
   ui->btnRefreshDownloads->setText(QString());
   ui->btnRefreshDownloads->setFixedWidth(32);
   ui->btnRefreshDownloads->setAccessibleName(tr("Refresh"));
-  ui->horizontalSpacer_7->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
   ui->horizontalLayout->invalidate();
 }
 

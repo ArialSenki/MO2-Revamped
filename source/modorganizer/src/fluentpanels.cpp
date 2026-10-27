@@ -285,8 +285,14 @@ QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
     value->show();
   }
 
-  // the box keeps its name for screen readers and for plugins that look it up
+  // the box keeps its name for screen readers and for plugins that look it up;
+  // a new parent hides it, so it shows again unless its own code had hidden it
+  const bool hiddenByCode =
+      box->testAttribute(Qt::WA_WState_ExplicitShowHide) && box->isHidden();
   box->setParent(frame);
+  if (!hiddenByCode) {
+    box->show();
+  }
   box->setText(QString());
   box->setAccessibleName(title);
   box->setAccessibleDescription(description);

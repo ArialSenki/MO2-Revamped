@@ -18,11 +18,22 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "aboutdialog.h"
+#include "fluenticons.h"
+#include "fluentnavigation.h"
+#include "fluentpanels.h"
 #include "shared/util.h"
 #include "ui_aboutdialog.h"
 #include <utility.h>
 
 #include <QApplication>
+#include <QClipboard>
+#include <QFrame>
+#include <QGuiApplication>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QSysInfo>
+#include <QToolButton>
+#include <QVBoxLayout>
 #include <QFontDatabase>
 #include <QLabel>
 #include <QListWidget>
@@ -97,6 +108,113 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   ui->usvfsLabel->setText(ui->usvfsLabel->text() + " " +
                           MOShared::getUsvfsVersionString());
   ui->licenseText->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+
+  if (FluentIcons::active()) {
+    buildFluentLayout(applicationName, version);
+  }
+}
+
+void AboutDialog::buildFluentLayout(const QString& applicationName, const QString& version)
+{
+  // Windows 11 Settings' About page: the pages on the left under the
+  // program's card, and the build facts as rows a bug report can copy
+  QListWidget* nav = FluentNavigation::attach(ui->tabWidget, {0xE946, 0xE8F1, 0xE716});
+  if (nav == nullptr) {
+    return;
+  }
+  ui->aboutHeaderCard->hide();
+
+  auto* card = new QFrame(this);
+  card->setObjectName(QStringLiteral("aboutProgramCard"));
+  card->setProperty("fluentCard", true);
+  auto* cardLayout = new QVBoxLayout(card);
+  cardLayout->setContentsMargins(14, 14, 14, 14);
+  cardLayout->setSpacing(6);
+  auto* icon = new QLabel(card);
+  const QPixmap logo = ui->iconLabel->pixmap();
+  if (!logo.isNull()) {
+    icon->setPixmap(logo.scaled(48, 48, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+  }
+  cardLayout->addWidget(icon);
+  auto* name = new QLabel(applicationName, card);
+  name->setObjectName(QStringLiteral("instanceDetailName"));
+  name->setWordWrap(true);
+  auto* caption = new QLabel(tr("Version %1").arg(version), card);
+  caption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  cardLayout->addWidget(name);
+  cardLayout->addWidget(caption);
+  FluentNavigation::setNavigationHeader(ui->tabWidget, card);
+
+#if defined(HGID)
+  const QString revision = QStringLiteral(HGID);
+#elif defined(GITID)
+  const QString revision = QStringLiteral(GITID);
+#else
+  const QString revision = tr("unknown");
+#endif
+  const QString usvfs   = MOShared::getUsvfsVersionString();
+  const QString windows = QSysInfo::prettyProductName() + QStringLiteral(" (") +
+                          QSysInfo::kernelVersion() + QLatin1Char(')');
+
+  // the facts, as the first card of the About page
+  auto* page = qobject_cast<QVBoxLayout*>(ui->about->layout());
+  if (page != nullptr) {
+    ui->aboutSummary->hide();
+    auto* facts = new QFrame(ui->about);
+    facts->setProperty("fluentCard", true);
+    auto* rows = new QVBoxLayout(facts);
+    rows->setContentsMargins(0, 0, 0, 0);
+    rows->setSpacing(0);
+    const QList<std::tuple<char16_t, QString, QString>> values{
+        {0xE81C, tr("Version"), version},
+        {0xE943, tr("Build"), revision},
+        {0xE8B7, tr("Virtual file system"), tr("usvfs %1").arg(usvfs)},
+        {0xE737, tr("Qt"), QString::fromLatin1(qVersion())},
+        {0xE770, tr("Windows"), windows}};
+    for (const auto& [glyph, title, value] : values) {
+      FluentPanels::addDetailRow(facts, glyph, title).value->setFullText(value);
+    }
+
+    const QString report = QStringLiteral("%1 %2\n%3: %4\nusvfs %5\nQt %6\n%7")
+                               .arg(applicationName, version, tr("Build"), revision, usvfs,
+                                    QString::fromLatin1(qVersion()), windows);
+    auto* actions = new QFrame(facts);
+    actions->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* actionsLayout = new QHBoxLayout(actions);
+    actionsLayout->setContentsMargins(12, 12, 12, 12);
+    actionsLayout->setSpacing(8);
+    auto* copy = new QPushButton(FluentIcons::glyph(0xE8C8), tr("Copy for a bug report"),
+                                 actions);
+    copy->setAutoDefault(false);
+    copy->setToolTip(tr("Copies the version, build and system to paste in an issue"));
+    connect(copy, &QPushButton::clicked, this, [report, copy] {
+      QGuiApplication::clipboard()->setText(report);
+      copy->setText(tr("Copied"));
+    });
+    auto* github = new QPushButton(FluentIcons::glyph(0xE8A7), tr("MO2 Revamped on GitHub"),
+                                   actions);
+    github->setAutoDefault(false);
+    connect(github, &QPushButton::clicked, this, [] {
+      MOBase::shell::Open(QUrl(QStringLiteral("https://github.com/ArialSenki/MO2-Revamped")));
+    });
+    auto* issue = new QPushButton(FluentIcons::glyph(0xEBE8), tr("Report a problem"),
+                                  actions);
+    issue->setAutoDefault(false);
+    connect(issue, &QPushButton::clicked, this, [] {
+      MOBase::shell::Open(
+          QUrl(QStringLiteral("https://github.com/ArialSenki/MO2-Revamped/issues/new/choose")));
+    });
+    actionsLayout->addWidget(copy);
+    actionsLayout->addWidget(github);
+    actionsLayout->addWidget(issue);
+    actionsLayout->addStretch(1);
+    rows->addWidget(actions);
+    page->insertWidget(page->indexOf(ui->aboutSummary) + 1, facts);
+  }
+
+  ui->creditsList->setFrameShape(QFrame::NoFrame);
+  setMinimumSize(900, 600);
+  resize(980, 660);
 }
 
 AboutDialog::~AboutDialog()

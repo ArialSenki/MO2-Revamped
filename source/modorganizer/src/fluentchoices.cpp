@@ -71,9 +71,6 @@ FluentThemeCard::Colors themeColors(FluentChoices::Theme theme)
   case FluentChoices::Theme::Dark:
     return {QColor(0x202226), QColor(0x2B2B2B), QColor(0x363636), QColor(0xFFFFFF),
             QColor(0xC5C5C5), QColor(0x4CC2FF), QColor(Qt::black)};
-  case FluentChoices::Theme::DarkBlack:
-    return {QColor(0x181818), QColor(0x222222), QColor(0x2E2E2E), QColor(0xEDEDED),
-            QColor(0xBDBDBD), QColor(0xD6D6D6), QColor(Qt::black)};
   }
   return {};
 }
@@ -421,7 +418,7 @@ FluentOptionCard* addOption(FluentContentDialog& dialog, char16_t glyph,
 std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
                                  const QString& heading, const QString& description,
                                  const QString& lightLabel, const QString& darkLabel,
-                                 const QString& blackLabel, const QString& acceptLabel,
+                                 const QString& acceptLabel,
                                  Theme current)
 {
   FluentContentDialog dialog(parent, QStringLiteral("ThemeChoiceDialog"), heading,
@@ -443,7 +440,6 @@ std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
   const Entry entries[] = {
       {Theme::Light, lightLabel},
       {Theme::Dark, darkLabel},
-      {Theme::DarkBlack, blackLabel},
   };
 
   FluentThemeCard* chosen = nullptr;
