@@ -16,6 +16,8 @@
 #include <QPixmap>
 #include <QPixmapCache>
 #include <QToolBar>
+#include <QPushButton>
+#include <QCommandLinkButton>
 
 using namespace MOBase;
 
@@ -34,6 +36,13 @@ const QString GlyphPrefix = QStringLiteral("fluent:");
 const char* const OriginalProperty = "fluentOriginalIcon";
 const char* const InkProperty      = "fluentIconInk";
 const char* const ShownProperty    = "fluentIconShown";
+// a push button's icon with room for the gap to its text (see apply())
+const char* const GapIconProperty  = "fluentGapIcon";
+const char* const GapInnerProperty = "fluentGapInner";
+const char* const GapSizeProperty  = "fluentGapSize";
+// Windows 11 leaves 8 px between a button's icon and its text; Qt's button
+// label leaves 2, so the icon carries the other 6 on its right
+constexpr int IconGap = 6;
 
 struct Glyph
 {
@@ -255,6 +264,60 @@ const QHash<QString, Glyph>& glyphTable()
 
 // paints one glyph; the color is looked up on every paint so the icon follows
 // the theme, and the pixmaps are cached per size, color and scale
+// an icon drawn at the left of a wider box: the rest of the box is the gap
+// between a button's icon and its text
+class GapEngine : public QIconEngine
+{
+public:
+  explicit GapEngine(const QIcon& inner) : m_inner(inner) {}
+
+  QIconEngine* clone() const override { return new GapEngine(m_inner); }
+
+  QSize actualSize(const QSize& size, QIcon::Mode, QIcon::State) override
+  {
+    return size;
+  }
+
+  void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode,
+             QIcon::State state) override
+  {
+    const int side = qMin(rect.width(), rect.height());
+    m_inner.paint(painter,
+                  QRect(rect.x(), rect.y() + (rect.height() - side) / 2, side, side),
+                  Qt::AlignCenter, mode, state);
+  }
+
+  QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override
+  {
+    return scaledPixmap(size, mode, state, 1.0);
+  }
+
+  // size is in device pixels, as QIcon asks for it
+  QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state,
+                       qreal scale) override
+  {
+    QPixmap result(size);
+    result.fill(Qt::transparent);
+    result.setDevicePixelRatio(scale);
+    const QSizeF logical = QSizeF(size) / scale;
+    const int side       = qMax(1, qRound(qMin(logical.width(), logical.height())));
+    const QPixmap icon   = m_inner.pixmap(QSize(side, side), scale, mode, state);
+    if (!icon.isNull()) {
+      const QSizeF drawn = QSizeF(icon.size()) / icon.devicePixelRatio();
+      QPainter painter(&result);
+      painter.setRenderHint(QPainter::SmoothPixmapTransform);
+      painter.drawPixmap(QRectF(QPointF((side - drawn.width()) / 2.0,
+                                        (logical.height() - drawn.height()) / 2.0),
+                                drawn),
+                         icon, QRectF(icon.rect()));
+    }
+    return result;
+  }
+
+private:
+  QIcon m_inner;
+};
+
 class GlyphEngine : public QIconEngine
 {
 public:
@@ -704,12 +767,43 @@ void apply(QMenu* menu)
 
 void apply(QAbstractButton* button)
 {
-  if (button == nullptr || button->property("fluentKeepIcon").toBool() ||
-      qobject_cast<QToolBar*>(button->parentWidget()) != nullptr) {
+  if (button == nullptr) {
     return;
   }
 
-  restyle(button, button->palette().color(QPalette::Active, QPalette::ButtonText));
+  // a push button with an icon and a text: the gap between them (command
+  // links lay out their own icon)
+  auto* push = qobject_cast<QPushButton*>(button);
+  const bool spaced = push != nullptr && qobject_cast<QCommandLinkButton*>(button) == nullptr;
+  if (spaced) {
+    // back to the icon and size the button had, so restyling sees its icon
+    // and the gap is never added twice
+    const QVariant base = button->property(GapSizeProperty);
+    if (base.isValid() &&
+        button->iconSize() == base.toSize() + QSize(IconGap, 0)) {
+      button->setIconSize(base.toSize());
+    }
+    if (!button->icon().isNull() &&
+        button->icon().cacheKey() == button->property(GapIconProperty).toLongLong()) {
+      button->setIcon(button->property(GapInnerProperty).value<QIcon>());
+    }
+  }
+
+  if (!button->property("fluentKeepIcon").toBool() &&
+      qobject_cast<QToolBar*>(button->parentWidget()) == nullptr) {
+    restyle(button, button->palette().color(QPalette::Active, QPalette::ButtonText));
+  }
+
+  if (spaced && active() && !button->icon().isNull() && !button->text().isEmpty()) {
+    const QIcon inner = button->icon();
+    const QSize size  = button->iconSize();
+    const QIcon withGap(new GapEngine(inner));
+    button->setProperty(GapInnerProperty, QVariant::fromValue(inner));
+    button->setProperty(GapSizeProperty, size);
+    button->setIcon(withGap);
+    button->setIconSize(size + QSize(IconGap, 0));
+    button->setProperty(GapIconProperty, withGap.cacheKey());
+  }
 }
 
 }  // namespace FluentIcons

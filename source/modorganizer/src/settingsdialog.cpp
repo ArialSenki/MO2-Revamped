@@ -323,6 +323,12 @@ void SettingsDialog::initializeTab(int index)
     FluentSettings::restyle(ui->tabWidget->widget(index));
     FluentSettings::normalizePage(ui->tabWidget->widget(index));
     FluentSettings::scrollAtEdge(ui->tabWidget->widget(index));
+    // the page's controls take their style sheet now: polished only when
+    // shown, the first frame drew them in the plain style and then they
+    // moved (the Paths buttons' text slid towards their icons)
+    for (QWidget* w : ui->tabWidget->widget(index)->findChildren<QWidget*>()) {
+      w->ensurePolished();
+    }
     perf.lap("restyle");
   }
   const QString activeStyle = m_settings.interface().styleName().value_or("");

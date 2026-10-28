@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
+#include "fluentswitch.h"
 #include "fluentscrollbar.h"
 #include "commandline.h"
 #include "instancemanager.h"
@@ -66,6 +67,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStyleHintReturnMask>
 #include <QVariant>
 #include <QProxyStyle>
+#include <QCheckBox>
 #include <QRegularExpression>
 #include <QSSLSocket>
 #include <QStringList>
@@ -1429,6 +1431,12 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
       } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
                  button != nullptr && !button->icon().isNull()) {
         FluentIcons::apply(button);
+      }
+      // switches made anywhere (the Python tools' windows too) slide and are
+      // drawn smooth, instead of showing the theme's still image
+      if (auto* box = qobject_cast<QCheckBox*>(receiver);
+          box != nullptr && box->property("fluentSwitch").toBool()) {
+        FluentSwitch::animate(box);
       }
     }
   }
