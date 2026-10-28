@@ -1424,6 +1424,12 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
       } else if (auto* window = qobject_cast<QWidget*>(receiver);
                  window != nullptr && window->isWindow() &&
                  window->windowType() != Qt::Popup && window->windowType() != Qt::ToolTip) {
+        // pages hidden in tabs and stacks take their style sheet now: polished
+        // only when first shown, their first frame drew the plain style and
+        // then their controls moved (as the Settings pages did)
+        for (QWidget* child : window->findChildren<QWidget*>()) {
+          child->ensurePolished();
+        }
         // the theme may have set button icons after the buttons were shown
         for (QAbstractButton* child : window->findChildren<QAbstractButton*>()) {
           FluentIcons::apply(child);

@@ -71,6 +71,10 @@ public:
     if (backgroundColor.isValid()) {
       option->backgroundBrush = backgroundColor;
     }
+
+    if (index.column() == ModList::COL_NAME) {
+      alignWithSwitches(option);
+    }
   }
 
   void paint(QPainter* painter, const QStyleOptionViewItem& option,
@@ -122,6 +126,15 @@ public:
       }
     }
 
+    // Fluent: the priority is a quiet number next to the switch, the name
+    // carries the row
+    if (index.column() == ModList::COL_PRIORITY && !color.isValid() &&
+        FluentIcons::active()) {
+      QColor muted = opt.palette.color(QPalette::Text);
+      muted.setAlphaF(0.6);
+      opt.palette.setColor(QPalette::Text, muted);
+    }
+
     QStyledItemDelegate::paint(painter, opt, index);
     paintSwitch(painter, opt, index);
   }
@@ -147,6 +160,30 @@ private:
   // was toggled (a click, the keyboard, a menu, "enable all"...) and slides
   // over instead of jumping
   mutable QHash<int, bool> m_paintedStates;
+
+  // a name with an icon and no switch (Overwrite) gets the switch's width for
+  // its icon, so its text starts where the mods' names start
+  static void alignWithSwitches(QStyleOptionViewItem* option)
+  {
+    if ((option->features & QStyleOptionViewItem::HasCheckIndicator) ||
+        !(option->features & QStyleOptionViewItem::HasDecoration)) {
+      return;
+    }
+
+    const QWidget* widget = option->widget;
+    QStyle* style         = widget ? widget->style() : QApplication::style();
+    QStyleOptionViewItem withSwitch(*option);
+    withSwitch.features.setFlag(QStyleOptionViewItem::HasCheckIndicator, true);
+    withSwitch.features.setFlag(QStyleOptionViewItem::HasDecoration, false);
+    withSwitch.checkState = Qt::Unchecked;
+
+    const int shift =
+        style->subElementRect(QStyle::SE_ItemViewItemText, &withSwitch, widget).left() -
+        style->subElementRect(QStyle::SE_ItemViewItemText, option, widget).left();
+    if (shift > 0) {
+      option->decorationSize.rwidth() += shift;
+    }
+  }
 
   static int modKey(const QModelIndex& index)
   {
@@ -836,6 +873,18 @@ void ModListView::updateGroupByProxy()
       ui.filterSeparators->setEnabled(true);
     }
   }
+
+  // a list with nothing to open (no grouping, or collapsible separators but no
+  // separator) keeps no branch slot: every row showed an empty one between
+  // the priority and the switch
+  bool branches = (nextModel != m_core->modList());
+  if (nextModel == m_byPriorityProxy) {
+    branches = false;
+    for (unsigned int i = 0; i < ModInfo::getNumMods() && !branches; ++i) {
+      branches = ModInfo::getByIndex(i)->isSeparator();
+    }
+  }
+  setRootIsDecorated(branches);
 }
 
 void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindow* mw,

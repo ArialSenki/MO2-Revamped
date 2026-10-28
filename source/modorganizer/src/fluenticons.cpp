@@ -806,4 +806,14 @@ void apply(QAbstractButton* button)
   }
 }
 
+QIcon withGap(const QIcon& icon)
+{
+  return QIcon(new GapEngine(icon));
+}
+
+int gapWidth()
+{
+  return IconGap;
+}
+
 }  // namespace FluentIcons

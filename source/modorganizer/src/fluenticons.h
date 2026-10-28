@@ -66,6 +66,11 @@ void apply(QMenu* menu);
 // those with the "fluentKeepIcon" property are left alone
 void apply(QAbstractButton* button);
 
+// the icon drawn at the left of a box gapWidth() wider: set it with the icon
+// size grown by gapWidth() and the button's text keeps 8 px from the icon
+QIcon withGap(const QIcon& icon);
+int gapWidth();
+
 }  // namespace FluentIcons
 
 #endif  // FLUENTICONS_H

@@ -83,9 +83,17 @@ private:
       tinted.addPixmap(pixmap);
     }
 
-    // setIcon() triggers no palette change, so this does not recurse
-    m_button->setIcon(tinted);
+    // the run button's text keeps the same gap from its icon as every other
+    // button; setIcon() triggers no palette change, so this does not recurse
+    const QSize gap(FluentIcons::gapWidth(), 0);
+    if (m_button->iconSize() != m_size + gap) {
+      m_size = m_button->iconSize();
+    }
+    m_button->setIcon(FluentIcons::withGap(tinted));
+    m_button->setIconSize(m_size + gap);
   }
+
+  QSize m_size;
 };
 
 void repolish(QWidget* w)

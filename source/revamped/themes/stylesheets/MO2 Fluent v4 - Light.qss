@@ -4962,6 +4962,11 @@ QMainWindow#MainWindow QTreeView#modList::item:hover:selected:first {
     border-left: 3px solid #005FB8;
     padding-left: 7px;
 }
+/* Rows as tall as the Windows 11 list rows: the switch gets air above and
+   below, and the names read as a list instead of a dense grid. */
+QMainWindow#MainWindow QTreeView#modList::item {
+    min-height: 34px;
+}
 QMainWindow#MainWindow QTreeView#modList QHeaderView::section {
     min-height: 28px;
     padding: 6px 9px;

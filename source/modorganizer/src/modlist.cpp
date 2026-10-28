@@ -613,6 +613,11 @@ QVariant ModList::headerData(int section, Qt::Orientation orientation, int role)
       if (section == COL_PRIORITY) {
         return QVariant(Qt::AlignRight | Qt::AlignVCenter);
       }
+      // the icon columns center their icons, and so their headings
+      if (section == COL_FLAGS || section == COL_CONTENT ||
+          (section == COL_CONFLICTFLAGS && !FluentIcons::active())) {
+        return QVariant(Qt::AlignCenter);
+      }
       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
     } else if (role == MOBase::EnabledColumnRole) {
       if (section == COL_CONTENT) {
