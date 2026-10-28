@@ -387,6 +387,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     CreateInstanceGameSaveProfileNameEditName = "eldenRingCreateInstanceGameSaveProfileName"
     CreateInstanceGameSaveProfileNoteName = "eldenRingCreateInstanceGameSaveProfileNote"
     SaveProfilesDirectoryName = "save_profiles"
+    # the save types a new instance can start from: the game's own, Seamless
+    # Co-op's and Convergence's; each keeps its extension when copied
+    StartingSaveSuffixes = (".sl2", ".co2", ".cnv")
     ProfileSaveProfileKey = "profile_save_profile"
     InstanceSaveProfileKey = "instance_save_profile"
 
@@ -1052,7 +1055,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # other game (Elden Ring / Nightreign) is offered none
         target_game = self._create_dialog_game_key(dialog)
         same_game = target_game is None or target_game == EldenRingMo2SaveIsolation._game_key
-        sources = self._create_instance_save_sources() if same_game else []
+        suffixes = self._create_instance_save_suffixes(dialog)
+        sources = (
+            self._create_instance_save_sources(suffixes) if same_game and suffixes else []
+        )
         for label, source_path, relative_path in sources:
             index = source_combo.count()
             source_combo.addItem(label, (str(source_path), relative_path))
@@ -1075,19 +1081,27 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         found_saves = source_combo.count()
         copy_checkbox.setEnabled(found_saves > 0)
         source_combo.setEnabled(found_saves > 0 and copy_checkbox.isChecked())
-        if found_saves:
-            status_label.setText(
-                _tr("{count} .sl2 save(s) found. The selected file will be "
-                "copied after the new instance opens. Existing destination files "
-                "are never replaced.").format(count=found_saves)
-            )
-        else:
+        if not found_saves:
             copy_checkbox.setChecked(False)
-            status_label.setText(
-                _tr("No .sl2 saves were found in Steam or the detected Elden Ring "
-                "MO2 profiles.")
-            )
+        # the sync writes the status under the switch
         self._sync_create_instance_game_save_profile_controls(dialog)
+
+    def _create_instance_save_suffixes(self, dialog) -> tuple[str, ...]:
+        """The save types turned on in the new instance dialog (.sl2 alone
+        when the dialog has no such switches)."""
+        card = dialog.findChild(QWidget, self.CreateInstanceCardName)
+        boxes = (
+            [
+                box
+                for box in card.findChildren(QCheckBox)
+                if box.property("saveSuffix") in self.StartingSaveSuffixes
+            ]
+            if card is not None
+            else []
+        )
+        if not boxes:
+            return (".sl2",)
+        return tuple(box.property("saveSuffix") for box in boxes if box.isChecked())
 
     def _on_create_instance_game_save_profile_toggled(
         self, dialog, checked: bool
@@ -1143,9 +1157,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if copy_checkbox is not None:
             # a switch: what it does is its accessible name, its row says the rest
             copy_checkbox.setAccessibleName(
-                _tr("Copy an existing .sl2 save into this named profile")
+                _tr("Copy an existing save into this named profile")
                 if checkbox.isChecked()
-                else _tr("Copy an existing .sl2 save into the new instance")
+                else _tr("Copy an existing save into the new instance")
             )
             # Global mode plays from the Steam folder; nothing is copied into it
             copy_checkbox.setEnabled(
@@ -1169,7 +1183,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     _trs("This name appears in Tools > Elden Ring Save Isolation. If "
                     "you choose a starting save below, it will be copied into "
                     "this named save profile. "
-                    "Elden Ring loads the selected file as ER0000.sl2.")
+                    "Elden Ring loads the selected file as ER0000 with its own "
+                    "extension.")
                 )
             else:
                 note.setText(
@@ -1185,17 +1200,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     if checkbox.isChecked()
                     else _tr("the new instance's standard save folder")
                 )
+                count = source_combo.count()
                 status_label.setText(
-                    _tr("{count} .sl2 save(s) found. The selected file "
-                    "will be copied to {destination} after the new instance opens. "
-                    "Existing destination files are never replaced.").format(
-                        count=source_combo.count(), destination=destination
-                    )
+                    (_tr("1 save found.") if count == 1
+                     else _tr("{count} saves found.").format(count=count))
+                    + " "
+                    + _tr("The selected file will be copied to {destination} after "
+                    "the new instance opens. Existing destination files are never "
+                    "replaced.").format(destination=destination)
                 )
             else:
                 status_label.setText(
-                    _tr("No .sl2 saves were found in Steam or the detected Elden Ring "
-                    "MO2 profiles.")
+                    _tr("No saves of the chosen types were found in Steam or the "
+                    "detected Elden Ring MO2 profiles.")
+                    if self._create_instance_save_suffixes(dialog)
+                    else _tr("Turn on a save type to choose a starting save.")
                 )
 
     @staticmethod
@@ -2132,6 +2151,38 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             "global Steam save.")
         )
 
+        # the save types this instance plays with: the starting saves offered
+        # below are the ones of these types
+        types_layout = QVBoxLayout()
+        types_layout.setContentsMargins(0, 8, 0, 0)
+        types_layout.setSpacing(8)
+        for suffix, title in (
+            (".sl2", _tr("Elden Ring, the game's own saves (.sl2)")),
+            (".co2", _tr("Seamless Co-op (.co2)")),
+            (".cnv", _tr("Convergence (.cnv)")),
+        ):
+            type_box = QCheckBox(title, card)
+            type_box.setObjectName(
+                f"{self.CreateInstanceCardName}_type_{suffix.lstrip('.')}"
+            )
+            type_box.setProperty("saveSuffix", suffix)
+            type_box.setProperty("fluentSwitch", True)
+            type_box.setCursor(Qt.CursorShape.PointingHandCursor)
+            type_box.setChecked(suffix == ".sl2")
+            type_box.toggled.connect(
+                lambda _checked, target=dialog: self._refresh_create_instance_save_sources(
+                    target
+                )
+            )
+            types_layout.addWidget(type_box)
+        types_note = QLabel(
+            _tr("The saves of the types turned on can be copied in as the starting "
+            "save. MO2 keeps every type apart in the same way."),
+            card,
+        )
+        types_note.setObjectName(f"{self.CreateInstanceCardName}_typesNote")
+        wizard_row(_tr("Save types"), types_note, [], types_layout)
+
         # a named game save profile: its switch and its name
         game_save_profile_checkbox = QCheckBox(card)
         game_save_profile_checkbox.setObjectName(
@@ -2152,7 +2203,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
-        game_save_profile_name.setFixedWidth(220)
+        # with the switch beside it, as wide as the save mode list above
+        game_save_profile_name.setFixedWidth(244)
         game_save_profile_name.setToolTip(
             _trs("This name distinguishes the Elden Ring save profile in MO2. "
             "The game loads the selected file as ER0000.sl2.")
@@ -2162,6 +2214,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_note.setObjectName(
             self.CreateInstanceGameSaveProfileNoteName
         )
+        # a switch without text: only the switch, flush with the lists above
+        game_save_profile_checkbox.setFixedWidth(40)
         wizard_row(
             _tr("Game save profile"),
             game_save_profile_note,
@@ -2173,13 +2227,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         copy_checkbox.setObjectName(self.CreateInstanceSaveCopyCheckboxName)
         copy_checkbox.setToolTip(
             _trs("Choose a save from Steam or a detected Elden Ring MO2 profile. "
-            "The file is copied as ER0000.sl2 after the new instance is opened.")
+            "The file is copied as ER0000 with its own extension after the new "
+            "instance is opened.")
         )
         _make_switch(
             copy_checkbox,
-            _tr("Copy an existing .sl2 save into the new instance"),
+            _tr("Copy an existing save into the new instance"),
             copy_checkbox.toolTip(),
         )
+        copy_checkbox.setFixedWidth(40)
         source_combo = QComboBox(card)
         source_combo.setObjectName(self.CreateInstanceSaveSourceComboName)
         source_combo.setSizeAdjustPolicy(
@@ -2393,7 +2449,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     and candidate_path
                     and not relative_path.is_absolute()
                     and ".." not in relative_path.parts
-                    and relative_path.suffix.casefold() == ".sl2"
+                    and relative_path.suffix.casefold() in self.StartingSaveSuffixes
                 ):
                     source_save_path = candidate_path
                     relative_save_path = relative_path.as_posix()
@@ -2415,6 +2471,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 source_save_path,
                 relative_save_path,
                 game_save_profile_name,
+                ",".join(
+                    suffix.lstrip(".")
+                    for suffix in self._create_instance_save_suffixes(dialog)
+                ),
             )
         except (OSError, UnicodeError, ValueError) as error:
             qInfo(
@@ -2434,7 +2494,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
         if source_save_path is not None:
             qInfo(
-                "Elden Ring MO2 Save Isolation: queued one selected .sl2 save "
+                "Elden Ring MO2 Save Isolation: queued one selected save "
                 f"from '{source_save_path}' for the new instance."
             )
 
@@ -2545,6 +2605,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_save_path: str | None = None,
         relative_save_path: str | None = None,
         game_save_profile_name: str | None = None,
+        save_formats: str | None = None,
     ) -> None:
         if mode not in {self.ProfileIsolated, self.InstanceShared, self.GlobalShared}:
             raise ValueError(_tr("Unknown Elden Ring save mode."))
@@ -2562,27 +2623,30 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             entry["game_save_profile_name"] = self._validated_save_profile_name(
                 game_save_profile_name
             )
+        if save_formats is not None:
+            entry["save_formats"] = save_formats
         entries.append(entry)
         self._write_pending_modes(entries, profile_directory)
 
     @classmethod
     def _queued_save_source_root(cls, pending_item: dict[str, str]) -> Path:
+        suffixes = cls.StartingSaveSuffixes
         source_path = Path(pending_item["save_source_path"])
         relative_path = Path(pending_item["save_relative_path"])
         if (
             relative_path.is_absolute()
             or not relative_path.parts
             or ".." in relative_path.parts
-            or relative_path.suffix.casefold() != ".sl2"
+            or relative_path.suffix.casefold() not in suffixes
         ):
             raise ValueError(_tr("The queued save's relative path is invalid."))
         if (
-            source_path.suffix.casefold() != ".sl2"
+            source_path.suffix.casefold() != relative_path.suffix.casefold()
             or cls._is_reparse_point(source_path)
             or not source_path.is_file()
         ):
             raise FileNotFoundError(
-                _tr("The selected .sl2 save is no longer available: {path}").format(path=source_path)
+                _tr("The selected save is no longer available: {path}").format(path=source_path)
             )
         resolved_source = source_path.resolve(strict=True)
         if len(relative_path.parts) > len(resolved_source.parts) - 1:
@@ -2599,21 +2663,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _copy_queued_save_to_profile(
         self, profile_directory: Path, mode: str, pending_item: dict[str, str]
     ) -> str:
+        suffixes = self.StartingSaveSuffixes
         source_path = Path(pending_item["save_source_path"])
         relative_path = Path(pending_item["save_relative_path"])
         if (
             relative_path.is_absolute()
             or ".." in relative_path.parts
-            or relative_path.suffix.casefold() != ".sl2"
+            or relative_path.suffix.casefold() not in suffixes
         ):
             raise ValueError(_tr("The queued save's relative path is invalid."))
         if (
-            source_path.suffix.casefold() != ".sl2"
+            source_path.suffix.casefold() != relative_path.suffix.casefold()
             or self._is_reparse_point(source_path)
             or not source_path.is_file()
         ):
             raise FileNotFoundError(
-                _tr("The selected .sl2 save is no longer available: {path}").format(path=source_path)
+                _tr("The selected save is no longer available: {path}").format(path=source_path)
             )
         source_path = source_path.resolve(strict=True)
 
@@ -2627,7 +2692,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             destination_root = self._global_save_directory()
         else:
             destination_root = profile_directory / "saves"
-        destination_path = destination_root / relative_path.parent / f"{_game()['stem']}.sl2"
+        destination_path = (
+            destination_root
+            / relative_path.parent
+            / f"{_game()['stem']}{relative_path.suffix.casefold()}"
+        )
 
         if self._normalized_path(source_path) == self._normalized_path(destination_path):
             return "same"
@@ -2770,7 +2839,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         )
 
                     self._save_mode_directory(
-                        profile_directory, mode, selected_save_profile_id
+                        profile_directory,
+                        mode,
+                        selected_save_profile_id,
+                        item.get("save_formats"),
                     )
                 else:
                     if save_profile_name and mode == self.GlobalShared:
@@ -2779,7 +2851,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                             "are unavailable in global Steam mode; using the standard "
                             "global save route."
                         )
-                    self._save_mode_directory(profile_directory, mode)
+                    self._save_mode_directory(
+                        profile_directory, mode, save_formats=item.get("save_formats")
+                    )
 
                 changed = True
                 self.__pending_applied_paths.add(active_path)
@@ -2801,7 +2875,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         if result == "copied":
                             qInfo(
                                 "Elden Ring MO2 Save Isolation: copied one "
-                                "selected .sl2 save into the new instance."
+                                "selected save into the new instance."
                             )
                         elif result == "global":
                             qInfo(
@@ -2812,7 +2886,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         elif result == "identical":
                             qInfo(
                                 "Elden Ring MO2 Save Isolation: the destination "
-                                "already has the same .sl2 save; no duplicate "
+                                "already has the same save; no duplicate "
                                 "copy was made."
                             )
                         else:
@@ -3144,6 +3218,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         profile_directory: Path,
         mode: str,
         save_profile_id: str | None = None,
+        save_formats: str | None = None,
     ) -> None:
         if mode not in {cls.ProfileIsolated, cls.InstanceShared, cls.GlobalShared}:
             raise ValueError(_tr("Unknown Elden Ring save mode."))
@@ -3157,6 +3232,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if not config.has_section("Saves"):
             config.add_section("Saves")
         config.set("Saves", "mode", mode)
+        if save_formats is not None:
+            # the save types chosen when the instance was created
+            config.set("Saves", "formats", save_formats)
         if save_profile_id is not None:
             key = cls._save_profile_key(mode)
             if key is not None:
@@ -3379,7 +3457,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if source_root is None:
                     raise ValueError(_tr("The selected save source has no known folder."))
                 if (
-                    source_path.suffix.casefold() not in (".sl2", ".co2")
+                    source_path.suffix.casefold() not in self.StartingSaveSuffixes
                     or self._is_reparse_point(source_path)
                     or not source_path.is_file()
                 ):
@@ -3392,7 +3470,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if (
                     relative_path.is_absolute()
                     or ".." in relative_path.parts
-                    or relative_path.suffix.casefold() not in (".sl2", ".co2")
+                    or relative_path.suffix.casefold() not in self.StartingSaveSuffixes
                 ):
                     raise ValueError(_tr("The selected save path is outside its source folder."))
                 source_parent = source_path.parent

@@ -3739,7 +3739,55 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
       <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; General &gt; Beta features to hand it MO2&apos;s mods.</source>
       <translation>El juego se cierra con me3 dentro de la VFS, así que MO2 lo inicia fuera con su propio perfil. Activa la integración con me3 en Ajustes &gt; General &gt; Funciones beta para pasarle los mods de MO2.</translation>
     </message>
-  </context>
+      <message>
+      <source>Save types</source>
+      <translation>Tipos de partida</translation>
+    </message>
+    <message>
+      <source>Elden Ring, the game's own saves (.sl2)</source>
+      <translation>Elden Ring, las partidas del propio juego (.sl2)</translation>
+    </message>
+    <message>
+      <source>The saves of the types turned on can be copied in as the starting save. MO2 keeps every type apart in the same way.</source>
+      <translation>Las partidas de los tipos activados se pueden copiar como partida inicial. MO2 separa todos los tipos de la misma forma.</translation>
+    </message>
+    <message>
+      <source>Choose a save from Steam or a detected Elden Ring MO2 profile. The file is copied as ER0000 with its own extension after the new instance is opened.</source>
+      <translation>Elige una partida de Steam o de un perfil de MO2 de Elden Ring detectado. El archivo se copia como ER0000 con su propia extensión al abrir la nueva instancia.</translation>
+    </message>
+    <message>
+      <source>Copy an existing save into the new instance</source>
+      <translation>Copiar una partida existente en la nueva instancia</translation>
+    </message>
+    <message>
+      <source>Copy an existing save into this named profile</source>
+      <translation>Copiar una partida existente en este perfil con nombre</translation>
+    </message>
+    <message>
+      <source>1 save found.</source>
+      <translation>1 partida encontrada.</translation>
+    </message>
+    <message>
+      <source>{count} saves found.</source>
+      <translation>{count} partidas encontradas.</translation>
+    </message>
+    <message>
+      <source>The selected file will be copied to {destination} after the new instance opens. Existing destination files are never replaced.</source>
+      <translation>El archivo seleccionado se copiará en {destination} cuando se abra la nueva instancia. Los archivos de destino existentes nunca se reemplazan.</translation>
+    </message>
+    <message>
+      <source>No saves of the chosen types were found in Steam or the detected Elden Ring MO2 profiles.</source>
+      <translation>No se encontraron partidas de los tipos elegidos en Steam ni en los perfiles de MO2 de Elden Ring detectados.</translation>
+    </message>
+    <message>
+      <source>Turn on a save type to choose a starting save.</source>
+      <translation>Activa un tipo de partida para elegir una partida inicial.</translation>
+    </message>
+    <message>
+      <source>This name appears in Tools &gt; Elden Ring Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <translation>Este nombre aparece en Herramientas &gt; Aislamiento de partidas. Si eliges una partida inicial abajo, se copiará en este perfil de partidas con nombre. Elden Ring carga el archivo seleccionado como ER0000 con su propia extensión.</translation>
+    </message>
+</context>
   <context>
     <name>EldenRingStartupOptions</name>
     <message>

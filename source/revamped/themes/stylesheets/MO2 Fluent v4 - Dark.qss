@@ -6297,15 +6297,17 @@ QLabel[wizardCompare="cell"] {
     color: #FFFFFF;
     background-color: transparent;
 }
+QWidget#wizardProgressTrack, QWidget#wizardFieldBox {
+    background-color: transparent;
+}
 QProgressBar#wizardProgress {
     background-color: #353535;
     border: none;
-    border-top-left-radius: 7px;
-    border-top-right-radius: 7px;
+    border-radius: 2px;
 }
 QProgressBar#wizardProgress::chunk {
     background-color: #4CC2FF;
-    border-top-left-radius: 7px;
+    border-radius: 2px;
 }
 QLabel[wizardPageTitle="true"] {
     color: #FFFFFF;

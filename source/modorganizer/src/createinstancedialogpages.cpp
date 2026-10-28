@@ -15,6 +15,8 @@
 #include <utility.h>
 
 #include <QCheckBox>
+#include <QEvent>
+#include <QCommandLinkButton>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFrame>
@@ -124,6 +126,82 @@ QIcon choiceIcon(char16_t glyph)
   }
   return icon;
 }
+
+// a command link draws its icon at its top; a choice's icon is kept as tall
+// as its text, with the glyph in the middle, so it sits centred beside a
+// title and a description of any length
+QIcon centredChoiceIcon(const QIcon& source, int glyph, int height)
+{
+  QIcon icon;
+  for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
+    QPixmap pixmap((QSizeF(ChoiceIconWidth, height) * ratio).toSize());
+    pixmap.setDevicePixelRatio(ratio);
+    pixmap.fill(Qt::transparent);
+    const QPixmap inner =
+        source.pixmap(QSize(ChoiceIconWidth, glyph), ratio);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    painter.drawPixmap(QRectF(0, (height - glyph) / 2.0, ChoiceIconWidth, glyph), inner,
+                       QRectF(inner.rect()));
+    painter.end();
+    icon.addPixmap(pixmap);
+  }
+  return icon;
+}
+
+void centreChoiceIcon(QCommandLinkButton* b)
+{
+  const QIcon source = b->property("wizardChoiceIcon").value<QIcon>();
+  const int glyph    = b->property("wizardChoiceGlyph").toInt();
+  if (source.isNull() || glyph <= 0 || b->property("wizardChoiceCentring").toBool()) {
+    return;
+  }
+  b->setProperty("wizardChoiceCentring", true);
+  // the height the text needs: with an icon no taller than the glyph, the
+  // text decides it; the button keeps 10 px above and below its content
+  const int width = b->width() > 0 ? b->width() : b->sizeHint().width();
+  const QSize current = b->iconSize();
+  b->setIconSize(QSize(ChoiceIconWidth, glyph));
+  const int height = qMax(glyph, b->heightForWidth(width) - 20);
+  b->setIconSize(QSize(ChoiceIconWidth, height));
+  if (current.height() != height || b->property("wizardChoiceStale").toBool()) {
+    b->setIcon(centredChoiceIcon(source, glyph, height));
+    b->setProperty("wizardChoiceStale", false);
+  }
+  b->setProperty("wizardChoiceCentring", false);
+}
+
+class ChoiceIconCentring : public QObject
+{
+public:
+  using QObject::QObject;
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::Resize) {
+      if (auto* b = qobject_cast<QCommandLinkButton*>(watched)) {
+        centreChoiceIcon(b);
+      }
+    }
+    return false;
+  }
+};
+
+// sets a choice's icon (a glyph or a game's icon, glyph px tall) centred
+// beside its text
+void setChoiceIcon(QCommandLinkButton* b, const QIcon& icon, int glyph)
+{
+  b->setProperty("wizardChoiceIcon", QVariant::fromValue(icon));
+  b->setProperty("wizardChoiceGlyph", glyph);
+  b->setProperty("wizardChoiceStale", true);
+  if (!b->property("wizardChoiceCentred").toBool()) {
+    b->setProperty("wizardChoiceCentred", true);
+    b->installEventFilter(new ChoiceIconCentring(b));
+  }
+  centreChoiceIcon(b);
+}
+
 
 QString decodeSteamPath(QString path)
 {
@@ -603,12 +681,9 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
       InstanceManager::singleton().isEldenRingOnlyPortableMode();
 
   ui->portableExistsLabel->setVisible(false);
-  ui->createGlobal->setIcon(choiceIcon(HomeGlyph));
-  ui->createPortable->setIcon(choiceIcon(DriveGlyph));
-  ui->createIsolated->setIcon(choiceIcon(LockGlyph));
-  for (auto* choice : {ui->createGlobal, ui->createPortable, ui->createIsolated}) {
-    choice->setIconSize(choiceIconSize(16));
-  }
+  setChoiceIcon(ui->createGlobal, choiceIcon(HomeGlyph), 16);
+  setChoiceIcon(ui->createPortable, choiceIcon(DriveGlyph), 16);
+  setChoiceIcon(ui->createIsolated, choiceIcon(LockGlyph), 16);
 
   // each kind with the folder it goes to and the instances already there
   {
@@ -1147,8 +1222,9 @@ void GamePage::updateButton(Game* g)
   g->button->setText(displayName.replace("&", "&&"));
   // the game's own icon, as the main window's bar shows it
   QIcon gameIcon = g->game->gameIcon();
-  g->button->setIcon(gameIcon.isNull() ? choiceIcon(GameGlyph)
-                                       : paddedChoiceIcon(gameIcon, 28));
+  setChoiceIcon(g->button,
+                gameIcon.isNull() ? choiceIcon(GameGlyph) : paddedChoiceIcon(gameIcon, 28),
+                gameIcon.isNull() ? 16 : 28);
 
   QStringList description;
   if (g->installed) {
@@ -1550,8 +1626,7 @@ void VariantsPage::fillList()
     b->setObjectName(QStringLiteral("editionChoice"));
     b->setProperty("wizardChoice", true);
     b->setProperty("fluentKeepIcon", true);
-    b->setIcon(choiceIcon(EditionGlyph));
-    b->setIconSize(choiceIconSize(16));
+    setChoiceIcon(b, choiceIcon(EditionGlyph), 16);
     b->setCursor(Qt::PointingHandCursor);
 
     QObject::connect(b, &QAbstractButton::clicked, [v, this] {

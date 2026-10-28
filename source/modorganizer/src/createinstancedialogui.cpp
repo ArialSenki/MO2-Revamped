@@ -176,7 +176,7 @@ QLabel* infoRow(QWidget* parent, QVBoxLayout* rows, char16_t code, const QString
   auto* layout = new QHBoxLayout(frame);
   layout->setContentsMargins(20, 12, 16, 12);
   layout->setSpacing(14);
-  layout->addWidget(glyph(frame, code), 0, Qt::AlignTop);
+  layout->addWidget(glyph(frame, code), 0, Qt::AlignVCenter);
   auto* text = new QVBoxLayout;
   text->setSpacing(2);
   text->addWidget(label(frame, "fluentSettingTitle", title, false));
@@ -301,18 +301,23 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
   root->setContentsMargins(12, 12, 12, 12);
   root->setSpacing(10);
 
-  // the card: the progress line on its top edge, then the current page
+  // the card: a slim progress track above the page, inset like the page's
+  // text, then the current page
   auto* card = named(new QFrame(dialog), "wizardCard");
   card->setProperty("fluentCard", true);
   auto* cardLayout = new QVBoxLayout(card);
   cardLayout->setContentsMargins(1, 1, 1, 1);
   cardLayout->setSpacing(0);
 
-  progress = named(new QProgressBar(card), "wizardProgress");
+  auto* track       = named(new QWidget(card), "wizardProgressTrack");
+  auto* trackLayout = new QHBoxLayout(track);
+  trackLayout->setContentsMargins(20, 14, 20, 0);
+  progress = named(new QProgressBar(track), "wizardProgress");
   progress->setTextVisible(false);
-  progress->setFixedHeight(3);
+  progress->setFixedHeight(4);
   progress->setAccessibleName(tr("Progress"));
-  cardLayout->addWidget(progress);
+  trackLayout->addWidget(progress);
+  cardLayout->addWidget(track);
 
   pages = named(new QStackedWidget(card), "pages");
   cardLayout->addWidget(pages, 1);
@@ -362,7 +367,8 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
         tr("<h3>Choose where this setup will live</h3>"), typeSelectionHint,
         "typeSelectionHint",
         tr("Select a storage model. MO2 will show the folders before it creates "
-           "anything."));
+           "anything."),
+        true);
     widget_15 = named(new QWidget(page_2), "widget_15");
     auto* choices = new QVBoxLayout(widget_15);
     choices->setContentsMargins(0, 0, 0, 0);
@@ -386,13 +392,15 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     portableExistsLabel->hide();
     rows->addWidget(portableExistsLabel);
 
-    // the differences that matter when choosing, one column per kind
+    // the differences that matter when choosing, one column per kind, at the
+    // card's foot: the choices above, the comparison below, no empty half
+    rows->addStretch(1);
     auto* frame = row(page_2, rows);
     typeComparison = frame;
     auto* grid = new QGridLayout(frame);
-    grid->setContentsMargins(20, 12, 20, 12);
+    grid->setContentsMargins(20, 14, 20, 16);
     grid->setHorizontalSpacing(16);
-    grid->setVerticalSpacing(6);
+    grid->setVerticalSpacing(10);
     grid->setColumnStretch(0, 3);
     for (int c = 1; c <= 3; ++c) {
       grid->setColumnStretch(c, 2);
@@ -641,7 +649,8 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     auto* simpleRows = new QVBoxLayout(simple);
     simpleRows->setContentsMargins(0, 0, 0, 0);
     simpleRows->setSpacing(0);
-    auto* locationBox = new QWidget;
+    // a field and its button: the row shows through between them
+    auto* locationBox = named(new QWidget, "wizardFieldBox");
     auto* locationLayout = new QHBoxLayout(locationBox);
     locationLayout->setContentsMargins(0, 0, 0, 0);
     locationLayout->setSpacing(6);
@@ -743,7 +752,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
         tr("<h3>Link Mod Organizer with your Nexus account</h3>"), label_18, "label_18",
         tr("Linking with Nexus allows you to download mods directly from Mod Organizer "
            "and automatically check for updates. This is optional."));
-    auto* buttons = new QWidget;
+    auto* buttons = named(new QWidget, "wizardFieldBox");
     auto* buttonsLayout = new QHBoxLayout(buttons);
     buttonsLayout->setContentsMargins(0, 0, 0, 0);
     buttonsLayout->setSpacing(8);

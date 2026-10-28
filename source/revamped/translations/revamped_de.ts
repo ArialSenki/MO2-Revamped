@@ -3723,7 +3723,55 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; General &gt; Beta features to hand it MO2&apos;s mods.</source>
       <translation>Das Spiel stürzt mit me3 im VFS ab, daher startet MO2 es außerhalb mit seinem eigenen Profil. Aktiviere die me3-Integration unter Einstellungen &gt; Allgemein &gt; Beta-Funktionen, um ihm die Mods von MO2 zu übergeben.</translation>
     </message>
-  </context>
+      <message>
+      <source>Save types</source>
+      <translation>Spielstandtypen</translation>
+    </message>
+    <message>
+      <source>Elden Ring, the game's own saves (.sl2)</source>
+      <translation>Elden Ring, die Spielstände des Spiels (.sl2)</translation>
+    </message>
+    <message>
+      <source>The saves of the types turned on can be copied in as the starting save. MO2 keeps every type apart in the same way.</source>
+      <translation>Spielstände der eingeschalteten Typen können als Startspielstand übernommen werden. MO2 trennt jeden Typ auf dieselbe Weise.</translation>
+    </message>
+    <message>
+      <source>Choose a save from Steam or a detected Elden Ring MO2 profile. The file is copied as ER0000 with its own extension after the new instance is opened.</source>
+      <translation>Wähle einen Spielstand aus Steam oder einem erkannten Elden-Ring-Profil von MO2. Die Datei wird beim Öffnen der neuen Instanz als ER0000 mit ihrer eigenen Endung kopiert.</translation>
+    </message>
+    <message>
+      <source>Copy an existing save into the new instance</source>
+      <translation>Vorhandenen Spielstand in die neue Instanz kopieren</translation>
+    </message>
+    <message>
+      <source>Copy an existing save into this named profile</source>
+      <translation>Vorhandenen Spielstand in dieses benannte Profil kopieren</translation>
+    </message>
+    <message>
+      <source>1 save found.</source>
+      <translation>1 Spielstand gefunden.</translation>
+    </message>
+    <message>
+      <source>{count} saves found.</source>
+      <translation>{count} Spielstände gefunden.</translation>
+    </message>
+    <message>
+      <source>The selected file will be copied to {destination} after the new instance opens. Existing destination files are never replaced.</source>
+      <translation>Die ausgewählte Datei wird nach dem Öffnen der neuen Instanz nach {destination} kopiert. Vorhandene Zieldateien werden nie ersetzt.</translation>
+    </message>
+    <message>
+      <source>No saves of the chosen types were found in Steam or the detected Elden Ring MO2 profiles.</source>
+      <translation>In Steam und den erkannten Elden-Ring-Profilen von MO2 wurden keine Spielstände der gewählten Typen gefunden.</translation>
+    </message>
+    <message>
+      <source>Turn on a save type to choose a starting save.</source>
+      <translation>Schalte einen Spielstandtyp ein, um einen Startspielstand zu wählen.</translation>
+    </message>
+    <message>
+      <source>This name appears in Tools &gt; Elden Ring Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <translation>Dieser Name erscheint unter Werkzeuge &gt; Elden Ring Save Isolation. Wählst du unten einen Startspielstand, wird er in dieses benannte Spielstandprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000 mit ihrer eigenen Endung.</translation>
+    </message>
+</context>
   <context>
     <name>EldenRingStartupOptions</name>
     <message>

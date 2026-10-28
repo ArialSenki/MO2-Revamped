@@ -1852,15 +1852,17 @@ QLabel[wizardCompare="cell"] {
     color: @text@;
     background-color: transparent;
 }
+QWidget#wizardProgressTrack, QWidget#wizardFieldBox {
+    background-color: transparent;
+}
 QProgressBar#wizardProgress {
     background-color: @line@;
     border: none;
-    border-top-left-radius: 7px;
-    border-top-right-radius: 7px;
+    border-radius: 2px;
 }
 QProgressBar#wizardProgress::chunk {
     background-color: @accent@;
-    border-top-left-radius: 7px;
+    border-radius: 2px;
 }
 QLabel[wizardPageTitle="true"] {
     color: @text@;

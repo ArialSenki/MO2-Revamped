@@ -56,6 +56,13 @@ void animate(QCheckBox* box)
                                                             Qt::FindDirectChildrenOnly)) {
     return;
   }
+  // the theme hides its still image of the switch for animated ones: drawn
+  // under the painter, its edge showed beside the painted one as a jagged rim
+  if (!box->property("fluentAnimated").toBool()) {
+    box->setProperty("fluentAnimated", true);
+    box->style()->unpolish(box);
+    box->style()->polish(box);
+  }
   new FluentSwitchPainter(box);
 }
 

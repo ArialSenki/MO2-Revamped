@@ -9,6 +9,7 @@
 #include "createinstancedialogui.h"
 #include "envshortcut.h"
 #include "fluentmotion.h"
+#include "fluentswitch.h"
 #include "gameiconutils.h"
 #include <iplugingame.h>
 #include <utility.h>
@@ -706,6 +707,16 @@ void CreateInstanceDialog::selectPage(std::size_t i)
   ui->pages->setCurrentIndex(static_cast<int>(i));
   m_pages[i]->activated();
 
+  // switches a plugin added to the page (the Elden Ring save options) slide
+  // like the wizard's own ones
+  if (FluentIcons::active()) {
+    for (QCheckBox* box : ui->pages->currentWidget()->findChildren<QCheckBox*>()) {
+      if (box->property("fluentSwitch").toBool()) {
+        FluentSwitch::animate(box);
+      }
+    }
+  }
+
   updateNavigation();
   FluentMotion::pageIn(ui->pages->currentWidget(), 10);
 }
@@ -744,7 +755,8 @@ void CreateInstanceDialog::updateNavigation()
   }
   ui->progress->setRange(0, qMax(steps, 1));
   ui->progress->setValue(step);
-  ui->progress->setVisible(!m_singlePage);
+  // the track around it too, so a single page keeps no gap above its title
+  ui->progress->parentWidget()->setVisible(!m_singlePage);
   if (!m_singlePage) {
     ui->title->setText(tr("Step %1 of %2").arg(step).arg(steps));
   }

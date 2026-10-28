@@ -3765,7 +3765,55 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; General &gt; Beta features to hand it MO2&apos;s mods.</source>
       <translation>Il gioco si blocca con me3 nel VFS, quindi MO2 lo avvia fuori con il suo profilo. Attiva l&apos;integrazione con me3 in Impostazioni &gt; Generale &gt; Funzioni beta per passargli le mod di MO2.</translation>
     </message>
-  </context>
+      <message>
+      <source>Save types</source>
+      <translation>Tipi di salvataggio</translation>
+    </message>
+    <message>
+      <source>Elden Ring, the game's own saves (.sl2)</source>
+      <translation>Elden Ring, i salvataggi del gioco (.sl2)</translation>
+    </message>
+    <message>
+      <source>The saves of the types turned on can be copied in as the starting save. MO2 keeps every type apart in the same way.</source>
+      <translation>I salvataggi dei tipi attivati possono essere copiati come salvataggio iniziale. MO2 separa ogni tipo allo stesso modo.</translation>
+    </message>
+    <message>
+      <source>Choose a save from Steam or a detected Elden Ring MO2 profile. The file is copied as ER0000 with its own extension after the new instance is opened.</source>
+      <translation>Scegli un salvataggio da Steam o da un profilo MO2 di Elden Ring rilevato. Il file viene copiato come ER0000 con la sua estensione all'apertura della nuova istanza.</translation>
+    </message>
+    <message>
+      <source>Copy an existing save into the new instance</source>
+      <translation>Copia un salvataggio esistente nella nuova istanza</translation>
+    </message>
+    <message>
+      <source>Copy an existing save into this named profile</source>
+      <translation>Copia un salvataggio esistente in questo profilo con nome</translation>
+    </message>
+    <message>
+      <source>1 save found.</source>
+      <translation>1 salvataggio trovato.</translation>
+    </message>
+    <message>
+      <source>{count} saves found.</source>
+      <translation>{count} salvataggi trovati.</translation>
+    </message>
+    <message>
+      <source>The selected file will be copied to {destination} after the new instance opens. Existing destination files are never replaced.</source>
+      <translation>Il file selezionato verrà copiato in {destination} all'apertura della nuova istanza. I file di destinazione esistenti non vengono mai sostituiti.</translation>
+    </message>
+    <message>
+      <source>No saves of the chosen types were found in Steam or the detected Elden Ring MO2 profiles.</source>
+      <translation>Nessun salvataggio dei tipi scelti è stato trovato in Steam o nei profili MO2 di Elden Ring rilevati.</translation>
+    </message>
+    <message>
+      <source>Turn on a save type to choose a starting save.</source>
+      <translation>Attiva un tipo di salvataggio per scegliere un salvataggio iniziale.</translation>
+    </message>
+    <message>
+      <source>This name appears in Tools &gt; Elden Ring Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <translation>Questo nome compare in Strumenti &gt; Elden Ring Save Isolation. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000 con la sua estensione.</translation>
+    </message>
+</context>
   <context>
     <name>EldenRingStartupOptions</name>
     <message>
