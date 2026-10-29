@@ -25,9 +25,22 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFileInfo>
 #include <QIcon>
 
+// Windows' own name for a folder, in the user's language (filetreeitem.cpp)
+const QString& directoryFileType();
+
 class MO2FolderIconProvider final : public QFileIconProvider
 {
 public:
+  // Qt calls every folder "File Folder" in English whatever the language;
+  // files already get Windows' names for their types
+  QString type(const QFileInfo& info) const override
+  {
+    if (info.isDir()) {
+      return directoryFileType();
+    }
+    return QFileIconProvider::type(info);
+  }
+
   QIcon icon(IconType type) const override
   {
     if (type == Folder) {

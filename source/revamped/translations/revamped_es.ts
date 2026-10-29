@@ -7002,7 +7002,43 @@ p, li { white-space: pre-wrap; }
       <source>Version %1</source>
       <translation>Versión %1</translation>
     </message>
-  </context>
+      <message>
+      <source>Text Files</source>
+      <translation>Archivos de texto</translation>
+    </message>
+    <message>
+      <source>INI Files</source>
+      <translation>Archivos INI</translation>
+    </message>
+    <message>
+      <source>Filetree</source>
+      <translation>Árbol de archivos</translation>
+    </message>
+    <message>
+      <source>Open Mod in Explorer</source>
+      <translation>Abrir en el Explorador</translation>
+    </message>
+    <message>
+      <source>Open in Explorer</source>
+      <translation>Abrir en el Explorador</translation>
+    </message>
+    <message>
+      <source>Open in Browser</source>
+      <translation>Abrir en el navegador</translation>
+    </message>
+    <message>
+      <source>Winning file conflicts:</source>
+      <translation>Archivos que ganan:</translation>
+    </message>
+    <message>
+      <source>Losing file conflicts:</source>
+      <translation>Archivos que pierden:</translation>
+    </message>
+    <message>
+      <source>The following files have no conflicts</source>
+      <translation>Archivos sin conflictos</translation>
+    </message>
+</context>
   <context>
     <name>ModList</name>
     <message>
@@ -8883,6 +8919,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <message>
       <source>Shows this page. Turning it off restarts MO2; seven taps on the version in About turn it on again.</source>
       <translation>Muestra esta página. Al desactivarlo, MO2 se reinicia; siete toques en la versión en Acerca de lo vuelven a activar.</translation>
+    </message>
+    <message>
+      <source>&amp;Open in Explorer</source>
+      <translation>&amp;Abrir en el Explorador</translation>
     </message>
 </context>
   <context>
@@ -10822,14 +10862,7 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
 %1</translation>
     </message>
   </context>
-  <context>
-    <name>RevampedModes</name>
-    <message>
-      <source>Cancel</source>
-      <translation>Cancelar</translation>
-    </message>
-  </context>
-  <context>
+    <context>
     <name>InstallationManager</name>
     <message>
       <source>This archive is protected with a password.</source>
@@ -10887,6 +10920,57 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
       <message>
       <source>Script Extender Plugin Load Checker</source>
       <translation>Comprobador de carga de plugins de Script Extender</translation>
+    </message>
+</context>
+<context>
+    <name>OverwriteConflictListModel</name>
+    <message>
+      <source>File</source>
+      <translation>Archivo</translation>
+    </message>
+    <message>
+      <source>Overwritten Mods</source>
+      <translation>Mods que pierden</translation>
+    </message>
+</context>
+<context>
+    <name>OverwrittenConflictListModel</name>
+    <message>
+      <source>File</source>
+      <translation>Archivo</translation>
+    </message>
+    <message>
+      <source>Providing Mod</source>
+      <translation>Mod que gana</translation>
+    </message>
+</context>
+<context>
+    <name>NoConflictListModel</name>
+    <message>
+      <source>File</source>
+      <translation>Archivo</translation>
+    </message>
+</context>
+<context>
+    <name>AdvancedConflictListModel</name>
+    <message>
+      <source>File</source>
+      <translation>Archivo</translation>
+    </message>
+</context>
+<context>
+    <name>NexusTab</name>
+    <message>
+      <source>Tracked</source>
+      <translation>Siguiendo</translation>
+    </message>
+    <message>
+      <source>Untracked</source>
+      <translation>Sin seguir</translation>
+    </message>
+    <message>
+      <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
+      <translation>Este mod no tiene un ID de Nexus válido. Para abrir otra web, activa Página web personalizada arriba y escribe su dirección.</translation>
     </message>
 </context>
 </TS>

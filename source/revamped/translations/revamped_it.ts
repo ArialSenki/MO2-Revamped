@@ -10958,10 +10958,10 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
     </message>
   </context>
   <context>
-    <name>RevampedModes</name>
+    <name>NexusTab</name>
     <message>
-      <source>Cancel</source>
-      <translation>Annulla</translation>
+      <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
+      <translation>Questa mod non ha un ID Nexus valido. Per aprire un altro sito, attiva Pagina web personalizzata qui sopra e inserisci il suo indirizzo.</translation>
     </message>
-  </context>
+</context>
 </TS>

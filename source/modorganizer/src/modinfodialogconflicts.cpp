@@ -4,6 +4,7 @@
 #include "modinfodialog.h"
 #include "modinfodialogconflictsmodels.h"
 #include "organizercore.h"
+#include <QHeaderView>
 #include <QTimer>
 #include "settings.h"
 #include "shared/directoryentry.h"
@@ -653,6 +654,19 @@ void GeneralConflictsTab::restoreState(const Settings& s)
   s.geometry().restoreState(ui->overwriteTree->header());
   s.geometry().restoreState(ui->noConflictTree->header());
   s.geometry().restoreState(ui->overwrittenTree->header());
+
+  // the file is what the lists are about: it takes the width, and the mod
+  // column keeps a fixed share at the right (the name column was a hundred
+  // pixels wide, the file names cut down to "...Ashes.log")
+  for (QTreeView* tree : {ui->overwriteTree, ui->overwrittenTree, ui->noConflictTree}) {
+    QHeaderView* header = tree->header();
+    header->setStretchLastSection(false);
+    header->setSectionResizeMode(0, QHeaderView::Stretch);
+    for (int column = 1; column < header->count(); ++column) {
+      header->setSectionResizeMode(column, QHeaderView::Interactive);
+      header->resizeSection(column, 240);
+    }
+  }
 }
 
 bool GeneralConflictsTab::update()

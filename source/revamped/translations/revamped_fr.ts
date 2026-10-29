@@ -10892,10 +10892,10 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     </message>
   </context>
   <context>
-    <name>RevampedModes</name>
+    <name>NexusTab</name>
     <message>
-      <source>Cancel</source>
-      <translation>Annuler</translation>
+      <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
+      <translation>Ce mod n'a pas d'ID Nexus valide. Pour ouvrir un autre site, active Page web personnalisée ci-dessus et saisis son adresse.</translation>
     </message>
-  </context>
+</context>
 </TS>

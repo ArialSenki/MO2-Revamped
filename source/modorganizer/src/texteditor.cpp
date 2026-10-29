@@ -1,6 +1,7 @@
 #include "texteditor.h"
 #include "fluenticons.h"
 #include "utility.h"
+#include <QDir>
 #include <QSplitter>
 #include <log.h>
 
@@ -534,7 +535,7 @@ void TextEditorToolbar::onLoaded(const QString& path)
   m_explore->setEnabled(hasDoc);
   m_wordWrap->setEnabled(hasDoc);
   m_path->setEnabled(hasDoc);
-  m_path->setText(path);
+  m_path->setText(QDir::toNativeSeparators(path));
 }
 
 void HTMLEditor::focusOutEvent(QFocusEvent* e)

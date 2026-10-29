@@ -16,6 +16,7 @@
 #include <QPixmap>
 #include <QPixmapCache>
 #include <QToolBar>
+#include <QToolButton>
 #include <QPushButton>
 #include <QCommandLinkButton>
 
@@ -772,9 +773,16 @@ void apply(QAbstractButton* button)
   }
 
   // a push button with an icon and a text: the gap between them (command
-  // links lay out their own icon)
+  // links lay out their own icon); tool buttons that show their text beside
+  // the icon too, except on toolbars, which space their own, and those that
+  // keep their icon (the run button sets its gap itself)
   auto* push = qobject_cast<QPushButton*>(button);
-  const bool spaced = push != nullptr && qobject_cast<QCommandLinkButton*>(button) == nullptr;
+  auto* tool = qobject_cast<QToolButton*>(button);
+  const bool spaced =
+      (push != nullptr && qobject_cast<QCommandLinkButton*>(button) == nullptr) ||
+      (tool != nullptr && tool->toolButtonStyle() == Qt::ToolButtonTextBesideIcon &&
+       qobject_cast<QToolBar*>(button->parentWidget()) == nullptr &&
+       !button->property("fluentKeepIcon").toBool());
   if (spaced) {
     // back to the icon and size the button had, so restyling sees its icon
     // and the gap is never added twice

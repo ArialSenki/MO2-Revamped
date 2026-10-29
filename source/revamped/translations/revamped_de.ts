@@ -10626,14 +10626,7 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
 %1</translation>
     </message>
   </context>
-  <context>
-    <name>RevampedModes</name>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-  </context>
-  <context>
+    <context>
     <name>InstallationManager</name>
     <message>
       <source>This archive is protected with a password.</source>
@@ -10672,4 +10665,11 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
       <translation>Der eingegebene Name ist ungültig, bitte gib einen anderen ein.</translation>
     </message>
   </context>
+<context>
+    <name>NexusTab</name>
+    <message>
+      <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
+      <translation>Dieser Mod hat keine gültige Nexus-ID. Um eine andere Seite für ihn zu öffnen, schalte oben Eigene Webseite ein und gib ihre Adresse ein.</translation>
+    </message>
+</context>
 </TS>

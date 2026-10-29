@@ -113,6 +113,13 @@ void FileTreeTab::restoreState(const Settings& s)
   if (!s.geometry().restoreState(ui->filetree->header())) {
     ui->filetree->sortByColumn(0, Qt::AscendingOrder);
   }
+
+  // a layout saved with Qt's default width cut Windows' type names short
+  // ("documento d..."); a wider one the user chose stays
+  constexpr int typeColumn = 2, typeWidth = 180;
+  if (ui->filetree->columnWidth(typeColumn) < typeWidth) {
+    ui->filetree->setColumnWidth(typeColumn, typeWidth);
+  }
 }
 
 void FileTreeTab::update()

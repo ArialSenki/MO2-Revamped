@@ -1,5 +1,6 @@
 #include "modinfodialogconflictsmodels.h"
 #include "modinfodialog.h"
+#include <QDir>
 #include <utility.h>
 
 using MOBase::naturalCompare;
@@ -171,6 +172,15 @@ QVariant ConflictListModel::data(const QModelIndex& index, int role) const
     }
 
     if (role == Qt::DisplayRole) {
+      // a file inside the mod as the text and INI file lists show it,
+      // "DLLs\x.log" rather than "/DLLs/x.log"
+      if (m_columns[c].getText == &ConflictItem::relativeName) {
+        QString name = QDir::toNativeSeparators(item->relativeName());
+        while (name.startsWith(QLatin1Char('\\'))) {
+          name.remove(0, 1);
+        }
+        return name;
+      }
       return (item->*m_columns[c].getText)();
     } else if (role == Qt::FontRole) {
       if (item->isArchive()) {

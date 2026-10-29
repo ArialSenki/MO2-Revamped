@@ -229,6 +229,39 @@ bool NexusTab::tryRefreshData(int modID)
   return false;
 }
 
+// the description page in the colors of the Fluent theme's cards, with its
+// text font, instead of Nexus' own grey (which stayed dark in Light too)
+static QString fluentDescriptionStyle(QString html)
+{
+  const bool dark = MOBase::RevampedTheme::isDark();
+  const QString card    = dark ? "#2B2B2B" : "#FBFBFB";
+  const QString text    = dark ? "#FFFFFF" : "#1A1A1A";
+  const QString muted   = dark ? "#C5C5C5" : "#5D5D5D";
+  const QString link    = dark ? "#60CDFF" : "#005FB8";
+  const QString quote   = dark ? "#2F2F2F" : "#F3F3F3";
+  const QString inset   = dark ? "#262626" : "#F2F2F2";
+  const QString line    = dark ? "#3D3D3D" : "#E5E5E5";
+  const QString control = dark ? "#323232" : "#F6F6F6";
+
+  html.replace("font-family: sans-serif;",
+               "font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;");
+  html.replace("font-size: 14px;", "font-size: 13px;");
+  html.replace("background: #404040;", "background: " + card + ";");
+  html.replace("color: #f1f1f1;", "color: " + text + ";");
+  html.replace("color: #e1e1e1;", "color: " + muted + ";");
+  html.replace("color: #8197ec;", "color: " + link + ";");
+  html.replace("border-left-color: rgb(87, 165, 204);", "border-left-color: " + link + ";");
+  html.replace("background: #383838 url(", "background: " + quote + " url(");
+  html.replace("background: #262626;", "background: " + inset + ";");
+  html.replace("border: 1px dashed #3b3b3b;", "border: 1px dashed " + line + ";");
+  html.replace("border: 1px solid black;", "border: 1px solid " + line + ";");
+  html.replace("background-color: #454545;", "background-color: " + control + ";");
+  html.replace("color: #E6E6E6;", "color: " + text + ";");
+  html.replace("</style>", "    div.empty { text-align: center; color: " + muted +
+                               "; padding-top: 24px; }\n    </style>");
+  return html;
+}
+
 void NexusTab::onModChanged()
 {
   m_requestStarted = false;
@@ -317,13 +350,19 @@ void NexusTab::onModChanged()
 </html>)";
 
   if (nexusDescription.isEmpty()) {
-    descriptionAsHTML = descriptionAsHTML.arg(tr(R"(
-      <div style="text-align: center;">
-      <p>This mod does not have a valid Nexus ID. You can add a custom web
-      page for it in the "Custom URL" box below.</p>
-      </div>)"));
+    descriptionAsHTML = descriptionAsHTML.arg(
+        QStringLiteral(R"(<div class="empty"><p>%1</p></div>)")
+            .arg(tr("This mod has no valid Nexus ID. To open another site for it, "
+                    "turn on Custom web page above and enter its address.")));
   } else {
     descriptionAsHTML = descriptionAsHTML.arg(BBCode::convertToHTML(nexusDescription));
+  }
+
+  if (FluentIcons::active()) {
+    descriptionAsHTML = fluentDescriptionStyle(descriptionAsHTML);
+    // no white frame while the page loads
+    ui->browser->page()->setBackgroundColor(
+        QColor(MOBase::RevampedTheme::isDark() ? 0x2B2B2B : 0xFBFBFB));
   }
 
   ui->browser->page()->setHtml(descriptionAsHTML);
