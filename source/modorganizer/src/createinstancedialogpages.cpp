@@ -255,9 +255,6 @@ struct KnownTool
 
 const KnownTool KnownTools[] = {
     {"Seamless Co-op", {"Game/ersc_launcher.exe", "ersc_launcher.exe"}},
-    {"ModEngine 2",
-     {"modengine2_launcher.exe", "Game/modengine2_launcher.exe",
-      "ModEngine2/modengine2_launcher.exe", "Game/ModEngine2/modengine2_launcher.exe"}},
 };
 
 // an instance that exists already, as the wizard shows it

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Removed
+
+- The me3 and Mod Engine 2 integrations of the developer mode, with their game
+  modes (the Mode selector), their Settings > Developer switches and the
+  detection of Mod Engine 2 in the new instance wizard. Instances made for a
+  mode stay as ordinary instances, and their "me3 (beta)" and "Mod Engine 2
+  (beta)" entries leave the executables. A me3 or Mod Engine 2 added to the
+  executables by hand keeps the save guard, and mods packaged for Mod Engine 2
+  still install.
+
 ## 1.1.0-beta.1 (pre-release) — October 27, 2026
 
 A pre-release: some details are still under review.

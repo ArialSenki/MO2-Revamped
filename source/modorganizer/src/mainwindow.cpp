@@ -65,7 +65,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "profile.h"
 #include "revampedprompts.h"
 #include "revampedtheme.h"
-#include "revampedmodes.h"
 #include "profilesdialog.h"
 #include "report.h"
 #include "savegameinfo.h"
@@ -3813,16 +3812,12 @@ void MainWindow::readSettings()
   FilterWidget::setOptions(s.interface().filterOptions());
 
   {
-    // special case in case someone puts 0 in the INI
+    // special case in case someone puts 0 in the INI; without a beta entry
+    // that was there the saved position may point to another program, so the
+    // game is picked again
     auto v = s.widgets().index(ui->executablesListBox);
-    if (!v || v == 0) {
+    if (!v || v == 0 || m_OrganizerCore.removedBetaLaunchers()) {
       v = 1;
-      // a game mode's instance starts on that mode's launcher
-      const int launcher = ui->executablesListBox->findText(
-          RevampedModes::launcherTitle(RevampedModes::current(s)));
-      if (!RevampedModes::launcherTitle(RevampedModes::current(s)).isEmpty() && launcher > 0) {
-        v = launcher;
-      }
     }
 
     ui->executablesListBox->setCurrentIndex(*v);

@@ -118,6 +118,16 @@ void Settings::processUpdates(const QVersionNumber& currentVersion,
     return;
   }
 
+  // the me3 and Mod Engine 2 betas and their game modes are gone; Revamped
+  // builds share MO2's version, so this runs on every start (a key that is
+  // not there is left alone)
+  for (const char* key :
+       {"beta_features", "beta_me3", "beta_me2", "revamped_mode", "revamped_mode_me3",
+        "revamped_mode_me2", "revamped_mode_parent", "revamped_mode_parent_dir",
+        "revamped_mode_launcher"}) {
+    remove(m_Settings, "Settings", key);
+  }
+
   if (currentVersion == lastVersion) {
     return;
   }
@@ -223,45 +233,6 @@ bool Settings::usePrereleases() const
 void Settings::setUsePrereleases(bool b)
 {
   set(m_Settings, "Settings", "use_prereleases", b);
-}
-
-bool Settings::betaMe3() const
-{
-  // beta_features held both before they had a switch each
-  return GlobalSettings::developerMode() &&
-         get<bool>(m_Settings, "Settings", "beta_me3",
-                   get<bool>(m_Settings, "Settings", "beta_features", false));
-}
-
-void Settings::setBetaMe3(bool b)
-{
-  set(m_Settings, "Settings", "beta_me3", b);
-}
-
-bool Settings::betaMe2() const
-{
-  return GlobalSettings::developerMode() &&
-         get<bool>(m_Settings, "Settings", "beta_me2",
-                   get<bool>(m_Settings, "Settings", "beta_features", false));
-}
-
-void Settings::setBetaMe2(bool b)
-{
-  set(m_Settings, "Settings", "beta_me2", b);
-}
-
-QString Settings::revampedValue(const QString& key) const
-{
-  return get<QString>(m_Settings, "Settings", key, QString());
-}
-
-void Settings::setRevampedValue(const QString& key, const QString& value)
-{
-  if (value.isEmpty()) {
-    remove(m_Settings, "Settings", key);
-  } else {
-    set(m_Settings, "Settings", key, value);
-  }
 }
 
 bool Settings::profileLocalInis() const

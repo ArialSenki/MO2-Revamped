@@ -249,6 +249,10 @@ public:
   void setManagedGame(MOBase::IPluginGame* game);
 
   void updateExecutablesList();
+
+  // whether updateExecutablesList() took out an entry of the removed me3 or
+  // Mod Engine 2 betas: the program picked before may point elsewhere now
+  bool removedBetaLaunchers() const { return m_RemovedBetaLaunchers; }
   void updateModInfoFromDisc();
 
   void checkForUpdates();
@@ -556,6 +560,7 @@ private:
   QList<std::function<void()>> m_PostLoginTasks;
 
   ExecutablesList m_ExecutablesList;
+  bool m_RemovedBetaLaunchers = false;
   QStringList m_PendingDownloads;
   QStringList m_DefaultArchives;
   QStringList m_ActiveArchives;

@@ -1958,68 +1958,12 @@ Se contiene progressi che vuoi tenere, chiudi il gioco e ricopia i suoi file.</t
       <translation>Mod Engine 2 (beta)</translation>
     </message>
     <message>
-      <source>Extensions from your active mods: {0}.</source>
-      <translation>Estensioni dalle tue mod attive: {0}.</translation>
-    </message>
-    <message>
-      <source>None of your active mods has a Mod Engine 2 extension.</source>
-      <translation>Nessuna delle tue mod attive ha un&apos;estensione di Mod Engine 2.</translation>
-    </message>
-    <message>
-      <source>Mod Engine 2 starts with this config</source>
-      <translation>Mod Engine 2 si avvia con questa configurazione</translation>
-    </message>
-    <message>
-      <source>MO2 wrote it from your active mods: their files come through MO2&apos;s virtual folder and MO2 loads their native DLLs, so only Mod Engine 2 extensions are listed. You can edit it for this run; MO2 writes it again next time.</source>
-      <translation>MO2 l&apos;ha scritta dalle tue mod attive: i loro file arrivano dalla cartella virtuale di MO2 e MO2 carica le loro DLL native, quindi sono elencate solo le estensioni di Mod Engine 2. Puoi modificarla per questo avvio; MO2 la riscrive la volta successiva.</translation>
-    </message>
-    <message>
-      <source>Show this before every Mod Engine 2 run</source>
-      <translation>Mostra questo prima di ogni avvio con Mod Engine 2</translation>
-    </message>
-    <message>
-      <source>Edit for this run</source>
-      <translation>Modifica per questo avvio</translation>
-    </message>
-    <message>
       <source>Cancel</source>
       <translation>Annulla</translation>
     </message>
     <message>
-      <source>Start</source>
-      <translation>Avvia</translation>
-    </message>
-    <message>
-      <source>This config is not valid TOML: {0}</source>
-      <translation>Questa configurazione non è TOML valido: {0}</translation>
-    </message>
-    <message>
-      <source>Start with these changes</source>
-      <translation>Avvia con queste modifiche</translation>
-    </message>
-    <message>
-      <source>Add to external_dlls in {0}:</source>
-      <translation>Aggiungere a external_dlls in {0}:</translation>
-    </message>
-    <message>
-      <source>Your Mod Engine 2 config leaves out active extensions</source>
-      <translation>La tua configurazione di Mod Engine 2 esclude estensioni attive</translation>
-    </message>
-    <message>
-      <source>These DLLs are active in MO2 and only work when Mod Engine 2 starts them: {0}. Your config ({1}) does not list them, so they stay off. Add them as shown, or start this run with the config MO2 writes from your mods.</source>
-      <translation>Queste DLL sono attive in MO2 e funzionano solo se le avvia Mod Engine 2: {0}. La tua configurazione ({1}) non le elenca, quindi restano spente. Aggiungile come mostrato o avvia questa partita con la configurazione che MO2 scrive dalle tue mod.</translation>
-    </message>
-    <message>
-      <source>Copy the suggestion</source>
-      <translation>Copia il suggerimento</translation>
-    </message>
-    <message>
       <source>Use MO2&apos;s config this time</source>
       <translation>Usa la configurazione di MO2 questa volta</translation>
-    </message>
-    <message>
-      <source>Start with my config</source>
-      <translation>Avvia con la mia configurazione</translation>
     </message>
     <message>
       <source>Seamless Co-op</source>
@@ -2452,8 +2396,8 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>{count} file</translation>
     </message>
     <message>
-      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; Developer to hand it MO2&apos;s mods.</source>
-      <translation>Il gioco si blocca con me3 dentro il VFS, quindi MO2 lo avvia fuori con il suo profilo. Attiva l'integrazione di me3 in Impostazioni &gt; Sviluppatore per passargli le mod di MO2.</translation>
+      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile.</source>
+      <translation>Il gioco si blocca con me3 dentro il VFS, quindi MO2 lo avvia fuori con il suo profilo.</translation>
     </message>
     <message>
       <source>Name this profile.</source>
@@ -3753,18 +3697,6 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <source>Starts the game through MO2, inside the VFS with every MO2 mod and Seamless Co-op from the mod {mod}.</source>
       <translation>Avvia il gioco tramite MO2, nel VFS con tutte le mod di MO2 e Seamless Co-op dalla mod {mod}.</translation>
     </message>
-    <message>
-      <source>Beta: the game crashes with me3 inside the VFS, so MO2 hands it the profile&apos;s mod list and native DLLs, Seamless Co-op when its mod is active, and the native DLLs of the me3 profile this program names.</source>
-      <translation>Beta: il gioco si blocca con me3 nel VFS, quindi MO2 gli passa l&apos;elenco delle mod e le DLL native del profilo, Seamless Co-op quando la sua mod è attiva e le DLL native del profilo me3 indicato da questo programma.</translation>
-    </message>
-    <message>
-      <source>Beta: Mod Engine 2 runs inside the VFS with every MO2 mod and native DLL. With the config MO2 writes (Mod Engine 2 (beta)) it also starts the extensions of your active mods, Seamless Co-op among them; with its own config, MO2 says before the run which ones it leaves out.</source>
-      <translation>Beta: Mod Engine 2 funziona nel VFS con tutte le mod e le DLL native di MO2. Con la configurazione scritta da MO2 (Mod Engine 2 (beta)) avvia anche le estensioni delle tue mod attive, tra cui Seamless Co-op; con la sua configurazione, MO2 indica prima dell&apos;avvio quelle escluse.</translation>
-    </message>
-    <message>
-      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile. Turn on the me3 integration in Settings &gt; General &gt; Beta features to hand it MO2&apos;s mods.</source>
-      <translation>Il gioco si blocca con me3 nel VFS, quindi MO2 lo avvia fuori con il suo profilo. Attiva l&apos;integrazione con me3 in Impostazioni &gt; Generale &gt; Funzioni beta per passargli le mod di MO2.</translation>
-    </message>
       <message>
       <source>Save types</source>
       <translation>Tipi di salvataggio</translation>
@@ -4384,18 +4316,6 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
     <message>
       <source>Search files</source>
       <translation>Cerca file</translation>
-    </message>
-    <message>
-      <source>Mode</source>
-      <translation>Modalità</translation>
-    </message>
-    <message>
-      <source>%1 (beta)</source>
-      <translation>%1 (beta)</translation>
-    </message>
-    <message>
-      <source>MO2, me3 or Mod Engine 2, each with an instance of its own. Changing it restarts MO2 in that mode&apos;s instance.</source>
-      <translation>MO2, me3 o Mod Engine 2, ognuno con la propria istanza. Cambiandolo, MO2 si riavvia nell&apos;istanza di quella modalità.</translation>
     </message>
   </context>
   <context>
@@ -7040,10 +6960,6 @@ OpenSSL · {openssl}</translation>
       <translation>La modalità sviluppatore è già attiva: Impostazioni &gt; Sviluppatore.</translation>
     </message>
     <message>
-      <source>You are now a developer. Settings &gt; Developer has the beta features; open Settings again to see it.</source>
-      <translation>Ora sei uno sviluppatore. Impostazioni &gt; Sviluppatore contiene le funzioni beta; riapri le Impostazioni per vederlo.</translation>
-    </message>
-    <message>
       <source>1 more tap to turn the developer mode on.</source>
       <translation>Ancora 1 tocco per attivare la modalità sviluppatore.</translation>
     </message>
@@ -7051,7 +6967,11 @@ OpenSSL · {openssl}</translation>
       <source>{0} more taps to turn the developer mode on.</source>
       <translation>Ancora {0} tocchi per attivare la modalità sviluppatore.</translation>
     </message>
-  </context>
+      <message>
+      <source>You are now a developer. Open Settings again to see Settings &gt; Developer.</source>
+      <translation>Ora sei uno sviluppatore. Riapri le Impostazioni per vedere Impostazioni &gt; Sviluppatore.</translation>
+    </message>
+</context>
   <context>
     <name>ModInfoDialog</name>
     <message>
@@ -9119,26 +9039,6 @@ Esempio:
       <translation>Sono state trovate diverse installazioni di %1. Scegli quella che questa istanza deve usare:</translation>
     </message>
     <message>
-      <source>Beta features</source>
-      <translation>Funzioni beta</translation>
-    </message>
-    <message>
-      <source>me3 integration</source>
-      <translation>Integrazione con me3</translation>
-    </message>
-    <message>
-      <source>Mod Engine 2 integration</source>
-      <translation>Integrazione con Mod Engine 2</translation>
-    </message>
-    <message>
-      <source>me3 starts Elden Ring with MO2&apos;s mods, native DLLs and Seamless Co-op, and shows up among the executables when it is installed. Takes effect after a restart.</source>
-      <translation>me3 avvia Elden Ring con le mod, le DLL native e Seamless Co-op di MO2 e compare tra gli eseguibili quando è installato. Ha effetto dopo il riavvio.</translation>
-    </message>
-    <message>
-      <source>Mod Engine 2 gets a config MO2 writes from your active mods, with its extensions such as Seamless Co-op, shown before the game starts. Takes effect after a restart.</source>
-      <translation>Mod Engine 2 riceve una configurazione che MO2 scrive dalle tue mod attive, con le loro estensioni come Seamless Co-op, mostrata prima dell&apos;avvio del gioco. Ha effetto dopo il riavvio.</translation>
-    </message>
-    <message>
       <source>Developer</source>
       <translation>Sviluppatore</translation>
     </message>
@@ -9151,48 +9051,12 @@ Esempio:
       <translation>Modalità sviluppatore</translation>
     </message>
     <message>
-      <source>Shows this page. Turning it off switches every beta feature off and restarts MO2; seven taps on the version in About turn it on again.</source>
-      <translation>Mostra questa pagina. Spegnerla spegne tutte le funzioni beta e riavvia MO2; sette tocchi sulla versione in Informazioni la riaccendono.</translation>
-    </message>
-    <message>
-      <source>Mod managers (beta)</source>
-      <translation>Gestori di mod (beta)</translation>
-    </message>
-    <message>
-      <source>Remove me3…</source>
-      <translation>Rimuovi me3…</translation>
-    </message>
-    <message>
-      <source>Remove Mod Engine 2…</source>
-      <translation>Rimuovi Mod Engine 2…</translation>
-    </message>
-    <message>
-      <source>Turns the integration off, takes its entry out of the executables and, if you want, its mode&apos;s instance too, then restarts MO2.</source>
-      <translation>Spegne l&apos;integrazione, toglie la sua voce dagli eseguibili e, se vuoi, anche l&apos;istanza della sua modalità, poi riavvia MO2.</translation>
-    </message>
-    <message>
-      <source>Remove %1?</source>
-      <translation>Rimuovere %1?</translation>
-    </message>
-    <message>
       <source>The %1 integration turns off and its entry leaves the executables. %1 itself stays installed. MO2 restarts.</source>
       <translation>L&apos;integrazione con %1 si spegne e la sua voce lascia gli eseguibili. %1 resta installato. MO2 si riavvia.</translation>
     </message>
     <message>
-      <source>Remove and restart</source>
-      <translation>Rimuovi e riavvia</translation>
-    </message>
-    <message>
       <source>Cancel</source>
       <translation>Annulla</translation>
-    </message>
-    <message>
-      <source>Also move &quot;%1&quot; to the Recycle Bin</source>
-      <translation>Spostare anche «%1» nel Cestino</translation>
-    </message>
-    <message>
-      <source>The instance of this mode, with its mods, profiles and saves.</source>
-      <translation>L&apos;istanza di questa modalità, con mod, profili e salvataggi.</translation>
     </message>
     <message>
       <source>Separate saves per MO2 profile</source>
@@ -9210,7 +9074,11 @@ Esempio:
       <source>OK</source>
       <translation>OK</translation>
     </message>
-  </context>
+      <message>
+      <source>Shows this page. Turning it off restarts MO2; seven taps on the version in About turn it on again.</source>
+      <translation>Mostra questa pagina. Disattivarla riavvia MO2; sette tocchi sulla versione in Informazioni la riattivano.</translation>
+    </message>
+</context>
   <context>
     <name>QueryOverwriteDialog</name>
     <message>
@@ -11092,54 +10960,8 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
   <context>
     <name>RevampedModes</name>
     <message>
-      <source>Make the %1 instance?</source>
-      <translation>Creare l&apos;istanza di %1?</translation>
-    </message>
-    <message>
-      <source>%1 gets an instance of its own, &quot;%2&quot;: the same game and the same downloads, but its own mods, profiles, native DLLs, settings and saves, so nothing in it touches this instance. It starts empty; install there the mods to play with %1. MO2 restarts in it, and the mode selector brings you back.</source>
-      <translation>%1 avrà un&apos;istanza propria, «%2»: lo stesso gioco e gli stessi download, ma mod, profili, DLL native, impostazioni e salvataggi propri, quindi nulla di essa tocca questa istanza. Parte vuota; installa lì le mod per giocare con %1. MO2 si riavvia in essa, e il selettore di modalità ti riporta indietro.</translation>
-    </message>
-    <message>
-      <source>Copy this profile&apos;s saves into it</source>
-      <translation>Copiare lì i salvataggi di questo profilo</translation>
-    </message>
-    <message>
-      <source>Make it and restart</source>
-      <translation>Crea e riavvia</translation>
-    </message>
-    <message>
       <source>Cancel</source>
       <translation>Annulla</translation>
-    </message>
-    <message>
-      <source>MO2 could not find %1 (%2). Install it, or add it to this instance&apos;s executables, then choose the mode again.</source>
-      <translation>MO2 non ha trovato %1 (%2). Installalo o aggiungilo agli eseguibili di questa istanza, poi scegli di nuovo la modalità.</translation>
-    </message>
-    <message>
-      <source>Could not make the folder %1.</source>
-      <translation>Impossibile creare la cartella %1.</translation>
-    </message>
-    <message>
-      <source>Could not write %1.</source>
-      <translation>Impossibile scrivere %1.</translation>
-    </message>
-    <message>
-      <source>Close the game before you change the game mode.</source>
-      <translation>Chiudi il gioco prima di cambiare la modalità di gioco.</translation>
-    </message>
-    <message>
-      <source>The instance this mode was made from is gone:
-%1</source>
-      <translation>L&apos;istanza da cui è stata creata questa modalità non esiste più:
-%1</translation>
-    </message>
-    <message>
-      <source>This is the %1 instance. Switch the mode back to MO2 first, then remove it from there.</source>
-      <translation>Questa è l&apos;istanza di %1. Torna prima alla modalità MO2 e rimuovila da lì.</translation>
-    </message>
-    <message>
-      <source>Could not move %1 to the Recycle Bin.</source>
-      <translation>Impossibile spostare %1 nel Cestino.</translation>
     </message>
   </context>
 </TS>

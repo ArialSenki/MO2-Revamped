@@ -1,5 +1,4 @@
 #include "organizercore.h"
-#include "revampedmodes.h"
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
@@ -212,12 +211,13 @@ void OrganizerCore::updateExecutablesList()
 
   m_ExecutablesList.load(managedGame(), m_Settings);
 
-  // a mod manager whose beta feature is off keeps no entry MO2 added for it
-  if (!m_Settings.betaMe3()) {
-    m_ExecutablesList.remove(RevampedModes::launcherTitle(RevampedModes::Mode::Me3));
-  }
-  if (!m_Settings.betaMe2()) {
-    m_ExecutablesList.remove(RevampedModes::launcherTitle(RevampedModes::Mode::Me2));
+  // the entries the me3 and Mod Engine 2 betas added (both are gone) leave
+  // the instances that still have them
+  for (const QString title : {QStringLiteral("me3 (beta)"), QStringLiteral("Mod Engine 2 (beta)")}) {
+    if (m_ExecutablesList.titleExists(title)) {
+      m_ExecutablesList.remove(title);
+      m_RemovedBetaLaunchers = true;
+    }
   }
 }
 

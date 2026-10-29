@@ -188,8 +188,8 @@ class _DeveloperTaps(QObject):
         left = self.Needed - self._taps
         if left <= 0:
             application.setProperty("revampedDeveloperMode", True)
-            self._show(_tr("You are now a developer. Settings > Developer has the beta "
-                           "features; open Settings again to see it."))
+            self._show(_tr("You are now a developer. Open Settings again to see "
+                           "Settings > Developer."))
         elif left <= 4:
             self._show(
                 (_tr("1 more tap to turn the developer mode on.") if left == 1
