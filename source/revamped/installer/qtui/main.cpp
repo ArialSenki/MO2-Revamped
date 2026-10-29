@@ -69,46 +69,36 @@ struct ModeInfo {
 struct Theme {
     bool dark = true;
     QColor page, surface, input, border, text, muted, heading;
-    QColor accent, accentHover, selected, hover, danger, dangerHover, success, tile, tileInk;
+    QColor accent, accentHover, accentFg, selected, hover, danger, dangerHover, success, tile, tileInk;
+    QColor fieldBottom;
 };
 
+// the colors of MO2 Revamped's Fluent v4 theme (themes/Build-FluentTheme.ps1),
+// so setup and MO2 look like one program; the accent is the theme's fixed
+// blue, not the Windows accent
 Theme makeTheme(bool dark) {
     Theme t;
     t.dark = dark;
     if (dark) {
-        t.page = QColor(30, 35, 40); t.surface = QColor(37, 43, 49); t.input = QColor(29, 34, 39);
-        t.border = QColor(62, 73, 82); t.text = QColor(211, 221, 228); t.muted = QColor(150, 167, 179);
-        t.heading = QColor(228, 238, 245); t.accent = QColor(38, 128, 178); t.accentHover = QColor(52, 144, 195);
-        t.selected = QColor(42, 62, 76); t.hover = QColor(44, 52, 59); t.danger = QColor(196, 84, 78);
-        t.dangerHover = QColor(214, 99, 92); t.success = QColor(110, 196, 146);
-        t.tile = QColor(47, 58, 67); t.tileInk = QColor(132, 196, 230);
+        t.page = QColor(0x20, 0x22, 0x26); t.surface = QColor(0x2B, 0x2B, 0x2B); t.input = QColor(0x2F, 0x2F, 0x2F);
+        t.border = QColor(0x3D, 0x3D, 0x3D); t.text = QColor(0xFF, 0xFF, 0xFF); t.muted = QColor(0xC5, 0xC5, 0xC5);
+        t.heading = QColor(0xFF, 0xFF, 0xFF); t.accent = QColor(0x4C, 0xC2, 0xFF); t.accentHover = QColor(0x48, 0xB1, 0xE8);
+        t.accentFg = QColor(0x00, 0x00, 0x00);
+        t.selected = QColor(0x34, 0x3B, 0x44); t.hover = QColor(0x32, 0x32, 0x32); t.danger = QColor(0xD1, 0x34, 0x38);
+        t.dangerHover = QColor(0xDE, 0x4A, 0x4E); t.success = QColor(0x6C, 0xCB, 0x5F);
+        t.tile = QColor(0x1F, 0x34, 0x43); t.tileInk = QColor(0x60, 0xCD, 0xFF);
+        t.fieldBottom = QColor(0x9A, 0x9A, 0x9A);
     } else {
-        t.page = QColor(243, 246, 249); t.surface = Qt::white; t.input = QColor(249, 251, 253);
-        t.border = QColor(208, 219, 228); t.text = QColor(41, 56, 71); t.muted = QColor(88, 110, 128);
-        t.heading = QColor(30, 66, 94); t.accent = QColor(30, 122, 176); t.accentHover = QColor(24, 108, 158);
-        t.selected = QColor(223, 237, 248); t.hover = QColor(238, 244, 249); t.danger = QColor(184, 64, 58);
-        t.dangerHover = QColor(162, 52, 47); t.success = QColor(38, 128, 78);
-        t.tile = QColor(226, 238, 247); t.tileInk = QColor(30, 110, 160);
+        t.page = QColor(0xEF, 0xF1, 0xF4); t.surface = QColor(0xFB, 0xFB, 0xFB); t.input = QColor(0xFF, 0xFF, 0xFF);
+        t.border = QColor(0xE5, 0xE5, 0xE5); t.text = QColor(0x1A, 0x1A, 0x1A); t.muted = QColor(0x5D, 0x5D, 0x5D);
+        t.heading = QColor(0x1A, 0x1A, 0x1A); t.accent = QColor(0x00, 0x5F, 0xB8); t.accentHover = QColor(0x1A, 0x6F, 0xC0);
+        t.accentFg = QColor(0xFF, 0xFF, 0xFF);
+        t.selected = QColor(0xE6, 0xEB, 0xF1); t.hover = QColor(0xF2, 0xF2, 0xF2); t.danger = QColor(0xC4, 0x2B, 0x1C);
+        t.dangerHover = QColor(0xB3, 0x26, 0x1A); t.success = QColor(0x0F, 0x7B, 0x0F);
+        t.tile = QColor(0xDC, 0xE8, 0xF5); t.tileInk = QColor(0x00, 0x5F, 0xB8);
+        t.fieldBottom = QColor(0x8A, 0x8A, 0x8A);
     }
     return t;
-}
-
-// Windows' accent colour (Settings > Personalization > Colors), used for the
-// main buttons and highlights when white text keeps a 4.5:1 contrast on it
-QColor windowsAccent() {
-#ifdef Q_OS_WIN
-    QSettings settings(QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM"), QSettings::NativeFormat);
-    bool ok = false;
-    const uint abgr = settings.value(QStringLiteral("AccentColor")).toUInt(&ok);
-    if (!ok) return QColor();
-    const QColor accent(int(abgr & 0xff), int((abgr >> 8) & 0xff), int((abgr >> 16) & 0xff));
-    auto channel = [](qreal c) { return c <= 0.03928 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4); };
-    const qreal luminance = 0.2126 * channel(accent.redF()) + 0.7152 * channel(accent.greenF()) + 0.0722 * channel(accent.blueF());
-    if ((1.05) / (luminance + 0.05) < 4.5) return QColor();
-    return accent;
-#else
-    return QColor();
-#endif
 }
 
 QColor mix(const QColor &from, const QColor &to, qreal amount) {
@@ -316,14 +306,11 @@ protected:
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
         const QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
-        QLinearGradient gradient(r.topLeft(), r.bottomRight());
-        gradient.setColorAt(0.0, theme_.accentHover);
-        gradient.setColorAt(1.0, theme_.accent.darker(118));
         p.setPen(Qt::NoPen);
-        p.setBrush(gradient);
-        p.drawRoundedRect(r, r.width() * 0.28, r.height() * 0.28);
+        p.setBrush(theme_.accent);
+        p.drawRoundedRect(r, 8, 8);
         const qreal inset = r.width() * 0.24;
-        drawGlyph(p, glyph_, r.adjusted(inset, inset, -inset, -inset), Qt::white, theme_.accent);
+        drawGlyph(p, glyph_, r.adjusted(inset, inset, -inset, -inset), theme_.accentFg, theme_.accent);
     }
 private:
     QString glyph_;
@@ -366,7 +353,7 @@ protected:
         outline = mix(outline, activeOutline, check_);
         p.setPen(outline.alpha() > 0 ? QPen(outline, 1.0) : Qt::NoPen);
         p.setBrush(background);
-        p.drawRoundedRect(r, 9, 9);
+        p.drawRoundedRect(r, 4, 4);
 
         if (check_ > 0.01) {
             const qreal barHeight = (r.height() - 26.0) * check_;
@@ -377,7 +364,7 @@ protected:
 
         const QRectF tile(r.left() + 14.0, r.center().y() - 18.0, 36.0, 36.0);
         const QColor tileColor = mix(theme_.tile, theme_.accent, check_);
-        const QColor ink = mix(theme_.tileInk, Qt::white, check_);
+        const QColor ink = mix(theme_.tileInk, theme_.accentFg, check_);
         p.setPen(Qt::NoPen);
         p.setBrush(tileColor);
         p.drawEllipse(tile);
@@ -407,7 +394,7 @@ protected:
         if (hasFocus()) {
             p.setPen(QPen(theme_.accent, 1.5));
             p.setBrush(Qt::NoBrush);
-            p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 8, 8);
+            p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 4, 4);
         }
     }
 private:
@@ -446,7 +433,8 @@ protected:
         const QRectF indicator = style()->subElementRect(QStyle::SE_CheckBoxIndicator, &option, this);
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
-        QColor ink(Qt::white);
+        // the accent's own ink (black on Dark's light blue); white on red
+        QColor ink = property("danger").toBool() ? QColor(Qt::white) : palette().color(QPalette::HighlightedText);
         if (!isEnabled()) ink.setAlpha(140);
         painter.setPen(QPen(ink, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         QPainterPath check;
@@ -551,13 +539,6 @@ private:
             dark = settings.value(QStringLiteral("AppsUseLightTheme"), 1).toInt() == 0;
         }
         theme_ = makeTheme(dark);
-        const QColor accent = windowsAccent();
-        if (accent.isValid()) {
-            theme_.accent = accent;
-            theme_.accentHover = dark ? accent.lighter(112) : accent.darker(112);
-            theme_.tileInk = dark ? mix(accent, Qt::white, 0.45) : accent.darker(105);
-            theme_.selected = mix(theme_.selected, accent, dark ? 0.22 : 0.12);
-        }
         themeOverride_ = themeOverride;
     }
 
@@ -1285,7 +1266,7 @@ private:
         progress_->setRange(0, 1000);
         progress_->setValue(0);
         progress_->setTextVisible(false);
-        progress_->setFixedHeight(8);
+        progress_->setFixedHeight(4);
         progressLayout->addWidget(progress_);
         progressAnimation_ = new QPropertyAnimation(progress_, "value", progress_);
         progressAnimation_->setDuration(320);
@@ -1328,8 +1309,8 @@ private:
             "QLabel#brandTitle { color:%4; font-size:16pt; font-weight:600; }"
             "QLabel#brandSub,QLabel#secondary { color:%5; }"
             "QLabel#sectionTitle { color:%4; font-size:10.5pt; font-weight:600; }"
-            "QFrame#sidebar,QFrame#contentCard,QFrame#heroCard { background:%6; border:1px solid %3; border-radius:10px; }"
-            "QFrame#heroCard { border-color:%13; }"
+            "QFrame#sidebar,QFrame#contentCard,QFrame#heroCard { background:%6; border:1px solid %3; border-radius:8px; }"
+            "QFrame#heroCard { border-color:%3; }"
             "QLabel#heroTitle { color:%4; font-size:13pt; font-weight:600; }"
             "QLabel#cardTitle { color:%4; font-size:10.5pt; font-weight:600; }"
             "QLabel#groupLabel { color:%5; font-size:8pt; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }"
@@ -1338,28 +1319,28 @@ private:
             "QLabel#statusLabel[state='success'] { color:%14; font-weight:600; }"
             "QLabel#statusLabel[state='error'] { color:%15; font-weight:600; }"
             "QLabel#statusLabel[state='busy'] { color:%1; }"
-            "QLineEdit,QPlainTextEdit { background:%10; border:1px solid %3; border-radius:7px; padding:7px 10px; selection-background-color:%11; selection-color:white; }"
-            "QLineEdit:hover { border-color:%13; }"
-            "QLineEdit:focus,QPlainTextEdit:focus { border:1px solid %11; }"
+            "QLineEdit,QPlainTextEdit { background:%10; border:1px solid %3; border-bottom:1px solid %18; border-radius:4px; padding:7px 10px; selection-background-color:%11; selection-color:%17; }"
+            "QLineEdit:hover { background:%7; }"
+            "QLineEdit:focus,QPlainTextEdit:focus { background:%10; border-bottom:2px solid %11; padding-bottom:6px; }"
             "QLineEdit:read-only { background:%2; color:%5; }"
             "QPlainTextEdit { font-family:'Cascadia Mono','Consolas'; font-size:8.5pt; }"
-            "QPushButton { background:%6; border:1px solid %3; border-radius:7px; padding:8px 16px; min-height:20px; }"
-            "QPushButton:hover { background:%7; border-color:%13; }"
+            "QPushButton { background:%6; border:1px solid %3; border-radius:4px; padding:8px 16px; min-height:20px; }"
+            "QPushButton:hover { background:%7; }"
             "QPushButton:pressed { background:%8; }"
             "QPushButton:disabled { color:%5; background:%2; border-color:%3; }"
             "QPushButton:focus { border-color:%11; }"
-            "QPushButton#primaryButton { background:%11; color:white; border:1px solid %11; font-weight:600; }"
+            "QPushButton#primaryButton { background:%11; color:%17; border:1px solid %11; font-weight:600; }"
             "QPushButton#primaryButton:hover { background:%12; border-color:%12; }"
             "QPushButton#primaryButton:pressed { background:%11; }"
             "QPushButton#primaryButton:disabled,QPushButton#dangerButton:disabled { background:%3; color:%5; border-color:%3; }"
             "QPushButton#dangerButton { background:%15; color:white; border:1px solid %15; font-weight:600; }"
             "QPushButton#dangerButton:hover { background:%16; border-color:%16; }"
-            "QPushButton#languageBox { text-align:left; background:%6; border:1px solid %3; border-radius:12px; padding:4px 34px 4px 10px; font-weight:500; }"
-            "QPushButton#languageBox:hover { background:%7; border-color:%13; }"
+            "QPushButton#languageBox { text-align:left; background:%6; border:1px solid %3; border-radius:4px; padding:4px 34px 4px 10px; font-weight:500; }"
+            "QPushButton#languageBox:hover { background:%7; }"
             "QPushButton#languageBox:pressed { background:%8; }"
             "QPushButton#languageBox::menu-indicator { image:none; width:0; }"
-            "QMenu#languageMenu { background:%6; border:1px solid %3; border-radius:12px; padding:6px; }"
-            "QMenu#languageMenu::item { background:transparent; color:%1; padding:8px 14px 8px 32px; margin:1px 0; border-radius:7px; }"
+            "QMenu#languageMenu { background:%6; border:1px solid %3; border-radius:8px; padding:4px; }"
+            "QMenu#languageMenu::item { background:transparent; color:%1; padding:8px 14px 8px 32px; margin:1px 0; border-radius:4px; }"
             "QMenu#languageMenu::item:selected { background:%7; color:%4; }"
             "QMenu#languageMenu::item:checked { background:%8; color:%4; font-weight:600; }"
             "QMenu#languageMenu::indicator { width:14px; height:14px; left:10px; }"
@@ -1367,34 +1348,35 @@ private:
             "QToolButton#linkButton:hover { color:%12; text-decoration:underline; }"
             "QCheckBox { spacing:9px; min-height:22px; }"
             "QCheckBox:disabled { color:%5; }"
-            "QCheckBox::indicator { width:17px; height:17px; border:1px solid %13; border-radius:5px; background:%10; }"
+            "QCheckBox::indicator { width:18px; height:18px; border:1px solid %18; border-radius:4px; background:%10; }"
             "QCheckBox::indicator:hover { border-color:%11; }"
             "QCheckBox::indicator:checked { background:%11; border-color:%11; }"
             "QCheckBox[danger='true']::indicator:checked { background:%15; border-color:%15; }"
             "QCheckBox::indicator:disabled { background:%2; border-color:%3; }"
-            "QProgressBar { background:%10; border:none; border-radius:4px; }"
-            "QProgressBar::chunk { border-radius:4px; background:qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 %11, stop:1 %12); }"
+            "QProgressBar { background:%3; border:none; border-radius:2px; max-height:4px; }"
+            "QProgressBar::chunk { border-radius:2px; background:%11; }"
             "QScrollBar:vertical { background:transparent; width:10px; margin:2px 0; }"
-            "QScrollBar::handle:vertical { background:%3; min-height:30px; border-radius:4px; margin:0 2px; }"
-            "QScrollBar::handle:vertical:hover { background:%13; }"
+            "QScrollBar::handle:vertical { background:%13; min-height:30px; border-radius:3px; margin:0 3px; }"
+            "QScrollBar::handle:vertical:hover { background:%18; }"
             "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; }"
             "QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical { background:transparent; }"
             "QFrame#footer { background:transparent; border:none; border-top:1px solid %3; }"
             "QMessageBox { background:%2; } QMessageBox QLabel { color:%1; }"
-            "QToolTip { background:%6; color:%1; border:1px solid %3; padding:4px 6px; }"
+            "QToolTip { background:%6; color:%1; border:1px solid %3; border-radius:4px; padding:4px 6px; }"
         );
         const QColor strongBorder = mix(theme_.border, theme_.muted, 0.35);
         const QString colors[] = {theme_.text.name(), theme_.page.name(), theme_.border.name(), theme_.heading.name(),
                                   theme_.muted.name(), theme_.surface.name(), theme_.hover.name(), theme_.selected.name(),
                                   theme_.accent.name(), theme_.input.name(), theme_.accent.name(), theme_.accentHover.name(),
-                                  strongBorder.name(), theme_.success.name(), theme_.danger.name(), theme_.dangerHover.name()};
-        for (int i = 16; i >= 1; --i) qss.replace(QStringLiteral("%") + QString::number(i), colors[i - 1]);
+                                  strongBorder.name(), theme_.success.name(), theme_.danger.name(), theme_.dangerHover.name(),
+                                  theme_.accentFg.name(), theme_.fieldBottom.name()};
+        for (int i = 18; i >= 1; --i) qss.replace(QStringLiteral("%") + QString::number(i), colors[i - 1]);
         setStyleSheet(qss);
         QPalette p = palette();
         p.setColor(QPalette::Window, theme_.page); p.setColor(QPalette::WindowText, theme_.text);
         p.setColor(QPalette::Base, theme_.input); p.setColor(QPalette::Text, theme_.text);
         p.setColor(QPalette::Button, theme_.surface); p.setColor(QPalette::ButtonText, theme_.text);
-        p.setColor(QPalette::Highlight, theme_.accent); p.setColor(QPalette::HighlightedText, Qt::white);
+        p.setColor(QPalette::Highlight, theme_.accent); p.setColor(QPalette::HighlightedText, theme_.accentFg);
         p.setColor(QPalette::PlaceholderText, theme_.muted);
         setPalette(p);
     }
