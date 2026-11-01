@@ -1775,6 +1775,91 @@ void schedule_skip_intro_logos() {
   }
 }
 
+// The game names every save from one ".sl2" literal (ER0000.sl2, its .bak).
+// MO2 asks for another extension through ELDENRING_MO2_SAVE_EXTENSION (three
+// letters, "err" for ELDEN RING Reforged, as its me3 launch saves), and the
+// literal is replaced in place, as Seamless Co-op does for its .co2, before
+// the game first reads its saves.
+void apply_save_extension_setting() {
+  wchar_t extension[8] = {};
+  const DWORD length =
+      GetEnvironmentVariableW(L"ELDENRING_MO2_SAVE_EXTENSION", extension, 8);
+  if (length == 0) {
+    return;
+  }
+  if (length != 3) {
+    log_line("Save extension skipped: MO2 asked for an extension that is not three letters:",
+             length < 8 ? extension : nullptr);
+    return;
+  }
+
+  HMODULE image = GetModuleHandleW(nullptr);
+  const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
+  if (image == nullptr || dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0) {
+    log_line("Save extension skipped: invalid game image header.");
+    return;
+  }
+  const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(
+      reinterpret_cast<const unsigned char*>(image) + dos->e_lfanew);
+  if (nt->Signature != IMAGE_NT_SIGNATURE ||
+      nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    log_line("Save extension skipped: game image is not 64-bit PE.");
+    return;
+  }
+
+  static const wchar_t kSaveExtension[] = L".sl2";
+  constexpr size_t kPatternSize = 4 * sizeof(wchar_t);
+  unsigned char* image_base = reinterpret_cast<unsigned char*>(image);
+  const size_t image_size = nt->OptionalHeader.SizeOfImage;
+  const IMAGE_SECTION_HEADER* sections = IMAGE_FIRST_SECTION(nt);
+  unsigned char* found = nullptr;
+  unsigned int matches = 0;
+  for (unsigned int index = 0; index < nt->FileHeader.NumberOfSections; ++index) {
+    const IMAGE_SECTION_HEADER& section = sections[index];
+    // the literal is constant data: code and writable data are not searched
+    if ((section.Characteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_WRITE)) != 0 ||
+        (section.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA) == 0 ||
+        section.VirtualAddress >= image_size) {
+      continue;
+    }
+    size_t section_size = section.Misc.VirtualSize;
+    if (section_size == 0) {
+      section_size = section.SizeOfRawData;
+    }
+    if (section_size > image_size - section.VirtualAddress) {
+      section_size = image_size - section.VirtualAddress;
+    }
+    unsigned char* data = image_base + section.VirtualAddress;
+    for (size_t offset = 0; offset + kPatternSize <= section_size; offset += 2) {
+      if (memcmp(data + offset, kSaveExtension, kPatternSize) == 0) {
+        found = data + offset;
+        ++matches;
+      }
+    }
+  }
+  if (matches != 1) {
+    char message[96] = {};
+    snprintf(message, sizeof(message),
+             "Save extension skipped: expected one .sl2 literal in the game, found %u.",
+             matches);
+    log_line(message);
+    return;
+  }
+
+  DWORD old_protection = 0;
+  if (!VirtualProtect(found, kPatternSize, PAGE_READWRITE, &old_protection)) {
+    log_line("Save extension skipped: the .sl2 literal could not be made writable.");
+    return;
+  }
+  wchar_t* literal = reinterpret_cast<wchar_t*>(found);
+  for (int character = 0; character < 3; ++character) {
+    literal[character + 1] = extension[character];
+  }
+  DWORD unused = 0;
+  VirtualProtect(found, kPatternSize, old_protection, &unused);
+  log_line("Saves use the extension MO2 asked for:", literal);
+}
+
 DWORD WINAPI bridge_worker(void*) {
   schedule_skip_intro_logos();
   read_native_initializer_requests();
@@ -1827,11 +1912,13 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.36.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.37.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
     install_startup_window_hooks();
+    // before the game's main thread runs: it reads the saves early
+    apply_save_extension_setting();
     HANDLE thread = CreateThread(nullptr, 0, bridge_worker, nullptr, 0, nullptr);
     if (thread != nullptr) {
       CloseHandle(thread);

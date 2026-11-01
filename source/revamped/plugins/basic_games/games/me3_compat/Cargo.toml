@@ -1,0 +1,20 @@
+[package]
+name = "eldenring_mo2_me3_compat"
+version = "0.1.0"
+edition = "2021"
+description = "MO2 Revamped: what me3 does for ELDEN RING Reforged beside loading it: Arxan neutralized before the entry point and the oversized regulation kept out of the save"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+dearxan = "=0.5.2"
+log = "0.4"
+from-singleton = "=3.0.1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

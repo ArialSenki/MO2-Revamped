@@ -278,12 +278,13 @@ function Copy-RuntimeTree {
 }
 
 function Copy-RevampedSources {
-    param([string]$DestinationRoot, [string]$BridgePath)
+    param([string]$DestinationRoot, [string]$BridgePath, [string]$Me3CompatPath)
     $pluginSource = Join-Path $repoRoot 'source\revamped\plugins'
     $pluginDestination = Join-Path $DestinationRoot 'plugins'
     foreach ($file in Get-ChildItem -LiteralPath $pluginSource -File -Recurse -Force) {
         if ($file.Extension -notin @('.py', '.dll')) { continue }
-        if ($file.Name -ieq 'eldenring_mo2_bridge.dll' -or $file.FullName -match '\\(__pycache__|vendor)\\') { continue }
+        # both native DLLs are built for the release; me3_compat\ holds only their source and build output
+        if ($file.Name -ieq 'eldenring_mo2_bridge.dll' -or $file.FullName -match '\\(__pycache__|vendor|me3_compat)\\') { continue }
         $relative = $file.FullName.Substring($pluginSource.Length).TrimStart('\')
         if (Test-ExcludedRuntimeFile -RelativePath $relative) { continue }
         $destination = Join-Path $pluginDestination $relative
@@ -300,6 +301,7 @@ function Copy-RevampedSources {
     $bridgeDestination = Join-Path $pluginDestination 'basic_games\games\eldenring_mo2_bridge.dll'
     New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($bridgeDestination)) | Out-Null
     Copy-Item -LiteralPath $BridgePath -Destination $bridgeDestination -Force
+    Copy-Item -LiteralPath $Me3CompatPath -Destination (Join-Path $pluginDestination 'basic_games\games\eldenring_mo2_me3_compat.dll') -Force
 
     $themeSource = Join-Path $repoRoot 'source\revamped\themes\stylesheets'
     $themeDestination = Join-Path $DestinationRoot 'stylesheets'
@@ -585,7 +587,7 @@ function Copy-EldenRingPlugins {
         'installer_fomod_csharp.dll', 'installer_fomod.dll', 'installer_manual.dll',
         'installer_quick.dll', 'mo2_revamped_info.py', 'preview_base.dll'
     )
-    $allowedGameFiles = @('__init__.py', 'eldenring_mo2_bridge.dll', 'game_eldenring_mo2.py')
+    $allowedGameFiles = @('__init__.py', 'eldenring_mo2_bridge.dll', 'eldenring_mo2_me3_compat.dll', 'game_eldenring_mo2.py')
     New-Item -ItemType Directory -Force -Path $targetPlugins | Out-Null
     foreach ($file in Get-ChildItem -LiteralPath $sourcePlugins -File -Recurse -Force) {
         $relative = $file.FullName.Substring($sourcePlugins.Length).TrimStart('\')
@@ -618,7 +620,8 @@ function Copy-EldenRingPlugins {
         'eldenring_mo2_native_profile_tool.py', 'eldenring_mo2_save_isolation.py',
         'eldenring_mo2_startup_tool.py', 'eldenring_mo2_archive_installer\installer.py',
         'basic_games\games\game_eldenring_mo2.py',
-        'basic_games\games\eldenring_mo2_bridge.dll', 'plugin_python\plugin_python.dll',
+        'basic_games\games\eldenring_mo2_bridge.dll', 'basic_games\games\eldenring_mo2_me3_compat.dll',
+        'plugin_python\plugin_python.dll',
         'plugin_python\dlls\python312.dll', 'plugin_python\libs\pythoncore.zip',
         'plugin_python\libs\_ssl.pyd', 'plugin_python\libs\_hashlib.pyd'
     )) {
@@ -773,6 +776,15 @@ $bridgeBuildScript = Join-Path $repoRoot 'source\revamped\plugins\basic_games\ga
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $bridgePath -PathType Leaf)) {
     throw 'Building the Elden Ring native bridge failed.'
 }
+# ELDEN RING Reforged's Arxan and regulation fixes (Rust, see me3_compat\build.cmd)
+$me3CompatSource = Join-Path $repoRoot 'source\revamped\plugins\basic_games\games\me3_compat'
+$me3CompatPath = Join-Path $buildRoot 'eldenring_mo2_me3_compat.dll'
+& cmd.exe /c (Join-Path $me3CompatSource 'build.cmd')
+$me3CompatBuilt = Join-Path $me3CompatSource 'eldenring_mo2_me3_compat.dll'
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $me3CompatBuilt -PathType Leaf)) {
+    throw 'Building the Elden Ring me3 compatibility DLL failed.'
+}
+Copy-Item -LiteralPath $me3CompatBuilt -Destination $me3CompatPath -Force
 
 $generalUninstallerStub = Join-Path $buildRoot 'unins000-general.exe'
 $eldenRingUninstallerStub = Join-Path $buildRoot 'unins000-eldenring.exe'
@@ -786,7 +798,7 @@ $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
 Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage
 Move-WebEngineProcessToDlls -DestinationRoot $fullStage
-Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath
+Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath -Me3CompatPath $me3CompatPath
 Copy-OpenSslRuntime -RuntimeSource $openSslRuntimeRoot -DestinationRoot $fullStage
 Copy-PythonRuntime -RuntimeSource $pythonRuntimeRoot -DestinationRoot $fullStage
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force

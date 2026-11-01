@@ -1365,6 +1365,18 @@ Os programas que não estão ocultos aparecem na lista Programa da janela princi
   <context>
     <name>EldenRingArchiveInstaller</name>
     <message>
+      <source>Also prepare Reforged's online mode?</source>
+      <translation>Preparar também o modo online do Reforged?</translation>
+    </message>
+    <message>
+      <source>MO2 runs ELDEN RING Reforged itself, offline, together with your other mods. With online mode, MO2 also keeps Reforged's own launcher and adds the executable &quot;ELDEN RING Reforged (online)&quot; the next time it starts. Online, Reforged allows no other mods or DLLs. It takes no extra disk space.
+
+Reinstall the mod to change this.</source>
+      <translation>O MO2 executa o ELDEN RING Reforged por conta própria, offline, junto com seus outros mods. Com o modo online, o MO2 também mantém o launcher do Reforged e adiciona o executável &quot;ELDEN RING Reforged (online)&quot; na próxima vez que iniciar. Online, o Reforged não permite outros mods nem DLLs. Não ocupa espaço extra em disco.
+
+Reinstale o mod para mudar isso.</translation>
+    </message>
+    <message>
       <source>Elden Ring Archive Layout Installer</source>
       <translation>Instalador de estrutura de pacotes do Elden Ring</translation>
     </message>

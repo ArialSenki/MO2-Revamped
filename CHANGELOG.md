@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+### ELDEN RING Reforged
+
+- The archive installer recognizes ELDEN RING Reforged and installs it without
+  the layout choice: its game files at the game root and its natives in
+  `DLLs`. Its launcher, me3 and setup tool are left out.
+- Reforged runs from MO2, offline, with your other mods. MO2 hands
+  `reforged.dll` the attach config it expects from me3. A new MO2 DLL,
+  `eldenring_mo2_me3_compat.dll`, does what me3 does for it: it disables Arxan
+  and keeps the oversized regulation out of the save, so saving after the
+  first time no longer fails.
+- The bridge names the saves `ER0000.err`, as Reforged does, unless Seamless
+  Co-op is active. Save Isolation, the Saves list and save transfers recognize
+  `.err`, and a new instance can start from a Reforged save.
+- Online mode (optional, asked at install): the installer keeps Reforged's
+  release with its own launcher in `_ReforgedOnline`, hard-linked, so it
+  takes no extra disk space. After a restart MO2 adds the executable
+  "ELDEN RING Reforged (online)", which starts outside the VFS with the
+  profile's saves and is listed in Save Isolation > Programs. A console
+  launcher started outside the VFS, like Reforged's, now opens in a visible
+  window instead of waiting at a prompt nobody can see.
+- The game folders `expression`, `font` and `other` are recognized as game
+  files. A mod's copy of `me3_mod_host.dll` or `libzstd.dll` is never loaded
+  as a native.
+
 ### Removed
 
 - The me3 and Mod Engine 2 integrations of the developer mode, with their game

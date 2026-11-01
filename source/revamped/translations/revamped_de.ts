@@ -1365,6 +1365,18 @@ Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste ne
   <context>
     <name>EldenRingArchiveInstaller</name>
     <message>
+      <source>Also prepare Reforged's online mode?</source>
+      <translation>Auch den Online-Modus von Reforged vorbereiten?</translation>
+    </message>
+    <message>
+      <source>MO2 runs ELDEN RING Reforged itself, offline, together with your other mods. With online mode, MO2 also keeps Reforged's own launcher and adds the executable &quot;ELDEN RING Reforged (online)&quot; the next time it starts. Online, Reforged allows no other mods or DLLs. It takes no extra disk space.
+
+Reinstall the mod to change this.</source>
+      <translation>MO2 startet ELDEN RING Reforged selbst, offline, zusammen mit deinen anderen Mods. Mit dem Online-Modus behält MO2 zusätzlich den eigenen Launcher von Reforged und fügt beim nächsten Start die ausführbare Datei „ELDEN RING Reforged (online)“ hinzu. Online erlaubt Reforged keine anderen Mods oder DLLs. Es belegt keinen zusätzlichen Speicherplatz.
+
+Installiere den Mod neu, um das zu ändern.</translation>
+    </message>
+    <message>
       <source>Elden Ring Archive Layout Installer</source>
       <translation>Elden-Ring-Installer für Archivstruktur</translation>
     </message>

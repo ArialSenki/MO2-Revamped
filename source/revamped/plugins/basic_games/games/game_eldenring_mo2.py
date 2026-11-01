@@ -221,7 +221,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
     _legacy_dll_directories = {"external_dlls", "mo2_dlls", "mods"}
     # folders whose DLLs are already where the standard layout puts them
     _managed_dll_directories = frozenset(
-        {_dll_directory.casefold(), *_legacy_dll_directories, "plugins"}
+        # _reforgedonline: the Reforged release kept for its own launcher
+        {_dll_directory.casefold(), *_legacy_dll_directories, "plugins", "_reforgedonline"}
     )
 
     _asset_directories = {
@@ -234,13 +235,18 @@ class EldenRingModDataChecker(BasicModDataChecker):
         "common",
         "cutscene",
         "event",
+        "expression",
         "facegen",
+        "font",
         "map",
         "material",
         "menu",
         "msg",
         "movie",
         "movie_dlc",
+        # game files with no folder of their own (ELDEN RING Reforged's
+        # autoinvadepoint, decaltex and mapinfotex)
+        "other",
         "param",
         "parts",
         "script",
@@ -469,8 +475,12 @@ class EldenRingModDataChecker(BasicModDataChecker):
         self,
         filetree: mobase.IFileTree,
         recognize_mod_engine_paths: bool = True,
+        keep_reforged_online: bool = False,
     ) -> mobase.IFileTree:
         """Apply the standard DLL/assets layout directly to an archive tree."""
+        # ELDEN RING Reforged first: the release it keeps for its own launcher
+        # must stay as it ships, notes and licences included
+        self._reshape_reforged_layout(filetree, keep_reforged_online)
         # Apply MO2's standard root patterns before peeling the outer archive
         # folders. The wrapper scan itself stays at this game-root boundary.
         self._fix_known_layouts(filetree)
@@ -559,6 +569,130 @@ class EldenRingModDataChecker(BasicModDataChecker):
             if not self._merge_package_folder(filetree, folder):
                 return filetree
         return filetree
+
+    # ELDEN RING Reforged ships its own me3 and launcher: its game files are
+    # under mod/ and its natives under internals/modengine/dll. MO2 serves the
+    # files and loads the natives itself, and hands reforged.dll the attach
+    # config me3 would give it (see EldenRingMo2Game._reforged_attach_config).
+    _reforged_native_path = "internals/modengine/dll"
+    _reforged_dll = "reforged.dll"
+    # what the launcher, me3 and the UI setup tool (Gideon) need, not the game
+    _reforged_tool_paths = ("mod/menu/deploy",)
+    # the release kept for Reforged's own launcher (its online mode); its DLLs
+    # (me3's among them) are never MO2's natives
+    ReforgedOnlineDirectory = "_ReforgedOnline"
+    ReforgedLauncherPath = "internals/launcher/ReforgedLauncher.exe"
+
+    @classmethod
+    def reforged_root(
+        cls, filetree: mobase.IFileTree, depth: int = 0
+    ) -> mobase.IFileTree | None:
+        """The folder holding an ELDEN RING Reforged release, if any."""
+        natives = cls._directory_at_path(filetree, cls._reforged_native_path)
+        if natives is not None and any(
+            not is_directory(entry) and entry.name().casefold() == cls._reforged_dll
+            for entry in natives
+        ):
+            return filetree
+        if depth >= 2:
+            return None
+        folders = [entry for entry in filetree if is_directory(entry)]
+        for folder in folders:
+            found = cls.reforged_root(folder, depth + 1)
+            if found is not None:
+                return found
+        return None
+
+    def _reshape_reforged_layout(
+        self, filetree: mobase.IFileTree, keep_online: bool = False
+    ) -> bool:
+        """Lay out ELDEN RING Reforged as MO2 runs it: mod/ at the game root,
+        its natives in DLLs, and nothing of its launcher or me3.
+
+        With ``keep_online`` the rest of the release (launcher, me3, its tools
+        and notes) moves whole into ``_ReforgedOnline``; the archive installer
+        then hard-links the game files and natives back to their release paths
+        there, so Reforged's own launcher finds the release it checks for its
+        online mode without a second copy on disk. ``self.reforged_layout``
+        records what goes where.
+        """
+        self.reforged_layout = None
+        root = self.reforged_root(filetree)
+        if root is None:
+            return False
+        online = self.ReforgedOnlineDirectory
+        natives = self._directory_at_path(root, self._reforged_native_path)
+        mod_folder = self._direct_directory(root, "mod")
+        for path in self._reforged_tool_paths:
+            tool = self._directory_at_path(root, path)
+            if tool is None:
+                continue
+            if keep_online:
+                filetree.move(tool, f"{online}/{Path(path).parent.as_posix()}/")
+            else:
+                tool.detach()
+        native_names = []
+        for entry in list(natives):
+            if not is_directory(entry) and Path(entry.name()).suffix.casefold() in {
+                ".dll",
+                ".ini",
+            }:
+                native_names.append(entry.name())
+                filetree.move(entry, f"{self._dll_directory}/")
+        mod_entries = []
+        if mod_folder is not None:
+            mod_entries = [entry.name() for entry in mod_folder]
+            if mod_folder.detach():
+                filetree.merge(mod_folder)
+        if keep_online:
+            # everything else of the release, as it ships
+            release = [entry for entry in root] if root is not filetree else [
+                entry
+                for entry in filetree
+                if entry.name() not in mod_entries
+                and entry.name().casefold() != self._dll_directory.casefold()
+                and entry.name() != online
+            ]
+            for entry in release:
+                filetree.move(entry, f"{online}/")
+            if root is not filetree:
+                root.detach()
+            self.reforged_layout = {
+                "online": online,
+                "mod_entries": mod_entries,
+                "natives": native_names,
+            }
+            qInfo(
+                "Elden Ring MO2: laid out ELDEN RING Reforged for MO2 and kept its "
+                f"release for its online mode in {online}."
+            )
+            return True
+        # a release at the archive root keeps its notes (README, CHANGELOG)
+        leftovers = (
+            [root]
+            if root is not filetree
+            else [
+                entry
+                for entry in filetree
+                if (
+                    is_directory(entry)
+                    and entry.name().casefold()
+                    in {"internals", "dll", "addons", "extras", "troubleshooting"}
+                )
+                or (
+                    not is_directory(entry)
+                    and Path(entry.name()).suffix.casefold() in {".bat", ".sh", ".lnk"}
+                )
+            ]
+        )
+        for entry in leftovers:
+            entry.detach()
+        qInfo(
+            "Elden Ring MO2: laid out ELDEN RING Reforged for MO2: its game files "
+            "at the game root and its natives in DLLs; its launcher and me3 are "
+            "not installed."
+        )
+        return True
 
     def _unwrap_mod_engine_paths(self, filetree: mobase.IFileTree) -> None:
         """Map a recognized Mod Engine ``mod/`` payload to the game root."""
@@ -692,8 +826,12 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 )
                 if is_directory(entry):
                     # Seamless Co-op reads its settings, locale and crash
-                    # reporter beside its DLL: its folder stays whole
-                    if entry.name().casefold() == "seamlesscoop":
+                    # reporter beside its DLL: its folder stays whole, as
+                    # does the Reforged release kept for its own launcher
+                    if entry.name().casefold() in {
+                        "seamlesscoop",
+                        self.ReforgedOnlineDirectory.casefold(),
+                    }:
                         continue
                     if entry.name().casefold() == "fonts":
                         font_directories.append((entry, parent_path))
@@ -1159,7 +1297,9 @@ class EldenRingModDataChecker(BasicModDataChecker):
             return
         self._fix_basic_patterns(filetree)
         for entry in list(filetree):
-            if is_directory(entry):
+            if is_directory(entry) and not (
+                depth == 0 and entry.name() == self.ReforgedOnlineDirectory
+            ):
                 self._fix_known_layouts(entry, depth + 1)
 
     def _fix_basic_patterns(self, filetree: mobase.IFileTree) -> mobase.IFileTree:
@@ -1241,7 +1381,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if name == "drag files into here":
             return self._contains_supported_payload(folder)
 
-        if name in self._content_directories:
+        if name in self._content_directories or name == self.ReforgedOnlineDirectory.casefold():
             return False
 
         entries = list(folder)
@@ -1608,8 +1748,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.75"
-    NativeBridgeVersion = "0.5.0-alpha.36"
+    Version = "0.5.0-alpha.76"
+    NativeBridgeVersion = "0.5.0-alpha.37"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -1668,6 +1808,8 @@ class EldenRingMo2Game(BasicGame):
             "me3-launcher.exe",
             # the launcher of older Seamless Co-op releases
             "launch_elden_ring_seamlesscoop.exe",
+            # ELDEN RING Reforged's own launcher (its online mode)
+            "reforgedlauncher.exe",
         }
     )
     # Mod Engine 2 starts the game from launchmod_eldenring.bat (Convergence
@@ -1688,6 +1830,8 @@ class EldenRingMo2Game(BasicGame):
             "nrsc_launcher.exe",
             "me3.exe",
             "me3-launcher.exe",
+            # its online mode checks a clean release: no MO2 files or DLLs
+            "reforgedlauncher.exe",
         }
     )
     LaunchMethodsFilename = "eldenring_mo2_launch_methods.json"
@@ -1937,7 +2081,7 @@ class EldenRingMo2Game(BasicGame):
             entry_name = entry.name.casefold()
             if entry_name == "steam_autocloud.vdf" or entry_name.startswith(cls.SavePrefix):
                 return True
-            if entry_name.endswith((".sl2", ".sl2.bak", ".co2", ".co2.bak")):
+            if entry_name.endswith((".sl2", ".sl2.bak", ".co2", ".co2.bak", ".err", ".err.bak")):
                 return True
         return False
 
@@ -2144,7 +2288,26 @@ class EldenRingMo2Game(BasicGame):
             directory = ""
         if not directory:
             directory = str(Path(app_path).parent)
-        started, pid = QProcess.startDetached(app_path, self._split_arguments(args), directory)
+        if self._is_console_program(app_path):
+            # a console launcher (ELDEN RING Reforged's asks for its settings
+            # there): QProcess gives it a console nobody sees, so it waited
+            # for a key forever. It gets a window of its own.
+            startup = subprocess.STARTUPINFO()
+            startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startup.wShowWindow = 1  # SW_SHOWNORMAL
+            try:
+                process = subprocess.Popen(
+                    [app_path, *self._split_arguments(args)],
+                    cwd=directory,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE,
+                    startupinfo=startup,
+                )
+                started, pid = True, process.pid
+            except OSError as error:
+                qCritical(f"Elden Ring MO2: could not start '{app_path}': {error}")
+                started, pid = False, 0
+        else:
+            started, pid = QProcess.startDetached(app_path, self._split_arguments(args), directory)
         if started:
             qInfo(
                 f"Elden Ring MO2: started '{Path(app_path).name}' outside the VFS "
@@ -2153,6 +2316,20 @@ class EldenRingMo2Game(BasicGame):
         else:
             qCritical(f"Elden Ring MO2: could not start '{app_path}' outside the VFS.")
         return bool(started)
+
+    @staticmethod
+    def _is_console_program(app_path: str) -> bool:
+        """Whether the executable's PE header asks for a console."""
+        try:
+            with open(app_path, "rb") as image:
+                header = image.read(4096)
+            pe = int.from_bytes(header[0x3C:0x40], "little")
+            if header[:2] != b"MZ" or header[pe : pe + 4] != b"PE\0\0":
+                return False
+            # the optional header's Subsystem field; 3 is IMAGE_SUBSYSTEM_WINDOWS_CUI
+            return int.from_bytes(header[pe + 0x5C : pe + 0x5E], "little") == 3
+        except (OSError, ValueError):
+            return False
 
     def _restore_global_save_quarantine(
         self, session_directory: Path, global_save_root: Path
@@ -4401,7 +4578,120 @@ class EldenRingMo2Game(BasicGame):
             )
         else:
             os.environ.pop(initializer_key, None)
+
+        self._reforged_env_previous = {
+            key: os.environ.get(key)
+            for key in (self.ReforgedAttachEnvironment, self.SaveExtensionEnvironment)
+        }
+        self._reforged_env_active = True
+        reforged_natives = self._reforged_natives()
+        # Seamless Co-op names the saves itself (its save_file_extension)
+        save_extension = (
+            self.ReforgedSaveExtension
+            if reforged_natives is not None and self._active_seamless_dll() is None
+            else None
+        )
+        if reforged_natives is not None:
+            os.environ[self.ReforgedAttachEnvironment] = self._reforged_attach_config(
+                reforged_natives, save_extension
+            )
+            qInfo(
+                "Elden Ring MO2: ELDEN RING Reforged is active; its natives get "
+                "the me3 attach config of this MO2 run."
+            )
+        else:
+            os.environ.pop(self.ReforgedAttachEnvironment, None)
+        if save_extension is not None:
+            os.environ[self.SaveExtensionEnvironment] = save_extension
+            qInfo(
+                f"Elden Ring MO2: the bridge names the saves ER0000.{save_extension}, "
+                "as ELDEN RING Reforged does."
+            )
+        else:
+            os.environ.pop(self.SaveExtensionEnvironment, None)
         qInfo("Elden Ring MO2: profile launch options passed to bridge.")
+
+    # reforged.dll reads me3's attach config (JSON, the AttachConfig of me3's
+    # launcher-attach-protocol crate) from this variable and stops the game
+    # when it is missing
+    ReforgedAttachEnvironment = "ME3_ATTACH_CONFIG"
+    # the bridge replaces the game's .sl2 with these three letters
+    SaveExtensionEnvironment = "ELDENRING_MO2_SAVE_EXTENSION"
+    # ELDEN RING Reforged's me3 profile saves to ER0000.err
+    ReforgedSaveExtension = "err"
+
+    # What me3 does for ELDEN RING Reforged beside loading it: Arxan
+    # neutralized (disable_arxan) and the raw regulation kept out of the
+    # save (its oversized_regulation_fix: Reforged's regulation.bin no longer
+    # fits in a save, so every save after the first failed with "run
+    # Reforged through its dedicated launcher"). Source in me3_compat/.
+    Me3Compat = "eldenring_mo2_me3_compat.dll"
+
+    def _me3_compat_load(
+        self, forced_loads: list[mobase.ExecutableForcedLoadSetting]
+    ) -> mobase.ExecutableForcedLoadSetting | None:
+        """The me3 compatibility DLL's forced load when a mod needs it."""
+        if not any(
+            Path(load.library()).name.casefold() == EldenRingModDataChecker._reforged_dll
+            for load in forced_loads
+        ):
+            return None
+        library = Path(__file__).with_name(self.Me3Compat)
+        if not library.is_file():
+            qWarning(
+                f"Elden Ring MO2: {self.Me3Compat} is missing; ELDEN RING "
+                "Reforged runs with Arxan active and cannot save."
+            )
+            return None
+        return mobase.ExecutableForcedLoadSetting(
+            self.GameProcess, str(library)
+        ).withEnabled(True)
+
+    def _reforged_natives(self) -> list[Path] | None:
+        """This run's native DLLs when ELDEN RING Reforged is among them."""
+        own = {
+            os.path.normcase(str(Path(__file__).with_name(name)))
+            for name in ("eldenring_mo2_bridge.dll", self.Me3Compat)
+        }
+        libraries = [
+            Path(load.library())
+            for load in self.executableForcedLoads()
+            if load.enabled() and os.path.normcase(str(Path(load.library()))) not in own
+        ]
+        if not any(
+            library.name.casefold() == EldenRingModDataChecker._reforged_dll
+            for library in libraries
+        ):
+            return None
+        return libraries
+
+    def _reforged_attach_config(
+        self, libraries: list[Path], save_extension: str | None
+    ) -> str:
+        """me3's attach config for ELDEN RING Reforged run from MO2.
+
+        MO2 has already done me3's part: the game files come from the VFS, the
+        natives are this run's forced loads and the bridge names the saves, so
+        the config lists those, offline (Reforged's online server checks a me3
+        launch).
+        """
+        return json.dumps(
+            {
+                "game": "eldenring",
+                "natives": [{"path": str(library)} for library in libraries],
+                "packages": [
+                    {"id": "mo2", "path": str(Path(self.dataDirectory().absolutePath()))}
+                ],
+                "savefile": f"ER0000.{save_extension}" if save_extension else None,
+                "cache_path": None,
+                "suspend": False,
+                "boot_boost": False,
+                "skip_logos": False,
+                "start_online": False,
+                "disable_arxan": Path(__file__).with_name(self.Me3Compat).is_file(),
+                "skip_steam_init": False,
+            }
+        )
 
     def _restore_profile_config_environment(self) -> None:
         if getattr(self, "_profile_config_env_active", False):
@@ -4424,6 +4714,15 @@ class EldenRingMo2Game(BasicGame):
             self._native_initializer_env_previous = None
             self._native_initializer_env_active = False
 
+        if getattr(self, "_reforged_env_active", False):
+            for key, previous in self._reforged_env_previous.items():
+                if previous is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = previous
+            self._reforged_env_previous = {}
+            self._reforged_env_active = False
+
     def documentsDirectory(self) -> QDir:
         appdata = os.environ.get("APPDATA")
         if not appdata:
@@ -4435,13 +4734,13 @@ class EldenRingMo2Game(BasicGame):
 
     def listSaves(self, folder: QDir) -> list[mobase.ISaveGame]:
         # only the saves the game reads: <account>/ER0000.sl2, a Seamless
-        # Co-op .co2 or a Convergence .cnv. A recursive search would also
+        # Co-op .co2, a Convergence .cnv or an ELDEN RING Reforged .err. A recursive search would also
         # list the named save profiles and backups kept inside the shared
         # route.
         return [
             BasicGameSaveGame(file)
             for file in self._route_save_files(Path(folder.absolutePath()))
-            if file.suffix.casefold() in {".sl2", ".co2", ".cnv"}
+            if file.suffix.casefold() in {".sl2", ".co2", ".cnv", ".err"}
         ]
 
     def executables(self) -> list[mobase.ExecutableInfo]:
@@ -4452,7 +4751,34 @@ class EldenRingMo2Game(BasicGame):
         executable = mobase.ExecutableInfo(f"{self.GameName} (MO2)", game_exe)
         executable = executable.withWorkingDirectory(self.dataDirectory())
         executable = executable.withSteamAppId(str(self.GameSteamId))
-        return [executable]
+        return [executable, *self._reforged_online_executables()]
+
+    def _reforged_online_executables(self) -> list[mobase.ExecutableInfo]:
+        """Reforged's own launcher, for its online mode, from each installed
+        ELDEN RING Reforged that kept its release (archive installer choice).
+        It starts outside the VFS (AutoSwapLaunchers), as online needs."""
+        try:
+            mods_path = Path(self._organizer.modsPath())
+        except (AttributeError, RuntimeError, TypeError):
+            return []
+        online = EldenRingModDataChecker.ReforgedOnlineDirectory
+        executables = []
+        try:
+            launchers = sorted(
+                mods_path.glob(f"*/{online}/{EldenRingModDataChecker.ReforgedLauncherPath}")
+            )
+        except OSError:
+            return []
+        for index, launcher in enumerate(launchers):
+            title = "ELDEN RING Reforged (online)"
+            if index:
+                title += f" ({launcher.parents[3].name})"
+            executables.append(
+                mobase.ExecutableInfo(title, QFileInfo(str(launcher)))
+                .withWorkingDirectory(QDir(str(launcher.parents[2])))
+                .withSteamAppId(str(self.GameSteamId))
+            )
+        return executables
 
     def _is_me2_launch(self, app_path: str) -> bool:
         return (
@@ -4650,6 +4976,11 @@ class EldenRingMo2Game(BasicGame):
             forced_loads.append(
                 mobase.ExecutableForcedLoadSetting(self.GameProcess, str(seamless)).withEnabled(True)
             )
+        arxan = self._me3_compat_load(forced_loads)
+        if arxan is not None:
+            # first: it hooks the entry point before anything else runs
+            notes.append(f"Elden Ring MO2: queued the me3 compatibility DLL {self.Me3Compat}.")
+            forced_loads.insert(0, arxan)
         self._log_forced_load_notes(notes)
         return forced_loads
 
@@ -4742,8 +5073,12 @@ class EldenRingMo2Game(BasicGame):
         # libraries the game itself imports: a copy in a mod is never
         # force-loaded ahead of the game's own
         name = name.casefold()
-        return name == "steam_api64.dll" or (
-            name.startswith("oo2core_") and name.endswith("_win64.dll")
+        return (
+            name == "steam_api64.dll"
+            or (name.startswith("oo2core_") and name.endswith("_win64.dll"))
+            # a mod loader's own host and the tools' libraries, shipped by
+            # releases that bundle me3 (ELDEN RING Reforged): never a mod
+            or name in {"me3_mod_host.dll", "libzstd.dll"}
         )
 
     def _active_root_layout_dlls(

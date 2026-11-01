@@ -311,6 +311,8 @@ _GAME_LAUNCHERS = frozenset(
         "modengine2_launcher.exe",
         "me3.exe",
         "me3-launcher.exe",
+        # ELDEN RING Reforged's own launcher (its online mode)
+        "reforgedlauncher.exe",
     }
 )
 _AUTO_SWAP_LAUNCHERS = frozenset(
@@ -320,6 +322,7 @@ _AUTO_SWAP_LAUNCHERS = frozenset(
         "nrsc_launcher.exe",
         "me3.exe",
         "me3-launcher.exe",
+        "reforgedlauncher.exe",
     }
 )
 _LAUNCH_METHODS_FILENAME = "eldenring_mo2_launch_methods.json"
@@ -388,8 +391,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     CreateInstanceGameSaveProfileNoteName = "eldenRingCreateInstanceGameSaveProfileNote"
     SaveProfilesDirectoryName = "save_profiles"
     # the save types a new instance can start from: the game's own, Seamless
-    # Co-op's and Convergence's; each keeps its extension when copied
-    StartingSaveSuffixes = (".sl2", ".co2", ".cnv")
+    # Co-op's, Convergence's and ELDEN RING Reforged's; each keeps its
+    # extension when copied
+    StartingSaveSuffixes = (".sl2", ".co2", ".cnv", ".err")
     ProfileSaveProfileKey = "profile_save_profile"
     InstanceSaveProfileKey = "instance_save_profile"
 
@@ -441,7 +445,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             application.installEventFilter(self.__ui_event_filter)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
-        qInfo("Elden Ring MO2: save isolation alpha.77 initialized.")
+        qInfo("Elden Ring MO2: save isolation alpha.78 initialized.")
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
@@ -493,7 +497,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 77)
+        return mobase.VersionInfo(0, 5, 0, 78)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -1684,7 +1688,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
 
             save_list.clear()
-            files = self._list_transferable_saves(source_root, (".sl2", ".co2"))
+            files = self._list_transferable_saves(source_root, (".sl2", ".co2", ".err"))
             for save_path in files:
                 try:
                     relative_path = save_path.relative_to(source_root)
@@ -1726,7 +1730,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return
 
             source_path = Path(item.data(Qt.ItemDataRole.UserRole))
-            if source_path.suffix.casefold() not in (".sl2", ".co2") or self._is_reparse_point(
+            if source_path.suffix.casefold() not in (".sl2", ".co2", ".err") or self._is_reparse_point(
                 source_path
             ):
                 self._show_notice(
@@ -2160,7 +2164,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             (".sl2", _tr("Elden Ring, the game's own saves (.sl2)")),
             (".co2", _tr("Seamless Co-op (.co2)")),
             (".cnv", _tr("Convergence (.cnv)")),
+            (".err", "ELDEN RING Reforged (.err)"),
         ):
+            if suffix == ".err" and self._game_key != "eldenring":
+                continue
             type_box = QCheckBox(title, card)
             type_box.setObjectName(
                 f"{self.CreateInstanceCardName}_type_{suffix.lstrip('.')}"
@@ -3616,7 +3623,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_combo.setMinimumContentsLength(34)
         source_combo.view().setMinimumWidth(480)
         try:
-            sources = self._create_instance_save_sources((".sl2", ".co2"))
+            sources = self._create_instance_save_sources((".sl2", ".co2", ".err"))
         except (OSError, RuntimeError, ValueError):
             sources = []
         for label, source_path, relative_path in sources:
@@ -3939,6 +3946,30 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         "available": False,
                     }
                 )
+        if self._game_key == "eldenring":
+            # ELDEN RING Reforged: the bridge names its saves ER0000.err, as
+            # its own me3 launch does (Seamless Co-op's extension wins)
+            reforged_mod = next(
+                (
+                    mod_name
+                    for mod_name, folder in self._active_mod_folders()
+                    if (folder / "DLLs" / "reforged.dll").is_file()
+                ),
+                None,
+            )
+            formats.append(
+                {
+                    "key": "reforged",
+                    "name": "ELDEN RING Reforged",
+                    "source": (
+                        _tr("From the mod {mod}").format(mod=reforged_mod)
+                        if reforged_mod
+                        else _tr("Mod not active")
+                    ),
+                    "extension": "err",
+                    "available": reforged_mod is not None,
+                }
+            )
         return formats
 
     @staticmethod

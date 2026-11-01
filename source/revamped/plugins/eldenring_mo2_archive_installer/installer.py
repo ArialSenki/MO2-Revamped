@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, Union
 import json
 import os
+import shutil
 import uuid
 
 import mobase
@@ -63,6 +64,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     _omit_md_files_key = "omit_md_files"
     _recognize_mod_engine_paths_key = "recognize_mod_engine_paths"
     _installed_native_route_index_key = "installed_native_route_index"
+    # ELDEN RING Reforged: keep its release for its own launcher (online mode)
+    _reforged_online_key = "reforged_online"
     _archive_preview_entry_limit = 250
     _supported_payload_extensions = {
         ".acb",
@@ -128,7 +131,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
-        qInfo("Elden Ring MO2: archive layout installer alpha.72 initialized.")
+        qInfo("Elden Ring MO2: archive layout installer alpha.73 initialized.")
         return True
 
     def name(self) -> str:
@@ -146,7 +149,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 72)
+        return mobase.VersionInfo(0, 5, 0, 73)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -189,6 +192,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         self._default_omit_txt = False
         self._default_omit_md = False
         self._default_recognize_mod_engine_paths = True
+        self._default_reforged_online = True
+        self._pending_reforged_layout = None
         self._default_mod_name = None
         if self._organizer is not None:
             self._organizer.setPluginSetting(
@@ -207,6 +212,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             )
             self._default_recognize_mod_engine_paths = bool(
                 settings.get(self._recognize_mod_engine_paths_key, True)
+            )
+            self._default_reforged_online = bool(
+                settings.get(self._reforged_online_key, True)
             )
 
     def onInstallationEnd(
@@ -232,6 +240,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                         recognize_mod_engine_paths,
                     ),
                 )
+                if self._pending_reforged_layout is not None:
+                    settings_to_store += (
+                        (self._reforged_online_key, self._pending_reforged_layout["keep"]),
+                    )
+                    layout = self._pending_reforged_layout["layout"]
+                    if layout is not None:
+                        self._link_reforged_release(Path(new_mod.absolutePath()), layout)
                 installed_dll_routes = self._collect_installed_dll_routes(
                     Path(new_mod.absolutePath())
                 )
@@ -281,6 +296,77 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 )
             self._pending_choice = None
             self._pending_source_dll_routes = []
+            self._pending_reforged_layout = None
+
+    def _ask_reforged_online(self) -> bool:
+        """Whether to keep ELDEN RING Reforged's release for its own launcher."""
+        box = QtWidgets.QMessageBox()
+        box.setWindowTitle("ELDEN RING Reforged")
+        box.setIcon(QtWidgets.QMessageBox.Icon.Question)
+        box.setText(self.tr("Also prepare Reforged's online mode?"))
+        box.setInformativeText(
+            self.tr(
+                "MO2 runs ELDEN RING Reforged itself, offline, together with your "
+                "other mods. With online mode, MO2 also keeps Reforged's own "
+                "launcher and adds the executable \"ELDEN RING Reforged (online)\" "
+                "the next time it starts. Online, Reforged allows no other mods "
+                "or DLLs. It takes no extra disk space.\n\n"
+                "Reinstall the mod to change this."
+            )
+        )
+        yes = box.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+        no = box.addButton(QtWidgets.QMessageBox.StandardButton.No)
+        box.setDefaultButton(yes if self._default_reforged_online else no)
+        box.exec()
+        keep = box.clickedButton() is yes
+        qInfo(
+            "Elden Ring MO2: ELDEN RING Reforged online mode "
+            f"{'kept' if keep else 'not kept'} for this install."
+        )
+        return keep
+
+    @staticmethod
+    def _link_reforged_release(mod_root: Path, layout: dict) -> None:
+        """Hard-links the game files and natives back to their paths in the
+        kept Reforged release, so its launcher checks the files it shipped
+        without a second copy on disk (a copy where links are impossible)."""
+        online = mod_root / layout["online"]
+        pairs: list[tuple[Path, Path]] = []
+        for name in layout["mod_entries"]:
+            source = mod_root / name
+            target = online / "mod" / name
+            if source.is_dir():
+                for current, _directories, filenames in os.walk(source):
+                    for filename in filenames:
+                        path = Path(current) / filename
+                        pairs.append((path, target / path.relative_to(source)))
+            elif source.is_file():
+                pairs.append((source, target))
+        for name in layout["natives"]:
+            pairs.append(
+                (mod_root / "DLLs" / name, online / "internals" / "modengine" / "dll" / name)
+            )
+        linked = copied = 0
+        for source, target in pairs:
+            if target.exists():
+                continue
+            try:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    os.link(source, target)
+                    linked += 1
+                except OSError:
+                    shutil.copy2(source, target)
+                    copied += 1
+            except OSError as error:
+                qCritical(
+                    "Elden Ring MO2: could not place a Reforged file for its "
+                    f"launcher: {target}: {error}"
+                )
+        qInfo(
+            "Elden Ring MO2: Reforged release for its launcher ready in "
+            f"{online}: {linked} hard link(s), {copied} copy(ies)."
+        )
 
     @classmethod
     def _collect_tree_dll_routes(
@@ -312,6 +398,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 directory
                 for directory in directories
                 if not (current_path / directory).is_symlink()
+                # the Reforged release kept for its own launcher (me3's DLLs)
+                and not (current_path == mod_root and directory == "_ReforgedOnline")
             ]
             for filename in filenames:
                 if Path(filename).suffix.casefold() != ".dll":
@@ -548,11 +636,29 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             return mobase.InstallResult.NOT_ATTEMPTED
 
         default_mod_name = self._default_mod_name or str(name)
-        qInfo(
-            "Elden Ring MO2: opening archive layout choice for "
-            f"{default_mod_name}."
-        )
-        choice = self._ask_archive_layout(default_mod_name, tree)
+        try:
+            from basic_games.games.game_eldenring_mo2 import (
+                EldenRingModDataChecker,
+            )
+
+            reforged = EldenRingModDataChecker.reforged_root(tree) is not None
+        except Exception:
+            reforged = False
+        if reforged:
+            # only one layout runs ELDEN RING Reforged from MO2, and its
+            # action/*.txt are game files: no choice to make
+            qInfo(
+                "Elden Ring MO2: ELDEN RING Reforged recognized in "
+                f"{default_mod_name}; installing it in the MO2 layout."
+            )
+            choice = (False, False, False, True, default_mod_name)
+            keep_reforged_online = self._ask_reforged_online()
+        else:
+            qInfo(
+                "Elden Ring MO2: opening archive layout choice for "
+                f"{default_mod_name}."
+            )
+            choice = self._ask_archive_layout(default_mod_name, tree)
         if choice is None:
             return mobase.InstallResult.CANCELED
         if choice == "manual":
@@ -627,7 +733,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 tree = checker.normalize_standard_layout(
                     tree,
                     recognize_mod_engine_paths=recognize_mod_engine_paths,
+                    keep_reforged_online=reforged and keep_reforged_online,
                 )
+                if reforged:
+                    self._pending_reforged_layout = {
+                        "keep": keep_reforged_online,
+                        "layout": getattr(checker, "reforged_layout", None),
+                    }
         except Exception as error:
             qCritical(
                 "Elden Ring MO2: could not apply the selected archive layout "
