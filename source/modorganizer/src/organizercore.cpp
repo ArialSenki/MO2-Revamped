@@ -555,9 +555,10 @@ std::wstring OrganizerCore::getGlobalCoreDumpPath()
   return {};
 }
 
-void OrganizerCore::setCurrentProfile(const QString& profileName)
+void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
 {
-  if ((m_CurrentProfile != nullptr) && (profileName == m_CurrentProfile->name())) {
+  if (!reload && (m_CurrentProfile != nullptr) &&
+      (profileName == m_CurrentProfile->name())) {
     return;
   }
 

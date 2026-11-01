@@ -2,6 +2,7 @@
 #include "circularuihelpers.h"
 #include "settings.h"
 
+#include <QApplication>
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QLabel>
@@ -41,8 +42,8 @@ DeveloperSettingsTab::DeveloperSettingsTab(Settings& s, SettingsDialog& d, QWidg
   new QVBoxLayout(developer);
   m_developerMode = addBox(
       developer, QStringLiteral("developerModeBox"), QObject::tr("Developer mode"),
-      QObject::tr("Shows this page. Turning it off restarts MO2; seven taps on the "
-                  "version in About turn it on again."),
+      QObject::tr("Shows this page. Turned off, it is gone the next time Settings "
+                  "opens; seven taps on the version in About turn it on again."),
       true);
   // the section titles sit inside the cards, as on the other pages
   MOBase::CircularUi::addGroupHeading(
@@ -57,7 +58,8 @@ void DeveloperSettingsTab::update()
 {
   if (m_developerMode->isChecked() != GlobalSettings::developerMode()) {
     GlobalSettings::setDeveloperMode(m_developerMode->isChecked());
-    // plugins read the developer mode as MO2 starts
-    dialog().setExitNeeded(dialog().exitNeeded() | Exit::Restart);
+    // only this page reads it, the next time Settings opens: no restart. The
+    // About page's seven taps look at the application's property.
+    qApp->setProperty("revampedDeveloperMode", m_developerMode->isChecked());
   }
 }

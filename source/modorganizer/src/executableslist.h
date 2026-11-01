@@ -119,6 +119,14 @@ public:
   void resetFromPlugin(MOBase::IPluginGame const* game);
 
   /**
+   * @brief adds the plugin's executables that are not in the list yet, as on
+   *        startup; a plugin can offer new ones while MO2 runs (a launcher
+   *        that came with a mod just installed)
+   * @return whether any executable was added
+   **/
+  bool addMissingFromPlugin(MOBase::IPluginGame const* game);
+
+  /**
    * @brief writes the current list to the settings
    */
   void store(Settings& settings);

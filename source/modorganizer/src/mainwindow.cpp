@@ -2996,6 +2996,37 @@ void MainWindow::requestRestartFromPlugin()
   }
 }
 
+bool MainWindow::reloadProfileFromPlugin()
+{
+  Profile* profile = m_OrganizerCore.currentProfile();
+  if (profile == nullptr) {
+    return false;
+  }
+
+  log::info("reloading profile '{}' for a plugin", profile->name());
+  if (profile->exists()) {
+    m_OrganizerCore.saveCurrentLists();
+  }
+
+  // the same steps as choosing a profile in the profile box; MO2's lock keeps
+  // plugins' windows closed while a program it started runs
+  m_OrganizerCore.setCurrentProfile(profile->name(), true);
+  m_SavesTab->refreshSaveList();
+  m_OrganizerCore.refresh();
+  ui->modList->updateModCount();
+  ui->espList->updatePluginCount();
+  ui->statusBar->updateNormalMessage(m_OrganizerCore);
+
+  auto saveGames = m_OrganizerCore.gameFeatures().gameFeature<LocalSavegames>();
+  if (saveGames != nullptr) {
+    if (saveGames->prepareProfile(m_OrganizerCore.currentProfile())) {
+      m_SavesTab->refreshSaveList();
+    }
+  }
+
+  return true;
+}
+
 void MainWindow::closeEvent(QCloseEvent* event)
 {
   if (isVisible()) {
@@ -4231,9 +4262,9 @@ void MainWindow::showEldenRingGuide()
            "game still receives <code>ER0000.sl2</code>.</p>")},
        {tr("Restart and online safety"),
         tr("<p>Changes between profile-isolated and instance-shared saves "
-           "take effect on the next game launch without restarting MO2. "
-           "Restart MO2 only when switching to or from the global Steam save. "
-           "Routing only changes save files; it does not change Easy Anti-Cheat "
+           "take effect on the next game launch. Switching to or from the "
+           "global Steam save applies when the Save Isolation window closes; "
+           "MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat "
            "or network mode, and does not make modded saves safe for online "
            "play.</p>")}});
 
@@ -4377,6 +4408,23 @@ void MainWindow::onDirectoryStructureChanged()
   // updated now
   scheduleCheckForProblems();
   m_DataTab->updateTree();
+
+  // a mod just installed can bring a launcher the game plugin offers as an
+  // executable (ELDEN RING Reforged's online mode): it is listed now instead
+  // of on the next start, and saved so plugins reading the instance's
+  // executables see it too
+  if (const auto* game = m_OrganizerCore.managedGame()) {
+    if (m_OrganizerCore.executablesList()->addMissingFromPlugin(game)) {
+      const QString selected = ui->executablesListBox->currentText();
+      m_OrganizerCore.executablesList()->store(m_OrganizerCore.settings());
+      m_OrganizerCore.settings().sync();
+      refreshExecutablesList();
+      const int index = ui->executablesListBox->findText(selected);
+      if (index > 0) {
+        ui->executablesListBox->setCurrentIndex(index);
+      }
+    }
+  }
 }
 
 void MainWindow::modInstalled(const QString& modName)

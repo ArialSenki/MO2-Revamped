@@ -18,7 +18,7 @@ import traceback
 import uuid
 
 import mobase
-from PyQt6.QtCore import QCoreApplication, QEvent, QMetaObject, QObject, QRectF, QSettings, QSize, QTimer, QUrl, Qt, qInfo
+from PyQt6.QtCore import Q_RETURN_ARG, QCoreApplication, QEvent, QMetaObject, QObject, QRectF, QSettings, QSize, QTimer, QUrl, Qt, qInfo
 from PyQt6.QtGui import QColor, QDesktopServices, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -308,9 +308,6 @@ _GAME_LAUNCHERS = frozenset(
         "ersc_launcher.exe",
         "launch_elden_ring_seamlesscoop.exe",
         "nrsc_launcher.exe",
-        "modengine2_launcher.exe",
-        "me3.exe",
-        "me3-launcher.exe",
         # ELDEN RING Reforged's own launcher (its online mode)
         "reforgedlauncher.exe",
     }
@@ -320,8 +317,6 @@ _AUTO_SWAP_LAUNCHERS = frozenset(
         "ersc_launcher.exe",
         "launch_elden_ring_seamlesscoop.exe",
         "nrsc_launcher.exe",
-        "me3.exe",
-        "me3-launcher.exe",
         "reforgedlauncher.exe",
     }
 )
@@ -449,11 +444,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
-        if main_window is None or not QMetaObject.invokeMethod(
-            main_window,
-            "requestRestartFromPlugin",
-            Qt.ConnectionType.QueuedConnection,
-        ):
+        # PyQt6's invokeMethod returns None for a void slot and raises when
+        # MO2 has no such slot
+        try:
+            accepted = main_window is not None and QMetaObject.invokeMethod(
+                main_window,
+                "requestRestartFromPlugin",
+                Qt.ConnectionType.QueuedConnection,
+            ) is not False
+        except (RuntimeError, TypeError):
+            accepted = False
+        if not accepted:
             qInfo(
                 "Elden Ring MO2 Save Isolation: MO2 restart request was not "
                 "accepted; the saved route needs a manual restart."
@@ -2150,9 +2151,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             dialog, save_checkbox, self.ProfileIsolated
         )
         status.setText(
-            _tr("Saved for the new instance's Default profile. Local routes apply when "
-            "that instance starts; restart MO2 only when switching to or from the "
-            "global Steam save.")
+            _tr("Saved for the new instance's Default profile. Its route applies when "
+            "that instance starts.")
         )
 
         # the save types this instance plays with: the starting saves offered
@@ -3767,11 +3767,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     @staticmethod
     def _is_game_launch_binary(binary: str) -> bool:
         name = Path(binary).name.casefold()
-        return (
-            name in _GAME_LAUNCHERS
-            or name == _game()["process"]
-            or (name.startswith("launchmod") and name.endswith((".bat", ".cmd")))
-        )
+        return name in _GAME_LAUNCHERS or name == _game()["process"]
 
     def _launch_methods(self) -> dict[str, str]:
         base = self._instance_base()
@@ -4057,6 +4053,16 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # the left, cards of setting rows on the right; the theme's global
         # Fluent rules (fluentNav, fluentCard, fluentSettingRow, fluentSwitch)
         # style it, so it follows every Revamped theme.
+        # a route to or from the global Steam save: MO2 reloads the profile
+        # once the window closes; also one saved earlier that could not be
+        # applied yet (MO2's profile-specific saves still say otherwise)
+        try:
+            stored_mode = self._read_mode(profile)
+            local_saves = bool(profile.localSavesEnabled())
+            stale_route = (stored_mode == self.GlobalShared) == local_saves
+        except Exception:
+            stale_route = False
+        reload_on_close = {"needed": stale_route}
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingSaveIsolationDialog")
         dialog.setWindowTitle(_tr("Elden Ring Saves"))
@@ -4264,9 +4270,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # --- Programs ------------------------------------------------------
         programs_page = add_page(
             0xE756, _tr("Programs"),
-            _tr("me3, and a Seamless Co-op installed in the game folder, do not work inside "
-            "MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's "
-            "saves in place for the run, then collects them when the game closes."),
+            _tr("A Seamless Co-op installed in the game folder and ELDEN RING Reforged's "
+            "online launcher do not work inside MO2's virtual folder (VFS). MO2 starts "
+            "them outside it and puts this profile's saves in place for the run, then "
+            "collects them when the game closes."),
         )
         programs_card = add_card(programs_page, _tr("Start outside the VFS"))
         programs_page.addStretch(1)
@@ -4365,9 +4372,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     reason = _tr("Starts the Seamless Co-op installed in the game folder, without MO2's "
                                  "mods. Activate a Seamless Co-op mod and it starts the game through MO2 "
                                  "instead.")
-                elif binary_name in {"me3.exe", "me3-launcher.exe"}:
-                    reason = _tr("The game crashes with me3 inside the VFS, so MO2 starts it outside "
-                                 "with its own profile.")
+                elif binary_name == "reforgedlauncher.exe":
+                    reason = _tr("Reforged's online mode allows no other mods, so MO2 starts its "
+                                 "launcher outside the VFS with this profile's saves.")
                 else:
                     reason = _tr("Outside the VFS, MO2's mods and native DLLs are not loaded.")
                 if not (direct_game or hands_over):
@@ -4474,8 +4481,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 mode == self.GlobalShared and local_saves_on
             ):
                 status_label.setText(
-                    _tr("<b>Route saved.</b> Restart MO2 before launching so it can "
-                    "reload this profile's save mode.")
+                    _tr("<b>Route saved.</b> MO2 applies it when you close this "
+                    "window, without restarting.")
                 )
             else:
                 status_label.setText("")
@@ -4746,38 +4753,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
                 return
 
-            running = _running_process_names()
-            if running is not None and _game()["process"] in running:
-                # a restart now would find the Steam saves still hidden by the
-                # game's own launch
-                status_label.setText(
-                    _tr("<b>Route saved for {profile}.</b> Close the game, then "
-                    "restart MO2 before launching it again to apply the Steam "
-                    "save route.").format(profile=profile.name())
-                )
-                return
-
-            restart_now = self._ask_confirmation(
-                dialog,
-                _tr("Restart MO2 to apply Steam save routing?"),
-                _tr("The save route for {profile} has been saved.\n\n"
-                "This change switches to or from the global Steam save. Restart "
-                "Mod Organizer before launching Elden Ring so it can reload the "
-                "profile-specific save setting, or choose Later and restart manually.").format(
-                    profile=profile.name()
-                ),
-                _tr("Restart now"),
-                _tr("Later"),
-                "info",
+            # MO2 reloads the profile once this window closes: the window
+            # keeps using this profile object, which a reload replaces
+            reload_on_close["needed"] = True
+            status_label.setText(
+                _tr("<b>Route saved for {profile}.</b> MO2 applies it when you "
+                "close this window, without restarting.").format(profile=profile.name())
             )
-            if restart_now:
-                dialog.accept()
-                QTimer.singleShot(0, self._request_mo2_restart)
-            else:
-                status_label.setText(
-                    _tr("<b>Route saved for {profile}.</b> Restart MO2 "
-                    "before launching Elden Ring to apply the Steam save route.").format(profile=profile.name())
-                )
 
         def route_selection_changed(*_args) -> None:
             refresh_details()
@@ -4810,6 +4792,55 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             f"{bool(save_profile_combo.currentData())}."
         )
         dialog.exec()
+        if reload_on_close["needed"]:
+            QTimer.singleShot(0, self._apply_saved_route)
+
+    def _apply_saved_route(self) -> None:
+        """Reloads the current profile in MO2, as switching to another profile
+        and back does, so a route to or from the global Steam save applies
+        without a restart. An MO2 without that reload offers the restart."""
+        main_window = self.__parent_widget
+        running = _running_process_names()
+        # while the game or a launcher runs, or Steam saves are still set
+        # aside, a route change could put one route's saves in another's
+        # place: it waits, and this window applies it once closed again
+        busy = running is not None and (
+            _game()["process"] in running or bool(running & _GAME_LAUNCHERS)
+        )
+        if busy or EldenRingMo2SaveDiagnose._pending_sessions():
+            self._show_notice(
+                main_window,
+                _tr("Route saved"),
+                _tr("Close the game and its launcher, then open Elden Ring Saves "
+                "and close it again: MO2 applies the save route then."),
+                "info",
+            )
+            return
+        try:
+            # the slot's own answer: PyQt6 returns None without Q_RETURN_ARG
+            reloaded = main_window is not None and QMetaObject.invokeMethod(
+                main_window,
+                "reloadProfileFromPlugin",
+                Qt.ConnectionType.DirectConnection,
+                Q_RETURN_ARG(bool),
+            ) is True
+        except (RuntimeError, TypeError):
+            reloaded = False
+        if reloaded:
+            qInfo("Elden Ring MO2 Save Isolation: MO2 reloaded the profile for the new route.")
+            return
+        qInfo("Elden Ring MO2 Save Isolation: this MO2 cannot reload the profile; offering a restart.")
+        if self._ask_confirmation(
+            main_window,
+            _tr("Restart MO2 to apply Steam save routing?"),
+            _tr("This change switches to or from the global Steam save. Restart "
+            "Mod Organizer before launching Elden Ring so it can reload the "
+            "profile-specific save setting, or choose Later and restart manually."),
+            _tr("Restart now"),
+            _tr("Later"),
+            "info",
+        ):
+            self._request_mo2_restart()
 
 
 class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):

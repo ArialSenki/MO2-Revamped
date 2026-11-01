@@ -39,7 +39,7 @@ isolated Elden Ring installations from 1.0.1 are updated the same way.
   startup options and the archive installer, as in Elden Ring.
 - **Safer saves.** While the game runs from an isolated profile, the Steam
   save folders are set aside and come back unchanged when it closes, with
-  every launcher (Mod Engine 2, Seamless Co-op, me3). Saves are backed up
+  every launcher (Seamless Co-op, ELDEN RING Reforged). Saves are backed up
   before each launch and can be restored from Save Isolation.
 - **Complete installation.** One MO2 Revamped for every game MO2 supports;
   isolated copies for one game are made from the New instance wizard.
@@ -57,7 +57,7 @@ The full list is in the [changelog](CHANGELOG.md).
 - **Archive installer** (Elden Ring, Nightreign) — keep a mod's original
   folder layout or use MO2's standard layout.
 - **Native DLL Profile** — per-profile order of native DLL mods, loaded through
-  the Revamped native bridge, also with Seamless Co-op, Mod Engine 2 and me3.
+  the Revamped native bridge, also with Seamless Co-op and ELDEN RING Reforged.
 - **Startup Options** — launch minimized, black background, and skip the
   intro logos (Elden Ring).
 - **Save Isolation** — separate save routes per profile or instance, named

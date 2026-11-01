@@ -175,6 +175,23 @@ void ExecutablesList::resetFromPlugin(MOBase::IPluginGame const* game)
   }
 }
 
+bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game)
+{
+  Q_ASSERT(game != nullptr);
+
+  bool added = false;
+
+  for (const auto& exe : getPluginExecutables(game)) {
+    if (!titleExists(exe.title())) {
+      log::debug("adding new plugin executable '{}'", exe.title());
+      setExecutable(exe, IgnoreExisting);
+      added = true;
+    }
+  }
+
+  return added;
+}
+
 void ExecutablesList::addFromPlugin(IPluginGame const* game, SetFlags flags)
 {
   Q_ASSERT(game != nullptr);

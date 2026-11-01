@@ -268,7 +268,9 @@ public:
   }
 
   Profile* currentProfile() const { return m_CurrentProfile.get(); }
-  void setCurrentProfile(const QString& profileName);
+  // reload: load the profile again even when it is the current one, so
+  // settings changed on disk (an Elden Ring save route) take effect
+  void setCurrentProfile(const QString& profileName, bool reload = false);
 
   std::vector<QString> enabledArchives();
 

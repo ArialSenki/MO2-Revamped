@@ -2362,12 +2362,20 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
   <context>
     <name>EldenRingSaveIsolation</name>
     <message>
+      <source>Route saved</source>
+      <translation>Route gespeichert</translation>
+    </message>
+    <message>
+      <source>Close the game and its launcher, then open Elden Ring Saves and close it again: MO2 applies the save route then.</source>
+      <translation>Schließe das Spiel und seinen Launcher, öffne dann Elden-Ring-Spielstände und schließe es wieder: Dann übernimmt MO2 die Spielstandroute.</translation>
+    </message>
+    <message>
       <source>{count} files</source>
       <translation>{count} Dateien</translation>
     </message>
     <message>
-      <source>The game crashes with me3 inside the VFS, so MO2 starts it outside with its own profile.</source>
-      <translation>Das Spiel stürzt mit me3 im VFS ab, daher startet MO2 es außerhalb mit seinem eigenen Profil.</translation>
+      <source>Reforged's online mode allows no other mods, so MO2 starts its launcher outside the VFS with this profile's saves.</source>
+      <translation>Der Online-Modus von Reforged erlaubt keine anderen Mods, daher startet MO2 seinen Launcher außerhalb des VFS mit den Spielständen dieses Profils.</translation>
     </message>
     <message>
       <source>Name this profile.</source>
@@ -2426,8 +2434,8 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <translation>Gilt nur für Elden-Ring-Profile in dieser neuen Instanz.</translation>
     </message>
     <message>
-      <source>Saved for the new instance's Default profile. Local routes apply when that instance starts; restart MO2 only when switching to or from the global Steam save.</source>
-      <translation>Für das Default-Profil der neuen Instanz gespeichert. Lokale Routen gelten beim Start dieser Instanz; starte MO2 nur neu, wenn du zum oder vom globalen Steam-Spielstand wechselst.</translation>
+      <source>Saved for the new instance's Default profile. Its route applies when that instance starts.</source>
+      <translation>Für das Profil Default der neuen Instanz gespeichert. Seine Route gilt, sobald diese Instanz startet.</translation>
     </message>
     <message>
       <source>Game save profile</source>
@@ -2982,8 +2990,8 @@ Das vorherige Ziel wurde verschoben nach:
       <translation>&lt;b&gt;Ausgewählter Spielstandordner:&lt;/b&gt;&lt;br&gt;{path}</translation>
     </message>
     <message>
-      <source>&lt;b&gt;Route saved.&lt;/b&gt; Restart MO2 before launching so it can reload this profile's save mode.</source>
-      <translation>&lt;b&gt;Route gespeichert.&lt;/b&gt; Starte MO2 vor dem Spielstart neu, damit es den Speichermodus dieses Profils neu lädt.</translation>
+      <source>&lt;b&gt;Route saved.&lt;/b&gt; MO2 applies it when you close this window, without restarting.</source>
+      <translation>&lt;b&gt;Route gespeichert.&lt;/b&gt; MO2 übernimmt sie beim Schließen dieses Fensters, ohne Neustart.</translation>
     </message>
     <message>
       <source>Could not read route</source>
@@ -3006,12 +3014,8 @@ Das vorherige Ziel wurde verschoben nach:
       <translation>Route konnte nicht gespeichert werden</translation>
     </message>
     <message>
-      <source>The save route for {profile} has been saved.
-
-This change switches to or from the global Steam save. Restart Mod Organizer before launching Elden Ring so it can reload the profile-specific save setting, or choose Later and restart manually.</source>
-      <translation>Die Speicherroute für {profile} wurde gespeichert.
-
-Diese Änderung wechselt zum oder vom globalen Steam-Spielstand. Starte Mod Organizer vor Elden Ring neu, damit die profilspezifische Spielstandeinstellung neu geladen wird, oder wähle Später und starte manuell neu.</translation>
+      <source>This change switches to or from the global Steam save. Restart Mod Organizer before launching Elden Ring so it can reload the profile-specific save setting, or choose Later and restart manually.</source>
+      <translation>Diese Änderung wechselt zum oder vom globalen Steam-Spielstand. Starte Mod Organizer vor dem Start von Elden Ring neu, damit die profilspezifische Spielstandeinstellung neu geladen wird, oder wähle Später und starte selbst neu.</translation>
     </message>
     <message>
       <source>MO2 profile saves — {profile} (standard)</source>
@@ -3348,8 +3352,8 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>Jedes benannte Spielstandprofil hat einen eigenen Ordner. MO2 stellt Elden Ring den gewählten Spielstand als ER0000.sl2 bereit (ER0000.co2 mit Seamless Co-op); beim Importieren bleibt die Quelle unverändert.</translation>
     </message>
     <message>
-      <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; Close the game, then restart MO2 before launching it again to apply the Steam save route.</source>
-      <translation>&lt;b&gt;Route für {profile} gespeichert.&lt;/b&gt; Schließe das Spiel und starte MO2 neu, bevor du es wieder startest, damit die Steam-Spielstandroute gilt.</translation>
+      <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; MO2 applies it when you close this window, without restarting.</source>
+      <translation>&lt;b&gt;Route für {profile} gespeichert.&lt;/b&gt; MO2 übernimmt sie beim Schließen dieses Fensters, ohne Neustart.</translation>
     </message>
     <message>
       <source>Save folders were set aside in the recovery folder</source>
@@ -3656,8 +3660,8 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
       <translation>Startet innerhalb des VFS mit allen MO2-Mods und mit Seamless Co-op aus der Mod {mod}.</translation>
     </message>
     <message>
-      <source>me3, and a Seamless Co-op installed in the game folder, do not work inside MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's saves in place for the run, then collects them when the game closes.</source>
-      <translation>me3 und ein im Spielordner installiertes Seamless Co-op funktionieren nicht im virtuellen Ordner von MO2 (VFS). MO2 startet sie außerhalb davon, legt die Spielstände dieses Profils für die Sitzung bereit und holt sie zurück, wenn das Spiel geschlossen wird.</translation>
+      <source>A Seamless Co-op installed in the game folder and ELDEN RING Reforged's online launcher do not work inside MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Ein im Spielordner installiertes Seamless Co-op und der Online-Launcher von ELDEN RING Reforged funktionieren nicht im virtuellen Ordner von MO2 (VFS). MO2 startet sie außerhalb, legt die Spielstände dieses Profils für die Sitzung bereit und holt sie zurück, wenn das Spiel geschlossen wird.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>
@@ -5699,8 +5703,8 @@ Immer ausblenden: Trenner nie anzeigen</translation>
       <translation>Neustart und Online-Sicherheit</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch without restarting MO2. Restart MO2 only when switching to or from the global Steam save. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Wechsel zwischen profilgetrennten und instanzweit geteilten Spielständen wirken beim nächsten Spielstart, ohne MO2 neu zu starten. Starte MO2 nur neu, wenn du zum oder vom globalen Steam-Spielstand wechselst. Die Umleitung ändert nur Speicherdateien; sie ändert weder Easy Anti-Cheat noch den Netzwerkmodus und macht gemoddete Spielstände nicht sicher für das Online-Spiel.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Wechsel zwischen profilgetrennten und instanzweit geteilten Spielständen wirken beim nächsten Spielstart. Der Wechsel zum oder vom globalen Steam-Spielstand gilt, sobald das Fenster Save Isolation geschlossen wird; MO2 muss dafür nie neu starten. Die Umleitung ändert nur Speicherdateien; sie ändert weder Easy Anti-Cheat noch den Netzwerkmodus und macht gemoddete Spielstände nicht sicher für das Online-Spiel.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Data and launch</source>
@@ -8765,8 +8769,8 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <translation>OK</translation>
     </message>
       <message>
-      <source>Shows this page. Turning it off restarts MO2; seven taps on the version in About turn it on again.</source>
-      <translation>Zeigt diese Seite. Ausschalten startet MO2 neu; sieben Tipps auf die Version unter Über schalten ihn wieder ein.</translation>
+      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About turn it on again.</source>
+      <translation>Zeigt diese Seite. Ausgeschaltet ist sie beim nächsten Öffnen der Einstellungen weg; sieben Tipps auf die Version unter Über schalten ihn wieder ein.</translation>
     </message>
 </context>
   <context>

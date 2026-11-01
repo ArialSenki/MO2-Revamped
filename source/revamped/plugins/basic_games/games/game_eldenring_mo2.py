@@ -1790,37 +1790,22 @@ class EldenRingMo2Game(BasicGame):
     # launcher run with a Seamless mod active starts the game through MO2)
     SeamlessLaunchers = frozenset({"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe"})
     SeamlessDll = "ersc.dll"
-    # Mod Engine 2 knows Elden Ring by this target; it has none for Nightreign.
-    # A Mod Engine 2 the user adds to the executables starts its extensions
-    # itself, so the bridge leaves them alone for its runs
-    Me2Target: str | None = "er"
-    Me2Launcher = "modengine2_launcher.exe"
-    # Programs that start eldenring.exe themselves (Seamless Co-op, ModEngine2,
-    # me3) get the same save guard as the game, and the guard waits for the
-    # game they start instead of for the launcher.
+    # Programs that start eldenring.exe themselves (Seamless Co-op, Reforged's
+    # launcher) get the same save guard as the game, and the guard waits for
+    # the game they start instead of for the launcher.
     GameLaunchers = frozenset(
         {
             "eldenring.exe",
             "start_protected_game.exe",
             "ersc_launcher.exe",
-            "modengine2_launcher.exe",
-            "me3.exe",
-            "me3-launcher.exe",
             # the launcher of older Seamless Co-op releases
             "launch_elden_ring_seamlesscoop.exe",
             # ELDEN RING Reforged's own launcher (its online mode)
             "reforgedlauncher.exe",
         }
     )
-    # Mod Engine 2 starts the game from launchmod_eldenring.bat (Convergence
-    # ships its own launchmod_*.bat); MO2 may run it through a script host
-    # me3 starts Nightreign too: while that game runs, a me3 process is its
-    # launcher; Easy Anti-Cheat's launcher has the same name in every game, so
-    # only the one in this game's folder counts
-    SharedLaunchers = frozenset({"me3.exe", "me3-launcher.exe"})
     # Launchers that fail under MO2's virtual file system (Seamless Co-op
-    # installed in the game folder stays inactive, me3 crashes the game): MO2
-    # starts them itself,
+    # installed in the game folder stays inactive): MO2 starts them itself,
     # outside the VFS, and swaps the route's saves into the Steam folder for
     # the run. Each executable can be switched either way in Save Isolation.
     AutoSwapLaunchers = frozenset(
@@ -1828,8 +1813,6 @@ class EldenRingMo2Game(BasicGame):
             "ersc_launcher.exe",
             "launch_elden_ring_seamlesscoop.exe",
             "nrsc_launcher.exe",
-            "me3.exe",
-            "me3-launcher.exe",
             # its online mode checks a clean release: no MO2 files or DLLs
             "reforgedlauncher.exe",
         }
@@ -1840,10 +1823,9 @@ class EldenRingMo2Game(BasicGame):
     # in a swap session's recovery folder: the Steam folder's own loose
     # files (GraphicsConfig.xml) while the route's copies stand in for them
     SwapRootFilesDirectoryName = "steam-root-files"
+    # Easy Anti-Cheat's launcher has the same name in every game, so only the
+    # one in this game's folder counts
     AntiCheatLauncher = "start_protected_game.exe"
-    FromSoftwareGameProcesses = frozenset({"eldenring.exe", "nightreign.exe"})
-    LauncherScriptPrefix = "launchmod"
-    ScriptHosts = frozenset({"cmd.exe", "powershell.exe", "pwsh.exe"})
     LauncherStartGrace = 90  # seconds a launcher may take to start the game
     LauncherWaitLimit = 600  # a launcher still open after this is not waited for
     GameWatchInterval = 5000  # milliseconds between checks for the game process
@@ -2086,24 +2068,10 @@ class EldenRingMo2Game(BasicGame):
         return False
 
     @classmethod
-    def _is_launcher_script(cls, name: str) -> bool:
-        name = name.casefold()
-        return name.startswith(cls.LauncherScriptPrefix) and name.endswith((".bat", ".cmd"))
-
-    @classmethod
     def _is_game_launch(cls, app_path: str, args: str = "") -> bool:
         # exact names only: a save tool or another program with a similar
         # name must not hide the Steam saves
-        name = Path(app_path).name.casefold()
-        if name in cls.GameLaunchers or cls._is_launcher_script(name):
-            return True
-        if name in cls.ScriptHosts:
-            return any(
-                cls._is_launcher_script(Path(part.strip("\"'")).name)
-                or Path(part.strip("\"'")).name.casefold() in cls.GameLaunchers
-                for part in args.split()
-            )
-        return False
+        return Path(app_path).name.casefold() in cls.GameLaunchers
 
     @classmethod
     def launch_methods_path(cls, instance_base: Path) -> Path:
@@ -2528,15 +2496,9 @@ class EldenRingMo2Game(BasicGame):
         processes = _running_processes()
         if processes is None:
             return False
-        other_game_running = any(
-            name in self.FromSoftwareGameProcesses and name != self.GameProcess
-            for _pid, name in processes
-        )
         game_directory = None
         for pid, name in processes:
             if name not in self.GameLaunchers or name == self.GameProcess:
-                continue
-            if name in self.SharedLaunchers and other_game_running:
                 continue
             if name == self.AntiCheatLauncher:
                 image = _process_image_path(pid)
@@ -3462,14 +3424,6 @@ class EldenRingMo2Game(BasicGame):
         if direct_game:
             # Seamless Co-op with the game run from MO2
             initializer_entries = initializer_entries + self._seamless_initializer()
-        elif self._is_me2_launch(app_path):
-            # Mod Engine 2 starts its extensions itself; the bridge calling
-            # modengine_ext_init as well crashes the game
-            initializer_entries = [
-                entry
-                for entry in initializer_entries
-                if str(entry.get("initializer", "")).casefold() != "modengine_ext_init"
-            ]
         self._activate_profile_config_environment(profile_config, initializer_entries)
         # a new run only once nothing above blocked the launch: a blocked
         # attempt must not disown the watch of a game that is still running
@@ -3619,9 +3573,8 @@ class EldenRingMo2Game(BasicGame):
                     pass
 
     def _accept_game_launch(self, app_path: str) -> None:
-        # the finished-run hook only gets the path (cmd.exe for a launchmod
-        # script): it recognises this run by it, even when other tools ran
-        # in between
+        # the finished-run hook only gets the path: it recognises this run by
+        # it, even when other tools ran in between
         self._guarded_launches.add(os.path.normcase(str(app_path)))
         # this launch arms its own Overwrite cleanup below, if any
         self._overwrite_cleanup_armed = False
@@ -4780,12 +4733,6 @@ class EldenRingMo2Game(BasicGame):
             )
         return executables
 
-    def _is_me2_launch(self, app_path: str) -> bool:
-        return (
-            self.Me2Target is not None
-            and Path(app_path).name.casefold() == self.Me2Launcher
-        )
-
     def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
         if not self.isActive():
             return []
@@ -5349,8 +5296,7 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     """ELDEN RING NIGHTREIGN: the Elden Ring support with the game's own names.
 
     The saves are %APPDATA%/Nightreign/<SteamID64>/NR0000.sl2 (NR0000.co2
-    with Seamless Co-op), the game is Game/nightreign.exe, and mods are
-    usually started through me3 or the Seamless Co-op launcher."""
+    with Seamless Co-op), the game is Game/nightreign.exe."""
 
     Name = "Elden Ring Nightreign MO2 Support"
     GameName = "ELDEN RING NIGHTREIGN"
@@ -5368,7 +5314,6 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     DisplayName = "Nightreign"
     SeamlessLaunchers = frozenset({"nrsc_launcher.exe"})
     SeamlessDll = "nrsc.dll"
-    Me2Target = None
     GameLaunchers = frozenset(
         {
             "nightreign.exe",
@@ -5376,7 +5321,5 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
             "start_protected_game.exe",
             # Seamless Co-op for Nightreign
             "nrsc_launcher.exe",
-            "me3.exe",
-            "me3-launcher.exe",
         }
     )

@@ -26,15 +26,28 @@
   files. A mod's copy of `me3_mod_host.dll` or `libzstd.dll` is never loaded
   as a native.
 
+### Fewer restarts
+
+- An executable the game plugin offers while MO2 runs (a launcher that came
+  with a mod just installed) is listed at once, and saved for Save
+  Isolation > Programs.
+- Save Isolation: switching to or from the global Steam save applies when its
+  window closes. MO2 reloads the profile, as switching to another profile and
+  back does, instead of restarting.
+- Turning the developer mode on or off no longer restarts MO2.
+
 ### Removed
 
 - The me3 and Mod Engine 2 integrations of the developer mode, with their game
   modes (the Mode selector), their Settings > Developer switches and the
   detection of Mod Engine 2 in the new instance wizard. Instances made for a
   mode stay as ordinary instances, and their "me3 (beta)" and "Mod Engine 2
-  (beta)" entries leave the executables. A me3 or Mod Engine 2 added to the
-  executables by hand keeps the save guard, and mods packaged for Mod Engine 2
-  still install.
+  (beta)" entries leave the executables.
+- Every other trace of me3 and Mod Engine 2 as launchers: their programs and
+  `launchmod_*.bat` scripts no longer get the save guard or a place in Save
+  Isolation > Programs. Mods packaged for Mod Engine 2 (a `mod/` folder) still
+  install, and Seamless Co-op still starts through its Mod Engine 2 entry
+  point.
 
 ## 1.1.0-beta.1 (pre-release) — October 27, 2026
 

@@ -162,6 +162,8 @@ public:
 public slots:
   void refresherProgress(const DirectoryRefreshProgress* p);
   void requestRestartFromPlugin();
+  // loads the current profile again, as switching to another and back does
+  bool reloadProfileFromPlugin();
 
 signals:
   // emitted after the information dialog has been closed, used by tutorials
