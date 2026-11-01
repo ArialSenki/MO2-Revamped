@@ -305,18 +305,12 @@ _GAME_LAUNCHERS = frozenset(
         "eldenring.exe",
         "nightreign.exe",
         "start_protected_game.exe",
-        "ersc_launcher.exe",
-        "launch_elden_ring_seamlesscoop.exe",
-        "nrsc_launcher.exe",
         # ELDEN RING Reforged's own launcher (its online mode)
         "reforgedlauncher.exe",
     }
 )
 _AUTO_SWAP_LAUNCHERS = frozenset(
     {
-        "ersc_launcher.exe",
-        "launch_elden_ring_seamlesscoop.exe",
-        "nrsc_launcher.exe",
         "reforgedlauncher.exe",
     }
 )
@@ -3863,8 +3857,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
     def _detect_save_formats(self) -> list[dict]:
         """The save formats this instance can produce: the game's own, Seamless
-        Co-op's (found in the game folder or an active mod) and alt-saves'
-        (Convergence's .cnv), each with its file extension."""
+        Co-op's (from an active mod) and alt-saves' (Convergence's .cnv), each
+        with its file extension."""
         formats = [
             {
                 "key": "vanilla",
@@ -3874,23 +3868,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "available": True,
             }
         ]
+        # Seamless Co-op runs only from its MO2 mod, with the game
         seamless_dll = None
-        game_directory = self._game_directory()
-        for dll_name in ("ersc.dll", "nrsc.dll"):
-            if game_directory is not None and (game_directory / "SeamlessCoop" / dll_name).is_file():
-                seamless_dll = (game_directory / "SeamlessCoop" / dll_name, _tr("Found in the game folder"))
-                break
-        if seamless_dll is None:
-            for mod_name, folder in self._active_mod_folders():
-                for dll_name in ("ersc.dll", "nrsc.dll"):
-                    if (folder / "SeamlessCoop" / dll_name).is_file():
-                        seamless_dll = (
-                            folder / "SeamlessCoop" / dll_name,
-                            _tr("From the mod {mod}").format(mod=mod_name),
-                        )
-                        break
-                if seamless_dll is not None:
+        for mod_name, folder in self._active_mod_folders():
+            for dll_name in ("ersc.dll", "nrsc.dll"):
+                if (folder / "SeamlessCoop" / dll_name).is_file():
+                    seamless_dll = (
+                        folder / "SeamlessCoop" / dll_name,
+                        _tr("From the mod {mod}").format(mod=mod_name),
+                    )
                     break
+            if seamless_dll is not None:
+                break
         seamless_extension = "co2"
         if seamless_dll is not None:
             settings_name = seamless_dll[0].name.replace(".dll", "_settings.ini")
@@ -4270,10 +4259,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # --- Programs ------------------------------------------------------
         programs_page = add_page(
             0xE756, _tr("Programs"),
-            _tr("A Seamless Co-op installed in the game folder and ELDEN RING Reforged's "
-            "online launcher do not work inside MO2's virtual folder (VFS). MO2 starts "
-            "them outside it and puts this profile's saves in place for the run, then "
-            "collects them when the game closes."),
+            _tr("ELDEN RING Reforged's online launcher does not work inside MO2's virtual "
+            "folder (VFS). MO2 starts it outside and puts this profile's saves in place "
+            "for the run, then collects them when the game closes."),
         )
         programs_card = add_card(programs_page, _tr("Start outside the VFS"))
         programs_page.addStretch(1)
@@ -4347,41 +4335,23 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         def refresh_programs() -> None:
             clear_rows(programs_card)
             methods = self._launch_methods()
-            seamless_names = {"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe", "nrsc_launcher.exe"}
             shown = 0
             for title, binary in self._read_executables():
                 binary_name = Path(binary).name.casefold()
-                if not self._is_game_launch_binary(binary):
+                # the game itself always runs inside the VFS, with every mod
+                # (Seamless Co-op's included): it has no choice to show
+                if not self._is_game_launch_binary(binary) or binary_name == _game()["process"]:
                     continue
                 shown += 1
                 method, by_hand = self._launch_method_of(binary, methods)
-                direct_game = binary_name == _game()["process"]
-                active_seamless = self._seamless_mod()
-                hands_over = binary_name in seamless_names and bool(active_seamless)
-                if direct_game:
-                    if active_seamless:
-                        reason = _tr("Starts inside the VFS with every MO2 mod, and with Seamless Co-op "
-                                     "from the mod {mod}.").format(mod=active_seamless)
-                    else:
-                        reason = _tr("Starts inside the VFS with every MO2 mod. Activate a Seamless Co-op "
-                                     "mod and it starts with the game too.")
-                elif hands_over:
-                    reason = _tr("Starts the game through MO2, inside the VFS with every MO2 mod and "
-                                 "Seamless Co-op from the mod {mod}.").format(mod=active_seamless)
-                elif binary_name in seamless_names:
-                    reason = _tr("Starts the Seamless Co-op installed in the game folder, without MO2's "
-                                 "mods. Activate a Seamless Co-op mod and it starts the game through MO2 "
-                                 "instead.")
-                elif binary_name == "reforgedlauncher.exe":
+                if binary_name == "reforgedlauncher.exe":
                     reason = _tr("Reforged's online mode allows no other mods, so MO2 starts its "
                                  "launcher outside the VFS with this profile's saves.")
                 else:
                     reason = _tr("Outside the VFS, MO2's mods and native DLLs are not loaded.")
-                if not (direct_game or hands_over):
-                    reason += " " + (_tr("Chosen by hand.") if by_hand else _tr("Set automatically."))
+                reason += " " + (_tr("Chosen by hand.") if by_hand else _tr("Set automatically."))
                 switch = QCheckBox()
-                switch.setChecked(method == "swap" and not hands_over)
-                switch.setEnabled(not (direct_game or hands_over))
+                switch.setChecked(method == "swap")
                 add_row(programs_card, 0xE756, title, reason, (switch,))
 
                 def toggled(on: bool, path: str = binary, name: str = title) -> None:
@@ -4397,7 +4367,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
                 switch.toggled.connect(toggled)
             if not shown:
-                add_row(programs_card, 0xE946, _tr("No game programs in this instance."))
+                add_row(
+                    programs_card, 0xE946, _tr("No launcher needs it"),
+                    _tr("The game starts inside the VFS with every MO2 mod.")
+                    if _game()["process"] != "eldenring.exe"
+                    else _tr("The game starts inside the VFS with every MO2 mod. Install ELDEN RING "
+                             "Reforged with its online mode and its launcher appears here."),
+                )
 
         def refresh_backups(route: Path) -> None:
             clear_rows(backups_card)

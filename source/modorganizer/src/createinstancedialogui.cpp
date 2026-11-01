@@ -561,12 +561,6 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
                              tr("Add a desktop shortcut that opens it"));
     shortcutLayout->addWidget(desktopShortcut);
 
-    detectedPrograms = named(new QWidget(widget_9), "detectedPrograms");
-    auto* programs   = new QVBoxLayout(detectedPrograms);
-    programs->setContentsMargins(0, 0, 0, 0);
-    programs->setSpacing(0);
-    detectedPrograms->hide();
-    fields->addWidget(detectedPrograms);
     rows->addWidget(widget_9);
   }
 

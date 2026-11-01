@@ -1786,33 +1786,25 @@ class EldenRingMo2Game(BasicGame):
     UnroutedSaveDirectoryName = "unrouted-global"
     # the game's name in messages that name Elden Ring
     DisplayName = "Elden Ring"
-    # Seamless Co-op for this game: its launchers and the DLL they inject (a
-    # launcher run with a Seamless mod active starts the game through MO2)
-    SeamlessLaunchers = frozenset({"ersc_launcher.exe", "launch_elden_ring_seamlesscoop.exe"})
+    # Seamless Co-op's DLL, run from its MO2 mod with the game
     SeamlessDll = "ersc.dll"
-    # Programs that start eldenring.exe themselves (Seamless Co-op, Reforged's
-    # launcher) get the same save guard as the game, and the guard waits for
-    # the game they start instead of for the launcher.
+    # Programs that start eldenring.exe themselves (Reforged's launcher) get
+    # the same save guard as the game, and the guard waits for the game they
+    # start instead of for the launcher.
     GameLaunchers = frozenset(
         {
             "eldenring.exe",
             "start_protected_game.exe",
-            "ersc_launcher.exe",
-            # the launcher of older Seamless Co-op releases
-            "launch_elden_ring_seamlesscoop.exe",
             # ELDEN RING Reforged's own launcher (its online mode)
             "reforgedlauncher.exe",
         }
     )
-    # Launchers that fail under MO2's virtual file system (Seamless Co-op
-    # installed in the game folder stays inactive): MO2 starts them itself,
-    # outside the VFS, and swaps the route's saves into the Steam folder for
-    # the run. Each executable can be switched either way in Save Isolation.
+    # Launchers that fail under MO2's virtual file system: MO2 starts them
+    # itself, outside the VFS, and swaps the route's saves into the Steam
+    # folder for the run. Each executable can be switched either way in Save
+    # Isolation.
     AutoSwapLaunchers = frozenset(
         {
-            "ersc_launcher.exe",
-            "launch_elden_ring_seamlesscoop.exe",
-            "nrsc_launcher.exe",
             # its online mode checks a clean release: no MO2 files or DLLs
             "reforgedlauncher.exe",
         }
@@ -3149,15 +3141,6 @@ class EldenRingMo2Game(BasicGame):
             # Overwrite cleanup and save restore that wait for that game
             return True
         if not self._seamless_password_ready():
-            return False
-        if Path(app_path).name.casefold() in self.SeamlessLaunchers and self._seamless_initializer():
-            # Seamless Co-op from its MO2 mod starts with the game run inside
-            # the VFS, so its launcher hands over to the game's own executable
-            QTimer.singleShot(0, self._start_game_for_seamless)
-            qInfo(
-                f"Elden Ring MO2: '{Path(app_path).name}' hands over to {self.GameProcess}, "
-                "which MO2 starts with Seamless Co-op from its mod."
-            )
             return False
         if self._active_save_quarantine is not None:
             starting = time.monotonic() < self._launch_pending_until
@@ -4938,16 +4921,6 @@ class EldenRingMo2Game(BasicGame):
         for note in notes:
             qInfo(note)
 
-    def _start_game_for_seamless(self) -> None:
-        game = Path(self.gameDirectory().absolutePath(), self.GameBinary)
-        try:
-            handle = self._organizer.startApplication(str(game))
-        except (AttributeError, RuntimeError) as error:
-            qCritical(f"Elden Ring MO2: could not start {game.name} for Seamless Co-op: {error}")
-            return
-        if handle:
-            ctypes.windll.kernel32.CloseHandle(wintypes.HANDLE(int(handle)))
-
     def _seamless_password_ready(self) -> bool:
         """Seamless Co-op quits the game at start without a session password
         in its settings file: MO2 says so before the launch instead."""
@@ -5312,14 +5285,14 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     LocalSavegamesClass = NightreignLocalSavegames
     RecoveryScope = "|nightreign"
     DisplayName = "Nightreign"
-    SeamlessLaunchers = frozenset({"nrsc_launcher.exe"})
     SeamlessDll = "nrsc.dll"
     GameLaunchers = frozenset(
         {
             "nightreign.exe",
             # Easy Anti-Cheat's launcher, the program Steam starts
             "start_protected_game.exe",
-            # Seamless Co-op for Nightreign
-            "nrsc_launcher.exe",
         }
     )
+    # Reforged is an Elden Ring mod: Nightreign has no launcher to start
+    # outside the VFS
+    AutoSwapLaunchers = frozenset()

@@ -98,7 +98,6 @@ public:
   QCheckBox* desktopShortcut;
   // launchers found in the game folder, each with a switch; filled when the
   // step opens, hidden with none
-  QWidget* detectedPrograms;
 
   // profile settings
   QWidget* page;

@@ -46,8 +46,14 @@
 - Every other trace of me3 and Mod Engine 2 as launchers: their programs and
   `launchmod_*.bat` scripts no longer get the save guard or a place in Save
   Isolation > Programs. Mods packaged for Mod Engine 2 (a `mod/` folder) still
-  install, and Seamless Co-op still starts through its Mod Engine 2 entry
-  point.
+  install, always mapped to the game folders: the installer's "Recognize Mod
+  Engine 2 paths" switch is gone.
+- Seamless Co-op's launchers (`ersc_launcher.exe`, `nrsc_launcher.exe`) and a
+  Seamless Co-op installed in the game folder: Seamless Co-op runs from its MO2
+  mod with "ELDEN RING (MO2)", with every other mod. The New instance wizard no
+  longer offers to add its launcher.
+- Elden Ring and Nightreign instances drop executables that start me3, Mod
+  Engine 2 or Seamless Co-op's launchers the next time MO2 opens them.
 
 ## 1.1.0-beta.1 (pre-release) — October 27, 2026
 

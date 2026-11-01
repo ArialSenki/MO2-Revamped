@@ -468,7 +468,6 @@ private:
   void updatePathHint();
 
   // lists the launchers found in the game folder, each with a switch
-  void fillPrograms();
 
   // check if the entered name is valid, sets m_okay and calls checkName()
   //

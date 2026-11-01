@@ -2362,6 +2362,18 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
   <context>
     <name>EldenRingSaveIsolation</name>
     <message>
+      <source>No launcher needs it</source>
+      <translation>Nenhum launcher precisa disso</translation>
+    </message>
+    <message>
+      <source>The game starts inside the VFS with every MO2 mod.</source>
+      <translation>O jogo inicia dentro do VFS com todos os mods do MO2.</translation>
+    </message>
+    <message>
+      <source>The game starts inside the VFS with every MO2 mod. Install ELDEN RING Reforged with its online mode and its launcher appears here.</source>
+      <translation>O jogo inicia dentro do VFS com todos os mods do MO2. Instale o ELDEN RING Reforged com o modo online e o launcher dele aparecerá aqui.</translation>
+    </message>
+    <message>
       <source>Route saved</source>
       <translation>Rota salva</translation>
     </message>
@@ -3660,8 +3672,8 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
       <translation>Inicia dentro do VFS com todos os mods do MO2 e com o Seamless Co-op a partir do mod {mod}.</translation>
     </message>
     <message>
-      <source>A Seamless Co-op installed in the game folder and ELDEN RING Reforged's online launcher do not work inside MO2's virtual folder (VFS). MO2 starts them outside it and puts this profile's saves in place for the run, then collects them when the game closes.</source>
-      <translation>Um Seamless Co-op instalado na pasta do jogo e o launcher online do ELDEN RING Reforged não funcionam dentro da pasta virtual do MO2 (VFS). O MO2 os inicia fora dela, coloca os saves deste perfil no lugar durante a sessão e os recolhe quando o jogo fecha.</translation>
+      <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>O launcher online do ELDEN RING Reforged não funciona dentro da pasta virtual do MO2 (VFS). O MO2 o inicia fora, coloca os saves deste perfil no lugar durante a sessão e os recolhe quando o jogo fecha.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>

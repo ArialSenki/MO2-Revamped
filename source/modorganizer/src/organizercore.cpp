@@ -2,6 +2,7 @@
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
+#include "eldenringsavesettings.h"
 #include "env.h"
 #include "envfs.h"
 #include "envmodule.h"
@@ -215,6 +216,33 @@ void OrganizerCore::updateExecutablesList()
   // the instances that still have them
   for (const QString title : {QStringLiteral("me3 (beta)"), QStringLiteral("Mod Engine 2 (beta)")}) {
     if (m_ExecutablesList.titleExists(title)) {
+      m_ExecutablesList.remove(title);
+      m_RemovedBetaLaunchers = true;
+    }
+  }
+
+  // Elden Ring and Nightreign run their mods from MO2 alone: me3, Mod Engine 2
+  // (and its launchmod scripts) and Seamless Co-op's launchers have no part
+  // in it any more, so their entries leave too, however they were added.
+  // Seamless Co-op runs from its MO2 mod with the game.
+  if (EldenRingSaveSettings::supports(managedGame())) {
+    static const QStringList retired = {
+        QStringLiteral("me3.exe"),           QStringLiteral("me3-launcher.exe"),
+        QStringLiteral("modengine2_launcher.exe"), QStringLiteral("ersc_launcher.exe"),
+        QStringLiteral("launch_elden_ring_seamlesscoop.exe"),
+        QStringLiteral("nrsc_launcher.exe")};
+    QStringList titles;
+    for (const auto& exe : m_ExecutablesList) {
+      const QString name = exe.binaryInfo().fileName().toLower();
+      const bool script = name.startsWith(QStringLiteral("launchmod")) &&
+                          (name.endsWith(QStringLiteral(".bat")) ||
+                           name.endsWith(QStringLiteral(".cmd")));
+      if (retired.contains(name) || script) {
+        titles.push_back(exe.title());
+      }
+    }
+    for (const auto& title : titles) {
+      log::info("removing the retired launcher '{}' from the executables", title);
       m_ExecutablesList.remove(title);
       m_RemovedBetaLaunchers = true;
     }

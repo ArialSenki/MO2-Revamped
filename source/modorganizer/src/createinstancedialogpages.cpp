@@ -245,18 +245,6 @@ bool inOneDrive(const QString& path)
   return underAnyOf(path, {"OneDrive", "OneDriveConsumer", "OneDriveCommercial"});
 }
 
-// launchers that live in a game's folder and that game plugins don't add to
-// the executables themselves; the first path found is used
-struct KnownTool
-{
-  const char* title;
-  const char* paths[4];
-};
-
-const KnownTool KnownTools[] = {
-    {"Seamless Co-op", {"Game/ersc_launcher.exe", "ersc_launcher.exe"}},
-};
-
 // an instance that exists already, as the wizard shows it
 struct ExistingInstance
 {
@@ -1763,93 +1751,6 @@ void NamePage::doActivated(bool)
 
   updatePathHint();
   verify();
-  fillPrograms();
-}
-
-void NamePage::fillPrograms()
-{
-  const auto ci = m_dlg.rawCreationInfo();
-  auto* layout  = ui->detectedPrograms->layout();
-
-  // the switches keep their state while the same launcher is offered again
-  QSet<QString> off;
-  for (auto* box : ui->detectedPrograms->findChildren<QCheckBox*>()) {
-    if (!box->isChecked()) {
-      off.insert(box->property("toolBinary").toString());
-    }
-  }
-  while (auto* item = layout->takeAt(0)) {
-    delete item->widget();
-    delete item;
-  }
-
-  auto addRow = [&](const QString& title, const QString& description) {
-    auto* row = new QFrame(ui->detectedPrograms);
-    row->setObjectName(QStringLiteral("fluentSettingRow"));
-    auto* rowLayout = new QHBoxLayout(row);
-    rowLayout->setContentsMargins(20, 10, 16, 10);
-    rowLayout->setSpacing(16);
-    auto* text = new QVBoxLayout;
-    text->setSpacing(2);
-    auto* titleLabel = new QLabel(title, row);
-    titleLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
-    auto* descriptionLabel = new QLabel(description, row);
-    descriptionLabel->setObjectName(QStringLiteral("fluentSettingDescription"));
-    descriptionLabel->setWordWrap(true);
-    text->addWidget(titleLabel);
-    text->addWidget(descriptionLabel);
-    rowLayout->addLayout(text, 1);
-    layout->addWidget(row);
-    return rowLayout;
-  };
-
-  bool found = false;
-  if (ci.type != CreateInstanceDialog::Isolated && !ci.gameLocation.isEmpty()) {
-    const QDir dir(ci.gameLocation);
-    for (const auto& tool : KnownTools) {
-      for (const char* path : tool.paths) {
-        if (path == nullptr) {
-          break;
-        }
-        const QString binary = dir.filePath(QString::fromLatin1(path));
-        if (!QFileInfo(binary).isFile()) {
-          continue;
-        }
-        if (!found) {
-          // the section's title and what the switches do
-          QStringList always;
-          if (ci.game != nullptr) {
-            for (const auto& info : ci.game->executables()) {
-              if (info.isValid()) {
-                always.push_back(info.title());
-              }
-            }
-          }
-          addRow(QObject::tr("Programs found"),
-                 always.isEmpty()
-                     ? QObject::tr("The ones turned on are added to Executables.")
-                     : QObject::tr("The ones turned on are added to Executables, after %1.")
-                           .arg(always.join(QStringLiteral(", "))));
-          found = true;
-        }
-        auto* rowLayout = addRow(QString::fromLatin1(tool.title),
-                                 QDir::toNativeSeparators(QString::fromLatin1(path)));
-        auto* box = new QCheckBox(rowLayout->parentWidget());
-        box->setProperty("fluentSwitch", true);
-        box->setProperty("toolBinary", QDir::toNativeSeparators(binary));
-        box->setProperty("toolTitle", QString::fromLatin1(tool.title));
-        box->setAccessibleName(QObject::tr("Add %1").arg(QString::fromLatin1(tool.title)));
-        box->setCursor(Qt::PointingHandCursor);
-        box->setChecked(!off.contains(QDir::toNativeSeparators(binary)));
-        if (FluentIcons::active()) {
-          FluentSwitch::animate(box);
-        }
-        rowLayout->addWidget(box, 0, Qt::AlignVCenter);
-        break;
-      }
-    }
-  }
-  ui->detectedPrograms->setVisible(found);
 }
 
 QString NamePage::selectedInstanceName() const
@@ -2597,18 +2498,6 @@ std::vector<ConfirmationPage::ReviewRow> ConfirmationPage::makeReview() const
   }
   if (!ui->diskSpace->text().isEmpty()) {
     rows.push_back({QObject::tr("Disk"), ui->diskSpace->text(), pathsPage});
-  }
-  {
-    QStringList programs;
-    for (auto* box : ui->detectedPrograms->findChildren<QCheckBox*>()) {
-      if (box->isChecked() && !ui->detectedPrograms->isHidden()) {
-        programs.push_back(box->property("toolTitle").toString());
-      }
-    }
-    if (!programs.isEmpty()) {
-      rows.push_back({QObject::tr("Programs"), programs.join(QStringLiteral(", ")),
-                      namePage});
-    }
   }
   if (ci.type != CreateInstanceDialog::Isolated && ui->desktopShortcut->isChecked()) {
     rows.push_back({QObject::tr("Shortcut"), QObject::tr("On the desktop"), namePage});

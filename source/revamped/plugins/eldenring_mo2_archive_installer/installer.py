@@ -969,14 +969,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 preserve,
                 omit_txt_box.isChecked(),
                 omit_md_box.isChecked(),
-                mod_engine_paths_box.isChecked(),
+                # a mod's mod/ folder (the usual packaging) always maps to
+                # the game folders in the standard layout
+                True,
                 chosen_name,
             )
             dialog.accept()
 
         # --- standard layout options -----------------------------------------
-        # text files and Mod Engine 2 paths apply to the standard layout only;
-        # the card says so once
+        # text files apply to the standard layout only; the card says so once
         options_card = add_card("archiveTextFilesCard", self.tr("Text files"))
         filters_label = QtWidgets.QLabel(
             self.tr(
@@ -1004,22 +1005,6 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             options_card, 0xE8A5, self.tr("Skip .md files"),
             self.tr("Skips every Markdown .md file in this archive before installation."),
             (omit_md_box,),
-        )
-
-        routes_card = add_card("archivePackagePathsCard", self.tr("Elden Ring package paths"))
-        mod_engine_paths_box = switch(
-            QtWidgets.QCheckBox(self.tr("Recognize Mod Engine 2 paths (standard layout only)"))
-        )
-        mod_engine_paths_box.setObjectName("archiveModEnginePathsCheck")
-        mod_engine_paths_box.setChecked(self._default_recognize_mod_engine_paths)
-        add_row(
-            routes_card, 0xE8B7,
-            self.tr("Recognize Mod Engine 2 paths (standard layout only)"),
-            self.tr(
-                "With standard layout, maps Mod Engine 2 menu files and external "
-                "DLLs to MO2's game folders. Keep original leaves every path in place."
-            ),
-            (mod_engine_paths_box,),
         )
 
         # --- the layout ------------------------------------------------------
