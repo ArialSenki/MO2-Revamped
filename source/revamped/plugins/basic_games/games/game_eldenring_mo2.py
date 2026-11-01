@@ -1994,9 +1994,28 @@ class EldenRingMo2Game(BasicGame):
 
     def _foreign_pending_sessions(self) -> list[Path]:
         """Sessions of other MO2 Revamped installs that still hide Steam
-        account folders. Only that install restores them; a launch from here
-        would play against a Steam folder that is not complete."""
+        account folders and that this install may not restore yet (see
+        _stale_foreign_sessions); a launch from here would play against a
+        Steam folder that is not complete."""
         return [session for session, owner_exists in self._other_install_sessions() if owner_exists]
+
+    def _stale_foreign_sessions(self) -> list[Path]:
+        """Sessions of other installs old enough that their launch is over:
+        recovery restores them here too, once their lock is free (no MO2 of
+        that install waits for its game) and the game and its launchers are
+        closed. Their record says where everything goes back, so the other
+        install no longer has to be started just to put the Steam saves back.
+        A newer one may still belong to a launch that is starting."""
+        stale = []
+        now = time.time()
+        for session in self._foreign_pending_sessions():
+            try:
+                written = (session / self.SaveRecoveryManifestName).stat().st_mtime
+            except OSError:
+                continue
+            if now - written >= self.LauncherStartGrace:
+                stale.append(session)
+        return stale
 
     def _orphaned_sessions(self) -> list[Path]:
         """Sessions whose install no longer exists: this install restores
@@ -2499,7 +2518,7 @@ class EldenRingMo2Game(BasicGame):
         except OSError as error:
             qCritical(f"Elden Ring MO2: the save-recovery folder could not be read: {error}")
             return False
-        sessions += self._orphaned_sessions()
+        sessions += self._orphaned_sessions() + self._stale_foreign_sessions()
         if not sessions:
             return True
 
@@ -2519,9 +2538,9 @@ class EldenRingMo2Game(BasicGame):
             if not self._claim_save_quarantine(session_directory):
                 self._recovery_waiting = True
                 qCritical(
-                    "Elden Ring MO2: another MO2 window of this installation "
-                    f"still holds the hidden Steam saves in '{session_directory}'; "
-                    "it restores them when its game closes."
+                    "Elden Ring MO2: another MO2 window (this installation or "
+                    "another one) still holds the hidden Steam saves in "
+                    f"'{session_directory}'; it restores them when its game closes."
                 )
                 return False
             try:
@@ -3267,9 +3286,10 @@ class EldenRingMo2Game(BasicGame):
             QMessageBox.critical(
                 None,
                 self._game_text(_tr("Elden Ring save recovery needed")),
-                self._game_text(_tr("Another MO2 Revamped installation still holds Steam saves it "
-                "hid for its own launch. Start that installation once with Elden "
-                "Ring closed so it puts them back. The game was not started.\n\n{0}")).format(
+                self._game_text(_tr("Another MO2 Revamped installation has just hidden the Steam "
+                "saves for a launch of its own. Wait until that game closes, then "
+                "try again: MO2 puts the saves back itself. The game was not "
+                "started.\n\n{0}")).format(
                     foreign_sessions[0]
                 ),
             )

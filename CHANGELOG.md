@@ -39,6 +39,10 @@
   and its launchers are closed. MO2 closed right after the game used to leave
   them aside until its next start, and other MO2 installs refused to launch
   meanwhile.
+- Any MO2 Revamped install now puts back Steam saves another install set aside,
+  once that launch is over: no MO2 of the other install waits for its game,
+  and the game and its launchers are closed. Before, the other install had to
+  be started again only to restore them.
 
 ### Fewer restarts
 

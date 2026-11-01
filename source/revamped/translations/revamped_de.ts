@@ -1888,10 +1888,10 @@ Das Spiel wurde nicht gestartet.</translation>
       <translation>Wie viele automatische Sicherungen der aktiven Elden-Ring-Spielstandroute behalten werden. Vor jedem Start wird eine Kopie erstellt, wenn sich die Spielstände seit der letzten geändert haben; 0 schaltet die Sicherungen ab.</translation>
     </message>
     <message>
-      <source>Another MO2 Revamped installation still holds Steam saves it hid for its own launch. Start that installation once with Elden Ring closed so it puts them back. The game was not started.
+      <source>Another MO2 Revamped installation has just hidden the Steam saves for a launch of its own. Wait until that game closes, then try again: MO2 puts the saves back itself. The game was not started.
 
 {0}</source>
-      <translation>Eine andere MO2-Revamped-Installation hält noch Steam-Spielstände zurück, die sie für ihren eigenen Start ausgeblendet hat. Starte diese Installation einmal bei geschlossenem Elden Ring, damit sie sie zurücklegt. Das Spiel wurde nicht gestartet.
+      <translation>Eine andere MO2-Revamped-Installation hat die Steam-Spielstände gerade für einen eigenen Start beiseitegelegt. Warte, bis dieses Spiel geschlossen ist, und versuche es dann erneut: MO2 legt die Spielstände selbst zurück. Das Spiel wurde nicht gestartet.
 
 {0}</translation>
     </message>

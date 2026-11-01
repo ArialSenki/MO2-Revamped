@@ -1904,10 +1904,10 @@ El juego no se inició.</translation>
       <translation>Cuántas copias automáticas de la ruta de partidas activa de Elden Ring conservar. Se hace una copia antes de cada inicio si las partidas cambiaron desde la última; 0 desactiva las copias.</translation>
     </message>
     <message>
-      <source>Another MO2 Revamped installation still holds Steam saves it hid for its own launch. Start that installation once with Elden Ring closed so it puts them back. The game was not started.
+      <source>Another MO2 Revamped installation has just hidden the Steam saves for a launch of its own. Wait until that game closes, then try again: MO2 puts the saves back itself. The game was not started.
 
 {0}</source>
-      <translation>Otra instalación de MO2 Revamped todavía guarda los guardados de Steam que ocultó para su propio lanzamiento. Abre esa instalación una vez con Elden Ring cerrado para que los devuelva. El juego no se inició.
+      <translation>Otra instalación de MO2 Revamped acaba de apartar las partidas de Steam para un lanzamiento suyo. Espera a que ese juego se cierre y vuelve a intentarlo: MO2 devuelve las partidas por sí mismo. El juego no se inició.
 
 {0}</translation>
     </message>
