@@ -3797,12 +3797,39 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             methods.pop(key, None)
         else:
             methods[key] = method
+        self._write_launch_file({"methods": methods})
+
+    def _write_launch_file(self, changes: dict) -> None:
+        """Updates the instance's launch file, keeping its other keys."""
+        base = self._instance_base()
+        if base is None:
+            raise OSError(_tr("The MO2 instance folder is unknown."))
         path = base / _LAUNCH_METHODS_FILENAME
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError):
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        data.update({"version": 1, **changes})
         temporary = path.with_name(f".{path.name}.tmp")
-        temporary.write_text(
-            json.dumps({"version": 1, "methods": methods}, indent=2) + "\n", encoding="utf-8"
-        )
+        temporary.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         os.replace(temporary, path)
+
+    # Reforged's online play keeps its own save in this folder of the route
+    # unless the switch shares one save (game_eldenring_mo2.py reads both)
+    _ReforgedOnlineSavesFolder = "reforged_online"
+    _ReforgedOnlineSavesKey = "reforged_online_saves"
+
+    def _reforged_online_separate(self) -> bool:
+        base = self._instance_base()
+        if base is None:
+            return True
+        try:
+            data = json.loads((base / _LAUNCH_METHODS_FILENAME).read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError):
+            return True
+        return not isinstance(data, dict) or data.get(self._ReforgedOnlineSavesKey) != "shared"
 
     def _game_directory(self) -> Path | None:
         try:
@@ -4263,7 +4290,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             "folder (VFS). MO2 starts it outside and puts this profile's saves in place "
             "for the run, then collects them when the game closes."),
         )
-        programs_card = add_card(programs_page, _tr("Start outside the VFS"))
+        programs_card = add_card(programs_page, _tr("Launchers"))
         programs_page.addStretch(1)
 
         # --- Backups -------------------------------------------------------
@@ -4312,25 +4339,80 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 str(save_profile_combo.currentData() or ""),
             )
 
+        def save_state(route: Path, extension: str) -> str:
+            written = self._route_save_time(route, extension)
+            if written is None:
+                return _tr("no save yet")
+            if datetime.fromtimestamp(written).date() == datetime.now().date():
+                return _tr("last saved today at {time}").format(
+                    time=datetime.fromtimestamp(written).strftime("%H:%M")
+                )
+            return _tr("last saved {when}").format(when=self._when_text(written))
+
         def refresh_files(route: Path) -> None:
             clear_rows(files_card)
             for save_format in self._detect_save_formats():
                 if not save_format["available"]:
                     continue
                 file_name = f"{_game()['stem']}.{save_format['extension']}"
-                written = self._route_save_time(route, save_format["extension"])
-                if written is None:
-                    state = _tr("no save yet")
-                elif datetime.fromtimestamp(written).date() == datetime.now().date():
-                    state = _tr("last saved today at {time}").format(
-                        time=datetime.fromtimestamp(written).strftime("%H:%M")
-                    )
-                else:
-                    state = _tr("last saved {when}").format(when=self._when_text(written))
+                state = save_state(route, save_format["extension"])
                 add_row(
                     files_card, 0xE8A5, save_format["name"],
                     f"{file_name} · {state} · {save_format['source']}",
                 )
+                if (
+                    save_format["key"] == "reforged"
+                    and mode_box.currentData() != self.GlobalShared
+                    and self._reforged_online_separate()
+                ):
+                    # online play's own save, kept apart from the offline one
+                    online_state = save_state(
+                        route / self._ReforgedOnlineSavesFolder, save_format["extension"]
+                    )
+                    add_row(
+                        files_card, 0xE774, _tr("ELDEN RING Reforged (online)"),
+                        f"{file_name} · {online_state} · "
+                        + _tr("Its own save, in the folder {folder} of this route").format(
+                            folder=self._ReforgedOnlineSavesFolder
+                        ),
+                    )
+
+        def add_reforged_online_row(title: str) -> None:
+            global_route = mode_box.currentData() == self.GlobalShared
+            separate = self._reforged_online_separate()
+            if global_route:
+                reason = _tr("Starts outside the VFS, as its online mode needs. With the global "
+                             "Steam save, online and offline play share it; a profile or "
+                             "instance route can keep them apart.")
+            elif separate:
+                reason = _tr("Starts outside the VFS, as its online mode needs. Online play keeps "
+                             "its own save, apart from the offline one you play with other MO2 "
+                             "mods; the first time it starts from a copy of the offline save.")
+            else:
+                reason = _tr("Starts outside the VFS, as its online mode needs. Online and "
+                             "offline play share this profile's save.")
+            switch = QCheckBox()
+            switch.setAccessibleName(_tr("Separate online saves"))
+            switch.setToolTip(_tr("Separate online saves"))
+            switch.setChecked(separate and not global_route)
+            switch.setEnabled(not global_route)
+            add_row(programs_card, 0xE774, title, reason, (switch,))
+
+            def toggled(on: bool) -> None:
+                try:
+                    self._write_launch_file(
+                        {self._ReforgedOnlineSavesKey: "separate" if on else "shared"}
+                    )
+                except OSError as error:
+                    self._show_notice(dialog, _tr("Could not save"), str(error), "warning")
+                qInfo(
+                    "Elden Ring MO2 Save Isolation: Reforged online now "
+                    f"{'keeps its own save' if on else 'shares the offline save'}."
+                )
+                QTimer.singleShot(0, refresh_programs)
+                QTimer.singleShot(0, lambda: refresh_files(selected_route()))
+
+            switch.toggled.connect(toggled)
 
         def refresh_programs() -> None:
             clear_rows(programs_card)
@@ -4343,12 +4425,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if not self._is_game_launch_binary(binary) or binary_name == _game()["process"]:
                     continue
                 shown += 1
-                method, by_hand = self._launch_method_of(binary, methods)
                 if binary_name == "reforgedlauncher.exe":
-                    reason = _tr("Reforged's online mode allows no other mods, so MO2 starts its "
-                                 "launcher outside the VFS with this profile's saves.")
-                else:
-                    reason = _tr("Outside the VFS, MO2's mods and native DLLs are not loaded.")
+                    # always outside the VFS; its switch keeps online play on
+                    # a save of its own
+                    add_reforged_online_row(title)
+                    continue
+                method, by_hand = self._launch_method_of(binary, methods)
+                reason = _tr("Outside the VFS, MO2's mods and native DLLs are not loaded.")
                 reason += " " + (_tr("Chosen by hand.") if by_hand else _tr("Set automatically."))
                 switch = QCheckBox()
                 switch.setChecked(method == "swap")

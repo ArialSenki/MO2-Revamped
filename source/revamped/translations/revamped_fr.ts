@@ -1564,6 +1564,18 @@ Réinstallez le mod pour changer ce choix.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Could not prepare the online saves</source>
+      <translation>Impossible de préparer les sauvegardes en ligne</translation>
+    </message>
+    <message>
+      <source>MO2 could not set up Reforged's online save folder, so the game was not started. Your saves were not changed.
+
+{0}</source>
+      <translation>MO2 n'a pas pu préparer le dossier des sauvegardes en ligne de Reforged : le jeu n'a pas été lancé. Vos sauvegardes n'ont pas été modifiées.
+
+{0}</translation>
+    </message>
+    <message>
       <source>Run the selected program; use the arrow for shortcut options.</source>
       <translation>Lance le programme sélectionné ; utilisez la flèche pour les options de raccourci.</translation>
     </message>
@@ -2365,6 +2377,34 @@ Les DLL détectées des mods activés apparaîtront dans le panneau de gauche.</
   </context>
   <context>
     <name>EldenRingSaveIsolation</name>
+    <message>
+      <source>Launchers</source>
+      <translation>Lanceurs</translation>
+    </message>
+    <message>
+      <source>Separate online saves</source>
+      <translation>Sauvegardes en ligne séparées</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. With the global Steam save, online and offline play share it; a profile or instance route can keep them apart.</source>
+      <translation>Démarre en dehors du VFS, comme l'exige son mode en ligne. Avec la sauvegarde Steam globale, le jeu en ligne et hors ligne la partagent ; une route de profil ou d'instance peut les séparer.</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. Online play keeps its own save, apart from the offline one you play with other MO2 mods; the first time it starts from a copy of the offline save.</source>
+      <translation>Démarre en dehors du VFS, comme l'exige son mode en ligne. Le jeu en ligne garde sa propre sauvegarde, séparée de celle hors ligne jouée avec d'autres mods de MO2 ; la première fois, elle part d'une copie de la sauvegarde hors ligne.</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. Online and offline play share this profile's save.</source>
+      <translation>Démarre en dehors du VFS, comme l'exige son mode en ligne. Le jeu en ligne et hors ligne partagent la sauvegarde de ce profil.</translation>
+    </message>
+    <message>
+      <source>ELDEN RING Reforged (online)</source>
+      <translation>ELDEN RING Reforged (online)</translation>
+    </message>
+    <message>
+      <source>Its own save, in the folder {folder} of this route</source>
+      <translation>Sa propre sauvegarde, dans le dossier {folder} de cette route</translation>
+    </message>
     <message>
       <source>No launcher needs it</source>
       <translation>Aucun lanceur n'en a besoin</translation>

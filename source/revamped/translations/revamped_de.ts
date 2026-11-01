@@ -1560,6 +1560,18 @@ Installiere den Mod neu, um das zu ändern.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Could not prepare the online saves</source>
+      <translation>Die Online-Spielstände konnten nicht vorbereitet werden</translation>
+    </message>
+    <message>
+      <source>MO2 could not set up Reforged's online save folder, so the game was not started. Your saves were not changed.
+
+{0}</source>
+      <translation>MO2 konnte den Online-Spielstandordner von Reforged nicht einrichten, daher wurde das Spiel nicht gestartet. Deine Spielstände wurden nicht verändert.
+
+{0}</translation>
+    </message>
+    <message>
       <source>Run the selected program; use the arrow for shortcut options.</source>
       <translation>Startet das ausgewählte Programm; der Pfeil öffnet die Verknüpfungsoptionen.</translation>
     </message>
@@ -2361,6 +2373,34 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
   </context>
   <context>
     <name>EldenRingSaveIsolation</name>
+    <message>
+      <source>Launchers</source>
+      <translation>Launcher</translation>
+    </message>
+    <message>
+      <source>Separate online saves</source>
+      <translation>Getrennte Online-Spielstände</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. With the global Steam save, online and offline play share it; a profile or instance route can keep them apart.</source>
+      <translation>Startet außerhalb des VFS, wie sein Online-Modus es braucht. Mit dem globalen Steam-Spielstand teilen sich Online- und Offline-Spiel diesen; eine Profil- oder Instanzroute kann sie trennen.</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. Online play keeps its own save, apart from the offline one you play with other MO2 mods; the first time it starts from a copy of the offline save.</source>
+      <translation>Startet außerhalb des VFS, wie sein Online-Modus es braucht. Das Online-Spiel hat einen eigenen Spielstand, getrennt vom Offline-Spielstand, den du mit anderen MO2-Mods spielst; beim ersten Mal beginnt er als Kopie des Offline-Spielstands.</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. Online and offline play share this profile's save.</source>
+      <translation>Startet außerhalb des VFS, wie sein Online-Modus es braucht. Online- und Offline-Spiel teilen sich den Spielstand dieses Profils.</translation>
+    </message>
+    <message>
+      <source>ELDEN RING Reforged (online)</source>
+      <translation>ELDEN RING Reforged (online)</translation>
+    </message>
+    <message>
+      <source>Its own save, in the folder {folder} of this route</source>
+      <translation>Eigener Spielstand im Ordner {folder} dieser Route</translation>
+    </message>
     <message>
       <source>No launcher needs it</source>
       <translation>Kein Launcher braucht das</translation>

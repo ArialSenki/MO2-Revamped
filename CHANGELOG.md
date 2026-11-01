@@ -22,9 +22,23 @@
   profile's saves and is listed in Save Isolation > Programs. A console
   launcher started outside the VFS, like Reforged's, now opens in a visible
   window instead of waiting at a prompt nobody can see.
+- Separate online saves (Save Isolation > Programs, on by default): online play
+  keeps its own `ER0000.err` in the route's `reforged_online` folder, apart from
+  the offline save played with other MO2 mods, so a modded character does not
+  go online by mistake. The first online run starts from a copy of the offline
+  save; the online save gets its own backups. Turned off, both modes share one
+  save. A global Steam route shares it either way. The online launcher always
+  starts outside the VFS; its old switch is gone.
 - The game folders `expression`, `font` and `other` are recognized as game
   files. A mod's copy of `me3_mod_host.dll` or `libzstd.dll` is never loaded
   as a native.
+
+### Saves
+
+- Steam saves set aside for a launch come back when MO2 closes, if the game
+  and its launchers are closed. MO2 closed right after the game used to leave
+  them aside until its next start, and other MO2 installs refused to launch
+  meanwhile.
 
 ### Fewer restarts
 

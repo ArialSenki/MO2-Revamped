@@ -207,6 +207,20 @@ class _RunButtonEnabledMirror(QObject):
         return False
 
 
+class _MainWindowCloseWatcher(QObject):
+    """Calls back when MO2's main window closes (MO2 quits or switches
+    instance), before the plugin's timers stop."""
+
+    def __init__(self, window, on_close) -> None:
+        super().__init__(window)
+        self._on_close = on_close
+
+    def eventFilter(self, watched, event) -> bool:
+        if event.type() == QEvent.Type.Close:
+            self._on_close()
+        return False
+
+
 class EldenRingModDataChecker(BasicModDataChecker):
     """Recognize Elden Ring asset and native-mod archive layouts.
 
@@ -1809,6 +1823,15 @@ class EldenRingMo2Game(BasicGame):
             "reforgedlauncher.exe",
         }
     )
+    # Reforged's online launcher, always run outside the VFS (inside it, MO2's
+    # mods and natives would join the release its online mode checks)
+    ReforgedOnlineLauncher = "reforgedlauncher.exe"
+    # Online play keeps its own save, in this folder inside the profile's
+    # route, apart from the offline save played with other MO2 mods (the
+    # first online run starts from a copy of it). Save Isolation's switch,
+    # kept in the launch methods file, can share one save between both.
+    ReforgedOnlineSavesFolder = "reforged_online"
+    ReforgedOnlineSavesKey = "reforged_online_saves"
     LaunchMethodsFilename = "eldenring_mo2_launch_methods.json"
     LaunchMethodVfs = "vfs"
     LaunchMethodSwap = "swap"
@@ -2087,8 +2110,45 @@ class EldenRingMo2Game(BasicGame):
         }
 
     @classmethod
+    def reforged_online_saves_separate(cls, instance_base: Path) -> bool:
+        """Whether Reforged's online play keeps its own save (the default)."""
+        try:
+            data = json.loads(cls.launch_methods_path(instance_base).read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError):
+            return True
+        if not isinstance(data, dict):
+            return True
+        return data.get(cls.ReforgedOnlineSavesKey, "separate") != "shared"
+
+    def _reforged_online_route(self, route: Path) -> Path:
+        """The online save folder inside the route. Its first use starts from
+        a copy of the route's saves (account folders and loose files), so the
+        character carries over once; after that both go their own way."""
+        online = route / self.ReforgedOnlineSavesFolder
+        if self._route_save_files(online):
+            return online
+        online.mkdir(parents=True, exist_ok=True)
+        copied = 0
+        if route.is_dir():
+            for child in route.iterdir():
+                if child.name in {self.ReforgedOnlineSavesFolder, "save_profiles"}:
+                    continue
+                if child.is_dir() and self._save_directory_contains_elden_ring_saves(child):
+                    shutil.copytree(child, online / child.name, dirs_exist_ok=True)
+                    copied += 1
+                elif child.is_file():
+                    shutil.copy2(child, online / child.name)
+        qInfo(
+            "Elden Ring MO2: Reforged's online saves start from a copy of the "
+            f"route's ({copied} account folder(s)) in '{online}'."
+        )
+        return online
+
+    @classmethod
     def launch_method_for(cls, binary: str, methods: dict[str, str]) -> tuple[str, bool]:
         """(method, chosen by hand) for one executable."""
+        if Path(binary).name.casefold() == cls.ReforgedOnlineLauncher:
+            return cls.LaunchMethodSwap, False
         key = os.path.normcase(os.path.abspath(binary)) if binary else ""
         if key in methods:
             return methods[key], True
@@ -2714,10 +2774,44 @@ class EldenRingMo2Game(BasicGame):
                 self._show_recovery_failed(_main_window)
         self._report_displaced_saves(_main_window)
 
+        # the game-close watcher checks every few seconds: MO2 closed right
+        # after the game would leave the saves set aside until its next start
+        # (and block other installs' launches meanwhile)
+        if _main_window is not None:
+            self._close_watcher = _MainWindowCloseWatcher(
+                _main_window, self._restore_saves_on_close
+            )
+            _main_window.installEventFilter(self._close_watcher)
+
         self._organizer.setPluginSetting(
             self.name(), self.ArchiveLayoutOverrideSetting, False
         )
         self._start_refined_ui_alignment()
+
+    def _restore_saves_on_close(self) -> None:
+        """MO2 is closing: Steam saves this launch set aside come back now,
+        when neither the game nor a launcher of it runs any more; otherwise
+        they wait for the next MO2 start, as after a crash."""
+        session = self._active_save_quarantine
+        if session is None:
+            return
+        if self._elden_ring_process_state() is not False or self._launcher_running():
+            qInfo(
+                "Elden Ring MO2: MO2 closes while the game or its launcher runs; "
+                "the Steam saves come back at the next MO2 start."
+            )
+            return
+        try:
+            self._restore_global_save_quarantine(
+                session, Path(self.savesDirectory().absolutePath())
+            )
+            self._active_save_quarantine = None
+            qInfo("Elden Ring MO2: MO2 closes; the Steam saves are back in their folder.")
+        except (OSError, RuntimeError, ValueError) as error:
+            qCritical(
+                "Elden Ring MO2: the Steam saves could not be restored as MO2 "
+                f"closes; they come back at the next MO2 start: {error}"
+            )
 
     def _game_text(self, text: str) -> str:
         # a translated text that names Elden Ring, for the game this plugin manages
@@ -3333,6 +3427,36 @@ class EldenRingMo2Game(BasicGame):
                 ),
                 self._save_backups_kept(),
             )
+
+        # Reforged online with its own save: the swap below takes the online
+        # folder instead of the route (a global route has none to keep apart:
+        # both modes use the Steam saves)
+        swap_route = active_save_dir
+        if (
+            swap_launch
+            and active_save_dir is not None
+            and save_mode != self.LocalSavegamesClass.GlobalShared
+            and Path(app_path).name.casefold() == self.ReforgedOnlineLauncher
+            and self.reforged_online_saves_separate(Path(self._organizer.basePath()))
+        ):
+            try:
+                swap_route = self._reforged_online_route(active_save_dir)
+            except OSError as error:
+                QMessageBox.critical(
+                    None,
+                    self._game_text(_tr("Could not prepare the online saves")),
+                    self._game_text(_tr("MO2 could not set up Reforged's online save folder, so the "
+                    "game was not started. Your saves were not changed.\n\n{0}")).format(error),
+                )
+                qCritical(f"Elden Ring MO2: the Reforged online save folder failed: {error}")
+                return False
+            if self._elden_ring_process_state() is False:
+                self._backup_route_saves(
+                    swap_route,
+                    active_save_dir.parent / f"{active_save_dir.name} Backups" / "online",
+                    self._save_backups_kept(),
+                )
+            qInfo(f"Elden Ring MO2: Reforged online plays with its own saves in '{swap_route}'.")
         (
             start_minimized,
             black_startup_background,
@@ -3357,7 +3481,7 @@ class EldenRingMo2Game(BasicGame):
                 return False
             try:
                 self._active_save_quarantine = self._hide_existing_global_save_directories(
-                    active_save_dir if swap_launch else None
+                    swap_route if swap_launch else None
                 )
             except OSError as error:
                 qCritical(f"Elden Ring MO2: save isolation could not begin: {error}")

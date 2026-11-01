@@ -1560,6 +1560,18 @@ Reinstale o mod para mudar isso.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Could not prepare the online saves</source>
+      <translation>Não foi possível preparar os saves online</translation>
+    </message>
+    <message>
+      <source>MO2 could not set up Reforged's online save folder, so the game was not started. Your saves were not changed.
+
+{0}</source>
+      <translation>O MO2 não conseguiu preparar a pasta de saves online do Reforged, então o jogo não foi iniciado. Seus saves não foram alterados.
+
+{0}</translation>
+    </message>
+    <message>
       <source>Run the selected program; use the arrow for shortcut options.</source>
       <translation>Executa o programa selecionado; use a seta para as opções de atalho.</translation>
     </message>
@@ -2361,6 +2373,34 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
   </context>
   <context>
     <name>EldenRingSaveIsolation</name>
+    <message>
+      <source>Launchers</source>
+      <translation>Launchers</translation>
+    </message>
+    <message>
+      <source>Separate online saves</source>
+      <translation>Saves online separados</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. With the global Steam save, online and offline play share it; a profile or instance route can keep them apart.</source>
+      <translation>Inicia fora do VFS, como o modo online exige. Com o save global da Steam, o jogo online e o offline o compartilham; uma rota de perfil ou de instância pode mantê-los separados.</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. Online play keeps its own save, apart from the offline one you play with other MO2 mods; the first time it starts from a copy of the offline save.</source>
+      <translation>Inicia fora do VFS, como o modo online exige. O jogo online tem seu próprio save, separado do offline que você joga com outros mods do MO2; na primeira vez ele parte de uma cópia do save offline.</translation>
+    </message>
+    <message>
+      <source>Starts outside the VFS, as its online mode needs. Online and offline play share this profile's save.</source>
+      <translation>Inicia fora do VFS, como o modo online exige. O jogo online e o offline compartilham o save deste perfil.</translation>
+    </message>
+    <message>
+      <source>ELDEN RING Reforged (online)</source>
+      <translation>ELDEN RING Reforged (online)</translation>
+    </message>
+    <message>
+      <source>Its own save, in the folder {folder} of this route</source>
+      <translation>Save próprio, na pasta {folder} desta rota</translation>
+    </message>
     <message>
       <source>No launcher needs it</source>
       <translation>Nenhum launcher precisa disso</translation>
