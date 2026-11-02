@@ -192,7 +192,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         self._default_omit_txt = False
         self._default_omit_md = False
         self._default_recognize_mod_engine_paths = True
-        self._default_reforged_online = True
+        self._default_reforged_online = False
         self._pending_reforged_layout = None
         self._default_mod_name = None
         if self._organizer is not None:
@@ -214,7 +214,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 settings.get(self._recognize_mod_engine_paths_key, True)
             )
             self._default_reforged_online = bool(
-                settings.get(self._reforged_online_key, True)
+                settings.get(self._reforged_online_key, False)
             )
 
     def onInstallationEnd(
@@ -297,33 +297,6 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             self._pending_choice = None
             self._pending_source_dll_routes = []
             self._pending_reforged_layout = None
-
-    def _ask_reforged_online(self) -> bool:
-        """Whether to keep ELDEN RING Reforged's release for its own launcher."""
-        box = QtWidgets.QMessageBox()
-        box.setWindowTitle("ELDEN RING Reforged")
-        box.setIcon(QtWidgets.QMessageBox.Icon.Question)
-        box.setText(self.tr("Also prepare Reforged's online mode?"))
-        box.setInformativeText(
-            self.tr(
-                "MO2 runs ELDEN RING Reforged itself, offline, together with your "
-                "other mods. With online mode, MO2 also keeps Reforged's own "
-                "launcher and adds the executable \"ELDEN RING Reforged (online)\" "
-                "the next time it starts. Online, Reforged allows no other mods "
-                "or DLLs. It takes no extra disk space.\n\n"
-                "Reinstall the mod to change this."
-            )
-        )
-        yes = box.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
-        no = box.addButton(QtWidgets.QMessageBox.StandardButton.No)
-        box.setDefaultButton(yes if self._default_reforged_online else no)
-        box.exec()
-        keep = box.clickedButton() is yes
-        qInfo(
-            "Elden Ring MO2: ELDEN RING Reforged online mode "
-            f"{'kept' if keep else 'not kept'} for this install."
-        )
-        return keep
 
     @staticmethod
     def _link_reforged_release(mod_root: Path, layout: dict) -> None:
@@ -642,24 +615,16 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 EldenRingModDataChecker,
             )
 
-            reforged = EldenRingModDataChecker.reforged_root(tree) is not None
+            package = EldenRingModDataChecker.known_package(tree)
         except Exception:
-            reforged = False
-        if reforged:
-            # only one layout runs ELDEN RING Reforged from MO2, and its
-            # action/*.txt are game files: no choice to make
-            qInfo(
-                "Elden Ring MO2: ELDEN RING Reforged recognized in "
-                f"{default_mod_name}; installing it in the MO2 layout."
-            )
-            choice = (False, False, False, True, default_mod_name)
-            keep_reforged_online = self._ask_reforged_online()
-        else:
-            qInfo(
-                "Elden Ring MO2: opening archive layout choice for "
-                f"{default_mod_name}."
-            )
-            choice = self._ask_archive_layout(default_mod_name, tree)
+            package = None
+        reforged = package == "reforged"
+        qInfo(
+            f"Elden Ring MO2: opening the install window for {default_mod_name}; "
+            f"recognized package: {package or 'none'}."
+        )
+        choice = self._ask_archive_layout(default_mod_name, tree, package)
+        keep_reforged_online = self._chosen_reforged_online
         if choice is None:
             return mobase.InstallResult.CANCELED
         if choice == "manual":
@@ -773,8 +738,40 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         return removed
 
     def _ask_archive_layout(
-        self, mod_name: str, archive_tree: mobase.IFileTree
+        self, mod_name: str, archive_tree: mobase.IFileTree, package: Optional[str] = None
     ) -> Optional[tuple[bool, bool, bool, bool, str]]:
+        self._chosen_reforged_online = False
+        # what the window says about a mod it knows; these two run in one layout
+        # only, and their .txt files are game files, so nothing else is offered
+        package_names = {
+            "reforged": "ELDEN RING Reforged",
+            "convergence": "Convergence",
+            "seamless": "Seamless Co-op",
+            "frzn": "FRZN Merge",
+        }
+        package_texts = {
+            "reforged": self.tr(
+                "MO2 runs it itself, with your other mods: its game files and natives "
+                "go to MO2's folders; its launcher, me3 and setup tool stay out."
+            ),
+            "convergence": self.tr(
+                "MO2 runs it itself, with your other mods: its game files and natives "
+                "go to MO2's folders; me3, its launcher and the logs it ships stay out."
+            ),
+            "seamless": self.tr(
+                "Its SeamlessCoop folder stays whole, and it runs from MO2's own "
+                "program, with your other mods."
+            ),
+            "frzn": self.tr(
+                "The contents of 'Drag Files Into Here' go to the game root, and its "
+                "natives keep their paths."
+            ),
+        }
+        single_layout = package in {"reforged", "convergence"}
+        preferred_preserve = (
+            True if package == "frzn" else False if package else self._default_preserve
+        )
+
         dialog = QtWidgets.QDialog(self._parentWidget())
         dialog.setWindowTitle(self.tr("Elden Ring archive layout"))
         dialog.setObjectName("EldenRingArchiveLayoutDialog")
@@ -808,14 +805,22 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         # a Windows 11 page: its title and text, then cards of rows, as in
         # MO2's Settings and the Save Isolation and Startup options dialogs
         heading = QtWidgets.QLabel(
-            self.tr("Choose how to install this mod.").rstrip(". "), content
+            self.tr("Detected: {0}").format(package_names[package])
+            if package
+            else self.tr("Install this mod"),
+            content,
         )
         heading.setObjectName("archivePageTitle")
         heading.setProperty("wizardPageTitle", True)
         heading.setWordWrap(True)
         content_layout.addWidget(heading)
         subtitle = QtWidgets.QLabel(
-            self.tr("Review the archive and choose how its files should be arranged."),
+            package_texts[package]
+            if package
+            else self.tr(
+                "MO2 finds the mod's files inside the archive and puts them in its "
+                "standard folders."
+            ),
             content,
         )
         subtitle.setObjectName("archivePageSubtitle")
@@ -827,6 +832,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         glyph_font = QtGui.QFont()
         glyph_font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])
         glyph_font.setPixelSize(16)
+        # where the next card goes: the page, or its advanced part
+        cards_layout = [content_layout]
 
         def add_card(object_name: str, title: str = "") -> QtWidgets.QFrame:
             card = QtWidgets.QFrame(content)
@@ -840,7 +847,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 card_title.setObjectName("fluentCardTitle")
                 card_title.setContentsMargins(18, 0, 18, 8)
                 card_layout.addWidget(card_title)
-            content_layout.addWidget(card)
+            cards_layout[0].addWidget(card)
             return card
 
         def add_row(
@@ -902,6 +909,38 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         add_row(
             name_card, 0xE8AC, self.tr("Mod name:").rstrip(": "), name_help, (mod_name_edit,)
         )
+        reforged_online_box = None
+        if package == "reforged":
+            reforged_online_box = switch(
+                QtWidgets.QCheckBox(self.tr("Install as the online version"))
+            )
+            reforged_online_box.setObjectName("archiveReforgedOnlineCheck")
+            reforged_online_box.setChecked(self._default_reforged_online)
+            add_row(
+                name_card, 0xE774, reforged_online_box.accessibleName(),
+                self.tr(
+                    "While this mod is on, MO2 starts Reforged's own launcher and the "
+                    "program can't be changed; online, Reforged allows no other mods "
+                    "or DLLs. For offline play with your other mods, install Reforged "
+                    "again with this off, as a separate mod.\n\n"
+                    "Reinstall the mod to change this."
+                ),
+                (reforged_online_box,),
+            )
+
+            # two versions are two mods: a name of its own, so neither replaces
+            # the other
+            def name_online_version(online: bool) -> None:
+                name = mod_name_edit.text()
+                marked = name.casefold().endswith(" online")
+                if online and not marked:
+                    mod_name_edit.setText(f"{name} Online")
+                elif not online and marked:
+                    mod_name_edit.setText(name[: -len(" online")])
+
+            reforged_online_box.toggled.connect(name_online_version)
+            if self._default_reforged_online:
+                name_online_version(True)
 
         # game files a mod rarely means to replace, and regulation.bin, which
         # only one active mod can provide
@@ -927,7 +966,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 )
         # several copies of one DLL, or several option folders: both layouts
         # would install every copy, and the game would use only one or none
-        duplicate_dlls = self._duplicate_dll_names(archive_tree)
+        # (a mod the window knows is laid out on purpose: nothing to warn about)
+        duplicate_dlls = [] if package else self._duplicate_dll_names(archive_tree)
         if duplicate_dlls:
             notice_lines.append(
                 self.tr(
@@ -936,7 +976,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     "you want."
                 ).format(", ".join(duplicate_dlls))
             )
-        option_folders = self._option_folders(archive_tree)
+        option_folders = [] if package else self._option_folders(archive_tree)
         if option_folders:
             notice_lines.append(
                 self.tr(
@@ -975,9 +1015,28 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 True,
                 chosen_name,
             )
+            if reforged_online_box is not None:
+                self._chosen_reforged_online = reforged_online_box.isChecked()
             dialog.accept()
 
-        # --- standard layout options -----------------------------------------
+        # --- advanced: text files and the layout -----------------------------
+        advanced = QtWidgets.QWidget(content)
+        advanced.setObjectName("archiveAdvancedOptions")
+        advanced_layout = QtWidgets.QVBoxLayout(advanced)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.setSpacing(10)
+        advanced_card = add_card("archiveAdvancedCard")
+        advanced_button = QtWidgets.QPushButton(self.tr("Show"))
+        advanced_button.setObjectName("archiveAdvancedButton")
+        advanced_button.setCheckable(True)
+        add_row(
+            advanced_card, 0xE713, self.tr("Advanced options"),
+            self.tr("Skip text files, or keep the archive's own structure."),
+            (advanced_button,),
+        )
+        content_layout.addWidget(advanced)
+        cards_layout[0] = advanced_layout
+
         # text files apply to the standard layout only; the card says so once
         options_card = add_card("archiveTextFilesCard", self.tr("Text files"))
         filters_label = QtWidgets.QLabel(
@@ -1014,7 +1073,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         def add_layout_option(
             glyph: int, title: str, description: str, details: str, preserve: bool
         ) -> QtWidgets.QPushButton:
-            preferred = preserve == self._default_preserve
+            preferred = preserve == preferred_preserve
             choose_button = QtWidgets.QPushButton(self.tr("Choose this layout"))
             choose_button.setObjectName("archiveLayoutChoiceButton")
             choose_button.setProperty("preferredChoice", preferred)
@@ -1170,8 +1229,33 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 "preselected."
             )
         )
-        content_layout.addWidget(default_label)
+        advanced_layout.addWidget(default_label)
         content_layout.addStretch(1)
+
+        def toggle_advanced(visible: bool) -> None:
+            advanced.setVisible(visible)
+            advanced_button.setText(self.tr("Hide") if visible else self.tr("Show"))
+            advanced_button.setAccessibleName(
+                self.tr("Hide advanced options") if visible else self.tr("Show advanced options")
+            )
+            content_layout.activate()
+            if visible:
+                # the scroll area takes what the screen has no room for
+                dialog.resize(
+                    dialog.width(),
+                    min(
+                        dialog.maximumHeight(),
+                        dialog.height() + advanced.sizeHint().height() + 10,
+                    ),
+                )
+
+        advanced_button.toggled.connect(toggle_advanced)
+        advanced.setVisible(False)
+        advanced_button.setAccessibleName(self.tr("Show advanced options"))
+        if single_layout:
+            advanced_card.setVisible(False)
+            omit_txt_box.setChecked(False)
+            omit_md_box.setChecked(False)
 
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Cancel, dialog
@@ -1194,11 +1278,21 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             dialog.accept()
 
         manual_button.clicked.connect(choose_manual)
+        install_button = buttons.addButton(
+            self.tr("Install"), QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole
+        )
+        install_button.setObjectName("archiveLayoutChoiceButton")
+        install_button.setProperty("preferredChoice", True)
+        install_button.clicked.connect(lambda: choose_layout(preferred_preserve))
         layout.addWidget(buttons)
 
-        default_button = preserve_button if self._default_preserve else standard_button
-        default_button.setDefault(True)
-        default_button.setFocus()
+        install_button.setDefault(True)
+        install_button.setFocus()
+        # a mod reinstalled with its own choices shows them
+        if not package and (
+            self._default_preserve or self._default_omit_txt or self._default_omit_md
+        ):
+            advanced_button.setChecked(True)
 
         # Size from the complete, collapsed dialog. Doing this before adding
         # the layout choices leaves them below the fold on shorter displays.
@@ -1213,7 +1307,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             max_width = max(320, available.width() - 32)
             max_height = max(320, available.height() - 16)
             min_width = min(880, max_width)
-            min_height = min(560, max_height)
+            min_height = min(360, max_height)
             dialog.setMinimumSize(min_width, min_height)
             dialog.setMaximumSize(max_width, max_height)
             size_hint = dialog.sizeHint().expandedTo(dialog.minimumSizeHint())

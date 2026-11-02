@@ -1556,7 +1556,67 @@ Installiere den Mod neu, um das zu ändern.</translation>
       <source>Hide</source>
       <translation>Ausblenden</translation>
     </message>
-  </context>
+      <message>
+      <source>MO2 runs it itself, with your other mods: its game files and natives go to MO2's folders; its launcher, me3 and setup tool stay out.</source>
+      <translation>MO2 führt es selbst aus, zusammen mit deinen anderen Mods: Spieldateien und DLLs kommen in die Ordner von MO2; Launcher, me3 und Einrichtungstool bleiben außen vor.</translation>
+    </message>
+    <message>
+      <source>MO2 runs it itself, with your other mods: its game files and natives go to MO2's folders; me3, its launcher and the logs it ships stay out.</source>
+      <translation>MO2 führt es selbst aus, zusammen mit deinen anderen Mods: Spieldateien und DLLs kommen in die Ordner von MO2; me3, sein Launcher und mitgelieferte Protokolle bleiben außen vor.</translation>
+    </message>
+    <message>
+      <source>Its SeamlessCoop folder stays whole, and it runs from MO2's own program, with your other mods.</source>
+      <translation>Der Ordner SeamlessCoop bleibt vollständig, und es läuft über das MO2-Programm zusammen mit deinen anderen Mods.</translation>
+    </message>
+    <message>
+      <source>The contents of 'Drag Files Into Here' go to the game root, and its natives keep their paths.</source>
+      <translation>Der Inhalt von 'Drag Files Into Here' kommt in das Spielverzeichnis, die DLLs behalten ihre Pfade.</translation>
+    </message>
+    <message>
+      <source>Detected: {0}</source>
+      <translation>Erkannt: {0}</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Diese Mod installieren</translation>
+    </message>
+    <message>
+      <source>MO2 finds the mod's files inside the archive and puts them in its standard folders.</source>
+      <translation>MO2 sucht die Dateien der Mod im Archiv und legt sie in seine Standardordner.</translation>
+    </message>
+    <message>
+      <source>Advanced options</source>
+      <translation>Erweiterte Optionen</translation>
+    </message>
+    <message>
+      <source>Skip text files, or keep the archive's own structure.</source>
+      <translation>Textdateien auslassen oder die Struktur des Archivs beibehalten.</translation>
+    </message>
+    <message>
+      <source>Hide advanced options</source>
+      <translation>Erweiterte Optionen ausblenden</translation>
+    </message>
+    <message>
+      <source>Show advanced options</source>
+      <translation>Erweiterte Optionen anzeigen</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Install as the online version</source>
+      <translation>Als Online-Version installieren</translation>
+    </message>
+    <message>
+      <source>While this mod is on, MO2 starts Reforged's own launcher and the program can't be changed; online, Reforged allows no other mods or DLLs. For offline play with your other mods, install Reforged again with this off, as a separate mod.
+
+Reinstall the mod to change this.</source>
+      <translation>Solange diese Mod aktiv ist, startet MO2 den Launcher von Reforged, und das Programm lässt sich nicht ändern; online erlaubt Reforged keine anderen Mods oder DLLs. Für das Offline-Spiel mit deinen anderen Mods installiere Reforged erneut mit deaktivierter Option als eigene Mod.
+
+Installiere die Mod neu, um das zu ändern.</translation>
+    </message>
+</context>
   <context>
     <name>EldenRingGame</name>
     <message>
@@ -1900,6 +1960,18 @@ Das Spiel wurde nicht gestartet.</translation>
       <translation>Steam-Spielstände noch ausgeblendet</translation>
     </message>
     <message>
+      <source>Reforged is off in this profile</source>
+      <translation>Reforged ist in diesem Profil deaktiviert</translation>
+    </message>
+    <message>
+      <source>Its online mode starts from the mod {0}. Turn the mod on and start it?</source>
+      <translation>Der Online-Modus startet aus der Mod {0}. Mod aktivieren und starten?</translation>
+    </message>
+    <message>
+      <source>Turn on and start</source>
+      <translation>Aktivieren und starten</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Mods wurden möglicherweise nicht geladen</translation>
     </message>
@@ -1975,7 +2047,11 @@ Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und ko
       <source>Open the settings file</source>
       <translation>Einstellungsdatei öffnen</translation>
     </message>
-  </context>
+      <message>
+      <source>Reforged's online version is on. Turn that mod off to choose another program.</source>
+      <translation>Die Online-Version von Reforged ist aktiv. Deaktiviere diese Mod, um ein anderes Programm zu wählen.</translation>
+    </message>
+</context>
   <context>
     <name>EldenRingNativeProfile</name>
     <message>

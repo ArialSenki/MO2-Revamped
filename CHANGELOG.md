@@ -67,6 +67,22 @@
 - The archive installer treats folders named after Nightreign as wrappers even
   beside another container, as it does for Elden Ring.
 
+### Install window
+
+- A simpler window: the mod's name and Install. Skipping text files, the
+  archive's own structure and its contents move to Advanced options.
+- It recognizes ELDEN RING Reforged, Convergence, Seamless Co-op and FRZN Merge,
+  says what it will do with each, and uses the layout each one needs.
+- Reforged's online and offline versions are separate mods: a switch in this
+  window installs the online one, with "Online" in its name. While that mod is
+  on, the program list stays on "ELDEN RING Reforged (online)"; with it off, the
+  program isn't offered. Started some other way with the mod off, MO2 asks to
+  turn it on first.
+- Standard layout leaves out me3 and the script that starts it when a package
+  ships them, and logs folders that came in the archive.
+- Fixes: Seamless Co-op lost its folder when the archive wrapped it in another;
+  FRZN Merge's "Drag Files Into Here" stayed a folder beside its natives.
+
 ### Elden Ring Nightreign
 
 - Loose game files from mods now load in Nightreign (1.3.3). The native bridge

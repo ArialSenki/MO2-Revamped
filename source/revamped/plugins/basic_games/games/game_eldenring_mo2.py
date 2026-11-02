@@ -234,6 +234,25 @@ class _RunButtonEnabledMirror(QObject):
         return False
 
 
+class _ProgramListLock(QObject):
+    """Keeps a combo box on its program while it still looks and reads as usual;
+    disabled, it would lose its colors and icon."""
+
+    Blocked = (
+        QEvent.Type.MouseButtonPress,
+        QEvent.Type.MouseButtonDblClick,
+        QEvent.Type.Wheel,
+        QEvent.Type.KeyPress,
+    )
+
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        self.locked = False
+
+    def eventFilter(self, _watched, event) -> bool:
+        return self.locked and event.type() in self.Blocked
+
+
 class _MainWindowCloseWatcher(QObject):
     """Calls back when MO2's main window closes (MO2 quits or switches
     instance), before the plugin's timers stop."""
@@ -527,6 +546,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
         # ELDEN RING Reforged first: the release it keeps for its own launcher
         # must stay as it ships, notes and licences included
         self._reshape_reforged_layout(filetree, keep_reforged_online)
+        self._remove_me3_launcher(filetree)
+        self._remove_shipped_logs(filetree)
         # Apply MO2's standard root patterns before peeling the outer archive
         # folders. The wrapper scan itself stays at this game-root boundary.
         self._fix_known_layouts(filetree)
@@ -606,6 +627,12 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 for entry in entries
                 if is_directory(entry) and self._contains_supported_payload(entry)
             ]
+            # FRZN's staging folder goes to the root even beside its natives/
+            staging = [
+                folder for folder in folders if folder.name().casefold() == "drag files into here"
+            ]
+            if staging:
+                folders = staging
             if len(folders) != 1:
                 return filetree
             folder = folders[0]
@@ -632,6 +659,77 @@ class EldenRingModDataChecker(BasicModDataChecker):
     # (me3's among them) are never MO2's natives
     ReforgedOnlineDirectory = "_ReforgedOnline"
     ReforgedLauncherPath = "internals/launcher/ReforgedLauncher.exe"
+
+    @classmethod
+    def known_package(cls, filetree: mobase.IFileTree, depth: int = 0) -> str | None:
+        """Which mod with its own install needs this archive is, if any."""
+        if depth == 0 and cls.reforged_root(filetree) is not None:
+            return "reforged"
+        me3 = cls._direct_directory(filetree, "me3")
+        if me3 is not None and any(
+            entry.name().casefold() == "convergence.me3" for entry in me3
+        ):
+            return "convergence"
+        seamless = cls._direct_directory(filetree, "seamlesscoop")
+        if seamless is not None and any(
+            entry.name().casefold() in {"ersc.dll", "nrsc.dll"} for entry in seamless
+        ):
+            return "seamless"
+        if cls._direct_directory(filetree, "drag files into here") is not None:
+            return "frzn"
+        if depth >= 2:
+            return None
+        for entry in filetree:
+            if is_directory(entry):
+                found = cls.known_package(entry, depth + 1)
+                if found is not None:
+                    return found
+        return None
+
+    @classmethod
+    def _is_me3_folder(cls, folder: mobase.IFileTree, depth: int = 0) -> bool:
+        for entry in folder:
+            if is_directory(entry):
+                if depth < 3 and cls._is_me3_folder(entry, depth + 1):
+                    return True
+            elif entry.name().casefold() == "me3.exe" or entry.name().casefold().endswith(".me3"):
+                return True
+        return False
+
+    def _remove_me3_launcher(self, filetree: mobase.IFileTree, depth: int = 0) -> None:
+        """A package made for me3 brings me3 and the script that starts it; MO2
+        loads the package's files and natives itself."""
+        me3 = self._direct_directory(filetree, "me3")
+        if me3 is not None and self._is_me3_folder(me3):
+            me3.detach()
+            for entry in list(filetree):
+                if not is_directory(entry) and Path(entry.name()).suffix.casefold() in {
+                    ".bat",
+                    ".cmd",
+                    ".sh",
+                    ".lnk",
+                }:
+                    entry.detach()
+            return
+        if depth < 2:
+            for entry in list(filetree):
+                if is_directory(entry) and entry.name() != self.ReforgedOnlineDirectory:
+                    self._remove_me3_launcher(entry, depth + 1)
+
+    def _remove_shipped_logs(self, filetree: mobase.IFileTree, depth: int = 0) -> None:
+        """A logs folder that came with the archive is its author's, not the mod."""
+        if depth > self._archive_wrapper_depth_limit:
+            return
+        for entry in list(filetree):
+            if not is_directory(entry) or entry.name() == self.ReforgedOnlineDirectory:
+                continue
+            if entry.name().casefold() == "logs" and len(entry) > 0 and all(
+                not is_directory(child) and child.name().casefold().endswith(".log")
+                for child in entry
+            ):
+                entry.detach()
+            else:
+                self._remove_shipped_logs(entry, depth + 1)
 
     @classmethod
     def reforged_root(
@@ -1431,7 +1529,12 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if name == "drag files into here":
             return self._contains_supported_payload(folder)
 
-        if name in self._content_directories or name == self.ReforgedOnlineDirectory.casefold():
+        # Seamless Co-op reads its settings and locale beside its DLL
+        if (
+            name in self._content_directories
+            or name == "seamlesscoop"
+            or name == self.ReforgedOnlineDirectory.casefold()
+        ):
             return False
 
         entries = list(folder)
@@ -1919,6 +2022,8 @@ class EldenRingMo2Game(BasicGame):
         # folders with newer saves that a restore had to move aside
         self._displaced_newer_saves: list[Path] = []
         self._loose_files_warning_shown = False
+        self._online_programs_selector = None
+        self._online_program_locked = False
 
         self._local_savegames_feature = self.LocalSavegamesClass(self, organizer)
         self._register_feature(self._local_savegames_feature)
@@ -2983,6 +3088,7 @@ class EldenRingMo2Game(BasicGame):
                 )
                 selector.setMaxVisibleItems(8)
                 selector.view().setMinimumWidth(max(320, selector.width()))
+                self._follow_reforged_online_programs(selector)
                 if not self._integrate_shortcut_menu(window, run_button):
                     continue
                 self._set_native_title_bar(window, self._uses_dark_theme(application, window))
@@ -3296,6 +3402,8 @@ class EldenRingMo2Game(BasicGame):
             # hidden Steam saves of a game that may still be running, nor the
             # Overwrite cleanup and save restore that wait for that game
             return True
+        if not self._reforged_online_mod_ready(app_path):
+            return False
         if not self._seamless_password_ready():
             return False
         if self._active_save_quarantine is not None:
@@ -4946,6 +5054,102 @@ class EldenRingMo2Game(BasicGame):
                 .withSteamAppId(str(self.GameSteamId))
             )
         return executables
+
+    def _inactive_reforged_online_programs(self) -> set[str]:
+        """The online programs whose Reforged mod is off in this profile."""
+        inactive = set()
+        try:
+            mod_list = self._organizer.modList()
+            for executable in self._reforged_online_executables():
+                mod_name = Path(executable.binary().absoluteFilePath()).parents[3].name
+                if not mod_list.state(mod_name) & mobase.ModState.ACTIVE:
+                    inactive.add(executable.title())
+        except (AttributeError, IndexError, RuntimeError):
+            return set()
+        return inactive
+
+    def _follow_reforged_online_programs(self, selector: QComboBox) -> None:
+        """The program list offers Reforged's online mode only with its mod on."""
+        if self._online_programs_selector is selector:
+            return
+        self._online_programs_selector = selector
+        self._online_programs_tooltip = selector.toolTip()
+        self._online_program_lock = _ProgramListLock(selector)
+        selector.installEventFilter(self._online_program_lock)
+        sync = lambda *_args: QTimer.singleShot(0, self._sync_reforged_online_programs)
+        selector.model().rowsInserted.connect(sync)
+        selector.currentIndexChanged.connect(
+            lambda _row: self._online_program_locked and sync()
+        )
+        self._organizer.modList().onModStateChanged(lambda _changes: sync())
+        self._organizer.onProfileChanged(sync)
+        sync()
+
+    def _sync_reforged_online_programs(self) -> None:
+        """A Reforged mod installed as the online version decides the program:
+        while it is on, the list stays on its launcher."""
+        selector = self._online_programs_selector
+        if selector is None or not self.isActive():
+            return
+        hidden = self._inactive_reforged_online_programs()
+        view = selector.view()
+        for row in range(selector.count()):
+            view.setRowHidden(row, selector.itemText(row) in hidden)
+        online = [
+            executable.title()
+            for executable in self._reforged_online_executables()
+            if executable.title() not in hidden
+        ]
+        row = selector.findText(online[0]) if online else -1
+        if row >= 0:
+            if selector.currentIndex() != row:
+                selector.setCurrentIndex(row)
+            self._online_program_lock.locked = True
+            selector.setToolTip(
+                _tr("Reforged's online version is on. Turn that mod off to choose another program.")
+            )
+            self._online_program_locked = True
+            return
+        if self._online_program_locked:
+            self._online_program_locked = False
+            self._online_program_lock.locked = False
+            selector.setToolTip(self._online_programs_tooltip)
+        # MO2's first program is the game
+        if selector.currentText() in hidden and selector.count() > 1:
+            selector.setCurrentIndex(1)
+
+    def _reforged_online_mod_ready(self, app_path: str) -> bool:
+        """A shortcut or the toolbar can still start the online program with its
+        mod off: it would run a Reforged the profile has turned off."""
+        launcher = Path(app_path)
+        if (
+            launcher.name.casefold() not in self.AutoSwapLaunchers
+            or len(launcher.parents) < 4
+            or launcher.parents[2].name != EldenRingModDataChecker.ReforgedOnlineDirectory
+        ):
+            return True
+        mod_name = launcher.parents[3].name
+        mod_list = self._organizer.modList()
+        try:
+            if mod_list.state(mod_name) & mobase.ModState.ACTIVE:
+                return True
+        except (AttributeError, RuntimeError):
+            return True
+        box = QMessageBox()
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle("ELDEN RING Reforged")
+        box.setText(_tr("Reforged is off in this profile"))
+        box.setInformativeText(
+            _tr("Its online mode starts from the mod {0}. Turn the mod on and start it?").format(mod_name)
+        )
+        start = box.addButton(_tr("Turn on and start"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(start)
+        box.exec()
+        if box.clickedButton() is not start:
+            return False
+        mod_list.setActive(mod_name, True)
+        return True
 
     def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
         if not self.isActive():
