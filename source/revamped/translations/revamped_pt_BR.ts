@@ -1914,7 +1914,7 @@ Reinicie o MO2, ou mude para outro perfil e volte, antes de iniciar o Elden Ring
       <translation>O perfil de save nomeado do Elden Ring está ausente</translation>
     </message>
     <message>
-      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Elden Ring Save Isolation and choose an available profile, or restore the missing profile folder.</source>
+      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
       <translation>O perfil de save nomeado selecionado não foi encontrado ou os metadados são inválidos. O jogo não foi iniciado. Abra Ferramentas &gt; Isolamento de saves e escolha um perfil disponível, ou restaure a pasta do perfil ausente.</translation>
     </message>
     <message>
@@ -8355,6 +8355,26 @@ Para manter alguns arquivos, mova-os para um mod antes.</translation>
   <context>
     <name>ProfilesDialog</name>
     <message>
+      <source>That name is already in use</source>
+      <translation>Esse nome já está em uso</translation>
+    </message>
+    <message>
+      <source>Choose another name for this profile.</source>
+      <translation>Escolha outro nome para este perfil.</translation>
+    </message>
+    <message>
+      <source>The game is running</source>
+      <translation>O jogo está em execução</translation>
+    </message>
+    <message>
+      <source>Close the game before deleting a profile.</source>
+      <translation>Feche o jogo antes de excluir um perfil.</translation>
+    </message>
+    <message>
+      <source>Close the game before renaming a profile.</source>
+      <translation>Feche o jogo antes de renomear um perfil.</translation>
+    </message>
+    <message>
       <source>Profile management</source>
       <translation>Gerenciamento de perfis</translation>
     </message>
@@ -10205,6 +10225,14 @@ Restantes nesta hora: %3</translation>
   <context>
     <name>TransferSavesDialog</name>
     <message>
+      <source>Transfer saves</source>
+      <translation>Transferir saves</translation>
+    </message>
+    <message>
+      <source>%1 file(s) could not be transferred, usually because a program had them open. The log has the details.</source>
+      <translation>Não foi possível transferir %1 arquivo(s), geralmente porque um programa os tinha abertos. O log tem os detalhes.</translation>
+    </message>
+    <message>
       <source>Transfer save games</source>
       <translation>Transferir saves</translation>
     </message>
@@ -11168,4 +11196,11 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
       <translation>Este mod não tem um ID do Nexus válido. Para abrir outro site, ative Página web personalizada acima e digite o endereço.</translation>
     </message>
 </context>
+  <context>
+    <name>Profile</name>
+    <message>
+      <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
+      <translation>Não foi possível excluir os saves do perfil. Feche qualquer programa que os esteja usando e tente novamente.</translation>
+    </message>
+  </context>
 </TS>

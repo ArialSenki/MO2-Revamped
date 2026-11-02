@@ -9125,162 +9125,162 @@ Please enter a name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="805"/>
+        <location filename="organizercore.cpp" line="808"/>
         <source>Installation cancelled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="806"/>
+        <location filename="organizercore.cpp" line="809"/>
         <source>Another installation is currently in progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="819"/>
+        <location filename="organizercore.cpp" line="822"/>
         <source>Installation successful</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="852"/>
+        <location filename="organizercore.cpp" line="855"/>
         <source>Configure Mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="853"/>
+        <location filename="organizercore.cpp" line="856"/>
         <source>This mod contains ini tweaks. Do you want to configure them now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="863"/>
+        <location filename="organizercore.cpp" line="866"/>
         <source>mod not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="879"/>
+        <location filename="organizercore.cpp" line="882"/>
         <source>Extraction cancelled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="880"/>
+        <location filename="organizercore.cpp" line="883"/>
         <source>The installation was cancelled while extracting files. If this was prior to a FOMOD setup, this warning may be ignored. However, if this was during installation, the mod will likely be missing files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1107"/>
+        <location filename="organizercore.cpp" line="1110"/>
         <source>file not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1123"/>
-        <location filename="organizercore.cpp" line="1139"/>
+        <location filename="organizercore.cpp" line="1126"/>
+        <location filename="organizercore.cpp" line="1142"/>
         <source>failed to generate preview for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1190"/>
+        <location filename="organizercore.cpp" line="1193"/>
         <source>Sorry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1191"/>
+        <location filename="organizercore.cpp" line="1194"/>
         <source>Sorry, can&apos;t preview anything. This function currently does not support extracting from bsas.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1202"/>
+        <location filename="organizercore.cpp" line="1205"/>
         <source>File &apos;%1&apos; not found.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1210"/>
+        <location filename="organizercore.cpp" line="1213"/>
         <source>Failed to generate preview for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1323"/>
+        <location filename="organizercore.cpp" line="1326"/>
         <source>Failed to refresh list of esps: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1433"/>
+        <location filename="organizercore.cpp" line="1436"/>
         <source>Multiple esps/esls activated, please check that they don&apos;t conflict.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1504"/>
+        <location filename="organizercore.cpp" line="1507"/>
         <source>You need to be logged in with Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1548"/>
+        <location filename="organizercore.cpp" line="1551"/>
         <source>Download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1549"/>
+        <location filename="organizercore.cpp" line="1552"/>
         <source>A download has been started but no installed page plugin recognizes it.
 If you download anyway no information (i.e. version) will be associated with the download.
 Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1778"/>
-        <location filename="organizercore.cpp" line="1830"/>
+        <location filename="organizercore.cpp" line="1781"/>
+        <location filename="organizercore.cpp" line="1833"/>
         <source>failed to update mod list: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1855"/>
+        <location filename="organizercore.cpp" line="1858"/>
         <source>Login failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1856"/>
+        <location filename="organizercore.cpp" line="1859"/>
         <source>Login failed, try again?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1864"/>
+        <location filename="organizercore.cpp" line="1867"/>
         <source>login failed: %1. Download will not be associated with an account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1872"/>
+        <location filename="organizercore.cpp" line="1875"/>
         <source>login failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1935"/>
+        <location filename="organizercore.cpp" line="1938"/>
         <source>&lt;a href=&quot;%1&quot;&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to &quot;Script Extender&quot;, in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1922"/>
+        <location filename="organizercore.cpp" line="1925"/>
         <source>MO1 &quot;Script Extender&quot; load mechanism has left hook.dll in your game folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1837"/>
+        <location filename="organizercore.cpp" line="1840"/>
         <source>Signed in to Nexus Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1926"/>
-        <location filename="organizercore.cpp" line="1946"/>
+        <location filename="organizercore.cpp" line="1929"/>
+        <location filename="organizercore.cpp" line="1949"/>
         <source>Description missing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="1971"/>
+        <location filename="organizercore.cpp" line="1974"/>
         <source>failed to save load order: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="2034"/>
+        <location filename="organizercore.cpp" line="2037"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="organizercore.cpp" line="2109"/>
+        <location filename="organizercore.cpp" line="2112"/>
         <source>The designated write target &quot;%1&quot; is not enabled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10162,12 +10162,17 @@ To keep some files, move them to a mod first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="995"/>
+        <location filename="profile.cpp" line="969"/>
+        <source>The profile&apos;s saves could not be deleted. Close any program using them and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profile.cpp" line="1000"/>
         <source>Missing profile-specific game INI files!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="996"/>
+        <location filename="profile.cpp" line="1001"/>
         <source>Some of your profile-specific game INI files were missing.  They will now be copied from the vanilla game folder.  You might want to double-check your settings.
 
 Missing files:
@@ -10175,12 +10180,12 @@ Missing files:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="1015"/>
+        <location filename="profile.cpp" line="1020"/>
         <source>Delete profile-specific game INI files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profile.cpp" line="1016"/>
+        <location filename="profile.cpp" line="1021"/>
         <source>Do you want to delete the profile-specific game INI files? (If you select &quot;No&quot;, the INI files will be used again if you re-enable profile-specific game INI files.)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10277,57 +10282,57 @@ Missing files:
 <context>
     <name>ProfilesDialog</name>
     <message>
-        <location filename="profilesdialog.cpp" line="215"/>
-        <location filename="profilesdialog.cpp" line="289"/>
-        <location filename="profilesdialog.cpp" line="305"/>
+        <location filename="profilesdialog.cpp" line="240"/>
+        <location filename="profilesdialog.cpp" line="315"/>
+        <location filename="profilesdialog.cpp" line="331"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="363"/>
+        <location filename="profilesdialog.cpp" line="389"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="246"/>
+        <location filename="profilesdialog.cpp" line="272"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="518"/>
-        <location filename="profilesdialog.cpp" line="785"/>
+        <location filename="profilesdialog.cpp" line="547"/>
+        <location filename="profilesdialog.cpp" line="820"/>
         <source>failed to create profile: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="805"/>
-        <location filename="profilesdialog.cpp" line="942"/>
+        <location filename="profilesdialog.cpp" line="840"/>
+        <location filename="profilesdialog.cpp" line="997"/>
         <source>Choose a valid name for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="827"/>
-        <location filename="profilesdialog.cpp" line="929"/>
+        <location filename="profilesdialog.cpp" line="869"/>
+        <location filename="profilesdialog.cpp" line="978"/>
         <source>This profile is currently active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="828"/>
+        <location filename="profilesdialog.cpp" line="870"/>
         <source>Switch to another profile before removing it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="833"/>
+        <location filename="profilesdialog.cpp" line="882"/>
         <source>Remove profile &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="853"/>
+        <location filename="profilesdialog.cpp" line="902"/>
         <source>This profile appears to be broken.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="858"/>
+        <location filename="profilesdialog.cpp" line="907"/>
         <source>The folder below will be deleted:
 %1
 
@@ -10335,145 +10340,145 @@ Proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="930"/>
+        <location filename="profilesdialog.cpp" line="979"/>
         <source>Switch to another profile before renaming it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="812"/>
+        <location filename="profilesdialog.cpp" line="853"/>
         <source>failed to copy profile: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="158"/>
+        <location filename="profilesdialog.cpp" line="183"/>
         <source>Today at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="161"/>
+        <location filename="profilesdialog.cpp" line="186"/>
         <source>Yesterday at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="234"/>
-        <location filename="profilesdialog.cpp" line="752"/>
+        <location filename="profilesdialog.cpp" line="260"/>
+        <location filename="profilesdialog.cpp" line="781"/>
         <source>What is a profile?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="309"/>
+        <location filename="profilesdialog.cpp" line="335"/>
         <source>New profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="312"/>
+        <location filename="profilesdialog.cpp" line="338"/>
         <source>Create a profile with its own mod list (Ctrl+N)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="336"/>
+        <location filename="profilesdialog.cpp" line="362"/>
         <source>Select a profile to see its mods and options.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="383"/>
+        <location filename="profilesdialog.cpp" line="409"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="384"/>
+        <location filename="profilesdialog.cpp" line="410"/>
         <source>Profile folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="385"/>
+        <location filename="profilesdialog.cpp" line="411"/>
         <source>Open the profile folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="393"/>
+        <location filename="profilesdialog.cpp" line="419"/>
         <source>Saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="398"/>
+        <location filename="profilesdialog.cpp" line="424"/>
         <source>Profile-specific saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="399"/>
+        <location filename="profilesdialog.cpp" line="425"/>
         <source>This profile keeps its own save games instead of sharing the game&apos;s.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="405"/>
+        <location filename="profilesdialog.cpp" line="431"/>
         <source>Profile-specific game INI files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="406"/>
+        <location filename="profilesdialog.cpp" line="432"/>
         <source>This profile keeps its own copy of the game&apos;s INI files, so its settings don&apos;t change other profiles.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="412"/>
+        <location filename="profilesdialog.cpp" line="438"/>
         <source>Automatic archive invalidation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="413"/>
+        <location filename="profilesdialog.cpp" line="439"/>
         <source>Makes the game load loose files over the ones in its archives.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="444"/>
+        <location filename="profilesdialog.cpp" line="473"/>
         <source>Duplicate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="447"/>
+        <location filename="profilesdialog.cpp" line="476"/>
         <source>Create a profile with the same mods and options (Ctrl+D)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="449"/>
-        <location filename="profilesdialog.cpp" line="731"/>
+        <location filename="profilesdialog.cpp" line="478"/>
+        <location filename="profilesdialog.cpp" line="760"/>
         <source>Transfer saves...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="452"/>
-        <location filename="profilesdialog.cpp" line="665"/>
+        <location filename="profilesdialog.cpp" line="481"/>
+        <location filename="profilesdialog.cpp" line="694"/>
         <source>Copy or move saves between this profile and the game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="455"/>
+        <location filename="profilesdialog.cpp" line="484"/>
         <source>Delete profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="536"/>
+        <location filename="profilesdialog.cpp" line="565"/>
         <source>Can&apos;t be read</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="539"/>
+        <location filename="profilesdialog.cpp" line="568"/>
         <source>%1 of %2 mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="541"/>
+        <location filename="profilesdialog.cpp" line="570"/>
         <source>In use</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="583"/>
+        <location filename="profilesdialog.cpp" line="612"/>
         <source>The copy is incomplete</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="profilesdialog.cpp" line="584"/>
+        <location filename="profilesdialog.cpp" line="613"/>
         <source>%n file(s) could not be copied, usually because a program such as the game had them open. Close it, remove the new profile and copy again.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -10481,179 +10486,209 @@ Proceed?</source>
         </translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="605"/>
-        <location filename="profilesdialog.cpp" line="615"/>
-        <location filename="profilesdialog.cpp" line="723"/>
+        <location filename="profilesdialog.cpp" line="634"/>
+        <location filename="profilesdialog.cpp" line="644"/>
+        <location filename="profilesdialog.cpp" line="752"/>
         <source>Use this profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="612"/>
+        <location filename="profilesdialog.cpp" line="641"/>
         <source>In use by the main window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="613"/>
+        <location filename="profilesdialog.cpp" line="642"/>
         <source>Not in use</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="615"/>
+        <location filename="profilesdialog.cpp" line="644"/>
         <source>Current profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="617"/>
+        <location filename="profilesdialog.cpp" line="646"/>
         <source>Switch the main window to this profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="621"/>
+        <location filename="profilesdialog.cpp" line="650"/>
         <source>Switch to another profile before renaming this one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="622"/>
+        <location filename="profilesdialog.cpp" line="651"/>
         <source>Rename (F2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="624"/>
+        <location filename="profilesdialog.cpp" line="653"/>
         <source>Switch to another profile before deleting this one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="625"/>
+        <location filename="profilesdialog.cpp" line="654"/>
         <source>Delete the profile and its own saves (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="636"/>
+        <location filename="profilesdialog.cpp" line="665"/>
         <source>This profile can&apos;t be read</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="152"/>
-        <location filename="profilesdialog.cpp" line="639"/>
+        <location filename="profilesdialog.cpp" line="177"/>
+        <location filename="profilesdialog.cpp" line="668"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="388"/>
+        <location filename="profilesdialog.cpp" line="414"/>
         <source>Last used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="644"/>
+        <location filename="profilesdialog.cpp" line="673"/>
         <source>%1 of %2 mods enabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="648"/>
+        <location filename="profilesdialog.cpp" line="677"/>
         <source>Chosen in Tools &gt; Save Isolation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="666"/>
+        <location filename="profilesdialog.cpp" line="695"/>
         <source>Turn on profile-specific saves to transfer saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="697"/>
+        <location filename="profilesdialog.cpp" line="726"/>
         <source>New profile...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="699"/>
+        <location filename="profilesdialog.cpp" line="728"/>
         <source>Open profiles folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="726"/>
+        <location filename="profilesdialog.cpp" line="755"/>
         <source>Rename...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="728"/>
+        <location filename="profilesdialog.cpp" line="757"/>
         <source>Duplicate...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="739"/>
+        <location filename="profilesdialog.cpp" line="768"/>
         <source>Open folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="741"/>
+        <location filename="profilesdialog.cpp" line="770"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="741"/>
+        <location filename="profilesdialog.cpp" line="770"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="743"/>
+        <location filename="profilesdialog.cpp" line="772"/>
         <source>Delete profile...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="753"/>
+        <location filename="profilesdialog.cpp" line="782"/>
         <source>A profile is one setup of the same instance: which mods are enabled, their order and, if you want, its own saves and game INI files. Profiles share the instance&apos;s mods and downloads, so a second profile costs no disk space.
 
 Use one per playthrough or per mod list you want to try. The profile in use is chosen next to Program in the main window.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="758"/>
+        <location filename="profilesdialog.cpp" line="787"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="804"/>
-        <location filename="profilesdialog.cpp" line="941"/>
+        <location filename="profilesdialog.cpp" line="813"/>
+        <location filename="profilesdialog.cpp" line="845"/>
+        <location filename="profilesdialog.cpp" line="1002"/>
+        <source>That name is already in use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="814"/>
+        <location filename="profilesdialog.cpp" line="846"/>
+        <location filename="profilesdialog.cpp" line="1003"/>
+        <source>Choose another name for this profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="839"/>
+        <location filename="profilesdialog.cpp" line="996"/>
         <source>Invalid profile name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="841"/>
+        <location filename="profilesdialog.cpp" line="876"/>
+        <location filename="profilesdialog.cpp" line="984"/>
+        <source>The game is running</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="877"/>
+        <source>Close the game before deleting a profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="890"/>
         <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="844"/>
+        <location filename="profilesdialog.cpp" line="893"/>
         <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="889"/>
+        <location filename="profilesdialog.cpp" line="938"/>
         <source>The profile could not be moved to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="894"/>
+        <location filename="profilesdialog.cpp" line="943"/>
         <source>Delete this folder permanently instead? Its saves cannot be recovered afterwards.
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="949"/>
+        <location filename="profilesdialog.cpp" line="985"/>
+        <source>Close the game before renaming a profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="profilesdialog.cpp" line="1010"/>
         <source>The profile was not renamed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="950"/>
+        <location filename="profilesdialog.cpp" line="1011"/>
         <source>Windows could not rename the profile folder. Close any program using files in it and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="985"/>
+        <location filename="profilesdialog.cpp" line="1046"/>
         <source>failed to change archive invalidation state: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="671"/>
+        <location filename="profilesdialog.cpp" line="700"/>
         <source>failed to determine if invalidation is active: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11806,7 +11841,7 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="profilesdialog.cpp" line="488"/>
+        <location filename="profilesdialog.cpp" line="517"/>
         <source>Before you can use ModOrganizer, you need to create at least one profile. ATTENTION: Run the game at least once before creating a profile!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14650,6 +14685,16 @@ Remaining this hour: %3</source>
     <message>
         <location filename="transfersavesdialog.cpp" line="340"/>
         <source>Confirm</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="transfersavesdialog.cpp" line="400"/>
+        <source>Transfer saves</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="transfersavesdialog.cpp" line="401"/>
+        <source>%1 file(s) could not be transferred, usually because a program had them open. The log has the details.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

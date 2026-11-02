@@ -2085,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.80"
+    Version = "0.5.0-alpha.81"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -3710,7 +3710,7 @@ class EldenRingMo2Game(BasicGame):
                 None,
                 self._game_text(_tr("Named Elden Ring save profile is missing")),
                 self._game_text(_tr("The selected named save profile could not be found or its metadata "
-                "is invalid. The game was not started. Open Tools > Elden Ring "
+                "is invalid. The game was not started. Open Tools > "
                 "Save Isolation and choose an available profile, or restore the "
                 "missing profile folder.")),
             )

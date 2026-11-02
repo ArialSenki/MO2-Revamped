@@ -343,6 +343,7 @@ bool TransferSavesDialog::transferCharacters(
   }
 
   OverwriteMode overwriteMode = OVERWRITE_ASK;
+  int failed                  = 0;
 
   for (SaveListItem const& save : saves) {
     for (QString source : save->allFiles()) {
@@ -365,6 +366,7 @@ bool TransferSavesDialog::transferCharacters(
             !QFile::rename(destinationFile, backupFile)) {
           log::error("Failed to preserve existing save before transfer: {}",
                      destinationFile);
+          ++failed;
           continue;
         }
       }
@@ -384,6 +386,7 @@ bool TransferSavesDialog::transferCharacters(
           log::error("Failed to remove incomplete transfer: {}", destinationFile);
         }
         log::error(errmsg, sourceFile.absoluteFilePath(), std::move(destinationFile));
+        ++failed;
         continue;
       }
 
@@ -392,6 +395,12 @@ bool TransferSavesDialog::transferCharacters(
                    backupFile);
       }
     }
+  }
+  if (failed > 0) {
+    QMessageBox::warning(this, tr("Transfer saves"),
+                         tr("%1 file(s) could not be transferred, usually because a "
+                            "program had them open. The log has the details.")
+                             .arg(failed));
   }
   return true;
 }

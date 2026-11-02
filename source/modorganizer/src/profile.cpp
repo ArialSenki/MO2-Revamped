@@ -964,7 +964,12 @@ bool Profile::enableLocalSaves(bool enable)
         QDialogButtonBox::No | QDialogButtonBox::Yes | QDialogButtonBox::Cancel,
         QDialogButtonBox::No);
     if (res == QMessageBox::Yes) {
-      shellDelete(QStringList(m_Directory.absoluteFilePath("saves")));
+      // to the Recycle Bin, as the INI files and whole profiles go
+      if (!shellDelete(QStringList(m_Directory.absoluteFilePath("saves")), true)) {
+        reportError(tr("The profile's saves could not be deleted. Close any program "
+                       "using them and try again."));
+        return false;
+      }
     } else if (res == QMessageBox::No) {
       // No action
     } else {
@@ -1114,10 +1119,15 @@ QString Profile::savePath() const
 bool Profile::rename(const QString& newName)
 {
   QDir profileDir(Settings::instance().paths().profiles());
+  m_Settings->sync();
   if (!profileDir.rename(name(), newName)) {
     return false;
   }
   m_Directory.setPath(profileDir.absoluteFilePath(newName));
+  // the settings file moved with its folder: the old path would bring that back
+  delete m_Settings;
+  m_Settings =
+      new QSettings(m_Directory.absoluteFilePath("settings.ini"), QSettings::IniFormat);
   return true;
 }
 

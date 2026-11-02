@@ -627,11 +627,14 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
                     .arg(QDir(profileDir).dirName()));
   }
 
+  // first: one that can't be read throws here, and the current one stays
+  auto newProfile =
+      std::make_unique<Profile>(QDir(profileDir), managedGame(), gameFeatures());
+
   // Keep the old profile to emit signal-changed:
   auto oldProfile = std::move(m_CurrentProfile);
 
-  m_CurrentProfile =
-      std::make_unique<Profile>(QDir(profileDir), managedGame(), gameFeatures());
+  m_CurrentProfile = std::move(newProfile);
 
   m_ModList.setProfile(m_CurrentProfile.get());
 

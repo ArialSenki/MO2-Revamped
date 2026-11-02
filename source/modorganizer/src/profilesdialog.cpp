@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "menuutils.h"
 
 #include "bsainvalidation.h"
+#include "envmodule.h"
 #include "eldenringsavesettings.h"
 #include "filesystemutilities.h"
 #include "game_features.h"
@@ -87,6 +88,30 @@ constexpr char16_t SettingsGlyph = 0xE713;
 constexpr char16_t ArchiveGlyph  = 0xF012;  // Zip folder
 constexpr char16_t TransferGlyph = 0xE8AB;
 constexpr char16_t PlayGlyph     = 0xE768;
+
+// a folder name differing only in case is the same folder on Windows
+bool profileNameTaken(const QListWidget* list, const QString& name,
+                      const QListWidgetItem* except = nullptr)
+{
+  for (int i = 0; i < list->count(); ++i) {
+    const QListWidgetItem* item = list->item(i);
+    if (item != except && item->text().compare(name, Qt::CaseInsensitive) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool gameIsRunning(const MOBase::IPluginGame* game)
+{
+  const QString binary = QFileInfo(game->binaryName()).fileName();
+  for (const env::Process& process : env::getRunningProcesses()) {
+    if (process.name().compare(binary, Qt::CaseInsensitive) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 void styleProfilePrompt(QMessageBox& prompt,
                         QMessageBox::StandardButton confirmButton = QMessageBox::No,
@@ -213,8 +238,9 @@ void ProfilesDialog::setupUi()
 {
   setObjectName(QStringLiteral("ProfilesDialog"));
   setWindowTitle(tr("Profiles"));
-  setMinimumSize(820, 520);
-  resize(940, 620);
+  // Elden Ring and Nightreign don't show the profile's switches
+  setMinimumSize(820, m_eldenRing ? 440 : 520);
+  resize(940, m_eldenRing ? 470 : 620);
 
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(12, 12, 12, 12);
@@ -427,6 +453,9 @@ QWidget* ProfilesDialog::createDetails()
     if (!m_GameFeatures.gameFeature<LocalSavegames>()) {
       m_localSaves->hide();
     }
+    if (m_Game->iniFiles().isEmpty()) {
+      m_localIniFiles->hide();
+    }
   }
 
   connect(m_localSaves, &QCheckBox::toggled, this, &ProfilesDialog::onLocalSavesChanged);
@@ -450,7 +479,7 @@ QWidget* ProfilesDialog::createDetails()
   m_transfer->setObjectName(QStringLiteral("transferButton"));
   m_transfer->setAutoDefault(false);
   m_transfer->setToolTip(tr("Copy or move saves between this profile and the game"));
-  m_transfer->setVisible(!m_eldenRing);
+  m_transfer->setVisible(!m_eldenRing && m_GameFeatures.gameFeature<LocalSavegames>());
   m_remove = new QPushButton(FluentIcons::glyph(DeleteGlyph, FluentIcons::Tone::Critical),
                              tr("Delete profile"), actions);
   m_remove->setObjectName(QStringLiteral("removeProfileButton"));
@@ -607,7 +636,7 @@ void ProfilesDialog::fillDetails()
   }
 
   m_details->setCurrentIndex(1);
-  const bool active = item->text() == m_ActiveProfileName;
+  const bool active = item->text().compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0;
   m_name->setText(item->text());
   m_caption->setText(active ? tr("In use by the main window")
                             : tr("Not in use"));
@@ -779,6 +808,12 @@ void ProfilesDialog::addProfile()
   QString name   = dialog.getName();
 
   if (okClicked && (name.size() > 0)) {
+    QString folderName = name;
+    if (fixDirectoryName(folderName) && profileNameTaken(m_list, folderName)) {
+      showProfileNotice(this, QMessageBox::Warning, tr("That name is already in use"),
+                        tr("Choose another name for this profile."));
+      return;
+    }
     try {
       createProfile(name, dialog.getPreferDefaultSettings());
     } catch (const std::exception& e) {
@@ -806,6 +841,12 @@ void ProfilesDialog::copyProfile()
     return;
   }
 
+  if (profileNameTaken(m_list, name)) {
+    showProfileNotice(this, QMessageBox::Warning, tr("That name is already in use"),
+                      tr("Choose another name for this profile."));
+    return;
+  }
+
   try {
     createProfile(name, *profile);
   } catch (const std::exception& e) {
@@ -822,10 +863,18 @@ void ProfilesDialog::removeProfile()
   Profile::Ptr profileToDelete = selectedItem->data(Qt::UserRole).value<Profile::Ptr>();
   const QString profileName =
       profileToDelete ? profileToDelete->name() : selectedItem->text();
-  if (profileToDelete && profileName == m_ActiveProfileName) {
+  if (profileToDelete &&
+      profileName.compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
     showProfileNotice(this, QMessageBox::Warning,
                       tr("This profile is currently active"),
                       tr("Switch to another profile before removing it."));
+    return;
+  }
+  // a launch outside the virtual folder writes its saves back to its route when
+  // the game closes, which would bring this folder back
+  if (m_eldenRing && gameIsRunning(m_Game)) {
+    showProfileNotice(this, QMessageBox::Warning, tr("The game is running"),
+                      tr("Close the game before deleting a profile."));
     return;
   }
 
@@ -931,6 +980,12 @@ void ProfilesDialog::renameProfile()
     return;
   }
 
+  if (m_eldenRing && gameIsRunning(m_Game)) {
+    showProfileNotice(this, QMessageBox::Warning, tr("The game is running"),
+                      tr("Close the game before renaming a profile."));
+    return;
+  }
+
   ProfileInputDialog dialog(this, ProfileInputDialog::Purpose::Rename, profile->name());
   if (dialog.exec() != QDialog::Accepted) {
     return;
@@ -940,6 +995,12 @@ void ProfilesDialog::renameProfile()
   if (!fixDirectoryName(name) || name.isEmpty()) {
     showProfileNotice(this, QMessageBox::Warning, tr("Invalid profile name"),
                       tr("Choose a valid name for this profile."));
+    return;
+  }
+
+  if (profileNameTaken(m_list, name, m_list->currentItem())) {
+    showProfileNotice(this, QMessageBox::Warning, tr("That name is already in use"),
+                      tr("Choose another name for this profile."));
     return;
   }
 

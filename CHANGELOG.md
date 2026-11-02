@@ -90,6 +90,18 @@
 - Duplicating refreshes the list if the copy stops partway, warns if the copy's
   profiles could not be made, and no longer doubles "Portable" in the name.
 
+### Profiles
+
+- A new, duplicated or renamed profile can't take a name already in use, in any
+  case. Duplicating onto one used to report success, and its row could delete
+  the original.
+- A profile that can't be read no longer leaves MO2 without one when picked.
+- Elden Ring and Nightreign: renaming or deleting a profile waits until the game
+  is closed, and the window fits their fewer rows.
+- Other games: switches changed after a rename reach the renamed profile. Deleting
+  profile-specific saves uses the Recycle Bin and says if it fails. Transfer saves
+  says when files fail. Options the game doesn't have stay hidden.
+
 ### New instance wizard and menus
 
 - Menus are more compact.

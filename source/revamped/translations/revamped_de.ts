@@ -1914,7 +1914,7 @@ Starte MO2 neu oder wechsle zu einem anderen Profil und zurück, bevor du Elden 
       <translation>Benanntes Elden-Ring-Speicherprofil fehlt</translation>
     </message>
     <message>
-      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Elden Ring Save Isolation and choose an available profile, or restore the missing profile folder.</source>
+      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
       <translation>Das ausgewählte benannte Speicherprofil wurde nicht gefunden oder seine Metadaten sind ungültig. Das Spiel wurde nicht gestartet. Öffne Werkzeuge &gt; Spielstand-Isolation und wähle ein verfügbares Profil oder stelle den fehlenden Profilordner wieder her.</translation>
     </message>
     <message>
@@ -8355,6 +8355,26 @@ Um einige Dateien zu behalten, verschiebe sie vorher in eine Mod.</translation>
   <context>
     <name>ProfilesDialog</name>
     <message>
+      <source>That name is already in use</source>
+      <translation>Dieser Name wird bereits verwendet</translation>
+    </message>
+    <message>
+      <source>Choose another name for this profile.</source>
+      <translation>Wähle einen anderen Namen für dieses Profil.</translation>
+    </message>
+    <message>
+      <source>The game is running</source>
+      <translation>Das Spiel läuft</translation>
+    </message>
+    <message>
+      <source>Close the game before deleting a profile.</source>
+      <translation>Schließe das Spiel, bevor du ein Profil löschst.</translation>
+    </message>
+    <message>
+      <source>Close the game before renaming a profile.</source>
+      <translation>Schließe das Spiel, bevor du ein Profil umbenennst.</translation>
+    </message>
+    <message>
       <source>Profile management</source>
       <translation>Profilverwaltung</translation>
     </message>
@@ -10205,6 +10225,14 @@ In dieser Stunde verbleibend: %3</translation>
   <context>
     <name>TransferSavesDialog</name>
     <message>
+      <source>Transfer saves</source>
+      <translation>Spielstände übertragen</translation>
+    </message>
+    <message>
+      <source>%1 file(s) could not be transferred, usually because a program had them open. The log has the details.</source>
+      <translation>%1 Datei(en) konnten nicht übertragen werden, meist weil ein Programm sie geöffnet hatte. Details stehen im Protokoll.</translation>
+    </message>
+    <message>
       <source>Transfer save games</source>
       <translation>Spielstände übertragen</translation>
     </message>
@@ -11168,4 +11196,11 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
       <translation>Dieser Mod hat keine gültige Nexus-ID. Um eine andere Seite für ihn zu öffnen, schalte oben Eigene Webseite ein und gib ihre Adresse ein.</translation>
     </message>
 </context>
+  <context>
+    <name>Profile</name>
+    <message>
+      <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
+      <translation>Die Spielstände des Profils konnten nicht gelöscht werden. Schließe alle Programme, die sie verwenden, und versuche es erneut.</translation>
+    </message>
+  </context>
 </TS>
