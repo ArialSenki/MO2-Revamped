@@ -439,7 +439,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             application.installEventFilter(self.__ui_event_filter)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
-        qInfo("Elden Ring MO2: save isolation alpha.78 initialized.")
+        qInfo("Elden Ring MO2: save isolation alpha.79 initialized.")
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
@@ -497,7 +497,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 78)
+        return mobase.VersionInfo(0, 5, 0, 79)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]

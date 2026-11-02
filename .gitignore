@@ -28,3 +28,6 @@ __pycache__/
 /source/modorganizer/work/
 
 /backup-*/
+
+# Local paths for the me3 compat build
+source/revamped/plugins/basic_games/games/me3_compat/build.local.cmd

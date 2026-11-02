@@ -358,15 +358,15 @@ class Mo2RevampedInfo(mobase.IPluginTool):
 
         game = "basic_games/games/game_eldenring_mo2.py"
         versions = {
-            "plugin": read(game, r'^\s*Version = "([^"]+)"', str, "0.5.0-alpha.76"),
-            "bridge": read(game, r'NativeBridgeVersion = "([^"]+)"', str, "0.5.0-alpha.37"),
+            "plugin": read(game, r'^\s*Version = "([^"]+)"', str, "0.5.0-alpha.77"),
+            "bridge": read(game, r'NativeBridgeVersion = "([^"]+)"', str, "0.5.0-alpha.38"),
             "installer": read(
                 "eldenring_mo2_archive_installer/installer.py",
-                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.73",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.74",
             ),
             "saves": read(
                 "eldenring_mo2_save_isolation.py",
-                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.78",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.79",
             ),
             "startup": read(
                 "eldenring_mo2_startup_tool.py",

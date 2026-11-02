@@ -131,7 +131,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
-        qInfo("Elden Ring MO2: archive layout installer alpha.73 initialized.")
+        qInfo("Elden Ring MO2: archive layout installer alpha.74 initialized.")
         return True
 
     def name(self) -> str:
@@ -149,7 +149,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 73)
+        return mobase.VersionInfo(0, 5, 0, 74)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
