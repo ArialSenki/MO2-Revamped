@@ -42,6 +42,7 @@ from PyQt6.QtWidgets import (
     QApplication,
     QBoxLayout,
     QComboBox,
+    QCheckBox,
     QMessageBox,
     QSizePolicy,
     QPushButton,
@@ -2083,7 +2084,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.77"
+    Version = "0.5.0-alpha.78"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -2207,6 +2208,7 @@ class EldenRingMo2Game(BasicGame):
         self._online_programs_selector = None
         self._online_program_locked = False
         self._last_launch_time = 0.0
+        self._mod_turned_on_for_launch: str | None = None
 
         self._local_savegames_feature = self.LocalSavegamesClass(self, organizer)
         self._register_feature(self._local_savegames_feature)
@@ -3570,6 +3572,23 @@ class EldenRingMo2Game(BasicGame):
         return max(0, min(value, 50))
 
     def _prepare_profile_launch(
+        self, app_path: str, working_directory, args: str
+    ) -> bool:
+        """A launch that doesn't go ahead leaves off the mod it turned on."""
+        self._mod_turned_on_for_launch = None
+        allowed = False
+        try:
+            allowed = self._check_profile_launch(app_path, working_directory, args)
+            return allowed
+        finally:
+            if not allowed and self._mod_turned_on_for_launch:
+                try:
+                    self._organizer.modList().setActive(self._mod_turned_on_for_launch, False)
+                except (AttributeError, RuntimeError) as error:
+                    qWarning(f"Elden Ring MO2: could not turn the mod back off: {error}")
+                self._mod_turned_on_for_launch = None
+
+    def _check_profile_launch(
         self, app_path: str, _working_directory, _args: str
     ) -> bool:
         self._restore_profile_config_environment()
@@ -3588,6 +3607,8 @@ class EldenRingMo2Game(BasicGame):
         if not self._reforged_online_mod_ready(app_path):
             return False
         if not self._seamless_password_ready():
+            return False
+        if not self._regulation_conflict_ready(app_path):
             return False
         if self._active_save_quarantine is not None:
             starting = time.monotonic() < self._launch_pending_until
@@ -3931,6 +3952,9 @@ class EldenRingMo2Game(BasicGame):
             return False
         if session is not None:
             self._finish_when_game_closes(True, session, False, None, 0.0, False, self._game_run)
+        # it did start: the False below only stops MO2's own run, and the mod
+        # it turned on stays on
+        self._mod_turned_on_for_launch = None
         # MO2 must not start it a second time under its hooks
         return False
 
@@ -5337,6 +5361,7 @@ class EldenRingMo2Game(BasicGame):
         if box.clickedButton() is not start:
             return False
         mod_list.setActive(mod_name, True)
+        self._mod_turned_on_for_launch = mod_name
         return True
 
     def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
@@ -5543,6 +5568,56 @@ class EldenRingMo2Game(BasicGame):
         self._last_forced_load_notes = list(notes)
         for note in notes:
             qInfo(note)
+
+    def _regulation_conflict_ready(self, app_path: str) -> bool:
+        """Of several active regulation.bin the game gets only the one with the
+        highest priority, and nothing else tells the user."""
+        if (
+            Path(app_path).name.casefold() != self.GameProcess
+            and self._launch_method(app_path) == self.LaunchMethodSwap
+        ):
+            # outside the VFS: no mod's regulation.bin reaches it
+            return True
+        mods = [
+            name
+            for name, root, active in self._mod_folders()
+            if active and (root / "regulation.bin").is_file()
+        ]
+        if len(mods) < 2:
+            return True
+        combination = "|".join(sorted(name.casefold() for name in mods))
+        profile = self._organizer.profile()
+        key = f"regulation_accepted_{profile.name() if profile is not None else ''}"
+        try:
+            if self._organizer.persistent(self.name(), key, "") == combination:
+                return True
+        except (AttributeError, RuntimeError):
+            pass
+        qInfo(f"Elden Ring MO2: several active mods have regulation.bin: {', '.join(mods)}.")
+        box = QMessageBox(QApplication.activeWindow())
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle("regulation.bin")
+        box.setText(_tr("Several active mods bring their own regulation.bin"))
+        box.setInformativeText(
+            _tr("The game uses only one: {0}, the one with the highest priority. The rule "
+                "changes of the others ({1}) won't apply, and they may not work properly. "
+                "To use another one, change its priority in the mod list or turn off the "
+                "mods you don't need.").format(mods[-1], ", ".join(mods[:-1]))
+        )
+        remember = QCheckBox(_tr("Don't warn again for these mods"))
+        box.setCheckBox(remember)
+        start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(start)
+        box.exec()
+        if box.clickedButton() is not start:
+            return False
+        if remember.isChecked():
+            try:
+                self._organizer.setPersistent(self.name(), key, combination)
+            except (AttributeError, RuntimeError) as error:
+                qWarning(f"Elden Ring MO2: could not save the regulation.bin choice: {error}")
+        return True
 
     def _seamless_password_ready(self) -> bool:
         """Seamless Co-op quits the game at start without a session password

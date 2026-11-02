@@ -2160,6 +2160,22 @@ O jogo não foi iniciado.</translation>
       <translation>Ativar e iniciar</translation>
     </message>
     <message>
+      <source>Several active mods bring their own regulation.bin</source>
+      <translation>Vários mods ativos trazem seu próprio regulation.bin</translation>
+    </message>
+    <message>
+      <source>The game uses only one: {0}, the one with the highest priority. The rule changes of the others ({1}) won't apply, and they may not work properly. To use another one, change its priority in the mod list or turn off the mods you don't need.</source>
+      <translation>O jogo usa apenas um: {0}, o de maior prioridade. As mudanças de regras dos outros ({1}) não serão aplicadas e eles podem não funcionar bem. Para usar outro, mude a prioridade dele na lista de mods ou desative os que não precisar.</translation>
+    </message>
+    <message>
+      <source>Don't warn again for these mods</source>
+      <translation>Não avisar novamente para estes mods</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar mesmo assim</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Os mods podem não ter sido carregados</translation>
     </message>

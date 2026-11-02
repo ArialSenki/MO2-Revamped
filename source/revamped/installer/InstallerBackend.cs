@@ -190,7 +190,9 @@ namespace Mo2RevampedSetup
         // The elevated setup runs and reads what it keeps here. A program of the
         // same user can write to %TEMP% and rename folders in it, so an elevated
         // run works below Program Files, in a folder only administrators can
-        // write. Without elevation there is nothing to protect: %TEMP% is used.
+        // write, and stops if Windows refuses it: falling back to %TEMP% would
+        // undo that protection. Without elevation there is nothing to protect:
+        // %TEMP% is used.
         internal static string CreateWorkFolder()
         {
             string name = Guid.NewGuid().ToString("N");
@@ -222,12 +224,17 @@ namespace Mo2RevampedSetup
                     Directory.CreateDirectory(secured, security);
                     return secured;
                 }
-                catch (IOException) { }
-                catch (UnauthorizedAccessException) { }
+                catch (IOException error) { throw WorkFolderRefused(error); }
+                catch (UnauthorizedAccessException error) { throw WorkFolderRefused(error); }
             }
             string folder = Path.Combine(Path.GetTempPath(), "MO2 Revamped Setup", name);
             Directory.CreateDirectory(folder);
             return folder;
+        }
+
+        private static Exception WorkFolderRefused(Exception error)
+        {
+            return new InvalidOperationException(String.Format(InstallerText.T("Windows no dejó crear la carpeta de trabajo protegida en Archivos de programa, así que el instalador no continuó. Comprueba el espacio libre y que ningún antivirus la esté bloqueando, y vuelve a intentarlo.\n\n{0}"), error.Message));
         }
 
         internal static void RemoveWorkFolder(string folder)

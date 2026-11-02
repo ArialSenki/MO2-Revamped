@@ -56,6 +56,14 @@
 
 - Linking or unlinking the Nexus account in Settings applies at once.
 
+### Launching
+
+- With several active mods that bring `regulation.bin`, MO2 says before the
+  launch which one the game will use. "Don't warn again for these mods" keeps
+  it quiet for that combination in that profile.
+- A mod MO2 turned on to start Reforged online goes back off if the launch
+  doesn't go ahead.
+
 ### Saves and new instances
 
 - Save Isolation > Backups: "Export all my saves" copies the saves of Steam and
@@ -111,7 +119,7 @@
 - An elevated setup keeps its program, requests and results in a folder only
   administrators can write, below Program Files, instead of `%TEMP%`. Its log
   stays in `%TEMP%`, and is not written if that folder has become a link. If
-  Windows refuses that folder, the setup still runs from `%TEMP%`.
+  Windows refuses that folder, the setup says so and stops.
 
 ### Removed
 
