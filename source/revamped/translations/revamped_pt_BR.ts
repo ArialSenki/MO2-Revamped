@@ -1732,6 +1732,78 @@ Reinstale o mod para alterar isso.</translation>
       <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
       <translation>Este é um mod de Elden Ring: esta instância gerencia Nightreign.</translation>
     </message>
+    <message>
+      <source>Arrange the files by hand</source>
+      <translation>Organizar os arquivos à mão</translation>
+    </message>
+    <message>
+      <source>This is how {0} will be installed, with the game's folder at the top. Untick what you don't want and drag the rest where it belongs.</source>
+      <translation>É assim que {0} será instalado, com a pasta do jogo no topo. Desmarque o que não quiser e arraste o resto para o lugar.</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <translation>Voltar</translation>
+    </message>
+    <message>
+      <source>Two files would end up in the same place: {0}. Rename or untick one.</source>
+      <translation>Dois arquivos ficariam no mesmo lugar: {0}. Renomeie ou desmarque um.</translation>
+    </message>
+    <message>
+      <source>{0} files are inside the folder {1}, where the game doesn't look for them. Its game folders belong at the top.</source>
+      <translation>{0} arquivos estão na pasta {1}, onde o jogo não os procura. As pastas do jogo ficam no topo.</translation>
+    </message>
+    <message>
+      <source>Only one copy of a DLL can load: {0}.</source>
+      <translation>Só uma cópia de uma DLL pode ser carregada: {0}.</translation>
+    </message>
+    <message>
+      <source>{0} of {1} files will be installed.</source>
+      <translation>{0} de {1} arquivos serão instalados.</translation>
+    </message>
+    <message>
+      <source>New folder</source>
+      <translation>Nova pasta</translation>
+    </message>
+    <message>
+      <source>Move to the top</source>
+      <translation>Mover para o topo</translation>
+    </message>
+    <message>
+      <source>Move to DLLs</source>
+      <translation>Mover para DLLs</translation>
+    </message>
+    <message>
+      <source>Use as the top</source>
+      <translation>Usar como raiz</translation>
+    </message>
+    <message>
+      <source>Rename</source>
+      <translation>Renomear</translation>
+    </message>
+    <message>
+      <source>Reset</source>
+      <translation>Restaurar</translation>
+    </message>
+    <message>
+      <source>Choose the files and put them where you want.</source>
+      <translation>Escolha os arquivos e coloque-os onde quiser.</translation>
+    </message>
+    <message>
+      <source>Left out by MO2</source>
+      <translation>Deixados de fora pelo MO2</translation>
+    </message>
+    <message>
+      <source>Drag what you tick out of "{0}" to where it belongs.</source>
+      <translation>Arraste o que marcar para fora de "{0}", para o lugar certo.</translation>
+    </message>
+    <message>
+      <source>Optional extras left out</source>
+      <translation>Extras opcionais deixados de fora</translation>
+    </message>
+    <message>
+      <source>Manual... lets you add them.</source>
+      <translation>Com Manual... você pode adicioná-los.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingGame</name>

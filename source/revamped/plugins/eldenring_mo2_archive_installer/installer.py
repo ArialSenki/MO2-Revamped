@@ -663,12 +663,38 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             f"Elden Ring MO2: opening the install window for {default_mod_name}; "
             f"recognized package: {package or 'none'}."
         )
-        choice = self._ask_archive_layout(default_mod_name, tree, package)
-        keep_reforged_online = self._chosen_reforged_online
-        if choice is None:
-            return mobase.InstallResult.CANCELED
-        if choice == "manual":
-            return mobase.InstallResult.MANUAL_REQUESTED
+        window_name = default_mod_name
+        manual_state: dict = {}
+        while True:
+            choice = self._ask_archive_layout(window_name, tree, package)
+            keep_reforged_online = self._chosen_reforged_online
+            if choice is None:
+                return mobase.InstallResult.CANCELED
+            if choice[0] != "manual":
+                break
+            _manual, preserve, omit_txt, omit_md, window_name = choice
+            try:
+                arranged = self._ask_manual_layout(
+                    tree, window_name, preserve, omit_txt, omit_md, manual_state
+                )
+            except Exception as error:
+                qCritical(f"Elden Ring MO2: could not arrange {window_name}: {error}")
+                return mobase.InstallResult.FAILED
+            if arranged is None:
+                # back in the window, as it was left
+                self._default_preserve = preserve
+                self._default_omit_txt = omit_txt
+                self._default_omit_md = omit_md
+                continue
+            if window_name != str(name):
+                name.update(window_name, mobase.GuessQuality.USER)
+            self._pending_source_dll_routes = self._collect_tree_dll_routes(tree)
+            # kept as arranged: the layout check takes it as it is, like a mod
+            # installed as it comes
+            self._pending_choice = (True, False, False, True)
+            organizer.setPluginSetting(self._game_plugin_name, self._game_override_key, True)
+            qInfo(f"Elden Ring MO2: {window_name} arranged by hand.")
+            return arranged
 
         (
             preserve,
@@ -798,8 +824,6 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     ) -> Optional[dict]:
         """What the install would give, from a copy of the archive's tree."""
         try:
-            from basic_games.games.game_eldenring_mo2 import EldenRingModDataChecker
-
             source_files = len(self._file_paths(tree))
             copy = tree.createOrphanTree()
             for entry in tree:
@@ -813,13 +837,500 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             qWarning(f"Elden Ring MO2: could not preview the archive layout: {error}")
             return None
 
+        summary = self._classify_layout_paths(paths, preserve)
+        summary["left_out"] = max(0, source_files - len(paths))
+        # optional folders are left out too, but the window says so apart
+        summary["optional"] = getattr(_checker, "optional_files_left_out", 0)
+        return summary
+
+    def _ask_manual_layout(
+        self,
+        archive_tree: mobase.IFileTree,
+        mod_name: str,
+        preserve: bool,
+        omit_txt: bool,
+        omit_md: bool,
+        state: dict,
+    ) -> Optional[mobase.IFileTree]:
+        """The mod's files as a tree the user arranges by hand: tick what goes in,
+        drag it where it should be. Starts from what the install window would
+        do. Returns the arranged tree, or None to go back to that window, which
+        keeps the arrangement in ``state`` for when this one opens again."""
+        key = (preserve, omit_txt, omit_md)
+        if state.get("key") != key:
+            copy = archive_tree.createOrphanTree()
+            for entry in archive_tree:
+                copy.copy(entry, "", mobase.IFileTree.InsertPolicy.FAIL_IF_EXISTS)
+            base, _checker = self._apply_layout(
+                copy, preserve, omit_txt, omit_md, False, previewing=True
+            )
+            whole = archive_tree.createOrphanTree()
+            for entry in archive_tree:
+                whole.copy(entry, "", mobase.IFileTree.InsertPolicy.FAIL_IF_EXISTS)
+            state.update(key=key, base=base, whole=whole, snapshot=None)
+        base = state["base"]
+        whole = state["whole"]
+        # what the layout left out, offered unticked: optional folders, launchers
+        left_out_folder = self.tr("Left out by MO2")
+        left_out = self._left_out_paths(self._file_paths(whole), self._file_paths(base))
+        source_role = Qt.ItemDataRole.UserRole
+
+        parent = self._parentWidget()
+        dialog = QtWidgets.QDialog(parent)
+        dialog.setObjectName("EldenRingManualInstallDialog")
+        dialog.setWindowTitle(self.tr("Arrange the files by hand"))
+        dialog.setSizeGripEnabled(True)
+        dialog.setModal(True)
+        layout = QtWidgets.QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 16, 16, 14)
+        layout.setSpacing(10)
+
+        heading = QtWidgets.QLabel(self.tr("Arrange the files by hand"), dialog)
+        heading.setProperty("wizardPageTitle", True)
+        layout.addWidget(heading)
+        subtitle = QtWidgets.QLabel(
+            self.tr(
+                "This is how {0} will be installed, with the game's folder at the top. "
+                "Untick what you don't want and drag the rest where it belongs."
+            ).format(mod_name),
+            dialog,
+        )
+        subtitle.setProperty("wizardPageText", True)
+        subtitle.setWordWrap(True)
+        layout.addWidget(subtitle)
+
+        tools = QtWidgets.QHBoxLayout()
+        tools.setSpacing(6)
+        layout.addLayout(tools)
+
+        tree = QtWidgets.QTreeWidget(dialog)
+        tree.setObjectName("archivePreviewTree")
+        tree.setHeaderHidden(True)
+        tree.setAlternatingRowColors(True)
+        tree.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        tree.setDragEnabled(True)
+        tree.setAcceptDrops(True)
+        tree.setDropIndicatorShown(True)
+        tree.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
+        tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        layout.addWidget(tree, 1)
+
+        notice = QtWidgets.QLabel(dialog)
+        notice.setObjectName("archiveManualNotice")
+        notice.setWordWrap(True)
+        notice.setStyleSheet(
+            "QLabel#archiveManualNotice { background: rgba(255, 185, 0, 0.14);"
+            " border: 1px solid rgba(255, 185, 0, 0.45); border-radius: 6px;"
+            " padding: 8px 10px; }"
+        )
+        notice.setVisible(False)
+        layout.addWidget(notice)
+        status = QtWidgets.QLabel(dialog)
+        status.setObjectName("fluentSettingDescription")
+        layout.addWidget(status)
+
+        buttons = QtWidgets.QDialogButtonBox(dialog)
+        buttons.setObjectName("archiveDialogButtons")
+        back_button = buttons.addButton(
+            self.tr("Back"), QtWidgets.QDialogButtonBox.ButtonRole.RejectRole
+        )
+        install_button = buttons.addButton(
+            self.tr("Install"), QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole
+        )
+        install_button.setObjectName("archiveLayoutChoiceButton")
+        install_button.setProperty("preferredChoice", True)
+        install_button.setDefault(True)
+        back_button.clicked.connect(dialog.reject)
+        install_button.clicked.connect(dialog.accept)
+        layout.addWidget(buttons)
+
+        folder_icon = dialog.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
+        file_icon = dialog.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileIcon)
+        updating = [True]
+
+        def make_folder(name: str) -> QtWidgets.QTreeWidgetItem:
+            item = QtWidgets.QTreeWidgetItem([name])
+            item.setIcon(0, folder_icon)
+            item.setFlags(
+                Qt.ItemFlag.ItemIsEnabled
+                | Qt.ItemFlag.ItemIsSelectable
+                | Qt.ItemFlag.ItemIsEditable
+                | Qt.ItemFlag.ItemIsDragEnabled
+                | Qt.ItemFlag.ItemIsDropEnabled
+                | Qt.ItemFlag.ItemIsUserCheckable
+                | Qt.ItemFlag.ItemIsAutoTristate
+            )
+            item.setCheckState(0, Qt.CheckState.Checked)
+            return item
+
+        def make_file(name: str, source: str, checked: bool = True) -> QtWidgets.QTreeWidgetItem:
+            item = QtWidgets.QTreeWidgetItem([name])
+            item.setIcon(0, file_icon)
+            item.setData(0, source_role, source)
+            # nothing can be dropped on a file
+            item.setFlags(
+                Qt.ItemFlag.ItemIsEnabled
+                | Qt.ItemFlag.ItemIsSelectable
+                | Qt.ItemFlag.ItemIsEditable
+                | Qt.ItemFlag.ItemIsDragEnabled
+                | Qt.ItemFlag.ItemIsUserCheckable
+            )
+            item.setCheckState(0, Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+            return item
+
+        def children_of(holder) -> list:
+            if holder is None:
+                return [tree.topLevelItem(i) for i in range(tree.topLevelItemCount())]
+            return [holder.child(i) for i in range(holder.childCount())]
+
+        def add_to(holder, item) -> None:
+            if holder is None:
+                tree.addTopLevelItem(item)
+            else:
+                holder.addChild(item)
+
+        def is_folder(item) -> bool:
+            return item.data(0, source_role) is None
+
+        def folder_for(path: list[str]):
+            holder = None
+            for part in path:
+                existing = next(
+                    (
+                        child
+                        for child in children_of(holder)
+                        if is_folder(child) and child.text(0).casefold() == part.casefold()
+                    ),
+                    None,
+                )
+                if existing is None:
+                    existing = make_folder(part)
+                    add_to(holder, existing)
+                holder = existing
+            return holder
+
+        def walk(holder=None, prefix: str = ""):
+            """Every item with its path: (item, path)."""
+            for item in children_of(holder):
+                path = f"{prefix}/{item.text(0)}" if prefix else item.text(0)
+                yield item, path
+                if is_folder(item):
+                    yield from walk(item, path)
+
+        def populate() -> None:
+            updating[0] = True
+            tree.clear()
+            snapshot = state.get("snapshot")
+            if snapshot is None:
+                snapshot = [(path, path, True) for path in self._file_paths(base)]
+                snapshot += [
+                    (f"{left_out_folder}/{path}", self._WholeTreePrefix + path, False)
+                    for path in left_out
+                ]
+            for target, source, checked in snapshot:
+                parts = target.split("/")
+                if source is None:
+                    folder_for(parts)
+                else:
+                    add_to(folder_for(parts[:-1]), make_file(parts[-1], source, checked))
+            for index in range(tree.topLevelItemCount()):
+                tree.topLevelItem(index).setExpanded(True)
+            updating[0] = False
+            refresh()
+
+        def take_snapshot() -> list:
+            return [
+                (
+                    path,
+                    item.data(0, source_role),
+                    item.checkState(0) == Qt.CheckState.Checked,
+                )
+                for item, path in walk()
+            ]
+
+        def chosen_files() -> list[tuple[str, str]]:
+            return [
+                (path, item.data(0, source_role))
+                for item, path in walk()
+                if not is_folder(item) and item.checkState(0) == Qt.CheckState.Checked
+            ]
+
+        def refresh() -> None:
+            if updating[0]:
+                return
+            files = chosen_files()
+            targets = [path.casefold() for path, _source in files]
+            repeated = sorted({path for path in targets if targets.count(path) > 1})
+            summary = self._classify_layout_paths([path for path, _source in files], True)
+            names = [path.rsplit("/", 1)[-1] for path in targets if path.endswith(".dll")]
+            twice = sorted({name for name in names if names.count(name) > 1})
+            lines = []
+            if any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets):
+                lines.append(
+                    self.tr("Drag what you tick out of \"{0}\" to where it belongs.").format(left_out_folder)
+                )
+            if repeated:
+                lines.append(
+                    self.tr("Two files would end up in the same place: {0}. Rename or untick one.").format(
+                        ", ".join(repeated[:3])
+                    )
+                )
+            if summary["misplaced"]:
+                lines.append(
+                    self.tr(
+                        "{0} files are inside the folder {1}, where the game doesn't look "
+                        "for them. Its game folders belong at the top."
+                    ).format(summary["misplaced"], summary["misplaced_in"])
+                )
+            if twice:
+                lines.append(
+                    self.tr("Only one copy of a DLL can load: {0}.").format(", ".join(twice))
+                )
+            notice.setText("\n\n".join(lines))
+            notice.setVisible(bool(lines))
+            total = len(files)
+            status.setText(
+                self.tr("{0} of {1} files will be installed.").format(
+                    total, len(self._file_paths(base)) + len(left_out)
+                )
+            )
+            install_button.setEnabled(
+                total > 0
+                and not repeated
+                and not any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets)
+            )
+
+        def move_items(items: list, target) -> None:
+            updating[0] = True
+            for item in items:
+                # a folder can't go inside itself
+                ancestor = target
+                while ancestor is not None and ancestor is not item:
+                    ancestor = ancestor.parent()
+                if ancestor is item or item.parent() is target:
+                    continue
+                holder = item.parent()
+                if holder is None:
+                    tree.takeTopLevelItem(tree.indexOfTopLevelItem(item))
+                else:
+                    holder.removeChild(item)
+                same = next(
+                    (
+                        child
+                        for child in children_of(target)
+                        if is_folder(child)
+                        and is_folder(item)
+                        and child.text(0).casefold() == item.text(0).casefold()
+                    ),
+                    None,
+                )
+                if same is None:
+                    add_to(target, item)
+                    item.setExpanded(True)
+                else:
+                    # the same folder there already: they become one
+                    updating[0] = False
+                    move_items(item.takeChildren(), same)
+                    updating[0] = True
+            updating[0] = False
+            refresh()
+
+        def selected_items() -> list:
+            selected = tree.selectedItems()
+            # a selected folder brings its contents: moving them too would flatten it
+            return [
+                item
+                for item in selected
+                if not any(other is not item and _is_inside(item, other) for other in selected)
+            ]
+
+        def _is_inside(item, folder) -> bool:
+            parent_item = item.parent()
+            while parent_item is not None:
+                if parent_item is folder:
+                    return True
+                parent_item = parent_item.parent()
+            return False
+
+        def to_root() -> None:
+            move_items(selected_items(), None)
+
+        def to_dlls() -> None:
+            updating[0] = True
+            target = folder_for(["DLLs"])
+            updating[0] = False
+            move_items(selected_items(), target)
+
+        def use_as_root() -> None:
+            items = selected_items()
+            if len(items) != 1 or not is_folder(items[0]):
+                return
+            folder = items[0]
+            updating[0] = True
+            for item, _path in list(walk()):
+                if item is not folder and not _is_inside(item, folder) and not is_folder(item):
+                    item.setCheckState(0, Qt.CheckState.Unchecked)
+            updating[0] = False
+            moved = folder.takeChildren()
+            move_items(moved, None)
+            holder = folder.parent()
+            if holder is None:
+                tree.takeTopLevelItem(tree.indexOfTopLevelItem(folder))
+            else:
+                holder.removeChild(folder)
+            refresh()
+
+        def new_folder() -> None:
+            items = selected_items()
+            holder = None
+            if len(items) == 1:
+                holder = items[0] if is_folder(items[0]) else items[0].parent()
+            updating[0] = True
+            item = make_folder(self.tr("New folder"))
+            add_to(holder, item)
+            updating[0] = False
+            if holder is not None:
+                holder.setExpanded(True)
+            tree.setCurrentItem(item)
+            tree.editItem(item, 0)
+
+        def rename() -> None:
+            items = selected_items()
+            if len(items) == 1:
+                tree.editItem(items[0], 0)
+
+        def reset() -> None:
+            state["snapshot"] = None
+            populate()
+
+        actions = (
+            (self.tr("Move to the top"), to_root),
+            (self.tr("Move to DLLs"), to_dlls),
+            (self.tr("Use as the top"), use_as_root),
+            (self.tr("New folder"), new_folder),
+            (self.tr("Rename"), rename),
+        )
+        for text, handler in actions:
+            button = QtWidgets.QPushButton(text, dialog)
+            button.setAutoDefault(False)
+            button.clicked.connect(lambda _checked=False, run=handler: run())
+            tools.addWidget(button)
+        tools.addStretch(1)
+        reset_button = QtWidgets.QPushButton(self.tr("Reset"), dialog)
+        reset_button.setAutoDefault(False)
+        reset_button.clicked.connect(lambda _checked=False: reset())
+        tools.addWidget(reset_button)
+
+        def show_menu(position) -> None:
+            menu = QtWidgets.QMenu(tree)
+            for text, handler in actions:
+                menu.addAction(text, handler)
+            menu.exec(tree.viewport().mapToGlobal(position))
+
+        tree.customContextMenuRequested.connect(show_menu)
+        tree.itemChanged.connect(lambda _item, _column: refresh())
+        # a drop moves items without any item changing
+        tree.model().rowsInserted.connect(lambda *_args: QTimer.singleShot(0, refresh))
+        tree.model().rowsRemoved.connect(lambda *_args: QTimer.singleShot(0, refresh))
+
+        populate()
+        screen = (parent.screen() if parent is not None else None) or (
+            QtWidgets.QApplication.primaryScreen()
+        )
+        if screen is not None:
+            available = screen.availableGeometry()
+            width = min(920, available.width() - 32)
+            height = min(720, available.height() - 48)
+            dialog.resize(width, height)
+            area = parent.frameGeometry() if parent is not None else available
+            left = min(
+                max(area.center().x() - width // 2, available.left()),
+                available.right() - width + 1,
+            )
+            top = min(
+                max(area.center().y() - height // 2, available.top()),
+                available.bottom() - height - 40,
+            )
+            dialog.move(left, top)
+        dialog.exec()
+        accepted = dialog.result() == QtWidgets.QDialog.DialogCode.Accepted
+        state["snapshot"] = take_snapshot()
+        files = chosen_files()
+        dialog.deleteLater()
+        if not accepted:
+            return None
+        return self._arranged_tree(archive_tree, base, whole, files)
+
+    _WholeTreePrefix = "whole:"
+
+    @staticmethod
+    def _left_out_paths(whole: list[str], arranged: list[str]) -> list[str]:
+        """Files of the archive with no place in the arranged tree. The layout
+        moves files without saying where, so they are matched by name, longest
+        common path first."""
+        remaining: dict[str, list[list[str]]] = {}
+        for path in arranged:
+            parts = path.casefold().split("/")
+            remaining.setdefault(parts[-1], []).append(parts)
+
+        def shared_tail(a: list[str], b: list[str]) -> int:
+            count = 0
+            while count < min(len(a), len(b)) and a[-1 - count] == b[-1 - count]:
+                count += 1
+            return count
+
+        scored = []
+        for path in whole:
+            parts = path.casefold().split("/")
+            best = max(
+                (shared_tail(parts, other) for other in remaining.get(parts[-1], [])), default=0
+            )
+            scored.append((-best, path))
+        left_out = []
+        for _score, path in sorted(scored, key=lambda item: item[0]):
+            parts = path.casefold().split("/")
+            candidates = remaining.get(parts[-1])
+            if candidates:
+                candidates.remove(max(candidates, key=lambda other: shared_tail(parts, other)))
+            else:
+                left_out.append(path)
+        return sorted(left_out)
+
+    @classmethod
+    def _arranged_tree(
+        cls,
+        archive_tree: mobase.IFileTree,
+        base: mobase.IFileTree,
+        whole: mobase.IFileTree,
+        files: list[tuple[str, str]],
+    ) -> mobase.IFileTree:
+        """The tree MO2 installs from what the manual window chose: (target path,
+        where the file is). Folders left with no chosen file aren't created."""
+        result = archive_tree.createOrphanTree()
+        entries = [
+            (
+                target,
+                whole.find(source[len(cls._WholeTreePrefix):])
+                if source.startswith(cls._WholeTreePrefix)
+                else base.find(source),
+            )
+            for target, source in files
+        ]
+        for target, entry in entries:
+            if entry is None or not result.move(entry, target):
+                raise RuntimeError(f"Could not place {target}.")
+        return result
+
+    @staticmethod
+    def _classify_layout_paths(paths: list[str], preserve: bool) -> dict:
+        from basic_games.games.game_eldenring_mo2 import EldenRingModDataChecker
+
         online_folder = EldenRingModDataChecker.ReforgedOnlineDirectory.casefold()
         game_folders = EldenRingModDataChecker._asset_directories
         summary = {
             "game": 0, "dlls": 0, "dlls_routed": 0, "online": 0, "other": 0,
             "regulation": False, "paths": paths, "misplaced": 0, "misplaced_in": "",
         }
-        summary["left_out"] = max(0, source_files - len(paths))
         for path in paths:
             parts = path.casefold().split("/")
             # game folders below another folder: the game looks for them at its
@@ -1309,6 +1820,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 )
             if summary["other"]:
                 summary_row(0xE8A5, self.tr("Other files"), files(summary["other"]))
+            if summary["optional"]:
+                summary_row(
+                    0xE712, self.tr("Optional extras left out"), files(summary["optional"]),
+                    self.tr("Manual... lets you add them."),
+                )
+            summary["left_out"] -= summary["optional"]
             if summary["left_out"]:
                 summary_row(
                     0xE711, self.tr("Left out"), files(summary["left_out"]),
@@ -1460,7 +1977,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             dialog.accept()
 
         def choose_manual() -> None:
-            selected["choice"] = "manual"
+            chosen_name = mod_name_edit.text().strip() or mod_name
+            preserve, omit_txt, omit_md, _online = current_choices()
+            selected["choice"] = ("manual", preserve, omit_txt, omit_md, chosen_name)
             dialog.accept()
 
         buttons = QtWidgets.QDialogButtonBox(
@@ -1476,7 +1995,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
         manual_button.setObjectName("archiveManualButton")
         manual_button.setToolTip(
-            self.tr("Open MO2's manual installer to choose the files and folders yourself.")
+            self.tr("Choose the files and put them where you want.")
         )
         manual_button.clicked.connect(choose_manual)
         install_button = buttons.addButton(

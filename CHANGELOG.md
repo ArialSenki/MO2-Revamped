@@ -79,6 +79,11 @@
 - It names your active mods that also bring regulation.bin, and says when you
   already have a mod with that name.
 - The window stays on its screen, so its buttons don't end up out of sight.
+- Manual... opens a new window instead of MO2's generic one: start from what the
+  install would do, tick what goes in (what MO2 left out is there, unticked), drag
+  files where you want, move them to the top or to DLLs, rename, make folders and
+  reset. It warns about files the game wouldn't read and blocks two files in one
+  place. Back returns to the install window and keeps your arrangement.
 - It recognizes ELDEN RING Reforged, Convergence, Seamless Co-op and FRZN Merge,
   says what it will do with each, and uses the layout each one needs.
 - Reforged's online and offline versions are separate mods: a switch in this
