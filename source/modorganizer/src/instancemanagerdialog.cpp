@@ -1171,6 +1171,11 @@ void InstanceManagerDialog::openSelectedInstance()
     return;
   }
 
+  // Enter and a double click do what the button could: no plugin, no opening
+  if (!m_switch->isEnabled()) {
+    return;
+  }
+
   // removed or moved outside MO2 since the list was filled
   if (!QFileInfo(to.iniPath()).isFile()) {
     QMessageBox::warning(this, tr("Open instance"),
@@ -1283,6 +1288,38 @@ void InstanceManagerDialog::rename()
 
   // renaming
   const QString src = i->directory();
+
+  // another instance using this folder keeps its old path, with empty folders
+  QStringList usedBy;
+  const QString srcKey = QDir::cleanPath(QDir::fromNativeSeparators(src)).toLower() + "/";
+  for (const auto& other : m_instances) {
+    if (!other || other.get() == i) {
+      continue;
+    }
+    const Settings s(other->iniPath());
+    if (s.iniStatus() != QSettings::NoError) {
+      continue;
+    }
+    for (const QString& used : {s.paths().downloads(), s.paths().mods(), s.paths().profiles(),
+                                s.paths().overwrite()}) {
+      if (!used.isEmpty() &&
+          (QDir::cleanPath(QDir::fromNativeSeparators(used)).toLower() + "/").startsWith(srcKey)) {
+        usedBy.append(other->displayName());
+        break;
+      }
+    }
+  }
+  if (!usedBy.isEmpty()) {
+    const auto answer = QMessageBox::warning(
+        this, tr("Rename instance"),
+        tr("These instances use folders of this one: %1\n\nThey will keep looking in the "
+           "old folder and find nothing until their paths are changed. Rename anyway?")
+            .arg(usedBy.join(QStringLiteral(", "))),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if (answer != QMessageBox::Yes) {
+      return;
+    }
+  }
   const QString dest =
       QDir::toNativeSeparators(QFileInfo(src).dir().path() + "/" + newName);
 
@@ -1542,11 +1579,16 @@ void InstanceManagerDialog::deleteInstance()
 
   // deleting
   const QString identifier = i->instanceIdentifier();
+  const bool hadShortcut   = shortcutExists(*i);
   if (!doDelete(selected, (r == Recycle))) {
     // part of it may be gone already: the list shows what is left
     updateInstances();
     updateList();
     return;
+  }
+  // it would open an instance that no longer exists
+  if (hadShortcut) {
+    env::instanceShortcut(*i).remove(env::Shortcut::Desktop);
   }
   setInstanceValue(GroupsSection, identifier, {});
   setInstanceValue(NotesSection, identifier, {});
@@ -1887,7 +1929,8 @@ void InstanceManagerDialog::duplicateInstance()
 
   const auto name = getInstanceName(
       this, tr("Duplicate instance"), text, tr("Name of the copy"), parentDirectory,
-      m.makeUniqueName(i->displayName() + QStringLiteral(" ") + tr("copy"), parentDirectory),
+      m.makeUniqueName(QFileInfo(i->directory()).fileName() + QStringLiteral(" ") + tr("copy"),
+                       parentDirectory),
       tr("Duplicate"), false);
   if (name.isEmpty()) {
     return;
@@ -1904,6 +1947,9 @@ void InstanceManagerDialog::duplicateInstance()
                             tr("The instance could not be copied: %1")
                                 .arg(QString::fromStdWString(formatSystemMessage(e))));
     }
+    // what was copied before it stopped may show as an instance
+    updateInstances();
+    updateList();
     return;
   }
 
@@ -1938,6 +1984,11 @@ void InstanceManagerDialog::duplicateInstance()
         }
       } else {
         log::error("can't copy the profiles {} to {}", profiles, copied);
+        QMessageBox::warning(
+            this, tr("Duplicate instance"),
+            tr("The copy's profiles could not be created, so it shares its mod lists with "
+               "the original:\n%1")
+                .arg(QDir::toNativeSeparators(profiles)));
       }
     }
   }

@@ -391,6 +391,13 @@ bool launchFreshProcessAfterRestart()
     executable.assign(modulePath.data(), modulePathLength);
   }
   std::wstring commandLine = L"\"" + executable + L"\"";
+  // a restart stays on the instance a desktop shortcut opened; the saved one is
+  // another
+  if (RestartExecutable().isEmpty()) {
+    if (const auto instance = InstanceManager::singleton().overriddenInstance()) {
+      commandLine += L" -i \"" + instance->toStdWString() + L"\"";
+    }
+  }
   std::vector<wchar_t> mutableCommandLine(commandLine.begin(), commandLine.end());
   mutableCommandLine.push_back(L'\0');
 
@@ -599,6 +606,11 @@ int run(int argc, char* argv[])
         if (r == RestartExitCode && !RestartExecutable().isEmpty()) {
           // handing off to another MO2 copy; it needs this process gone
           return kFreshProcessRestartExitCode;
+        }
+
+        if (r == ReselectExitCode && InstanceManager::singleton().isEldenRingOnlyPortableMode()) {
+          // an isolated copy has one instance: there is nothing else to pick
+          return 0;
         }
 
         if (r == RestartExitCode || r == ReselectExitCode) {

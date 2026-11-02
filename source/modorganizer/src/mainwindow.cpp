@@ -2992,7 +2992,7 @@ void MainWindow::requestRestartFromPlugin()
     QMessageBox::information(
         this, tr("Restart not started"),
         tr("The save route remains saved, but Mod Organizer could not restart "
-           "right now. Restart Mod Organizer manually before launching Elden Ring."));
+           "right now. Restart Mod Organizer manually before launching the game."));
   }
 }
 

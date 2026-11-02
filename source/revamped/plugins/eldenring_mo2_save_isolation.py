@@ -440,7 +440,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             application.installEventFilter(self.__ui_event_filter)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
-        qInfo("Elden Ring MO2: save isolation alpha.79 initialized.")
+        qInfo("Elden Ring MO2: save isolation alpha.81 initialized.")
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
@@ -498,7 +498,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 79)
+        return mobase.VersionInfo(0, 5, 0, 81)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -1116,6 +1116,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         card = dialog.findChild(QWidget, self.CreateInstanceCardName)
         if card is None:
             return
+        # the list empties and fills again: one paint, with the final result
+        card.setUpdatesEnabled(False)
+        try:
+            self._fill_create_instance_save_sources(dialog, card)
+        finally:
+            card.setUpdatesEnabled(True)
+
+    def _fill_create_instance_save_sources(self, dialog, card) -> None:
         source_combo = card.findChild(
             QComboBox, self.CreateInstanceSaveSourceComboName
         )
@@ -1263,7 +1271,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             elif checkbox.isChecked():
                 note.setText(
-                    _trs("This name appears in Tools > Elden Ring Save Isolation. If "
+                    _trs("This name appears in Tools > Save Isolation. If "
                     "you choose a starting save below, it will be copied into "
                     "this named save profile. "
                     "Elden Ring loads the selected file as ER0000 with its own "
@@ -1273,7 +1281,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 note.setText(
                     _tr("Optional. Leave this unchecked to use standard saves. "
                     "You can create named game save profiles later from Tools > "
-                    "Elden Ring Save Isolation.")
+                    "Save Isolation.")
                 )
 
         if status_label is not None and source_combo is not None:
@@ -1292,12 +1300,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     "the new instance opens. Existing destination files are never "
                     "replaced.").format(destination=destination)
                 )
+            elif not self._create_instance_save_suffixes(dialog):
+                status_label.setText(_tr("Turn on a save type to choose a starting save."))
+            elif self._create_dialog_game_key(dialog) not in (
+                None,
+                EldenRingMo2SaveIsolation._game_key,
+            ):
+                # the search only knows the running instance's game
+                status_label.setText(
+                    _tr("This instance can only list saves of its own game. Once the new "
+                    "instance is open, add a save from Tools > Save Isolation.")
+                )
             else:
                 status_label.setText(
                     _tr("No saves of the chosen types were found in Steam or the "
                     "detected Elden Ring MO2 profiles.")
-                    if self._create_instance_save_suffixes(dialog)
-                    else _tr("Turn on a save type to choose a starting save.")
                 )
 
     @staticmethod
@@ -2078,6 +2095,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 checkbox.setProperty("_eldenRingSaveUiHidden", False)
                 checkbox.show()
 
+        # another game was picked after this card was added
+        card = dialog.findChild(QWidget, self.CreateInstanceCardName)
+        if card is not None:
+            card.hide()
         dialog.setProperty("_eldenRingSaveUiInjected", False)
 
     def _is_elden_ring_create_dialog(self, dialog) -> bool:
@@ -2189,9 +2210,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         def wizard_row(title: str, description: QLabel, controls: list, under=None) -> QFrame:
             row = QFrame(card)
             row.setObjectName("fluentSettingRow")
-            row_layout = QHBoxLayout(row)
-            row_layout.setContentsMargins(20, 12, 16, 12)
+            outer_layout = QVBoxLayout(row)
+            outer_layout.setContentsMargins(20, 12, 16, 12)
+            outer_layout.setSpacing(0)
+            # the controls beside the title and its text; what goes under them
+            # takes the row's whole width
+            row_layout = QHBoxLayout()
             row_layout.setSpacing(16)
+            outer_layout.addLayout(row_layout)
             texts = QVBoxLayout()
             texts.setSpacing(2)
             heading = QLabel(title, row)
@@ -2202,12 +2228,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             description.setProperty("wizardRowText", True)
             description.setWordWrap(True)
             texts.addWidget(description)
-            if under is not None:
-                texts.addLayout(under)
             row_layout.addLayout(texts, 1)
             for control in controls:
                 control.setParent(row)
                 row_layout.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
+            if under is not None:
+                outer_layout.addLayout(under)
             card_layout.addWidget(row)
             return row
 
@@ -2258,7 +2284,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             (".cnv", _tr("Convergence (.cnv)")),
             (".err", "ELDEN RING Reforged (.err)"),
         ):
-            if suffix == ".err" and (target_game or self._game_key) != "eldenring":
+            if suffix in {".err", ".cnv"} and (target_game or self._game_key) != "eldenring":
                 continue
             type_box = QCheckBox(title, card)
             type_box.setObjectName(
@@ -2289,7 +2315,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         game_save_profile_checkbox.setToolTip(
             _tr("Create a separate named save choice managed in Tools > "
-            "Elden Ring Save Isolation.")
+            "Save Isolation.")
         )
         _make_switch(
             game_save_profile_checkbox,

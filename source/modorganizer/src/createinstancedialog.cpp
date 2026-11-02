@@ -709,6 +709,12 @@ void CreateInstanceDialog::finish()
             Instance(ci.dataPath, ci.type == Portable));
         m_switching = true;
       }
+    } else if (ci.type == Isolated) {
+      // no list of this Mod Organizer shows an isolated copy
+      QMessageBox::information(
+          this, tr("Isolated copy created"),
+          tr("The copy is in this folder. Start it with its ModOrganizer.exe:\n%1")
+              .arg(QDir::toNativeSeparators(ci.dataPath)));
     }
 
     // close the dialog
@@ -739,6 +745,11 @@ void CreateInstanceDialog::selectPage(std::size_t i)
     return;
   }
 
+  // the page is set up before it is painted: it never shows the state it had
+  // from another path through the wizard
+  const QPixmap before = ui->pages->isVisible() ? ui->pages->grab() : QPixmap();
+  setUpdatesEnabled(false);
+
   ui->pages->setCurrentIndex(static_cast<int>(i));
   m_pages[i]->activated();
 
@@ -753,7 +764,12 @@ void CreateInstanceDialog::selectPage(std::size_t i)
   }
 
   updateNavigation();
-  FluentMotion::pageIn(ui->pages->currentWidget(), 10);
+
+  if (auto* layout = ui->pages->currentWidget()->layout()) {
+    layout->activate();
+  }
+  setUpdatesEnabled(true);
+  FluentMotion::crossFade(ui->pages, before);
 }
 
 void CreateInstanceDialog::selectPageOf(const cid::Page* page)

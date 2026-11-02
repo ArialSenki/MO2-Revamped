@@ -404,6 +404,8 @@ bool ModOrganizerExiting()
 void ResetExitFlag()
 {
   g_exiting = false;
+  // this process goes on with another instance: its window asks again
+  g_canClose = false;
 }
 
 static QString g_restartExecutable;

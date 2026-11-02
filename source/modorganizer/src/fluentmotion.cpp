@@ -4,6 +4,8 @@
 #include <QAction>
 #include <QEvent>
 #include <QGraphicsOpacityEffect>
+#include <QLabel>
+#include <QPixmap>
 #include <QMenu>
 #include <QPainter>
 #include <QStyle>
@@ -211,6 +213,33 @@ void fadeOut(QWidget* window, std::function<void()> done)
 
   animation->setStartValue(window->windowOpacity());
   animation->setEndValue(0.0);
+  animation->setDuration(Fast);
+  animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void crossFade(QWidget* host, const QPixmap& before)
+{
+  if (!g_enabled || host == nullptr || !host->isVisible() || before.isNull()) {
+    return;
+  }
+
+  auto* picture = new QLabel(host);
+  picture->setAttribute(Qt::WA_TransparentForMouseEvents);
+  picture->setPixmap(before);
+  picture->setGeometry(host->rect());
+  auto* effect = new QGraphicsOpacityEffect(picture);
+  picture->setGraphicsEffect(effect);
+  picture->show();
+  picture->raise();
+
+  QVariantAnimation* animation = createAnimation(effect, QEasingCurve::OutCubic);
+  QObject::connect(animation, &QVariantAnimation::valueChanged, effect,
+                   [effect](const QVariant& value) {
+                     effect->setOpacity(1.0 - value.toReal());
+                   });
+  QObject::connect(animation, &QVariantAnimation::finished, picture, &QObject::deleteLater);
+  animation->setStartValue(0.0);
+  animation->setEndValue(1.0);
   animation->setDuration(Fast);
   animation->start(QAbstractAnimation::DeleteWhenStopped);
 }

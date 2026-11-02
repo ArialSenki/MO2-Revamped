@@ -349,6 +349,7 @@ void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
     QString name;
     QString group;
     bool active;
+    bool hasPlugin;
   };
 
   // the instances by game, the games and the names in alphabetical order
@@ -366,7 +367,8 @@ void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
     entries.push_back({path, portable, instance.displayName(),
                        GlobalSettings::instanceValue(QStringLiteral("InstanceGroups"),
                                                      instance.instanceIdentifier()),
-                       instance.isActive()});
+                       instance.isActive(),
+                       manager.gamePluginForDirectory(path, m_PluginContainer) != nullptr});
   };
   for (auto&& d : manager.globalInstancePaths()) {
     add(d, false);
@@ -395,9 +397,15 @@ void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
           !entry.name.startsWith(entry.group + QStringLiteral(" ("))) {
         text += QLatin1Char('\t') + entry.group;
       }
+      // the same block as the instance manager's button: it couldn't open
+      if (!entry.hasPlugin) {
+        text = QString(entry.name).replace('&', QStringLiteral("&&")) + QLatin1Char('\t') +
+               tr("No game plugin");
+      }
       auto* action = menu->addAction(text);
       action->setCheckable(true);
       action->setChecked(entry.active);
+      action->setEnabled(entry.active || entry.hasPlugin);
       connect(action, &QAction::triggered, this, [this, entry] {
         if (entry.active) {
           return;
@@ -406,8 +414,12 @@ void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
         if (!InstanceManagerDialog::confirmSwitch(this, to)) {
           return;
         }
+        // only once closing is certain; otherwise the next start would open
+        // the other instance unasked
+        if (!ExitModOrganizer(Exit::Restart)) {
+          return;
+        }
         InstanceManager::singleton().setCurrentInstance(to);
-        ExitModOrganizer(Exit::Restart);
       });
     }
   }

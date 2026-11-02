@@ -786,6 +786,9 @@ void InstanceManager::setCurrentInstance(const QString& name)
     return;
   }
 
+  // what is chosen now counts over what the command line asked for
+  m_overrideInstanceName = {};
+
   GlobalSettings::setCurrentInstanceForInstallation(
       name, currentInstanceInstallationId());
 }

@@ -6539,3 +6539,12 @@ QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceGameSaveProfileNote {
     font-size: 8.5pt;
     padding: 0px;
 }
+
+/* Menus: compact rows, close to Windows 11's own. */
+QMenu::item,
+QMenu#modListOptionsMenu::item,
+QMenu#openFolderMenuPopup::item {
+    min-height: 18px;
+    padding: 4px 26px 4px 10px;
+    margin: 0px;
+}

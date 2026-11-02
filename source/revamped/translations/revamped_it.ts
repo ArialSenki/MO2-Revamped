@@ -810,6 +810,32 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <translation>La sua copia</translation>
     </message>
     <message>
+      <source>The copy is in this folder. Start it with its ModOrganizer.exe:
+%1</source>
+      <translation>La copia è in questa cartella. Avviala con il suo ModOrganizer.exe:
+%1</translation>
+    </message>
+    <message>
+      <source>Isolated copy created</source>
+      <translation>Copia isolata creata</translation>
+    </message>
+    <message>
+      <source>Best for</source>
+      <translation>Ideale per</translation>
+    </message>
+    <message>
+      <source>Most setups</source>
+      <translation>La maggior parte dei casi</translation>
+    </message>
+    <message>
+      <source>Taking it on another drive</source>
+      <translation>Portarla su un altro disco</translation>
+    </message>
+    <message>
+      <source>One game, apart from the rest</source>
+      <translation>Un gioco, separato dal resto</translation>
+    </message>
+    <message>
       <source>Search games</source>
       <translation>Cerca giochi</translation>
     </message>
@@ -2852,7 +2878,7 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>Crea un profilo di salvataggio con nome</translation>
     </message>
     <message>
-      <source>Create a separate named save choice managed in Tools &gt; Elden Ring Save Isolation.</source>
+      <source>Create a separate named save choice managed in Tools &gt; Save Isolation.</source>
       <translation>Crea una scelta di salvataggio con nome separata, gestita in Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
     <message>
@@ -3300,7 +3326,7 @@ Scegli Usa il salvataggio globale di Steam per memorizzare questo percorso per i
       <translation>Questo nome compare in Strumenti &gt; Isolamento salvataggi. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000.sl2.</translation>
     </message>
     <message>
-      <source>Optional. Leave this unchecked to use standard saves. You can create named game save profiles later from Tools &gt; Elden Ring Save Isolation.</source>
+      <source>Optional. Leave this unchecked to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
       <translation>Facoltativo. Lascia deselezionato per usare i salvataggi standard. Puoi creare profili di salvataggio con nome in seguito da Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
     <message>
@@ -4170,7 +4196,11 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <translation>Attiva un tipo di salvataggio per scegliere un salvataggio iniziale.</translation>
     </message>
     <message>
-      <source>This name appears in Tools &gt; Elden Ring Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save Isolation.</source>
+      <translation>Questa istanza può elencare solo i salvataggi del proprio gioco. Una volta aperta la nuova istanza, aggiungi un salvataggio da Strumenti &gt; Isolamento salvataggi.</translation>
+    </message>
+    <message>
+      <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
       <translation>Questo nome compare in Strumenti &gt; Elden Ring Save Isolation. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000 con la sua estensione.</translation>
     </message>
 </context>
@@ -5521,6 +5551,20 @@ Percorso: %3</translation>
       <translation>Duplica istanza</translation>
     </message>
     <message>
+      <source>The copy's profiles could not be created, so it shares its mod lists with the original:
+%1</source>
+      <translation>Non è stato possibile creare i profili della copia, quindi condivide gli elenchi delle mod con l'originale:
+%1</translation>
+    </message>
+    <message>
+      <source>These instances use folders of this one: %1
+
+They will keep looking in the old folder and find nothing until their paths are changed. Rename anyway?</source>
+      <translation>Queste istanze usano cartelle di questa: %1
+
+Continueranno a cercare nella vecchia cartella senza trovare nulla finché non ne cambi i percorsi. Rinominare comunque?</translation>
+    </message>
+    <message>
       <source>Name of the copy</source>
       <translation>Nome della copia</translation>
     </message>
@@ -5782,6 +5826,10 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   </context>
   <context>
     <name>MainWindow</name>
+    <message>
+      <source>No game plugin</source>
+      <translation>Nessun plugin di gioco</translation>
+    </message>
     <message>
       <source>Filter state: off, included, or excluded.</source>
       <translation>Stato del filtro: disattivato, incluso o escluso.</translation>
@@ -6141,8 +6189,8 @@ In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, 
       <translation>Riavvio non avviato</translation>
     </message>
     <message>
-      <source>The save route remains saved, but Mod Organizer could not restart right now. Restart Mod Organizer manually before launching Elden Ring.</source>
-      <translation>Il percorso dei salvataggi resta memorizzato, ma Mod Organizer non è riuscito a riavviarsi ora. Riavvia manualmente Mod Organizer prima di avviare Elden Ring.</translation>
+      <source>The save route remains saved, but Mod Organizer could not restart right now. Restart Mod Organizer manually before launching the game.</source>
+      <translation>Il percorso dei salvataggi resta memorizzato, ma Mod Organizer non è riuscito a riavviarsi ora. Riavvia manualmente Mod Organizer prima di avviare il gioco.</translation>
     </message>
     <message>
       <source>Installed Elden Ring mods appear here. Checked mods are active in this profile and can provide virtual game files or native DLLs. Keep only one version of a mutually exclusive mod active.</source>
@@ -8965,8 +9013,8 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
       <translation>I profili che usano questa modalità condividono una cartella di salvataggi con mod in questa istanza MO2. Le altre istanze restano separate.</translation>
     </message>
     <message>
-      <source>Uses the global Elden Ring save folder. Steam and other instances using the same global path can share it.</source>
-      <translation>Usa la cartella globale dei salvataggi di Elden Ring. Steam e altre istanze che usano lo stesso percorso globale possono condividerla.</translation>
+      <source>Uses the game's global save folder. Steam and other instances using the same global path can share it.</source>
+      <translation>Usa la cartella globale dei salvataggi del gioco. Steam e altre istanze che usano lo stesso percorso globale possono condividerla.</translation>
     </message>
     <message>
       <source>Each MO2 profile uses its own save folder. Different instances remain separate when their profile folders are separate.</source>
@@ -9461,6 +9509,10 @@ Esempio:
     <message>
       <source>Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.</source>
       <translation>Al momento le copie isolate di MO2 supportano Elden Ring e Nightreign. Scegli il gioco e la sua cartella di installazione per continuare.</translation>
+    </message>
+    <message>
+      <source>Choose Browse… and select its folder.</source>
+      <translation>Scegli Sfoglia… e seleziona la sua cartella.</translation>
     </message>
     <message>
       <source>Several installations of %1 were found. Choose the one this instance should use:</source>
@@ -10660,8 +10712,8 @@ Rimanenti in quest'ora: %3</translation>
   <context>
     <name>cid::ProfilePage</name>
     <message>
-      <source>This choice applies only to Elden Ring profiles in the instance being created.</source>
-      <translation>Questa scelta vale solo per i profili di Elden Ring dell'istanza in fase di creazione.</translation>
+      <source>This choice applies only to the profiles of the instance being created.</source>
+      <translation>Questa scelta vale solo per i profili dell'istanza in fase di creazione.</translation>
     </message>
     <message>
       <source>&lt;h3&gt;Choose how Elden Ring saves are handled.&lt;/h3&gt;</source>

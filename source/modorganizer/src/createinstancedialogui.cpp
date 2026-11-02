@@ -392,10 +392,11 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     portableExistsLabel->hide();
     rows->addWidget(portableExistsLabel);
 
-    // the differences that matter when choosing, one column per kind, at the
-    // card's foot: the choices above, the comparison below, no empty half
-    rows->addStretch(1);
+    // the differences that matter when choosing, one column per kind, in all
+    // the room the choices leave; hidden, the stretch keeps the choices at the top
     auto* frame = row(page_2, rows);
+    rows->setStretchFactor(frame, 1);
+    rows->addStretch(0);
     typeComparison = frame;
     auto* grid = new QGridLayout(frame);
     grid->setContentsMargins(20, 14, 20, 16);
@@ -426,6 +427,13 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     cell(3, 1, tr("This Mod Organizer's"), "cell");
     cell(3, 2, tr("This Mod Organizer's"), "cell");
     cell(3, 3, tr("Its own copy"), "cell");
+    cell(4, 0, tr("Best for"), "key");
+    cell(4, 1, tr("Most setups"), "cell");
+    cell(4, 2, tr("Taking it on another drive"), "cell");
+    cell(4, 3, tr("One game, apart from the rest"), "cell");
+    for (int r = 0; r <= 4; ++r) {
+      grid->setRowStretch(r, 1);
+    }
   }
 
   // game

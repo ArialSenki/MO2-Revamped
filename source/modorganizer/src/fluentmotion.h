@@ -7,6 +7,7 @@
 
 class QVariantAnimation;
 class QObject;
+class QPixmap;
 class QToolButton;
 class QWidget;
 
@@ -48,6 +49,10 @@ void fadeOut(QWidget* window, std::function<void()> done);
 // pages, the main window's tabs): it fades in while it rises `rise` pixels
 // into place. Pages with GPU-rendered children (web views) switch at once.
 void pageIn(QWidget* page, int rise = 16);
+
+// fades a picture of what a widget showed away over what it shows now, so a
+// page change has no empty frame between the two
+void crossFade(QWidget* host, const QPixmap& before);
 
 // Windows 11 drop-down chevron for a tool button with a menu: the button's own
 // arrow is hidden ([fluentChevron="true"] in the theme) and a chevron is drawn

@@ -239,6 +239,10 @@ public:
   //
   void overrideInstance(const QString& instanceName);
 
+  // the instance -i asked for, unless another one was chosen since
+  //
+  std::optional<QString> overriddenInstance() const { return m_overrideInstanceName; }
+
   // overrides profile name from INI for currentInstance()
   //
   void overrideProfile(const QString& profileName);

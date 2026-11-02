@@ -77,6 +77,40 @@
 - The archive installer treats folders named after Nightreign as wrappers even
   beside another container, as it does for Elden Ring.
 
+### Instances
+
+- Switching instance from the toolbar and then cancelling the exit no longer
+  changes the instance of the next start.
+- A restart stays on the instance a desktop shortcut opened. Creating an instance
+  from the start window keeps the prompts when closing Mod Organizer. The toolbar
+  menu shows an instance without a game plugin as unavailable.
+- Renaming an instance warns when others use its folders. Deleting one removes
+  its desktop shortcut. Enter and a double click no longer try to open an
+  instance without a game plugin.
+- Duplicating refreshes the list if the copy stops partway, warns if the copy's
+  profiles could not be made, and no longer doubles "Portable" in the name.
+
+### New instance wizard and menus
+
+- Menus are more compact.
+- Steps change without a flash: a page is set up before it shows, so the
+  isolated copy's game step no longer shows the others' search box first, and
+  the old page fades into the new one.
+- Step 2 uses its whole page, with larger icons and a "Best for" row. Game
+  icons are round, as in the instance manager.
+- Nightreign gets the search through every Steam library and the choice between
+  several installations, as Elden Ring had.
+- Browse on the folders step updates the free space, the folders it will create
+  and its warnings. Searching the game step keeps the game already chosen.
+- A folder no plugin recognizes can no longer be accepted anyway: such an
+  instance could not open. An isolated copy created without starting it says
+  where it is. Closing the game page of an isolated copy closes it instead of
+  opening the page again.
+- Going back and picking another game removes the Elden Ring save options.
+  A new instance of the other game says why it lists no saves.
+- The saves step's switches line up with their titles; turning a save type on
+  or off no longer flickers. The review step's rows line up.
+
 ### Install window
 
 - A new window: the mod's name, what will be installed (game files, DLLs,

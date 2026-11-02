@@ -59,7 +59,7 @@ inline QString modeDescription(const QString& mode)
   }
   if (mode == QLatin1String(GlobalShared)) {
     return QObject::tr(
-        "Uses the global Elden Ring save folder. Steam and other instances using "
+        "Uses the game's global save folder. Steam and other instances using "
         "the same global path can share it.");
   }
   return QObject::tr(

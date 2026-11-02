@@ -105,12 +105,11 @@ QIcon paddedChoiceIcon(const QIcon& source, int size)
   return icon;
 }
 
-QIcon choiceIcon(char16_t glyph)
+QIcon choiceIcon(char16_t glyph, int size = 16)
 {
   // the glyph drawn as text in the icon font, as FluentIcons does: its own
   // engine gives no pixmap outside a widget
-  constexpr int size = 16;
-  const int left     = 23 - size / 2;
+  const int left = 23 - size / 2;
   QIcon icon;
   for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
     QPixmap pixmap((QSizeF(ChoiceIconWidth, size) * ratio).toSize());
@@ -344,10 +343,8 @@ std::vector<QPair<QString, QString>> findEldenRingInstallations(
     MOBase::IPluginGame* game)
 {
   std::vector<QPair<QString, QString>> installations;
-  if (!game ||
-      (game->gameName().compare(QStringLiteral("ELDEN RING"),
-                                Qt::CaseInsensitive) != 0 &&
-       game->steamAPPId() != QStringLiteral("1245620"))) {
+  // Elden Ring and Nightreign
+  if (!game || !EldenRingSaveSettings::supports(game)) {
     return installations;
   }
 
@@ -390,12 +387,8 @@ std::vector<QPair<QString, QString>> findEldenRingInstallations(
     }
   }
 
-  const QString appId = game->steamAPPId().isEmpty()
-                            ? QStringLiteral("1245620")
-                            : game->steamAPPId();
-  const QStringList names = {game->gameName(), game->displayGameName(),
-                             QStringLiteral("ELDEN RING"),
-                             QStringLiteral("Elden Ring")};
+  const QString appId = game->steamAPPId();
+  const QStringList names = {game->gameName(), game->displayGameName()};
 
   const QStringList libraries =
       steamRoot.isEmpty() ? QStringList() : steamLibraries(steamRoot);
@@ -666,9 +659,9 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
       InstanceManager::singleton().isEldenRingOnlyPortableMode();
 
   ui->portableExistsLabel->setVisible(false);
-  setChoiceIcon(ui->createGlobal, choiceIcon(HomeGlyph), 16);
-  setChoiceIcon(ui->createPortable, choiceIcon(DriveGlyph), 16);
-  setChoiceIcon(ui->createIsolated, choiceIcon(LockGlyph), 16);
+  setChoiceIcon(ui->createGlobal, choiceIcon(HomeGlyph, 22), 22);
+  setChoiceIcon(ui->createPortable, choiceIcon(DriveGlyph, 22), 22);
+  setChoiceIcon(ui->createIsolated, choiceIcon(LockGlyph, 22), 22);
 
   // each kind with the folder it goes to and the instances already there
   {
@@ -809,7 +802,10 @@ void GamePage::doActivated(bool firstTime)
     ui->gamesFilter = gamesFilter;
     ui->showAllGames = showAllGames;
     ui->games = games;
-    ui->gameSelectionHint = selectionHint;
+    // the page's text has another name in the Fluent layout: this one stays
+    if (selectionHint != nullptr) {
+      ui->gameSelectionHint = selectionHint;
+    }
 
     // A new wizard always starts with detected installations only. Keep the
     // filter state in GamePage so list rebuilding never depends on a stale UI
@@ -875,12 +871,20 @@ void GamePage::doActivated(bool firstTime)
   if (ui->gamesFilter != nullptr) {
     ui->gamesFilter->setVisible(!isolatedCopy);
   }
-  if (ui->gameSelectionHint != nullptr) {
-    ui->gameSelectionHint->setText(
-        isolatedCopy
-            ? QObject::tr("Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue.")
-            : QObject::tr("Choose an installed game, or browse to its folder. The selected game and path are shown on each card."));
-  }
+  // an isolated copy has its own texts; the others keep the page's
+  const auto setText = [isolatedCopy](QLabel* label, const QString& isolatedText) {
+    if (label == nullptr) {
+      return;
+    }
+    if (!label->property("wizardCommonText").isValid()) {
+      label->setProperty("wizardCommonText", label->text());
+    }
+    label->setText(isolatedCopy ? isolatedText
+                                : label->property("wizardCommonText").toString());
+  };
+  setText(ui->gameSelectionHint,
+          QObject::tr("Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue."));
+  setText(ui->gameMissingHint, QObject::tr("Choose Browse\u2026 and select its folder."));
 
   // instances that already manage each game, shown on its row
   m_instanceCounts.clear();
@@ -1207,8 +1211,12 @@ void GamePage::updateButton(Game* g)
   g->button->setText(displayName.replace("&", "&&"));
   // the game's own icon, as the main window's bar shows it
   QIcon gameIcon = g->game->gameIcon();
+  // round, as in the instance manager
   setChoiceIcon(g->button,
-                gameIcon.isNull() ? choiceIcon(GameGlyph) : paddedChoiceIcon(gameIcon, 28),
+                gameIcon.isNull()
+                    ? choiceIcon(GameGlyph)
+                    : paddedChoiceIcon(MOBase::makeRunStyleGameIcon(gameIcon, &m_dlg, QSize(28, 28)),
+                                       28),
                 gameIcon.isNull() ? 16 : 28);
 
   QStringList description;
@@ -1341,7 +1349,9 @@ void GamePage::fillList()
       continue;
     }
 
-    if (!query.isEmpty() &&
+    // the chosen game stays, whatever the search says: the next steps read it
+    // from its checked button
+    if (!query.isEmpty() && g.get() != m_selection &&
         !g->game->gameName().contains(query, Qt::CaseInsensitive) &&
         !g->game->displayGameName().contains(query, Qt::CaseInsensitive)) {
       // filtered out
@@ -1350,6 +1360,7 @@ void GamePage::fillList()
 
     createGameButton(g.get());
     addButton(g->button);
+    g->button->setChecked(g.get() == m_selection);
   }
 
   updateProtectedWarning();
@@ -1478,12 +1489,13 @@ bool GamePage::confirmUnknown(const QString& path, IPluginGame* game)
                           "for any other game Mod Organizer can manage.")
                   .arg(path)
                   .arg(game->displayGameName()))
-          .button({QObject::tr("Use this folder for %1").arg(game->displayGameName()),
-                   QObject::tr("I know what I'm doing"), QMessageBox::Ignore})
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
 
-  return (r == QMessageBox::Ignore);
+  // the instance wouldn't open with a folder its plugin rejects, so there is
+  // no way to go on with it
+  Q_UNUSED(r);
+  return false;
 }
 
 IPluginGame* GamePage::confirmOtherGame(const QString& path, IPluginGame* selectedGame,
@@ -1852,7 +1864,7 @@ ProfilePage::ProfilePage(CreateInstanceDialog& dlg)
 
   m_eldenRingSaveScope->setText(QCoreApplication::translate(
       "cid::ProfilePage",
-      "This choice applies only to Elden Ring profiles in the instance being created."));
+      "This choice applies only to the profiles of the instance being created."));
   m_eldenRingSaveScope->setWordWrap(true);
   m_eldenRingSaveScope->setStyleSheet(
       QStringLiteral("QLabel { background-color: transparent; border: none; padding: 0; }"));
@@ -2154,6 +2166,8 @@ void PathsPage::browse(QLineEdit* e)
   }
 
   e->setText(QDir::toNativeSeparators(s));
+  // setText doesn't count as an edit
+  onChanged();
 }
 
 void PathsPage::updateDiskSpace()
@@ -2400,7 +2414,7 @@ void ConfirmationPage::doActivated(bool)
     auto* captionLabel = new QLabel(caption, row);
     captionLabel->setObjectName(QStringLiteral("wizardReviewKey"));
     captionLabel->setFixedWidth(120);
-    captionLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    captionLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     auto* valueLabel = new QLabel(value, row);
     valueLabel->setObjectName(QStringLiteral("wizardReviewValue"));
     valueLabel->setWordWrap(true);
@@ -2417,7 +2431,7 @@ void ConfirmationPage::doActivated(bool)
       QObject::connect(change, &QToolButton::clicked, &m_dlg, [this, step = step] {
         m_dlg.selectPageOf(step);
       });
-      rowLayout->addWidget(change, 0, Qt::AlignTop);
+      rowLayout->addWidget(change, 0, Qt::AlignVCenter);
     }
     rows->addWidget(row);
   }
