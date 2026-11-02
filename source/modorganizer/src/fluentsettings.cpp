@@ -8,6 +8,7 @@
 #include <QKeySequenceEdit>
 #include <QLineEdit>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -839,6 +840,12 @@ void normalizePage(QWidget* page)
   }
   page->setProperty("fluentNormalized", true);
 
+  // a label's default indent depends on its font: titles and the text under
+  // them started a few pixels apart
+  for (QLabel* label : page->findChildren<QLabel*>()) {
+    label->setIndent(0);
+  }
+
   QBoxLayout* content = makeHeader(page);
   if (content == nullptr) {
     return;
@@ -908,6 +915,19 @@ void scrollAtEdge(QWidget* page, int gap)
     margins.setRight(margins.right() + gap);
     content->layout()->setContentsMargins(margins);
     content->setProperty("fluentEdgeGap", true);
+
+    // the bar takes its width from the gap: the cards and their switches end at
+    // one place on a page with a bar and on one without
+    QScrollBar* bar = scroll->verticalScrollBar();
+    const auto fit  = [content, bar, margins](int, int maximum) {
+      QMargins now = margins;
+      if (maximum > 0) {
+        now.setRight(qMax(0, margins.right() - bar->sizeHint().width()));
+      }
+      content->layout()->setContentsMargins(now);
+    };
+    QObject::connect(bar, &QScrollBar::rangeChanged, content, fit);
+    fit(bar->minimum(), bar->maximum());
 
     // and the layouts holding the scroll area leave no gap of their own
     for (QWidget* w = scroll->parentWidget(); w != nullptr; w = w->parentWidget()) {

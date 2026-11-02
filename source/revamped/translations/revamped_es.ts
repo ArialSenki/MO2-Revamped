@@ -3934,6 +3934,36 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <translation>Cierra Elden Ring primero</translation>
     </message>
     <message>
+      <source>In use by the running game.</source>
+      <translation>En uso por el juego abierto.</translation>
+    </message>
+    <message>
+      <source>Close the game first</source>
+      <translation>Cierra primero el juego</translation>
+    </message>
+    <message>
+      <source>Save profiles can't change while the game runs or Steam's saves are still set aside. Close it and try again.</source>
+      <translation>Los perfiles de partidas no pueden cambiar con el juego abierto o con las partidas de Steam aún apartadas. Ciérralo y vuelve a intentarlo.</translation>
+    </message>
+    <message>
+      <source>Save profile deleted</source>
+      <translation>Perfil de partidas eliminado</translation>
+    </message>
+    <message>
+      <source>Its saves are kept in this folder:
+{path}</source>
+      <translation>Sus partidas se conservan en esta carpeta:
+{path}</translation>
+    </message>
+    <message>
+      <source>No save files were found in this source folder.</source>
+      <translation>No se encontraron partidas en esta carpeta de origen.</translation>
+    </message>
+    <message>
+      <source>Choose a regular save file.</source>
+      <translation>Elige un archivo de partida normal.</translation>
+    </message>
+    <message>
       <source>A save copied while the game writes it can be incomplete.</source>
       <translation>Una partida copiada mientras el juego la escribe puede quedar incompleta.</translation>
     </message>
@@ -10064,6 +10094,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Key</source>
       <translation>Clave</translation>
+    </message>
+    <message>
+      <source>Option</source>
+      <translation>Opción</translation>
     </message>
     <message>
       <source>No plugins match this search.</source>

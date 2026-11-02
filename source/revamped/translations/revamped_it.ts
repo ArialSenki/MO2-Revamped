@@ -3960,6 +3960,36 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>Chiudi prima Elden Ring</translation>
     </message>
     <message>
+      <source>In use by the running game.</source>
+      <translation>In uso dal gioco in esecuzione.</translation>
+    </message>
+    <message>
+      <source>Close the game first</source>
+      <translation>Chiudi prima il gioco</translation>
+    </message>
+    <message>
+      <source>Save profiles can't change while the game runs or Steam's saves are still set aside. Close it and try again.</source>
+      <translation>I profili di salvataggio non possono cambiare mentre il gioco è in esecuzione o i salvataggi di Steam sono ancora da parte. Chiudilo e riprova.</translation>
+    </message>
+    <message>
+      <source>Save profile deleted</source>
+      <translation>Profilo di salvataggio eliminato</translation>
+    </message>
+    <message>
+      <source>Its saves are kept in this folder:
+{path}</source>
+      <translation>I suoi salvataggi restano in questa cartella:
+{path}</translation>
+    </message>
+    <message>
+      <source>No save files were found in this source folder.</source>
+      <translation>Nessun salvataggio trovato in questa cartella di origine.</translation>
+    </message>
+    <message>
+      <source>Choose a regular save file.</source>
+      <translation>Scegli un normale file di salvataggio.</translation>
+    </message>
+    <message>
       <source>A save copied while the game writes it can be incomplete.</source>
       <translation>Un salvataggio copiato mentre il gioco lo scrive può risultare incompleto.</translation>
     </message>
@@ -9783,6 +9813,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Option</source>
+      <translation>Opzione</translation>
+    </message>
     <message>
       <source>General preferences</source>
       <translation>Preferenze generali</translation>

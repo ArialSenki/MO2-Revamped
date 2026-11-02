@@ -6,6 +6,8 @@
 #include "settings.h"
 #include "settingsdialog.h"
 
+class QLabel;
+
 class PluginsSettingsTab : public SettingsTab
 {
 public:
@@ -16,6 +18,9 @@ public:
   void closing() override;
 
 private:
+  QLabel* m_pluginName    = nullptr;
+  QLabel* m_pluginCaption = nullptr;
+
   void on_pluginsList_currentItemChanged(QTreeWidgetItem* current,
                                          QTreeWidgetItem* previous);
   void on_checkboxEnabled_clicked(bool checked);

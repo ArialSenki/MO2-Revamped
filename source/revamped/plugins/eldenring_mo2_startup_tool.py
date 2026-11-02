@@ -374,6 +374,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         page_subtitle = QLabel(dialog)
         page_subtitle.setProperty("wizardPageText", True)
         page_subtitle.setWordWrap(True)
+        # room for two lines on every page: the cards below don't jump between them
+        page_subtitle.setMinimumHeight(2 * page_subtitle.fontMetrics().lineSpacing())
         page_subtitle.setContentsMargins(0, 0, 16, 0)
         page_column.addWidget(page_title)
         page_column.addWidget(page_subtitle)
@@ -398,6 +400,13 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             content_layout.setContentsMargins(0, 0, 16, 0)
             content_layout.setSpacing(12)
             scroll.setWidget(content)
+            # the scroll bar takes its width from the gap: the cards and their
+            # switches end at one place on every page, with a bar or without
+            scroll.verticalScrollBar().rangeChanged.connect(
+                lambda _low, high, layout=content_layout, area=scroll: layout.setContentsMargins(
+                    0, 0, 16 - area.verticalScrollBar().sizeHint().width() if high > 0 else 16, 0
+                )
+            )
             pages.addWidget(scroll)
             item = QListWidgetItem(name, nav)
             item.setData(Qt.ItemDataRole.UserRole, chr(glyph))

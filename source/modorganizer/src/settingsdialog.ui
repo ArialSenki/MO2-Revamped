@@ -2031,7 +2031,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                  </attribute>
                  <column>
                   <property name="text">
-                   <string>Key</string>
+                   <string>Option</string>
                   </property>
                  </column>
                  <column>

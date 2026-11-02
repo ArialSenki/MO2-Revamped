@@ -481,7 +481,13 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             for candidate in candidates
         }
         active_mods = {str(candidate["mod"]).casefold() for candidate in candidates}
-        shown = [entry for entry in entries if str(entry.get("mod", "")).casefold() in active_mods]
+        # of a mod that is on, only the DLLs it still has and that win their path:
+        # a mod's update can rename one, and a row for it would stop the launch
+        shown = [
+            entry
+            for entry in entries
+            if (str(entry.get("mod", "")).casefold(), str(entry.get("path", "")).casefold()) in active_keys
+        ]
         table.stale_entries = [
             entry for entry in entries if str(entry.get("mod", "")).casefold() not in active_mods
         ]
@@ -494,7 +500,6 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             entry for entry in default_entries
             if (str(entry["mod"]).casefold(), str(entry["path"]).casefold()) not in listed
         ]
-        del active_keys
         self._populate_detected_tree(detected_tree, candidates)
         mod_count = len({str(candidate["mod"]).casefold() for candidate in candidates})
         detected_status.setText(
@@ -758,6 +763,20 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             pass
         return normalized
 
+    @staticmethod
+    def _never_forced(name: str) -> bool:
+        try:
+            from basic_games.games.game_eldenring_mo2 import (
+                EldenRingMo2Game,
+                EldenRingModDataChecker,
+            )
+        except ImportError:
+            return False
+        return (
+            EldenRingMo2Game._is_game_runtime_dll(name)
+            or name.casefold() in EldenRingModDataChecker._root_loader_dlls
+        )
+
     def _detect_native_dlls(self) -> list[dict]:
         mod_list = self.__organizer.modList()
         candidates = []
@@ -784,6 +803,11 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             for route in sorted(set(routes), key=str.casefold):
                 route = self._normalize_native_route(route)
                 if route is None:
+                    continue
+                # the game's own libraries and root loaders load by themselves:
+                # the game plugin never forces them, and a row would
+                name = Path(route).name
+                if self._never_forced(name):
                     continue
                 physical_path = self._safe_mod_file(mod_root, route)
                 if physical_path is None:

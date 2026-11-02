@@ -12,6 +12,7 @@
 #include <QMouseEvent>
 #include <QScrollBar>
 #include <QVariantAnimation>
+#include <memory>
 #include <QPainter>
 #include <QStackedWidget>
 #include <QStyledItemDelegate>
@@ -314,14 +315,19 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
 
   // selection rather than the current row: accessibility tools select items
   // without moving the current one
-  QObject::connect(nav, &QListWidget::itemSelectionChanged, tabs, [tabs, nav] {
+  auto* pagesArea = tabs->findChild<QStackedWidget*>();
+  auto before     = std::make_shared<QPixmap>();
+  QObject::connect(nav, &QListWidget::itemSelectionChanged, tabs, [tabs, nav, pagesArea, before] {
     const auto selected = nav->selectedItems();
     const int row       = selected.isEmpty() ? -1 : nav->row(selected.first());
     if (row >= 0 && row < tabs->count() && row != tabs->currentIndex()) {
+      if (pagesArea != nullptr && pagesArea->isVisible()) {
+        *before = pagesArea->grab();
+      }
       tabs->setCurrentIndex(row);
     }
   });
-  QObject::connect(tabs, &QTabWidget::currentChanged, nav, [nav, tabs](int index) {
+  QObject::connect(tabs, &QTabWidget::currentChanged, nav, [nav, tabs, pagesArea, before](int index) {
     if (index != nav->currentRow()) {
       nav->setCurrentRow(index);
     }
@@ -329,10 +335,12 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
     if (page != nullptr && qApp->property("revampedFluent").toBool()) {
       // pages fill in their buttons late (Nexus info, conflicts)
       for (QAbstractButton* button : page->findChildren<QAbstractButton*>()) {
-        FluentIcons::apply(button);
+        FluentIcons::applyIfNew(button);
       }
     }
-    FluentMotion::pageIn(page);
+    // a fade, without moving: icons and text stay where they will be
+    FluentMotion::crossFade(pagesArea, *before);
+    *before = QPixmap();
   });
 
   return nav;

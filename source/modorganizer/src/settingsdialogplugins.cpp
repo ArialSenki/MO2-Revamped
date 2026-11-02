@@ -5,15 +5,22 @@
 #include <iplugin.h>
 
 #include "disableproxyplugindialog.h"
+#include "fluentswitch.h"
 #include "organizercore.h"
 #include "plugincontainer.h"
 
 #include <QAbstractItemView>
+#include <QApplication>
+#include <QStyle>
 #include <QComboBox>
+#include <QFormLayout>
 #include <QHeaderView>
+#include <QLabel>
 #include <QMetaType>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QPointer>
+#include <QRegularExpression>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStyledItemDelegate>
@@ -28,7 +35,41 @@ namespace
 class PluginSettingValueDelegate final : public QStyledItemDelegate
 {
 public:
-  using QStyledItemDelegate::QStyledItemDelegate;
+  PluginSettingValueDelegate(QWidget* colorsFrom, QObject* parent)
+      : QStyledItemDelegate(parent), m_colorsFrom(colorsFrom)
+  {}
+
+  // a true or false option is a switch, as in every other settings page
+  void paint(QPainter* painter, const QStyleOptionViewItem& option,
+             const QModelIndex& index) const override
+  {
+    if (index.data(Qt::EditRole).metaType().id() != QMetaType::Bool) {
+      QStyledItemDelegate::paint(painter, option, index);
+      return;
+    }
+    QStyleOptionViewItem blank(option);
+    initStyleOption(&blank, index);
+    blank.text.clear();
+    const QStyle* style = blank.widget != nullptr ? blank.widget->style() : QApplication::style();
+    style->drawControl(QStyle::CE_ItemViewItem, &blank, painter, blank.widget);
+
+    FluentSwitch::Colors colors{QColor(0x4C, 0xC2, 0xFF), QColor(0x2F, 0x2F, 0x2F),
+                                QColor(0x9A, 0x9A, 0x9A), QColor(0, 0, 0),
+                                QColor(0xC5, 0xC5, 0xC5)};
+    if (m_colorsFrom != nullptr) {
+      if (auto* painterWidget = m_colorsFrom->findChild<FluentSwitchPainter*>()) {
+        colors = {painterWidget->property("onColor").value<QColor>(),
+                  painterWidget->property("offColor").value<QColor>(),
+                  painterWidget->property("borderColor").value<QColor>(),
+                  painterWidget->property("knobOnColor").value<QColor>(),
+                  painterWidget->property("knobOffColor").value<QColor>()};
+      }
+    }
+    const QRectF track(option.rect.left() + 6,
+                       option.rect.center().y() - 9.5, 40, 20);
+    FluentSwitch::paint(painter, track, index.data(Qt::EditRole).toBool() ? 1.0 : 0.0, 0.0,
+                        colors);
+  }
 
   QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
                         const QModelIndex& index) const override
@@ -42,7 +83,30 @@ public:
     }
     return editor;
   }
+
+private:
+  QWidget* m_colorsFrom;
 };
+
+// check_font reads "Check font"; the plugin's own key stays with the row
+QString readableOptionName(QString key)
+{
+  key.replace(QLatin1Char('_'), QLatin1Char(' '));
+  // camelCase, without splitting an abbreviation
+  static const QRegularExpression wordStart(QStringLiteral("(?<=[a-z0-9])(?=[A-Z])"));
+  key.replace(wordStart, QStringLiteral(" "));
+  key = key.simplified();
+  QString result;
+  for (const QString& word : key.split(QLatin1Char(' '))) {
+    const bool abbreviation = word.size() > 1 && word == word.toUpper();
+    result += (result.isEmpty() ? QString() : QStringLiteral(" ")) +
+              (abbreviation ? word : word.toLower());
+  }
+  if (!result.isEmpty()) {
+    result[0] = result[0].toUpper();
+  }
+  return result;
+}
 
 class PluginBooleanSingleClickFilter final : public QObject
 {
@@ -61,13 +125,9 @@ public:
           m_view->indexAt(mouseEvent->position().toPoint());
       if (index.isValid() && index.column() == 1 &&
           index.data(Qt::EditRole).metaType().id() == QMetaType::Bool) {
-        const QPointer<QTreeWidget> view = m_view;
-        QTimer::singleShot(0, view, [view, index] {
-          if (!view.isNull() && index.isValid()) {
-            view->setCurrentIndex(index);
-            view->edit(index);
-          }
-        });
+        // it changes on the spot, as a switch does
+        m_view->setCurrentIndex(index);
+        m_view->model()->setData(index, !index.data(Qt::EditRole).toBool(), Qt::EditRole);
       }
     }
 
@@ -117,7 +177,13 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
     widget->setMinimumHeight(0);
   };
   keepNaturalHeight(ui->pluginBrowserDescription);
-  keepNaturalHeight(ui->pluginDescription);
+  // grows with its wrapped text, or the enable row below it gets cut off
+  {
+    QSizePolicy policy = ui->pluginDescription->sizePolicy();
+    policy.setVerticalPolicy(QSizePolicy::Minimum);
+    policy.setHeightForWidth(true);
+    ui->pluginDescription->setSizePolicy(policy);
+  }
   keepNaturalHeight(ui->pluginSettingsTitle);
   keepNaturalHeight(ui->pluginSettingsDescription);
   keepNaturalHeight(ui->pluginBlacklistDescription);
@@ -143,17 +209,34 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
   ui->pluginFilterEdit->setMinimumHeight(32);
   ui->pluginFilterEdit->setSizePolicy(QSizePolicy::Expanding,
                                       QSizePolicy::Maximum);
-  ui->pluginDescriptionLayout->setVerticalSpacing(4);
+  ui->pluginDescriptionLayout->setVerticalSpacing(6);
   ui->pluginDescriptionLayout->setHorizontalSpacing(12);
-  // room inside the details card, so the enable switch is not pressed
-  // against its edge
-  ui->pluginDescriptionLayout->setContentsMargins(12, 8, 12, 8);
+  // no card inside the card: the enable switch ends where the other pages' do
+  ui->pluginDescriptionLayout->setContentsMargins(0, 0, 0, 0);
   ui->pluginSettingsList->setEditTriggers(QAbstractItemView::DoubleClicked |
                                           QAbstractItemView::EditKeyPressed);
+  // the same height of row as the other pages' lists
+  ui->pluginsList->setIndentation(14);
   ui->pluginSettingsList->viewport()->installEventFilter(
       new PluginBooleanSingleClickFilter(ui->pluginSettingsList));
   ui->pluginSettingsList->setItemDelegateForColumn(
-      1, new PluginSettingValueDelegate(ui->pluginSettingsList));
+      1, new PluginSettingValueDelegate(ui->enabledCheckbox, ui->pluginSettingsList));
+
+  // the plugin's name heads its details, with its author and version under it
+  m_pluginName = new QLabel(ui->pluginDescription);
+  m_pluginName->setObjectName(QStringLiteral("pluginDetailsName"));
+  m_pluginName->setWordWrap(true);
+  m_pluginCaption = new QLabel(ui->pluginDescription);
+  m_pluginCaption->setObjectName(QStringLiteral("pluginDetailsCaption"));
+  m_pluginCaption->setWordWrap(true);
+  ui->pluginDescriptionLayout->insertRow(0, m_pluginCaption);
+  ui->pluginDescriptionLayout->insertRow(0, m_pluginName);
+  for (QWidget* w : {static_cast<QWidget*>(ui->label_13), static_cast<QWidget*>(ui->label_15),
+                     static_cast<QWidget*>(ui->label_14), static_cast<QWidget*>(ui->authorLabel),
+                     static_cast<QWidget*>(ui->versionLabel)}) {
+    w->hide();
+  }
+  ui->pluginDescriptionLayout->setHorizontalSpacing(0);
 
   // Create top-level tree widget:
   QStringList pluginInterfaces = m_pluginContainer->pluginInterfaces();
@@ -441,6 +524,9 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
   ui->authorLabel->setText(plugin->author());
   ui->versionLabel->setText(plugin->version().canonicalString());
   ui->descriptionLabel->setText(plugin->description());
+  m_pluginName->setText(plugin->localizedName());
+  m_pluginCaption->setText(QStringLiteral("%1 \u00B7 %2")
+                               .arg(plugin->author(), plugin->version().canonicalString()));
   ui->pluginDescription->updateGeometry();
   ui->pluginSettingsDescription->updateGeometry();
 
@@ -486,8 +572,10 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
   QVariantMap descriptions = current->data(0, DescriptionsRole).toMap();
   ui->pluginSettingsList->setEnabled(settings.count() != 0);
   for (auto iter = settings.begin(); iter != settings.end(); ++iter) {
-    QTreeWidgetItem* newItem = new QTreeWidgetItem(QStringList(iter.key()));
-    QVariant value           = *iter;
+    QTreeWidgetItem* newItem =
+        new QTreeWidgetItem(QStringList(readableOptionName(iter.key())));
+    newItem->setData(0, Qt::UserRole, iter.key());
+    QVariant value = *iter;
     QString description;
     {
       auto descriptionIter = descriptions.find(iter.key());
@@ -500,6 +588,10 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
     newItem->setData(1, Qt::DisplayRole, value);
     newItem->setData(1, Qt::EditRole, value);
     newItem->setToolTip(1, description);
+    // the plugin's own name for it, as a mod's guide or the plugin's author would use
+    newItem->setToolTip(0, description.isEmpty()
+                               ? iter.key()
+                               : QStringLiteral("%1\n\n%2").arg(iter.key(), description));
 
     newItem->setFlags(newItem->flags() | Qt::ItemIsEditable);
     ui->pluginSettingsList->addTopLevelItem(newItem);
@@ -507,6 +599,10 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
 
   ui->pluginSettingsList->resizeColumnToContents(0);
   ui->pluginSettingsList->resizeColumnToContents(1);
+
+  // the options list takes what's left: the details keep their whole height
+  ui->pluginDescription->layout()->invalidate();
+  ui->pluginDescription->setMinimumHeight(ui->pluginDescription->layout()->sizeHint().height());
 }
 
 void PluginsSettingsTab::deleteBlacklistItem()
@@ -521,7 +617,7 @@ void PluginsSettingsTab::storeSettings(QTreeWidgetItem* pluginItem)
 
     for (int i = 0; i < ui->pluginSettingsList->topLevelItemCount(); ++i) {
       const QTreeWidgetItem* item = ui->pluginSettingsList->topLevelItem(i);
-      settings[item->text(0)]     = item->data(1, Qt::DisplayRole);
+      settings[item->data(0, Qt::UserRole).toString()] = item->data(1, Qt::DisplayRole);
     }
 
     pluginItem->setData(0, SettingsRole, settings);

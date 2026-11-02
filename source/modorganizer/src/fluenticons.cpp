@@ -814,6 +814,15 @@ void apply(QAbstractButton* button)
   }
 }
 
+void applyIfNew(QAbstractButton* button)
+{
+  if (button != nullptr && !button->icon().isNull() &&
+      button->icon().cacheKey() == button->property(GapIconProperty).toLongLong()) {
+    return;
+  }
+  apply(button);
+}
+
 QIcon withGap(const QIcon& icon)
 {
   return QIcon(new GapEngine(icon));

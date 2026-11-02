@@ -2,6 +2,7 @@
 #define FLUENTTABWIDGET_H
 
 #include <QColor>
+#include <QPixmap>
 #include <QRectF>
 #include <QTabBar>
 #include <QTabWidget>
@@ -48,6 +49,9 @@ class FluentTabWidget : public QTabWidget
 
 public:
   explicit FluentTabWidget(QWidget* parent = nullptr);
+
+private:
+  QPixmap m_before;
 };
 
 #endif  // FLUENTTABWIDGET_H

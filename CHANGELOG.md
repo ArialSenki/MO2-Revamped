@@ -104,6 +104,34 @@
 - Reforged's online program follows its mod when renamed and leaves the list when
   the mod is removed.
 
+### Save Isolation and Native DLL Profile
+
+- "Export all my saves" includes saves with a mod's own extension, and waits if
+  Steam's saves are still set aside. Transfer and "Start from" list them too,
+  Convergence's included.
+- Replacing a save in Steam's folder works with the instance on another drive.
+- Restore opens on the route in use with the backup clicked selected.
+- Save profiles can't be created or deleted during a launch, and deleting one says
+  where its saves went.
+- The Native DLL Profile drops rows for DLLs a mod no longer has, which used to stop
+  the launch, and leaves out the game's own libraries and root loaders, which a
+  Save used to force.
+
+### Moving between pages
+
+- Settings and the main window's panel fade between pages without moving: icons,
+  text and Browse buttons no longer jump as a page appears. In Save Isolation and
+  Startup Options the cards stay in place whatever the length of a page's text.
+
+### Alignment
+
+- Settings pages share one set of margins, and switches and cards end at the same
+  place on every page, with a scroll bar or without. The same in Save Isolation,
+  Startup Options and the install window.
+- Settings > Plugins heads its details with the plugin's name, its options have
+  readable names (the plugin's own is in their tooltip), and true or false options
+  are switches that change with one click.
+
 ### Foreground
 
 - Mod Organizer's notices and its lock no longer take the foreground from a game

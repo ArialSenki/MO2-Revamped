@@ -3922,6 +3922,36 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>Fermez d'abord Elden Ring</translation>
     </message>
     <message>
+      <source>In use by the running game.</source>
+      <translation>Utilisées par le jeu en cours.</translation>
+    </message>
+    <message>
+      <source>Close the game first</source>
+      <translation>Fermez d'abord le jeu</translation>
+    </message>
+    <message>
+      <source>Save profiles can't change while the game runs or Steam's saves are still set aside. Close it and try again.</source>
+      <translation>Les profils de sauvegarde ne peuvent pas changer tant que le jeu tourne ou que les sauvegardes Steam sont encore mises de côté. Fermez-le et réessayez.</translation>
+    </message>
+    <message>
+      <source>Save profile deleted</source>
+      <translation>Profil de sauvegarde supprimé</translation>
+    </message>
+    <message>
+      <source>Its saves are kept in this folder:
+{path}</source>
+      <translation>Ses sauvegardes sont conservées dans ce dossier :
+{path}</translation>
+    </message>
+    <message>
+      <source>No save files were found in this source folder.</source>
+      <translation>Aucune sauvegarde trouvée dans ce dossier source.</translation>
+    </message>
+    <message>
+      <source>Choose a regular save file.</source>
+      <translation>Choisissez un fichier de sauvegarde normal.</translation>
+    </message>
+    <message>
       <source>A save copied while the game writes it can be incomplete.</source>
       <translation>Une sauvegarde copiée pendant que le jeu l'écrit peut être incomplète.</translation>
     </message>
@@ -9721,6 +9751,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Option</source>
+      <translation>Option</translation>
+    </message>
     <message>
       <source>General preferences</source>
       <translation>Préférences générales</translation>

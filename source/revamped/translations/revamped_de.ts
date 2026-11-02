@@ -3918,6 +3918,36 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>Beende zuerst Elden Ring</translation>
     </message>
     <message>
+      <source>In use by the running game.</source>
+      <translation>Vom laufenden Spiel verwendet.</translation>
+    </message>
+    <message>
+      <source>Close the game first</source>
+      <translation>Schließe zuerst das Spiel</translation>
+    </message>
+    <message>
+      <source>Save profiles can't change while the game runs or Steam's saves are still set aside. Close it and try again.</source>
+      <translation>Spielstandprofile können nicht geändert werden, solange das Spiel läuft oder die Steam-Spielstände noch beiseitegelegt sind. Schließe es und versuche es erneut.</translation>
+    </message>
+    <message>
+      <source>Save profile deleted</source>
+      <translation>Spielstandprofil gelöscht</translation>
+    </message>
+    <message>
+      <source>Its saves are kept in this folder:
+{path}</source>
+      <translation>Seine Spielstände bleiben in diesem Ordner:
+{path}</translation>
+    </message>
+    <message>
+      <source>No save files were found in this source folder.</source>
+      <translation>In diesem Quellordner wurden keine Spielstände gefunden.</translation>
+    </message>
+    <message>
+      <source>Choose a regular save file.</source>
+      <translation>Wähle eine normale Spielstanddatei.</translation>
+    </message>
+    <message>
       <source>A save copied while the game writes it can be incomplete.</source>
       <translation>Ein Spielstand, der kopiert wird, während das Spiel ihn schreibt, kann unvollständig sein.</translation>
     </message>
@@ -9461,6 +9491,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Option</source>
+      <translation>Option</translation>
+    </message>
     <message>
       <source>General preferences</source>
       <translation>Allgemeine Einstellungen</translation>

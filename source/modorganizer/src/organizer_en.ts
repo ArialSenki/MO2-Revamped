@@ -12106,27 +12106,27 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="379"/>
+        <location filename="settingsdialogplugins.cpp" line="462"/>
         <source>Cannot disable plugin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="380"/>
+        <location filename="settingsdialogplugins.cpp" line="463"/>
         <source>The &apos;%1&apos; plugin is used by the current game plugin and cannot disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="408"/>
+        <location filename="settingsdialogplugins.cpp" line="491"/>
         <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%1&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="412"/>
+        <location filename="settingsdialogplugins.cpp" line="495"/>
         <source>Really disable plugin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="460"/>
+        <location filename="settingsdialogplugins.cpp" line="546"/>
         <source>This plugin is required for Mod Organizer to work properly and cannot be disabled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12727,7 +12727,7 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentnavigation.cpp" line="301"/>
+        <location filename="fluentnavigation.cpp" line="302"/>
         <source>Pages</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13843,6 +13843,11 @@ If you disable this feature, MO will only display official DLCs this way. Please
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="settingsdialog.ui" line="2034"/>
+        <source>Option</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="settingsdialog.ui" line="2047"/>
         <source>No plugins match this search.</source>
         <translation type="unfinished"></translation>
@@ -14292,11 +14297,6 @@ Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for e
     <message>
         <location filename="settingsdialog.ui" line="1786"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="2034"/>
-        <source>Key</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

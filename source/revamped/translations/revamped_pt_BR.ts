@@ -3918,6 +3918,36 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>Feche o Elden Ring primeiro</translation>
     </message>
     <message>
+      <source>In use by the running game.</source>
+      <translation>Em uso pelo jogo aberto.</translation>
+    </message>
+    <message>
+      <source>Close the game first</source>
+      <translation>Feche o jogo primeiro</translation>
+    </message>
+    <message>
+      <source>Save profiles can't change while the game runs or Steam's saves are still set aside. Close it and try again.</source>
+      <translation>Os perfis de saves não podem mudar com o jogo aberto ou com os saves da Steam ainda separados. Feche-o e tente novamente.</translation>
+    </message>
+    <message>
+      <source>Save profile deleted</source>
+      <translation>Perfil de saves excluído</translation>
+    </message>
+    <message>
+      <source>Its saves are kept in this folder:
+{path}</source>
+      <translation>Os saves dele ficam nesta pasta:
+{path}</translation>
+    </message>
+    <message>
+      <source>No save files were found in this source folder.</source>
+      <translation>Nenhum save encontrado nesta pasta de origem.</translation>
+    </message>
+    <message>
+      <source>Choose a regular save file.</source>
+      <translation>Escolha um arquivo de save normal.</translation>
+    </message>
+    <message>
       <source>A save copied while the game writes it can be incomplete.</source>
       <translation>Um save copiado enquanto o jogo o grava pode ficar incompleto.</translation>
     </message>
@@ -9461,6 +9491,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Option</source>
+      <translation>Opção</translation>
+    </message>
     <message>
       <source>General preferences</source>
       <translation>Preferências gerais</translation>

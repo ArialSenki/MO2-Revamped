@@ -66,6 +66,10 @@ void apply(QMenu* menu);
 // those with the "fluentKeepIcon" property are left alone
 void apply(QAbstractButton* button);
 
+// for a button that may have been styled already, shown again: leaves that one
+// alone, since styling it again resizes its icon and moves what is beside it
+void applyIfNew(QAbstractButton* button);
+
 // the icon drawn at the left of a box gapWidth() wider: set it with the icon
 // size grown by gapWidth() and the button's text keeps 8 px from the icon
 QIcon withGap(const QIcon& icon);

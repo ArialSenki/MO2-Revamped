@@ -2085,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.82"
+    Version = "0.5.0-alpha.83"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -4571,6 +4571,13 @@ class EldenRingMo2Game(BasicGame):
                     )
 
                 route = relative_path.as_posix()
+                # a profile saved before these stayed out of the list
+                if (
+                    self._is_game_runtime_dll(relative_path.name)
+                    or relative_path.name.casefold() in EldenRingModDataChecker._root_loader_dlls
+                ):
+                    qInfo(f"Elden Ring MO2: skipped '{route}' from the native profile: never forced.")
+                    continue
                 route_key = (mapped_mod.casefold(), route.casefold())
                 if route_key in seen_routes:
                     raise ValueError(
@@ -4693,9 +4700,10 @@ class EldenRingMo2Game(BasicGame):
                     if optional:
                         qInfo(f"Elden Ring MO2: skipped optional Revamped native '{route}'.")
                         continue
-                    raise ValueError(
-                        _tr("Revamped native '{0}' was not found in the mapped MO2 mod '{1}'. Keep original structure may retain natives/...; MO2 layout must place it under DLLs/.").format(route, mapped_mod)
-                    )
+                    # a mod's update can rename or remove it: the launch goes on
+                    # with the DLLs the mods have now
+                    qWarning(f"Elden Ring MO2: Revamped native '{route}' is no longer in its mod; skipped.")
+                    continue
 
                 virtual_path, _source_path = resolved_candidates[0]
                 virtual_key = virtual_path.casefold()

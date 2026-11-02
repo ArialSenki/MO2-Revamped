@@ -1469,6 +1469,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         content_layout.setContentsMargins(0, 0, 16, 0)
         content_layout.setSpacing(10)
         scroll_area.setWidget(content)
+        # the scroll bar takes its width from the gap: the cards end at one place
+        scroll_area.verticalScrollBar().rangeChanged.connect(
+            lambda _low, high: content_layout.setContentsMargins(
+                0, 0, 16 - scroll_area.verticalScrollBar().sizeHint().width() if high > 0 else 16, 0
+            )
+        )
         layout.addWidget(scroll_area, 1)
 
         # a Windows 11 page: its title and text, then cards of rows, as in
@@ -1731,6 +1737,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         standard_radio.setAccessibleName(self.tr("Organize for MO2 (recommended)"))
         preserve_radio = QtWidgets.QRadioButton()
         preserve_radio.setObjectName("archivePreserveLayoutRadio")
+        # as wide as their circle: they end where the switches and buttons do
+        for radio in (standard_radio, preserve_radio):
+            radio.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+            radio.setStyleSheet("QRadioButton { spacing: 0px; margin: 0px; padding: 0px; }")
         preserve_radio.setAccessibleName(self.tr("Install as it comes in the archive"))
         layout_group.addButton(standard_radio)
         layout_group.addButton(preserve_radio)

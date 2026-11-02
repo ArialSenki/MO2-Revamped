@@ -1240,8 +1240,8 @@ QDialog#SettingsDialog QWidget#generalTab QGroupBox {
     background-color: #292929;
     border: 1px solid #454545;
     border-radius: 7px;
-    margin-top: 3px;
-    padding: 8px;
+    margin-top: 4px;
+    padding: 8px 10px;
 }
 
 QDialog#SettingsDialog QWidget#generalTab QGroupBox::title {
@@ -1411,7 +1411,7 @@ QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusServersGroup {
     border: none;
     border-radius: 0;
     margin: 0;
-    padding: 0;
+    padding: 8px 10px;
 }
 
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusAccountTitle,
@@ -1591,7 +1591,7 @@ QDialog#SettingsDialog QWidget#workaroundTab QGroupBox#virtualFilesystemGroup {
     border: 1px solid #363636;
     border-radius: 8px;
     margin-top: 4px;
-    padding: 6px 9px;
+    padding: 8px 10px;
 }
 
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#label_4,
@@ -1649,7 +1649,7 @@ QDialog#SettingsDialog QWidget#diagnosticsTab QGroupBox#diagnosticsFilesGroup {
     border: 1px solid #363636;
     border-radius: 8px;
     margin-top: 4px;
-    padding: 6px 9px 7px;
+    padding: 8px 10px;
 }
 
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsFieldLabel {
@@ -6516,7 +6516,7 @@ QDialog#SettingsDialog QWidget#developerTab QLabel#generalSectionTitle {
     font-weight: 600;
 }
 QDialog#SettingsDialog QWidget#developerTab QGroupBox {
-    margin-top: 3px;
+    margin-top: 4px;
 }
 /* the Developer page is built in code: its title and subtitle sit like the
    other pages' ones */
@@ -6553,4 +6553,28 @@ QMenu#openFolderMenuPopup::item {
 QComboBox QAbstractItemView::item {
     min-height: 20px;
     padding: 3px 10px;
+}
+/* Settings > Plugins: the plugin's name over its author and version, rows with room */
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsName {
+    color: #FFFFFF;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption {
+    color: #9A9A9A;
+}
+QTreeWidget#pluginsList::item {
+    min-height: 22px;
+    padding: 5px 4px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
+    background-color: transparent;
+    border: none;
+    border-radius: 0px;
+    padding: 0px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsName,
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption,
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#descriptionLabel {
+    padding: 0px 0px 0px 4px;
 }
