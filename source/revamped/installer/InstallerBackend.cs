@@ -6,6 +6,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -111,9 +113,8 @@ namespace Mo2RevampedSetup
             {
                 if (resource == null) return false;
 
-                string extractionRoot = Path.Combine(Path.GetTempPath(), "MO2 Revamped Setup", Guid.NewGuid().ToString("N"));
+                string extractionRoot = CreateWorkFolder();
                 bool cleanupScheduled = false;
-                Directory.CreateDirectory(extractionRoot);
                 string archivePath = Path.Combine(extractionRoot, "qt-runtime.zip");
                 try
                 {
@@ -187,6 +188,38 @@ namespace Mo2RevampedSetup
             }
         }
 
+        // The elevated setup runs and reads what it keeps here. A program of the
+        // same user can write to %TEMP% and rename folders in it, so an elevated
+        // run works below Program Files, in a folder only administrators can
+        // write. Without elevation there is nothing to protect: %TEMP% is used.
+        internal static string CreateWorkFolder()
+        {
+            string name = Guid.NewGuid().ToString("N");
+            if (new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
+            {
+                try
+                {
+                    string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    Directory.CreateDirectory(Path.Combine(programFiles, "MO2 Revamped Setup"));
+                    DirectorySecurity security = new DirectorySecurity();
+                    security.SetAccessRuleProtection(true, false);
+                    foreach (WellKnownSidType account in new WellKnownSidType[] { WellKnownSidType.BuiltinAdministratorsSid, WellKnownSidType.LocalSystemSid })
+                    {
+                        security.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(account, null), FileSystemRights.FullControl,
+                            InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                    }
+                    string secured = Path.Combine(programFiles, "MO2 Revamped Setup", name);
+                    Directory.CreateDirectory(secured, security);
+                    return secured;
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            }
+            string folder = Path.Combine(Path.GetTempPath(), "MO2 Revamped Setup", name);
+            Directory.CreateDirectory(folder);
+            return folder;
+        }
+
         private static bool IsUninstallRequest(string[] args)
         {
             return args != null && args.Length >= 2 &&
@@ -245,7 +278,8 @@ namespace Mo2RevampedSetup
                 if (!File.Exists(powershell)) return false;
                 string escaped = (directory ?? "").Replace("'", "''");
                 string script = "$p = " + processId.ToString() + "; try { $owner = [System.Diagnostics.Process]::GetProcessById($p); $owner.WaitForExit(); $owner.Dispose() } catch {}; " +
-                    "$dir = '" + escaped + "'; try { if ([System.IO.Directory]::Exists($dir)) { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue } } catch {};";
+                    "$dir = '" + escaped + "'; try { if ([System.IO.Directory]::Exists($dir)) { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue } } catch {}; " +
+                    "try { [System.IO.Directory]::Delete([System.IO.Path]::GetDirectoryName($dir), $false) } catch {};";
                 string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
                 ProcessStartInfo cleanup = new ProcessStartInfo();
                 cleanup.FileName = powershell;

@@ -527,7 +527,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             "config", "configs", "dlls", "external_dlls", "fonts", "mod", "mods",
             "mo2_dlls", "native", "natives", "plugins", "seamlesscoop",
             "modengine2", "bin", "locale", "game", "elden ring", "eldenring", "nightreign",
-            "drag files into here", "fomod",
+            "elden ring nightreign", "elden-ring-nightreign", "eldenring nightreign",
+            "elden_ring_nightreign", "drag files into here", "fomod",
         }
     )
 

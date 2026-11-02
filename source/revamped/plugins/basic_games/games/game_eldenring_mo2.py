@@ -295,6 +295,11 @@ class EldenRingModDataChecker(BasicModDataChecker):
         "elden-ring",
         "eldenring",
         "elden_ring",
+        "nightreign",
+        "elden ring nightreign",
+        "elden-ring-nightreign",
+        "eldenring nightreign",
+        "elden_ring_nightreign",
         "data",
         "game",
         "dlls",
@@ -550,7 +555,11 @@ class EldenRingModDataChecker(BasicModDataChecker):
         ``.toml`` is the payload root (Seamless Co-op keeps ``SeamlessCoop/``
         beside ``ersc_launcher.exe``, Mod Engine 2 keeps ``modengine2/bin``).
         """
-        game_folders = {"<game>", "game", "elden ring", "elden-ring", "eldenring", "elden_ring"}
+        game_folders = {
+            "<game>", "game", "elden ring", "elden-ring", "eldenring", "elden_ring",
+            "nightreign", "elden ring nightreign", "elden-ring-nightreign",
+            "eldenring nightreign", "elden_ring_nightreign",
+        }
         for _ in range(self._archive_wrapper_depth_limit):
             entries = [
                 entry

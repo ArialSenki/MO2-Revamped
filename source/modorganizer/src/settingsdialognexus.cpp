@@ -301,7 +301,9 @@ void NexusConnectionUI::onValidatorFinished(ValidationAttempt::Result r,
                                             std::optional<APIUserAccount> user)
 {
   if (user) {
-    NexusInterface::instance().setUserAccount(*user);
+    // applies at once: the Nexus requests, the status bar and the window title
+    // all follow this signal, so linking needs no restart
+    emit NexusInterface::instance().getAccessManager()->credentialsReceived(*user);
     addLog(tr("Received user account information"));
 
     if (setKey(user->apiKey())) {
@@ -551,10 +553,6 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
         updateNexusData();
       },
       Qt::QueuedConnection);
-
-  QObject::connect(m_connectionUI.get(), &NexusConnectionUI::keyChanged, &d, [&] {
-    dialog().setExitNeeded(Exit::Restart);
-  });
 
   QObject::connect(ui->clearCacheButton, &QPushButton::clicked, [&] {
     clearCache();

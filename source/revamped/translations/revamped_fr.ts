@@ -3556,6 +3556,54 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>Parcourir toutes les copies d'une route et en restaurer une.</translation>
     </message>
     <message>
+      <source>Export…</source>
+      <translation>Exporter…</translation>
+    </message>
+    <message>
+      <source>Export all my saves</source>
+      <translation>Exporter toutes mes sauvegardes</translation>
+    </message>
+    <message>
+      <source>Copies the saves of every route to a folder you choose, for example before reinstalling Windows.</source>
+      <translation>Copie les sauvegardes de toutes les routes dans le dossier de votre choix, par exemple avant de réinstaller Windows.</translation>
+    </message>
+    <message>
+      <source>Close Elden Ring first</source>
+      <translation>Fermez d'abord Elden Ring</translation>
+    </message>
+    <message>
+      <source>A save copied while the game writes it can be incomplete.</source>
+      <translation>Une sauvegarde copiée pendant que le jeu l'écrit peut être incomplète.</translation>
+    </message>
+    <message>
+      <source>No saves found.</source>
+      <translation>Aucune sauvegarde trouvée.</translation>
+    </message>
+    <message>
+      <source>Some saves could not be copied</source>
+      <translation>Certaines sauvegardes n'ont pas pu être copiées</translation>
+    </message>
+    <message>
+      <source>{copied} copied to {path}
+
+Not copied:
+{errors}</source>
+      <translation>{copied} copiées vers {path}
+
+Non copiées :
+{errors}</translation>
+    </message>
+    <message>
+      <source>Saves exported</source>
+      <translation>Sauvegardes exportées</translation>
+    </message>
+    <message>
+      <source>Files copied: {copied}
+{path}</source>
+      <translation>Fichiers copiés : {copied}
+{path}</translation>
+    </message>
+    <message>
       <source>Copy</source>
       <translation>Copier</translation>
     </message>

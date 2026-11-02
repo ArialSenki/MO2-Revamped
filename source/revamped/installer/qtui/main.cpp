@@ -568,10 +568,14 @@ private:
     }
 
     QString tempFile(const QString &pattern) const {
-        const QString path = QDir::temp().filePath(QStringLiteral("MO2 Revamped Setup/") +
-                                                   pattern.arg(QUuid::createUuid().toString(QUuid::WithoutBraces)));
-        QDir().mkpath(QFileInfo(path).absolutePath());
-        return path;
+        // beside this program, in the folder the host extracted it to: an elevated
+        // run reads its requests from there, where only administrators can write
+        const QString name = pattern.arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+        const QString path = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("work/") + name);
+        if (QDir().mkpath(QFileInfo(path).absolutePath())) return path;
+        const QString fallback = QDir::temp().filePath(QStringLiteral("MO2 Revamped Setup/") + name);
+        QDir().mkpath(QFileInfo(fallback).absolutePath());
+        return fallback;
     }
 
     QJsonObject runHost(const QStringList &arguments, const QString &output, int timeout = 8000) const {

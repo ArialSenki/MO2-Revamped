@@ -3552,6 +3552,54 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>Veja todos os backups de uma rota e restaure um.</translation>
     </message>
     <message>
+      <source>Export…</source>
+      <translation>Exportar…</translation>
+    </message>
+    <message>
+      <source>Export all my saves</source>
+      <translation>Exportar todos os meus saves</translation>
+    </message>
+    <message>
+      <source>Copies the saves of every route to a folder you choose, for example before reinstalling Windows.</source>
+      <translation>Copia os saves de todas as rotas para a pasta que você escolher, por exemplo antes de reinstalar o Windows.</translation>
+    </message>
+    <message>
+      <source>Close Elden Ring first</source>
+      <translation>Feche o Elden Ring primeiro</translation>
+    </message>
+    <message>
+      <source>A save copied while the game writes it can be incomplete.</source>
+      <translation>Um save copiado enquanto o jogo o grava pode ficar incompleto.</translation>
+    </message>
+    <message>
+      <source>No saves found.</source>
+      <translation>Nenhum save encontrado.</translation>
+    </message>
+    <message>
+      <source>Some saves could not be copied</source>
+      <translation>Alguns saves não puderam ser copiados</translation>
+    </message>
+    <message>
+      <source>{copied} copied to {path}
+
+Not copied:
+{errors}</source>
+      <translation>{copied} copiados para {path}
+
+Não copiados:
+{errors}</translation>
+    </message>
+    <message>
+      <source>Saves exported</source>
+      <translation>Saves exportados</translation>
+    </message>
+    <message>
+      <source>Files copied: {copied}
+{path}</source>
+      <translation>Arquivos copiados: {copied}
+{path}</translation>
+    </message>
+    <message>
       <source>Copy</source>
       <translation>Copiar</translation>
     </message>

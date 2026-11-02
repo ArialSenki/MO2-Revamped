@@ -3552,6 +3552,54 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>Alle Sicherungen einer Route durchsehen und eine wiederherstellen.</translation>
     </message>
     <message>
+      <source>Export…</source>
+      <translation>Exportieren…</translation>
+    </message>
+    <message>
+      <source>Export all my saves</source>
+      <translation>Alle meine Spielstände exportieren</translation>
+    </message>
+    <message>
+      <source>Copies the saves of every route to a folder you choose, for example before reinstalling Windows.</source>
+      <translation>Kopiert die Spielstände aller Routen in einen Ordner deiner Wahl, zum Beispiel vor einer Neuinstallation von Windows.</translation>
+    </message>
+    <message>
+      <source>Close Elden Ring first</source>
+      <translation>Beende zuerst Elden Ring</translation>
+    </message>
+    <message>
+      <source>A save copied while the game writes it can be incomplete.</source>
+      <translation>Ein Spielstand, der kopiert wird, während das Spiel ihn schreibt, kann unvollständig sein.</translation>
+    </message>
+    <message>
+      <source>No saves found.</source>
+      <translation>Keine Spielstände gefunden.</translation>
+    </message>
+    <message>
+      <source>Some saves could not be copied</source>
+      <translation>Einige Spielstände konnten nicht kopiert werden</translation>
+    </message>
+    <message>
+      <source>{copied} copied to {path}
+
+Not copied:
+{errors}</source>
+      <translation>{copied} nach {path} kopiert
+
+Nicht kopiert:
+{errors}</translation>
+    </message>
+    <message>
+      <source>Saves exported</source>
+      <translation>Spielstände exportiert</translation>
+    </message>
+    <message>
+      <source>Files copied: {copied}
+{path}</source>
+      <translation>Kopierte Dateien: {copied}
+{path}</translation>
+    </message>
+    <message>
       <source>Copy</source>
       <translation>Kopieren</translation>
     </message>

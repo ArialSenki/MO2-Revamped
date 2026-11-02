@@ -1982,6 +1982,12 @@ void ProfilePage::doActivated(bool firstTime)
       isEldenRing
           ? plainHeading(QCoreApplication::translate(
                 "cid::ProfilePage", "<h3>Choose how Elden Ring saves are handled.</h3>"))
+                .replace(QStringLiteral("Elden Ring"),
+                         gamePage != nullptr && gamePage->selectedGame() != nullptr &&
+                                 gamePage->selectedGame()->gameShortName().compare(
+                                     QStringLiteral("nightreign"), Qt::CaseInsensitive) == 0
+                             ? QStringLiteral("Nightreign")
+                             : QStringLiteral("Elden Ring"))
           : m_defaultHeading);
 
   if (isEldenRing && firstTime) {

@@ -54,6 +54,25 @@
   back does, instead of restarting.
 - Turning the developer mode on or off no longer restarts MO2.
 
+- Linking or unlinking the Nexus account in Settings applies at once.
+
+### Saves and new instances
+
+- Save Isolation > Backups: "Export all my saves" copies the saves of Steam and
+  of every route of this instance to a folder you choose.
+- Making an isolated copy shows its progress and the window keeps responding.
+- The saves step of the New instance wizard follows the game picked there: an
+  Elden Ring instance creating a Nightreign one no longer shows Elden Ring's
+  name and save types.
+- The archive installer treats folders named after Nightreign as wrappers even
+  beside another container, as it does for Elden Ring.
+
+### Installer
+
+- An elevated setup keeps its program, requests and results in a folder only
+  administrators can write, below Program Files, instead of `%TEMP%`. Its log
+  stays in `%TEMP%`, and is not written if that folder has become a link.
+
 ### Removed
 
 - The me3 and Mod Engine 2 integrations of the developer mode, with their game

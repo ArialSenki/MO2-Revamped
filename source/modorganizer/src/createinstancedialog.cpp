@@ -17,9 +17,12 @@
 #include <QLayout>
 #include <QBoxLayout>
 #include <QComboBox>
+#include <QEventLoop>
 #include <QGuiApplication>
 #include <QProgressBar>
+#include <QProgressDialog>
 #include <QScreen>
+#include <QThread>
 #include <QVariantAnimation>
 #include <QCheckBox>
 #include <QPushButton>
@@ -57,7 +60,8 @@ namespace {
 
 bool copyIsolatedApplication(const QString& sourcePath,
                              const QString& destinationPath,
-                             const std::function<void(QString)>& log)
+                             const std::function<void(QString)>& log,
+                             const std::function<void(int, int)>& progress)
 {
   // user data and leftovers, as the release builder leaves them out
   // (source/revamped/installer/Build-Release.ps1): these folders at any depth
@@ -89,6 +93,9 @@ bool copyIsolatedApplication(const QString& sourcePath,
       QStringLiteral("tmp"), QStringLiteral("lock"), QStringLiteral("pyc"),
       QStringLiteral("pyo")};
 
+  // folders first, so the progress knows how many files there are
+  std::vector<std::pair<QString, QString>> files;
+
   std::function<bool(const QDir&, const QDir&, bool)> copyDirectory;
   copyDirectory = [&](const QDir& source, const QDir& destination,
                       bool topLevel) {
@@ -119,8 +126,9 @@ bool copyIsolatedApplication(const QString& sourcePath,
                            QDir(destinationEntry), false)) {
           return false;
         }
-      } else if (!entry.isFile() ||
-                 !QFile::copy(entry.absoluteFilePath(), destinationEntry)) {
+      } else if (entry.isFile()) {
+        files.emplace_back(entry.absoluteFilePath(), destinationEntry);
+      } else {
         log(QObject::tr("Could not copy %1 to the isolated MO2 folder.")
                 .arg(entry.absoluteFilePath()));
         return false;
@@ -130,7 +138,21 @@ bool copyIsolatedApplication(const QString& sourcePath,
     return true;
   };
 
-  return copyDirectory(QDir(sourcePath), QDir(destinationPath), true);
+  if (!copyDirectory(QDir(sourcePath), QDir(destinationPath), true)) {
+    return false;
+  }
+
+  const int total = static_cast<int>(files.size());
+  for (int i = 0; i < total; ++i) {
+    if (!QFile::copy(files[i].first, files[i].second)) {
+      log(QObject::tr("Could not copy %1 to the isolated MO2 folder.")
+              .arg(files[i].first));
+      return false;
+    }
+    progress(i + 1, total);
+  }
+
+  return true;
 }
 
 bool createMarkerFile(const QString& directory, const QString& name)
@@ -485,9 +507,46 @@ void CreateInstanceDialog::finish()
 
     dirs.push_back(createDir(ci.dataPath));
     if (ci.type == Isolated) {
-      logCreation(tr("Copying MO2 application files into %1...").arg(ci.dataPath));
-      if (!copyIsolatedApplication(QCoreApplication::applicationDirPath(),
-                                   ci.dataPath, logger)) {
+      const QString copying =
+          tr("Copying MO2 application files into %1...").arg(ci.dataPath);
+      logCreation(copying);
+
+      // on its own thread: it takes a while and the window has to keep painting
+      QProgressDialog progress(copying, QString(), 0, 0, this);
+      progress.setWindowTitle(windowTitle());
+      progress.setWindowModality(Qt::WindowModal);
+      progress.setCancelButton(nullptr);
+      progress.setAutoClose(false);
+      progress.setAutoReset(false);
+      progress.setMinimumDuration(0);
+      progress.show();
+
+      bool copied = false;
+      QEventLoop waiting;
+      std::unique_ptr<QThread> worker(QThread::create([&] {
+        copied = copyIsolatedApplication(
+            QCoreApplication::applicationDirPath(), ci.dataPath,
+            [&](QString s) {
+              QMetaObject::invokeMethod(
+                  this, [this, s] { logCreation(s); }, Qt::QueuedConnection);
+            },
+            [&](int done, int total) {
+              QMetaObject::invokeMethod(
+                  &progress,
+                  [&progress, done, total] {
+                    progress.setMaximum(total);
+                    progress.setValue(done);
+                  },
+                  Qt::QueuedConnection);
+            });
+      }));
+      connect(worker.get(), &QThread::finished, &waiting, &QEventLoop::quit);
+      worker->start();
+      waiting.exec(QEventLoop::ExcludeUserInputEvents);
+      worker->wait();
+      progress.close();
+
+      if (!copied) {
         logCreation(tr("The isolated copy could not be completed."));
         throw Failed();
       }

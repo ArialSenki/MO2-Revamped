@@ -3594,6 +3594,54 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>Sfoglia tutti i backup di un percorso e ripristinane uno.</translation>
     </message>
     <message>
+      <source>Export…</source>
+      <translation>Esporta…</translation>
+    </message>
+    <message>
+      <source>Export all my saves</source>
+      <translation>Esporta tutti i miei salvataggi</translation>
+    </message>
+    <message>
+      <source>Copies the saves of every route to a folder you choose, for example before reinstalling Windows.</source>
+      <translation>Copia i salvataggi di tutti i percorsi nella cartella che scegli, ad esempio prima di reinstallare Windows.</translation>
+    </message>
+    <message>
+      <source>Close Elden Ring first</source>
+      <translation>Chiudi prima Elden Ring</translation>
+    </message>
+    <message>
+      <source>A save copied while the game writes it can be incomplete.</source>
+      <translation>Un salvataggio copiato mentre il gioco lo scrive può risultare incompleto.</translation>
+    </message>
+    <message>
+      <source>No saves found.</source>
+      <translation>Nessun salvataggio trovato.</translation>
+    </message>
+    <message>
+      <source>Some saves could not be copied</source>
+      <translation>Alcuni salvataggi non sono stati copiati</translation>
+    </message>
+    <message>
+      <source>{copied} copied to {path}
+
+Not copied:
+{errors}</source>
+      <translation>{copied} copiati in {path}
+
+Non copiati:
+{errors}</translation>
+    </message>
+    <message>
+      <source>Saves exported</source>
+      <translation>Salvataggi esportati</translation>
+    </message>
+    <message>
+      <source>Files copied: {copied}
+{path}</source>
+      <translation>File copiati: {copied}
+{path}</translation>
+    </message>
+    <message>
       <source>Copy</source>
       <translation>Copia</translation>
     </message>

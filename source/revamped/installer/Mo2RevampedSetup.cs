@@ -177,6 +177,13 @@ namespace Mo2RevampedSetup
             {
                 string root = Path.Combine(Path.GetTempPath(), "MO2 Revamped", "Installer Logs");
                 Directory.CreateDirectory(root);
+                // the log stays where the user can read it, but an elevated run
+                // must not follow a link planted there to write somewhere else
+                foreach (string folder in new string[] { Path.GetDirectoryName(root), root })
+                {
+                    if ((File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0)
+                        throw new IOException("The log folder is a link.");
+                }
                 string suffix = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Process.GetCurrentProcess().Id;
                 lock (Sync) CurrentLog = Path.Combine(root, "setup-" + suffix + ".log");
 
@@ -1387,7 +1394,7 @@ namespace Mo2RevampedSetup
                 string restoreCopy = null;
                 if (!String.IsNullOrEmpty(backup))
                 {
-                    restoreCopy = Path.Combine(Path.GetTempPath(), "MO2RevampedUninstallerRestore-" + Guid.NewGuid().ToString("N") + ".exe");
+                    restoreCopy = Path.Combine(InstallerBackend.CreateWorkFolder(), "MO2RevampedUninstallerRestore.exe");
                     File.Copy(backup, restoreCopy, true);
                 }
                 // the helper deletes the file once this process exits and queues
@@ -1395,7 +1402,7 @@ namespace Mo2RevampedSetup
                 // also delete the uninstaller of a reinstall made before rebooting
                 if (StartPostExitCleanup(destination, restoreCopy, emptyDirectory))
                     return true;
-                if (restoreCopy != null && File.Exists(restoreCopy)) File.Delete(restoreCopy);
+                if (restoreCopy != null) Directory.Delete(Path.GetDirectoryName(restoreCopy), true);
             }
             catch
             {
@@ -1445,7 +1452,8 @@ namespace Mo2RevampedSetup
 #endif
             script += "$exe = '" + EscapePowerShellLiteral(executable) + "'; ";
             if (!String.IsNullOrEmpty(restoreCopy))
-                script += "$src = '" + EscapePowerShellLiteral(restoreCopy) + "'; try { [System.IO.File]::Copy($src, $exe, $true); [System.IO.File]::Delete($src) } catch { exit 2 }; ";
+                script += "$src = '" + EscapePowerShellLiteral(restoreCopy) + "'; try { [System.IO.File]::Copy($src, $exe, $true); [System.IO.File]::Delete($src) } catch { exit 2 }; " +
+                    "$work = [System.IO.Path]::GetDirectoryName($src); try { [System.IO.Directory]::Delete($work, $false); [System.IO.Directory]::Delete([System.IO.Path]::GetDirectoryName($work), $false) } catch {}; ";
             else
                 script += "for ($attempt = 0; $attempt -lt 30 -and [System.IO.File]::Exists($exe); $attempt++) { try { [System.IO.File]::SetAttributes($exe, [System.IO.FileAttributes]::Normal); [System.IO.File]::Delete($exe) } catch {}; if ([System.IO.File]::Exists($exe)) { Start-Sleep -Milliseconds 500 } }; " +
                     "if ([System.IO.File]::Exists($exe)) { try { Add-Type -Namespace Mo2Revamped -Name Reboot -MemberDefinition '[System.Runtime.InteropServices.DllImport(\"kernel32.dll\", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] public static extern bool MoveFileEx(string existingName, string newName, int flags);'; [void][Mo2Revamped.Reboot]::MoveFileEx($exe, [NullString]::Value, 4) } catch {}; exit 2 }; ";

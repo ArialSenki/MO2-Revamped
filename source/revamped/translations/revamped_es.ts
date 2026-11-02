@@ -3568,6 +3568,54 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <translation>Revisa todas las copias de una ruta y restaura una.</translation>
     </message>
     <message>
+      <source>Export…</source>
+      <translation>Exportar…</translation>
+    </message>
+    <message>
+      <source>Export all my saves</source>
+      <translation>Exportar todas mis partidas</translation>
+    </message>
+    <message>
+      <source>Copies the saves of every route to a folder you choose, for example before reinstalling Windows.</source>
+      <translation>Copia las partidas de todas las rutas a la carpeta que elijas, por ejemplo antes de reinstalar Windows.</translation>
+    </message>
+    <message>
+      <source>Close Elden Ring first</source>
+      <translation>Cierra Elden Ring primero</translation>
+    </message>
+    <message>
+      <source>A save copied while the game writes it can be incomplete.</source>
+      <translation>Una partida copiada mientras el juego la escribe puede quedar incompleta.</translation>
+    </message>
+    <message>
+      <source>No saves found.</source>
+      <translation>No se encontraron partidas.</translation>
+    </message>
+    <message>
+      <source>Some saves could not be copied</source>
+      <translation>Algunas partidas no se pudieron copiar</translation>
+    </message>
+    <message>
+      <source>{copied} copied to {path}
+
+Not copied:
+{errors}</source>
+      <translation>{copied} copiadas a {path}
+
+Sin copiar:
+{errors}</translation>
+    </message>
+    <message>
+      <source>Saves exported</source>
+      <translation>Partidas exportadas</translation>
+    </message>
+    <message>
+      <source>Files copied: {copied}
+{path}</source>
+      <translation>Archivos copiados: {copied}
+{path}</translation>
+    </message>
+    <message>
       <source>Copy</source>
       <translation>Copiar</translation>
     </message>

@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 import subprocess
@@ -27,6 +28,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QFrame,
     QGroupBox,
     QGridLayout,
@@ -95,7 +97,8 @@ def _tr(text: str) -> str:
     # the texts name Elden Ring; a Nightreign instance gets its own name
     # (looked up when called: the class is defined below this helper)
     tool = globals().get("EldenRingMo2SaveIsolation")
-    if tool is not None and tool._game_key == "nightreign":
+    # the new instance wizard speaks of the game picked there
+    if tool is not None and (tool._wizard_text_game or tool._game_key) == "nightreign":
         text = text.replace("Elden Ring", "Nightreign").replace("eldenring.exe", "nightreign.exe")
     return text
 
@@ -370,6 +373,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     PendingModesFilename = "pending_instance_modes.json"
     # the managed game's key in _GAMES, set when the instance is known
     _game_key = "eldenring"
+    # the game picked in an open new instance wizard, for its texts only
+    _wizard_text_game: str | None = None
     # this MO2 instance's folder, for the instance-shared saves
     _path_instance_base: Path | None = None
     CreateInstanceSaveCopyCheckboxName = "eldenRingCreateInstanceSaveCopy"
@@ -939,6 +944,61 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         except ValueError:
             saves.sort(key=lambda path: str(path).casefold())
         return saves
+
+    def _export_all_saves(self, parent) -> None:
+        """Copy the saves of every route of this instance and Steam's to a folder."""
+        running = _running_process_names()
+        if running is not None and _game()["process"] in running:
+            self._show_notice(
+                parent,
+                _tr("Close Elden Ring first"),
+                _tr("A save copied while the game writes it can be incomplete."),
+                "warning",
+            )
+            return
+        chosen = QFileDialog.getExistingDirectory(parent, _tr("Export all my saves"))
+        if not chosen:
+            return
+        sources = self._create_instance_save_sources((".sl2", ".co2", ".cnv", ".err", ".bak"))
+        if not sources:
+            self._show_notice(parent, _tr("Export all my saves"), _tr("No saves found."), "info")
+            return
+
+        stamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        root = Path(chosen) / f"{_game()['save_dir']} saves {stamp}"
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        copied, failed = 0, []
+        try:
+            for label, source, relative in sources:
+                # the label names the route, then the file inside it
+                route = re.sub(r'[<>:"/\\|?*]+', "-", label.rsplit(" — ", 1)[0]).strip(" .")
+                destination = root / route / relative
+                try:
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(source, destination)
+                    copied += 1
+                except OSError as error:
+                    failed.append(f"{source}: {error}")
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if failed:
+            self._show_notice(
+                parent,
+                _tr("Some saves could not be copied"),
+                _tr("{copied} copied to {path}\n\nNot copied:\n{errors}").format(
+                    copied=copied, path=root, errors="\n".join(failed[:10])
+                ),
+                "warning",
+            )
+            return
+        self._show_notice(
+            parent,
+            _tr("Saves exported"),
+            _tr("Files copied: {copied}\n{path}").format(copied=copied, path=root),
+            "info",
+        )
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(root)))
 
     def _create_instance_save_sources(
         self, suffixes: tuple[str, ...] = (".sl2",)
@@ -2043,7 +2103,20 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return False
 
     def _inject_create_instance_dialog(self, dialog, save_checkbox) -> None:
+        target_game = self._create_dialog_game_key(dialog)
+        EldenRingMo2SaveIsolation._wizard_text_game = target_game
+        if not dialog.property("_eldenRingTextGameHooked"):
+            dialog.setProperty("_eldenRingTextGameHooked", True)
+            dialog.finished.connect(
+                lambda _result: setattr(EldenRingMo2SaveIsolation, "_wizard_text_game", None)
+            )
         existing_card = dialog.findChild(QWidget, self.CreateInstanceCardName)
+        # made for the other game: its texts, save types and save name are that
+        # game's, so it is made again
+        if existing_card is not None and existing_card.property("gameKey") != target_game:
+            existing_card.setParent(None)
+            existing_card.deleteLater()
+            existing_card = None
         if existing_card is not None:
             existing_card.show()
             mode = dialog.property("_eldenRingSaveMode")
@@ -2078,6 +2151,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # a plain widget: a group box keeps room for its frame and title
         card = QWidget(container)
         card.setObjectName(self.CreateInstanceCardName)
+        card.setProperty("gameKey", target_game)
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(0, 0, 0, 0)
@@ -2160,7 +2234,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             (".cnv", _tr("Convergence (.cnv)")),
             (".err", "ELDEN RING Reforged (.err)"),
         ):
-            if suffix == ".err" and self._game_key != "eldenring":
+            if suffix == ".err" and (target_game or self._game_key) != "eldenring":
                 continue
             type_box = QCheckBox(title, card)
             type_box.setObjectName(
@@ -4312,6 +4386,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             _tr("Browse every backup of a route and restore one."),
             (all_backups_button,),
         )
+        export_button = QPushButton(_tr("Export…"))
+        add_row(
+            tools_card, 0xEDE1, _tr("Export all my saves"),
+            _tr("Copies the saves of every route to a folder you choose, for example "
+            "before reinstalling Windows."),
+            (export_button,),
+        )
         copy_report_button = QPushButton(_tr("Copy"))
         add_row(
             tools_card, 0xE9D9, _tr("Diagnostics"),
@@ -4835,6 +4916,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         transfer_button.clicked.connect(
             lambda: self._display_transfer_dialog(self._profile_directory(profile), profile.name(), dialog)
         )
+        export_button.clicked.connect(lambda: self._export_all_saves(dialog))
         all_backups_button.clicked.connect(
             lambda: self._display_restore_dialog(self._profile_directory(profile), dialog)
         )
