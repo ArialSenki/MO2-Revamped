@@ -12012,11 +12012,11 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialognexus.cpp" line="650"/>
-        <location filename="settingsdialognexus.cpp" line="651"/>
-        <location filename="settingsdialognexus.cpp" line="652"/>
-        <location filename="settingsdialognexus.cpp" line="653"/>
-        <location filename="settingsdialognexus.cpp" line="654"/>
+        <location filename="settingsdialognexus.cpp" line="663"/>
+        <location filename="settingsdialognexus.cpp" line="664"/>
+        <location filename="settingsdialognexus.cpp" line="665"/>
+        <location filename="settingsdialognexus.cpp" line="666"/>
+        <location filename="settingsdialognexus.cpp" line="667"/>
         <source>N/A</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12106,27 +12106,27 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="462"/>
+        <location filename="settingsdialogplugins.cpp" line="502"/>
         <source>Cannot disable plugin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="463"/>
+        <location filename="settingsdialogplugins.cpp" line="503"/>
         <source>The &apos;%1&apos; plugin is used by the current game plugin and cannot disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="491"/>
+        <location filename="settingsdialogplugins.cpp" line="531"/>
         <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%1&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="495"/>
+        <location filename="settingsdialogplugins.cpp" line="535"/>
         <source>Really disable plugin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="546"/>
+        <location filename="settingsdialogplugins.cpp" line="586"/>
         <source>This plugin is required for Mod Organizer to work properly and cannot be disabled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13095,172 +13095,167 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="settingsdialog.ui" line="114"/>
         <location filename="settingsdialog.ui" line="117"/>
-        <source>&lt;a href=&quot;https://discord.gg/ewUVAqyrQX&quot;&gt;Help translate Mod Organizer on Discord&lt;/a&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="127"/>
-        <location filename="settingsdialog.ui" line="130"/>
         <source>The language of the user interface.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="140"/>
+        <location filename="settingsdialog.ui" line="127"/>
         <source>Download List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="133"/>
+        <location filename="settingsdialog.ui" line="136"/>
+        <source>Show meta information instead of file names in the download list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="139"/>
+        <source>Show meta information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="146"/>
         <location filename="settingsdialog.ui" line="149"/>
-        <source>Show meta information instead of file names in the download list.</source>
+        <source>Make the download list more compact.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="152"/>
-        <source>Show meta information</source>
+        <source>Compact list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="159"/>
         <location filename="settingsdialog.ui" line="162"/>
-        <source>Make the download list more compact.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="165"/>
-        <source>Compact list</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="172"/>
-        <location filename="settingsdialog.ui" line="175"/>
         <source>Automatically hide downloads after successful installation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="178"/>
+        <location filename="settingsdialog.ui" line="165"/>
         <source>Hide downloads after installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="188"/>
+        <location filename="settingsdialog.ui" line="175"/>
         <source>Updates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="181"/>
+        <location filename="settingsdialog.ui" line="184"/>
+        <source>Check for MO2 Revamped updates on GitHub on startup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="187"/>
+        <source>Check for MO2 Revamped updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="194"/>
         <location filename="settingsdialog.ui" line="197"/>
-        <source>Check for MO2 Revamped updates on GitHub on startup.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="200"/>
-        <source>Check for MO2 Revamped updates</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="207"/>
-        <location filename="settingsdialog.ui" line="210"/>
         <source>Update to non-stable releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="213"/>
+        <location filename="settingsdialog.ui" line="200"/>
         <source>Update to beta versions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="223"/>
+        <location filename="settingsdialog.ui" line="210"/>
         <source>Profile Defaults</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="229"/>
+        <location filename="settingsdialog.ui" line="216"/>
         <source>Local INIs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="236"/>
+        <location filename="settingsdialog.ui" line="223"/>
         <source>Local Saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="243"/>
+        <location filename="settingsdialog.ui" line="230"/>
         <source>Automatic Archive Invalidation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="253"/>
+        <location filename="settingsdialog.ui" line="240"/>
         <source>Miscellaneous</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="271"/>
-        <location filename="settingsdialog.ui" line="274"/>
+        <location filename="settingsdialog.ui" line="258"/>
+        <location filename="settingsdialog.ui" line="261"/>
         <source>Dialogs will always be centered on the main window, but will remember their size.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="277"/>
+        <location filename="settingsdialog.ui" line="264"/>
         <source>Always center dialogs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="284"/>
+        <location filename="settingsdialog.ui" line="271"/>
         <source>Show confirmation when changing instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="291"/>
+        <location filename="settingsdialog.ui" line="278"/>
         <source>Whether double-clicking on a file opens the preview window or launches the program associated with it. This applies to the Data tab as well as the Conflicts and Filetree tabs in the mod info window.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="294"/>
+        <location filename="settingsdialog.ui" line="281"/>
         <source>Open previews on double-click</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="399"/>
+        <location filename="settingsdialog.ui" line="402"/>
+        <source>Reset all choices made in dialogs.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="405"/>
+        <source>Reset Dialog Choices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="412"/>
         <location filename="settingsdialog.ui" line="415"/>
-        <source>Reset all choices made in dialogs.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="418"/>
-        <source>Reset Dialog Choices</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="425"/>
-        <location filename="settingsdialog.ui" line="428"/>
         <source>Modify the categories available to arrange your mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="431"/>
+        <location filename="settingsdialog.ui" line="418"/>
         <source>Configure Mod Categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="472"/>
+        <location filename="settingsdialog.ui" line="459"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="513"/>
-        <location filename="settingsdialog.ui" line="516"/>
+        <location filename="settingsdialog.ui" line="500"/>
+        <location filename="settingsdialog.ui" line="503"/>
         <source>Visual theme of the user interface.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="638"/>
+        <location filename="settingsdialog.ui" line="625"/>
         <source>Mod List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="717"/>
+        <location filename="settingsdialog.ui" line="704"/>
         <source>By default Mod Organizer will display esp+bsa bundles installed with foreign tools as mods (left pane). This allows you to control their priority in relation to other mods. This is particularly useful if you also use Steam Workshop to install mods.
 However, if you installed loose file mods outside MO which conflict with BSAs also installed outside MO those conflicts can&apos;t be resolved correctly.
 
@@ -13268,1059 +13263,1059 @@ If you disable this feature, MO will only display official DLCs this way. Please
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="733"/>
-        <location filename="settingsdialog.ui" line="736"/>
+        <location filename="settingsdialog.ui" line="720"/>
+        <location filename="settingsdialog.ui" line="723"/>
         <source>Save the current filters when closing MO2 and restore them on startup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="891"/>
+        <location filename="settingsdialog.ui" line="878"/>
         <source>Enable when sorting by</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1029"/>
-        <location filename="settingsdialog.ui" line="1032"/>
+        <location filename="settingsdialog.ui" line="1016"/>
+        <location filename="settingsdialog.ui" line="1019"/>
         <source>Do not share the collapse/expanded state of separators between profiles.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1061"/>
+        <location filename="settingsdialog.ui" line="1048"/>
         <source>Paths</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1086"/>
-        <location filename="settingsdialog.ui" line="1103"/>
-        <location filename="settingsdialog.ui" line="1200"/>
-        <location filename="settingsdialog.ui" line="1258"/>
+        <location filename="settingsdialog.ui" line="1073"/>
+        <location filename="settingsdialog.ui" line="1090"/>
+        <location filename="settingsdialog.ui" line="1187"/>
+        <location filename="settingsdialog.ui" line="1245"/>
         <source>...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1113"/>
+        <location filename="settingsdialog.ui" line="1100"/>
         <source>Caches</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1120"/>
+        <location filename="settingsdialog.ui" line="1107"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1127"/>
-        <location filename="settingsdialog.ui" line="1130"/>
+        <location filename="settingsdialog.ui" line="1114"/>
+        <location filename="settingsdialog.ui" line="1117"/>
         <source>Directory where downloads are stored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1147"/>
+        <location filename="settingsdialog.ui" line="1134"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1022"/>
-        <location filename="settingsdialog.ui" line="1167"/>
+        <location filename="settingsdialog.ui" line="1009"/>
+        <location filename="settingsdialog.ui" line="1154"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="301"/>
+        <location filename="settingsdialog.ui" line="288"/>
         <source>Animate tab changes, switches, the log panel, and the Run button. Turn this off to show every change immediately.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="304"/>
+        <location filename="settingsdialog.ui" line="291"/>
         <source>Enable animations</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="314"/>
+        <location filename="settingsdialog.ui" line="301"/>
         <source>Toolbar and panels</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="320"/>
+        <location filename="settingsdialog.ui" line="307"/>
         <source>Toolbar icon size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="327"/>
+        <location filename="settingsdialog.ui" line="314"/>
         <source>Choose the size of toolbar icons.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="334"/>
+        <location filename="settingsdialog.ui" line="321"/>
         <source>Toolbar button style</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="341"/>
+        <location filename="settingsdialog.ui" line="328"/>
         <source>Choose whether toolbar buttons show icons, text, or both.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="348"/>
+        <location filename="settingsdialog.ui" line="335"/>
         <source>Set the toolbar appearance and choose which workspace panels stay visible.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="358"/>
+        <location filename="settingsdialog.ui" line="345"/>
         <source>Show or hide the main toolbar.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="361"/>
+        <location filename="settingsdialog.ui" line="348"/>
         <source>Show main toolbar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="368"/>
+        <location filename="settingsdialog.ui" line="355"/>
         <source>Show or hide the status bar at the bottom of the main window.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="371"/>
+        <location filename="settingsdialog.ui" line="358"/>
         <source>Show status bar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="378"/>
+        <location filename="settingsdialog.ui" line="365"/>
         <source>Show or hide the log panel.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="381"/>
+        <location filename="settingsdialog.ui" line="368"/>
         <source>Show log panel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="478"/>
+        <location filename="settingsdialog.ui" line="465"/>
         <source>Appearance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="485"/>
+        <location filename="settingsdialog.ui" line="472"/>
         <source>Choose a light or dark theme, then customize the highlights used for mod conflicts and selected plugins.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="495"/>
+        <location filename="settingsdialog.ui" line="482"/>
         <source>Interface theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="523"/>
+        <location filename="settingsdialog.ui" line="510"/>
         <source>Open the folder containing MO2&apos;s theme files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="526"/>
+        <location filename="settingsdialog.ui" line="513"/>
         <source>Open theme folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="551"/>
+        <location filename="settingsdialog.ui" line="538"/>
         <source>Mod and plugin highlight colors</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="557"/>
+        <location filename="settingsdialog.ui" line="544"/>
         <source>Activate a row (double-click it or press Enter) to edit its highlight color and transparency.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="613"/>
-        <location filename="settingsdialog.ui" line="616"/>
+        <location filename="settingsdialog.ui" line="600"/>
+        <location filename="settingsdialog.ui" line="603"/>
         <source>Restore all highlight colors to their default values.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="619"/>
+        <location filename="settingsdialog.ui" line="606"/>
         <source>Restore default colors</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="644"/>
+        <location filename="settingsdialog.ui" line="631"/>
         <source>Mod list behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="651"/>
+        <location filename="settingsdialog.ui" line="638"/>
         <source>Choose what the list displays and how MO2 handles sorting, installing, and drag-and-drop.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="679"/>
+        <location filename="settingsdialog.ui" line="666"/>
         <source>Display and filters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="688"/>
+        <location filename="settingsdialog.ui" line="675"/>
         <source>Choose what appears in the list and what MO2 remembers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="698"/>
-        <location filename="settingsdialog.ui" line="701"/>
+        <location filename="settingsdialog.ui" line="685"/>
+        <location filename="settingsdialog.ui" line="688"/>
         <source>Show separator colors on the mod list scrollbar so you can quickly locate a separator.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="704"/>
+        <location filename="settingsdialog.ui" line="691"/>
         <source>Show separator colors in scrollbar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="714"/>
+        <location filename="settingsdialog.ui" line="701"/>
         <source>Show mods installed by other tools in the left pane so their priority can be managed alongside MO2 mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="723"/>
+        <location filename="settingsdialog.ui" line="710"/>
         <source>Display mods installed outside MO2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="739"/>
+        <location filename="settingsdialog.ui" line="726"/>
         <source>Remember filters after restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="762"/>
+        <location filename="settingsdialog.ui" line="749"/>
         <source>Installation and drag</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="771"/>
+        <location filename="settingsdialog.ui" line="758"/>
         <source>Set how MO2 checks new installs and helps organize items while dragging.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="781"/>
-        <location filename="settingsdialog.ui" line="784"/>
+        <location filename="settingsdialog.ui" line="768"/>
+        <location filename="settingsdialog.ui" line="771"/>
         <source>Check whether updates are available for a mod after it is installed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="787"/>
+        <location filename="settingsdialog.ui" line="774"/>
         <source>Check for updates after installing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="797"/>
-        <location filename="settingsdialog.ui" line="800"/>
+        <location filename="settingsdialog.ui" line="784"/>
+        <location filename="settingsdialog.ui" line="787"/>
         <source>Collapse separators, categories or Nexus IDs after hovering over them briefly during drag-and-drop.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="803"/>
+        <location filename="settingsdialog.ui" line="790"/>
         <source>Auto-collapse items while dragging</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="845"/>
+        <location filename="settingsdialog.ui" line="832"/>
         <source>Collapsible separators</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="860"/>
+        <location filename="settingsdialog.ui" line="847"/>
         <source>Choose when separators fold and which details remain visible.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="875"/>
-        <location filename="settingsdialog.ui" line="878"/>
+        <location filename="settingsdialog.ui" line="862"/>
+        <location filename="settingsdialog.ui" line="865"/>
         <source>Color each collapsed separator using the conflict state of the mods inside it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="881"/>
+        <location filename="settingsdialog.ui" line="868"/>
         <source>Color separator from contents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="898"/>
+        <location filename="settingsdialog.ui" line="885"/>
         <source>Conflict and plugin highlights</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="905"/>
-        <location filename="settingsdialog.ui" line="908"/>
+        <location filename="settingsdialog.ui" line="892"/>
+        <location filename="settingsdialog.ui" line="895"/>
         <source>When you select a collapsed separator, highlight its contained mods and their plugins.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="911"/>
+        <location filename="settingsdialog.ui" line="898"/>
         <source>Highlight contents when selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="921"/>
+        <location filename="settingsdialog.ui" line="908"/>
         <source>Ascending priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="931"/>
+        <location filename="settingsdialog.ui" line="918"/>
         <source>Descending priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="938"/>
+        <location filename="settingsdialog.ui" line="925"/>
         <source>Show status icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="966"/>
+        <location filename="settingsdialog.ui" line="953"/>
         <source>Conflicts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="976"/>
+        <location filename="settingsdialog.ui" line="963"/>
         <source>Flags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="986"/>
+        <location filename="settingsdialog.ui" line="973"/>
         <source>Contents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="996"/>
-        <location filename="settingsdialog.ui" line="1945"/>
+        <location filename="settingsdialog.ui" line="983"/>
+        <location filename="settingsdialog.ui" line="1932"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1035"/>
+        <location filename="settingsdialog.ui" line="1022"/>
         <source>Keep separator collapse state per profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1067"/>
+        <location filename="settingsdialog.ui" line="1054"/>
         <source>Storage paths</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1074"/>
+        <location filename="settingsdialog.ui" line="1061"/>
         <source>Choose where this instance keeps its downloads, mods, profiles, and temporary files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1190"/>
+        <location filename="settingsdialog.ui" line="1177"/>
         <source>Directory where mods are stored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1193"/>
+        <location filename="settingsdialog.ui" line="1180"/>
         <source>Directory where mods are stored. Please note that changing this will break all associations of profiles with mods that don&apos;t exist in the new location (with the same name).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1217"/>
+        <location filename="settingsdialog.ui" line="1204"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1237"/>
+        <location filename="settingsdialog.ui" line="1224"/>
         <source>Managed Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1244"/>
+        <location filename="settingsdialog.ui" line="1231"/>
         <source>Base Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1251"/>
+        <location filename="settingsdialog.ui" line="1238"/>
         <source>Use %BASE_DIR% to refer to the Base Directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1280"/>
+        <location filename="settingsdialog.ui" line="1267"/>
         <source> All directories must be writable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1288"/>
+        <location filename="settingsdialog.ui" line="1275"/>
         <source>Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1330"/>
+        <location filename="settingsdialog.ui" line="1317"/>
         <source>Nexus integration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1337"/>
+        <location filename="settingsdialog.ui" line="1324"/>
         <source>Link your Nexus account, choose MO2 features, and set download server priority.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1349"/>
+        <location filename="settingsdialog.ui" line="1336"/>
         <source>Linked account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1406"/>
+        <location filename="settingsdialog.ui" line="1393"/>
         <source>API request usage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1448"/>
+        <location filename="settingsdialog.ui" line="1435"/>
         <source>Account connection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1469"/>
+        <location filename="settingsdialog.ui" line="1456"/>
         <source>Sign in through Nexus or enter an API key manually. Connection messages appear beside these actions.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1479"/>
+        <location filename="settingsdialog.ui" line="1466"/>
         <source>Start or cancel Nexus account authorization.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1489"/>
+        <location filename="settingsdialog.ui" line="1476"/>
         <source>Open the dialog to enter and validate a Nexus API key.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1540"/>
+        <location filename="settingsdialog.ui" line="1527"/>
         <source>Connection activity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1560"/>
+        <location filename="settingsdialog.ui" line="1547"/>
         <source>MO2 integration and tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1593"/>
+        <location filename="settingsdialog.ui" line="1580"/>
         <source>Choose which Nexus actions and category mappings MO2 uses.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1603"/>
+        <location filename="settingsdialog.ui" line="1590"/>
         <source>Show endorsement actions and status for mods linked to Nexus.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1606"/>
+        <location filename="settingsdialog.ui" line="1593"/>
         <source>Enable endorsement actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1616"/>
+        <location filename="settingsdialog.ui" line="1603"/>
         <source>Show track or untrack actions and tracking status for mods linked to Nexus.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1619"/>
+        <location filename="settingsdialog.ui" line="1606"/>
         <source>Enable tracked-mod actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1629"/>
+        <location filename="settingsdialog.ui" line="1616"/>
         <source>Use Nexus category mappings when assigning or importing mod categories.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1642"/>
-        <location filename="settingsdialog.ui" line="1645"/>
+        <location filename="settingsdialog.ui" line="1629"/>
+        <location filename="settingsdialog.ui" line="1632"/>
         <source>Hide the remaining Nexus API request count in MO2&apos;s status bar. This does not change the available request limit.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1648"/>
+        <location filename="settingsdialog.ui" line="1635"/>
         <source>Hide API request counter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1673"/>
+        <location filename="settingsdialog.ui" line="1660"/>
         <source>Register MO2 for Nexus download links or clear cached Nexus data.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1683"/>
+        <location filename="settingsdialog.ui" line="1670"/>
         <source>Register this MO2 instance to handle Nexus Download with manager links.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1686"/>
+        <location filename="settingsdialog.ui" line="1673"/>
         <source>Register MO2 for Nexus download links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1693"/>
+        <location filename="settingsdialog.ui" line="1680"/>
         <source>Clear the MO2 cache folder and the Nexus API cache.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1696"/>
+        <location filename="settingsdialog.ui" line="1683"/>
         <source>Clear Nexus cache</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1709"/>
+        <location filename="settingsdialog.ui" line="1696"/>
         <source>Download server priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1732"/>
+        <location filename="settingsdialog.ui" line="1719"/>
         <source>Available servers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1739"/>
+        <location filename="settingsdialog.ui" line="1726"/>
         <source>Servers MO2 has learned from Nexus downloads. Drag one into the preferred list to use it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1756"/>
+        <location filename="settingsdialog.ui" line="1743"/>
         <source>Preferred order (top has priority)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1763"/>
+        <location filename="settingsdialog.ui" line="1750"/>
         <source>MO2 tries these servers in order. Drag items to change their priority.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1807"/>
+        <location filename="settingsdialog.ui" line="1794"/>
         <source>Plugin management</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1814"/>
+        <location filename="settingsdialog.ui" line="1801"/>
         <source>Browse installed plugins and their options. Select a plugin to review its details; dependent plugins appear beneath their parent.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1859"/>
+        <location filename="settingsdialog.ui" line="1846"/>
         <source>Installed plugins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1865"/>
+        <location filename="settingsdialog.ui" line="1852"/>
         <source>Plugins are grouped by the MO2 interface they implement.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1878"/>
+        <location filename="settingsdialog.ui" line="1865"/>
         <source>Search plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1910"/>
+        <location filename="settingsdialog.ui" line="1897"/>
         <source>Plugin details and options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1925"/>
+        <location filename="settingsdialog.ui" line="1912"/>
         <source>Author</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1965"/>
+        <location filename="settingsdialog.ui" line="1952"/>
         <source>Description</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1988"/>
+        <location filename="settingsdialog.ui" line="1975"/>
         <source>Enable plugin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1998"/>
+        <location filename="settingsdialog.ui" line="1985"/>
         <source>Plugin-specific options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2005"/>
+        <location filename="settingsdialog.ui" line="1992"/>
         <source>Double-click a value to edit it. Boolean options can be changed with one click; hover over a value to see its description when available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2034"/>
+        <location filename="settingsdialog.ui" line="2021"/>
         <source>Option</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2047"/>
+        <location filename="settingsdialog.ui" line="2034"/>
         <source>No plugins match this search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2071"/>
+        <location filename="settingsdialog.ui" line="2058"/>
         <source>Plugin blacklist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2077"/>
+        <location filename="settingsdialog.ui" line="2064"/>
         <source>Blacklisted plugins are skipped when MO2 starts. Select an entry and press Delete to remove it from this list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2101"/>
+        <location filename="settingsdialog.ui" line="2088"/>
         <source>Compatibility and advanced options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2108"/>
+        <location filename="settingsdialog.ui" line="2095"/>
         <source>Optional compatibility, network, and maintenance controls. Change these only when needed; hover over an option for details.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2154"/>
+        <location filename="settingsdialog.ui" line="2141"/>
         <source>MO2 behavior and archive handling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2172"/>
+        <location filename="settingsdialog.ui" line="2159"/>
         <source>Adjust how MO2 treats core game files, archives, and the interface while an executable runs.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2182"/>
+        <location filename="settingsdialog.ui" line="2169"/>
         <source>Prevent core game files such as plugins and archives from being disabled in the UI. Disable this only for total conversions; required game files may otherwise be missing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2185"/>
+        <location filename="settingsdialog.ui" line="2172"/>
         <source>Prevent core game files from being disabled in the UI. For a total conversion, you may need to disable this option, but the game can fail to start if required files are not enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2188"/>
+        <location filename="settingsdialog.ui" line="2175"/>
         <source>Keep core game files enabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2198"/>
+        <location filename="settingsdialog.ui" line="2185"/>
         <source>Inspect archive contents to calculate file conflicts. This experimental scan can slow down conflict checks and may report incorrect results; it does not load archives into the game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2201"/>
+        <location filename="settingsdialog.ui" line="2188"/>
         <source>Archive parsing compares files inside supported archives with other files to display conflicts. It has a performance cost and does not extract or load archives into the game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2204"/>
+        <location filename="settingsdialog.ui" line="2191"/>
         <source>Check archive contents for conflicts (experimental)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2214"/>
+        <location filename="settingsdialog.ui" line="2201"/>
         <source>Keep MO2&apos;s interface locked while a launched executable is running. Disabling the lock can cause abnormal behavior.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2217"/>
+        <location filename="settingsdialog.ui" line="2204"/>
         <source>Keep the MO2 interface unavailable while a launched executable runs. Disabling the lock can cause abnormal behavior.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2220"/>
+        <location filename="settingsdialog.ui" line="2207"/>
         <source>Keep MO2 locked while a program runs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2233"/>
+        <location filename="settingsdialog.ui" line="2220"/>
         <source>Steam launch settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2239"/>
+        <location filename="settingsdialog.ui" line="2226"/>
         <source>Set an App ID override or optional Steam login details when a game&apos;s launch setup requires them.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2249"/>
+        <location filename="settingsdialog.ui" line="2236"/>
         <source>Optional Steam username for launch configurations that use MO2&apos;s Steam login settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="settingsdialog.ui" line="2239"/>
         <location filename="settingsdialog.ui" line="2252"/>
-        <location filename="settingsdialog.ui" line="2265"/>
         <source>Optional</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2259"/>
+        <location filename="settingsdialog.ui" line="2246"/>
         <source>Optional Steam password. It remains masked while entered.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2272"/>
+        <location filename="settingsdialog.ui" line="2259"/>
         <source>Steam username</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2279"/>
+        <location filename="settingsdialog.ui" line="2266"/>
         <source>Steam password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2286"/>
+        <location filename="settingsdialog.ui" line="2273"/>
         <source>App ID override</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2293"/>
+        <location filename="settingsdialog.ui" line="2280"/>
         <source>Optional override for direct Steam launch. Leave empty to use the game&apos;s default Steam App ID.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2296"/>
+        <location filename="settingsdialog.ui" line="2283"/>
         <source>Leave empty to use the game default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2299"/>
+        <location filename="settingsdialog.ui" line="2286"/>
         <source>Leave empty to use the Steam App ID supplied by the selected game plugin. Enter an override only when the game uses a different launch entry.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2309"/>
+        <location filename="settingsdialog.ui" line="2296"/>
         <source>Network and browser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2315"/>
+        <location filename="settingsdialog.ui" line="2302"/>
         <source>Set MO2&apos;s connection mode, proxy, and browser used for web links.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2325"/>
+        <location filename="settingsdialog.ui" line="2312"/>
         <source>Disable automatic online features. Actions you start yourself, such as opening a link or checking for updates, remain available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2331"/>
+        <location filename="settingsdialog.ui" line="2318"/>
         <source>Disable automatic internet features. This does not affect features that you explicitly start, such as checking mods for updates, endorsing, or opening the web browser.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2334"/>
+        <location filename="settingsdialog.ui" line="2321"/>
         <source>Use offline mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2341"/>
+        <location filename="settingsdialog.ui" line="2328"/>
         <source>Use the system-wide HTTP proxy for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2347"/>
+        <location filename="settingsdialog.ui" line="2334"/>
         <source>Use the system-wide proxy settings for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2350"/>
+        <location filename="settingsdialog.ui" line="2337"/>
         <source>Use system HTTP proxy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2372"/>
-        <location filename="settingsdialog.ui" line="2378"/>
+        <location filename="settingsdialog.ui" line="2359"/>
+        <location filename="settingsdialog.ui" line="2365"/>
         <source>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2375"/>
-        <location filename="settingsdialog.ui" line="2406"/>
+        <location filename="settingsdialog.ui" line="2362"/>
+        <location filename="settingsdialog.ui" line="2393"/>
         <source>Use %1 as the URL placeholder in the browser command.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2381"/>
+        <location filename="settingsdialog.ui" line="2368"/>
         <source>Use custom browser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2403"/>
-        <location filename="settingsdialog.ui" line="2409"/>
+        <location filename="settingsdialog.ui" line="2390"/>
+        <location filename="settingsdialog.ui" line="2396"/>
         <source>Browser command with %1 in place of the target URL.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2412"/>
+        <location filename="settingsdialog.ui" line="2399"/>
         <source>Browser command (%1 = URL)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2419"/>
+        <location filename="settingsdialog.ui" line="2406"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2435"/>
+        <location filename="settingsdialog.ui" line="2422"/>
         <source>Maintenance tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2441"/>
+        <location filename="settingsdialog.ui" line="2428"/>
         <source>Run occasional repair actions for MO2 windows or supported game archives.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="2453"/>
+        <location filename="settingsdialog.ui" line="2456"/>
+        <source>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.ui" line="2459"/>
+        <source>Reset window geometry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialog.ui" line="2466"/>
         <location filename="settingsdialog.ui" line="2469"/>
-        <source>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="2472"/>
-        <source>Reset window geometry</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="2479"/>
-        <location filename="settingsdialog.ui" line="2482"/>
         <source>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2485"/>
+        <location filename="settingsdialog.ui" line="2472"/>
         <source>Back-date BSA archives</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2511"/>
+        <location filename="settingsdialog.ui" line="2498"/>
         <source>Virtual file system exclusions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2517"/>
+        <location filename="settingsdialog.ui" line="2504"/>
         <source>Exclude specific programs, file endings, or folders from MO2&apos;s virtual file system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2542"/>
+        <location filename="settingsdialog.ui" line="2529"/>
         <source>Edit the executables that must not see MO2&apos;s virtual files. Use this to keep unrelated programs from being hooked.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2545"/>
+        <location filename="settingsdialog.ui" line="2532"/>
         <source>Executables on this list and programs they start cannot access MO2&apos;s virtual files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2548"/>
+        <location filename="settingsdialog.ui" line="2535"/>
         <source>Executables</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2558"/>
+        <location filename="settingsdialog.ui" line="2545"/>
         <source>Edit filename endings that MO2 should skip in the virtual file system. A suffix is the end of a filename, not necessarily its extension.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2561"/>
+        <location filename="settingsdialog.ui" line="2548"/>
         <source>Files whose names end with a listed suffix are skipped by the virtual file system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2564"/>
+        <location filename="settingsdialog.ui" line="2551"/>
         <source>File suffixes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2574"/>
+        <location filename="settingsdialog.ui" line="2561"/>
         <source>Edit directories that MO2 should skip in the virtual file system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2577"/>
+        <location filename="settingsdialog.ui" line="2564"/>
         <source>Directories on this list are skipped by the virtual file system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2580"/>
+        <location filename="settingsdialog.ui" line="2567"/>
         <source>Directories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2623"/>
+        <location filename="settingsdialog.ui" line="2610"/>
         <source>Logs and crash reports</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2630"/>
+        <location filename="settingsdialog.ui" line="2617"/>
         <source>Choose how much troubleshooting information MO2 and LOOT collect. The recommended levels are suitable for everyday use.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2660"/>
+        <location filename="settingsdialog.ui" line="2647"/>
         <source>MO2 logging and crash dumps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2669"/>
+        <location filename="settingsdialog.ui" line="2656"/>
         <source>Set the detail in ModOrganizer.log and choose whether crashes from injected programs create a dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2684"/>
+        <location filename="settingsdialog.ui" line="2671"/>
         <source>MO2 log detail</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2703"/>
+        <location filename="settingsdialog.ui" line="2690"/>
         <source>Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; Debug can help troubleshoot issues.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2706"/>
+        <location filename="settingsdialog.ui" line="2693"/>
         <source>
 Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2714"/>
+        <location filename="settingsdialog.ui" line="2701"/>
         <source>Crash dump detail</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2733"/>
+        <location filename="settingsdialog.ui" line="2720"/>
         <source>Choose the amount of process data saved when an injected program crashes. Mini is recommended for routine troubleshooting.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2736"/>
+        <location filename="settingsdialog.ui" line="2723"/>
         <source>None disables dump collection. Mini stores a compact report; Data and Full include progressively more process memory and can use substantially more disk space.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2743"/>
+        <location filename="settingsdialog.ui" line="2730"/>
         <source>Maximum dumps to keep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2750"/>
+        <location filename="settingsdialog.ui" line="2737"/>
         <source>Limit how many crash dumps remain on disk. Set to 0 to keep every dump.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2753"/>
+        <location filename="settingsdialog.ui" line="2740"/>
         <source>Limit how many crash dumps remain on disk. Set to 0 for unlimited retention. Choose None for Crash dump detail to disable collection.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2765"/>
+        <location filename="settingsdialog.ui" line="2752"/>
         <source>LOOT diagnostics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2774"/>
+        <location filename="settingsdialog.ui" line="2761"/>
         <source>Control the detail recorded by the integrated LOOT sorting service. Increase it only when troubleshooting LOOT.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2789"/>
+        <location filename="settingsdialog.ui" line="2776"/>
         <source>LOOT log detail</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2817"/>
+        <location filename="settingsdialog.ui" line="2804"/>
         <source>Diagnostic file locations</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2823"/>
+        <location filename="settingsdialog.ui" line="2810"/>
         <source>These folders belong to the active MO2 instance. Select a path to open it in your file manager.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2833"/>
+        <location filename="settingsdialog.ui" line="2820"/>
         <source>Open the selected diagnostic folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2836"/>
+        <location filename="settingsdialog.ui" line="2823"/>
         <source>MO2 logs: &lt;a href=&quot;LOGS_FULL_PATH&quot;&gt;LOGS_DIR&lt;/a&gt;&lt;br/&gt;Crash dumps: &lt;a href=&quot;DUMPS_FULL_PATH&quot;&gt;DUMPS_DIR&lt;/a&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1358"/>
+        <location filename="settingsdialog.ui" line="1345"/>
         <source>User ID:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1375"/>
+        <location filename="settingsdialog.ui" line="1362"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1389"/>
+        <location filename="settingsdialog.ui" line="1376"/>
         <source>Account:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1415"/>
+        <location filename="settingsdialog.ui" line="1402"/>
         <source>Daily requests:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1429"/>
+        <location filename="settingsdialog.ui" line="1416"/>
         <source>Hourly requests:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1482"/>
+        <location filename="settingsdialog.ui" line="1469"/>
         <source>Connect to Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1492"/>
+        <location filename="settingsdialog.ui" line="1479"/>
         <source>Enter API Key Manually</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1499"/>
+        <location filename="settingsdialog.ui" line="1486"/>
         <source>Clear the stored Nexus API key and force reauthorization.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1502"/>
+        <location filename="settingsdialog.ui" line="1489"/>
         <source>Disconnect from Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1632"/>
+        <location filename="settingsdialog.ui" line="1619"/>
         <source>Use Nexus category mappings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="1786"/>
+        <location filename="settingsdialog.ui" line="1773"/>
         <source>Plugins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2039"/>
+        <location filename="settingsdialog.ui" line="2026"/>
         <source>Value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2095"/>
+        <location filename="settingsdialog.ui" line="2082"/>
         <source>Workarounds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2328"/>
+        <location filename="settingsdialog.ui" line="2315"/>
         <source>Disable automatic internet features</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2344"/>
+        <location filename="settingsdialog.ui" line="2331"/>
         <source>Use a proxy for network connections.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.ui" line="2614"/>
+        <location filename="settingsdialog.ui" line="2601"/>
         <source>Diagnostics</source>
         <translation type="unfinished"></translation>
     </message>

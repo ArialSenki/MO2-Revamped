@@ -457,23 +457,36 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
           qobject_cast<QVBoxLayout*>(ui->nexusActivityPanel->layout())) {
     activityLayout->setSpacing(8);
   }
+  // one column, as the other pages: the switches end at the card's edge, with
+  // the two tools side by side below them
   if (auto* optionsLayout =
           qobject_cast<QHBoxLayout*>(ui->nexusOptionsGroup->layout())) {
+    optionsLayout->setDirection(QBoxLayout::TopToBottom);
     optionsLayout->setContentsMargins(0, 0, 0, 0);
     optionsLayout->setSpacing(14);
-    optionsLayout->setStretch(0, 3);
-    optionsLayout->setStretch(1, 2);
   }
   if (auto* featuresLayout =
           qobject_cast<QVBoxLayout*>(ui->nexusFeatureOptions->layout())) {
-    featuresLayout->setSpacing(5);
-    featuresLayout->addStretch(1);
+    featuresLayout->setContentsMargins(0, 0, 0, 0);
+    featuresLayout->setSpacing(0);
   }
   if (auto* toolsLayout =
           qobject_cast<QVBoxLayout*>(ui->nexusIntegrationTools->layout())) {
+    toolsLayout->setContentsMargins(0, 0, 0, 0);
     toolsLayout->setSpacing(8);
-    // Start both columns at the same height as their descriptions.
-    toolsLayout->addStretch(1);
+    toolsLayout->removeWidget(ui->associateButton);
+    toolsLayout->removeWidget(ui->clearCacheButton);
+    auto* buttons = new QHBoxLayout;
+    buttons->setSpacing(8);
+    buttons->addWidget(ui->associateButton, 1);
+    buttons->addWidget(ui->clearCacheButton, 1);
+    toolsLayout->addLayout(buttons);
+  }
+  if (auto* connectionActions = ui->nexusConnectionActions->layout()) {
+    connectionActions->setContentsMargins(0, 0, 0, 0);
+  }
+  if (auto* activity = ui->nexusActivityPanel->layout()) {
+    activity->setContentsMargins(0, 0, 0, 0);
   }
   if (auto* serversLayout =
           qobject_cast<QHBoxLayout*>(ui->nexusServersGroup->layout())) {

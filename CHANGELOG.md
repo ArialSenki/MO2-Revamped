@@ -132,6 +132,10 @@
   readable names (the plugin's own is in their tooltip), and true or false options
   are switches that change with one click.
 
+- Settings > Nexus lists its options in one column, with their switches where the
+  other pages have them. The translations link is gone from General. The hover of
+  a row is rounded, as in Windows 11.
+
 ### Foreground
 
 - Mod Organizer's notices and its lock no longer take the foreground from a game

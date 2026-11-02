@@ -6578,3 +6578,33 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#plugi
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#descriptionLabel {
     padding: 0px 0px 0px 4px;
 }
+/* Settings > Nexus: its groups sit inside cards, without an inset of their own */
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusAccountGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusUsageGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusConnectionGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusOptionsGroup,
+QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusServersGroup {
+    margin: 0px;
+    padding: 0px;
+    border: none;
+    background-color: transparent;
+}
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusFeatureOptions,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusIntegrationTools {
+    margin: 0px;
+    padding: 0px;
+}
+/* The hover of a row or a choice is rounded, as in Windows 11 */
+QFrame#fluentSettingRow:hover {
+    border-radius: 6px;
+    border-top: 1px solid transparent;
+}
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"]:hover,
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:hover {
+    border-radius: 6px;
+    border-top-color: transparent;
+}
+QTreeWidget#pluginsList::item:hover,
+QTreeWidget#pluginsList::item:selected {
+    border-radius: 4px;
+}

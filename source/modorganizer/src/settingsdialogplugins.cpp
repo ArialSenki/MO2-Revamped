@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QStyle>
 #include <QComboBox>
+#include <QEvent>
 #include <QFormLayout>
 #include <QHeaderView>
 #include <QLabel>
@@ -108,6 +109,51 @@ QString readableOptionName(QString key)
   return result;
 }
 
+// the details are as tall as their text at their width: no less, or the enable
+// row is cut off, and no more, or there's a gap above the options
+class PluginDetailsHeight final : public QObject
+{
+public:
+  using QObject::QObject;
+
+  static void fit(QWidget* details)
+  {
+    auto* form = qobject_cast<QFormLayout*>(details->layout());
+    if (form == nullptr) {
+      return;
+    }
+    // row by row: with most of the form's rows hidden, its own sum isn't usable
+    const QMargins margins = form->contentsMargins();
+    const int width        = details->width() - margins.left() - margins.right();
+    int height             = margins.top() + margins.bottom();
+    int rows               = 0;
+    for (int i = 0; i < form->count(); ++i) {
+      QWidget* w = form->itemAt(i)->widget();
+      if (w == nullptr || w->isHidden()) {
+        continue;
+      }
+      w->ensurePolished();
+      height += w->hasHeightForWidth() ? w->heightForWidth(width) : w->sizeHint().height();
+      ++rows;
+    }
+    height += qMax(0, rows - 1) * form->verticalSpacing();
+    if (details->minimumHeight() != height || details->maximumHeight() != height) {
+      details->setFixedHeight(height);
+    }
+  }
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    // also once shown and laid out: the page can be built while it's being
+    // opened, with its rows still being made
+    if (event->type() == QEvent::Resize || event->type() == QEvent::Show ||
+        event->type() == QEvent::LayoutRequest) {
+      fit(static_cast<QWidget*>(watched));
+    }
+    return false;
+  }
+};
+
 class PluginBooleanSingleClickFilter final : public QObject
 {
 public:
@@ -177,13 +223,7 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
     widget->setMinimumHeight(0);
   };
   keepNaturalHeight(ui->pluginBrowserDescription);
-  // grows with its wrapped text, or the enable row below it gets cut off
-  {
-    QSizePolicy policy = ui->pluginDescription->sizePolicy();
-    policy.setVerticalPolicy(QSizePolicy::Minimum);
-    policy.setHeightForWidth(true);
-    ui->pluginDescription->setSizePolicy(policy);
-  }
+  ui->pluginDescription->installEventFilter(new PluginDetailsHeight(ui->pluginDescription));
   keepNaturalHeight(ui->pluginSettingsTitle);
   keepNaturalHeight(ui->pluginSettingsDescription);
   keepNaturalHeight(ui->pluginBlacklistDescription);
@@ -600,9 +640,10 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
   ui->pluginSettingsList->resizeColumnToContents(0);
   ui->pluginSettingsList->resizeColumnToContents(1);
 
-  // the options list takes what's left: the details keep their whole height
-  ui->pluginDescription->layout()->invalidate();
-  ui->pluginDescription->setMinimumHeight(ui->pluginDescription->layout()->sizeHint().height());
+  PluginDetailsHeight::fit(ui->pluginDescription);
+  QTimer::singleShot(0, ui->pluginDescription, [details = ui->pluginDescription] {
+    PluginDetailsHeight::fit(details);
+  });
 }
 
 void PluginsSettingsTab::deleteBlacklistItem()
