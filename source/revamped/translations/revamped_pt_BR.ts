@@ -3982,6 +3982,18 @@ Mods com arquivo de save próprio (o .co2 do Seamless Co-op, o .cnv do Convergen
 Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 coloca os saves da rota na pasta da Steam durante a sessão e depois os recolhe. Um backup da rota é feito antes de cada inicialização.</translation>
     </message>
     <message>
+      <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
+
+Mods with their own save file (Seamless Co-op's .co2) keep it next to the normal one, in the same route.
+
+Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the route's saves in Steam's folder for the run and takes them back afterwards. A backup of the route is made before every launch.</source>
+      <translation>Cada perfil do MO2 pode ter seus próprios saves, então jogar com mods nunca mexe no seu personagem da Steam. Enquanto o jogo roda, a pasta de saves da Steam é separada e volta sem alterações quando o jogo fecha.
+
+Mods com arquivo de save próprio (o .co2 do Seamless Co-op) o guardam ao lado do normal, na mesma rota.
+
+Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 coloca os saves da rota na pasta da Steam durante a sessão e depois os recolhe. Um backup da rota é feito antes de cada inicialização.</translation>
+    </message>
+    <message>
       <source>Rename save profile</source>
       <translation>Renomear perfil de saves</translation>
     </message>

@@ -440,7 +440,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             application.installEventFilter(self.__ui_event_filter)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
-        qInfo("Elden Ring MO2: save isolation alpha.81 initialized.")
+        qInfo("Elden Ring MO2: save isolation alpha.82 initialized.")
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
@@ -498,7 +498,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 81)
+        return mobase.VersionInfo(0, 5, 0, 82)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -4071,7 +4071,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     "available": True,
                 }
             )
-        else:
+        elif self._game_key == "eldenring":
+            # mods of Elden Ring only: Nightreign lists them when one is active
             for name, extension in (("Convergence", "cnv"), ("alt-saves", "mod")):
                 formats.append(
                     {
@@ -4744,6 +4745,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "folder is set aside; it comes back unchanged when the game closes.\n\n"
                 "Mods with their own save file (Seamless Co-op's .co2, Convergence's "
                 ".cnv) keep it next to the normal one, in the same route.\n\n"
+                "Launchers that fail inside MO2's virtual folder start outside it: MO2 "
+                "puts the route's saves in Steam's folder for the run and takes them "
+                "back afterwards. A backup of the route is made before every launch.")
+                if self._game_key == "eldenring"
+                else _tr("Each MO2 profile can keep its own saves, so modded play never "
+                "touches your Steam character. While the game runs, Steam's save "
+                "folder is set aside; it comes back unchanged when the game closes.\n\n"
+                "Mods with their own save file (Seamless Co-op's .co2) keep it next to "
+                "the normal one, in the same route.\n\n"
                 "Launchers that fail inside MO2's virtual folder start outside it: MO2 "
                 "puts the route's saves in Steam's folder for the run and takes them "
                 "back afterwards. A backup of the route is made before every launch."),

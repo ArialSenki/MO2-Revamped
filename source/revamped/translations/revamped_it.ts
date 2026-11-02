@@ -4024,6 +4024,18 @@ Le mod con un proprio file di salvataggio (il .co2 di Seamless Co-op, il .cnv di
 I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fuori: MO2 mette i salvataggi del percorso nella cartella di Steam per la sessione e poi li riprende. Prima di ogni avvio viene fatto un backup del percorso.</translation>
     </message>
     <message>
+      <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
+
+Mods with their own save file (Seamless Co-op's .co2) keep it next to the normal one, in the same route.
+
+Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the route's saves in Steam's folder for the run and takes them back afterwards. A backup of the route is made before every launch.</source>
+      <translation>Ogni profilo di MO2 può avere i propri salvataggi, così giocare con le mod non tocca mai il tuo personaggio di Steam. Mentre il gioco è in esecuzione, la cartella dei salvataggi di Steam viene messa da parte e torna invariata quando il gioco si chiude.
+
+Le mod con un proprio file di salvataggio (il .co2 di Seamless Co-op) lo tengono accanto a quello normale, nello stesso percorso.
+
+I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fuori: MO2 mette i salvataggi del percorso nella cartella di Steam per la sessione e poi li riprende. Prima di ogni avvio viene fatto un backup del percorso.</translation>
+    </message>
+    <message>
       <source>Rename save profile</source>
       <translation>Rinomina profilo di salvataggio</translation>
     </message>

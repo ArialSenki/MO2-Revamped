@@ -3998,6 +3998,18 @@ Los mods con su propio archivo de partida (el .co2 de Seamless Co-op, el .cnv de
 Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera de ella: MO2 pone las partidas de la ruta en la carpeta de Steam durante la sesión y luego las recoge. Antes de cada lanzamiento se hace una copia de la ruta.</translation>
     </message>
     <message>
+      <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
+
+Mods with their own save file (Seamless Co-op's .co2) keep it next to the normal one, in the same route.
+
+Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the route's saves in Steam's folder for the run and takes them back afterwards. A backup of the route is made before every launch.</source>
+      <translation>Cada perfil de MO2 puede tener sus propias partidas, así que jugar con mods nunca toca tu personaje de Steam. Mientras el juego está abierto, la carpeta de partidas de Steam se aparta y vuelve sin cambios al cerrarlo.
+
+Los mods con su propio archivo de partida (el .co2 de Seamless Co-op) lo guardan junto al normal, en la misma ruta.
+
+Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera de ella: MO2 pone las partidas de la ruta en la carpeta de Steam durante la sesión y luego las recoge. Antes de cada lanzamiento se hace una copia de la ruta.</translation>
+    </message>
+    <message>
       <source>Rename save profile</source>
       <translation>Renombrar perfil de partidas</translation>
     </message>

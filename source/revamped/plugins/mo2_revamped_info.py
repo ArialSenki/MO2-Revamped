@@ -366,7 +366,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             ),
             "saves": read(
                 "eldenring_mo2_save_isolation.py",
-                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.81",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.82",
             ),
             "startup": read(
                 "eldenring_mo2_startup_tool.py",

@@ -108,6 +108,8 @@
   opening the page again.
 - Going back and picking another game removes the Elden Ring save options.
   A new instance of the other game says why it lists no saves.
+- Nightreign no longer offers Convergence's save type, in the wizard or in Save
+  Isolation: that mod is for Elden Ring.
 - The saves step's switches line up with their titles; turning a save type on
   or off no longer flickers. The review step's rows line up.
 

@@ -3986,6 +3986,18 @@ Les mods qui ont leur propre fichier de sauvegarde (le .co2 de Seamless Co-op, l
 Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors : MO2 place les sauvegardes de la route dans le dossier de Steam pour la session, puis les reprend. Une copie de la route est faite avant chaque lancement.</translation>
     </message>
     <message>
+      <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
+
+Mods with their own save file (Seamless Co-op's .co2) keep it next to the normal one, in the same route.
+
+Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the route's saves in Steam's folder for the run and takes them back afterwards. A backup of the route is made before every launch.</source>
+      <translation>Chaque profil MO2 peut avoir ses propres sauvegardes : jouer avec des mods ne touche jamais votre personnage Steam. Pendant que le jeu tourne, le dossier de sauvegardes de Steam est mis de côté ; il revient inchangé à la fermeture du jeu.
+
+Les mods qui ont leur propre fichier de sauvegarde (le .co2 de Seamless Co-op) le gardent à côté du fichier normal, dans la même route.
+
+Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors : MO2 place les sauvegardes de la route dans le dossier de Steam pour la session, puis les reprend. Une copie de la route est faite avant chaque lancement.</translation>
+    </message>
+    <message>
       <source>Rename save profile</source>
       <translation>Renommer le profil de sauvegarde</translation>
     </message>

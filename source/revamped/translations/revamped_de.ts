@@ -3982,6 +3982,18 @@ Mods mit eigener Spielstanddatei (die .co2 von Seamless Co-op, die .cnv von Conv
 Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
     </message>
     <message>
+      <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
+
+Mods with their own save file (Seamless Co-op's .co2) keep it next to the normal one, in the same route.
+
+Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the route's saves in Steam's folder for the run and takes them back afterwards. A backup of the route is made before every launch.</source>
+      <translation>Jedes MO2-Profil kann eigene Spielstände haben, sodass das Spielen mit Mods deinen Steam-Charakter nie berührt. Solange das Spiel läuft, wird der Spielstandordner von Steam beiseitegelegt; er kehrt unverändert zurück, wenn das Spiel geschlossen wird.
+
+Mods mit eigener Spielstanddatei (die .co2 von Seamless Co-op) legen sie neben die normale, in derselben Route.
+
+Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
+    </message>
+    <message>
       <source>Rename save profile</source>
       <translation>Spielstandprofil umbenennen</translation>
     </message>
