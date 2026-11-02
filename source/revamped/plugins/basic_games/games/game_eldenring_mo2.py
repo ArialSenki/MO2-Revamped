@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 import shutil
 import stat
+import struct
 import subprocess
 import tempfile
 import time
@@ -2084,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.78"
+    Version = "0.5.0-alpha.79"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -2096,6 +2097,12 @@ class EldenRingMo2Game(BasicGame):
     GameSaveExtension = "sl2"
     # the names that differ between Elden Ring and Nightreign
     GameProcess = "eldenring.exe"
+    # the code around a call to the game's file loader, Elden Ring then Nightreign:
+    # install_loose_asset_hook in the bridge looks for the same, change both together
+    ResolverCallSites = (
+        (b"", bytes.fromhex("48837B2008488D4B087203488B094C8B4B1841B8050000004D3BC8")),
+        (bytes.fromhex("33D24889442420498BCD"), bytes.fromhex("48837F18087203488B3F48837B1805")),
+    )
     SaveFolderName = "EldenRing"  # in %APPDATA%
     SavePrefix = "er0000."  # the save files: ER0000.sl2, .co2, .bak...
     GlobalBackupsFolderName = "Elden Ring Global Save Backups"
@@ -2205,6 +2212,7 @@ class EldenRingMo2Game(BasicGame):
         # folders with newer saves that a restore had to move aside
         self._displaced_newer_saves: list[Path] = []
         self._loose_files_warning_shown = False
+        self._file_loader_scan: tuple[str, bool | None] = ("", None)
         self._online_programs_selector = None
         self._online_program_locked = False
         self._last_launch_time = 0.0
@@ -3609,6 +3617,8 @@ class EldenRingMo2Game(BasicGame):
         if not self._seamless_password_ready():
             return False
         if not self._regulation_conflict_ready(app_path):
+            return False
+        if not self._file_loader_ready(app_path):
             return False
         if self._active_save_quarantine is not None:
             starting = time.monotonic() < self._launch_pending_until
@@ -5569,14 +5579,115 @@ class EldenRingMo2Game(BasicGame):
         for note in notes:
             qInfo(note)
 
+    def _runs_outside_vfs(self, app_path: str) -> bool:
+        return (
+            Path(app_path).name.casefold() != self.GameProcess
+            and self._launch_method(app_path) == self.LaunchMethodSwap
+        )
+
+    @classmethod
+    def file_loader_found(cls, executable: Path) -> bool | None:
+        """Whether the bridge will find the game's file loader in this executable,
+        by the rules of its own search; None when the file can't be read."""
+        try:
+            data = executable.read_bytes()
+            header = struct.unpack_from("<I", data, 0x3C)[0]
+            count = struct.unpack_from("<H", data, header + 6)[0]
+            optional_size = struct.unpack_from("<H", data, header + 20)[0]
+            sections = []
+            for index in range(count):
+                entry = header + 24 + optional_size + index * 40
+                virtual_size, address, raw_size, raw = struct.unpack_from("<IIII", data, entry + 8)
+                if struct.unpack_from("<I", data, entry + 36)[0] & 0x20000000:
+                    sections.append((address, min(virtual_size or raw_size, raw_size), raw))
+        except (OSError, struct.error):
+            return None
+
+        def file_offset(address: int) -> int | None:
+            for start, size, raw in sections:
+                if start <= address < start + size:
+                    return raw + address - start
+            return None
+
+        def follow_jumps(address: int) -> int | None:
+            for _jump in range(9):
+                offset = file_offset(address)
+                if offset is None:
+                    return None
+                if data[offset] != 0xE9:
+                    return address
+                address += 5 + int.from_bytes(data[offset + 1:offset + 5], "little", signed=True)
+            return None
+
+        found = None
+        for start, size, raw in sections:
+            for before, after in cls.ResolverCallSites:
+                first = 5 + len(before)
+                match = data.find(after, raw + first, raw + size)
+                while match >= 0:
+                    if data[match - 5] == 0xE8 and data[match - first:match - 5] == before:
+                        target = follow_jumps(
+                            start + match - raw
+                            + int.from_bytes(data[match - 4:match], "little", signed=True)
+                        )
+                        if target is not None:
+                            if found is not None and found != target:
+                                return False
+                            found = target
+                    match = data.find(after, match + 1, raw + size)
+        return found is not None
+
+    def _file_loader_ready(self, app_path: str) -> bool:
+        """A game update can change the code the bridge looks for: said before
+        the launch, and again only if the game's own run shows what this missed."""
+        if self._runs_outside_vfs(app_path) or not self._active_mods_have_game_files():
+            return True
+        executable = Path(self.gameDirectory().absolutePath()) / self.GameBinary
+        try:
+            info = executable.stat()
+        except OSError:
+            return True
+        stamp = f"{info.st_size}:{info.st_mtime_ns}"
+        if self._file_loader_scan[0] != stamp:
+            self._file_loader_scan = (stamp, self.file_loader_found(executable))
+        if self._file_loader_scan[1] is not False:
+            return True
+        qWarning(f"Elden Ring MO2: the game's file loader wasn't found in '{executable}'.")
+        self._loose_files_warning_shown = True
+        key = "file_loader_accepted"
+        try:
+            if self._organizer.persistent(self.name(), key, "") == stamp:
+                return True
+        except (AttributeError, RuntimeError):
+            pass
+        box = QMessageBox(QApplication.activeWindow())
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(_tr("Mods may not load"))
+        box.setText(self._game_text(_tr("MO2 doesn't recognize this version of Elden Ring")))
+        box.setInformativeText(
+            _tr("The game files of your mods won't be used, though their DLLs aren't affected. "
+                "This usually follows a game update: look for a new version of MO2 Revamped.")
+        )
+        remember = QCheckBox(_tr("Don't warn again for this version of the game"))
+        box.setCheckBox(remember)
+        start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(start)
+        box.exec()
+        if box.clickedButton() is not start:
+            return False
+        if remember.isChecked():
+            try:
+                self._organizer.setPersistent(self.name(), key, stamp)
+            except (AttributeError, RuntimeError) as error:
+                qWarning(f"Elden Ring MO2: could not save the file loader choice: {error}")
+        return True
+
     def _regulation_conflict_ready(self, app_path: str) -> bool:
         """Of several active regulation.bin the game gets only the one with the
         highest priority, and nothing else tells the user."""
-        if (
-            Path(app_path).name.casefold() != self.GameProcess
-            and self._launch_method(app_path) == self.LaunchMethodSwap
-        ):
-            # outside the VFS: no mod's regulation.bin reaches it
+        if self._runs_outside_vfs(app_path):
+            # no mod's regulation.bin reaches it
             return True
         mods = [
             name

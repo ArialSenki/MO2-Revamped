@@ -63,6 +63,8 @@
   it quiet for that combination in that profile.
 - A mod MO2 turned on to start Reforged online goes back off if the launch
   doesn't go ahead.
+- When a game update has changed the code MO2 uses to load your mods' game
+  files, MO2 says so before the launch instead of after you've played.
 
 ### Saves and new instances
 

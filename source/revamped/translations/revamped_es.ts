@@ -2192,6 +2192,22 @@ El juego no se inició.</translation>
       <translation>Iniciar igualmente</translation>
     </message>
     <message>
+      <source>Mods may not load</source>
+      <translation>Puede que los mods no carguen</translation>
+    </message>
+    <message>
+      <source>MO2 doesn't recognize this version of Elden Ring</source>
+      <translation>MO2 no reconoce esta versión de Elden Ring</translation>
+    </message>
+    <message>
+      <source>The game files of your mods won't be used, though their DLLs aren't affected. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>No se usarán los archivos de juego de tus mods, aunque sus DLL no se ven afectadas. Suele ocurrir tras una actualización del juego: busca una versión nueva de MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>Don't warn again for this version of the game</source>
+      <translation>No volver a avisar con esta versión del juego</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Puede que los mods no se hayan cargado</translation>
     </message>

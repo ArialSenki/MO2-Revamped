@@ -1136,7 +1136,8 @@ void* __cdecl map_archive_path_hook(EldenRingLocalWString* path, uint64_t p2,
 }
 
 bool install_loose_asset_hook() {
-  // the code around a call to the resolver: Elden Ring, then Nightreign (1.3.3)
+  // the code around a call to the resolver: Elden Ring, then Nightreign (1.3.3).
+  // The plugin looks for the same on disk (ResolverCallSites): change both together
   static const unsigned char elden_ring_after[] = {
       0x48, 0x83, 0x7B, 0x20, 0x08, 0x48, 0x8D, 0x4B, 0x08,
       0x72, 0x03, 0x48, 0x8B, 0x09, 0x4C, 0x8B, 0x4B, 0x18,
