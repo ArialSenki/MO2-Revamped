@@ -2196,6 +2196,10 @@ Le jeu n'a pas été lancé.</translation>
       <translation>Ne plus avertir pour cette version du jeu</translation>
     </message>
     <message>
+      <source>Game version: {0}</source>
+      <translation>Version du jeu : {0}</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Les mods n'ont peut-être pas été chargés</translation>
     </message>

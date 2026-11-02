@@ -2234,6 +2234,10 @@ Il gioco non è stato avviato.</translation>
       <translation>Non avvisare più per questa versione del gioco</translation>
     </message>
     <message>
+      <source>Game version: {0}</source>
+      <translation>Versione del gioco: {0}</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>I mod potrebbero non essere stati caricati</translation>
     </message>

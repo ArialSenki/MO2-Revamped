@@ -2085,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.79"
+    Version = "0.5.0-alpha.80"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -5637,6 +5637,25 @@ class EldenRingMo2Game(BasicGame):
                     match = data.find(after, match + 1, raw + size)
         return found is not None
 
+    @staticmethod
+    def game_version_text(executable: Path) -> str:
+        """The version as the game shows it (Elden Ring keeps it in the text
+        "Gr v1.17.2#1131") with the file's own, or whichever of them is there."""
+        try:
+            data = executable.read_bytes()
+        except OSError:
+            return ""
+        file_version = ""
+        fixed_info = data.find(struct.pack("<I", 0xFEEF04BD))
+        if fixed_info >= 0 and fixed_info + 16 <= len(data):
+            high, low = struct.unpack_from("<II", data, fixed_info + 8)
+            file_version = f"{high >> 16}.{high & 0xFFFF}.{low >> 16}.{low & 0xFFFF}"
+        shown = re.search(rb"Gr v(\d+\.\d+\.\d+)#\d+\0dantelion", data)
+        if shown is None:
+            return file_version
+        version = shown.group(1).decode().removesuffix(".0")
+        return f"{version} ({file_version})" if file_version else version
+
     def _file_loader_ready(self, app_path: str) -> bool:
         """A game update can change the code the bridge looks for: said before
         the launch, and again only if the game's own run shows what this missed."""
@@ -5652,7 +5671,8 @@ class EldenRingMo2Game(BasicGame):
             self._file_loader_scan = (stamp, self.file_loader_found(executable))
         if self._file_loader_scan[1] is not False:
             return True
-        qWarning(f"Elden Ring MO2: the game's file loader wasn't found in '{executable}'.")
+        version = self.game_version_text(executable)
+        qWarning(f"Elden Ring MO2: the game's file loader wasn't found in '{executable}' ({version}).")
         self._loose_files_warning_shown = True
         key = "file_loader_accepted"
         try:
@@ -5664,10 +5684,11 @@ class EldenRingMo2Game(BasicGame):
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(_tr("Mods may not load"))
         box.setText(self._game_text(_tr("MO2 doesn't recognize this version of Elden Ring")))
-        box.setInformativeText(
-            _tr("The game files of your mods won't be used, though their DLLs aren't affected. "
-                "This usually follows a game update: look for a new version of MO2 Revamped.")
-        )
+        details = _tr("The game files of your mods won't be used, though their DLLs aren't affected. "
+                      "This usually follows a game update: look for a new version of MO2 Revamped.")
+        if version:
+            details += "\n\n" + _tr("Game version: {0}").format(version)
+        box.setInformativeText(details)
         remember = QCheckBox(_tr("Don't warn again for this version of the game"))
         box.setCheckBox(remember)
         start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)

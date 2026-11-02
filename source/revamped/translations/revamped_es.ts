@@ -2208,6 +2208,10 @@ El juego no se inició.</translation>
       <translation>No volver a avisar con esta versión del juego</translation>
     </message>
     <message>
+      <source>Game version: {0}</source>
+      <translation>Versión del juego: {0}</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Puede que los mods no se hayan cargado</translation>
     </message>

@@ -358,7 +358,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
 
         game = "basic_games/games/game_eldenring_mo2.py"
         versions = {
-            "plugin": read(game, r'^\s*Version = "([^"]+)"', str, "0.5.0-alpha.79"),
+            "plugin": read(game, r'^\s*Version = "([^"]+)"', str, "0.5.0-alpha.80"),
             "bridge": read(game, r'NativeBridgeVersion = "([^"]+)"', str, "0.5.0-alpha.38"),
             "installer": read(
                 "eldenring_mo2_archive_installer/installer.py",
