@@ -361,7 +361,8 @@ def _game() -> dict:
 
 def _trs(text: str) -> str:
     # a translated text that names the Elden Ring save file, for this game
-    return _tr(text).replace("ER0000", _game()["stem"])
+    tool = EldenRingMo2SaveIsolation
+    return _tr(text).replace("ER0000", _GAMES[tool._wizard_text_game or tool._game_key]["stem"])
 
 
 class EldenRingMo2SaveIsolation(mobase.IPluginTool):
@@ -959,7 +960,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         chosen = QFileDialog.getExistingDirectory(parent, _tr("Export all my saves"))
         if not chosen:
             return
-        sources = self._create_instance_save_sources((".sl2", ".co2", ".cnv", ".err", ".bak"))
+        sources = self._create_instance_save_sources(
+            (".sl2", ".co2", ".cnv", ".err", ".bak"), include_online=True
+        )
         if not sources:
             self._show_notice(parent, _tr("Export all my saves"), _tr("No saves found."), "info")
             return
@@ -968,10 +971,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         root = Path(chosen) / f"{_game()['save_dir']} saves {stamp}"
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         copied, failed = 0, []
+        # two routes can share a name once it is a folder's: never over each other
+        route_folders: dict[str, str] = {}
+        used_folders: set[str] = set()
         try:
             for label, source, relative in sources:
                 # the label names the route, then the file inside it
-                route = re.sub(r'[<>:"/\\|?*]+', "-", label.rsplit(" — ", 1)[0]).strip(" .")
+                route_label = label.rsplit(" — ", 1)[0]
+                route = route_folders.get(route_label)
+                if route is None:
+                    base = re.sub(r'[<>:"/\\|?*]+', "-", route_label).strip(" .")
+                    route, number = base, 1
+                    while route.casefold() in used_folders:
+                        number += 1
+                        route = f"{base} ({number})"
+                    used_folders.add(route.casefold())
+                    route_folders[route_label] = route
                 destination = root / route / relative
                 try:
                     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -1001,7 +1016,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(root)))
 
     def _create_instance_save_sources(
-        self, suffixes: tuple[str, ...] = (".sl2",)
+        self, suffixes: tuple[str, ...] = (".sl2",), include_online: bool = False
     ) -> list[tuple[str, Path, str]]:
         """Find Elden Ring saves in Steam and this MO2 instance only."""
         discovered_roots: list[tuple[str, Path]] = []
@@ -1021,6 +1036,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         seen_files: set[str] = set()
 
         def add_save_files(label: str, root: Path) -> None:
+            # Reforged's online saves, a route inside the route: an export takes them
+            if include_online:
+                online = root / self._ReforgedOnlineSavesFolder
+                if online.is_dir():
+                    for save_path in self._list_transferable_saves(online, suffixes):
+                        sources.append(
+                            (f"{label} (online) — {save_path.name}", save_path,
+                             save_path.relative_to(online).as_posix())
+                        )
             for save_path in self._list_transferable_saves(root, suffixes):
                 try:
                     relative_path = save_path.relative_to(root)
@@ -1044,7 +1068,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     )
                 )
 
-        add_save_files("Steam / Elden Ring", self._global_save_directory())
+        add_save_files(_tr("Steam / Elden Ring"), self._global_save_directory())
         discovered_roots.sort(key=lambda item: item[0].casefold())
         for instance_name, profiles_root in discovered_roots:
             display_instance = instance_name.partition(" — ")[0].strip()

@@ -182,8 +182,7 @@ namespace Mo2RevampedSetup
                 }
                 finally
                 {
-                    try { if (!cleanupScheduled && Directory.Exists(extractionRoot)) Directory.Delete(extractionRoot, true); }
-                    catch { }
+                    if (!cleanupScheduled) RemoveWorkFolder(extractionRoot);
                 }
             }
         }
@@ -200,7 +199,18 @@ namespace Mo2RevampedSetup
                 try
                 {
                     string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                    Directory.CreateDirectory(Path.Combine(programFiles, "MO2 Revamped Setup"));
+                    string parent = Path.Combine(programFiles, "MO2 Revamped Setup");
+                    Directory.CreateDirectory(parent);
+                    // what a power cut or a killed setup left behind
+                    foreach (string old in Directory.GetDirectories(parent))
+                    {
+                        try
+                        {
+                            if (DateTime.UtcNow - Directory.GetLastWriteTimeUtc(old) > TimeSpan.FromDays(1)) Directory.Delete(old, true);
+                        }
+                        catch (IOException) { }
+                        catch (UnauthorizedAccessException) { }
+                    }
                     DirectorySecurity security = new DirectorySecurity();
                     security.SetAccessRuleProtection(true, false);
                     foreach (WellKnownSidType account in new WellKnownSidType[] { WellKnownSidType.BuiltinAdministratorsSid, WellKnownSidType.LocalSystemSid })
@@ -218,6 +228,17 @@ namespace Mo2RevampedSetup
             string folder = Path.Combine(Path.GetTempPath(), "MO2 Revamped Setup", name);
             Directory.CreateDirectory(folder);
             return folder;
+        }
+
+        internal static void RemoveWorkFolder(string folder)
+        {
+            try
+            {
+                if (Directory.Exists(folder)) Directory.Delete(folder, true);
+                Directory.Delete(Path.GetDirectoryName(folder));
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
 
         private static bool IsUninstallRequest(string[] args)
@@ -278,7 +299,7 @@ namespace Mo2RevampedSetup
                 if (!File.Exists(powershell)) return false;
                 string escaped = (directory ?? "").Replace("'", "''");
                 string script = "$p = " + processId.ToString() + "; try { $owner = [System.Diagnostics.Process]::GetProcessById($p); $owner.WaitForExit(); $owner.Dispose() } catch {}; " +
-                    "$dir = '" + escaped + "'; try { if ([System.IO.Directory]::Exists($dir)) { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue } } catch {}; " +
+                    "$dir = '" + escaped + "'; for ($attempt = 0; $attempt -lt 20 -and [System.IO.Directory]::Exists($dir); $attempt++) { try { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue } catch {}; if ([System.IO.Directory]::Exists($dir)) { Start-Sleep -Milliseconds 500 } }; " +
                     "try { [System.IO.Directory]::Delete([System.IO.Path]::GetDirectoryName($dir), $false) } catch {};";
                 string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
                 ProcessStartInfo cleanup = new ProcessStartInfo();

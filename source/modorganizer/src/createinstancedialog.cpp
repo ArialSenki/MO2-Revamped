@@ -17,7 +17,9 @@
 #include <QLayout>
 #include <QBoxLayout>
 #include <QComboBox>
+#include <QEvent>
 #include <QEventLoop>
+#include <QKeyEvent>
 #include <QGuiApplication>
 #include <QProgressBar>
 #include <QProgressDialog>
@@ -154,6 +156,28 @@ bool copyIsolatedApplication(const QString& sourcePath,
 
   return true;
 }
+
+// the copy can't be stopped halfway: its window stays until it ends, and with it
+// the block on the wizard behind it
+class KeepOpenFilter : public QObject
+{
+public:
+  using QObject::QObject;
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::Close) {
+      event->ignore();
+      return true;
+    }
+    if (event->type() == QEvent::KeyPress &&
+        static_cast<QKeyEvent*>(event)->key() == Qt::Key_Escape) {
+      return true;
+    }
+    return QObject::eventFilter(watched, event);
+  }
+};
 
 bool createMarkerFile(const QString& directory, const QString& name)
 {
@@ -519,6 +543,8 @@ void CreateInstanceDialog::finish()
       progress.setAutoClose(false);
       progress.setAutoReset(false);
       progress.setMinimumDuration(0);
+      KeepOpenFilter keepOpen;
+      progress.installEventFilter(&keepOpen);
       progress.show();
 
       bool copied = false;
@@ -544,6 +570,7 @@ void CreateInstanceDialog::finish()
       worker->start();
       waiting.exec(QEventLoop::ExcludeUserInputEvents);
       worker->wait();
+      progress.removeEventFilter(&keepOpen);
       progress.close();
 
       if (!copied) {

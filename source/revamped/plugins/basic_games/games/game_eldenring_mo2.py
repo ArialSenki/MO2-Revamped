@@ -107,9 +107,11 @@ def _with_true_case(path) -> str:
     result = Path(original.anchor.upper() if len(drive) == 2 else original.anchor)
     for part in original.parts[1:]:
         try:
-            match = next(
-                (name for name in os.listdir(result) if name.casefold() == part.casefold()),
-                None,
+            names = os.listdir(result)
+            match = (
+                part
+                if part in names
+                else next((name for name in names if name.casefold() == part.casefold()), None)
             )
         except OSError:
             return str(path)
@@ -250,7 +252,13 @@ class _ProgramListLock(QObject):
         self.locked = False
 
     def eventFilter(self, _watched, event) -> bool:
-        return self.locked and event.type() in self.Blocked
+        if not self.locked or event.type() not in self.Blocked:
+            return False
+        # the keyboard can still leave the list
+        return not (
+            event.type() == QEvent.Type.KeyPress
+            and event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab)
+        )
 
 
 class _MainWindowCloseWatcher(QObject):
@@ -282,7 +290,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
     # folders whose DLLs are already where the standard layout puts them
     _managed_dll_directories = frozenset(
         # _reforgedonline: the Reforged release kept for its own launcher
-        {_dll_directory.casefold(), *_legacy_dll_directories, "plugins", "_reforgedonline"}
+        {_dll_directory.casefold(), *_legacy_dll_directories, "plugins", "_reforgedonline", "seamlesscoop"}
     )
 
     _asset_directories = {
@@ -442,6 +450,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
     ):
         self._organizer = organizer
         self._plugin_name = plugin_name
+        # the install window's summary runs the layout on a copy: nothing to log
+        self.previewing = False
         self._preserve_extensions = frozenset(
             extension.casefold() for extension in preserve_extensions
         )
@@ -468,6 +478,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
                         f"*{extension}" for extension in self._supported_extensions
                     ),
                     "load.txt",
+                    "seamlesscoop",
+                    self.ReforgedOnlineDirectory,
                 ],
                 delete=[
                     "*.md",
@@ -546,8 +558,9 @@ class EldenRingModDataChecker(BasicModDataChecker):
         # ELDEN RING Reforged first: the release it keeps for its own launcher
         # must stay as it ships, notes and licences included
         self._reshape_reforged_layout(filetree, keep_reforged_online)
-        self._remove_me3_launcher(filetree)
+        self._remove_loader_launchers(filetree)
         self._remove_shipped_logs(filetree)
+        self.optional_files_left_out = self._remove_optional_folders(filetree)
         # Apply MO2's standard root patterns before peeling the outer archive
         # folders. The wrapper scan itself stays at this game-root boundary.
         self._fix_known_layouts(filetree)
@@ -584,6 +597,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
             ):
                 self._merge_package_folder(filetree, folder)
         self._unwrap_package_folders(filetree, allow_safe_multiple=True)
+        self._remove_preview_images(filetree)
         return filetree
 
     def normalize_preserved_layout(
@@ -696,25 +710,130 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 return True
         return False
 
-    def _remove_me3_launcher(self, filetree: mobase.IFileTree, depth: int = 0) -> None:
-        """A package made for me3 brings me3 and the script that starts it; MO2
-        loads the package's files and natives itself."""
+    def _remove_loader_launchers(self, filetree: mobase.IFileTree, depth: int = 0) -> None:
+        """A package made for me3 or Mod Engine 2 brings that loader and the
+        script that starts it; MO2 loads the package's files and natives itself."""
+        loader_files = [
+            entry
+            for entry in filetree
+            if not is_directory(entry)
+            and (
+                entry.name().casefold().endswith(".me3")
+                or entry.name().casefold() in {"me3.exe", "modengine2_launcher.exe"}
+                or re.fullmatch(r"launchmod_.*\.(bat|cmd)", entry.name().casefold())
+            )
+        ]
         me3 = self._direct_directory(filetree, "me3")
-        if me3 is not None and self._is_me3_folder(me3):
-            me3.detach()
+        me3 = me3 if me3 is not None and self._is_me3_folder(me3) else None
+        modengine = self._direct_directory(filetree, "modengine2")
+        if loader_files or me3 is not None or modengine is not None:
+            for folder in (me3, modengine):
+                if folder is not None:
+                    folder.detach()
             for entry in list(filetree):
-                if not is_directory(entry) and Path(entry.name()).suffix.casefold() in {
-                    ".bat",
-                    ".cmd",
-                    ".sh",
-                    ".lnk",
-                }:
+                name = entry.name().casefold()
+                if not is_directory(entry) and (
+                    Path(name).suffix in {".bat", ".cmd", ".sh", ".lnk", ".me3"}
+                    or name in {"me3.exe", "modengine2_launcher.exe"}
+                    or re.fullmatch(r"config_[a-z0-9_]+\.toml", name)
+                ):
                     entry.detach()
             return
         if depth < 2:
             for entry in list(filetree):
                 if is_directory(entry) and entry.name() != self.ReforgedOnlineDirectory:
-                    self._remove_me3_launcher(entry, depth + 1)
+                    self._remove_loader_launchers(entry, depth + 1)
+
+    _optional_folder_names = re.compile(
+        r"(^|[\s_\-.])optionals?($|[\s_\-.])|^(extras?|add-?ons?)$", re.IGNORECASE
+    )
+
+    def _remove_optional_folders(self, filetree: mobase.IFileTree, depth: int = 0) -> int:
+        """An archive's optional extras aren't the mod: left out, and counted so
+        the window can say so. A folder that is all the payload there is stays."""
+        removed = 0
+        for entry in list(filetree):
+            if (
+                is_directory(entry)
+                and entry.name() != self.ReforgedOnlineDirectory
+                and self._optional_folder_names.search(entry.name())
+                and any(
+                    other is not entry
+                    and other.name() != entry.name()
+                    and (
+                        self._contains_supported_payload(other)
+                        if is_directory(other)
+                        else Path(other.name()).suffix.casefold() in self._supported_extensions
+                    )
+                    for other in filetree
+                )
+            ):
+                removed += self._count_files(entry)
+                entry.detach()
+        if depth < 2:
+            for entry in list(filetree):
+                if is_directory(entry) and entry.name() != self.ReforgedOnlineDirectory:
+                    removed += self._remove_optional_folders(entry, depth + 1)
+        return removed
+
+    @classmethod
+    def _count_files(cls, tree: mobase.IFileTree) -> int:
+        return sum(cls._count_files(entry) if is_directory(entry) else 1 for entry in tree)
+
+    _preview_image_suffixes = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
+
+    def _remove_preview_images(self, filetree: mobase.IFileTree) -> None:
+        """Screenshots beside the mod would end up in the game's folder. Only at
+        the root: a DLL's own icons stay with it in DLLs."""
+        for entry in list(filetree):
+            if is_directory(entry):
+                if entry.name().casefold() in {
+                    "images", "image", "screenshots", "screenshot", "previews", "preview", "pictures",
+                } and all(
+                    not is_directory(child)
+                    and Path(child.name()).suffix.casefold() in self._preview_image_suffixes
+                    for child in entry
+                ):
+                    entry.detach()
+            elif Path(entry.name()).suffix.casefold() in self._preview_image_suffixes:
+                entry.detach()
+
+    def _dll_companion_folders(self, tree: mobase.IFileTree) -> set[str]:
+        """Folders beside a DLL holding only its data (settings, icons, text):
+        they stay with it, whole, instead of being taken for package wrappers."""
+        if not any(
+            not is_directory(entry) and Path(entry.name()).suffix.casefold() == ".dll"
+            and entry.name().casefold() not in self._root_loader_dlls
+            for entry in tree
+        ):
+            return set()
+        names = set()
+        for entry in tree:
+            name = entry.name().casefold()
+            if (
+                is_directory(entry)
+                and len(entry) > 0
+                and name not in self._content_directories
+                and name not in self._package_directories
+                and name not in {"seamlesscoop", "logs", self.ReforgedOnlineDirectory.casefold()}
+                and not self._has_game_payload(entry)
+            ):
+                names.add(name)
+        return names
+
+    @classmethod
+    def _has_game_payload(cls, tree: mobase.IFileTree, depth: int = 0) -> bool:
+        if depth > cls._archive_wrapper_depth_limit:
+            return True
+        for entry in tree:
+            if is_directory(entry):
+                if entry.name().casefold() in cls._asset_directories or cls._has_game_payload(
+                    entry, depth + 1
+                ):
+                    return True
+            elif Path(entry.name()).suffix.casefold() in {".dll", ".exe", ".dcx", ".bin", ".gfx", ".bdt", ".bhd"}:
+                return True
+        return False
 
     def _remove_shipped_logs(self, filetree: mobase.IFileTree, depth: int = 0) -> None:
         """A logs folder that came with the archive is its author's, not the mod."""
@@ -810,10 +929,11 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 "mod_entries": mod_entries,
                 "natives": native_names,
             }
-            qInfo(
-                "Elden Ring MO2: laid out ELDEN RING Reforged for MO2 and kept its "
-                f"release for its online mode in {online}."
-            )
+            if not self.previewing:
+                qInfo(
+                    "Elden Ring MO2: laid out ELDEN RING Reforged for MO2 and kept its "
+                    f"release for its online mode in {online}."
+                )
             return True
         # a release at the archive root keeps its notes (README, CHANGELOG)
         leftovers = (
@@ -835,11 +955,12 @@ class EldenRingModDataChecker(BasicModDataChecker):
         )
         for entry in leftovers:
             entry.detach()
-        qInfo(
-            "Elden Ring MO2: laid out ELDEN RING Reforged for MO2: its game files "
-            "at the game root and its natives in DLLs; its launcher and me3 are "
-            "not installed."
-        )
+        if not self.previewing:
+            qInfo(
+                "Elden Ring MO2: laid out ELDEN RING Reforged for MO2: its game files "
+                "at the game root and its natives in DLLs; its launcher and me3 are "
+                "not installed."
+            )
         return True
 
     def _unwrap_mod_engine_paths(self, filetree: mobase.IFileTree) -> None:
@@ -853,7 +974,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
         recognized_directories = (
             self._asset_directories
             | self._legacy_dll_directories
-            | {"config", "configs", "dlls", "fonts", "native", "natives", "plugins"}
+            | {"config", "configs", "dlls", "fonts", "mod", "native", "natives", "plugins"}
         )
         has_known_route = any(
             is_directory(entry)
@@ -875,7 +996,9 @@ class EldenRingModDataChecker(BasicModDataChecker):
         ):
             return
 
-        self._merge_package_folder(filetree, mod_folder)
+        if self._merge_package_folder(filetree, mod_folder):
+            # an archive's top folder can itself be called mod: mod/mod/parts
+            self._unwrap_mod_engine_paths(filetree)
 
     @staticmethod
     def _merge_package_folder(
@@ -906,10 +1029,13 @@ class EldenRingModDataChecker(BasicModDataChecker):
     ) -> None:
         """Peel redundant wrappers at this tree boundary, not inside game assets."""
         for _ in range(self._archive_wrapper_depth_limit):
+            companions = self._dll_companion_folders(filetree)
             candidates = [
                 entry
                 for entry in filetree
-                if is_directory(entry) and self._is_package_wrapper(entry)
+                if is_directory(entry)
+                and entry.name().casefold() not in companions
+                and self._is_package_wrapper(entry)
             ]
             # Several top-level folders can each contain valid game files.
             # Preserve them unless standard-layout processing has already
@@ -966,8 +1092,10 @@ class EldenRingModDataChecker(BasicModDataChecker):
         records: list[tuple[mobase.IFileTree, str]] = []
         font_directories: list[tuple[mobase.IFileTree, str]] = []
         asset_directories: list[tuple[mobase.IFileTree, str]] = []
+        companion_directories: list[tuple[mobase.IFileTree, str]] = []
 
         def collect(tree: mobase.IFileTree, parent_path: str = "") -> None:
+            companions = self._dll_companion_folders(tree)
             for entry in tree:
                 relative_path = (
                     f"{parent_path}/{entry.name()}" if parent_path else entry.name()
@@ -980,6 +1108,9 @@ class EldenRingModDataChecker(BasicModDataChecker):
                         "seamlesscoop",
                         self.ReforgedOnlineDirectory.casefold(),
                     }:
+                        continue
+                    if entry.name().casefold() in companions:
+                        companion_directories.append((entry, parent_path))
                         continue
                     if entry.name().casefold() == "fonts":
                         font_directories.append((entry, parent_path))
@@ -1009,10 +1140,34 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 (entry, parent_path)
             )
 
+        # two DLL folders with a config.ini each, or an assets folder each, can't
+        # share DLLs/: those DLLs keep a folder of their own there
+        dll_parents = {parent_path.casefold() for _entry, parent_path in dlls}
+        sidecar_parents: dict[str, set[str]] = {}
+        for entry, parent_path in records:
+            if (
+                parent_path.casefold() in dll_parents
+                and Path(entry.name()).suffix.casefold() == ".ini"
+            ):
+                sidecar_parents.setdefault(entry.name().casefold(), set()).add(parent_path.casefold())
+        for folder, parent_path in asset_directories:
+            if parent_path.casefold() in dll_parents:
+                sidecar_parents.setdefault(f"{folder.name().casefold()}/", set()).add(parent_path.casefold())
+        shared_sidecar_parents = {
+            parent
+            for parents in sidecar_parents.values()
+            if len(parents) > 1
+            for parent in parents
+            if parent and parent != self._dll_directory.casefold()
+        }
+
         target_directories: dict[int, str] = {}
         for group in dll_groups.values():
             if len(group) == 1:
                 entry, parent_path = group[0]
+                if parent_path.casefold() in shared_sidecar_parents:
+                    target_directories[id(entry)] = f"{self._dll_directory}/{parent_path}"
+                    continue
                 target_directories[id(entry)] = (
                     parent_path
                     if parent_path.casefold() == self._dll_directory.casefold()
@@ -1059,6 +1214,22 @@ class EldenRingModDataChecker(BasicModDataChecker):
                     _tr("Could not move {0} into Game/{1}.").format(entry.name(), destination)
                 )
 
+        # a DLL's own data folders go with it, whole
+        for folder, parent_path in companion_directories:
+            destinations = {
+                target_directories[id(dll)].casefold(): target_directories[id(dll)]
+                for dll, dll_parent in dlls
+                if dll_parent.casefold() == parent_path.casefold()
+            }
+            if len(destinations) != 1:
+                continue
+            destination = next(iter(destinations.values()))
+            target = self._directory_at_path(filetree, destination)
+            if parent_path.casefold() != destination.casefold() and (
+                target is None or self._direct_directory(target, folder.name()) is None
+            ):
+                filetree.move(folder, f"{destination}/")
+
         # Keep sidecar assets beside native DLLs that came from a Revamped
         # ``native(s)/<mod>/`` tree. In particular, Nightreign Movement looks
         # for ``assets`` beside its DLL. MO2 layout moves that DLL under DLLs;
@@ -1099,8 +1270,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 else:
                     raise RuntimeError(
                         _tr("MO2 layout found a conflicting assets directory beside "
-                        "a native DLL. Choose Keep original structure to preserve "
-                        "both folders without merging them.")
+                        "a native DLL. Choose Install as it comes in the archive to "
+                        "preserve both folders without merging them.")
                     )
             if not filetree.move(asset_directory, f"{destination}/"):
                 raise RuntimeError(
@@ -1443,14 +1614,16 @@ class EldenRingModDataChecker(BasicModDataChecker):
     def _fix_known_layouts(self, filetree: mobase.IFileTree, depth: int = 0) -> None:
         if depth > self._archive_wrapper_depth_limit:
             return
-        self._fix_basic_patterns(filetree)
+        self._fix_basic_patterns(filetree, depth)
         for entry in list(filetree):
             if is_directory(entry) and not (
                 depth == 0 and entry.name() == self.ReforgedOnlineDirectory
             ):
                 self._fix_known_layouts(entry, depth + 1)
 
-    def _fix_basic_patterns(self, filetree: mobase.IFileTree) -> mobase.IFileTree:
+    def _fix_basic_patterns(
+        self, filetree: mobase.IFileTree, depth: int = 0
+    ) -> mobase.IFileTree:
         """Apply MO2's basic patterns while retaining user-selected text files."""
         patterns = self._regex_patterns
         for entry in list(filetree):
@@ -1462,13 +1635,22 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 continue
 
             if patterns.unfold.match(name):
-                assert is_directory(entry)
-                if entry.detach():
+                # only a folder at the top, and never over a file already there:
+                # chr/game is a game path, and a file can have that name too
+                if (
+                    is_directory(entry)
+                    and depth == 0
+                    and self._package_folders_merge_without_conflicts(filetree, [entry])
+                    and entry.detach()
+                ):
                     filetree.merge(entry)
             elif patterns.valid.match(name):
                 continue
             elif patterns.delete.match(name):
-                entry.detach()
+                # the patterns mean notes: a folder called "Credits Skip" that
+                # holds a mod isn't one
+                if not is_directory(entry) or not self._contains_supported_payload(entry):
+                    entry.detach()
             elif (move_key := patterns.move_match(name)) is not None:
                 filetree.move(entry, self._file_patterns.move[move_key])
 
@@ -2024,6 +2206,7 @@ class EldenRingMo2Game(BasicGame):
         self._loose_files_warning_shown = False
         self._online_programs_selector = None
         self._online_program_locked = False
+        self._last_launch_time = 0.0
 
         self._local_savegames_feature = self.LocalSavegamesClass(self, organizer)
         self._register_feature(self._local_savegames_feature)
@@ -3854,6 +4037,7 @@ class EldenRingMo2Game(BasicGame):
         # the finished-run hook only gets the path: it recognises this run by
         # it, even when other tools ran in between
         self._guarded_launches.add(os.path.normcase(str(app_path)))
+        self._last_launch_time = time.time()
         # this launch arms its own Overwrite cleanup below, if any
         self._overwrite_cleanup_armed = False
         self._overwrite_cleanup_path = None
@@ -3874,7 +4058,6 @@ class EldenRingMo2Game(BasicGame):
             return
         self._guarded_launches.discard(launch_key)
         self._restore_profile_config_environment()
-        self._warn_if_loose_files_were_skipped()
         # MO2 reports the run as finished when its lock is off or unlocked, and
         # a launcher finishes while the game it started keeps running; the
         # Steam saves come back and Overwrite is cleared only once the game is
@@ -3898,6 +4081,9 @@ class EldenRingMo2Game(BasicGame):
             return
         log = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.log"
         try:
+            # the bridge rewrites it when it loads: an older one is another run's
+            if log.stat().st_mtime < self._last_launch_time:
+                return
             if "Loose asset hook skipped" not in log.read_text("utf-8", "replace"):
                 return
         except OSError:
@@ -3987,6 +4173,7 @@ class EldenRingMo2Game(BasicGame):
             )
             return
 
+        self._warn_if_loose_files_were_skipped()
         # a later launch may have restored this session and started its own
         if session_directory is not None and self._active_save_quarantine == session_directory:
             try:
@@ -5032,6 +5219,8 @@ class EldenRingMo2Game(BasicGame):
         """Reforged's own launcher, for its online mode, from each installed
         ELDEN RING Reforged that kept its release (archive installer choice).
         It starts outside the VFS (AutoSwapLaunchers), as online needs."""
+        if not self.AutoSwapLaunchers:
+            return []
         try:
             mods_path = Path(self._organizer.modsPath())
         except (AttributeError, RuntimeError, TypeError):
@@ -5078,9 +5267,8 @@ class EldenRingMo2Game(BasicGame):
         selector.installEventFilter(self._online_program_lock)
         sync = lambda *_args: QTimer.singleShot(0, self._sync_reforged_online_programs)
         selector.model().rowsInserted.connect(sync)
-        selector.currentIndexChanged.connect(
-            lambda _row: self._online_program_locked and sync()
-        )
+        # the wheel and the arrows can reach a row hidden from the popup
+        selector.currentIndexChanged.connect(lambda _row: sync())
         self._organizer.modList().onModStateChanged(lambda _changes: sync())
         self._organizer.onProfileChanged(sync)
         sync()
@@ -5464,9 +5652,12 @@ class EldenRingMo2Game(BasicGame):
 
             try:
                 preserve_layout = bool(
-                    mod.pluginSettings(self.ArchiveLayoutInstallerName).get(
-                        self.PreserveArchiveLayoutSetting, False
-                    )
+                    str(
+                        mod.pluginSettings(self.ArchiveLayoutInstallerName).get(
+                            self.PreserveArchiveLayoutSetting, False
+                        )
+                    ).strip().casefold()
+                    not in {"", "false", "0"}
                 )
                 file_tree = mod.fileTree()
             except Exception as error:

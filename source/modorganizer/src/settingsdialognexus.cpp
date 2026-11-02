@@ -303,7 +303,7 @@ void NexusConnectionUI::onValidatorFinished(ValidationAttempt::Result r,
   if (user) {
     // applies at once: the Nexus requests, the status bar and the window title
     // all follow this signal, so linking needs no restart
-    emit NexusInterface::instance().getAccessManager()->credentialsReceived(*user);
+    NexusInterface::instance().getAccessManager()->setLinkedAccount(*user);
     addLog(tr("Received user account information"));
 
     if (setKey(user->apiKey())) {

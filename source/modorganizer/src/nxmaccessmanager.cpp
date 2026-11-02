@@ -967,7 +967,14 @@ QString NXMAccessManager::userAgent(const QString& subModule) const
 void NXMAccessManager::clearApiKey()
 {
   m_validator.cancel();
+  m_validationState = NotChecked;
   emit credentialsReceived(APIUserAccount());
+}
+
+void NXMAccessManager::setLinkedAccount(const APIUserAccount& user)
+{
+  m_validationState = Valid;
+  emit credentialsReceived(user);
 }
 
 void NXMAccessManager::startProgress()

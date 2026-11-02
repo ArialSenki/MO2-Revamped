@@ -989,87 +989,87 @@ Changes are saved when you choose OK.</source>
 <context>
     <name>CreateInstanceDialog</name>
     <message>
-        <location filename="createinstancedialog.cpp" line="434"/>
+        <location filename="createinstancedialog.cpp" line="458"/>
         <source>Setting up instance %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="435"/>
+        <location filename="createinstancedialog.cpp" line="459"/>
         <source>Setting up an instance %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="481"/>
+        <location filename="createinstancedialog.cpp" line="505"/>
         <source>Creating instance...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="503"/>
+        <location filename="createinstancedialog.cpp" line="527"/>
         <source>The isolated MO2 folder already exists: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="511"/>
+        <location filename="createinstancedialog.cpp" line="535"/>
         <source>Copying MO2 application files into %1...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="550"/>
+        <location filename="createinstancedialog.cpp" line="577"/>
         <source>The isolated copy could not be completed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="556"/>
+        <location filename="createinstancedialog.cpp" line="583"/>
         <source>Could not initialize the isolated MO2 copy.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="559"/>
+        <location filename="createinstancedialog.cpp" line="586"/>
         <source>MO2 application files copied.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="614"/>
+        <location filename="createinstancedialog.cpp" line="641"/>
         <source>Writing %1...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="626"/>
+        <location filename="createinstancedialog.cpp" line="653"/>
         <source>Format error.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="630"/>
+        <location filename="createinstancedialog.cpp" line="657"/>
         <source>Error %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="642"/>
+        <location filename="createinstancedialog.cpp" line="669"/>
         <source>Done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="656"/>
+        <location filename="createinstancedialog.cpp" line="683"/>
         <source>The desktop shortcut could not be added.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="672"/>
+        <location filename="createinstancedialog.cpp" line="699"/>
         <source>Close Mod Organizer, then start the isolated copy: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="769"/>
+        <location filename="createinstancedialog.cpp" line="796"/>
         <source>Step %1 of %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="777"/>
+        <location filename="createinstancedialog.cpp" line="804"/>
         <source>Create instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="777"/>
+        <location filename="createinstancedialog.cpp" line="804"/>
         <source>Finish</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10790,13 +10790,13 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="132"/>
-        <location filename="createinstancedialog.cpp" line="148"/>
+        <location filename="createinstancedialog.cpp" line="134"/>
+        <location filename="createinstancedialog.cpp" line="150"/>
         <source>Could not copy %1 to the isolated MO2 folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialog.cpp" line="227"/>
+        <location filename="createinstancedialog.cpp" line="251"/>
         <source>Creating %1</source>
         <translation type="unfinished"></translation>
     </message>

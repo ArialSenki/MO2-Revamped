@@ -69,8 +69,16 @@
 
 ### Install window
 
-- A simpler window: the mod's name and Install. Skipping text files, the
-  archive's own structure and its contents move to Advanced options.
+- A new window: the mod's name, what will be installed (game files, DLLs,
+  regulation.bin and what's left out, worked out by the code that installs it)
+  and Install. Skipping text files and the archive's own structure move to
+  Advanced options, where they update that summary instead of installing.
+- The two layouts are now "Organize for MO2 (recommended)" and "Install as it
+  comes in the archive". The second warns when it would leave game files where
+  the game doesn't look, and both can skip text files.
+- It names your active mods that also bring regulation.bin, and says when you
+  already have a mod with that name.
+- The window stays on its screen, so its buttons don't end up out of sight.
 - It recognizes ELDEN RING Reforged, Convergence, Seamless Co-op and FRZN Merge,
   says what it will do with each, and uses the layout each one needs.
 - Reforged's online and offline versions are separate mods: a switch in this
@@ -90,14 +98,15 @@
 - When a game update stops MO2 from reaching the game's file loader, Elden Ring
   and Nightreign now show a notice after the game closes, if active mods have
   game files.
-- The game folder keeps its real capitals when it comes from Steam, and the logs
-  name Nightreign in a Nightreign instance.
+- The game folder keeps its real capitals when it comes from Steam, and the game
+  plugin's logs name Nightreign in a Nightreign instance.
 
 ### Installer
 
 - An elevated setup keeps its program, requests and results in a folder only
   administrators can write, below Program Files, instead of `%TEMP%`. Its log
-  stays in `%TEMP%`, and is not written if that folder has become a link.
+  stays in `%TEMP%`, and is not written if that folder has become a link. If
+  Windows refuses that folder, the setup still runs from `%TEMP%`.
 
 ### Removed
 

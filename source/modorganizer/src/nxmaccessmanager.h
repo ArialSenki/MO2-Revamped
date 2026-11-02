@@ -230,6 +230,9 @@ public:
 
   void clearApiKey();
 
+  // an account validated elsewhere (Settings): applies it without checking again
+  void setLinkedAccount(const APIUserAccount& user);
+
   void refuseValidation();
 
 signals:

@@ -176,13 +176,13 @@ namespace Mo2RevampedSetup
             try
             {
                 string root = Path.Combine(Path.GetTempPath(), "MO2 Revamped", "Installer Logs");
-                Directory.CreateDirectory(root);
                 // the log stays where the user can read it, but an elevated run
                 // must not follow a link planted there to write somewhere else
                 foreach (string folder in new string[] { Path.GetDirectoryName(root), root })
                 {
-                    if ((File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0)
+                    if (Directory.Exists(folder) && (File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0)
                         throw new IOException("The log folder is a link.");
+                    Directory.CreateDirectory(folder);
                 }
                 string suffix = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Process.GetCurrentProcess().Id;
                 lock (Sync) CurrentLog = Path.Combine(root, "setup-" + suffix + ".log");
@@ -1389,9 +1389,9 @@ namespace Mo2RevampedSetup
         {
             const int MoveFileReplaceExisting = 0x1;
             const int MoveFileDelayUntilReboot = 0x4;
+            string restoreCopy = null;
             try
             {
-                string restoreCopy = null;
                 if (!String.IsNullOrEmpty(backup))
                 {
                     restoreCopy = Path.Combine(InstallerBackend.CreateWorkFolder(), "MO2RevampedUninstallerRestore.exe");
@@ -1402,11 +1402,11 @@ namespace Mo2RevampedSetup
                 // also delete the uninstaller of a reinstall made before rebooting
                 if (StartPostExitCleanup(destination, restoreCopy, emptyDirectory))
                     return true;
-                if (restoreCopy != null) Directory.Delete(Path.GetDirectoryName(restoreCopy), true);
             }
             catch
             {
             }
+            if (restoreCopy != null) InstallerBackend.RemoveWorkFolder(Path.GetDirectoryName(restoreCopy));
             if (String.IsNullOrEmpty(backup))
                 return ScheduleDeleteOnReboot(destination, emptyDirectory, MoveFileDelayUntilReboot);
             string pending = destination + ".restore-pending";
@@ -1452,7 +1452,7 @@ namespace Mo2RevampedSetup
 #endif
             script += "$exe = '" + EscapePowerShellLiteral(executable) + "'; ";
             if (!String.IsNullOrEmpty(restoreCopy))
-                script += "$src = '" + EscapePowerShellLiteral(restoreCopy) + "'; try { [System.IO.File]::Copy($src, $exe, $true); [System.IO.File]::Delete($src) } catch { exit 2 }; " +
+                script += "$src = '" + EscapePowerShellLiteral(restoreCopy) + "'; $copied = $false; for ($attempt = 0; $attempt -lt 30 -and -not $copied; $attempt++) { try { [System.IO.File]::Copy($src, $exe, $true); $copied = $true } catch { Start-Sleep -Milliseconds 500 } }; if (-not $copied) { exit 2 }; try { [System.IO.File]::Delete($src) } catch {}; " +
                     "$work = [System.IO.Path]::GetDirectoryName($src); try { [System.IO.Directory]::Delete($work, $false); [System.IO.Directory]::Delete([System.IO.Path]::GetDirectoryName($work), $false) } catch {}; ";
             else
                 script += "for ($attempt = 0; $attempt -lt 30 -and [System.IO.File]::Exists($exe); $attempt++) { try { [System.IO.File]::SetAttributes($exe, [System.IO.FileAttributes]::Normal); [System.IO.File]::Delete($exe) } catch {}; if ([System.IO.File]::Exists($exe)) { Start-Sleep -Milliseconds 500 } }; " +

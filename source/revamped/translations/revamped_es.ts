@@ -1632,6 +1632,122 @@ Reinstall the mod to change this.</source>
 
 Reinstala el mod para cambiarlo.</translation>
     </message>
+    <message>
+      <source>Install a mod</source>
+      <translation>Instalar un mod</translation>
+    </message>
+    <message>
+      <source>What will be installed</source>
+      <translation>Qué se instalará</translation>
+    </message>
+    <message>
+      <source>All files</source>
+      <translation>Todos los archivos</translation>
+    </message>
+    <message>
+      <source>Show all files</source>
+      <translation>Mostrar todos los archivos</translation>
+    </message>
+    <message>
+      <source>Hide all files</source>
+      <translation>Ocultar todos los archivos</translation>
+    </message>
+    <message>
+      <source>The summary isn't available</source>
+      <translation>El resumen no está disponible</translation>
+    </message>
+    <message>
+      <source>{0} files</source>
+      <translation>{0} archivos</translation>
+    </message>
+    <message>
+      <source>Game files</source>
+      <translation>Archivos del juego</translation>
+    </message>
+    <message>
+      <source>Native DLLs</source>
+      <translation>DLL nativas</translation>
+    </message>
+    <message>
+      <source>{0} in DLLs</source>
+      <translation>{0} en DLLs</translation>
+    </message>
+    <message>
+      <source>{0} DLL files</source>
+      <translation>{0} archivos DLL</translation>
+    </message>
+    <message>
+      <source>At the game root</source>
+      <translation>En la raíz del juego</translation>
+    </message>
+    <message>
+      <source>Reforged's online version</source>
+      <translation>Versión online de Reforged</translation>
+    </message>
+    <message>
+      <source>Other files</source>
+      <translation>Otros archivos</translation>
+    </message>
+    <message>
+      <source>Left out</source>
+      <translation>Se deja fuera</translation>
+    </message>
+    <message>
+      <source>Files MO2 doesn't need, such as launchers, or those you chose to skip.</source>
+      <translation>Archivos que MO2 no necesita, como lanzadores, o los que elegiste omitir.</translation>
+    </message>
+    <message>
+      <source>No game files or DLLs found</source>
+      <translation>No se encontraron archivos del juego ni DLL</translation>
+    </message>
+    <message>
+      <source>This archive may be for another game. Manual... lets you choose its files.</source>
+      <translation>Puede que este archivo sea de otro juego. Con Manual... puedes elegir sus archivos.</translation>
+    </message>
+    <message>
+      <source>Your active mods also bring regulation.bin ({0}). Only one can provide it: the one with the highest priority wins.</source>
+      <translation>Tus mods activos también traen regulation.bin ({0}). Solo uno puede aportarlo: gana el de mayor prioridad.</translation>
+    </message>
+    <message>
+      <source>You already have a mod with this name. MO2 will ask whether to merge or replace it.</source>
+      <translation>Ya tienes un mod con este nombre. MO2 te preguntará si quieres fusionarlo o reemplazarlo.</translation>
+    </message>
+    <message>
+      <source>Showing the first {0} of {1} files.</source>
+      <translation>Mostrando los primeros {0} de {1} archivos.</translation>
+    </message>
+    <message>
+      <source>Showing all {0} files.</source>
+      <translation>Mostrando los {0} archivos.</translation>
+    </message>
+    <message>
+      <source>1 file</source>
+      <translation>1 archivo</translation>
+    </message>
+    <message>
+      <source>Organize for MO2 (recommended)</source>
+      <translation>Organizar para MO2 (recomendado)</translation>
+    </message>
+    <message>
+      <source>Install as it comes in the archive</source>
+      <translation>Instalar tal como viene en el archivo</translation>
+    </message>
+    <message>
+      <source>Removes only the archive's outer folders and keeps every other path. For a mod whose instructions need its files in exact places.</source>
+      <translation>Quita solo las carpetas exteriores del archivo y conserva las demás rutas. Para un mod cuyas instrucciones piden sus archivos en lugares exactos.</translation>
+    </message>
+    <message>
+      <source>{0} files would stay inside the folder {1}, where the game doesn't look for them. Organize for MO2 puts them in place.</source>
+      <translation>{0} archivos quedarían dentro de la carpeta {1}, donde el juego no los busca. Organizar para MO2 los coloca en su sitio.</translation>
+    </message>
+    <message>
+      <source>{0} files of Reforged's online version could not be placed, so its launcher may refuse to start. Free some disk space and reinstall the mod.</source>
+      <translation>No se pudieron colocar {0} archivos de la versión online de Reforged, así que su lanzador puede negarse a arrancar. Libera espacio en disco y reinstala el mod.</translation>
+    </message>
+    <message>
+      <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
+      <translation>Este es un mod de Elden Ring: esta instancia gestiona Nightreign.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingGame</name>
@@ -1784,8 +1900,8 @@ Reinicia MO2, o cambia a otro perfil y vuelve, antes de iniciar Elden Ring.</tra
       <translation>la ruta de Overwrite no es una carpeta</translation>
     </message>
     <message>
-      <source>MO2 layout found a conflicting assets directory beside a native DLL. Choose Keep original structure to preserve both folders without merging them.</source>
-      <translation>La estructura de MO2 encontró una carpeta assets en conflicto junto a una DLL nativa. Elige Conservar la estructura original para mantener ambas carpetas sin combinarlas.</translation>
+      <source>MO2 layout found a conflicting assets directory beside a native DLL. Choose Install as it comes in the archive to preserve both folders without merging them.</source>
+      <translation>La estructura de MO2 encontró una carpeta assets en conflicto junto a una DLL nativa. Elige Instalar tal como viene en el archivo para mantener ambas carpetas sin combinarlas.</translation>
     </message>
     <message>
       <source>Could not move the mod fonts directory beside its DLL.</source>

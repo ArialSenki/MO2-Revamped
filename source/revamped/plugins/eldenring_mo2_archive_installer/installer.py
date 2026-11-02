@@ -11,7 +11,7 @@ import uuid
 
 import mobase
 from PyQt6 import QtGui, QtWidgets
-from PyQt6.QtCore import Qt, qCritical, qInfo
+from PyQt6.QtCore import QTimer, Qt, qCritical, qInfo, qWarning
 
 
 # PyQt passes Qt's log functions ASCII only: a message with any other
@@ -48,6 +48,14 @@ def _safe_qt_log(qt_function, level):
 
 qCritical = _safe_qt_log(qCritical, logging.CRITICAL)
 qInfo = _safe_qt_log(qInfo, logging.INFO)
+qWarning = _safe_qt_log(qWarning, logging.WARNING)
+
+
+def _flag(value) -> bool:
+    """A setting read back from meta.ini arrives as the text "false"."""
+    if isinstance(value, str):
+        return value.strip().casefold() not in {"", "false", "0"}
+    return bool(value)
 
 
 class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
@@ -203,17 +211,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         if current_mod is not None:
             self._default_mod_name = current_mod.name()
             settings = current_mod.pluginSettings(self.name())
-            self._default_preserve = bool(settings.get(self._mod_choice_key, False))
-            self._default_omit_txt = bool(
-                settings.get(self._omit_txt_files_key, False)
-            )
-            self._default_omit_md = bool(
-                settings.get(self._omit_md_files_key, False)
-            )
-            self._default_recognize_mod_engine_paths = bool(
+            self._default_preserve = _flag(settings.get(self._mod_choice_key, False))
+            self._default_omit_txt = _flag(settings.get(self._omit_txt_files_key, False))
+            self._default_omit_md = _flag(settings.get(self._omit_md_files_key, False))
+            self._default_recognize_mod_engine_paths = _flag(
                 settings.get(self._recognize_mod_engine_paths_key, True)
             )
-            self._default_reforged_online = bool(
+            self._default_reforged_online = _flag(
                 settings.get(self._reforged_online_key, False)
             )
 
@@ -246,7 +250,28 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     )
                     layout = self._pending_reforged_layout["layout"]
                     if layout is not None:
-                        self._link_reforged_release(Path(new_mod.absolutePath()), layout)
+                        missing = self._link_reforged_release(Path(new_mod.absolutePath()), layout)
+                        if missing:
+                            settings_to_store = tuple(
+                                (key, False if key == self._reforged_online_key else value)
+                                for key, value in settings_to_store
+                            )
+                            QtWidgets.QMessageBox.warning(
+                                self._parentWidget(),
+                                "ELDEN RING Reforged",
+                                self.tr(
+                                    "{0} files of Reforged's online version could not be "
+                                    "placed, so its launcher may refuse to start. Free some "
+                                    "disk space and reinstall the mod."
+                                ).format(missing),
+                            )
+                    elif not self._pending_reforged_layout["keep"]:
+                        # merged over the online version with the switch off: its
+                        # release would keep the program list on its launcher
+                        online = Path(new_mod.absolutePath()) / "_ReforgedOnline"
+                        if online.is_dir():
+                            shutil.rmtree(online, ignore_errors=True)
+                            qInfo(f"Elden Ring MO2: removed the online release of {new_mod.name()}.")
                 installed_dll_routes = self._collect_installed_dll_routes(
                     Path(new_mod.absolutePath())
                 )
@@ -289,6 +314,14 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                         f"layout for {new_mod.name()}."
                     )
                 self._bump_archive_layout_cache_epoch()
+            elif (
+                result == mobase.InstallResult.SUCCESS
+                and new_mod is not None
+                and self._pending_choice is None
+            ):
+                # installed some other way (Manual, FOMOD): a replace brings the
+                # old meta.ini back, and this window's choices no longer describe it
+                new_mod.clearPluginSettings(self.name())
         finally:
             if self._organizer is not None:
                 self._organizer.setPluginSetting(
@@ -299,10 +332,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             self._pending_reforged_layout = None
 
     @staticmethod
-    def _link_reforged_release(mod_root: Path, layout: dict) -> None:
+    def _link_reforged_release(mod_root: Path, layout: dict) -> int:
         """Hard-links the game files and natives back to their paths in the
         kept Reforged release, so its launcher checks the files it shipped
-        without a second copy on disk (a copy where links are impossible)."""
+        without a second copy on disk (a copy where links are impossible).
+        Returns how many files could not be placed."""
         online = mod_root / layout["online"]
         pairs: list[tuple[Path, Path]] = []
         for name in layout["mod_entries"]:
@@ -319,11 +353,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             pairs.append(
                 (mod_root / "DLLs" / name, online / "internals" / "modengine" / "dll" / name)
             )
-        linked = copied = 0
+        linked = copied = missing = 0
         for source, target in pairs:
-            if target.exists():
-                continue
             try:
+                # an update merged over the release: a link to the old file is
+                # no longer the file MO2 runs
+                if target.exists():
+                    if os.path.samefile(source, target):
+                        continue
+                    target.unlink()
                 target.parent.mkdir(parents=True, exist_ok=True)
                 try:
                     os.link(source, target)
@@ -336,10 +374,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     "Elden Ring MO2: could not place a Reforged file for its "
                     f"launcher: {target}: {error}"
                 )
+                missing += 1
         qInfo(
             "Elden Ring MO2: Reforged release for its launcher ready in "
-            f"{online}: {linked} hard link(s), {copied} copy(ies)."
+            f"{online}: {linked} hard link(s), {copied} copy(ies), {missing} missing."
         )
+        return missing
 
     @classmethod
     def _collect_tree_dll_routes(
@@ -637,12 +677,6 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             recognize_mod_engine_paths,
             selected_mod_name,
         ) = choice
-        if preserve:
-            # "Keep original" retains every archive file. Text exclusions are
-            # only meaningful for standard layout and must not be carried over
-            # from a previous choice when reinstalling in preserve mode.
-            omit_txt = False
-            omit_md = False
         selected_mod_name = selected_mod_name.strip() or default_mod_name
         if selected_mod_name and selected_mod_name != str(name):
             name.update(selected_mod_name, mobase.GuessQuality.USER)
@@ -657,55 +691,18 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             self._game_plugin_name, self._game_override_key, preserve
         )
 
-        skipped_extensions = tuple(
-            extension
-            for extension, omit in ((".txt", omit_txt), (".md", omit_md))
-            if omit
-        )
-        for extension in skipped_extensions:
-            removed = self._remove_files_with_extension(tree, extension)
-            qInfo(
-                "Elden Ring MO2: per-mod archive option omitted "
-                f"{removed} {extension} file(s) from {str(name)} before installation."
-            )
-
         # Both choices peel only redundant outer wrappers. Keep original leaves
         # payload paths and files alone; standard layout also routes native
         # plugins into Game/DLLs.
         try:
-            from basic_games.games.game_eldenring_mo2 import (
-                EldenRingModDataChecker,
+            tree, checker = self._apply_layout(
+                tree, preserve, omit_txt, omit_md, reforged and keep_reforged_online
             )
-
-            checker = EldenRingModDataChecker(
-                organizer,
-                self._game_plugin_name,
-                preserve_extensions=tuple(
-                    extension
-                    for extension, omit in ((".txt", omit_txt), (".md", omit_md))
-                    if not omit
-                ),
-            )
-            if preserve:
-                tree = checker.normalize_preserved_layout(tree)
-                qInfo(
-                    "Elden Ring MO2: mapped installation-source folders to the "
-                    "virtual game root while preserving all payload-relative "
-                    f"paths and files for {str(name)}; DLL routing was not applied."
-                )
-            else:
-                # Apply the selected layout before MO2 installs the files,
-                # independently of any later data-check pass.
-                tree = checker.normalize_standard_layout(
-                    tree,
-                    recognize_mod_engine_paths=recognize_mod_engine_paths,
-                    keep_reforged_online=reforged and keep_reforged_online,
-                )
-                if reforged:
-                    self._pending_reforged_layout = {
-                        "keep": keep_reforged_online,
-                        "layout": getattr(checker, "reforged_layout", None),
-                    }
+            if reforged and not preserve:
+                self._pending_reforged_layout = {
+                    "keep": keep_reforged_online,
+                    "layout": getattr(checker, "reforged_layout", None),
+                }
         except Exception as error:
             qCritical(
                 "Elden Ring MO2: could not apply the selected archive layout "
@@ -727,15 +724,152 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         cls, filetree: mobase.IFileTree, extension: str
     ) -> int:
         removed = 0
+        from basic_games.games.game_eldenring_mo2 import EldenRingModDataChecker
+
         for entry in list(filetree):
             if entry.isDir():
+                # text inside a game folder is game data (action/*.txt)
+                if entry.name().casefold() in EldenRingModDataChecker._asset_directories:
+                    continue
                 removed += cls._remove_files_with_extension(entry, extension)
                 if len(entry) == 0:
                     entry.detach()
-            elif entry.name().casefold().endswith(extension):
+            elif entry.name().casefold().endswith(extension) and entry.name().casefold() != "load.txt":
                 entry.detach()
                 removed += 1
         return removed
+
+    def _apply_layout(
+        self,
+        tree: mobase.IFileTree,
+        preserve: bool,
+        omit_txt: bool,
+        omit_md: bool,
+        keep_reforged_online: bool,
+        previewing: bool = False,
+    ):
+        """Arranges the tree as the mod will be installed; the window's summary
+        runs this same code on a copy. Returns the tree and the checker."""
+        from basic_games.games.game_eldenring_mo2 import EldenRingModDataChecker
+
+        for extension, omit in ((".txt", omit_txt), (".md", omit_md)):
+            if omit:
+                self._remove_files_with_extension(tree, extension)
+        checker = EldenRingModDataChecker(
+            self._organizer,
+            self._game_plugin_name,
+            preserve_extensions=tuple(
+                extension
+                for extension, omit in ((".txt", omit_txt), (".md", omit_md))
+                if not omit
+            ),
+        )
+        checker.previewing = previewing
+        if preserve:
+            tree = checker.normalize_preserved_layout(tree)
+        else:
+            # a mod's mod/ folder (the usual packaging) always maps to the game
+            # folders in the standard layout
+            tree = checker.normalize_standard_layout(
+                tree,
+                recognize_mod_engine_paths=True,
+                keep_reforged_online=keep_reforged_online,
+            )
+        return tree, checker
+
+    @classmethod
+    def _file_paths(cls, tree: mobase.IFileTree, prefix: str = "") -> list[str]:
+        paths = []
+        for entry in tree:
+            path = f"{prefix}/{entry.name()}" if prefix else entry.name()
+            if entry.isDir():
+                paths.extend(cls._file_paths(entry, path))
+            else:
+                paths.append(path)
+        return paths
+
+    def _layout_summary(
+        self,
+        tree: mobase.IFileTree,
+        preserve: bool,
+        omit_txt: bool,
+        omit_md: bool,
+        keep_reforged_online: bool,
+    ) -> Optional[dict]:
+        """What the install would give, from a copy of the archive's tree."""
+        try:
+            from basic_games.games.game_eldenring_mo2 import EldenRingModDataChecker
+
+            source_files = len(self._file_paths(tree))
+            copy = tree.createOrphanTree()
+            for entry in tree:
+                copy.copy(entry, "", mobase.IFileTree.InsertPolicy.FAIL_IF_EXISTS)
+            result, _checker = self._apply_layout(
+                copy, preserve, omit_txt, omit_md, keep_reforged_online, previewing=True
+            )
+            paths = self._file_paths(result)
+        except Exception as error:
+            # the summary is a courtesy: the install does not depend on it
+            qWarning(f"Elden Ring MO2: could not preview the archive layout: {error}")
+            return None
+
+        online_folder = EldenRingModDataChecker.ReforgedOnlineDirectory.casefold()
+        game_folders = EldenRingModDataChecker._asset_directories
+        summary = {
+            "game": 0, "dlls": 0, "dlls_routed": 0, "online": 0, "other": 0,
+            "regulation": False, "paths": paths, "misplaced": 0, "misplaced_in": "",
+        }
+        summary["left_out"] = max(0, source_files - len(paths))
+        for path in paths:
+            parts = path.casefold().split("/")
+            # game folders below another folder: the game looks for them at its
+            # root, so it wouldn't read these
+            if (
+                preserve
+                and parts[0] not in game_folders
+                and parts[0] not in {online_folder, "dlls", "seamlesscoop", "native", "natives", "mods"}
+                and any(part in game_folders for part in parts[1:-1])
+            ):
+                summary["misplaced"] += 1
+                summary["misplaced_in"] = summary["misplaced_in"] or path.split("/")[0]
+            if parts[0] == online_folder:
+                summary["online"] += 1
+            elif parts[-1].endswith(".dll"):
+                summary["dlls"] += 1
+                summary["dlls_routed"] += parts[0] == "dlls"
+            elif parts[0] == "dlls":
+                # a DLL's settings, beside it
+                continue
+            elif parts == ["regulation.bin"]:
+                summary["regulation"] = True
+            elif len(parts) > 1 and parts[0] in game_folders:
+                summary["game"] += 1
+            else:
+                summary["other"] += 1
+        return summary
+
+    def _other_mods_with_regulation(self) -> list[str]:
+        names = []
+        try:
+            mod_list = self._organizer.modList()
+            for name in mod_list.allModsByProfilePriority():
+                if name == self._default_mod_name:
+                    continue
+                if not mod_list.state(name) & mobase.ModState.ACTIVE:
+                    continue
+                mod = mod_list.getMod(name)
+                if mod is not None and (Path(mod.absolutePath()) / "regulation.bin").is_file():
+                    names.append(name)
+        except (AttributeError, OSError, RuntimeError):
+            return []
+        return names
+
+    def _mod_name_taken(self, name: str) -> bool:
+        try:
+            wanted = name.strip().casefold()
+            return any(mod.casefold() == wanted for mod in self._organizer.modList().allMods())
+        except (AttributeError, RuntimeError):
+            return False
 
     def _ask_archive_layout(
         self, mod_name: str, archive_tree: mobase.IFileTree, package: Optional[str] = None
@@ -768,12 +902,19 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             ),
         }
         single_layout = package in {"reforged", "convergence"}
-        preferred_preserve = (
-            True if package == "frzn" else False if package else self._default_preserve
+        # a reinstall keeps what was chosen; a new install starts from what the
+        # mod needs
+        start_preserve = (
+            False
+            if single_layout
+            else self._default_preserve
+            if self._default_mod_name or not package
+            else package == "frzn"
         )
 
-        dialog = QtWidgets.QDialog(self._parentWidget())
-        dialog.setWindowTitle(self.tr("Elden Ring archive layout"))
+        parent = self._parentWidget()
+        dialog = QtWidgets.QDialog(parent)
+        dialog.setWindowTitle(self.tr("Install a mod"))
         dialog.setObjectName("EldenRingArchiveLayoutDialog")
         dialog.setSizeGripEnabled(True)
         dialog.setModal(True)
@@ -856,6 +997,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             title: str,
             description: str = "",
             controls: tuple = (),
+            host: Optional[QtWidgets.QBoxLayout] = None,
         ) -> QtWidgets.QFrame:
             row = QtWidgets.QFrame(card)
             row.setObjectName("fluentSettingRow")
@@ -883,7 +1025,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             for control in controls:
                 control.setParent(row)
                 row_layout.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
-            card.layout().addWidget(row)
+            (host if host is not None else card.layout()).addWidget(row)
             return row
 
         def switch(box: QtWidgets.QCheckBox) -> QtWidgets.QCheckBox:
@@ -894,6 +1036,18 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             box.setProperty("fluentSwitch", True)
             box.setCursor(Qt.CursorShape.PointingHandCursor)
             return box
+
+        def notice_label(object_name: str) -> QtWidgets.QLabel:
+            label = QtWidgets.QLabel(content)
+            label.setObjectName(object_name)
+            label.setWordWrap(True)
+            label.setStyleSheet(
+                f"QLabel#{object_name} {{ background: rgba(255, 185, 0, 0.14);"
+                " border: 1px solid rgba(255, 185, 0, 0.45); border-radius: 6px;"
+                " padding: 8px 10px; }"
+            )
+            label.setVisible(False)
+            return label
 
         # --- the mod ---------------------------------------------------------
         name_card = add_card("archiveNameCard")
@@ -942,28 +1096,56 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             if self._default_reforged_online:
                 name_online_version(True)
 
-        # game files a mod rarely means to replace, and regulation.bin, which
-        # only one active mod can provide
-        found_game_files = self._game_files_in(archive_tree)
+        # --- what will be installed ------------------------------------------
+        summary_card = add_card("archiveSummaryCard", self.tr("What will be installed"))
+        summary_host = QtWidgets.QVBoxLayout()
+        summary_host.setSpacing(0)
+        summary_card.layout().addLayout(summary_host)
+        preview_button = QtWidgets.QPushButton(self.tr("Show"))
+        preview_button.setObjectName("archivePreviewButton")
+        preview_button.setCheckable(True)
+        preview_button.setAccessibleName(self.tr("Show all files"))
+        add_row(summary_card, 0xE8B9, self.tr("All files"), "", (preview_button,))
+        preview_note = QtWidgets.QLabel(summary_card)
+        preview_note.setObjectName("fluentSettingDescription")
+        preview_note.setWordWrap(True)
+        preview_note.setContentsMargins(18, 4, 18, 4)
+        preview_tree = QtWidgets.QTreeWidget(summary_card)
+        preview_tree.setObjectName("archivePreviewTree")
+        preview_tree.setHeaderHidden(True)
+        preview_tree.setAlternatingRowColors(True)
+        preview_tree.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        preview_tree.setMinimumHeight(190)
+        preview_tree.setMaximumHeight(260)
+        preview_tree.setUniformRowHeights(True)
+        preview_tree.setVisible(False)
+        preview_note.setVisible(False)
+        summary_card.layout().addWidget(preview_note)
+        summary_card.layout().addWidget(preview_tree)
+
+        # --- what the user should know ---------------------------------------
+        layout_notice = notice_label("archiveLayoutNotice")
+        content_layout.addWidget(layout_notice)
+        regulation_notice = notice_label("archiveRegulationNotice")
+        content_layout.addWidget(regulation_notice)
+        name_notice = notice_label("archiveNameNotice")
+        content_layout.addWidget(name_notice)
+
         notice_lines = []
-        if found_game_files:
-            if "regulation.bin" in found_game_files:
-                notice_lines.append(
-                    self.tr(
-                        "This archive replaces the game's regulation.bin. Only one "
-                        "active mod can provide it: the one with the highest "
-                        "priority wins."
-                    )
-                )
-            executables = sorted(found_game_files - {"regulation.bin"})
-            if executables:
-                notice_lines.append(
-                    self.tr(
-                        "This archive contains game files ({0}). Installed through "
-                        "MO2 they replace the game's own copies; most mods do not "
-                        "need that."
-                    ).format(", ".join(executables))
-                )
+        if package in {"reforged", "convergence"} and self._nightreign_active():
+            notice_lines.append(
+                self.tr("This is an Elden Ring mod: this instance manages Nightreign.")
+            )
+        # game files a mod rarely means to replace
+        executables = sorted(self._game_files_in(archive_tree) - {"regulation.bin"})
+        if executables:
+            notice_lines.append(
+                self.tr(
+                    "This archive contains game files ({0}). Installed through "
+                    "MO2 they replace the game's own copies; most mods do not "
+                    "need that."
+                ).format(", ".join(executables))
+            )
         # several copies of one DLL, or several option folders: both layouts
         # would install every copy, and the game would use only one or none
         # (a mod the window knows is laid out on purpose: nothing to warn about)
@@ -986,73 +1168,63 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 ).format(", ".join(option_folders))
             )
         if notice_lines:
-            game_file_notice = QtWidgets.QLabel("\n\n".join(notice_lines), content)
-            game_file_notice.setObjectName("archiveGameFileNotice")
-            game_file_notice.setWordWrap(True)
-            game_file_notice.setStyleSheet(
-                "QLabel#archiveGameFileNotice { background: rgba(255, 185, 0, 0.14);"
-                " border: 1px solid rgba(255, 185, 0, 0.45); border-radius: 6px;"
-                " padding: 8px 10px; }"
-            )
-            content_layout.addWidget(game_file_notice)
+            archive_notice = notice_label("archiveGameFileNotice")
+            archive_notice.setText("\n\n".join(notice_lines))
+            archive_notice.setVisible(True)
+            content_layout.addWidget(archive_notice)
 
-        selected: dict[str, Optional[tuple[bool, bool, bool, bool, str]]] = {
-            "choice": None
-        }
-
-        def choose_layout(preserve: bool) -> None:
-            chosen_name = mod_name_edit.text().strip()
-            if not chosen_name:
-                mod_name_edit.setText(mod_name)
-                mod_name_edit.setFocus()
-                return
-            selected["choice"] = (
-                preserve,
-                omit_txt_box.isChecked(),
-                omit_md_box.isChecked(),
-                # a mod's mod/ folder (the usual packaging) always maps to
-                # the game folders in the standard layout
-                True,
-                chosen_name,
-            )
-            if reforged_online_box is not None:
-                self._chosen_reforged_online = reforged_online_box.isChecked()
-            dialog.accept()
-
-        # --- advanced: text files and the layout -----------------------------
-        advanced = QtWidgets.QWidget(content)
-        advanced.setObjectName("archiveAdvancedOptions")
-        advanced_layout = QtWidgets.QVBoxLayout(advanced)
-        advanced_layout.setContentsMargins(0, 0, 0, 0)
-        advanced_layout.setSpacing(10)
+        # --- advanced --------------------------------------------------------
         advanced_card = add_card("archiveAdvancedCard")
         advanced_button = QtWidgets.QPushButton(self.tr("Show"))
         advanced_button.setObjectName("archiveAdvancedButton")
         advanced_button.setCheckable(True)
+        advanced_button.setAccessibleName(self.tr("Show advanced options"))
         add_row(
             advanced_card, 0xE713, self.tr("Advanced options"),
             self.tr("Skip text files, or keep the archive's own structure."),
             (advanced_button,),
         )
+        advanced = QtWidgets.QWidget(content)
+        advanced.setObjectName("archiveAdvancedOptions")
+        advanced_layout = QtWidgets.QVBoxLayout(advanced)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.setSpacing(10)
+        advanced.setVisible(False)
         content_layout.addWidget(advanced)
         cards_layout[0] = advanced_layout
 
-        # text files apply to the standard layout only; the card says so once
-        options_card = add_card("archiveTextFilesCard", self.tr("Text files"))
-        filters_label = QtWidgets.QLabel(
+        layout_card = add_card("archiveLayoutCard", self.tr("Layout"))
+        layout_group = QtWidgets.QButtonGroup(dialog)
+        standard_radio = QtWidgets.QRadioButton()
+        standard_radio.setObjectName("archiveStandardLayoutRadio")
+        standard_radio.setAccessibleName(self.tr("Organize for MO2 (recommended)"))
+        preserve_radio = QtWidgets.QRadioButton()
+        preserve_radio.setObjectName("archivePreserveLayoutRadio")
+        preserve_radio.setAccessibleName(self.tr("Install as it comes in the archive"))
+        layout_group.addButton(standard_radio)
+        layout_group.addButton(preserve_radio)
+        (preserve_radio if start_preserve else standard_radio).setChecked(True)
+        add_row(
+            layout_card, 0xE8FD, self.tr("Organize for MO2 (recommended)"),
             self.tr(
-                "Text-file exclusions apply only to standard layout. Keep original "
-                "always installs every archive file; choices are remembered for reinstall."
+                "Finds mod files inside wrappers and routes DLLs, settings, fonts, "
+                "and game assets to MO2's standard folders."
             ),
-            options_card,
+            (standard_radio,),
         )
-        filters_label.setObjectName("fluentSettingDescription")
-        filters_label.setWordWrap(True)
-        filters_label.setContentsMargins(18, 0, 18, 8)
-        options_card.layout().addWidget(filters_label)
+        add_row(
+            layout_card, 0xE8B7, self.tr("Install as it comes in the archive"),
+            self.tr(
+                "Removes only the archive's outer folders and keeps every other path. "
+                "For a mod whose instructions need its files in exact places."
+            ),
+            (preserve_radio,),
+        )
+
+        options_card = add_card("archiveTextFilesCard", self.tr("Text files"))
         omit_txt_box = switch(QtWidgets.QCheckBox(self.tr("Skip .txt files")))
         omit_txt_box.setObjectName("archiveSkipTxtCheck")
-        omit_txt_box.setChecked(self._default_omit_txt)
+        omit_txt_box.setChecked(self._default_omit_txt and not single_layout)
         add_row(
             options_card, 0xE8A5, self.tr("Skip .txt files"),
             self.tr("Skips every .txt file in this archive before installation."),
@@ -1060,177 +1232,213 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
         omit_md_box = switch(QtWidgets.QCheckBox(self.tr("Skip .md files")))
         omit_md_box.setObjectName("archiveSkipMarkdownCheck")
-        omit_md_box.setChecked(self._default_omit_md)
+        omit_md_box.setChecked(self._default_omit_md and not single_layout)
         add_row(
             options_card, 0xE8A5, self.tr("Skip .md files"),
             self.tr("Skips every Markdown .md file in this archive before installation."),
             (omit_md_box,),
         )
+        if single_layout:
+            advanced_card.setVisible(False)
+        content_layout.addStretch(1)
 
-        # --- the layout ------------------------------------------------------
-        layout_card = add_card("archiveLayoutCard", self.tr("Layout"))
+        # --- the summary follows the choices ---------------------------------
+        selected: dict = {"choice": None}
+        summary_state: dict = {"paths": []}
 
-        def add_layout_option(
-            glyph: int, title: str, description: str, details: str, preserve: bool
-        ) -> QtWidgets.QPushButton:
-            preferred = preserve == preferred_preserve
-            choose_button = QtWidgets.QPushButton(self.tr("Choose this layout"))
-            choose_button.setObjectName("archiveLayoutChoiceButton")
-            choose_button.setProperty("preferredChoice", preferred)
-            choose_button.setToolTip(self.tr(details))
-            choose_button.clicked.connect(
-                lambda _checked=False, value=preserve: choose_layout(value)
+        def current_choices() -> tuple[bool, bool, bool, bool]:
+            preserve = preserve_radio.isChecked()
+            return (
+                preserve,
+                omit_txt_box.isChecked(),
+                omit_md_box.isChecked(),
+                reforged_online_box is not None and reforged_online_box.isChecked(),
             )
-            row = add_row(
-                layout_card, glyph, self.tr(title), self.tr(description), (choose_button,)
-            )
-            row.setToolTip(self.tr(details))
-            return choose_button
 
-        standard_button = add_layout_option(
-            0xE8FD,
-            "Use standard MO2 layout",
-            "Finds mod files inside wrappers and routes DLLs, settings, fonts, "
-            "and game assets to MO2's standard folders.",
-            "Finds mod files inside package folders, moves native-mod DLLs and "
-            "their INI files into the game's DLLs folder, puts FreecamMod's "
-            "settings and fonts in DLLs/Freecam, keeps other mods' fonts "
-            "beside a moved DLL when their location is unambiguous, and "
-            "keeps Elden Ring asset folders such as action, chr, common, event, "
-            "assets, map, menu, msg, param, parts, script, sd, and sfx at their game "
-            "paths. Windows proxy loaders and their matching settings stay at "
-            "the game root so MO2 can load them there.",
-            False,
-        )
-        preserve_button = add_layout_option(
-            0xE8B7,
-            "Keep original archive structure",
-            "Maps install-source folders such as 'Drag Files Into Here' to the "
-            "game root, then keeps every file's internal path, including DLL locations.",
-            "For FRZN Merge, the contents of 'Drag Files Into Here' land at the "
-            "game root as intended; its natives/ tree stays unchanged. Keeps .txt "
-            "and .md files and does not move DLLs into MO2's DLLs folder.",
-            True,
-        )
+        def clear_summary() -> None:
+            while summary_host.count():
+                widget = summary_host.takeAt(0).widget()
+                if widget is not None:
+                    widget.setParent(None)
+                    widget.deleteLater()
 
-        # the archive's files, under the choices, shown on request
-        preview_button = QtWidgets.QPushButton(self.tr("Show"))
-        preview_button.setObjectName("archivePreviewButton")
-        preview_button.setCheckable(True)
-        preview_button.setAccessibleName(self.tr("Show archive contents"))
-        add_row(layout_card, 0xE8B9, self.tr("Archive contents"), "", (preview_button,))
-        preview_note = QtWidgets.QLabel(layout_card)
-        preview_note.setObjectName("fluentSettingDescription")
-        preview_note.setWordWrap(True)
-        preview_note.setContentsMargins(18, 4, 18, 4)
-        preview_tree = QtWidgets.QTreeWidget(layout_card)
-        preview_tree.setObjectName("archivePreviewTree")
-        preview_tree.setHeaderLabels(
-            [self.tr("Original archive path"), self.tr("Type")]
-        )
-        preview_header = preview_tree.header()
-        preview_header.setStretchLastSection(False)
-        preview_header.setSectionResizeMode(
-            0, QtWidgets.QHeaderView.ResizeMode.Stretch
-        )
-        preview_header.setSectionResizeMode(
-            1, QtWidgets.QHeaderView.ResizeMode.Fixed
-        )
-        preview_tree.setColumnWidth(1, 130)
-        preview_tree.setAlternatingRowColors(True)
-        preview_tree.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        preview_tree.setMinimumHeight(0)
-        preview_tree.setMaximumHeight(260)
-        preview_tree.setUniformRowHeights(True)
-        preview_tree.setVisible(False)
-        preview_note.setVisible(False)
-        layout_card.layout().addWidget(preview_note)
-        layout_card.layout().addWidget(preview_tree)
+        def summary_row(glyph: int, title: str, value: str, description: str = "") -> None:
+            value_label = QtWidgets.QLabel(value)
+            value_label.setObjectName("fluentSettingDescription")
+            add_row(summary_card, glyph, title, description, (value_label,), summary_host)
+
+        def refresh_summary() -> None:
+            preserve, omit_txt, omit_md, online = current_choices()
+            clear_summary()
+            summary = self._layout_summary(archive_tree, preserve, omit_txt, omit_md, online)
+            summary_state["paths"] = summary["paths"] if summary else []
+            preview_button.setChecked(False)
+            preview_state["populated"] = False
+            if summary is None:
+                summary_row(0xE7BA, self.tr("The summary isn't available"), "")
+                regulation_notice.setVisible(False)
+                layout_notice.setVisible(False)
+                return
+            layout_notice.setVisible(summary["misplaced"] > 0)
+            if summary["misplaced"]:
+                layout_notice.setText(
+                    self.tr(
+                        "{0} files would stay inside the folder {1}, where the game doesn't "
+                        "look for them. Organize for MO2 puts them in place."
+                    ).format(summary["misplaced"], summary["misplaced_in"])
+                )
+
+            def files(count: int) -> str:
+                return self.tr("1 file") if count == 1 else self.tr("{0} files").format(count)
+
+            if summary["game"]:
+                summary_row(0xE8B7, self.tr("Game files"), files(summary["game"]))
+            if summary["dlls"]:
+                summary_row(
+                    0xE943,
+                    self.tr("Native DLLs"),
+                    self.tr("{0} in DLLs").format(summary["dlls"])
+                    if summary["dlls_routed"] == summary["dlls"]
+                    else self.tr("{0} DLL files").format(summary["dlls"]),
+                )
+            if summary["regulation"]:
+                summary_row(0xE713, "regulation.bin", self.tr("At the game root"))
+            if summary["online"]:
+                summary_row(
+                    0xE774, self.tr("Reforged's online version"), files(summary["online"])
+                )
+            if summary["other"]:
+                summary_row(0xE8A5, self.tr("Other files"), files(summary["other"]))
+            if summary["left_out"]:
+                summary_row(
+                    0xE711, self.tr("Left out"), files(summary["left_out"]),
+                    self.tr("Files MO2 doesn't need, such as launchers, or those you chose to skip."),
+                )
+            if not summary["paths"] or not (summary["game"] or summary["dlls"] or summary["regulation"]):
+                summary_row(
+                    0xE7BA, self.tr("No game files or DLLs found"), "",
+                    self.tr("This archive may be for another game. Manual... lets you choose its files."),
+                )
+            others = self._other_mods_with_regulation() if summary["regulation"] else []
+            regulation_notice.setVisible(bool(others))
+            if others:
+                regulation_notice.setText(
+                    self.tr(
+                        "Your active mods also bring regulation.bin ({0}). Only one can "
+                        "provide it: the one with the highest priority wins."
+                    ).format(", ".join(others))
+                )
+            refit_window()
+
+        def refresh_name_notice() -> None:
+            # a reinstall keeps its own name: that's expected
+            name = mod_name_edit.text().strip()
+            taken = name != (self._default_mod_name or "") and self._mod_name_taken(name)
+            changed = taken != name_notice.isVisibleTo(content)
+            name_notice.setVisible(taken)
+            if taken:
+                name_notice.setText(
+                    self.tr("You already have a mod with this name. MO2 will ask whether to merge or replace it.")
+                )
+            if changed:
+                refit_window()
+
         preview_state = {"populated": False}
 
-        def add_preview_entries(
-            source_tree: mobase.IFileTree,
-            parent_item: Optional[QtWidgets.QTreeWidgetItem],
-            shown_count: list[int],
-            truncated: list[bool],
-        ) -> None:
-            for entry in source_tree:
-                if shown_count[0] >= self._archive_preview_entry_limit:
-                    truncated[0] = True
-                    return
-                is_directory = entry.isDir()
-                item = QtWidgets.QTreeWidgetItem(
-                    [entry.name(), self.tr("Folder") if is_directory else self.tr("File")]
-                )
+        def populate_preview() -> None:
+            preview_tree.clear()
+            paths = summary_state["paths"]
+            shown = paths[: self._archive_preview_entry_limit]
+            folders: dict = {}
+            for path in shown:
+                parent_item = None
+                prefix = ""
+                parts = path.split("/")
+                for part in parts[:-1]:
+                    prefix = f"{prefix}/{part}"
+                    item = folders.get(prefix)
+                    if item is None:
+                        item = QtWidgets.QTreeWidgetItem([part])
+                        if parent_item is None:
+                            preview_tree.addTopLevelItem(item)
+                        else:
+                            parent_item.addChild(item)
+                        folders[prefix] = item
+                    parent_item = item
+                leaf = QtWidgets.QTreeWidgetItem([parts[-1]])
                 if parent_item is None:
-                    preview_tree.addTopLevelItem(item)
+                    preview_tree.addTopLevelItem(leaf)
                 else:
-                    parent_item.addChild(item)
-                shown_count[0] += 1
-                if is_directory:
-                    add_preview_entries(entry, item, shown_count, truncated)
-                    if truncated[0]:
-                        return
+                    parent_item.addChild(leaf)
+            preview_note.setText(
+                self.tr("Showing the first {0} of {1} files.").format(len(shown), len(paths))
+                if len(shown) < len(paths)
+                else self.tr("Showing all {0} files.").format(len(paths))
+            )
+            preview_state["populated"] = True
 
-        def toggle_archive_preview(visible: bool) -> None:
-            if visible and not preview_state["populated"]:
-                shown_count = [0]
-                truncated = [False]
-                add_preview_entries(archive_tree, None, shown_count, truncated)
-                for index in range(preview_tree.topLevelItemCount()):
-                    preview_tree.topLevelItem(index).setExpanded(True)
-                if truncated[0]:
-                    preview_note.setText(
-                        self.tr(
-                            "Showing the first {0} entries from the archive. "
-                            "The preview is limited to keep large archives responsive."
-                        ).format(shown_count[0])
-                    )
-                else:
-                    preview_note.setText(
-                        self.tr("Showing all {0} archive entries.").format(
-                            shown_count[0]
-                        )
-                    )
-                preview_state["populated"] = True
-            if visible:
-                preview_tree.setMinimumHeight(190)
+        fit_state = {"wanted": 0, "placed": None}
+
+        def fit_window() -> None:
+            """As tall as the content, on the screen: the buttons stay in sight
+            and the scroll area takes what doesn't fit."""
+            screen = (parent.screen() if parent is not None else None) or (
+                QtWidgets.QApplication.primaryScreen()
+            )
+            if screen is None:
+                return
+            available = screen.availableGeometry()
+            # a card that just folded still has its old height cached
+            for card in content.findChildren(QtWidgets.QFrame):
+                if card.layout() is not None:
+                    card.layout().invalidate()
+            advanced_layout.invalidate()
+            content_layout.invalidate()
+            content_layout.activate()
+            margins = layout.contentsMargins()
+            needed = (
+                content_layout.sizeHint().height()
+                + margins.top()
+                + margins.bottom()
+                + layout.spacing()
+                + buttons.sizeHint().height()
+            )
+            # before its first show a window has no frame to measure
+            shown = dialog.isVisible()
+            frame_extra = dialog.frameGeometry().height() - dialog.height() if shown else 40
+            height = min(max(needed, 320), available.height() - frame_extra)
+            width = min(920, available.width() - 32)
+            dialog.resize(width, height)
+            if shown:
+                left = dialog.frameGeometry().left()
+                # back where it was when it shrinks, unless the user moved it
+                if dialog.frameGeometry().top() != fit_state["placed"]:
+                    fit_state["wanted"] = dialog.frameGeometry().top()
             else:
-                preview_tree.setMinimumHeight(0)
+                area = parent.frameGeometry() if parent is not None else available
+                left = area.center().x() - width // 2
+                fit_state["wanted"] = area.center().y() - (height + frame_extra) // 2
+            top = min(fit_state["wanted"], available.bottom() - height - frame_extra + 1)
+            top = max(available.top(), top)
+            left = min(max(left, available.left()), available.right() - width + 1)
+            dialog.move(left, top)
+            fit_state["placed"] = top
+
+        def refit_window() -> None:
+            # once Qt has laid out what just changed
+            if dialog.isVisible():
+                QTimer.singleShot(0, fit_window)
+
+        def toggle_preview(visible: bool) -> None:
+            if visible and not preview_state["populated"]:
+                populate_preview()
             preview_tree.setVisible(visible)
             preview_note.setVisible(visible)
             preview_button.setText(self.tr("Hide") if visible else self.tr("Show"))
             preview_button.setAccessibleName(
-                self.tr("Hide archive contents")
-                if visible
-                else self.tr("Show archive contents")
+                self.tr("Hide all files") if visible else self.tr("Show all files")
             )
-            # Keep the top-level dialog inside the monitor's work area. The
-            # scroll area absorbs the preview's extra height without sending
-            # conflicting resize requests to the Windows window manager.
-            content_layout.activate()
-
-        preview_button.toggled.connect(toggle_archive_preview)
-
-        default_label = QtWidgets.QLabel(
-            self.tr(
-                "Shown for each supported install; existing mods reopen with "
-                "their previous choices."
-            ),
-            content,
-        )
-        default_label.setObjectName("fluentSettingDescription")
-        default_label.setWordWrap(True)
-        default_label.setContentsMargins(4, 0, 4, 0)
-        default_label.setToolTip(
-            self.tr(
-                "MO2 asks on every supported installation. For an existing mod, "
-                "its previous layout, path-mapping, and text-file choices are "
-                "preselected."
-            )
-        )
-        advanced_layout.addWidget(default_label)
-        content_layout.addStretch(1)
+            refit_window()
 
         def toggle_advanced(visible: bool) -> None:
             advanced.setVisible(visible)
@@ -1238,24 +1446,22 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             advanced_button.setAccessibleName(
                 self.tr("Hide advanced options") if visible else self.tr("Show advanced options")
             )
-            content_layout.activate()
-            if visible:
-                # the scroll area takes what the screen has no room for
-                dialog.resize(
-                    dialog.width(),
-                    min(
-                        dialog.maximumHeight(),
-                        dialog.height() + advanced.sizeHint().height() + 10,
-                    ),
-                )
+            refit_window()
 
-        advanced_button.toggled.connect(toggle_advanced)
-        advanced.setVisible(False)
-        advanced_button.setAccessibleName(self.tr("Show advanced options"))
-        if single_layout:
-            advanced_card.setVisible(False)
-            omit_txt_box.setChecked(False)
-            omit_md_box.setChecked(False)
+        def choose_install() -> None:
+            chosen_name = mod_name_edit.text().strip()
+            if not chosen_name:
+                mod_name_edit.setText(mod_name)
+                mod_name_edit.setFocus()
+                return
+            preserve, omit_txt, omit_md, online = current_choices()
+            selected["choice"] = (preserve, omit_txt, omit_md, True, chosen_name)
+            self._chosen_reforged_online = online
+            dialog.accept()
+
+        def choose_manual() -> None:
+            selected["choice"] = "manual"
+            dialog.accept()
 
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Cancel, dialog
@@ -1272,19 +1478,25 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         manual_button.setToolTip(
             self.tr("Open MO2's manual installer to choose the files and folders yourself.")
         )
-
-        def choose_manual() -> None:
-            selected["choice"] = "manual"
-            dialog.accept()
-
         manual_button.clicked.connect(choose_manual)
         install_button = buttons.addButton(
             self.tr("Install"), QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole
         )
         install_button.setObjectName("archiveLayoutChoiceButton")
         install_button.setProperty("preferredChoice", True)
-        install_button.clicked.connect(lambda: choose_layout(preferred_preserve))
+        install_button.clicked.connect(choose_install)
         layout.addWidget(buttons)
+
+        preview_button.toggled.connect(toggle_preview)
+        advanced_button.toggled.connect(toggle_advanced)
+        standard_radio.toggled.connect(lambda _checked: refresh_summary())
+        omit_txt_box.toggled.connect(lambda _checked: refresh_summary())
+        omit_md_box.toggled.connect(lambda _checked: refresh_summary())
+        mod_name_edit.textChanged.connect(lambda _text: refresh_name_notice())
+        if reforged_online_box is not None:
+            reforged_online_box.toggled.connect(lambda _checked: refresh_summary())
+        refresh_summary()
+        refresh_name_notice()
 
         install_button.setDefault(True)
         install_button.setFocus()
@@ -1294,46 +1506,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         ):
             advanced_button.setChecked(True)
 
-        # Size from the complete, collapsed dialog. Doing this before adding
-        # the layout choices leaves them below the fold on shorter displays.
         dialog.ensurePolished()
-        content_layout.activate()
-        layout.activate()
-        screen = dialog.screen()
-        if screen is None:
-            screen = QtWidgets.QApplication.primaryScreen()
-        if screen is not None:
-            available = screen.availableGeometry()
-            max_width = max(320, available.width() - 32)
-            max_height = max(320, available.height() - 16)
-            min_width = min(880, max_width)
-            min_height = min(360, max_height)
-            dialog.setMinimumSize(min_width, min_height)
-            dialog.setMaximumSize(max_width, max_height)
-            size_hint = dialog.sizeHint().expandedTo(dialog.minimumSizeHint())
-            initial_width = min(
-                max(min_width, 920, size_hint.width()), max_width
-            )
-            dialog.resize(initial_width, min_height)
-            content_layout.activate()
-            layout.activate()
-            margins = layout.contentsMargins()
-            fixed_height = (
-                margins.top()
-                + margins.bottom()
-                + layout.spacing()
-                + buttons.sizeHint().height()
-            )
-            complete_content_height = content_layout.sizeHint().height()
-            target_height = max(
-                size_hint.height(), complete_content_height + fixed_height
-            )
-            dialog.resize(
-                initial_width,
-                min(max(min_height, target_height), max_height),
-            )
-        else:
-            dialog.resize(dialog.sizeHint().expandedTo(dialog.minimumSizeHint()))
+        fit_window()
         dialog.exec()
         accepted = dialog.result() == QtWidgets.QDialog.DialogCode.Accepted
         # a child of MO2's window: freed, not kept for every install

@@ -1953,6 +1953,8 @@ int main(int argc, char *argv[]) {
                                       : QStringLiteral("The setup engine could not be found."));
         return 2;
     }
+    // what this program starts must not hold its folder, which goes when it closes
+    if (!host.isEmpty()) QDir::setCurrent(QFileInfo(host).absolutePath());
     SetupWindow window(host, language, fixedMode, fixedTarget, isolated, theme);
     window.show();
     if (!snapshot.isEmpty()) {
