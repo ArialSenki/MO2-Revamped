@@ -44,7 +44,6 @@ volatile LONG g_logged_asset_overrides = 0;
 volatile LONG g_logged_resolver_requests = 0;
 volatile LONG g_logged_data_paths = 0;
 volatile LONG g_logged_missing_asset_probes = 0;
-volatile LONG g_logged_target_asset_events = 0;
 volatile LONG g_focus_guard_enabled = 0;
 volatile LONG g_focus_guard_focus_block_logged = 0;
 volatile LONG g_focus_guard_show_seen = 0;
@@ -142,7 +141,7 @@ bool read_focus_guard_setting() {
   }
   const bool enabled = setting != 0;
   if (enabled) {
-    log_line("Profile option enabled: start Elden Ring minimized.");
+    log_line("Profile option enabled: start the game minimized.");
   }
   return enabled;
 }
@@ -209,10 +208,10 @@ void apply_process_priority_setting() {
     return;
   }
   if (!SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS)) {
-    log_line("Could not set Elden Ring process priority to Above normal.");
+    log_line("Could not set the game process priority to Above normal.");
     return;
   }
-  log_line("Profile option applied: Elden Ring process priority is Above normal.");
+  log_line("Profile option applied: the game process priority is Above normal.");
 }
 
 bool is_process_top_level_window(HWND window) {
@@ -946,7 +945,7 @@ DWORD WINAPI apply_cpu0_affinity_after_delay(void* context) {
     return 0;
   }
 
-  log_line("CPU 0 affinity adjustment applied to the Elden Ring process.");
+  log_line("CPU 0 affinity adjustment applied to the game process.");
   return 0;
 }
 
@@ -1043,31 +1042,6 @@ bool has_parent_segment(const wchar_t* path) {
   }
 }
 
-bool is_target_asset_path(const wchar_t* path) {
-  if (path == nullptr) {
-    return false;
-  }
-
-  static const wchar_t filename[] = L"01_000_fe.gfx";
-  constexpr size_t filename_length =
-      sizeof(filename) / sizeof(filename[0]) - 1;
-  for (const wchar_t* cursor = path; *cursor != L'\0'; ++cursor) {
-    if (_wcsnicmp(cursor, filename, filename_length) == 0 &&
-        (cursor[filename_length] == L'\0' ||
-         cursor[filename_length] == L'/' ||
-         cursor[filename_length] == L'\\')) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void log_target_asset(const char* message, const wchar_t* path) {
-  if (InterlockedIncrement(&g_logged_target_asset_events) <= 64) {
-    log_line(message, path);
-  }
-}
-
 bool virtual_asset_exists(const wchar_t* archive_path) {
   wchar_t candidate[2048] = {L'.', L'\\'};
   size_t out = 2;
@@ -1094,7 +1068,6 @@ bool virtual_asset_exists(const wchar_t* archive_path) {
                                 FILE_SHARE_DELETE,
                             nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
                             nullptr);
-  bool used_absolute_path = false;
   wchar_t absolute_candidate[4096] = {};
   if (file == INVALID_HANDLE_VALUE) {
     const DWORD absolute_length = GetFullPathNameW(
@@ -1109,37 +1082,18 @@ bool virtual_asset_exists(const wchar_t* archive_path) {
                              FILE_SHARE_DELETE,
                          nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
                          nullptr);
-      used_absolute_path = file != INVALID_HANDLE_VALUE;
-      if (file == INVALID_HANDLE_VALUE &&
-          is_target_asset_path(absolute_candidate)) {
-        log_target_asset("MO2 absolute VFS probe failed:",
-                         absolute_candidate);
-      }
-    } else if (is_target_asset_path(candidate)) {
-      log_target_asset("Could not make target asset path absolute:",
-                       candidate);
     }
   }
 
-  const bool is_target_asset = is_target_asset_path(candidate);
   if (file == INVALID_HANDLE_VALUE) {
-    if (is_target_asset ||
-        InterlockedIncrement(&g_logged_missing_asset_probes) <= 128) {
+    if (InterlockedIncrement(&g_logged_missing_asset_probes) <= 128) {
       log_line("MO2 VFS probe did not find loose asset:", candidate);
     }
     return false;
   }
   CloseHandle(file);
 
-  if (is_target_asset) {
-    log_target_asset(used_absolute_path
-                         ? "MO2 absolute VFS probe found loose asset:"
-                         : "MO2 relative VFS probe found loose asset:",
-                     used_absolute_path ? absolute_candidate : candidate);
-  }
-
-  const LONG override_number = InterlockedIncrement(&g_logged_asset_overrides);
-  if (is_target_asset || override_number <= 128) {
+  if (InterlockedIncrement(&g_logged_asset_overrides) <= 128) {
     log_line("MO2 loose asset override:", candidate);
   }
   return true;
@@ -1154,32 +1108,23 @@ void* __cdecl map_archive_path_hook(EldenRingLocalWString* path, uint64_t p2,
     return nullptr;
   }
   wchar_t* input = mutable_string(path);
-  if (is_target_asset_path(input)) {
-    log_target_asset("Target asset resolver input:", input);
-  }
   if (input != nullptr &&
       InterlockedIncrement(&g_logged_resolver_requests) <= 64) {
     log_line("Archive resolver request:", input);
   }
   void* result = g_original_archive_path(path, p2, p3, p4, p5, p6);
   wchar_t* value = mutable_string(path);
-  if (is_target_asset_path(value)) {
-    log_target_asset("Target asset resolver output:", value);
-  }
   if (value == nullptr) {
     return result;
   }
   if (path->length < 7 ||
       _wcsnicmp(value, L"data", 4) != 0 || value[4] < L'0' ||
       value[4] > L'9' || value[5] != L':' || value[6] != L'/') {
-    if (is_target_asset_path(value)) {
-      log_target_asset("Target asset is outside the dataN path format:", value);
-    }
     return result;
   }
 
   if (InterlockedIncrement(&g_logged_data_paths) <= 128) {
-    log_line("Elden Ring data path request:", value);
+    log_line("Game data path request:", value);
   }
   if (virtual_asset_exists(value + 6)) {
     // Elden Ring treats this prefix as a loose, game-relative path. MO2's

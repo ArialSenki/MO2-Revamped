@@ -1900,6 +1900,14 @@ Das Spiel wurde nicht gestartet.</translation>
       <translation>Steam-Spielstände noch ausgeblendet</translation>
     </message>
     <message>
+      <source>Mods may not have loaded</source>
+      <translation>Mods wurden möglicherweise nicht geladen</translation>
+    </message>
+    <message>
+      <source>Elden Ring started, but MO2 could not connect to its file loader, so the game files of your mods were not used (their DLLs were not affected). This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>Elden Ring wurde gestartet, aber MO2 konnte sich nicht mit seinem Datei-Lader verbinden, daher wurden die Spieldateien deiner Mods nicht verwendet (ihre DLLs sind nicht betroffen). Das passiert meist nach einem Spiel-Update: Suche nach einer neuen Version von MO2 Revamped.</translation>
+    </message>
+    <message>
       <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
       <translation>Ein früherer Start hat die Steam-Spielstandordner ausgeblendet, und das Spiel oder einer seiner Launcher läuft noch, oder ein anderes MO2-Fenster wartet auf sein Spiel. MO2 stellt die Spielstände wieder her, sobald es geschlossen wird. Starte das Spiel bis dahin nicht über Steam.</translation>
     </message>

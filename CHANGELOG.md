@@ -71,6 +71,11 @@
 
 - Loose game files from mods now load in Nightreign (1.3.3). The native bridge
   only knew Elden Ring's game code, so it skipped them and only its log said so.
+- When a game update stops MO2 from reaching the game's file loader, Elden Ring
+  and Nightreign now show a notice after the game closes, if active mods have
+  game files.
+- The game folder keeps its real capitals when it comes from Steam, and the logs
+  name Nightreign in a Nightreign instance.
 
 ### Installer
 

@@ -1904,6 +1904,14 @@ Le jeu n'a pas été lancé.</translation>
       <translation>Sauvegardes Steam encore masquées</translation>
     </message>
     <message>
+      <source>Mods may not have loaded</source>
+      <translation>Les mods n'ont peut-être pas été chargés</translation>
+    </message>
+    <message>
+      <source>Elden Ring started, but MO2 could not connect to its file loader, so the game files of your mods were not used (their DLLs were not affected). This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>Elden Ring a démarré, mais MO2 n'a pas pu se connecter à son chargeur de fichiers : les fichiers de jeu de vos mods n'ont donc pas été utilisés (leurs DLL ne sont pas concernées). Cela arrive généralement après une mise à jour du jeu : cherchez une nouvelle version de MO2 Revamped.</translation>
+    </message>
+    <message>
       <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
       <translation>Un lancement précédent a masqué les dossiers de sauvegarde Steam, et le jeu ou l&apos;un de ses lanceurs est encore ouvert, ou une autre fenêtre de MO2 attend son jeu. MO2 remet les sauvegardes en place dès sa fermeture. D&apos;ici là, ne lancez pas le jeu depuis Steam.</translation>
     </message>

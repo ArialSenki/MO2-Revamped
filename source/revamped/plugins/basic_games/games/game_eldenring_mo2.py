@@ -66,9 +66,14 @@ import sys  # noqa: E402
 _QT_LOG_CALLS: dict = {}
 
 
+# the game this MO2 manages, for the log; set once its interface is up
+_log_game_name = "Elden Ring"
+
+
 def _safe_qt_log(qt_function, level):
     def log(message) -> None:
         text = "" if message is None else str(message)
+        text = text.replace("Elden Ring MO2", f"{_log_game_name} MO2")
         caller = sys._getframe(1)
         filename, line = caller.f_code.co_filename, caller.f_lineno
         if not text.isascii():
@@ -90,6 +95,28 @@ def _safe_qt_log(qt_function, level):
 qCritical = _safe_qt_log(qCritical, logging.CRITICAL)
 qInfo = _safe_qt_log(qInfo, logging.INFO)
 qWarning = _safe_qt_log(qWarning, logging.WARNING)
+
+
+def _with_true_case(path) -> str:
+    """The path as the disk spells it. Steam's registry value can be all lower
+    case, and MO2 shows and stores the game folder as it gets it."""
+    original = Path(path)
+    if not original.is_absolute():
+        return str(path)
+    drive = original.drive
+    result = Path(original.anchor.upper() if len(drive) == 2 else original.anchor)
+    for part in original.parts[1:]:
+        try:
+            match = next(
+                (name for name in os.listdir(result) if name.casefold() == part.casefold()),
+                None,
+            )
+        except OSError:
+            return str(path)
+        if match is None:
+            return str(path)
+        result = result / match
+    return str(result)
 
 
 # MO2 installs translations/revamped_<language>.qm; the source text is English.
@@ -1891,6 +1918,7 @@ class EldenRingMo2Game(BasicGame):
         self._recovery_retry_pending = False
         # folders with newer saves that a restore had to move aside
         self._displaced_newer_saves: list[Path] = []
+        self._loose_files_warning_shown = False
 
         self._local_savegames_feature = self.LocalSavegamesClass(self, organizer)
         self._register_feature(self._local_savegames_feature)
@@ -1917,6 +1945,9 @@ class EldenRingMo2Game(BasicGame):
             f"{self.NativeBridgeVersion}."
         )
         return True
+
+    def setGamePath(self, path) -> None:
+        super().setGamePath(_with_true_case(path))
 
     def _install_root(self) -> Path:
         try:
@@ -2783,6 +2814,9 @@ class EldenRingMo2Game(BasicGame):
     def _initialize_elden_ring_ui(self, _main_window) -> None:
         if not self.isActive():
             return
+
+        global _log_game_name
+        _log_game_name = self.DisplayName
 
         if not self._recover_stale_global_save_quarantines():
             if self._recovery_waiting:
@@ -3732,6 +3766,7 @@ class EldenRingMo2Game(BasicGame):
             return
         self._guarded_launches.discard(launch_key)
         self._restore_profile_config_environment()
+        self._warn_if_loose_files_were_skipped()
         # MO2 reports the run as finished when its lock is off or unlocked, and
         # a launcher finishes while the game it started keeps running; the
         # Steam saves come back and Overwrite is cleared only once the game is
@@ -3747,6 +3782,49 @@ class EldenRingMo2Game(BasicGame):
         )
         self._overwrite_cleanup_path = None
         self._overwrite_cleanup_armed = False
+
+    def _warn_if_loose_files_were_skipped(self) -> None:
+        """A game update can change the code the bridge looks for; the mods'
+        game files then stay out with nothing but a line in its log."""
+        if self._loose_files_warning_shown:
+            return
+        log = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.log"
+        try:
+            if "Loose asset hook skipped" not in log.read_text("utf-8", "replace"):
+                return
+        except OSError:
+            return
+        qWarning("Elden Ring MO2: the bridge could not hook the game's file loader.")
+        if not self._active_mods_have_game_files():
+            return
+        self._loose_files_warning_shown = True
+        # not from inside MO2's finished-run hook
+        QTimer.singleShot(
+            0,
+            lambda: QMessageBox.warning(
+                None,
+                _tr("Mods may not have loaded"),
+                self._game_text(_tr("Elden Ring started, but MO2 could not connect to its "
+                "file loader, so the game files of your mods were not used (their DLLs "
+                "were not affected). This usually follows a game update: look for a new "
+                "version of MO2 Revamped.")),
+            ),
+        )
+
+    def _active_mods_have_game_files(self) -> bool:
+        folders = EldenRingModDataChecker._asset_directories
+        for _name, root, active in self._mod_folders():
+            if not active:
+                continue
+            try:
+                if any(
+                    entry.is_dir() and entry.name.casefold() in folders
+                    for entry in root.iterdir()
+                ):
+                    return True
+            except OSError:
+                continue
+        return False
 
     def _finish_when_game_closes(
         self,
