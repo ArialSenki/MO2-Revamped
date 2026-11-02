@@ -1191,10 +1191,26 @@ void* __cdecl map_archive_path_hook(EldenRingLocalWString* path, uint64_t p2,
 }
 
 bool install_loose_asset_hook() {
-  static const unsigned char signature[] = {
+  // the code around a call to the resolver: Elden Ring, then Nightreign (1.3.3)
+  static const unsigned char elden_ring_after[] = {
       0x48, 0x83, 0x7B, 0x20, 0x08, 0x48, 0x8D, 0x4B, 0x08,
       0x72, 0x03, 0x48, 0x8B, 0x09, 0x4C, 0x8B, 0x4B, 0x18,
       0x41, 0xB8, 0x05, 0x00, 0x00, 0x00, 0x4D, 0x3B, 0xC8};
+  static const unsigned char nightreign_before[] = {
+      0x33, 0xD2, 0x48, 0x89, 0x44, 0x24, 0x20, 0x49, 0x8B, 0xCD};
+  static const unsigned char nightreign_after[] = {
+      0x48, 0x83, 0x7F, 0x18, 0x08, 0x72, 0x03, 0x48,
+      0x8B, 0x3F, 0x48, 0x83, 0x7B, 0x18, 0x05};
+  struct ResolverCallSite {
+    const unsigned char* before;
+    size_t before_size;
+    const unsigned char* after;
+    size_t after_size;
+  };
+  static const ResolverCallSite call_sites[] = {
+      {nullptr, 0, elden_ring_after, sizeof(elden_ring_after)},
+      {nightreign_before, sizeof(nightreign_before), nightreign_after,
+       sizeof(nightreign_after)}};
   HMODULE image = GetModuleHandleW(nullptr);
   if (image == nullptr) {
     log_line("Loose asset hook skipped: game image is unavailable.");
@@ -1241,53 +1257,56 @@ bool install_loose_asset_hook() {
     if (section_size > available_size) {
       section_size = available_size;
     }
-    if (section_size < sizeof(signature) + 5) {
-      continue;
-    }
-
     const unsigned char* code = image_base + section.VirtualAddress;
-    for (size_t offset = 5; offset + sizeof(signature) <= section_size;
-         ++offset) {
-      const unsigned char* match = code + offset;
-      if (match[-5] != 0xE8 ||
-          memcmp(match, signature, sizeof(signature)) != 0) {
+    for (const ResolverCallSite& site : call_sites) {
+      const size_t first = 5 + site.before_size;
+      if (section_size < site.after_size + first) {
         continue;
       }
+      for (size_t offset = first; offset + site.after_size <= section_size;
+           ++offset) {
+        const unsigned char* match = code + offset;
+        if (match[-5] != 0xE8 || memcmp(match, site.after, site.after_size) != 0 ||
+            (site.before != nullptr &&
+             memcmp(match - first, site.before, site.before_size) != 0)) {
+          continue;
+        }
 
-      int32_t displacement = 0;
-      memcpy(&displacement, match - 4, sizeof(displacement));
-      auto* target = reinterpret_cast<unsigned char*>(
-          reinterpret_cast<uintptr_t>(match) +
-          static_cast<intptr_t>(displacement));
-      if (!is_in_executable_section(target, image_base, image_size,
-                                    image_sections,
-                                    nt->FileHeader.NumberOfSections)) {
-        continue;
-      }
-
-      unsigned int jumps = 0;
-      while (target[0] == 0xE9 && jumps++ < 8) {
-        int32_t jump_displacement = 0;
-        memcpy(&jump_displacement, target + 1, sizeof(jump_displacement));
-        target = reinterpret_cast<unsigned char*>(
-            reinterpret_cast<uintptr_t>(target) + 5 +
-            static_cast<intptr_t>(jump_displacement));
+        int32_t displacement = 0;
+        memcpy(&displacement, match - 4, sizeof(displacement));
+        auto* target = reinterpret_cast<unsigned char*>(
+            reinterpret_cast<uintptr_t>(match) +
+            static_cast<intptr_t>(displacement));
         if (!is_in_executable_section(target, image_base, image_size,
                                       image_sections,
                                       nt->FileHeader.NumberOfSections)) {
-          target = nullptr;
-          break;
+          continue;
         }
+
+        unsigned int jumps = 0;
+        while (target[0] == 0xE9 && jumps++ < 8) {
+          int32_t jump_displacement = 0;
+          memcpy(&jump_displacement, target + 1, sizeof(jump_displacement));
+          target = reinterpret_cast<unsigned char*>(
+              reinterpret_cast<uintptr_t>(target) + 5 +
+              static_cast<intptr_t>(jump_displacement));
+          if (!is_in_executable_section(target, image_base, image_size,
+                                        image_sections,
+                                        nt->FileHeader.NumberOfSections)) {
+            target = nullptr;
+            break;
+          }
+        }
+        if (target == nullptr || jumps > 8) {
+          continue;
+        }
+        if (resolver != nullptr && resolver != target) {
+          log_line("Loose asset hook skipped: resolver signatures disagree.");
+          return false;
+        }
+        resolver = target;
+        ++matches;
       }
-      if (target == nullptr || jumps > 8) {
-        continue;
-      }
-      if (resolver != nullptr && resolver != target) {
-        log_line("Loose asset hook skipped: resolver signatures disagree.");
-        return false;
-      }
-      resolver = target;
-      ++matches;
     }
   }
 
@@ -1312,7 +1331,7 @@ bool install_loose_asset_hook() {
     log_line("Loose asset hook skipped: archive resolver detour could not be enabled.");
     return false;
   }
-  log_line("Elden Ring loose asset resolver hook installed for MO2.");
+  log_line("Loose asset resolver hook installed for MO2.");
   return true;
 }
 

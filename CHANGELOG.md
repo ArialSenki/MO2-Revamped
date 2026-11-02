@@ -67,6 +67,11 @@
 - The archive installer treats folders named after Nightreign as wrappers even
   beside another container, as it does for Elden Ring.
 
+### Elden Ring Nightreign
+
+- Loose game files from mods now load in Nightreign (1.3.3). The native bridge
+  only knew Elden Ring's game code, so it skipped them and only its log said so.
+
 ### Installer
 
 - An elevated setup keeps its program, requests and results in a folder only

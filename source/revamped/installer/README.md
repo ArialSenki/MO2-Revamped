@@ -25,6 +25,6 @@ The builder compiles the Qt UI, deploys its Windows platform plugin and runtime 
 
 ## Architecture
 
-The Qt interface exchanges a small JSON request, progress stream, and result file with the C# executable. The C# executable remains the source of truth for install, update, migration, restore, and uninstall operations. Its existing payloads and manifests remain embedded in the installer. The Qt runtime is extracted to a unique temporary directory at launch and cleaned up after the window closes.
+The Qt interface exchanges a small JSON request, progress stream, and result file with the C# executable. The C# executable remains the source of truth for install, update, migration, restore, and uninstall operations. Its existing payloads and manifests remain embedded in the installer. The Qt runtime is extracted at launch to a unique folder below `Program Files\MO2 Revamped Setup`, which only administrators can write, and cleaned up after the window closes; the JSON files live there too. Without elevation `%TEMP%` is used.
 
 The UI follows the Windows light/dark preference, uses the existing six installer languages, and keeps the original confirmation and validation flow. Qt and MinGW notices are listed in the repository's `THIRD-PARTY-NOTICES.md` and license files.
