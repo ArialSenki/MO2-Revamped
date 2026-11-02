@@ -54,7 +54,13 @@ void HandlerStorage::registerHandler(const QStringList &games, const QString &ex
       // executable already registered, update supported games and move it to top if requested
       if (rereg) {
         HandlerInfo info = *iter;
-        info.games = gamesLower;
+        // added to what it handles: one program serves every instance, and each
+        // instance registers only its own game
+        for (const QString &game : gamesLower) {
+          if (!info.games.contains(game)) {
+            info.games.append(game);
+          }
+        }
         m_Handlers.erase(iter);
         if (prepend) {
           m_Handlers.push_front(info);

@@ -8719,6 +8719,26 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   <context>
     <name>QObject</name>
     <message>
+      <source>Clear Nexus cache</source>
+      <translation>Nexus-Cache leeren</translation>
+    </message>
+    <message>
+      <source>The cache folder also holds this instance's mods or profiles, so only the Nexus data in memory was cleared:
+%1</source>
+      <translation>Der Cache-Ordner enthält auch Mods oder Profile dieser Instanz, daher wurden nur die Nexus-Daten im Speicher geleert:
+%1</translation>
+    </message>
+    <message>
+      <source>Delete everything in this folder? It doesn't go to the Recycle Bin.
+%1</source>
+      <translation>Alles in diesem Ordner löschen? Es landet nicht im Papierkorb.
+%1</translation>
+    </message>
+    <message>
+      <source>Registered for Nexus download links</source>
+      <translation>Für Nexus-Downloadlinks registriert</translation>
+    </message>
+    <message>
       <source>Text</source>
       <translation>Text</translation>
     </message>
@@ -9491,6 +9511,20 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Base directory</source>
+      <translation>Basisverzeichnis</translation>
+    </message>
+    <message>
+      <source>This folder can't be created, so the settings weren't saved:
+%1</source>
+      <translation>Dieser Ordner kann nicht erstellt werden, daher wurden die Einstellungen nicht gespeichert:
+%1</translation>
+    </message>
+    <message>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <translation>Schaltet aus, was MO2 bei Nexus anfragt: Update-Prüfungen, Empfehlungen und Tracking laufen nicht, auch wenn du sie selbst startest. Links öffnen sich weiterhin im Browser.</translation>
+    </message>
     <message>
       <source>Option</source>
       <translation>Option</translation>
@@ -11170,8 +11204,8 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
       <translation>Windows hat einen Nexus-Link für „%1“ gesendet, aber kein Programm in der Liste ist für dieses Spiel zuständig, daher kann der Link noch nicht geöffnet werden.</translation>
     </message>
     <message>
-      <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click "Associate with ... links".</source>
-      <translation>Wähle den Mod Organizer, der Links für dieses Spiel öffnen soll, und der Link wird sofort an ihn weitergegeben. Soll Mod Organizer ihn übernehmen, kannst du dort auch unter Einstellungen &gt; Nexus auf „Mit ...-Links verknüpfen“ klicken.</translation>
+      <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click "Register MO2 for Nexus download links".</source>
+      <translation>Wähle den Mod Organizer, der Links für dieses Spiel öffnen soll, und der Link wird sofort an ihn weitergegeben. Soll Mod Organizer ihn übernehmen, kannst du dort auch unter Einstellungen &gt; Nexus auf „MO2 für Nexus-Downloadlinks registrieren“ klicken.</translation>
     </message>
     <message>
       <source>Choose a program...</source>

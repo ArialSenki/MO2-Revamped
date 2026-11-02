@@ -1,5 +1,6 @@
 #include "settingsdialogworkarounds.h"
 #include "circularuihelpers.h"
+#include "eldenringsavesettings.h"
 #include "settings.h"
 #include "spawn.h"
 #include "ui_settingsdialog.h"
@@ -111,7 +112,12 @@ WorkaroundsSettingsTab::WorkaroundsSettingsTab(Settings& s, SettingsDialog& d)
 
   ui->appIDEdit->setText(settings().steam().appID());
   ui->steamUserEdit->setText(username);
-  ui->steamPassEdit->setText(password);
+  // the password belongs to every instance; without a user here it isn't this one's
+  ui->steamPassEdit->setText(username.isEmpty() ? QString() : password);
+  // these games' programs carry their own Steam ID and don't start through Steam
+  // here, so nothing on this card has an effect on them
+  ui->steamSettingsGroup->setVisible(
+      !EldenRingSaveSettings::supports(settings().game().plugin()));
 
   // network
   ui->offlineBox->setChecked(settings().network().offlineMode());
@@ -162,7 +168,16 @@ void WorkaroundsSettingsTab::update()
   } else {
     settings().steam().setAppID("");
   }
-  settings().steam().setLogin(ui->steamUserEdit->text(), ui->steamPassEdit->text());
+  // only a real change: an instance without a user must not delete the password
+  // another instance saved
+  {
+    QString oldUser, oldPassword;
+    settings().steam().login(oldUser, oldPassword);
+    const QString shownPassword = oldUser.isEmpty() ? QString() : oldPassword;
+    if (ui->steamUserEdit->text() != oldUser || ui->steamPassEdit->text() != shownPassword) {
+      settings().steam().setLogin(ui->steamUserEdit->text(), ui->steamPassEdit->text());
+    }
+  }
 
   // network
   settings().network().setOfflineMode(ui->offlineBox->isChecked());

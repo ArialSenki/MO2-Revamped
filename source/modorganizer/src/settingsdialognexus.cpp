@@ -2,6 +2,9 @@
 #include "circularuihelpers.h"
 #include "fluenticons.h"
 #include "log.h"
+#include "messagedialog.h"
+
+#include <QMessageBox>
 #include "nexusinterface.h"
 #include "serverinfo.h"
 #include "ui_nexusmanualkey.h"
@@ -634,13 +637,46 @@ void NexusSettingsTab::update()
 
 void NexusSettingsTab::clearCache()
 {
-  QDir(Settings::instance().paths().cache()).removeRecursively();
+  auto& paths         = Settings::instance().paths();
+  const QString cache = paths.cache();
+  const auto key      = [](const QString& path) {
+    return QDir::cleanPath(QDir::fromNativeSeparators(path)).toLower() + QLatin1Char('/');
+  };
+
+  // Paths accepts any folder for the cache: never one holding the instance's data
+  bool holdsData = false;
+  for (const QString& folder :
+       {paths.base(), paths.mods(), paths.downloads(), paths.profiles(), paths.overwrite()}) {
+    holdsData = holdsData || key(folder).startsWith(key(cache));
+  }
+  if (holdsData) {
+    QMessageBox::warning(parentWidget(), QObject::tr("Clear Nexus cache"),
+                         QObject::tr("The cache folder also holds this instance's mods or "
+                                     "profiles, so only the Nexus data in memory was "
+                                     "cleared:\n%1")
+                             .arg(QDir::toNativeSeparators(cache)));
+    NexusInterface::instance().clearCache();
+    return;
+  }
+
+  // not to the Recycle Bin
+  if (QMessageBox::question(parentWidget(), QObject::tr("Clear Nexus cache"),
+                            QObject::tr("Delete everything in this folder? It doesn't go to "
+                                        "the Recycle Bin.\n%1")
+                                .arg(QDir::toNativeSeparators(cache)),
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) != QMessageBox::Yes) {
+    return;
+  }
+  QDir(cache).removeRecursively();
   NexusInterface::instance().clearCache();
 }
 
 void NexusSettingsTab::associate()
 {
   Settings::instance().nexus().registerAsNXMHandler(true);
+  MessageDialog::showMessage(QObject::tr("Registered for Nexus download links"),
+                             parentWidget());
 }
 
 void NexusSettingsTab::updateNexusData()

@@ -156,7 +156,8 @@ void ServerList::cleanup()
   for (auto itor = m_servers.begin(); itor != m_servers.end();) {
     const QDate lastSeen = itor->lastSeen();
 
-    if (lastSeen.daysTo(now) > 30) {
+    // one the user put in the preferred list stays there
+    if (lastSeen.daysTo(now) > 30 && itor->preferred() <= 0) {
       log::debug("removing server {} since it hasn't been available for downloads "
                  "in over a month",
                  itor->name());

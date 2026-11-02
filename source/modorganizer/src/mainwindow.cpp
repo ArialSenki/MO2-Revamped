@@ -4853,6 +4853,8 @@ void MainWindow::on_actionSettings_triggered()
   QString oldModDirectory(settings.paths().mods());
   QString oldCacheDirectory(settings.paths().cache());
   QString oldProfilesDirectory(settings.paths().profiles());
+  const QString oldOverwriteDirectory(settings.paths().overwrite());
+  const QString oldDownloadsSetting(settings.paths().downloads(false));
   QString oldManagedGameDirectory(settings.game().directory().value_or(""));
   bool oldDisplayForeign(settings.interface().displayForeign());
   bool oldArchiveParsing(settings.archiveParsing());
@@ -4867,7 +4869,10 @@ void MainWindow::on_actionSettings_triggered()
 
   auto e = dialog.exitNeeded();
 
-  if (oldManagedGameDirectory != settings.game().directory()) {
+  // the current profile and Overwrite stay open at the old paths until then
+  if (oldManagedGameDirectory != settings.game().directory() ||
+      oldProfilesDirectory != settings.paths().profiles() ||
+      oldOverwriteDirectory != settings.paths().overwrite()) {
     e |= Exit::Restart;
   }
 
@@ -4907,6 +4912,15 @@ void MainWindow::on_actionSettings_triggered()
     }
   }
 
+  // a download in progress keeps the folder: the setting doesn't change either
+  if (dlManager->getOutputDirectory() != settings.paths().downloads() &&
+      dlManager->downloadsInProgress()) {
+    settings.paths().setDownloads(oldDownloadsSetting);
+    MessageDialog::showMessage(tr("Can't change download directory while "
+                                  "downloads are in progress!"),
+                               this);
+  }
+
   InstallationManager* instManager = m_OrganizerCore.installationManager();
   instManager->setModsDirectory(settings.paths().mods());
   instManager->setDownloadDirectory(settings.paths().downloads());
@@ -4927,13 +4941,7 @@ void MainWindow::on_actionSettings_triggered()
   }
 
   if (dlManager->getOutputDirectory() != settings.paths().downloads()) {
-    if (dlManager->downloadsInProgress()) {
-      MessageDialog::showMessage(tr("Can't change download directory while "
-                                    "downloads are in progress!"),
-                                 this);
-    } else {
-      dlManager->setOutputDirectory(settings.paths().downloads());
-    }
+    dlManager->setOutputDirectory(settings.paths().downloads());
   }
 
   if ((settings.paths().mods() != oldModDirectory) ||

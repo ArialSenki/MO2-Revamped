@@ -2309,13 +2309,13 @@ If you disable this feature, MO will only display official DLCs this way. Please
               <item>
                <widget class="QCheckBox" name="offlineBox">
                 <property name="toolTip">
-                 <string>Disable automatic online features. Actions you start yourself, such as opening a link or checking for updates, remain available.</string>
+                 <string>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</string>
                 </property>
                 <property name="statusTip">
                  <string>Disable automatic internet features</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Disable automatic internet features. This does not affect features that you explicitly start, such as checking mods for updates, endorsing, or opening the web browser.</string>
+                 <string>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</string>
                 </property>
                 <property name="text">
                  <string>Use offline mode</string>

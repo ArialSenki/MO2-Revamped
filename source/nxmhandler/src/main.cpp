@@ -278,7 +278,7 @@ static bool chooseHandlerFor(HandlerStorage &storage, const QString &game)
   box.setInformativeText(QCoreApplication::translate("NxmHandler",
       "Choose the Mod Organizer that should open links for this game and the link is "
       "passed on to it right away. If Mod Organizer should handle it, you can also go to "
-      "Settings > Nexus there and click \"Associate with ... links\"."));
+      "Settings > Nexus there and click \"Register MO2 for Nexus download links\"."));
   QPushButton *choose = box.addButton(
       QCoreApplication::translate("NxmHandler", "Choose a program..."), QMessageBox::AcceptRole);
   box.addButton(QMessageBox::Close);

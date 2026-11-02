@@ -89,6 +89,8 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
     ui->colorTable->resetColors();
   });
 
+  // only the two Fluent themes are listed: what's in that folder has no use here
+  ui->exploreStyles->hide();
   QObject::connect(ui->exploreStyles, &QPushButton::clicked, [&] {
     onExploreStyles();
   });

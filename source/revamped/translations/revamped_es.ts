@@ -8859,6 +8859,26 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
   <context>
     <name>QObject</name>
     <message>
+      <source>Clear Nexus cache</source>
+      <translation>Vaciar la caché de Nexus</translation>
+    </message>
+    <message>
+      <source>The cache folder also holds this instance's mods or profiles, so only the Nexus data in memory was cleared:
+%1</source>
+      <translation>La carpeta de caché también contiene mods o perfiles de esta instancia, así que solo se vaciaron los datos de Nexus en memoria:
+%1</translation>
+    </message>
+    <message>
+      <source>Delete everything in this folder? It doesn't go to the Recycle Bin.
+%1</source>
+      <translation>¿Eliminar todo lo que hay en esta carpeta? No va a la Papelera de reciclaje.
+%1</translation>
+    </message>
+    <message>
+      <source>Registered for Nexus download links</source>
+      <translation>Registrado para los enlaces de descarga de Nexus</translation>
+    </message>
+    <message>
       <source>Connect to Nexus</source>
       <translation>Conectarse a Nexus</translation>
     </message>
@@ -9659,6 +9679,20 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Base directory</source>
+      <translation>Carpeta base</translation>
+    </message>
+    <message>
+      <source>This folder can't be created, so the settings weren't saved:
+%1</source>
+      <translation>Esta carpeta no se puede crear, así que los ajustes no se guardaron:
+%1</translation>
+    </message>
+    <message>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <translation>Desactiva lo que MO2 pide a Nexus: las comprobaciones de actualizaciones, los avales y el seguimiento no funcionan, tampoco si los inicias tú. Los enlaces se siguen abriendo en el navegador.</translation>
+    </message>
     <message>
       <source>User ID:</source>
       <translation>ID de usuario:</translation>
@@ -11406,8 +11440,8 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
       <translation>Windows envió un enlace de Nexus para «%1», pero ningún programa de la lista gestiona ese juego, así que el enlace aún no se puede abrir.</translation>
     </message>
     <message>
-      <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click "Associate with ... links".</source>
-      <translation>Elige el Mod Organizer que debe abrir los enlaces de este juego y el enlace se le pasará de inmediato. Si debe gestionarlo Mod Organizer, también puedes ir en él a Ajustes &gt; Nexus y pulsar «Asociar con links ...».</translation>
+      <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click "Register MO2 for Nexus download links".</source>
+      <translation>Elige el Mod Organizer que debe abrir los enlaces de este juego y el enlace se le pasará de inmediato. Si debe gestionarlo Mod Organizer, también puedes ir en él a Ajustes &gt; Nexus y pulsar «Registrar MO2 para los enlaces de descarga de Nexus».</translation>
     </message>
     <message>
       <source>Choose a program...</source>

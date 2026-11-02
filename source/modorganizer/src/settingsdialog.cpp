@@ -405,8 +405,22 @@ void SettingsDialog::accept()
   // only changed a theme, language, or another unrelated setting.
   constexpr std::size_t PathsTabIndex = 3;
   if (m_tabs.size() > PathsTabIndex && m_tabs[PathsTabIndex]) {
+    QString newBase = ui->baseDirEdit->text().trimmed();
+    if (newBase.isEmpty()) {
+      newBase = qApp->property("dataPath").toString();
+    }
+    // every folder that uses %BASE_DIR% depends on it, and the instance wouldn't
+    // open with one that can't be created
+    if (!QDir().mkpath(QDir::fromNativeSeparators(newBase))) {
+      QMessageBox::warning(parentWidgetForDialogs(), tr("Base directory"),
+                           tr("This folder can't be created, so the settings weren't "
+                              "saved:\n%1")
+                               .arg(newBase));
+      return;
+    }
+
     QString newModPath = ui->modDirEdit->text();
-    newModPath = PathSettings::resolve(newModPath, ui->baseDirEdit->text());
+    newModPath = PathSettings::resolve(newModPath, newBase);
 
     if ((QDir::fromNativeSeparators(newModPath) !=
          QDir::fromNativeSeparators(Settings::instance().paths().mods(true))) &&

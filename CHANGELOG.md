@@ -136,6 +136,25 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Settings
+
+- Paths: a folder typed to stay outside a new Base Directory keeps its path, which
+  used to empty the mod list without warning. A Base Directory that can't be
+  created isn't saved. Changing Profiles or Overwrite asks to restart. A download
+  in progress keeps the download folder, in the setting too.
+- Nexus: "Clear Nexus cache" asks first, and refuses a folder that holds mods or
+  profiles. Registering for download links adds the game instead of replacing the
+  others and says when it's done. Nightreign's download links are recognized.
+  Preferred servers stay in the list.
+- Workarounds: an instance without a Steam user no longer deletes the password
+  another saved. The Steam card is hidden on Elden Ring and Nightreign, where it
+  has no effect. Offline mode's description says what it does.
+- Plugins: a double click on a switch no longer opens a list, a required plugin's
+  switch shows on, and options of plugins under another plugin are saved.
+- No false "Language changed" prompt on an English system. "Reset Dialog Choices"
+  also brings back the category questions. The unused "Open theme folder" and
+  "Show main toolbar" are gone.
+
 ### Foreground
 
 - Mod Organizer's notices and its lock no longer take the foreground from a game

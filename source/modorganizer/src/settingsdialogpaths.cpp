@@ -197,7 +197,12 @@ void PathsSettingsTab::update()
   using Setter    = void (PathSettings::*)(const QString&);
   using Directory = std::tuple<QString, Setter, std::wstring>;
 
-  QString basePath = settings().paths().base();
+  // the base being saved: a folder typed to stay where it is, outside the new
+  // base, keeps its path instead of following the base
+  QString basePath = stored(ui->baseDirEdit);
+  if (basePath.isEmpty()) {
+    basePath = qApp->property("dataPath").toString();
+  }
 
   for (const Directory& dir :
        {Directory{stored(ui->downloadDirEdit), &PathSettings::setDownloads,
@@ -216,7 +221,7 @@ void PathsSettingsTab::update()
     std::tie(path, setter, defaultName) = dir;
 
     QString realPath = path;
-    realPath         = PathSettings::resolve(realPath, stored(ui->baseDirEdit));
+    realPath         = PathSettings::resolve(realPath, basePath);
 
     if (!QDir(realPath).exists()) {
       if (!QDir().mkpath(realPath)) {

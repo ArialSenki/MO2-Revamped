@@ -2697,4 +2697,6 @@ void GlobalSettings::resetDialogs()
 {
   setHideCreateInstanceIntro(false);
   setHideTutorialQuestion(false);
+  setHideCategoryReminder(false);
+  setHideAssignCategoriesQuestion(false);
 }

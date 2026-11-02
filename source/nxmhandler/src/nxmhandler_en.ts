@@ -475,7 +475,8 @@ Use this if you moved Mod Organizer or if you uninstalled the Mod Organizer inst
     </message>
     <message>
         <location filename="main.cpp" line="278"/>
-        <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click &quot;Associate with ... links&quot;.</source>
+        <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click &quot;Register MO2 for Nexus download links&quot;.</source>
+        <oldsource>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click &quot;Associate with ... links&quot;.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>

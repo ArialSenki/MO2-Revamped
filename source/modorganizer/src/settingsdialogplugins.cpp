@@ -27,6 +27,7 @@
 #include <QStyledItemDelegate>
 #include <QTimer>
 #include <QTreeWidget>
+#include <functional>
 
 using namespace MOBase;
 
@@ -163,17 +164,28 @@ public:
 
   bool eventFilter(QObject* watched, QEvent* event) override
   {
-    if (event->type() == QEvent::MouseButtonRelease &&
-        static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton &&
-        !m_view.isNull()) {
+    const auto type = event->type();
+    if ((type == QEvent::MouseButtonPress || type == QEvent::MouseButtonDblClick ||
+         type == QEvent::MouseButtonRelease) &&
+        static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton && !m_view.isNull()) {
       const auto* mouseEvent = static_cast<QMouseEvent*>(event);
-      const QModelIndex index =
-          m_view->indexAt(mouseEvent->position().toPoint());
-      if (index.isValid() && index.column() == 1 &&
-          index.data(Qt::EditRole).metaType().id() == QMetaType::Bool) {
-        // it changes on the spot, as a switch does
-        m_view->setCurrentIndex(index);
-        m_view->model()->setData(index, !index.data(Qt::EditRole).toBool(), Qt::EditRole);
+      const QModelIndex index = m_view->indexAt(mouseEvent->position().toPoint());
+      const bool isSwitch     = index.isValid() && index.column() == 1 &&
+                            index.data(Qt::EditRole).metaType().id() == QMetaType::Bool;
+
+      if (type == QEvent::MouseButtonRelease) {
+        // it changes on the spot, as a switch does: a click that started on it
+        if (isSwitch && m_pressed == index) {
+          m_view->setCurrentIndex(index);
+          m_view->model()->setData(index, !index.data(Qt::EditRole).toBool(), Qt::EditRole);
+        }
+        m_pressed = QPersistentModelIndex();
+      } else {
+        m_pressed = isSwitch ? QPersistentModelIndex(index) : QPersistentModelIndex();
+        // a double click is two clicks here, not the list's editor
+        if (isSwitch && type == QEvent::MouseButtonDblClick) {
+          return true;
+        }
       }
     }
 
@@ -182,6 +194,7 @@ public:
 
 private:
   QPointer<QTreeWidget> m_view;
+  QPersistentModelIndex m_pressed;
 };
 
 }  // namespace
@@ -453,14 +466,18 @@ IPlugin* PluginsSettingsTab::plugin(QTreeWidgetItem* pluginItem) const
 
 void PluginsSettingsTab::update()
 {
-  // transfer plugin settings to in-memory structure
-  for (int i = 0; i < ui->pluginsList->topLevelItemCount(); ++i) {
-    auto* topLevelItem = ui->pluginsList->topLevelItem(i);
-    for (int j = 0; j < topLevelItem->childCount(); ++j) {
-      auto* item = topLevelItem->child(j);
+  // transfer plugin settings to in-memory structure, the plugins under another
+  // plugin too
+  const std::function<void(QTreeWidgetItem*)> transfer = [&](QTreeWidgetItem* parent) {
+    for (int j = 0; j < parent->childCount(); ++j) {
+      auto* item = parent->child(j);
       settings().plugins().setSettings(plugin(item)->name(),
                                        item->data(0, SettingsRole).toMap());
+      transfer(item);
     }
+  };
+  for (int i = 0; i < ui->pluginsList->topLevelItemCount(); ++i) {
+    transfer(ui->pluginsList->topLevelItem(i));
   }
 
   // set plugin blacklist
@@ -582,6 +599,7 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
 
   if (m_pluginContainer->requirements(plugin).isCorePlugin()) {
     ui->enabledCheckbox->setDisabled(true);
+    ui->enabledCheckbox->setChecked(true);
     ui->enabledCheckbox->setToolTip(
         QObject::tr("This plugin is required for Mod Organizer to work properly and "
                     "cannot be disabled."));

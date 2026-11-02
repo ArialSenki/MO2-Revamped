@@ -238,6 +238,10 @@ void makeRow(QCheckBox* box, bool takeDetail = false)
 
   new RowBehavior(row, box, labels);
   new VisibilityMirror(box, row);
+  // one hidden before it became a row stays out
+  if (box->isHidden()) {
+    row->hide();
+  }
 }
 
 

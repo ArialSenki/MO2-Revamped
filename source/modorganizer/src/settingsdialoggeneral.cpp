@@ -171,6 +171,7 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
       // so it always stays visible
       ui->mainToolbarVisibleBox->setChecked(true);
       ui->mainToolbarVisibleBox->setEnabled(false);
+      ui->mainToolbarVisibleBox->hide();
     } else {
       ui->toolbarIconSizeCombo->setEnabled(false);
       ui->toolbarButtonStyleCombo->setEnabled(false);
@@ -215,7 +216,13 @@ void GeneralSettingsTab::update()
   const QString newLanguage =
       ui->languageBox->itemData(ui->languageBox->currentIndex()).toString();
 
-  if (newLanguage != oldLanguage) {
+  // the entry the list fell back to when it opened isn't a change: en_US shows
+  // as en, which otherwise asked for a restart on the first OK
+  int shownAtOpen = ui->languageBox->findData(oldLanguage);
+  if (shownAtOpen == -1) {
+    shownAtOpen = ui->languageBox->findData(oldLanguage.mid(0, 2));
+  }
+  if (newLanguage != oldLanguage && ui->languageBox->currentIndex() != shownAtOpen) {
     settings().interface().setLanguage(newLanguage);
     emit settings().languageChanged(newLanguage);
   }

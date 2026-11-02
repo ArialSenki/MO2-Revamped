@@ -2085,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.83"
+    Version = "0.5.0-alpha.84"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -6122,6 +6122,8 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     GameName = "ELDEN RING NIGHTREIGN"
     GameShortName = "nightreign"
     GameNexusName = "eldenringnightreign"
+    # Nexus download links name it this way
+    GameValidShortNames = ["eldenringnightreign"]
     GameSteamId = 2622380
     GameBinary = "Game/nightreign.exe"
 
