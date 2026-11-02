@@ -362,7 +362,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             "bridge": read(game, r'NativeBridgeVersion = "([^"]+)"', str, "0.5.0-alpha.38"),
             "installer": read(
                 "eldenring_mo2_archive_installer/installer.py",
-                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.75",
+                r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.76",
             ),
             "saves": read(
                 "eldenring_mo2_save_isolation.py",

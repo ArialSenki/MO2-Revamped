@@ -139,7 +139,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
-        qInfo("Elden Ring MO2: archive layout installer alpha.75 initialized.")
+        qInfo("Elden Ring MO2: archive layout installer alpha.76 initialized.")
         return True
 
     def name(self) -> str:
@@ -157,7 +157,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 75)
+        return mobase.VersionInfo(0, 5, 0, 76)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -1210,11 +1210,28 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             (self.tr("New folder"), new_folder),
             (self.tr("Rename"), rename),
         )
+        def can_run(handler) -> bool:
+            items = selected_items()
+            if handler is use_as_root:
+                return len(items) == 1 and is_folder(items[0])
+            if handler is rename:
+                return len(items) == 1
+            return handler is new_folder or bool(items)
+
+        action_buttons = []
         for text, handler in actions:
             button = QtWidgets.QPushButton(text, dialog)
             button.setAutoDefault(False)
             button.clicked.connect(lambda _checked=False, run=handler: run())
             tools.addWidget(button)
+            action_buttons.append((button, handler))
+
+        def refresh_actions() -> None:
+            for button, handler in action_buttons:
+                button.setEnabled(can_run(handler))
+
+        tree.itemSelectionChanged.connect(refresh_actions)
+        refresh_actions()
         tools.addStretch(1)
         reset_button = QtWidgets.QPushButton(self.tr("Reset"), dialog)
         reset_button.setAutoDefault(False)
@@ -1224,7 +1241,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         def show_menu(position) -> None:
             menu = QtWidgets.QMenu(tree)
             for text, handler in actions:
-                menu.addAction(text, handler)
+                menu.addAction(text, handler).setEnabled(can_run(handler))
             menu.exec(tree.viewport().mapToGlobal(position))
 
         tree.customContextMenuRequested.connect(show_menu)
@@ -1328,7 +1345,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         online_folder = EldenRingModDataChecker.ReforgedOnlineDirectory.casefold()
         game_folders = EldenRingModDataChecker._asset_directories
         summary = {
-            "game": 0, "dlls": 0, "dlls_routed": 0, "online": 0, "other": 0,
+            "game": 0, "dlls": 0, "dlls_routed": 0, "dll_settings": 0, "online": 0, "other": 0,
             "regulation": False, "paths": paths, "misplaced": 0, "misplaced_in": "",
         }
         for path in paths:
@@ -1350,7 +1367,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 summary["dlls_routed"] += parts[0] == "dlls"
             elif parts[0] == "dlls":
                 # a DLL's settings, beside it
-                continue
+                summary["dll_settings"] += 1
             elif parts == ["regulation.bin"]:
                 summary["regulation"] = True
             elif len(parts) > 1 and parts[0] in game_folders:
@@ -1520,7 +1537,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             icon.setFont(glyph_font)
             icon.setFixedWidth(24)
             icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            row_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
+            # beside a title alone it sits in the middle, as the row's button does
+            row_layout.addWidget(
+                icon, 0, Qt.AlignmentFlag.AlignTop if description else Qt.AlignmentFlag.AlignVCenter
+            )
             texts = QtWidgets.QVBoxLayout()
             texts.setSpacing(2)
             title_label = QtWidgets.QLabel(title, row)
@@ -1813,7 +1833,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 summary_row(
                     0xE943,
                     self.tr("Native DLLs"),
-                    self.tr("{0} in DLLs").format(summary["dlls"])
+                    (
+                        self.tr("{0} in DLLs + {1} settings").format(
+                            summary["dlls"], summary["dll_settings"]
+                        )
+                        if summary["dll_settings"]
+                        else self.tr("{0} in DLLs").format(summary["dlls"])
+                    )
                     if summary["dlls_routed"] == summary["dlls"]
                     else self.tr("{0} DLL files").format(summary["dlls"]),
                 )
@@ -1918,8 +1944,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             content_layout.invalidate()
             content_layout.activate()
             margins = layout.contentsMargins()
+            width = min(920, available.width() - 32)
+            # at the window's width: a wrapped text alone asks for more lines
+            inner_width = width - margins.left() - margins.right()
             needed = (
-                content_layout.sizeHint().height()
+                (
+                    content_layout.totalHeightForWidth(inner_width)
+                    if content_layout.hasHeightForWidth()
+                    else content_layout.sizeHint().height()
+                )
                 + margins.top()
                 + margins.bottom()
                 + layout.spacing()
@@ -1929,7 +1962,6 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             shown = dialog.isVisible()
             frame_extra = dialog.frameGeometry().height() - dialog.height() if shown else 40
             height = min(max(needed, 320), available.height() - frame_extra)
-            width = min(920, available.width() - 32)
             dialog.resize(width, height)
             if shown:
                 left = dialog.frameGeometry().left()

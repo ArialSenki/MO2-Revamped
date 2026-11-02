@@ -143,6 +143,8 @@
   FRZN Merge's "Drag Files Into Here" stayed a folder beside its natives.
 - The install window's description follows the layout chosen in its advanced
   options.
+- The window fits its content when the advanced options open, and counts a DLL's
+  settings files. Manual's buttons that need a selection wait for one.
 - A Nexus download whose category has no mapping installs without a category;
   MO2 no longer stops to ask on each one.
 

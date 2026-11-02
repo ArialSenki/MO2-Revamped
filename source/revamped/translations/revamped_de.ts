@@ -1687,6 +1687,10 @@ Installiere die Mod neu, um das zu ändern.</translation>
       <translation>{0} in DLLs</translation>
     </message>
     <message>
+      <source>{0} in DLLs + {1} settings</source>
+      <translation>{0} in DLLs + {1} Einstellungen</translation>
+    </message>
+    <message>
       <source>{0} DLL files</source>
       <translation>{0} DLL-Dateien</translation>
     </message>

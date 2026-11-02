@@ -1703,6 +1703,10 @@ Reinstala el mod para cambiarlo.</translation>
       <translation>{0} en DLLs</translation>
     </message>
     <message>
+      <source>{0} in DLLs + {1} settings</source>
+      <translation>{0} en DLLs + {1} de ajustes</translation>
+    </message>
+    <message>
       <source>{0} DLL files</source>
       <translation>{0} archivos DLL</translation>
     </message>
