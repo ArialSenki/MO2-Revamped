@@ -103,6 +103,8 @@
   ships them, and logs folders that came in the archive.
 - Fixes: Seamless Co-op lost its folder when the archive wrapped it in another;
   FRZN Merge's "Drag Files Into Here" stayed a folder beside its natives.
+- A Nexus download whose category has no mapping installs without a category;
+  MO2 no longer stops to ask on each one.
 
 ### Elden Ring Nightreign
 

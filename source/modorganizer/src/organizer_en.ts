@@ -3584,93 +3584,68 @@ Most mods do not need it: script extenders and DLL loaders already load their pl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="746"/>
-        <source>No category found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="installationmanager.cpp" line="747"/>
-        <source>This Nexus category has not yet been mapped. Do you wish to proceed without setting a category, proceed and disable automatic Nexus mappings, or stop and configure your category mappings?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="installationmanager.cpp" line="752"/>
-        <source>&amp;Proceed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="installationmanager.cpp" line="754"/>
-        <source>&amp;Disable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="installationmanager.cpp" line="756"/>
-        <source>&amp;Stop &amp;&amp; Configure</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="installationmanager.cpp" line="878"/>
+        <location filename="installationmanager.cpp" line="864"/>
         <source>Invalid file tree returned by plugin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="925"/>
+        <location filename="installationmanager.cpp" line="911"/>
         <source>Installation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="926"/>
+        <location filename="installationmanager.cpp" line="912"/>
         <source>Something went wrong while installing this mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="950"/>
+        <location filename="installationmanager.cpp" line="936"/>
         <source>None of the available installer plugins were able to handle that archive.
 This is likely due to a corrupted or incompatible download or unrecognized archive format.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="962"/>
+        <location filename="installationmanager.cpp" line="948"/>
         <source>no error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="965"/>
+        <location filename="installationmanager.cpp" line="951"/>
         <source>7z.dll not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="968"/>
+        <location filename="installationmanager.cpp" line="954"/>
         <source>7z.dll isn&apos;t valid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="971"/>
+        <location filename="installationmanager.cpp" line="957"/>
         <source>archive not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="974"/>
+        <location filename="installationmanager.cpp" line="960"/>
         <source>failed to open archive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="977"/>
+        <location filename="installationmanager.cpp" line="963"/>
         <source>unsupported archive type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="980"/>
+        <location filename="installationmanager.cpp" line="966"/>
         <source>internal library error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="983"/>
+        <location filename="installationmanager.cpp" line="969"/>
         <source>archive invalid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installationmanager.cpp" line="987"/>
+        <location filename="installationmanager.cpp" line="973"/>
         <source>unknown archive error</source>
         <translation type="unfinished"></translation>
     </message>
