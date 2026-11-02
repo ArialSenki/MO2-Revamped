@@ -1292,6 +1292,14 @@ As alterações são salvas quando você escolhe OK.</translation>
       <translation>O botão Executar e os atalhos mostram o ícone do programa</translation>
     </message>
     <message>
+      <source>Desktop shortcuts show the program's own icon</source>
+      <translation>Os atalhos da área de trabalho mostram o ícone do programa</translation>
+    </message>
+    <message>
+      <source>The mod "%1" assigned to "%2" no longer exists, so new files go to Overwrite again.</source>
+      <translation>O mod "%1" atribuído a "%2" não existe mais, então os novos arquivos voltam para Overwrite.</translation>
+    </message>
+    <message>
       <source>Hide from the Program list</source>
       <translation>Ocultar da lista Programa</translation>
     </message>
@@ -4116,6 +4124,10 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
     <message>
       <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
       <translation>O launcher online do ELDEN RING Reforged não funciona dentro da pasta virtual do MO2 (VFS). O MO2 o inicia fora, coloca os saves deste perfil no lugar durante a sessão e os recolhe quando o jogo fecha.</translation>
+    </message>
+    <message>
+      <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Alguns inicializadores não funcionam dentro da pasta virtual do MO2 (VFS). O MO2 os inicia fora, coloca os saves deste perfil no lugar para a execução e os recolhe quando o jogo fecha.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>

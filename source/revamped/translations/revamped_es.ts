@@ -1308,6 +1308,14 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <translation>El botón Ejecutar y los accesos directos muestran el icono del programa</translation>
     </message>
     <message>
+      <source>Desktop shortcuts show the program's own icon</source>
+      <translation>Los accesos directos del escritorio muestran el icono del programa</translation>
+    </message>
+    <message>
+      <source>The mod "%1" assigned to "%2" no longer exists, so new files go to Overwrite again.</source>
+      <translation>El mod "%1" asignado a "%2" ya no existe, así que los archivos nuevos vuelven a Overwrite.</translation>
+    </message>
+    <message>
       <source>Hide from the Program list</source>
       <translation>Ocultar de la lista Programa</translation>
     </message>
@@ -4132,6 +4140,10 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     <message>
       <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
       <translation>El lanzador online de ELDEN RING Reforged no funciona dentro de la carpeta virtual de MO2 (VFS). MO2 lo inicia fuera, pone las partidas de este perfil en su sitio durante la partida y las recoge al cerrar el juego.</translation>
+    </message>
+    <message>
+      <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Algunos lanzadores no funcionan dentro de la carpeta virtual de MO2 (VFS). MO2 los inicia fuera y coloca las partidas de este perfil para esa ejecución, y las recoge al cerrar el juego.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>

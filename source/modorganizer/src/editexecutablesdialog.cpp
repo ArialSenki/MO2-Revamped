@@ -412,6 +412,18 @@ bool EditExecutablesDialog::checkOutputMods(const ExecutablesList& exes)
 
         return false;
       } else if (ModInfo::getIndex(modName->value) == UINT_MAX) {
+        // a mod renamed or removed since: this mustn't block every other edit
+        if (m_organizerCore.currentProfile()
+                ->setting("custom_overwrites", e.title())
+                .toString() == modName->value) {
+          showExecutableNotice(
+              this, QMessageBox::Warning, tr("Output mod not found"),
+              tr("The mod \"%1\" assigned to \"%2\" no longer exists, so new files go to "
+                 "Overwrite again.")
+                  .arg(modName->value, e.title()));
+          m_customOverwrites.setEnabled(e.title(), false);
+          continue;
+        }
         showExecutableNotice(
             this, QMessageBox::Warning, tr("Output mod not found"),
             tr("The mod \"%1\" assigned to \"%2\" does not exist.")
@@ -450,15 +462,23 @@ bool EditExecutablesDialog::commitChanges()
     }
 
     if (auto libraryList = m_forcedLibraries.find(e.title())) {
-      if (libraryList && !libraryList->value.empty()) {
+      if (libraryList) {
+        // also with no libraries: a switch turned off stays off
         profile->setForcedLibrariesEnabled(e.title(), libraryList->enabled);
-        profile->storeForcedLibraries(e.title(), libraryList->value);
+        if (!libraryList->value.empty()) {
+          profile->storeForcedLibraries(e.title(), libraryList->value);
+        }
       }
     }
   }
 
-  // set the new executables list
+  // set the new executables list; saved now, for plugins reading the instance's
+  // list and in case Mod Organizer doesn't get to close normally
   m_organizerCore.setExecutablesList(newExecutables);
+  m_organizerCore.executablesList()->store(m_organizerCore.settings());
+  m_organizerCore.settings().sync();
+  // the next Apply removes what this one stored
+  m_originalExecutables = newExecutables;
 
   setDirty(false);
 
@@ -863,7 +883,7 @@ void EditExecutablesDialog::on_down_clicked()
 bool EditExecutablesDialog::isTitleConflicting(const QString& s)
 {
   for (const auto& exe : m_executablesList) {
-    if (exe.title() == s) {
+    if (exe.title().compare(s, Qt::CaseInsensitive) == 0) {
       if (&exe != selectedExe()) {
         // found an executable that's not the current one with the same title
         return true;
@@ -980,7 +1000,21 @@ void EditExecutablesDialog::clone()
     return;
   }
 
-  addNew(*e);
+  // a copy works as the original does, without another toolbar button
+  Executable copy(*e);
+  copy.setShownOnToolbar(false);
+  const auto title = m_executablesList.makeNonConflictingTitle(e->title());
+  if (!title) {
+    return;
+  }
+  if (const auto mod = m_customOverwrites.find(e->title())) {
+    m_customOverwrites.set(*title, mod->enabled, mod->value);
+  }
+  if (const auto libraries = m_forcedLibraries.find(e->title())) {
+    m_forcedLibraries.set(*title, libraries->enabled, libraries->value);
+  }
+  copy.title(*title);
+  addNew(copy);
 }
 
 void EditExecutablesDialog::addNew(Executable e)
@@ -1306,7 +1340,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
                tr("Loads extra DLLs into the program when it starts"),
                ui->forceLoadLibraries, ui->configureLibraries);
   addSwitchRow(rows, 0xE91B, tr("Use the program's icon"),
-               tr("The Run button and shortcuts show the program's own icon"),
+               tr("Desktop shortcuts show the program's own icon"),
                ui->useApplicationIcon);
   addSwitchRow(rows, 0xED1A, tr("Hide from the Program list"),
                tr("Keeps the program here without listing it in the main window"),

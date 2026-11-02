@@ -68,8 +68,15 @@ public:
     m_topLevel->show();
     m_topLevel->setEnabled(true);
 
-    m_topLevel->raise();
-    m_topLevel->activateWindow();
+    // this runs again whenever the window it covers changes, also with the game
+    // in front: it never takes the foreground from another program
+    const bool appActive = QApplication::applicationState() == Qt::ApplicationActive;
+    if (appActive || !m_topLevel->isWindow()) {
+      m_topLevel->raise();
+    }
+    if (appActive) {
+      m_topLevel->activateWindow();
+    }
 
     return true;
   }

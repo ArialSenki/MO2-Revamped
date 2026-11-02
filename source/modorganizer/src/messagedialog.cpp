@@ -343,7 +343,9 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   QAccessibleEvent alert(notice, QAccessible::Alert);
   QAccessible::updateAccessibility(&alert);
 
-  if (bringToFront && reference != nullptr) {
+  // never over a game or another program the user is in
+  if (bringToFront && reference != nullptr &&
+      QApplication::applicationState() == Qt::ApplicationActive) {
     reference->activateWindow();
   }
 }

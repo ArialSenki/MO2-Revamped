@@ -182,9 +182,16 @@ bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game)
   bool added = false;
 
   for (const auto& exe : getPluginExecutables(game)) {
-    if (!titleExists(exe.title())) {
+    auto existing = find(exe.title());
+    if (existing == end()) {
       log::debug("adding new plugin executable '{}'", exe.title());
       setExecutable(exe, IgnoreExisting);
+      added = true;
+    } else if (!existing->binaryInfo().exists() && exe.binaryInfo().exists()) {
+      // its mod was renamed: the program moved with it
+      log::debug("updating the path of plugin executable '{}'", exe.title());
+      existing->binaryInfo(exe.binaryInfo());
+      existing->workingDirectory(exe.workingDirectory());
       added = true;
     }
   }
@@ -249,8 +256,9 @@ ExecutablesList::const_iterator ExecutablesList::find(const QString& title,
 
 bool ExecutablesList::titleExists(const QString& title) const
 {
+  // as find() does: titles differing only in case would become one program
   auto test = [&](const Executable& exe) {
-    return exe.title() == title;
+    return exe.title().compare(title, Qt::CaseInsensitive) == 0;
   };
   return std::find_if(m_Executables.begin(), m_Executables.end(), test) !=
          m_Executables.end();

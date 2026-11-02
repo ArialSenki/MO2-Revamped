@@ -1296,6 +1296,14 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
       <translation>Le bouton Lancer et les raccourcis affichent l’icône du programme</translation>
     </message>
     <message>
+      <source>Desktop shortcuts show the program's own icon</source>
+      <translation>Les raccourcis du bureau affichent l'icône du programme</translation>
+    </message>
+    <message>
+      <source>The mod "%1" assigned to "%2" no longer exists, so new files go to Overwrite again.</source>
+      <translation>Le mod « %1 » attribué à « %2 » n'existe plus : les nouveaux fichiers retournent donc dans Overwrite.</translation>
+    </message>
+    <message>
       <source>Hide from the Program list</source>
       <translation>Masquer dans la liste Programme</translation>
     </message>
@@ -4120,6 +4128,10 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
     <message>
       <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
       <translation>Le lanceur en ligne d'ELDEN RING Reforged ne fonctionne pas dans le dossier virtuel de MO2 (VFS). MO2 le lance en dehors, met en place les sauvegardes de ce profil pendant la session et les récupère à la fermeture du jeu.</translation>
+    </message>
+    <message>
+      <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Certains lanceurs ne fonctionnent pas dans le dossier virtuel de MO2 (VFS). MO2 les démarre en dehors, met les sauvegardes de ce profil en place pour l'exécution, puis les récupère à la fermeture du jeu.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>

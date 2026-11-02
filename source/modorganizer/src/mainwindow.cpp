@@ -3989,13 +3989,30 @@ bool MainWindow::modifyExecutablesDialog(int selection)
 {
   bool result = false;
 
+  // the program in the list stays selected whatever else changed; the list skips
+  // hidden programs, so its row isn't the dialog's
+  const QString title = ui->executablesListBox->itemText(selection + 1);
+  int dialogRow       = 0;
+  int row             = 0;
+  for (const auto& exe : *m_OrganizerCore.executablesList()) {
+    if (exe.title() == title) {
+      dialogRow = row;
+      break;
+    }
+    ++row;
+  }
+
   try {
-    EditExecutablesDialog dialog(m_OrganizerCore, selection, this);
+    EditExecutablesDialog dialog(m_OrganizerCore, dialogRow, this);
 
     result = (dialog.exec() == QDialog::Accepted);
 
     refreshExecutablesList();
     updatePinnedExecutables();
+
+    const int index = ui->executablesListBox->findText(title);
+    ui->executablesListBox->setCurrentIndex(
+        index > 0 ? index : qMin(1, ui->executablesListBox->count() - 1));
   } catch (const std::exception& e) {
     reportError(e.what());
   }
@@ -4015,13 +4032,6 @@ void MainWindow::on_executablesListBox_currentIndexChanged(int index)
 
   if (index == 0) {
     modifyExecutablesDialog(previousIndex - 1);
-    const auto newCount = ui->executablesListBox->count();
-
-    if (previousIndex >= 0 && previousIndex < newCount) {
-      ui->executablesListBox->setCurrentIndex(previousIndex);
-    } else {
-      ui->executablesListBox->setCurrentIndex(newCount - 1);
-    }
   }
 }
 
@@ -4381,14 +4391,7 @@ void MainWindow::on_actionModify_Executables_triggered()
 {
   const auto sel = (m_OldExecutableIndex > 0 ? m_OldExecutableIndex - 1 : 0);
 
-  if (modifyExecutablesDialog(sel)) {
-    const auto newCount = ui->executablesListBox->count();
-    if (m_OldExecutableIndex >= 0 && m_OldExecutableIndex < newCount) {
-      ui->executablesListBox->setCurrentIndex(m_OldExecutableIndex);
-    } else {
-      ui->executablesListBox->setCurrentIndex(newCount - 1);
-    }
-  }
+  modifyExecutablesDialog(sel);
 }
 
 void MainWindow::refresherProgress(const DirectoryRefreshProgress* p)
@@ -4477,6 +4480,16 @@ void MainWindow::modRenamed(const QString& oldName, const QString& newName)
 
   // immediately refresh the active profile because the data in memory is invalid
   m_OrganizerCore.currentProfile()->refreshModStatus();
+
+  // the programs that save new files to it follow it
+  for (const auto& exe : *m_OrganizerCore.executablesList()) {
+    if (m_OrganizerCore.currentProfile()
+            ->setting("custom_overwrites", exe.title())
+            .toString() == oldName) {
+      m_OrganizerCore.currentProfile()->storeSetting("custom_overwrites", exe.title(),
+                                                     newName);
+    }
+  }
 
   // also fix the directory structure
   try {

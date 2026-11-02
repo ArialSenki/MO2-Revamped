@@ -1334,6 +1334,14 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <translation>Il pulsante Avvia e le scorciatoie mostrano l’icona del programma</translation>
     </message>
     <message>
+      <source>Desktop shortcuts show the program's own icon</source>
+      <translation>I collegamenti sul desktop mostrano l'icona del programma</translation>
+    </message>
+    <message>
+      <source>The mod "%1" assigned to "%2" no longer exists, so new files go to Overwrite again.</source>
+      <translation>La mod "%1" assegnata a "%2" non esiste più, quindi i nuovi file tornano in Overwrite.</translation>
+    </message>
+    <message>
       <source>Hide from the Program list</source>
       <translation>Nascondi dall’elenco Programma</translation>
     </message>
@@ -4158,6 +4166,10 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
     <message>
       <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
       <translation>Il launcher online di ELDEN RING Reforged non funziona nella cartella virtuale di MO2 (VFS). MO2 lo avvia fuori, mette a posto i salvataggi di questo profilo per la sessione e li raccoglie alla chiusura del gioco.</translation>
+    </message>
+    <message>
+      <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Alcuni launcher non funzionano nella cartella virtuale di MO2 (VFS). MO2 li avvia all'esterno, mette a posto i salvataggi di questo profilo per l'esecuzione e li riprende alla chiusura del gioco.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>

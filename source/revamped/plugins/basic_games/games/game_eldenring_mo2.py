@@ -2085,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.81"
+    Version = "0.5.0-alpha.82"
     NativeBridgeVersion = "0.5.0-alpha.38"
 
     GameName = "ELDEN RING"
@@ -5314,6 +5314,12 @@ class EldenRingMo2Game(BasicGame):
         if selector is None or not self.isActive():
             return
         hidden = self._inactive_reforged_online_programs()
+        # the program of a Reforged mod that was removed stays saved: not offered
+        offered = {executable.title() for executable in self._reforged_online_executables()}
+        for row in range(selector.count()):
+            text = selector.itemText(row)
+            if text.startswith("ELDEN RING Reforged (online)") and text not in offered:
+                hidden.add(text)
         view = selector.view()
         for row in range(selector.count()):
             view.setRowHidden(row, selector.itemText(row) in hidden)

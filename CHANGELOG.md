@@ -90,6 +90,25 @@
 - Duplicating refreshes the list if the copy stops partway, warns if the copy's
   profiles could not be made, and no longer doubles "Portable" in the name.
 
+### Executables
+
+- Titles differing only in case count as the same. Such a rename or a program
+  added from a file could silently merge two programs and lose one.
+- The Run button keeps its program after this window closes, also after Cancel,
+  by its name rather than its position.
+- Turning off "Save new files to a mod" sticks after Apply. A program follows its
+  output mod when that is renamed; if the mod is gone, the program saves to
+  Overwrite again and says so, instead of refusing every edit.
+- Edits are saved when applied. Duplicating copies the output mod and libraries,
+  without another toolbar button.
+- Reforged's online program follows its mod when renamed and leaves the list when
+  the mod is removed.
+
+### Foreground
+
+- Mod Organizer's notices and its lock no longer take the foreground from a game
+  or another program.
+
 ### Profiles
 
 - A new, duplicated or renamed profile can't take a name already in use, in any
@@ -104,7 +123,7 @@
 
 ### New instance wizard and menus
 
-- Menus are more compact.
+- Menus and the lists that drop down from a field are more compact.
 - Steps change without a flash: a page is set up before it shows, so the
   isolated copy's game step no longer shows the others' search box first, and
   the old page fades into the new one.

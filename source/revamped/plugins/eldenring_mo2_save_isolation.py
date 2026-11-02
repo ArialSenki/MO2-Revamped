@@ -440,7 +440,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             application.installEventFilter(self.__ui_event_filter)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
-        qInfo("Elden Ring MO2: save isolation alpha.82 initialized.")
+        qInfo("Elden Ring MO2: save isolation alpha.83 initialized.")
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
@@ -498,7 +498,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 82)
+        return mobase.VersionInfo(0, 5, 0, 83)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -4413,7 +4413,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             0xE756, _tr("Programs"),
             _tr("ELDEN RING Reforged's online launcher does not work inside MO2's virtual "
             "folder (VFS). MO2 starts it outside and puts this profile's saves in place "
-            "for the run, then collects them when the game closes."),
+            "for the run, then collects them when the game closes.")
+            if self._game_key == "eldenring"
+            else _tr("Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts "
+            "them outside and puts this profile's saves in place for the run, then "
+            "collects them when the game closes."),
         )
         programs_card = add_card(programs_page, _tr("Launchers"))
         programs_page.addStretch(1)

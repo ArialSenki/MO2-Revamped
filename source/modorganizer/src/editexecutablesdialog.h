@@ -187,7 +187,7 @@ private:
 
   // copy of the original executables, used to clear the current settings when
   // committing changes
-  const ExecutablesList m_originalExecutables;
+  ExecutablesList m_originalExecutables;
 
   // current executable list
   ExecutablesList m_executablesList;

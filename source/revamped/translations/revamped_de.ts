@@ -1292,6 +1292,14 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
       <translation>Ausführen-Schaltfläche und Verknüpfungen zeigen das eigene Symbol des Programms</translation>
     </message>
     <message>
+      <source>Desktop shortcuts show the program's own icon</source>
+      <translation>Desktop-Verknüpfungen zeigen das Symbol des Programms</translation>
+    </message>
+    <message>
+      <source>The mod "%1" assigned to "%2" no longer exists, so new files go to Overwrite again.</source>
+      <translation>Der "%2" zugewiesene Mod "%1" existiert nicht mehr, daher gehen neue Dateien wieder nach Overwrite.</translation>
+    </message>
+    <message>
       <source>Hide from the Program list</source>
       <translation>In der Programmliste ausblenden</translation>
     </message>
@@ -4116,6 +4124,10 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
     <message>
       <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
       <translation>Der Online-Launcher von ELDEN RING Reforged funktioniert nicht im virtuellen Ordner von MO2 (VFS). MO2 startet ihn außerhalb, legt die Spielstände dieses Profils für die Sitzung bereit und holt sie zurück, wenn das Spiel geschlossen wird.</translation>
+    </message>
+    <message>
+      <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
+      <translation>Manche Launcher funktionieren nicht im virtuellen Ordner von MO2 (VFS). MO2 startet sie außerhalb, legt die Spielstände dieses Profils für den Lauf bereit und holt sie nach dem Schließen des Spiels zurück.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>
