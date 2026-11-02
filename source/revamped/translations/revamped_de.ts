@@ -1585,6 +1585,10 @@ Installiere den Mod neu, um das zu ändern.</translation>
       <translation>MO2 sucht die Dateien der Mod im Archiv und legt sie in seine Standardordner.</translation>
     </message>
     <message>
+      <source>MO2 installs the files as they come in the archive, in the same folders.</source>
+      <translation>MO2 installiert die Dateien so, wie sie im Archiv liegen, in denselben Ordnern.</translation>
+    </message>
+    <message>
       <source>Advanced options</source>
       <translation>Erweiterte Optionen</translation>
     </message>

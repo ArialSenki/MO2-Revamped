@@ -139,7 +139,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
-        qInfo("Elden Ring MO2: archive layout installer alpha.74 initialized.")
+        qInfo("Elden Ring MO2: archive layout installer alpha.75 initialized.")
         return True
 
     def name(self) -> str:
@@ -157,7 +157,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 74)
+        return mobase.VersionInfo(0, 5, 0, 75)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -1466,15 +1466,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         heading.setProperty("wizardPageTitle", True)
         heading.setWordWrap(True)
         content_layout.addWidget(heading)
-        subtitle = QtWidgets.QLabel(
+        organized_text = (
             package_texts[package]
             if package
             else self.tr(
                 "MO2 finds the mod's files inside the archive and puts them in its "
                 "standard folders."
-            ),
-            content,
+            )
         )
+        subtitle = QtWidgets.QLabel(organized_text, content)
         subtitle.setObjectName("archivePageSubtitle")
         subtitle.setProperty("wizardPageText", True)
         subtitle.setWordWrap(True)
@@ -1779,6 +1779,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             add_row(summary_card, glyph, title, description, (value_label,), summary_host)
 
         def refresh_summary() -> None:
+            subtitle.setText(
+                self.tr("MO2 installs the files as they come in the archive, in the same folders.")
+                if preserve_radio.isChecked()
+                else organized_text
+            )
             preserve, omit_txt, omit_md, online = current_choices()
             clear_summary()
             summary = self._layout_summary(archive_tree, preserve, omit_txt, omit_md, online)

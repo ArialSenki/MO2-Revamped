@@ -1589,6 +1589,10 @@ Réinstallez le mod pour changer ce choix.</translation>
       <translation>MO2 trouve les fichiers du mod dans l'archive et les place dans ses dossiers standard.</translation>
     </message>
     <message>
+      <source>MO2 installs the files as they come in the archive, in the same folders.</source>
+      <translation>MO2 installe les fichiers tels qu'ils sont dans l'archive, dans les mêmes dossiers.</translation>
+    </message>
+    <message>
       <source>Advanced options</source>
       <translation>Options avancées</translation>
     </message>

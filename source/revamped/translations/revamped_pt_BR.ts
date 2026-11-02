@@ -1585,6 +1585,10 @@ Reinstale o mod para mudar isso.</translation>
       <translation>O MO2 encontra os arquivos do mod dentro do arquivo compactado e os coloca nas pastas padrão.</translation>
     </message>
     <message>
+      <source>MO2 installs the files as they come in the archive, in the same folders.</source>
+      <translation>O MO2 instala os arquivos como vêm no pacote, nas mesmas pastas.</translation>
+    </message>
+    <message>
       <source>Advanced options</source>
       <translation>Opções avançadas</translation>
     </message>

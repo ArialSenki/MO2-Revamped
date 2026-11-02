@@ -1601,6 +1601,10 @@ Reinstala el mod para cambiarlo.</translation>
       <translation>MO2 busca los archivos del mod dentro del archivo comprimido y los coloca en sus carpetas estándar.</translation>
     </message>
     <message>
+      <source>MO2 installs the files as they come in the archive, in the same folders.</source>
+      <translation>MO2 instala los archivos tal como vienen en el archivo comprimido, en las mismas carpetas.</translation>
+    </message>
+    <message>
       <source>Advanced options</source>
       <translation>Opciones avanzadas</translation>
     </message>
