@@ -556,6 +556,8 @@ int run(int argc, char* argv[])
       return 0;
     }
 
+    // nothing has set a theme yet this early
+    app.setStyleFile(Settings::defaultInterfaceStyleName());
     QMessageBox::information(
         nullptr, QObject::tr("Mod Organizer"),
         QObject::tr("An instance of Mod Organizer is already running"));

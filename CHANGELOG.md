@@ -136,6 +136,16 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Old look gone
+
+- The question dialogs, such as "Restart Mod Organizer", use the Fluent look instead of
+  the original's blue icon and arrows, and "Some things might be weird" says what happens.
+- The profile and program lists say "Manage profiles..." and "Edit programs...", not
+  "<Manage...>" and "<Edit...>". The other labels in angle brackets went too.
+- An old logo left in an instance's folder no longer shows at start.
+- "An instance of Mod Organizer is already running" uses the theme, and what appears before
+  the main window uses the instance's theme, not always Dark.
+
 ### Saves and Downloads tabs
 
 - Saves and Downloads say when something couldn't be removed, also when Windows was

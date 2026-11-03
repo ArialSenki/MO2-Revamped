@@ -116,7 +116,7 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
           m_manager.getPendingDownload(index.row() - m_manager.numTotalDownloads());
       switch (index.column()) {
       case COL_NAME:
-        return tr("< game %1 mod %2 file %3 >")
+        return tr("Game %1, mod %2, file %3")
             .arg(std::get<0>(nexusids))
             .arg(std::get<1>(nexusids))
             .arg(std::get<2>(nexusids));

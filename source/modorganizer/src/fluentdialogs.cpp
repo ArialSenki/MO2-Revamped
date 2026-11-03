@@ -6,6 +6,7 @@
 #include "settings.h"
 
 #include <QAbstractItemView>
+#include <QCommandLinkButton>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFrame>
@@ -229,6 +230,25 @@ void polish(QDialog* dialog)
     return;
   }
   dialog->setProperty("fluentPolished", true);
+
+  // uibase's question dialogs: no arrow on their choices, no details row without
+  // details, and an icon at the size of a message box's
+  if (dialog->objectName() == QLatin1String("TaskDialog")) {
+    for (auto* choice : dialog->findChildren<QCommandLinkButton*>()) {
+      choice->setIcon(QIcon());
+    }
+    if (auto* details = dialog->findChild<QWidget*>(QStringLiteral("detailsExpander"));
+        details != nullptr && !details->isEnabled()) {
+      details->hide();
+    }
+  }
+  if (dialog->objectName() == QLatin1String("QuestionBoxMemory")) {
+    if (auto* icon = dialog->findChild<QLabel*>(QStringLiteral("iconLabel"))) {
+      icon->setPixmap(dialog->style()
+                          ->standardIcon(QStyle::SP_MessageBoxQuestion)
+                          .pixmap(QSize(28, 28), dialog->devicePixelRatioF()));
+    }
+  }
 
   flattenHeaders(dialog);
 

@@ -959,6 +959,10 @@ As alterações são salvas quando você escolhe OK.</translation>
   <context>
     <name>DownloadList</name>
     <message>
+      <source>Game %1, mod %2, file %3</source>
+      <translation>Jogo %1, mod %2, arquivo %3</translation>
+    </message>
+    <message>
       <source>Modified</source>
       <translation>Modificado</translation>
     </message>
@@ -5820,6 +5824,18 @@ Excluí-las também remove os arquivos dessas instâncias. Excluir mesmo assim?<
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Some changes won't apply until you restart.</source>
+      <translation>Algumas alterações só serão aplicadas após reiniciar.</translation>
+    </message>
+    <message>
+      <source>Edit programs...</source>
+      <translation>Editar programas...</translation>
+    </message>
+    <message>
+      <source>No programs</source>
+      <translation>Nenhum programa</translation>
+    </message>
+    <message>
       <source>Shows the game's folder as the game sees it, with the active mods applied. The Origin column says which mod supplies each file.</source>
       <translation>Mostra a pasta do jogo como o jogo a vê, com os mods ativos aplicados. A coluna Origin indica qual mod fornece cada arquivo.</translation>
     </message>
@@ -8875,6 +8891,10 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   <context>
     <name>QObject</name>
     <message>
+      <source>Manage profiles...</source>
+      <translation>Gerenciar perfis...</translation>
+    </message>
+    <message>
       <source>Removed from Nexus</source>
       <translation>Removido do Nexus</translation>
     </message>
@@ -10453,6 +10473,10 @@ Restantes nesta hora: %3</translation>
   </context>
   <context>
     <name>SyncOverwriteDialog</name>
+    <message>
+      <source>Don't sync</source>
+      <translation>Não sincronizar</translation>
+    </message>
     <message>
       <source>Choose which mod should own each file, or leave it in Overwrite.</source>
       <translation>Escolha qual mod deve ficar com cada arquivo ou deixe-o no Overwrite.</translation>

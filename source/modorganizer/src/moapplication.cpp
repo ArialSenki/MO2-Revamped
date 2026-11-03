@@ -52,6 +52,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMainWindow>
 #include <QAbstractButton>
 #include <QMenu>
+#include <QCryptographicHash>
 #include <QMessageBox>
 #include <QTreeView>
 #include <QMouseEvent>
@@ -520,6 +521,26 @@ public:
     return QProxyStyle::styleHint(hint, option, widget, returnData);
   }
 
+  QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption* option,
+                     const QWidget* widget) const override
+  {
+    if (qApp->property("revampedFluent").toBool()) {
+      switch (standardIcon) {
+      case SP_MessageBoxInformation:
+      case SP_MessageBoxQuestion:
+        return FluentIcons::glyph(standardIcon == SP_MessageBoxQuestion ? 0xE897 : 0xE946,
+                                  FluentIcons::Tone::Accent);
+      case SP_MessageBoxWarning:
+        return FluentIcons::glyph(0xE7BA, FluentIcons::Tone::Caution);
+      case SP_MessageBoxCritical:
+        return FluentIcons::glyph(0xEA39, FluentIcons::Tone::Critical);
+      default:
+        break;
+      }
+    }
+    return QProxyStyle::standardIcon(standardIcon, option, widget);
+  }
+
   void drawPrimitive(PrimitiveElement element, const QStyleOption* option,
                      QPainter* painter, const QWidget* widget) const override
   {
@@ -743,6 +764,9 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
                                           : configuredStyle,
                 selectedStyle);
     }
+    // what comes before the main window (a plugin's error, a shortcut's lock
+    // window) already uses this instance's theme
+    setStyleFile(selectedStyle);
   } else {
     log::error("Revamped Light and Dark stylesheets are missing from '{}'",
                stylesheetsPath);
@@ -1690,8 +1714,20 @@ QString MOSplash::getSplashPath(const Settings& settings, const QString& dataPat
   // try splash from instance directory
   const QString splashPath = dataPath + "/splash.png";
   if (QFile::exists(dataPath + "/splash.png")) {
+    // earlier versions left a copy of their logo here, which would show forever
+    static const QStringList oldLogos = {
+        "4e77a09b7ca9969486d7167d4349a947f15acef8"};
+    QFile copy(splashPath);
+    const bool oldLogo =
+        copy.open(QIODevice::ReadOnly) &&
+        oldLogos.contains(QString::fromLatin1(
+            QCryptographicHash::hash(copy.readAll(), QCryptographicHash::Sha1).toHex()));
+    copy.close();
+
     QImage image(splashPath);
-    if (!image.isNull()) {
+    if (oldLogo) {
+      QFile::remove(splashPath);
+    } else if (!image.isNull()) {
       return splashPath;
     }
   }
@@ -1701,7 +1737,6 @@ QString MOSplash::getSplashPath(const Settings& settings, const QString& dataPat
   if (QFile::exists(pluginSplash)) {
     QImage image(pluginSplash);
     if (!image.isNull()) {
-      image.save(splashPath);
       return pluginSplash;
     }
   }

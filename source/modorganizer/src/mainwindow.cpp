@@ -3439,7 +3439,7 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
 
   profileBox->blockSignals(true);
   profileBox->clear();
-  profileBox->addItem(QObject::tr("<Manage...>"));
+  profileBox->addItem(QObject::tr("Manage profiles..."));
 
   QDir profilesDir(Settings::instance().paths().profiles());
   profilesDir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
@@ -3518,7 +3518,7 @@ void MainWindow::refreshExecutablesList()
   ui->executablesListBox->setEnabled(false);
   ui->executablesListBox->clear();
 
-  add(tr("<Edit...>"), {});
+  add(tr("Edit programs..."), {});
 
   for (const auto& exe : *m_OrganizerCore.executablesList()) {
     if (!exe.hide()) {
@@ -3529,7 +3529,7 @@ void MainWindow::refreshExecutablesList()
   if (ui->executablesListBox->count() == 1) {
     // all executables are hidden, add an empty one to at least be able to
     // switch to edit
-    add(tr("(no executables)"), QFileInfo(":badfile"));
+    add(tr("No programs"), QFileInfo(":badfile"));
   }
 
   const int selectedIndex = ui->executablesListBox->findText(selected);
@@ -4890,7 +4890,8 @@ void MainWindow::on_actionSettings_triggered()
             .icon(QMessageBox::Question)
             .button({tr("Restart"), QMessageBox::Yes})
             .button(
-                {tr("Continue"), tr("Some things might be weird."), QMessageBox::No})
+                {tr("Continue"), tr("Some changes won't apply until you restart."),
+                 QMessageBox::No})
             .exec();
 
     if (r == QMessageBox::Yes) {
@@ -5077,7 +5078,7 @@ void MainWindow::languageChange(const QString& newLanguage)
   }
   log::debug("loaded language {}", newLanguage);
 
-  ui->profileBox->setItemText(0, QObject::tr("<Manage...>"));
+  ui->profileBox->setItemText(0, QObject::tr("Manage profiles..."));
 
   createHelpMenu();
 

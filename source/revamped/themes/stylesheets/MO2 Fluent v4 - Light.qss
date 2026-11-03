@@ -6558,3 +6558,27 @@ QTreeWidget#pluginsList::item:selected {
 QToolButton#startButton[runState="idle"]::menu-button:disabled {
     border-left-color: #EBEBEB;
 }
+/* uibase's question dialogs: their choices as the wizard's, the icon on the card */
+QDialog#TaskDialog QWidget#iconPanel,
+QDialog#TaskDialog QWidget#widget_3,
+QDialog#TaskDialog QWidget#mainPanel,
+QDialog#TaskDialog QWidget#commandButtonsPanel,
+QDialog#TaskDialog QWidget#commandButtons {
+    background-color: transparent;
+    border: none;
+}
+QDialog#TaskDialog QCommandLinkButton {
+    color: #1A1A1A;
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid #EBEBEB;
+    border-radius: 0px;
+    padding: 12px 20px 12px 16px;
+    text-align: left;
+}
+QDialog#TaskDialog QCommandLinkButton:hover {
+    background-color: #F2F2F2;
+}
+QDialog#TaskDialog QCommandLinkButton:pressed {
+    background-color: #DFE1E4;
+}
