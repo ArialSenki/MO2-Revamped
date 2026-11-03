@@ -8421,6 +8421,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
   <context>
     <name>OrganizerCore</name>
     <message>
+      <source>The installation was cancelled while extracting files. Nothing was installed.</source>
+      <translation>Die Installation wurde beim Entpacken abgebrochen. Es wurde nichts installiert.</translation>
+    </message>
+    <message>
       <source>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to "Script Extender", in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
       <translation>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; wurde im Spielordner gefunden (Rechtsklick kopiert den vollständigen Pfad). Wahrscheinlich ist das ein Überbleibsel davon, dass der Lademechanismus von ModOrganizer 1 auf "Script Extender" gestellt war. Entferne die Datei dann, indem du den Lademechanismus in ModOrganizer 1 änderst oder sie manuell löschst. Sonst startet das Spiel möglicherweise nicht oder stürzt ab.</translation>
     </message>

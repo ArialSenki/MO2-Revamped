@@ -263,11 +263,15 @@ public:
 
   // the mod that Replace set aside: back in place, or to the Recycle Bin; whoever
   // called testOverwrite() calls one of them
+  void removeUnfinishedNewMod();
   void restoreReplacedMod();
   void discardReplacedMod();
 
   // whether a cancelled or failed install put the old version back
   bool replacedModRestored() const { return m_ReplacedRestored; }
+
+  // a new mod's install stopped, and its partial folder is gone
+  bool newModRemoved() const { return m_NewModRemoved; }
 
   // old versions a Replace left behind in this instance, the newest of each mod;
   // older copies of the same mods go in older
@@ -369,6 +373,8 @@ private:
   void removeAsideSlot(const QString& aside) const;
 
   bool m_ReplacedRestored = false;
+  QString m_NewModFolder;
+  bool m_NewModRemoved = false;
   QString m_ReplacedFolder;
   QString m_ReplacedTarget;
   std::optional<QString> m_ReplacedInstallFile;

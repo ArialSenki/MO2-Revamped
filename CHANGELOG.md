@@ -138,6 +138,11 @@
 
 ### Other windows
 
+- A new mod's install that is cancelled or fails no longer leaves a folder with
+  part of its files, which showed up as a mod.
+- In games with plugins, the right panel opens wide enough for the plugin names
+  and every tab.
+- LOOT's report takes the free height, and its scroll bars follow the theme.
 - Replace, when a mod is already installed: the old files stay aside until the
   new version has finished installing, then go to the Recycle Bin. If you cancel
   or the install fails, the old mod comes back as it was, also with installers

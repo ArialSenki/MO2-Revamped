@@ -1607,6 +1607,7 @@ QString VariantsPage::selectedGameVariant(MOBase::IPluginGame* game) const
 void VariantsPage::fillList()
 {
   ui->editions->clear();
+  ui->editions->setSizePolicy(QSizePolicy::Expanding, ui->editions->sizePolicy().verticalPolicy());
   m_buttons.clear();
 
   auto* g = m_dlg.rawCreationInfo().game;
@@ -1625,6 +1626,7 @@ void VariantsPage::fillList()
     b->setProperty("fluentKeepIcon", true);
     setChoiceIcon(b, choiceIcon(EditionGlyph), 16);
     b->setCursor(Qt::PointingHandCursor);
+    b->setSizePolicy(QSizePolicy::Expanding, b->sizePolicy().verticalPolicy());
 
     QObject::connect(b, &QAbstractButton::clicked, [v, this] {
       select(v);

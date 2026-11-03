@@ -1652,6 +1652,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   auto& features = m_OrganizerCore.gameFeatures();
   if (!features.gameFeature<GamePlugins>()) {
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->espTab));
+  } else {
+    // room for the plugin table's names and every tab
+    ui->tabWidget->setMinimumWidth(500);
   }
   if (!features.gameFeature<DataArchives>()) {
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->bsaTab));
@@ -2004,6 +2007,10 @@ void MainWindow::allowListResize()
 
   for (int i = nameStretches ? 1 : 0; i < header->count(); ++i) {
     header->setSectionResizeMode(i, QHeaderView::Interactive);
+    // room for the sort arrow, which the contents' width leaves out
+    if (nameStretches) {
+      header->resizeSection(i, header->sectionSize(i) + 14);
+    }
   }
   header->setStretchLastSection(!nameStretches);
 }
@@ -2737,18 +2744,18 @@ void MainWindow::showEvent(QShowEvent* event)
              "manual setup)."));
       const bool nexus = NexusInterface::instance().getAccessManager()->validated();
       if (nexus) {
-        FluentChoices::addOption(setup, ImportNexusGlyph, tr("&Import Nexus Categories"),
+        FluentChoices::addOption(setup, ImportNexusGlyph, tr("&Import Nexus categories"),
                                  tr("Map this game's Nexus categories to yours "
                                     "automatically."),
                                  ImportNexus)
             ->setRecommended(true);
       }
-      FluentChoices::addOption(setup, OldDefaultsGlyph, tr("Use &Old Category Defaults"),
+      FluentChoices::addOption(setup, OldDefaultsGlyph, tr("Use &old category defaults"),
                                tr("Start with the categories Mod Organizer has always "
                                   "come with."),
                                OldDefaults)
           ->setRecommended(!nexus);
-      FluentChoices::addOption(setup, ManualCategoriesGlyph, tr("Do &Nothing"),
+      FluentChoices::addOption(setup, ManualCategoriesGlyph, tr("Do &nothing"),
                                tr("Start without categories and set them up yourself."),
                                DoNothing);
       auto* later = setup.addButton(tr("&Close"));
@@ -2784,17 +2791,17 @@ void MainWindow::showEvent(QShowEvent* event)
                "and has no mappings yet."));
         if (NexusInterface::instance().getAccessManager()->validated()) {
           FluentChoices::addOption(migrate, ImportNexusGlyph,
-                                   tr("&Import Nexus Categories"),
+                                   tr("&Import Nexus categories"),
                                    tr("Map this game's Nexus categories to yours "
                                       "automatically."),
                                    ImportNexus)
               ->setRecommended(true);
         }
-        FluentChoices::addOption(migrate, CategoryEditorGlyph, tr("&Open Categories Dialog"),
+        FluentChoices::addOption(migrate, CategoryEditorGlyph, tr("&Open categories dialog"),
                                  tr("Set up the mappings yourself in the category editor."),
                                  OpenEditor);
         FluentChoices::addOption(migrate, DisableMappingsGlyph,
-                                 tr("&Disable Nexus Mappings"),
+                                 tr("&Disable Nexus mappings"),
                                  tr("Keep categories as they are. You can turn mappings "
                                     "back on in Settings."),
                                  DisableMappings);

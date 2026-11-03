@@ -6257,7 +6257,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
       <translation>Si ya te conectaste a Nexus, puedes importar automáticamente las categorías de Nexus para este juego (si corresponde). Si no, usa la estructura de categorías predeterminada antigua de Mod Organizer o deja las categorías vacías (para configurarlas a mano).</translation>
     </message>
     <message>
-      <source>Use &amp;Old Category Defaults</source>
+      <source>Use &amp;old category defaults</source>
       <translation>Usar las categorías predeterminadas &amp;antiguas</translation>
     </message>
     <message>
@@ -8528,6 +8528,10 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
   </context>
   <context>
     <name>OrganizerCore</name>
+    <message>
+      <source>The installation was cancelled while extracting files. Nothing was installed.</source>
+      <translation>Se canceló la instalación durante la extracción. No se ha instalado nada.</translation>
+    </message>
     <message>
       <source>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to "Script Extender", in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
       <translation>Se encontró &lt;a href="%1"&gt;hook.dll&lt;/a&gt; en la carpeta del juego (clic derecho para copiar la ruta completa). Lo más probable es que sea un resto de haber configurado el mecanismo de carga de ModOrganizer 1 como "Script Extender"; en ese caso debes quitar este archivo cambiando el mecanismo de carga en ModOrganizer 1 o borrándolo manualmente. De lo contrario, el juego podría no iniciarse o cerrarse inesperadamente.</translation>

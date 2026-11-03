@@ -6457,15 +6457,15 @@ I BSA selezionati qui vengono caricati in modo da rispettare correttamente l'ord
       <translation>Se sei già connesso a Nexus, puoi importare automaticamente le categorie Nexus per questo gioco (se disponibili). Altrimenti usa la vecchia struttura di categorie predefinita di Mod Organizer o lascia vuote le categorie (configurazione manuale).</translation>
     </message>
     <message>
-      <source>&amp;Import Nexus Categories</source>
+      <source>&amp;Import Nexus categories</source>
       <translation>&amp;Importa categorie Nexus</translation>
     </message>
     <message>
-      <source>Use &amp;Old Category Defaults</source>
+      <source>Use &amp;old category defaults</source>
       <translation>Usa le &amp;vecchie categorie predefinite</translation>
     </message>
     <message>
-      <source>Do &amp;Nothing</source>
+      <source>Do &amp;nothing</source>
       <translation>&amp;Non fare nulla</translation>
     </message>
     <message>
@@ -6485,11 +6485,11 @@ Puoi aprire manualmente l'editor delle categorie, dalle Impostazioni o dalla bar
 In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, modificabile in qualsiasi momento nelle Impostazioni.</translation>
     </message>
     <message>
-      <source>&amp;Open Categories Dialog</source>
+      <source>&amp;Open categories dialog</source>
       <translation>&amp;Apri finestra categorie</translation>
     </message>
     <message>
-      <source>&amp;Disable Nexus Mappings</source>
+      <source>&amp;Disable Nexus mappings</source>
       <translation>&amp;Disattiva associazioni Nexus</translation>
     </message>
     <message>
@@ -8704,6 +8704,10 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
   </context>
   <context>
     <name>OrganizerCore</name>
+    <message>
+      <source>The installation was cancelled while extracting files. Nothing was installed.</source>
+      <translation>L&apos;installazione è stata annullata durante l&apos;estrazione. Non è stato installato nulla.</translation>
+    </message>
     <message>
       <source>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to "Script Extender", in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
       <translation>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; è stato trovato nella cartella del gioco (clic destro per copiare il percorso completo). Molto probabilmente è un residuo del meccanismo di caricamento di ModOrganizer 1 impostato su "Script Extender"; in tal caso rimuovi il file cambiando il meccanismo di caricamento in ModOrganizer 1 o eliminandolo a mano. Altrimenti il gioco potrebbe non avviarsi o andare in crash.</translation>

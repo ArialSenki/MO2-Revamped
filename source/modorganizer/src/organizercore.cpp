@@ -898,6 +898,8 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
             m_InstallationManager.replacedModRestored()
                 ? tr("The installation was cancelled while extracting files. The "
                      "installed mod is back as it was.")
+            : m_InstallationManager.newModRemoved()
+                ? tr("The installation was cancelled while extracting files. Nothing was installed.")
                 : tr("The installation was cancelled while extracting files. "
                      "If this was prior to a FOMOD setup, this warning may be ignored. "
                      "However, if this was during installation, the mod will likely be "
@@ -905,7 +907,8 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
                      "files."),
             QMessageBox::Ok);
         refresh();
-      } else if (m_InstallationManager.replacedModRestored()) {
+      } else if (m_InstallationManager.replacedModRestored() ||
+                 m_InstallationManager.newModRemoved()) {
         refresh();
       }
     }

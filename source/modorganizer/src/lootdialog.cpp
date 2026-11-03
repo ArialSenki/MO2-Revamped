@@ -4,6 +4,7 @@
 #include "organizercore.h"
 #include "revampedtheme.h"
 #include "ui_lootdialog.h"
+#include <QBoxLayout>
 #include <QWebChannel>
 #include <utility.h>
 
@@ -205,12 +206,16 @@ void LootDialog::createUI()
       // the page is written for dark backgrounds
       if (FluentIcons::active() && !RevampedTheme::isDark()) {
         html.replace(QStringLiteral("</head>"),
-                     QStringLiteral("<style>body{background:#FBFBFB;color:#1B1B1B}"
+                     QStringLiteral("<style>html{color-scheme:light}"
+                                    "body{background:#FBFBFB;color:#1B1B1B}"
                                     "a{color:#005FB8}a:visited{color:#003E92}"
                                     "blockquote{border-left-color:#E5E5E5}"
                                     "blockquote p,blockquote cite{color:#5C5C5C}"
                                     "</style></head>"));
         page->setBackgroundColor(QColor(0xFB, 0xFB, 0xFB));
+      } else if (FluentIcons::active()) {
+        html.replace(QStringLiteral("</head>"),
+                     QStringLiteral("<style>html{color-scheme:dark}</style></head>"));
       }
       ui->report->setHtml(html);
     } else {
@@ -229,6 +234,10 @@ void LootDialog::createUI()
   ui->buttons->setStandardButtons(QDialogButtonBox::Cancel);
 
   m_report.setText(tr("Running LOOT..."));
+
+  if (auto* root = qobject_cast<QBoxLayout*>(layout())) {
+    root->setStretchFactor(ui->frame, 1);
+  }
 
   resize(760, 560);
   setSizeGripEnabled(true);

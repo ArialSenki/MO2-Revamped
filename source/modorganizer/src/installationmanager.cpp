@@ -456,6 +456,8 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
     m_ReplacedFolder.clear();
   }
   m_ReplacedRestored = false;
+  m_NewModRemoved    = false;
+  m_NewModFolder.clear();
 
   QString targetDirectory =
       QDir::fromNativeSeparators(m_ModsDirectory + "\\" + modName);
@@ -567,6 +569,9 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
     }
   }
 
+  if (!QDir(targetDirectory).exists()) {
+    m_NewModFolder = targetDirectory;
+  }
   QDir().mkdir(targetDirectory);
 
   return result;
@@ -709,6 +714,20 @@ bool InstallationManager::discardLeftover(const QString& aside)
   return true;
 }
 
+void InstallationManager::removeUnfinishedNewMod()
+{
+  // the folder didn't exist before this install, so all of it comes from there;
+  // left behind, it would show up as a mod with part of its files
+  if (m_NewModFolder.isEmpty()) {
+    return;
+  }
+  const QString folder = std::exchange(m_NewModFolder, QString());
+  m_NewModRemoved      = QDir(folder).removeRecursively();
+  if (!m_NewModRemoved) {
+    log::error("failed to remove the unfinished install in {}", folder);
+  }
+}
+
 void InstallationManager::restoreReplacedMod()
 {
   if (m_ReplacedFolder.isEmpty()) {
@@ -785,6 +804,7 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
   // does nothing once the install has finished
   ON_BLOCK_EXIT([this]() {
     restoreReplacedMod();
+    removeUnfinishedNewMod();
   });
 
   result.m_name = modName;
@@ -856,6 +876,7 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
   }
 
   discardReplacedMod();
+  m_NewModFolder.clear();
 
   return result;
 }
@@ -1029,6 +1050,7 @@ InstallationResult InstallationManager::install(const QString& fileName,
   m_PasswordCancelled = false;
   m_PasswordRejected  = false;
   m_ReplacedRestored  = false;
+  m_NewModRemoved     = false;
   const auto askPassword = [this]() -> std::wstring {
     m_Password = QString();
 
