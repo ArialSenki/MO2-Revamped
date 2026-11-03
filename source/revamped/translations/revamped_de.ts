@@ -4680,6 +4680,10 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>None found</source>
+      <translation>Keine gefunden</translation>
+    </message>
+    <message>
       <source>Last saved %1</source>
       <translation>Zuletzt gespeichert %1</translation>
     </message>

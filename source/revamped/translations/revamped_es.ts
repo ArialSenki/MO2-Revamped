@@ -4696,6 +4696,10 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>None found</source>
+      <translation>Ninguna encontrada</translation>
+    </message>
+    <message>
       <source>Last saved %1</source>
       <translation>Último guardado %1</translation>
     </message>

@@ -4680,6 +4680,10 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>None found</source>
+      <translation>Nenhuma encontrada</translation>
+    </message>
+    <message>
       <source>Last saved %1</source>
       <translation>Último save %1</translation>
     </message>

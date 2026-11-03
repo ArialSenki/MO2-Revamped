@@ -4684,6 +4684,10 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>None found</source>
+      <translation>Aucune trouvée</translation>
+    </message>
+    <message>
       <source>Last saved %1</source>
       <translation>Dernière sauvegarde %1</translation>
     </message>

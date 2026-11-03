@@ -2981,67 +2981,67 @@ The programs that are not hidden appear in the main window&apos;s Program list, 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="372"/>
+        <location filename="fluentdashboard.cpp" line="373"/>
         <source>%1 of %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="373"/>
+        <location filename="fluentdashboard.cpp" line="374"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="379"/>
+        <location filename="fluentdashboard.cpp" line="380"/>
         <source>%1 available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="379"/>
-        <source>Up to date</source>
+        <location filename="fluentdashboard.cpp" line="380"/>
+        <source>None found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="400"/>
+        <location filename="fluentdashboard.cpp" line="401"/>
         <source>Empty folders</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="400"/>
+        <location filename="fluentdashboard.cpp" line="401"/>
         <source>Empty</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="402"/>
+        <location filename="fluentdashboard.cpp" line="403"/>
         <source>%1+ files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="404"/>
+        <location filename="fluentdashboard.cpp" line="405"/>
         <source>1 file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="404"/>
+        <location filename="fluentdashboard.cpp" line="405"/>
         <source>%1 files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="445"/>
+        <location filename="fluentdashboard.cpp" line="446"/>
         <source>today at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="447"/>
+        <location filename="fluentdashboard.cpp" line="448"/>
         <source>yesterday</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="449"/>
+        <location filename="fluentdashboard.cpp" line="450"/>
         <source>%1 days ago</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="453"/>
+        <location filename="fluentdashboard.cpp" line="454"/>
         <source>Last saved %1</source>
         <oldsource>Last played %1</oldsource>
         <translation type="unfinished"></translation>

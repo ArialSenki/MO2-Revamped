@@ -364,7 +364,8 @@ void FluentDashboard::refreshStats()
         ++conflicts;
       }
     }
-    if (mod->updateAvailable()) {
+    // the same as the filter behind Show
+    if (mod->updateAvailable() || mod->downgradeAvailable()) {
       ++updates;
     }
   }
@@ -376,7 +377,7 @@ void FluentDashboard::refreshStats()
   m_conflictsAction->setVisible(conflicts > 0);
 
 
-  m_updates->setValue(updates > 0 ? tr("%1 available").arg(updates) : tr("Up to date"),
+  m_updates->setValue(updates > 0 ? tr("%1 available").arg(updates) : tr("None found"),
                       updates > 0 ? QStringLiteral("accent") : QStringLiteral("neutral"));
   m_updatesAction->setVisible(updates > 0);
 }
@@ -403,7 +404,7 @@ void FluentDashboard::refreshDisk()
   } else if (overwriteFiles > 0) {
     overwriteText = overwriteFiles == 1 ? tr("1 file") : tr("%1 files").arg(overwriteFiles);
   }
-  m_overwrite->setValue(overwriteText, overwriteFiles > 0 ? QStringLiteral("critical")
+  m_overwrite->setValue(overwriteText, overwriteFiles > 0 ? QStringLiteral("caution")
                                                           : QStringLiteral("neutral"));
   m_overwriteAction->setVisible(overwriteFiles > 0 || overwriteFolders);
 

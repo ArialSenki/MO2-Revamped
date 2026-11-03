@@ -136,6 +136,12 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Summary cards
+
+- Updates counts a mod whose newest version on Nexus is lower too, as the list and
+  its filter do. With none it says "None found": it can't know it's up to date.
+- Overwrite is amber instead of red: files there are normal after playing.
+
 ### Theme
 
 - Changing from Dark to Light without restarting no longer leaves the title and the

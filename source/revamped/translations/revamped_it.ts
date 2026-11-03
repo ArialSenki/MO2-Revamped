@@ -4722,6 +4722,10 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>None found</source>
+      <translation>Nessuno trovato</translation>
+    </message>
+    <message>
       <source>Last saved %1</source>
       <translation>Ultimo salvataggio %1</translation>
     </message>
