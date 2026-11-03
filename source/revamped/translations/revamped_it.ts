@@ -5931,6 +5931,10 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log panel</source>
+      <translation>Pannello del log</translation>
+    </message>
+    <message>
       <source>Some changes won't apply until you restart.</source>
       <translation>Alcune modifiche non verranno applicate fino al riavvio.</translation>
     </message>

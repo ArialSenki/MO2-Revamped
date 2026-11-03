@@ -2629,6 +2629,14 @@ void MainWindow::createHelpMenu()
   });
   menu->addAction(whatsThisAction);
 
+  // the way back after closing the log: the window has no menu bar
+  ui->actionViewLog->setText(tr("Log panel"));
+  ui->actionViewLog->setIcon(FluentIcons::glyph(0xE9D9));
+  menu->addAction(ui->actionViewLog);
+  connect(menu, &QMenu::aboutToShow, ui->actionViewLog, [this] {
+    ui->actionViewLog->setChecked(ui->logDock->isVisible());
+  });
+
   if (game && !game->getSupportURL().isEmpty()) {
     QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
     gameSupportAction->setObjectName(QStringLiteral("gameSupportWikiAction"));
@@ -5900,6 +5908,8 @@ void MainWindow::toolBar_customContextMenuRequested(const QPoint& point)
 
   // did not click a link button, show the default context menu
   std::unique_ptr<QMenu> m(createPopupMenu());
+  // with no menu bar, nothing would bring a hidden command bar back
+  m->removeAction(ui->toolBar->toggleViewAction());
   m->exec(ui->toolBar->mapToGlobal(point));
 }
 

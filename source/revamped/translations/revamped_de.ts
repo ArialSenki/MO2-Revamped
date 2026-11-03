@@ -5824,6 +5824,10 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log panel</source>
+      <translation>Protokollbereich</translation>
+    </message>
+    <message>
       <source>Some changes won't apply until you restart.</source>
       <translation>Einige Änderungen werden erst nach dem Neustart wirksam.</translation>
     </message>

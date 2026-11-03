@@ -18,8 +18,8 @@ void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
 {
   ui              = mainWindowUI;
 
-  // keep the last permanent widget (the API counter) clear of the window edge
-  setContentsMargins(0, 0, 10, 0);
+  // the window's margin keeps it clear of the edge
+  setContentsMargins(0, 0, 0, 0);
   m_notifications = new StatusBarAction(ui->actionNotifications);
   m_update        = new StatusBarAction(ui->actionUpdate);
 

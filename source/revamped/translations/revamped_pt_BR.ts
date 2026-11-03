@@ -5824,6 +5824,10 @@ Excluí-las também remove os arquivos dessas instâncias. Excluir mesmo assim?<
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log panel</source>
+      <translation>Painel de log</translation>
+    </message>
+    <message>
       <source>Some changes won't apply until you restart.</source>
       <translation>Algumas alterações só serão aplicadas após reiniciar.</translation>
     </message>

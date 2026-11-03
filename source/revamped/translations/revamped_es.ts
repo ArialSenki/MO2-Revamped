@@ -5840,6 +5840,10 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log panel</source>
+      <translation>Panel de registro</translation>
+    </message>
+    <message>
       <source>Some changes won't apply until you restart.</source>
       <translation>Algunos cambios no se aplicarán hasta reiniciar.</translation>
     </message>

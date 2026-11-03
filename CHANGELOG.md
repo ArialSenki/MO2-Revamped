@@ -136,6 +136,13 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Log and status bar
+
+- The command bar, the cards, the log and the status bar share one edge on both sides.
+- A closed log panel comes back from the "..." menu; only a right click on the command
+  bar brought it back before. The command bar can no longer be hidden, since nothing
+  would bring it back.
+
 ### Old look gone
 
 - The question dialogs, such as "Restart Mod Organizer", use the Fluent look instead of

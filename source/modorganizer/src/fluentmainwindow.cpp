@@ -136,6 +136,17 @@ void MainWindow::setupFluentLayout()
     setAttribute(Qt::WA_TranslucentBackground);
   }
 
+  // one edge for everything: the command bar, the cards, the log and the status
+  // bar. The margin moves from the central widget, which only had the cards, to
+  // the window
+  if (auto* central = ui->centralWidget->layout()) {
+    QMargins margins = central->contentsMargins();
+    setContentsMargins(margins.left(), 0, margins.right(), 0);
+    margins.setLeft(0);
+    margins.setRight(0);
+    central->setContentsMargins(margins);
+  }
+
   // one "more" button replaces the list options gear and the folder button;
   // both stay in the .ui (hidden) because other code still sets their menus
   ui->listOptionsBtn->hide();

@@ -5871,6 +5871,10 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log panel</source>
+      <translation>Panneau du journal</translation>
+    </message>
+    <message>
       <source>Some changes won't apply until you restart.</source>
       <translation>Certains changements ne s'appliqueront qu'après le redémarrage.</translation>
     </message>
