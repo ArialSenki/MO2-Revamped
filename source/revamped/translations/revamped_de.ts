@@ -7552,6 +7552,46 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModList</name>
     <message>
+      <source>Its files win over other mods</source>
+      <translation>Seine Dateien setzen sich gegen andere Mods durch</translation>
+    </message>
+    <message>
+      <source>Some of its files are overwritten by other mods</source>
+      <translation>Einige seiner Dateien werden von anderen Mods überschrieben</translation>
+    </message>
+    <message>
+      <source>Some of its files win over other mods, others are overwritten</source>
+      <translation>Einige seiner Dateien setzen sich durch, andere werden überschrieben</translation>
+    </message>
+    <message>
+      <source>All its files are overwritten by other mods</source>
+      <translation>Alle seine Dateien werden von anderen Mods überschrieben</translation>
+    </message>
+    <message>
+      <source>Its author removed this file from Nexus. There may be no update.</source>
+      <translation>Der Autor hat diese Datei von Nexus entfernt. Möglicherweise gibt es kein Update.</translation>
+    </message>
+    <message>
+      <source>New version on Nexus: %1</source>
+      <translation>Neue Version auf Nexus: %1</translation>
+    </message>
+    <message>
+      <source>The newest version on Nexus, %1, is older than yours.</source>
+      <translation>Die neueste Version auf Nexus, %1, ist älter als deine.</translation>
+    </message>
+    <message>
+      <source>Version not known: this is the date of the file.</source>
+      <translation>Version unbekannt: Dies ist das Datum der Datei.</translation>
+    </message>
+    <message>
+      <source>Installed version: %1</source>
+      <translation>Installierte Version: %1</translation>
+    </message>
+    <message>
+      <source>Newest version on Nexus: %1</source>
+      <translation>Neueste Version auf Nexus: %1</translation>
+    </message>
+    <message>
       <source>Status</source>
       <translation>Status</translation>
     </message>
@@ -8758,6 +8798,14 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>Removed from Nexus</source>
+      <translation>Von Nexus entfernt</translation>
+    </message>
+    <message>
+      <source>Older on Nexus</source>
+      <translation>Älter auf Nexus</translation>
+    </message>
     <message>
       <source>Clear Nexus cache</source>
       <translation>Nexus-Cache leeren</translation>

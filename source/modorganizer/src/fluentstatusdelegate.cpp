@@ -2,6 +2,7 @@
 
 #include "modinfo.h"
 #include "modlist.h"
+#include "nexusinterface.h"
 #include "revampedtheme.h"
 
 #include <QApplication>
@@ -90,9 +91,16 @@ std::vector<Status> statusesFor(const QModelIndex& index)
     return result;
   }
 
-  if (mod->updateAvailable()) {
+  // a file its author removed counts as an update, but there may be none
+  if (mod->getNexusFileStatus() == NexusInterface::FileStatus::REMOVED) {
+    result.push_back({QObject::tr("Removed from Nexus"), QObject::tr("Removed from Nexus"),
+                      Tone::Caution});
+  } else if (mod->updateAvailable()) {
     result.push_back(
         {QObject::tr("New version"), QObject::tr("New version"), Tone::Accent});
+  } else if (mod->downgradeAvailable()) {
+    result.push_back(
+        {QObject::tr("Older on Nexus"), QObject::tr("Older on Nexus"), Tone::Caution});
   }
 
   const Side side = sideOf(mod);
@@ -223,7 +231,7 @@ quint64 FluentStatusDelegate::sortKey(const ModInfo::Ptr& mod)
   if (!mod || mod->isSeparator() || mod->isOverwrite() || mod->isForeign()) {
     return 0;
   }
-  const quint64 update = mod->updateAvailable() ? 1 : 0;
+  const quint64 update = mod->updateAvailable() || mod->downgradeAvailable() ? 1 : 0;
   const Side side      = sideOf(mod);
   const quint64 count =
       side == Side::Redundant

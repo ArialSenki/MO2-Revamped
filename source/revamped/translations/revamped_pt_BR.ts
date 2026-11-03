@@ -7552,6 +7552,46 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModList</name>
     <message>
+      <source>Its files win over other mods</source>
+      <translation>Seus arquivos prevalecem sobre os de outros mods</translation>
+    </message>
+    <message>
+      <source>Some of its files are overwritten by other mods</source>
+      <translation>Alguns de seus arquivos são sobrescritos por outros mods</translation>
+    </message>
+    <message>
+      <source>Some of its files win over other mods, others are overwritten</source>
+      <translation>Alguns de seus arquivos prevalecem sobre outros mods, outros são sobrescritos</translation>
+    </message>
+    <message>
+      <source>All its files are overwritten by other mods</source>
+      <translation>Todos os seus arquivos são sobrescritos por outros mods</translation>
+    </message>
+    <message>
+      <source>Its author removed this file from Nexus. There may be no update.</source>
+      <translation>O autor removeu este arquivo do Nexus. Pode não haver atualização.</translation>
+    </message>
+    <message>
+      <source>New version on Nexus: %1</source>
+      <translation>Nova versão no Nexus: %1</translation>
+    </message>
+    <message>
+      <source>The newest version on Nexus, %1, is older than yours.</source>
+      <translation>A versão mais recente no Nexus, %1, é mais antiga que a sua.</translation>
+    </message>
+    <message>
+      <source>Version not known: this is the date of the file.</source>
+      <translation>Versão desconhecida: esta é a data do arquivo.</translation>
+    </message>
+    <message>
+      <source>Installed version: %1</source>
+      <translation>Versão instalada: %1</translation>
+    </message>
+    <message>
+      <source>Newest version on Nexus: %1</source>
+      <translation>Versão mais recente no Nexus: %1</translation>
+    </message>
+    <message>
       <source>Status</source>
       <translation>Status</translation>
     </message>
@@ -8758,6 +8798,14 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>Removed from Nexus</source>
+      <translation>Removido do Nexus</translation>
+    </message>
+    <message>
+      <source>Older on Nexus</source>
+      <translation>Mais antiga no Nexus</translation>
+    </message>
     <message>
       <source>Clear Nexus cache</source>
       <translation>Limpar o cache do Nexus</translation>

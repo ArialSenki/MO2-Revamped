@@ -136,6 +136,13 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Mod list rows
+
+- Status says "Removed from Nexus" when a file's author removed it, instead of "New
+  version", and "Older on Nexus" when the newest there is lower than yours.
+- The Status and Version tooltips say what they show, in plain words. A date in
+  Version is explained as not being a version.
+
 ### Nexus file names
 
 - MO2 read the month in the names Nexus gives its files now as the mod id, so a mod

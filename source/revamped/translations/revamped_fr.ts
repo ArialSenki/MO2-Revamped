@@ -7684,6 +7684,46 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModList</name>
     <message>
+      <source>Its files win over other mods</source>
+      <translation>Ses fichiers l'emportent sur ceux d'autres mods</translation>
+    </message>
+    <message>
+      <source>Some of its files are overwritten by other mods</source>
+      <translation>Certains de ses fichiers sont écrasés par d'autres mods</translation>
+    </message>
+    <message>
+      <source>Some of its files win over other mods, others are overwritten</source>
+      <translation>Certains de ses fichiers l'emportent sur d'autres mods, d'autres sont écrasés</translation>
+    </message>
+    <message>
+      <source>All its files are overwritten by other mods</source>
+      <translation>Tous ses fichiers sont écrasés par d'autres mods</translation>
+    </message>
+    <message>
+      <source>Its author removed this file from Nexus. There may be no update.</source>
+      <translation>Son auteur a retiré ce fichier de Nexus. Il n'y a peut-être pas de mise à jour.</translation>
+    </message>
+    <message>
+      <source>New version on Nexus: %1</source>
+      <translation>Nouvelle version sur Nexus : %1</translation>
+    </message>
+    <message>
+      <source>The newest version on Nexus, %1, is older than yours.</source>
+      <translation>La version la plus récente sur Nexus, %1, est plus ancienne que la vôtre.</translation>
+    </message>
+    <message>
+      <source>Version not known: this is the date of the file.</source>
+      <translation>Version inconnue : il s'agit de la date du fichier.</translation>
+    </message>
+    <message>
+      <source>Installed version: %1</source>
+      <translation>Version installée : %1</translation>
+    </message>
+    <message>
+      <source>Newest version on Nexus: %1</source>
+      <translation>Version la plus récente sur Nexus : %1</translation>
+    </message>
+    <message>
       <source>Status</source>
       <translation>État</translation>
     </message>
@@ -8952,6 +8992,14 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>Removed from Nexus</source>
+      <translation>Retiré de Nexus</translation>
+    </message>
+    <message>
+      <source>Older on Nexus</source>
+      <translation>Plus ancienne sur Nexus</translation>
+    </message>
     <message>
       <source>Clear Nexus cache</source>
       <translation>Vider le cache Nexus</translation>

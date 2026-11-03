@@ -159,13 +159,13 @@ QString ModList::getConflictFlagText(ModInfo::EConflictFlag flag,
 {
   switch (flag) {
   case ModInfo::FLAG_CONFLICT_OVERWRITE:
-    return tr("Overwrites loose files");
+    return tr("Its files win over other mods");
   case ModInfo::FLAG_CONFLICT_OVERWRITTEN:
-    return tr("Overwritten loose files");
+    return tr("Some of its files are overwritten by other mods");
   case ModInfo::FLAG_CONFLICT_MIXED:
-    return tr("Loose files Overwrites & Overwritten");
+    return tr("Some of its files win over other mods, others are overwritten");
   case ModInfo::FLAG_CONFLICT_REDUNDANT:
-    return tr("Redundant");
+    return tr("All its files are overwritten by other mods");
   case ModInfo::FLAG_ARCHIVE_LOOSE_CONFLICT_OVERWRITE:
     return tr("Overwrites an archive with loose files");
   case ModInfo::FLAG_ARCHIVE_LOOSE_CONFLICT_OVERWRITTEN:
@@ -401,6 +401,16 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     } else if (column == COL_CONFLICTFLAGS) {
       QString result;
 
+      // what the Status column shows besides conflicts
+      if (modInfo->getNexusFileStatus() == NexusInterface::FileStatus::REMOVED) {
+        result = tr("Its author removed this file from Nexus. There may be no update.");
+      } else if (modInfo->updateAvailable()) {
+        result = tr("New version on Nexus: %1").arg(modInfo->newestVersion().displayString(3));
+      } else if (modInfo->downgradeAvailable()) {
+        result = tr("The newest version on Nexus, %1, is older than yours.")
+                     .arg(modInfo->newestVersion().displayString(3));
+      }
+
       for (ModInfo::EConflictFlag flag : modInfo->getConflictFlags()) {
         if (result.length() != 0)
           result += "<br>";
@@ -416,9 +426,14 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
         return QString();
       }
     } else if (column == COL_VERSION) {
-      QString text = tr("installed version: \"%1\", newest version: \"%2\"")
-                         .arg(modInfo->version().displayString(3))
-                         .arg(modInfo->newestVersion().displayString(3));
+      // MO2 shows a file's date where it knows no version
+      QString text = modInfo->version().scheme() == VersionInfo::SCHEME_DATE
+                         ? tr("Version not known: this is the date of the file.")
+                         : tr("Installed version: %1").arg(modInfo->version().displayString(3));
+      if (modInfo->newestVersion().isValid()) {
+        text += "<br>" + tr("Newest version on Nexus: %1")
+                             .arg(modInfo->newestVersion().displayString(3));
+      }
       if (modInfo->downgradeAvailable()) {
         text +=
             "<br>" + tr("The newest version on Nexus seems to be older than the one "
