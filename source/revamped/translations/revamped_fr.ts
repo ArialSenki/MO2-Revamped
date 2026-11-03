@@ -5839,6 +5839,10 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Open the saves folder this profile uses.</source>
+      <translation>Ouvre le dossier de sauvegardes utilisé par ce profil.</translation>
+    </message>
+    <message>
       <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
       <translation>Lance le programme sélectionné avec le profil actif. La petite flèche à droite contient les options de raccourci.</translation>
     </message>

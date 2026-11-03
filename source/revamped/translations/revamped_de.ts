@@ -5792,6 +5792,10 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Open the saves folder this profile uses.</source>
+      <translation>Öffnet den Spielstandordner, den dieses Profil verwendet.</translation>
+    </message>
+    <message>
       <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
       <translation>Startet das ausgewählte Programm mit dem aktiven Profil. Der kleine Pfeil rechts enthält die Verknüpfungsoptionen.</translation>
     </message>

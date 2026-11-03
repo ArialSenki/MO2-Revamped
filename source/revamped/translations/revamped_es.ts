@@ -5808,6 +5808,10 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Open the saves folder this profile uses.</source>
+      <translation>Abre la carpeta de partidas que usa este perfil.</translation>
+    </message>
+    <message>
       <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
       <translation>Inicia el programa seleccionado con el perfil activo. La flecha pequeña de la derecha tiene las opciones de acceso directo.</translation>
     </message>

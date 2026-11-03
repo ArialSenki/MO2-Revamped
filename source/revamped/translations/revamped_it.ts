@@ -5893,6 +5893,10 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Open the saves folder this profile uses.</source>
+      <translation>Apre la cartella dei salvataggi usata da questo profilo.</translation>
+    </message>
+    <message>
       <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
       <translation>Avvia il programma selezionato con il profilo attivo. La piccola freccia a destra contiene le opzioni dei collegamenti.</translation>
     </message>

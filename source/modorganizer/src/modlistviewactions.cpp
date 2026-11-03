@@ -487,8 +487,10 @@ void ModListViewActions::checkModsForUpdates() const
       });
       NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
     } else {
-      log::warn("{}", tr("You are not currently authenticated with Nexus. Please do so "
-                         "under Settings -> Nexus."));
+      const QString notice = tr("You are not currently authenticated with Nexus. Please do so "
+                                "under Settings -> Nexus.");
+      log::warn("{}", notice);
+      MessageDialog::showMessage(notice, m_parent);
     }
   }
 
@@ -502,10 +504,7 @@ void ModListViewActions::checkModsForUpdates() const
   }
 
   if (updatesAvailable || checkingModsForUpdate) {
-    m_view->setFilterCriteria(
-        {{ModListSortProxy::TypeSpecial, CategoryFactory::UpdateAvailable, false}});
-
-    m_filters.setSelection(
+    m_filters.select(
         {{ModListSortProxy::TypeSpecial, CategoryFactory::UpdateAvailable, false}});
   }
 }
@@ -561,9 +560,12 @@ void ModListViewActions::checkModsForUpdates(
         checkModsForUpdates(IDs);
       });
       NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
-    } else
-      log::warn("{}", tr("You are not currently authenticated with Nexus. Please do so "
-                         "under Settings -> Nexus."));
+    } else {
+      const QString notice = tr("You are not currently authenticated with Nexus. Please do so "
+                                "under Settings -> Nexus.");
+      log::warn("{}", notice);
+      MessageDialog::showMessage(notice, m_parent);
+    }
   }
 }
 

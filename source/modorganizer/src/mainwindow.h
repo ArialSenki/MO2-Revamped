@@ -445,6 +445,7 @@ private slots:
   void openIniFolder();
   void openGameFolder();
   void openMyGamesFolder();
+  QDir myGamesFolder() const;
   void startExeAction();
 
   void checkBSAList();

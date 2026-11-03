@@ -5792,6 +5792,10 @@ Excluí-las também remove os arquivos dessas instâncias. Excluir mesmo assim?<
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Open the saves folder this profile uses.</source>
+      <translation>Abre a pasta de saves que este perfil usa.</translation>
+    </message>
+    <message>
       <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
       <translation>Inicia o programa selecionado com o perfil ativo. A pequena seta à direita tem as opções de atalho.</translation>
     </message>

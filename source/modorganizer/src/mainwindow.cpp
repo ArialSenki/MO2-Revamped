@@ -4042,8 +4042,6 @@ void MainWindow::configureEldenRingHelp()
       "Shows how many active mods are visible in the mod list. Filtering the "
       "list changes this count; hover over the counter to see the total and "
       "visible counts by mod type."));
-  ui->modFilterEdit->setWhatsThis(tr(
-      "Filter the installed Elden Ring mods by name."));
   ui->dataTree->setWhatsThis(tr(
       "Shows the virtual Elden Ring Data directory after MO2 combines the game "
       "files with the active mods. The Mod column identifies which mod supplies "
@@ -4627,9 +4625,18 @@ void MainWindow::openGameFolder()
   shell::Explore(m_OrganizerCore.managedGame()->gameDirectory());
 }
 
+QDir MainWindow::myGamesFolder() const
+{
+  // where the documents are the saves, the profile's route can be elsewhere
+  const IPluginGame* game = m_OrganizerCore.managedGame();
+  return game->documentsDirectory() == game->savesDirectory()
+             ? m_SavesTab->currentSavesDir()
+             : game->documentsDirectory();
+}
+
 void MainWindow::openMyGamesFolder()
 {
-  shell::Explore(m_OrganizerCore.managedGame()->documentsDirectory());
+  shell::Explore(myGamesFolder());
 }
 
 QMenu* MainWindow::createModListOptionsMenu()
@@ -4726,10 +4733,10 @@ QMenu* MainWindow::openFolderMenu()
         path = m_OrganizerCore.managedGame()->gameDirectory().absolutePath();
         description = tr("Open the active game's installation folder.");
       } else if (route == QLatin1String("myGames")) {
-        path = m_OrganizerCore.managedGame()->documentsDirectory().absolutePath();
+        path = myGamesFolder().absolutePath();
         description = m_OrganizerCore.managedGame()->documentsDirectory() ==
                               m_OrganizerCore.managedGame()->savesDirectory()
-                          ? tr("Open the game's save folder.")
+                          ? tr("Open the saves folder this profile uses.")
                           : tr("Open the game's documents folder.");
       } else if (route == QLatin1String("ini")) {
         const auto* profile = m_OrganizerCore.currentProfile();

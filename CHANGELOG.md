@@ -136,6 +136,12 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Mod list header
+
+- "Check for updates" marks its filter on the buttons above the list, and says so
+  when you aren't connected to Nexus.
+- "Saves" in Open folder opens the folder this profile uses, not always Steam's.
+
 ### Summary cards
 
 - Updates counts a mod whose newest version on Nexus is lower too, as the list and
