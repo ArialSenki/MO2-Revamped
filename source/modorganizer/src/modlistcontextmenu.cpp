@@ -500,9 +500,15 @@ void ModListContextMenu::addSendToContextMenu()
   menu->addAction(tr("Priority..."), [this] {
     m_actions.sendModsToPriority(m_selected);
   });
-  menu->addAction(tr("Separator..."), [this] {
-    m_actions.sendModsToSeparator(m_selected);
-  });
+  bool hasSeparators = false;
+  for (unsigned int i = 0; i < ModInfo::getNumMods() && !hasSeparators; ++i) {
+    hasSeparators = ModInfo::getByIndex(i)->isSeparator();
+  }
+  if (hasSeparators) {
+    menu->addAction(tr("Separator..."), [this] {
+      m_actions.sendModsToSeparator(m_selected);
+    });
+  }
   if (overwrite) {
     menu->addAction(tr("First conflict"), [this] {
       m_actions.sendModsToFirstConflict(m_selected);
@@ -707,7 +713,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
       m_actions.clearOverwrite();
     });
     m_remove->setToolTip(
-        tr("Permanently delete every file and folder currently in Overwrite."));
+        tr("Move every file and folder in Overwrite to the Recycle Bin."));
   }
 
   addSeparator();
@@ -775,10 +781,12 @@ void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
   }
 
   addSeparator();
-  addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"),
-            [=]() {
-              m_actions.renameMod(m_index);
-            });
+  if (m_selected.size() == 1) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"),
+              [=]() {
+                m_actions.renameMod(m_index);
+              });
+  }
   addColorActions(mod);
   addCategoryContextMenus(mod);
   if (m_view->sortColumn() == ModList::COL_PRIORITY) {
@@ -819,10 +827,12 @@ void ModListContextMenu::addBackupActions(ModInfo::Ptr mod)
   auto flags = mod->getFlags();
   addVisitActions(mod);
   addSeparator();
-  addAction(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"), tr("Restore backup"),
-            [=]() {
-              m_actions.restoreBackup(m_index);
-            });
+  if (m_selected.size() == 1) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"),
+              tr("Restore backup"), [=]() {
+                m_actions.restoreBackup(m_index);
+              });
+  }
   if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_INVALID) != flags.end()) {
     addAction(menuGlyph(MenuGlyphs::Warning), tr("Ignore missing data"), [=]() {
       m_actions.ignoreMissingData(m_selected);
@@ -860,17 +870,20 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
 
   addSeparator();
 
-  addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"), [=]() {
-    m_actions.renameMod(m_index);
-  });
-  addAction(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"), tr("Reinstall"),
-            [=]() {
-              m_actions.reinstallMod(m_index);
-            });
-  addAction(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"), tr("Create backup"),
-            [=]() {
-              m_actions.createBackup(m_index);
-            });
+  // these act on the clicked mod only, which a selection of several wouldn't show
+  if (m_selected.size() == 1) {
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/rename.svg"), tr("Rename"), [=]() {
+      m_actions.renameMod(m_index);
+    });
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/reinstall.svg"), tr("Reinstall"),
+              [=]() {
+                m_actions.reinstallMod(m_index);
+              });
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/backup.svg"), tr("Create backup"),
+              [=]() {
+                m_actions.createBackup(m_index);
+              });
+  }
   if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_HIDDEN_FILES) !=
       flags.end()) {
     addAction(menuGlyph(MenuGlyphs::Show), tr("Restore hidden files"), [=]() {
@@ -896,7 +909,7 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
       m_actions.setIgnoreUpdate(m_selected, true);
     });
   }
-  if (mod->downgradeAvailable()) {
+  if (mod->downgradeAvailable() && m_selected.size() == 1) {
     addAction(tr("Change versioning scheme"), [=]() {
       m_actions.changeVersioningScheme(m_index);
     });

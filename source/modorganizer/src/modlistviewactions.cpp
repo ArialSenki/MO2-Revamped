@@ -914,8 +914,11 @@ void ModListViewActions::sendModsToPriority(const QModelIndexList& indexes) cons
 {
   bool ok;
   int priority = QInputDialog::getInt(m_parent, tr("Set Priority"),
-                                      tr("Set the priority of the selected mods"), 0, 0,
-                                      std::numeric_limits<int>::max(), 1, &ok);
+                                      tr("Set the priority of the selected mods"),
+                                      indexes.isEmpty()
+                                          ? 0
+                                          : indexes[0].data(ModList::PriorityRole).toInt(),
+                                      0, std::numeric_limits<int>::max(), 1, &ok);
   if (!ok)
     return;
 
@@ -1152,8 +1155,8 @@ void ModListViewActions::changeVersioningScheme(const QModelIndex& index) const
     }
     if (!success) {
       QMessageBox::information(
-          m_parent, tr("Sorry"),
-          tr("I don't know a versioning scheme where %1 is newer than %2.")
+          m_parent, tr("Versioning scheme"),
+          tr("No versioning scheme makes %1 newer than %2, so nothing was changed.")
               .arg(info->newestVersion().canonicalString())
               .arg(info->version().canonicalString()),
           QMessageBox::Ok);
@@ -1566,21 +1569,38 @@ void ModListViewActions::restoreBackup(const QModelIndex& index) const
              m_parent, tr("Overwrite?"),
              tr("This will replace the existing mod \"%1\". Continue?").arg(regName),
              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)) {
-      if (modDir.exists(regName) &&
-          !shellDelete(QStringList(modDir.absoluteFilePath(regName)))) {
-        reportError(tr("failed to remove mod \"%1\"").arg(regName));
-      } else {
-        QString destinationPath =
-            QDir::fromNativeSeparators(m_core.settings().paths().mods()) + "/" +
-            regName;
-        if (!modDir.rename(modInfo->absolutePath(), destinationPath)) {
-          reportError(tr("failed to rename \"%1\" to \"%2\"")
-                          .arg(modInfo->absolutePath())
-                          .arg(destinationPath));
+      // the mod goes aside and is only removed once the backup is in its place:
+      // a file in use can stop any of these steps
+      QString aside;
+      if (modDir.exists(regName)) {
+        aside = regName + "_replaced";
+        for (int i = 1; modDir.exists(aside); ++i) {
+          aside = regName + "_replaced" + QString::number(i);
         }
-        m_core.refresh();
-        m_view->updateModCount();
+        if (!modDir.rename(regName, aside)) {
+          reportError(tr("The backup wasn't restored: a file of \"%1\" may be in use. "
+                         "Nothing was changed.")
+                          .arg(regName));
+          return;
+        }
       }
+
+      if (!modDir.rename(modInfo->absolutePath(), modDir.absoluteFilePath(regName))) {
+        const bool putBack = aside.isEmpty() || modDir.rename(aside, regName);
+        reportError(putBack ? tr("The backup wasn't restored: a file in it may be in use. "
+                                 "\"%1\" was left as it was.")
+                                  .arg(regName)
+                            : tr("The backup wasn't restored, and \"%1\" could not be put "
+                                 "back. It is safe in the mods folder as \"%2\".")
+                                  .arg(regName, aside));
+      } else if (!aside.isEmpty() &&
+                 !shellDelete(QStringList(modDir.absoluteFilePath(aside)), true)) {
+        reportError(tr("The backup was restored, but the old \"%1\" could not be removed. "
+                       "It is in the mods folder as \"%2\".")
+                        .arg(regName, aside));
+      }
+      m_core.refresh();
+      m_view->updateModCount();
     }
   }
 }
@@ -1683,14 +1703,15 @@ void ModListViewActions::clearOverwrite() const
     QDir overwriteDir(modInfo->absolutePath());
     if (QMessageBox::question(
             m_parent, tr("Clear Overwrite files?"),
-            tr("This will permanently delete every file and folder in:\n\n%1\n\n"
+            tr("This will move every file and folder to the Recycle Bin:\n\n%1\n\n"
                "Move anything you want to keep into a mod before continuing.")
                 .arg(overwriteDir.absolutePath()),
             QMessageBox::Yes | QMessageBox::Cancel,
             QMessageBox::Cancel) == QMessageBox::Yes) {
       QStringList delList;
       for (auto f :
-           overwriteDir.entryList(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot))
+           overwriteDir.entryList(QDir::AllDirs | QDir::Files | QDir::Hidden |
+                                  QDir::System | QDir::NoDotAndDotDot))
         delList.push_back(overwriteDir.absoluteFilePath(f));
       if (shellDelete(delList, true)) {
         emit overwriteCleared();
@@ -1698,6 +1719,8 @@ void ModListViewActions::clearOverwrite() const
       } else {
         const auto e = GetLastError();
         log::error("Delete operation failed: {}", formatSystemMessage(e));
+        reportError(tr("Overwrite could not be cleared: %1").arg(formatSystemMessage(e)));
+        m_core.refresh();
       }
     }
   }

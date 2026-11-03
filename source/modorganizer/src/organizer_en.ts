@@ -7944,84 +7944,79 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="503"/>
+        <location filename="modlistcontextmenu.cpp" line="508"/>
         <source>Separator...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="507"/>
+        <location filename="modlistcontextmenu.cpp" line="513"/>
         <source>First conflict</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="512"/>
+        <location filename="modlistcontextmenu.cpp" line="518"/>
         <source>Last conflict</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="705"/>
+        <location filename="modlistcontextmenu.cpp" line="711"/>
         <source>Clear Overwrite...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="672"/>
+        <location filename="modlistcontextmenu.cpp" line="678"/>
         <source>Review and manage files...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="677"/>
+        <location filename="modlistcontextmenu.cpp" line="683"/>
         <source>Browse files in Overwrite, create folders, rename items, or move files into regular mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="682"/>
+        <location filename="modlistcontextmenu.cpp" line="688"/>
         <source>Organize files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="688"/>
+        <location filename="modlistcontextmenu.cpp" line="694"/>
         <source>Review and assign files from Overwrite to regular mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="692"/>
+        <location filename="modlistcontextmenu.cpp" line="698"/>
         <source>Create mod from Overwrite...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="696"/>
+        <location filename="modlistcontextmenu.cpp" line="702"/>
         <source>Move all files from Overwrite into a new regular mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="699"/>
+        <location filename="modlistcontextmenu.cpp" line="705"/>
         <source>Move files to an existing mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="703"/>
+        <location filename="modlistcontextmenu.cpp" line="709"/>
         <source>Choose a regular mod and move all files from Overwrite into it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="710"/>
-        <source>Permanently delete every file and folder currently in Overwrite.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modlistcontextmenu.cpp" line="827"/>
-        <location filename="modlistcontextmenu.cpp" line="910"/>
+        <location filename="modlistcontextmenu.cpp" line="837"/>
+        <location filename="modlistcontextmenu.cpp" line="923"/>
         <source>Ignore missing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="833"/>
-        <location filename="modlistcontextmenu.cpp" line="917"/>
+        <location filename="modlistcontextmenu.cpp" line="843"/>
+        <location filename="modlistcontextmenu.cpp" line="930"/>
         <source>Mark as converted/working</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="598"/>
+        <location filename="modlistcontextmenu.cpp" line="604"/>
         <source>Visit on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8041,233 +8036,238 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="525"/>
+        <location filename="modlistcontextmenu.cpp" line="531"/>
         <source>Categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="543"/>
+        <location filename="modlistcontextmenu.cpp" line="549"/>
         <source>Primary category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="583"/>
+        <location filename="modlistcontextmenu.cpp" line="589"/>
         <source>Enable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="589"/>
+        <location filename="modlistcontextmenu.cpp" line="595"/>
         <source>Disable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="607"/>
+        <location filename="modlistcontextmenu.cpp" line="613"/>
         <source>Visit on %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="615"/>
+        <location filename="modlistcontextmenu.cpp" line="621"/>
         <source>Select color...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="619"/>
+        <location filename="modlistcontextmenu.cpp" line="625"/>
         <source>Reset color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="644"/>
+        <location filename="modlistcontextmenu.cpp" line="650"/>
         <source>Mod folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="645"/>
+        <location filename="modlistcontextmenu.cpp" line="651"/>
         <source>Downloaded archive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="649"/>
+        <location filename="modlistcontextmenu.cpp" line="655"/>
         <source>Folders of the %1 selected mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="656"/>
+        <location filename="modlistcontextmenu.cpp" line="662"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="656"/>
+        <location filename="modlistcontextmenu.cpp" line="662"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="658"/>
+        <location filename="modlistcontextmenu.cpp" line="664"/>
         <source>Nexus link</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="662"/>
+        <location filename="modlistcontextmenu.cpp" line="668"/>
         <source>Archive name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="683"/>
+        <location filename="modlistcontextmenu.cpp" line="689"/>
         <source>Sync to mods...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="715"/>
+        <location filename="modlistcontextmenu.cpp" line="716"/>
+        <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistcontextmenu.cpp" line="721"/>
         <source>Open folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="718"/>
+        <location filename="modlistcontextmenu.cpp" line="724"/>
         <source>Copy folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="766"/>
+        <location filename="modlistcontextmenu.cpp" line="772"/>
         <source>Enable its mods</source>
         <oldsource>Enable the %n mod(s) in it</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="772"/>
+        <location filename="modlistcontextmenu.cpp" line="778"/>
         <source>Disable its mods</source>
         <oldsource>Disable the %n mod(s) in it</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="778"/>
-        <location filename="modlistcontextmenu.cpp" line="863"/>
+        <location filename="modlistcontextmenu.cpp" line="785"/>
+        <location filename="modlistcontextmenu.cpp" line="875"/>
         <source>Rename</source>
         <oldsource>Rename...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="789"/>
-        <location filename="modlistcontextmenu.cpp" line="814"/>
+        <location filename="modlistcontextmenu.cpp" line="797"/>
+        <location filename="modlistcontextmenu.cpp" line="822"/>
         <source>Copy name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="792"/>
+        <location filename="modlistcontextmenu.cpp" line="800"/>
         <source>Remove separators...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="793"/>
+        <location filename="modlistcontextmenu.cpp" line="801"/>
         <source>Remove separator...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="822"/>
+        <location filename="modlistcontextmenu.cpp" line="832"/>
         <source>Restore backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="842"/>
+        <location filename="modlistcontextmenu.cpp" line="852"/>
         <source>Remove backup...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="866"/>
+        <location filename="modlistcontextmenu.cpp" line="878"/>
         <source>Reinstall</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="870"/>
+        <location filename="modlistcontextmenu.cpp" line="882"/>
         <source>Create backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="886"/>
+        <location filename="modlistcontextmenu.cpp" line="899"/>
         <source>Check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="900"/>
+        <location filename="modlistcontextmenu.cpp" line="913"/>
         <source>Change versioning scheme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="926"/>
+        <location filename="modlistcontextmenu.cpp" line="939"/>
         <source>Remove mods...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="926"/>
+        <location filename="modlistcontextmenu.cpp" line="939"/>
         <source>Remove...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="936"/>
+        <location filename="modlistcontextmenu.cpp" line="949"/>
         <source>Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="943"/>
+        <location filename="modlistcontextmenu.cpp" line="956"/>
         <source>Un-endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="991"/>
+        <location filename="modlistcontextmenu.cpp" line="1004"/>
         <source>Use the Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="891"/>
+        <location filename="modlistcontextmenu.cpp" line="904"/>
         <source>Un-ignore update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="895"/>
+        <location filename="modlistcontextmenu.cpp" line="908"/>
         <source>Ignore update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="583"/>
+        <location filename="modlistcontextmenu.cpp" line="589"/>
         <source>Enable selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="589"/>
+        <location filename="modlistcontextmenu.cpp" line="595"/>
         <source>Disable selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="876"/>
+        <location filename="modlistcontextmenu.cpp" line="889"/>
         <source>Restore hidden files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="949"/>
-        <location filename="modlistcontextmenu.cpp" line="959"/>
+        <location filename="modlistcontextmenu.cpp" line="962"/>
+        <location filename="modlistcontextmenu.cpp" line="972"/>
         <source>Endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="953"/>
+        <location filename="modlistcontextmenu.cpp" line="966"/>
         <source>Won&apos;t endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="964"/>
+        <location filename="modlistcontextmenu.cpp" line="977"/>
         <source>Endorsement state unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="973"/>
+        <location filename="modlistcontextmenu.cpp" line="986"/>
         <source>Start tracking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="979"/>
+        <location filename="modlistcontextmenu.cpp" line="992"/>
         <source>Stop tracking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistcontextmenu.cpp" line="984"/>
+        <location filename="modlistcontextmenu.cpp" line="997"/>
         <source>Tracked state unknown</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8715,33 +8715,63 @@ Please enter the name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="945"/>
+        <location filename="modlistviewactions.cpp" line="948"/>
         <source>Choose a separator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1597"/>
+        <location filename="modlistviewactions.cpp" line="1158"/>
+        <source>Versioning scheme</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1159"/>
+        <source>No versioning scheme makes %1 newer than %2, so nothing was changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1581"/>
+        <source>The backup wasn&apos;t restored: a file of &quot;%1&quot; may be in use. Nothing was changed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1590"/>
+        <source>The backup wasn&apos;t restored: a file in it may be in use. &quot;%1&quot; was left as it was.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1593"/>
+        <source>The backup wasn&apos;t restored, and &quot;%1&quot; could not be put back. It is safe in the mods folder as &quot;%2&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1598"/>
+        <source>The backup was restored, but the old &quot;%1&quot; could not be removed. It is in the mods folder as &quot;%2&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1617"/>
         <source>Files from Overwrite were moved to the selected mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1615"/>
+        <location filename="modlistviewactions.cpp" line="1635"/>
         <source>Create Mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1652"/>
+        <location filename="modlistviewactions.cpp" line="1672"/>
         <source>Choose a destination mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1685"/>
+        <location filename="modlistviewactions.cpp" line="1705"/>
         <source>Clear Overwrite files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1686"/>
-        <source>This will permanently delete every file and folder in:
+        <location filename="modlistviewactions.cpp" line="1706"/>
+        <source>This will move every file and folder to the Recycle Bin:
 
 %1
 
@@ -8749,8 +8779,13 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="modlistviewactions.cpp" line="1722"/>
+        <source>Overwrite could not be cleared: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="modlistviewactions.cpp" line="360"/>
-        <location filename="modlistviewactions.cpp" line="1626"/>
+        <location filename="modlistviewactions.cpp" line="1646"/>
         <source>A mod with this name already exists</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8760,8 +8795,8 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1082"/>
-        <location filename="modlistviewactions.cpp" line="1331"/>
+        <location filename="modlistviewactions.cpp" line="1085"/>
+        <location filename="modlistviewactions.cpp" line="1334"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8772,7 +8807,7 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1365"/>
+        <location filename="modlistviewactions.cpp" line="1368"/>
         <source>Are you sure?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8802,123 +8837,103 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1047"/>
+        <location filename="modlistviewactions.cpp" line="1050"/>
         <source>failed to rename mod: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1083"/>
+        <location filename="modlistviewactions.cpp" line="1086"/>
         <source>Remove the following mods?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1100"/>
+        <location filename="modlistviewactions.cpp" line="1103"/>
         <source>failed to remove mod: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1128"/>
+        <location filename="modlistviewactions.cpp" line="1131"/>
         <source>Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1129"/>
+        <location filename="modlistviewactions.cpp" line="1132"/>
         <source>The versioning scheme decides which version is considered newer than another.
 This function will guess the versioning scheme under the assumption that the installed version is outdated.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1155"/>
-        <source>Sorry</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modlistviewactions.cpp" line="1156"/>
-        <source>I don&apos;t know a versioning scheme where %1 is newer than %2.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modlistviewactions.cpp" line="1177"/>
+        <location filename="modlistviewactions.cpp" line="1180"/>
         <source>Opening Nexus Links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1178"/>
+        <location filename="modlistviewactions.cpp" line="1181"/>
         <source>You are trying to open %1 links to Nexus Mods.  Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1201"/>
-        <location filename="modlistviewactions.cpp" line="1223"/>
+        <location filename="modlistviewactions.cpp" line="1204"/>
+        <location filename="modlistviewactions.cpp" line="1226"/>
         <source>Opening Web Pages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1202"/>
-        <location filename="modlistviewactions.cpp" line="1224"/>
+        <location filename="modlistviewactions.cpp" line="1205"/>
+        <location filename="modlistviewactions.cpp" line="1227"/>
         <source>You are trying to open %1 Web Pages.  Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1274"/>
-        <location filename="modlistviewactions.cpp" line="1279"/>
-        <location filename="modlistviewactions.cpp" line="1290"/>
+        <location filename="modlistviewactions.cpp" line="1277"/>
+        <location filename="modlistviewactions.cpp" line="1282"/>
+        <location filename="modlistviewactions.cpp" line="1293"/>
         <source>Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1275"/>
+        <location filename="modlistviewactions.cpp" line="1278"/>
         <source>Installation file no longer exists</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1280"/>
+        <location filename="modlistviewactions.cpp" line="1283"/>
         <source>Mods installed with old versions of MO can&apos;t be reinstalled in this way.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1290"/>
+        <location filename="modlistviewactions.cpp" line="1293"/>
         <source>Failed to create backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1332"/>
+        <location filename="modlistviewactions.cpp" line="1335"/>
         <source>Restore all hidden files in the following mods?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1366"/>
+        <location filename="modlistviewactions.cpp" line="1369"/>
         <source>About to restore all hidden files in:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1399"/>
+        <location filename="modlistviewactions.cpp" line="1402"/>
         <source>Endorsing multiple mods will take a while. Please wait...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1566"/>
+        <location filename="modlistviewactions.cpp" line="1569"/>
         <source>Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1567"/>
+        <location filename="modlistviewactions.cpp" line="1570"/>
         <source>This will replace the existing mod &quot;%1&quot;. Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1571"/>
-        <source>failed to remove mod &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modlistviewactions.cpp" line="1577"/>
-        <source>failed to rename &quot;%1&quot; to &quot;%2&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modlistviewactions.cpp" line="1616"/>
+        <location filename="modlistviewactions.cpp" line="1636"/>
         <source>This will move all files from overwrite into a new, regular mod.
 Please enter a name:</source>
         <translation type="unfinished"></translation>

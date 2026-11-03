@@ -7675,6 +7675,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
+      <translation>Mueve todos los archivos y carpetas de Overwrite a la Papelera de reciclaje.</translation>
+    </message>
+    <message>
       <source>All Mods</source>
       <translation>Todos los mods</translation>
     </message>
@@ -7988,6 +7992,46 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>The backup wasn't restored: a file of "%1" may be in use. Nothing was changed.</source>
+      <translation>La copia no se restauró: puede que un archivo de «%1» esté en uso. No se cambió nada.</translation>
+    </message>
+    <message>
+      <source>The backup wasn't restored: a file in it may be in use. "%1" was left as it was.</source>
+      <translation>La copia no se restauró: puede que uno de sus archivos esté en uso. «%1» se quedó como estaba.</translation>
+    </message>
+    <message>
+      <source>The backup wasn't restored, and "%1" could not be put back. It is safe in the mods folder as "%2".</source>
+      <translation>La copia no se restauró y «%1» no se pudo volver a colocar. Está a salvo en la carpeta de mods como «%2».</translation>
+    </message>
+    <message>
+      <source>The backup was restored, but the old "%1" could not be removed. It is in the mods folder as "%2".</source>
+      <translation>La copia se restauró, pero el «%1» antiguo no se pudo quitar. Está en la carpeta de mods como «%2».</translation>
+    </message>
+    <message>
+      <source>This will move every file and folder to the Recycle Bin:
+
+%1
+
+Move anything you want to keep into a mod before continuing.</source>
+      <translation>Esto moverá todos los archivos y carpetas a la Papelera de reciclaje:
+
+%1
+
+Mueve a un mod lo que quieras conservar antes de continuar.</translation>
+    </message>
+    <message>
+      <source>Overwrite could not be cleared: %1</source>
+      <translation>No se pudo vaciar Overwrite: %1</translation>
+    </message>
+    <message>
+      <source>Versioning scheme</source>
+      <translation>Esquema de versiones</translation>
+    </message>
+    <message>
+      <source>No versioning scheme makes %1 newer than %2, so nothing was changed.</source>
+      <translation>Ningún esquema de versiones hace que %1 sea más nueva que %2, así que no se cambió nada.</translation>
+    </message>
     <message>
       <source>Create empty mod</source>
       <translation>Crear mod vacío</translation>

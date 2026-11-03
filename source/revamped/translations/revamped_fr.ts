@@ -7739,6 +7739,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
+      <translation>Déplace tous les fichiers et dossiers d'Overwrite vers la Corbeille.</translation>
+    </message>
+    <message>
       <source>Review and manage files...</source>
       <translation>Examiner et gérer les fichiers...</translation>
     </message>
@@ -8020,6 +8024,46 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>The backup wasn't restored: a file of "%1" may be in use. Nothing was changed.</source>
+      <translation>La sauvegarde n'a pas été restaurée : un fichier de « %1 » est peut-être utilisé. Rien n'a été modifié.</translation>
+    </message>
+    <message>
+      <source>The backup wasn't restored: a file in it may be in use. "%1" was left as it was.</source>
+      <translation>La sauvegarde n'a pas été restaurée : un de ses fichiers est peut-être utilisé. « %1 » est resté tel quel.</translation>
+    </message>
+    <message>
+      <source>The backup wasn't restored, and "%1" could not be put back. It is safe in the mods folder as "%2".</source>
+      <translation>La sauvegarde n'a pas été restaurée et « %1 » n'a pas pu être remis en place. Il est en sécurité dans le dossier des mods sous le nom « %2 ».</translation>
+    </message>
+    <message>
+      <source>The backup was restored, but the old "%1" could not be removed. It is in the mods folder as "%2".</source>
+      <translation>La sauvegarde a été restaurée, mais l'ancien « %1 » n'a pas pu être retiré. Il se trouve dans le dossier des mods sous le nom « %2 ».</translation>
+    </message>
+    <message>
+      <source>This will move every file and folder to the Recycle Bin:
+
+%1
+
+Move anything you want to keep into a mod before continuing.</source>
+      <translation>Tous les fichiers et dossiers seront déplacés vers la Corbeille :
+
+%1
+
+Déplacez ce que vous voulez garder dans un mod avant de continuer.</translation>
+    </message>
+    <message>
+      <source>Overwrite could not be cleared: %1</source>
+      <translation>Impossible de vider Overwrite : %1</translation>
+    </message>
+    <message>
+      <source>Versioning scheme</source>
+      <translation>Schéma de version</translation>
+    </message>
+    <message>
+      <source>No versioning scheme makes %1 newer than %2, so nothing was changed.</source>
+      <translation>Aucun schéma de version ne rend %1 plus récente que %2 : rien n'a été modifié.</translation>
+    </message>
     <message>
       <source>Create empty mod</source>
       <translation>Créer un mod vide</translation>

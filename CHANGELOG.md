@@ -136,6 +136,16 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Mod list menu
+
+- "Restore backup" no longer deletes the mod before the backup is in its place: if a
+  step fails it's put back, and the old mod goes to the Recycle Bin, not away for good.
+- "Clear Overwrite" says it uses the Recycle Bin, as it did, takes hidden files too, and
+  says when it fails.
+- Rename, Reinstall and Create backup aren't offered with several mods selected, where
+  they acted on one. "Send to" has no Separator without separators, and its Priority
+  starts from the mod's own.
+
 ### Mod list rows
 
 - Status says "Removed from Nexus" when a file's author removed it, instead of "New
