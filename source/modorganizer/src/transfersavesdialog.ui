@@ -81,7 +81,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>Global saves</string>
+            <string>The game's saves</string>
            </property>
           </widget>
          </item>
@@ -167,7 +167,7 @@
          <item>
           <widget class="QLabel" name="globalToProfileHeading">
            <property name="text">
-            <string>GLOBAL TO PROFILE</string>
+            <string>GAME TO PROFILE</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -228,7 +228,7 @@
          <item>
           <widget class="QLabel" name="profileToGlobalHeading">
            <property name="text">
-            <string>PROFILE TO GLOBAL</string>
+            <string>PROFILE TO GAME</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -241,7 +241,7 @@
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>← Copy to Global</string>
+            <string>← Copy to Game</string>
            </property>
            <property name="toolTip">
             <string>Copy this character's saves to the shared game save location and keep the originals. This can affect the game's save numbering; existing files trigger an overwrite prompt.</string>
@@ -260,7 +260,7 @@
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>← Move to Global</string>
+            <string>← Move to Game</string>
            </property>
            <property name="toolTip">
             <string>Move this character's saves to the shared game save location. This can affect the game's save numbering; existing files trigger an overwrite prompt.</string>

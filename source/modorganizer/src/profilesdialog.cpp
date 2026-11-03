@@ -36,6 +36,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "report.h"
 #include "settings.h"
 #include "shared/appconfig.h"
+#include "shared/util.h"
 #include "transfersavesdialog.h"
 
 #include <QAbstractButton>
@@ -515,8 +516,8 @@ void ProfilesDialog::showEvent(QShowEvent* event)
     QWhatsThis::showText(
         pos,
         QObject::tr(
-            "Before you can use ModOrganizer, you need to create at least one profile. "
-            "ATTENTION: Run the game at least once before creating a profile!"),
+            "Create a profile to start using Mod Organizer. Run the game once first, "
+            "so that its settings exist."),
         m_list);
   }
 }
@@ -918,22 +919,13 @@ void ProfilesDialog::removeProfile()
     if (item != nullptr) {
       delete item;
     }
-    // FOF_WANTNUKEWARNING: Windows asks first when the folder cannot go to
-    // the Recycle Bin (no bin on that drive, too large for it) instead of
-    // deleting it for good without a word, as uibase's shellDelete() does
-    std::wstring from = QDir::toNativeSeparators(profilePath).toStdWString();
-    from.push_back(L'\0');
-    SHFILEOPSTRUCTW operation{};
-    operation.hwnd   = reinterpret_cast<HWND>(winId());
-    operation.wFunc  = FO_DELETE;
-    operation.pFrom  = from.c_str();
-    operation.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_WANTNUKEWARNING;
-    const int result = ::SHFileOperationW(&operation);
-    bool removed     = result == 0 && !operation.fAnyOperationsAborted;
+    profileToDelete.reset();
+    const auto result = shellRemove({profilePath}, true, this);
+    bool removed      = result.removed();
 
-    if (!removed && !operation.fAnyOperationsAborted) {
+    if (!removed && result.error != 0 && !result.aborted) {
       log::warn("Failed to move \"{}\" to the Recycle Bin (error {})", profilePath,
-                result);
+                result.error);
       QMessageBox permanentBox(QMessageBox::Warning, "MO2 Revamped",
                                tr("The profile could not be moved to the Recycle Bin."),
                                QMessageBox::Yes | QMessageBox::No, this);
@@ -1056,6 +1048,9 @@ void ProfilesDialog::onLocalSavesChanged(bool checked)
 
   if (profile->enableLocalSaves(checked)) {
     m_transfer->setEnabled(checked);
+    m_transfer->setToolTip(checked
+                               ? tr("Copy or move saves between this profile and the game")
+                               : tr("Turn on profile-specific saves to transfer saves"));
   } else {
     // revert the switch
     QSignalBlocker blocker(m_localSaves);

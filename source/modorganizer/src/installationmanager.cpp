@@ -31,6 +31,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modinfo.h"
 #include "nexusinterface.h"
 #include "queryoverwritedialog.h"
+#include "shared/util.h"
 #include "questionboxmemory.h"
 #include "report.h"
 #include "selectiondialog.h"
@@ -169,7 +170,8 @@ std::optional<QString> askText(QWidget* parent, const QString& title, const QStr
     const QString wrong = problem ? problem(edit->text().trimmed()) : QString();
     error->setText(wrong);
     error->setVisible(!wrong.isEmpty());
-    ok->setEnabled(wrong.isEmpty() && (password || !edit->text().trimmed().isEmpty()));
+    ok->setEnabled(wrong.isEmpty() && (password ? !edit->text().isEmpty()
+                                                : !edit->text().trimmed().isEmpty()));
   };
   QObject::connect(edit, &QLineEdit::textChanged, &dlg, check);
   check();
@@ -184,10 +186,13 @@ std::optional<QString> askText(QWidget* parent, const QString& title, const QStr
 
 void InstallationManager::queryPassword()
 {
-  m_Password = askText(m_ParentWidget, tr("Password required"),
-                       tr("This archive is protected with a password."), tr("Password"),
-                       {}, true)
-                   .value_or(QString());
+  const auto typed =
+      askText(m_ParentWidget, tr("Password required"),
+              m_PasswordRejected ? tr("That password did not open the archive. Try again.")
+                                 : tr("This archive is protected with a password."),
+              tr("Password"), {}, true);
+  m_PasswordCancelled = !typed.has_value();
+  m_Password          = typed.value_or(QString());
 }
 
 bool InstallationManager::extractFiles(QString extractPath, QString title,
@@ -220,11 +225,10 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
     });
     installationProgress->setWindowFlags(installationProgress->windowFlags() &
                                          (~Qt::WindowContextHelpButtonHint));
-    if (!title.isEmpty()) {
-      installationProgress->setWindowTitle(title);
-    }
+    installationProgress->setWindowTitle(title.isEmpty() ? tr("Installing") : title);
     installationProgress->setWindowModality(Qt::WindowModal);
-    installationProgress->setFixedSize(600, 100);
+    // the width stays when the file names change
+    installationProgress->setFixedWidth(600);
 
     // Turn off auto-reset otherwize the progress dialog is reset before the end. This
     // is kind of annoying because updateProgress consider percentage of progression
@@ -302,14 +306,16 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
     future = futureWatcher.future();
   }
 
-  // Check the result:
+  // Check the result; an error can come with a result that reports success
+  if ((!future.result() || !errorMessage.isEmpty()) && m_PasswordCancelled) {
+    return false;
+  }
+  if (!errorMessage.isEmpty()) {
+    throw MyException(tr("Extraction failed: %1").arg(errorMessage));
+  }
   if (!future.result()) {
     if (m_ArchiveHandler->getLastError() == Archive::Error::ERROR_EXTRACT_CANCELLED) {
-      if (!errorMessage.isEmpty()) {
-        throw MyException(tr("Extraction failed: %1").arg(errorMessage));
-      } else {
-        return false;
-      }
+      return false;
     } else {
       throw MyException(tr("Extraction failed: %1")
                             .arg(static_cast<int>(m_ArchiveHandler->getLastError())));
@@ -438,6 +444,14 @@ QString InstallationManager::generateBackupName(const QString& directoryName) co
 
 InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& modName)
 {
+  // a Replace nobody finished: its folder stays for the question at the next start,
+  // and nothing below may act on it
+  if (!m_ReplacedFolder.isEmpty()) {
+    log::error("a replaced mod was left unfinished: {}", m_ReplacedFolder);
+    m_ReplacedFolder.clear();
+  }
+  m_ReplacedRestored = false;
+
   QString targetDirectory =
       QDir::fromNativeSeparators(m_ModsDirectory + "\\" + modName);
 
@@ -456,7 +470,10 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
     if (overwriteDialog.exec()) {
       settings.setKeepBackupOnInstall(overwriteDialog.backup());
 
-      if (overwriteDialog.backup()) {
+      // a new mod beside the installed one changes nothing there
+      const bool keepBackup = overwriteDialog.backup() &&
+                              overwriteDialog.action() != QueryOverwriteDialog::ACT_RENAME;
+      if (keepBackup) {
         QString backupDirectory = generateBackupName(targetDirectory);
         if (!copyDir(targetDirectory, backupDirectory, false)) {
           reportError(tr("Failed to create backup"));
@@ -466,7 +483,7 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
 
       result.m_merged   = overwriteDialog.action() == QueryOverwriteDialog::ACT_MERGE;
       result.m_replaced = overwriteDialog.action() == QueryOverwriteDialog::ACT_REPLACE;
-      result.m_backup   = overwriteDialog.backup();
+      result.m_backup   = keepBackup;
 
       if (overwriteDialog.action() == QueryOverwriteDialog::ACT_RENAME) {
         // a free name to start from: "<name> (2)", "<name> (3)"...
@@ -492,12 +509,6 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
           targetDirectory = QDir::fromNativeSeparators(m_ModsDirectory) + "/" + modName;
         }
       } else if (overwriteDialog.action() == QueryOverwriteDialog::ACT_REPLACE) {
-        unsigned int idx = ModInfo::getIndex(modName);
-        if (idx != UINT_MAX) {
-          auto modInfo = ModInfo::getByIndex(idx);
-          // mark the old install file as uninstalled
-          emit modReplaced(modInfo->installationFile());
-        }
         // save original settings like categories. Because it makes sense
         QString metaFilename = targetDirectory + "/meta.ini";
         QFile settingsFile(metaFilename);
@@ -507,13 +518,30 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
           settingsFile.close();
         }
 
-        // remove the directory with all content, then recreate it empty
-        shellDelete(QStringList(targetDirectory));
+        // the old files wait beside the new ones until the install has worked, so a
+        // cancelled or failed install loses nothing
+        const QString asideDirectory = setAsideMod(targetDirectory);
+        if (asideDirectory.isEmpty()) {
+          reportError(tr("The installed mod could not be replaced. Close any program "
+                         "using its files and try again."));
+          return {IPluginInstaller::RESULT_FAILED};
+        }
+        m_ReplacedFolder = asideDirectory;
+        m_ReplacedTarget = targetDirectory;
+        m_ReplacedInstallFile.reset();
+        unsigned int idx = ModInfo::getIndex(modName);
+        if (idx != UINT_MAX) {
+          m_ReplacedInstallFile = ModInfo::getByIndex(idx)->installationFile();
+        }
         if (!QDir().mkdir(targetDirectory)) {
           // windows may keep the directory around for a moment, preventing its
-          // re-creation. Not sure if this still happens with shellDelete
+          // re-creation
           Sleep(100);
-          QDir().mkdir(targetDirectory);
+          if (!QDir().mkdir(targetDirectory)) {
+            reportError(tr("The folder for the new version could not be created."));
+            restoreReplacedMod();
+            return {IPluginInstaller::RESULT_FAILED};
+          }
         }
         // restore the saved settings
         if (settingsFile.open(QIODevice::WriteOnly)) {
@@ -537,6 +565,126 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
   QDir().mkdir(targetDirectory);
 
   return result;
+}
+
+QStringList InstallationManager::replacedFolderRoots() const
+{
+  // beside the mods folder, so it never shows as a mod; inside it (the mod list skips
+  // it) for a mods folder that is on a volume of its own
+  const QString mods = QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory));
+  const QString name = QString::fromLatin1(ReplacedModsFolder);
+  QStringList roots{QDir::cleanPath(QFileInfo(mods).absolutePath() + "/" + name),
+                    QDir::cleanPath(mods + "/" + name)};
+  roots.removeDuplicates();
+  return roots;
+}
+
+QString InstallationManager::setAsideMod(const QString& modFolder) const
+{
+  for (const QString& root : replacedFolderRoots()) {
+    // a numbered folder each, as a leftover of the same mod may still be there
+    QString slot;
+    for (int n = 1; slot.isEmpty() || QFileInfo::exists(slot); ++n) {
+      slot = root + "/" + QString::number(n);
+    }
+    if (!QDir().mkpath(slot)) {
+      continue;
+    }
+    const QString aside = slot + "/" + QFileInfo(modFolder).fileName();
+    if (QDir().rename(modFolder, aside)) {
+      return aside;
+    }
+    removeAsideSlot(aside);
+  }
+  return {};
+}
+
+void InstallationManager::removeAsideSlot(const QString& aside) const
+{
+  // only empty folders go
+  QDir slot = QFileInfo(aside).dir();
+  const QString root = QFileInfo(slot.absolutePath()).absolutePath();
+  QDir().rmdir(slot.absolutePath());
+  QDir().rmdir(root);
+}
+
+QStringList InstallationManager::replacedLeftovers() const
+{
+  QStringList leftovers;
+  for (const QString& root : replacedFolderRoots()) {
+    const auto slots_ = QDir(root).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QFileInfo& slot : slots_) {
+      const auto mods =
+          QDir(slot.absoluteFilePath()).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+      for (const QFileInfo& mod : mods) {
+        leftovers.append(mod.absoluteFilePath());
+      }
+    }
+  }
+  return leftovers;
+}
+
+bool InstallationManager::restoreLeftover(const QString& aside)
+{
+  const QString target = QDir::fromNativeSeparators(m_ModsDirectory) + "/" +
+                         QFileInfo(aside).fileName();
+  if (QFileInfo::exists(target) && !shellRemove({target}, true, m_ParentWidget).removed()) {
+    return false;
+  }
+  if (!QDir().rename(aside, target)) {
+    return false;
+  }
+  removeAsideSlot(aside);
+  return true;
+}
+
+bool InstallationManager::discardLeftover(const QString& aside)
+{
+  if (!shellRemove({aside}, true, m_ParentWidget).removed()) {
+    return false;
+  }
+  removeAsideSlot(aside);
+  return true;
+}
+
+void InstallationManager::restoreReplacedMod()
+{
+  if (m_ReplacedFolder.isEmpty()) {
+    return;
+  }
+  const QString aside = std::exchange(m_ReplacedFolder, QString());
+
+  // what the install left in its place
+  QDir(m_ReplacedTarget).removeRecursively();
+  if (!QDir().rename(aside, m_ReplacedTarget)) {
+    log::error("failed to put back {} as {}", aside, m_ReplacedTarget);
+    reportError(tr("The previous version of the mod could not be put back. It is in "
+                   "this folder:\n%1")
+                    .arg(QDir::toNativeSeparators(aside)));
+    return;
+  }
+  removeAsideSlot(aside);
+  m_ReplacedRestored = true;
+}
+
+void InstallationManager::discardReplacedMod()
+{
+  if (m_ReplacedFolder.isEmpty()) {
+    return;
+  }
+  const QString aside = std::exchange(m_ReplacedFolder, QString());
+
+  if (m_ReplacedInstallFile) {
+    // mark the old install file as uninstalled
+    emit modReplaced(*m_ReplacedInstallFile);
+  }
+  if (!shellRemove({aside}, true, m_ParentWidget).removed()) {
+    reportError(tr("The mod was replaced, but its previous version did not go to the "
+                   "Recycle Bin. It is in this folder:\n%1")
+                    .arg(QDir::toNativeSeparators(aside)));
+    return;
+  }
+  removeAsideSlot(aside);
 }
 
 bool InstallationManager::ensureValidModName(GuessedValue<QString>& name) const
@@ -572,6 +720,11 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
     return result;
   }
 
+  // does nothing once the install has finished
+  ON_BLOCK_EXIT([this]() {
+    restoreReplacedMod();
+  });
+
   result.m_name = modName;
 
   QString targetDirectory       = QDir(m_ModsDirectory + "/" + modName).canonicalPath();
@@ -598,7 +751,10 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
       dir.mkpath(".");
     }
 
-    QFile::copy(p.second, destPath);
+    if (!QFile::copy(p.second, destPath)) {
+      log::error("failed to copy {} to {}", p.second, destPath);
+      return {IPluginInstaller::RESULT_FAILED};
+    }
   }
 
   QSettings settingsFile(targetDirectory + "/meta.ini", QSettings::IniFormat);
@@ -637,12 +793,15 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
     settingsFile.endGroup();
   }
 
+  discardReplacedMod();
+
   return result;
 }
 
 bool InstallationManager::wasCancelled() const
 {
-  return m_ArchiveHandler->getLastError() == Archive::Error::ERROR_EXTRACT_CANCELLED;
+  return !m_PasswordCancelled &&
+         m_ArchiveHandler->getLastError() == Archive::Error::ERROR_EXTRACT_CANCELLED;
 }
 
 bool InstallationManager::isRunning() const
@@ -802,28 +961,50 @@ InstallationResult InstallationManager::install(const QString& fileName,
 
   // open the archive and construct the directory tree the installers work on
 
-  bool archiveOpen =
-      m_ArchiveHandler->open(fileName.toStdWString(), [this]() -> std::wstring {
-        m_Password = QString();
+  m_PasswordAsked     = false;
+  m_PasswordCancelled = false;
+  m_PasswordRejected  = false;
+  m_ReplacedRestored  = false;
+  const auto askPassword = [this]() -> std::wstring {
+    m_Password = QString();
 
-        // Note: If we are not in the Qt event thread, we cannot use queryPassword()
-        // directly, so we emit passwordRequested() that is connected to
-        // queryPassword(). The connection is made using Qt::BlockingQueuedConnection,
-        // so the emit "call" is actually blocking. We cannot use emit if we are in the
-        // even thread, otherwize we have a deadlock.
-        if (QThread::currentThread() != QApplication::instance()->thread()) {
-          emit passwordRequested();
-        } else {
-          queryPassword();
-        }
-        return m_Password.toStdWString();
-      });
+    // cancelled once: the other files of the archive don't ask again
+    if (m_PasswordCancelled) {
+      return {};
+    }
+    m_PasswordAsked = true;
+
+    // Note: If we are not in the Qt event thread, we cannot use queryPassword()
+    // directly, so we emit passwordRequested() that is connected to
+    // queryPassword(). The connection is made using Qt::BlockingQueuedConnection,
+    // so the emit "call" is actually blocking. We cannot use emit if we are in the
+    // even thread, otherwize we have a deadlock.
+    if (QThread::currentThread() != QApplication::instance()->thread()) {
+      emit passwordRequested();
+    } else {
+      queryPassword();
+    }
+    return m_Password.toStdWString();
+  };
+
+  bool archiveOpen = m_ArchiveHandler->open(fileName.toStdWString(), askPassword);
+  // a wrong password keeps the archive from opening
+  while (!archiveOpen && m_PasswordAsked && !m_PasswordCancelled) {
+    m_PasswordRejected = true;
+    m_PasswordAsked    = false;
+    m_ArchiveHandler->close();
+    archiveOpen = m_ArchiveHandler->open(fileName.toStdWString(), askPassword);
+  }
   if (!archiveOpen) {
     log::debug("integrated archiver can't open {}: {} ({})", fileName,
                getErrorString(m_ArchiveHandler->getLastError()),
                m_ArchiveHandler->getLastError());
   }
   ON_BLOCK_EXIT(std::bind(&InstallationManager::postInstallCleanup, this));
+
+  if (!archiveOpen && m_PasswordCancelled) {
+    return InstallationResult(IPluginInstaller::RESULT_CANCELED);
+  }
 
   std::shared_ptr<IFileTree> filesTree =
       archiveOpen ? ArchiveFileTree::makeTree(*m_ArchiveHandler) : nullptr;
@@ -916,9 +1097,9 @@ InstallationResult InstallationManager::install(const QString& fileName,
     // extracted to the correct location
     switch (installResult.result()) {
     case IPluginInstaller::RESULT_FAILED: {
-      QMessageBox::information(qApp->activeWindow(), tr("Installation failed"),
-                               tr("Something went wrong while installing this mod."),
-                               QMessageBox::Ok);
+      QMessageBox::warning(qApp->activeWindow(), tr("Installation failed"),
+                           tr("The mod could not be installed. The log has the details."),
+                           QMessageBox::Ok);
       return installResult;
     } break;
     case IPluginInstaller::RESULT_SUCCESS:

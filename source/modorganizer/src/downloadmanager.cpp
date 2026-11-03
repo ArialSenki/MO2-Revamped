@@ -1073,20 +1073,21 @@ void DownloadManager::queryInfo(int index)
                                            true);
     if (info->m_FileInfo->modID < 0) {
       bool ok   = false;
-      int modId = QInputDialog::getInt(nullptr, tr("Please enter the nexus mod id"),
+      int modId = QInputDialog::getInt(m_ParentWidget, tr("Mod ID on Nexus"),
                                        tr("Mod ID:"), 1, 1,
                                        std::numeric_limits<int>::max(), 1, &ok);
       // careful now: while the dialog was displayed, events were processed.
       // the download list might have changed and our info-ptr invalidated.
-      if (ok)
-        m_ActiveDownloads[index]->m_FileInfo->modID = modId;
-      return;
+      if (!ok || index >= m_ActiveDownloads.size() || m_ActiveDownloads[index] != info) {
+        return;
+      }
+      info->m_FileInfo->modID = modId;
     }
   }
 
   if (info->m_FileInfo->gameName.size() == 0) {
     SelectionDialog selection(
-        tr("Please select the source game code for %1").arg(getFileName(index)));
+        tr("Which game is %1 for?").arg(getFileName(index)));
 
     std::vector<std::pair<QString, QString>> choices =
         m_NexusInterface->getGameChoices(m_ManagedGame);
@@ -1144,8 +1145,11 @@ void DownloadManager::queryInfoMd5(int index)
 
   QCryptographicHash hash(QCryptographicHash::Md5);
   const qint64 progressStep = 10 * 1024 * 1024;
-  QProgressDialog progress(tr("Hashing download file '%1'").arg(info->m_FileName),
-                           tr("Cancel"), 0, downloadFile.size() / progressStep);
+  QProgressDialog progress(tr("Reading '%1' to find it on Nexus").arg(info->m_FileName),
+                           tr("Cancel"), 0, downloadFile.size() / progressStep,
+                           m_ParentWidget);
+  progress.setWindowTitle(tr("Query info"));
+  progress.setMinimumWidth(480);
   progress.setWindowModality(Qt::WindowModal);
   progress.setMinimumDuration(1000);
 

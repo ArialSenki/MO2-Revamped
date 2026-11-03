@@ -142,11 +142,19 @@ public:
     connect(ui->clear, &QPushButton::clicked, [&] {
       clear();
     });
+
+    // disconnecting is the Disconnect button's job
+    auto updateOk = [this] {
+      ui->buttonBox->button(QDialogButtonBox::Ok)
+          ->setEnabled(!ui->key->toPlainText().trimmed().isEmpty());
+    };
+    connect(ui->key, &QPlainTextEdit::textChanged, this, updateOk);
+    updateOk();
   }
 
   void accept() override
   {
-    m_key = ui->key->toPlainText();
+    m_key = ui->key->toPlainText().trimmed();
     QDialog::accept();
   }
 
@@ -243,14 +251,8 @@ void NexusConnectionUI::manual()
     return;
   }
 
-  const auto key = d.key();
-  if (key.isEmpty()) {
-    clearKey();
-    return;
-  }
-
   m_log->clear();
-  validateKey(key);
+  validateKey(d.key());
 }
 
 void NexusConnectionUI::disconnect()

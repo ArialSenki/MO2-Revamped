@@ -83,9 +83,6 @@ install(DIRECTORY
 	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-fluent-v4-light"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../../revamped/themes/stylesheets/mo2-fluent-v4-dark"
 	DESTINATION bin/stylesheets)
-install(DIRECTORY
-	"${CMAKE_CURRENT_SOURCE_DIR}/tutorials"
-	DESTINATION bin)
 
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/markdown.html"
 	DESTINATION bin/resources)
@@ -114,11 +111,6 @@ mo2_add_filter(NAME src/application GROUPS
 	multiprocess
 	sanitychecks
 	selfupdater
-)
-
-mo2_add_filter(NAME src/browser GROUPS
-	browserdialog
-	browserview
 )
 
 mo2_add_filter(NAME src/categories GROUPS

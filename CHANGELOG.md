@@ -136,6 +136,53 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Other windows
+
+- Replace, when a mod is already installed: the old files stay aside until the
+  new version has finished installing, then go to the Recycle Bin. If you cancel
+  or the install fails, the old mod comes back as it was. The window says so. If
+  Mod Organizer stops halfway, it asks at the next start whether to restore or
+  discard the old version.
+- An install in which a file made by the installer can't be copied now counts as
+  failed, instead of as a complete mod.
+- "Move to Recycle Bin" for an instance: Windows now asks before anything too
+  large for the Bin is deleted for good. If files stay behind, you get a list,
+  and the instance keeps its shortcut, group and notes.
+- Transfer Saves: a save being overwritten is only removed once the new one has
+  arrived whole, also if you choose Skip in Windows' dialog. The questions name
+  "the game's save folder" and no longer run words together.
+- A backup is no longer made when you install as a new mod, since that changes
+  nothing in the installed one.
+- Password-protected archives: Cancel stops quietly. A wrong password asks again
+  when the archive's file list is protected. When only its files are protected,
+  as in many RAR archives, a wrong password stops the install with "Wrong
+  password". Neither blames a corrupted download.
+- Restore required plugins (Saves tab): the choices say "Overwrite" and "Game
+  folder". A plugin in the game's folder no longer stops the whole restore, and
+  plugins no installed mod has are listed afterwards.
+- Replacing the category list says how many mods use a category from it. Those
+  mods end up without a category instead of silently getting another one. A
+  removed category's number is not used again, category numbers can't be edited,
+  and a ticked filter on a removed category no longer leaves the list empty.
+- Backups of the mod list and plugin order go to the Recycle Bin when deleted.
+  Restoring a backup saves the current list first.
+- Archives tab: cancelling Extract stops the remaining archives too, and
+  right-clicking the empty area no longer leads to a crash.
+- The LOOT report follows the Light theme.
+- Query info: the mod ID you type is used right away, instead of asking you to
+  query again.
+- The Nexus API key: spaces and line breaks around a pasted key are ignored, and
+  OK with an empty field no longer disconnects your account.
+- Executables: Cancel, Esc and the X ask before dropping unsaved changes.
+- Lists to choose from keep OK off until something is selected. Saving a text
+  output says when the file could not be written.
+- Windows with a progress bar have a title and a parent, and choice windows lost
+  the old arrow. Backup questions look like the other questions. Folder, file
+  and requirement icons in the Manual and BAIN install windows use the new icons.
+- Mod pages from plugins open in your browser. The built-in browser window and
+  the old tutorials are gone. Third-party mod-page plugins that downloaded through
+  the built-in browser now need the site's nxm links.
+
 ### Mod information and Overwrite
 
 - Next, Previous, Page Up, Page Down, "Go to" and Esc now ask before dropping

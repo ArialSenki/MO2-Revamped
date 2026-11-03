@@ -6,8 +6,17 @@ from typing import Any, cast
 
 from antlr4 import ParserRuleContext
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFontDatabase, QKeySequence, QPixmap, QResizeEvent, QShortcut
+from PyQt6.QtCore import QRectF, Qt, pyqtSignal
+from PyQt6.QtGui import (
+    QFont,
+    QFontDatabase,
+    QKeySequence,
+    QPainter,
+    QPalette,
+    QPixmap,
+    QResizeEvent,
+    QShortcut,
+)
 from PyQt6.QtWidgets import QApplication
 
 from wizard.contexts import (
@@ -81,6 +90,22 @@ def check_version(
     return (game_ok, se_ok, ge_ok, True)
 
 
+def _glyph_pixmap(glyph: int) -> QPixmap:
+    font = QFont()
+    font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])
+    font.setPixelSize(16)
+    pixmap = QPixmap(32, 32)
+    pixmap.setDevicePixelRatio(2.0)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setFont(font)
+    painter.setPen(QApplication.palette().color(QPalette.ColorRole.WindowText))
+    painter.drawText(QRectF(0, 0, 16, 16), Qt.AlignmentFlag.AlignCenter, chr(glyph))
+    painter.end()
+    return pixmap
+
+
 class WizardInstallerRequiresVersionPage(QtWidgets.QWidget):
     context: WizardRequireVersionsContext[WizardRunnerState]
 
@@ -104,24 +129,9 @@ class WizardInstallerRequiresVersionPage(QtWidgets.QWidget):
 
         game = organizer.managedGame()
 
-        okIcon = QPixmap(":/MO/gui/checked-checkbox").scaled(
-            16,
-            16,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
-        noIcon = QPixmap(":/MO/gui/unchecked-checkbox").scaled(
-            16,
-            16,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
-        koIcon = QPixmap(":/MO/gui/indeterminate-checkbox").scaled(
-            16,
-            16,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
+        okIcon = _glyph_pixmap(0xE73E)  # check mark
+        noIcon = _glyph_pixmap(0xE739)  # empty box
+        koIcon = _glyph_pixmap(0xE711)  # cross
 
         self.ui.labelGame.setText(game.gameName())
 

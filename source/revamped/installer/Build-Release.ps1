@@ -338,17 +338,10 @@ function Copy-RevampedSources {
         }
     }
 
-    # Tutorials are loaded from disk at runtime rather than compiled into the
-    # executable. Overlay the maintained source tree so rebuilt installers do
-    # not silently ship stale tutorial text from an older runtime snapshot.
-    $tutorialSource = Join-Path $repoRoot 'source\modorganizer\src\tutorials'
+    # MO2 Revamped has no tutorials; an older runtime snapshot may still hold them.
     $tutorialDestination = Join-Path $DestinationRoot 'tutorials'
-    foreach ($file in Get-ChildItem -LiteralPath $tutorialSource -File -Recurse -Force) {
-        if ($file.Extension -notin @('.js', '.qml')) { continue }
-        $relative = $file.FullName.Substring($tutorialSource.Length).TrimStart('\')
-        $destination = Join-Path $tutorialDestination $relative
-        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
-        Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
+    if (Test-Path -LiteralPath $tutorialDestination) {
+        Remove-Item -LiteralPath $tutorialDestination -Recurse -Force
     }
 
     # MO2's own translation files do not cover the Revamped additions or the

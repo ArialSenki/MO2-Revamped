@@ -109,7 +109,7 @@ private:
                          QPushButton* copy, QPushButton* move);
 
   bool
-  transferCharacters(QString const& character, char const* message,
+  transferCharacters(QString const& character, QString const& message,
                      QDir const& sourceDirectory, SaveList& saves, QDir const& dest,
                      const std::function<bool(const QString&, const QString&)>& method,
                      std::format_string<QString, QString> errmsg);

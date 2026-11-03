@@ -166,7 +166,7 @@ bool TransferSavesDialog::testOverwrite(OverwriteMode& overwriteMode,
       overwriteMode == OVERWRITE_YES ? QMessageBox::Yes : QMessageBox::No;
   if (overwriteMode == OVERWRITE_ASK) {
     res = QMessageBox::question(this, tr("Overwrite"),
-                                tr("Overwrite the file \"%1\"").arg(destinationFile),
+                                tr("Overwrite the file \"%1\"?").arg(destinationFile),
                                 QMessageBox::Yes | QMessageBox::No |
                                     QMessageBox::YesToAll | QMessageBox::NoToAll);
     if (res == QMessageBox::YesToAll) {
@@ -180,19 +180,11 @@ bool TransferSavesDialog::testOverwrite(OverwriteMode& overwriteMode,
   return res == QMessageBox::Yes;
 }
 
-#define MOVE_SAVES "Move all save games of character \"%1\""
-#define COPY_SAVES "Copy all save games of character \"%1\""
-
-#define TO_PROFILE "to the profile?"
-#define TO_GLOBAL                                                                      \
-  "to the global location? Please be aware that this will mess up the running number " \
-  "of save games."
-
 void TransferSavesDialog::on_moveToLocalBtn_clicked()
 {
   QString character = ui->globalCharacterList->currentItem()->text();
   if (transferCharacters(
-          character, MOVE_SAVES TO_PROFILE, m_GamePlugin->savesDirectory(),
+          character, tr("Move all saves of character \"%1\" to the profile?"), m_GamePlugin->savesDirectory(),
           m_GlobalSaves[character], m_Profile.savePath(),
           [this](const QString& source, const QString& destination) -> bool {
             return shellMove(source, destination, true, this);
@@ -209,7 +201,7 @@ void TransferSavesDialog::on_copyToLocalBtn_clicked()
 {
   QString character = ui->globalCharacterList->currentItem()->text();
   if (transferCharacters(
-          character, COPY_SAVES TO_PROFILE, m_GamePlugin->savesDirectory(),
+          character, tr("Copy all saves of character \"%1\" to the profile?"), m_GamePlugin->savesDirectory(),
           m_GlobalSaves[character], m_Profile.savePath(),
           [this](const QString& source, const QString& destination) -> bool {
             return shellCopy(source, destination, true, this);
@@ -224,7 +216,10 @@ void TransferSavesDialog::on_moveToGlobalBtn_clicked()
 {
   QString character = ui->localCharacterList->currentItem()->text();
   if (transferCharacters(
-          character, MOVE_SAVES TO_GLOBAL, m_Profile.savePath(),
+          character,
+          tr("Move all saves of character \"%1\" to the game's save folder? The game "
+             "may number its saves differently afterwards."),
+          m_Profile.savePath(),
           m_LocalSaves[character], m_GamePlugin->savesDirectory().absolutePath(),
           [this](const QString& source, const QString& destination) -> bool {
             return shellMove(source, destination, true, this);
@@ -241,7 +236,10 @@ void TransferSavesDialog::on_copyToGlobalBtn_clicked()
 {
   QString character = ui->localCharacterList->currentItem()->text();
   if (transferCharacters(
-          character, COPY_SAVES TO_GLOBAL, m_Profile.savePath(),
+          character,
+          tr("Copy all saves of character \"%1\" to the game's save folder? The game "
+             "may number its saves differently afterwards."),
+          m_Profile.savePath(),
           m_LocalSaves[character], m_GamePlugin->savesDirectory().absolutePath(),
           [this](const QString& source, const QString& destination) -> bool {
             return shellCopy(source, destination, true, this);
@@ -332,12 +330,12 @@ void TransferSavesDialog::refreshCharacters(const SaveCollection& saveCollection
 }
 
 bool TransferSavesDialog::transferCharacters(
-    QString const& character, char const* message, QDir const& sourceDirectory,
+    QString const& character, QString const& message, QDir const& sourceDirectory,
     SaveList& saves, QDir const& destination,
     const std::function<bool(const QString&, const QString&)>& method,
     std::format_string<QString, QString> errmsg)
 {
-  if (QMessageBox::question(this, tr("Confirm"), tr(message).arg(character),
+  if (QMessageBox::question(this, tr("Confirm"), message.arg(character),
                             QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
     return false;
   }
@@ -371,7 +369,13 @@ bool TransferSavesDialog::transferCharacters(
         }
       }
 
-      if (!method(sourceFile.absoluteFilePath(), destinationFile)) {
+      // Windows reports success when its dialog skipped the file; the previous
+      // save only goes once the new one has arrived whole
+      const qint64 sourceSize = sourceFile.size();
+      const bool transferred  = method(sourceFile.absoluteFilePath(), destinationFile) &&
+                               QFileInfo(destinationFile).exists() &&
+                               QFileInfo(destinationFile).size() == sourceSize;
+      if (!transferred) {
         if (!backupFile.isEmpty()) {
           if (QFile::exists(destinationFile) && !QFile::remove(destinationFile)) {
             log::error(

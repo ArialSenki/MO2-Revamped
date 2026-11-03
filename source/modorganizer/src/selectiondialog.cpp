@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "selectiondialog.h"
+#include "fluenticons.h"
 #include "ui_selectiondialog.h"
 
 #include <QCommandLinkButton>
@@ -48,6 +49,10 @@ void SelectionDialog::addChoice(const QString& buttonText, const QString& descri
   button->setAccessibleDescription(description);
   if (m_IconSize.isValid()) {
     button->setIconSize(m_IconSize);
+  }
+  // Windows 11 choices have no arrow
+  if (FluentIcons::active()) {
+    button->setIcon(QIcon());
   }
   button->setProperty("data", data);
   ui->buttonBox->addButton(button, QDialogButtonBox::AcceptRole);

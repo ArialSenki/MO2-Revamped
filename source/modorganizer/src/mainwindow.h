@@ -42,7 +42,6 @@ class FluentDashboard;
 class DataTab;
 class DownloadsTab;
 class SavesTab;
-class BrowserDialog;
 class QDialog;
 class QLabel;
 
@@ -137,7 +136,6 @@ public:
 
   QMainWindow* mainWindow() override;
 
-  bool addProfile();
   void updateBSAList(const QStringList& defaultArchives,
                      const QStringList& activeArchives);
 
@@ -274,7 +272,9 @@ private:
   static void setupNetworkProxy(bool activate);
   void activateProxy(bool activate);
 
-  bool createBackup(const QString& filePath, const QDateTime& time);
+  bool createBackup(const QString& filePath, const QDateTime& time, bool removeOld = true);
+  bool backUpBeforeRestore(const QStringList& files);
+  void offerReplacedModsRecovery();
   QString queryRestore(const QString& filePath);
   void createProfileBackup(bool includeModList, bool includePluginOrder);
   void createPluginOrderBackup();
@@ -351,7 +351,6 @@ private:
   QString m_CurrentLanguage;
   std::vector<QTranslator*> m_Translators;
 
-  std::unique_ptr<BrowserDialog> m_IntegratedBrowser;
 
   QByteArray m_ArchiveListHash;
 
@@ -392,11 +391,7 @@ private slots:
 
   void languageChange(const QString& newLanguage);
 
-  void windowTutorialFinished(const QString& windowName);
 
-  BSA::EErrorCode extractBSA(BSA::Archive& archive, BSA::Folder::Ptr folder,
-                             const QString& destination,
-                             QProgressDialog& extractProgress);
 
   // nexus related
   void updateAvailable();
@@ -433,7 +428,6 @@ private slots:
   void modRenamed(const QString& oldName, const QString& newName);
   void modRemoved(const QString& fileName);
 
-  void hookUpWindowTutorials();
 
   void openInstanceFolder();
   void openInstallFolder();

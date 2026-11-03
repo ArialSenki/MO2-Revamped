@@ -25,7 +25,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <versioninfo.h>
 
+#include <QStringList>
+
 class Executable;
+class QWidget;
 
 namespace MOShared
 {
@@ -50,6 +53,24 @@ bool CaseInsensitiveEqual(const std::wstring& lhs, const std::wstring& rhs);
 
 MOBase::VersionInfo createVersionInfo();
 QString getUsvfsVersionString();
+
+// where Replace keeps a mod's old version until the install has finished
+inline constexpr char ReplacedModsFolder[] = ".mo2-replaced";
+
+struct ShellRemoveResult
+{
+  int error    = 0;
+  bool aborted = false;
+  QStringList remaining;
+
+  bool removed() const { return remaining.isEmpty(); }
+};
+
+// deletes files and folders through Windows and tells what is still there, as a
+// skipped file reports success. With recycle, Windows asks first when something
+// can't go to the Recycle Bin (no bin on that drive, too large for it) instead of
+// deleting it for good without a word, as uibase's shellDelete() does.
+ShellRemoveResult shellRemove(const QStringList& paths, bool recycle, QWidget* parent);
 
 void SetThisThreadName(const QString& s);
 void checkDuplicateShortcuts(const QMenu& m);

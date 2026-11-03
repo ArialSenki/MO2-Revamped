@@ -23,11 +23,16 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "appconfig.h"
 #include "windows_error.h"
 #include <QApplication>
+#include <QDir>
+#include <QFileInfo>
 #include <QRegularExpression>
 #include <QTranslator>
 #include <log.h>
 #include <usvfs.h>
 #include <usvfs_version.h>
+
+#include <Windows.h>
+#include <shellapi.h>
 
 using namespace MOBase;
 
@@ -255,6 +260,38 @@ QString getUsvfsDLLVersion()
     s = "?";
   }
   return s;
+}
+
+ShellRemoveResult shellRemove(const QStringList& paths, bool recycle, QWidget* parent)
+{
+  ShellRemoveResult result;
+  if (paths.isEmpty()) {
+    return result;
+  }
+
+  std::wstring from;
+  for (const QString& path : paths) {
+    from += QDir::toNativeSeparators(QFileInfo(path).absoluteFilePath()).toStdWString();
+    from.push_back(L'\0');
+  }
+
+  SHFILEOPSTRUCTW operation{};
+  operation.hwnd   = parent != nullptr ? reinterpret_cast<HWND>(parent->winId()) : nullptr;
+  operation.wFunc  = FO_DELETE;
+  operation.pFrom  = from.c_str();
+  operation.fFlags = FOF_NOCONFIRMATION;
+  if (recycle) {
+    operation.fFlags |= FOF_ALLOWUNDO | FOF_WANTNUKEWARNING;
+  }
+  result.error   = ::SHFileOperationW(&operation);
+  result.aborted = operation.fAnyOperationsAborted;
+
+  for (const QString& path : paths) {
+    if (QFileInfo::exists(path)) {
+      result.remaining.append(path);
+    }
+  }
+  return result;
 }
 
 QString getUsvfsVersionString()

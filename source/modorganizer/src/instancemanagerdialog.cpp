@@ -1580,7 +1580,17 @@ void InstanceManagerDialog::deleteInstance()
   // deleting
   const QString identifier = i->instanceIdentifier();
   const bool hadShortcut   = shortcutExists(*i);
-  if (!doDelete(selected, (r == Recycle))) {
+  const QStringList remaining = doDelete(selected, (r == Recycle));
+  if (!remaining.isEmpty()) {
+    QStringList shown;
+    for (const QString& path : remaining) {
+      shown.append(QDir::toNativeSeparators(path));
+    }
+    QMessageBox::warning(
+        this, tr("Delete instance"),
+        tr("These were not removed, so the instance keeps its shortcut, group and "
+           "notes:\n\n%1")
+            .arg(shown.join(QLatin1Char('\n'))));
     // part of it may be gone already: the list shows what is left
     updateInstances();
     updateList();
@@ -1607,7 +1617,7 @@ void InstanceManagerDialog::setRestartOnSelect(bool b)
   }
 }
 
-bool InstanceManagerDialog::doDelete(const QStringList& files, bool recycle)
+QStringList InstanceManagerDialog::doDelete(const QStringList& files, bool recycle)
 {
   // logging
   for (auto&& f : files) {
@@ -1618,18 +1628,12 @@ bool InstanceManagerDialog::doDelete(const QStringList& files, bool recycle)
     }
   }
 
-  if (MOBase::shellDelete(files, recycle, this)) {
-    return true;
+  const auto result = MOShared::shellRemove(files, recycle, this);
+  if (!result.removed()) {
+    log::error("failed to delete {}, error {}", result.remaining.join(", "), result.error);
   }
 
-  const auto e = GetLastError();
-  if (e == ERROR_CANCELLED) {
-    log::debug("deletion cancelled by user");
-  } else {
-    log::error("failed to delete, {}", formatSystemMessage(e));
-  }
-
-  return false;
+  return result.remaining;
 }
 
 void InstanceManagerDialog::onSelection()

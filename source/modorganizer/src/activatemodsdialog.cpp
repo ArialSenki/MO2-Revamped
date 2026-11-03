@@ -53,7 +53,14 @@ ActivateModsDialog::ActivateModsDialog(SaveGameInfo::MissingAssets const& missin
     } else {
       QComboBox* combo = new QComboBox();
       for (QString const& mod : espIter.value()) {
-        combo->addItem(mod);
+        // the game plugins' names for these two places
+        if (mod == QLatin1String("<overwrite>")) {
+          combo->addItem(tr("Overwrite"), mod);
+        } else if (mod == QLatin1String("<data>") || mod == QLatin1String("data")) {
+          combo->addItem(tr("Game folder"), mod);
+        } else {
+          combo->addItem(mod, mod);
+        }
       }
       modsTable->setCellWidget(row, 1, combo);
     }
@@ -73,7 +80,20 @@ std::set<QString> ActivateModsDialog::getModsToActivate()
   for (int row = 0; row < modsTable->rowCount(); ++row) {
     QComboBox* comboBox = dynamic_cast<QComboBox*>(modsTable->cellWidget(row, 1));
     if (comboBox != nullptr) {
-      result.insert(comboBox->currentText());
+      result.insert(comboBox->currentData().toString());
+    }
+  }
+  return result;
+}
+
+std::set<QString> ActivateModsDialog::getMissingPlugins()
+{
+  std::set<QString> result;
+  QTableWidget* modsTable = findChild<QTableWidget*>("modsTable");
+
+  for (int row = 0; row < modsTable->rowCount(); ++row) {
+    if (dynamic_cast<QComboBox*>(modsTable->cellWidget(row, 1)) == nullptr) {
+      result.insert(dynamic_cast<QLabel*>(modsTable->cellWidget(row, 0))->text());
     }
   }
   return result;

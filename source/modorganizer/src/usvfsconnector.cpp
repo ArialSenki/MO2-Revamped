@@ -198,7 +198,9 @@ void UsvfsConnector::updateMapping(const MappingType& mapping)
   const auto start = std::chrono::high_resolution_clock::now();
 
   QProgressDialog progress(qApp->activeWindow());
-  progress.setLabelText(tr("Preparing vfs"));
+  progress.setWindowTitle(tr("Starting the program"));
+  progress.setLabelText(tr("Preparing the mods for the program"));
+  progress.setMinimumWidth(420);
   progress.setMaximum(static_cast<int>(mapping.size()));
   progress.show();
 

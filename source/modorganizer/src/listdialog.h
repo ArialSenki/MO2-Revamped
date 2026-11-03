@@ -27,6 +27,8 @@ public slots:
   void on_filterEdit_textChanged(QString filter);
 
 private:
+  void updateAcceptButton();
+
   Ui::ListDialog* ui;
   QStringList m_Choices;
 };

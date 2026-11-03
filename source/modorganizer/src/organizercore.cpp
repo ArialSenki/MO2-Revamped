@@ -727,6 +727,12 @@ MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name)
     return nullptr;
   }
 
+  // does nothing once the old version is discarded below; runs after the settings
+  // file below has been written
+  ON_BLOCK_EXIT([this]() {
+    m_InstallationManager.restoreReplacedMod();
+  });
+
   m_InstallationManager.setModsDirectory(m_Settings.paths().mods());
 
   QString targetDirectory =
@@ -748,7 +754,11 @@ MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name)
 
   // shouldn't this use the existing mod in case of a merge? also, this does not refresh
   // the indices in the ModInfo structure
-  return ModInfo::createFrom(QDir(targetDirectory), *this).data();
+  MOBase::IModInterface* mod = ModInfo::createFrom(QDir(targetDirectory), *this).data();
+  if (mod != nullptr) {
+    m_InstallationManager.discardReplacedMod();
+  }
+  return mod;
 }
 
 void OrganizerCore::modDataChanged(MOBase::IModInterface*)
@@ -880,11 +890,14 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
       if (m_InstallationManager.wasCancelled()) {
         QMessageBox::information(
             qApp->activeWindow(), tr("Extraction cancelled"),
-            tr("The installation was cancelled while extracting files. "
-               "If this was prior to a FOMOD setup, this warning may be ignored. "
-               "However, if this was during installation, the mod will likely be "
-               "missing "
-               "files."),
+            m_InstallationManager.replacedModRestored()
+                ? tr("The installation was cancelled while extracting files. The "
+                     "installed mod is back as it was.")
+                : tr("The installation was cancelled while extracting files. "
+                     "If this was prior to a FOMOD setup, this warning may be ignored. "
+                     "However, if this was during installation, the mod will likely be "
+                     "missing "
+                     "files."),
             QMessageBox::Ok);
         refresh();
       }

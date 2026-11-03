@@ -11,7 +11,7 @@ import uuid
 
 import mobase
 from PyQt6 import QtGui, QtWidgets
-from PyQt6.QtCore import QTimer, Qt, qCritical, qInfo, qWarning
+from PyQt6.QtCore import QRectF, QTimer, Qt, qCritical, qInfo, qWarning
 
 
 # PyQt passes Qt's log functions ASCII only: a message with any other
@@ -843,6 +843,24 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         summary["optional"] = getattr(_checker, "optional_files_left_out", 0)
         return summary
 
+    @staticmethod
+    def _glyph_icon(glyph: int) -> QtGui.QIcon:
+        font = QtGui.QFont()
+        font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])
+        font.setPixelSize(16)
+        pixmap = QtGui.QPixmap(32, 32)
+        pixmap.setDevicePixelRatio(2.0)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QtGui.QPainter(pixmap)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        painter.setFont(font)
+        painter.setPen(
+            QtWidgets.QApplication.palette().color(QtGui.QPalette.ColorRole.WindowText)
+        )
+        painter.drawText(QRectF(0, 0, 16, 16), Qt.AlignmentFlag.AlignCenter, chr(glyph))
+        painter.end()
+        return QtGui.QIcon(pixmap)
+
     def _ask_manual_layout(
         self,
         archive_tree: mobase.IFileTree,
@@ -944,8 +962,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         install_button.clicked.connect(dialog.accept)
         layout.addWidget(buttons)
 
-        folder_icon = dialog.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
-        file_icon = dialog.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileIcon)
+        folder_icon = self._glyph_icon(0xE8B7)
+        file_icon = self._glyph_icon(0xE7C3)
         updating = [True]
 
         def make_folder(name: str) -> QtWidgets.QTreeWidgetItem:

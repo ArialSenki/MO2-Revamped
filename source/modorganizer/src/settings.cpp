@@ -2369,16 +2369,6 @@ void InterfaceSettings::setLanguage(const QString& name)
   set(m_Settings, "Settings", "language", name);
 }
 
-bool InterfaceSettings::isTutorialCompleted(const QString& windowName) const
-{
-  return get<bool>(m_Settings, "CompletedWindowTutorials", windowName, false);
-}
-
-void InterfaceSettings::setTutorialCompleted(const QString& windowName, bool b)
-{
-  set(m_Settings, "CompletedWindowTutorials", windowName, b);
-}
-
 bool InterfaceSettings::showChangeGameConfirmation() const
 {
   return get<bool>(m_Settings, "Settings", "show_change_game_confirmation", true);
@@ -2642,16 +2632,6 @@ QString GlobalSettings::systemLanguage()
   return QStringLiteral("en_US");
 }
 
-bool GlobalSettings::hideTutorialQuestion()
-{
-  return settings().value("HideTutorialQuestion", false).toBool();
-}
-
-void GlobalSettings::setHideTutorialQuestion(bool b)
-{
-  settings().setValue("HideTutorialQuestion", b);
-}
-
 bool GlobalSettings::hideCategoryReminder()
 {
   return settings().value("HideCategoryReminder", false).toBool();
@@ -2706,7 +2686,6 @@ bool GlobalSettings::hasNexusApiKey()
 void GlobalSettings::resetDialogs()
 {
   setHideCreateInstanceIntro(false);
-  setHideTutorialQuestion(false);
   setHideCategoryReminder(false);
   setHideAssignCategoriesQuestion(false);
 }

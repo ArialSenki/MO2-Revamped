@@ -136,7 +136,8 @@ void QueryOverwriteDialog::buildFluentLayout()
             tr("Adds the new files to the installed mod; files with the same name are "
                "replaced"));
   addChoice(ui->replaceBtn, 0xE72C, tr("Replace"),
-            tr("Deletes the installed mod's files and installs this one in their place"));
+            tr("Sends the installed mod's files to the Recycle Bin once this one is "
+               "installed in their place"));
 
   FluentPanels::addSwitchRow(card, 0xEA35, tr("Keep a backup of the current mod"),
                              tr("Saves a copy you can restore before any file changes"),

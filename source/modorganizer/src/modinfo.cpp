@@ -34,6 +34,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "versioninfo.h"
 
 #include "shared/appconfig.h"
+#include "shared/util.h"
 #include <iplugingame.h>
 #include <log.h>
 #include <report.h>
@@ -245,7 +246,10 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     mods.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
     QDirIterator modIter(mods);
     while (modIter.hasNext()) {
-      createFrom(QDir(modIter.next()), core);
+      const QString modPath = modIter.next();
+      if (modIter.fileName() != QLatin1String(MOShared::ReplacedModsFolder)) {
+        createFrom(QDir(modPath), core);
+      }
     }
   }
 

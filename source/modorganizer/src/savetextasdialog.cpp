@@ -2,9 +2,26 @@
 #include "ui_savetextasdialog.h"
 #include <QClipboard>
 #include <QFileDialog>
+#include <QTimer>
 #include <report.h>
 
 using MOBase::reportError;
+
+namespace
+{
+// the button says what it did for a moment
+void showDone(QPushButton* button, const QString& text)
+{
+  const QString original = button->property("idleText").toString().isEmpty()
+                               ? button->text()
+                               : button->property("idleText").toString();
+  button->setProperty("idleText", original);
+  button->setText(text);
+  QTimer::singleShot(2000, button, [button, original] {
+    button->setText(original);
+  });
+}
+}  // namespace
 
 SaveTextAsDialog::SaveTextAsDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::SaveTextAsDialog)
@@ -31,6 +48,7 @@ void SaveTextAsDialog::on_clipboardBtn_clicked()
 {
   QClipboard* clipboard = QApplication::clipboard();
   clipboard->setText(ui->textEdit->toPlainText());
+  showDone(ui->clipboardBtn, tr("Copied"));
 }
 
 void SaveTextAsDialog::on_saveAsBtn_clicked()
@@ -45,6 +63,13 @@ void SaveTextAsDialog::on_saveAsBtn_clicked()
       return;
     }
 
-    file.write(ui->textEdit->toPlainText().toUtf8());
+    const QByteArray text = ui->textEdit->toPlainText().toUtf8();
+    if (file.write(text) != text.size() || !file.flush()) {
+      reportError(tr("\"%1\" could not be written completely. It may be missing part "
+                     "of the text.")
+                      .arg(fileName));
+      return;
+    }
+    showDone(ui->saveAsBtn, tr("Saved"));
   }
 }

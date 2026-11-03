@@ -24,7 +24,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_mainwindow.h"
 
 #include "aboutdialog.h"
-#include "browserdialog.h"
 #include "categories.h"
 #include "categoriesdialog.h"
 #include "datatab.h"
@@ -1111,68 +1110,19 @@ bool showProfileBackupPrompt(QWidget* parent, const QString& windowTitle,
                              const QString& primaryButtonText,
                              const QString& cancelButtonText = QString())
 {
-  QDialog dialog(parent);
-  dialog.setObjectName(QStringLiteral("profileBackupPromptDialog"));
+  FluentContentDialog dialog(parent, QStringLiteral("profileBackupPromptDialog"), headingText,
+                             descriptionText);
   dialog.setWindowTitle(windowTitle);
-  if (parent != nullptr) {
-    dialog.setWindowIcon(parent->windowIcon());
-  }
-  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumWidth(460);
-  dialog.resize(540, cancelButtonText.isEmpty() ? 170 : 200);
 
-  auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(5);
-
-  auto* heading = new QLabel(headingText, &dialog);
-  heading->setObjectName(QStringLiteral("profileBackupPromptTitle"));
-  QFont headingFont = heading->font();
-  if (headingFont.pointSize() > 0) {
-    headingFont.setPointSize(headingFont.pointSize() + 2);
-  }
-  headingFont.setBold(true);
-  heading->setFont(headingFont);
-  heading->setWordWrap(true);
-  layout->addWidget(heading);
-
-  auto* card = new QFrame(&dialog);
-  card->setObjectName(QStringLiteral("profileBackupPromptCard"));
-  card->setFrameShape(QFrame::StyledPanel);
-  auto* cardLayout = new QVBoxLayout(card);
-  cardLayout->setContentsMargins(10, 5, 10, 5);
-  cardLayout->setSpacing(0);
-
-  auto* description = new QLabel(descriptionText, card);
-  description->setObjectName(QStringLiteral("profileBackupPromptDescription"));
-  description->setWordWrap(true);
-  cardLayout->addWidget(description);
-  layout->addWidget(card);
-
-  auto* divider = new QFrame(&dialog);
-  divider->setObjectName(QStringLiteral("profileBackupPromptDivider"));
-  divider->setFrameShape(QFrame::HLine);
-  divider->setFrameShadow(QFrame::Plain);
-  layout->addWidget(divider);
-
-  auto* buttons = new QDialogButtonBox(&dialog);
-  buttons->setObjectName(QStringLiteral("profileBackupPromptButtons"));
-  auto* primaryButton =
-      buttons->addButton(primaryButtonText, QDialogButtonBox::AcceptRole);
-  primaryButton->setAutoDefault(false);
-  if (cancelButtonText.isEmpty()) {
-    primaryButton->setDefault(true);
-  } else {
-    auto* cancelButton =
-        buttons->addButton(cancelButtonText, QDialogButtonBox::RejectRole);
+  auto* primaryButton = dialog.addButton(primaryButtonText, true);
+  QObject::connect(primaryButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+  if (!cancelButtonText.isEmpty()) {
+    // asking: Enter doesn't go ahead
+    auto* cancelButton = dialog.addButton(cancelButtonText);
+    QObject::connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
     cancelButton->setDefault(true);
   }
-  layout->addWidget(buttons);
-
-  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
-                   &QDialog::accept);
-  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
-                   &QDialog::reject);
+  dialog.resize(540, dialog.sizeHint().height());
   return dialog.exec() == QDialog::Accepted;
 }
 
@@ -1777,8 +1727,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   connect(&NexusInterface::instance(), &NexusInterface::requestsChanged, ui->statusBar,
           &StatusBar::setAPI);
 
-  connect(&TutorialManager::instance(), SIGNAL(windowTutorialFinished(QString)), this,
-          SLOT(windowTutorialFinished(QString)));
   connect(ui->tabWidget, SIGNAL(currentChanged(int)), &TutorialManager::instance(),
           SIGNAL(tabChanged(int)));
   connect(ui->toolBar, SIGNAL(customContextMenuRequested(QPoint)), this,
@@ -1990,11 +1938,6 @@ MainWindow::~MainWindow()
     cleanup();
 
     m_OrganizerCore.setUserInterface(nullptr);
-
-    if (m_IntegratedBrowser) {
-      m_IntegratedBrowser->close();
-      m_IntegratedBrowser.reset();
-    }
 
     delete ui;
   } catch (std::exception& e) {
@@ -2699,50 +2642,6 @@ void MainWindow::createHelpMenu()
   }
 }
 
-bool MainWindow::addProfile()
-{
-  QComboBox* profileBox = findChild<QComboBox*>("profileBox");
-  bool okClicked        = false;
-
-  QString name = QInputDialog::getText(this, tr("Name"),
-                                       tr("Please enter a name for the new profile"),
-                                       QLineEdit::Normal, QString(), &okClicked);
-  if (okClicked && (name.size() > 0)) {
-    try {
-      profileBox->addItem(name);
-      profileBox->setCurrentIndex(profileBox->count() - 1);
-      return true;
-    } catch (const std::exception& e) {
-      reportError(tr("failed to create profile: %1").arg(e.what()));
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
-
-void MainWindow::hookUpWindowTutorials()
-{
-  QDirIterator dirIter(QApplication::applicationDirPath() + "/tutorials",
-                       QStringList("*.js"), QDir::Files);
-  while (dirIter.hasNext()) {
-    dirIter.next();
-    QString fileName = dirIter.fileName();
-    QFile file(dirIter.filePath());
-    if (!file.open(QIODevice::ReadOnly)) {
-      log::error("Failed to open {}", fileName);
-      continue;
-    }
-    QString firstLine = QString::fromUtf8(file.readLine());
-    if (firstLine.startsWith("//WIN")) {
-      QString windowName = firstLine.mid(6).trimmed();
-      if (!m_OrganizerCore.settings().interface().isTutorialCompleted(windowName)) {
-        TutorialManager::instance().activateTutorial(windowName, fileName);
-      }
-    }
-  }
-}
-
 void MainWindow::showEvent(QShowEvent* event)
 {
   QMainWindow::showEvent(event);
@@ -2794,7 +2693,9 @@ void MainWindow::showEvent(QShowEvent* event)
     // only the first time the window becomes visible
     m_Tutorial.registerControl();
 
-    hookUpWindowTutorials();
+    QTimer::singleShot(0, this, [this] {
+      offerReplacedModsRecovery();
+    });
 
     if (m_OrganizerCore.settings().firstStart()) {
       if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
@@ -2802,7 +2703,7 @@ void MainWindow::showEvent(QShowEvent* event)
         if (QMessageBox::question(
                 this, tr("Game Support Wiki"),
                 tr("A game support wiki is available for this game. Open it now? "
-                   "You can also open it later from the \"Help\" menu."),
+                   "You can also open it later from the \"...\" menu."),
                 QMessageBox::Yes | QMessageBox::No,
                 QMessageBox::Yes) == QMessageBox::Yes) {
           gameSupportTriggered();
@@ -3068,11 +2969,6 @@ void MainWindow::cleanup()
 {
   QWebEngineProfile::defaultProfile()->clearAllVisitedLinks();
 
-  if (m_IntegratedBrowser) {
-    m_IntegratedBrowser->close();
-    m_IntegratedBrowser = {};
-  }
-
   m_SaveMetaTimer.stop();
   m_MetaSave.waitForFinished();
 }
@@ -3193,22 +3089,8 @@ void MainWindow::registerModPage(IPluginModPage* modPage)
   QAction* action = new QAction(modPage->icon(), modPage->displayName(), this);
   connect(
       action, &QAction::triggered, this,
-      [this, modPage]() {
-        if (modPage->useIntegratedBrowser()) {
-
-          if (!m_IntegratedBrowser) {
-            m_IntegratedBrowser.reset(new BrowserDialog);
-
-            connect(m_IntegratedBrowser.get(),
-                    SIGNAL(requestDownload(QUrl, QNetworkReply*)), &m_OrganizerCore,
-                    SLOT(requestDownload(QUrl, QNetworkReply*)));
-          }
-
-          m_IntegratedBrowser->setWindowTitle(modPage->displayName());
-          m_IntegratedBrowser->openUrl(modPage->pageURL());
-        } else {
-          shell::Open(QUrl(modPage->pageURL()));
-        }
+      [modPage]() {
+        shell::Open(QUrl(modPage->pageURL()));
       },
       Qt::QueuedConnection);
 
@@ -3768,8 +3650,9 @@ void MainWindow::setupNetworkProxy(bool activate)
 
 void MainWindow::activateProxy(bool activate)
 {
-  QProgressDialog busyDialog(tr("Activating Network Proxy"), QString(), 0, 0,
-                             parentWidget());
+  QProgressDialog busyDialog(tr("Activating Network Proxy"), QString(), 0, 0, this);
+  busyDialog.setWindowTitle(tr("Network proxy"));
+  busyDialog.setMinimumWidth(420);
   busyDialog.setWindowFlags(busyDialog.windowFlags() &
                             ~Qt::WindowContextHelpButtonHint);
   busyDialog.setWindowModality(Qt::WindowModal);
@@ -4531,11 +4414,6 @@ void MainWindow::modRemoved(const QString& fileName)
   if (!fileName.isEmpty() && !QFileInfo(fileName).isAbsolute()) {
     m_OrganizerCore.downloadManager()->markUninstalled(fileName);
   }
-}
-
-void MainWindow::windowTutorialFinished(const QString& windowName)
-{
-  m_OrganizerCore.settings().interface().setTutorialCompleted(windowName);
 }
 
 void MainWindow::displayModInformation(ModInfo::Ptr modInfo, unsigned int modIndex,
@@ -5714,50 +5592,6 @@ void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant, in
   }
 }
 
-BSA::EErrorCode MainWindow::extractBSA(BSA::Archive& archive, BSA::Folder::Ptr folder,
-                                       const QString& destination,
-                                       QProgressDialog& progress)
-{
-  QDir().mkdir(destination);
-  BSA::EErrorCode result = BSA::ERROR_NONE;
-  QString errorFile;
-
-  for (unsigned int i = 0; i < folder->getNumFiles(); ++i) {
-    BSA::File::Ptr file = folder->getFile(i);
-    BSA::EErrorCode res = archive.extract(file, qUtf8Printable(destination));
-    if (res != BSA::ERROR_NONE) {
-      reportError(tr("failed to read %1: %2").arg(file->getName().c_str()).arg(res));
-      result = res;
-    }
-    progress.setLabelText(file->getName().c_str());
-    progress.setValue(progress.value() + 1);
-    QCoreApplication::processEvents();
-    if (progress.wasCanceled()) {
-      result = BSA::ERROR_CANCELED;
-    }
-  }
-
-  if (result != BSA::ERROR_NONE) {
-    if (QMessageBox::critical(
-            this, tr("Error"),
-            tr("failed to extract %1 (errorcode %2)").arg(errorFile).arg(result),
-            QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
-      return result;
-    }
-  }
-
-  for (unsigned int i = 0; i < folder->getNumSubFolders(); ++i) {
-    BSA::Folder::Ptr subFolder = folder->getSubFolder(i);
-    BSA::EErrorCode res        = extractBSA(
-        archive, subFolder,
-        destination.mid(0).append("/").append(subFolder->getName().c_str()), progress);
-    if (res != BSA::ERROR_NONE) {
-      return res;
-    }
-  }
-  return BSA::ERROR_NONE;
-}
-
 bool MainWindow::extractProgress(QProgressDialog& progress, int percentage,
                                  std::string fileName)
 {
@@ -5804,6 +5638,8 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
       }
 
       QProgressDialog progress(this);
+      progress.setWindowTitle(tr("Extract BSA"));
+      progress.setFixedWidth(600);
       progress.setMaximum(100);
       progress.setValue(0);
       progress.show();
@@ -5816,15 +5652,23 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
             tr("This archive contains invalid hashes. Some files may be broken."));
       }
       archive.close();
+      if (progress.wasCanceled()) {
+        return;
+      }
     }
   }
 }
 
 void MainWindow::on_bsaList_customContextMenuRequested(const QPoint& pos)
 {
+  QTreeWidgetItem* item = ui->bsaList->itemAt(pos);
+  if (item == nullptr) {
+    return;
+  }
+
   QMenu menu;
   QAction* extractAction = menu.addAction(
-      tr("Extract..."), [=, item = ui->bsaList->itemAt(pos)]() {
+      tr("Extract..."), [=]() {
     extractBSATriggered(item);
   });
   extractAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/export.svg"));
@@ -5935,17 +5779,92 @@ const char* MainWindow::PATTERN_BACKUP_REGEX =
     "\\.(\\d\\d\\d\\d_\\d\\d_\\d\\d_\\d\\d_\\d\\d_\\d\\d)";
 const char* MainWindow::PATTERN_BACKUP_DATE = "yyyy_MM_dd_hh_mm_ss";
 
-bool MainWindow::createBackup(const QString& filePath, const QDateTime& time)
+bool MainWindow::createBackup(const QString& filePath, const QDateTime& time,
+                              bool removeOld)
 {
   QString outPath = filePath + "." + time.toString(PATTERN_BACKUP_DATE);
   if (shellCopy(QStringList(filePath), QStringList(outPath), this)) {
-    QFileInfo fileInfo(filePath);
-    removeOldFiles(fileInfo.absolutePath(), fileInfo.fileName() + PATTERN_BACKUP_GLOB,
-                   10, QDir::Name);
+    if (removeOld) {
+      QFileInfo fileInfo(filePath);
+      removeOldFiles(fileInfo.absolutePath(), fileInfo.fileName() + PATTERN_BACKUP_GLOB,
+                     10, QDir::Name);
+    }
     return true;
   } else {
     return false;
   }
+}
+
+void MainWindow::offerReplacedModsRecovery()
+{
+  auto* installer            = m_OrganizerCore.installationManager();
+  const QStringList leftovers = installer->replacedLeftovers();
+  if (leftovers.isEmpty()) {
+    return;
+  }
+
+  QStringList names;
+  for (const QString& path : leftovers) {
+    names.append(QFileInfo(path).fileName());
+  }
+
+  enum
+  {
+    Later = 0,
+    Restore,
+    Discard
+  };
+  FluentContentDialog dialog(
+      this, QStringLiteral("ReplacedModsDialog"), tr("Finish replacing mods"),
+      tr("Mod Organizer stopped while replacing these mods, and kept their previous "
+         "versions:\n\n%1\n\nRestore puts each previous version back and sends the "
+         "version installed now to the Recycle Bin. Discard sends the previous versions "
+         "to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at "
+         "the next start.")
+          .arg(names.join(QLatin1Char('\n'))));
+  auto* restore = dialog.addButton(tr("Restore"), true);
+  auto* discard = dialog.addButton(tr("Discard"));
+  auto* later   = dialog.addButton(tr("Later"));
+  connect(restore, &QPushButton::clicked, &dialog, [&dialog] {
+    dialog.done(Restore);
+  });
+  connect(discard, &QPushButton::clicked, &dialog, [&dialog] {
+    dialog.done(Discard);
+  });
+  connect(later, &QPushButton::clicked, &dialog, &QDialog::reject);
+  dialog.resize(560, dialog.sizeHint().height());
+
+  const int choice = dialog.exec();
+  if (choice != Restore && choice != Discard) {
+    return;
+  }
+
+  QStringList failed;
+  for (const QString& path : leftovers) {
+    if (!(choice == Restore ? installer->restoreLeftover(path)
+                            : installer->discardLeftover(path))) {
+      failed.append(QDir::toNativeSeparators(path));
+    }
+  }
+  if (!failed.isEmpty()) {
+    QMessageBox::warning(this, tr("Finish replacing mods"),
+                         tr("These stay where they are, and Mod Organizer asks again at "
+                            "the next start:\n\n%1")
+                             .arg(failed.join(QLatin1Char('\n'))));
+  }
+  m_OrganizerCore.refresh();
+}
+
+bool MainWindow::backUpBeforeRestore(const QStringList& files)
+{
+  const QDateTime now = QDateTime::currentDateTime();
+  for (const QString& file : files) {
+    // keeps the older ones: the backup being restored can be the oldest
+    if (QFileInfo::exists(file) && !createBackup(file, now, false)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void MainWindow::createProfileBackup(bool includeModList, bool includePluginOrder)
@@ -6077,11 +5996,10 @@ QString MainWindow::queryRestore(const QString& filePath)
   const QString dialogDescription =
       isModListBackup
           ? tr("Choose a saved mod list for this profile. Restoring it replaces "
-               "the current mod list; MO2 does not back up the current version "
-               "automatically.")
+               "the current mod list; MO2 backs up the current one first.")
           : tr("Choose a saved plugin load order for this profile. Restoring it "
-               "replaces the current plugin load order; MO2 does not back up the "
-               "current version automatically.");
+               "replaces the current plugin load order; MO2 backs up the current "
+               "one first.");
   const QString choiceDescription =
       isModListBackup ? tr("Restore this saved mod list.")
                       : tr("Restore this saved plugin load order.");
@@ -6111,7 +6029,7 @@ QString MainWindow::queryRestore(const QString& filePath)
     if (match.hasMatch()) {
       QDateTime time = QDateTime::fromString(match.captured(1), PATTERN_BACKUP_DATE);
       addBackupChoice(match.captured(1),
-                      tr("Backup from %1").arg(time.toString()));
+                      tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)));
     } else if (match2.hasMatch()) {
       addBackupChoice(match2.captured(1), match2.captured(1));
     }
@@ -6170,10 +6088,18 @@ void MainWindow::restorePluginOrderBackup()
     const QString backupName = QFileInfo(pluginName).fileName() + "." + choice;
     if (!showProfileBackupPrompt(
             this, tr("Confirm restore"), tr("Restore this plugin order?"),
-            tr("This replaces the current plugin list and load order. MO2 does "
-               "not back up the current version automatically.\n\n%1")
+            tr("This replaces the current plugin list and load order. MO2 backs "
+               "up the current ones first.\n\n%1")
                 .arg(backupName),
             tr("Restore backup"), tr("Cancel"))) {
+      return;
+    }
+
+    m_OrganizerCore.savePluginList();
+    if (!backUpBeforeRestore(destinationFiles)) {
+      showProfileBackupPrompt(
+          this, tr("Restore failed"), tr("The current plugin order could not be backed up."),
+          tr("No files were restored."), tr("OK"));
       return;
     }
 
@@ -6315,10 +6241,17 @@ void MainWindow::restoreModListBackup()
     }
     if (!showProfileBackupPrompt(
             this, tr("Confirm restore"), tr("Restore this mod list?"),
-            tr("This replaces the current mod list and does not create a "
-               "backup of it automatically.\n\n%1")
+            tr("This replaces the current mod list. MO2 backs up the current "
+               "one first.\n\n%1")
                 .arg(backupName),
             tr("Restore backup"), tr("Cancel"))) {
+      return;
+    }
+    m_OrganizerCore.currentProfile()->writeModlistNow(true);
+    if (!backUpBeforeRestore({modlistName})) {
+      showProfileBackupPrompt(this, tr("Restore failed"),
+                              tr("The current mod list could not be backed up."),
+                              tr("No files were restored."), tr("OK"));
       return;
     }
     if (!shellCopy(modlistName + "." + choice, modlistName, true, this)) {
@@ -6365,13 +6298,13 @@ void MainWindow::deleteProfileModListBackup()
       const QDateTime time = QDateTime::fromString(
           timestampMatch.captured(1), PATTERN_BACKUP_DATE);
       dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                       tr("Backup from %1").arg(time.toString()),
-                       tr("Permanently delete this saved mod list backup."),
+                       tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)),
+                       tr("Send this saved mod list backup to the Recycle Bin."),
                        info.absoluteFilePath());
     } else if (legacyMatch.hasMatch()) {
       dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                        legacyMatch.captured(1),
-                       tr("Permanently delete this saved mod list backup."),
+                       tr("Send this saved mod list backup to the Recycle Bin."),
                        info.absoluteFilePath());
     }
   }
@@ -6400,20 +6333,20 @@ void MainWindow::deleteProfileModListBackup()
 
   if (!showProfileBackupPrompt(
           this, tr("Delete mod list backup"), tr("Delete this backup?"),
-          tr("Permanently delete this saved mod list backup?\n\n%1")
+          tr("Send this saved mod list backup to the Recycle Bin?\n\n%1")
               .arg(selectedInfo.fileName()),
           tr("Delete backup"), tr("Cancel"))) {
     return;
   }
 
-  if (!QFile::remove(selectedInfo.absoluteFilePath())) {
+  if (!shellRemove({selectedInfo.absoluteFilePath()}, true, this).removed()) {
     showProfileBackupPrompt(
         this, tr("Delete failed"), tr("The backup could not be deleted."),
         tr("Could not delete the selected mod list backup."), tr("OK"));
   } else {
     showProfileBackupPrompt(
         this, tr("Mod list backup deleted"), tr("Backup deleted"),
-        tr("The mod list backup was permanently deleted."), tr("OK"));
+        tr("The mod list backup went to the Recycle Bin."), tr("OK"));
   }
 }
 
@@ -6450,13 +6383,13 @@ void MainWindow::deleteProfileLoadOrderBackup()
       const QDateTime time = QDateTime::fromString(
           timestampMatch.captured(1), PATTERN_BACKUP_DATE);
       dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                       tr("Backup from %1").arg(time.toString()),
-                       tr("Permanently delete this saved plugin load order."),
+                       tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)),
+                       tr("Send this saved plugin load order to the Recycle Bin."),
                        info.absoluteFilePath());
     } else if (legacyMatch.hasMatch()) {
       dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                        legacyMatch.captured(1),
-                       tr("Permanently delete this saved plugin load order."),
+                       tr("Send this saved plugin load order to the Recycle Bin."),
                        info.absoluteFilePath());
     }
   }
@@ -6490,24 +6423,23 @@ void MainWindow::deleteProfileLoadOrderBackup()
       m_OrganizerCore.currentProfile()->getLockedOrderFileName() + suffix};
   if (!showProfileBackupPrompt(
           this, tr("Delete plugin order backup"), tr("Delete this backup?"),
-          tr("Permanently delete this saved plugin-order backup?\n\n%1")
+          tr("Send this saved plugin-order backup to the Recycle Bin?\n\n%1")
               .arg(selectedInfo.fileName()),
           tr("Delete backup"), tr("Cancel"))) {
     return;
   }
 
-  QStringList failedFiles;
-  bool removedAny = false;
+  QStringList existing;
   for (const QString& path : backupPaths) {
-    if (!QFileInfo::exists(path)) {
-      continue;
-    }
-    if (QFile::remove(path)) {
-      removedAny = true;
-    } else {
-      failedFiles.append(QFileInfo(path).fileName());
+    if (QFileInfo::exists(path)) {
+      existing.append(path);
     }
   }
+  QStringList failedFiles;
+  for (const QString& path : shellRemove(existing, true, this).remaining) {
+    failedFiles.append(QFileInfo(path).fileName());
+  }
+  const bool removedAny = failedFiles.size() < existing.size();
 
   if (!failedFiles.isEmpty()) {
     showProfileBackupPrompt(
@@ -6519,7 +6451,7 @@ void MainWindow::deleteProfileLoadOrderBackup()
   } else if (removedAny) {
     showProfileBackupPrompt(
         this, tr("Plugin order backup deleted"), tr("Backup deleted"),
-        tr("The plugin-order backup was permanently deleted."), tr("OK"));
+        tr("The plugin-order backup went to the Recycle Bin."), tr("OK"));
   }
 }
 

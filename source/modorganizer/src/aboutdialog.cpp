@@ -32,6 +32,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QSysInfo>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QFontDatabase>
@@ -72,7 +73,7 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   addLicense("Qt Json", LICENSE_GPL3);
   addLicense("Boost Library", LICENSE_BOOST);
   addLicense("7-zip", LICENSE_7ZIP);
-  addLicense("ZLib", LICENSE_NONE);
+  addLicense("ZLib", LICENSE_ZLIB);
   addLicense("Tango Icon Theme", LICENSE_NONE);
   addLicense("RRZE Icon Set", LICENSE_CCBY3);
   addLicense("Icons by Lorc, Delapouite and sbed available on http://game-icons.net",
@@ -189,7 +190,11 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     copy->setToolTip(tr("Copies the version, build and system to paste in an issue"));
     connect(copy, &QPushButton::clicked, this, [report, copy] {
       QGuiApplication::clipboard()->setText(report);
+      const QString idle = tr("Copy for a bug report");
       copy->setText(tr("Copied"));
+      QTimer::singleShot(2000, copy, [copy, idle] {
+        copy->setText(idle);
+      });
     });
     auto* github = new QPushButton(FluentIcons::glyph(0xE8A7), tr("MO2 Revamped on GitHub"),
                                    actions);

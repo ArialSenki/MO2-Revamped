@@ -21,6 +21,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluenticons.h"
 #include "fluentpanels.h"
 
+#include <QPushButton>
+
 ListDialog::ListDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::ListDialog), m_Choices()
 {
@@ -37,6 +39,9 @@ ListDialog::ListDialog(QWidget* parent)
     ui->choiceList->setFrameShape(QFrame::NoFrame);
   }
   connect(ui->choiceList, &QListWidget::itemDoubleClicked, this, &QDialog::accept);
+  connect(ui->choiceList, &QListWidget::itemSelectionChanged, this,
+          &ListDialog::updateAcceptButton);
+  updateAcceptButton();
 }
 
 ListDialog::~ListDialog()
@@ -59,6 +64,14 @@ void ListDialog::setChoices(QStringList choices)
   m_Choices = choices;
   ui->choiceList->clear();
   ui->choiceList->addItems(m_Choices);
+  updateAcceptButton();
+}
+
+void ListDialog::updateAcceptButton()
+{
+  if (auto* ok = ui->buttonBox->button(QDialogButtonBox::Ok)) {
+    ok->setEnabled(!ui->choiceList->selectedItems().isEmpty());
+  }
 }
 
 QString ListDialog::getChoice() const
@@ -86,5 +99,5 @@ void ListDialog::on_filterEdit_textChanged(QString filter)
     item->setSelected(true);
     ui->choiceList->setCurrentItem(item);
   }
-
+  updateAcceptButton();
 }

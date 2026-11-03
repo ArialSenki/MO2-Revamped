@@ -76,7 +76,7 @@
           <column>
            <property name="text"><string>ID</string></property>
            <property name="toolTip"><string>MO2's internal ID for this category.</string></property>
-           <property name="whatsThis"><string>Mods store their category assignments by this ID. Use a new ID when adding a category.</string></property>
+           <property name="whatsThis"><string>Mods store their category assignments by this ID. MO2 assigns it to each new category.</string></property>
           </column>
           <column>
            <property name="text"><string>Name</string></property>

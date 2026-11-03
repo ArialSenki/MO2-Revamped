@@ -2,6 +2,7 @@
 #include "fluenticons.h"
 #include "menuutils.h"
 #include "fluentpanels.h"
+#include <QMessageBox>
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -489,8 +490,9 @@ void SavesTab::fixMods(SaveGameInfo::MissingAssets const& missingAssets)
     std::set<QString> modsToActivate = dialog.getModsToActivate();
     for (std::set<QString>::iterator iter = modsToActivate.begin();
          iter != modsToActivate.end(); ++iter) {
-      if ((*iter != "<data>") && (*iter != "<overwrite>")) {
-        unsigned int modIndex = ModInfo::getIndex(*iter);
+      // the game's folder and Overwrite are always on and aren't mods in the list
+      unsigned int modIndex = ModInfo::getIndex(*iter);
+      if (modIndex != UINT_MAX) {
         m_core.currentProfile()->setModEnabled(modIndex, true);
       }
     }
@@ -505,6 +507,14 @@ void SavesTab::fixMods(SaveGameInfo::MissingAssets const& missingAssets)
     }
 
     m_core.saveCurrentLists();
+
+    const std::set<QString> missing = dialog.getMissingPlugins();
+    if (!missing.empty()) {
+      QMessageBox::information(
+          m_window, tr("Restore required plugins"),
+          tr("No installed mod has these plugins, so they were not restored:\n\n%1")
+              .arg(QStringList(missing.begin(), missing.end()).join(QLatin1Char('\n'))));
+    }
   }
 }
 

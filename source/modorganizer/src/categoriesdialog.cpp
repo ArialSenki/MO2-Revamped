@@ -49,33 +49,13 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenu>
+#include <QMessageBox>
 #include <QRegularExpressionValidator>
 #include <QSet>
 #include <QStyle>
 #include <QStyleOptionViewItem>
 #include <QVector>
 #include <functional>
-
-class NewIDValidator : public QIntValidator
-{
-public:
-  NewIDValidator(const std::set<int>& ids) : m_UsedIDs(ids) {}
-  virtual State validate(QString& input, int& pos) const
-  {
-    State intRes = QIntValidator::validate(input, pos);
-    if (intRes == Acceptable) {
-      bool ok = false;
-      int id  = input.toInt(&ok);
-      if (m_UsedIDs.find(id) != m_UsedIDs.end()) {
-        return QValidator::Intermediate;
-      }
-    }
-    return intRes;
-  }
-
-private:
-  const std::set<int>& m_UsedIDs;
-};
 
 class ExistingIDValidator : public QIntValidator
 {
@@ -324,11 +304,23 @@ void CategoriesDialog::commitChanges()
   categories.setNexusCategories(nexusCats);
 
   categories.saveCategories();
+
+  // mods lose the categories that are gone; a lookup of their old IDs would throw
+  for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+    if (auto mod = ModInfo::getByIndex(i)) {
+      const std::set<int> ids = mod->getCategories();
+      for (int id : ids) {
+        if (!categories.categoryExists(id)) {
+          mod->setCategory(id, false);
+        }
+      }
+    }
+  }
 }
 
 void CategoriesDialog::refreshIDs()
 {
-  m_HighestID = 0;
+  // never lowered: an ID that was removed may still be on a mod until the commit
   m_IDs.clear();
   for (int i = 0; i < ui->categoriesTable->rowCount(); ++i) {
     const auto* idItem = ui->categoriesTable->item(i, 0);
@@ -366,8 +358,6 @@ void CategoriesDialog::fillTable()
   table->verticalHeader()->setSectionsMovable(true);
   table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
   table->setItemDelegateForColumn(
-      0, new ValidatingDelegate(this, new NewIDValidator(m_IDs)));
-  table->setItemDelegateForColumn(
       2, new ValidatingDelegate(this, new ExistingIDValidator(m_IDs)));
 
   table->setRowCount(0);
@@ -384,8 +374,10 @@ void CategoriesDialog::fillTable()
     const int row = table->rowCount();
     table->insertRow(row);
 
+    // mods store their categories by this ID
     QScopedPointer<QTableWidgetItem> idItem(new QTableWidgetItem());
     idItem->setData(Qt::DisplayRole, category.ID());
+    idItem->setFlags(idItem->flags() & ~Qt::ItemIsEditable);
 
     QScopedPointer<QTableWidgetItem> nameItem(new QTableWidgetItem(category.name()));
     QScopedPointer<QTableWidgetItem> parentIDItem(new QTableWidgetItem());
@@ -531,8 +523,9 @@ void CategoriesDialog::addCategory_clicked()
   ui->categoriesTable->setVerticalHeaderItem(row, new QTableWidgetItem("  "));
   const int newID = ++m_HighestID;
   m_IDs.insert(newID);
-  ui->categoriesTable->setItem(row, 0,
-                               new QTableWidgetItem(QString::number(newID)));
+  auto* idItem = new QTableWidgetItem(QString::number(newID));
+  idItem->setFlags(idItem->flags() & ~Qt::ItemIsEditable);
+  ui->categoriesTable->setItem(row, 0, idItem);
   ui->categoriesTable->setItem(row, 1, new QTableWidgetItem("new"));
   ui->categoriesTable->setItem(row, 2, new QTableWidgetItem("0"));
   auto* mappingItem = new QTableWidgetItem("");
@@ -590,13 +583,36 @@ void CategoriesDialog::nexusImport_clicked()
   auto importDialog = CategoryImportDialog(this);
   if (importDialog.exec() && importDialog.strategy()) {
     refreshIDs();
+    if (importDialog.strategy() == CategoryImportDialog::Overwrite) {
+      int affected = 0;
+      for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+        if (auto mod = ModInfo::getByIndex(i)) {
+          const auto& ids = mod->getCategories();
+          if (std::any_of(ids.begin(), ids.end(), [this](int id) {
+                return m_IDs.count(id) != 0;
+              })) {
+            ++affected;
+          }
+        }
+      }
+      if (affected > 0 &&
+          QMessageBox::warning(
+              this, tr("Replace existing categories"),
+              tr("Mods using a category from the current list: %1. They will have no "
+                 "category after this, and you can assign the new ones afterwards. "
+                 "Replace the list?")
+                  .arg(affected),
+              QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) {
+        return;
+      }
+    }
     QTableWidget* table = ui->categoriesTable;
     QListWidget* list   = ui->nexusCategoryList;
     const bool wasSorting = table->isSortingEnabled();
     table->setSortingEnabled(false);
     if (importDialog.strategy() == CategoryImportDialog::Overwrite) {
       table->setRowCount(0);
-      m_HighestID = 0;
+      // the new IDs stay above the old ones, or mods would get another category
       m_IDs.clear();
     }
 
@@ -675,6 +691,7 @@ void CategoriesDialog::nexusImport_clicked()
 
         QScopedPointer<QTableWidgetItem> idItem(new QTableWidgetItem());
         idItem->setData(Qt::DisplayRole, ++m_HighestID);
+        idItem->setFlags(idItem->flags() & ~Qt::ItemIsEditable);
 
         QScopedPointer<QTableWidgetItem> nameItem(new QTableWidgetItem(name));
         QScopedPointer<QTableWidgetItem> parentIDItem(new QTableWidgetItem());

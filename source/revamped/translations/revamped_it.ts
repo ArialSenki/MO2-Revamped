@@ -102,6 +102,18 @@
       <source>Mod to enable</source>
       <translation>Mod da attivare</translation>
     </message>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
+      <source>Game folder</source>
+      <translation>Cartella del gioco</translation>
+    </message>
+    <message>
+      <source>The plugins that were active when this save was made.</source>
+      <translation>I plugin che erano attivi quando è stato creato questo salvataggio.</translation>
+    </message>
   </context>
   <context>
     <name>BrowserDialog</name>
@@ -159,10 +171,6 @@
     <message>
       <source>MO2's internal ID for this category.</source>
       <translation>ID interno di MO2 per questa categoria.</translation>
-    </message>
-    <message>
-      <source>Mods store their category assignments by this ID. Use a new ID when adding a category.</source>
-      <translation>Le mod memorizzano le assegnazioni di categoria tramite questo ID. Usa un nuovo ID quando aggiungi una categoria.</translation>
     </message>
     <message>
       <source>Name shown for this category in MO2.</source>
@@ -479,6 +487,18 @@ Le modifiche vengono salvate quando scegli OK.</translation>
     <message>
       <source>What are categories for?</source>
       <translation>A cosa servono le categorie?</translation>
+    </message>
+    <message>
+      <source>Replace existing categories</source>
+      <translation>Sostituisci le categorie esistenti</translation>
+    </message>
+    <message>
+      <source>Mods using a category from the current list: %1. They will have no category after this, and you can assign the new ones afterwards. Replace the list?</source>
+      <translation>Mod che usano una categoria dell&apos;elenco attuale: %1. Dopo non avranno alcuna categoria e potrai assegnare quelle nuove. Sostituire l&apos;elenco?</translation>
+    </message>
+    <message>
+      <source>Mods store their category assignments by this ID. MO2 assigns it to each new category.</source>
+      <translation>Le mod memorizzano le categorie tramite questo ID. MO2 lo assegna a ogni nuova categoria.</translation>
     </message>
   </context>
   <context>
@@ -1133,6 +1153,26 @@ Vuoi davvero continuare?</translation>
       <source>%1% - %2 - ~%3</source>
       <translation>%1% - %2 - ~%3</translation>
     </message>
+    <message>
+      <source>Mod ID on Nexus</source>
+      <translation>ID della mod su Nexus</translation>
+    </message>
+    <message>
+      <source>Mod ID:</source>
+      <translation>ID della mod:</translation>
+    </message>
+    <message>
+      <source>Which game is %1 for?</source>
+      <translation>Per quale gioco è %1?</translation>
+    </message>
+    <message>
+      <source>Reading &apos;%1&apos; to find it on Nexus</source>
+      <translation>Lettura di &quot;%1&quot; per trovarlo su Nexus</translation>
+    </message>
+    <message>
+      <source>Query info</source>
+      <translation>Richiedi informazioni</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -1286,10 +1326,6 @@ Vuoi davvero continuare?</translation>
     <message>
       <source>Java is required</source>
       <translation>Java è necessario</translation>
-    </message>
-    <message>
-      <source>MO needs Java to launch this JAR. If Java is already installed, browse to its javaw.exe file and select it as the binary.</source>
-      <translation>MO ha bisogno di Java per avviare questo JAR. Se Java è già installato, cerca il file javaw.exe e selezionalo come binario.</translation>
     </message>
     <message>
       <source>What can I add here?</source>
@@ -1470,6 +1506,14 @@ I programmi non nascosti compaiono nell’elenco Programma della finestra princi
     <message>
       <source>New files go here instead of Overwrite</source>
       <translation>I nuovi file vanno qui invece che in Overwrite</translation>
+    </message>
+    <message>
+      <source>Save the changes to your programs?</source>
+      <translation>Salvare le modifiche ai tuoi programmi?</translation>
+    </message>
+    <message>
+      <source>Mod Organizer needs Java to launch this JAR. If Java is already installed, browse to its javaw.exe file and select it as the binary.</source>
+      <translation>Mod Organizer ha bisogno di Java per avviare questo JAR. Se Java è già installato, cerca il file javaw.exe e selezionalo come programma.</translation>
     </message>
   </context>
   <context>
@@ -5199,6 +5243,38 @@ La maggior parte delle mod non ne ha bisogno: gli script extender e i loader di 
       <source>The name you entered is invalid, please enter a different one.</source>
       <translation>Il nome inserito non è valido; inseriscine un altro.</translation>
     </message>
+    <message>
+      <source>That password did not open the archive. Try again.</source>
+      <translation>Questa password non ha aperto l&apos;archivio. Riprova.</translation>
+    </message>
+    <message>
+      <source>Installing</source>
+      <translation>Installazione</translation>
+    </message>
+    <message>
+      <source>The installed mod could not be replaced. Close any program using its files and try again.</source>
+      <translation>Non è stato possibile sostituire la mod installata. Chiudi i programmi che usano i suoi file e riprova.</translation>
+    </message>
+    <message>
+      <source>The folder for the new version could not be created.</source>
+      <translation>Non è stato possibile creare la cartella della nuova versione.</translation>
+    </message>
+    <message>
+      <source>The previous version of the mod could not be put back. It is in this folder:
+%1</source>
+      <translation>Non è stato possibile rimettere al suo posto la versione precedente della mod. Si trova in questa cartella:
+%1</translation>
+    </message>
+    <message>
+      <source>The mod was replaced, but its previous version did not go to the Recycle Bin. It is in this folder:
+%1</source>
+      <translation>La mod è stata sostituita, ma la versione precedente non è finita nel Cestino. Si trova in questa cartella:
+%1</translation>
+    </message>
+    <message>
+      <source>The mod could not be installed. The log has the details.</source>
+      <translation>Non è stato possibile installare la mod. Il registro contiene i dettagli.</translation>
+    </message>
   </context>
   <context>
     <name>InstanceManagerDialog</name>
@@ -5846,6 +5922,14 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
       <translation>L&apos;istanza è stata copiata, ma il file delle impostazioni della copia non è stato aggiornato e potrebbe puntare ancora alle cartelle dell&apos;originale:
 %1</translation>
     </message>
+    <message>
+      <source>These were not removed, so the instance keeps its shortcut, group and notes:
+
+%1</source>
+      <translation>Questi elementi non sono stati rimossi, quindi l&apos;istanza mantiene il collegamento, il gruppo e le note:
+
+%1</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -6283,10 +6367,6 @@ I BSA selezionati qui vengono caricati in modo da rispettare correttamente l'ord
     <message>
       <source>Show MO2 Revamped information, components, and credits.</source>
       <translation>Mostra informazioni, componenti e riconoscimenti di MO2 Revamped.</translation>
-    </message>
-    <message>
-      <source>A game support wiki is available for this game. Open it now? You can also open it later from the "Help" menu.</source>
-      <translation>È disponibile una wiki di supporto per questo gioco. Aprirla ora? Puoi aprirla anche in seguito dal menu "Aiuto".</translation>
     </message>
     <message>
       <source>Category Setup</source>
@@ -6783,14 +6863,6 @@ Le parti completate restano disponibili per il ripristino.</translation>
       <translation>Ripristina backup dell'ordine di caricamento</translation>
     </message>
     <message>
-      <source>Choose a saved mod list for this profile. Restoring it replaces the current mod list; MO2 does not back up the current version automatically.</source>
-      <translation>Scegli un elenco mod salvato per questo profilo. Ripristinarlo sostituisce l'elenco attuale; MO2 non esegue automaticamente il backup della versione attuale.</translation>
-    </message>
-    <message>
-      <source>Choose a saved plugin load order for this profile. Restoring it replaces the current plugin load order; MO2 does not back up the current version automatically.</source>
-      <translation>Scegli un ordine di caricamento dei plugin salvato per questo profilo. Ripristinarlo sostituisce l'ordine attuale; MO2 non esegue automaticamente il backup della versione attuale.</translation>
-    </message>
-    <message>
       <source>Restore this saved mod list.</source>
       <translation>Ripristina questo elenco mod salvato.</translation>
     </message>
@@ -6829,14 +6901,6 @@ Le parti completate restano disponibili per il ripristino.</translation>
     <message>
       <source>Restore this plugin order?</source>
       <translation>Ripristinare questo ordine dei plugin?</translation>
-    </message>
-    <message>
-      <source>This replaces the current plugin list and load order. MO2 does not back up the current version automatically.
-
-%1</source>
-      <translation>Questo sostituisce l'elenco dei plugin e l'ordine di caricamento attuali. MO2 non esegue automaticamente il backup della versione attuale.
-
-%1</translation>
     </message>
     <message>
       <source>Restore backup</source>
@@ -6897,14 +6961,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Ripristinare questo elenco mod?</translation>
     </message>
     <message>
-      <source>This replaces the current mod list and does not create a backup of it automatically.
-
-%1</source>
-      <translation>Questo sostituisce l'elenco mod attuale senza crearne automaticamente un backup.
-
-%1</translation>
-    </message>
-    <message>
       <source>The backup could not be restored.</source>
       <translation>Impossibile ripristinare il backup.</translation>
     </message>
@@ -6921,10 +6977,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Elimina backup dell'elenco mod</translation>
     </message>
     <message>
-      <source>Permanently delete this saved mod list backup.</source>
-      <translation>Elimina definitivamente questo backup salvato dell'elenco mod.</translation>
-    </message>
-    <message>
       <source>There are no mod list backups to delete.</source>
       <translation>Non ci sono backup dell'elenco mod da eliminare.</translation>
     </message>
@@ -6935,14 +6987,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
     <message>
       <source>Delete this backup?</source>
       <translation>Eliminare questo backup?</translation>
-    </message>
-    <message>
-      <source>Permanently delete this saved mod list backup?
-
-%1</source>
-      <translation>Eliminare definitivamente questo backup salvato dell'elenco mod?
-
-%1</translation>
     </message>
     <message>
       <source>Delete backup</source>
@@ -6969,10 +7013,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Backup eliminato</translation>
     </message>
     <message>
-      <source>The mod list backup was permanently deleted.</source>
-      <translation>Il backup dell'elenco mod è stato eliminato definitivamente.</translation>
-    </message>
-    <message>
       <source>Choose a saved plugin load order to delete. The current load order will not be changed.</source>
       <translation>Scegli un ordine di caricamento salvato da eliminare. L'ordine attuale non cambierà.</translation>
     </message>
@@ -6981,24 +7021,12 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Elimina backup dell'ordine dei plugin</translation>
     </message>
     <message>
-      <source>Permanently delete this saved plugin load order.</source>
-      <translation>Elimina definitivamente questo ordine di caricamento dei plugin salvato.</translation>
-    </message>
-    <message>
       <source>There are no plugin-order backups to delete.</source>
       <translation>Non ci sono backup dell'ordine dei plugin da eliminare.</translation>
     </message>
     <message>
       <source>This profile has no saved plugin-order backups.</source>
       <translation>Questo profilo non ha backup salvati dell'ordine dei plugin.</translation>
-    </message>
-    <message>
-      <source>Permanently delete this saved plugin-order backup?
-
-%1</source>
-      <translation>Eliminare definitivamente questo backup salvato dell'ordine dei plugin?
-
-%1</translation>
     </message>
     <message>
       <source>Some files could not be deleted.</source>
@@ -7013,10 +7041,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
     <message>
       <source>Plugin order backup deleted</source>
       <translation>Backup dell'ordine dei plugin eliminato</translation>
-    </message>
-    <message>
-      <source>The plugin-order backup was permanently deleted.</source>
-      <translation>Il backup dell'ordine dei plugin è stato eliminato definitivamente.</translation>
     </message>
     <message>
       <source>Mod list actions, backups, and folders</source>
@@ -7217,6 +7241,122 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
     <message>
       <source>Start without categories and set them up yourself.</source>
       <translation>Inizia senza categorie e configurale tu.</translation>
+    </message>
+    <message>
+      <source>A game support wiki is available for this game. Open it now? You can also open it later from the &quot;...&quot; menu.</source>
+      <translation>Per questo gioco è disponibile una wiki di supporto. Aprirla ora? Puoi aprirla anche in seguito dal menu &quot;...&quot;.</translation>
+    </message>
+    <message>
+      <source>Network proxy</source>
+      <translation>Proxy di rete</translation>
+    </message>
+    <message>
+      <source>Extract BSA</source>
+      <translation>Estrai BSA</translation>
+    </message>
+    <message>
+      <source>Choose a saved mod list for this profile. Restoring it replaces the current mod list; MO2 backs up the current one first.</source>
+      <translation>Scegli un elenco di mod salvato per questo profilo. Il ripristino sostituisce l&apos;elenco di mod attuale; MO2 esegue prima il backup di quello attuale.</translation>
+    </message>
+    <message>
+      <source>Choose a saved plugin load order for this profile. Restoring it replaces the current plugin load order; MO2 backs up the current one first.</source>
+      <translation>Scegli un ordine di caricamento dei plugin salvato per questo profilo. Il ripristino sostituisce l&apos;ordine di caricamento attuale; MO2 esegue prima il backup di quello attuale.</translation>
+    </message>
+    <message>
+      <source>This replaces the current plugin list and load order. MO2 backs up the current ones first.
+
+%1</source>
+      <translation>Questa operazione sostituisce l&apos;elenco dei plugin e l&apos;ordine di caricamento attuali. MO2 esegue prima il backup di quelli attuali.
+
+%1</translation>
+    </message>
+    <message>
+      <source>This replaces the current mod list. MO2 backs up the current one first.
+
+%1</source>
+      <translation>Questa operazione sostituisce l&apos;elenco di mod attuale. MO2 esegue prima il backup di quello attuale.
+
+%1</translation>
+    </message>
+    <message>
+      <source>The current plugin order could not be backed up.</source>
+      <translation>Non è stato possibile eseguire il backup dell&apos;ordine dei plugin attuale.</translation>
+    </message>
+    <message>
+      <source>The current mod list could not be backed up.</source>
+      <translation>Non è stato possibile eseguire il backup dell&apos;elenco di mod attuale.</translation>
+    </message>
+    <message>
+      <source>No files were restored.</source>
+      <translation>Nessun file è stato ripristinato.</translation>
+    </message>
+    <message>
+      <source>Send this saved mod list backup to the Recycle Bin.</source>
+      <translation>Sposta questo backup dell&apos;elenco di mod nel Cestino.</translation>
+    </message>
+    <message>
+      <source>Send this saved mod list backup to the Recycle Bin?
+
+%1</source>
+      <translation>Spostare questo backup dell&apos;elenco di mod nel Cestino?
+
+%1</translation>
+    </message>
+    <message>
+      <source>The mod list backup went to the Recycle Bin.</source>
+      <translation>Il backup dell&apos;elenco di mod è stato spostato nel Cestino.</translation>
+    </message>
+    <message>
+      <source>Send this saved plugin load order to the Recycle Bin.</source>
+      <translation>Sposta questo ordine di caricamento dei plugin salvato nel Cestino.</translation>
+    </message>
+    <message>
+      <source>Send this saved plugin-order backup to the Recycle Bin?
+
+%1</source>
+      <translation>Spostare questo backup dell&apos;ordine dei plugin nel Cestino?
+
+%1</translation>
+    </message>
+    <message>
+      <source>The plugin-order backup went to the Recycle Bin.</source>
+      <translation>Il backup dell&apos;ordine dei plugin è stato spostato nel Cestino.</translation>
+    </message>
+    <message>
+      <source>Restore failed</source>
+      <translation>Ripristino non riuscito</translation>
+    </message>
+    <message>
+      <source>Finish replacing mods</source>
+      <translation>Completa la sostituzione delle mod</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while replacing these mods, and kept their previous versions:
+
+%1
+
+Restore puts each previous version back and sends the version installed now to the Recycle Bin. Discard sends the previous versions to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer si è interrotto durante la sostituzione di queste mod e ha conservato le versioni precedenti:
+
+%1
+
+Ripristina rimette al suo posto ogni versione precedente e sposta nel Cestino la versione ora installata. Scarta sposta nel Cestino le versioni precedenti. Più tardi non cambia nulla e Mod Organizer lo chiederà di nuovo al prossimo avvio.</translation>
+    </message>
+    <message>
+      <source>Restore</source>
+      <translation>Ripristina</translation>
+    </message>
+    <message>
+      <source>Discard</source>
+      <translation>Scarta</translation>
+    </message>
+    <message>
+      <source>These stay where they are, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Questi elementi restano dove sono e Mod Organizer lo chiederà di nuovo al prossimo avvio:
+
+%1</translation>
     </message>
   </context>
   <context>
@@ -8411,6 +8551,10 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
     <message>
       <source>Signed in to Nexus Mods</source>
       <translation>Accesso effettuato a Nexus Mods</translation>
+    </message>
+    <message>
+      <source>The installation was cancelled while extracting files. The installed mod is back as it was.</source>
+      <translation>L&apos;installazione è stata annullata durante l&apos;estrazione dei file. La mod installata è tornata com&apos;era.</translation>
     </message>
   </context>
   <context>
@@ -9878,6 +10022,18 @@ Esempio:
       <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About turn it on again.</source>
       <translation>Mostra questa pagina. Disattivata, sparisce alla prossima apertura delle Impostazioni; sette tocchi sulla versione in Informazioni la riattivano.</translation>
     </message>
+    <message>
+      <source>Writing the load order</source>
+      <translation>Scrittura dell&apos;ordine di caricamento</translation>
+    </message>
+    <message>
+      <source>Reading LOOT&apos;s messages</source>
+      <translation>Lettura dei messaggi di LOOT</translation>
+    </message>
+    <message>
+      <source>Create a profile to start using Mod Organizer. Run the game once first, so that its settings exist.</source>
+      <translation>Crea un profilo per iniziare a usare Mod Organizer. Prima avvia il gioco una volta, così le sue impostazioni esisteranno.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -9916,10 +10072,6 @@ p, li { white-space: pre-wrap; }
       <translation>Aggiunge i nuovi file alla mod installata; i file con lo stesso nome vengono sostituiti</translation>
     </message>
     <message>
-      <source>Deletes the installed mod&apos;s files and installs this one in their place</source>
-      <translation>Elimina i file della mod installata e installa questa al loro posto</translation>
-    </message>
-    <message>
       <source>Install as a new mod</source>
       <translation>Installa come nuova mod</translation>
     </message>
@@ -9942,6 +10094,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Mod Exists</source>
       <translation>La mod esiste già</translation>
+    </message>
+    <message>
+      <source>Sends the installed mod&apos;s files to the Recycle Bin once this one is installed in their place</source>
+      <translation>Sposta i file della mod installata nel Cestino dopo aver installato questa al loro posto</translation>
     </message>
   </context>
   <context>
@@ -9973,6 +10129,18 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Text and CSV files</source>
       <translation>File di testo e CSV</translation>
+    </message>
+    <message>
+      <source>Copied</source>
+      <translation>Copiato</translation>
+    </message>
+    <message>
+      <source>Saved</source>
+      <translation>Salvato</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; could not be written completely. It may be missing part of the text.</source>
+      <translation>Non è stato possibile scrivere &quot;%1&quot; per intero. Potrebbe mancare parte del testo.</translation>
     </message>
   </context>
   <context>
@@ -10044,6 +10212,18 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>These are the game's own Steam saves, also used when Elden Ring starts outside MO2.</source>
       <translation>Sono i salvataggi Steam del gioco stesso, usati anche quando Elden Ring si avvia fuori da MO2.</translation>
+    </message>
+    <message>
+      <source>Restore required plugins</source>
+      <translation>Ripristina i plugin necessari</translation>
+    </message>
+    <message>
+      <source>No installed mod has these plugins, so they were not restored:
+
+%1</source>
+      <translation>Nessuna mod installata contiene questi plugin, quindi non sono stati ripristinati:
+
+%1</translation>
     </message>
   </context>
   <context>
@@ -10901,10 +11081,6 @@ Rimanenti in quest'ora: %3</translation>
       <translation>Copia o sposta personaggi tra la posizione di salvataggio condivisa del gioco e il profilo MO2 selezionato.</translation>
     </message>
     <message>
-      <source>Global saves</source>
-      <translation>Salvataggi globali</translation>
-    </message>
-    <message>
       <source>Characters in the game's shared save location.</source>
       <translation>Personaggi nella posizione di salvataggio condivisa del gioco.</translation>
     </message>
@@ -10929,10 +11105,6 @@ Rimanenti in quest'ora: %3</translation>
       <translation>File associati al personaggio selezionato nella posizione di salvataggio condivisa.</translation>
     </message>
     <message>
-      <source>GLOBAL TO PROFILE</source>
-      <translation>DA GLOBALE A PROFILO</translation>
-    </message>
-    <message>
       <source>Move to Profile →</source>
       <translation>Sposta nel profilo →</translation>
     </message>
@@ -10949,20 +11121,8 @@ Rimanenti in quest'ora: %3</translation>
       <translation>Copia i salvataggi di questo personaggio nel profilo selezionato mantenendo gli originali.</translation>
     </message>
     <message>
-      <source>PROFILE TO GLOBAL</source>
-      <translation>DA PROFILO A GLOBALE</translation>
-    </message>
-    <message>
-      <source>← Copy to Global</source>
-      <translation>← Copia in globale</translation>
-    </message>
-    <message>
       <source>Copy this character's saves to the shared game save location and keep the originals. This can affect the game's save numbering; existing files trigger an overwrite prompt.</source>
       <translation>Copia i salvataggi di questo personaggio nella posizione di salvataggio condivisa del gioco mantenendo gli originali. Ciò può influire sulla numerazione dei salvataggi; i file esistenti fanno comparire una richiesta di sovrascrittura.</translation>
-    </message>
-    <message>
-      <source>← Move to Global</source>
-      <translation>← Sposta in globale</translation>
     </message>
     <message>
       <source>Move this character's saves to the shared game save location. This can affect the game's save numbering; existing files trigger an overwrite prompt.</source>
@@ -11023,6 +11183,46 @@ Rimanenti in quest'ora: %3</translation>
     <message>
       <source>Open the profile&apos;s save folder</source>
       <translation>Apri la cartella dei salvataggi del profilo</translation>
+    </message>
+    <message>
+      <source>Overwrite the file &quot;%1&quot;?</source>
+      <translation>Sovrascrivere il file &quot;%1&quot;?</translation>
+    </message>
+    <message>
+      <source>Move all saves of character &quot;%1&quot; to the profile?</source>
+      <translation>Spostare tutti i salvataggi del personaggio &quot;%1&quot; nel profilo?</translation>
+    </message>
+    <message>
+      <source>Copy all saves of character &quot;%1&quot; to the profile?</source>
+      <translation>Copiare tutti i salvataggi del personaggio &quot;%1&quot; nel profilo?</translation>
+    </message>
+    <message>
+      <source>Move all saves of character &quot;%1&quot; to the game&apos;s save folder? The game may number its saves differently afterwards.</source>
+      <translation>Spostare tutti i salvataggi del personaggio &quot;%1&quot; nella cartella dei salvataggi del gioco? In seguito il gioco potrebbe numerarli diversamente.</translation>
+    </message>
+    <message>
+      <source>Copy all saves of character &quot;%1&quot; to the game&apos;s save folder? The game may number its saves differently afterwards.</source>
+      <translation>Copiare tutti i salvataggi del personaggio &quot;%1&quot; nella cartella dei salvataggi del gioco? In seguito il gioco potrebbe numerarli diversamente.</translation>
+    </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Salvataggi del gioco</translation>
+    </message>
+    <message>
+      <source>GAME TO PROFILE</source>
+      <translation>DAL GIOCO AL PROFILO</translation>
+    </message>
+    <message>
+      <source>PROFILE TO GAME</source>
+      <translation>DAL PROFILO AL GIOCO</translation>
+    </message>
+    <message>
+      <source>← Copy to Game</source>
+      <translation>← Copia nel gioco</translation>
+    </message>
+    <message>
+      <source>← Move to Game</source>
+      <translation>← Sposta nel gioco</translation>
     </message>
   </context>
   <context>
@@ -11877,6 +12077,17 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
     <message>
       <source>&lt;table cellspacing="5"&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;%1&lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;th&gt;Percent&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Loose files:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;td align=right&gt;%3&lt;/td&gt;&lt;td align=right&gt;%4%&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
       <translation>&lt;table cellspacing="5"&gt;&lt;tr&gt;&lt;th&gt;Tipo&lt;/th&gt;&lt;th&gt;%1&lt;/th&gt;&lt;th&gt;Totale&lt;/th&gt;&lt;th&gt;Percentuale&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;File sciolti:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;td align=right&gt;%3&lt;/td&gt;&lt;td align=right&gt;%4%&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</translation>
+    </message>
+  </context>
+  <context>
+    <name>UsvfsConnector</name>
+    <message>
+      <source>Starting the program</source>
+      <translation>Avvio del programma</translation>
+    </message>
+    <message>
+      <source>Preparing the mods for the program</source>
+      <translation>Preparazione delle mod per il programma</translation>
     </message>
   </context>
 </TS>

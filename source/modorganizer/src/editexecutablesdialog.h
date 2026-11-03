@@ -156,6 +156,10 @@ public:
   //
   int exec() override;
 
+  // asks before unsaved changes are dropped
+  //
+  void reject() override;
+
   ExecutablesList getExecutablesList() const;
   const CustomOverwrites& getCustomOverwrites() const;
   const ForcedLibraries& getForcedLibraries() const;

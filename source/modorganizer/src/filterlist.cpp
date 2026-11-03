@@ -373,6 +373,11 @@ void FilterList::refresh()
 
   addCategoryCriteria(nullptr, categoriesUsed, 0);
   setSelection(oldSelection);
+
+  // a ticked filter can be gone, as its category was removed
+  if (selectedCriteria() != oldSelection) {
+    checkCriteria();
+  }
 }
 
 void FilterList::setSelection(const std::vector<Criteria>& criteria)

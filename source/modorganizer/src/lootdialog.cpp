@@ -1,6 +1,8 @@
 #include "lootdialog.h"
+#include "fluenticons.h"
 #include "loot.h"
 #include "organizercore.h"
+#include "revampedtheme.h"
 #include "ui_lootdialog.h"
 #include <QWebChannel>
 #include <utility.h>
@@ -17,8 +19,8 @@ QString progressToString(lootcli::Progress p)
       {P::LoadingLists, QObject::tr("Loading lists")},
       {P::ReadingPlugins, QObject::tr("Reading plugins")},
       {P::SortingPlugins, QObject::tr("Sorting plugins")},
-      {P::WritingLoadorder, QObject::tr("Writing loadorder.txt")},
-      {P::ParsingLootMessages, QObject::tr("Parsing loot messages")},
+      {P::WritingLoadorder, QObject::tr("Writing the load order")},
+      {P::ParsingLootMessages, QObject::tr("Reading LOOT's messages")},
       {P::Done, QObject::tr("Done")}};
 
   auto itor = map.find(p);
@@ -198,8 +200,18 @@ void LootDialog::createUI()
   QFile f(path);
 
   if (f.open(QFile::ReadOnly)) {
-    const QString html = f.readAll();
+    QString html = f.readAll();
     if (!html.isEmpty()) {
+      // the page is written for dark backgrounds
+      if (FluentIcons::active() && !RevampedTheme::isDark()) {
+        html.replace(QStringLiteral("</head>"),
+                     QStringLiteral("<style>body{background:#FBFBFB;color:#1B1B1B}"
+                                    "a{color:#005FB8}a:visited{color:#003E92}"
+                                    "blockquote{border-left-color:#E5E5E5}"
+                                    "blockquote p,blockquote cite{color:#5C5C5C}"
+                                    "</style></head>"));
+        page->setBackgroundColor(QColor(0xFB, 0xFB, 0xFB));
+      }
       ui->report->setHtml(html);
     } else {
       log::error("failed to read '{}', {}", path, f.errorString());

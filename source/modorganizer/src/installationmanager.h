@@ -20,6 +20,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef INSTALLATIONMANAGER_H
 #define INSTALLATIONMANAGER_H
 
+#include <optional>
 #include <guessedvalue.h>
 #include <ifiletree.h>
 #include <iinstallationmanager.h>
@@ -260,6 +261,19 @@ public:
    */
   InstallationResult testOverwrite(MOBase::GuessedValue<QString>& modName);
 
+  // the mod that Replace set aside: back in place, or to the Recycle Bin; whoever
+  // called testOverwrite() calls one of them
+  void restoreReplacedMod();
+  void discardReplacedMod();
+
+  // whether a cancelled or failed install put the old version back
+  bool replacedModRestored() const { return m_ReplacedRestored; }
+
+  // old versions a Replace left when Mod Organizer stopped halfway
+  QStringList replacedLeftovers() const;
+  bool restoreLeftover(const QString& aside);
+  bool discardLeftover(const QString& aside);
+
   QString generateBackupName(const QString& directoryName) const;
 
 private:
@@ -345,6 +359,18 @@ private:
   std::unique_ptr<Archive> m_ArchiveHandler;
   QString m_CurrentFile;
   QString m_Password;
+  bool m_PasswordAsked     = false;
+  bool m_PasswordCancelled = false;
+  bool m_PasswordRejected  = false;
+
+  QStringList replacedFolderRoots() const;
+  QString setAsideMod(const QString& modFolder) const;
+  void removeAsideSlot(const QString& aside) const;
+
+  bool m_ReplacedRestored = false;
+  QString m_ReplacedFolder;
+  QString m_ReplacedTarget;
+  std::optional<QString> m_ReplacedInstallFile;
 
   // Map from entries in the tree that is used by the installer and absolute
   // paths to temporary files.

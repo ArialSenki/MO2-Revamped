@@ -231,7 +231,8 @@ private:
 
   // deletes the given files, returns false on error
   //
-  bool doDelete(const QStringList& files, bool recycle);
+  // what is still there afterwards
+  QStringList doDelete(const QStringList& files, bool recycle);
 };
 
 #endif  // MODORGANIZER_INSTANCEMANAGERDIALOG_INCLUDED

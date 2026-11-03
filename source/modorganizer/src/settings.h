@@ -686,11 +686,6 @@ public:
   QString language();
   void setLanguage(const QString& name);
 
-  // whether the given tutorial has been completed
-  //
-  bool isTutorialCompleted(const QString& windowName) const;
-  void setTutorialCompleted(const QString& windowName, bool b = true);
-
   // whether to show the confirmation when switching instances
   //
   bool showChangeGameConfirmation() const;
@@ -960,8 +955,6 @@ public:
   // "en_US"; the language of a first start, before any was chosen
   static QString systemLanguage();
 
-  static bool hideTutorialQuestion();
-  static void setHideTutorialQuestion(bool b);
 
   static bool hideCategoryReminder();
   static void setHideCategoryReminder(bool b);

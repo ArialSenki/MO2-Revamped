@@ -1091,6 +1091,31 @@ void EditExecutablesDialog::on_configureLibraries_clicked()
   }
 }
 
+void EditExecutablesDialog::reject()
+{
+  const auto* apply = ui->buttons->button(QDialogButtonBox::Apply);
+  if (apply != nullptr && apply->isEnabled()) {
+    QMessageBox prompt(QMessageBox::Question, "MO2 Revamped",
+                       tr("Save the changes to your programs?"),
+                       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this);
+    styleExecutablePrompt(prompt, QMessageBox::Save);
+    prompt.setDefaultButton(QMessageBox::Save);
+    prompt.setEscapeButton(QMessageBox::Cancel);
+
+    const int answer = prompt.exec();
+    if (answer == QMessageBox::Cancel) {
+      return;
+    }
+    if (answer == QMessageBox::Save) {
+      if (commitChanges()) {
+        accept();
+      }
+      return;
+    }
+  }
+  TutorableDialog::reject();
+}
+
 void EditExecutablesDialog::on_buttons_clicked(QAbstractButton* b)
 {
   if (b == ui->buttons->button(QDialogButtonBox::Ok)) {
@@ -1130,7 +1155,7 @@ void EditExecutablesDialog::setJarBinary(const QFileInfo& binary)
   if (java.isEmpty()) {
     showExecutableNotice(
         this, QMessageBox::Information, tr("Java is required"),
-        tr("MO needs Java to launch this JAR. If Java is already installed, "
+        tr("Mod Organizer needs Java to launch this JAR. If Java is already installed, "
            "browse to its javaw.exe file and select it as the binary."));
   }
 

@@ -69,6 +69,11 @@ public:
    **/
   std::set<QString> getESPsToActivate();
 
+  /**
+   * @brief the plugins no installed mod has
+   */
+  std::set<QString> getMissingPlugins();
+
 private slots:
 
 private:
