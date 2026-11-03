@@ -136,6 +136,16 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Notifications and Help
+
+- Nightreign's Help has its guide, and no longer offers the tours written for
+  Bethesda games. The guide names the program's switches and buttons as they are.
+- Bug reports list the versions this copy really has, not fixed older ones.
+- A notification no longer promises an action it doesn't have.
+- The "…" menu holds everything at one level, with Create Bug Report next to
+  Report a Problem, and Ctrl+H opens it. The guided tours are gone: they described
+  the old window.
+
 ### Settings
 
 - Paths: a folder typed to stay outside a new Base Directory keeps its path, which

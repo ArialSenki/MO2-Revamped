@@ -5885,6 +5885,22 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Create Bug Report</source>
+      <translation>Crea segnalazione di errore</translation>
+    </message>
+    <message>
+      <source>Save a ZIP with the logs, to attach it to your report.</source>
+      <translation>Salva un file ZIP con i log, da allegare alla tua segnalazione.</translation>
+    </message>
+    <message>
+      <source>Open the guides and help, report a problem, and reach the project's links.</source>
+      <translation>Apre le guide e l'aiuto, permette di segnalare un problema e dà accesso ai link del progetto.</translation>
+    </message>
+    <message>
+      <source>Nightreign Guide</source>
+      <translation>Guida di Nightreign</translation>
+    </message>
+    <message>
       <source>No game plugin</source>
       <translation>Nessun plugin di gioco</translation>
     </message>
@@ -6399,8 +6415,8 @@ In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, 
       <translation>Percorsi dei salvataggi</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still receives &lt;code&gt;ER0000.sl2&lt;/code&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Lo strumento Isolamento salvataggi può mantenere i salvataggi per profilo MO2, condividerli tra i profili di questa istanza o usare la cartella globale dei salvataggi di Steam. Le prime due modalità supportano anche profili di salvataggio con nome, mentre il gioco continua a ricevere &lt;code&gt;ER0000.sl2&lt;/code&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still finds its usual save file.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Lo strumento Isolamento salvataggi può mantenere i salvataggi per profilo MO2, condividerli tra i profili di questa istanza o usare la cartella globale dei salvataggi di Steam. Le prime due modalità supportano anche profili di salvataggio con nome, mentre il gioco continua a trovare il solito file di salvataggio.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Restart and online safety</source>
@@ -6427,8 +6443,8 @@ In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, 
       <translation>&lt;p&gt;&lt;b&gt;Dati&lt;/b&gt; mostra la cartella virtuale del gioco e la mod che fornisce ogni file. Non copia file nella cartella fisica del gioco.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install Mod&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;&lt;b&gt;Download&lt;/b&gt; elenca gli archivi pronti da installare. Scegline uno lì o usa &lt;b&gt;Installa mod&lt;/b&gt; per cercarne uno.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;&lt;b&gt;Download&lt;/b&gt; elenca gli archivi pronti da installare. Scegline uno lì o usa &lt;b&gt;Installa&lt;/b&gt; per cercarne uno.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>&lt;p&gt;The &lt;b&gt;Run&lt;/b&gt; button starts the selected program with the active profile. Its arrow opens shortcut options.&lt;/p&gt;</source>
@@ -6439,8 +6455,8 @@ In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, 
       <translation>Altro aiuto</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The &lt;b&gt;Help&lt;/b&gt; menu offers this guide, the project repository, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Il menu &lt;b&gt;Aiuto&lt;/b&gt; offre questa guida, il repository del progetto, una wiki di supporto del gioco quando il suo plugin MO2 ne fornisce una, &lt;i&gt;Segnala un problema&lt;/i&gt; e &lt;i&gt;Informazioni su MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;The &lt;b&gt;…&lt;/b&gt; menu offers this guide, the Mod Organizer 2 documentation, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, &lt;i&gt;Create Bug Report&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Il menu &lt;b&gt;…&lt;/b&gt; offre questa guida, la documentazione di Mod Organizer 2, una wiki di supporto del gioco quando il suo plugin MO2 ne fornisce una, &lt;i&gt;Segnala un problema&lt;/i&gt;, &lt;i&gt;Crea segnalazione di errore&lt;/i&gt; e &lt;i&gt;Informazioni su MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Game</source>
@@ -7013,8 +7029,8 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Sfoglia i salvataggi disponibili per questo profilo di Elden Ring. Configura il percorso in Strumenti &gt; Isolamento salvataggi per separare i salvataggi per profilo MO2, condividere un profilo di salvataggio con nome in questa istanza o usare la cartella globale dei salvataggi di Steam.</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Enable mods with their checkboxes. Each profile keeps its own enabled mod list. Configure Elden Ring save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Attiva le mod con le loro caselle. Ogni profilo tiene il proprio elenco di mod attive. Configura i percorsi dei salvataggi di Elden Ring in &lt;b&gt;Strumenti &amp;gt; Isolamento salvataggi&lt;/b&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Attiva le mod con i loro interruttori. Ogni profilo tiene il proprio elenco di mod attive. Configura i percorsi dei salvataggi in &lt;b&gt;Strumenti &amp;gt; Isolamento salvataggi&lt;/b&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Open the game's save folder.</source>

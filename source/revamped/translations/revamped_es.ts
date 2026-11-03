@@ -5800,6 +5800,22 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Create Bug Report</source>
+      <translation>Crear informe de errores</translation>
+    </message>
+    <message>
+      <source>Save a ZIP with the logs, to attach it to your report.</source>
+      <translation>Guarda un ZIP con los registros, para adjuntarlo a tu informe.</translation>
+    </message>
+    <message>
+      <source>Open the guides and help, report a problem, and reach the project's links.</source>
+      <translation>Abre las guías y la ayuda, permite informar de un problema y da acceso a los enlaces del proyecto.</translation>
+    </message>
+    <message>
+      <source>Nightreign Guide</source>
+      <translation>Guía de Nightreign</translation>
+    </message>
+    <message>
       <source>No game plugin</source>
       <translation>Sin plugin de juego</translation>
     </message>
@@ -6241,8 +6257,8 @@ Ocultar siempre: nunca muestra los separadores</translation>
       <translation>Rutas de guardado</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still receives &lt;code&gt;ER0000.sl2&lt;/code&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;La herramienta Aislamiento de partidas puede mantener las partidas por perfil de MO2, compartirlas entre los perfiles de esta instancia o usar la carpeta global de partidas de Steam. Los dos primeros modos también admiten perfiles de partidas con nombre, mientras el juego sigue recibiendo &lt;code&gt;ER0000.sl2&lt;/code&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still finds its usual save file.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;La herramienta Aislamiento de partidas puede mantener las partidas por perfil de MO2, compartirlas entre los perfiles de esta instancia o usar la carpeta global de partidas de Steam. Los dos primeros modos también admiten perfiles de partidas con nombre, mientras el juego sigue encontrando su archivo de partida habitual.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Restart and online safety</source>
@@ -6269,8 +6285,8 @@ Ocultar siempre: nunca muestra los separadores</translation>
       <translation>&lt;p&gt;&lt;b&gt;Datos&lt;/b&gt; muestra la carpeta virtual del juego y el mod que proporciona cada archivo. No copia archivos a la carpeta física del juego.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install Mod&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;&lt;b&gt;Descargas&lt;/b&gt; enumera los archivos listos para instalar. Elige uno allí o usa &lt;b&gt;Instalar mod&lt;/b&gt; para buscarlo.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;&lt;b&gt;Descargas&lt;/b&gt; enumera los archivos listos para instalar. Elige uno allí o usa &lt;b&gt;Instalar&lt;/b&gt; para buscarlo.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>&lt;p&gt;The &lt;b&gt;Run&lt;/b&gt; button starts the selected program with the active profile. Its arrow opens shortcut options.&lt;/p&gt;</source>
@@ -6281,8 +6297,8 @@ Ocultar siempre: nunca muestra los separadores</translation>
       <translation>Más ayuda</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The &lt;b&gt;Help&lt;/b&gt; menu offers this guide, the project repository, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;El menú &lt;b&gt;Ayuda&lt;/b&gt; ofrece esta guía, el repositorio del proyecto, una wiki de soporte del juego cuando su plugin de MO2 la proporciona, &lt;i&gt;Informar de un problema&lt;/i&gt; y &lt;i&gt;Acerca de MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;The &lt;b&gt;…&lt;/b&gt; menu offers this guide, the Mod Organizer 2 documentation, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, &lt;i&gt;Create Bug Report&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;El menú &lt;b&gt;…&lt;/b&gt; ofrece esta guía, la documentación de Mod Organizer 2, una wiki de soporte del juego cuando su plugin de MO2 la proporciona, &lt;i&gt;Informar de un problema&lt;/i&gt;, &lt;i&gt;Crear informe de errores&lt;/i&gt; y &lt;i&gt;Acerca de MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Game</source>
@@ -6851,8 +6867,8 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Explora las partidas disponibles para este perfil de Elden Ring. Configura su ruta en Herramientas &gt; Aislamiento de partidas para separar las partidas por perfil de MO2, compartir un perfil de partidas con nombre en esta instancia o usar la carpeta global de partidas de Steam.</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Enable mods with their checkboxes. Each profile keeps its own enabled mod list. Configure Elden Ring save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Activa los mods con sus casillas. Cada perfil guarda su propia lista de mods activos. Configura las rutas de partidas de Elden Ring en &lt;b&gt;Herramientas &amp;gt; Aislamiento de partidas&lt;/b&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Activa los mods con sus interruptores. Cada perfil guarda su propia lista de mods activos. Configura las rutas de partidas en &lt;b&gt;Herramientas &amp;gt; Aislamiento de partidas&lt;/b&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Open the game's save folder.</source>

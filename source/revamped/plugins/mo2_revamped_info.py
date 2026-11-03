@@ -754,6 +754,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             qt_version = QtCore.qVersion()
         except Exception:
             qt_version = "Unavailable"
+        versions = self._component_versions()
         try:
             import ssl
             openssl_version = ssl.OPENSSL_VERSION
@@ -764,8 +765,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             (
                 "MO2 Revamped diagnostic report",
                 f"Created UTC: {datetime.now(timezone.utc).isoformat()}",
-                "Package: MO2 Revamped 1.1.0-beta.1 (based on MO2 2.5.2)",
-                "Base: Mod Organizer 2.5.2",
+                f"Base: Mod Organizer {versions['mo2']}",
                 "USVFS: 0.5.7.2",
                 f"Windows: {platform.platform()}",
                 f"Architecture: {platform.machine()}",
@@ -784,11 +784,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 f"Game data directory: {game_data_path}",
                 f"Active profile: {profile_name}",
                 f"Profile directory: {profile_path}",
-                "Elden Ring game plugin: 0.5.0-alpha.75",
-                "Native bridge: 0.5.0-alpha.35",
-                "Archive layout installer: alpha.72",
-                "Save isolation: alpha.76",
-                "Startup options: 0.5.0.64",
+                f"Elden Ring game plugin: {versions['plugin']}",
+                f"Native bridge: {versions['bridge']}",
+                f"Archive layout installer: {versions['installer']}",
+                f"Save isolation: {versions['saves']}",
+                f"Startup options: {versions['startup']}",
                 "",
                 "Review this report and the included logs before sharing; paths and profile names may identify your Windows account.",
             )

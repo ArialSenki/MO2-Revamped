@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "mainwindow.h"
+#include "eldenringsavesettings.h"
 #include "fluenticons.h"
 #include "menuutils.h"
 #include "ui_mainwindow.h"
@@ -2576,12 +2577,6 @@ void MainWindow::createEndorseMenu()
 
 void MainWindow::createHelpMenu()
 {
-  //: Translation strings for tutorial names
-  static std::map<QString, const char*> translate = {
-      {"First Steps", QT_TR_NOOP("Getting Started")},
-      {"Conflict Resolution", QT_TR_NOOP("Understanding Mod Conflicts")},
-      {"Overview", QT_TR_NOOP("Interface Overview")}};
-
   auto* menu = ui->actionHelp->menu();
   if (!menu) {
     // this happens on startup because languageChanged() (which calls this) is
@@ -2594,11 +2589,10 @@ void MainWindow::createHelpMenu()
   menu->clear();
 
   const auto* game = m_OrganizerCore.managedGame();
-  const bool isEldenRing =
-      game && game->gameShortName().compare("eldenring", Qt::CaseInsensitive) == 0;
+  const bool isEldenRing = EldenRingSaveSettings::supports(game);
 
   if (isEldenRing) {
-    QAction* guideAction = new QAction(tr("Elden Ring Guide"), menu);
+    QAction* guideAction = new QAction(gameGuideTitle(game), menu);
     guideAction->setObjectName(QStringLiteral("eldenRingGuideAction"));
     guideAction->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
     guideAction->setToolTip(
@@ -2608,78 +2602,9 @@ void MainWindow::createHelpMenu()
     menu->addAction(guideAction);
   }
 
-  typedef std::vector<std::pair<int, QAction*>> ActionList;
-  ActionList tutorials;
-  QDirIterator dirIter(QApplication::applicationDirPath() + "/tutorials",
-                       QStringList("*.js"), QDir::Files);
-  while (dirIter.hasNext()) {
-    dirIter.next();
-    const QString fileName = dirIter.fileName();
-
-    // The generic tours include Bethesda-specific plugin and record-conflict
-    // guidance, while the Elden Ring tour is no longer offered from Help.
-    if (isEldenRing || fileName == "tutorial_eldenring_overview.js") {
-      continue;
-    }
-
-    QFile file(dirIter.filePath());
-    if (!file.open(QIODevice::ReadOnly)) {
-      log::error("Failed to open {}", fileName);
-      continue;
-    }
-    const QString firstLine = QString::fromUtf8(file.readLine());
-    if (!firstLine.startsWith("//TL")) {
-      continue;
-    }
-
-    const QStringList params = firstLine.mid(4).trimmed().split('#');
-    if (params.size() != 2) {
-      log::error("invalid header line for tutorial {}, expected 2 parameters",
-                 fileName);
-      continue;
-    }
-
-    const auto translatedTitle = translate.find(params.at(0));
-    if (translatedTitle == translate.end()) {
-      continue;
-    }
-
-    QAction* tutorialAction =
-        new QAction(tr(translatedTitle->second), menu);
-    tutorialAction->setData(fileName);
-    tutorials.push_back(
-        std::make_pair(params.at(1).toInt(), tutorialAction));
+  if (isEldenRing) {
+    addMenuSection(menu, tr("Resources"));
   }
-
-  std::sort(tutorials.begin(), tutorials.end(),
-            [](const ActionList::value_type& lhs,
-               const ActionList::value_type& rhs) {
-              return lhs.first < rhs.first;
-            });
-
-  if (!tutorials.empty()) {
-    QMenu* tutorialMenu = new QMenu(tr("Guided Tours"), menu);
-    tutorialMenu->setObjectName(QStringLiteral("revampedGuidedToursMenu"));
-    tutorialMenu->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
-    for (const auto& tutorial : tutorials) {
-      connect(tutorial.second, SIGNAL(triggered()), this,
-              SLOT(tutorialTriggered()));
-      tutorialMenu->addAction(tutorial.second);
-    }
-    menu->addMenu(tutorialMenu);
-  }
-
-  addMenuSection(menu, tr("Resources"));
-
-  QAction* repositoryAction = new QAction(tr("MO2 Revamped on GitHub"), menu);
-  repositoryAction->setObjectName(QStringLiteral("revampedRepositoryAction"));
-  repositoryAction->setIcon(
-      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/github-updates.svg")));
-  repositoryAction->setToolTip(
-      tr("Open the project repository, source notes, and third-party notices."));
-  connect(repositoryAction, SIGNAL(triggered()), this,
-          SLOT(revampedRepositoryTriggered()));
-  menu->addAction(repositoryAction);
 
   // the original MO2 documentation still covers everything Revamped keeps
   QAction* documentationAction = new QAction(tr("Mod Organizer 2 Documentation"), menu);
@@ -2726,6 +2651,28 @@ void MainWindow::createHelpMenu()
   connect(issueAction, SIGNAL(triggered()), this, SLOT(issueTriggered()));
   menu->addAction(issueAction);
 
+  // the report is made by the MO2 Revamped Information plugin
+  QAction* reportAction = new QAction(tr("Create Bug Report"), menu);
+  reportAction->setObjectName(QStringLiteral("revampedBugReportAction"));
+  reportAction->setIcon(FluentIcons::glyph(0xEBE8));
+  reportAction->setToolTip(tr("Save a ZIP with the logs, to attach it to your report."));
+  const auto diagnosticsAction = [this] {
+    return findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"));
+  };
+  connect(reportAction, &QAction::triggered, this, [diagnosticsAction] {
+    if (QAction* action = diagnosticsAction()) {
+      action->trigger();
+    }
+  });
+  connect(menu, &QMenu::aboutToShow, reportAction, [reportAction, diagnosticsAction] {
+    reportAction->setVisible(diagnosticsAction() != nullptr);
+  });
+  menu->addAction(reportAction);
+
+  menu->addSeparator();
+  menu->addAction(ui->actionUpdate);
+  menu->addAction(ui->actionEndorseMO);
+
   addMenuSection(menu, tr("About"));
   QAction* revampedAboutAction =
       menu->addAction(tr("About MO2 Revamped"), this, SLOT(about()));
@@ -2738,6 +2685,10 @@ void MainWindow::createHelpMenu()
   QAction* aboutQtAction = menu->addAction(tr("About Qt"), qApp, &QApplication::aboutQt);
   aboutQtAction->setObjectName(QStringLiteral("aboutQtAction"));
   aboutQtAction->setToolTip(tr("Show the version and license of the Qt framework."));
+
+  if (m_fluentOverflowAction != nullptr) {
+    m_fluentOverflowAction->setMenu(menu);
+  }
 }
 
 bool MainWindow::addProfile()
@@ -4088,23 +4039,29 @@ void MainWindow::configureEldenRingHelp()
       "Save Isolation for save routes and named saves, Startup Options for "
       "launch and cleanup settings, and Native DLL Profile for native DLL "
       "load order and optional initializers."));
-  ui->actionHelp->setWhatsThis(tr(
-      "Open interface help, the Elden Ring guide and tour, MO2 Revamped "
-      "project resources, and support links."));
   ui->actionInstallMod->setWhatsThis(tr(
       "Install a mod archive. For Elden Ring, keep the original archive paths "
       "when the mod relies on its packaged folders; use standard MO2 layout "
       "when the archive follows common MO2 or game-data paths."));
 }
 
+QString MainWindow::gameGuideTitle(const MOBase::IPluginGame* game) const
+{
+  return game != nullptr &&
+                 game->gameShortName().compare("nightreign", Qt::CaseInsensitive) == 0
+             ? tr("Nightreign Guide")
+             : tr("Elden Ring Guide");
+}
+
 void MainWindow::showEldenRingGuide()
 {
   QDialog guide(this);
   guide.setObjectName(QStringLiteral("EldenRingGuideDialog"));
-  guide.setWindowTitle(tr("Elden Ring Guide"));
+  const QString guideTitle = gameGuideTitle(m_OrganizerCore.managedGame());
+  guide.setWindowTitle(guideTitle);
   guide.setWindowIcon(windowIcon());
-  guide.setMinimumSize(760, 520);
-  guide.resize(900, 660);
+  guide.setMinimumSize(760, 480);
+  guide.resize(900, 560);
   guide.setWindowFlag(Qt::WindowType::WindowContextHelpButtonHint, false);
 
   auto* layout = new QVBoxLayout(&guide);
@@ -4145,7 +4102,7 @@ void MainWindow::showEldenRingGuide()
   auto* headingLayout = new QVBoxLayout(headingText);
   headingLayout->setContentsMargins(0, 0, 0, 0);
   headingLayout->setSpacing(3);
-  auto* heading = new QLabel(tr("Elden Ring Guide"), headingText);
+  auto* heading = new QLabel(guideTitle, headingText);
   heading->setObjectName(QStringLiteral("eldenRingGuideTitle"));
   auto* subtitle = new QLabel(
       tr("Profiles, archives, native DLLs, saves, and launching the game."),
@@ -4186,6 +4143,7 @@ void MainWindow::showEldenRingGuide()
     text->setMargin(0);
     cardLayout->addWidget(titleLabel);
     cardLayout->addWidget(text);
+    cardLayout->addStretch(1);
     return card;
   };
 
@@ -4218,15 +4176,14 @@ void MainWindow::showEldenRingGuide()
     grid->setVerticalSpacing(8);
     grid->setColumnStretch(0, 1);
     grid->setColumnStretch(1, 1);
-    grid->setRowStretch(0, 1);
-    grid->setRowStretch(1, 1);
     for (int index = 0; index < static_cast<int>(cards.size()); ++index) {
       const int row = index / 2;
       const int column = index % 2;
       grid->addWidget(makeCard(page, cards[index].first, cards[index].second),
                       row, column);
     }
-    pageLayout->addLayout(grid, 1);
+    pageLayout->addLayout(grid);
+    pageLayout->addStretch(1);
     tabs->addTab(page, tabTitle);
   };
 
@@ -4235,8 +4192,8 @@ void MainWindow::showEldenRingGuide()
       tr("Choose the active profile and understand how MO2 resolves files and "
          "archive layouts."),
       {{tr("Profiles"),
-        tr("<p>Enable mods with their checkboxes. Each profile keeps its own "
-           "enabled mod list. Configure Elden Ring save routes in "
+        tr("<p>Enable mods with their switches. Each profile keeps its own "
+           "enabled mod list. Configure save routes in "
            "<b>Tools &gt; Save Isolation</b>.</p>")},
        {tr("Mod priority"),
         tr("<p>The left list controls file priority when mods provide the same "
@@ -4269,7 +4226,7 @@ void MainWindow::showEldenRingGuide()
         tr("<p>Save Isolation can keep saves per MO2 profile, share them among "
            "profiles in this instance, or use the global Steam save folder. "
            "The first two modes also support named save profiles while the "
-           "game still receives <code>ER0000.sl2</code>.</p>")},
+           "game still finds its usual save file.</p>")},
        {tr("Restart and online safety"),
         tr("<p>Changes between profile-isolated and instance-shared saves "
            "take effect on the next game launch. Switching to or from the "
@@ -4288,14 +4245,14 @@ void MainWindow::showEldenRingGuide()
            "folder.</p>")},
        {tr("Downloads"),
         tr("<p><b>Downloads</b> lists archives ready to install. Choose an "
-           "archive there or use <b>Install Mod</b> to browse for one.</p>")},
+           "archive there or use <b>Install</b> to browse for one.</p>")},
        {tr("Run"),
         tr("<p>The <b>Run</b> button starts the selected program with the "
            "active profile. Its arrow opens shortcut options.</p>")},
        {tr("More help"),
-        tr("<p>The <b>Help</b> menu offers this guide, the project repository, "
-           "a game support wiki when its MO2 plugin provides one, <i>Report a Problem</i>, and <i>About MO2 "
-           "Revamped</i>.</p>")}});
+        tr("<p>The <b>…</b> menu offers this guide, the Mod Organizer 2 documentation, "
+           "a game support wiki when its MO2 plugin provides one, <i>Report a Problem</i>, "
+           "<i>Create Bug Report</i>, and <i>About MO2 Revamped</i>.</p>")}});
 
   layout->addWidget(tabs, 1);
 
@@ -4324,15 +4281,6 @@ void MainWindow::gameSupportTriggered()
 void MainWindow::issueTriggered()
 {
   shell::Open(QUrl("https://github.com/ArialSenki/MO2-Revamped/issues"));
-}
-
-void MainWindow::tutorialTriggered()
-{
-  QAction* tutorialAction = qobject_cast<QAction*>(sender());
-  if (tutorialAction != nullptr) {
-    TutorialManager::instance().activateTutorial("MainWindow",
-                                                 tutorialAction->data().toString());
-  }
 }
 
 void MainWindow::on_actionInstallMod_triggered()

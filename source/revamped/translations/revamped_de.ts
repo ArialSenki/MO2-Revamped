@@ -5784,6 +5784,22 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Create Bug Report</source>
+      <translation>Fehlerbericht erstellen</translation>
+    </message>
+    <message>
+      <source>Save a ZIP with the logs, to attach it to your report.</source>
+      <translation>Speichert eine ZIP-Datei mit den Protokollen, die du deiner Meldung beifügen kannst.</translation>
+    </message>
+    <message>
+      <source>Open the guides and help, report a problem, and reach the project's links.</source>
+      <translation>Öffnet die Anleitungen und die Hilfe, ermöglicht das Melden von Problemen und führt zu den Links des Projekts.</translation>
+    </message>
+    <message>
+      <source>Nightreign Guide</source>
+      <translation>Nightreign-Anleitung</translation>
+    </message>
+    <message>
       <source>No game plugin</source>
       <translation>Kein Spiel-Plugin</translation>
     </message>
@@ -6213,8 +6229,8 @@ Immer ausblenden: Trenner nie anzeigen</translation>
       <translation>Speicherrouten</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still receives &lt;code&gt;ER0000.sl2&lt;/code&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Das Werkzeug Spielstand-Isolation kann Spielstände pro MO2-Profil trennen, sie zwischen den Profilen dieser Instanz teilen oder den globalen Steam-Spielstandordner nutzen. Die ersten beiden Modi unterstützen auch benannte Speicherprofile, während das Spiel weiterhin &lt;code&gt;ER0000.sl2&lt;/code&gt; erhält.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still finds its usual save file.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Das Werkzeug Spielstand-Isolation kann Spielstände pro MO2-Profil trennen, sie zwischen den Profilen dieser Instanz teilen oder den globalen Steam-Spielstandordner nutzen. Die ersten beiden Modi unterstützen auch benannte Speicherprofile, während das Spiel weiterhin seine gewohnte Spielstanddatei findet.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Restart and online safety</source>
@@ -6241,8 +6257,8 @@ Immer ausblenden: Trenner nie anzeigen</translation>
       <translation>&lt;p&gt;&lt;b&gt;Daten&lt;/b&gt; zeigt das virtuelle Spielverzeichnis und die Mod, die jede Datei bereitstellt. Es kopiert keine Dateien in den physischen Spielordner.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install Mod&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; listet installationsbereite Archive auf. Wähle dort ein Archiv oder nutze &lt;b&gt;Mod installieren&lt;/b&gt;, um nach einem zu suchen.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; listet installationsbereite Archive auf. Wähle dort ein Archiv oder nutze &lt;b&gt;Installieren&lt;/b&gt;, um nach einem zu suchen.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>&lt;p&gt;The &lt;b&gt;Run&lt;/b&gt; button starts the selected program with the active profile. Its arrow opens shortcut options.&lt;/p&gt;</source>
@@ -6253,8 +6269,8 @@ Immer ausblenden: Trenner nie anzeigen</translation>
       <translation>Weitere Hilfe</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The &lt;b&gt;Help&lt;/b&gt; menu offers this guide, the project repository, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Das Menü &lt;b&gt;Hilfe&lt;/b&gt; bietet diese Anleitung, das Projekt-Repository, ein Support-Wiki zum Spiel, wenn dessen MO2-Plugin eines bereitstellt, &lt;i&gt;Problem melden&lt;/i&gt; und &lt;i&gt;Über MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;The &lt;b&gt;…&lt;/b&gt; menu offers this guide, the Mod Organizer 2 documentation, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, &lt;i&gt;Create Bug Report&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Das Menü &lt;b&gt;…&lt;/b&gt; bietet diese Anleitung, die Dokumentation von Mod Organizer 2, ein Support-Wiki zum Spiel, wenn dessen MO2-Plugin eines bereitstellt, &lt;i&gt;Problem melden&lt;/i&gt;, &lt;i&gt;Fehlerbericht erstellen&lt;/i&gt; und &lt;i&gt;Über MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Game</source>
@@ -6823,8 +6839,8 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Durchsuche die Spielstände, die diesem Elden-Ring-Profil zur Verfügung stehen. Lege ihren Pfad unter Werkzeuge &gt; Spielstand-Isolation fest, um Spielstände pro MO2-Profil zu trennen, ein benanntes Spielstandprofil in dieser Instanz zu teilen oder den globalen Steam-Spielstandordner zu verwenden.</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Enable mods with their checkboxes. Each profile keeps its own enabled mod list. Configure Elden Ring save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Aktiviere Mods über ihre Kontrollkästchen. Jedes Profil hat seine eigene Liste aktiver Mods. Lege die Spielstandpfade von Elden Ring unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
+      <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Aktiviere Mods über ihre Schalter. Jedes Profil hat seine eigene Liste aktiver Mods. Lege die Spielstandpfade unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Open the game's save folder.</source>

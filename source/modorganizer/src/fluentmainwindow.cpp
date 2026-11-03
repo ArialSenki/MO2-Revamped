@@ -281,9 +281,9 @@ void MainWindow::setupFluentCommandBar()
   QToolBar* bar = ui->toolBar;
 
   // the left group keeps MO2's original order (install, Nexus, profiles,
-  // refresh, executables, tools, settings); links and help move into one
-  // overflow button at the far right. The actions stay on the window so their
-  // shortcuts keep working.
+  // refresh, executables, tools, settings); links and help are one menu behind
+  // the button at the far right, filled by createHelpMenu(). The actions stay
+  // on the window so their shortcuts keep working.
   const QList<QAction*> overflow = {ui->actionEndorseMO, ui->actionUpdate,
                                     ui->actionHelp};
   for (QAction* action : overflow) {
@@ -291,19 +291,20 @@ void MainWindow::setupFluentCommandBar()
     addAction(action);
   }
 
-  auto* menu = new QMenu(this);
-  menu->addAction(ui->actionEndorseMO);
-  menu->addAction(ui->actionUpdate);
-  menu->addAction(ui->actionHelp);
-
   m_fluentOverflowAction = new QAction(tr("More"), this);
   m_fluentOverflowAction->setObjectName(QStringLiteral("actionFluentMore"));
   m_fluentOverflowAction->setToolTip(tr("Links, updates and help"));
-  m_fluentOverflowAction->setMenu(menu);
+  m_fluentOverflowAction->setWhatsThis(
+      tr("Open the guides and help, report a problem, and reach the project's links."));
+  if (ui->actionHelp->menu() != nullptr) {
+    m_fluentOverflowAction->setMenu(ui->actionHelp->menu());
+  }
   bar->addAction(m_fluentOverflowAction);
   if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_fluentOverflowAction))) {
     button->setPopupMode(QToolButton::InstantPopup);
     button->setObjectName(QStringLiteral("actionFluentMore"));
+    // its shortcut, Ctrl+H, opens the menu
+    connect(ui->actionHelp, &QAction::triggered, button, &QToolButton::showMenu);
   }
 
   // Manage Instances opens the instances to switch to; the manager itself

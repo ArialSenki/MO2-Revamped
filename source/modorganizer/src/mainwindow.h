@@ -202,6 +202,7 @@ private:
   void createHelpMenu();
   void configureEldenRingHelp();
   void showEldenRingGuide();
+  QString gameGuideTitle(const MOBase::IPluginGame* game) const;
   void createEndorseMenu();
   void updateShortcutActionIcons();
 
@@ -380,7 +381,6 @@ private slots:
   void issueTriggered();
   void revampedRepositoryTriggered();
   void gameSupportTriggered();
-  void tutorialTriggered();
   void extractBSATriggered(QTreeWidgetItem* item);
 
   void refreshProfile_activated();

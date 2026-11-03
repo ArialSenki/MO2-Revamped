@@ -200,8 +200,10 @@ QWidget* ProblemsDialog::createDetails()
   m_description->setLineWrapMode(QTextEdit::WidgetWidth);
   // reading text, not a field: no box around it
   m_description->viewport()->setAutoFillBackground(false);
+  // starts where the line above it starts
+  m_description->document()->setDocumentMargin(0);
   m_description->setStyleSheet(
-      QStringLiteral("QTextBrowser { background: transparent; border: none; }"));
+      QStringLiteral("QTextBrowser { background: transparent; border: none; padding: 0px; }"));
   textLayout->addWidget(m_context);
   textLayout->addWidget(m_description, 1);
   layout->addWidget(text, 1);
@@ -320,13 +322,13 @@ void ProblemsDialog::selectionChanged()
 
   m_title->setText(item->text());
   m_caption->setText(tr("From %1").arg(item->data(FluentPanels::CaptionRole).toString()));
-  m_context->setText(
-      isOverwrite
-          ? tr("Files here are not assigned to a regular mod yet. Review them and move "
-               "anything you want to keep into a mod. Deleting files here removes "
-               "them from this instance.")
-          : tr("Review the details below to understand this notification and choose an "
-               "available action."));
+  m_context->setVisible(isOverwrite);
+  if (isOverwrite) {
+    m_context->setText(
+        tr("Files here are not assigned to a regular mod yet. Review them and move "
+           "anything you want to keep into a mod. Deleting files here removes "
+           "them from this instance."));
+  }
 
   if (isOverwrite && EldenRingSaveSettings::supports(m_PluginContainer.managedGame())) {
     // the basic diagnosis text is written for the Bethesda games (Wrye Bash,
