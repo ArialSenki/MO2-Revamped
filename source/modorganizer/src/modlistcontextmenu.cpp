@@ -691,7 +691,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
                                       m_core.syncOverwrite();
                                     });
     syncAction->setToolTip(
-        tr("Review and assign files from Overwrite to regular mods."));
+        tr("Replace files that regular mods already have with the versions in Overwrite."));
 
     QAction* createModAction =
         addAction(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"),

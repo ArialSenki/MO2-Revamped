@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QSplitter>
 #include <log.h>
+#include <report.h>
 
 using namespace MOBase;
 
@@ -100,22 +101,33 @@ bool TextEditor::load(const QString& filename)
 
 bool TextEditor::save()
 {
-  if (m_filename.isEmpty() || m_encoding.isEmpty()) {
+  if (m_filename.isEmpty()) {
+    return false;
+  }
+
+  // the encoding is empty when the file couldn't be read
+  auto codec = QStringConverter::encodingForName(m_encoding.toLocal8Bit());
+  if (!codec.has_value()) {
+    MOBase::reportError(
+        tr("Could not save \"%1\": the file could not be read when it was opened.")
+            .arg(m_filename));
     return false;
   }
 
   QFile file(m_filename);
-  file.open(QIODevice::WriteOnly);
-  file.resize(0);
-
-  auto codec = QStringConverter::encodingForName(m_encoding.toLocal8Bit());
-  if (!codec.has_value())
-    return false;
   QStringEncoder encoder(codec.value());
 
-  QString data = toPlainText().replace("\n", "\r\n");
+  QString data           = toPlainText().replace("\n", "\r\n");
+  const QByteArray bytes = encoder.encode(data);
 
-  file.write(encoder.encode(data));
+  const bool saved = file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() &&
+                     file.flush();
+
+  if (!saved) {
+    MOBase::reportError(tr("Could not save \"%1\": %2").arg(m_filename, file.errorString()));
+    return false;
+  }
+
   document()->setModified(false);
 
   return true;
@@ -544,5 +556,5 @@ void HTMLEditor::focusOutEvent(QFocusEvent* e)
     emit editingFinished();
   }
 
-  QTextEdit::focusInEvent(e);
+  QTextEdit::focusOutEvent(e);
 }

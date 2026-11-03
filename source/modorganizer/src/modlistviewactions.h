@@ -155,9 +155,10 @@ private:
   //
   int findInstallPriority(const QModelIndex& current) const;
 
-  // move the contents of the overwrite to the given path
+  // move the contents of the overwrite to the given path; a failure is
+  // reported and returns false; the caller refreshes
   //
-  void moveOverwriteContentsTo(const QString& absolutePath) const;
+  bool moveOverwriteContentsTo(const QString& absolutePath) const;
 
   // set the category of the given mod based on the given array
   //

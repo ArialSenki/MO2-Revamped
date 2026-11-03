@@ -938,49 +938,49 @@ Changes are saved when you choose OK.</source>
 <context>
     <name>ConflictsTab</name>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="476"/>
+        <location filename="modinfodialogconflicts.cpp" line="478"/>
         <source>&amp;Execute</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="478"/>
+        <location filename="modinfodialogconflicts.cpp" line="480"/>
         <source>Execute with &amp;VFS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="480"/>
+        <location filename="modinfodialogconflicts.cpp" line="482"/>
         <source>&amp;Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="482"/>
+        <location filename="modinfodialogconflicts.cpp" line="484"/>
         <source>Open with &amp;VFS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="489"/>
+        <location filename="modinfodialogconflicts.cpp" line="491"/>
         <source>&amp;Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="492"/>
+        <location filename="modinfodialogconflicts.cpp" line="494"/>
         <source>&amp;Go to</source>
         <oldsource>&amp;Go to...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="495"/>
+        <location filename="modinfodialogconflicts.cpp" line="497"/>
         <source>Show in &amp;folder</source>
         <oldsource>Open in &amp;Explorer</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="499"/>
+        <location filename="modinfodialogconflicts.cpp" line="501"/>
         <source>&amp;Hide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="505"/>
+        <location filename="modinfodialogconflicts.cpp" line="507"/>
         <source>&amp;Un-hide</source>
         <oldsource>&amp;Unhide</oldsource>
         <translation type="unfinished"></translation>
@@ -2709,109 +2709,115 @@ Start it anyway?</source>
 <context>
     <name>FileTreeTab</name>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="31"/>
+        <location filename="modinfodialogfiletree.cpp" line="50"/>
         <source>&amp;Open/Execute</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="32"/>
-        <location filename="modinfodialogfiletree.cpp" line="529"/>
+        <location filename="modinfodialogfiletree.cpp" line="51"/>
+        <location filename="modinfodialogfiletree.cpp" line="557"/>
         <source>Open with &amp;VFS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="33"/>
+        <location filename="modinfodialogfiletree.cpp" line="52"/>
         <source>&amp;Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="35"/>
+        <location filename="modinfodialogfiletree.cpp" line="54"/>
         <source>&amp;Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="30"/>
+        <location filename="modinfodialogfiletree.cpp" line="49"/>
         <source>&amp;New folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="34"/>
+        <location filename="modinfodialogfiletree.cpp" line="53"/>
         <source>Show in &amp;folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="36"/>
+        <location filename="modinfodialogfiletree.cpp" line="55"/>
         <source>&amp;Delete...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="37"/>
+        <location filename="modinfodialogfiletree.cpp" line="56"/>
         <source>&amp;Hide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="38"/>
+        <location filename="modinfodialogfiletree.cpp" line="57"/>
         <source>&amp;Un-hide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="171"/>
-        <location filename="modinfodialogfiletree.cpp" line="177"/>
+        <location filename="modinfodialogfiletree.cpp" line="202"/>
+        <location filename="modinfodialogfiletree.cpp" line="208"/>
         <source>New Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="183"/>
+        <location filename="modinfodialogfiletree.cpp" line="214"/>
         <source>Failed to create &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="292"/>
-        <source>Are you sure you want to delete &quot;%1&quot;?</source>
+        <location filename="modinfodialogfiletree.cpp" line="338"/>
+        <source>Move &quot;%1&quot; to the Recycle Bin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="294"/>
-        <source>Are you sure you want to delete the selected files?</source>
+        <location filename="modinfodialogfiletree.cpp" line="340"/>
+        <source>Move the selected files to the Recycle Bin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="297"/>
+        <location filename="modinfodialogfiletree.cpp" line="357"/>
+        <source>Failed to delete the selected files: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialogfiletree.cpp" line="387"/>
+        <source>meta.ini stays: it holds this mod&apos;s Nexus ID, version and notes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialogfiletree.cpp" line="331"/>
+        <location filename="modinfodialogfiletree.cpp" line="347"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="333"/>
-        <source>Failed to delete %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modinfodialogfiletree.cpp" line="523"/>
+        <location filename="modinfodialogfiletree.cpp" line="551"/>
         <source>&amp;Execute</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="525"/>
+        <location filename="modinfodialogfiletree.cpp" line="553"/>
         <source>Execute with &amp;VFS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="527"/>
+        <location filename="modinfodialogfiletree.cpp" line="555"/>
         <source>&amp;Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="561"/>
+        <location filename="modinfodialogfiletree.cpp" line="589"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="562"/>
+        <location filename="modinfodialogfiletree.cpp" line="590"/>
         <source>Path in the mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogfiletree.cpp" line="564"/>
+        <location filename="modinfodialogfiletree.cpp" line="592"/>
         <source>Full path</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3524,22 +3530,27 @@ Most mods do not need it: script extenders and DLL loaders already load their pl
 <context>
     <name>GeneralConflictsTab</name>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="817"/>
+        <location filename="modinfodialogconflicts.cpp" line="819"/>
         <source>&lt;table cellspacing=&quot;5&quot;&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;%1&lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;th&gt;Percent&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Loose files:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;td align=right&gt;%3&lt;/td&gt;&lt;td align=right&gt;%4%&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Archive files:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%5&lt;/td&gt;&lt;td align=right&gt;%6&lt;/td&gt;&lt;td align=right&gt;%7%&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Combined:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%8&lt;/td&gt;&lt;td align=right&gt;%9&lt;/td&gt;&lt;td align=right&gt;%10%&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="828"/>
+        <location filename="modinfodialogconflicts.cpp" line="835"/>
+        <source>&lt;table cellspacing=&quot;5&quot;&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;%1&lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;th&gt;Percent&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Loose files:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;td align=right&gt;%3&lt;/td&gt;&lt;td align=right&gt;%4%&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialogconflicts.cpp" line="858"/>
         <source>Winning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="840"/>
+        <location filename="modinfodialogconflicts.cpp" line="861"/>
         <source>Losing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogconflicts.cpp" line="852"/>
+        <location filename="modinfodialogconflicts.cpp" line="865"/>
         <source>Non conflicting</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3547,23 +3558,28 @@ Most mods do not need it: script extenders and DLL loaders already load their pl
 <context>
     <name>ImagesTab</name>
     <message>
-        <location filename="modinfodialogimages.cpp" line="214"/>
+        <location filename="modinfodialogimages.cpp" line="215"/>
         <source>No matching images</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogimages.cpp" line="215"/>
+        <location filename="modinfodialogimages.cpp" line="216"/>
         <source>No images to display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogimages.cpp" line="217"/>
+        <location filename="modinfodialogimages.cpp" line="218"/>
         <source>No images match the current filters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogimages.cpp" line="218"/>
+        <location filename="modinfodialogimages.cpp" line="219"/>
         <source>This mod contains no supported images.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialogimages.cpp" line="338"/>
+        <source>This image format is not supported by Qt, but the preview plugin may be able to display it. Use the button above.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7013,7 +7029,7 @@ Recovery snapshots were kept at: %2</source>
     </message>
     <message>
         <location filename="modinfodialog.ui" line="45"/>
-        <location filename="modinfodialog.cpp" line="850"/>
+        <location filename="modinfodialog.cpp" line="910"/>
         <source>Review documentation and other text files included with this mod.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7226,8 +7242,8 @@ Most mods do not have optional esps, so chances are good you are looking at an e
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1011"/>
-        <location filename="modinfodialog.cpp" line="1034"/>
-        <location filename="modinfodialog.cpp" line="1035"/>
+        <location filename="modinfodialog.cpp" line="1100"/>
+        <location filename="modinfodialog.cpp" line="1101"/>
         <source>Mod ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7271,7 +7287,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1056"/>
-        <location filename="modinfodialog.cpp" line="1039"/>
+        <location filename="modinfodialog.cpp" line="1105"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7319,7 +7335,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1282"/>
-        <location filename="modinfodialog.cpp" line="1102"/>
+        <location filename="modinfodialog.cpp" line="1168"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7389,203 +7405,203 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="838"/>
+        <location filename="modinfodialog.cpp" line="898"/>
         <source>Mod information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="840"/>
-        <location filename="modinfodialog.cpp" line="878"/>
+        <location filename="modinfodialog.cpp" line="900"/>
+        <location filename="modinfodialog.cpp" line="938"/>
         <source>Inspect this mod&apos;s contents, metadata, and file conflicts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="853"/>
+        <location filename="modinfodialog.cpp" line="913"/>
         <source>Inspect and edit configuration files provided by the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="856"/>
+        <location filename="modinfodialog.cpp" line="916"/>
         <source>Browse the images and previews packaged with the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="859"/>
+        <location filename="modinfodialog.cpp" line="919"/>
         <source>Choose which optional ESP, ESM, and ESL files are active. Mods without optional plugins leave this list empty.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="863"/>
+        <location filename="modinfodialog.cpp" line="923"/>
         <source>See which files this mod wins, loses, or shares with other mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="866"/>
+        <location filename="modinfodialog.cpp" line="926"/>
         <source>Organize the mod and choose its primary category.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="869"/>
+        <location filename="modinfodialog.cpp" line="929"/>
         <source>Review Nexus metadata, refresh details, and open the mod page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="872"/>
+        <location filename="modinfodialog.cpp" line="932"/>
         <source>Add notes and a color marker to recognize this mod in your list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="875"/>
+        <location filename="modinfodialog.cpp" line="935"/>
         <source>Inspect the mod&apos;s folder structure and manage its files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="996"/>
+        <location filename="modinfodialog.cpp" line="1061"/>
         <source>Open the mod&apos;s folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1000"/>
+        <location filename="modinfodialog.cpp" line="1065"/>
         <source>Open the mod&apos;s page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1009"/>
+        <location filename="modinfodialog.cpp" line="1075"/>
         <source>Copy the mod&apos;s name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1027"/>
+        <location filename="modinfodialog.cpp" line="1093"/>
         <source>Nexus Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1035"/>
+        <location filename="modinfodialog.cpp" line="1101"/>
         <source>The number in the mod&apos;s Nexus address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1037"/>
+        <location filename="modinfodialog.cpp" line="1103"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1037"/>
+        <location filename="modinfodialog.cpp" line="1103"/>
         <source>The Nexus game the page belongs to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1039"/>
+        <location filename="modinfodialog.cpp" line="1105"/>
         <source>Red when Nexus has a newer one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1041"/>
+        <location filename="modinfodialog.cpp" line="1107"/>
         <source>Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1041"/>
+        <location filename="modinfodialog.cpp" line="1107"/>
         <source>The category number on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1061"/>
+        <location filename="modinfodialog.cpp" line="1127"/>
         <source>Open the custom page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1064"/>
+        <location filename="modinfodialog.cpp" line="1130"/>
         <source>Custom web page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1065"/>
+        <location filename="modinfodialog.cpp" line="1131"/>
         <source>For mods from elsewhere: the page Open opens instead of Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1094"/>
+        <location filename="modinfodialog.cpp" line="1160"/>
         <source>A short note shown in the mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1095"/>
+        <location filename="modinfodialog.cpp" line="1161"/>
         <source>Comment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1095"/>
+        <location filename="modinfodialog.cpp" line="1161"/>
         <source>Shown in the mod list&apos;s Notes column</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1100"/>
+        <location filename="modinfodialog.cpp" line="1166"/>
         <source>Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1100"/>
+        <location filename="modinfodialog.cpp" line="1166"/>
         <source>Marks the mod&apos;s row in the mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1113"/>
+        <location filename="modinfodialog.cpp" line="1179"/>
         <source>Primary category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1114"/>
+        <location filename="modinfodialog.cpp" line="1180"/>
         <source>The one the mod list shows and groups by</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1115"/>
+        <location filename="modinfodialog.cpp" line="1181"/>
         <source>Categories of this mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1130"/>
+        <location filename="modinfodialog.cpp" line="1196"/>
         <source>The mod above this one in the list (Page Up)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1131"/>
+        <location filename="modinfodialog.cpp" line="1197"/>
         <source>The mod below this one in the list (Page Down)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1144"/>
+        <location filename="modinfodialog.cpp" line="1210"/>
         <source>Separator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1146"/>
+        <location filename="modinfodialog.cpp" line="1212"/>
         <source>Files outside any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1150"/>
+        <location filename="modinfodialog.cpp" line="1216"/>
         <source>Version %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1155"/>
+        <location filename="modinfodialog.cpp" line="1221"/>
         <source>Active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1155"/>
+        <location filename="modinfodialog.cpp" line="1221"/>
         <source>Inactive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1156"/>
+        <location filename="modinfodialog.cpp" line="1222"/>
         <source>Priority %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1159"/>
+        <location filename="modinfodialog.cpp" line="1225"/>
         <source>Not managed by Mod Organizer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7624,12 +7640,12 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModInfoRegular</name>
     <message>
-        <location filename="modinforegular.cpp" line="765"/>
+        <location filename="modinforegular.cpp" line="780"/>
         <source>%1 contains no esp/esm/esl and no asset (textures, meshes, interface, ...) directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinforegular.cpp" line="771"/>
+        <location filename="modinforegular.cpp" line="786"/>
         <source>Categories: &lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8021,7 +8037,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modlistcontextmenu.cpp" line="694"/>
-        <source>Review and assign files from Overwrite to regular mods.</source>
+        <source>Replace files that regular mods already have with the versions in Overwrite.</source>
+        <oldsource>Review and assign files from Overwrite to regular mods.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8756,62 +8773,67 @@ Please enter the name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="948"/>
+        <location filename="modlistviewactions.cpp" line="959"/>
         <source>Choose a separator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1158"/>
+        <location filename="modlistviewactions.cpp" line="1169"/>
         <source>Versioning scheme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1159"/>
+        <location filename="modlistviewactions.cpp" line="1170"/>
         <source>No versioning scheme makes %1 newer than %2, so nothing was changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1581"/>
+        <location filename="modlistviewactions.cpp" line="1592"/>
         <source>The backup wasn&apos;t restored: a file of &quot;%1&quot; may be in use. Nothing was changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1590"/>
+        <location filename="modlistviewactions.cpp" line="1601"/>
         <source>The backup wasn&apos;t restored: a file in it may be in use. &quot;%1&quot; was left as it was.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1593"/>
+        <location filename="modlistviewactions.cpp" line="1604"/>
         <source>The backup wasn&apos;t restored, and &quot;%1&quot; could not be put back. It is safe in the mods folder as &quot;%2&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1598"/>
+        <location filename="modlistviewactions.cpp" line="1609"/>
         <source>The backup was restored, but the old &quot;%1&quot; could not be removed. It is in the mods folder as &quot;%2&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1617"/>
+        <location filename="modlistviewactions.cpp" line="1628"/>
         <source>Files from Overwrite were moved to the selected mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1635"/>
+        <location filename="modlistviewactions.cpp" line="1633"/>
+        <source>Files could not be moved from Overwrite: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modlistviewactions.cpp" line="1649"/>
         <source>Create Mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1672"/>
+        <location filename="modlistviewactions.cpp" line="1697"/>
         <source>Choose a destination mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1705"/>
+        <location filename="modlistviewactions.cpp" line="1731"/>
         <source>Clear Overwrite files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1706"/>
+        <location filename="modlistviewactions.cpp" line="1732"/>
         <source>This will move every file and folder to the Recycle Bin:
 
 %1
@@ -8820,13 +8842,13 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1722"/>
+        <location filename="modlistviewactions.cpp" line="1748"/>
         <source>Overwrite could not be cleared: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="modlistviewactions.cpp" line="360"/>
-        <location filename="modlistviewactions.cpp" line="1646"/>
+        <location filename="modlistviewactions.cpp" line="1660"/>
         <source>A mod with this name already exists</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8836,8 +8858,8 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1085"/>
-        <location filename="modlistviewactions.cpp" line="1334"/>
+        <location filename="modlistviewactions.cpp" line="1096"/>
+        <location filename="modlistviewactions.cpp" line="1345"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8848,7 +8870,7 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1368"/>
+        <location filename="modlistviewactions.cpp" line="1379"/>
         <source>Are you sure?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8863,118 +8885,118 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="855"/>
+        <location filename="modlistviewactions.cpp" line="860"/>
         <source>Failed to display overwrite dialog: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="916"/>
+        <location filename="modlistviewactions.cpp" line="927"/>
         <source>Set Priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="917"/>
+        <location filename="modlistviewactions.cpp" line="928"/>
         <source>Set the priority of the selected mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1050"/>
+        <location filename="modlistviewactions.cpp" line="1061"/>
         <source>failed to rename mod: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1086"/>
+        <location filename="modlistviewactions.cpp" line="1097"/>
         <source>Remove the following mods?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1103"/>
+        <location filename="modlistviewactions.cpp" line="1114"/>
         <source>failed to remove mod: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1131"/>
+        <location filename="modlistviewactions.cpp" line="1142"/>
         <source>Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1132"/>
+        <location filename="modlistviewactions.cpp" line="1143"/>
         <source>The versioning scheme decides which version is considered newer than another.
 This function will guess the versioning scheme under the assumption that the installed version is outdated.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1180"/>
+        <location filename="modlistviewactions.cpp" line="1191"/>
         <source>Opening Nexus Links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1181"/>
+        <location filename="modlistviewactions.cpp" line="1192"/>
         <source>You are trying to open %1 links to Nexus Mods.  Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1204"/>
-        <location filename="modlistviewactions.cpp" line="1226"/>
+        <location filename="modlistviewactions.cpp" line="1215"/>
+        <location filename="modlistviewactions.cpp" line="1237"/>
         <source>Opening Web Pages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1205"/>
-        <location filename="modlistviewactions.cpp" line="1227"/>
+        <location filename="modlistviewactions.cpp" line="1216"/>
+        <location filename="modlistviewactions.cpp" line="1238"/>
         <source>You are trying to open %1 Web Pages.  Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1277"/>
-        <location filename="modlistviewactions.cpp" line="1282"/>
+        <location filename="modlistviewactions.cpp" line="1288"/>
         <location filename="modlistviewactions.cpp" line="1293"/>
+        <location filename="modlistviewactions.cpp" line="1304"/>
         <source>Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1278"/>
+        <location filename="modlistviewactions.cpp" line="1289"/>
         <source>Installation file no longer exists</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1283"/>
+        <location filename="modlistviewactions.cpp" line="1294"/>
         <source>Mods installed with old versions of MO can&apos;t be reinstalled in this way.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1293"/>
+        <location filename="modlistviewactions.cpp" line="1304"/>
         <source>Failed to create backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1335"/>
+        <location filename="modlistviewactions.cpp" line="1346"/>
         <source>Restore all hidden files in the following mods?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1369"/>
+        <location filename="modlistviewactions.cpp" line="1380"/>
         <source>About to restore all hidden files in:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1402"/>
+        <location filename="modlistviewactions.cpp" line="1413"/>
         <source>Endorsing multiple mods will take a while. Please wait...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1569"/>
+        <location filename="modlistviewactions.cpp" line="1580"/>
         <source>Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1570"/>
+        <location filename="modlistviewactions.cpp" line="1581"/>
         <source>This will replace the existing mod &quot;%1&quot;. Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1636"/>
+        <location filename="modlistviewactions.cpp" line="1650"/>
         <source>This will move all files from overwrite into a new, regular mod.
 Please enter a name:</source>
         <translation type="unfinished"></translation>
@@ -9119,27 +9141,37 @@ Please enter a name:</source>
 <context>
     <name>NexusTab</name>
     <message>
-        <location filename="modinfodialognexus.cpp" line="158"/>
+        <location filename="modinfodialognexus.cpp" line="184"/>
         <source>Current Version: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="160"/>
+        <location filename="modinfodialognexus.cpp" line="186"/>
         <source>No update available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="204"/>
+        <location filename="modinfodialognexus.cpp" line="230"/>
+        <source>This mod has no Nexus ID.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="242"/>
         <source>Tracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="207"/>
+        <location filename="modinfodialognexus.cpp" line="245"/>
         <source>Untracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="355"/>
+        <location filename="modinfodialognexus.cpp" line="395"/>
+        <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="397"/>
         <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9371,147 +9403,147 @@ Continue?</source>
 <context>
     <name>OverwriteInfoDialog</name>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="116"/>
+        <location filename="overwriteinfodialog.cpp" line="133"/>
         <source>&amp;Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="108"/>
+        <location filename="overwriteinfodialog.cpp" line="125"/>
         <source>Open the Overwrite folder in Windows File Explorer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="79"/>
+        <location filename="overwriteinfodialog.cpp" line="96"/>
         <source>Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="83"/>
+        <location filename="overwriteinfodialog.cpp" line="100"/>
         <source>File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="84"/>
+        <location filename="overwriteinfodialog.cpp" line="101"/>
         <source>%1 file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="115"/>
+        <location filename="overwriteinfodialog.cpp" line="132"/>
         <source>&amp;Delete…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="117"/>
+        <location filename="overwriteinfodialog.cpp" line="134"/>
         <source>&amp;Open file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="118"/>
+        <location filename="overwriteinfodialog.cpp" line="135"/>
         <source>&amp;New folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="123"/>
+        <location filename="overwriteinfodialog.cpp" line="140"/>
         <source>Create a folder inside Overwrite.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="124"/>
+        <location filename="overwriteinfodialog.cpp" line="141"/>
         <source>Open the selected file with its associated application.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="125"/>
+        <location filename="overwriteinfodialog.cpp" line="142"/>
         <source>Rename the selected file or folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="127"/>
-        <source>Permanently remove the selected file or folder from Overwrite.</source>
+        <location filename="overwriteinfodialog.cpp" line="143"/>
+        <source>Move the selected file or folder to the Recycle Bin.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="174"/>
+        <location filename="overwriteinfodialog.cpp" line="190"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="182"/>
+        <location filename="overwriteinfodialog.cpp" line="198"/>
         <source>Create mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="183"/>
+        <location filename="overwriteinfodialog.cpp" line="199"/>
         <source>Move all files from Overwrite into a new regular mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="185"/>
+        <location filename="overwriteinfodialog.cpp" line="201"/>
         <source>Move to a mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="186"/>
+        <location filename="overwriteinfodialog.cpp" line="202"/>
         <source>Choose a regular mod and move all files from Overwrite into it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="205"/>
+        <location filename="overwriteinfodialog.cpp" line="221"/>
         <source>Search files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="209"/>
+        <location filename="overwriteinfodialog.cpp" line="225"/>
         <source>Expand all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="210"/>
+        <location filename="overwriteinfodialog.cpp" line="226"/>
         <source>Collapse all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="215"/>
+        <location filename="overwriteinfodialog.cpp" line="231"/>
         <source>Empty to Recycle Bin...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="217"/>
+        <location filename="overwriteinfodialog.cpp" line="233"/>
         <source>Move everything in Overwrite to the Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="317"/>
+        <location filename="overwriteinfodialog.cpp" line="333"/>
         <source>Empty: nothing here belongs outside the mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="319"/>
+        <location filename="overwriteinfodialog.cpp" line="335"/>
         <source>Only empty folders, safe to clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="323"/>
+        <location filename="overwriteinfodialog.cpp" line="339"/>
         <source>More than %1 files, not part of any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="327"/>
+        <location filename="overwriteinfodialog.cpp" line="343"/>
         <source>1 file, %1, not part of any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="328"/>
+        <location filename="overwriteinfodialog.cpp" line="344"/>
         <source>%1 files, %2, not part of any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="350"/>
+        <location filename="overwriteinfodialog.cpp" line="366"/>
         <source>Empty Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="351"/>
+        <location filename="overwriteinfodialog.cpp" line="367"/>
         <source>Everything in Overwrite goes to the Recycle Bin: %1. Logs and settings that DLL mods and tools wrote there are gone from the game until you restore them.
 
 To keep some files, move them to a mod first.</source>
@@ -9519,68 +9551,68 @@ To keep some files, move them to a mod first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="355"/>
+        <location filename="overwriteinfodialog.cpp" line="371"/>
         <source>Move to Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="356"/>
+        <location filename="overwriteinfodialog.cpp" line="372"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="409"/>
+        <location filename="overwriteinfodialog.cpp" line="384"/>
+        <source>Overwrite could not be cleared: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="overwriteinfodialog.cpp" line="427"/>
         <source>mod not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="443"/>
-        <source>Failed to delete &quot;%1&quot;</source>
+        <location filename="overwriteinfodialog.cpp" line="439"/>
+        <source>Move &quot;%1&quot; to the Recycle Bin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="459"/>
-        <location filename="overwriteinfodialog.cpp" line="466"/>
-        <location filename="overwriteinfodialog.cpp" line="487"/>
-        <location filename="overwriteinfodialog.cpp" line="493"/>
+        <location filename="overwriteinfodialog.cpp" line="440"/>
+        <source>Move the selected files to the Recycle Bin?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="overwriteinfodialog.cpp" line="457"/>
+        <source>Failed to delete the selected files: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="overwriteinfodialog.cpp" line="442"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="460"/>
-        <location filename="overwriteinfodialog.cpp" line="488"/>
-        <source>Are you sure you want to delete &quot;%1&quot;?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="overwriteinfodialog.cpp" line="467"/>
-        <location filename="overwriteinfodialog.cpp" line="494"/>
-        <source>Are you sure you want to delete the selected files?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="overwriteinfodialog.cpp" line="536"/>
-        <location filename="overwriteinfodialog.cpp" line="542"/>
+        <location filename="overwriteinfodialog.cpp" line="505"/>
+        <location filename="overwriteinfodialog.cpp" line="511"/>
         <source>New Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="548"/>
+        <location filename="overwriteinfodialog.cpp" line="517"/>
         <source>Failed to create &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="587"/>
+        <location filename="overwriteinfodialog.cpp" line="556"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="590"/>
+        <location filename="overwriteinfodialog.cpp" line="559"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="591"/>
+        <location filename="overwriteinfodialog.cpp" line="560"/>
         <source>Full path</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9611,7 +9643,8 @@ To keep some files, move them to a mod first.</source>
     </message>
     <message>
         <location filename="overwriteinfodialog.ui" line="125"/>
-        <source>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting removes files from Overwrite.</source>
+        <source>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting sends files to the Recycle Bin.</source>
+        <oldsource>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting removes files from Overwrite.</oldsource>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11763,13 +11796,18 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogtextfiles.cpp" line="132"/>
+        <location filename="modinfodialogtextfiles.cpp" line="133"/>
         <source>Save changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialogtextfiles.cpp" line="133"/>
+        <location filename="modinfodialogtextfiles.cpp" line="135"/>
         <source>Save changes to &quot;%1&quot;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialogtextfiles.cpp" line="136"/>
+        <source>&quot;%1&quot; no longer exists. Save your changes as a new file?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12506,17 +12544,17 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texteditor.cpp" line="466"/>
+        <location filename="texteditor.cpp" line="478"/>
         <source>&amp;Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texteditor.cpp" line="473"/>
+        <location filename="texteditor.cpp" line="485"/>
         <source>&amp;Word wrap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texteditor.cpp" line="477"/>
+        <location filename="texteditor.cpp" line="489"/>
         <source>&amp;Open in Explorer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14501,7 +14539,8 @@ Remaining this hour: %3</source>
     </message>
     <message>
         <location filename="syncoverwritedialog.ui" line="60"/>
-        <source>Choose which mod should own each file, or leave it in Overwrite.</source>
+        <source>Only files a mod already has can be synced: choose which mod gets the new version, or leave it in Overwrite.</source>
+        <oldsource>Choose which mod should own each file, or leave it in Overwrite.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14516,22 +14555,28 @@ Remaining this hour: %3</source>
     </message>
     <message>
         <location filename="syncoverwritedialog.ui" line="93"/>
-        <source>Press OK to move files to the selected mods while keeping their folder paths. Cancel leaves them in Overwrite.</source>
+        <source>OK moves each file to the mod you chose, in the same folder, and sends that mod&apos;s old copy to the Recycle Bin. Cancel leaves everything in Overwrite.</source>
+        <oldsource>Press OK to move files to the selected mods while keeping their folder paths. Cancel leaves them in Overwrite.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="syncoverwritedialog.cpp" line="99"/>
+        <location filename="syncoverwritedialog.cpp" line="101"/>
         <source>Don&apos;t sync</source>
         <oldsource>&lt;don&apos;t sync&gt;</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="syncoverwritedialog.cpp" line="158"/>
+        <location filename="syncoverwritedialog.cpp" line="129"/>
+        <source>Overwrite</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="syncoverwritedialog.cpp" line="179"/>
         <source>failed to remove %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="syncoverwritedialog.cpp" line="160"/>
+        <location filename="syncoverwritedialog.cpp" line="165"/>
         <source>failed to move %1 to %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14579,6 +14624,19 @@ Remaining this hour: %3</source>
     <message>
         <location filename="../../../../../../mo2build/mo/build/modorganizer_super/uibase/src/taskdialog.ui" line="320"/>
         <source>Details</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TextEditor</name>
+    <message>
+        <location filename="texteditor.cpp" line="112"/>
+        <source>Could not save &quot;%1&quot;: the file could not be read when it was opened.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="texteditor.cpp" line="127"/>
+        <source>Could not save &quot;%1&quot;: %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -5121,6 +5121,10 @@ La maggior parte delle mod non ne ha bisogno: gli script extender e i loader di 
   <context>
     <name>ImagesTab</name>
     <message>
+      <source>This image format is not supported by Qt, but the preview plugin may be able to display it. Use the button above.</source>
+      <translation>Qt non supporta questo formato di immagine, ma il plugin di anteprima potrebbe visualizzarlo. Usa il pulsante qui sopra.</translation>
+    </message>
+    <message>
       <source>No matching images</source>
       <translation>Nessuna immagine corrispondente</translation>
     </message>
@@ -7875,8 +7879,8 @@ p, li { white-space: pre-wrap; }
       <translation>Organizza file</translation>
     </message>
     <message>
-      <source>Review and assign files from Overwrite to regular mods.</source>
-      <translation>Esamina e assegna i file di Overwrite a mod normali.</translation>
+      <source>Replace files that regular mods already have with the versions in Overwrite.</source>
+      <translation>Sostituisce i file che le mod normali hanno già con le versioni in Overwrite.</translation>
     </message>
     <message>
       <source>Create mod from Overwrite...</source>
@@ -8145,6 +8149,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>ModListViewActions</name>
     <message>
+      <source>Files could not be moved from Overwrite: %1</source>
+      <translation>Impossibile spostare i file da Overwrite: %1</translation>
+    </message>
+    <message>
       <source>The backup wasn't restored: a file of "%1" may be in use. Nothing was changed.</source>
       <translation>Il backup non è stato ripristinato: un file di "%1" potrebbe essere in uso. Non è stato modificato nulla.</translation>
     </message>
@@ -8408,6 +8416,22 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
   <context>
     <name>OverwriteInfoDialog</name>
     <message>
+      <source>Overwrite could not be cleared: %1</source>
+      <translation>Impossibile svuotare Overwrite: %1</translation>
+    </message>
+    <message>
+      <source>Failed to delete the selected files: %1</source>
+      <translation>Impossibile eliminare i file selezionati: %1</translation>
+    </message>
+    <message>
+      <source>Move the selected files to the Recycle Bin?</source>
+      <translation>Spostare i file selezionati nel Cestino?</translation>
+    </message>
+    <message>
+      <source>Move "%1" to the Recycle Bin?</source>
+      <translation>Spostare "%1" nel Cestino?</translation>
+    </message>
+    <message>
       <source>Manage Overwrite</source>
       <translation>Gestisci Overwrite</translation>
     </message>
@@ -8428,8 +8452,8 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
       <translation>Elementi attualmente in Overwrite</translation>
     </message>
     <message>
-      <source>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting removes files from Overwrite.</source>
-      <translation>Trascina gli elementi su una mod normale per spostarli. Clic destro per cartelle, apertura, rinomina ed eliminazione. Eliminare rimuove i file da Overwrite.</translation>
+      <source>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting sends files to the Recycle Bin.</source>
+      <translation>Trascina gli elementi su una mod normale per spostarli. Clic destro per cartelle, apertura, rinomina ed eliminazione. Eliminare sposta i file nel Cestino.</translation>
     </message>
     <message>
       <source>Open the Overwrite folder in Windows File Explorer.</source>
@@ -8456,8 +8480,8 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
       <translation>Rinomina il file o la cartella selezionati.</translation>
     </message>
     <message>
-      <source>Permanently remove the selected file or folder from Overwrite.</source>
-      <translation>Rimuove definitivamente da Overwrite il file o la cartella selezionati.</translation>
+      <source>Move the selected file or folder to the Recycle Bin.</source>
+      <translation>Sposta nel Cestino il file o la cartella selezionati.</translation>
     </message>
     <message>
       <source>&amp;New folder</source>
@@ -9156,6 +9180,10 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
   </context>
   <context>
     <name>QObject</name>
+    <message>
+        <source>&quot;%1&quot; no longer exists. Save your changes as a new file?</source>
+        <translation>&quot;%1&quot; non esiste più. Salvare le modifiche come nuovo file?</translation>
+    </message>
     <message>
       <source>Manage profiles...</source>
       <translation>Gestisci profili...</translation>
@@ -10830,12 +10858,16 @@ Rimanenti in quest'ora: %3</translation>
   <context>
     <name>SyncOverwriteDialog</name>
     <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
+    <message>
       <source>Don't sync</source>
       <translation>Non sincronizzare</translation>
     </message>
     <message>
-      <source>Choose which mod should own each file, or leave it in Overwrite.</source>
-      <translation>Scegli a quale mod deve appartenere ogni file, oppure lascialo in Overwrite.</translation>
+      <source>Only files a mod already has can be synced: choose which mod gets the new version, or leave it in Overwrite.</source>
+      <translation>Si possono sincronizzare solo i file che una mod ha già: scegli quale mod riceve la nuova versione, oppure lascialo in Overwrite.</translation>
     </message>
     <message>
       <source>File</source>
@@ -10846,8 +10878,8 @@ Rimanenti in quest'ora: %3</translation>
       <translation>Sposta nella mod</translation>
     </message>
     <message>
-      <source>Press OK to move files to the selected mods while keeping their folder paths. Cancel leaves them in Overwrite.</source>
-      <translation>Premi OK per spostare i file nelle mod selezionate mantenendo i percorsi delle cartelle. Annulla li lascia in Overwrite.</translation>
+      <source>OK moves each file to the mod you chose, in the same folder, and sends that mod's old copy to the Recycle Bin. Cancel leaves everything in Overwrite.</source>
+      <translation>OK sposta ogni file nella mod scelta, nella stessa cartella, e manda la vecchia copia di quella mod nel Cestino. Annulla lascia tutto in Overwrite.</translation>
     </message>
   </context>
   <context>
@@ -11298,6 +11330,22 @@ Avviarlo comunque?</translation>
   </context>
   <context>
     <name>FileTreeTab</name>
+    <message>
+      <source>Failed to delete the selected files: %1</source>
+      <translation>Impossibile eliminare i file selezionati: %1</translation>
+    </message>
+    <message>
+      <source>meta.ini stays: it holds this mod's Nexus ID, version and notes.</source>
+      <translation>meta.ini resta: contiene l'ID Nexus, la versione e le note di questa mod.</translation>
+    </message>
+    <message>
+      <source>Move the selected files to the Recycle Bin?</source>
+      <translation>Spostare i file selezionati nel Cestino?</translation>
+    </message>
+    <message>
+      <source>Move "%1" to the Recycle Bin?</source>
+      <translation>Spostare "%1" nel Cestino?</translation>
+    </message>
     <message>
       <source>&amp;New folder</source>
       <translation>&amp;Nuova cartella</translation>
@@ -11794,6 +11842,14 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
   <context>
     <name>NexusTab</name>
     <message>
+      <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
+      <translation>Nexus non ha una descrizione per questa mod, oppure non è stato possibile leggerla. Aggiorna riprova.</translation>
+    </message>
+    <message>
+      <source>This mod has no Nexus ID.</source>
+      <translation>Questa mod non ha un ID Nexus.</translation>
+    </message>
+    <message>
       <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
       <translation>Questa mod non ha un ID Nexus valido. Per aprire un altro sito, attiva Pagina web personalizzata qui sopra e inserisci il suo indirizzo.</translation>
     </message>
@@ -11803,6 +11859,24 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
     <message>
       <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
       <translation>Non è stato possibile eliminare i salvataggi del profilo. Chiudi i programmi che li usano e riprova.</translation>
+    </message>
+  </context>
+  <context>
+    <name>TextEditor</name>
+    <message>
+        <source>Could not save &quot;%1&quot;: the file could not be read when it was opened.</source>
+        <translation>Impossibile salvare &quot;%1&quot;: non è stato possibile leggere il file all&apos;apertura.</translation>
+    </message>
+    <message>
+      <source>Could not save "%1": %2</source>
+      <translation>Impossibile salvare "%1": %2</translation>
+    </message>
+  </context>
+  <context>
+    <name>GeneralConflictsTab</name>
+    <message>
+      <source>&lt;table cellspacing="5"&gt;&lt;tr&gt;&lt;th&gt;Type&lt;/th&gt;&lt;th&gt;%1&lt;/th&gt;&lt;th&gt;Total&lt;/th&gt;&lt;th&gt;Percent&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Loose files:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;td align=right&gt;%3&lt;/td&gt;&lt;td align=right&gt;%4%&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</source>
+      <translation>&lt;table cellspacing="5"&gt;&lt;tr&gt;&lt;th&gt;Tipo&lt;/th&gt;&lt;th&gt;%1&lt;/th&gt;&lt;th&gt;Totale&lt;/th&gt;&lt;th&gt;Percentuale&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;File sciolti:&amp;emsp;&lt;/td&gt;&lt;td align=right&gt;%2&lt;/td&gt;&lt;td align=right&gt;%3&lt;/td&gt;&lt;td align=right&gt;%4%&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</translation>
     </message>
   </context>
 </TS>

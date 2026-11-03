@@ -64,8 +64,7 @@ private:
   void emptyOverwrite();
 
   void openFile(const QModelIndex& index);
-  bool recursiveDelete(const QModelIndex& index);
-  void deleteFile(const QModelIndex& index);
+  void deleteFiles(const QModelIndexList& indexes);
 
 private slots:
 

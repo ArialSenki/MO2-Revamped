@@ -122,7 +122,7 @@
    <item>
     <widget class="QLabel" name="overwriteContextHint">
      <property name="text">
-      <string>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting removes files from Overwrite.</string>
+      <string>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting sends files to the Recycle Bin.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

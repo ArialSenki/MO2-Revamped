@@ -1,3 +1,4 @@
+#include "shared/filesorigin.h"
 #include "modinfodialogfiletree.h"
 #include "fluenticons.h"
 #include "menuutils.h"
@@ -10,6 +11,7 @@
 #include <report.h>
 #include <utility.h>
 #include <QIcon>
+#include <Windows.h>
 
 using namespace MOBase;
 namespace shell = MOBase::shell;
@@ -17,6 +19,23 @@ namespace shell = MOBase::shell;
 // if there are more than 50 selected items in the filetree, don't bother
 // checking whether menu items apply to them, just show all of them
 const int max_scan_for_context_menu = 50;
+
+// a folder takes what's inside it along, and the shell would stop at the rest
+static QStringList topmostPaths(QStringList paths)
+{
+  paths.sort(Qt::CaseInsensitive);
+
+  QStringList topmost;
+  for (const QString& path : paths) {
+    const bool inside = std::any_of(topmost.begin(), topmost.end(), [&](const QString& top) {
+      return path.startsWith(top + "/", Qt::CaseInsensitive);
+    });
+    if (!inside) {
+      topmost.append(path);
+    }
+  }
+  return topmost;
+}
 
 FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
     : ModInfoDialogTab(std::move(cx)), m_fs(nullptr)
@@ -84,6 +103,18 @@ FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
 
   connect(ui->filetree, &QTreeView::customContextMenuRequested, [&](const QPoint& pos) {
     onContextMenu(pos);
+  });
+
+  // queued: the model is still inside the rename when it says so, and the
+  // dialog may have moved on to another mod by then
+  connect(m_fs, &QFileSystemModel::fileRenamed, this, [this] {
+    const int id = origin() ? origin()->getID() : -1;
+    QMetaObject::invokeMethod(
+        this,
+        [this, id] {
+          emit originModified(id);
+        },
+        Qt::QueuedConnection);
   });
 
   // disable renaming on double click, open the file instead
@@ -285,13 +316,32 @@ void FileTreeTab::onDelete()
     return;
   }
 
+  QStringList paths;
+  bool keepsMeta = false;
+
+  for (const auto& index : rows) {
+    if (isModMetaFile(index)) {
+      keepsMeta = true;
+    } else {
+      paths.append(m_fs->filePath(index));
+    }
+  }
+
+  if (paths.isEmpty()) {
+    QMessageBox::information(parentWidget(), tr("Confirm"), metaFileReason());
+    return;
+  }
+
   QString message;
 
-  if (rows.count() == 1) {
-    QString fileName = m_fs->fileName(rows[0]);
-    message          = tr("Are you sure you want to delete \"%1\"?").arg(fileName);
+  if (paths.count() == 1) {
+    message = tr("Move \"%1\" to the Recycle Bin?").arg(QFileInfo(paths[0]).fileName());
   } else {
-    message = tr("Are you sure you want to delete the selected files?");
+    message = tr("Move the selected files to the Recycle Bin?");
+  }
+
+  if (keepsMeta) {
+    message += "\n\n" + metaFileReason();
   }
 
   if (QMessageBox::question(parentWidget(), tr("Confirm"), message) !=
@@ -299,9 +349,16 @@ void FileTreeTab::onDelete()
     return;
   }
 
-  for (const auto& index : rows) {
-    deleteFile(index);
+  if (!shellDelete(topmostPaths(paths), true, parentWidget())) {
+    const auto e = GetLastError();
+    if (e != ERROR_CANCELLED) {
+      log::error("failed to delete files, {}", formatSystemMessage(e));
+      reportError(
+          tr("Failed to delete the selected files: %1").arg(formatSystemMessage(e)));
+    }
   }
+
+  emitOriginModified();
 }
 
 void FileTreeTab::onHide()
@@ -319,47 +376,15 @@ void FileTreeTab::onOpenInExplorer()
   shell::Explore(mod().absolutePath());
 }
 
-bool FileTreeTab::deleteFile(const QModelIndex& index)
+bool FileTreeTab::isModMetaFile(const QModelIndex& index) const
 {
-  bool res = false;
-
-  if (m_fs->isDir(index)) {
-    res = deleteFileRecursive(index);
-  } else {
-    res = m_fs->remove(index);
-  }
-
-  if (!res) {
-    reportError(tr("Failed to delete %1").arg(m_fs->fileName(index)));
-  }
-
-  return res;
+  const QString meta = QDir::fromNativeSeparators(mod().absolutePath()) + "/meta.ini";
+  return m_fs->filePath(index).compare(meta, Qt::CaseInsensitive) == 0;
 }
 
-bool FileTreeTab::deleteFileRecursive(const QModelIndex& parent)
+QString FileTreeTab::metaFileReason() const
 {
-  for (int row = 0; row < m_fs->rowCount(parent); ++row) {
-    QModelIndex index = m_fs->index(row, 0, parent);
-
-    if (m_fs->isDir(index)) {
-      if (!deleteFileRecursive(index)) {
-        log::error("failed to delete {}", m_fs->fileName(index));
-        return false;
-      }
-    } else {
-      if (!m_fs->remove(index)) {
-        log::error("failed to delete {}", m_fs->fileName(index));
-        return false;
-      }
-    }
-  }
-
-  if (!m_fs->remove(parent)) {
-    log::error("failed to delete {}", m_fs->fileName(parent));
-    return false;
-  }
-
-  return true;
+  return tr("meta.ini stays: it holds this mod's Nexus ID, version and notes.");
 }
 
 void FileTreeTab::changeVisibility(bool visible)
@@ -388,6 +413,11 @@ void FileTreeTab::changeVisibility(bool visible)
 
     const QString path = m_fs->filePath(index);
     auto result        = FileRenamer::RESULT_CANCEL;
+
+    if (isModMetaFile(index)) {
+      log::debug("keeping {}", path);
+      continue;
+    }
 
     if (visible) {
       if (!canUnhideFile(false, path)) {
@@ -426,9 +456,7 @@ void FileTreeTab::changeVisibility(bool visible)
   log::debug("{} filetree files done", (visible ? "unhiding" : "hiding"));
 
   if (changed) {
-    if (origin()) {
-      emitOriginModified();
-    }
+    emitOriginModified();
   }
 }
 
@@ -437,6 +465,7 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
   const auto selection = ui->filetree->selectionModel()->selectedRows();
 
   QMenu menu(ui->filetree);
+  menu.setToolTipsVisible(true);
 
   bool enableNewFolder = false;
   bool enableRun       = false;
@@ -456,7 +485,7 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
     // single selection
     enableNewFolder = true;
     enableRename    = true;
-    enableDelete    = true;
+    enableDelete    = !isModMetaFile(selection[0]);
 
     // only enable open action if a file is selected
     bool hasFiles = false;
@@ -473,13 +502,12 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
 
     enablePreview = canPreviewFile(plugin(), false, fileName);
     enableExplore = canExploreFile(false, fileName);
-    enableHide    = canHideFile(false, fileName);
+    enableHide    = enableDelete && canHideFile(false, fileName);
     enableUnhide  = canUnhideFile(false, fileName);
   } else {
     // this is a multiple selection, don't show open or explore actions so users
     // don't open a thousand files
-    enableNewFolder = true;
-    enableDelete    = true;
+    enableDelete = true;
 
     if (selection.size() < max_scan_for_context_menu) {
       // if the number of selected items is low, checking them to accurately
@@ -488,7 +516,7 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
       for (const auto& index : selection) {
         const QString fileName = m_fs->fileName(index);
 
-        if (canHideFile(false, fileName)) {
+        if (!isModMetaFile(index) && canHideFile(false, fileName)) {
           enableHide = true;
         }
 
@@ -572,15 +600,23 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
   menu.addAction(m_actions.rename);
   m_actions.rename->setEnabled(enableRename);
 
+  // shown but off for the mod's own meta.ini, with the reason
+  const bool metaSelected = selection.size() == 1 && isModMetaFile(selection[0]);
+  const QString metaReason = metaSelected ? metaFileReason() : QString();
+
   // only the visibility command that applies
-  if (enableHide) {
+  if (enableHide || metaSelected) {
+    m_actions.hide->setEnabled(enableHide);
+    m_actions.hide->setToolTip(metaReason);
     menu.addAction(m_actions.hide);
   }
   if (enableUnhide) {
     menu.addAction(m_actions.unhide);
   }
 
-  if (enableDelete) {
+  if (enableDelete || metaSelected) {
+    m_actions.del->setEnabled(enableDelete);
+    m_actions.del->setToolTip(metaReason);
     menu.addSeparator();
     menu.addAction(m_actions.del);
   }

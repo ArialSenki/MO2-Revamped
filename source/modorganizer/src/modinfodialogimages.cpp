@@ -1,4 +1,5 @@
 #include "modinfodialogimages.h"
+#include "fluenticons.h"
 #include "settings.h"
 #include "ui_modinfodialog.h"
 #include "utility.h"
@@ -118,8 +119,8 @@ ImagesTab::ImagesTab(ModInfoDialogTabContext cx)
     auto list = std::make_unique<QListWidget>();
     parentWidget()->style()->polish(list.get());
 
-    m_theme.borderColor     = QColor(Qt::black);
-    m_theme.backgroundColor = QColor(Qt::black);
+    m_theme.borderColor     = list->palette().color(QPalette::Mid);
+    m_theme.backgroundColor = list->palette().color(QPalette::Base);
     m_theme.textColor       = list->palette().color(QPalette::WindowText);
 
     m_theme.highlightBackgroundColor = list->palette().color(QPalette::Highlight);
@@ -327,14 +328,15 @@ void ImagesTab::select(std::size_t i, Visibility v)
       QImage image(300, 100, QImage::Format_RGBA64);
       QPainter paint;
       paint.begin(&image);
-      paint.fillRect(0, 0, 300, 100, QBrush(QColor(0, 0, 0, 255)));
+      paint.fillRect(0, 0, 300, 100, m_theme.backgroundColor);
       paint.setPen(m_theme.textColor);
       paint.setFont(m_theme.font);
-      paint.drawImage(QPoint(150 - 16, 50 - 20 - 16), QImage(":/MO/gui/warning"));
+      paint.drawPixmap(QPoint(150 - 16, 50 - 20 - 16),
+                       FluentIcons::icon(":/MO/gui/warning").pixmap(32, 32));
       const auto flags = Qt::AlignHCenter | Qt::AlignVCenter | Qt::TextWordWrap;
       paint.drawText(0, 46, 300, 54, flags,
-                     "This image format is not supported by Qt, but the preview plugin "
-                     "may be able to display it. Use the button above.");
+                     tr("This image format is not supported by Qt, but the preview plugin "
+                        "may be able to display it. Use the button above."));
       paint.end();
 
       m_image->setImage(image);

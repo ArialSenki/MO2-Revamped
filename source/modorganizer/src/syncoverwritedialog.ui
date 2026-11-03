@@ -57,7 +57,7 @@
       <item>
        <widget class="QLabel" name="syncPageSubtitle">
         <property name="text">
-         <string>Choose which mod should own each file, or leave it in Overwrite.</string>
+         <string>Only files a mod already has can be synced: choose which mod gets the new version, or leave it in Overwrite.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -90,7 +90,7 @@
    <item>
     <widget class="QLabel" name="syncFooterNote">
      <property name="text">
-      <string>Press OK to move files to the selected mods while keeping their folder paths. Cancel leaves them in Overwrite.</string>
+      <string>OK moves each file to the mod you chose, in the same folder, and sends that mod's old copy to the Recycle Bin. Cancel leaves everything in Overwrite.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

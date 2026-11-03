@@ -61,7 +61,9 @@ SyncOverwriteDialog::~SyncOverwriteDialog()
 
 static void addToComboBox(QComboBox* box, const QString& name, const QVariant& userData)
 {
-  if (QString::compare(name, "overwrite", Qt::CaseInsensitive) != 0) {
+  // neither Overwrite itself nor the game's own files (data) are mods to move to
+  if (QString::compare(name, "overwrite", Qt::CaseInsensitive) != 0 &&
+      QString::compare(name, "data", Qt::CaseInsensitive) != 0) {
     box->addItem(name, userData);
   }
 }
@@ -124,7 +126,7 @@ void SyncOverwriteDialog::readTree(const QString& path,
 
 void SyncOverwriteDialog::refresh(const QString& path)
 {
-  QTreeWidgetItem* rootItem = new QTreeWidgetItem(ui->syncTree, QStringList("<data>"));
+  QTreeWidgetItem* rootItem = new QTreeWidgetItem(ui->syncTree, QStringList(tr("Overwrite")));
   readTree(path, m_DirectoryStructure, rootItem);
   ui->syncTree->addTopLevelItem(rootItem);
   ui->syncTree->expandAll();
@@ -154,10 +156,27 @@ void SyncOverwriteDialog::applyTo(QTreeWidgetItem* item, const QString& path,
           QString source      = m_SourcePath + "/" + filePath;
           QString destination =
               modDirectory + "/" + ToQString(origin.getName()) + "/" + filePath;
-          if (!QFile::remove(destination)) {
-            reportError(tr("failed to remove %1").arg(destination));
-          } else if (!QFile::rename(source, destination)) {
-            reportError(tr("failed to move %1 to %2").arg(source).arg(destination));
+          // the mod's copy only goes to the Recycle Bin once the new file is in
+          // place; a failure puts it back, and each error names where the file is
+          const auto move = [this](const QString& from, const QString& to) {
+            if (QFile::rename(from, to)) {
+              return true;
+            }
+            reportError(tr("failed to move %1 to %2").arg(from).arg(to));
+            return false;
+          };
+
+          const bool hadCopy    = QFile::exists(destination);
+          const QString oldCopy = destination + ".mo2old";
+
+          if (hadCopy && !move(destination, oldCopy)) {
+            // both files are still where they were
+          } else if (!move(source, destination)) {
+            if (hadCopy) {
+              move(oldCopy, destination);
+            }
+          } else if (hadCopy && !shellDelete(QStringList{oldCopy}, true, this)) {
+            reportError(tr("failed to remove %1").arg(oldCopy));
           }
         }
       }
@@ -166,7 +185,8 @@ void SyncOverwriteDialog::applyTo(QTreeWidgetItem* item, const QString& path,
 
   QDir dir(m_SourcePath + "/" + path);
   if ((path.length() > 0) && (dir.count() == 2)) {
-    dir.rmpath(".");
+    // only this folder: rmpath() would go on to empty parents, Overwrite included
+    QDir(m_SourcePath).rmdir(path);
   }
 }
 

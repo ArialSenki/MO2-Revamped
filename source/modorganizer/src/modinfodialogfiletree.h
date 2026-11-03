@@ -48,8 +48,8 @@ private:
   void onContextMenu(const QPoint& pos);
 
   QModelIndex singleSelection() const;
-  bool deleteFile(const QModelIndex& index);
-  bool deleteFileRecursive(const QModelIndex& index);
+  bool isModMetaFile(const QModelIndex& index) const;
+  QString metaFileReason() const;
   void changeVisibility(bool visible);
 };
 

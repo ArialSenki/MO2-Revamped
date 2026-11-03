@@ -124,9 +124,8 @@ QWidget* ModInfoDialogTab::parentWidget()
 
 void ModInfoDialogTab::emitOriginModified()
 {
-  if (m_origin) {
-    emit originModified(m_origin->getID());
-  }
+  // -1 is a mod that's not active: only the dialog's tabs have to follow
+  emit originModified(m_origin ? m_origin->getID() : -1);
 }
 
 void ModInfoDialogTab::emitModOpen(QString name)

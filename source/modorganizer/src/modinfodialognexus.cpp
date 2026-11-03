@@ -17,10 +17,27 @@ bool isValidModID(int id)
   return (id > 0);
 }
 
+namespace
+{
+// an empty field is how an id gets removed; QIntValidator wouldn't let the line
+// edit report it
+class ModIDValidator : public QIntValidator
+{
+public:
+  using QIntValidator::QIntValidator;
+
+  State validate(QString& input, int& pos) const override
+  {
+    return input.isEmpty() ? Acceptable : QIntValidator::validate(input, pos);
+  }
+};
+}  // namespace
+
 NexusTab::NexusTab(ModInfoDialogTabContext cx)
     : ModInfoDialogTab(std::move(cx)), m_requestStarted(false), m_loading(false)
 {
-  ui->modID->setValidator(new QIntValidator(ui->modID));
+  ui->modID->setValidator(
+      new ModIDValidator(0, std::numeric_limits<int>::max(), ui->modID));
   ui->endorse->setVisible(core().settings().nexus().endorsementIntegration());
   ui->track->setVisible(core().settings().nexus().trackedIntegration());
 
@@ -77,6 +94,9 @@ void NexusTab::cleanup()
 
 void NexusTab::clear()
 {
+  // the new mod is already set: nothing here may be taken for an edit of it
+  QScopedValueRollback loading(m_loading, true);
+
   ui->modID->clear();
   ui->sourceGame->clear();
   ui->version->clear();
@@ -93,7 +113,9 @@ void NexusTab::update()
 
   clear();
 
-  ui->modID->setText(QString("%1").arg(mod().nexusId()));
+  if (isValidModID(mod().nexusId())) {
+    ui->modID->setText(QString("%1").arg(mod().nexusId()));
+  }
 
   QString gameName = mod().gameName();
   ui->sourceGame->addItem(core().managedGame()->gameName(),
@@ -123,10 +145,9 @@ void NexusTab::update()
     shell::Open(url);
   });
 
-  ui->endorse->setEnabled((mod().endorsedState() == EndorsedState::ENDORSED_FALSE) ||
-                          (mod().endorsedState() == EndorsedState::ENDORSED_NEVER));
+  updateActions();
 
-  setHasData(mod().nexusId() >= 0);
+  setHasData(isValidModID(mod().nexusId()) || mod().hasCustomURL());
 }
 
 void NexusTab::firstActivation()
@@ -137,6 +158,9 @@ void NexusTab::firstActivation()
 void NexusTab::setMod(ModInfoPtr mod, MOShared::FilesOrigin* origin)
 {
   cleanup();
+
+  // whatever was still on its way was for the last mod
+  m_requestStarted = false;
 
   ModInfoDialogTab::setMod(mod, origin);
 
@@ -152,7 +176,9 @@ bool NexusTab::usesOriginFiles() const
 
 void NexusTab::updateVersionColor()
 {
-  const bool outdated = mod().version() != mod().newestVersion();
+  // no newest version yet says nothing about this one
+  const bool outdated =
+      mod().newestVersion().isValid() && mod().version() < mod().newestVersion();
   if (outdated) {
     ui->version->setToolTip(
         tr("Current Version: %1").arg(mod().newestVersion().canonicalString()));
@@ -178,10 +204,6 @@ void NexusTab::updateWebpage()
   const int modID = mod().nexusId();
 
   if (isValidModID(modID)) {
-    const QString nexusLink =
-        NexusInterface::instance().getModURL(modID, mod().gameName());
-
-    ui->visitNexus->setToolTip(nexusLink);
     refreshData(modID);
   } else {
     onModChanged();
@@ -195,6 +217,22 @@ void NexusTab::updateWebpage()
   ui->visitCustomURL->setToolTip(mod().parseCustomURL().toString());
 
   updateTracking();
+}
+
+void NexusTab::updateActions()
+{
+  const int modID  = mod().nexusId();
+  const bool valid = isValidModID(modID);
+
+  ui->visitNexus->setEnabled(valid);
+  ui->visitNexus->setToolTip(
+      valid ? NexusInterface::instance().getModURL(modID, mod().gameName())
+            : tr("This mod has no Nexus ID."));
+  ui->refresh->setEnabled(valid);
+  ui->track->setEnabled(valid);
+  ui->endorse->setEnabled(valid &&
+                          (mod().endorsedState() == EndorsedState::ENDORSED_FALSE ||
+                           mod().endorsedState() == EndorsedState::ENDORSED_NEVER));
 }
 
 void NexusTab::updateTracking()
@@ -349,11 +387,15 @@ void NexusTab::onModChanged()
   <body>%1</body>
 </html>)";
 
-  if (nexusDescription.isEmpty()) {
+  const bool validID = isValidModID(mod().nexusId());
+  if (!validID || nexusDescription.isEmpty()) {
     descriptionAsHTML = descriptionAsHTML.arg(
         QStringLiteral(R"(<div class="empty"><p>%1</p></div>)")
-            .arg(tr("This mod has no valid Nexus ID. To open another site for it, "
-                    "turn on Custom web page above and enter its address.")));
+            .arg(validID
+                     ? tr("Nexus has no description for this mod, or it could not be "
+                          "read. Refresh tries again.")
+                     : tr("This mod has no valid Nexus ID. To open another site for it, "
+                          "turn on Custom web page above and enter its address.")));
   } else {
     descriptionAsHTML = descriptionAsHTML.arg(BBCode::convertToHTML(nexusDescription));
   }
@@ -368,6 +410,7 @@ void NexusTab::onModChanged()
   ui->browser->page()->setHtml(descriptionAsHTML);
   updateVersionColor();
   updateTracking();
+  updateActions();
 }
 
 void NexusTab::onModIDChanged()
@@ -379,15 +422,15 @@ void NexusTab::onModIDChanged()
   const int oldID = mod().nexusId();
   const int newID = ui->modID->text().toInt();
 
-  if (oldID != newID) {
+  // -1 and 0 both mean no id
+  if (oldID != newID && (isValidModID(oldID) || isValidModID(newID))) {
     mod().setNexusID(newID);
     mod().setLastNexusQuery(QDateTime::fromSecsSinceEpoch(0));
 
-    ui->browser->page()->setHtml("");
-
-    if (isValidModID(newID)) {
-      refreshData(newID);
-    }
+    m_requestStarted = false;
+    updateActions();
+    setHasData(isValidModID(newID) || mod().hasCustomURL());
+    refreshData(newID);
   }
 }
 
@@ -410,6 +453,11 @@ void NexusTab::onSourceGameChanged()
 void NexusTab::onVersionChanged()
 {
   if (m_loading) {
+    return;
+  }
+
+  // leaving the field untouched mustn't parse the version again
+  if (ui->version->text() == mod().version().displayString()) {
     return;
   }
 
@@ -483,6 +531,7 @@ void NexusTab::onCustomURLToggled()
   mod().setHasCustomURL(ui->hasCustomURL->isChecked());
   ui->customURL->setEnabled(mod().hasCustomURL());
   ui->visitCustomURL->setEnabled(mod().hasCustomURL());
+  setHasData(isValidModID(mod().nexusId()) || mod().hasCustomURL());
 }
 
 void NexusTab::onCustomURLChanged()

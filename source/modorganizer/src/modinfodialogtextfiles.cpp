@@ -2,6 +2,7 @@
 #include "modinfodialog.h"
 #include "settings.h"
 #include "ui_modinfodialog.h"
+#include <QFile>
 #include <QMessageBox>
 
 class FileListModel : public QAbstractItemModel
@@ -130,15 +131,18 @@ bool GenericFilesTab::canClose()
 
   const int res = QMessageBox::question(
       parentWidget(), QObject::tr("Save changes?"),
-      QObject::tr("Save changes to \"%1\"?").arg(m_editor->filename()),
+      QFile::exists(m_editor->filename())
+          ? QObject::tr("Save changes to \"%1\"?").arg(m_editor->filename())
+          : QObject::tr("\"%1\" no longer exists. Save your changes as a new file?")
+                .arg(m_editor->filename()),
       QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
   if (res == QMessageBox::Cancel) {
     return false;
   }
 
-  if (res == QMessageBox::Yes) {
-    m_editor->save();
+  if (res == QMessageBox::Yes && !m_editor->save()) {
+    return false;
   }
 
   return true;

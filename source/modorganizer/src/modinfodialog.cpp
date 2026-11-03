@@ -31,6 +31,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modinfodialogimages.h"
 #include "modinfodialognexus.h"
 #include "modinfodialogtextfiles.h"
+#include "modlist.h"
 #include "modlistview.h"
 #include "organizercore.h"
 #include "game_features.h"
@@ -40,12 +41,15 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/filesorigin.h"
 #include "ui_modinfodialog.h"
 #include <filesystem>
+#include <QApplication>
 #include <QClipboard>
 #include <QFrame>
 #include <QGuiApplication>
 #include <QLabel>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QTabBar>
+#include <QTextEdit>
 #include <QToolButton>
 #include <QUrl>
 
@@ -235,15 +239,21 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
     });
   }
   {
-    auto* sc = new QShortcut(QKeySequence::MoveToNextPage, this);
-    connect(sc, &QShortcut::activated, [&] {
+    auto* next = new QShortcut(QKeySequence::MoveToNextPage, this);
+    connect(next, &QShortcut::activated, [&] {
       onNextMod();
     });
-  }
-  {
-    auto* sc = new QShortcut(QKeySequence::MoveToPreviousPage, this);
-    connect(sc, &QShortcut::activated, [&] {
+    auto* previous = new QShortcut(QKeySequence::MoveToPreviousPage, this);
+    connect(previous, &QShortcut::activated, [&] {
       onPreviousMod();
+    });
+
+    // in a multi-line editor these keys scroll the text
+    connect(qApp, &QApplication::focusChanged, this, [next, previous](QWidget*, QWidget* now) {
+      const bool multiLine =
+          qobject_cast<QPlainTextEdit*>(now) != nullptr || qobject_cast<QTextEdit*>(now) != nullptr;
+      next->setEnabled(!multiLine);
+      previous->setEnabled(!multiLine);
     });
   }
 
@@ -251,6 +261,13 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
   perf.lap("setMod");
   createTabs();
   perf.lap("createTabs");
+
+  // the card's facts and link follow what the Nexus page edits
+  for (QLineEdit* field :
+       std::initializer_list<QLineEdit*>{ui->modID, ui->version, ui->customURL}) {
+    connect(field, &QLineEdit::editingFinished, this, &ModInfoDialog::updateModCard);
+  }
+  connect(ui->hasCustomURL, &QCheckBox::toggled, this, &ModInfoDialog::updateModCard);
 
   connect(ui->tabWidget, &QTabWidget::currentChanged, [&] {
     onTabSelectionChanged();
@@ -314,6 +331,10 @@ void ModInfoDialog::createTabs()
     });
 
     connect(tabInfo.tab.get(), &ModInfoDialogTab::modOpen, [&](const QString& name) {
+      if (!tryClose()) {
+        return;
+      }
+      leaveMod();
       setMod(name);
       update();
     });
@@ -351,8 +372,21 @@ int ModInfoDialog::exec()
 
   const int r = TutorableDialog::exec();
   saveState();
+  leaveMod();
 
   return r;
+}
+
+void ModInfoDialog::leaveMod()
+{
+  // whoever opened the dialog only knows the mod it started with
+  m_mod->saveMeta();
+
+  const auto index = ModInfo::getIndex(m_mod->name());
+  if (index != UINT_MAX) {
+    m_mod->diskContentModified();
+    m_core.modList()->notifyChange(static_cast<int>(index));
+  }
 }
 
 void ModInfoDialog::setMod(ModInfo::Ptr mod)
@@ -739,7 +773,11 @@ void ModInfoDialog::restoreState()
 
 void ModInfoDialog::saveTabOrder() const
 {
-  if (static_cast<int>(m_tabs.size()) != ui->tabWidget->count()) {
+  // a game without plugins never shows the ESPs tab
+  const bool hasEsps = m_core.gameFeatures().gameFeature<MOBase::GamePlugins>() != nullptr;
+  const int allTabs  = static_cast<int>(m_tabs.size()) - (hasEsps ? 0 : 1);
+
+  if (allTabs != ui->tabWidget->count()) {
     // only save tab state when all tabs are visible
     //
     // if not all tabs are visible, it becomes very difficult to figure out in
@@ -761,6 +799,11 @@ void ModInfoDialog::saveTabOrder() const
     names += ui->tabWidget->widget(i)->objectName();
   }
 
+  // stays in the list, or the saved order couldn't be used at all
+  if (!hasEsps) {
+    names += " " + ui->tabESPs->objectName();
+  }
+
   m_core.settings().geometry().setModInfoTabOrder(names);
   // save last opened index
   m_core.settings().widgets().saveIndex(ui->tabWidget);
@@ -768,11 +811,15 @@ void ModInfoDialog::saveTabOrder() const
 
 void ModInfoDialog::onOriginModified(int originID)
 {
-  // tell the main window the origin changed
-  emit originModified(originID);
+  // tell the main window the origin changed; a mod that's not active has none
+  if (originID >= 0) {
+    emit originModified(originID);
+  }
 
-  // update tabs that depend on the origin
-  updateTabs(true);
+  // update tabs that depend on the origin, which empties the text editors
+  if (tryClose()) {
+    updateTabs(true);
+  }
 }
 
 void ModInfoDialog::onDeleteShortcut()
@@ -792,21 +839,34 @@ void ModInfoDialog::closeEvent(QCloseEvent* e)
   }
 }
 
-void ModInfoDialog::onCloseButton()
+void ModInfoDialog::reject()
 {
   if (tryClose()) {
-    close();
+    TutorableDialog::reject();
   }
+}
+
+void ModInfoDialog::onCloseButton()
+{
+  close();
 }
 
 bool ModInfoDialog::tryClose()
 {
+  // the line edits and the notes save when they lose focus, which Esc, the X
+  // and Page Up or Down don't make them do
+  if (auto* field = focusWidget()) {
+    field->clearFocus();
+    field->setFocus();
+  }
+
   // cancel the close if any tab returns false; for example. this can happen if
   // a tab has unsaved content, pops a confirmation dialog, and the user clicks
   // cancel
 
+  // a hidden tab still holds the last mod's text, which it was already asked about
   for (auto& tabInfo : m_tabs) {
-    if (!tabInfo.tab->canClose()) {
+    if (tabInfo.isVisible() && !tabInfo.tab->canClose()) {
       return false;
     }
   }
@@ -917,10 +977,11 @@ void ModInfoDialog::onNextMod()
     return;
   }
   auto mod = ModInfo::getByIndex(*index);
-  if (!mod || mod == m_mod) {
+  if (!mod || mod == m_mod || !tryClose()) {
     return;
   }
 
+  leaveMod();
   setMod(mod);
   update();
 
@@ -934,7 +995,11 @@ void ModInfoDialog::onPreviousMod()
     return;
   }
   auto mod = ModInfo::getByIndex(*index);
+  if (!mod || mod == m_mod || !tryClose()) {
+    return;
+  }
 
+  leaveMod();
   setMod(mod);
   update();
 
@@ -999,11 +1064,12 @@ void ModInfoDialog::buildFluentPages()
   });
   m_modCardNexus = FluentPanels::iconButton(0xE774, tr("Open the mod's page"), modCard);
   connect(m_modCardNexus, &QToolButton::clicked, this, [this] {
-    if (m_mod->nexusId() > 0) {
+    const QUrl custom = m_mod->parseCustomURL();
+    if (custom.isValid()) {
+      shell::Open(custom);
+    } else if (m_mod->nexusId() > 0) {
       shell::Open(QUrl(NexusInterface::instance().getModURL(m_mod->nexusId(),
                                                             m_mod->gameName())));
-    } else if (m_mod->hasCustomURL()) {
-      shell::Open(m_mod->parseCustomURL());
     }
   });
   auto* copyName = FluentPanels::iconButton(0xE8C8, tr("Copy the mod's name"), modCard);
@@ -1160,5 +1226,5 @@ void ModInfoDialog::updateModCard()
     }
   }
   m_modCardCaption->setText(facts.join(QStringLiteral(" · ")));
-  m_modCardNexus->setEnabled(m_mod->nexusId() > 0 || m_mod->hasCustomURL());
+  m_modCardNexus->setEnabled(m_mod->nexusId() > 0 || m_mod->parseCustomURL().isValid());
 }

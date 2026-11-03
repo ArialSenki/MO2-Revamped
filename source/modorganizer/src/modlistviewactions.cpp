@@ -820,34 +820,39 @@ void ModListViewActions::displayModInformation(ModInfo::Ptr modInfo,
                                                unsigned int modIndex,
                                                ModInfoTabIDs tab) const
 {
-  if (!m_core.modList()->modInfoAboutToChange(modInfo)) {
-    log::debug("a different mod information dialog is open. If this is incorrect, "
-               "please restart MO");
-    return;
-  }
   std::vector<ModInfo::EFlag> flags = modInfo->getFlags();
   if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_OVERWRITE) != flags.end()) {
+    // this window stays open beside the main one, so other mods' dialogs can
+    // open meanwhile and it doesn't take part in modInfoAboutToChange() until
+    // it closes
     QDialog* dialog = m_parent->findChild<QDialog*>("__overwriteDialog");
+    if (dialog != nullptr) {
+      dialog->show();
+      dialog->raise();
+      dialog->activateWindow();
+      return;
+    }
+
     try {
-      if (dialog == nullptr) {
-        auto* overwrite = new OverwriteInfoDialog(modInfo, m_parent);
-        overwrite->setObjectName("__overwriteDialog");
-        connect(overwrite, &OverwriteInfoDialog::createModRequested, this, [this] {
-          createModFromOverwrite();
-        });
-        connect(overwrite, &OverwriteInfoDialog::moveToModRequested, this, [this] {
-          moveOverwriteContentToExistingMod();
-        });
-        dialog = overwrite;
-      } else {
-        qobject_cast<OverwriteInfoDialog*>(dialog)->setModInfo(modInfo);
-      }
+      auto* overwrite = new OverwriteInfoDialog(modInfo, m_parent);
+      overwrite->setObjectName("__overwriteDialog");
+      connect(overwrite, &OverwriteInfoDialog::createModRequested, this, [this] {
+        createModFromOverwrite();
+      });
+      connect(overwrite, &OverwriteInfoDialog::moveToModRequested, this, [this] {
+        moveOverwriteContentToExistingMod();
+      });
+      dialog = overwrite;
 
       dialog->show();
       dialog->raise();
       dialog->activateWindow();
       connect(dialog, &QDialog::finished, [=]() {
-        m_core.modList()->modInfoChanged(modInfo);
+        // it lives until the event loop comes back; don't find it again
+        dialog->setObjectName(QString());
+        if (m_core.modList()->modInfoAboutToChange(modInfo)) {
+          m_core.modList()->modInfoChanged(modInfo);
+        }
         dialog->deleteLater();
         m_core.refreshDirectoryStructure();
       });
@@ -855,6 +860,12 @@ void ModListViewActions::displayModInformation(ModInfo::Ptr modInfo,
       reportError(tr("Failed to display overwrite dialog: %1").arg(e.what()));
     }
   } else {
+    if (!m_core.modList()->modInfoAboutToChange(modInfo)) {
+      log::debug("a different mod information dialog is open. If this is incorrect, "
+                 "please restart MO");
+      return;
+    }
+
     modInfo->saveMeta();
 
     ModInfoDialog dialog(m_core, m_core.pluginContainer(), modInfo, m_view, m_parent);
@@ -1243,10 +1254,10 @@ void ModListViewActions::visitNexusOrWebPage(const QModelIndexList& indices) con
     QString gameName = info->gameName();
     const auto url   = info->parseCustomURL();
 
-    if (modID > 0) {
-      shell::Open(QUrl(NexusInterface::instance().getModURL(modID, gameName)));
-    } else if (url.isValid()) {
+    if (url.isValid()) {
       shell::Open(url);
+    } else if (modID > 0) {
+      shell::Open(QUrl(NexusInterface::instance().getModURL(modID, gameName)));
     } else {
       log::error("mod '{}' has no valid link", info->name());
     }
@@ -1605,7 +1616,7 @@ void ModListViewActions::restoreBackup(const QModelIndex& index) const
   }
 }
 
-void ModListViewActions::moveOverwriteContentsTo(const QString& absolutePath) const
+bool ModListViewActions::moveOverwriteContentsTo(const QString& absolutePath) const
 {
   ModInfo::Ptr overwriteInfo = ModInfo::getOverwrite();
   bool successful =
@@ -1618,9 +1629,12 @@ void ModListViewActions::moveOverwriteContentsTo(const QString& absolutePath) co
   } else {
     const auto e = GetLastError();
     log::error("Move operation failed: {}", formatSystemMessage(e));
+    if (e != ERROR_CANCELLED) {
+      reportError(tr("Files could not be moved from Overwrite: %1").arg(formatSystemMessage(e)));
+    }
   }
 
-  m_core.refresh();
+  return successful;
 }
 
 void ModListViewActions::createModFromOverwrite() const
@@ -1652,7 +1666,18 @@ void ModListViewActions::createModFromOverwrite() const
     return;
   }
 
-  moveOverwriteContentsTo(newMod->absolutePath());
+  const QString modPath = newMod->absolutePath();
+  if (!moveOverwriteContentsTo(modPath)) {
+    // nothing came over: no empty mod is left behind
+    QDir modDir(modPath);
+    const auto entries = modDir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot |
+                                          QDir::Hidden | QDir::System);
+    if (entries == QStringList{QStringLiteral("meta.ini")}) {
+      modDir.removeRecursively();
+    }
+  }
+
+  m_core.refresh();
 }
 
 void ModListViewActions::moveOverwriteContentToExistingMod() const
@@ -1692,6 +1717,7 @@ void ModListViewActions::moveOverwriteContentToExistingMod() const
       }
 
       moveOverwriteContentsTo(modAbsolutePath);
+      m_core.refresh();
     }
   }
 }

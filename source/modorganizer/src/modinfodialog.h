@@ -81,6 +81,11 @@ signals:
   //
   void modChanged(unsigned int modIndex);
 
+public slots:
+  // Esc ends up here; forwards to tryClose()
+  //
+  void reject() override;
+
 protected:
   // forwards to tryClose()
   //
@@ -223,8 +228,11 @@ private:
   //
   bool tryClose();
 
-  // called when the user clicks the close button; closing the dialog by other
-  // means ends up in closeEvent(); forwards to tryClose()
+  // saves the current mod and updates its row in the mod list
+  //
+  void leaveMod();
+
+  // called when the user clicks the close button; goes through closeEvent()
   //
   void onCloseButton();
 

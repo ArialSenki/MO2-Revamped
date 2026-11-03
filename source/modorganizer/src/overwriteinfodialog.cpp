@@ -49,6 +49,23 @@ using namespace MOBase;
 
 namespace
 {
+// a folder takes what's inside it along, and the shell would stop at the rest
+QStringList topmostPaths(QStringList paths)
+{
+  paths.sort(Qt::CaseInsensitive);
+
+  QStringList topmost;
+  for (const QString& path : paths) {
+    const bool inside = std::any_of(topmost.begin(), topmost.end(), [&](const QString& top) {
+      return path.startsWith(top + "/", Qt::CaseInsensitive);
+    });
+    if (!inside) {
+      topmost.append(path);
+    }
+  }
+  return topmost;
+}
+
 class CenteredOverwriteFileSystemModel final : public QFileSystemModel
 {
 public:
@@ -123,8 +140,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   m_NewFolderAction->setToolTip(tr("Create a folder inside Overwrite."));
   m_OpenAction->setToolTip(tr("Open the selected file with its associated application."));
   m_RenameAction->setToolTip(tr("Rename the selected file or folder."));
-  m_DeleteAction->setToolTip(
-      tr("Permanently remove the selected file or folder from Overwrite."));
+  m_DeleteAction->setToolTip(tr("Move the selected file or folder to the Recycle Bin."));
 
   new QShortcut(QKeySequence::Delete, this, SLOT(delete_activated()));
 
@@ -365,6 +381,7 @@ void OverwriteInfoDialog::emptyOverwrite()
     const auto e = GetLastError();
     if (e != ERROR_CANCELLED) {
       log::error("failed to empty Overwrite, {}", formatSystemMessage(e));
+      reportError(tr("Overwrite could not be cleared: %1").arg(formatSystemMessage(e)));
     }
   }
   updateSummary();
@@ -401,7 +418,8 @@ void OverwriteInfoDialog::done(int r)
 void OverwriteInfoDialog::setModInfo(ModInfo::Ptr modInfo)
 {
   m_ModInfo = modInfo;
-  if (QDir(modInfo->absolutePath()).exists()) {
+  // the folder comes back if something removed it
+  if (QDir().mkpath(modInfo->absolutePath())) {
     m_FileSystemModel->setRootPath(modInfo->absolutePath());
     updateSummary();
   } else {
@@ -410,96 +428,47 @@ void OverwriteInfoDialog::setModInfo(ModInfo::Ptr modInfo)
   }
 }
 
-bool OverwriteInfoDialog::recursiveDelete(const QModelIndex& index)
+void OverwriteInfoDialog::deleteFiles(const QModelIndexList& indexes)
 {
-  for (int childRow = 0; childRow < m_FileSystemModel->rowCount(index); ++childRow) {
-    QModelIndex childIndex = m_FileSystemModel->index(childRow, 0, index);
-    if (m_FileSystemModel->isDir(childIndex)) {
-      if (!recursiveDelete(childIndex)) {
-        log::error("failed to delete {}", m_FileSystemModel->fileName(childIndex));
-        return false;
-      }
-    } else {
-      if (!m_FileSystemModel->remove(childIndex)) {
-        log::error("failed to delete {}", m_FileSystemModel->fileName(childIndex));
-        return false;
-      }
+  if (indexes.isEmpty()) {
+    return;
+  }
+
+  const QString message =
+      indexes.count() == 1
+          ? tr("Move \"%1\" to the Recycle Bin?").arg(m_FileSystemModel->fileName(indexes[0]))
+          : tr("Move the selected files to the Recycle Bin?");
+
+  if (QMessageBox::question(this, tr("Confirm"), message,
+                            QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+    return;
+  }
+
+  QStringList paths;
+  for (const QModelIndex& index : indexes) {
+    paths.append(m_FileSystemModel->filePath(index));
+  }
+
+  if (!shellDelete(topmostPaths(paths), true, this)) {
+    const auto e = GetLastError();
+    if (e != ERROR_CANCELLED) {
+      log::error("failed to delete files, {}", formatSystemMessage(e));
+      reportError(
+          tr("Failed to delete the selected files: %1").arg(formatSystemMessage(e)));
     }
-  }
-  if (!m_FileSystemModel->remove(index)) {
-    log::error("failed to delete {}", m_FileSystemModel->fileName(index));
-    return false;
-  }
-  return true;
-}
-
-void OverwriteInfoDialog::deleteFile(const QModelIndex& index)
-{
-
-  bool res = m_FileSystemModel->isDir(index) ? recursiveDelete(index)
-                                             : m_FileSystemModel->remove(index);
-  if (!res) {
-    QString fileName = m_FileSystemModel->fileName(index);
-    reportError(tr("Failed to delete \"%1\"").arg(fileName));
   }
 }
 
 void OverwriteInfoDialog::delete_activated()
 {
   if (ui->filesView->hasFocus()) {
-    QItemSelectionModel* selection = ui->filesView->selectionModel();
-
-    if (selection->hasSelection() && selection->selectedRows().count() >= 1) {
-
-      if (selection->selectedRows().count() == 0) {
-        return;
-      } else if (selection->selectedRows().count() == 1) {
-        QString fileName = m_FileSystemModel->fileName(selection->selectedRows().at(0));
-        if (QMessageBox::question(
-                this, tr("Confirm"),
-                tr("Are you sure you want to delete \"%1\"?").arg(fileName),
-                QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
-          return;
-        }
-      } else {
-        if (QMessageBox::question(
-                this, tr("Confirm"),
-                tr("Are you sure you want to delete the selected files?"),
-                QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
-          return;
-        }
-      }
-
-      foreach (QModelIndex index, selection->selectedRows()) {
-        deleteFile(index);
-      }
-    }
+    deleteFiles(ui->filesView->selectionModel()->selectedRows());
   }
 }
 
 void OverwriteInfoDialog::deleteTriggered()
 {
-  if (m_FileSelection.count() == 0) {
-    return;
-  } else if (m_FileSelection.count() == 1) {
-    QString fileName = m_FileSystemModel->fileName(m_FileSelection.at(0));
-    if (QMessageBox::question(
-            this, tr("Confirm"),
-            tr("Are you sure you want to delete \"%1\"?").arg(fileName),
-            QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
-      return;
-    }
-  } else {
-    if (QMessageBox::question(this, tr("Confirm"),
-                              tr("Are you sure you want to delete the selected files?"),
-                              QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
-      return;
-    }
-  }
-
-  foreach (QModelIndex index, m_FileSelection) {
-    deleteFile(index);
-  }
+  deleteFiles(m_FileSelection);
 }
 
 void OverwriteInfoDialog::renameTriggered()

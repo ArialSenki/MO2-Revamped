@@ -1,6 +1,7 @@
 #include "modinfodialogconflicts.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
+#include "game_features.h"
 #include "modinfodialog.h"
 #include "modinfodialogconflictsmodels.h"
 #include "organizercore.h"
@@ -12,6 +13,7 @@
 #include "shared/filesorigin.h"
 #include "ui_modinfodialog.h"
 #include "utility.h"
+#include <dataarchives.h>
 #include <QIcon>
 
 using namespace MOShared;
@@ -824,45 +826,44 @@ void GeneralConflictsTab::updateUICounters()
          "<td align=right>%8</td><td align=right>%9</td><td align=right>%10%</td></tr>"
          "</table>");
 
-  QString tooltipOverwrite =
-      tooltipBase.arg(tr("Winning"))
-          .arg(m_counts.numOverwriteLoose)
-          .arg(m_counts.numTotalLoose)
-          .arg(percent(m_counts.numOverwriteLoose, m_counts.numTotalLoose))
-          .arg(m_counts.numOverwriteArchive)
-          .arg(m_counts.numTotalArchive)
-          .arg(percent(m_counts.numOverwriteArchive, m_counts.numTotalArchive))
-          .arg(m_counts.numOverwrite)
-          .arg(m_counts.numTotalFiles)
-          .arg(percent(m_counts.numOverwrite, m_counts.numTotalFiles));
+  // a game without archives only has loose files to count
+  const bool hasArchives = m_core.gameFeatures().gameFeature<DataArchives>() != nullptr;
 
-  QString tooltipOverwritten =
-      tooltipBase.arg(tr("Losing"))
-          .arg(m_counts.numOverwrittenLoose)
+  const auto tooltip = [&](const QString& name, int loose, int archive,
+                           int all) -> QString {
+    if (!hasArchives) {
+      return tr("<table cellspacing=\"5\">"
+                "<tr><th>Type</th><th>%1</th><th>Total</th><th>Percent</th></tr>"
+                "<tr><td>Loose files:&emsp;</td>"
+                "<td align=right>%2</td><td align=right>%3</td><td align=right>%4%</td></tr>"
+                "</table>")
+          .arg(name)
+          .arg(loose)
           .arg(m_counts.numTotalLoose)
-          .arg(percent(m_counts.numOverwrittenLoose, m_counts.numTotalLoose))
-          .arg(m_counts.numOverwrittenArchive)
-          .arg(m_counts.numTotalArchive)
-          .arg(percent(m_counts.numOverwrittenArchive, m_counts.numTotalArchive))
-          .arg(m_counts.numOverwritten)
-          .arg(m_counts.numTotalFiles)
-          .arg(percent(m_counts.numOverwritten, m_counts.numTotalFiles));
+          .arg(percent(loose, m_counts.numTotalLoose));
+    }
 
-  QString tooltipNonConflict =
-      tooltipBase.arg(tr("Non conflicting"))
-          .arg(m_counts.numNonConflictingLoose)
-          .arg(m_counts.numTotalLoose)
-          .arg(percent(m_counts.numNonConflictingLoose, m_counts.numTotalLoose))
-          .arg(m_counts.numNonConflictingArchive)
-          .arg(m_counts.numTotalArchive)
-          .arg(percent(m_counts.numNonConflictingArchive, m_counts.numTotalArchive))
-          .arg(m_counts.numNonConflicting)
-          .arg(m_counts.numTotalFiles)
-          .arg(percent(m_counts.numNonConflicting, m_counts.numTotalFiles));
+    return tooltipBase.arg(name)
+        .arg(loose)
+        .arg(m_counts.numTotalLoose)
+        .arg(percent(loose, m_counts.numTotalLoose))
+        .arg(archive)
+        .arg(m_counts.numTotalArchive)
+        .arg(percent(archive, m_counts.numTotalArchive))
+        .arg(all)
+        .arg(m_counts.numTotalFiles)
+        .arg(percent(all, m_counts.numTotalFiles));
+  };
 
-  ui->overwriteCount->setToolTip(tooltipOverwrite);
-  ui->overwrittenCount->setToolTip(tooltipOverwritten);
-  ui->noConflictCount->setToolTip(tooltipNonConflict);
+  ui->overwriteCount->setToolTip(tooltip(tr("Winning"), m_counts.numOverwriteLoose,
+                                         m_counts.numOverwriteArchive,
+                                         m_counts.numOverwrite));
+  ui->overwrittenCount->setToolTip(tooltip(tr("Losing"), m_counts.numOverwrittenLoose,
+                                           m_counts.numOverwrittenArchive,
+                                           m_counts.numOverwritten));
+  ui->noConflictCount->setToolTip(
+      tooltip(tr("Non conflicting"), m_counts.numNonConflictingLoose,
+              m_counts.numNonConflictingArchive, m_counts.numNonConflicting));
 }
 
 void GeneralConflictsTab::onOverwriteActivated(const QModelIndex& index)

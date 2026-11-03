@@ -562,6 +562,21 @@ void ModInfoRegular::setGameName(const QString& gameName)
 
 void ModInfoRegular::setNexusID(int modID)
 {
+  // what the old page said doesn't describe the new one
+  if (modID != m_NexusID) {
+    for (auto file = m_InstalledFileIDs.begin(); file != m_InstalledFileIDs.end();) {
+      file = file->first == m_NexusID ? m_InstalledFileIDs.erase(file) : std::next(file);
+    }
+    m_NewestVersion   = VersionInfo();
+    m_IgnoredVersion  = VersionInfo();
+    m_NexusDescription.clear();
+    m_NexusFileStatus = 1;
+    m_LastNexusUpdate = QDateTime();
+    m_LastNexusQuery  = QDateTime();
+    m_TrackedState    = TrackedState::TRACKED_FALSE;
+    m_EndorsedState   = EndorsedState::ENDORSED_UNKNOWN;
+  }
+
   m_NexusID         = modID;
   m_MetaInfoChanged = true;
 }

@@ -136,6 +136,41 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Mod information and Overwrite
+
+- Next, Previous, Page Up, Page Down, "Go to" and Esc now ask before dropping
+  unsaved changes in a text or INI file. After "No", Close no longer asks twice.
+- A text file that can't be saved says so and keeps the window open, instead of
+  looking saved.
+- Comments, notes and Nexus fields are saved when you press Esc, close the
+  window or change mod with the keyboard. Page Up and Page Down scroll in a
+  multi-line editor instead of changing mod.
+- Mods reached with Next or Previous are saved when you leave them, and their
+  row in the mod list updates.
+- Delete in the Filetree and in Manage Overwrite moves files to the Recycle Bin,
+  and the prompts say so. Deleting, renaming or hiding a file updates the other
+  pages right away.
+- Delete and Hide are off for a mod's own `meta.ini`, with the reason.
+- The window remembers its last page on games without plugins.
+- Nexus page: a custom web page no longer turns off on the next mod. Emptying the
+  Mod ID removes it, and changing it forgets what the old page said. Visit,
+  Refresh, Track and Endorse follow the mod's real state and are off without an
+  ID. The version is red only when Nexus has a newer one, and a valid ID with no
+  description no longer claims to be invalid.
+- With a custom web page turned on, the mod's page button and Shift-click open it
+  instead of Nexus.
+- Sync to mods sends the mod's old copy to the Recycle Bin, and a failed move
+  loses nothing. It no longer removes the Overwrite folder or offers the game's
+  own files as a mod, and it says that only files a mod already has can be
+  synced.
+- Manage Overwrite no longer blocks other mods' windows, comes to the front if
+  it's open, and recovers if the Overwrite folder is gone.
+- Failed moves and failed emptying of Overwrite are reported. A new mod that
+  received nothing is removed.
+- The Images page follows the theme, and its unsupported-format message is
+  readable in Light. Conflict counts drop the Archive files row on games without
+  archives.
+
 ### Log and status bar
 
 - The command bar, the cards, the log and the status bar share one edge on both sides.

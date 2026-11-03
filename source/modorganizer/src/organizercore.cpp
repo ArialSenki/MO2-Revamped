@@ -2124,6 +2124,9 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
     }
   }
 
+  // what a game writes needs somewhere to go, even if something removed it
+  QDir().mkpath(m_Settings.paths().overwrite());
+
   for (auto dataPath : dataPaths) {
     result.insert(result.end(),
                   {QDir::toNativeSeparators(m_Settings.paths().overwrite()), dataPath,

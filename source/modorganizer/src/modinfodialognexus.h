@@ -48,6 +48,7 @@ private:
   void cleanup();
   void updateVersionColor();
   void updateWebpage();
+  void updateActions();
   void updateTracking();
 
   void refreshData(int modID);
