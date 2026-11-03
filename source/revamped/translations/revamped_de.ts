@@ -7087,18 +7087,6 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Ersetzen der Mods abschließen</translation>
     </message>
     <message>
-      <source>Mod Organizer stopped while replacing these mods, and kept their previous versions:
-
-%1
-
-Restore puts each previous version back and sends the version installed now to the Recycle Bin. Discard sends the previous versions to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at the next start.</source>
-      <translation>Mod Organizer wurde beim Ersetzen dieser Mods unterbrochen und hat ihre vorherigen Versionen behalten:
-
-%1
-
-Wiederherstellen legt jede vorherige Version zurück und verschiebt die jetzt installierte Version in den Papierkorb. Verwerfen verschiebt die vorherigen Versionen in den Papierkorb. Später ändert nichts, und Mod Organizer fragt beim nächsten Start erneut.</translation>
-    </message>
-    <message>
       <source>Restore</source>
       <translation>Wiederherstellen</translation>
     </message>
@@ -7112,6 +7100,24 @@ Wiederherstellen legt jede vorherige Version zurück und verschiebt die jetzt in
 %1</source>
       <translation>Diese bleiben, wo sie sind, und Mod Organizer fragt beim nächsten Start erneut:
 
+%1</translation>
+    </message>
+    <message>
+      <source>These mods still have a previous version from a Replace that did not finish: Mod Organizer stopped partway, or the previous version could not go to the Recycle Bin.
+
+%1
+
+Restore puts each previous version back and sends the version in its place, if there is one, to the Recycle Bin. Discard sends the previous versions to the Recycle Bin and keeps the versions in place. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Diese Mods haben noch eine vorherige Version aus einem nicht abgeschlossenen Ersetzen: Mod Organizer wurde unterbrochen, oder die vorherige Version konnte nicht in den Papierkorb verschoben werden.
+
+%1
+
+Wiederherstellen legt jede vorherige Version zurück und verschiebt die Version an ihrer Stelle, falls vorhanden, in den Papierkorb. Verwerfen verschiebt die vorherigen Versionen in den Papierkorb und behält die vorhandenen Versionen. Später ändert nichts, und Mod Organizer fragt beim nächsten Start erneut.</translation>
+    </message>
+    <message>
+      <source>Older copies of these mods stay where they are, and Mod Organizer offers them at a later start:
+%1</source>
+      <translation>Ältere Kopien dieser Mods bleiben, wo sie sind, und Mod Organizer bietet sie bei einem späteren Start an:
 %1</translation>
     </message>
   </context>
@@ -8299,6 +8305,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     <message>
       <source>The installation was cancelled while extracting files. The installed mod is back as it was.</source>
       <translation>Die Installation wurde beim Entpacken der Dateien abgebrochen. Der installierte Mod ist wieder wie zuvor.</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
+      <translation>Der Mod &quot;%1&quot;, der die neuen Dateien dieses Programms erhalten soll, existiert nicht mehr. Wähle unter Programme bearbeiten einen anderen.</translation>
     </message>
   </context>
   <context>

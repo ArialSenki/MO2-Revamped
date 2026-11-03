@@ -7115,18 +7115,6 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Terminar de reemplazar mods</translation>
     </message>
     <message>
-      <source>Mod Organizer stopped while replacing these mods, and kept their previous versions:
-
-%1
-
-Restore puts each previous version back and sends the version installed now to the Recycle Bin. Discard sends the previous versions to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at the next start.</source>
-      <translation>Mod Organizer se detuvo mientras reemplazaba estos mods y conservó sus versiones anteriores:
-
-%1
-
-Restaurar devuelve cada versión anterior a su sitio y envía la versión instalada ahora a la Papelera de reciclaje. Descartar envía las versiones anteriores a la Papelera de reciclaje. Más tarde no cambia nada, y Mod Organizer volverá a preguntar en el próximo inicio.</translation>
-    </message>
-    <message>
       <source>Restore</source>
       <translation>Restaurar</translation>
     </message>
@@ -7140,6 +7128,24 @@ Restaurar devuelve cada versión anterior a su sitio y envía la versión instal
 %1</source>
       <translation>Esto se queda donde está, y Mod Organizer volverá a preguntar en el próximo inicio:
 
+%1</translation>
+    </message>
+    <message>
+      <source>These mods still have a previous version from a Replace that did not finish: Mod Organizer stopped partway, or the previous version could not go to the Recycle Bin.
+
+%1
+
+Restore puts each previous version back and sends the version in its place, if there is one, to the Recycle Bin. Discard sends the previous versions to the Recycle Bin and keeps the versions in place. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Estos mods aún tienen una versión anterior de un reemplazo que no terminó: Mod Organizer se detuvo a medias, o la versión anterior no pudo ir a la Papelera de reciclaje.
+
+%1
+
+Restaurar devuelve cada versión anterior a su sitio y envía a la Papelera de reciclaje la versión que ocupa su lugar, si la hay. Descartar envía las versiones anteriores a la Papelera de reciclaje y conserva las que están en su sitio. Más tarde no cambia nada, y Mod Organizer volverá a preguntar en el próximo inicio.</translation>
+    </message>
+    <message>
+      <source>Older copies of these mods stay where they are, and Mod Organizer offers them at a later start:
+%1</source>
+      <translation>Las copias más antiguas de estos mods se quedan donde están, y Mod Organizer las ofrecerá en un inicio posterior:
 %1</translation>
     </message>
   </context>
@@ -8407,6 +8413,10 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
     <message>
       <source>The installation was cancelled while extracting files. The installed mod is back as it was.</source>
       <translation>La instalación se canceló mientras se extraían los archivos. El mod instalado ha vuelto a estar como estaba.</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
+      <translation>El mod &quot;%1&quot; elegido para recibir los archivos nuevos de este programa ya no existe. Elige otro en Editar programas.</translation>
     </message>
   </context>
   <context>

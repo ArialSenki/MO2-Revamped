@@ -140,9 +140,13 @@
 
 - Replace, when a mod is already installed: the old files stay aside until the
   new version has finished installing, then go to the Recycle Bin. If you cancel
-  or the install fails, the old mod comes back as it was. The window says so. If
-  Mod Organizer stops halfway, it asks at the next start whether to restore or
-  discard the old version.
+  or the install fails, the old mod comes back as it was, also with installers
+  that create the mod themselves. The window says so. If a Replace doesn't finish,
+  Mod Organizer asks at the next start whether to restore or discard the old
+  version, for this instance's mods only and one copy of each mod at a time.
+- Renaming a mod updates the programs that save new files to it in every profile.
+  A program whose chosen mod no longer exists says so at launch, instead of "not
+  enabled".
 - An install in which a file made by the installer can't be copied now counts as
   failed, instead of as a complete mod.
 - "Move to Recycle Bin" for an instance: Windows now asks before anything too
@@ -162,7 +166,8 @@
   plugins no installed mod has are listed afterwards.
 - Replacing the category list says how many mods use a category from it. Those
   mods end up without a category instead of silently getting another one. A
-  removed category's number is not used again, category numbers can't be edited,
+  removed category leaves its mods when you press OK, so a later category with
+  the same number can't land on them; category numbers can't be edited,
   and a ticked filter on a removed category no longer leaves the list empty.
 - Backups of the mod list and plugin order go to the Recycle Bin when deleted.
   Restoring a backup saves the current list first.

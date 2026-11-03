@@ -4364,16 +4364,6 @@ void MainWindow::modRenamed(const QString& oldName, const QString& newName)
   // immediately refresh the active profile because the data in memory is invalid
   m_OrganizerCore.currentProfile()->refreshModStatus();
 
-  // the programs that save new files to it follow it
-  for (const auto& exe : *m_OrganizerCore.executablesList()) {
-    if (m_OrganizerCore.currentProfile()
-            ->setting("custom_overwrites", exe.title())
-            .toString() == oldName) {
-      m_OrganizerCore.currentProfile()->storeSetting("custom_overwrites", exe.title(),
-                                                     newName);
-    }
-  }
-
   // also fix the directory structure
   try {
     if (m_OrganizerCore.directoryStructure()->originExists(ToWString(oldName))) {
@@ -5813,7 +5803,8 @@ bool MainWindow::createBackup(const QString& filePath, const QDateTime& time,
 void MainWindow::offerReplacedModsRecovery()
 {
   auto* installer            = m_OrganizerCore.installationManager();
-  const QStringList leftovers = installer->replacedLeftovers();
+  QStringList older;
+  const QStringList leftovers = installer->replacedLeftovers(&older);
   if (leftovers.isEmpty()) {
     return;
   }
@@ -5829,14 +5820,26 @@ void MainWindow::offerReplacedModsRecovery()
     Restore,
     Discard
   };
-  FluentContentDialog dialog(
-      this, QStringLiteral("ReplacedModsDialog"), tr("Finish replacing mods"),
-      tr("Mod Organizer stopped while replacing these mods, and kept their previous "
-         "versions:\n\n%1\n\nRestore puts each previous version back and sends the "
-         "version installed now to the Recycle Bin. Discard sends the previous versions "
-         "to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at "
-         "the next start.")
-          .arg(names.join(QLatin1Char('\n'))));
+  QString text =
+      tr("These mods still have a previous version from a Replace that did not finish: "
+         "Mod Organizer stopped partway, or the previous version could not go to the "
+         "Recycle Bin.\n\n%1\n\nRestore puts each previous version back and sends the "
+         "version in its place, if there is one, to the Recycle Bin. Discard sends the "
+         "previous versions to the Recycle Bin and keeps the versions in place. Later "
+         "changes nothing, and Mod Organizer asks again at the next start.")
+          .arg(names.join(QLatin1Char('\n')));
+  if (!older.isEmpty()) {
+    QStringList shown;
+    for (const QString& path : older) {
+      shown.append(QDir::toNativeSeparators(path));
+    }
+    text += QStringLiteral("\n\n") +
+            tr("Older copies of these mods stay where they are, and Mod Organizer offers "
+               "them at a later start:\n%1")
+                .arg(shown.join(QLatin1Char('\n')));
+  }
+  FluentContentDialog dialog(this, QStringLiteral("ReplacedModsDialog"),
+                             tr("Finish replacing mods"), text);
   auto* restore = dialog.addButton(tr("Restore"), true);
   auto* discard = dialog.addButton(tr("Discard"));
   auto* later   = dialog.addButton(tr("Later"));

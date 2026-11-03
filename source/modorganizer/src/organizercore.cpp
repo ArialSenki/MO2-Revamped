@@ -727,10 +727,12 @@ MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name)
     return nullptr;
   }
 
-  // does nothing once the old version is discarded below; runs after the settings
-  // file below has been written
-  ON_BLOCK_EXIT([this]() {
-    m_InstallationManager.restoreReplacedMod();
+  // runs after the settings file below has been written
+  bool created = false;
+  ON_BLOCK_EXIT([&]() {
+    if (!created) {
+      m_InstallationManager.restoreReplacedMod();
+    }
   });
 
   m_InstallationManager.setModsDirectory(m_Settings.paths().mods());
@@ -755,7 +757,10 @@ MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name)
   // shouldn't this use the existing mod in case of a merge? also, this does not refresh
   // the indices in the ModInfo structure
   MOBase::IModInterface* mod = ModInfo::createFrom(QDir(targetDirectory), *this).data();
-  if (mod != nullptr) {
+  created = mod != nullptr;
+  // a custom installer fills the mod after this: install() finishes the job when it
+  // knows how that went
+  if (created && !m_InstallationManager.isRunning()) {
     m_InstallationManager.discardReplacedMod();
   }
   return mod;
@@ -899,6 +904,8 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
                      "missing "
                      "files."),
             QMessageBox::Ok);
+        refresh();
+      } else if (m_InstallationManager.replacedModRestored()) {
         refresh();
       }
     }
@@ -2121,6 +2128,11 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
   }
 
   if (!overwriteActive && !customOverwrite.isEmpty()) {
+    if (ModInfo::getIndex(customOverwrite) == UINT_MAX) {
+      throw MyException(tr("The mod \"%1\" chosen to receive this program's new files "
+                           "no longer exists. Choose another one in Edit programs.")
+                            .arg(customOverwrite));
+    }
     throw MyException(
         tr("The designated write target \"%1\" is not enabled.").arg(customOverwrite));
   }

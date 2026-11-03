@@ -7247,18 +7247,6 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Terminer le remplacement des mods</translation>
     </message>
     <message>
-      <source>Mod Organizer stopped while replacing these mods, and kept their previous versions:
-
-%1
-
-Restore puts each previous version back and sends the version installed now to the Recycle Bin. Discard sends the previous versions to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at the next start.</source>
-      <translation>Mod Organizer s&apos;est arrêté pendant le remplacement de ces mods et a conservé leurs versions précédentes :
-
-%1
-
-Restaurer remet chaque version précédente en place et envoie la version installée à la Corbeille. Abandonner envoie les versions précédentes à la Corbeille. Plus tard ne change rien, et Mod Organizer demandera à nouveau au prochain démarrage.</translation>
-    </message>
-    <message>
       <source>Restore</source>
       <translation>Restaurer</translation>
     </message>
@@ -7272,6 +7260,24 @@ Restaurer remet chaque version précédente en place et envoie la version instal
 %1</source>
       <translation>Ces éléments restent où ils sont, et Mod Organizer demandera à nouveau au prochain démarrage :
 
+%1</translation>
+    </message>
+    <message>
+      <source>These mods still have a previous version from a Replace that did not finish: Mod Organizer stopped partway, or the previous version could not go to the Recycle Bin.
+
+%1
+
+Restore puts each previous version back and sends the version in its place, if there is one, to the Recycle Bin. Discard sends the previous versions to the Recycle Bin and keeps the versions in place. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Ces mods ont encore une version précédente issue d&apos;un remplacement inachevé : Mod Organizer s&apos;est arrêté en cours de route, ou la version précédente n&apos;a pas pu aller dans la Corbeille.
+
+%1
+
+Restaurer remet chaque version précédente en place et envoie à la Corbeille la version qui l&apos;a remplacée, s&apos;il y en a une. Abandonner envoie les versions précédentes à la Corbeille et garde les versions en place. Plus tard ne change rien, et Mod Organizer demandera à nouveau au prochain démarrage.</translation>
+    </message>
+    <message>
+      <source>Older copies of these mods stay where they are, and Mod Organizer offers them at a later start:
+%1</source>
+      <translation>Les copies plus anciennes de ces mods restent où elles sont, et Mod Organizer les proposera lors d&apos;un prochain démarrage :
 %1</translation>
     </message>
   </context>
@@ -8471,6 +8477,10 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     <message>
       <source>The installation was cancelled while extracting files. The installed mod is back as it was.</source>
       <translation>L&apos;installation a été annulée pendant l&apos;extraction des fichiers. Le mod installé est revenu à son état précédent.</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
+      <translation>Le mod « %1 » choisi pour recevoir les nouveaux fichiers de ce programme n&apos;existe plus. Choisissez-en un autre dans Modifier les programmes.</translation>
     </message>
   </context>
   <context>

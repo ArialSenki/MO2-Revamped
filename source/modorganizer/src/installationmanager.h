@@ -269,8 +269,9 @@ public:
   // whether a cancelled or failed install put the old version back
   bool replacedModRestored() const { return m_ReplacedRestored; }
 
-  // old versions a Replace left when Mod Organizer stopped halfway
-  QStringList replacedLeftovers() const;
+  // old versions a Replace left behind in this instance, the newest of each mod;
+  // older copies of the same mods go in older
+  QStringList replacedLeftovers(QStringList* older = nullptr) const;
   bool restoreLeftover(const QString& aside);
   bool discardLeftover(const QString& aside);
 

@@ -387,6 +387,17 @@ void Profile::renameModInAllProfiles(const QString& oldName, const QString& newN
       renameModInList(modList, oldName, newName);
     else
       log::warn("Profile has no modlist.txt: {}", profileIter.filePath());
+
+    // the programs that save new files to it follow it
+    QSettings settings(profileIter.filePath() + "/settings.ini", QSettings::IniFormat);
+    settings.beginGroup("custom_overwrites");
+    for (const QString& key : settings.allKeys()) {
+      if (settings.value(key).toString() == oldName) {
+        settings.setValue(key, newName);
+      }
+    }
+    settings.endGroup();
+    settings.sync();
   }
 }
 

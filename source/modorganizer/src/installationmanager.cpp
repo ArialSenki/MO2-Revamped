@@ -567,6 +567,12 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
   return result;
 }
 
+namespace
+{
+// beside the old version in its numbered folder: whose it is and from when
+const QString ReplacedManifestName = QStringLiteral("replaced.ini");
+}  // namespace
+
 QStringList InstallationManager::replacedFolderRoots() const
 {
   // beside the mods folder, so it never shows as a mod; inside it (the mod list skips
@@ -590,6 +596,12 @@ QString InstallationManager::setAsideMod(const QString& modFolder) const
     if (!QDir().mkpath(slot)) {
       continue;
     }
+    {
+      QSettings manifest(slot + "/" + ReplacedManifestName, QSettings::IniFormat);
+      manifest.setValue("modsPath", QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory)));
+      manifest.setValue("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+      manifest.sync();
+    }
     const QString aside = slot + "/" + QFileInfo(modFolder).fileName();
     if (QDir().rename(modFolder, aside)) {
       return aside;
@@ -604,24 +616,69 @@ void InstallationManager::removeAsideSlot(const QString& aside) const
   // only empty folders go
   QDir slot = QFileInfo(aside).dir();
   const QString root = QFileInfo(slot.absolutePath()).absolutePath();
+  QFile::remove(slot.filePath(ReplacedManifestName));
   QDir().rmdir(slot.absolutePath());
   QDir().rmdir(root);
 }
 
-QStringList InstallationManager::replacedLeftovers() const
+QStringList InstallationManager::replacedLeftovers(QStringList* older) const
 {
-  QStringList leftovers;
+  struct Leftover
+  {
+    QString path;
+    QDateTime date;
+    int slot;
+  };
+  const QString mods = QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory));
+  std::map<QString, std::vector<Leftover>> byName;
+
   for (const QString& root : replacedFolderRoots()) {
-    const auto slots_ = QDir(root).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
-    for (const QFileInfo& slot : slots_) {
-      const auto mods =
+    const auto slotList = QDir(root).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QFileInfo& slot : slotList) {
+      QDateTime date = slot.lastModified();
+      const QString manifestPath = slot.absoluteFilePath() + "/" + ReplacedManifestName;
+      // no record: it is in this instance's own folder, which is all there is to go on
+      if (QFileInfo::exists(manifestPath)) {
+        const QSettings manifest(manifestPath, QSettings::IniFormat);
+        const QString owner = manifest.value("modsPath").toString();
+        // two instances can share the parent folder. A folder that moved along with
+        // its instance keeps its name, and the old path is gone
+        const bool same = owner.compare(mods, Qt::CaseInsensitive) == 0;
+        const bool moved = !QFileInfo::exists(owner) &&
+                           QFileInfo(owner).fileName().compare(QFileInfo(mods).fileName(),
+                                                               Qt::CaseInsensitive) == 0;
+        if (!same && !moved) {
+          continue;
+        }
+        const QDateTime recorded =
+            QDateTime::fromString(manifest.value("date").toString(), Qt::ISODate);
+        if (recorded.isValid()) {
+          date = recorded;
+        }
+      }
+      const auto modList =
           QDir(slot.absoluteFilePath()).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
-      for (const QFileInfo& mod : mods) {
-        leftovers.append(mod.absoluteFilePath());
+      for (const QFileInfo& mod : modList) {
+        byName[mod.fileName().toLower()].push_back(
+            {mod.absoluteFilePath(), date, slot.fileName().toInt()});
       }
     }
   }
-  return leftovers;
+
+  // one copy of each mod at a time: restoring two would send the first to the Bin
+  QStringList newest;
+  for (auto& [name, copies] : byName) {
+    std::sort(copies.begin(), copies.end(), [](const Leftover& a, const Leftover& b) {
+      return a.date != b.date ? a.date > b.date : a.slot > b.slot;
+    });
+    newest.append(copies.front().path);
+    if (older != nullptr) {
+      for (std::size_t i = 1; i < copies.size(); ++i) {
+        older->append(copies[i].path);
+      }
+    }
+  }
+  return newest;
 }
 
 bool InstallationManager::restoreLeftover(const QString& aside)
@@ -862,6 +919,8 @@ InstallationResult InstallationManager::install(const QString& fileName,
   m_IsRunning = true;
   ON_BLOCK_EXIT([this]() {
     m_IsRunning = false;
+    // a mod a custom installer replaced with createMod(), if nothing finished it
+    restoreReplacedMod();
   });
 
   QFileInfo fileInfo(fileName);
@@ -1081,6 +1140,12 @@ InstallationResult InstallationManager::install(const QString& fileName,
           if (installerExt.find(fileInfo.suffix()) != installerExt.end()) {
             installResult.m_result =
                 installerCustom->install(modName, gameName, fileName, version, modID);
+            if (installResult.result() == IPluginInstaller::RESULT_SUCCESS ||
+                installResult.result() == IPluginInstaller::RESULT_SUCCESSCANCEL) {
+              discardReplacedMod();
+            } else {
+              restoreReplacedMod();
+            }
             unsigned int idx = ModInfo::getIndex(modName);
             if (idx != UINT_MAX) {
               ModInfo::Ptr info = ModInfo::getByIndex(idx);

@@ -7335,18 +7335,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Completa la sostituzione delle mod</translation>
     </message>
     <message>
-      <source>Mod Organizer stopped while replacing these mods, and kept their previous versions:
-
-%1
-
-Restore puts each previous version back and sends the version installed now to the Recycle Bin. Discard sends the previous versions to the Recycle Bin. Later changes nothing, and Mod Organizer asks again at the next start.</source>
-      <translation>Mod Organizer si è interrotto durante la sostituzione di queste mod e ha conservato le versioni precedenti:
-
-%1
-
-Ripristina rimette al suo posto ogni versione precedente e sposta nel Cestino la versione ora installata. Scarta sposta nel Cestino le versioni precedenti. Più tardi non cambia nulla e Mod Organizer lo chiederà di nuovo al prossimo avvio.</translation>
-    </message>
-    <message>
       <source>Restore</source>
       <translation>Ripristina</translation>
     </message>
@@ -7360,6 +7348,24 @@ Ripristina rimette al suo posto ogni versione precedente e sposta nel Cestino la
 %1</source>
       <translation>Questi elementi restano dove sono e Mod Organizer lo chiederà di nuovo al prossimo avvio:
 
+%1</translation>
+    </message>
+    <message>
+      <source>These mods still have a previous version from a Replace that did not finish: Mod Organizer stopped partway, or the previous version could not go to the Recycle Bin.
+
+%1
+
+Restore puts each previous version back and sends the version in its place, if there is one, to the Recycle Bin. Discard sends the previous versions to the Recycle Bin and keeps the versions in place. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Queste mod hanno ancora una versione precedente da una sostituzione non completata: Mod Organizer si è interrotto a metà, oppure la versione precedente non è potuta finire nel Cestino.
+
+%1
+
+Ripristina rimette al suo posto ogni versione precedente e sposta nel Cestino la versione che l&apos;ha sostituita, se presente. Scarta sposta nel Cestino le versioni precedenti e mantiene quelle attuali. Più tardi non cambia nulla e Mod Organizer lo chiederà di nuovo al prossimo avvio.</translation>
+    </message>
+    <message>
+      <source>Older copies of these mods stay where they are, and Mod Organizer offers them at a later start:
+%1</source>
+      <translation>Le copie più vecchie di queste mod restano dove sono e Mod Organizer le proporrà a un avvio successivo:
 %1</translation>
     </message>
   </context>
@@ -8559,6 +8565,10 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
     <message>
       <source>The installation was cancelled while extracting files. The installed mod is back as it was.</source>
       <translation>L&apos;installazione è stata annullata durante l&apos;estrazione dei file. La mod installata è tornata com&apos;era.</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
+      <translation>La mod &quot;%1&quot; scelta per ricevere i nuovi file di questo programma non esiste più. Scegline un&apos;altra in Modifica programmi.</translation>
     </message>
   </context>
   <context>

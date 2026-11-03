@@ -2558,7 +2558,7 @@ class EldenRingMo2Game(BasicGame):
         )
 
     def _swap_route_saves_out(
-        self, session_directory: Path, swap: dict, global_save_root: Path
+        self, session_directory: Path, manifest: dict, swap: dict, global_save_root: Path
     ) -> None:
         """Takes what the game wrote in the Steam folder back to the route (the
         route was backed up before the launch), then puts the Steam folder's
@@ -2567,6 +2567,12 @@ class EldenRingMo2Game(BasicGame):
         if not route.is_absolute():
             raise OSError(_tr("The save-recovery record has no valid route for the swapped saves."))
         route.mkdir(parents=True, exist_ok=True)
+        # Steam's own loose files already put back by a try that failed partway are
+        # not the game's to take to the route; records older than this have no list
+        restored = swap.get("restored_root_files")
+        if not isinstance(restored, list):
+            restored = []
+        swap["restored_root_files"] = restored
         if global_save_root.is_dir():
             for child in list(global_save_root.iterdir()):
                 if child.is_dir() and self._save_directory_contains_elden_ring_saves(child):
@@ -2580,13 +2586,18 @@ class EldenRingMo2Game(BasicGame):
                             destination.parent.mkdir(parents=True, exist_ok=True)
                             shutil.copy2(entry, destination)
                     shutil.rmtree(child)
-                elif child.is_file():
+                elif child.is_file() and child.name not in restored:
                     shutil.copy2(child, route / child.name)
                     child.unlink()
         held = session_directory / self.SwapRootFilesDirectoryName
         if held.is_dir():
             global_save_root.mkdir(parents=True, exist_ok=True)
             for entry in list(held.iterdir()):
+                # recorded first: by now the game's copy of this name has gone to the
+                # route, so whatever a retry finds under it is Steam's
+                if entry.name not in restored:
+                    restored.append(entry.name)
+                    self._write_save_quarantine_manifest(session_directory, manifest)
                 os.replace(entry, global_save_root / entry.name)
             held.rmdir()
         qInfo(
@@ -2774,7 +2785,7 @@ class EldenRingMo2Game(BasicGame):
         if isinstance(swap, dict) and not swap.get("returned"):
             # a launch outside the VFS played from the Steam folder: its
             # saves go back to the route before the Steam ones return
-            self._swap_route_saves_out(session_directory, swap, global_save_root)
+            self._swap_route_saves_out(session_directory, manifest, swap, global_save_root)
             swap["returned"] = True
             self._write_save_quarantine_manifest(session_directory, manifest)
 
