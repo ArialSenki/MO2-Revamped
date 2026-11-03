@@ -763,7 +763,7 @@ void ModListView::onExternalFolderDropped(const QUrl& url, int priority)
   do {
     bool ok;
     name.update(
-        QInputDialog::getText(this, tr("Copy Folder..."),
+        QInputDialog::getText(this, tr("Copy folder..."),
                               tr("This will copy the content of %1 to a new mod.\n"
                                  "Please enter the name:")
                                   .arg(fileInfo.fileName()),

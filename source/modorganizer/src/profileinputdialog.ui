@@ -127,7 +127,7 @@
          <string>If checked, the new profile will use the game's default INI settings instead of global settings.</string>
         </property>
         <property name="whatsThis">
-         <string>If checked, the new profile will use the default game INI settings instead of the global settings. Global settings are the settings you configure when running the game launcher directly, without MO.</string>
+         <string>If checked, the new profile will use the default game INI settings instead of the global settings. Global settings are the settings you configure when running the game launcher directly, without MO2.</string>
         </property>
         <property name="text">
          <string>Use the game's default INI settings</string>

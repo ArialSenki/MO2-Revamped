@@ -1952,7 +1952,7 @@ MainWindow::~MainWindow()
   } catch (std::exception& e) {
     QMessageBox::critical(
         nullptr, tr("Crash on exit"),
-        tr("MO crashed while exiting.  Some settings may not be saved.\n\nError: %1")
+        tr("MO2 crashed while exiting.  Some settings may not be saved.\n\nError: %1")
             .arg(e.what()),
         QMessageBox::Ok);
   }
@@ -2559,7 +2559,7 @@ void MainWindow::createHelpMenu()
   }
 
   // the original MO2 documentation still covers everything Revamped keeps
-  QAction* documentationAction = new QAction(tr("Mod Organizer 2 Documentation"), menu);
+  QAction* documentationAction = new QAction(tr("Mod Organizer 2 documentation"), menu);
   documentationAction->setObjectName(QStringLiteral("mo2DocumentationAction"));
   documentationAction->setIcon(
       FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
@@ -2570,7 +2570,7 @@ void MainWindow::createHelpMenu()
   });
   menu->addAction(documentationAction);
 
-  QAction* whatsThisAction = new QAction(tr("Help on the Interface"), menu);
+  QAction* whatsThisAction = new QAction(tr("Help on the interface"), menu);
   whatsThisAction->setObjectName(QStringLiteral("whatsThisAction"));
   whatsThisAction->setIcon(
       FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
@@ -2590,7 +2590,7 @@ void MainWindow::createHelpMenu()
   });
 
   if (game && !game->getSupportURL().isEmpty()) {
-    QAction* gameSupportAction = new QAction(tr("Game Support Wiki"), menu);
+    QAction* gameSupportAction = new QAction(tr("Game support wiki"), menu);
     gameSupportAction->setObjectName(QStringLiteral("gameSupportWikiAction"));
     gameSupportAction->setIcon(
         FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/mod-page.svg")));
@@ -2602,7 +2602,7 @@ void MainWindow::createHelpMenu()
 
   addMenuSection(menu, tr("Support"));
 
-  QAction* issueAction = new QAction(tr("Report a Problem"), menu);
+  QAction* issueAction = new QAction(tr("Report a problem"), menu);
   issueAction->setObjectName(QStringLiteral("revampedIssueAction"));
   issueAction->setIcon(
       FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/status/warning.svg")));
@@ -2612,7 +2612,7 @@ void MainWindow::createHelpMenu()
   menu->addAction(issueAction);
 
   // the report is made by the MO2 Revamped Information plugin
-  QAction* reportAction = new QAction(tr("Create Bug Report"), menu);
+  QAction* reportAction = new QAction(tr("Create bug report"), menu);
   reportAction->setObjectName(QStringLiteral("revampedBugReportAction"));
   reportAction->setIcon(FluentIcons::glyph(0xEBE8));
   reportAction->setToolTip(tr("Save a ZIP with the logs, to attach it to your report."));
@@ -2644,6 +2644,9 @@ void MainWindow::createHelpMenu()
 
   QAction* aboutQtAction = menu->addAction(tr("About Qt"), qApp, &QApplication::aboutQt);
   aboutQtAction->setObjectName(QStringLiteral("aboutQtAction"));
+  if (FluentIcons::active()) {
+    aboutQtAction->setIcon(FluentIcons::glyph(0xE946));
+  }
   aboutQtAction->setToolTip(tr("Show the version and license of the Qt framework."));
 
   if (m_fluentOverflowAction != nullptr) {
@@ -2710,7 +2713,7 @@ void MainWindow::showEvent(QShowEvent* event)
       if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
         // Let the user decline instead of always opening a browser on first start.
         if (QMessageBox::question(
-                this, tr("Game Support Wiki"),
+                this, tr("Game support wiki"),
                 tr("A game support wiki is available for this game. Open it now? "
                    "You can also open it later from the \"...\" menu."),
                 QMessageBox::Yes | QMessageBox::No,
@@ -2727,7 +2730,7 @@ void MainWindow::showEvent(QShowEvent* event)
         DoNothing
       };
       FluentContentDialog setup(
-          this, QStringLiteral("CategorySetupDialog"), tr("Category Setup"),
+          this, QStringLiteral("CategorySetupDialog"), tr("Category setup"),
           tr("If you've already connected to Nexus, you can automatically import Nexus "
              "categories for this game (if applicable). Otherwise, use the old Mod "
              "Organizer default category structure, or leave the categories blank (for "
@@ -3665,7 +3668,7 @@ void MainWindow::setupNetworkProxy(bool activate)
 
 void MainWindow::activateProxy(bool activate)
 {
-  QProgressDialog busyDialog(tr("Activating Network Proxy"), QString(), 0, 0, this);
+  QProgressDialog busyDialog(tr("Activating network proxy"), QString(), 0, 0, this);
   busyDialog.setWindowTitle(tr("Network proxy"));
   busyDialog.setMinimumWidth(420);
   busyDialog.setWindowFlags(busyDialog.windowFlags() &
@@ -3787,7 +3790,7 @@ void MainWindow::processUpdates()
 
   if (currentVersion < lastVersion) {
     const auto text =
-        tr("Notice: Your current MO version (%1) is lower than the previously used one "
+        tr("Notice: Your current MO2 version (%1) is lower than the previously used one "
            "(%2). "
            "The GUI may not downgrade gracefully, so you may experience oddities. "
            "However, there should be no serious issues.")
@@ -3984,8 +3987,8 @@ QString MainWindow::gameGuideTitle(const MOBase::IPluginGame* game) const
 {
   return game != nullptr &&
                  game->gameShortName().compare("nightreign", Qt::CaseInsensitive) == 0
-             ? tr("Nightreign Guide")
-             : tr("Elden Ring Guide");
+             ? tr("Nightreign guide")
+             : tr("Elden Ring guide");
 }
 
 void MainWindow::showEldenRingGuide()
@@ -4000,7 +4003,7 @@ void MainWindow::showEldenRingGuide()
   guide.setWindowFlag(Qt::WindowType::WindowContextHelpButtonHint, false);
 
   auto* layout = new QVBoxLayout(&guide);
-  layout->setContentsMargins(14, 12, 14, 12);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(10);
 
   auto* headerPanel = new QFrame(&guide);
@@ -4186,8 +4189,8 @@ void MainWindow::showEldenRingGuide()
            "active profile. Its arrow opens shortcut options.</p>")},
        {tr("More help"),
         tr("<p>The <b>…</b> menu offers this guide, the Mod Organizer 2 documentation, "
-           "a game support wiki when its MO2 plugin provides one, <i>Report a Problem</i>, "
-           "<i>Create Bug Report</i>, and <i>About MO2 Revamped</i>.</p>")}});
+           "a game support wiki when its MO2 plugin provides one, <i>Report a problem</i>, "
+           "<i>Create bug report</i>, and <i>About MO2 Revamped</i>.</p>")}});
 
   layout->addWidget(tabs, 1);
 
@@ -6060,7 +6063,7 @@ QString MainWindow::queryRestore(const QString& filePath)
                  "plugin list, load order, and locked order must all be present.")
             : tr("There are no backups to restore");
     showProfileBackupPrompt(
-        this, tr("No Backups"),
+        this, tr("No backups"),
         incompleteLoadOrderBackupFound
             ? tr("No complete plugin-order backup is available.")
             : tr("There are no backups to restore."),
@@ -6328,7 +6331,7 @@ void MainWindow::deleteProfileModListBackup()
   }
 
   if (dialog.numChoices() == 0) {
-    showProfileBackupPrompt(this, tr("No Backups"),
+    showProfileBackupPrompt(this, tr("No backups"),
                             tr("There are no mod list backups to delete."),
                             tr("This profile has no saved mod list backups."),
                             tr("OK"));
@@ -6414,7 +6417,7 @@ void MainWindow::deleteProfileLoadOrderBackup()
 
   if (dialog.numChoices() == 0) {
     showProfileBackupPrompt(
-        this, tr("No Backups"),
+        this, tr("No backups"),
         tr("There are no plugin-order backups to delete."),
         tr("This profile has no saved plugin-order backups."), tr("OK"));
     return;

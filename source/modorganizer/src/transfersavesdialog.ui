@@ -17,7 +17,7 @@
     </size>
    </property>
    <property name="windowTitle">
-    <string>Transfer Save Games</string>
+    <string>Transfer save games</string>
    </property>
    <layout class="QVBoxLayout" name="transferSavesMainLayout">
     <property name="leftMargin">

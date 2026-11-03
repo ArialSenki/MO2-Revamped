@@ -111,6 +111,7 @@ void flattenHeaders(QDialog* dialog)
         label->setIndent(0);
       }
       if (label->text().isEmpty() && label->pixmap().isNull() == false &&
+          !label->property("fluentKeepIcon").toBool() &&
           !label->objectName().contains(QLatin1String("Logo"), Qt::CaseInsensitive)) {
         label->hide();
       }

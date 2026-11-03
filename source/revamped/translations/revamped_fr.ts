@@ -492,6 +492,10 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
       <source>Mods store their category assignments by this ID. MO2 assigns it to each new category.</source>
       <translation>Les mods enregistrent leurs catégories à l&apos;aide de cet ID. MO2 l&apos;attribue à chaque nouvelle catégorie.</translation>
     </message>
+    <message>
+      <source>Manage categories - %1</source>
+      <translation>Gérer les catégories - %1</translation>
+    </message>
   </context>
   <context>
     <name>CategoryImportDialog</name>
@@ -1109,6 +1113,14 @@ Voulez-vous vraiment continuer ?</translation>
       <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
       <translation>Les archives téléchargées depuis Nexus ou ajoutées avec Installer apparaissent ici. Les téléchargements masqués apparaissent quand les téléchargements masqués sont affichés.</translation>
     </message>
+    <message>
+      <source>Delete files?</source>
+      <translation>Supprimer les fichiers ?</translation>
+    </message>
+    <message>
+      <source>Hide files?</source>
+      <translation>Masquer les fichiers ?</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -1450,6 +1462,22 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
     <message>
       <source>Mod Organizer needs Java to launch this JAR. If Java is already installed, browse to its javaw.exe file and select it as the binary.</source>
       <translation>Mod Organizer a besoin de Java pour lancer ce JAR. Si Java est déjà installé, recherchez son fichier javaw.exe et sélectionnez-le comme programme.</translation>
+    </message>
+    <message>
+      <source>Save programs</source>
+      <translation>Enregistrer les programmes</translation>
+    </message>
+    <message>
+      <source>Restore the game&apos;s programs</source>
+      <translation>Restaurer les programmes du jeu</translation>
+    </message>
+    <message>
+      <source>Unsaved changes</source>
+      <translation>Modifications non enregistrées</translation>
+    </message>
+    <message>
+      <source>Select an executable</source>
+      <translation>Sélectionner un exécutable</translation>
     </message>
   </context>
   <context>
@@ -4275,6 +4303,22 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
       <translation>Ce nom apparaît dans Outils &gt; Elden Ring Save Isolation. Si tu choisis une sauvegarde de départ ci-dessous, elle sera copiée dans ce profil de sauvegarde nommé. Elden Ring charge le fichier sélectionné en ER0000 avec sa propre extension.</translation>
     </message>
+    <message>
+      <source>1 file</source>
+      <translation>1 fichier</translation>
+    </message>
+    <message>
+      <source>Steam / Elden Ring</source>
+      <translation>Steam / Elden Ring</translation>
+    </message>
+    <message>
+      <source>Seamless Co-op (.co2)</source>
+      <translation>Seamless Co-op (.co2)</translation>
+    </message>
+    <message>
+      <source>Convergence (.cnv)</source>
+      <translation>Convergence (.cnv)</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingStartupOptions</name>
@@ -5673,10 +5717,6 @@ Elles continueront à chercher dans l'ancien dossier sans rien trouver tant que 
       <translation>Nom de la copie</translation>
     </message>
     <message>
-      <source>copy</source>
-      <translation>copie</translation>
-    </message>
-    <message>
       <source>The instance could not be copied: %1</source>
       <translation>L'instance n'a pas pu être copiée : %1</translation>
     </message>
@@ -5850,6 +5890,10 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
 
 %1</translation>
     </message>
+    <message>
+      <source>%1 copy</source>
+      <translation>Copie de %1</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -5979,7 +6023,7 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
       <translation>Choisissez un profil pour changer ses mods activés. Chaque profil garde sa propre liste, pour différentes configurations de mods ou parties.</translation>
     </message>
     <message>
-      <source>Create Bug Report</source>
+      <source>Create bug report</source>
       <translation>Créer un rapport de bug</translation>
     </message>
     <message>
@@ -5991,7 +6035,7 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
       <translation>Ouvre les guides et l'aide, permet de signaler un problème et donne accès aux liens du projet.</translation>
     </message>
     <message>
-      <source>Nightreign Guide</source>
+      <source>Nightreign guide</source>
       <translation>Guide de Nightreign</translation>
     </message>
     <message>
@@ -6241,7 +6285,7 @@ Les BSA cochés ici sont chargés de façon à respecter correctement votre ordr
       <translation>Aperçu de l'interface</translation>
     </message>
     <message>
-      <source>Elden Ring Guide</source>
+      <source>Elden Ring guide</source>
       <translation>Guide d'Elden Ring</translation>
     </message>
     <message>
@@ -6273,7 +6317,7 @@ Les BSA cochés ici sont chargés de façon à respecter correctement votre ordr
       <translation>Assistance</translation>
     </message>
     <message>
-      <source>Report a Problem</source>
+      <source>Report a problem</source>
       <translation>Signaler un problème</translation>
     </message>
     <message>
@@ -6541,7 +6585,7 @@ Enfin, vous pouvez désactiver complètement la correspondance des catégories N
       <translation>Plus d'aide</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The &lt;b&gt;…&lt;/b&gt; menu offers this guide, the Mod Organizer 2 documentation, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, &lt;i&gt;Create Bug Report&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
+      <source>&lt;p&gt;The &lt;b&gt;…&lt;/b&gt; menu offers this guide, the Mod Organizer 2 documentation, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a problem&lt;/i&gt;, &lt;i&gt;Create bug report&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Le menu &lt;b&gt;…&lt;/b&gt; propose ce guide, la documentation de Mod Organizer 2, un wiki d'assistance du jeu lorsque son plugin MO2 en fournit un, &lt;i&gt;Signaler un problème&lt;/i&gt;, &lt;i&gt;Créer un rapport de bug&lt;/i&gt; et &lt;i&gt;À propos de MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
@@ -7111,7 +7155,7 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Libellés</translation>
     </message>
     <message>
-      <source>Mod Organizer 2 Documentation</source>
+      <source>Mod Organizer 2 documentation</source>
       <translation>Documentation de Mod Organizer 2</translation>
     </message>
     <message>
@@ -7119,7 +7163,7 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Ouvre la documentation et les guides de Mod Organizer 2.</translation>
     </message>
     <message>
-      <source>Help on the Interface</source>
+      <source>Help on the interface</source>
       <translation>Aide sur l&apos;interface</translation>
     </message>
     <message>
@@ -7279,6 +7323,42 @@ Restaurer remet chaque version précédente en place et envoie à la Corbeille l
 %1</source>
       <translation>Les copies plus anciennes de ces mods restent où elles sont, et Mod Organizer les proposera lors d&apos;un prochain démarrage :
 %1</translation>
+    </message>
+    <message>
+      <source>MO2 crashed while exiting.  Some settings may not be saved.
+
+Error: %1</source>
+      <translation>MO2 a planté en se fermant. Certains paramètres n&apos;ont peut-être pas été enregistrés.
+
+Erreur : %1</translation>
+    </message>
+    <message>
+      <source>Notice: Your current MO2 version (%1) is lower than the previously used one (%2). The GUI may not downgrade gracefully, so you may experience oddities. However, there should be no serious issues.</source>
+      <translation>Remarque : votre version actuelle de MO2 (%1) est antérieure à celle utilisée précédemment (%2). L&apos;interface peut présenter des bizarreries, mais il ne devrait pas y avoir de problème sérieux.</translation>
+    </message>
+    <message>
+      <source>List of available BS Archives. Archives not checked here are not managed by MO2 and ignore installation order.</source>
+      <translation>Liste des archives BS disponibles. Les archives non cochées ici ne sont pas gérées par MO2 et ignorent l&apos;ordre d&apos;installation.</translation>
+    </message>
+    <message>
+      <source>This button will be highlighted on the toolbar if MO2 discovered potential problems in your setup and provide tips on how to fix them.</source>
+      <translation>Ce bouton est mis en évidence dans la barre d&apos;outils si MO2 détecte des problèmes potentiels dans votre configuration, et donne des conseils pour les résoudre.</translation>
+    </message>
+    <message>
+      <source>Game support wiki</source>
+      <translation>Wiki d&apos;aide du jeu</translation>
+    </message>
+    <message>
+      <source>Category setup</source>
+      <translation>Configuration des catégories</translation>
+    </message>
+    <message>
+      <source>No backups</source>
+      <translation>Aucune sauvegarde</translation>
+    </message>
+    <message>
+      <source>Activating network proxy</source>
+      <translation>Activation du proxy réseau</translation>
     </message>
   </context>
   <context>
@@ -7866,6 +7946,20 @@ p, li { white-space: pre-wrap; }
       <source>Version %1</source>
       <translation>Version %1</translation>
     </message>
+    <message>
+      <source>List of esps, esms, and esls contained in this plugin that currently can not be loaded by the game. They will not even appear in the esp-list in the main MO2 window.
+They usually contain optional functionality, see the readme.
+
+Most mods do not have optional esps, so chances are good you are looking at an empty list.</source>
+      <translation>Liste des esps, esms et esls de ce plugin que le jeu ne peut pas charger actuellement. Ils n&apos;apparaissent même pas dans la liste des esps de la fenêtre principale de MO2.
+Ils contiennent généralement des fonctions optionnelles ; consultez le fichier lisez-moi.
+
+La plupart des mods n&apos;ont pas d&apos;esps optionnels, cette liste est donc probablement vide.</translation>
+    </message>
+    <message>
+      <source>This moves a esp to the esp directory so it can be enabled in the main window. Please note that the ESP merely becomes &quot;available&quot;, it will not necessarily be loaded! That is configured in the main window of MO2.</source>
+      <translation>Déplace un esp vers le dossier des esps pour pouvoir l&apos;activer dans la fenêtre principale. L&apos;ESP devient seulement « disponible », il ne sera pas forcément chargé ! Cela se règle dans la fenêtre principale de MO2.</translation>
+    </message>
   </context>
   <context>
     <name>ModList</name>
@@ -7920,6 +8014,10 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>New versions and file conflicts with other mods.</source>
       <translation>Nouvelles versions et conflits de fichiers avec d'autres mods.</translation>
+    </message>
+    <message>
+      <source>Non-MO2</source>
+      <translation>Hors MO2</translation>
     </message>
   </context>
   <context>
@@ -8341,10 +8439,6 @@ Déplacez ce que vous voulez garder dans un mod avant de continuer.</translation
       <translation>Lignes de mods</translation>
     </message>
     <message>
-      <source>Active (checked) mods from the current profile</source>
-      <translation>Mods activés (cochés) du profil actuel</translation>
-    </message>
-    <message>
       <source>Currently visible mods</source>
       <translation>Mods actuellement visibles</translation>
     </message>
@@ -8424,6 +8518,34 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
       <source>Choose a separator</source>
       <translation>Choisir un séparateur</translation>
     </message>
+    <message>
+      <source>Mods installed with old versions of MO2 can&apos;t be reinstalled in this way.</source>
+      <translation>Les mods installés avec d&apos;anciennes versions de MO2 ne peuvent pas être réinstallés de cette façon.</translation>
+    </message>
+    <message>
+      <source>Set priority</source>
+      <translation>Définir la priorité</translation>
+    </message>
+    <message>
+      <source>Opening Nexus links</source>
+      <translation>Ouverture de liens Nexus</translation>
+    </message>
+    <message>
+      <source>Opening web pages</source>
+      <translation>Ouverture de pages web</translation>
+    </message>
+    <message>
+      <source>Create mod...</source>
+      <translation>Créer un mod...</translation>
+    </message>
+    <message>
+      <source>Active mods from the current profile</source>
+      <translation>Mods actifs du profil actuel</translation>
+    </message>
+    <message>
+      <source>You are not currently authenticated with Nexus. Please do so under Settings &gt; Nexus.</source>
+      <translation>Vous n&apos;êtes pas connecté à Nexus. Connectez-vous dans Paramètres &gt; Nexus.</translation>
+    </message>
   </context>
   <context>
     <name>NexusManualKeyDialog</name>
@@ -8481,6 +8603,14 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     <message>
       <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
       <translation>Le mod « %1 » choisi pour recevoir les nouveaux fichiers de ce programme n&apos;existe plus. Choisissez-en un autre dans Modifier les programmes.</translation>
+    </message>
+    <message>
+      <source>An error occurred trying to write back MO2 settings to %1: %2</source>
+      <translation>Une erreur s&apos;est produite lors de l&apos;écriture des paramètres de MO2 dans %1 : %2</translation>
+    </message>
+    <message>
+      <source>Configure mod</source>
+      <translation>Configurer le mod</translation>
     </message>
   </context>
   <context>
@@ -8925,6 +9055,10 @@ Pour garder certains fichiers, déplacez-les d&apos;abord dans un mod.</translat
       <source>Rename</source>
       <translation>Renommer</translation>
     </message>
+    <message>
+      <source>If checked, the new profile will use the default game INI settings instead of the global settings. Global settings are the settings you configure when running the game launcher directly, without MO2.</source>
+      <translation>Si cette option est cochée, le nouveau profil utilise les paramètres INI par défaut du jeu au lieu des paramètres globaux. Les paramètres globaux sont ceux que vous réglez en lançant directement le lanceur du jeu, sans MO2.</translation>
+    </message>
   </context>
   <context>
     <name>ProfilesDialog</name>
@@ -9246,6 +9380,14 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
         <numerusform>%n fichier n'a pas pu être copié, généralement parce qu'un programme comme le jeu l'avait ouvert. Fermez-le, supprimez le nouveau profil et recommencez la copie.</numerusform>
         <numerusform>%n fichiers n'ont pas pu être copiés, généralement parce qu'un programme comme le jeu les avait ouverts. Fermez-le, supprimez le nouveau profil et recommencez la copie.</numerusform>
       </translation>
+    </message>
+    <message>
+      <source>Duplicate profile</source>
+      <translation>Dupliquer le profil</translation>
+    </message>
+    <message>
+      <source>Rename profile</source>
+      <translation>Renommer le profil</translation>
     </message>
   </context>
   <context>
@@ -9960,6 +10102,26 @@ Exemple :
       <source>Create a profile to start using Mod Organizer. Run the game once first, so that its settings exist.</source>
       <translation>Créez un profil pour commencer à utiliser Mod Organizer. Lancez d&apos;abord le jeu une fois pour que ses paramètres existent.</translation>
     </message>
+    <message>
+      <source>File exists</source>
+      <translation>Le fichier existe</translation>
+    </message>
+    <message>
+      <source>Executables blacklist</source>
+      <translation>Liste noire des exécutables</translation>
+    </message>
+    <message>
+      <source>Skip file suffixes</source>
+      <translation>Ignorer les suffixes de fichier</translation>
+    </message>
+    <message>
+      <source>Skip directories</source>
+      <translation>Ignorer les dossiers</translation>
+    </message>
+    <message>
+      <source>Disabled because: %1</source>
+      <translation>Désactivé parce que : %1</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10018,7 +10180,7 @@ p, li { white-space: pre-wrap; }
       <translation>Enregistre une copie restaurable avant toute modification de fichier</translation>
     </message>
     <message>
-      <source>Mod Exists</source>
+      <source>Mod exists</source>
       <translation>Le mod existe déjà</translation>
     </message>
     <message>
@@ -11161,6 +11323,10 @@ Restantes cette heure : %3</translation>
       <source>Cancel stops the check. Hide or close this window to leave it running in the background.</source>
       <translation>Annuler arrête la vérification. Masquez ou fermez cette fenêtre pour la laisser continuer en arrière-plan.</translation>
     </message>
+    <message>
+      <source>Validating Nexus connection</source>
+      <translation>Validation de la connexion à Nexus</translation>
+    </message>
   </context>
   <context>
     <name>cid::NamePage</name>
@@ -11189,8 +11355,8 @@ Restantes cette heure : %3</translation>
       <translation>Dossier de stockage : %1</translation>
     </message>
     <message>
-      <source>&lt;instance name&gt;</source>
-      <translation>&lt;nom de l'instance&gt;</translation>
+      <source>instance name</source>
+      <translation>nom de l&apos;instance</translation>
     </message>
   </context>
   <context>
@@ -11449,6 +11615,10 @@ Le lancer quand même ?</translation>
       <source>&amp;Collapse all</source>
       <translation>Tout &amp;réduire</translation>
     </message>
+    <message>
+      <source>Enter name</source>
+      <translation>Saisir un nom</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeTab</name>
@@ -11559,6 +11729,10 @@ Le lancer quand même ?</translation>
     <message>
       <source>Exception: %1</source>
       <translation>Exception : %1</translation>
+    </message>
+    <message>
+      <source>Copy folder...</source>
+      <translation>Copier le dossier...</translation>
     </message>
   </context>
   <context>
@@ -12011,6 +12185,26 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
       <source>Query info</source>
       <translation>Demander les infos</translation>
     </message>
+    <message>
+      <source>The download link is for a mod for &quot;%1&quot; but this instance of MO2 has been set up for &quot;%2&quot;.</source>
+      <translation>Le lien de téléchargement concerne un mod pour « %1 », mais cette instance de MO2 est configurée pour « %2 ».</translation>
+    </message>
+    <message>
+      <source>Wrong game</source>
+      <translation>Mauvais jeu</translation>
+    </message>
+    <message>
+      <source>Already queued</source>
+      <translation>Déjà dans la file</translation>
+    </message>
+    <message>
+      <source>Already started</source>
+      <translation>Déjà commencé</translation>
+    </message>
+    <message>
+      <source>unknown</source>
+      <translation>inconnu</translation>
+    </message>
   </context>
   <context>
     <name>TextEditor</name>
@@ -12039,6 +12233,20 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     <message>
       <source>Preparing the mods for the program</source>
       <translation>Préparation des mods pour le programme</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModInfoForeign</name>
+    <message>
+      <source>This entry stands for game content managed outside MO2. MO2 doesn&apos;t change it.</source>
+      <translation>Cette entrée représente du contenu du jeu géré en dehors de MO2. MO2 ne le modifie pas.</translation>
+    </message>
+  </context>
+  <context>
+    <name>NexusInterface</name>
+    <message>
+      <source>You must authorize MO2 in Settings &gt; Nexus to use the Nexus API.</source>
+      <translation>Vous devez autoriser MO2 dans Paramètres &gt; Nexus pour utiliser l&apos;API de Nexus.</translation>
     </message>
   </context>
 </TS>

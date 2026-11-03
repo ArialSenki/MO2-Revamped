@@ -5,7 +5,7 @@
   <property name="geometry">
     <rect><x>0</x><y>0</y><width>520</width><height>240</height></rect>
   </property>
-  <property name="windowTitle"><string>Validating Nexus Connection</string></property>
+  <property name="windowTitle"><string>Validating Nexus connection</string></property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="spacing"><number>12</number></property>
    <property name="leftMargin"><number>16</number></property>
@@ -64,9 +64,9 @@
    <item>
     <layout class="QHBoxLayout" name="actionsLayout">
      <property name="spacing"><number>8</number></property>
-     <item><widget class="QPushButton" name="cancel"><property name="text"><string>Cancel</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
      <item><spacer name="actionsSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item>
      <item><widget class="QPushButton" name="hide"><property name="text"><string>Hide</string></property><property name="default"><bool>true</bool></property><property name="autoDefault"><bool>true</bool></property></widget></item>
+     <item><widget class="QPushButton" name="cancel"><property name="text"><string>Cancel</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
     </layout>
    </item>
   </layout>

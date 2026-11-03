@@ -1803,7 +1803,7 @@ void NamePage::updatePathHint()
   const QString name = MOBase::sanitizeFileName(ui->instanceName->text().trimmed());
   const QString folder = name.isEmpty()
                              ? QDir(root).filePath(QCoreApplication::translate(
-                                   "cid::NamePage", "<instance name>"))
+                                   "cid::NamePage", "instance name"))
                              : QDir(root).filePath(name);
   ui->instanceNamePath->setText(
       QCoreApplication::translate("cid::NamePage", "Storage folder: %1")

@@ -126,7 +126,7 @@ private:
       s += "\n";
     }
 
-    s += QObject::tr("Disabled because") + ": " + m_disabledHint.trimmed();
+    s += QObject::tr("Disabled because: %1").arg(m_disabledHint.trimmed());
 
     if (!s.endsWith(".")) {
       s += ".";
@@ -316,7 +316,7 @@ void FileTree::addAsExecutable(FileTreeItem* item)
     QString name = target.completeBaseName();
     for (;;) {
       bool ok = false;
-      name    = QInputDialog::getText(m_tree->window(), tr("Enter Name"),
+      name    = QInputDialog::getText(m_tree->window(), tr("Enter name"),
                                       tr("Enter a name for the executable"),
                                       QLineEdit::Normal, name, &ok)
                  .trimmed();

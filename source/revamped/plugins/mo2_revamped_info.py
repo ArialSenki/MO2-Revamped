@@ -911,7 +911,6 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         initial_path = Path.home() / "Desktop" / filename
         save_dialog = QFileDialog(parent)
         save_dialog.setObjectName("MO2RevampedReportSaveDialog")
-        save_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
         save_dialog.setWindowTitle(_tr("Save MO2 Revamped report"))
         save_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         save_dialog.setFileMode(QFileDialog.FileMode.AnyFile)

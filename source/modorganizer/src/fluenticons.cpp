@@ -67,6 +67,10 @@ const QHash<QString, Glyph>& glyphTable()
     };
 
     add(":/MO/gui/", {
+                         // the filter list's three states: off, include, exclude
+                         {"unchecked-checkbox", 0xE739, Tone::Muted},
+                         {"checked-checkbox", 0xE73D, Tone::Accent},
+                         {"indeterminate-checkbox", 0xE711, Tone::Critical},
                          {"save", 0xE74E, Tone::Ink},
                          {"word-wrap", 0xE8E4, Tone::Ink},
                          {"add", 0xE710, Tone::Ink},

@@ -119,7 +119,6 @@ void styleProfilePrompt(QMessageBox& prompt,
                         bool destructive = false)
 {
   prompt.setObjectName("revampedProfileActionPrompt");
-  prompt.setWindowTitle("MO2 Revamped");
   prompt.setTextFormat(Qt::PlainText);
 
   if (QLabel* label = prompt.findChild<QLabel*>("qt_msgbox_label")) {
@@ -141,10 +140,10 @@ void styleProfilePrompt(QMessageBox& prompt,
   }
 }
 
-void showProfileNotice(QWidget* parent, QMessageBox::Icon icon,
+void showProfileNotice(QWidget* parent, const QString& title, QMessageBox::Icon icon,
                        const QString& heading, const QString& details)
 {
-  QMessageBox prompt(icon, "MO2 Revamped", heading, QMessageBox::Ok, parent);
+  QMessageBox prompt(icon, title, heading, QMessageBox::Ok, parent);
   prompt.setInformativeText(details);
   styleProfilePrompt(prompt, QMessageBox::Ok);
   prompt.exec();
@@ -610,7 +609,7 @@ void ProfilesDialog::createProfile(const QString& name, const Profile& reference
     emit profileCreated(profile.get());
     if (failedCopies > 0) {
       showProfileNotice(
-          this, QMessageBox::Warning, tr("The copy is incomplete"),
+          this, tr("Duplicate profile"), QMessageBox::Warning, tr("The copy is incomplete"),
           tr("%n file(s) could not be copied, usually because a program such as "
              "the game had them open. Close it, remove the new profile and copy "
              "again.",
@@ -811,7 +810,7 @@ void ProfilesDialog::addProfile()
   if (okClicked && (name.size() > 0)) {
     QString folderName = name;
     if (fixDirectoryName(folderName) && profileNameTaken(m_list, folderName)) {
-      showProfileNotice(this, QMessageBox::Warning, tr("That name is already in use"),
+      showProfileNotice(this, tr("New profile"), QMessageBox::Warning, tr("That name is already in use"),
                         tr("Choose another name for this profile."));
       return;
     }
@@ -837,13 +836,13 @@ void ProfilesDialog::copyProfile()
 
   QString name = dialog.getName();
   if (!fixDirectoryName(name) || name.isEmpty()) {
-    showProfileNotice(this, QMessageBox::Warning, tr("Invalid profile name"),
+    showProfileNotice(this, tr("Duplicate profile"), QMessageBox::Warning, tr("Invalid profile name"),
                       tr("Choose a valid name for this profile."));
     return;
   }
 
   if (profileNameTaken(m_list, name)) {
-    showProfileNotice(this, QMessageBox::Warning, tr("That name is already in use"),
+    showProfileNotice(this, tr("Duplicate profile"), QMessageBox::Warning, tr("That name is already in use"),
                       tr("Choose another name for this profile."));
     return;
   }
@@ -866,7 +865,7 @@ void ProfilesDialog::removeProfile()
       profileToDelete ? profileToDelete->name() : selectedItem->text();
   if (profileToDelete &&
       profileName.compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
-    showProfileNotice(this, QMessageBox::Warning,
+    showProfileNotice(this, tr("Delete profile"), QMessageBox::Warning,
                       tr("This profile is currently active"),
                       tr("Switch to another profile before removing it."));
     return;
@@ -874,12 +873,12 @@ void ProfilesDialog::removeProfile()
   // a launch outside the virtual folder writes its saves back to its route when
   // the game closes, which would bring this folder back
   if (m_eldenRing && gameIsRunning(m_Game)) {
-    showProfileNotice(this, QMessageBox::Warning, tr("The game is running"),
+    showProfileNotice(this, tr("Delete profile"), QMessageBox::Warning, tr("The game is running"),
                       tr("Close the game before deleting a profile."));
     return;
   }
 
-  QMessageBox confirmBox(QMessageBox::Warning, "MO2 Revamped",
+  QMessageBox confirmBox(QMessageBox::Warning, tr("Delete profile"),
                          tr("Remove profile \"%1\"?").arg(profileName),
                          QMessageBox::Yes | QMessageBox::No, this);
   confirmBox.setDefaultButton(QMessageBox::No);
@@ -899,7 +898,7 @@ void ProfilesDialog::removeProfile()
     QString profilePath;
     if (profileToDelete.get() == nullptr) {
       profilePath = Settings::instance().paths().profiles() + "/" + profileName;
-      QMessageBox brokenProfileBox(QMessageBox::Warning, "MO2 Revamped",
+      QMessageBox brokenProfileBox(QMessageBox::Warning, tr("Delete profile"),
                                    tr("This profile appears to be broken."),
                                    QMessageBox::Yes | QMessageBox::No, this);
       brokenProfileBox.setDefaultButton(QMessageBox::No);
@@ -926,7 +925,7 @@ void ProfilesDialog::removeProfile()
     if (!removed && result.error != 0 && !result.aborted) {
       log::warn("Failed to move \"{}\" to the Recycle Bin (error {})", profilePath,
                 result.error);
-      QMessageBox permanentBox(QMessageBox::Warning, "MO2 Revamped",
+      QMessageBox permanentBox(QMessageBox::Warning, tr("Delete profile"),
                                tr("The profile could not be moved to the Recycle Bin."),
                                QMessageBox::Yes | QMessageBox::No, this);
       permanentBox.setDefaultButton(QMessageBox::No);
@@ -966,14 +965,14 @@ void ProfilesDialog::renameProfile()
   }
 
   if (profile->name() == m_ActiveProfileName) {
-    showProfileNotice(this, QMessageBox::Warning,
+    showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning,
                       tr("This profile is currently active"),
                       tr("Switch to another profile before renaming it."));
     return;
   }
 
   if (m_eldenRing && gameIsRunning(m_Game)) {
-    showProfileNotice(this, QMessageBox::Warning, tr("The game is running"),
+    showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning, tr("The game is running"),
                       tr("Close the game before renaming a profile."));
     return;
   }
@@ -985,13 +984,13 @@ void ProfilesDialog::renameProfile()
 
   QString name = dialog.getName();
   if (!fixDirectoryName(name) || name.isEmpty()) {
-    showProfileNotice(this, QMessageBox::Warning, tr("Invalid profile name"),
+    showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning, tr("Invalid profile name"),
                       tr("Choose a valid name for this profile."));
     return;
   }
 
   if (profileNameTaken(m_list, name, m_list->currentItem())) {
-    showProfileNotice(this, QMessageBox::Warning, tr("That name is already in use"),
+    showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning, tr("That name is already in use"),
                       tr("Choose another name for this profile."));
     return;
   }
@@ -999,7 +998,7 @@ void ProfilesDialog::renameProfile()
   QString oldName = profile->name();
   // a file open inside the profile (a save, a backup) blocks the rename
   if (!profile->rename(name)) {
-    showProfileNotice(this, QMessageBox::Warning, tr("The profile was not renamed"),
+    showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning, tr("The profile was not renamed"),
                       tr("Windows could not rename the profile folder. Close any "
                          "program using files in it and try again."));
     return;

@@ -997,7 +997,7 @@
                 <enum>Qt::CustomContextMenu</enum>
                </property>
                <property name="toolTip">
-                <string>List of available BS Archives. Archives not checked here are not managed by MO and ignore installation order.</string>
+                <string>List of available BS Archives. Archives not checked here are not managed by MO2 and ignore installation order.</string>
                </property>
                <property name="whatsThis">
                 <string>
@@ -1797,7 +1797,7 @@
     <string>Open the notifications dialog</string>
    </property>
    <property name="whatsThis">
-    <string>This button will be highlighted on the toolbar if MO discovered potential problems in your setup and provide tips on how to fix them.</string>
+    <string>This button will be highlighted on the toolbar if MO2 discovered potential problems in your setup and provide tips on how to fix them.</string>
    </property>
   </action>
   <action name="actionHelp">

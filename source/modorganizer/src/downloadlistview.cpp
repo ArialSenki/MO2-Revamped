@@ -558,7 +558,7 @@ void DownloadListView::issueResume(int index)
 void DownloadListView::issueDeleteAll()
 {
   if (QMessageBox::warning(
-          this, tr("Delete Files?"),
+          this, tr("Delete files?"),
           tr("This will move all finished downloads to the Recycle Bin.\n\n"
              "Are you absolutely sure you want to proceed?"),
           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -569,7 +569,7 @@ void DownloadListView::issueDeleteAll()
 void DownloadListView::issueDeleteCompleted()
 {
   if (QMessageBox::warning(
-          this, tr("Delete Files?"),
+          this, tr("Delete files?"),
           tr("This will move all installed downloads to the Recycle Bin.\n\n"
              "Are you absolutely sure you want to proceed?"),
           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -580,7 +580,7 @@ void DownloadListView::issueDeleteCompleted()
 void DownloadListView::issueDeleteUninstalled()
 {
   if (QMessageBox::warning(
-          this, tr("Delete Files?"),
+          this, tr("Delete files?"),
           tr("This will move all uninstalled downloads to the Recycle Bin.\n\n"
              "Are you absolutely sure you want to proceed?"),
           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -590,7 +590,7 @@ void DownloadListView::issueDeleteUninstalled()
 
 void DownloadListView::issueRemoveFromViewAll()
 {
-  if (QMessageBox::question(this, tr("Hide Files?"),
+  if (QMessageBox::question(this, tr("Hide files?"),
                             tr("This will remove all finished downloads from this list "
                                "(but NOT from disk)."),
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -600,7 +600,7 @@ void DownloadListView::issueRemoveFromViewAll()
 
 void DownloadListView::issueRemoveFromViewCompleted()
 {
-  if (QMessageBox::question(this, tr("Hide Files?"),
+  if (QMessageBox::question(this, tr("Hide files?"),
                             tr("This will remove all installed downloads from this "
                                "list (but NOT from disk)."),
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -610,7 +610,7 @@ void DownloadListView::issueRemoveFromViewCompleted()
 
 void DownloadListView::issueRemoveFromViewUninstalled()
 {
-  if (QMessageBox::question(this, tr("Hide Files?"),
+  if (QMessageBox::question(this, tr("Hide files?"),
                             tr("This will remove all uninstalled downloads from this "
                                "list (but NOT from disk)."),
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {

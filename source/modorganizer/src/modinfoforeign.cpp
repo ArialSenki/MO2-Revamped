@@ -33,8 +33,8 @@ int ModInfoForeign::getHighlight() const
 
 QString ModInfoForeign::getDescription() const
 {
-  return tr("This pseudo mod represents content managed outside MO. It isn't modified "
-            "by MO.");
+  return tr("This entry stands for game content managed outside MO2. MO2 doesn't "
+            "change it.");
 }
 
 ModInfoForeign::ModInfoForeign(const QString& modName, const QString& referenceFile,

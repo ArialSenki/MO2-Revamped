@@ -340,7 +340,7 @@ void ESPsTab::onActivate()
     bool okClicked = false;
 
     newName = QInputDialog::getText(
-        parentWidget(), QObject::tr("File Exists"),
+        parentWidget(), QObject::tr("File exists"),
         QObject::tr("A file with that name exists, please enter a new one"),
         QLineEdit::Normal, file.fileName(), &okClicked);
 

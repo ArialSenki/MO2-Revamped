@@ -669,8 +669,8 @@ void DownloadManager::addNXMDownload(const QString& url)
     log::debug("download requested for wrong game (game: {}, url: {})",
                m_ManagedGame->gameShortName(), nxmInfo.game());
     QMessageBox::information(
-        m_ParentWidget, tr("Wrong Game"),
-        tr("The download link is for a mod for \"%1\" but this instance of MO "
+        m_ParentWidget, tr("Wrong game"),
+        tr("The download link is for a mod for \"%1\" but this instance of MO2 "
            "has been set up for \"%2\".")
             .arg(nxmInfo.game())
             .arg(m_ManagedGame->gameShortName()),
@@ -691,7 +691,7 @@ void DownloadManager::addNXMDownload(const QString& url)
       log::debug("download requested is already queued (mod: {}, file: {})",
                  nxmInfo.modId(), nxmInfo.fileId());
 
-      QMessageBox::information(m_ParentWidget, tr("Already Queued"), infoStr,
+      QMessageBox::information(m_ParentWidget, tr("Already queued"), infoStr,
                                QMessageBox::Ok);
       return;
     }
@@ -720,7 +720,7 @@ void DownloadManager::addNXMDownload(const QString& url)
           infoStr  = infoStr.arg(download->m_FileInfo->modName);
         } else {
           debugStr = debugStr.arg(QStringLiteral("<blank>"));
-          infoStr  = infoStr.arg(QStringLiteral("<blank>"));
+          infoStr  = infoStr.arg(tr("unknown"));
         }
 
         // %3
@@ -736,11 +736,11 @@ void DownloadManager::addNXMDownload(const QString& url)
           infoStr  = infoStr.arg(download->m_FileName);
         } else {
           debugStr = debugStr.arg(QStringLiteral("<blank>"));
-          infoStr  = infoStr.arg(QStringLiteral("<blank>"));
+          infoStr  = infoStr.arg(tr("unknown"));
         }
 
         log::debug("{}", debugStr);
-        QMessageBox::information(m_ParentWidget, tr("Already Started"), infoStr,
+        QMessageBox::information(m_ParentWidget, tr("Already started"), infoStr,
                                  QMessageBox::Ok);
         return;
       }

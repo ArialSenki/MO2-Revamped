@@ -883,7 +883,7 @@ void NexusInterface::nextRequest()
     } else {
       log::error(
           "{}",
-          tr("You must authorize MO2 in Settings -> Nexus to use the Nexus API."));
+          tr("You must authorize MO2 in Settings > Nexus to use the Nexus API."));
     }
   }
 

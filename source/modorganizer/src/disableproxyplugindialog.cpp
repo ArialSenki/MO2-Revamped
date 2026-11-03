@@ -1,5 +1,6 @@
 #include "disableproxyplugindialog.h"
 
+#include "fluenticons.h"
 #include "ui_disableproxyplugindialog.h"
 
 using namespace MOBase;
@@ -10,6 +11,11 @@ DisableProxyPluginDialog::DisableProxyPluginDialog(
     : QDialog(parent), ui(new Ui::DisableProxyPluginDialog)
 {
   ui->setupUi(this);
+
+  ui->label_2->setPixmap(FluentIcons::glyph(0xE7BA, FluentIcons::Tone::Caution)
+                             .pixmap(QSize(28, 28), devicePixelRatioF()));
+  // this one warns, it isn't a decoration
+  ui->label_2->setProperty("fluentKeepIcon", true);
 
   ui->topLabel->setText(QObject::tr("Disabling the '%1' plugin will prevent the "
                                     "following %2 plugin(s) from working:",

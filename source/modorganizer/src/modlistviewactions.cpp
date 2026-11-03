@@ -196,7 +196,7 @@ bool confirmCategoryAssignment(QWidget* parent, bool* hideWarning)
   dialog.resize(520, 205);
 
   auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 12, 16, 12);
+  layout->setContentsMargins(16, 16, 16, 14);
   layout->setSpacing(6);
 
   auto* title = new QLabel(QObject::tr("Assign Nexus categories"), &dialog);
@@ -479,7 +479,7 @@ void ModListViewActions::checkModsForUpdates() const
       NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
     } else {
       const QString notice = tr("You are not currently authenticated with Nexus. Please do so "
-                                "under Settings -> Nexus.");
+                                "under Settings > Nexus.");
       log::warn("{}", notice);
       MessageDialog::showMessage(notice, m_parent);
     }
@@ -553,7 +553,7 @@ void ModListViewActions::checkModsForUpdates(
       NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
     } else {
       const QString notice = tr("You are not currently authenticated with Nexus. Please do so "
-                                "under Settings -> Nexus.");
+                                "under Settings > Nexus.");
       log::warn("{}", notice);
       MessageDialog::showMessage(notice, m_parent);
     }
@@ -603,19 +603,23 @@ void ModListViewActions::exportModListCSV() const
   auto* optionsLayout = new QHBoxLayout;
   optionsLayout->setSpacing(14);
 
-  auto* groupBoxRows = new QGroupBox(tr("Mod rows"), &selection);
+  auto* groupBoxRows = new QGroupBox(&selection);
   groupBoxRows->setObjectName(QStringLiteral("exportRowsGroup"));
+  groupBoxRows->setAccessibleName(tr("Mod rows"));
+  auto* rowsTitle = new QLabel(tr("Mod rows"), groupBoxRows);
+  rowsTitle->setObjectName(QStringLiteral("fluentCardTitle"));
   auto* all = new QRadioButton(tr("All installed mods"), groupBoxRows);
   all->setObjectName(QStringLiteral("exportAllRows"));
   auto* active = new QRadioButton(
-      tr("Active (checked) mods from the current profile"), groupBoxRows);
+      tr("Active mods from the current profile"), groupBoxRows);
   active->setObjectName(QStringLiteral("exportActiveRows"));
   auto* visible = new QRadioButton(tr("Currently visible mods"), groupBoxRows);
   visible->setObjectName(QStringLiteral("exportVisibleRows"));
 
   auto* rowsLayout = new QVBoxLayout(groupBoxRows);
-  rowsLayout->setContentsMargins(12, 14, 12, 12);
+  rowsLayout->setContentsMargins(12, 4, 12, 12);
   rowsLayout->setSpacing(8);
+  rowsLayout->addWidget(rowsTitle);
   rowsLayout->addWidget(all);
   rowsLayout->addWidget(active);
   rowsLayout->addWidget(visible);
@@ -627,8 +631,11 @@ void ModListViewActions::exportModListCSV() const
   buttonGroupRows->addButton(visible, 2);
   buttonGroupRows->button(0)->setChecked(true);
 
-  auto* groupBoxColumns = new QGroupBox(tr("CSV columns"), &selection);
+  auto* groupBoxColumns = new QGroupBox(&selection);
   groupBoxColumns->setObjectName(QStringLiteral("exportColumnsGroup"));
+  groupBoxColumns->setAccessibleName(tr("CSV columns"));
+  auto* columnsTitle = new QLabel(tr("CSV columns"), groupBoxColumns);
+  columnsTitle->setObjectName(QStringLiteral("fluentCardTitle"));
 
   auto* mod_Priority = new QCheckBox(tr("Priority"), groupBoxColumns);
   mod_Priority->setObjectName(QStringLiteral("exportPriority"));
@@ -655,21 +662,23 @@ void ModListViewActions::exportModListCSV() const
   download_File_Name->setObjectName(QStringLiteral("exportDownloadFileName"));
 
   auto* columnsLayout = new QGridLayout(groupBoxColumns);
-  columnsLayout->setContentsMargins(12, 14, 12, 12);
+  columnsLayout->setContentsMargins(12, 4, 12, 12);
   columnsLayout->setHorizontalSpacing(14);
   columnsLayout->setVerticalSpacing(6);
-  columnsLayout->addWidget(mod_Priority, 0, 0);
-  columnsLayout->addWidget(mod_Name, 0, 1);
-  columnsLayout->addWidget(mod_Status, 1, 0);
-  columnsLayout->addWidget(mod_Note, 1, 1);
-  columnsLayout->addWidget(primary_Category, 2, 0);
-  columnsLayout->addWidget(nexus_ID, 2, 1);
-  columnsLayout->addWidget(mod_Nexus_URL, 3, 0);
-  columnsLayout->addWidget(mod_Version, 3, 1);
-  columnsLayout->addWidget(install_Date, 4, 0);
-  columnsLayout->addWidget(download_File_Name, 4, 1);
+  columnsLayout->addWidget(columnsTitle, 0, 0, 1, 2);
+  columnsLayout->addWidget(mod_Priority, 1, 0);
+  columnsLayout->addWidget(mod_Name, 1, 1);
+  columnsLayout->addWidget(mod_Status, 2, 0);
+  columnsLayout->addWidget(mod_Note, 2, 1);
+  columnsLayout->addWidget(primary_Category, 3, 0);
+  columnsLayout->addWidget(nexus_ID, 3, 1);
+  columnsLayout->addWidget(mod_Nexus_URL, 4, 0);
+  columnsLayout->addWidget(mod_Version, 4, 1);
+  columnsLayout->addWidget(install_Date, 5, 0);
+  columnsLayout->addWidget(download_File_Name, 5, 1);
   columnsLayout->setColumnStretch(0, 1);
   columnsLayout->setColumnStretch(1, 1);
+  columnsLayout->setRowStretch(6, 1);
 
   optionsLayout->addWidget(groupBoxRows, 1);
   optionsLayout->addWidget(groupBoxColumns, 2);
@@ -853,7 +862,7 @@ void ModListViewActions::displayModInformation(ModInfo::Ptr modInfo,
   } else {
     if (!m_core.modList()->modInfoAboutToChange(modInfo)) {
       log::debug("a different mod information dialog is open. If this is incorrect, "
-                 "please restart MO");
+                 "please restart MO2");
       return;
     }
 
@@ -915,7 +924,7 @@ void ModListViewActions::sendModsToBottom(const QModelIndexList& indexes) const
 void ModListViewActions::sendModsToPriority(const QModelIndexList& indexes) const
 {
   bool ok;
-  int priority = QInputDialog::getInt(m_parent, tr("Set Priority"),
+  int priority = QInputDialog::getInt(m_parent, tr("Set priority"),
                                       tr("Set the priority of the selected mods"),
                                       indexes.isEmpty()
                                           ? 0
@@ -1179,7 +1188,7 @@ void ModListViewActions::markConverted(const QModelIndexList& indices) const
 void ModListViewActions::visitOnNexus(const QModelIndexList& indices) const
 {
   if (indices.size() > 10) {
-    if (QMessageBox::question(m_parent, tr("Opening Nexus Links"),
+    if (QMessageBox::question(m_parent, tr("Opening Nexus links"),
                               tr("You are trying to open %1 links to Nexus Mods.  Are "
                                  "you sure you want to do this?")
                                   .arg(indices.size()),
@@ -1203,7 +1212,7 @@ void ModListViewActions::visitOnNexus(const QModelIndexList& indices) const
 void ModListViewActions::visitWebPage(const QModelIndexList& indices) const
 {
   if (indices.size() > 10) {
-    if (QMessageBox::question(m_parent, tr("Opening Web Pages"),
+    if (QMessageBox::question(m_parent, tr("Opening web pages"),
                               tr("You are trying to open %1 Web Pages.  Are you sure "
                                  "you want to do this?")
                                   .arg(indices.size()),
@@ -1225,7 +1234,7 @@ void ModListViewActions::visitWebPage(const QModelIndexList& indices) const
 void ModListViewActions::visitNexusOrWebPage(const QModelIndexList& indices) const
 {
   if (indices.size() > 10) {
-    if (QMessageBox::question(m_parent, tr("Opening Web Pages"),
+    if (QMessageBox::question(m_parent, tr("Opening web pages"),
                               tr("You are trying to open %1 Web Pages.  Are you sure "
                                  "you want to do this?")
                                   .arg(indices.size()),
@@ -1282,7 +1291,7 @@ void ModListViewActions::reinstallMod(const QModelIndex& index) const
   } else {
     QMessageBox::information(
         m_parent, tr("Failed"),
-        tr("Mods installed with old versions of MO can't be reinstalled in this way."));
+        tr("Mods installed with old versions of MO2 can't be reinstalled in this way."));
   }
 }
 
@@ -1637,7 +1646,7 @@ void ModListViewActions::createModFromOverwrite() const
     bool ok;
     name.update(
         QInputDialog::getText(
-            m_parent, tr("Create Mod..."),
+            m_parent, tr("Create mod..."),
             tr("This will move all files from overwrite into a new, regular mod.\n"
                "Please enter a name:"),
             QLineEdit::Normal, "", &ok),

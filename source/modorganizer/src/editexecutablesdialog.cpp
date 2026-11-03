@@ -138,7 +138,6 @@ void styleExecutablePrompt(QMessageBox& prompt,
                            QMessageBox::StandardButton confirmButton)
 {
   prompt.setObjectName("revampedExecutableActionPrompt");
-  prompt.setWindowTitle("MO2 Revamped");
   prompt.setTextFormat(Qt::PlainText);
 
   if (QLabel* label = prompt.findChild<QLabel*>("qt_msgbox_label")) {
@@ -156,10 +155,10 @@ void styleExecutablePrompt(QMessageBox& prompt,
   }
 }
 
-void showExecutableNotice(QWidget* parent, QMessageBox::Icon icon,
+void showExecutableNotice(QWidget* parent, const QString& title, QMessageBox::Icon icon,
                           const QString& heading, const QString& details)
 {
-  QMessageBox prompt(icon, "MO2 Revamped", heading, QMessageBox::Ok, parent);
+  QMessageBox prompt(icon, title, heading, QMessageBox::Ok, parent);
   prompt.setInformativeText(details);
   styleExecutablePrompt(prompt, QMessageBox::Ok);
   prompt.exec();
@@ -406,7 +405,7 @@ bool EditExecutablesDialog::checkOutputMods(const ExecutablesList& exes)
     if (modName && modName->enabled) {
       if (modName->value.isEmpty()) {
         showExecutableNotice(
-            this, QMessageBox::Warning, tr("Output mod is empty"),
+            this, tr("Save programs"), QMessageBox::Warning, tr("Output mod is empty"),
             tr("Output-mod routing is enabled for \"%1\", but no mod is selected.")
                 .arg(e.title()));
 
@@ -417,7 +416,7 @@ bool EditExecutablesDialog::checkOutputMods(const ExecutablesList& exes)
                 ->setting("custom_overwrites", e.title())
                 .toString() == modName->value) {
           showExecutableNotice(
-              this, QMessageBox::Warning, tr("Output mod not found"),
+              this, tr("Save programs"), QMessageBox::Warning, tr("Output mod not found"),
               tr("The mod \"%1\" assigned to \"%2\" no longer exists, so new files go to "
                  "Overwrite again.")
                   .arg(modName->value, e.title()));
@@ -425,7 +424,7 @@ bool EditExecutablesDialog::checkOutputMods(const ExecutablesList& exes)
           continue;
         }
         showExecutableNotice(
-            this, QMessageBox::Warning, tr("Output mod not found"),
+            this, tr("Save programs"), QMessageBox::Warning, tr("Output mod not found"),
             tr("The mod \"%1\" assigned to \"%2\" does not exist.")
                 .arg(modName->value, e.title()));
 
@@ -795,7 +794,7 @@ void EditExecutablesDialog::on_list_itemSelectionChanged()
 
 void EditExecutablesDialog::on_reset_clicked()
 {
-  QMessageBox prompt(QMessageBox::Question, "MO2 Revamped",
+  QMessageBox prompt(QMessageBox::Question, tr("Restore the game's programs"),
                      tr("Restore the game-provided executables?"),
                      QMessageBox::Ok | QMessageBox::Cancel, this);
   prompt.setInformativeText(
@@ -1095,7 +1094,7 @@ void EditExecutablesDialog::reject()
 {
   const auto* apply = ui->buttons->button(QDialogButtonBox::Apply);
   if (apply != nullptr && apply->isEnabled()) {
-    QMessageBox prompt(QMessageBox::Question, "MO2 Revamped",
+    QMessageBox prompt(QMessageBox::Question, tr("Unsaved changes"),
                        tr("Save the changes to your programs?"),
                        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this);
     styleExecutablePrompt(prompt, QMessageBox::Save);
@@ -1154,7 +1153,7 @@ void EditExecutablesDialog::setJarBinary(const QFileInfo& binary)
 
   if (java.isEmpty()) {
     showExecutableNotice(
-        this, QMessageBox::Information, tr("Java is required"),
+        this, tr("Select an executable"), QMessageBox::Information, tr("Java is required"),
         tr("Mod Organizer needs Java to launch this JAR. If Java is already installed, "
            "browse to its javaw.exe file and select it as the binary."));
   }

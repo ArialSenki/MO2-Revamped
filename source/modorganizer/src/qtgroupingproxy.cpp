@@ -17,6 +17,7 @@
 // Modifications 2013-03-27 to 2013-03-29 by Sebastian Herbord
 
 #include "qtgroupingproxy.h"
+#include "fluenticons.h"
 #include <log.h>
 
 #include <QDebug>
@@ -401,7 +402,9 @@ QVariant QtGroupingProxy::data(const QModelIndex& index, int role) const
     if ((role != Qt::DisplayRole) && (role != Qt::EditRole)) {
       switch (role) {
       case Qt::ForegroundRole: {
-        return QBrush(Qt::gray);
+        return FluentIcons::active()
+               ? QBrush(FluentIcons::color(FluentIcons::Tone::Muted))
+               : QBrush(Qt::gray);
       } break;
       case Qt::FontRole: {
         QFont font(m_groupMaps[row][column].value(Qt::FontRole).value<QFont>());

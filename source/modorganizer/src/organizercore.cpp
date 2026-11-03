@@ -198,7 +198,7 @@ void OrganizerCore::storeSettings()
 
     QMessageBox::critical(
         qApp->activeWindow(), tr("Failed to write settings"),
-        tr("An error occurred trying to write back MO settings to %1: %2")
+        tr("An error occurred trying to write back MO2 settings to %1: %2")
             .arg(m_Settings.filename(), reason));
   }
 }
@@ -867,7 +867,7 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
       }
 
       if (hasIniTweaks && m_UserInterface != nullptr &&
-          (QMessageBox::question(qApp->activeWindow(), tr("Configure Mod"),
+          (QMessageBox::question(qApp->activeWindow(), tr("Configure mod"),
                                  tr("This mod contains ini tweaks. Do you "
                                     "want to configure them now?"),
                                  QMessageBox::Yes | QMessageBox::No) ==

@@ -1933,7 +1933,7 @@ void InstanceManagerDialog::duplicateInstance()
 
   const auto name = getInstanceName(
       this, tr("Duplicate instance"), text, tr("Name of the copy"), parentDirectory,
-      m.makeUniqueName(QFileInfo(i->directory()).fileName() + QStringLiteral(" ") + tr("copy"),
+      m.makeUniqueName(tr("%1 copy").arg(QFileInfo(i->directory()).fileName()),
                        parentDirectory),
       tr("Duplicate"), false);
   if (name.isEmpty()) {

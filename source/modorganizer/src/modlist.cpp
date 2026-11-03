@@ -230,7 +230,7 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       return modInfo->gameName();
     } else if (column == COL_CATEGORY) {
       if (modInfo->hasFlag(ModInfo::FLAG_FOREIGN)) {
-        return tr("Non-MO");
+        return tr("Non-MO2");
       } else {
         int category = modInfo->primaryCategory();
         if (category != -1) {

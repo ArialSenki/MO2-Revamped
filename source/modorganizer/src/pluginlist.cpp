@@ -1,4 +1,5 @@
 #include "revampedtheme.h"
+#include "fluenticons.h"
 /*
 Copyright (C) 2012 Sebastian Herbord. All rights reserved.
 
@@ -1279,7 +1280,9 @@ QVariant PluginList::foregroundData(const QModelIndex& modelIndex) const
   const int index = modelIndex.row();
 
   if ((modelIndex.column() == COL_NAME) && m_ESPs[index].forceLoaded) {
-    return QBrush(Qt::gray);
+    return FluentIcons::active()
+               ? QBrush(FluentIcons::color(FluentIcons::Tone::Muted))
+               : QBrush(Qt::gray);
   }
 
   if ((modelIndex.column() == COL_NAME) && m_ESPs[index].forceDisabled) {

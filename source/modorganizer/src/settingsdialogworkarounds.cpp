@@ -209,7 +209,7 @@ WorkaroundsSettingsTab::changeBlacklistLater(QWidget* parent, const QString& cur
   bool ok = false;
 
   QString result = QInputDialog::getMultiLineText(
-      parent, QObject::tr("Executables Blacklist"),
+      parent, QObject::tr("Executables blacklist"),
       QObject::tr("Enter one executable per line to be blacklisted from the virtual "
                   "file system.\n"
                   "Mods and other virtualized files will not be visible to these "
@@ -241,7 +241,7 @@ WorkaroundsSettingsTab::changeSkipFileSuffixes(QWidget* parent,
   bool ok = false;
 
   QString result = QInputDialog::getMultiLineText(
-      parent, QObject::tr("Skip File Suffixes"),
+      parent, QObject::tr("Skip file suffixes"),
       QObject::tr(
           "Enter one file suffix per line to be skipped / ignored from the virtual "
           "file system.\n"
@@ -275,7 +275,7 @@ WorkaroundsSettingsTab::changeSkipDirectories(QWidget* parent,
   bool ok = false;
 
   QString result = QInputDialog::getMultiLineText(
-      parent, QObject::tr("Skip Directories"),
+      parent, QObject::tr("Skip directories"),
       QObject::tr(
           "Enter one directory per line to be skipped / ignored from the virtual "
           "file system.\n\n"

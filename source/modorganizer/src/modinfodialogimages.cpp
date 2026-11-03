@@ -1016,7 +1016,8 @@ void File::load(const Geometry& geo)
   ensureOriginalLoaded();
 
   if (m_failed) {
-    QImage warning(":/MO/gui/warning");
+    const QImage warning =
+        FluentIcons::icon(":/MO/gui/warning").pixmap(128, 128).toImage();
     const auto scaledSize = geo.scaledImageSize(warning.size());
 
     m_thumbnail =

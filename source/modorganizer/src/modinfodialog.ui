@@ -388,7 +388,7 @@
               <string>List of esps, esms, and esls that can not be loaded by the game.</string>
              </property>
              <property name="whatsThis">
-              <string>List of esps, esms, and esls contained in this plugin that currently can not be loaded by the game. They will not even appear in the esp-list in the main MO-window.
+              <string>List of esps, esms, and esls contained in this plugin that currently can not be loaded by the game. They will not even appear in the esp-list in the main MO2 window.
 They usually contain optional functionality, see the readme.
 
 Most mods do not have optional esps, so chances are good you are looking at an empty list.</string>
@@ -438,7 +438,7 @@ Most mods do not have optional esps, so chances are good you are looking at an e
                 <string>Move a file to the data directory.</string>
                </property>
                <property name="whatsThis">
-                <string>This moves a esp to the esp directory so it can be enabled in the main window. Please note that the ESP merely becomes &quot;available&quot;, it will not necessarily be loaded! That is configured in the main window of MO.</string>
+                <string>This moves a esp to the esp directory so it can be enabled in the main window. Please note that the ESP merely becomes &quot;available&quot;, it will not necessarily be loaded! That is configured in the main window of MO2.</string>
                </property>
                <property name="text">
                 <string/>

@@ -117,7 +117,7 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
 {
   ui->setupUi(this);
   if (auto* game = Settings::instance().game().plugin()) {
-    setWindowTitle(tr("Manage Categories - %1").arg(game->gameName()));
+    setWindowTitle(tr("Manage categories - %1").arg(game->gameName()));
     ui->dialogHeading->setText(
         tr("Organize categories for %1").arg(game->gameName()));
   }
