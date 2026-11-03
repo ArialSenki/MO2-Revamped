@@ -2368,8 +2368,30 @@ namespace Mo2RevampedSetup
                 try
                 {
                     if (!Directory.Exists(directory) || (File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) continue;
+                    RemovePythonCachesBelow(directory);
                     RemoveEmptyDirectoriesBelow(directory);
                     if (Directory.GetFileSystemEntries(directory).Length == 0) Directory.Delete(directory, false);
+                }
+                catch { }
+            }
+        }
+
+        // Python makes these beside the plugins when it runs them; they'd keep the plugin folders behind
+        private static void RemovePythonCachesBelow(string directory)
+        {
+            foreach (string child in Directory.GetDirectories(directory))
+            {
+                try
+                {
+                    if ((File.GetAttributes(child) & FileAttributes.ReparsePoint) != 0) continue;
+                    if (String.Equals(Path.GetFileName(child), "__pycache__", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (string file in Directory.GetFiles(child, "*.pyc")) File.Delete(file);
+                    }
+                    else
+                    {
+                        RemovePythonCachesBelow(child);
+                    }
                 }
                 catch { }
             }
