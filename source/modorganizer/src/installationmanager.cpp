@@ -760,6 +760,14 @@ InstallationResult InstallationManager::install(const QString& fileName,
     fileCategoryID = metaFile.value("fileCategory", 1).toInt();
   }
 
+  // a file downloaded by hand has no meta file, but Nexus's name says the version
+  if (version.isEmpty()) {
+    QString nameInFile;
+    int idInFile = -1;
+    NexusInterface::parseCurrentNexusFileName(fileInfo.fileName(), nameInFile, idInFile,
+                                              version);
+  }
+
   if (version.isEmpty()) {
     QDateTime lastMod = fileInfo.lastModified();
     version           = "d" + lastMod.toString("yyyy.M.d");

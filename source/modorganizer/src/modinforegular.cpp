@@ -2,6 +2,7 @@
 
 #include "categories.h"
 #include "messagedialog.h"
+#include "nexusinterface.h"
 #include "moddatacontent.h"
 #include "organizercore.h"
 #include "plugincontainer.h"
@@ -11,6 +12,7 @@
 
 #include <QApplication>
 #include <QDirIterator>
+#include <QFileInfo>
 #include <QSettings>
 
 #include <sstream>
@@ -241,6 +243,38 @@ void ModInfoRegular::readMeta()
   metaFile.endGroup();
 
   m_MetaInfoChanged = false;
+
+  // MO2 read the month in Nexus's current file names as the mod id, so these mods
+  // point at an unrelated one: everything Nexus said about it goes too. An id the
+  // user set is another number, unless it's exactly this mistake
+  QString nameInFile, versionInFile;
+  int idInFile = -1, monthInFile = -1;
+  if (m_NexusID > 0 &&
+      NexusInterface::parseCurrentNexusFileName(QFileInfo(m_InstallationFile).fileName(),
+                                                nameInFile, idInFile, versionInFile,
+                                                &monthInFile) &&
+      m_NexusID == monthInFile && idInFile != m_NexusID) {
+    log::info("mod '{}': Nexus id {} was the month in its file name, using {}", name(),
+              m_NexusID, idInFile);
+    for (auto file = m_InstalledFileIDs.begin(); file != m_InstalledFileIDs.end();) {
+      file = file->first == m_NexusID ? m_InstalledFileIDs.erase(file) : std::next(file);
+    }
+    m_NexusID          = idInFile;
+    m_NewestVersion    = VersionInfo();
+    m_IgnoredVersion   = VersionInfo();
+    m_NexusDescription.clear();
+    m_NexusFileStatus  = 1;
+    m_NexusCategory    = 0;
+    m_LastNexusQuery   = QDateTime();
+    m_LastNexusUpdate  = QDateTime();
+    m_TrackedState     = TrackedState::TRACKED_FALSE;
+    m_EndorsedState    = EndorsedState::ENDORSED_UNKNOWN;
+    // only a version MO2 made up from the file's date
+    if (metaFile.value("version").toString().startsWith('d')) {
+      m_Version.parse(versionInFile);
+    }
+    m_MetaInfoChanged = true;
+  }
 }
 
 void ModInfoRegular::saveMeta()

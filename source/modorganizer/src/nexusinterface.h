@@ -529,6 +529,16 @@ public:
                                      int& modID, bool query);
 
   /**
+   * @brief reads a file name as Nexus names its downloads now:
+   *        "Name 541 2.3.8.1 2026-10-30T02-01Z luvfLW3w9.zip"
+   * @param month the month of the date in the name, if wanted
+   * @return false if the file name has another form; nothing is changed then
+   */
+  static bool parseCurrentNexusFileName(const QString& fileName, QString& modName,
+                                        int& modID, QString& version,
+                                        int* month = nullptr);
+
+  /**
    * @brief get the currently managed game
    */
   MOBase::IPluginGame const* managedGame() const;

@@ -323,6 +323,27 @@ void NexusInterface::setUserAccount(const APIUserAccount& user)
   emit requestsChanged(getAPIStats(), m_User);
 }
 
+bool NexusInterface::parseCurrentNexusFileName(const QString& fileName, QString& modName,
+                                               int& modID, QString& version, int* month)
+{
+  static const QRegularExpression current(
+      R"(^(.+?) ([1-9][0-9]*) (\S+) \d{4}-(\d{2})-\d{2}T\d{2}-\d{2}Z \S+\.(?:zip|rar|7z)$)",
+      QRegularExpression::CaseInsensitiveOption);
+
+  const auto match = current.match(fileName);
+  if (!match.hasMatch()) {
+    return false;
+  }
+
+  modName = match.captured(1);
+  modID   = match.captured(2).toInt();
+  version = match.captured(3);
+  if (month != nullptr) {
+    *month = match.captured(4).toInt();
+  }
+  return true;
+}
+
 void NexusInterface::interpretNexusFileName(const QString& fileName, QString& modName,
                                             int& modID, bool query)
 {
@@ -343,7 +364,23 @@ void NexusInterface::interpretNexusFileName(const QString& fileName, QString& mo
   // assume not found
   modID = -1;
 
-  if (complexMatch.hasMatch()) {
+  // a number inside a date isn't an id: the month of "2026-10-30" reads as one
+  static const QRegularExpression date(R"(\d{4}-\d{2}-\d{2})");
+  bool idInDate = false;
+  for (auto dates = date.globalMatch(fileName); dates.hasNext();) {
+    const auto found = dates.next();
+    idInDate         = idInDate || (complexMatch.capturedStart(3) >= found.capturedStart() &&
+                            complexMatch.capturedStart(3) < found.capturedEnd());
+  }
+
+  QString currentName, currentVersion;
+  int currentID = -1;
+  if (parseCurrentNexusFileName(fileName, currentName, currentID, currentVersion)) {
+    modName = currentName;
+    if (!query) {
+      modID = currentID;
+    }
+  } else if (complexMatch.hasMatch() && !idInDate) {
     modName = complexMatch.captured(1);
     if (!query && !complexMatch.captured(3).isNull()) {
       modID = complexMatch.captured(3).toInt();

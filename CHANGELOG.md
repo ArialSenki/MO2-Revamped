@@ -136,6 +136,13 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Nexus file names
+
+- MO2 read the month in the names Nexus gives its files now as the mod id, so a mod
+  downloaded by hand in October could point at an unrelated page and report false
+  updates. It now reads the id, version and name from them, and a number in a date
+  is never an id. Mods already installed with that mistake are repaired on start.
+
 ### Mod list header
 
 - "Check for updates" marks its filter on the buttons above the list, and says so
