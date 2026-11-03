@@ -1260,6 +1260,10 @@ void applyNativeTitleBarTheme(QWidget* window, const QString& styleName)
     QTimer::singleShot(0, window, [handle, useDarkMode] {
       DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(20), &useDarkMode,
                             sizeof(useDarkMode));
+      // the backdrop keeps its old colors until the frame is redrawn
+      SetWindowPos(handle, nullptr, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE |
+                       SWP_FRAMECHANGED);
     });
   }
 
@@ -1614,6 +1618,26 @@ void MOApplication::updateStyle(const QString& fileName)
         themePalette.setColor(QPalette::ToolTipText, QColor("#FFFFFF"));
         for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
           themePalette.setColor(QPalette::Disabled, role, QColor("#9A9A9A"));
+        }
+      } else if (property("revampedFluent").toBool()) {
+        // Fluent Light tokens. The standard palette follows Windows, so on a dark
+        // system it would keep the native frame and the Mica backdrop dark.
+        themePalette.setColor(QPalette::Window, QColor("#F3F3F3"));
+        themePalette.setColor(QPalette::WindowText, QColor("#1B1B1B"));
+        themePalette.setColor(QPalette::Base, QColor("#FFFFFF"));
+        themePalette.setColor(QPalette::AlternateBase, QColor("#F7F7F7"));
+        themePalette.setColor(QPalette::Text, QColor("#1B1B1B"));
+        themePalette.setColor(QPalette::PlaceholderText, QColor("#6E6E6E"));
+        themePalette.setColor(QPalette::Button, QColor("#FBFBFB"));
+        themePalette.setColor(QPalette::ButtonText, QColor("#1B1B1B"));
+        themePalette.setColor(QPalette::Highlight, QColor("#E5E5E5"));
+        themePalette.setColor(QPalette::HighlightedText, QColor("#1B1B1B"));
+        themePalette.setColor(QPalette::Link, QColor("#005FB8"));
+        themePalette.setColor(QPalette::LinkVisited, QColor("#003E92"));
+        themePalette.setColor(QPalette::ToolTipBase, QColor("#F9F9F9"));
+        themePalette.setColor(QPalette::ToolTipText, QColor("#1B1B1B"));
+        for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
+          themePalette.setColor(QPalette::Disabled, role, QColor("#8A8A8A"));
         }
       }
       setPalette(themePalette);

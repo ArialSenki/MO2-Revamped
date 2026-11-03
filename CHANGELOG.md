@@ -136,6 +136,12 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Theme
+
+- Changing from Dark to Light without restarting no longer leaves the title and the
+  command bar dark, also when Windows itself is in dark mode.
+- Run's line by its arrow is gone while Run is off.
+
 ### Main window header
 
 - Run keeps its program when the list is rebuilt (a theme change, a program added

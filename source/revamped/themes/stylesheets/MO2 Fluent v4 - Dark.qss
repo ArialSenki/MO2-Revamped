@@ -6608,3 +6608,7 @@ QTreeWidget#pluginsList::item:hover,
 QTreeWidget#pluginsList::item:selected {
     border-radius: 4px;
 }
+/* Run has nothing to start: no accent line by its arrow */
+QToolButton#startButton[runState="idle"]::menu-button:disabled {
+    border-left-color: #353535;
+}

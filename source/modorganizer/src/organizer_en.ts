@@ -4611,12 +4611,12 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1487"/>
+        <location filename="moapplication.cpp" line="1491"/>
         <source>an error occurred: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="moapplication.cpp" line="1492"/>
+        <location filename="moapplication.cpp" line="1496"/>
         <source>an error occurred</source>
         <translation type="unfinished"></translation>
     </message>
