@@ -4030,6 +4030,10 @@ void MainWindow::configureEldenRingHelp()
       "Start the selected program with the active profile. The small arrow on the "
       "right has the shortcut options."));
 
+  ui->dataTree->setWhatsThis(tr(
+      "Shows the game's folder as the game sees it, with the active mods applied. "
+      "The Origin column says which mod supplies each file."));
+
   if (game->gameShortName().compare("eldenring", Qt::CaseInsensitive) != 0) {
     return;
   }
@@ -4042,11 +4046,6 @@ void MainWindow::configureEldenRingHelp()
       "Shows how many active mods are visible in the mod list. Filtering the "
       "list changes this count; hover over the counter to see the total and "
       "visible counts by mod type."));
-  ui->dataTree->setWhatsThis(tr(
-      "Shows the virtual Elden Ring Data directory after MO2 combines the game "
-      "files with the active mods. The Mod column identifies which mod supplies "
-      "a file. Standard archive layout keeps top-level DLLs at the game root and "
-      "organizes DLLs from recognized native-mod folders under Game/DLLs."));
   ui->savegameList->setWhatsThis(tr(
       "Browse the save files available to this Elden Ring profile. Configure "
       "its route in Tools > Save Isolation to keep saves separate "

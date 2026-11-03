@@ -5843,6 +5843,10 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Shows the game's folder as the game sees it, with the active mods applied. The Origin column says which mod supplies each file.</source>
+      <translation>Affiche le dossier du jeu tel que le jeu le voit, avec les mods actifs appliqués. La colonne Origin indique quel mod fournit chaque fichier.</translation>
+    </message>
+    <message>
       <source>Open the saves folder this profile uses.</source>
       <translation>Ouvre le dossier de sauvegardes utilisé par ce profil.</translation>
     </message>
@@ -11087,6 +11091,30 @@ Restantes cette heure : %3</translation>
   </context>
   <context>
     <name>FileTree</name>
+    <message>
+      <source>This is one of the game's own files</source>
+      <translation>C'est l'un des fichiers propres au jeu</translation>
+    </message>
+    <message>
+      <source>Start without your mods?</source>
+      <translation>Lancer sans vos mods ?</translation>
+    </message>
+    <message>
+      <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
+
+Start it anyway?</source>
+      <translation>« %1 » démarrerait sans vos mods, et un jeu n'utiliserait pas les sauvegardes de ce profil. Pour le lancer avec eux, utilisez Run.
+
+Le lancer quand même ?</translation>
+    </message>
+    <message>
+      <source>Name in use</source>
+      <translation>Nom déjà utilisé</translation>
+    </message>
+    <message>
+      <source>There is already a program named "%1". Choose another name.</source>
+      <translation>Il existe déjà un programme nommé « %1 ». Choisissez un autre nom.</translation>
+    </message>
     <message>
       <source>&amp;Save tree as text...</source>
       <translation>&amp;Enregistrer l’arborescence en texte...</translation>

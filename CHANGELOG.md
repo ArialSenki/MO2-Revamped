@@ -136,6 +136,18 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Data tab
+
+- "Hide" is off on the game's own files: it renamed the real file in the game's folder,
+  which could leave the game unusable.
+- A double click on a program asks first: it starts without your mods.
+- "Add as executable" no longer replaces a program with the same name, and the new one
+  is saved right away.
+- The search box says "Search files", and the help on the interface names the Origin
+  column, on Nightreign too.
+
+- Long messages use the whole window instead of a narrow column beside an empty one.
+
 ### Mod list filters
 
 - The bar under the list names the filters in use and says which ones exclude, instead

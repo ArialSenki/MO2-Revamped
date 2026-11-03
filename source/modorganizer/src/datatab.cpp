@@ -1,5 +1,6 @@
 #include "datatab.h"
 #include "filetree.h"
+#include "fluenticons.h"
 #include "filetreemodel.h"
 #include "messagedialog.h"
 #include "organizercore.h"
@@ -37,6 +38,11 @@ DataTab::DataTab(OrganizerCore& core, PluginContainer& pc, QWidget* parent,
   m_filter.setFilterColumn(FileTreeModel::FileName);
   setStartupDiagnosticPhase("data_tab.filter.set_edit");
   m_filter.setEdit(mwui->dataTabFilter);
+  // it brings its own text; the Fluent window names what's searched
+  if (FluentIcons::active()) {
+    mwui->dataTabFilter->setPlaceholderText(
+        QCoreApplication::translate("FluentDashboard", "Search files"));
+  }
   setStartupDiagnosticPhase("data_tab.filter.set_list");
   m_filter.setList(mwui->dataTree);
   setStartupDiagnosticPhase("data_tab.filter.set_update_delay");

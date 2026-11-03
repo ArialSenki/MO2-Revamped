@@ -5897,6 +5897,10 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Shows the game's folder as the game sees it, with the active mods applied. The Origin column says which mod supplies each file.</source>
+      <translation>Mostra la cartella del gioco come la vede il gioco, con le mod attive applicate. La colonna Origin indica quale mod fornisce ogni file.</translation>
+    </message>
+    <message>
       <source>Open the saves folder this profile uses.</source>
       <translation>Apre la cartella dei salvataggi usata da questo profilo.</translation>
     </message>
@@ -11153,6 +11157,30 @@ Rimanenti in quest'ora: %3</translation>
   </context>
   <context>
     <name>FileTree</name>
+    <message>
+      <source>This is one of the game's own files</source>
+      <translation>È uno dei file propri del gioco</translation>
+    </message>
+    <message>
+      <source>Start without your mods?</source>
+      <translation>Avviare senza le tue mod?</translation>
+    </message>
+    <message>
+      <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
+
+Start it anyway?</source>
+      <translation>"%1" si avvierebbe senza le tue mod e un gioco non userebbe i salvataggi di questo profilo. Per avviarlo con le mod, usa Run.
+
+Avviarlo comunque?</translation>
+    </message>
+    <message>
+      <source>Name in use</source>
+      <translation>Nome già in uso</translation>
+    </message>
+    <message>
+      <source>There is already a program named "%1". Choose another name.</source>
+      <translation>Esiste già un programma chiamato "%1". Scegli un altro nome.</translation>
+    </message>
     <message>
       <source>&amp;Save tree as text...</source>
       <translation>&amp;Salva albero come testo...</translation>

@@ -433,6 +433,17 @@ void polishMessageBox(QMessageBox* box)
     if (oneLine < 320) {
       text->setMinimumWidth(320);
     }
+
+    // a wrapped text has a small minimum width, so without this the grid shared
+    // the window's width with the empty column on its left
+    if (auto* grid = qobject_cast<QGridLayout*>(box->layout())) {
+      int row = 0, column = 0, rowSpan = 0, columnSpan = 0;
+      const int index = grid->indexOf(text);
+      if (index >= 0) {
+        grid->getItemPosition(index, &row, &column, &rowSpan, &columnSpan);
+        grid->setColumnStretch(column, 1);
+      }
+    }
   }
 
   matchTitleBar(box);

@@ -13,6 +13,8 @@
 #include <iplugingame.h>
 #include <log.h>
 #include <QIcon>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <widgetutility.h>
 
 using namespace MOShared;
@@ -131,6 +133,7 @@ private:
     }
 
     m_action->setStatusTip(s);
+    m_action->setToolTip(s);
   }
 };
 
@@ -279,6 +282,18 @@ void FileTree::activate(FileTreeItem* item)
     }
   }
 
+  if (spawn::getFileExecutionType(QFileInfo(item->realPath())) ==
+          spawn::FileExecutionTypes::Executable &&
+      QMessageBox::question(m_tree->window(), tr("Start without your mods?"),
+                            tr("\"%1\" would start without your mods, and a game would "
+                               "not use this profile's saves. To start it with them, use "
+                               "Run.\n\nStart it anyway?")
+                                .arg(item->filename()),
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) != QMessageBox::Yes) {
+    return;
+  }
+
   open(item);
 }
 
@@ -298,21 +313,34 @@ void FileTree::addAsExecutable(FileTreeItem* item)
 
   switch (fec.type) {
   case spawn::FileExecutionTypes::Executable: {
-    const QString name = QInputDialog::getText(
-        m_tree->window(), tr("Enter Name"), tr("Enter a name for the executable"),
-        QLineEdit::Normal, target.completeBaseName());
-
-    if (!name.isEmpty()) {
-      // Note: If this already exists, you'll lose custom settings
-      m_core.executablesList()->setExecutable(
-          Executable()
-              .title(name)
-              .binaryInfo(fec.binary)
-              .arguments(fec.arguments)
-              .workingDirectory(target.absolutePath()));
-
-      emit executablesChanged();
+    QString name = target.completeBaseName();
+    for (;;) {
+      bool ok = false;
+      name    = QInputDialog::getText(m_tree->window(), tr("Enter Name"),
+                                      tr("Enter a name for the executable"),
+                                      QLineEdit::Normal, name, &ok)
+                 .trimmed();
+      if (!ok || name.isEmpty()) {
+        return;
+      }
+      if (!m_core.executablesList()->titleExists(name)) {
+        break;
+      }
+      QMessageBox::information(m_tree->window(), tr("Name in use"),
+                               tr("There is already a program named \"%1\". "
+                                  "Choose another name.")
+                                   .arg(name));
     }
+
+    m_core.executablesList()->setExecutable(Executable()
+                                                .title(name)
+                                                .binaryInfo(fec.binary)
+                                                .arguments(fec.arguments)
+                                                .workingDirectory(target.absolutePath()));
+    m_core.executablesList()->store(m_core.settings());
+    m_core.settings().sync();
+
+    emit executablesChanged();
 
     break;
   }
@@ -760,14 +788,16 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
         .enabled(!file.isFromArchive())
         .addTo(menu);
   } else {
+    // hiding renames the real file, and one of the game's own is in its folder
     MenuItem(tr("&Hide"))
         .icon(":/MO/gui/contextmenu/visibility-hide.svg")
         .callback([&] {
           hide();
         })
         .hint(tr("Hides the file"))
-        .disabledHint(tr("This file is in an archive"))
-        .enabled(!file.isFromArchive())
+        .disabledHint(originID == 0 ? tr("This is one of the game's own files")
+                                    : tr("This file is in an archive"))
+        .enabled(!file.isFromArchive() && originID != 0)
         .addTo(menu);
   }
 }
