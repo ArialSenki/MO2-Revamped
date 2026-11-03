@@ -970,6 +970,30 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>This will move all finished downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Tous les téléchargements terminés seront déplacés vers la Corbeille.
+
+Voulez-vous vraiment continuer ?</translation>
+    </message>
+    <message>
+      <source>This will move all installed downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Tous les téléchargements installés seront déplacés vers la Corbeille.
+
+Voulez-vous vraiment continuer ?</translation>
+    </message>
+    <message>
+      <source>This will move all uninstalled downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Tous les téléchargements non installés seront déplacés vers la Corbeille.
+
+Voulez-vous vraiment continuer ?</translation>
+    </message>
+    <message>
       <source>Selected download</source>
       <translation>Téléchargement sélectionné</translation>
     </message>
@@ -6995,8 +7019,8 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Quitter</translation>
     </message>
     <message>
-      <source>Browse the save files available to this Elden Ring profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
-      <translation>Parcourez les sauvegardes disponibles pour ce profil Elden Ring. Configurez leur emplacement dans Outils &gt; Isolation des sauvegardes pour séparer les sauvegardes par profil MO2, partager un profil de sauvegarde nommé dans cette instance ou utiliser le dossier global de sauvegardes Steam.</translation>
+      <source>Browse the save files available to this profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
+      <translation>Parcourez les sauvegardes disponibles pour ce profil. Configurez leur emplacement dans Outils &gt; Isolation des sauvegardes pour séparer les sauvegardes par profil MO2, partager un profil de sauvegarde nommé dans cette instance ou utiliser le dossier global de sauvegardes Steam.</translation>
     </message>
     <message>
       <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
@@ -9834,6 +9858,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SavesTab</name>
     <message>
+      <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
+      <translation>Certaines de ces sauvegardes sont toujours là. Elles sont peut-être utilisées, ou la suppression a été annulée.</translation>
+    </message>
+    <message>
       <source>Restore required plugins...</source>
       <translation>Restaurer les plugins requis...</translation>
     </message>
@@ -11675,6 +11703,15 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     <message>
       <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
       <translation>Les sauvegardes du profil n'ont pas pu être supprimées. Fermez tout programme qui les utilise et réessayez.</translation>
+    </message>
+  </context>
+  <context>
+    <name>DownloadManager</name>
+    <message>
+      <source>These downloads were not deleted. They may be in use, or the deletion was cancelled:
+%1</source>
+      <translation>Ces téléchargements n'ont pas été supprimés. Ils sont peut-être utilisés, ou la suppression a été annulée :
+%1</translation>
     </message>
   </context>
 </TS>

@@ -136,6 +136,17 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Saves and Downloads tabs
+
+- Saves and Downloads say when something couldn't be removed, also when Windows was
+  told to skip a file in use.
+- The questions that remove several downloads appear over MO2's window, not on the main
+  screen, and say that the files go to the Recycle Bin.
+- In a narrow window the tabs keep their dates and sizes in view: the name gives way
+  first, instead of a horizontal scroll bar.
+- The Downloads search box says "Search downloads", and both tabs have their help on the
+  interface on Nightreign too.
+
 ### Data tab
 
 - "Hide" is off on the game's own files: it renamed the real file in the game's folder,

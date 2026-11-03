@@ -766,7 +766,7 @@ void DownloadManager::addNXMDownload(const QString& url)
       QVariant::fromValue(test), ""));
 }
 
-void DownloadManager::removeFile(int index, bool deleteFile)
+bool DownloadManager::removeFile(int index, bool deleteFile)
 {
   // Avoid triggering refreshes from DirWatcher
   ScopedDisableDirWatcher scopedDirWatcher(this);
@@ -781,7 +781,7 @@ void DownloadManager::removeFile(int index, bool deleteFile)
       (download->m_State == STATE_DOWNLOADING)) {
     // shouldn't have been possible
     log::error("tried to remove active download");
-    return;
+    return false;
   }
 
   if ((download->m_State == STATE_PAUSED) || (download->m_State == STATE_ERROR)) {
@@ -789,14 +789,16 @@ void DownloadManager::removeFile(int index, bool deleteFile)
   }
 
   if (deleteFile) {
-    if (!shellDelete(QStringList(filePath), true)) {
-      reportError(tr("failed to delete %1").arg(filePath));
-      return;
+    // Windows reports success when the user skips a file in use, so the file
+    // itself says; removeDownload() tells them once the list is consistent
+    if (!shellDelete(QStringList(filePath), true) || QFile::exists(filePath)) {
+      m_RemovalFailures.append(QFileInfo(filePath).fileName());
+      return false;
     }
 
     QFile metaFile(filePath.append(".meta"));
     if (metaFile.exists() && !shellDelete(QStringList(filePath), true)) {
-      reportError(tr("failed to delete meta file for %1").arg(filePath));
+      log::warn("failed to delete meta file {}", filePath);
     }
   } else {
     QSettings metaSettings(filePath.append(".meta"), QSettings::IniFormat);
@@ -804,6 +806,7 @@ void DownloadManager::removeFile(int index, bool deleteFile)
       metaSettings.setValue("removed", true);
   }
   m_DownloadRemoved(index);
+  return true;
 }
 
 class LessThanWrapper
@@ -892,9 +895,14 @@ void DownloadManager::removeDownload(int index, bool deleteFile)
         DownloadState downloadState = (*iter)->m_State;
         if ((removeAll && (downloadState >= STATE_READY)) ||
             (removeState == downloadState)) {
-          removeFile(index, deleteFile);
-          delete *iter;
-          iter = m_ActiveDownloads.erase(iter);
+          // one that couldn't be removed stays listed
+          if (removeFile(index, deleteFile)) {
+            delete *iter;
+            iter = m_ActiveDownloads.erase(iter);
+          } else {
+            ++iter;
+            ++index;
+          }
         } else {
           ++iter;
           ++index;
@@ -903,19 +911,28 @@ void DownloadManager::removeDownload(int index, bool deleteFile)
     } else {
       if (index >= m_ActiveDownloads.size()) {
         reportError(tr("remove: invalid download index %1").arg(index));
-        // emit update(-1);
+        refreshList();
         return;
       }
 
-      removeFile(index, deleteFile);
-      delete m_ActiveDownloads.at(index);
-      m_ActiveDownloads.erase(m_ActiveDownloads.begin() + index);
+      if (removeFile(index, deleteFile)) {
+        delete m_ActiveDownloads.at(index);
+        m_ActiveDownloads.erase(m_ActiveDownloads.begin() + index);
+      }
     }
     emit update(-1);
   } catch (const std::exception& e) {
     log::error("failed to remove download: {}", e.what());
   }
   refreshList();
+
+  if (!m_RemovalFailures.isEmpty()) {
+    const QString names = m_RemovalFailures.join(QStringLiteral("\n"));
+    m_RemovalFailures.clear();
+    reportError(tr("These downloads were not deleted. They may be in use, or the "
+                   "deletion was cancelled:\n%1")
+                    .arg(names));
+  }
 }
 
 void DownloadManager::cancelDownload(int index)

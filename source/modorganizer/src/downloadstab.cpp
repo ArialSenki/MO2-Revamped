@@ -1,6 +1,7 @@
 #include "downloadstab.h"
 #include "downloadlist.h"
 #include "downloadlistview.h"
+#include "fluenticons.h"
 #include "organizercore.h"
 #include "startupdiagnostics.h"
 #include "ui_mainwindow.h"
@@ -25,6 +26,11 @@ DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
   setStartupDiagnosticPhase("downloads_tab.update.complete");
 
   m_filter.setEdit(ui.filter);
+  // it brings its own text; the Fluent window names what's searched
+  if (FluentIcons::active()) {
+    ui.filter->setPlaceholderText(
+        QCoreApplication::translate("FluentDashboard", "Search downloads"));
+  }
   m_filter.setList(ui.list);
   m_filter.setSortPredicate([sourceModel](auto&& left, auto&& right) {
     return sourceModel->lessThanPredicate(left, right);

@@ -219,6 +219,10 @@ void DownloadListView::onDoubleClick(const QModelIndex& index)
 {
   QModelIndex sourceIndex =
       qobject_cast<QSortFilterProxyModel*>(model())->mapToSource(index);
+  // a pending row (an nxm link still resolving) has no state yet
+  if (sourceIndex.row() < 0 || sourceIndex.row() >= m_Manager->numTotalDownloads()) {
+    return;
+  }
   if (m_Manager->getState(sourceIndex.row()) >= DownloadManager::STATE_READY)
     emit installDownload(sourceIndex.row());
   else if ((m_Manager->getState(sourceIndex.row()) == DownloadManager::STATE_PAUSED) ||
@@ -554,9 +558,9 @@ void DownloadListView::issueResume(int index)
 void DownloadListView::issueDeleteAll()
 {
   if (QMessageBox::warning(
-          nullptr, tr("Delete Files?"),
-          tr("This will remove all finished downloads from this list and from "
-             "disk.\n\nAre you absolutely sure you want to proceed?"),
+          this, tr("Delete Files?"),
+          tr("This will move all finished downloads to the Recycle Bin.\n\n"
+             "Are you absolutely sure you want to proceed?"),
           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-1, true);
   }
@@ -565,9 +569,9 @@ void DownloadListView::issueDeleteAll()
 void DownloadListView::issueDeleteCompleted()
 {
   if (QMessageBox::warning(
-          nullptr, tr("Delete Files?"),
-          tr("This will remove all installed downloads from this list and from "
-             "disk.\n\nAre you absolutely sure you want to proceed?"),
+          this, tr("Delete Files?"),
+          tr("This will move all installed downloads to the Recycle Bin.\n\n"
+             "Are you absolutely sure you want to proceed?"),
           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-2, true);
   }
@@ -576,9 +580,9 @@ void DownloadListView::issueDeleteCompleted()
 void DownloadListView::issueDeleteUninstalled()
 {
   if (QMessageBox::warning(
-          nullptr, tr("Delete Files?"),
-          tr("This will remove all uninstalled downloads from this list and from "
-             "disk.\n\nAre you absolutely sure you want to proceed?"),
+          this, tr("Delete Files?"),
+          tr("This will move all uninstalled downloads to the Recycle Bin.\n\n"
+             "Are you absolutely sure you want to proceed?"),
           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-3, true);
   }
@@ -586,7 +590,7 @@ void DownloadListView::issueDeleteUninstalled()
 
 void DownloadListView::issueRemoveFromViewAll()
 {
-  if (QMessageBox::question(nullptr, tr("Hide Files?"),
+  if (QMessageBox::question(this, tr("Hide Files?"),
                             tr("This will remove all finished downloads from this list "
                                "(but NOT from disk)."),
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -596,7 +600,7 @@ void DownloadListView::issueRemoveFromViewAll()
 
 void DownloadListView::issueRemoveFromViewCompleted()
 {
-  if (QMessageBox::question(nullptr, tr("Hide Files?"),
+  if (QMessageBox::question(this, tr("Hide Files?"),
                             tr("This will remove all installed downloads from this "
                                "list (but NOT from disk)."),
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -606,7 +610,7 @@ void DownloadListView::issueRemoveFromViewCompleted()
 
 void DownloadListView::issueRemoveFromViewUninstalled()
 {
-  if (QMessageBox::question(nullptr, tr("Hide Files?"),
+  if (QMessageBox::question(this, tr("Hide Files?"),
                             tr("This will remove all uninstalled downloads from this "
                                "list (but NOT from disk)."),
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {

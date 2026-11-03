@@ -568,7 +568,8 @@ private:
   // DownloadInfo-pointer might get invalidated at any time
   DownloadInfo* findDownload(QObject* reply, int* index = nullptr) const;
 
-  void removeFile(int index, bool deleteFile);
+  bool removeFile(int index, bool deleteFile);
+  QStringList m_RemovalFailures;
 
   void refreshAlphabeticalTranslation();
 

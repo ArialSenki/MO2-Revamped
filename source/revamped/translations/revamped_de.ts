@@ -966,6 +966,30 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>This will move all finished downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Dadurch werden alle abgeschlossenen Downloads in den Papierkorb verschoben.
+
+Möchtest du wirklich fortfahren?</translation>
+    </message>
+    <message>
+      <source>This will move all installed downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Dadurch werden alle installierten Downloads in den Papierkorb verschoben.
+
+Möchtest du wirklich fortfahren?</translation>
+    </message>
+    <message>
+      <source>This will move all uninstalled downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Dadurch werden alle nicht installierten Downloads in den Papierkorb verschoben.
+
+Möchtest du wirklich fortfahren?</translation>
+    </message>
+    <message>
       <source>Selected download</source>
       <translation>Ausgewählter Download</translation>
     </message>
@@ -6867,8 +6891,8 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Beenden</translation>
     </message>
     <message>
-      <source>Browse the save files available to this Elden Ring profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
-      <translation>Durchsuche die Spielstände, die diesem Elden-Ring-Profil zur Verfügung stehen. Lege ihren Pfad unter Werkzeuge &gt; Spielstand-Isolation fest, um Spielstände pro MO2-Profil zu trennen, ein benanntes Spielstandprofil in dieser Instanz zu teilen oder den globalen Steam-Spielstandordner zu verwenden.</translation>
+      <source>Browse the save files available to this profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
+      <translation>Durchsuche die Spielstände, die diesem Profil zur Verfügung stehen. Lege ihren Pfad unter Werkzeuge &gt; Spielstand-Isolation fest, um Spielstände pro MO2-Profil zu trennen, ein benanntes Spielstandprofil in dieser Instanz zu teilen oder den globalen Steam-Spielstandordner zu verwenden.</translation>
     </message>
     <message>
       <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
@@ -9574,6 +9598,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SavesTab</name>
     <message>
+      <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
+      <translation>Einige dieser Spielstände sind noch vorhanden. Sie werden möglicherweise verwendet, oder das Löschen wurde abgebrochen.</translation>
+    </message>
+    <message>
       <source>Restore required plugins...</source>
       <translation>Benötigte Plugins wiederherstellen...</translation>
     </message>
@@ -11449,6 +11477,15 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
     <message>
       <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
       <translation>Die Spielstände des Profils konnten nicht gelöscht werden. Schließe alle Programme, die sie verwenden, und versuche es erneut.</translation>
+    </message>
+  </context>
+  <context>
+    <name>DownloadManager</name>
+    <message>
+      <source>These downloads were not deleted. They may be in use, or the deletion was cancelled:
+%1</source>
+      <translation>Diese Downloads wurden nicht gelöscht. Sie werden möglicherweise verwendet, oder das Löschen wurde abgebrochen:
+%1</translation>
     </message>
   </context>
 </TS>

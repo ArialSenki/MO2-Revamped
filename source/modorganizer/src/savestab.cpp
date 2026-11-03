@@ -10,10 +10,13 @@
 #include "organizercore.h"
 #include "ui_mainwindow.h"
 #include <iplugingame.h>
+#include <report.h>
 #include <localsavegames.h>
 #include <isavegameinfowidget.h>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <algorithm>
 #include <QHeaderView>
 #include <QIcon>
 #include <QLocale>
@@ -339,10 +342,10 @@ void SavesTab::refreshSaveListNow()
       ui.list->setColumnCount(3);
       ui.list->headerItem()->setText(2, tr("Modified"));
       ui.list->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-      // the file path takes the free width, so the three columns fit the card
-      // without a horizontal scroll bar
+      // the name takes the free width, so the date stays in the card without a
+      // horizontal scroll bar; the path column is hidden below
       ui.list->header()->setStretchLastSection(false);
-      ui.list->header()->setSectionResizeMode(1, QHeaderView::Stretch);
+      ui.list->header()->setSectionResizeMode(0, QHeaderView::Stretch);
     }
 
     const QLocale locale;
@@ -416,7 +419,15 @@ void SavesTab::deleteSavegame()
              "", count)
               .arg(savesMsgLabel),
           QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
-    shellDelete(deleteFiles, true);  // recycle bin delete.
+    // recycle bin delete; a save in use stays where it was
+    shellDelete(deleteFiles, true);
+    // Windows reports success when the user skips a file in use, so the files say
+    if (std::any_of(deleteFiles.begin(), deleteFiles.end(), [](const QString& file) {
+          return QFile::exists(file);
+        })) {
+      reportError(tr("Some of these saves are still there. They may be in use, or the "
+                     "deletion was cancelled."));
+    }
     refreshSaveList();
   }
 }

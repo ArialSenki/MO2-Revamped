@@ -805,7 +805,7 @@ private:
     } else if (objectName == QStringLiteral("dataTree")) {
       // name and origin fit the side panel at its usual width without a
       // horizontal scroll bar
-      constexpr int widths[] = {180, 110, 90, 90, 145};
+      constexpr int widths[] = {130, 110, 90, 90, 145};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -816,7 +816,7 @@ private:
       }
     } else if (objectName == QStringLiteral("downloadView")) {
       // name and status fit the side panel; more columns scroll
-      constexpr int widths[] = {180, 105, 90, 150, 130, 95, 80, 125};
+      constexpr int widths[] = {130, 105, 90, 150, 130, 95, 80, 125};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -4033,6 +4033,15 @@ void MainWindow::configureEldenRingHelp()
   ui->dataTree->setWhatsThis(tr(
       "Shows the game's folder as the game sees it, with the active mods applied. "
       "The Origin column says which mod supplies each file."));
+  ui->savegameList->setWhatsThis(tr(
+      "Browse the save files available to this profile. Configure "
+      "its route in Tools > Save Isolation to keep saves separate "
+      "per MO2 profile, share a named save profile in this instance, or use "
+      "the global Steam save folder."));
+  ui->downloadView->setWhatsThis(tr(
+      "Downloaded archives for this instance appear here. Double-click an "
+      "archive to install it. To choose its priority, drag it from this list "
+      "onto the mod list while sorting by Priority."));
 
   if (game->gameShortName().compare("eldenring", Qt::CaseInsensitive) != 0) {
     return;
@@ -4046,15 +4055,6 @@ void MainWindow::configureEldenRingHelp()
       "Shows how many active mods are visible in the mod list. Filtering the "
       "list changes this count; hover over the counter to see the total and "
       "visible counts by mod type."));
-  ui->savegameList->setWhatsThis(tr(
-      "Browse the save files available to this Elden Ring profile. Configure "
-      "its route in Tools > Save Isolation to keep saves separate "
-      "per MO2 profile, share a named save profile in this instance, or use "
-      "the global Steam save folder."));
-  ui->downloadView->setWhatsThis(tr(
-      "Downloaded archives for this instance appear here. Double-click an "
-      "archive to install it. To choose its priority, drag it from this list "
-      "onto the mod list while sorting by Priority."));
   ui->actionChange_Game->setWhatsThis(tr(
       "Open the instance manager to switch between this Elden Ring setup and "
       "other independent MO2 instances."));

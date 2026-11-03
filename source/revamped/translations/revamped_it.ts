@@ -1001,6 +1001,30 @@ Le modifiche vengono salvate quando scegli OK.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>This will move all finished downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Tutti i download completati verranno spostati nel Cestino.
+
+Vuoi davvero continuare?</translation>
+    </message>
+    <message>
+      <source>This will move all installed downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Tutti i download installati verranno spostati nel Cestino.
+
+Vuoi davvero continuare?</translation>
+    </message>
+    <message>
+      <source>This will move all uninstalled downloads to the Recycle Bin.
+
+Are you absolutely sure you want to proceed?</source>
+      <translation>Tutti i download non installati verranno spostati nel Cestino.
+
+Vuoi davvero continuare?</translation>
+    </message>
+    <message>
       <source>Selected download</source>
       <translation>Download selezionato</translation>
     </message>
@@ -1095,6 +1119,12 @@ Le modifiche vengono salvate quando scegli OK.</translation>
   </context>
   <context>
     <name>DownloadManager</name>
+    <message>
+      <source>These downloads were not deleted. They may be in use, or the deletion was cancelled:
+%1</source>
+      <translation>Questi download non sono stati eliminati. Potrebbero essere in uso, oppure l'eliminazione è stata annullata:
+%1</translation>
+    </message>
     <message>
       <source>%1% - %2 - ~%3</source>
       <translation>%1% - %2 - ~%3</translation>
@@ -7057,8 +7087,8 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Esci</translation>
     </message>
     <message>
-      <source>Browse the save files available to this Elden Ring profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
-      <translation>Sfoglia i salvataggi disponibili per questo profilo di Elden Ring. Configura il percorso in Strumenti &gt; Isolamento salvataggi per separare i salvataggi per profilo MO2, condividere un profilo di salvataggio con nome in questa istanza o usare la cartella globale dei salvataggi di Steam.</translation>
+      <source>Browse the save files available to this profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
+      <translation>Sfoglia i salvataggi disponibili per questo profilo. Configura il percorso in Strumenti &gt; Isolamento salvataggi per separare i salvataggi per profilo MO2, condividere un profilo di salvataggio con nome in questa istanza o usare la cartella globale dei salvataggi di Steam.</translation>
     </message>
     <message>
       <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
@@ -9895,6 +9925,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SavesTab</name>
+    <message>
+      <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
+      <translation>Alcuni di questi salvataggi sono ancora lì. Potrebbero essere in uso, oppure l'eliminazione è stata annullata.</translation>
+    </message>
     <message>
       <source>Restore required plugins...</source>
       <translation>Ripristina plugin richiesti...</translation>
