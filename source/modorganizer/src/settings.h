@@ -197,6 +197,10 @@ public:
 
   // selected index for a combobox
   //
+  // the program Run starts, by its title
+  std::optional<QString> selectedProgram() const;
+  void setSelectedProgram(const QString& title);
+
   std::optional<int> index(const QComboBox* cb) const;
   void saveIndex(const QComboBox* cb);
   void restoreIndex(QComboBox* cb, std::optional<int> def = {}) const;

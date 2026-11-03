@@ -202,6 +202,7 @@ private:
   void createHelpMenu();
   void configureEldenRingHelp();
   void showEldenRingGuide();
+  void updateRunButton();
   QString gameGuideTitle(const MOBase::IPluginGame* game) const;
   void createEndorseMenu();
   void updateShortcutActionIcons();

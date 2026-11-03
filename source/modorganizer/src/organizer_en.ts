@@ -3042,7 +3042,8 @@ The programs that are not hidden appear in the main window&apos;s Program list, 
     </message>
     <message>
         <location filename="fluentdashboard.cpp" line="453"/>
-        <source>Last played %1</source>
+        <source>Last saved %1</source>
+        <oldsource>Last played %1</oldsource>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4747,7 +4748,7 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="281"/>
-        <location filename="mainwindow.cpp" line="4663"/>
+        <location filename="mainwindow.cpp" line="4695"/>
         <source>Profile</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4846,20 +4847,20 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     <message>
         <location filename="mainwindow.ui" line="733"/>
         <location filename="fluentmainwindow.cpp" line="214"/>
-        <location filename="mainwindow.cpp" line="4249"/>
+        <location filename="mainwindow.cpp" line="4281"/>
         <source>Run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="789"/>
-        <location filename="mainwindow.cpp" line="4671"/>
+        <location filename="mainwindow.cpp" line="4703"/>
         <source>Plugins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="806"/>
         <location filename="mainwindow.ui" line="809"/>
-        <location filename="mainwindow.cpp" line="5185"/>
+        <location filename="mainwindow.cpp" line="5219"/>
         <source>Sort the plugins using LOOT.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4911,7 +4912,7 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1034"/>
-        <location filename="mainwindow.cpp" line="4242"/>
+        <location filename="mainwindow.cpp" line="4274"/>
         <source>Data</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4950,7 +4951,7 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1165"/>
-        <location filename="mainwindow.cpp" line="4647"/>
+        <location filename="mainwindow.cpp" line="4679"/>
         <source>Saves</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4967,8 +4968,8 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1257"/>
-        <location filename="mainwindow.cpp" line="4246"/>
-        <location filename="mainwindow.cpp" line="4665"/>
+        <location filename="mainwindow.cpp" line="4278"/>
+        <location filename="mainwindow.cpp" line="4697"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4980,7 +4981,7 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1347"/>
-        <location filename="mainwindow.cpp" line="4019"/>
+        <location filename="mainwindow.cpp" line="4057"/>
         <source>Downloaded archives for this instance appear here. Double-click an archive to install it. To choose its priority, drag it from this list onto the mod list while sorting by Priority.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5290,7 +5291,7 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1647"/>
-        <location filename="mainwindow.cpp" line="4194"/>
+        <location filename="mainwindow.cpp" line="4226"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5371,7 +5372,7 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
         <location filename="mainwindow.ui" line="1836"/>
         <location filename="mainwindow.ui" line="1839"/>
         <location filename="mainwindow.cpp" line="2560"/>
-        <location filename="mainwindow.cpp" line="5113"/>
+        <location filename="mainwindow.cpp" line="5147"/>
         <source>Endorse MO2 Revamped</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5503,13 +5504,13 @@ Error: %1</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1833"/>
-        <location filename="mainwindow.cpp" line="5115"/>
+        <location filename="mainwindow.cpp" line="5149"/>
         <source>Endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="2570"/>
-        <location filename="mainwindow.cpp" line="5132"/>
+        <location filename="mainwindow.cpp" line="5166"/>
         <source>Won&apos;t Endorse</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5596,39 +5597,39 @@ Error: %1</source>
         <location filename="mainwindow.cpp" line="1405"/>
         <location filename="mainwindow.cpp" line="1436"/>
         <location filename="mainwindow.cpp" line="1590"/>
-        <location filename="mainwindow.cpp" line="5001"/>
-        <location filename="mainwindow.cpp" line="5002"/>
-        <location filename="mainwindow.cpp" line="5030"/>
+        <location filename="mainwindow.cpp" line="5035"/>
+        <location filename="mainwindow.cpp" line="5036"/>
+        <location filename="mainwindow.cpp" line="5064"/>
         <source>Filter options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1481"/>
-        <location filename="mainwindow.cpp" line="5007"/>
+        <location filename="mainwindow.cpp" line="5041"/>
         <source>Available criteria</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1500"/>
-        <location filename="mainwindow.cpp" line="5011"/>
+        <location filename="mainwindow.cpp" line="5045"/>
         <source>Filter actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1524"/>
-        <location filename="mainwindow.cpp" line="5015"/>
+        <location filename="mainwindow.cpp" line="5049"/>
         <source>Filter behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1545"/>
-        <location filename="mainwindow.cpp" line="5019"/>
+        <location filename="mainwindow.cpp" line="5053"/>
         <source>Match</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1559"/>
-        <location filename="mainwindow.cpp" line="5023"/>
+        <location filename="mainwindow.cpp" line="5057"/>
         <source>Separators</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5639,103 +5640,103 @@ Error: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="3517"/>
+        <location filename="mainwindow.cpp" line="3521"/>
         <source>&lt;Edit...&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="3528"/>
+        <location filename="mainwindow.cpp" line="3532"/>
         <source>(no executables)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="3700"/>
+        <location filename="mainwindow.cpp" line="3712"/>
         <source>This bsa is enabled in the ini file so it may be required!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="3751"/>
+        <location filename="mainwindow.cpp" line="3763"/>
         <source>Activating Network Proxy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="3862"/>
+        <location filename="mainwindow.cpp" line="3884"/>
         <source>Notice: Your current MO version (%1) is lower than the previously used one (%2). The GUI may not downgrade gracefully, so you may experience oddities. However, there should be no serious issues.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4451"/>
+        <location filename="mainwindow.cpp" line="4483"/>
         <source>failed to change origin name: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4481"/>
+        <location filename="mainwindow.cpp" line="4513"/>
         <source>failed to move &quot;%1&quot; from mod &quot;%2&quot; to &quot;%3&quot;: %4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4849"/>
-        <location filename="mainwindow.cpp" line="4850"/>
+        <location filename="mainwindow.cpp" line="4881"/>
+        <location filename="mainwindow.cpp" line="4882"/>
         <source>Restart Mod Organizer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4851"/>
+        <location filename="mainwindow.cpp" line="4883"/>
         <source>Mod Organizer must restart to finish configuration changes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4853"/>
+        <location filename="mainwindow.cpp" line="4885"/>
         <source>Restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4855"/>
+        <location filename="mainwindow.cpp" line="4887"/>
         <source>Continue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4855"/>
+        <location filename="mainwindow.cpp" line="4887"/>
         <source>Some things might be weird.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4867"/>
+        <location filename="mainwindow.cpp" line="4899"/>
         <source>Can&apos;t change download directory while downloads are in progress!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5113"/>
+        <location filename="mainwindow.cpp" line="5147"/>
         <source>Support MO2 Revamped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5114"/>
+        <location filename="mainwindow.cpp" line="5148"/>
         <source>This will submit your endorsement to the MO2 Revamped listing on Nexus Mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5130"/>
+        <location filename="mainwindow.cpp" line="5164"/>
         <source>Endorsement preference</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5130"/>
+        <location filename="mainwindow.cpp" line="5164"/>
         <source>Don&apos;t endorse MO2 Revamped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5131"/>
+        <location filename="mainwindow.cpp" line="5165"/>
         <source>This will record your choice not to endorse the listing on Nexus Mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5115"/>
-        <location filename="mainwindow.cpp" line="5132"/>
-        <location filename="mainwindow.cpp" line="6125"/>
-        <location filename="mainwindow.cpp" line="6270"/>
-        <location filename="mainwindow.cpp" line="6354"/>
-        <location filename="mainwindow.cpp" line="6444"/>
+        <location filename="mainwindow.cpp" line="5149"/>
+        <location filename="mainwindow.cpp" line="5166"/>
+        <location filename="mainwindow.cpp" line="6159"/>
+        <location filename="mainwindow.cpp" line="6304"/>
+        <location filename="mainwindow.cpp" line="6388"/>
+        <location filename="mainwindow.cpp" line="6478"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5760,7 +5761,7 @@ Error: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4053"/>
+        <location filename="mainwindow.cpp" line="4085"/>
         <source>Elden Ring Guide</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5902,746 +5903,748 @@ Error: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="3996"/>
+        <location filename="mainwindow.cpp" line="4037"/>
         <source>Installed Elden Ring mods appear here. Checked mods are active in this profile and can provide virtual game files or native DLLs. Keep only one version of a mutually exclusive mod active.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4000"/>
-        <source>Choose a profile to switch its enabled mod list, plugin selection, and plugin load order. Each profile keeps these lists separate for different mod setups or playthroughs.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="4003"/>
+        <location filename="mainwindow.cpp" line="4041"/>
         <source>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter to see the total and visible counts by mod type.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4007"/>
+        <location filename="mainwindow.cpp" line="4045"/>
         <source>Filter the installed Elden Ring mods by name.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4009"/>
+        <location filename="mainwindow.cpp" line="4047"/>
         <source>Shows the virtual Elden Ring Data directory after MO2 combines the game files with the active mods. The Mod column identifies which mod supplies a file. Standard archive layout keeps top-level DLLs at the game root and organizes DLLs from recognized native-mod folders under Game/DLLs.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4014"/>
+        <location filename="mainwindow.cpp" line="4052"/>
         <source>Browse the save files available to this Elden Ring profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="4023"/>
-        <source>Choose Elden Ring or another configured executable to launch through MO2&apos;s virtual file system.</source>
+        <source>Choose a profile to switch its enabled mods. Each profile keeps its own list, for different mod setups or playthroughs.</source>
+        <oldsource>Choose Elden Ring or another configured executable to launch through MO2&apos;s virtual file system.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="4026"/>
-        <source>Launch the selected program with the active Elden Ring profile. Use the small arrow on the right for shortcut options.</source>
+        <source>Choose the game or another configured program to start through MO2&apos;s virtual file system.</source>
+        <oldsource>Launch the selected program with the active Elden Ring profile. Use the small arrow on the right for shortcut options.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="4029"/>
+        <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="4061"/>
         <source>Open the instance manager to switch between this Elden Ring setup and other independent MO2 instances.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4032"/>
+        <location filename="mainwindow.cpp" line="4064"/>
         <source>Open the Nexus Mods page for the currently managed game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4034"/>
+        <location filename="mainwindow.cpp" line="4066"/>
         <source>Open MO2 settings. These settings belong to this MO2 installation and may be separate from settings in other instances.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4037"/>
+        <location filename="mainwindow.cpp" line="4069"/>
         <source>Open tools available in this MO2 instance. Elden Ring tools include Save Isolation for save routes and named saves, Startup Options for launch and cleanup settings, and Native DLL Profile for native DLL load order and optional initializers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4042"/>
+        <location filename="mainwindow.cpp" line="4074"/>
         <source>Install a mod archive. For Elden Ring, keep the original archive paths when the mod relies on its packaged folders; use standard MO2 layout when the archive follows common MO2 or game-data paths.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4092"/>
+        <location filename="mainwindow.cpp" line="4124"/>
         <source>Not detected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4096"/>
+        <location filename="mainwindow.cpp" line="4128"/>
         <source>Not selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4108"/>
+        <location filename="mainwindow.cpp" line="4140"/>
         <source>Profiles, archives, native DLLs, saves, and launching the game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4113"/>
+        <location filename="mainwindow.cpp" line="4145"/>
         <source>Current game: %1  ·  Active profile: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4191"/>
+        <location filename="mainwindow.cpp" line="4223"/>
         <source>Profiles and archives</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4191"/>
+        <location filename="mainwindow.cpp" line="4223"/>
         <source>Profiles and installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4192"/>
+        <location filename="mainwindow.cpp" line="4224"/>
         <source>Choose the active profile and understand how MO2 resolves files and archive layouts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4198"/>
+        <location filename="mainwindow.cpp" line="4230"/>
         <source>Mod priority</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4199"/>
+        <location filename="mainwindow.cpp" line="4231"/>
         <source>&lt;p&gt;The left list controls file priority when mods provide the same file. The &lt;b&gt;Data&lt;/b&gt; tab shows which mod wins. Avoid enabling two versions of the same mod at once.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4202"/>
+        <location filename="mainwindow.cpp" line="4234"/>
         <source>Keep original archive structure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4203"/>
+        <location filename="mainwindow.cpp" line="4235"/>
         <source>&lt;p&gt;Choose this when a mod expects its packaged paths to remain intact. Revamped removes only redundant outer wrappers and keeps the files inside their original folders, including DLL locations and documentation.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4207"/>
+        <location filename="mainwindow.cpp" line="4239"/>
         <source>Standard MO2 layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4208"/>
+        <location filename="mainwindow.cpp" line="4240"/>
         <source>&lt;p&gt;Choose this when an archive follows common MO2 or game-data paths. Recognized native-mod DLLs and related files are routed to this instance&apos;s game DLLs folder.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4213"/>
+        <location filename="mainwindow.cpp" line="4245"/>
         <source>Native DLLs and saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4213"/>
+        <location filename="mainwindow.cpp" line="4245"/>
         <source>Native DLLs and save profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4214"/>
+        <location filename="mainwindow.cpp" line="4246"/>
         <source>These tools keep their choices with the active MO2 profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4215"/>
+        <location filename="mainwindow.cpp" line="4247"/>
         <source>DLL detection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4216"/>
+        <location filename="mainwindow.cpp" line="4248"/>
         <source>&lt;p&gt;Native DLL Profile lists DLL routes from enabled mods. MO2&apos;s route index is used when available; older mods are scanned in their native DLL folders. Detected paths are checked against MO2&apos;s virtual file system.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4220"/>
+        <location filename="mainwindow.cpp" line="4252"/>
         <source>Load order and initializers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4221"/>
+        <location filename="mainwindow.cpp" line="4253"/>
         <source>&lt;p&gt;Associate detected DLLs with their MO2 mods and set their load order for each profile. Enter the initializer export documented by a mod only when it requires one. This profile does not enable or disable the MO2 mod.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4225"/>
+        <location filename="mainwindow.cpp" line="4257"/>
         <source>Save routes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4230"/>
+        <location filename="mainwindow.cpp" line="4262"/>
         <source>Restart and online safety</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4239"/>
+        <location filename="mainwindow.cpp" line="4271"/>
         <source>Data and launch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4239"/>
+        <location filename="mainwindow.cpp" line="4271"/>
         <source>Data, downloads, and launch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4240"/>
+        <location filename="mainwindow.cpp" line="4272"/>
         <source>MO2 presents a virtual game directory and launches programs through the active profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4243"/>
+        <location filename="mainwindow.cpp" line="4275"/>
         <source>&lt;p&gt;&lt;b&gt;Data&lt;/b&gt; shows the virtual game directory and the mod that provides each file. It does not copy files into the physical game folder.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4250"/>
+        <location filename="mainwindow.cpp" line="4282"/>
         <source>&lt;p&gt;The &lt;b&gt;Run&lt;/b&gt; button starts the selected program with the active profile. Its arrow opens shortcut options.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4252"/>
+        <location filename="mainwindow.cpp" line="4284"/>
         <source>More help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4253"/>
+        <location filename="mainwindow.cpp" line="4285"/>
         <source>&lt;p&gt;The &lt;b&gt;…&lt;/b&gt; menu offers this guide, the Mod Organizer 2 documentation, a game support wiki when its MO2 plugin provides one, &lt;i&gt;Report a Problem&lt;/i&gt;, &lt;i&gt;Create Bug Report&lt;/i&gt;, and &lt;i&gt;About MO2 Revamped&lt;/i&gt;.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4644"/>
+        <location filename="mainwindow.cpp" line="4676"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4650"/>
+        <location filename="mainwindow.cpp" line="4682"/>
         <source>My Games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4654"/>
+        <location filename="mainwindow.cpp" line="4686"/>
         <source>INI files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4658"/>
+        <location filename="mainwindow.cpp" line="4690"/>
         <source>MO2 instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4659"/>
+        <location filename="mainwindow.cpp" line="4691"/>
         <source>Instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4661"/>
+        <location filename="mainwindow.cpp" line="4693"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4668"/>
+        <location filename="mainwindow.cpp" line="4700"/>
         <source>MO2 installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4669"/>
+        <location filename="mainwindow.cpp" line="4701"/>
         <source>Program folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4673"/>
+        <location filename="mainwindow.cpp" line="4705"/>
         <source>Stylesheets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4675"/>
+        <location filename="mainwindow.cpp" line="4707"/>
         <source>Logs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4695"/>
+        <location filename="mainwindow.cpp" line="4727"/>
         <source>Open the active game&apos;s installation folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4700"/>
+        <location filename="mainwindow.cpp" line="4732"/>
         <source>Open the game&apos;s save folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4701"/>
+        <location filename="mainwindow.cpp" line="4733"/>
         <source>Open the game&apos;s documents folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4707"/>
+        <location filename="mainwindow.cpp" line="4739"/>
         <source>Open the INI folder used by the active profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4710"/>
+        <location filename="mainwindow.cpp" line="4742"/>
         <source>Open this MO2 instance&apos;s data folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4713"/>
+        <location filename="mainwindow.cpp" line="4745"/>
         <source>Open this instance&apos;s managed mods folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4716"/>
+        <location filename="mainwindow.cpp" line="4748"/>
         <source>Open the selected profile&apos;s folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4719"/>
+        <location filename="mainwindow.cpp" line="4751"/>
         <source>Open this instance&apos;s downloaded archives folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4722"/>
+        <location filename="mainwindow.cpp" line="4754"/>
         <source>Open the MO2 program folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4725"/>
+        <location filename="mainwindow.cpp" line="4757"/>
         <source>Open the MO2 plugins folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4728"/>
+        <location filename="mainwindow.cpp" line="4760"/>
         <source>Open the installed stylesheets folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4731"/>
+        <location filename="mainwindow.cpp" line="4763"/>
         <source>Open this MO2 instance&apos;s logs folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4736"/>
+        <location filename="mainwindow.cpp" line="4768"/>
         <source>%1
 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4831"/>
+        <location filename="mainwindow.cpp" line="4863"/>
         <source>Language changed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4831"/>
+        <location filename="mainwindow.cpp" line="4863"/>
         <source>Restart to apply the language everywhere</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4832"/>
+        <location filename="mainwindow.cpp" line="4864"/>
         <source>MO2 Revamped restarts so every window, menu and plugin uses the new language.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4835"/>
+        <location filename="mainwindow.cpp" line="4867"/>
         <source>Some text stays in the previous language until MO2 Revamped restarts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4837"/>
+        <location filename="mainwindow.cpp" line="4869"/>
         <source>Restart now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4838"/>
+        <location filename="mainwindow.cpp" line="4870"/>
         <source>Later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5034"/>
+        <location filename="mainwindow.cpp" line="5068"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5075"/>
+        <location filename="mainwindow.cpp" line="5109"/>
         <source>A newer MO2 Revamped release is available. Check MO2 Revamped on GitHub for release details.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5160"/>
+        <location filename="mainwindow.cpp" line="5194"/>
         <source>Thank you for endorsing MO2 Revamped! :)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5165"/>
+        <location filename="mainwindow.cpp" line="5199"/>
         <source>You chose not to endorse MO2 Revamped on Nexus Mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5188"/>
+        <location filename="mainwindow.cpp" line="5222"/>
         <source>There is no supported sort mechanism for this game. You will probably have to use a third-party tool.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5276"/>
+        <location filename="mainwindow.cpp" line="5310"/>
         <source>None of your %1 mods appear to have had recent file updates.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5289"/>
+        <location filename="mainwindow.cpp" line="5323"/>
         <source>All of your mods have been checked recently. We restrict update checks to help preserve your available API requests.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5519"/>
+        <location filename="mainwindow.cpp" line="5553"/>
         <source>Thank you!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5520"/>
+        <location filename="mainwindow.cpp" line="5554"/>
         <source>Thank you for your endorsement!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5645"/>
+        <location filename="mainwindow.cpp" line="5679"/>
         <source>Mod ID %1 no longer seems to be available on Nexus.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5663"/>
+        <location filename="mainwindow.cpp" line="5697"/>
         <source>Error %1: Request to Nexus failed: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5680"/>
-        <location filename="mainwindow.cpp" line="5753"/>
+        <location filename="mainwindow.cpp" line="5714"/>
+        <location filename="mainwindow.cpp" line="5787"/>
         <source>failed to read %1: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5693"/>
+        <location filename="mainwindow.cpp" line="5727"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5694"/>
+        <location filename="mainwindow.cpp" line="5728"/>
         <source>failed to extract %1 (errorcode %2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5728"/>
+        <location filename="mainwindow.cpp" line="5762"/>
         <source>Extract BSA</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5767"/>
+        <location filename="mainwindow.cpp" line="5801"/>
         <source>This archive contains invalid hashes. Some files may be broken.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5778"/>
+        <location filename="mainwindow.cpp" line="5812"/>
         <source>Extract...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5852"/>
+        <location filename="mainwindow.cpp" line="5886"/>
         <source>Remove &apos;%1&apos; from the toolbar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5909"/>
-        <location filename="mainwindow.cpp" line="5984"/>
+        <location filename="mainwindow.cpp" line="5943"/>
+        <location filename="mainwindow.cpp" line="6018"/>
         <source>Plugin order unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5910"/>
-        <location filename="mainwindow.cpp" line="5985"/>
+        <location filename="mainwindow.cpp" line="5944"/>
+        <location filename="mainwindow.cpp" line="6019"/>
         <source>There is no plugin order to back up.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5911"/>
-        <location filename="mainwindow.cpp" line="5986"/>
+        <location filename="mainwindow.cpp" line="5945"/>
+        <location filename="mainwindow.cpp" line="6020"/>
         <source>This profile has no ESP, ESM, or ESL plugins. Mod priorities are included in the mod list backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5913"/>
-        <location filename="mainwindow.cpp" line="5957"/>
-        <location filename="mainwindow.cpp" line="5966"/>
-        <location filename="mainwindow.cpp" line="5970"/>
-        <location filename="mainwindow.cpp" line="5974"/>
-        <location filename="mainwindow.cpp" line="5988"/>
-        <location filename="mainwindow.cpp" line="6080"/>
+        <location filename="mainwindow.cpp" line="5947"/>
+        <location filename="mainwindow.cpp" line="5991"/>
+        <location filename="mainwindow.cpp" line="6000"/>
+        <location filename="mainwindow.cpp" line="6004"/>
+        <location filename="mainwindow.cpp" line="6008"/>
+        <location filename="mainwindow.cpp" line="6022"/>
         <location filename="mainwindow.cpp" line="6114"/>
-        <location filename="mainwindow.cpp" line="6146"/>
-        <location filename="mainwindow.cpp" line="6188"/>
-        <location filename="mainwindow.cpp" line="6232"/>
-        <location filename="mainwindow.cpp" line="6262"/>
-        <location filename="mainwindow.cpp" line="6277"/>
-        <location filename="mainwindow.cpp" line="6332"/>
-        <location filename="mainwindow.cpp" line="6361"/>
-        <location filename="mainwindow.cpp" line="6365"/>
-        <location filename="mainwindow.cpp" line="6417"/>
-        <location filename="mainwindow.cpp" line="6467"/>
-        <location filename="mainwindow.cpp" line="6471"/>
+        <location filename="mainwindow.cpp" line="6148"/>
+        <location filename="mainwindow.cpp" line="6180"/>
+        <location filename="mainwindow.cpp" line="6222"/>
+        <location filename="mainwindow.cpp" line="6266"/>
+        <location filename="mainwindow.cpp" line="6296"/>
+        <location filename="mainwindow.cpp" line="6311"/>
+        <location filename="mainwindow.cpp" line="6366"/>
+        <location filename="mainwindow.cpp" line="6395"/>
+        <location filename="mainwindow.cpp" line="6399"/>
+        <location filename="mainwindow.cpp" line="6451"/>
+        <location filename="mainwindow.cpp" line="6501"/>
+        <location filename="mainwindow.cpp" line="6505"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5926"/>
+        <location filename="mainwindow.cpp" line="5960"/>
         <source>mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5943"/>
-        <location filename="mainwindow.cpp" line="5952"/>
+        <location filename="mainwindow.cpp" line="5977"/>
+        <location filename="mainwindow.cpp" line="5986"/>
         <source>plugin order</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5949"/>
+        <location filename="mainwindow.cpp" line="5983"/>
         <source>MO2 could not create these backup parts: %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5950"/>
+        <location filename="mainwindow.cpp" line="5984"/>
         <source>, </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5951"/>
+        <location filename="mainwindow.cpp" line="5985"/>
         <source>
 
 Any parts that succeeded are still available to restore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5953"/>
+        <location filename="mainwindow.cpp" line="5987"/>
         <source> An incomplete plugin-order backup cannot be restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5955"/>
+        <location filename="mainwindow.cpp" line="5989"/>
         <source>Backup incomplete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5956"/>
+        <location filename="mainwindow.cpp" line="5990"/>
         <source>The backup is incomplete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5963"/>
+        <location filename="mainwindow.cpp" line="5997"/>
         <source>Profile backup created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5963"/>
-        <location filename="mainwindow.cpp" line="5969"/>
-        <location filename="mainwindow.cpp" line="5973"/>
+        <location filename="mainwindow.cpp" line="5997"/>
+        <location filename="mainwindow.cpp" line="6003"/>
+        <location filename="mainwindow.cpp" line="6007"/>
         <source>Backup created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5964"/>
+        <location filename="mainwindow.cpp" line="5998"/>
         <source>The selected parts of this profile were saved and are ready to restore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5970"/>
+        <location filename="mainwindow.cpp" line="6004"/>
         <source>The mod list backup is ready to restore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5973"/>
+        <location filename="mainwindow.cpp" line="6007"/>
         <source>Backup of load order created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6076"/>
-        <location filename="mainwindow.cpp" line="6329"/>
-        <location filename="mainwindow.cpp" line="6415"/>
+        <location filename="mainwindow.cpp" line="6110"/>
+        <location filename="mainwindow.cpp" line="6363"/>
+        <location filename="mainwindow.cpp" line="6449"/>
         <source>No Backups</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6074"/>
+        <location filename="mainwindow.cpp" line="6108"/>
         <source>There are no backups to restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6110"/>
-        <location filename="mainwindow.cpp" line="6142"/>
-        <location filename="mainwindow.cpp" line="6186"/>
-        <location filename="mainwindow.cpp" line="6230"/>
-        <location filename="mainwindow.cpp" line="6260"/>
-        <location filename="mainwindow.cpp" line="6276"/>
+        <location filename="mainwindow.cpp" line="6144"/>
+        <location filename="mainwindow.cpp" line="6176"/>
+        <location filename="mainwindow.cpp" line="6220"/>
+        <location filename="mainwindow.cpp" line="6264"/>
+        <location filename="mainwindow.cpp" line="6294"/>
+        <location filename="mainwindow.cpp" line="6310"/>
         <source>Restore failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5969"/>
+        <location filename="mainwindow.cpp" line="6003"/>
         <source>Backup of mod list created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4052"/>
+        <location filename="mainwindow.cpp" line="4084"/>
         <source>Nightreign Guide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4195"/>
+        <location filename="mainwindow.cpp" line="4227"/>
         <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4226"/>
+        <location filename="mainwindow.cpp" line="4258"/>
         <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still finds its usual save file.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4231"/>
+        <location filename="mainwindow.cpp" line="4263"/>
         <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4247"/>
+        <location filename="mainwindow.cpp" line="4279"/>
         <source>&lt;p&gt;&lt;b&gt;Downloads&lt;/b&gt; lists archives ready to install. Choose an archive there or use &lt;b&gt;Install&lt;/b&gt; to browse for one.&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="5974"/>
+        <location filename="mainwindow.cpp" line="6008"/>
         <source>The plugin-order backup is ready to restore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6024"/>
+        <location filename="mainwindow.cpp" line="6058"/>
         <source>Restore mod list backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6025"/>
+        <location filename="mainwindow.cpp" line="6059"/>
         <source>Restore load order backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6028"/>
+        <location filename="mainwindow.cpp" line="6062"/>
         <source>Choose a saved mod list for this profile. Restoring it replaces the current mod list; MO2 does not back up the current version automatically.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6031"/>
+        <location filename="mainwindow.cpp" line="6065"/>
         <source>Choose a saved plugin load order for this profile. Restoring it replaces the current plugin load order; MO2 does not back up the current version automatically.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6035"/>
+        <location filename="mainwindow.cpp" line="6069"/>
         <source>Restore this saved mod list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6036"/>
+        <location filename="mainwindow.cpp" line="6070"/>
         <source>Restore this saved plugin load order.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6063"/>
-        <location filename="mainwindow.cpp" line="6317"/>
-        <location filename="mainwindow.cpp" line="6402"/>
+        <location filename="mainwindow.cpp" line="6097"/>
+        <location filename="mainwindow.cpp" line="6351"/>
+        <location filename="mainwindow.cpp" line="6436"/>
         <source>Backup from %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6072"/>
+        <location filename="mainwindow.cpp" line="6106"/>
         <source>No complete plugin order backup is available. The saved plugin list, load order, and locked order must all be present.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6078"/>
+        <location filename="mainwindow.cpp" line="6112"/>
         <source>No complete plugin-order backup is available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6079"/>
+        <location filename="mainwindow.cpp" line="6113"/>
         <source>There are no backups to restore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6111"/>
+        <location filename="mainwindow.cpp" line="6145"/>
         <source>The plugin-order backup is incomplete or unavailable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6112"/>
+        <location filename="mainwindow.cpp" line="6146"/>
         <source>The selected backup is no longer available. No files were restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6121"/>
-        <location filename="mainwindow.cpp" line="6266"/>
+        <location filename="mainwindow.cpp" line="6155"/>
+        <location filename="mainwindow.cpp" line="6300"/>
         <source>Confirm restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6121"/>
+        <location filename="mainwindow.cpp" line="6155"/>
         <source>Restore this plugin order?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6122"/>
+        <location filename="mainwindow.cpp" line="6156"/>
         <source>This replaces the current plugin list and load order. MO2 does not back up the current version automatically.
 
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6125"/>
-        <location filename="mainwindow.cpp" line="6270"/>
+        <location filename="mainwindow.cpp" line="6159"/>
+        <location filename="mainwindow.cpp" line="6304"/>
         <source>Restore backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6143"/>
-        <location filename="mainwindow.cpp" line="6187"/>
+        <location filename="mainwindow.cpp" line="6177"/>
+        <location filename="mainwindow.cpp" line="6221"/>
         <source>MO2 could not prepare the restore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6144"/>
+        <location filename="mainwindow.cpp" line="6178"/>
         <source>Temporary recovery files could not be prepared. No files were restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6162"/>
+        <location filename="mainwindow.cpp" line="6196"/>
         <source>MO2 could not prepare the selected backup. No files were restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6170"/>
+        <location filename="mainwindow.cpp" line="6204"/>
         <source>A destination for the plugin order is not a file. No files were restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6177"/>
+        <location filename="mainwindow.cpp" line="6211"/>
         <source>MO2 could not preserve the current plugin order before restoring. No files were restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6215"/>
+        <location filename="mainwindow.cpp" line="6249"/>
         <source>Failed to restore the plugin order backup. Errorcode: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6219"/>
+        <location filename="mainwindow.cpp" line="6253"/>
         <source>
 
 MO2 restored the original files that were in place before this operation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6224"/>
+        <location filename="mainwindow.cpp" line="6258"/>
         <source>
 
 MO2 could not fully recover these files: %1
@@ -6649,187 +6652,187 @@ Recovery snapshots were kept at: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6231"/>
+        <location filename="mainwindow.cpp" line="6265"/>
         <source>The plugin-order backup could not be restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6261"/>
+        <location filename="mainwindow.cpp" line="6295"/>
         <source>The selected backup is no longer available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6266"/>
+        <location filename="mainwindow.cpp" line="6300"/>
         <source>Restore this mod list?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6267"/>
+        <location filename="mainwindow.cpp" line="6301"/>
         <source>This replaces the current mod list and does not create a backup of it automatically.
 
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6276"/>
+        <location filename="mainwindow.cpp" line="6310"/>
         <source>The backup could not be restored.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6277"/>
+        <location filename="mainwindow.cpp" line="6311"/>
         <source>Error code: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6293"/>
+        <location filename="mainwindow.cpp" line="6327"/>
         <source>Choose a saved mod list backup to delete. The current mod list will not be changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6296"/>
-        <location filename="mainwindow.cpp" line="6351"/>
+        <location filename="mainwindow.cpp" line="6330"/>
+        <location filename="mainwindow.cpp" line="6385"/>
         <source>Delete mod list backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6318"/>
-        <location filename="mainwindow.cpp" line="6323"/>
+        <location filename="mainwindow.cpp" line="6352"/>
+        <location filename="mainwindow.cpp" line="6357"/>
         <source>Permanently delete this saved mod list backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6330"/>
+        <location filename="mainwindow.cpp" line="6364"/>
         <source>There are no mod list backups to delete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6331"/>
+        <location filename="mainwindow.cpp" line="6365"/>
         <source>This profile has no saved mod list backups.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6351"/>
-        <location filename="mainwindow.cpp" line="6441"/>
+        <location filename="mainwindow.cpp" line="6385"/>
+        <location filename="mainwindow.cpp" line="6475"/>
         <source>Delete this backup?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6352"/>
+        <location filename="mainwindow.cpp" line="6386"/>
         <source>Permanently delete this saved mod list backup?
 
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6354"/>
-        <location filename="mainwindow.cpp" line="6444"/>
+        <location filename="mainwindow.cpp" line="6388"/>
+        <location filename="mainwindow.cpp" line="6478"/>
         <source>Delete backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6360"/>
-        <location filename="mainwindow.cpp" line="6463"/>
+        <location filename="mainwindow.cpp" line="6394"/>
+        <location filename="mainwindow.cpp" line="6497"/>
         <source>Delete failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6360"/>
+        <location filename="mainwindow.cpp" line="6394"/>
         <source>The backup could not be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6361"/>
+        <location filename="mainwindow.cpp" line="6395"/>
         <source>Could not delete the selected mod list backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6364"/>
+        <location filename="mainwindow.cpp" line="6398"/>
         <source>Mod list backup deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6364"/>
-        <location filename="mainwindow.cpp" line="6470"/>
+        <location filename="mainwindow.cpp" line="6398"/>
+        <location filename="mainwindow.cpp" line="6504"/>
         <source>Backup deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6365"/>
+        <location filename="mainwindow.cpp" line="6399"/>
         <source>The mod list backup was permanently deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6378"/>
+        <location filename="mainwindow.cpp" line="6412"/>
         <source>Choose a saved plugin load order to delete. The current load order will not be changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6381"/>
-        <location filename="mainwindow.cpp" line="6441"/>
+        <location filename="mainwindow.cpp" line="6415"/>
+        <location filename="mainwindow.cpp" line="6475"/>
         <source>Delete plugin order backup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6403"/>
-        <location filename="mainwindow.cpp" line="6408"/>
+        <location filename="mainwindow.cpp" line="6437"/>
+        <location filename="mainwindow.cpp" line="6442"/>
         <source>Permanently delete this saved plugin load order.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6416"/>
+        <location filename="mainwindow.cpp" line="6450"/>
         <source>There are no plugin-order backups to delete.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6417"/>
+        <location filename="mainwindow.cpp" line="6451"/>
         <source>This profile has no saved plugin-order backups.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6442"/>
+        <location filename="mainwindow.cpp" line="6476"/>
         <source>Permanently delete this saved plugin-order backup?
 
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6464"/>
+        <location filename="mainwindow.cpp" line="6498"/>
         <source>Some files could not be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6465"/>
+        <location filename="mainwindow.cpp" line="6499"/>
         <source>The plugin-order backup is incomplete. These files remain:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6470"/>
+        <location filename="mainwindow.cpp" line="6504"/>
         <source>Plugin order backup deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6471"/>
+        <location filename="mainwindow.cpp" line="6505"/>
         <source>The plugin-order backup was permanently deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6536"/>
+        <location filename="mainwindow.cpp" line="6570"/>
         <source>A file with the same name has already been downloaded. What would you like to do?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6538"/>
+        <location filename="mainwindow.cpp" line="6572"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6539"/>
+        <location filename="mainwindow.cpp" line="6573"/>
         <source>Rename new file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="6540"/>
+        <location filename="mainwindow.cpp" line="6574"/>
         <source>Ignore file</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11639,7 +11642,7 @@ Destination:<byte value="xd"/>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="3442"/>
-        <location filename="mainwindow.cpp" line="5040"/>
+        <location filename="mainwindow.cpp" line="5074"/>
         <source>&lt;Manage...&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11850,19 +11853,19 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1463"/>
-        <location filename="settings.cpp" line="1487"/>
-        <location filename="settings.cpp" line="1535"/>
+        <location filename="settings.cpp" line="1473"/>
+        <location filename="settings.cpp" line="1497"/>
+        <location filename="settings.cpp" line="1545"/>
         <source>attempt to store setting for unknown plugin &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2033"/>
+        <location filename="settings.cpp" line="2043"/>
         <source>Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2034"/>
+        <location filename="settings.cpp" line="2044"/>
         <source>Failed to start the helper application: %1</source>
         <translation type="unfinished"></translation>
     </message>

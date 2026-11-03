@@ -4696,6 +4696,10 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>Last saved %1</source>
+      <translation>Último guardado %1</translation>
+    </message>
+    <message>
       <source>Profile</source>
       <translation>Perfil</translation>
     </message>
@@ -5799,6 +5803,18 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
   </context>
   <context>
     <name>MainWindow</name>
+    <message>
+      <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
+      <translation>Inicia el programa seleccionado con el perfil activo. La flecha pequeña de la derecha tiene las opciones de acceso directo.</translation>
+    </message>
+    <message>
+      <source>Choose the game or another configured program to start through MO2's virtual file system.</source>
+      <translation>Elige el juego u otro programa configurado para iniciarlo mediante el sistema de archivos virtual de MO2.</translation>
+    </message>
+    <message>
+      <source>Choose a profile to switch its enabled mods. Each profile keeps its own list, for different mod setups or playthroughs.</source>
+      <translation>Elige un perfil para cambiar sus mods activos. Cada perfil guarda su propia lista, para distintas configuraciones de mods o partidas.</translation>
+    </message>
     <message>
       <source>Create Bug Report</source>
       <translation>Crear informe de errores</translation>

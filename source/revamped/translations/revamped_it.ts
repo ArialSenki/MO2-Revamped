@@ -4722,6 +4722,10 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>Last saved %1</source>
+      <translation>Ultimo salvataggio %1</translation>
+    </message>
+    <message>
       <source>Profile</source>
       <translation>Profilo</translation>
     </message>
@@ -5884,6 +5888,18 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   </context>
   <context>
     <name>MainWindow</name>
+    <message>
+      <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
+      <translation>Avvia il programma selezionato con il profilo attivo. La piccola freccia a destra contiene le opzioni dei collegamenti.</translation>
+    </message>
+    <message>
+      <source>Choose the game or another configured program to start through MO2's virtual file system.</source>
+      <translation>Scegli il gioco o un altro programma configurato da avviare tramite il file system virtuale di MO2.</translation>
+    </message>
+    <message>
+      <source>Choose a profile to switch its enabled mods. Each profile keeps its own list, for different mod setups or playthroughs.</source>
+      <translation>Scegli un profilo per cambiare le sue mod attive. Ogni profilo ha il proprio elenco, per diverse configurazioni di mod o partite.</translation>
+    </message>
     <message>
       <source>Create Bug Report</source>
       <translation>Crea segnalazione di errore</translation>

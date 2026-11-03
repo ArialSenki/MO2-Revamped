@@ -136,6 +136,14 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Main window header
+
+- Run keeps its program when the list is rebuilt (a theme change, a program added
+  from Data) and between sessions, by its name instead of its position.
+- Run is off when there's nothing to start.
+- "Last played" is now "Last saved": it reads the date of the save files.
+- The header's help on the interface also works on Nightreign.
+
 ### Notifications and Help
 
 - Nightreign's Help has its guide, and no longer offers the tours written for

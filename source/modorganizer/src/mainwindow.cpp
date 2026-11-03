@@ -3511,6 +3511,10 @@ void MainWindow::refreshExecutablesList()
                    Qt::SizeHintRole);
   };
 
+  // a rebuilt list keeps the program: Run must not start another one because the
+  // theme changed or a program was added
+  const QString selected = ui->executablesListBox->currentText();
+
   ui->executablesListBox->setEnabled(false);
   ui->executablesListBox->clear();
 
@@ -3528,7 +3532,8 @@ void MainWindow::refreshExecutablesList()
     add(tr("(no executables)"), QFileInfo(":badfile"));
   }
 
-  ui->executablesListBox->setCurrentIndex(1);
+  const int selectedIndex = ui->executablesListBox->findText(selected);
+  ui->executablesListBox->setCurrentIndex(selectedIndex > 0 ? selectedIndex : 1);
   // Keep the executable popup readable and within the screen even when many
   // programs are configured. Remaining entries stay accessible by scrolling.
   ui->executablesListBox->setMaxVisibleItems(8);
@@ -3537,6 +3542,13 @@ void MainWindow::refreshExecutablesList()
   ui->executablesListBox->view()->setVerticalScrollBarPolicy(
       Qt::ScrollBarAsNeeded);
   ui->executablesListBox->setEnabled(true);
+  m_OldExecutableIndex = ui->executablesListBox->currentIndex();
+  updateRunButton();
+}
+
+void MainWindow::updateRunButton()
+{
+  ui->startButton->setEnabled(getSelectedExecutable() != nullptr);
 }
 
 static bool BySortValue(const std::pair<UINT32, QTreeWidgetItem*>& LHS,
@@ -3802,6 +3814,16 @@ void MainWindow::readSettings()
       v = 1;
     }
 
+    // by its name: the list can change between sessions. A position is only
+    // for an INI from before this, and one that went away picks the first
+    if (const auto program = s.widgets().selectedProgram();
+        program && !m_OrganizerCore.removedBetaLaunchers()) {
+      v = qMax(ui->executablesListBox->findText(*program), 1);
+    }
+    if (*v >= ui->executablesListBox->count()) {
+      v = 1;
+    }
+
     ui->executablesListBox->setCurrentIndex(*v);
   }
 
@@ -3889,6 +3911,9 @@ void MainWindow::storeSettings()
   s.geometry().saveState(ui->savegameList->header());
 
   s.widgets().saveIndex(ui->executablesListBox);
+  if (getSelectedExecutable() != nullptr) {
+    s.widgets().setSelectedProgram(ui->executablesListBox->currentText());
+  }
   s.widgets().saveIndex(ui->tabWidget);
 
   m_DataTab->saveState(s);
@@ -3927,7 +3952,7 @@ void MainWindow::launchSelectedExecutable()
   setRunState(RunState::Mounting);
   Guard g([&] {
     setRunState(RunState::Idle);
-    ui->startButton->setEnabled(true);
+    updateRunButton();
   });
 
   m_OrganizerCore.processRunner()
@@ -3984,12 +4009,28 @@ void MainWindow::on_executablesListBox_currentIndexChanged(int index)
   if (index == 0) {
     modifyExecutablesDialog(previousIndex - 1);
   }
+
+  updateRunButton();
 }
 
 void MainWindow::configureEldenRingHelp()
 {
   const auto* game = m_OrganizerCore.managedGame();
-  if (!game || game->gameShortName().compare("eldenring", Qt::CaseInsensitive) != 0) {
+  if (!EldenRingSaveSettings::supports(game)) {
+    return;
+  }
+
+  ui->profileBox->setWhatsThis(tr(
+      "Choose a profile to switch its enabled mods. Each profile keeps its own list, "
+      "for different mod setups or playthroughs."));
+  ui->executablesListBox->setWhatsThis(tr(
+      "Choose the game or another configured program to start through MO2's virtual "
+      "file system."));
+  ui->startButton->setWhatsThis(tr(
+      "Start the selected program with the active profile. The small arrow on the "
+      "right has the shortcut options."));
+
+  if (game->gameShortName().compare("eldenring", Qt::CaseInsensitive) != 0) {
     return;
   }
 
@@ -3997,9 +4038,6 @@ void MainWindow::configureEldenRingHelp()
       "Installed Elden Ring mods appear here. Checked mods are active in this "
       "profile and can provide virtual game files or native DLLs. Keep only one "
       "version of a mutually exclusive mod active."));
-  ui->profileBox->setWhatsThis(tr(
-      "Choose a profile to switch its enabled mod list, plugin selection, and "
-      "plugin load order. Each profile keeps these lists separate for different mod setups or playthroughs."));
   ui->activeModsCounter->setWhatsThis(tr(
       "Shows how many active mods are visible in the mod list. Filtering the "
       "list changes this count; hover over the counter to see the total and "
@@ -4020,12 +4058,6 @@ void MainWindow::configureEldenRingHelp()
       "Downloaded archives for this instance appear here. Double-click an "
       "archive to install it. To choose its priority, drag it from this list "
       "onto the mod list while sorting by Priority."));
-  ui->executablesListBox->setWhatsThis(tr(
-      "Choose Elden Ring or another configured executable to launch through "
-      "MO2's virtual file system."));
-  ui->startButton->setWhatsThis(tr(
-      "Launch the selected program with the active Elden Ring profile. Use the "
-      "small arrow on the right for shortcut options."));
   ui->actionChange_Game->setWhatsThis(tr(
       "Open the instance manager to switch between this Elden Ring setup and "
       "other independent MO2 instances."));
@@ -4995,6 +5027,8 @@ void MainWindow::languageChange(const QString& newLanguage)
     installTranslator(QFileInfo(fileName).baseName());
   }
   ui->retranslateUi(this);
+  // that also put back the original help on the interface
+  configureEldenRingHelp();
   // the command bar labels carry a leading gap; rebuild them in the new language
   applyFluentActionIcons();
   if (m_FilterOptionsDialog) {

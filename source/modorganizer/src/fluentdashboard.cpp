@@ -450,7 +450,7 @@ void FluentDashboard::refreshLastPlayed()
   } else {
     when = QLocale().toString(newest.date(), QLocale::ShortFormat);
   }
-  m_lastPlayed->setText(tr("Last played %1").arg(when));
+  m_lastPlayed->setText(tr("Last saved %1").arg(when));
   m_lastPlayed->show();
 }
 

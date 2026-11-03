@@ -4680,6 +4680,10 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>Last saved %1</source>
+      <translation>Zuletzt gespeichert %1</translation>
+    </message>
+    <message>
       <source>Profile</source>
       <translation>Profil</translation>
     </message>
@@ -5783,6 +5787,18 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
   </context>
   <context>
     <name>MainWindow</name>
+    <message>
+      <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
+      <translation>Startet das ausgewählte Programm mit dem aktiven Profil. Der kleine Pfeil rechts enthält die Verknüpfungsoptionen.</translation>
+    </message>
+    <message>
+      <source>Choose the game or another configured program to start through MO2's virtual file system.</source>
+      <translation>Wähle das Spiel oder ein anderes eingerichtetes Programm, um es über das virtuelle Dateisystem von MO2 zu starten.</translation>
+    </message>
+    <message>
+      <source>Choose a profile to switch its enabled mods. Each profile keeps its own list, for different mod setups or playthroughs.</source>
+      <translation>Wähle ein Profil, um seine aktiven Mods zu wechseln. Jedes Profil hat seine eigene Liste, für verschiedene Mod-Zusammenstellungen oder Spieldurchläufe.</translation>
+    </message>
     <message>
       <source>Create Bug Report</source>
       <translation>Fehlerbericht erstellen</translation>

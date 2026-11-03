@@ -4684,6 +4684,10 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>Last saved %1</source>
+      <translation>Dernière sauvegarde %1</translation>
+    </message>
+    <message>
       <source>Profile</source>
       <translation>Profil</translation>
     </message>
@@ -5830,6 +5834,18 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
   </context>
   <context>
     <name>MainWindow</name>
+    <message>
+      <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
+      <translation>Lance le programme sélectionné avec le profil actif. La petite flèche à droite contient les options de raccourci.</translation>
+    </message>
+    <message>
+      <source>Choose the game or another configured program to start through MO2's virtual file system.</source>
+      <translation>Choisissez le jeu ou un autre programme configuré à lancer via le système de fichiers virtuel de MO2.</translation>
+    </message>
+    <message>
+      <source>Choose a profile to switch its enabled mods. Each profile keeps its own list, for different mod setups or playthroughs.</source>
+      <translation>Choisissez un profil pour changer ses mods activés. Chaque profil garde sa propre liste, pour différentes configurations de mods ou parties.</translation>
+    </message>
     <message>
       <source>Create Bug Report</source>
       <translation>Créer un rapport de bug</translation>

@@ -1152,6 +1152,16 @@ void WidgetSettings::restoreTreeExpandState(QTreeView* tv, int role) const
   }
 }
 
+std::optional<QString> WidgetSettings::selectedProgram() const
+{
+  return getOptional<QString>(m_Settings, "Widgets", "selected_program");
+}
+
+void WidgetSettings::setSelectedProgram(const QString& title)
+{
+  set(m_Settings, "Widgets", "selected_program", title);
+}
+
 std::optional<int> WidgetSettings::index(const QComboBox* cb) const
 {
   return getOptional<int>(m_Settings, "Widgets", indexSettingName(cb));

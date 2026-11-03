@@ -4680,6 +4680,10 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
   <context>
     <name>FluentDashboard</name>
     <message>
+      <source>Last saved %1</source>
+      <translation>Último save %1</translation>
+    </message>
+    <message>
       <source>Profile</source>
       <translation>Perfil</translation>
     </message>
@@ -5783,6 +5787,18 @@ Excluí-las também remove os arquivos dessas instâncias. Excluir mesmo assim?<
   </context>
   <context>
     <name>MainWindow</name>
+    <message>
+      <source>Start the selected program with the active profile. The small arrow on the right has the shortcut options.</source>
+      <translation>Inicia o programa selecionado com o perfil ativo. A pequena seta à direita tem as opções de atalho.</translation>
+    </message>
+    <message>
+      <source>Choose the game or another configured program to start through MO2's virtual file system.</source>
+      <translation>Escolha o jogo ou outro programa configurado para iniciar pelo sistema de arquivos virtual do MO2.</translation>
+    </message>
+    <message>
+      <source>Choose a profile to switch its enabled mods. Each profile keeps its own list, for different mod setups or playthroughs.</source>
+      <translation>Escolha um perfil para trocar os mods ativos. Cada perfil mantém a própria lista, para diferentes configurações de mods ou jogatinas.</translation>
+    </message>
     <message>
       <source>Create Bug Report</source>
       <translation>Criar relatório de erro</translation>
