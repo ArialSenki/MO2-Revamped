@@ -5939,6 +5939,10 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log</source>
+      <translation>Journal</translation>
+    </message>
+    <message>
       <source>Log panel</source>
       <translation>Panneau du journal</translation>
     </message>

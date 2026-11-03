@@ -5860,6 +5860,10 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log</source>
+      <translation>Protokoll</translation>
+    </message>
+    <message>
       <source>Log panel</source>
       <translation>Protokollbereich</translation>
     </message>

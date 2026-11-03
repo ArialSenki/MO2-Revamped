@@ -133,8 +133,9 @@ void SavesTab::updateRoute(const QDir& savesDir)
   }
 
   m_routePath = path;
-  static_cast<FluentPanels::ElidedLabel*>(m_route)->setFullText(
-      kind + QStringLiteral(" \u00b7 ") + QDir::toNativeSeparators(path));
+  // the path doesn't fit beside the buttons: the kind stays readable
+  static_cast<FluentPanels::ElidedLabel*>(m_route)->setFullText(kind);
+  m_route->setToolTip(QDir::toNativeSeparators(path));
 }
 
 bool SavesTab::eventFilter(QObject* object, QEvent* e)

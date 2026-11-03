@@ -5860,6 +5860,10 @@ Excluí-las também remove os arquivos dessas instâncias. Excluir mesmo assim?<
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log</source>
+      <translation>Registro</translation>
+    </message>
+    <message>
       <source>Log panel</source>
       <translation>Painel de log</translation>
     </message>

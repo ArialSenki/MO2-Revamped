@@ -5876,6 +5876,10 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Log</source>
+      <translation>Registro</translation>
+    </message>
+    <message>
       <source>Log panel</source>
       <translation>Panel de registro</translation>
     </message>

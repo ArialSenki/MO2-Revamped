@@ -156,15 +156,14 @@ void ModInfoRegular::readMeta()
   if (metaFile.contains("hasCustomURL")) {
     m_HasCustomURL = metaFile.value("hasCustomURL").toBool();
   } else {
-    if (m_NexusID > 0) {
-      // the mod id is valid, disable the custom url
-      m_HasCustomURL = false;
-    } else {
-      if (!m_CustomURL.isEmpty()) {
-        // the mod id is invalid and the url is not empty, enable it
-        m_HasCustomURL = true;
-      }
-    }
+    // with a valid mod id or no url, there's no custom url to use; the flag was
+    // left unset here, and whatever it held got saved with the mod
+    m_HasCustomURL = m_NexusID <= 0 && !m_CustomURL.isEmpty();
+  }
+
+  // repairs mods saved that way: on with nothing to open is never a choice to keep
+  if (m_CustomURL.isEmpty()) {
+    m_HasCustomURL = false;
   }
 
   m_LastNexusQuery = QDateTime::fromString(

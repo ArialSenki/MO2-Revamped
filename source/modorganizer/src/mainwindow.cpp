@@ -481,12 +481,10 @@ public:
 
     auto* closeButton =
         new LogDockControlButton(LogDockControlButton::Glyph::Close, this);
+    m_CloseButton = closeButton;
     layout->addWidget(closeButton, 0, Qt::AlignVCenter);
 
-    closeButton->setToolTip(QObject::tr("Close log panel"));
-    closeButton->setAccessibleName(QObject::tr("Close log panel"));
-    m_FloatButton->setToolTip(QObject::tr("Float log panel"));
-    m_FloatButton->setAccessibleName(QObject::tr("Float log panel"));
+    retranslate();
 
     connect(closeButton, &QToolButton::clicked, dock,
             [dock] { dock->hide(); });
@@ -546,6 +544,15 @@ public:
   }
 
 protected:
+  void changeEvent(QEvent* e) override
+  {
+    // built before the window's language is set, and it can change later too
+    if (e->type() == QEvent::LanguageChange && m_CloseButton != nullptr) {
+      retranslate();
+    }
+    QWidget::changeEvent(e);
+  }
+
   void mousePressEvent(QMouseEvent* e) override
   {
     m_PressPosition = e->position().toPoint();
@@ -686,6 +693,14 @@ private:
     m_Summary->setToolTip(text);
   }
 
+  void retranslate()
+  {
+    m_CloseButton->setToolTip(QObject::tr("Close log panel"));
+    m_CloseButton->setAccessibleName(QObject::tr("Close log panel"));
+    updateFloatControl(m_Dock->isFloating());
+    updateChevron();
+  }
+
   void updateFloatControl(bool floating)
   {
     if (m_FloatButton == nullptr) {
@@ -701,6 +716,7 @@ private:
 
   QDockWidget* m_Dock;
   QLabel* m_Title;
+  QToolButton* m_CloseButton = nullptr;
   QLabel* m_Summary;
   QToolButton* m_Chevron;
   LogDockControlButton* m_FloatButton;
@@ -2987,7 +3003,10 @@ void MainWindow::registerPluginTool(IPluginTool* tool, QString name, QMenu* menu
 
   // the internal name: the shown one is translated ("Opciones de inicio"
   // read as an INI tool)
-  const QIcon icon = tool->icon().isNull() ? fluentToolIcon(tool->name()) : tool->icon();
+  // the INI Editor's own icon is the original's raster one
+  const bool ownIcon =
+      !tool->icon().isNull() && !tool->name().contains("ini editor", Qt::CaseInsensitive);
+  const QIcon icon = ownIcon ? tool->icon() : fluentToolIcon(tool->name());
   QAction* action  = new QAction(icon, name, menu);
   action->setToolTip(tool->tooltip());
   tool->setParentWidget(this);
@@ -3038,9 +3057,12 @@ void MainWindow::updateToolMenu()
 
                                      const auto* game =
                                          m_OrganizerCore.managedGame();
-                                     if (!game ||
-                                         game->gameShortName().compare(
-                                             "eldenring", Qt::CaseInsensitive) != 0) {
+                                     // FromSoftware games have no BSA archives or
+                                     // Bethesda-style INI files
+                                     if (!game || (game->gameShortName().compare(
+                                                       "eldenring", Qt::CaseInsensitive) != 0 &&
+                                                   !game->gameShortName().contains(
+                                                       "nightreign", Qt::CaseInsensitive))) {
                                        return false;
                                      }
 
