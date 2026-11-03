@@ -506,7 +506,7 @@ void CategoriesDialog::fillTable()
 
   ui->nexusStatus->setText(
       displayedNexusCategories == 0
-          ? tr("No Nexus categories loaded. Refresh the list to fetch categories for this game.")
+          ? tr("No Nexus categories loaded. Use the button above to load this game's.")
           : tr("%1 Nexus categories available; full category names are shown in the mappings.")
                 .arg(displayedNexusCategories));
 

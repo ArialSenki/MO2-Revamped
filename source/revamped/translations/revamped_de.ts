@@ -245,8 +245,8 @@
       <translation>Nexus-Kategorie-ID: %1. Ziehe diesen Eintrag auf eine lokale Kategorie, um ihn zuzuordnen.</translation>
     </message>
     <message>
-      <source>No Nexus categories loaded. Refresh the list to fetch categories for this game.</source>
-      <translation>Keine Nexus-Kategorien geladen. Aktualisiere die Liste, um die Kategorien dieses Spiels abzurufen.</translation>
+      <source>No Nexus categories loaded. Use the button above to load this game&apos;s.</source>
+      <translation>Keine Nexus-Kategorien geladen. Lade die Kategorien dieses Spiels mit der Schaltfläche oben.</translation>
     </message>
     <message>
       <source>%1 Nexus categories available; full category names are shown in the mappings.</source>

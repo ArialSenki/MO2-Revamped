@@ -6636,3 +6636,26 @@ QDialog#TaskDialog QCommandLinkButton:hover {
 QDialog#TaskDialog QCommandLinkButton:pressed {
     background-color: #292B2F;
 }
+QLabel#revampedEndorsementTitle,
+QLabel#profileBackupTitle,
+QLabel#modListNameTitle,
+QLabel#bulkModToggleTitle,
+QLabel#assignCategoriesTitle {
+    font-size: 20px;
+    font-weight: 600;
+}
+QDialog#SelectionDialog QCommandLinkButton,
+QDialog#SelectionDialog QCommandLinkButton:default {
+    color: #FFFFFF;
+    background-color: transparent;
+    border: 1px solid #353535;
+    border-radius: 6px;
+    padding: 10px 14px;
+    text-align: left;
+}
+QDialog#SelectionDialog QCommandLinkButton:hover {
+    background-color: #323232;
+}
+QDialog#SelectionDialog QCommandLinkButton:pressed {
+    background-color: #292B2F;
+}

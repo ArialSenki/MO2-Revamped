@@ -477,7 +477,7 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
         QString backupDirectory = generateBackupName(targetDirectory);
         if (!copyDir(targetDirectory, backupDirectory, false)) {
           reportError(tr("Failed to create backup"));
-          return {IPluginInstaller::RESULT_FAILED};
+          return {IPluginInstaller::RESULT_CANCELED};
         }
       }
 
@@ -524,7 +524,7 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
         if (asideDirectory.isEmpty()) {
           reportError(tr("The installed mod could not be replaced. Close any program "
                          "using its files and try again."));
-          return {IPluginInstaller::RESULT_FAILED};
+          return {IPluginInstaller::RESULT_CANCELED};
         }
         m_ReplacedFolder = asideDirectory;
         m_ReplacedTarget = targetDirectory;
@@ -540,7 +540,7 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
           if (!QDir().mkdir(targetDirectory)) {
             reportError(tr("The folder for the new version could not be created."));
             restoreReplacedMod();
-            return {IPluginInstaller::RESULT_FAILED};
+            return {IPluginInstaller::RESULT_CANCELED};
           }
         }
         // restore the saved settings

@@ -1052,9 +1052,7 @@ bool askNexusEndorsement(QWidget* parent, const QString& windowTitle,
   auto* heading = new QLabel(headingText, header);
   heading->setObjectName(QStringLiteral("revampedEndorsementTitle"));
   QFont headingFont = heading->font();
-  if (headingFont.pointSize() > 0) {
-    headingFont.setPointSize(headingFont.pointSize() + 2);
-  }
+  headingFont.setPixelSize(20);
   headingFont.setBold(true);
   heading->setFont(headingFont);
   heading->setWordWrap(true);
@@ -1151,9 +1149,7 @@ ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
   auto* heading = new QLabel(QObject::tr("Back up this profile"), &dialog);
   heading->setObjectName(QStringLiteral("profileBackupTitle"));
   QFont headingFont = heading->font();
-  if (headingFont.pointSize() > 0) {
-    headingFont.setPointSize(headingFont.pointSize() + 2);
-  }
+  headingFont.setPixelSize(20);
   headingFont.setBold(true);
   heading->setFont(headingFont);
   layout->addWidget(heading);
@@ -1221,10 +1217,7 @@ ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
   buttons->addButton(QDialogButtonBox::Cancel);
   auto* createButton =
       buttons->addButton(QObject::tr("Create backup"), QDialogButtonBox::AcceptRole);
-  createButton->setAutoDefault(false);
-  if (auto* cancelButton = buttons->button(QDialogButtonBox::Cancel)) {
-    cancelButton->setDefault(true);
-  }
+  createButton->setDefault(true);
   createButton->setEnabled(modList->isChecked() ||
                            (pluginOrderAvailable && pluginOrder->isChecked()));
   layout->addSpacing(2);

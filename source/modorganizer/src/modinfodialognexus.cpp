@@ -177,25 +177,27 @@ bool NexusTab::usesOriginFiles() const
 void NexusTab::updateVersionColor()
 {
   // no newest version yet says nothing about this one
-  const bool outdated =
-      mod().newestVersion().isValid() && mod().version() < mod().newestVersion();
+  const bool known    = mod().newestVersion().isValid();
+  const bool outdated = known && mod().version() < mod().newestVersion();
   if (outdated) {
     ui->version->setToolTip(
         tr("Current Version: %1").arg(mod().newestVersion().canonicalString()));
   } else {
-    ui->version->setToolTip(tr("No update available"));
+    ui->version->setToolTip(known ? tr("No update available") : QString());
   }
 
   if (FluentIcons::active()) {
     // the theme colors it (versionState) in its critical and success tones
-    const QString state = outdated ? QStringLiteral("outdated") : QStringLiteral("current");
+    const QString state = !known     ? QString()
+                          : outdated ? QStringLiteral("outdated")
+                                     : QStringLiteral("current");
     if (ui->version->property("versionState").toString() != state) {
       ui->version->setProperty("versionState", state);
       ui->version->style()->unpolish(ui->version);
       ui->version->style()->polish(ui->version);
     }
   } else {
-    ui->version->setStyleSheet(outdated ? "color: red" : "color: green");
+    ui->version->setStyleSheet(!known ? "" : outdated ? "color: red" : "color: green");
   }
 }
 

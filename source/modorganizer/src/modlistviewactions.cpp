@@ -86,9 +86,7 @@ QString promptForModListName(QWidget* parent, const QString& windowTitle,
   auto* title = new QLabel(heading, &dialog);
   title->setObjectName(QStringLiteral("modListNameTitle"));
   QFont titleFont = title->font();
-  if (titleFont.pointSize() > 0) {
-    titleFont.setPointSize(titleFont.pointSize() + 2);
-  }
+  titleFont.setPixelSize(20);
   titleFont.setBold(true);
   title->setFont(titleFont);
   layout->addWidget(title);
@@ -155,9 +153,7 @@ bool confirmBulkModToggle(QWidget* parent, const QString& windowTitle,
   auto* title = new QLabel(heading, &dialog);
   title->setObjectName(QStringLiteral("bulkModToggleTitle"));
   QFont titleFont = title->font();
-  if (titleFont.pointSize() > 0) {
-    titleFont.setPointSize(titleFont.pointSize() + 2);
-  }
+  titleFont.setPixelSize(20);
   titleFont.setBold(true);
   title->setFont(titleFont);
   layout->addWidget(title);
@@ -206,9 +202,7 @@ bool confirmCategoryAssignment(QWidget* parent, bool* hideWarning)
   auto* title = new QLabel(QObject::tr("Assign Nexus categories"), &dialog);
   title->setObjectName(QStringLiteral("assignCategoriesTitle"));
   QFont titleFont = title->font();
-  if (titleFont.pointSize() > 0) {
-    titleFont.setPointSize(titleFont.pointSize() + 2);
-  }
+  titleFont.setPixelSize(20);
   titleFont.setBold(true);
   title->setFont(titleFont);
   layout->addWidget(title);
@@ -239,10 +233,7 @@ bool confirmCategoryAssignment(QWidget* parent, bool* hideWarning)
   auto* assignButton =
       buttons->addButton(QObject::tr("Assign categories"),
                          QDialogButtonBox::AcceptRole);
-  assignButton->setAutoDefault(false);
-  if (auto* cancelButton = buttons->button(QDialogButtonBox::Cancel)) {
-    cancelButton->setDefault(true);
-  }
+  assignButton->setDefault(true);
   layout->addWidget(buttons);
 
   QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,

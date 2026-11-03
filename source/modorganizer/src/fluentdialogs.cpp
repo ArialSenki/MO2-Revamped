@@ -47,14 +47,30 @@ bool insideItemView(const QWidget* w, const QWidget* root)
 
 bool isPrimary(QPushButton* button)
 {
-  if (button->isDefault()) {
-    return true;
+  // a list of choices: none of them stands out over the others
+  if (qobject_cast<QCommandLinkButton*>(button) != nullptr) {
+    return false;
   }
-  if (auto* box = qobject_cast<QDialogButtonBox*>(button->parentWidget())) {
+  auto* box = qobject_cast<QDialogButtonBox*>(button->parentWidget());
+  if (box != nullptr) {
     const auto role = box->buttonRole(button);
-    return role == QDialogButtonBox::AcceptRole || role == QDialogButtonBox::YesRole;
+    if (role == QDialogButtonBox::AcceptRole || role == QDialogButtonBox::YesRole) {
+      return true;
+    }
+    // Cancel can be what Enter presses, but the accent stays on the action
+    if (role == QDialogButtonBox::RejectRole || role == QDialogButtonBox::NoRole) {
+      const auto buttons = box->buttons();
+      const bool hasAction =
+          std::any_of(buttons.begin(), buttons.end(), [box](QAbstractButton* other) {
+            const auto r = box->buttonRole(other);
+            return r == QDialogButtonBox::AcceptRole || r == QDialogButtonBox::YesRole;
+          });
+      if (hasAction) {
+        return false;
+      }
+    }
   }
-  return false;
+  return button->isDefault();
 }
 
 // gives a widget a dynamic property the theme styles it by; only the widget
