@@ -1056,7 +1056,8 @@ void ModListViewActions::sendModsToLastConflict(const QModelIndexList& indexes) 
 void ModListViewActions::renameMod(const QModelIndex& index) const
 {
   try {
-    m_view->edit(m_view->indexModelToView(index));
+    // the menu can open from any column of the row
+    m_view->edit(m_view->indexModelToView(index.sibling(index.row(), ModList::COL_NAME)));
   } catch (const std::exception& e) {
     reportError(tr("failed to rename mod: %1").arg(e.what()));
   }

@@ -8889,73 +8889,73 @@ Please enter the name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1169"/>
+        <location filename="modlistviewactions.cpp" line="1170"/>
         <source>Versioning scheme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1170"/>
+        <location filename="modlistviewactions.cpp" line="1171"/>
         <source>No versioning scheme makes %1 newer than %2, so nothing was changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1191"/>
+        <location filename="modlistviewactions.cpp" line="1192"/>
         <source>Opening Nexus links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1215"/>
-        <location filename="modlistviewactions.cpp" line="1237"/>
+        <location filename="modlistviewactions.cpp" line="1216"/>
+        <location filename="modlistviewactions.cpp" line="1238"/>
         <source>Opening web pages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1294"/>
+        <location filename="modlistviewactions.cpp" line="1295"/>
         <source>Mods installed with old versions of MO2 can&apos;t be reinstalled in this way.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1592"/>
+        <location filename="modlistviewactions.cpp" line="1593"/>
         <source>The backup wasn&apos;t restored: a file of &quot;%1&quot; may be in use. Nothing was changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1601"/>
+        <location filename="modlistviewactions.cpp" line="1602"/>
         <source>The backup wasn&apos;t restored: a file in it may be in use. &quot;%1&quot; was left as it was.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1604"/>
+        <location filename="modlistviewactions.cpp" line="1605"/>
         <source>The backup wasn&apos;t restored, and &quot;%1&quot; could not be put back. It is safe in the mods folder as &quot;%2&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1609"/>
+        <location filename="modlistviewactions.cpp" line="1610"/>
         <source>The backup was restored, but the old &quot;%1&quot; could not be removed. It is in the mods folder as &quot;%2&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1628"/>
+        <location filename="modlistviewactions.cpp" line="1629"/>
         <source>Files from Overwrite were moved to the selected mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1633"/>
+        <location filename="modlistviewactions.cpp" line="1634"/>
         <source>Files could not be moved from Overwrite: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1697"/>
+        <location filename="modlistviewactions.cpp" line="1698"/>
         <source>Choose a destination mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1731"/>
+        <location filename="modlistviewactions.cpp" line="1732"/>
         <source>Clear Overwrite files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1732"/>
+        <location filename="modlistviewactions.cpp" line="1733"/>
         <source>This will move every file and folder to the Recycle Bin:
 
 %1
@@ -8964,13 +8964,13 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1748"/>
+        <location filename="modlistviewactions.cpp" line="1749"/>
         <source>Overwrite could not be cleared: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="modlistviewactions.cpp" line="351"/>
-        <location filename="modlistviewactions.cpp" line="1660"/>
+        <location filename="modlistviewactions.cpp" line="1661"/>
         <source>A mod with this name already exists</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8985,8 +8985,8 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1096"/>
-        <location filename="modlistviewactions.cpp" line="1345"/>
+        <location filename="modlistviewactions.cpp" line="1097"/>
+        <location filename="modlistviewactions.cpp" line="1346"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8998,7 +8998,7 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1379"/>
+        <location filename="modlistviewactions.cpp" line="1380"/>
         <source>Are you sure?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9023,92 +9023,92 @@ Move anything you want to keep into a mod before continuing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1061"/>
+        <location filename="modlistviewactions.cpp" line="1062"/>
         <source>failed to rename mod: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1097"/>
+        <location filename="modlistviewactions.cpp" line="1098"/>
         <source>Remove the following mods?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1114"/>
+        <location filename="modlistviewactions.cpp" line="1115"/>
         <source>failed to remove mod: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1142"/>
+        <location filename="modlistviewactions.cpp" line="1143"/>
         <source>Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1143"/>
+        <location filename="modlistviewactions.cpp" line="1144"/>
         <source>The versioning scheme decides which version is considered newer than another.
 This function will guess the versioning scheme under the assumption that the installed version is outdated.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1192"/>
+        <location filename="modlistviewactions.cpp" line="1193"/>
         <source>You are trying to open %1 links to Nexus Mods.  Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1216"/>
-        <location filename="modlistviewactions.cpp" line="1238"/>
+        <location filename="modlistviewactions.cpp" line="1217"/>
+        <location filename="modlistviewactions.cpp" line="1239"/>
         <source>You are trying to open %1 Web Pages.  Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1288"/>
-        <location filename="modlistviewactions.cpp" line="1293"/>
-        <location filename="modlistviewactions.cpp" line="1304"/>
+        <location filename="modlistviewactions.cpp" line="1289"/>
+        <location filename="modlistviewactions.cpp" line="1294"/>
+        <location filename="modlistviewactions.cpp" line="1305"/>
         <source>Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1289"/>
+        <location filename="modlistviewactions.cpp" line="1290"/>
         <source>Installation file no longer exists</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1304"/>
+        <location filename="modlistviewactions.cpp" line="1305"/>
         <source>Failed to create backup.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1346"/>
+        <location filename="modlistviewactions.cpp" line="1347"/>
         <source>Restore all hidden files in the following mods?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1380"/>
+        <location filename="modlistviewactions.cpp" line="1381"/>
         <source>About to restore all hidden files in:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1413"/>
+        <location filename="modlistviewactions.cpp" line="1414"/>
         <source>Endorsing multiple mods will take a while. Please wait...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1580"/>
+        <location filename="modlistviewactions.cpp" line="1581"/>
         <source>Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1581"/>
+        <location filename="modlistviewactions.cpp" line="1582"/>
         <source>This will replace the existing mod &quot;%1&quot;. Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1649"/>
+        <location filename="modlistviewactions.cpp" line="1650"/>
         <source>Create mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistviewactions.cpp" line="1650"/>
+        <location filename="modlistviewactions.cpp" line="1651"/>
         <source>This will move all files from overwrite into a new, regular mod.
 Please enter a name:</source>
         <translation type="unfinished"></translation>
