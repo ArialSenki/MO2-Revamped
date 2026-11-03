@@ -1578,9 +1578,9 @@ I programmi non nascosti compaiono nell’elenco Programma della finestra princi
       <source>MO2 runs ELDEN RING Reforged itself, offline, together with your other mods. With online mode, MO2 also keeps Reforged's own launcher and adds the executable &quot;ELDEN RING Reforged (online)&quot; the next time it starts. Online, Reforged allows no other mods or DLLs. It takes no extra disk space.
 
 Reinstall the mod to change this.</source>
-      <translation>MO2 avvia da sé ELDEN RING Reforged, offline, insieme agli altri tuoi mod. Con la modalità online, MO2 conserva anche il launcher di Reforged e aggiunge l'eseguibile «ELDEN RING Reforged (online)» al prossimo avvio. Online, Reforged non consente altri mod né DLL. Non occupa spazio aggiuntivo su disco.
+      <translation>MO2 avvia da sé ELDEN RING Reforged, offline, insieme alle altre tue mod. Con la modalità online, MO2 conserva anche il launcher di Reforged e aggiunge l'eseguibile «ELDEN RING Reforged (online)» al prossimo avvio. Online, Reforged non consente altre mod né DLL. Non occupa spazio aggiuntivo su disco.
 
-Reinstalla il mod per cambiare questa scelta.</translation>
+Reinstalla la mod per cambiare questa scelta.</translation>
     </message>
     <message>
       <source>Elden Ring Archive Layout Installer</source>
@@ -1764,15 +1764,15 @@ Reinstalla il mod per cambiare questa scelta.</translation>
     </message>
       <message>
       <source>MO2 runs it itself, with your other mods: its game files and natives go to MO2's folders; its launcher, me3 and setup tool stay out.</source>
-      <translation>MO2 lo esegue da solo, con gli altri tuoi mod: i file di gioco e le DLL vanno nelle cartelle di MO2; il launcher, me3 e lo strumento di configurazione restano fuori.</translation>
+      <translation>MO2 lo esegue da solo, con le altre tue mod: i file di gioco e le DLL vanno nelle cartelle di MO2; il launcher, me3 e lo strumento di configurazione restano fuori.</translation>
     </message>
     <message>
       <source>MO2 runs it itself, with your other mods: its game files and natives go to MO2's folders; me3, its launcher and the logs it ships stay out.</source>
-      <translation>MO2 lo esegue da solo, con gli altri tuoi mod: i file di gioco e le DLL vanno nelle cartelle di MO2; me3, il launcher e i log inclusi restano fuori.</translation>
+      <translation>MO2 lo esegue da solo, con le altre tue mod: i file di gioco e le DLL vanno nelle cartelle di MO2; me3, il launcher e i log inclusi restano fuori.</translation>
     </message>
     <message>
       <source>Its SeamlessCoop folder stays whole, and it runs from MO2's own program, with your other mods.</source>
-      <translation>La cartella SeamlessCoop resta intera e viene eseguito dal programma di MO2, con gli altri tuoi mod.</translation>
+      <translation>La cartella SeamlessCoop resta intera e viene eseguito dal programma di MO2, con le altre tue mod.</translation>
     </message>
     <message>
       <source>The contents of 'Drag Files Into Here' go to the game root, and its natives keep their paths.</source>
@@ -1784,11 +1784,11 @@ Reinstalla il mod per cambiare questa scelta.</translation>
     </message>
     <message>
       <source>Install this mod</source>
-      <translation>Installa questo mod</translation>
+      <translation>Installa questa mod</translation>
     </message>
     <message>
       <source>MO2 finds the mod's files inside the archive and puts them in its standard folders.</source>
-      <translation>MO2 trova i file del mod nell'archivio e li mette nelle sue cartelle standard.</translation>
+      <translation>MO2 trova i file della mod nell'archivio e li mette nelle sue cartelle standard.</translation>
     </message>
     <message>
       <source>MO2 installs the files as they come in the archive, in the same folders.</source>
@@ -1822,13 +1822,13 @@ Reinstalla il mod per cambiare questa scelta.</translation>
       <source>While this mod is on, MO2 starts Reforged's own launcher and the program can't be changed; online, Reforged allows no other mods or DLLs. For offline play with your other mods, install Reforged again with this off, as a separate mod.
 
 Reinstall the mod to change this.</source>
-      <translation>Finché questo mod è attivo, MO2 avvia il launcher di Reforged e il programma non si può cambiare; online, Reforged non consente altri mod o DLL. Per giocare offline con gli altri tuoi mod, reinstalla Reforged con questa opzione disattivata, come mod separato.
+      <translation>Finché questa mod è attiva, MO2 avvia il launcher di Reforged e il programma non si può cambiare; online, Reforged non consente altre mod o DLL. Per giocare offline con le altre tue mod, reinstalla Reforged con questa opzione disattivata, come mod separata.
 
-Reinstalla il mod per cambiarlo.</translation>
+Reinstalla la mod per cambiarlo.</translation>
     </message>
     <message>
       <source>Install a mod</source>
-      <translation>Installa un mod</translation>
+      <translation>Installa una mod</translation>
     </message>
     <message>
       <source>What will be installed</source>
@@ -1904,11 +1904,11 @@ Reinstalla il mod per cambiarlo.</translation>
     </message>
     <message>
       <source>Your active mods also bring regulation.bin ({0}). Only one can provide it: the one with the highest priority wins.</source>
-      <translation>Anche i tuoi mod attivi portano regulation.bin ({0}). Solo uno può fornirlo: vince quello con la priorità più alta.</translation>
+      <translation>Anche le tue mod attive portano regulation.bin ({0}). Solo una può fornirlo: vince quella con la priorità più alta.</translation>
     </message>
     <message>
       <source>You already have a mod with this name. MO2 will ask whether to merge or replace it.</source>
-      <translation>Hai già un mod con questo nome. MO2 chiederà se unirlo o sostituirlo.</translation>
+      <translation>Hai già una mod con questo nome. MO2 chiederà se unirla o sostituirla.</translation>
     </message>
     <message>
       <source>Showing the first {0} of {1} files.</source>
@@ -1932,7 +1932,7 @@ Reinstalla il mod per cambiarlo.</translation>
     </message>
     <message>
       <source>Removes only the archive's outer folders and keeps every other path. For a mod whose instructions need its files in exact places.</source>
-      <translation>Rimuove solo le cartelle esterne dell'archivio e mantiene tutti gli altri percorsi. Per un mod le cui istruzioni richiedono posizioni esatte.</translation>
+      <translation>Rimuove solo le cartelle esterne dell'archivio e mantiene tutti gli altri percorsi. Per una mod le cui istruzioni richiedono posizioni esatte.</translation>
     </message>
     <message>
       <source>{0} files would stay inside the folder {1}, where the game doesn't look for them. Organize for MO2 puts them in place.</source>
@@ -1940,11 +1940,11 @@ Reinstalla il mod per cambiarlo.</translation>
     </message>
     <message>
       <source>{0} files of Reforged's online version could not be placed, so its launcher may refuse to start. Free some disk space and reinstall the mod.</source>
-      <translation>Non è stato possibile collocare {0} file della versione online di Reforged, quindi il suo launcher potrebbe non avviarsi. Libera spazio su disco e reinstalla il mod.</translation>
+      <translation>Non è stato possibile collocare {0} file della versione online di Reforged, quindi il suo launcher potrebbe non avviarsi. Libera spazio su disco e reinstalla la mod.</translation>
     </message>
     <message>
       <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
-      <translation>Questo è un mod di Elden Ring: questa istanza gestisce Nightreign.</translation>
+      <translation>Questa è una mod di Elden Ring: questa istanza gestisce Nightreign.</translation>
     </message>
     <message>
       <source>Arrange the files by hand</source>
@@ -2021,6 +2021,18 @@ Reinstalla il mod per cambiarlo.</translation>
 </context>
   <context>
     <name>EldenRingGame</name>
+    <message>
+      <source>Saves may mix</source>
+      <translation>I salvataggi potrebbero mescolarsi</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t give ELDEN RING Reforged its own save file in this version of the game</source>
+      <translation>MO2 non può assegnare a ELDEN RING Reforged un proprio file di salvataggio in questa versione del gioco</translation>
+    </message>
+    <message>
+      <source>Reforged would use ER0000.sl2, the save of your other mods, instead of ER0000.err, and could overwrite it. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>Reforged userebbe ER0000.sl2, il salvataggio delle altre tue mod, invece di ER0000.err, e potrebbe sovrascriverlo. Di solito succede dopo un aggiornamento del gioco: cerca una nuova versione di MO2 Revamped.</translation>
+    </message>
     <message>
       <source>Could not prepare the online saves</source>
       <translation>Impossibile preparare i salvataggi online</translation>
@@ -2282,10 +2294,6 @@ Il gioco non è stato avviato.</translation>
       <translation>Il nativo Revamped '{0}' non è stato trovato nella mod MO2 associata '{1}'. Mantenere la struttura originale può conservare natives/...; la struttura MO2 deve metterlo in DLLs/.</translation>
     </message>
     <message>
-      <source>The Revamped native profile resolves more than one entry to '{0}'. Keep only one entry for that game path.</source>
-      <translation>Il profilo nativo di Revamped risolve più di una voce in '{0}'. Mantieni una sola voce per quel percorso di gioco.</translation>
-    </message>
-    <message>
       <source>MO2 has no active file origin for Revamped native '{0}'.</source>
       <translation>MO2 non ha un'origine di file attiva per il nativo Revamped '{0}'.</translation>
     </message>
@@ -2367,7 +2375,7 @@ Il gioco non è stato avviato.</translation>
     </message>
     <message>
       <source>Its online mode starts from the mod {0}. Turn the mod on and start it?</source>
-      <translation>La modalità online parte dal mod {0}. Attivare il mod e avviarlo?</translation>
+      <translation>La modalità online parte dalla mod {0}. Attivare la mod e avviarlo?</translation>
     </message>
     <message>
       <source>Turn on and start</source>
@@ -2411,11 +2419,11 @@ Il gioco non è stato avviato.</translation>
     </message>
     <message>
       <source>Mods may not have loaded</source>
-      <translation>I mod potrebbero non essere stati caricati</translation>
+      <translation>Le mod potrebbero non essere state caricate</translation>
     </message>
     <message>
       <source>Elden Ring started, but MO2 could not connect to its file loader, so the game files of your mods were not used (their DLLs were not affected). This usually follows a game update: look for a new version of MO2 Revamped.</source>
-      <translation>Elden Ring si è avviato, ma MO2 non è riuscito a collegarsi al suo caricatore di file, quindi i file di gioco dei tuoi mod non sono stati usati (le loro DLL non sono interessate). Di solito succede dopo un aggiornamento del gioco: cerca una nuova versione di MO2 Revamped.</translation>
+      <translation>Elden Ring si è avviato, ma MO2 non è riuscito a collegarsi al suo caricatore di file, quindi i file di gioco delle tue mod non sono stati usati (le loro DLL non sono interessate). Di solito succede dopo un aggiornamento del gioco: cerca una nuova versione di MO2 Revamped.</translation>
     </message>
     <message>
       <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
@@ -2487,11 +2495,63 @@ Se contiene progressi che vuoi tenere, chiudi il gioco e ricopia i suoi file.</t
     </message>
       <message>
       <source>Reforged's online version is on. Turn that mod off to choose another program.</source>
-      <translation>La versione online di Reforged è attiva. Disattiva quel mod per scegliere un altro programma.</translation>
+      <translation>La versione online di Reforged è attiva. Disattiva quella mod per scegliere un altro programma.</translation>
+    </message>
+    <message>
+      <source>{0} is still open as MO2 closes. The Steam saves come back the next time MO2 runs, once it has closed. Don&apos;t start the game from Steam until then.</source>
+      <translation>{0} è ancora aperto mentre MO2 si chiude. I salvataggi di Steam torneranno alla prossima esecuzione di MO2, una volta che sarà chiuso. Fino ad allora non avviare il gioco da Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: {0} is still open. Close it and try again. The game was not started.</source>
+      <translation>Le cartelle dei salvataggi di Steam nascoste da un avvio precedente non possono ancora essere rimesse a posto: {0} è ancora aperto. Chiudilo e riprova. Il gioco non è stato avviato.</translation>
+    </message>
+    <message>
+      <source>Saves kept aside</source>
+      <translation>Salvataggi messi da parte</translation>
+    </message>
+    <message>
+      <source>MO2 found saves that differ from, or are newer than, the copy that takes their place. Nothing was deleted; they are kept here:
+
+{0}
+
+If one holds progress you want, close the game and copy it back.</source>
+      <translation>MO2 ha trovato salvataggi diversi dalla copia che prende il loro posto, o più recenti di essa. Non è stato eliminato nulla; sono conservati qui:
+
+{0}
+
+Se uno contiene progressi che vuoi tenere, chiudi il gioco e ricopialo.</translation>
+    </message>
+    <message>
+      <source>{0} changed file(s) to {1}</source>
+      <translation>{0} file modificati in {1}</translation>
+    </message>
+    <message>
+      <source>Saves moved back to their route</source>
+      <translation>Salvataggi tornati nel loro percorso</translation>
+    </message>
+    <message>
+      <source>A launch outside MO2&apos;s virtual file system ended while MO2 wasn&apos;t watching. What was played from the Steam folder went to the route, and the Steam saves are back:
+
+{0}</source>
+      <translation>Un avvio fuori dal file system virtuale di MO2 è terminato senza che MO2 lo seguisse. Quanto giocato dalla cartella di Steam è passato nel percorso, e i salvataggi di Steam sono tornati:
+
+{0}</translation>
+    </message>
+    <message>
+      <source>MO2 is still waiting for the last launch to start its game. If it doesn&apos;t start, MO2 puts the saves back within a minute and a half; try again then. The game was not started.</source>
+      <translation>MO2 sta ancora aspettando che l&apos;ultimo avvio faccia partire il suo gioco. Se non parte, MO2 rimette a posto i salvataggi entro un minuto e mezzo; riprova allora. Il gioco non è stato avviato.</translation>
+    </message>
+    <message>
+      <source>The game has closed, but {0} is still open. MO2 puts the Steam saves back when it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>Il gioco si è chiuso, ma {0} è ancora aperto. MO2 rimette a posto i salvataggi di Steam quando si chiude. Fino ad allora non avviare il gioco da Steam.</translation>
     </message>
 </context>
   <context>
     <name>EldenRingNativeProfile</name>
+    <message>
+      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads the DLLs at a mod&apos;s top level first, then the others, each by the mod list&apos;s order.</source>
+      <translation>Tutte le DLL native delle tue mod attive, in ordine di caricamento, Seamless Co-op inclusa. Disattivane una per non caricarla senza disattivare la sua mod, o spostala per cambiare l&apos;ordine. Senza modifiche, MO2 carica prima le DLL al livello principale di una mod, poi le altre, ciascuna secondo l&apos;ordine dell&apos;elenco delle mod.</translation>
+    </message>
     <message>
       <source>{configured} configured · {enabled} enabled</source>
       <translation>{configured} configurate · {enabled} attivate</translation>
@@ -2865,10 +2925,6 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>Mostra nella cartella</translation>
     </message>
     <message>
-      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads them all in the mod list&apos;s order.</source>
-      <translation>Tutte le DLL native delle tue mod attive, in ordine di caricamento, Seamless Co-op compreso. Spegnine una per non caricarla senza disattivare la sua mod, o spostala per cambiare l&apos;ordine. Senza modifiche, MO2 le carica tutte nell&apos;ordine dell&apos;elenco delle mod.</translation>
-    </message>
-    <message>
       <source>Load order</source>
       <translation>Ordine di caricamento</translation>
     </message>
@@ -2909,7 +2965,7 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
     </message>
     <message>
       <source>Starts outside the VFS, as its online mode needs. Online play keeps its own save, apart from the offline one you play with other MO2 mods; the first time it starts from a copy of the offline save.</source>
-      <translation>Si avvia fuori dal VFS, come richiede la sua modalità online. Il gioco online ha un salvataggio tutto suo, separato da quello offline con cui giochi con altri mod di MO2; la prima volta parte da una copia del salvataggio offline.</translation>
+      <translation>Si avvia fuori dal VFS, come richiede la sua modalità online. Il gioco online ha un salvataggio tutto suo, separato da quello offline con cui giochi con altre mod di MO2; la prima volta parte da una copia del salvataggio offline.</translation>
     </message>
     <message>
       <source>Starts outside the VFS, as its online mode needs. Online and offline play share this profile's save.</source>
@@ -2929,11 +2985,11 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
     </message>
     <message>
       <source>The game starts inside the VFS with every MO2 mod.</source>
-      <translation>Il gioco si avvia nel VFS con tutti i mod di MO2.</translation>
+      <translation>Il gioco si avvia nel VFS con tutte le mod di MO2.</translation>
     </message>
     <message>
       <source>The game starts inside the VFS with every MO2 mod. Install ELDEN RING Reforged with its online mode and its launcher appears here.</source>
-      <translation>Il gioco si avvia nel VFS con tutti i mod di MO2. Installa ELDEN RING Reforged con la sua modalità online e il suo launcher apparirà qui.</translation>
+      <translation>Il gioco si avvia nel VFS con tutte le mod di MO2. Installa ELDEN RING Reforged con la sua modalità online e il suo launcher apparirà qui.</translation>
     </message>
     <message>
       <source>Route saved</source>
@@ -2949,7 +3005,7 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
     </message>
     <message>
       <source>Reforged's online mode allows no other mods, so MO2 starts its launcher outside the VFS with this profile's saves.</source>
-      <translation>La modalità online di Reforged non consente altri mod, quindi MO2 avvia il suo launcher fuori dal VFS con i salvataggi di questo profilo.</translation>
+      <translation>La modalità online di Reforged non consente altre mod, quindi MO2 avvia il suo launcher fuori dal VFS con i salvataggi di questo profilo.</translation>
     </message>
     <message>
       <source>Name this profile.</source>
@@ -3837,7 +3893,7 @@ Il salvataggio è stato copiato, ma il suo .bak non è stato aggiornato: {error}
     </message>
     <message>
       <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Il percorso dei salvataggi di questo profilo non ha ancora salvataggi di Elden Ring, mentre la cartella di Steam sì. Il gioco partirà senza i tuoi personaggi, e un nuovo personaggio verrà salvato solo in questo percorso.&lt;/p&gt;&lt;p&gt;Per giocare qui un personaggio esistente, apri Strumenti &amp;gt; Save Isolation e usa Trasferisci un salvataggio, oppure crea o importa un profilo di salvataggio con nome. Per usare direttamente i salvataggi di Steam, scegli lì il percorso globale.&lt;/p&gt;&lt;p&gt;Percorso: {folder}&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Il percorso dei salvataggi di questo profilo non ha ancora salvataggi di Elden Ring, mentre la cartella di Steam sì. Il gioco partirà senza i tuoi personaggi, e un nuovo personaggio verrà salvato solo in questo percorso.&lt;/p&gt;&lt;p&gt;Per giocare qui un personaggio esistente, apri Strumenti &amp;gt; Isolamento salvataggi e usa Trasferisci un salvataggio, oppure crea o importa un profilo di salvataggio con nome. Per usare direttamente i salvataggi di Steam, scegli lì il percorso globale.&lt;/p&gt;&lt;p&gt;Percorso: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
       <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
@@ -3931,7 +3987,7 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
     </message>
     <message>
       <source>Save folders were set aside in the recovery folder</source>
-      <translation>Alcune cartelle di salvataggio sono state messe da parte nella cartella di ripristino</translation>
+      <translation>Alcune cartelle di salvataggio sono state messe da parte nella cartella di recupero</translation>
     </message>
     <message>
       <source>&lt;p&gt;When MO2 put back the Steam saves it had hidden for a launch, a save folder had appeared in their place: the game started from Steam meanwhile, or wrote a save outside the MO2 route. MO2 did not delete it; it is kept in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;If it holds progress you want, close the game and copy its files back. Delete the folder once you no longer need it to clear this notice.&lt;/p&gt;</source>
@@ -4389,7 +4445,7 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
     </message>
     <message>
       <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
-      <translation>Questo nome compare in Strumenti &gt; Elden Ring Save Isolation. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000 con la sua estensione.</translation>
+      <translation>Questo nome compare in Strumenti &gt; Isolamento salvataggi. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000 con la sua estensione.</translation>
     </message>
     <message>
       <source>1 file</source>
@@ -6666,7 +6722,7 @@ In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, 
     </message>
     <message>
       <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Il passaggio tra salvataggi isolati per profilo e salvataggi condivisi nell'istanza ha effetto al prossimo avvio del gioco. Il passaggio al o dal salvataggio globale di Steam si applica alla chiusura della finestra Save Isolation; MO2 non deve mai riavviarsi per questo. Il reindirizzamento cambia solo i file di salvataggio; non modifica Easy Anti-Cheat né la modalità di rete e non rende sicuri per il gioco online i salvataggi con mod.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Il passaggio tra salvataggi isolati per profilo e salvataggi condivisi nell'istanza ha effetto al prossimo avvio del gioco. Il passaggio al o dal salvataggio globale di Steam si applica alla chiusura della finestra Isolamento salvataggi; MO2 non deve mai riavviarsi per questo. Il reindirizzamento cambia solo i file di salvataggio; non modifica Easy Anti-Cheat né la modalità di rete e non rende sicuri per il gioco online i salvataggi con mod.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Data and launch</source>
@@ -7296,7 +7352,7 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
     </message>
     <message>
       <source>Since version 2.5, Mod Organizer gives mods their category by mapping the Nexus categories to yours. This instance was made with an older version and has no mappings yet.</source>
-      <translation>Dalla versione 2.5, Mod Organizer assegna la categoria ai mod facendo corrispondere le categorie di Nexus alle tue. Questa istanza è stata creata con una versione precedente e non ha ancora corrispondenze.</translation>
+      <translation>Dalla versione 2.5, Mod Organizer assegna la categoria alle mod facendo corrispondere le categorie di Nexus alle tue. Questa istanza è stata creata con una versione precedente e non ha ancora corrispondenze.</translation>
     </message>
     <message>
       <source>Map this game&apos;s Nexus categories to yours automatically.</source>
@@ -10358,6 +10414,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SavesTab</name>
     <message>
+      <source>Steam's saves</source>
+      <translation>Salvataggi di Steam</translation>
+    </message>
+    <message>
       <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
       <translation>Alcuni di questi salvataggi sono ancora lì. Potrebbero essere in uso, oppure l'eliminazione è stata annullata.</translation>
     </message>
@@ -11679,7 +11739,7 @@ Rimanenti in quest'ora: %3</translation>
       <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
 
 Start it anyway?</source>
-      <translation>"%1" si avvierebbe senza le tue mod e un gioco non userebbe i salvataggi di questo profilo. Per avviarlo con le mod, usa Run.
+      <translation>"%1" si avvierebbe senza le tue mod e un gioco non userebbe i salvataggi di questo profilo. Per avviarlo con le mod, usa Avvia.
 
 Avviarlo comunque?</translation>
     </message>

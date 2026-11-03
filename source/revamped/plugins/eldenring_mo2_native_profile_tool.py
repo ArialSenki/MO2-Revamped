@@ -269,6 +269,12 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         try:
             entries = self._read_profile_entries(config_path)
             candidates = self._detect_native_dlls()
+            mod_list = self.__organizer.modList()
+            enabled_mods = {
+                name.casefold()
+                for name in mod_list.allModsByProfilePriority()
+                if mod_list.state(name) & mobase.ModState.ACTIVE
+            }
         except (
             OSError,
             UnicodeError,
@@ -305,7 +311,8 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         subtitle = QLabel(
             _tr("Every native DLL of your active mods, in load order, Seamless Co-op included. "
             "Switch one off to keep it from loading without turning its mod off, or move it "
-            "to change the order. Without changes, MO2 loads them all in the mod list's order."),
+            "to change the order. Without changes, MO2 loads the DLLs at a mod's top level "
+            "first, then the others, each by the mod list's order."),
             dialog,
         )
         subtitle.setProperty("wizardPageText", True)
@@ -480,21 +487,18 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
             (str(candidate["mod"]).casefold(), str(candidate["path"]).casefold())
             for candidate in candidates
         }
-        active_mods = {str(candidate["mod"]).casefold() for candidate in candidates}
-        # of a mod that is on, only the DLLs it still has and that win their path:
-        # a mod's update can rename one, and a row for it would stop the launch
+        # of a mod that is on, the table shows only the DLLs that win their path
         shown = [
             entry
             for entry in entries
             if (str(entry.get("mod", "")).casefold(), str(entry.get("path", "")).casefold()) in active_keys
         ]
-        table.stale_entries = [
-            entry for entry in entries if str(entry.get("mod", "")).casefold() not in active_mods
-        ]
+        table.stale_entries = self._hidden_entries_to_keep(entries, active_keys, enabled_mods)
         listed = {(str(e.get("mod", "")).casefold(), str(e.get("path", "")).casefold()) for e in shown}
         default_entries = [
             {"enabled": True, "mod": candidate["mod"], "path": candidate["path"], "initializer": "", "optional": False}
-            for candidate in candidates
+            # as the game plugin queues them: a mod's top-level DLLs come first
+            for candidate in sorted(candidates, key=lambda candidate: "/" in str(candidate["path"]))
         ]
         entries = shown + [
             entry for entry in default_entries
@@ -681,6 +685,27 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         dialog.adjustSize()
         dialog.exec()
         dialog.deleteLater()
+
+    def _hidden_entries_to_keep(
+        self, entries: list[dict], active_keys: set, enabled_mods: set
+    ) -> list[dict]:
+        """Entries the table doesn't show that stay in the file: those of a mod
+        that is off, and those of a DLL another mod overrides for now, so a
+        switch-off or an initializer is still there when it wins again. An entry
+        whose DLL left its mod (an update renamed it) goes. The game plugin loads
+        one game path once, from its winner, so these can't stop a launch."""
+        kept = []
+        for entry in entries:
+            mod = str(entry.get("mod", ""))
+            path = str(entry.get("path", ""))
+            if (mod.casefold(), path.casefold()) in active_keys:
+                continue
+            if mod.casefold() not in enabled_mods or (
+                not self._never_forced(Path(path).name)
+                and self._physical_dll_path(mod, path) is not None
+            ):
+                kept.append(entry)
+        return kept
 
     def _read_profile_entries(self, config_path: Path) -> list[dict]:
         config = configparser.ConfigParser(interpolation=None)
@@ -1326,8 +1351,9 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
     def _save_and_close(
         self, dialog: QDialog, profile_root: Path, table: QTableWidget
     ) -> None:
-        # only what the table shows is checked: a hidden entry, of a mod that is off,
-        # can't be fixed from here, and the game plugin skips it. It is saved as it was
+        # only what the table shows is checked: a hidden entry (a mod that is off, a
+        # DLL overridden for now) can't be fixed from here, and can't stop a launch.
+        # It is saved as it was, after the rows, so a winner's row keeps its place
         entries = self._entries_from_table(table)
         stale_entries = [dict(entry) for entry in getattr(table, "stale_entries", [])]
         seen = set()

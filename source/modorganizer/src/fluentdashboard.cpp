@@ -1,6 +1,7 @@
 #include "fluentdashboard.h"
 
 #include "categories.h"
+#include "eldenringsavesettings.h"
 #include "modinfo.h"
 #include "modlist.h"
 #include "modlistview.h"
@@ -12,6 +13,8 @@
 #include "ui_mainwindow.h"
 
 #include <iplugingame.h>
+#include <isavegame.h>
+#include <log.h>
 
 #include <QBoxLayout>
 #include <QComboBox>
@@ -420,7 +423,22 @@ void FluentDashboard::setSavesDirectory(std::function<QDir()> provider)
 void FluentDashboard::refreshLastPlayed()
 {
   QDateTime newest;
-  if (m_savesDirectory) {
+  const MOBase::IPluginGame* game = m_core.managedGame();
+  if (m_savesDirectory && EldenRingSaveSettings::supports(game)) {
+    // the route also holds settings and named save profiles: only the saves
+    // the game reads say when it was last saved
+    try {
+      for (const auto& save : game->listSaves(m_savesDirectory())) {
+        const QDateTime modified = QFileInfo(save->getFilepath()).lastModified();
+        if (!newest.isValid() || modified > newest) {
+          newest = modified;
+        }
+      }
+    } catch (const std::exception& e) {
+      // listSaves() can throw
+      MOBase::log::error("{}", e.what());
+    }
+  } else if (m_savesDirectory) {
     // saves sit at most a couple of folders deep (per account or slot); stop
     // early on folders that hold far more than saves
     int seen = 0;

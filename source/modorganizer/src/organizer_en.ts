@@ -2942,148 +2942,148 @@ Start it anyway?</source>
 <context>
     <name>FluentDashboard</name>
     <message>
-        <location filename="fluentdashboard.cpp" line="166"/>
+        <location filename="fluentdashboard.cpp" line="169"/>
         <source>Profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="172"/>
+        <location filename="fluentdashboard.cpp" line="175"/>
         <source>Program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="217"/>
+        <location filename="fluentdashboard.cpp" line="220"/>
         <source>Active mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="218"/>
+        <location filename="fluentdashboard.cpp" line="221"/>
         <source>With conflicts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="219"/>
+        <location filename="fluentdashboard.cpp" line="222"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="220"/>
+        <location filename="fluentdashboard.cpp" line="223"/>
         <source>Updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="225"/>
-        <location filename="fluentdashboard.cpp" line="238"/>
+        <location filename="fluentdashboard.cpp" line="228"/>
+        <location filename="fluentdashboard.cpp" line="241"/>
         <source>Show</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="230"/>
+        <location filename="fluentdashboard.cpp" line="233"/>
         <source>Manage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="251"/>
+        <location filename="fluentdashboard.cpp" line="254"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="257"/>
+        <location filename="fluentdashboard.cpp" line="260"/>
         <source>All</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="258"/>
+        <location filename="fluentdashboard.cpp" line="261"/>
         <source>Active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="259"/>
+        <location filename="fluentdashboard.cpp" line="262"/>
         <source>Conflicts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="datatab.cpp" line="44"/>
-        <location filename="fluentdashboard.cpp" line="299"/>
-        <location filename="fluentdashboard.cpp" line="300"/>
+        <location filename="fluentdashboard.cpp" line="302"/>
+        <location filename="fluentdashboard.cpp" line="303"/>
         <source>Search files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="303"/>
-        <location filename="fluentdashboard.cpp" line="317"/>
+        <location filename="fluentdashboard.cpp" line="306"/>
+        <location filename="fluentdashboard.cpp" line="320"/>
         <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="downloadstab.cpp" line="32"/>
-        <location filename="fluentdashboard.cpp" line="313"/>
-        <location filename="fluentdashboard.cpp" line="314"/>
+        <location filename="fluentdashboard.cpp" line="316"/>
+        <location filename="fluentdashboard.cpp" line="317"/>
         <source>Search downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="373"/>
+        <location filename="fluentdashboard.cpp" line="376"/>
         <source>%1 of %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="374"/>
+        <location filename="fluentdashboard.cpp" line="377"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="380"/>
+        <location filename="fluentdashboard.cpp" line="383"/>
         <source>%1 available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="380"/>
+        <location filename="fluentdashboard.cpp" line="383"/>
         <source>None found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="401"/>
+        <location filename="fluentdashboard.cpp" line="404"/>
         <source>Empty folders</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="401"/>
+        <location filename="fluentdashboard.cpp" line="404"/>
         <source>Empty</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="403"/>
+        <location filename="fluentdashboard.cpp" line="406"/>
         <source>%1+ files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="405"/>
+        <location filename="fluentdashboard.cpp" line="408"/>
         <source>1 file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="405"/>
+        <location filename="fluentdashboard.cpp" line="408"/>
         <source>%1 files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="446"/>
+        <location filename="fluentdashboard.cpp" line="464"/>
         <source>today at %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="448"/>
+        <location filename="fluentdashboard.cpp" line="466"/>
         <source>yesterday</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="450"/>
+        <location filename="fluentdashboard.cpp" line="468"/>
         <source>%1 days ago</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="454"/>
+        <location filename="fluentdashboard.cpp" line="472"/>
         <source>Last saved %1</source>
         <oldsource>Last played %1</oldsource>
         <translation type="unfinished"></translation>
@@ -7130,7 +7130,7 @@ Recovery snapshots were kept at: %2</source>
     </message>
     <message>
         <location filename="modinfodialog.ui" line="45"/>
-        <location filename="modinfodialog.cpp" line="910"/>
+        <location filename="modinfodialog.cpp" line="947"/>
         <source>Review documentation and other text files included with this mod.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7348,8 +7348,8 @@ Most mods do not have optional esps, so chances are good you are looking at an e
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1011"/>
-        <location filename="modinfodialog.cpp" line="1100"/>
-        <location filename="modinfodialog.cpp" line="1101"/>
+        <location filename="modinfodialog.cpp" line="1137"/>
+        <location filename="modinfodialog.cpp" line="1138"/>
         <source>Mod ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7393,7 +7393,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1056"/>
-        <location filename="modinfodialog.cpp" line="1105"/>
+        <location filename="modinfodialog.cpp" line="1142"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7441,7 +7441,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1282"/>
-        <location filename="modinfodialog.cpp" line="1168"/>
+        <location filename="modinfodialog.cpp" line="1205"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7511,203 +7511,203 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="898"/>
+        <location filename="modinfodialog.cpp" line="935"/>
         <source>Mod information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="900"/>
-        <location filename="modinfodialog.cpp" line="938"/>
+        <location filename="modinfodialog.cpp" line="937"/>
+        <location filename="modinfodialog.cpp" line="975"/>
         <source>Inspect this mod&apos;s contents, metadata, and file conflicts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="913"/>
+        <location filename="modinfodialog.cpp" line="950"/>
         <source>Inspect and edit configuration files provided by the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="916"/>
+        <location filename="modinfodialog.cpp" line="953"/>
         <source>Browse the images and previews packaged with the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="919"/>
+        <location filename="modinfodialog.cpp" line="956"/>
         <source>Choose which optional ESP, ESM, and ESL files are active. Mods without optional plugins leave this list empty.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="923"/>
+        <location filename="modinfodialog.cpp" line="960"/>
         <source>See which files this mod wins, loses, or shares with other mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="926"/>
+        <location filename="modinfodialog.cpp" line="963"/>
         <source>Organize the mod and choose its primary category.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="929"/>
+        <location filename="modinfodialog.cpp" line="966"/>
         <source>Review Nexus metadata, refresh details, and open the mod page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="932"/>
+        <location filename="modinfodialog.cpp" line="969"/>
         <source>Add notes and a color marker to recognize this mod in your list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="935"/>
+        <location filename="modinfodialog.cpp" line="972"/>
         <source>Inspect the mod&apos;s folder structure and manage its files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1061"/>
+        <location filename="modinfodialog.cpp" line="1098"/>
         <source>Open the mod&apos;s folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1065"/>
+        <location filename="modinfodialog.cpp" line="1102"/>
         <source>Open the mod&apos;s page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1075"/>
+        <location filename="modinfodialog.cpp" line="1112"/>
         <source>Copy the mod&apos;s name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1093"/>
+        <location filename="modinfodialog.cpp" line="1130"/>
         <source>Nexus Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1101"/>
+        <location filename="modinfodialog.cpp" line="1138"/>
         <source>The number in the mod&apos;s Nexus address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1103"/>
+        <location filename="modinfodialog.cpp" line="1140"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1103"/>
+        <location filename="modinfodialog.cpp" line="1140"/>
         <source>The Nexus game the page belongs to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1105"/>
+        <location filename="modinfodialog.cpp" line="1142"/>
         <source>Red when Nexus has a newer one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1107"/>
+        <location filename="modinfodialog.cpp" line="1144"/>
         <source>Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1107"/>
+        <location filename="modinfodialog.cpp" line="1144"/>
         <source>The category number on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1127"/>
+        <location filename="modinfodialog.cpp" line="1164"/>
         <source>Open the custom page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1130"/>
+        <location filename="modinfodialog.cpp" line="1167"/>
         <source>Custom web page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1131"/>
+        <location filename="modinfodialog.cpp" line="1168"/>
         <source>For mods from elsewhere: the page Open opens instead of Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1160"/>
+        <location filename="modinfodialog.cpp" line="1197"/>
         <source>A short note shown in the mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1161"/>
+        <location filename="modinfodialog.cpp" line="1198"/>
         <source>Comment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1161"/>
+        <location filename="modinfodialog.cpp" line="1198"/>
         <source>Shown in the mod list&apos;s Notes column</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1166"/>
+        <location filename="modinfodialog.cpp" line="1203"/>
         <source>Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1166"/>
+        <location filename="modinfodialog.cpp" line="1203"/>
         <source>Marks the mod&apos;s row in the mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1179"/>
+        <location filename="modinfodialog.cpp" line="1216"/>
         <source>Primary category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1180"/>
+        <location filename="modinfodialog.cpp" line="1217"/>
         <source>The one the mod list shows and groups by</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1181"/>
+        <location filename="modinfodialog.cpp" line="1218"/>
         <source>Categories of this mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1196"/>
+        <location filename="modinfodialog.cpp" line="1233"/>
         <source>The mod above this one in the list (Page Up)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1197"/>
+        <location filename="modinfodialog.cpp" line="1234"/>
         <source>The mod below this one in the list (Page Down)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1210"/>
+        <location filename="modinfodialog.cpp" line="1247"/>
         <source>Separator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1212"/>
+        <location filename="modinfodialog.cpp" line="1249"/>
         <source>Files outside any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1216"/>
+        <location filename="modinfodialog.cpp" line="1253"/>
         <source>Version %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1221"/>
+        <location filename="modinfodialog.cpp" line="1258"/>
         <source>Active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1221"/>
+        <location filename="modinfodialog.cpp" line="1258"/>
         <source>Inactive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1222"/>
+        <location filename="modinfodialog.cpp" line="1259"/>
         <source>Priority %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1225"/>
+        <location filename="modinfodialog.cpp" line="1262"/>
         <source>Not managed by Mod Organizer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12999,12 +12999,12 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="56"/>
+        <location filename="fluentdashboard.cpp" line="59"/>
         <source>1 mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="fluentdashboard.cpp" line="56"/>
+        <location filename="fluentdashboard.cpp" line="59"/>
         <source>%1 mods</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13273,42 +13273,47 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="128"/>
+        <location filename="savestab.cpp" line="129"/>
         <source>This profile&apos;s own saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="130"/>
-        <source>The game&apos;s saves, shared with Steam</source>
+        <location filename="savestab.cpp" line="131"/>
+        <source>Steam&apos;s saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="savestab.cpp" line="132"/>
+        <source>The game&apos;s saves, shared with Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="savestab.cpp" line="134"/>
         <source>Shared saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="345"/>
+        <location filename="savestab.cpp" line="347"/>
         <source>Modified</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="405"/>
+        <location filename="savestab.cpp" line="407"/>
         <source>%1 more</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="412"/>
+        <location filename="savestab.cpp" line="414"/>
         <source>These are the game&apos;s own Steam saves, also used when Elden Ring starts outside MO2.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="417"/>
+        <location filename="savestab.cpp" line="419"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="savestab.cpp" line="418"/>
+        <location filename="savestab.cpp" line="420"/>
         <source>Are you sure you want to remove the following %n save(s)?&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;&lt;br&gt;Removed saves will be sent to the Recycle Bin.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -13316,58 +13321,58 @@ p, li { white-space: pre-wrap; }
         </translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="430"/>
+        <location filename="savestab.cpp" line="432"/>
         <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="454"/>
+        <location filename="savestab.cpp" line="456"/>
         <source>Restore required plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="457"/>
+        <location filename="savestab.cpp" line="459"/>
         <source>Choose installed mods to activate the plugins required by this save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="466"/>
+        <location filename="savestab.cpp" line="468"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="470"/>
+        <location filename="savestab.cpp" line="472"/>
         <source>File name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="471"/>
+        <location filename="savestab.cpp" line="473"/>
         <source>File path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="472"/>
+        <location filename="savestab.cpp" line="474"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="477"/>
+        <location filename="savestab.cpp" line="479"/>
         <source>Delete...</source>
         <oldsource>Delete %n save(s)...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="478"/>
+        <location filename="savestab.cpp" line="480"/>
         <source>Delete %1 saves...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="515"/>
+        <location filename="savestab.cpp" line="517"/>
         <source>Restore required plugins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="516"/>
+        <location filename="savestab.cpp" line="518"/>
         <source>No installed mod has these plugins, so they were not restored:
 
 %1</source>

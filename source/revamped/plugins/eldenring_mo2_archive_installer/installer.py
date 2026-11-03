@@ -1125,11 +1125,17 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 ancestor = target
                 while ancestor is not None and ancestor is not item:
                     ancestor = ancestor.parent()
-                if ancestor is item or item.parent() is target:
+                # an item taken out of its folder has no parent and isn't in the tree
+                top_level_index = tree.indexOfTopLevelItem(item)
+                already_there = item.parent() is target and (
+                    target is not None or top_level_index >= 0
+                )
+                if ancestor is item or already_there:
                     continue
                 holder = item.parent()
                 if holder is None:
-                    tree.takeTopLevelItem(tree.indexOfTopLevelItem(item))
+                    if top_level_index >= 0:
+                        tree.takeTopLevelItem(top_level_index)
                 else:
                     holder.removeChild(item)
                 same = next(
@@ -1190,12 +1196,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     item.setCheckState(0, Qt.CheckState.Unchecked)
             updating[0] = False
             moved = folder.takeChildren()
-            move_items(moved, None)
+            # gone first: a child with its name must not merge back into it
             holder = folder.parent()
             if holder is None:
                 tree.takeTopLevelItem(tree.indexOfTopLevelItem(folder))
             else:
                 holder.removeChild(folder)
+            move_items(moved, None)
             refresh()
 
         def new_folder() -> None:

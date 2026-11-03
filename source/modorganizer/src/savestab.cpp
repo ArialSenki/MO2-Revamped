@@ -123,11 +123,13 @@ void SavesTab::updateRoute(const QDir& savesDir)
       QDir::cleanPath(m_core.managedGame()->savesDirectory().absolutePath());
 
   QString kind;
+  QString detail;
   if (path.startsWith(profile + "/", Qt::CaseInsensitive) ||
       path.compare(profile, Qt::CaseInsensitive) == 0) {
     kind = tr("This profile's own saves");
   } else if (path.compare(game, Qt::CaseInsensitive) == 0) {
-    kind = tr("The game's saves, shared with Steam");
+    kind   = tr("Steam's saves");
+    detail = tr("The game's saves, shared with Steam") + QStringLiteral("\n");
   } else {
     kind = tr("Shared saves");
   }
@@ -135,7 +137,7 @@ void SavesTab::updateRoute(const QDir& savesDir)
   m_routePath = path;
   // the path doesn't fit beside the buttons: the kind stays readable
   static_cast<FluentPanels::ElidedLabel*>(m_route)->setFullText(kind);
-  m_route->setToolTip(QDir::toNativeSeparators(path));
+  m_route->setToolTip(detail + QDir::toNativeSeparators(path));
 }
 
 bool SavesTab::eventFilter(QObject* object, QEvent* e)

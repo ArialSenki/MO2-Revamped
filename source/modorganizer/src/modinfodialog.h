@@ -147,6 +147,9 @@ private:
   // are not fired incorrectly
   bool m_arrangingTabs;
 
+  // the open page was picked by leaveEmptyListPage(), not by the user
+  bool m_tabMovedAutomatically = false;
+
   // creates all the tabs and connects events
   //
   void createTabs();
@@ -231,6 +234,10 @@ private:
   // saves the current mod and updates its row in the mod list
   //
   void leaveMod();
+
+  // moves off a page that would open blank for this mod
+  //
+  void leaveEmptyListPage();
 
   // called when the user clicks the close button; goes through closeEvent()
   //

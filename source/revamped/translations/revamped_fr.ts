@@ -1001,7 +1001,7 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
       <source>This will move all finished downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
-      <translation>Tous les téléchargements terminés seront déplacés vers la Corbeille.
+      <translation>Tous les téléchargements terminés seront mis à la Corbeille.
 
 Voulez-vous vraiment continuer ?</translation>
     </message>
@@ -1009,7 +1009,7 @@ Voulez-vous vraiment continuer ?</translation>
       <source>This will move all installed downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
-      <translation>Tous les téléchargements installés seront déplacés vers la Corbeille.
+      <translation>Tous les téléchargements installés seront mis à la Corbeille.
 
 Voulez-vous vraiment continuer ?</translation>
     </message>
@@ -1017,7 +1017,7 @@ Voulez-vous vraiment continuer ?</translation>
       <source>This will move all uninstalled downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
-      <translation>Tous les téléchargements non installés seront déplacés vers la Corbeille.
+      <translation>Tous les téléchargements non installés seront mis à la Corbeille.
 
 Voulez-vous vraiment continuer ?</translation>
     </message>
@@ -1181,7 +1181,7 @@ Voulez-vous vraiment continuer ?</translation>
     </message>
     <message>
       <source>Defaults</source>
-      <translation>Valeurs par défaut</translation>
+      <translation>Par défaut</translation>
     </message>
     <message>
       <source>Launch settings</source>
@@ -1938,6 +1938,18 @@ Réinstallez le mod pour changer cela.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Saves may mix</source>
+      <translation>Les sauvegardes risquent de se mélanger</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t give ELDEN RING Reforged its own save file in this version of the game</source>
+      <translation>MO2 ne peut pas donner à ELDEN RING Reforged son propre fichier de sauvegarde dans cette version du jeu</translation>
+    </message>
+    <message>
+      <source>Reforged would use ER0000.sl2, the save of your other mods, instead of ER0000.err, and could overwrite it. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>Reforged utiliserait ER0000.sl2, la sauvegarde de vos autres mods, au lieu de ER0000.err, et pourrait l&apos;écraser. Cela survient généralement après une mise à jour du jeu : cherchez une nouvelle version de MO2 Revamped.</translation>
+    </message>
+    <message>
       <source>Could not prepare the online saves</source>
       <translation>Impossible de préparer les sauvegardes en ligne</translation>
     </message>
@@ -2198,10 +2210,6 @@ Le jeu n'a pas été lancé.</translation>
       <translation>Le natif Revamped '{0}' est introuvable dans le mod MO2 associé '{1}'. Conserver la structure d'origine peut garder natives/... ; la structure MO2 doit le placer sous DLLs/.</translation>
     </message>
     <message>
-      <source>The Revamped native profile resolves more than one entry to '{0}'. Keep only one entry for that game path.</source>
-      <translation>Le profil natif Revamped résout plusieurs entrées vers '{0}'. Ne gardez qu'une entrée pour ce chemin de jeu.</translation>
-    </message>
-    <message>
       <source>MO2 has no active file origin for Revamped native '{0}'.</source>
       <translation>MO2 n'a aucune origine de fichier active pour le natif Revamped '{0}'.</translation>
     </message>
@@ -2405,9 +2413,61 @@ S&apos;il contient une progression que vous voulez garder, fermez le jeu et reco
       <source>Reforged's online version is on. Turn that mod off to choose another program.</source>
       <translation>La version en ligne de Reforged est active. Désactivez ce mod pour choisir un autre programme.</translation>
     </message>
+    <message>
+      <source>{0} is still open as MO2 closes. The Steam saves come back the next time MO2 runs, once it has closed. Don&apos;t start the game from Steam until then.</source>
+      <translation>{0} est encore ouvert à la fermeture de MO2. Les sauvegardes Steam reviendront au prochain lancement de MO2, une fois qu&apos;il sera fermé. D&apos;ici là, ne lancez pas le jeu depuis Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: {0} is still open. Close it and try again. The game was not started.</source>
+      <translation>Les dossiers de sauvegarde Steam masqués par un lancement précédent ne peuvent pas encore être remis en place : {0} est encore ouvert. Fermez-le et réessayez. Le jeu n&apos;a pas été lancé.</translation>
+    </message>
+    <message>
+      <source>Saves kept aside</source>
+      <translation>Sauvegardes mises de côté</translation>
+    </message>
+    <message>
+      <source>MO2 found saves that differ from, or are newer than, the copy that takes their place. Nothing was deleted; they are kept here:
+
+{0}
+
+If one holds progress you want, close the game and copy it back.</source>
+      <translation>MO2 a trouvé des sauvegardes différentes de la copie qui prend leur place, ou plus récentes qu&apos;elle. Rien n&apos;a été supprimé ; elles sont conservées ici :
+
+{0}
+
+Si l&apos;une d&apos;elles contient une progression que vous voulez garder, fermez le jeu et recopiez-la.</translation>
+    </message>
+    <message>
+      <source>{0} changed file(s) to {1}</source>
+      <translation>{0} fichier(s) modifié(s) vers {1}</translation>
+    </message>
+    <message>
+      <source>Saves moved back to their route</source>
+      <translation>Sauvegardes revenues dans leur route</translation>
+    </message>
+    <message>
+      <source>A launch outside MO2&apos;s virtual file system ended while MO2 wasn&apos;t watching. What was played from the Steam folder went to the route, and the Steam saves are back:
+
+{0}</source>
+      <translation>Un lancement hors du système de fichiers virtuel de MO2 s&apos;est terminé sans que MO2 le surveille. Ce qui a été joué depuis le dossier Steam est passé dans la route, et les sauvegardes Steam sont revenues :
+
+{0}</translation>
+    </message>
+    <message>
+      <source>MO2 is still waiting for the last launch to start its game. If it doesn&apos;t start, MO2 puts the saves back within a minute and a half; try again then. The game was not started.</source>
+      <translation>MO2 attend encore que le dernier lancement démarre son jeu. S&apos;il ne démarre pas, MO2 remettra les sauvegardes en place dans la minute et demie ; réessayez alors. Le jeu n&apos;a pas été lancé.</translation>
+    </message>
+    <message>
+      <source>The game has closed, but {0} is still open. MO2 puts the Steam saves back when it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>Le jeu s&apos;est fermé, mais {0} est encore ouvert. MO2 remettra les sauvegardes Steam en place à sa fermeture. D&apos;ici là, ne lancez pas le jeu depuis Steam.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingNativeProfile</name>
+    <message>
+      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads the DLLs at a mod&apos;s top level first, then the others, each by the mod list&apos;s order.</source>
+      <translation>Toutes les DLL natives de vos mods actifs, dans l&apos;ordre de chargement, Seamless Co-op comprise. Désactivez-en une pour qu&apos;elle ne se charge pas sans désactiver son mod, ou déplacez-la pour changer l&apos;ordre. Sans modification, MO2 charge d&apos;abord les DLL au niveau supérieur d&apos;un mod, puis les autres, chacune selon l&apos;ordre de la liste des mods.</translation>
+    </message>
     <message>
       <source>{configured} configured · {enabled} enabled</source>
       <translation>{configured} configurées · {enabled} activées</translation>
@@ -2779,10 +2839,6 @@ Les DLL détectées des mods activés apparaîtront dans le panneau de gauche.</
     <message>
       <source>Show in folder</source>
       <translation>Afficher dans le dossier</translation>
-    </message>
-    <message>
-      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads them all in the mod list&apos;s order.</source>
-      <translation>Toutes les DLL natives de vos mods actifs, dans l&apos;ordre de chargement, Seamless Co-op compris. Désactivez-en une pour qu&apos;elle ne se charge pas sans désactiver son mod, ou déplacez-la pour changer l&apos;ordre. Sans changement, MO2 les charge toutes dans l&apos;ordre de la liste des mods.</translation>
     </message>
     <message>
       <source>Load order</source>
@@ -3709,7 +3765,7 @@ La sauvegarde a été copiée, mais son .bak n’a pas pu être mis à jour : {e
     </message>
     <message>
       <source>Restore an Elden Ring save backup</source>
-      <translation>Restaurer une sauvegarde Elden Ring</translation>
+      <translation>Restaurer une copie des sauvegardes d&apos;Elden Ring</translation>
     </message>
     <message>
       <source>Before each launch MO2 copies the saves of the route the game will use, when they changed since the last copy. Choose a route and a copy to bring back; the saves it replaces are kept in the backups' "replaced" folder.</source>
@@ -3753,7 +3809,7 @@ La sauvegarde a été copiée, mais son .bak n’a pas pu être mis à jour : {e
     </message>
     <message>
       <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
-      <translation>&lt;p&gt;La route de sauvegarde de ce profil n’a pas encore de sauvegardes Elden Ring, alors que le dossier Steam en a. Le jeu démarrera sans vos personnages, et un nouveau personnage sera enregistré uniquement sur cette route.&lt;/p&gt;&lt;p&gt;Pour jouer ici un personnage existant, ouvrez Outils &amp;gt; Save Isolation et utilisez Transférer une sauvegarde, ou créez ou importez un profil de sauvegarde nommé. Pour utiliser directement les sauvegardes Steam, choisissez-y la route globale.&lt;/p&gt;&lt;p&gt;Route : {folder}&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;La route de sauvegarde de ce profil n’a pas encore de sauvegardes Elden Ring, alors que le dossier Steam en a. Le jeu démarrera sans vos personnages, et un nouveau personnage sera enregistré uniquement sur cette route.&lt;/p&gt;&lt;p&gt;Pour jouer ici un personnage existant, ouvrez Outils &amp;gt; Isolation des sauvegardes et utilisez Transférer une sauvegarde, ou créez ou importez un profil de sauvegarde nommé. Pour utiliser directement les sauvegardes Steam, choisissez-y la route globale.&lt;/p&gt;&lt;p&gt;Route : {folder}&lt;/p&gt;</translation>
     </message>
     <message>
       <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
@@ -3951,7 +4007,7 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
     </message>
     <message>
       <source>Backups</source>
-      <translation>Sauvegardes de secours</translation>
+      <translation>Copies de secours</translation>
     </message>
     <message>
       <source>MO2 copies this route's saves before every launch.</source>
@@ -4305,7 +4361,7 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
     </message>
     <message>
       <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
-      <translation>Ce nom apparaît dans Outils &gt; Elden Ring Save Isolation. Si tu choisis une sauvegarde de départ ci-dessous, elle sera copiée dans ce profil de sauvegarde nommé. Elden Ring charge le fichier sélectionné en ER0000 avec sa propre extension.</translation>
+      <translation>Ce nom apparaît dans Outils &gt; Isolation des sauvegardes. Si vous choisissez une sauvegarde de départ ci-dessous, elle sera copiée dans ce profil de sauvegarde nommé. Elden Ring charge le fichier sélectionné en ER0000 avec sa propre extension.</translation>
     </message>
     <message>
       <source>1 file</source>
@@ -4754,7 +4810,7 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
     </message>
     <message>
       <source>Any</source>
-      <translation>N'importe lequel</translation>
+      <translation>Au moins un</translation>
     </message>
     <message>
       <source>Show mods that match at least one active filter.</source>
@@ -5236,7 +5292,7 @@ La plupart des mods n&apos;en ont pas besoin : les extenseurs de scripts et les 
     <message>
       <source>The mod was replaced, but its previous version did not go to the Recycle Bin. It is in this folder:
 %1</source>
-      <translation>Le mod a été remplacé, mais sa version précédente n&apos;est pas allée dans la Corbeille. Elle se trouve dans ce dossier :
+      <translation>Le mod a été remplacé, mais sa version précédente n&apos;a pas été placée dans la Corbeille. Elle se trouve dans ce dossier :
 %1</translation>
     </message>
     <message>
@@ -5592,7 +5648,7 @@ Emplacement : %3</translation>
     </message>
     <message>
       <source>Move to Recycle Bin</source>
-      <translation>Mettre à la corbeille</translation>
+      <translation>Mettre à la Corbeille</translation>
     </message>
     <message>
       <source>Last used %1</source>
@@ -6088,7 +6144,7 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
     </message>
     <message>
       <source>Any</source>
-      <translation>N'importe lequel</translation>
+      <translation>Au moins un</translation>
     </message>
     <message>
       <source>
@@ -6562,7 +6618,7 @@ Enfin, vous pouvez désactiver complètement la correspondance des catégories N
     </message>
     <message>
       <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Le passage entre sauvegardes isolées par profil et sauvegardes partagées dans l'instance prend effet au prochain lancement du jeu. Le passage vers ou depuis la sauvegarde Steam globale s'applique à la fermeture de la fenêtre Save Isolation ; MO2 n'a jamais besoin de redémarrer pour cela. La redirection ne modifie que les fichiers de sauvegarde ; elle ne change ni Easy Anti-Cheat ni le mode réseau, et ne rend pas les sauvegardes moddées sûres pour le jeu en ligne.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Le passage entre sauvegardes isolées par profil et sauvegardes partagées dans l'instance prend effet au prochain lancement du jeu. Le passage vers ou depuis la sauvegarde Steam globale s'applique à la fermeture de la fenêtre Isolation des sauvegardes ; MO2 n'a jamais besoin de redémarrer pour cela. La redirection ne modifie que les fichiers de sauvegarde ; elle ne change ni Easy Anti-Cheat ni le mode réseau, et ne rend pas les sauvegardes moddées sûres pour le jeu en ligne.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Data and launch</source>
@@ -6852,7 +6908,7 @@ Les parties réussies restent disponibles pour une restauration.</translation>
     </message>
     <message>
       <source>There are no backups to restore.</source>
-      <translation>Aucune sauvegarde à restaurer.</translation>
+      <translation>Aucune copie de secours à restaurer.</translation>
     </message>
     <message>
       <source>The plugin-order backup is incomplete or unavailable.</source>
@@ -6872,7 +6928,7 @@ Les parties réussies restent disponibles pour une restauration.</translation>
     </message>
     <message>
       <source>Restore backup</source>
-      <translation>Restaurer la sauvegarde</translation>
+      <translation>Restaurer la copie de secours</translation>
     </message>
     <message>
       <source>MO2 could not prepare the restore.</source>
@@ -6954,11 +7010,11 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
     </message>
     <message>
       <source>Delete this backup?</source>
-      <translation>Supprimer cette sauvegarde ?</translation>
+      <translation>Supprimer cette copie de secours ?</translation>
     </message>
     <message>
       <source>Delete backup</source>
-      <translation>Supprimer la sauvegarde</translation>
+      <translation>Supprimer la copie de secours</translation>
     </message>
     <message>
       <source>Delete failed</source>
@@ -6978,7 +7034,7 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
     </message>
     <message>
       <source>Backup deleted</source>
-      <translation>Sauvegarde supprimée</translation>
+      <translation>Copie de secours supprimée</translation>
     </message>
     <message>
       <source>Choose a saved plugin load order to delete. The current load order will not be changed.</source>
@@ -7260,35 +7316,35 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
     </message>
     <message>
       <source>Send this saved mod list backup to the Recycle Bin.</source>
-      <translation>Envoie cette sauvegarde de la liste de mods à la Corbeille.</translation>
+      <translation>Met cette sauvegarde de la liste de mods à la Corbeille.</translation>
     </message>
     <message>
       <source>Send this saved mod list backup to the Recycle Bin?
 
 %1</source>
-      <translation>Envoyer cette sauvegarde de la liste de mods à la Corbeille ?
+      <translation>Mettre cette sauvegarde de la liste de mods à la Corbeille ?
 
 %1</translation>
     </message>
     <message>
       <source>The mod list backup went to the Recycle Bin.</source>
-      <translation>La sauvegarde de la liste de mods est allée dans la Corbeille.</translation>
+      <translation>La sauvegarde de la liste de mods a été placée dans la Corbeille.</translation>
     </message>
     <message>
       <source>Send this saved plugin load order to the Recycle Bin.</source>
-      <translation>Envoie cet ordre de chargement des plugins enregistré à la Corbeille.</translation>
+      <translation>Met cet ordre de chargement des plugins enregistré à la Corbeille.</translation>
     </message>
     <message>
       <source>Send this saved plugin-order backup to the Recycle Bin?
 
 %1</source>
-      <translation>Envoyer cette sauvegarde de l&apos;ordre des plugins à la Corbeille ?
+      <translation>Mettre cette sauvegarde de l&apos;ordre des plugins à la Corbeille ?
 
 %1</translation>
     </message>
     <message>
       <source>The plugin-order backup went to the Recycle Bin.</source>
-      <translation>La sauvegarde de l&apos;ordre des plugins est allée dans la Corbeille.</translation>
+      <translation>La sauvegarde de l&apos;ordre des plugins a été placée dans la Corbeille.</translation>
     </message>
     <message>
       <source>Restore failed</source>
@@ -7320,11 +7376,11 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
 %1
 
 Restore puts each previous version back and sends the version in its place, if there is one, to the Recycle Bin. Discard sends the previous versions to the Recycle Bin and keeps the versions in place. Later changes nothing, and Mod Organizer asks again at the next start.</source>
-      <translation>Ces mods ont encore une version précédente issue d&apos;un remplacement inachevé : Mod Organizer s&apos;est arrêté en cours de route, ou la version précédente n&apos;a pas pu aller dans la Corbeille.
+      <translation>Ces mods ont encore une version précédente issue d&apos;un remplacement inachevé : Mod Organizer s&apos;est arrêté en cours de route, ou la version précédente n&apos;a pas pu être placée dans la Corbeille.
 
 %1
 
-Restaurer remet chaque version précédente en place et envoie à la Corbeille la version qui l&apos;a remplacée, s&apos;il y en a une. Abandonner envoie les versions précédentes à la Corbeille et garde les versions en place. Plus tard ne change rien, et Mod Organizer demandera à nouveau au prochain démarrage.</translation>
+Restaurer remet chaque version précédente en place et met à la Corbeille la version qui l&apos;a remplacée, s&apos;il y en a une. Abandonner met les versions précédentes à la Corbeille et garde les versions en place. Plus tard ne change rien, et Mod Organizer demandera à nouveau au prochain démarrage.</translation>
     </message>
     <message>
       <source>Older copies of these mods stay where they are, and Mod Organizer offers them at a later start:
@@ -7755,7 +7811,7 @@ OpenSSL · {openssl}</translation>
     </message>
       <message>
       <source>You are now a developer. Open Settings again to see Settings &gt; Developer.</source>
-      <translation>Tu es maintenant développeur. Rouvre les Paramètres pour voir Paramètres &gt; Développeur.</translation>
+      <translation>Vous êtes maintenant développeur. Rouvrez les Paramètres pour voir Paramètres &gt; Développeur.</translation>
     </message>
 </context>
   <context>
@@ -8032,7 +8088,7 @@ La plupart des mods n&apos;ont pas d&apos;esps optionnels, cette liste est donc 
     <name>ModListContextMenu</name>
     <message>
       <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
-      <translation>Déplace tous les fichiers et dossiers d'Overwrite vers la Corbeille.</translation>
+      <translation>Met tous les fichiers et dossiers d'Overwrite à la Corbeille.</translation>
     </message>
     <message>
       <source>Review and manage files...</source>
@@ -8164,11 +8220,11 @@ La plupart des mods n&apos;ont pas d&apos;esps optionnels, cette liste est donc 
     </message>
     <message>
       <source>Restore backup</source>
-      <translation>Restaurer la sauvegarde</translation>
+      <translation>Restaurer la copie de secours</translation>
     </message>
     <message>
       <source>Remove backup...</source>
-      <translation>Supprimer la sauvegarde...</translation>
+      <translation>Supprimer la copie de secours...</translation>
     </message>
     <message>
       <source>Reinstall</source>
@@ -8342,7 +8398,7 @@ La plupart des mods n&apos;ont pas d&apos;esps optionnels, cette liste est donc 
 %1
 
 Move anything you want to keep into a mod before continuing.</source>
-      <translation>Tous les fichiers et dossiers seront déplacés vers la Corbeille :
+      <translation>Tous les fichiers et dossiers seront mis à la Corbeille :
 
 %1
 
@@ -8637,11 +8693,11 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     </message>
     <message>
       <source>Move the selected files to the Recycle Bin?</source>
-      <translation>Mettre les fichiers sélectionnés à la corbeille ?</translation>
+      <translation>Mettre les fichiers sélectionnés à la Corbeille ?</translation>
     </message>
     <message>
       <source>Move "%1" to the Recycle Bin?</source>
-      <translation>Mettre "%1" à la corbeille ?</translation>
+      <translation>Mettre "%1" à la Corbeille ?</translation>
     </message>
     <message>
       <source>Manage Overwrite</source>
@@ -8665,7 +8721,7 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     </message>
     <message>
       <source>Drag items onto a regular mod to move them. Right-click for folder, open, rename, and delete actions. Deleting sends files to the Recycle Bin.</source>
-      <translation>Faites glisser des éléments sur un mod normal pour les déplacer. Clic droit pour créer un dossier, ouvrir, renommer et supprimer. Supprimer met les fichiers à la corbeille.</translation>
+      <translation>Faites glisser des éléments sur un mod normal pour les déplacer. Clic droit pour créer un dossier, ouvrir, renommer et supprimer. Supprimer met les fichiers à la Corbeille.</translation>
     </message>
     <message>
       <source>Open the Overwrite folder in Windows File Explorer.</source>
@@ -8693,7 +8749,7 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     </message>
     <message>
       <source>Move the selected file or folder to the Recycle Bin.</source>
-      <translation>Met à la corbeille le fichier ou dossier sélectionné.</translation>
+      <translation>Met à la Corbeille le fichier ou dossier sélectionné.</translation>
     </message>
     <message>
       <source>&amp;New folder</source>
@@ -8776,13 +8832,13 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     </message>
     <message>
       <source>Empty to Recycle Bin...</source>
-      <translation>Vider dans la corbeille...</translation>
+      <translation>Vider dans la Corbeille...</translation>
     </message>
     <message>
       <source>Everything in Overwrite goes to the Recycle Bin: %1. Logs and settings that DLL mods and tools wrote there are gone from the game until you restore them.
 
 To keep some files, move them to a mod first.</source>
-      <translation>Tout le contenu d&apos;Overwrite va à la corbeille : %1. Les journaux et paramètres que les mods DLL et les outils y ont écrits disparaissent du jeu jusqu&apos;à ce que vous les restauriez.
+      <translation>Tout le contenu d&apos;Overwrite va à la Corbeille : %1. Les journaux et paramètres que les mods DLL et les outils y ont écrits disparaissent du jeu jusqu&apos;à ce que vous les restauriez.
 
 Pour garder certains fichiers, déplacez-les d&apos;abord dans un mod.</translation>
     </message>
@@ -8800,11 +8856,11 @@ Pour garder certains fichiers, déplacez-les d&apos;abord dans un mod.</translat
     </message>
     <message>
       <source>Move everything in Overwrite to the Recycle Bin</source>
-      <translation>Met tout le contenu d&apos;Overwrite à la corbeille</translation>
+      <translation>Met tout le contenu d&apos;Overwrite à la Corbeille</translation>
     </message>
     <message>
       <source>Move to Recycle Bin</source>
-      <translation>Mettre à la corbeille</translation>
+      <translation>Mettre à la Corbeille</translation>
     </message>
     <message>
       <source>Search files</source>
@@ -9358,7 +9414,7 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
     </message>
     <message>
       <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
-      <translation>Cela supprime le profil, y compris ses propres sauvegardes, ses profils de sauvegarde nommés et leurs sauvegardes automatiques. Les sauvegardes partagées de l'instance et celles de Steam ne sont pas touchées. Le dossier est placé dans la Corbeille.</translation>
+      <translation>Cela supprime le profil, y compris ses propres sauvegardes, ses profils de sauvegarde nommés et leurs copies automatiques. Les sauvegardes partagées de l'instance et celles de Steam ne sont pas touchées. Le dossier est placé dans la Corbeille.</translation>
     </message>
     <message>
       <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
@@ -10201,7 +10257,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Sends the installed mod&apos;s files to the Recycle Bin once this one is installed in their place</source>
-      <translation>Envoie les fichiers du mod installé à la Corbeille une fois celui-ci installé à leur place</translation>
+      <translation>Met les fichiers du mod installé à la Corbeille une fois celui-ci installé à leur place</translation>
     </message>
   </context>
   <context>
@@ -10249,6 +10305,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SavesTab</name>
+    <message>
+      <source>Steam's saves</source>
+      <translation>Sauvegardes de Steam</translation>
+    </message>
     <message>
       <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
       <translation>Certaines de ces sauvegardes sont toujours là. Elles sont peut-être utilisées, ou la suppression a été annulée.</translation>
@@ -11163,7 +11223,7 @@ Restantes cette heure : %3</translation>
     </message>
     <message>
       <source>OK moves each file to the mod you chose, in the same folder, and sends that mod's old copy to the Recycle Bin. Cancel leaves everything in Overwrite.</source>
-      <translation>OK déplace chaque fichier vers le mod choisi, dans le même dossier, et met l'ancienne copie de ce mod à la corbeille. Annuler laisse tout dans Overwrite.</translation>
+      <translation>OK déplace chaque fichier vers le mod choisi, dans le même dossier, et met l'ancienne copie de ce mod à la Corbeille. Annuler laisse tout dans Overwrite.</translation>
     </message>
   </context>
   <context>
@@ -11567,7 +11627,7 @@ Restantes cette heure : %3</translation>
       <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
 
 Start it anyway?</source>
-      <translation>« %1 » démarrerait sans vos mods, et un jeu n'utiliserait pas les sauvegardes de ce profil. Pour le lancer avec eux, utilisez Run.
+      <translation>« %1 » démarrerait sans vos mods, et un jeu n'utiliserait pas les sauvegardes de ce profil. Pour le lancer avec eux, utilisez Lancer.
 
 Le lancer quand même ?</translation>
     </message>
@@ -11648,11 +11708,11 @@ Le lancer quand même ?</translation>
     </message>
     <message>
       <source>Move the selected files to the Recycle Bin?</source>
-      <translation>Mettre les fichiers sélectionnés à la corbeille ?</translation>
+      <translation>Mettre les fichiers sélectionnés à la Corbeille ?</translation>
     </message>
     <message>
       <source>Move "%1" to the Recycle Bin?</source>
-      <translation>Mettre "%1" à la corbeille ?</translation>
+      <translation>Mettre "%1" à la Corbeille ?</translation>
     </message>
     <message>
       <source>&amp;New folder</source>

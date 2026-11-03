@@ -1345,7 +1345,7 @@ Tem certeza de que deseja continuar?</translation>
     </message>
     <message>
       <source>The Run button and shortcuts show the program's own icon</source>
-      <translation>O botão Executar e os atalhos mostram o ícone do programa</translation>
+      <translation>O botão Iniciar e os atalhos mostram o ícone do programa</translation>
     </message>
     <message>
       <source>Desktop shortcuts show the program's own icon</source>
@@ -1413,7 +1413,7 @@ Tem certeza de que deseja continuar?</translation>
 The programs that are not hidden appear in the main window's Program list, next to Run.</source>
       <translation>Qualquer programa que o Mod Organizer deva iniciar com seus mods no lugar: o jogo, seu launcher, um script extender ou ferramentas como xEdit ou BodySlide. Programas iniciados daqui veem a pasta virtual do jogo, então encontram os mods do perfil em uso.
 
-Os programas que não estão ocultos aparecem na lista Programa da janela principal, ao lado de Executar.</translation>
+Os programas que não estão ocultos aparecem na lista Programa da janela principal, ao lado de Iniciar.</translation>
     </message>
     <message>
       <source>OK</source>
@@ -1676,11 +1676,11 @@ Reinstale o mod para mudar isso.</translation>
     </message>
       <message>
       <source>MO2 runs it itself, with your other mods: its game files and natives go to MO2's folders; its launcher, me3 and setup tool stay out.</source>
-      <translation>O MO2 o executa por conta própria, com seus outros mods: os arquivos de jogo e as DLLs vão para as pastas do MO2; o inicializador, o me3 e a ferramenta de configuração ficam de fora.</translation>
+      <translation>O MO2 o executa por conta própria, com seus outros mods: os arquivos de jogo e as DLLs vão para as pastas do MO2; o launcher, o me3 e a ferramenta de configuração ficam de fora.</translation>
     </message>
     <message>
       <source>MO2 runs it itself, with your other mods: its game files and natives go to MO2's folders; me3, its launcher and the logs it ships stay out.</source>
-      <translation>O MO2 o executa por conta própria, com seus outros mods: os arquivos de jogo e as DLLs vão para as pastas do MO2; o me3, o inicializador e os logs incluídos ficam de fora.</translation>
+      <translation>O MO2 o executa por conta própria, com seus outros mods: os arquivos de jogo e as DLLs vão para as pastas do MO2; o me3, o launcher e os logs incluídos ficam de fora.</translation>
     </message>
     <message>
       <source>Its SeamlessCoop folder stays whole, and it runs from MO2's own program, with your other mods.</source>
@@ -1734,7 +1734,7 @@ Reinstale o mod para mudar isso.</translation>
       <source>While this mod is on, MO2 starts Reforged's own launcher and the program can't be changed; online, Reforged allows no other mods or DLLs. For offline play with your other mods, install Reforged again with this off, as a separate mod.
 
 Reinstall the mod to change this.</source>
-      <translation>Enquanto este mod estiver ativo, o MO2 inicia o inicializador do Reforged e o programa não pode ser alterado; online, o Reforged não permite outros mods ou DLLs. Para jogar offline com seus outros mods, instale o Reforged novamente com esta opção desativada, como um mod separado.
+      <translation>Enquanto este mod estiver ativo, o MO2 inicia o launcher do Reforged e o programa não pode ser alterado; online, o Reforged não permite outros mods ou DLLs. Para jogar offline com seus outros mods, instale o Reforged novamente com esta opção desativada, como um mod separado.
 
 Reinstale o mod para alterar isso.</translation>
     </message>
@@ -1804,7 +1804,7 @@ Reinstale o mod para alterar isso.</translation>
     </message>
     <message>
       <source>Files MO2 doesn't need, such as launchers, or those you chose to skip.</source>
-      <translation>Arquivos de que o MO2 não precisa, como inicializadores, ou os que você escolheu ignorar.</translation>
+      <translation>Arquivos de que o MO2 não precisa, como launchers, ou os que você escolheu ignorar.</translation>
     </message>
     <message>
       <source>No game files or DLLs found</source>
@@ -1852,7 +1852,7 @@ Reinstale o mod para alterar isso.</translation>
     </message>
     <message>
       <source>{0} files of Reforged's online version could not be placed, so its launcher may refuse to start. Free some disk space and reinstall the mod.</source>
-      <translation>Não foi possível colocar {0} arquivos da versão online do Reforged, então o inicializador pode não abrir. Libere espaço em disco e reinstale o mod.</translation>
+      <translation>Não foi possível colocar {0} arquivos da versão online do Reforged, então o launcher pode não abrir. Libere espaço em disco e reinstale o mod.</translation>
     </message>
     <message>
       <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
@@ -1934,6 +1934,18 @@ Reinstale o mod para alterar isso.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Saves may mix</source>
+      <translation>Os saves podem se misturar</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t give ELDEN RING Reforged its own save file in this version of the game</source>
+      <translation>O MO2 não consegue dar ao ELDEN RING Reforged um arquivo de save próprio nesta versão do jogo</translation>
+    </message>
+    <message>
+      <source>Reforged would use ER0000.sl2, the save of your other mods, instead of ER0000.err, and could overwrite it. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>O Reforged usaria o ER0000.sl2, o save dos seus outros mods, em vez do ER0000.err, e poderia sobrescrevê-lo. Isso costuma acontecer após uma atualização do jogo: procure uma nova versão do MO2 Revamped.</translation>
+    </message>
+    <message>
       <source>Could not prepare the online saves</source>
       <translation>Não foi possível preparar os saves online</translation>
     </message>
@@ -1951,7 +1963,7 @@ Reinstale o mod para alterar isso.</translation>
     </message>
     <message>
       <source>Run</source>
-      <translation>Executar</translation>
+      <translation>Iniciar</translation>
     </message>
     <message>
       <source>Run the selected program. Use the arrow section for shortcut options.</source>
@@ -2194,10 +2206,6 @@ O jogo não foi iniciado.</translation>
       <translation>O nativo do Revamped '{0}' não foi encontrado no mod do MO2 mapeado '{1}'. Manter a estrutura original pode preservar natives/...; a estrutura do MO2 deve colocá-lo em DLLs/.</translation>
     </message>
     <message>
-      <source>The Revamped native profile resolves more than one entry to '{0}'. Keep only one entry for that game path.</source>
-      <translation>O perfil nativo do Revamped resolve mais de uma entrada para '{0}'. Mantenha só uma entrada para esse caminho do jogo.</translation>
-    </message>
-    <message>
       <source>MO2 has no active file origin for Revamped native '{0}'.</source>
       <translation>O MO2 não tem origem de arquivo ativa para o nativo do Revamped '{0}'.</translation>
     </message>
@@ -2331,11 +2339,11 @@ O jogo não foi iniciado.</translation>
     </message>
     <message>
       <source>An earlier launch hid the Steam save folders, and the game or one of its launchers is still running, or another MO2 window is waiting for its game. MO2 puts the saves back as soon as it closes. Don&apos;t start the game from Steam until then.</source>
-      <translation>Uma inicialização anterior ocultou as pastas de saves da Steam, e o jogo ou um de seus inicializadores ainda está aberto, ou outra janela do MO2 está esperando o seu jogo. O MO2 devolve os saves assim que ele fechar. Até lá, não inicie o jogo pela Steam.</translation>
+      <translation>Uma inicialização anterior ocultou as pastas de saves da Steam, e o jogo ou um de seus launchers ainda está aberto, ou outra janela do MO2 está esperando o seu jogo. O MO2 devolve os saves assim que ele fechar. Até lá, não inicie o jogo pela Steam.</translation>
     </message>
     <message>
       <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: the game or one of its launchers is still running, or another MO2 window is waiting for its game. Close it and try again. The game was not started.</source>
-      <translation>As pastas de saves da Steam que uma inicialização anterior ocultou ainda não podem ser devolvidas: o jogo ou um de seus inicializadores ainda está aberto, ou outra janela do MO2 está esperando o seu jogo. Feche-o e tente de novo. O jogo não foi iniciado.</translation>
+      <translation>As pastas de saves da Steam que uma inicialização anterior ocultou ainda não podem ser devolvidas: o jogo ou um de seus launchers ainda está aberto, ou outra janela do MO2 está esperando o seu jogo. Feche-o e tente de novo. O jogo não foi iniciado.</translation>
     </message>
     <message>
       <source>Newer saves set aside</source>
@@ -2401,9 +2409,61 @@ Se ela tiver progresso que você quer manter, feche o jogo e copie os arquivos d
       <source>Reforged's online version is on. Turn that mod off to choose another program.</source>
       <translation>A versão online do Reforged está ativa. Desative esse mod para escolher outro programa.</translation>
     </message>
+    <message>
+      <source>{0} is still open as MO2 closes. The Steam saves come back the next time MO2 runs, once it has closed. Don&apos;t start the game from Steam until then.</source>
+      <translation>{0} ainda está aberto enquanto o MO2 fecha. Os saves da Steam voltam na próxima vez que o MO2 for aberto, depois que ele tiver fechado. Até lá, não inicie o jogo pela Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: {0} is still open. Close it and try again. The game was not started.</source>
+      <translation>As pastas de saves da Steam que uma inicialização anterior ocultou ainda não podem ser devolvidas: {0} ainda está aberto. Feche-o e tente de novo. O jogo não foi iniciado.</translation>
+    </message>
+    <message>
+      <source>Saves kept aside</source>
+      <translation>Saves separados</translation>
+    </message>
+    <message>
+      <source>MO2 found saves that differ from, or are newer than, the copy that takes their place. Nothing was deleted; they are kept here:
+
+{0}
+
+If one holds progress you want, close the game and copy it back.</source>
+      <translation>O MO2 encontrou saves diferentes da cópia que fica no lugar deles, ou mais recentes que ela. Nada foi excluído; eles estão guardados aqui:
+
+{0}
+
+Se algum tiver progresso que você quer, feche o jogo e copie-o de volta.</translation>
+    </message>
+    <message>
+      <source>{0} changed file(s) to {1}</source>
+      <translation>{0} arquivo(s) alterado(s) para {1}</translation>
+    </message>
+    <message>
+      <source>Saves moved back to their route</source>
+      <translation>Saves devolvidos à sua rota</translation>
+    </message>
+    <message>
+      <source>A launch outside MO2&apos;s virtual file system ended while MO2 wasn&apos;t watching. What was played from the Steam folder went to the route, and the Steam saves are back:
+
+{0}</source>
+      <translation>Uma inicialização fora do sistema de arquivos virtual do MO2 terminou sem o MO2 acompanhar. O que foi jogado pela pasta da Steam foi para a rota, e os saves da Steam voltaram:
+
+{0}</translation>
+    </message>
+    <message>
+      <source>MO2 is still waiting for the last launch to start its game. If it doesn&apos;t start, MO2 puts the saves back within a minute and a half; try again then. The game was not started.</source>
+      <translation>O MO2 ainda está esperando a última inicialização abrir o jogo. Se ele não abrir, o MO2 devolve os saves em até um minuto e meio; tente de novo então. O jogo não foi iniciado.</translation>
+    </message>
+    <message>
+      <source>The game has closed, but {0} is still open. MO2 puts the Steam saves back when it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>O jogo fechou, mas {0} ainda está aberto. O MO2 devolve os saves da Steam quando ele fechar. Até lá, não inicie o jogo pela Steam.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingNativeProfile</name>
+    <message>
+      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads the DLLs at a mod&apos;s top level first, then the others, each by the mod list&apos;s order.</source>
+      <translation>Todas as DLLs nativas dos seus mods ativos, na ordem de carregamento, incluindo o Seamless Co-op. Desative uma para que ela não carregue sem desativar o mod, ou mova-a para mudar a ordem. Sem alterações, o MO2 carrega primeiro as DLLs no nível superior de um mod e depois as outras, cada uma pela ordem da lista de mods.</translation>
+    </message>
     <message>
       <source>{configured} configured · {enabled} enabled</source>
       <translation>{configured} configuradas · {enabled} ativadas</translation>
@@ -2775,10 +2835,6 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
     <message>
       <source>Show in folder</source>
       <translation>Mostrar na pasta</translation>
-    </message>
-    <message>
-      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads them all in the mod list&apos;s order.</source>
-      <translation>Todas as DLLs nativas dos seus mods ativos, na ordem de carregamento, Seamless Co-op incluído. Desligue uma para que não carregue sem desativar o mod, ou mova-a para mudar a ordem. Sem mudanças, o MO2 carrega todas na ordem da lista de mods.</translation>
     </message>
     <message>
       <source>Load order</source>
@@ -3749,7 +3805,7 @@ O save foi copiado, mas o .bak não pôde ser atualizado: {error}</translation>
     </message>
     <message>
       <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
-      <translation>&lt;p&gt;A rota de saves deste perfil ainda não tem saves do Elden Ring, enquanto a pasta da Steam tem. O jogo vai começar sem seus personagens, e um personagem novo será salvo só nesta rota.&lt;/p&gt;&lt;p&gt;Para jogar aqui com um personagem existente, abra Ferramentas &amp;gt; Save Isolation e use Transferir um save, ou crie ou importe um perfil de saves nomeado. Para usar os saves da Steam diretamente, escolha a rota global lá.&lt;/p&gt;&lt;p&gt;Rota: {folder}&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;A rota de saves deste perfil ainda não tem saves do Elden Ring, enquanto a pasta da Steam tem. O jogo vai começar sem seus personagens, e um personagem novo será salvo só nesta rota.&lt;/p&gt;&lt;p&gt;Para jogar aqui com um personagem existente, abra Ferramentas &amp;gt; Isolamento de saves e use Transferir um save, ou crie ou importe um perfil de saves nomeado. Para usar os saves da Steam diretamente, escolha a rota global lá.&lt;/p&gt;&lt;p&gt;Rota: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
       <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
@@ -4241,7 +4297,7 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
     </message>
     <message>
       <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
-      <translation>Alguns inicializadores não funcionam dentro da pasta virtual do MO2 (VFS). O MO2 os inicia fora, coloca os saves deste perfil no lugar para a execução e os recolhe quando o jogo fecha.</translation>
+      <translation>Alguns launchers não funcionam dentro da pasta virtual do MO2 (VFS). O MO2 os inicia fora, coloca os saves deste perfil no lugar para a execução e os recolhe quando o jogo fecha.</translation>
     </message>
     <message>
       <source>Starts the Seamless Co-op installed in the game folder, without MO2's mods. Activate a Seamless Co-op mod and it starts the game through MO2 instead.</source>
@@ -4301,7 +4357,7 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
     </message>
     <message>
       <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
-      <translation>Este nome aparece em Ferramentas &gt; Elden Ring Save Isolation. Se você escolher um save inicial abaixo, ele será copiado para este perfil de save nomeado. Elden Ring carrega o arquivo selecionado como ER0000 com sua própria extensão.</translation>
+      <translation>Este nome aparece em Ferramentas &gt; Isolamento de saves. Se você escolher um save inicial abaixo, ele será copiado para este perfil de save nomeado. Elden Ring carrega o arquivo selecionado como ER0000 com sua própria extensão.</translation>
     </message>
     <message>
       <source>1 file</source>
@@ -6398,7 +6454,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
     </message>
     <message>
       <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;As mudanças entre saves isolados por perfil e saves compartilhados na instância valem no próximo início do jogo. A mudança para ou do save global da Steam vale ao fechar a janela Save Isolation; o MO2 nunca precisa reiniciar para isso. O redirecionamento só altera arquivos de save; não muda o Easy Anti-Cheat nem o modo de rede e não torna saves com mods seguros para jogar online.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;As mudanças entre saves isolados por perfil e saves compartilhados na instância valem no próximo início do jogo. A mudança para ou do save global da Steam vale ao fechar a janela Isolamento de saves; o MO2 nunca precisa reiniciar para isso. O redirecionamento só altera arquivos de save; não muda o Easy Anti-Cheat nem o modo de rede e não torna saves com mods seguros para jogar online.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Data and launch</source>
@@ -6422,7 +6478,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
     </message>
     <message>
       <source>&lt;p&gt;The &lt;b&gt;Run&lt;/b&gt; button starts the selected program with the active profile. Its arrow opens shortcut options.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;O botão &lt;b&gt;Executar&lt;/b&gt; inicia o programa selecionado com o perfil ativo. A seta dele abre as opções de atalho.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;O botão &lt;b&gt;Iniciar&lt;/b&gt; inicia o programa selecionado com o perfil ativo. A seta dele abre as opções de atalho.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>More help</source>
@@ -6616,7 +6672,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
     </message>
     <message>
       <source>, </source>
-      <translation>,</translation>
+      <translation>, </translation>
     </message>
     <message>
       <source>
@@ -8839,7 +8895,7 @@ Para manter alguns arquivos, mova-os para um mod antes.</translation>
     </message>
     <message>
       <source>If checked, the new profile will use the default game INI settings instead of the global settings. Global settings are the settings you configure when running the game launcher directly, without MO2.</source>
-      <translation>Se marcado, o novo perfil usa as configurações INI padrão do jogo em vez das globais. As globais são as que você define ao executar o inicializador do jogo diretamente, sem o MO2.</translation>
+      <translation>Se marcado, o novo perfil usa as configurações INI padrão do jogo em vez das globais. As globais são as que você define ao executar o launcher do jogo diretamente, sem o MO2.</translation>
     </message>
   </context>
   <context>
@@ -9897,7 +9953,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Saves a copy you can restore before any file changes</source>
-      <translation>Salva uma cópia que você pode restaurar antes de alterar qualquer arquivo</translation>
+      <translation>Antes de alterar qualquer arquivo, salva uma cópia que você poderá restaurar</translation>
     </message>
     <message>
       <source>Mod exists</source>
@@ -9953,6 +10009,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SavesTab</name>
+    <message>
+      <source>Steam's saves</source>
+      <translation>Saves da Steam</translation>
+    </message>
     <message>
       <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
       <translation>Alguns destes saves ainda estão lá. Podem estar em uso, ou a exclusão foi cancelada.</translation>
@@ -10773,7 +10833,7 @@ Escolha quanto detalhe o MO2 grava em ModOrganizer.log. Info é o recomendado no
     </message>
     <message>
       <source>Animate tab changes, switches, the log panel, and the Run button. Turn this off to show every change immediately.</source>
-      <translation>Anima as trocas de aba, os interruptores, o painel de log e o botão Executar. Desative para mostrar cada mudança na hora.</translation>
+      <translation>Anima as trocas de aba, os interruptores, o painel de log e o botão Iniciar. Desative para mostrar cada mudança na hora.</translation>
     </message>
     <message>
       <source>Enable animations</source>
@@ -11247,7 +11307,7 @@ Restantes nesta hora: %3</translation>
       <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
 
 Start it anyway?</source>
-      <translation>"%1" iniciaria sem seus mods, e um jogo não usaria os saves deste perfil. Para iniciá-lo com eles, use Run.
+      <translation>"%1" iniciaria sem seus mods, e um jogo não usaria os saves deste perfil. Para iniciá-lo com eles, use Iniciar.
 
 Iniciar mesmo assim?</translation>
     </message>

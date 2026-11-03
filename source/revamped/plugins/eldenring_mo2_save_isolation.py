@@ -861,17 +861,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         def hides_this_game(session: Path) -> bool:
             # a session still hiding account folders is pending; one that only
             # kept unrouted output for review (beside its record and lock
-            # file) is not, nor one that hid the other game's saves
-            if not session.is_dir() or not any(
+            # file) is not, nor one that hid the other game's saves. A swap not
+            # yet returned is pending with no folder at all: an empty Steam folder
+            if not session.is_dir():
+                return False
+            hides_folders = any(
                 child.is_dir() and child.name != "unrouted-global"
                 for child in session.iterdir()
-            ):
-                return False
+            )
             try:
                 manifest = json.loads((session / "session.json").read_text(encoding="utf-8"))
                 hidden_from = str(manifest.get("global_save_root", ""))
+                swap = manifest.get("swap")
             except (OSError, UnicodeError, ValueError, AttributeError):
-                return True
+                return hides_folders
+            if not hides_folders and not (isinstance(swap, dict) and not swap.get("returned")):
+                return False
             return not hidden_from or os.path.normcase(os.path.abspath(hidden_from)) == global_saves
 
         try:
@@ -1853,7 +1858,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return
 
             source_path = Path(item.data(Qt.ItemDataRole.UserRole))
-            if source_path.suffix.casefold() not in (".sl2", ".co2", ".err") or self._is_reparse_point(
+            if source_path.suffix.casefold() not in self._known_save_suffixes() or self._is_reparse_point(
                 source_path
             ):
                 self._show_notice(
@@ -3608,8 +3613,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if source_path is not None:
                 if source_root is None:
                     raise ValueError(_tr("The selected save source has no known folder."))
+                # the same extensions "Start from" lists
+                known_suffixes = self._known_save_suffixes()
                 if (
-                    source_path.suffix.casefold() not in self.StartingSaveSuffixes
+                    source_path.suffix.casefold() not in known_suffixes
                     or self._is_reparse_point(source_path)
                     or not source_path.is_file()
                 ):
@@ -3622,7 +3629,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if (
                     relative_path.is_absolute()
                     or ".." in relative_path.parts
-                    or relative_path.suffix.casefold() not in self.StartingSaveSuffixes
+                    or relative_path.suffix.casefold() not in known_suffixes
                 ):
                     raise ValueError(_tr("The selected save path is outside its source folder."))
                 source_parent = source_path.parent
@@ -3857,9 +3864,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         layout.addWidget(buttons)
 
         def create_profile() -> None:
+            selected_source = source_combo.currentData()
+            # a route's save read during a launch could be the wrong one
+            busy_reason = self._transfer_blocked_reason() if selected_source else ""
+            if busy_reason:
+                self._show_notice(dialog, _tr("Close the game first"), busy_reason, "warning")
+                return
             try:
                 clean_name = self._validated_save_profile_name(name_edit.text())
-                selected_source = source_combo.currentData()
                 source_path = Path(selected_source[0]) if selected_source else None
                 source_root = Path(selected_source[1]) if selected_source else None
                 profile_id = self._create_named_save_profile(

@@ -367,6 +367,7 @@ int ModInfoDialog::exec()
 
   if (noCustomTabRequested) {
     m_core.settings().widgets().restoreIndex(ui->tabWidget);
+    leaveEmptyListPage();
   }
   perf.lap("restoreIndex");
 
@@ -375,6 +376,39 @@ int ModInfoDialog::exec()
   leaveMod();
 
   return r;
+}
+
+void ModInfoDialog::leaveEmptyListPage()
+{
+  // these only list what the mod has, so without anything they'd open on a blank
+  // page; Notes and the like stay, since they're there to be filled in
+  const auto* current = ui->tabWidget->currentWidget();
+
+  for (const auto& tabInfo : m_tabs) {
+    if (tabInfo.widget != current) {
+      continue;
+    }
+
+    const auto id        = tabInfo.tab->tabID();
+    const bool listsOnly = id == ModInfoTabIDs::TextFiles || id == ModInfoTabIDs::IniFiles ||
+                           id == ModInfoTabIDs::Images || id == ModInfoTabIDs::Esps ||
+                           id == ModInfoTabIDs::Conflicts;
+    if (!listsOnly || tabInfo.tab->hasData()) {
+      return;
+    }
+  }
+
+  for (int i = 0; i < ui->tabWidget->count(); ++i) {
+    for (const auto& tabInfo : m_tabs) {
+      if (tabInfo.widget == ui->tabWidget->widget(i) && tabInfo.tab->hasData()) {
+        ui->tabWidget->setCurrentIndex(i);
+        // set after the change, which clears it: the page the user chose stays
+        // the saved one
+        m_tabMovedAutomatically = true;
+        return;
+      }
+    }
+  }
 }
 
 void ModInfoDialog::leaveMod()
@@ -806,7 +840,9 @@ void ModInfoDialog::saveTabOrder() const
 
   m_core.settings().geometry().setModInfoTabOrder(names);
   // save last opened index
-  m_core.settings().widgets().saveIndex(ui->tabWidget);
+  if (!m_tabMovedAutomatically) {
+    m_core.settings().widgets().saveIndex(ui->tabWidget);
+  }
 }
 
 void ModInfoDialog::onOriginModified(int originID)
@@ -883,6 +919,7 @@ void ModInfoDialog::onTabSelectionChanged()
     return;
   }
 
+  m_tabMovedAutomatically = false;
   updatePageHeader();
 
   // this will call firstActivation() on the tab if needed

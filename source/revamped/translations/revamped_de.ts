@@ -1345,7 +1345,7 @@ Möchtest du wirklich fortfahren?</translation>
     </message>
     <message>
       <source>The Run button and shortcuts show the program's own icon</source>
-      <translation>Ausführen-Schaltfläche und Verknüpfungen zeigen das eigene Symbol des Programms</translation>
+      <translation>Starten-Schaltfläche und Verknüpfungen zeigen das eigene Symbol des Programms</translation>
     </message>
     <message>
       <source>Desktop shortcuts show the program's own icon</source>
@@ -1413,7 +1413,7 @@ Möchtest du wirklich fortfahren?</translation>
 The programs that are not hidden appear in the main window's Program list, next to Run.</source>
       <translation>Jedes Programm, das Mod Organizer mit deinen Mods starten soll: das Spiel, sein Launcher, ein Script Extender oder Werkzeuge wie xEdit oder BodySlide. Von hier gestartete Programme sehen den virtuellen Spielordner und finden so die Mods des verwendeten Profils.
 
-Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste neben Ausführen.</translation>
+Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste neben Starten.</translation>
     </message>
     <message>
       <source>OK</source>
@@ -1934,6 +1934,18 @@ Installiere die Mod neu, um das zu ändern.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Saves may mix</source>
+      <translation>Spielstände können sich vermischen</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t give ELDEN RING Reforged its own save file in this version of the game</source>
+      <translation>MO2 kann ELDEN RING Reforged in dieser Spielversion keine eigene Spielstanddatei zuweisen</translation>
+    </message>
+    <message>
+      <source>Reforged would use ER0000.sl2, the save of your other mods, instead of ER0000.err, and could overwrite it. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>Reforged würde statt ER0000.err die Datei ER0000.sl2 verwenden, den Spielstand deiner anderen Mods, und könnte ihn überschreiben. Das passiert meist nach einem Spielupdate: Suche nach einer neuen Version von MO2 Revamped.</translation>
+    </message>
+    <message>
       <source>Could not prepare the online saves</source>
       <translation>Die Online-Spielstände konnten nicht vorbereitet werden</translation>
     </message>
@@ -1971,7 +1983,7 @@ Installiere die Mod neu, um das zu ändern.</translation>
     </message>
     <message>
       <source>MO2 found a previous save-isolation session that it could not restore automatically. The original saves remain in the MO2 Revamped recovery folder. Do not launch Elden Ring or Steam until the saved folders have been restored.</source>
-      <translation>MO2 hat eine frühere Spielstandtrennungs-Sitzung gefunden, die es nicht automatisch wiederherstellen konnte. Die Originalspielstände liegen im Wiederherstellungsordner von MO2 Revamped. Starte Elden Ring oder Steam erst, wenn die gespeicherten Ordner wiederhergestellt sind.</translation>
+      <translation>MO2 hat eine frühere Spielstand-Isolations-Sitzung gefunden, die es nicht automatisch wiederherstellen konnte. Die Originalspielstände liegen im Wiederherstellungsordner von MO2 Revamped. Starte Elden Ring oder Steam erst, wenn die gespeicherten Ordner wiederhergestellt sind.</translation>
     </message>
     <message>
       <source>Load enabled mod DLLs through MO2. Some mods require an extension API that this plugin does not provide.</source>
@@ -1997,21 +2009,21 @@ Installiere die Mod neu, um das zu ändern.</translation>
       <source>The save mode, named save profile, or MO2 profile-specific-save setting changed after MO2 loaded this profile. The game was not started because the active save mapping may still point to the previous folder.
 
 Restart MO2, or switch to another profile and back, before launching Elden Ring.</source>
-      <translation>Speichermodus, benanntes Speicherprofil oder die profilspezifische Spielstandeinstellung von MO2 hat sich geändert, nachdem MO2 dieses Profil geladen hat. Das Spiel wurde nicht gestartet, weil die aktive Spielstandzuordnung noch auf den vorherigen Ordner zeigen könnte.
+      <translation>Speichermodus, benanntes Spielstandprofil oder die profilspezifische Spielstandeinstellung von MO2 hat sich geändert, nachdem MO2 dieses Profil geladen hat. Das Spiel wurde nicht gestartet, weil die aktive Spielstandzuordnung noch auf den vorherigen Ordner zeigen könnte.
 
 Starte MO2 neu oder wechsle zu einem anderen Profil und zurück, bevor du Elden Ring startest.</translation>
     </message>
     <message>
       <source>Named Elden Ring save profile is missing</source>
-      <translation>Benanntes Elden-Ring-Speicherprofil fehlt</translation>
+      <translation>Benanntes Elden-Ring-Spielstandprofil fehlt</translation>
     </message>
     <message>
       <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
-      <translation>Das ausgewählte benannte Speicherprofil wurde nicht gefunden oder seine Metadaten sind ungültig. Das Spiel wurde nicht gestartet. Öffne Werkzeuge &gt; Spielstand-Isolation und wähle ein verfügbares Profil oder stelle den fehlenden Profilordner wieder her.</translation>
+      <translation>Das ausgewählte benannte Spielstandprofil wurde nicht gefunden oder seine Metadaten sind ungültig. Das Spiel wurde nicht gestartet. Öffne Werkzeuge &gt; Spielstand-Isolation und wähle ein verfügbares Profil oder stelle den fehlenden Profilordner wieder her.</translation>
     </message>
     <message>
       <source>Elden Ring save isolation is not active</source>
-      <translation>Elden-Ring-Spielstandtrennung ist nicht aktiv</translation>
+      <translation>Elden-Ring-Spielstand-Isolation ist nicht aktiv</translation>
     </message>
     <message>
       <source>This profile is set to use isolated Elden Ring saves, but MO2's 'Use profile-specific Save Games' option is still off in this session. The saved route needs that setting. Restart MO2 to reload the route before launching. The game was not started, and the global Steam save was left untouched.</source>
@@ -2194,10 +2206,6 @@ Das Spiel wurde nicht gestartet.</translation>
       <translation>Das native Revamped-Element '{0}' wurde in der zugeordneten MO2-Mod '{1}' nicht gefunden. Die ursprüngliche Struktur kann natives/... behalten; das MO2-Layout muss es unter DLLs/ ablegen.</translation>
     </message>
     <message>
-      <source>The Revamped native profile resolves more than one entry to '{0}'. Keep only one entry for that game path.</source>
-      <translation>Das native Revamped-Profil löst mehr als einen Eintrag zu '{0}' auf. Behalte nur einen Eintrag für diesen Spielpfad.</translation>
-    </message>
-    <message>
       <source>MO2 has no active file origin for Revamped native '{0}'.</source>
       <translation>MO2 hat keinen aktiven Dateiursprung für das native Revamped-Element '{0}'.</translation>
     </message>
@@ -2291,7 +2299,7 @@ Das Spiel wurde nicht gestartet.</translation>
     </message>
     <message>
       <source>The game uses only one: {0}, the one with the highest priority. The rule changes of the others ({1}) won't apply, and they may not work properly. To use another one, change its priority in the mod list or turn off the mods you don't need.</source>
-      <translation>Das Spiel verwendet nur eine: {0}, die mit der höchsten Priorität. Die Regeländerungen der anderen ({1}) werden nicht angewendet, und sie funktionieren möglicherweise nicht richtig. Um eine andere zu verwenden, ändere ihre Priorität in der Modliste oder deaktiviere die Mods, die du nicht brauchst.</translation>
+      <translation>Das Spiel verwendet nur eine: {0}, die mit der höchsten Priorität. Die Regeländerungen der anderen ({1}) werden nicht angewendet, und sie funktionieren möglicherweise nicht richtig. Um eine andere zu verwenden, ändere ihre Priorität in der Mod-Liste oder deaktiviere die Mods, die du nicht brauchst.</translation>
     </message>
     <message>
       <source>Don't warn again for these mods</source>
@@ -2359,7 +2367,7 @@ Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und ko
     </message>
     <message>
       <source>Could not start the launcher</source>
-      <translation>Der Starter konnte nicht gestartet werden</translation>
+      <translation>Der Launcher konnte nicht gestartet werden</translation>
     </message>
     <message>
       <source>MO2 could not start {0} outside its virtual file system. The game was not started.</source>
@@ -2401,9 +2409,61 @@ Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und ko
       <source>Reforged's online version is on. Turn that mod off to choose another program.</source>
       <translation>Die Online-Version von Reforged ist aktiv. Deaktiviere diese Mod, um ein anderes Programm zu wählen.</translation>
     </message>
+    <message>
+      <source>{0} is still open as MO2 closes. The Steam saves come back the next time MO2 runs, once it has closed. Don&apos;t start the game from Steam until then.</source>
+      <translation>{0} ist noch geöffnet, während MO2 schließt. Die Steam-Spielstände kommen beim nächsten Start von MO2 zurück, sobald es geschlossen ist. Starte das Spiel bis dahin nicht über Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: {0} is still open. Close it and try again. The game was not started.</source>
+      <translation>Die Steam-Spielstandordner, die ein früherer Start ausgeblendet hat, können noch nicht wiederhergestellt werden: {0} ist noch geöffnet. Schließe es und versuche es erneut. Das Spiel wurde nicht gestartet.</translation>
+    </message>
+    <message>
+      <source>Saves kept aside</source>
+      <translation>Spielstände beiseitegelegt</translation>
+    </message>
+    <message>
+      <source>MO2 found saves that differ from, or are newer than, the copy that takes their place. Nothing was deleted; they are kept here:
+
+{0}
+
+If one holds progress you want, close the game and copy it back.</source>
+      <translation>MO2 hat Spielstände gefunden, die sich von der Kopie an ihrer Stelle unterscheiden oder neuer sind als sie. Nichts wurde gelöscht; sie liegen hier:
+
+{0}
+
+Wenn einer davon Fortschritt enthält, den du behalten möchtest, schließe das Spiel und kopiere ihn zurück.</translation>
+    </message>
+    <message>
+      <source>{0} changed file(s) to {1}</source>
+      <translation>{0} geänderte Datei(en) nach {1}</translation>
+    </message>
+    <message>
+      <source>Saves moved back to their route</source>
+      <translation>Spielstände zurück in ihrer Route</translation>
+    </message>
+    <message>
+      <source>A launch outside MO2&apos;s virtual file system ended while MO2 wasn&apos;t watching. What was played from the Steam folder went to the route, and the Steam saves are back:
+
+{0}</source>
+      <translation>Ein Start außerhalb des virtuellen Dateisystems von MO2 endete, ohne dass MO2 ihn überwachte. Was aus dem Steam-Ordner gespielt wurde, ist in die Route gewandert, und die Steam-Spielstände sind zurück:
+
+{0}</translation>
+    </message>
+    <message>
+      <source>MO2 is still waiting for the last launch to start its game. If it doesn&apos;t start, MO2 puts the saves back within a minute and a half; try again then. The game was not started.</source>
+      <translation>MO2 wartet noch darauf, dass der letzte Start sein Spiel startet. Startet es nicht, stellt MO2 die Spielstände innerhalb von anderthalb Minuten wieder her; versuche es dann erneut. Das Spiel wurde nicht gestartet.</translation>
+    </message>
+    <message>
+      <source>The game has closed, but {0} is still open. MO2 puts the Steam saves back when it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>Das Spiel wurde geschlossen, aber {0} ist noch geöffnet. MO2 stellt die Steam-Spielstände wieder her, sobald es geschlossen wird. Starte das Spiel bis dahin nicht über Steam.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingNativeProfile</name>
+    <message>
+      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads the DLLs at a mod&apos;s top level first, then the others, each by the mod list&apos;s order.</source>
+      <translation>Alle nativen DLLs deiner aktiven Mods in Ladereihenfolge, einschließlich Seamless Co-op. Schalte eine aus, damit sie nicht geladen wird, ohne ihren Mod auszuschalten, oder verschiebe sie, um die Reihenfolge zu ändern. Ohne Änderungen lädt MO2 zuerst die DLLs auf der obersten Ebene eines Mods, dann die übrigen, jeweils in der Reihenfolge der Mod-Liste.</translation>
+    </message>
     <message>
       <source>{configured} configured · {enabled} enabled</source>
       <translation>{configured} konfiguriert · {enabled} aktiviert</translation>
@@ -2777,10 +2837,6 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <translation>Im Ordner anzeigen</translation>
     </message>
     <message>
-      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads them all in the mod list&apos;s order.</source>
-      <translation>Alle nativen DLLs deiner aktiven Mods in Ladereihenfolge, Seamless Co-op eingeschlossen. Schalte eine aus, damit sie nicht geladen wird, ohne ihre Mod zu deaktivieren, oder verschiebe sie, um die Reihenfolge zu ändern. Ohne Änderungen lädt MO2 alle in der Reihenfolge der Mod-Liste.</translation>
-    </message>
-    <message>
       <source>Load order</source>
       <translation>Ladereihenfolge</translation>
     </message>
@@ -2869,7 +2925,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Choose Elden Ring save routes and named game save profiles, inspect the active save path, and import or transfer .sl2 saves.</source>
-      <translation>Wähle Elden-Ring-Speicherrouten und benannte Speicherprofile, prüfe den aktiven Speicherpfad und importiere oder übertrage .sl2-Spielstände.</translation>
+      <translation>Wähle Elden-Ring-Spielstandrouten und benannte Spielstandprofile, prüfe den aktiven Speicherpfad und importiere oder übertrage .sl2-Spielstände.</translation>
     </message>
     <message>
       <source>Save Isolation</source>
@@ -2877,7 +2933,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Select the Elden Ring save route and named game save for this profile.</source>
-      <translation>Wähle die Elden-Ring-Speicherroute und den benannten Spielstand für dieses Profil.</translation>
+      <translation>Wähle die Elden-Ring-Spielstandroute und den benannten Spielstand für dieses Profil.</translation>
     </message>
     <message>
       <source>Elden Ring profile options</source>
@@ -2893,7 +2949,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Save routes</source>
-      <translation>Speicherrouten</translation>
+      <translation>Spielstandrouten</translation>
     </message>
     <message>
       <source>Choose a destination…</source>
@@ -2925,11 +2981,11 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Game save profile</source>
-      <translation>Speicherprofil</translation>
+      <translation>Spielstandprofil</translation>
     </message>
     <message>
       <source>Create a named game save profile</source>
-      <translation>Benanntes Speicherprofil erstellen</translation>
+      <translation>Benanntes Spielstandprofil erstellen</translation>
     </message>
     <message>
       <source>Create a separate named save choice managed in Tools &gt; Save Isolation.</source>
@@ -2941,7 +2997,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>This name distinguishes the Elden Ring save profile in MO2. The game loads the selected file as ER0000.sl2.</source>
-      <translation>Dieser Name kennzeichnet das Elden-Ring-Speicherprofil in MO2. Das Spiel lädt die gewählte Datei als ER0000.sl2.</translation>
+      <translation>Dieser Name kennzeichnet das Elden-Ring-Spielstandprofil in MO2. Das Spiel lädt die gewählte Datei als ER0000.sl2.</translation>
     </message>
     <message>
       <source>Optional starting save</source>
@@ -2969,11 +3025,11 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Create Elden Ring save profile</source>
-      <translation>Elden-Ring-Speicherprofil erstellen</translation>
+      <translation>Elden-Ring-Spielstandprofil erstellen</translation>
     </message>
     <message>
       <source>Create a save profile</source>
-      <translation>Speicherprofil erstellen</translation>
+      <translation>Spielstandprofil erstellen</translation>
     </message>
     <message>
       <source>Start with a fresh save or copy an existing save into a separate profile.</source>
@@ -2985,7 +3041,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Save profile name</source>
-      <translation>Name des Speicherprofils</translation>
+      <translation>Name des Spielstandprofils</translation>
     </message>
     <message>
       <source>For example: Modded journey</source>
@@ -3005,11 +3061,11 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Start a new game with an empty save profile</source>
-      <translation>Neues Spiel mit leerem Speicherprofil beginnen</translation>
+      <translation>Neues Spiel mit leerem Spielstandprofil beginnen</translation>
     </message>
     <message>
       <source>Save profile folder</source>
-      <translation>Speicherprofilordner</translation>
+      <translation>Spielstandprofilordner</translation>
     </message>
     <message>
       <source>Elden Ring Save Isolation</source>
@@ -3021,7 +3077,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Choose the save route for the active MO2 profile.</source>
-      <translation>Wähle die Speicherroute für das aktive MO2-Profil.</translation>
+      <translation>Wähle die Spielstandroute für das aktive MO2-Profil.</translation>
     </message>
     <message>
       <source>Active MO2 profile</source>
@@ -3093,7 +3149,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Choose one .sl2 file and copy it once between MO2 profile, instance-shared, or global save routes.</source>
-      <translation>Wähle eine .sl2-Datei und kopiere sie einmalig zwischen MO2-Profil-, instanzweit geteilter oder globaler Speicherroute.</translation>
+      <translation>Wähle eine .sl2-Datei und kopiere sie einmalig zwischen MO2-Profil-, instanzweit geteilter oder globaler Spielstandroute.</translation>
     </message>
     <message>
       <source>Restart unavailable</source>
@@ -3101,7 +3157,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>The save route is saved, but MO2 could not start its restart. Restart MO2 manually before launching Elden Ring.</source>
-      <translation>Die Speicherroute ist gespeichert, aber MO2 konnte den Neustart nicht einleiten. Starte MO2 manuell neu, bevor du Elden Ring startest.</translation>
+      <translation>Die Spielstandroute ist gespeichert, aber MO2 konnte den Neustart nicht einleiten. Starte MO2 manuell neu, bevor du Elden Ring startest.</translation>
     </message>
     <message>
       <source>Separate saves per MO2 profile</source>
@@ -3173,7 +3229,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Enter a name for this game save profile.</source>
-      <translation>Gib einen Namen für dieses Speicherprofil ein.</translation>
+      <translation>Gib einen Namen für dieses Spielstandprofil ein.</translation>
     </message>
     <message>
       <source>Use a name between 1 and 64 characters.</source>
@@ -3197,19 +3253,19 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Named save profiles are unavailable in global Steam mode.</source>
-      <translation>Benannte Speicherprofile sind im globalen Steam-Modus nicht verfügbar.</translation>
+      <translation>Benannte Spielstandprofile sind im globalen Steam-Modus nicht verfügbar.</translation>
     </message>
     <message>
       <source>A save profile with this name already exists here.</source>
-      <translation>Hier existiert bereits ein Speicherprofil mit diesem Namen.</translation>
+      <translation>Hier existiert bereits ein Spielstandprofil mit diesem Namen.</translation>
     </message>
     <message>
       <source>A save profile with this identifier already exists.</source>
-      <translation>Ein Speicherprofil mit dieser Kennung existiert bereits.</translation>
+      <translation>Ein Spielstandprofil mit dieser Kennung existiert bereits.</translation>
     </message>
     <message>
       <source>Create save profile</source>
-      <translation>Speicherprofil erstellen</translation>
+      <translation>Spielstandprofil erstellen</translation>
     </message>
     <message>
       <source>No active Elden Ring profile</source>
@@ -3265,11 +3321,11 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Named game save profiles require profile-isolated or instance-shared saves. Global mode uses the Steam save folder.</source>
-      <translation>Benannte Speicherprofile erfordern profilgetrennte oder instanzweit geteilte Spielstände. Der globale Modus nutzt den Steam-Spielstandordner.</translation>
+      <translation>Benannte Spielstandprofile erfordern profilgetrennte oder instanzweit geteilte Spielstände. Der globale Modus nutzt den Steam-Spielstandordner.</translation>
     </message>
     <message>
       <source>the named game save profile</source>
-      <translation>das benannte Speicherprofil</translation>
+      <translation>das benannte Spielstandprofil</translation>
     </message>
     <message>
       <source>the new instance's standard save folder</source>
@@ -3277,7 +3333,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Copy one .sl2 save between storage routes. The selected MO2 profile is {profile}. Its account folder is preserved, and the copy is named ER0000.sl2 at the destination.</source>
-      <translation>Kopiere einen .sl2-Spielstand zwischen Speicherrouten. Das ausgewählte MO2-Profil ist {profile}. Sein Kontoordner bleibt erhalten, und die Kopie heißt am Ziel ER0000.sl2.</translation>
+      <translation>Kopiere einen .sl2-Spielstand zwischen Spielstandrouten. Das ausgewählte MO2-Profil ist {profile}. Sein Kontoordner bleibt erhalten, und die Kopie heißt am Ziel ER0000.sl2.</translation>
     </message>
     <message>
       <source>Source and destination are the same folder. Nothing will be copied.</source>
@@ -3329,15 +3385,15 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Named game save profiles are only available with profile-isolated or instance-shared saves.</source>
-      <translation>Benannte Speicherprofile sind nur mit profilgetrennten oder instanzweit geteilten Spielständen verfügbar.</translation>
+      <translation>Benannte Spielstandprofile sind nur mit profilgetrennten oder instanzweit geteilten Spielständen verfügbar.</translation>
     </message>
     <message>
       <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2; importing a save leaves its source intact.</source>
-      <translation>Jedes benannte Speicherprofil hat einen eigenen Ordner. MO2 präsentiert den gewählten Spielstand Elden Ring als ER0000.sl2; beim Import bleibt die Quelle unverändert.</translation>
+      <translation>Jedes benannte Spielstandprofil hat einen eigenen Ordner. MO2 präsentiert den gewählten Spielstand Elden Ring als ER0000.sl2; beim Import bleibt die Quelle unverändert.</translation>
     </message>
     <message>
       <source>&lt;b&gt;Save profile unavailable.&lt;/b&gt; Choose an available profile or the standard saves before saving.</source>
-      <translation>&lt;b&gt;Speicherprofil nicht verfügbar.&lt;/b&gt; Wähle vor dem Speichern ein verfügbares Profil oder die Standard-Spielstände.</translation>
+      <translation>&lt;b&gt;Spielstandprofil nicht verfügbar.&lt;/b&gt; Wähle vor dem Speichern ein verfügbares Profil oder die Standard-Spielstände.</translation>
     </message>
     <message>
       <source>Save folder not found</source>
@@ -3349,15 +3405,15 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
     </message>
     <message>
       <source>Named game save profiles are available with profile-isolated or instance-shared saves.</source>
-      <translation>Benannte Speicherprofile sind mit profilgetrennten oder instanzweit geteilten Spielständen verfügbar.</translation>
+      <translation>Benannte Spielstandprofile sind mit profilgetrennten oder instanzweit geteilten Spielständen verfügbar.</translation>
     </message>
     <message>
       <source>Save profile unavailable</source>
-      <translation>Speicherprofil nicht verfügbar</translation>
+      <translation>Spielstandprofil nicht verfügbar</translation>
     </message>
     <message>
       <source>Choose an available named save profile before saving.</source>
-      <translation>Wähle vor dem Speichern ein verfügbares benanntes Speicherprofil.</translation>
+      <translation>Wähle vor dem Speichern ein verfügbares benanntes Spielstandprofil.</translation>
     </message>
     <message>
       <source>This shares the same save folder with Steam and all MO2 instances that use the global path. Modded play can alter the vanilla character.
@@ -3377,11 +3433,11 @@ Wähle „Globalen Steam-Spielstand verwenden“, um diese Route für das aktuel
     </message>
     <message>
       <source>This name appears in Tools &gt; Elden Ring Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000.sl2.</source>
-      <translation>Dieser Name erscheint unter Werkzeuge &gt; Spielstand-Isolation. Wenn du unten einen Start-Spielstand wählst, wird er in dieses benannte Speicherprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000.sl2.</translation>
+      <translation>Dieser Name erscheint unter Werkzeuge &gt; Spielstand-Isolation. Wenn du unten einen Start-Spielstand wählst, wird er in dieses benannte Spielstandprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000.sl2.</translation>
     </message>
     <message>
       <source>Optional. Leave this unchecked to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
-      <translation>Optional. Lass das Feld leer, um Standard-Spielstände zu nutzen. Benannte Speicherprofile kannst du später unter Werkzeuge &gt; Spielstand-Isolation erstellen.</translation>
+      <translation>Optional. Lass das Feld leer, um Standard-Spielstände zu nutzen. Benannte Spielstandprofile kannst du später unter Werkzeuge &gt; Spielstand-Isolation erstellen.</translation>
     </message>
     <message>
       <source>Source folder: {path}</source>
@@ -3449,15 +3505,15 @@ Das vorherige Ziel wurde verschoben nach:
     </message>
     <message>
       <source>The selected named save profile is invalid.</source>
-      <translation>Das ausgewählte benannte Speicherprofil ist ungültig.</translation>
+      <translation>Das ausgewählte benannte Spielstandprofil ist ungültig.</translation>
     </message>
     <message>
       <source>Missing save profile ({id})</source>
-      <translation>Fehlendes Speicherprofil ({id})</translation>
+      <translation>Fehlendes Spielstandprofil ({id})</translation>
     </message>
     <message>
       <source>The save profile folder is a link and cannot be used: {path}</source>
-      <translation>Der Speicherprofilordner ist eine Verknüpfung und kann nicht verwendet werden: {path}</translation>
+      <translation>Der Spielstandprofilordner ist eine Verknüpfung und kann nicht verwendet werden: {path}</translation>
     </message>
     <message>
       <source>The selected save source has no known folder.</source>
@@ -3469,7 +3525,7 @@ Das vorherige Ziel wurde verschoben nach:
     </message>
     <message>
       <source>Could not create save profile</source>
-      <translation>Speicherprofil konnte nicht erstellt werden</translation>
+      <translation>Spielstandprofil konnte nicht erstellt werden</translation>
     </message>
     <message>
       <source>&lt;b&gt;Selected save folder:&lt;/b&gt;&lt;br&gt;{path}</source>
@@ -3485,7 +3541,7 @@ Das vorherige Ziel wurde verschoben nach:
     </message>
     <message>
       <source>The current save route could not be read. See the MO2 log.</source>
-      <translation>Die aktuelle Speicherroute konnte nicht gelesen werden. Siehe MO2-Protokoll.</translation>
+      <translation>Die aktuelle Spielstandroute konnte nicht gelesen werden. Siehe MO2-Protokoll.</translation>
     </message>
     <message>
       <source>&lt;b&gt;Global Steam route not applied.&lt;/b&gt; The previously saved mode remains active.</source>
@@ -3493,7 +3549,7 @@ Das vorherige Ziel wurde verschoben nach:
     </message>
     <message>
       <source>The selected save route could not be verified after writing. The menu will return to the route currently stored on disk.</source>
-      <translation>Die gewählte Speicherroute konnte nach dem Schreiben nicht geprüft werden. Das Menü kehrt zur aktuell auf der Festplatte gespeicherten Route zurück.</translation>
+      <translation>Die gewählte Spielstandroute konnte nach dem Schreiben nicht geprüft werden. Das Menü kehrt zur aktuell auf der Festplatte gespeicherten Route zurück.</translation>
     </message>
     <message>
       <source>Could not save route</source>
@@ -3509,7 +3565,7 @@ Das vorherige Ziel wurde verschoben nach:
     </message>
     <message>
       <source>Shared game save profile — {save}</source>
-      <translation>Geteiltes Speicherprofil — {save}</translation>
+      <translation>Geteiltes Spielstandprofil — {save}</translation>
     </message>
     <message>
       <source>Current MO2 instance</source>
@@ -3567,15 +3623,15 @@ Das vorherige Ziel wurde verschoben nach:
     </message>
     <message>
       <source>&lt;b&gt;Saved for {profile}.&lt;/b&gt; The selected local save route will be used the next time Elden Ring starts. MO2 does not need to restart.</source>
-      <translation>&lt;b&gt;Für {profile} gespeichert.&lt;/b&gt; Die gewählte lokale Speicherroute wird beim nächsten Start von Elden Ring verwendet. MO2 muss nicht neu starten.</translation>
+      <translation>&lt;b&gt;Für {profile} gespeichert.&lt;/b&gt; Die gewählte lokale Spielstandroute wird beim nächsten Start von Elden Ring verwendet. MO2 muss nicht neu starten.</translation>
     </message>
     <message>
       <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; Restart MO2 before launching Elden Ring to apply the Steam save route.</source>
-      <translation>&lt;b&gt;Route für {profile} gespeichert.&lt;/b&gt; Starte MO2 neu, bevor du Elden Ring startest, um die Steam-Speicherroute anzuwenden.</translation>
+      <translation>&lt;b&gt;Route für {profile} gespeichert.&lt;/b&gt; Starte MO2 neu, bevor du Elden Ring startest, um die Steam-Spielstandroute anzuwenden.</translation>
     </message>
     <message>
       <source>MO2 game save profile — {profile}: {save}</source>
-      <translation>MO2-Speicherprofil — {profile}: {save}</translation>
+      <translation>MO2-Spielstandprofil — {profile}: {save}</translation>
     </message>
     <message>
       <source>{count} save file(s) found. Select exactly one file to copy.</source>
@@ -3633,11 +3689,11 @@ Wiederherstellungsfehler: {error}</translation>
     </message>
     <message>
       <source>&lt;b&gt;Instance-shared modded save selected.&lt;/b&gt; Game save profile: {save}. Profiles in this instance can choose the same named profile to share it.</source>
-      <translation>&lt;b&gt;Instanzweit geteilter gemoddeter Spielstand ausgewählt.&lt;/b&gt; Speicherprofil: {save}. Profile dieser Instanz können dasselbe benannte Profil wählen, um es zu teilen.</translation>
+      <translation>&lt;b&gt;Instanzweit geteilter gemoddeter Spielstand ausgewählt.&lt;/b&gt; Spielstandprofil: {save}. Profile dieser Instanz können dasselbe benannte Profil wählen, um es zu teilen.</translation>
     </message>
     <message>
       <source>&lt;b&gt;Profile-isolated save selected.&lt;/b&gt; Game save profile: {save}.</source>
-      <translation>&lt;b&gt;Profilgetrennter Spielstand ausgewählt.&lt;/b&gt; Speicherprofil: {save}.</translation>
+      <translation>&lt;b&gt;Profilgetrennter Spielstand ausgewählt.&lt;/b&gt; Spielstandprofil: {save}.</translation>
     </message>
     <message>
       <source>Elden Ring is running, or MO2 could not confirm that it is closed. Close the game and try again; nothing was copied.</source>
@@ -3649,7 +3705,7 @@ Wiederherstellungsfehler: {error}</translation>
     </message>
     <message>
       <source>Copy one save between storage routes: a vanilla .sl2 or a Seamless Co-op .co2. The selected MO2 profile is {profile}. Its account folder is preserved, and the copy is named ER0000 at the destination with the same extension.</source>
-      <translation>Kopiert einen Spielstand zwischen Speicherrouten: ein normales .sl2 oder ein .co2 von Seamless Co-op. Das gewählte MO2-Profil ist {profile}. Sein Kontoordner bleibt erhalten, und die Kopie heißt am Ziel ER0000 mit derselben Endung.</translation>
+      <translation>Kopiert einen Spielstand zwischen Spielstandrouten: ein normales .sl2 oder ein .co2 von Seamless Co-op. Das gewählte MO2-Profil ist {profile}. Sein Kontoordner bleibt erhalten, und die Kopie heißt am Ziel ER0000 mit derselben Endung.</translation>
     </message>
     <message>
       <source>Choose a regular .sl2 or .co2 save file.</source>
@@ -3749,7 +3805,7 @@ Der Spielstand wurde kopiert, aber seine .bak konnte nicht aktualisiert werden: 
     </message>
     <message>
       <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Die Spielstandroute dieses Profils hat noch keine Elden-Ring-Spielstände, der Steam-Ordner aber schon. Das Spiel startet ohne deine Charaktere, und ein neuer Charakter wird nur in dieser Route gespeichert.&lt;/p&gt;&lt;p&gt;Um hier mit einem vorhandenen Charakter zu spielen, öffne Werkzeuge &amp;gt; Save Isolation und nutze „Einen Spielstand übertragen“ oder erstelle bzw. importiere ein benanntes Spielstandprofil. Für die Steam-Spielstände wähle dort die globale Route.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Die Spielstandroute dieses Profils hat noch keine Elden-Ring-Spielstände, der Steam-Ordner aber schon. Das Spiel startet ohne deine Charaktere, und ein neuer Charakter wird nur in dieser Route gespeichert.&lt;/p&gt;&lt;p&gt;Um hier mit einem vorhandenen Charakter zu spielen, öffne Werkzeuge &amp;gt; Spielstand-Isolation und nutze „Einen Spielstand übertragen“ oder erstelle bzw. importiere ein benanntes Spielstandprofil. Für die Steam-Spielstände wähle dort die globale Route.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
       <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
@@ -4105,7 +4161,7 @@ Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the r
 
 Mods mit eigener Spielstanddatei (die .co2 von Seamless Co-op, die .cnv von Convergence) legen sie neben die normale, in derselben Route.
 
-Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
+Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
     </message>
     <message>
       <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
@@ -4117,7 +4173,7 @@ Launchers that fail inside MO2's virtual folder start outside it: MO2 puts the r
 
 Mods mit eigener Spielstanddatei (die .co2 von Seamless Co-op) legen sie neben die normale, in derselben Route.
 
-Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
+Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: MO2 legt die Spielstände der Route für die Sitzung in den Ordner von Steam und holt sie danach zurück. Vor jedem Start wird die Route gesichert.</translation>
     </message>
     <message>
       <source>Rename save profile</source>
@@ -4301,7 +4357,7 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
     </message>
     <message>
       <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
-      <translation>Dieser Name erscheint unter Werkzeuge &gt; Elden Ring Save Isolation. Wählst du unten einen Startspielstand, wird er in dieses benannte Spielstandprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000 mit ihrer eigenen Endung.</translation>
+      <translation>Dieser Name erscheint unter Werkzeuge &gt; Spielstand-Isolation. Wählst du unten einen Startspielstand, wird er in dieses benannte Spielstandprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000 mit ihrer eigenen Endung.</translation>
     </message>
     <message>
       <source>1 file</source>
@@ -5626,7 +5682,7 @@ Ort: %3</translation>
     <message>
       <source>The copy's profiles could not be created, so it shares its mod lists with the original:
 %1</source>
-      <translation>Die Profile der Kopie konnten nicht erstellt werden, daher teilt sie ihre Modlisten mit dem Original:
+      <translation>Die Profile der Kopie konnten nicht erstellt werden, daher teilt sie ihre Mod-Listen mit dem Original:
 %1</translation>
     </message>
     <message>
@@ -6106,7 +6162,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Elden Ring Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
-      <translation>&lt;p&gt;Diese Liste zeigt die Spielstände in dem Ordner, der dem aktiven MO2-Profil zugewiesen ist. Fahre mit der Maus über einen Spielstand, um weitere Details zu sehen, wenn das Spiel-Plugin sie bereitstellt.&lt;/p&gt;&lt;p&gt;Fehlen einem ausgewählten Spielstand benötigte Plugins, verwende „Benötigte Plugins wiederherstellen...“, um die installierten Mods zu aktivieren, die sie bereitstellen. Du kannst den Spielstand auch löschen oder seinen Ordner öffnen. Für Elden Ring wählst du die Speicherroute und das benannte Speicherprofil unter Werkzeuge &amp;gt; Spielstand-Isolation.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Diese Liste zeigt die Spielstände in dem Ordner, der dem aktiven MO2-Profil zugewiesen ist. Fahre mit der Maus über einen Spielstand, um weitere Details zu sehen, wenn das Spiel-Plugin sie bereitstellt.&lt;/p&gt;&lt;p&gt;Fehlen einem ausgewählten Spielstand benötigte Plugins, verwende „Benötigte Plugins wiederherstellen...“, um die installierten Mods zu aktivieren, die sie bereitstellen. Du kannst den Spielstand auch löschen oder seinen Ordner öffnen. Für Elden Ring wählst du die Spielstandroute und das benannte Spielstandprofil unter Werkzeuge &amp;gt; Spielstand-Isolation.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Downloaded archives for this instance appear here. Double-click an archive to install it. To choose its priority, drag it from this list onto the mod list while sorting by Priority.</source>
@@ -6182,7 +6238,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>Learn about profiles, archive layouts, native DLLs, and save profiles.</source>
-      <translation>Erfahre mehr über Profile, Archivstrukturen, native DLLs und Speicherprofile.</translation>
+      <translation>Erfahre mehr über Profile, Archivstrukturen, native DLLs und Spielstandprofile.</translation>
     </message>
     <message>
       <source>Guided Tours</source>
@@ -6238,7 +6294,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>The save route remains saved, but Mod Organizer could not restart right now. Restart Mod Organizer manually before launching the game.</source>
-      <translation>Die Speicherroute bleibt gespeichert, aber Mod Organizer konnte gerade nicht neu starten. Starte Mod Organizer manuell neu, bevor du das Spiel startest.</translation>
+      <translation>Die Spielstandroute bleibt gespeichert, aber Mod Organizer konnte gerade nicht neu starten. Starte Mod Organizer manuell neu, bevor du das Spiel startest.</translation>
     </message>
     <message>
       <source>Installed Elden Ring mods appear here. Checked mods are active in this profile and can provide virtual game files or native DLLs. Keep only one version of a mutually exclusive mod active.</source>
@@ -6262,7 +6318,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>Browse the save files available to this Elden Ring profile. Configure its route in Tools &gt; Elden Ring Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
-      <translation>Durchsuche die Spielstände dieses Elden-Ring-Profils. Lege die Route unter Werkzeuge &gt; Spielstand-Isolation fest, um Spielstände pro MO2-Profil zu trennen, ein benanntes Speicherprofil in dieser Instanz zu teilen oder den globalen Steam-Spielstandordner zu nutzen.</translation>
+      <translation>Durchsuche die Spielstände dieses Elden-Ring-Profils. Lege die Route unter Werkzeuge &gt; Spielstand-Isolation fest, um Spielstände pro MO2-Profil zu trennen, ein benanntes Spielstandprofil in dieser Instanz zu teilen oder den globalen Steam-Spielstandordner zu nutzen.</translation>
     </message>
     <message>
       <source>Choose Elden Ring or another configured executable to launch through MO2's virtual file system.</source>
@@ -6286,7 +6342,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>Open tools available in this MO2 instance. Elden Ring tools include Save Isolation for save routes and named saves, Startup Options for launch and cleanup settings, and Native DLL Profile for native DLL load order and optional initializers.</source>
-      <translation>Öffnet die in dieser MO2-Instanz verfügbaren Werkzeuge. Zu den Elden-Ring-Werkzeugen gehören Spielstand-Isolation für Speicherrouten und benannte Spielstände, Startoptionen für Start- und Bereinigungseinstellungen sowie Native-DLL-Profil für die Ladereihenfolge nativer DLLs und optionale Initialisierer.</translation>
+      <translation>Öffnet die in dieser MO2-Instanz verfügbaren Werkzeuge. Zu den Elden-Ring-Werkzeugen gehören Spielstand-Isolation für Spielstandrouten und benannte Spielstände, Startoptionen für Start- und Bereinigungseinstellungen sowie Native-DLL-Profil für die Ladereihenfolge nativer DLLs und optionale Initialisierer.</translation>
     </message>
     <message>
       <source>Open interface help, the Elden Ring guide and tour, MO2 Revamped project resources, and support links.</source>
@@ -6330,7 +6386,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>&lt;p&gt;Enable mods with their checkboxes. Each profile keeps its own enabled mod list. Configure Elden Ring save routes in &lt;b&gt;Tools &amp;gt; Elden Ring Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Aktiviere Mods über ihre Kontrollkästchen. Jedes Profil hat eine eigene Liste aktiver Mods. Lege die Speicherrouten für Elden Ring unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Aktiviere Mods über ihre Kontrollkästchen. Jedes Profil hat eine eigene Liste aktiver Mods. Lege die Spielstandrouten für Elden Ring unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Mod priority</source>
@@ -6362,7 +6418,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>Native DLLs and save profiles</source>
-      <translation>Native DLLs und Speicherprofile</translation>
+      <translation>Native DLLs und Spielstandprofile</translation>
     </message>
     <message>
       <source>These tools keep their choices with the active MO2 profile.</source>
@@ -6386,11 +6442,11 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>Save routes</source>
-      <translation>Speicherrouten</translation>
+      <translation>Spielstandrouten</translation>
     </message>
     <message>
       <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still finds its usual save file.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Das Werkzeug Spielstand-Isolation kann Spielstände pro MO2-Profil trennen, sie zwischen den Profilen dieser Instanz teilen oder den globalen Steam-Spielstandordner nutzen. Die ersten beiden Modi unterstützen auch benannte Speicherprofile, während das Spiel weiterhin seine gewohnte Spielstanddatei findet.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Das Werkzeug Spielstand-Isolation kann Spielstände pro MO2-Profil trennen, sie zwischen den Profilen dieser Instanz teilen oder den globalen Steam-Spielstandordner nutzen. Die ersten beiden Modi unterstützen auch benannte Spielstandprofile, während das Spiel weiterhin seine gewohnte Spielstanddatei findet.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Restart and online safety</source>
@@ -6398,7 +6454,7 @@ Immer ausblenden: Trenner nie anzeigen</translation>
     </message>
     <message>
       <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Wechsel zwischen profilgetrennten und instanzweit geteilten Spielständen wirken beim nächsten Spielstart. Der Wechsel zum oder vom globalen Steam-Spielstand gilt, sobald das Fenster Save Isolation geschlossen wird; MO2 muss dafür nie neu starten. Die Umleitung ändert nur Speicherdateien; sie ändert weder Easy Anti-Cheat noch den Netzwerkmodus und macht gemoddete Spielstände nicht sicher für das Online-Spiel.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Wechsel zwischen profilgetrennten und instanzweit geteilten Spielständen wirken beim nächsten Spielstart. Der Wechsel zum oder vom globalen Steam-Spielstand gilt, sobald das Fenster Spielstand-Isolation geschlossen wird; MO2 muss dafür nie neu starten. Die Umleitung ändert nur Speicherdateien; sie ändert weder Easy Anti-Cheat noch den Netzwerkmodus und macht gemoddete Spielstände nicht sicher für das Online-Spiel.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Data and launch</source>
@@ -6848,7 +6904,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
     </message>
     <message>
       <source>Mod list actions, backups, and folders</source>
-      <translation>Aktionen der Modliste, Sicherungen und Ordner</translation>
+      <translation>Aktionen der Mod-Liste, Sicherungen und Ordner</translation>
     </message>
     <message>
       <source>More actions</source>
@@ -6899,7 +6955,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Diese Liste zeigt die Spielstände im Ordner, der dem aktiven MO2-Profil zugeordnet ist. Fahre mit der Maus über einen Spielstand, um weitere Details zu sehen, wenn das Spiel-Plugin sie liefert.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Fehlen einem ausgewählten Spielstand benötigte Plugins, aktiviere mit Benötigte Plugins wiederherstellen... die installierten Mods, die sie liefern. Du kannst den Spielstand auch löschen oder seinen Ordner öffnen. Wähle für Elden Ring den Spielstandpfad und das benannte Spielstandprofil unter Werkzeuge &amp;gt; Spielstand-Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Fehlen einem ausgewählten Spielstand benötigte Plugins, aktiviere mit Benötigte Plugins wiederherstellen... die installierten Mods, die sie liefern. Du kannst den Spielstand auch löschen oder seinen Ordner öffnen. Wähle für Elden Ring die Spielstandroute und das benannte Spielstandprofil unter Werkzeuge &amp;gt; Spielstand-Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </translation>
     </message>
     <message>
@@ -6944,7 +7000,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
     </message>
     <message>
       <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Aktiviere Mods über ihre Schalter. Jedes Profil hat seine eigene Liste aktiver Mods. Lege die Spielstandpfade unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Aktiviere Mods über ihre Schalter. Jedes Profil hat seine eigene Liste aktiver Mods. Lege die Spielstandrouten unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Open the game's save folder.</source>
@@ -7060,7 +7116,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
     </message>
     <message>
       <source>Choose a saved mod list for this profile. Restoring it replaces the current mod list; MO2 backs up the current one first.</source>
-      <translation>Wähle eine gespeicherte Modliste für dieses Profil. Das Wiederherstellen ersetzt die aktuelle Modliste; MO2 sichert die aktuelle zuerst.</translation>
+      <translation>Wähle eine gespeicherte Mod-Liste für dieses Profil. Das Wiederherstellen ersetzt die aktuelle Mod-Liste; MO2 sichert die aktuelle zuerst.</translation>
     </message>
     <message>
       <source>Choose a saved plugin load order for this profile. Restoring it replaces the current plugin load order; MO2 backs up the current one first.</source>
@@ -7070,7 +7126,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <source>This replaces the current plugin list and load order. MO2 backs up the current ones first.
 
 %1</source>
-      <translation>Dies ersetzt die aktuelle Pluginliste und Ladereihenfolge. MO2 sichert die aktuellen zuerst.
+      <translation>Dies ersetzt die aktuelle Plugin-Liste und Ladereihenfolge. MO2 sichert die aktuellen zuerst.
 
 %1</translation>
     </message>
@@ -7078,7 +7134,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <source>This replaces the current mod list. MO2 backs up the current one first.
 
 %1</source>
-      <translation>Dies ersetzt die aktuelle Modliste. MO2 sichert die aktuelle zuerst.
+      <translation>Dies ersetzt die aktuelle Mod-Liste. MO2 sichert die aktuelle zuerst.
 
 %1</translation>
     </message>
@@ -7088,7 +7144,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
     </message>
     <message>
       <source>The current mod list could not be backed up.</source>
-      <translation>Die aktuelle Modliste konnte nicht gesichert werden.</translation>
+      <translation>Die aktuelle Mod-Liste konnte nicht gesichert werden.</translation>
     </message>
     <message>
       <source>No files were restored.</source>
@@ -7096,19 +7152,19 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
     </message>
     <message>
       <source>Send this saved mod list backup to the Recycle Bin.</source>
-      <translation>Verschiebt diese Sicherung der Modliste in den Papierkorb.</translation>
+      <translation>Verschiebt diese Sicherung der Mod-Liste in den Papierkorb.</translation>
     </message>
     <message>
       <source>Send this saved mod list backup to the Recycle Bin?
 
 %1</source>
-      <translation>Diese Sicherung der Modliste in den Papierkorb verschieben?
+      <translation>Diese Sicherung der Mod-Liste in den Papierkorb verschieben?
 
 %1</translation>
     </message>
     <message>
       <source>The mod list backup went to the Recycle Bin.</source>
-      <translation>Die Sicherung der Modliste wurde in den Papierkorb verschoben.</translation>
+      <translation>Die Sicherung der Mod-Liste wurde in den Papierkorb verschoben.</translation>
     </message>
     <message>
       <source>Send this saved plugin load order to the Recycle Bin.</source>
@@ -7529,7 +7585,7 @@ Archiv-Installer · {installer}</translation>
       <source>Save isolation · {saves}
 Startup options · {startup}
 Fluent themes · Light and Dark</source>
-      <translation>Spielstandtrennung · {saves}
+      <translation>Spielstand-Isolation · {saves}
 Startoptionen · {startup}
 Fluent-Designs · Hell und Dunkel</translation>
     </message>
@@ -8732,7 +8788,7 @@ Um einige Dateien zu behalten, verschiebe sie vorher in eine Mod.</translation>
     </message>
     <message>
       <source>&lt;p&gt;Overwrite holds files that the game and tools created while running through MO2: logs and settings written by DLL mods, files saved by mod tools, and similar output. They do not belong to any mod yet.&lt;/p&gt;&lt;p&gt;Files in &lt;b&gt;Overwrite&lt;/b&gt; take priority over every mod in the profile. Move the files you want to keep into a mod: drag them from the Manage Overwrite window onto a mod, or right-click Overwrite in the mod list and create a mod from its contents. Delete what you no longer need, such as old logs.&lt;/p&gt;&lt;p&gt;Startup options can clear old mod logs from Overwrite before each launch.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Overwrite enthält Dateien, die das Spiel und Werkzeuge beim Ausführen über MO2 erstellt haben: Protokolle und Einstellungen von DLL-Mods, von Mod-Werkzeugen gespeicherte Dateien und ähnliche Ausgaben. Sie gehören noch zu keinem Mod.&lt;/p&gt;&lt;p&gt;Dateien in &lt;b&gt;Overwrite&lt;/b&gt; haben Vorrang vor allen Mods des Profils. Verschiebe die Dateien, die du behalten willst, in einen Mod: Ziehe sie aus dem Fenster Overwrite verwalten auf einen Mod, oder klicke in der Modliste mit rechts auf Overwrite und erstelle einen Mod aus seinem Inhalt. Lösche, was du nicht mehr brauchst, etwa alte Protokolle.&lt;/p&gt;&lt;p&gt;Die Startoptionen können alte Mod-Protokolle vor jedem Start aus Overwrite entfernen.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Overwrite enthält Dateien, die das Spiel und Werkzeuge beim Ausführen über MO2 erstellt haben: Protokolle und Einstellungen von DLL-Mods, von Mod-Werkzeugen gespeicherte Dateien und ähnliche Ausgaben. Sie gehören noch zu keinem Mod.&lt;/p&gt;&lt;p&gt;Dateien in &lt;b&gt;Overwrite&lt;/b&gt; haben Vorrang vor allen Mods des Profils. Verschiebe die Dateien, die du behalten willst, in einen Mod: Ziehe sie aus dem Fenster Overwrite verwalten auf einen Mod, oder klicke in der Mod-Liste mit rechts auf Overwrite und erstelle einen Mod aus seinem Inhalt. Lösche, was du nicht mehr brauchst, etwa alte Protokolle.&lt;/p&gt;&lt;p&gt;Die Startoptionen können alte Mod-Protokolle vor jedem Start aus Overwrite entfernen.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Check again</source>
@@ -8920,7 +8976,7 @@ Fortfahren?</translation>
     </message>
     <message>
       <source>Elden Ring save routing is managed in Tools &gt; Save Isolation.</source>
-      <translation>Die Spielstandpfade von Elden Ring werden unter Werkzeuge &gt; Spielstand-Isolation verwaltet.</translation>
+      <translation>Die Spielstandrouten von Elden Ring werden unter Werkzeuge &gt; Spielstand-Isolation verwaltet.</translation>
     </message>
     <message>
       <source>Today at %1</source>
@@ -9072,7 +9128,7 @@ Fortfahren?</translation>
     </message>
     <message>
       <source>Chosen in Tools &gt; Save Isolation</source>
-      <translation>Werden unter Werkzeuge &gt; Save Isolation gewählt</translation>
+      <translation>Werden unter Werkzeuge &gt; Spielstand-Isolation gewählt</translation>
     </message>
     <message>
       <source>Turn on profile-specific saves to transfer saves</source>
@@ -9953,6 +10009,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SavesTab</name>
+    <message>
+      <source>Steam's saves</source>
+      <translation>Steam-Spielstände</translation>
+    </message>
     <message>
       <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
       <translation>Einige dieser Spielstände sind noch vorhanden. Sie werden möglicherweise verwendet, oder das Löschen wurde abgebrochen.</translation>
@@ -11247,7 +11307,7 @@ In dieser Stunde verbleibend: %3</translation>
       <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
 
 Start it anyway?</source>
-      <translation>„%1“ würde ohne deine Mods starten, und ein Spiel würde die Spielstände dieses Profils nicht verwenden. Um es mit ihnen zu starten, nutze Run.
+      <translation>„%1“ würde ohne deine Mods starten, und ein Spiel würde die Spielstände dieses Profils nicht verwenden. Um es mit ihnen zu starten, nutze Starten.
 
 Trotzdem starten?</translation>
     </message>

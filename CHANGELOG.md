@@ -16,10 +16,10 @@
   Co-op is active. Save Isolation, the Saves list and save transfers recognize
   `.err`, and a new instance can start from a Reforged save.
 - Online mode (optional, asked at install): the installer keeps Reforged's
-  release with its own launcher in `_ReforgedOnline`, hard-linked, so it
-  takes no extra disk space. Once the mod is installed MO2 adds the executable
-  "ELDEN RING Reforged (online)", which starts outside the VFS with the
-  profile's saves and is listed in Save Isolation > Programs. A console
+  release with its own launcher in `_ReforgedOnline`. Its game files and natives
+  are hard links, so they aren't stored twice. Once the mod is installed MO2 adds
+  the executable "ELDEN RING Reforged (online)", which starts outside the VFS with
+  the profile's saves and is listed in Save Isolation > Programs. A console
   launcher started outside the VFS, like Reforged's, now opens in a visible
   window instead of waiting at a prompt nobody can see.
 - Separate online saves (Save Isolation > Programs, on by default): online play
@@ -43,6 +43,20 @@
   once that launch is over: no MO2 of the other install waits for its game,
   and the game and its launchers are closed. Before, the other install had to
   be started again only to restore them.
+- A launch outside the VFS never deletes or overwrites a save with no copy left. A save
+  that differs from the copy taking its place, or a route save newer than the one coming
+  back, stays in the recovery folder, and MO2 says where. If such a launch ended with MO2
+  closed, MO2 says what went back to the route at its next start.
+- A launcher left open keeps the Steam saves set aside. MO2 now names it: when the game has
+  closed, when you close MO2 and when a new launch is blocked. Save copies and backups also
+  wait for it when the Steam folder was empty. After switching to the other game's instance,
+  the saves still come back once it closes.
+- Native DLL Profile: a DLL you switched off stays off after another mod overrides it for
+  a while, and saving no longer forgets it. Switching off the copy that wins keeps it from
+  loading from any entry.
+- Mod information: opening on another page because the last one is empty for this mod no
+  longer changes the page the next mod opens on. The save extension warning's default
+  button is Cancel.
 
 ### Fewer restarts
 
@@ -157,7 +171,7 @@
 - "Move to Recycle Bin" for an instance: Windows now asks before anything too
   large for the Bin is deleted for good. If files stay behind, you get a list,
   and the instance keeps its shortcut, group and notes.
-- Transfer Saves: a save being overwritten is only removed once the new one has
+- Transfer saves: a save being overwritten is only removed once the new one has
   arrived whole, also if you choose Skip in Windows' dialog. The questions name
   "the game's save folder" and no longer run words together.
 - A backup is no longer made when you install as a new mod, since that changes
@@ -238,7 +252,8 @@
 ### Old look gone
 
 - The question dialogs, such as "Restart Mod Organizer", use the Fluent look instead of
-  the original's blue icon and arrows, and "Some things might be weird" says what happens.
+  the original's blue icon and arrows, and Continue says what happens: some changes won't
+  apply until you restart.
 - The profile and program lists say "Manage profiles..." and "Edit programs...", not
   "<Manage...>" and "<Edit...>". The other labels in angle brackets went too.
 - An old logo left in an instance's folder no longer shows at start.
@@ -331,8 +346,8 @@
 
 ### Notifications and Help
 
-- Nightreign's Help has its guide, and no longer offers the tours written for
-  Bethesda games. The guide names the program's switches and buttons as they are.
+- Nightreign's Help has its guide. The guide names the program's switches and
+  buttons as they are.
 - Bug reports list the versions this copy really has, not fixed older ones.
 - A notification no longer promises an action it doesn't have.
 - The "…" menu holds everything at one level, with Create bug report next to
@@ -394,7 +409,7 @@
 - Going back and picking another game removes the Elden Ring save options.
   A new instance of the other game says why it lists no saves.
 - Nightreign no longer offers Convergence's save type, in the wizard or in Save
-  Isolation: that mod is for Elden Ring.
+  Isolation, unless such a mod is active in that profile: that mod is for Elden Ring.
 - The saves step's switches line up with their titles; turning a save type on
   or off no longer flickers. The review step's rows line up.
 
@@ -464,7 +479,7 @@
   Engine 2 paths" switch is gone.
 - Seamless Co-op's launchers (`ersc_launcher.exe`, `nrsc_launcher.exe`) and a
   Seamless Co-op installed in the game folder: Seamless Co-op runs from its MO2
-  mod with "ELDEN RING (MO2)", with every other mod. The New instance wizard no
+  mod with the game's "(MO2)" program, with every other mod. The New instance wizard no
   longer offers to add its launcher.
 - Elden Ring and Nightreign instances drop executables that start me3, Mod
   Engine 2 or Seamless Co-op's launchers the next time MO2 opens them.

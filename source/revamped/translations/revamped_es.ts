@@ -732,7 +732,7 @@ Los cambios se guardan al elegir Aceptar.</translation>
     </message>
     <message>
       <source>Run the game once from its own launcher, so its INI files and its save folder exist.</source>
-      <translation>Abre el juego una vez desde su propio launcher, para que existan sus archivos INI y su carpeta de partidas.</translation>
+      <translation>Abre el juego una vez desde su propio lanzador, para que existan sus archivos INI y su carpeta de partidas.</translation>
     </message>
     <message>
       <source>Your instances</source>
@@ -1193,7 +1193,7 @@ Are you absolutely sure you want to proceed?</source>
     </message>
     <message>
       <source>Defaults</source>
-      <translation>Valores predeterminados</translation>
+      <translation>Predeterminados</translation>
     </message>
     <message>
       <source>Launch settings</source>
@@ -1836,7 +1836,7 @@ Reinstala el mod para cambiarlo.</translation>
     </message>
     <message>
       <source>You already have a mod with this name. MO2 will ask whether to merge or replace it.</source>
-      <translation>Ya tienes un mod con este nombre. MO2 te preguntará si quieres fusionarlo o reemplazarlo.</translation>
+      <translation>Ya tienes un mod con este nombre. MO2 te preguntará si quieres combinarlo o reemplazarlo.</translation>
     </message>
     <message>
       <source>Showing the first {0} of {1} files.</source>
@@ -1949,6 +1949,18 @@ Reinstala el mod para cambiarlo.</translation>
 </context>
   <context>
     <name>EldenRingGame</name>
+    <message>
+      <source>Saves may mix</source>
+      <translation>Las partidas pueden mezclarse</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t give ELDEN RING Reforged its own save file in this version of the game</source>
+      <translation>MO2 no puede dar a ELDEN RING Reforged su propio archivo de partida en esta versión del juego</translation>
+    </message>
+    <message>
+      <source>Reforged would use ER0000.sl2, the save of your other mods, instead of ER0000.err, and could overwrite it. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+      <translation>Reforged usaría ER0000.sl2, la partida de tus otros mods, en lugar de ER0000.err, y podría sobrescribirla. Esto suele ocurrir tras una actualización del juego: busca una nueva versión de MO2 Revamped.</translation>
+    </message>
     <message>
       <source>Could not prepare the online saves</source>
       <translation>No se pudieron preparar las partidas online</translation>
@@ -2210,10 +2222,6 @@ El juego no se inició.</translation>
       <translation>No se encontró el nativo de Revamped '{0}' en el mod de MO2 asignado '{1}'. Conservar la estructura original puede mantener natives/...; la estructura de MO2 debe colocarlo en DLLs/.</translation>
     </message>
     <message>
-      <source>The Revamped native profile resolves more than one entry to '{0}'. Keep only one entry for that game path.</source>
-      <translation>El perfil nativo de Revamped resuelve más de una entrada en '{0}'. Conserva solo una entrada para esa ruta del juego.</translation>
-    </message>
-    <message>
       <source>MO2 has no active file origin for Revamped native '{0}'.</source>
       <translation>MO2 no tiene un origen de archivo activo para el nativo de Revamped '{0}'.</translation>
     </message>
@@ -2417,9 +2425,61 @@ Si contiene progreso que quieres conservar, cierra el juego y vuelve a copiar su
       <source>Reforged's online version is on. Turn that mod off to choose another program.</source>
       <translation>La versión online de Reforged está activa. Desactiva ese mod para elegir otro programa.</translation>
     </message>
+    <message>
+      <source>{0} is still open as MO2 closes. The Steam saves come back the next time MO2 runs, once it has closed. Don&apos;t start the game from Steam until then.</source>
+      <translation>{0} sigue abierto al cerrarse MO2. Las partidas de Steam volverán la próxima vez que se abra MO2, cuando ya se haya cerrado. Hasta entonces, no inicies el juego desde Steam.</translation>
+    </message>
+    <message>
+      <source>The Steam save folders an earlier launch hid can&apos;t be put back yet: {0} is still open. Close it and try again. The game was not started.</source>
+      <translation>Todavía no se pueden devolver las carpetas de partidas de Steam que ocultó un inicio anterior: {0} sigue abierto. Ciérralo y vuelve a intentarlo. El juego no se ha iniciado.</translation>
+    </message>
+    <message>
+      <source>Saves kept aside</source>
+      <translation>Partidas apartadas</translation>
+    </message>
+    <message>
+      <source>MO2 found saves that differ from, or are newer than, the copy that takes their place. Nothing was deleted; they are kept here:
+
+{0}
+
+If one holds progress you want, close the game and copy it back.</source>
+      <translation>MO2 ha encontrado partidas distintas de la copia que ocupa su lugar, o más recientes que ella. No se ha borrado nada; están guardadas aquí:
+
+{0}
+
+Si alguna tiene un progreso que quieres, cierra el juego y vuelve a copiarla.</translation>
+    </message>
+    <message>
+      <source>{0} changed file(s) to {1}</source>
+      <translation>{0} archivo(s) cambiado(s) a {1}</translation>
+    </message>
+    <message>
+      <source>Saves moved back to their route</source>
+      <translation>Partidas devueltas a su ruta</translation>
+    </message>
+    <message>
+      <source>A launch outside MO2&apos;s virtual file system ended while MO2 wasn&apos;t watching. What was played from the Steam folder went to the route, and the Steam saves are back:
+
+{0}</source>
+      <translation>Un inicio fuera del sistema de archivos virtual de MO2 terminó sin MO2 pendiente de él. Lo jugado desde la carpeta de Steam ha pasado a la ruta, y las partidas de Steam han vuelto:
+
+{0}</translation>
+    </message>
+    <message>
+      <source>MO2 is still waiting for the last launch to start its game. If it doesn&apos;t start, MO2 puts the saves back within a minute and a half; try again then. The game was not started.</source>
+      <translation>MO2 sigue esperando a que el último inicio arranque su juego. Si no arranca, MO2 devolverá las partidas en menos de un minuto y medio; vuelve a intentarlo entonces. El juego no se ha iniciado.</translation>
+    </message>
+    <message>
+      <source>The game has closed, but {0} is still open. MO2 puts the Steam saves back when it closes. Don&apos;t start the game from Steam until then.</source>
+      <translation>El juego se ha cerrado, pero {0} sigue abierto. MO2 devolverá las partidas de Steam cuando se cierre. Hasta entonces, no inicies el juego desde Steam.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingNativeProfile</name>
+    <message>
+      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads the DLLs at a mod&apos;s top level first, then the others, each by the mod list&apos;s order.</source>
+      <translation>Todas las DLL nativas de tus mods activos, en orden de carga, incluida Seamless Co-op. Desactiva una para que no se cargue sin desactivar su mod, o muévela para cambiar el orden. Sin cambios, MO2 carga primero las DLL del nivel superior de cada mod y luego las demás, cada una según el orden de la lista de mods.</translation>
+    </message>
     <message>
       <source>{configured} configured · {enabled} enabled</source>
       <translation>{configured} configuradas · {enabled} activadas</translation>
@@ -2793,10 +2853,6 @@ Las DLL detectadas de los mods activos aparecerán en el panel izquierdo.</trans
       <translation>Mostrar en la carpeta</translation>
     </message>
     <message>
-      <source>Every native DLL of your active mods, in load order, Seamless Co-op included. Switch one off to keep it from loading without turning its mod off, or move it to change the order. Without changes, MO2 loads them all in the mod list&apos;s order.</source>
-      <translation>Todas las DLL nativas de tus mods activos, en orden de carga, Seamless Co-op incluido. Apaga una para que no se cargue sin desactivar su mod, o muévela para cambiar el orden. Sin cambios, MO2 las carga todas en el orden de la lista de mods.</translation>
-    </message>
-    <message>
       <source>Load order</source>
       <translation>Orden de carga</translation>
     </message>
@@ -2909,7 +2965,7 @@ Las DLL detectadas de los mods activos aparecerán en el panel izquierdo.</trans
     </message>
     <message>
       <source>Save routes</source>
-      <translation>Rutas de guardado</translation>
+      <translation>Rutas de partidas</translation>
     </message>
     <message>
       <source>Choose a destination…</source>
@@ -3765,7 +3821,7 @@ La partida se copió, pero su .bak no se pudo actualizar: {error}</translation>
     </message>
     <message>
       <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
-      <translation>&lt;p&gt;La ruta de partidas de este perfil aún no tiene partidas de Elden Ring, mientras que la carpeta de Steam sí. El juego empezará sin tus personajes, y un personaje nuevo se guardará solo en esta ruta.&lt;/p&gt;&lt;p&gt;Para jugar aquí con un personaje existente, abre Herramientas &amp;gt; Save Isolation y usa Transferir una partida, o crea o importa un perfil de partidas con nombre. Para usar directamente las partidas de Steam, elige allí la ruta global.&lt;/p&gt;&lt;p&gt;Ruta: {folder}&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;La ruta de partidas de este perfil aún no tiene partidas de Elden Ring, mientras que la carpeta de Steam sí. El juego empezará sin tus personajes, y un personaje nuevo se guardará solo en esta ruta.&lt;/p&gt;&lt;p&gt;Para jugar aquí con un personaje existente, abre Herramientas &amp;gt; Aislamiento de partidas y usa Transferir una partida, o crea o importa un perfil de partidas con nombre. Para usar directamente las partidas de Steam, elige allí la ruta global.&lt;/p&gt;&lt;p&gt;Ruta: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
       <source>No automatic backups of this route yet. MO2 makes one before the next launch that uses it.</source>
@@ -3847,11 +3903,11 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
     </message>
     <message>
       <source>Every choice has its own save folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
-      <translation>Cada opción tiene su propia carpeta de guardados. MO2 presenta el guardado elegido a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar un guardado deja intacto el original.</translation>
+      <translation>Cada opción tiene su propia carpeta de partidas. MO2 presenta la partida elegida a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar una partida deja intacto el original.</translation>
     </message>
     <message>
       <source>Each named game save profile has its own folder. MO2 presents the selected save to Elden Ring as ER0000.sl2 (ER0000.co2 with Seamless Co-op); importing a save leaves its source intact.</source>
-      <translation>Cada perfil de guardado con nombre tiene su propia carpeta. MO2 presenta el guardado elegido a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar un guardado deja intacto el original.</translation>
+      <translation>Cada perfil de partidas con nombre tiene su propia carpeta. MO2 presenta la partida elegida a Elden Ring como ER0000.sl2 (ER0000.co2 con Seamless Co-op); importar una partida deja intacto el original.</translation>
     </message>
     <message>
       <source>&lt;b&gt;Route saved for {profile}.&lt;/b&gt; MO2 applies it when you close this window, without restarting.</source>
@@ -4253,7 +4309,7 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     </message>
     <message>
       <source>ELDEN RING Reforged's online launcher does not work inside MO2's virtual folder (VFS). MO2 starts it outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
-      <translation>El lanzador online de ELDEN RING Reforged no funciona dentro de la carpeta virtual de MO2 (VFS). MO2 lo inicia fuera, pone las partidas de este perfil en su sitio durante la partida y las recoge al cerrar el juego.</translation>
+      <translation>El lanzador online de ELDEN RING Reforged no funciona dentro de la carpeta virtual de MO2 (VFS). MO2 lo inicia fuera, pone las partidas de este perfil en su sitio durante esa ejecución y las recoge al cerrar el juego.</translation>
     </message>
     <message>
       <source>Some launchers don't work inside MO2's virtual folder (VFS). MO2 starts them outside and puts this profile's saves in place for the run, then collects them when the game closes.</source>
@@ -4408,7 +4464,7 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     </message>
     <message>
       <source>At launch, removes existing .log files from Overwrite and its subfolders. Other files are kept, and logs created during the new session remain available.</source>
-      <translation>Al iniciar, quita los archivos .log existentes de Overwrite y sus subcarpetas. Los demás archivos se conservan y los registros creados durante la nueva sesión siguen disponibles.</translation>
+      <translation>Al iniciar, borra los archivos .log existentes de Overwrite y sus subcarpetas. Los demás archivos se conservan y los registros creados durante la nueva sesión siguen disponibles.</translation>
     </message>
     <message>
       <source>Delete all Overwrite contents after the game closes</source>
@@ -4416,7 +4472,7 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     </message>
     <message>
       <source>After eldenring.exe exits, removes all files and subfolders in Overwrite, including new logs and output from other mods or tools. The Overwrite folder itself remains. Enable only if you do not need any of its contents.</source>
-      <translation>Cuando eldenring.exe se cierra, quita todos los archivos y subcarpetas de Overwrite, incluidos los registros nuevos y la salida de otros mods o herramientas. La carpeta Overwrite se conserva. Actívalo solo si no necesitas nada de su contenido.</translation>
+      <translation>Cuando eldenring.exe se cierra, borra todos los archivos y subcarpetas de Overwrite, incluidos los registros nuevos y la salida de otros mods o herramientas. La carpeta Overwrite se conserva. Actívalo solo si no necesitas nada de su contenido.</translation>
     </message>
     <message>
       <source>Only one cleanup option can be active at a time. Both are off by default.</source>
@@ -4708,7 +4764,7 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     </message>
     <message>
       <source>Restore defaults</source>
-      <translation>Restablecer valores predeterminados</translation>
+      <translation>Restablecer</translation>
     </message>
     <message>
       <source>The launch before that one</source>
@@ -5521,11 +5577,11 @@ Ubicación: %3</translation>
     </message>
     <message>
       <source>Choose what to remove. Items the instance can't do without stay checked.</source>
-      <translation>Elige qué quitar. Lo que la instancia necesita sí o sí queda marcado.</translation>
+      <translation>Elige qué eliminar. Lo que la instancia necesita queda marcado.</translation>
     </message>
     <message>
       <source>Move to Recycle Bin</source>
-      <translation>Mover a la papelera de reciclaje</translation>
+      <translation>Mover a la Papelera de reciclaje</translation>
     </message>
     <message>
       <source>Last used %1</source>
@@ -5585,7 +5641,7 @@ Ubicación: %3</translation>
     </message>
     <message>
       <source>Choose which of this instance's folders to remove (Delete)</source>
-      <translation>Elige qué carpetas de esta instancia quitar (Supr)</translation>
+      <translation>Elige qué carpetas de esta instancia eliminar (Supr)</translation>
     </message>
     <message>
       <source>The portable instance in the Mod Organizer folder can't be duplicated</source>
@@ -6130,7 +6186,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Elden Ring Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
-      <translation>&lt;p&gt;Esta lista muestra los archivos de guardado de la carpeta asignada al perfil activo de MO2. Pasa el cursor sobre una partida para ver más detalles cuando el plugin del juego los proporciona.&lt;/p&gt;&lt;p&gt;Si una partida seleccionada tiene plugins necesarios que faltan, usa Restaurar plugins necesarios... para activar los mods instalados que los proporcionan. También puedes borrar la partida o abrir su carpeta. En Elden Ring, elige la ruta de guardado y el perfil de partidas con nombre en Herramientas &amp;gt; Aislamiento de partidas.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Esta lista muestra los archivos de guardado de la carpeta asignada al perfil activo de MO2. Pasa el cursor sobre una partida para ver más detalles cuando el plugin del juego los proporciona.&lt;/p&gt;&lt;p&gt;Si una partida seleccionada tiene plugins necesarios que faltan, usa Restaurar plugins necesarios... para activar los mods instalados que los proporcionan. También puedes borrar la partida o abrir su carpeta. En Elden Ring, elige la ruta de partidas y el perfil de partidas con nombre en Herramientas &amp;gt; Aislamiento de partidas.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Downloaded archives for this instance appear here. Double-click an archive to install it. To choose its priority, drag it from this list onto the mod list while sorting by Priority.</source>
@@ -6266,7 +6322,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
     </message>
     <message>
       <source>The save route remains saved, but Mod Organizer could not restart right now. Restart Mod Organizer manually before launching the game.</source>
-      <translation>La ruta de guardado sigue guardada, pero Mod Organizer no pudo reiniciarse ahora. Reinicia Mod Organizer manualmente antes de iniciar el juego.</translation>
+      <translation>La ruta de partidas sigue guardada, pero Mod Organizer no pudo reiniciarse ahora. Reinicia Mod Organizer manualmente antes de iniciar el juego.</translation>
     </message>
     <message>
       <source>Installed Elden Ring mods appear here. Checked mods are active in this profile and can provide virtual game files or native DLLs. Keep only one version of a mutually exclusive mod active.</source>
@@ -6314,7 +6370,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
     </message>
     <message>
       <source>Open tools available in this MO2 instance. Elden Ring tools include Save Isolation for save routes and named saves, Startup Options for launch and cleanup settings, and Native DLL Profile for native DLL load order and optional initializers.</source>
-      <translation>Abre las herramientas disponibles en esta instancia de MO2. Las herramientas de Elden Ring incluyen Aislamiento de partidas para rutas de guardado y partidas con nombre, Opciones de inicio para ajustes de inicio y limpieza, y Perfil de DLL nativas para el orden de carga de DLL nativas e inicializadores opcionales.</translation>
+      <translation>Abre las herramientas disponibles en esta instancia de MO2. Las herramientas de Elden Ring incluyen Aislamiento de partidas para rutas de partidas y partidas con nombre, Opciones de inicio para ajustes de inicio y limpieza, y Perfil de DLL nativas para el orden de carga de DLL nativas e inicializadores opcionales.</translation>
     </message>
     <message>
       <source>Open interface help, the Elden Ring guide and tour, MO2 Revamped project resources, and support links.</source>
@@ -6358,7 +6414,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
     </message>
     <message>
       <source>&lt;p&gt;Enable mods with their checkboxes. Each profile keeps its own enabled mod list. Configure Elden Ring save routes in &lt;b&gt;Tools &amp;gt; Elden Ring Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Activa los mods con sus casillas. Cada perfil conserva su propia lista de mods activos. Configura las rutas de guardado de Elden Ring en &lt;b&gt;Herramientas &amp;gt; Aislamiento de partidas&lt;/b&gt;.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Activa los mods con sus casillas. Cada perfil conserva su propia lista de mods activos. Configura las rutas de partidas de Elden Ring en &lt;b&gt;Herramientas &amp;gt; Aislamiento de partidas&lt;/b&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Mod priority</source>
@@ -6414,7 +6470,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
     </message>
     <message>
       <source>Save routes</source>
-      <translation>Rutas de guardado</translation>
+      <translation>Rutas de partidas</translation>
     </message>
     <message>
       <source>&lt;p&gt;Save Isolation can keep saves per MO2 profile, share them among profiles in this instance, or use the global Steam save folder. The first two modes also support named save profiles while the game still finds its usual save file.&lt;/p&gt;</source>
@@ -6426,7 +6482,7 @@ Ocultar siempre: nunca muestra los separadores</translation>
     </message>
     <message>
       <source>&lt;p&gt;Changes between profile-isolated and instance-shared saves take effect on the next game launch. Switching to or from the global Steam save applies when the Save Isolation window closes; MO2 never needs a restart for it. Routing only changes save files; it does not change Easy Anti-Cheat or network mode, and does not make modded saves safe for online play.&lt;/p&gt;</source>
-      <translation>&lt;p&gt;Los cambios entre partidas aisladas por perfil y partidas compartidas en la instancia se aplican en el siguiente inicio del juego. El cambio hacia o desde la partida global de Steam se aplica al cerrar la ventana de Save Isolation; MO2 nunca necesita reiniciarse para ello. La redirección solo cambia los archivos de guardado; no cambia Easy Anti-Cheat ni el modo de red, y no hace que las partidas con mods sean seguras para jugar en línea.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Los cambios entre partidas aisladas por perfil y partidas compartidas en la instancia se aplican en el siguiente inicio del juego. El cambio hacia o desde la partida global de Steam se aplica al cerrar la ventana de Aislamiento de partidas; MO2 nunca necesita reiniciarse para ello. La redirección solo cambia los archivos de guardado; no cambia Easy Anti-Cheat ni el modo de red, y no hace que las partidas con mods sean seguras para jugar en línea.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Data and launch</source>
@@ -7664,7 +7720,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>See which files this mod wins, loses, or shares with other mods.</source>
-      <translation>Mira qué archivos de este mod ganan, pierden o comparte con otros mods.</translation>
+      <translation>Mira qué archivos gana, pierde o comparte este mod con otros mods.</translation>
     </message>
     <message>
       <source>Organize the mod and choose its primary category.</source>
@@ -9030,11 +9086,11 @@ Para conservar algunos archivos, muévelos antes a un mod.</translation>
     </message>
     <message>
       <source>Switch to another profile before removing it.</source>
-      <translation>Cambia a otro perfil antes de quitarlo.</translation>
+      <translation>Cambia a otro perfil antes de eliminarlo.</translation>
     </message>
     <message>
       <source>Remove profile "%1"?</source>
-      <translation>¿Quitar el perfil "%1"?</translation>
+      <translation>¿Eliminar el perfil "%1"?</translation>
     </message>
     <message>
       <source>This removes the profile, including any profile-specific save games. This action cannot be undone.</source>
@@ -9268,11 +9324,11 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     </message>
     <message>
       <source>This removes the profile, including its own saves, its named save profiles and their automatic backups. Instance-shared and Steam saves are not touched. The folder goes to the Recycle Bin.</source>
-      <translation>Esto elimina el perfil, incluidos sus propios guardados, sus perfiles de guardado con nombre y sus copias automáticas. Los guardados compartidos de la instancia y los de Steam no se tocan. La carpeta va a la Papelera de reciclaje.</translation>
+      <translation>Esto elimina el perfil, incluidas sus propias partidas, sus perfiles de partidas con nombre y sus copias automáticas. Las partidas compartidas de la instancia y las de Steam no se tocan. La carpeta va a la Papelera de reciclaje.</translation>
     </message>
     <message>
       <source>This removes the profile, including any profile-specific save games. The folder goes to the Recycle Bin.</source>
-      <translation>Esto elimina el perfil, incluidos los guardados propios del perfil. La carpeta va a la Papelera de reciclaje.</translation>
+      <translation>Esto elimina el perfil, incluidas las partidas propias del perfil. La carpeta va a la Papelera de reciclaje.</translation>
     </message>
     <message>
       <source>The profile could not be moved to the Recycle Bin.</source>
@@ -9281,7 +9337,7 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     <message>
       <source>Delete this folder permanently instead? Its saves cannot be recovered afterwards.
 %1</source>
-      <translation>¿Eliminar esta carpeta de forma permanente? Sus guardados no se podrán recuperar después.
+      <translation>¿Eliminar esta carpeta de forma permanente? Sus partidas no se podrán recuperar después.
 %1</translation>
     </message>
     <message>
@@ -9436,7 +9492,7 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     </message>
     <message>
       <source>  Elden Ring save mode: %1</source>
-      <translation>  Modo de guardado de Elden Ring: %1</translation>
+      <translation>  Modo de partidas de Elden Ring: %1</translation>
     </message>
     <message>
       <source>Share modded saves within this MO2 instance</source>
@@ -10065,7 +10121,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Saves a copy you can restore before any file changes</source>
-      <translation>Guarda una copia que puedes restaurar antes de cambiar ningún archivo</translation>
+      <translation>Antes de cambiar ningún archivo, guarda una copia que podrás restaurar</translation>
     </message>
     <message>
       <source>Mod exists</source>
@@ -10121,6 +10177,10 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SavesTab</name>
+    <message>
+      <source>Steam's saves</source>
+      <translation>Partidas de Steam</translation>
+    </message>
     <message>
       <source>Some of these saves are still there. They may be in use, or the deletion was cancelled.</source>
       <translation>Algunas de estas partidas siguen ahí. Puede que estén en uso o que se cancelara el borrado.</translation>
@@ -10187,7 +10247,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>These are the game's own Steam saves, also used when Elden Ring starts outside MO2.</source>
-      <translation>Son los guardados de Steam del propio juego, que también se usan cuando Elden Ring se inicia fuera de MO2.</translation>
+      <translation>Son las partidas de Steam del propio juego, que también se usan cuando Elden Ring se inicia fuera de MO2.</translation>
     </message>
     <message>
       <source>Restore required plugins</source>
@@ -11341,7 +11401,7 @@ Restantes esta hora: %3</translation>
     </message>
     <message>
       <source>Switch between Data, Saves, and Downloads. Other tabs appear only when supported by the game.</source>
-      <translation>Cambia entre Datos, Partidas guardadas y Descargas. Las demás pestañas solo aparecen si el juego las admite.</translation>
+      <translation>Cambia entre Datos, Partidas y Descargas. Las demás pestañas solo aparecen si el juego las admite.</translation>
     </message>
     <message>
       <source>Select a category or built-in filter to narrow the visible mod list.</source>
@@ -11475,7 +11535,7 @@ Restantes esta hora: %3</translation>
       <source>"%1" would start without your mods, and a game would not use this profile's saves. To start it with them, use Run.
 
 Start it anyway?</source>
-      <translation>«%1» se iniciaría sin tus mods, y un juego no usaría las partidas de este perfil. Para iniciarlo con ellos, usa Run.
+      <translation>«%1» se iniciaría sin tus mods, y un juego no usaría las partidas de este perfil. Para iniciarlo con ellos, usa Ejecutar.
 
 ¿Iniciarlo de todos modos?</translation>
     </message>
