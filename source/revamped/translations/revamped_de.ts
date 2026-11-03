@@ -1475,6 +1475,10 @@ Nicht ausgeblendete Programme erscheinen im Hauptfenster in der Programmliste ne
       <source>Select an executable</source>
       <translation>Ausführbare Datei auswählen</translation>
     </message>
+    <message>
+      <source>Output mod not found</source>
+      <translation>Ausgabe-Mod nicht gefunden</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -8429,16 +8433,16 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
       <translation>Die Installation wurde beim Entpacken der Dateien abgebrochen. Der installierte Mod ist wieder wie zuvor.</translation>
     </message>
     <message>
-      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
-      <translation>Der Mod &quot;%1&quot;, der die neuen Dateien dieses Programms erhalten soll, existiert nicht mehr. Wähle unter Programme bearbeiten einen anderen.</translation>
-    </message>
-    <message>
       <source>An error occurred trying to write back MO2 settings to %1: %2</source>
       <translation>Beim Zurückschreiben der MO2-Einstellungen nach %1 ist ein Fehler aufgetreten: %2</translation>
     </message>
     <message>
       <source>Configure mod</source>
       <translation>Mod konfigurieren</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; assigned to this program no longer exists. Choose another one in Edit programs.</source>
+      <translation>Der diesem Programm zugewiesene Mod &quot;%1&quot; existiert nicht mehr. Wähle unter Programme bearbeiten einen anderen.</translation>
     </message>
   </context>
   <context>
@@ -9829,6 +9833,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
     <message>
       <source>Disabled because: %1</source>
       <translation>Deaktiviert, weil: %1</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Wenn du das Plugin &apos;%1&apos; deaktivierst, werden auch die folgenden Plugins deaktiviert:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Möchtest du fortfahren?&lt;/p&gt;</translation>
     </message>
 </context>
   <context>
@@ -11907,6 +11915,10 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
     <message>
       <source>The mod could not be installed. The log has the details.</source>
       <translation>Der Mod konnte nicht installiert werden. Details stehen im Protokoll.</translation>
+    </message>
+    <message>
+      <source>Wrong password, or the archive is damaged.</source>
+      <translation>Falsches Passwort, oder das Archiv ist beschädigt.</translation>
     </message>
   </context>
 <context>

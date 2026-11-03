@@ -4894,7 +4894,9 @@ void MainWindow::categoriesSaved()
 {
   for (auto modName : m_OrganizerCore.modList()->allMods()) {
     auto mod = ModInfo::getByName(modName);
-    for (auto category : mod->getCategories()) {
+    // setCategory() changes the mod's set
+    const std::set<int> categories = mod->getCategories();
+    for (int category : categories) {
       if (!m_CategoryFactory.categoryExists(category))
         mod->setCategory(category, false);
     }

@@ -2129,8 +2129,8 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
 
   if (!overwriteActive && !customOverwrite.isEmpty()) {
     if (ModInfo::getIndex(customOverwrite) == UINT_MAX) {
-      throw MyException(tr("The mod \"%1\" chosen to receive this program's new files "
-                           "no longer exists. Choose another one in Edit programs.")
+      throw MyException(tr("The mod \"%1\" assigned to this program no longer exists. "
+                           "Choose another one in Edit programs.")
                             .arg(customOverwrite));
     }
     throw MyException(

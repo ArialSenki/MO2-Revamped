@@ -1326,9 +1326,10 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
     def _save_and_close(
         self, dialog: QDialog, profile_root: Path, table: QTableWidget
     ) -> None:
-        entries = self._entries_from_table(table) + [
-            dict(entry) for entry in getattr(table, "stale_entries", [])
-        ]
+        # only what the table shows is checked: a hidden entry, of a mod that is off,
+        # can't be fixed from here, and the game plugin skips it. It is saved as it was
+        entries = self._entries_from_table(table)
+        stale_entries = [dict(entry) for entry in getattr(table, "stale_entries", [])]
         seen = set()
         # enabled entries by game path: the game plugin refuses a profile that
         # loads one path from two mods
@@ -1411,6 +1412,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                             "warning",
                         )
                         return
+        entries += stale_entries
 
         config_path = profile_root / self.ConfigFilename
         config = configparser.ConfigParser(interpolation=None)

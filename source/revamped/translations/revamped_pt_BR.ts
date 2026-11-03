@@ -1475,6 +1475,10 @@ Os programas que não estão ocultos aparecem na lista Programa da janela princi
       <source>Select an executable</source>
       <translation>Selecione um executável</translation>
     </message>
+    <message>
+      <source>Output mod not found</source>
+      <translation>Mod de saída não encontrado</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -8429,16 +8433,16 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>A instalação foi cancelada durante a extração dos arquivos. O mod instalado voltou a ficar como estava.</translation>
     </message>
     <message>
-      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
-      <translation>O mod &quot;%1&quot; escolhido para receber os novos arquivos deste programa não existe mais. Escolha outro em Editar programas.</translation>
-    </message>
-    <message>
       <source>An error occurred trying to write back MO2 settings to %1: %2</source>
       <translation>Ocorreu um erro ao gravar as configurações do MO2 em %1: %2</translation>
     </message>
     <message>
       <source>Configure mod</source>
       <translation>Configurar mod</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; assigned to this program no longer exists. Choose another one in Edit programs.</source>
+      <translation>O mod &quot;%1&quot; atribuído a este programa não existe mais. Escolha outro em Editar programas.</translation>
     </message>
   </context>
   <context>
@@ -9829,6 +9833,10 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
     <message>
       <source>Disabled because: %1</source>
       <translation>Desativado porque: %1</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Desativar o plugin &apos;%1&apos; também desativará os seguintes plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Deseja continuar?&lt;/p&gt;</translation>
     </message>
 </context>
   <context>
@@ -11907,6 +11915,10 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
     <message>
       <source>The mod could not be installed. The log has the details.</source>
       <translation>Não foi possível instalar o mod. O log tem os detalhes.</translation>
+    </message>
+    <message>
+      <source>Wrong password, or the archive is damaged.</source>
+      <translation>Senha incorreta, ou o arquivo está danificado.</translation>
     </message>
   </context>
 <context>

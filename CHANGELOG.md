@@ -17,7 +17,7 @@
   `.err`, and a new instance can start from a Reforged save.
 - Online mode (optional, asked at install): the installer keeps Reforged's
   release with its own launcher in `_ReforgedOnline`, hard-linked, so it
-  takes no extra disk space. After a restart MO2 adds the executable
+  takes no extra disk space. Once the mod is installed MO2 adds the executable
   "ELDEN RING Reforged (online)", which starts outside the VFS with the
   profile's saves and is listed in Save Isolation > Programs. A console
   launcher started outside the VFS, like Reforged's, now opens in a visible
@@ -159,8 +159,8 @@
   nothing in the installed one.
 - Password-protected archives: Cancel stops quietly. A wrong password asks again
   when the archive's file list is protected. When only its files are protected,
-  as in many RAR archives, a wrong password stops the install with "Wrong
-  password". Neither blames a corrupted download.
+  as in many RAR archives, a wrong password stops the install and says the
+  password is wrong or the archive is damaged, as the archive can't tell which.
 - Restore required plugins (Saves tab): the choices say "Overwrite" and "Game
   folder". A plugin in the game's folder no longer stops the whole restore, and
   plugins no installed mod has are listed afterwards.
@@ -330,8 +330,8 @@
   Bethesda games. The guide names the program's switches and buttons as they are.
 - Bug reports list the versions this copy really has, not fixed older ones.
 - A notification no longer promises an action it doesn't have.
-- The "…" menu holds everything at one level, with Create Bug Report next to
-  Report a Problem, and Ctrl+H opens it. The guided tours are gone: they described
+- The "…" menu holds everything at one level, with Create bug report next to
+  Report a problem, and Ctrl+H opens it. The guided tours are gone: they described
   the old window.
 
 ### Settings

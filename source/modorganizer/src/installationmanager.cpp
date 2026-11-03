@@ -311,6 +311,11 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
     return false;
   }
   if (!errorMessage.isEmpty()) {
+    // RAR4 and 7z report a wrong password as a damaged file
+    if (m_PasswordAsked && (errorMessage == QLatin1String("CRC error") ||
+                            errorMessage == QLatin1String("Data error"))) {
+      throw MyException(tr("Wrong password, or the archive is damaged."));
+    }
     throw MyException(tr("Extraction failed: %1").arg(errorMessage));
   }
   if (!future.result()) {

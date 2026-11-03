@@ -97,9 +97,9 @@ compiled `ModOrganizer.exe` and `nxmhandler.exe` (both overlaid onto the
 runtime), Zig 0.13.0, the verified OpenSSL 3.5.9 runtime,
 and this Python overlay. It checks the overlay hashes and versions, then
 creates one general single-file installer and its checksum in a new or empty
-output directory. The installer embeds both the Elden Ring Isolated payload
-used for new installations and the Complete payload used to maintain existing
-standard and portable installations. It also compiles
+output directory. The installer embeds both the Complete payload used for new
+installations and for maintaining standard and portable ones, and the Elden Ring
+Isolated payload used to update existing isolated installations. It also compiles
 `source/revamped/translations/revamped_*.ts` into the payloads with the Qt
 SDK's `lrelease`. Example:
 

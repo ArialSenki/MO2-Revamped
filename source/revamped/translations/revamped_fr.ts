@@ -1479,6 +1479,10 @@ Les programmes non masqués apparaissent dans la liste Programme de la fenêtre 
       <source>Select an executable</source>
       <translation>Sélectionner un exécutable</translation>
     </message>
+    <message>
+      <source>Output mod not found</source>
+      <translation>Mod de sortie introuvable</translation>
+    </message>
   </context>
   <context>
     <name>EldenRingArchiveInstaller</name>
@@ -5239,6 +5243,10 @@ La plupart des mods n&apos;en ont pas besoin : les extenseurs de scripts et les 
       <source>The mod could not be installed. The log has the details.</source>
       <translation>Le mod n&apos;a pas pu être installé. Le journal contient les détails.</translation>
     </message>
+    <message>
+      <source>Wrong password, or the archive is damaged.</source>
+      <translation>Mot de passe incorrect, ou l&apos;archive est endommagée.</translation>
+    </message>
   </context>
   <context>
     <name>InstanceManagerDialog</name>
@@ -8601,16 +8609,16 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
       <translation>L&apos;installation a été annulée pendant l&apos;extraction des fichiers. Le mod installé est revenu à son état précédent.</translation>
     </message>
     <message>
-      <source>The mod &quot;%1&quot; chosen to receive this program&apos;s new files no longer exists. Choose another one in Edit programs.</source>
-      <translation>Le mod « %1 » choisi pour recevoir les nouveaux fichiers de ce programme n&apos;existe plus. Choisissez-en un autre dans Modifier les programmes.</translation>
-    </message>
-    <message>
       <source>An error occurred trying to write back MO2 settings to %1: %2</source>
       <translation>Une erreur s&apos;est produite lors de l&apos;écriture des paramètres de MO2 dans %1 : %2</translation>
     </message>
     <message>
       <source>Configure mod</source>
       <translation>Configurer le mod</translation>
+    </message>
+    <message>
+      <source>The mod &quot;%1&quot; assigned to this program no longer exists. Choose another one in Edit programs.</source>
+      <translation>Le mod « %1 » attribué à ce programme n&apos;existe plus. Choisissez-en un autre dans Modifier les programmes.</translation>
     </message>
   </context>
   <context>
@@ -10121,6 +10129,10 @@ Exemple :
     <message>
       <source>Disabled because: %1</source>
       <translation>Désactivé parce que : %1</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Désactiver le plugin « %1 » désactivera aussi les plugins suivants :&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Voulez-vous continuer ?&lt;/p&gt;</translation>
     </message>
 </context>
   <context>

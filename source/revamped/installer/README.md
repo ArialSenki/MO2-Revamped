@@ -14,6 +14,7 @@ The Qt SDK is a build dependency and is not checked into this repository. Pass i
 .\source\revamped\installer\Build-Release.ps1 `
   -RuntimeDirectory $runtimeDirectory `
   -OrganizerExecutable $organizerExecutable `
+  -NxmHandlerExecutable $nxmHandlerExecutable `
   -ZigPath $zigPath `
   -OpenSslRuntimeDirectory $openSslRuntimeDirectory `
   -PythonRuntimeDirectory $pythonRuntimeDirectory `

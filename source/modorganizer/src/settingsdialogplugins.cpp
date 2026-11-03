@@ -546,7 +546,7 @@ void PluginsSettingsTab::on_checkboxEnabled_clicked(bool checked)
       pluginNames.sort();
       QString message =
           QObject::tr("<p>Disabling the '%1' plugin will also disable the following "
-                      "plugins:</p><ul>%1</ul><p>Do you want to continue?</p>")
+                      "plugins:</p><ul>%2</ul><p>Do you want to continue?</p>")
               .arg(plugin->localizedName())
               .arg("<li>" + pluginNames.join("</li><li>") + "</li>");
       if (QMessageBox::warning(parentWidget(), QObject::tr("Really disable plugin?"),
