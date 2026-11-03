@@ -296,7 +296,8 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
         return QVariant();
       }
     } else {
-      return modInfo->nexusId();
+      // without an id it isn't related to any other mod, Overwrite included
+      return modInfo->nexusId() > 0 ? QVariant(modInfo->nexusId()) : QVariant();
     }
   } else if (role == IndexRole) {
     return modIndex;

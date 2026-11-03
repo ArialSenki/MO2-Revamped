@@ -4625,6 +4625,10 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
   <context>
     <name>FilterList</name>
     <message>
+      <source>Remove every active filter and clear the search.</source>
+      <translation>Retire tous les filtres actifs et efface la recherche.</translation>
+    </message>
+    <message>
       <source>Clear filters</source>
       <translation>Effacer les filtres</translation>
     </message>
@@ -5879,8 +5883,8 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
       <translation>État du filtre : désactivé, inclus ou exclu.</translation>
     </message>
     <message>
-      <source>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</source>
-      <translation>Cliquez sur un filtre pour alterner entre désactivé, inclus et exclu. Utilisez ET ou OU ci-dessous pour combiner les filtres actifs.</translation>
+      <source>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</source>
+      <translation>Cliquez sur un filtre pour alterner entre désactivé, inclus et exclu. Choisissez ci-dessous si les mods doivent tous les respecter ou au moins un.</translation>
     </message>
     <message>
       <source>Clear filters</source>
@@ -11222,6 +11226,10 @@ Restantes cette heure : %3</translation>
   </context>
   <context>
     <name>ModListView</name>
+    <message>
+      <source>Not %1</source>
+      <translation>Pas %1</translation>
+    </message>
     <message>
       <source>Exception: %1</source>
       <translation>Exception : %1</translation>

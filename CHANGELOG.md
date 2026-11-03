@@ -136,6 +136,17 @@
   other pages have them. The translations link is gone from General. The hover of
   a row is rounded, as in Windows 11.
 
+### Mod list filters
+
+- The bar under the list names the filters in use and says which ones exclude, instead
+  of showing an excluded one as if it were on, or "<Multiple>".
+- "Clear filters" in the filter window also clears the search, as the one under the
+  list does.
+
+- Grouped by Nexus ID, mods without an id stay apart instead of forming a group with
+  Overwrite. Group titles line up with the rows, and a list with no group to open
+  keeps no space for one.
+
 ### Mod list menu
 
 - "Restore backup" no longer deletes the mod before the backup is in its place: if a

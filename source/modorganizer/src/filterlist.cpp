@@ -206,7 +206,9 @@ FilterList::FilterList(Ui::MainWindow* ui, OrganizerCore& core,
   ui->filters->installEventFilter(eventFilter);
   ui->filters->viewport()->installEventFilter(eventFilter);
 
+  // the same as the button under the mod list
   connect(ui->filtersClear, &QPushButton::clicked, [&] {
+    this->ui->modFilterEdit->clear();
     clearSelection();
   });
   connect(ui->filtersEdit, &QPushButton::clicked, [&] {
@@ -220,7 +222,7 @@ FilterList::FilterList(Ui::MainWindow* ui, OrganizerCore& core,
   });
 
   ui->filtersClear->setText(tr("Clear filters"));
-  ui->filtersClear->setToolTip(tr("Remove every active filter."));
+  ui->filtersClear->setToolTip(tr("Remove every active filter and clear the search."));
   ui->filtersEdit->setText(tr("Manage categories"));
   ui->filtersEdit->setToolTip(
       tr("Create, rename, organize, and map categories for this game."));

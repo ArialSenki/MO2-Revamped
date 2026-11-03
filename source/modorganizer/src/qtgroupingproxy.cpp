@@ -408,9 +408,6 @@ QVariant QtGroupingProxy::data(const QModelIndex& index, int role) const
         font.setItalic(true);
         return font;
       } break;
-      case Qt::TextAlignmentRole: {
-        return Qt::AlignHCenter;
-      } break;
       case Qt::UserRole: {
         return m_groupMaps[row][column].value(Qt::DisplayRole).toString();
       } break;

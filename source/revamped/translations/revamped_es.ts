@@ -4637,6 +4637,10 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
   <context>
     <name>FilterList</name>
     <message>
+      <source>Remove every active filter and clear the search.</source>
+      <translation>Quita todos los filtros activos y limpia la búsqueda.</translation>
+    </message>
+    <message>
       <source>Clear filters</source>
       <translation>Borrar filtros</translation>
     </message>
@@ -5856,8 +5860,8 @@ Si las borras, también se borran los archivos de esas instancias. ¿Borrar de t
       <translation>Estado del filtro: desactivado, incluido o excluido.</translation>
     </message>
     <message>
-      <source>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</source>
-      <translation>Haz clic en un filtro para alternar entre desactivado, incluido y excluido. Usa Y u O abajo para combinar los filtros activos.</translation>
+      <source>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</source>
+      <translation>Haz clic en un filtro para alternar entre desactivado, incluido y excluido. Elige abajo si los mods deben cumplir todos o cualquiera.</translation>
     </message>
     <message>
       <source>Clear filters</source>
@@ -11193,6 +11197,10 @@ Restantes esta hora: %3</translation>
   </context>
   <context>
     <name>ModListView</name>
+    <message>
+      <source>Not %1</source>
+      <translation>No %1</translation>
+    </message>
     <message>
       <source>Exception: %1</source>
       <translation>Excepción: %1</translation>

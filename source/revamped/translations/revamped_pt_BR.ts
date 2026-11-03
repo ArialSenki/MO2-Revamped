@@ -4621,6 +4621,10 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
   <context>
     <name>FilterList</name>
     <message>
+      <source>Remove every active filter and clear the search.</source>
+      <translation>Remove todos os filtros ativos e limpa a busca.</translation>
+    </message>
+    <message>
       <source>Clear filters</source>
       <translation>Limpar filtros</translation>
     </message>
@@ -5832,8 +5836,8 @@ Excluí-las também remove os arquivos dessas instâncias. Excluir mesmo assim?<
       <translation>Estado do filtro: desativado, incluído ou excluído.</translation>
     </message>
     <message>
-      <source>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</source>
-      <translation>Clique em um filtro para alternar entre desativado, incluído e excluído. Use E ou OU abaixo para combinar os filtros ativos.</translation>
+      <source>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</source>
+      <translation>Clique em um filtro para alternar entre desativado, incluído e excluído. Escolha abaixo se os mods devem atender a todos ou a qualquer um.</translation>
     </message>
     <message>
       <source>Clear filters</source>
@@ -10957,6 +10961,10 @@ Restantes nesta hora: %3</translation>
   </context>
   <context>
     <name>ModListView</name>
+    <message>
+      <source>Not %1</source>
+      <translation>Não %1</translation>
+    </message>
     <message>
       <source>Exception: %1</source>
       <translation>Exceção: %1</translation>

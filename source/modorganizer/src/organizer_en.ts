@@ -2786,78 +2786,78 @@ The programs that are not hidden appear in the main window&apos;s Program list, 
 <context>
     <name>FilterList</name>
     <message>
-        <location filename="filterlist.cpp" line="222"/>
+        <location filename="filterlist.cpp" line="224"/>
         <source>Clear filters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="223"/>
-        <source>Remove every active filter.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="filterlist.cpp" line="224"/>
-        <source>Manage categories</source>
+        <location filename="filterlist.cpp" line="225"/>
+        <source>Remove every active filter and clear the search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="filterlist.cpp" line="226"/>
-        <source>Create, rename, organize, and map categories for this game.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="filterlist.cpp" line="227"/>
-        <source>All</source>
+        <source>Manage categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="filterlist.cpp" line="228"/>
-        <source>Show mods that match every active filter.</source>
+        <source>Create, rename, organize, and map categories for this game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="filterlist.cpp" line="229"/>
-        <source>Any</source>
+        <source>All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="filterlist.cpp" line="230"/>
+        <source>Show mods that match every active filter.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="filterlist.cpp" line="231"/>
+        <source>Any</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="filterlist.cpp" line="233"/>
         <source>Show mods that match at least one active filter.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="245"/>
+        <location filename="filterlist.cpp" line="247"/>
         <source>Follow filters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="248"/>
+        <location filename="filterlist.cpp" line="250"/>
         <source>Show separators only when they match the active filters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="250"/>
+        <location filename="filterlist.cpp" line="252"/>
         <source>Always show separators</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="253"/>
+        <location filename="filterlist.cpp" line="255"/>
         <source>Keep separators visible even when they do not match the filters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="255"/>
+        <location filename="filterlist.cpp" line="257"/>
         <source>Always hide separators</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="258"/>
+        <location filename="filterlist.cpp" line="260"/>
         <source>Hide all separators from the mod list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filterlist.cpp" line="299"/>
-        <location filename="filterlist.cpp" line="300"/>
+        <location filename="filterlist.cpp" line="301"/>
+        <location filename="filterlist.cpp" line="302"/>
         <source>Contains %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5155,7 +5155,8 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="131"/>
-        <source>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</source>
+        <source>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</source>
+        <oldsource>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7697,203 +7698,203 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="406"/>
+        <location filename="modlist.cpp" line="407"/>
         <source>Its author removed this file from Nexus. There may be no update.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="408"/>
+        <location filename="modlist.cpp" line="409"/>
         <source>New version on Nexus: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="410"/>
+        <location filename="modlist.cpp" line="411"/>
         <source>The newest version on Nexus, %1, is older than yours.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="431"/>
+        <location filename="modlist.cpp" line="432"/>
         <source>Version not known: this is the date of the file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="432"/>
+        <location filename="modlist.cpp" line="433"/>
         <source>Installed version: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="434"/>
+        <location filename="modlist.cpp" line="435"/>
         <source>Newest version on Nexus: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="439"/>
+        <location filename="modlist.cpp" line="440"/>
         <source>The newest version on Nexus seems to be older than the one you have installed. This could either mean the version you have has been withdrawn (i.e. due to a bug) or the author uses a non-standard versioning scheme and that newest version is actually newer. Either way you may want to &quot;upgrade&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="447"/>
+        <location filename="modlist.cpp" line="448"/>
         <source>This file has been marked as &quot;Old&quot;. There is most likely an updated version of this file available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="455"/>
+        <location filename="modlist.cpp" line="456"/>
         <source>This file has been marked as &quot;Deleted&quot;! You may want to check for an update or remove the nexus ID from this mod!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="465"/>
+        <location filename="modlist.cpp" line="466"/>
         <source>%1 minute(s) and %2 second(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="467"/>
+        <location filename="modlist.cpp" line="468"/>
         <source>This mod will be available to check in %2.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="474"/>
+        <location filename="modlist.cpp" line="475"/>
         <source>Categories: &lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="507"/>
+        <location filename="modlist.cpp" line="508"/>
         <source>Invalid name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="513"/>
+        <location filename="modlist.cpp" line="514"/>
         <source>Name is already in use by another mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1229"/>
+        <location filename="modlist.cpp" line="1230"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1230"/>
+        <location filename="modlist.cpp" line="1231"/>
         <source>Are you sure you want to remove &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1312"/>
+        <location filename="modlist.cpp" line="1313"/>
         <source>Conflicts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1312"/>
+        <location filename="modlist.cpp" line="1313"/>
         <source>Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1314"/>
+        <location filename="modlist.cpp" line="1315"/>
         <source>Flags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1316"/>
+        <location filename="modlist.cpp" line="1317"/>
         <source>Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1318"/>
+        <location filename="modlist.cpp" line="1319"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1320"/>
+        <location filename="modlist.cpp" line="1321"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1324"/>
+        <location filename="modlist.cpp" line="1325"/>
         <source>Category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1326"/>
+        <location filename="modlist.cpp" line="1327"/>
         <source>Source Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1328"/>
+        <location filename="modlist.cpp" line="1329"/>
         <source>Nexus ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1330"/>
+        <location filename="modlist.cpp" line="1331"/>
         <source>Installation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1332"/>
+        <location filename="modlist.cpp" line="1333"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1334"/>
-        <location filename="modlist.cpp" line="1379"/>
+        <location filename="modlist.cpp" line="1335"/>
+        <location filename="modlist.cpp" line="1380"/>
         <source>unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1342"/>
+        <location filename="modlist.cpp" line="1343"/>
         <source>Name of your mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1344"/>
+        <location filename="modlist.cpp" line="1345"/>
         <source>Version of the mod (if available)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1346"/>
+        <location filename="modlist.cpp" line="1347"/>
         <source>Installation priority of your mod. The higher, the more &quot;important&quot; it is and thus overwrites files from mods with lower priority.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1350"/>
+        <location filename="modlist.cpp" line="1351"/>
         <source>Primary category of the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1352"/>
+        <location filename="modlist.cpp" line="1353"/>
         <source>The source game which was the origin of this mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1354"/>
+        <location filename="modlist.cpp" line="1355"/>
         <source>Id of the mod as used on Nexus.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1356"/>
+        <location filename="modlist.cpp" line="1357"/>
         <source>New versions and file conflicts with other mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1357"/>
+        <location filename="modlist.cpp" line="1358"/>
         <source>Indicators of file conflicts between mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1359"/>
+        <location filename="modlist.cpp" line="1360"/>
         <source>Emblems to highlight things that might require attention.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1366"/>
+        <location filename="modlist.cpp" line="1367"/>
         <source>Depicts the content of the mod:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1375"/>
+        <location filename="modlist.cpp" line="1376"/>
         <source>Time this mod was installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlist.cpp" line="1377"/>
+        <location filename="modlist.cpp" line="1378"/>
         <source>User notes about the mod</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8506,19 +8507,19 @@ Please enter the name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1220"/>
+        <location filename="modlistview.cpp" line="1226"/>
         <source>Exception: %1</source>
         <oldsource>Exception: </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1222"/>
+        <location filename="modlistview.cpp" line="1228"/>
         <source>Unknown exception</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modlistview.cpp" line="1593"/>
-        <source>&lt;Multiple&gt;</source>
+        <location filename="modlistview.cpp" line="1596"/>
+        <source>Not %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

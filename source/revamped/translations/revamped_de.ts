@@ -4621,6 +4621,10 @@ Starter, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: M
   <context>
     <name>FilterList</name>
     <message>
+      <source>Remove every active filter and clear the search.</source>
+      <translation>Entfernt alle aktiven Filter und leert die Suche.</translation>
+    </message>
+    <message>
       <source>Clear filters</source>
       <translation>Filter zurücksetzen</translation>
     </message>
@@ -5832,8 +5836,8 @@ Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzde
       <translation>Filterstatus: aus, eingeschlossen oder ausgeschlossen.</translation>
     </message>
     <message>
-      <source>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</source>
-      <translation>Klicke auf einen Filter, um zwischen aus, eingeschlossen und ausgeschlossen zu wechseln. Kombiniere aktive Filter unten mit UND oder ODER.</translation>
+      <source>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</source>
+      <translation>Klicke auf einen Filter, um zwischen aus, eingeschlossen und ausgeschlossen zu wechseln. Wähle unten, ob Mods alle oder einen davon erfüllen müssen.</translation>
     </message>
     <message>
       <source>Clear filters</source>
@@ -10957,6 +10961,10 @@ In dieser Stunde verbleibend: %3</translation>
   </context>
   <context>
     <name>ModListView</name>
+    <message>
+      <source>Not %1</source>
+      <translation>Nicht %1</translation>
+    </message>
     <message>
       <source>Exception: %1</source>
       <translation>Ausnahme: %1</translation>

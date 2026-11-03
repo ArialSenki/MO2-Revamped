@@ -4663,6 +4663,10 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
   <context>
     <name>FilterList</name>
     <message>
+      <source>Remove every active filter and clear the search.</source>
+      <translation>Rimuove tutti i filtri attivi e cancella la ricerca.</translation>
+    </message>
+    <message>
       <source>Clear filters</source>
       <translation>Cancella filtri</translation>
     </message>
@@ -5933,8 +5937,8 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
       <translation>Stato del filtro: disattivato, incluso o escluso.</translation>
     </message>
     <message>
-      <source>Click a filter to cycle between off, included, and excluded. Use AND or OR below to combine active filters.</source>
-      <translation>Fai clic su un filtro per passare tra disattivato, incluso ed escluso. Usa E o O qui sotto per combinare i filtri attivi.</translation>
+      <source>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</source>
+      <translation>Fai clic su un filtro per passare tra disattivato, incluso ed escluso. Scegli qui sotto se le mod devono soddisfarli tutti o almeno uno.</translation>
     </message>
     <message>
       <source>Clear filters</source>
@@ -11288,6 +11292,10 @@ Rimanenti in quest'ora: %3</translation>
   </context>
   <context>
     <name>ModListView</name>
+    <message>
+      <source>Not %1</source>
+      <translation>Non %1</translation>
+    </message>
     <message>
       <source>Exception: %1</source>
       <translation>Eccezione: %1</translation>

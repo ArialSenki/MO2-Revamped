@@ -883,6 +883,12 @@ void ModListView::updateGroupByProxy()
     for (unsigned int i = 0; i < ModInfo::getNumMods() && !branches; ++i) {
       branches = ModInfo::getByIndex(i)->isSeparator();
     }
+  } else if (branches) {
+    // grouped, but with no group to open
+    branches = false;
+    for (int i = 0; i < nextModel->rowCount() && !branches; ++i) {
+      branches = nextModel->hasChildren(nextModel->index(i, 0));
+    }
   }
   setRootIsDecorated(branches);
 }
@@ -1572,28 +1578,30 @@ void ModListView::onFiltersCriteria(
 {
   setFilterCriteria(criteria);
 
-  QString label = "?";
-
-  if (criteria.empty()) {
-    label = "";
-  } else if (criteria.size() == 1) {
-    const auto& c = criteria[0];
-
+  // each filter by name, saying which ones exclude
+  QStringList names;
+  for (const auto& c : criteria) {
+    QString name;
     if (c.type == ModListSortProxy::TypeContent) {
       const auto* content = m_core->modDataContents().findById(c.id);
-      label               = content ? content->name() : QString();
+      name                = content ? content->name() : QString();
     } else {
-      label = m_categories->getCategoryNameByID(c.id);
+      name = m_categories->getCategoryNameByID(c.id);
     }
 
-    if (label.isEmpty()) {
+    if (name.isEmpty()) {
       log::error("category {}:{} not found", c.type, c.id);
+      continue;
     }
-  } else {
-    label = tr("<Multiple>");
+    names.push_back(c.inverse ? tr("Not %1").arg(name) : name);
   }
 
-  ui.currentCategory->setText(label);
+  // several can be long: the whole text is in the tooltip
+  constexpr int LabelWidth = 360;
+  const QString label      = names.join(QStringLiteral(", "));
+  ui.currentCategory->setText(
+      ui.currentCategory->fontMetrics().elidedText(label, Qt::ElideRight, LabelWidth));
+  ui.currentCategory->setToolTip(label);
 }
 
 void ModListView::dragEnterEvent(QDragEnterEvent* event)
