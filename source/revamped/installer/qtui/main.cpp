@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QDialog>
 #include <QFrame>
 #include <QGraphicsOpacityEffect>
 #include <QGridLayout>
@@ -1548,11 +1549,69 @@ private:
         return true;
     }
 
+    // the content dialog of MO2 Revamped: a title, the text, and the buttons
+    // side by side in a band; an empty rejectText leaves one button
+    bool contentDialog(const QString &title, const QString &body, const QString &acceptText,
+                       const QString &rejectText, bool danger) {
+        QDialog dialog(this);
+        dialog.setObjectName(QStringLiteral("contentDialog"));
+        dialog.setWindowTitle(title);
+        dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+        dialog.setMinimumWidth(460);
+        dialog.setMaximumWidth(640);
+        dialog.setStyleSheet(styleSheet() + QStringLiteral(
+            "QDialog#contentDialog { background:%1; }"
+            "QLabel#contentTitle { color:%2; font-size:15pt; font-weight:600; }"
+            "QLabel#contentText { color:%3; }"
+            "QFrame#contentFooter { background:%4; border:none; border-top:1px solid %5; }")
+            .arg(theme_.surface.name(), theme_.heading.name(), theme_.text.name(),
+                 theme_.page.name(), theme_.border.name()));
+
+        auto *layout = new QVBoxLayout(&dialog);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(0);
+        auto *content = new QVBoxLayout;
+        content->setContentsMargins(24, 20, 24, 24);
+        content->setSpacing(8);
+        auto *heading = new QLabel(title, &dialog);
+        heading->setObjectName(QStringLiteral("contentTitle"));
+        heading->setWordWrap(true);
+        content->addWidget(heading);
+        auto *text = new QLabel(body, &dialog);
+        text->setObjectName(QStringLiteral("contentText"));
+        text->setWordWrap(true);
+        text->setTextFormat(Qt::PlainText);
+        content->addWidget(text);
+        layout->addLayout(content, 1);
+
+        auto *footer = new QFrame(&dialog);
+        footer->setObjectName(QStringLiteral("contentFooter"));
+        auto *buttons = new QHBoxLayout(footer);
+        buttons->setContentsMargins(24, 24, 24, 24);
+        buttons->setSpacing(8);
+        auto *accept = new QPushButton(acceptText, footer);
+        accept->setObjectName(danger ? QStringLiteral("dangerButton") : QStringLiteral("primaryButton"));
+        accept->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        accept->setAutoDefault(false);
+        connect(accept, &QPushButton::clicked, &dialog, &QDialog::accept);
+        buttons->addWidget(accept);
+        if (rejectText.isEmpty()) {
+            accept->setDefault(true);
+        } else {
+            auto *reject = new QPushButton(rejectText, footer);
+            reject->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            connect(reject, &QPushButton::clicked, &dialog, &QDialog::reject);
+            buttons->addWidget(reject);
+            // Enter answers no, as this question always has
+            reject->setDefault(true);
+            reject->setFocus();
+        }
+        layout->addWidget(footer);
+        return dialog.exec() == QDialog::Accepted;
+    }
+
     bool showError(const QString &title, const QString &body) {
-        QMessageBox box(QMessageBox::Warning, title, body, QMessageBox::Ok, this);
-        if (QAbstractButton *ok = box.button(QMessageBox::Ok)) ok->setText(tr(QStringLiteral("Cerrar")));
-        box.setStyleSheet(styleSheet());
-        box.exec();
+        contentDialog(title, body, tr(QStringLiteral("Cerrar")), QString(), false);
         return false;
     }
 
@@ -1617,15 +1676,7 @@ private:
                 body += tr(QStringLiteral("\n\nSi MO2 sigue abierto, se intentará cerrarlo y se forzará el cierre de esta instalación si no responde; podrías perder cambios sin guardar."));
             body += tr(QStringLiteral("\n\n¿Continuar?"));
         }
-        QMessageBox box(destructive ? QMessageBox::Warning : QMessageBox::Question, title, body, QMessageBox::Yes | QMessageBox::No, this);
-        if (QAbstractButton *yes = box.button(QMessageBox::Yes)) {
-            yes->setText(tr(QStringLiteral("Sí")));
-            yes->setObjectName(destructive ? QStringLiteral("dangerButton") : QStringLiteral("primaryButton"));
-        }
-        if (QAbstractButton *no = box.button(QMessageBox::No)) no->setText(tr(QStringLiteral("No")));
-        box.setDefaultButton(QMessageBox::No);
-        box.setStyleSheet(styleSheet());
-        return box.exec() == QMessageBox::Yes;
+        return contentDialog(title, body, tr(QStringLiteral("Sí")), tr(QStringLiteral("No")), destructive);
     }
 
     void beginOperation() {
@@ -1733,12 +1784,9 @@ private:
 
     void closeEvent(QCloseEvent *event) override {
         if (busy_) {
-            QMessageBox box(QMessageBox::Warning, tr(QStringLiteral("Proceso en curso")),
-                            tr(QStringLiteral("Espera a que termine el proceso antes de cerrar el asistente.")),
-                            QMessageBox::Ok, this);
-            if (QAbstractButton *ok = box.button(QMessageBox::Ok)) ok->setText(tr(QStringLiteral("Cerrar")));
-            box.setStyleSheet(styleSheet());
-            box.exec();
+            contentDialog(tr(QStringLiteral("Proceso en curso")),
+                          tr(QStringLiteral("Espera a que termine el proceso antes de cerrar el asistente.")),
+                          tr(QStringLiteral("Cerrar")), QString(), false);
             event->ignore();
             return;
         }

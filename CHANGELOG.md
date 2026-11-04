@@ -20,6 +20,10 @@
 - Settings migrations for versions before MO2 2.4. Their leftover keys stay in the
   file, unused.
 
+### Changed
+
+- Small windows share the Fluent look of the rest: questions, warnings, errors, text and number prompts, "remember my choice", enable or disable all, new empty mod and separator, backups, endorsements and the setup's own questions now have a title, the text, and the buttons side by side in a band. Choices with a description are cards. Long texts wrap instead of being cut.
+
 ### Fixed
 
 - A new installation starts in the language picked in its setup, unless MO2

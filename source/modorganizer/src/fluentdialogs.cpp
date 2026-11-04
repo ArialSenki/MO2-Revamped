@@ -1,5 +1,6 @@
 #include "fluentdialogs.h"
 
+#include "fluentchoices.h"
 #include "fluenticons.h"
 #include "fluentsettings.h"
 #include "revampedtheme.h"
@@ -12,9 +13,11 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QHeaderView>
+#include <QInputDialog>
 #include <QLabel>
 #include <QLayout>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QPushButton>
 #include <QToolBar>
 #include <QToolButton>
@@ -83,6 +86,305 @@ void setRole(QWidget* widget, const char* name)
   widget->setProperty(name, true);
   widget->style()->unpolish(widget);
   widget->style()->polish(widget);
+}
+
+// the shape of FluentContentDialog for the dialogs Qt and uibase build
+// themselves: the dialog's layout is emptied (their widgets stay its children)
+// and filled with a title, a body for the dialog's own widgets and the band of
+// buttons. The layout object stays when it is a QVBoxLayout, which is what
+// QInputDialog and uibase's size constraint rely on.
+struct ContentShape
+{
+  QVBoxLayout* body;
+  QHBoxLayout* footer;
+};
+
+ContentShape toContentShape(QDialog* dialog, const QString& title,
+                            const QPixmap& titleIcon = {}, int minimumWidth = 440)
+{
+  auto* root = qobject_cast<QVBoxLayout*>(dialog->layout());
+  if (root != nullptr) {
+    while (QLayoutItem* item = root->takeAt(0)) {
+      // a nested layout is its own item
+      if (QLayout* nested = item->layout()) {
+        delete nested;
+      } else {
+        delete item;
+      }
+    }
+  } else {
+    delete dialog->layout();
+    root = new QVBoxLayout(dialog);
+  }
+  root->setContentsMargins(0, 0, 0, 0);
+  root->setSpacing(0);
+  setRole(dialog, "fluentContentDialog");
+
+  // a layout rather than a widget: QMessageBox measures its layout while it
+  // changes a label's word wrap, which a widget in between would hide from it
+  auto* body = new QVBoxLayout;
+  root->addLayout(body, 1);
+  body->setContentsMargins(24, 20, 24, 24);
+  body->setSpacing(8);
+  body->addSpacerItem(new QSpacerItem(minimumWidth, 0, QSizePolicy::Fixed, QSizePolicy::Fixed));
+
+  if (!title.trimmed().isEmpty() || !titleIcon.isNull()) {
+    auto* head = new QHBoxLayout;
+    head->setContentsMargins(0, 0, 0, 0);
+    head->setSpacing(12);
+    if (!titleIcon.isNull()) {
+      auto* icon = new QLabel(dialog);
+      icon->setObjectName(QStringLiteral("fluentDialogIcon"));
+      icon->setPixmap(titleIcon);
+      icon->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+      head->addWidget(icon, 0, Qt::AlignTop);
+    }
+    auto* label = new QLabel(title, dialog);
+    label->setObjectName(QStringLiteral("fluentDialogTitle"));
+    label->setWordWrap(true);
+    head->addWidget(label, 1, Qt::AlignVCenter);
+    body->addLayout(head);
+  }
+
+  auto* band = new QFrame(dialog);
+  band->setObjectName(QStringLiteral("fluentDialogFooter"));
+  auto* footer = new QHBoxLayout(band);
+  footer->setContentsMargins(24, 24, 24, 24);
+  footer->setSpacing(8);
+  root->addWidget(band);
+
+  return {body, footer};
+}
+
+// a button box's buttons share the band's width, as in FluentContentDialog; a
+// box lays itself out again when its style changes, so this runs after the
+// show as well
+void equalButtons(QDialogButtonBox* box)
+{
+  const auto apply = [box] {
+    if (box->layout() == nullptr) {
+      return;
+    }
+    for (int i = 0; i < box->layout()->count(); ++i) {
+      if (QSpacerItem* spacer = box->layout()->itemAt(i)->spacerItem()) {
+        spacer->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
+      }
+    }
+    for (QAbstractButton* button : box->buttons()) {
+      button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+      button->setMinimumWidth(110);
+    }
+    box->layout()->invalidate();
+  };
+  apply();
+  QTimer::singleShot(0, box, apply);
+}
+
+// a button in the band or a card in the body that presses a hidden original,
+// which keeps whatever its dialog connected to it
+void pressesOriginal(QAbstractButton* copy, QAbstractButton* original)
+{
+  copy->setEnabled(original->isEnabled());
+  QObject::connect(copy, &QAbstractButton::clicked, original, &QAbstractButton::click);
+}
+
+// Windows 11 dialogs ask in words, as polishMessageBox() does for message boxes
+bool isQuestionIcon(const QDialog* dialog, const QPixmap& pixmap)
+{
+  const QIcon question =
+      dialog->style()->standardIcon(QStyle::SP_MessageBoxQuestion, nullptr, dialog);
+  return question.pixmap(pixmap.size()).toImage() == pixmap.toImage();
+}
+
+// uibase's TaskDialog: the main text is the title, choices with a description
+// are option cards, those without one are the band's buttons
+void shapeTaskDialog(QDialog* dialog)
+{
+  auto* main      = dialog->findChild<QLabel*>(QStringLiteral("main"));
+  auto* top       = dialog->findChild<QWidget*>(QStringLiteral("topPanel"));
+  auto* contents  = dialog->findChild<QWidget*>(QStringLiteral("contentPanel"));
+  auto* contentLb = dialog->findChild<QLabel*>(QStringLiteral("content"));
+  auto* commands  = dialog->findChild<QWidget*>(QStringLiteral("commandButtons"));
+  auto* remember  = dialog->findChild<QWidget*>(QStringLiteral("rememberPanel"));
+  auto* standard  = dialog->findChild<QWidget*>(QStringLiteral("standardButtonsPanel"));
+  auto* box       = dialog->findChild<QDialogButtonBox*>(QStringLiteral("standardButtons"));
+  auto* details   = dialog->findChild<QWidget*>(QStringLiteral("detailsPanel"));
+  auto* expander  = dialog->findChild<QWidget*>(QStringLiteral("detailsExpander"));
+  auto* iconPanel = dialog->findChild<QWidget*>(QStringLiteral("iconPanel"));
+  auto* iconLabel = dialog->findChild<QLabel*>(QStringLiteral("icon"));
+  if (main == nullptr || top == nullptr || contents == nullptr || contentLb == nullptr ||
+      commands == nullptr || remember == nullptr || standard == nullptr || box == nullptr ||
+      details == nullptr || expander == nullptr || iconPanel == nullptr ||
+      iconLabel == nullptr) {
+    return;
+  }
+
+  QPixmap icon;
+  if (!iconPanel->isHidden() && !iconLabel->pixmap().isNull() &&
+      !isQuestionIcon(dialog, iconLabel->pixmap())) {
+    const QPixmap original = iconLabel->pixmap();
+    icon = original.scaled(QSize(28, 28) * original.devicePixelRatio(), Qt::KeepAspectRatio,
+                           Qt::SmoothTransformation);
+    icon.setDevicePixelRatio(original.devicePixelRatio());
+  }
+  const int width         = top->minimumWidth();
+  const bool hasCommands  = !commands->parentWidget()->isHidden();
+  const bool showRemember = !remember->isHidden();
+  const bool hasDetails   = expander->isEnabled();
+
+  const ContentShape shape = toContentShape(dialog, main->text(), icon, std::max(440, width));
+
+  // the widgets the dialog still uses, without the frame around them
+  if (auto* spacer = contents->findChild<QWidget*>(QStringLiteral("buttonsSpacer"))) {
+    spacer->hide();
+  }
+  const bool hasText = !contentLb->text().isEmpty() || contents->layout()->count() > 2;
+  contents->setParent(dialog);
+  contents->layout()->setContentsMargins(0, 0, 0, 0);
+  contentLb->setObjectName(QStringLiteral("fluentDialogText"));
+  shape.body->addWidget(contents);
+  contents->setVisible(hasText);
+
+  if (hasCommands) {
+    QPushButton* first = nullptr;
+    bool hasCards      = false;
+    auto* cards        = new QVBoxLayout;
+    cards->setContentsMargins(0, 8, 0, 0);
+    cards->setSpacing(0);
+    for (QCommandLinkButton* original : commands->findChildren<QCommandLinkButton*>()) {
+      if (!original->description().isEmpty()) {
+        auto* card =
+            new FluentOptionCard(0, original->text(), original->description(), dialog);
+        pressesOriginal(card, original);
+        cards->addWidget(card);
+        hasCards = true;
+      } else {
+        auto* button = new QPushButton(original->text(), shape.footer->parentWidget());
+        button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        button->setMinimumWidth(110);
+        button->setAutoDefault(false);
+        pressesOriginal(button, original);
+        shape.footer->addWidget(button);
+        if (first == nullptr) {
+          first = button;
+        }
+      }
+    }
+    shape.body->addLayout(cards);
+    if (first != nullptr && !hasCards) {
+      first->setDefault(true);
+      first->setProperty("fluentPrimary", true);
+    }
+    if (first == nullptr) {
+      shape.footer->parentWidget()->hide();
+    }
+  } else {
+    box->setParent(shape.footer->parentWidget());
+    shape.footer->addWidget(box);
+    box->show();
+    equalButtons(box);
+  }
+  top->setMinimumWidth(0);
+  top->hide();
+  standard->hide();
+
+  if (showRemember) {
+    remember->setParent(dialog);
+    shape.body->addWidget(remember);
+    remember->show();
+  } else {
+    remember->hide();
+  }
+  if (hasDetails) {
+    details->setParent(dialog);
+    if (auto* line = details->findChild<QWidget*>(QStringLiteral("line"))) {
+      line->hide();
+    }
+    shape.body->addWidget(details);
+    details->show();
+  } else {
+    details->hide();
+  }
+}
+
+// uibase's question with "remember my choice"
+void shapeQuestionMemory(QDialog* dialog)
+{
+  auto* frame   = dialog->findChild<QWidget*>(QStringLiteral("frame"));
+  auto* message = dialog->findChild<QLabel*>(QStringLiteral("messageLabel"));
+  auto* box     = dialog->findChild<QDialogButtonBox*>(QStringLiteral("buttonBox"));
+  if (frame == nullptr || message == nullptr || box == nullptr) {
+    return;
+  }
+  auto* remember    = dialog->findChild<QWidget*>(QStringLiteral("rememberCheckBox"));
+  auto* rememberFor = dialog->findChild<QWidget*>(QStringLiteral("rememberForCheckBox"));
+
+  const ContentShape shape = toContentShape(dialog, dialog->windowTitle());
+  message->setParent(dialog);
+  message->setObjectName(QStringLiteral("fluentDialogText"));
+  message->setWordWrap(true);
+  shape.body->addWidget(message);
+  message->show();
+  shape.body->addSpacing(8);
+  for (QWidget* check : {remember, rememberFor}) {
+    if (check != nullptr) {
+      check->setParent(dialog);
+      shape.body->addWidget(check);
+      check->show();
+    }
+  }
+  frame->hide();
+  box->setParent(shape.footer->parentWidget());
+  shape.footer->addWidget(box);
+  box->show();
+  equalButtons(box);
+}
+
+// QInputDialog: the caption and the field under a title
+void shapeInputDialog(QInputDialog* dialog)
+{
+  auto* box = dialog->findChild<QDialogButtonBox*>();
+  if (box == nullptr || qobject_cast<QVBoxLayout*>(dialog->layout()) == nullptr) {
+    return;
+  }
+  QList<QWidget*> widgets;
+  for (int i = 0; i < dialog->layout()->count(); ++i) {
+    QWidget* widget = dialog->layout()->itemAt(i)->widget();
+    if (widget != nullptr && widget != box) {
+      widgets.append(widget);
+    }
+  }
+  const ContentShape shape = toContentShape(dialog, dialog->windowTitle());
+  for (QWidget* widget : widgets) {
+    shape.body->addWidget(widget);
+    widget->show();
+  }
+  box->setParent(shape.footer->parentWidget());
+  shape.footer->addWidget(box);
+  box->show();
+  equalButtons(box);
+}
+
+// choices as option cards
+void shapeSelectionDialog(QDialog* dialog)
+{
+  auto* box = dialog->findChild<QDialogButtonBox*>(QStringLiteral("buttonBox"));
+  if (box == nullptr ||
+      qobject_cast<QVBoxLayout*>(box->parentWidget()->layout()) == nullptr) {
+    return;
+  }
+  const auto originals = box->findChildren<QCommandLinkButton*>();
+  auto* layout = static_cast<QVBoxLayout*>(box->parentWidget()->layout());
+  const int at = layout->indexOf(box);
+  int row      = 0;
+  for (QCommandLinkButton* original : originals) {
+    auto* card = new FluentOptionCard(0, original->text(), original->description(),
+                                      box->parentWidget());
+    pressesOriginal(card, original);
+    layout->insertWidget(at + row++, card);
+  }
+  layout->addStretch(1);
+  box->hide();
 }
 
 // banner cards at the top of dialogs become a flat page title, like the
@@ -248,22 +550,19 @@ void polish(QDialog* dialog)
   }
   dialog->setProperty("fluentPolished", true);
 
-  // uibase's question dialogs: no arrow on their choices, no details row without
-  // details, and an icon at the size of a message box's
+  // the small dialogs Qt and uibase build themselves take the content dialog's shape
   if (dialog->objectName() == QLatin1String("TaskDialog")) {
-    for (auto* choice : dialog->findChildren<QCommandLinkButton*>()) {
-      choice->setIcon(QIcon());
-    }
-    if (auto* details = dialog->findChild<QWidget*>(QStringLiteral("detailsExpander"));
-        details != nullptr && !details->isEnabled()) {
-      details->hide();
-    }
-  }
-  if (dialog->objectName() == QLatin1String("QuestionBoxMemory")) {
-    if (auto* icon = dialog->findChild<QLabel*>(QStringLiteral("iconLabel"))) {
-      icon->setPixmap(dialog->style()
-                          ->standardIcon(QStyle::SP_MessageBoxQuestion)
-                          .pixmap(QSize(28, 28), dialog->devicePixelRatioF()));
+    shapeTaskDialog(dialog);
+  } else if (dialog->objectName() == QLatin1String("QuestionBoxMemory")) {
+    shapeQuestionMemory(dialog);
+  } else if (dialog->objectName() == QLatin1String("SelectionDialog")) {
+    shapeSelectionDialog(dialog);
+  } else if (auto* input = qobject_cast<QInputDialog*>(dialog)) {
+    shapeInputDialog(input);
+  } else if (auto* progress = qobject_cast<QProgressDialog*>(dialog)) {
+    progress->setMinimumWidth(440);
+    if (auto* label = progress->findChild<QLabel*>()) {
+      label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     }
   }
 
@@ -440,47 +739,51 @@ void polishMessageBox(QMessageBox* box)
         FluentIcons::glyph(glyph, tone).pixmap(QSize(28, 28), box->devicePixelRatioF()));
   }
 
-  // the roomy padding of a Windows 11 dialog, and a width that does not wrap
-  // a short question onto a cramped line
-  if (auto* grid = qobject_cast<QGridLayout*>(box->layout())) {
-    grid->setContentsMargins(24, 20, 24, 20);
-    grid->setVerticalSpacing(16);
-    // Qt indents the text with a spacer column (15 px without an icon, 7 px
-    // after one) that the button row spans, so the grid's spacing comes on
-    // top of it; Windows 11 starts the text at the margin, or 16 px past the
-    // icon
-    grid->setHorizontalSpacing(0);
-    const bool hasIcon = !box->iconPixmap().isNull();
-    for (int i = 0; i < grid->count(); ++i) {
-      QSpacerItem* spacer = grid->itemAt(i)->spacerItem();
-      if (spacer != nullptr && spacer->sizeHint().height() <= 1) {
-        spacer->changeSize(hasIcon ? 16 : 0, 1, QSizePolicy::Fixed, QSizePolicy::Fixed);
+  // the shape of a content dialog; Qt keeps sizing the box itself when it shows
+  auto* buttons     = box->findChild<QDialogButtonBox*>(QStringLiteral("qt_msgbox_buttonbox"));
+  auto* text        = box->findChild<QLabel*>(QStringLiteral("qt_msgbox_label"));
+  auto* informative = box->findChild<QLabel*>(QStringLiteral("qt_msgbox_informativelabel"));
+  auto* iconLabel   = box->findChild<QLabel*>(QStringLiteral("qt_msgboxex_icon_label"));
+  if (buttons != nullptr && text != nullptr) {
+    QList<QWidget*> others;
+    for (auto* child : box->findChildren<QWidget*>(QString(), Qt::FindDirectChildrenOnly)) {
+      if (child != buttons && child != text && child != informative && child != iconLabel &&
+          !child->isWindow()) {
+        others.append(child);
       }
     }
-    grid->invalidate();
-  }
-  // a short question gets a comfortable width; a long text keeps no
-  // minimum, since QMessageBox measures it on one line to decide that it
-  // wraps (a minimum would stop the wrap and cut the text at the edge)
-  if (auto* text = box->findChild<QLabel*>(QStringLiteral("qt_msgbox_label"))) {
+    const QPixmap icon = iconLabel != nullptr ? iconLabel->pixmap() : QPixmap();
+    if (iconLabel != nullptr) {
+      iconLabel->hide();
+    }
+    // Qt wraps a long text only when the layout's minimum width is past its
+    // limit, so only a short text gets the dialog's minimum width
+    const ContentShape shape = toContentShape(box, box->windowTitle(), icon, 0);
     const bool wrap = text->wordWrap();
     text->setWordWrap(false);
-    const int oneLine = text->sizeHint().width();
+    if (text->sizeHint().width() < 392) {
+      text->setMinimumWidth(392);
+    }
     text->setWordWrap(wrap);
-    if (oneLine < 320) {
-      text->setMinimumWidth(320);
+    shape.body->addWidget(text);
+    text->show();
+    if (informative != nullptr) {
+      shape.body->addWidget(informative);
+      informative->show();
     }
-
-    // a wrapped text has a small minimum width, so without this the grid shared
-    // the window's width with the empty column on its left
-    if (auto* grid = qobject_cast<QGridLayout*>(box->layout())) {
-      int row = 0, column = 0, rowSpan = 0, columnSpan = 0;
-      const int index = grid->indexOf(text);
-      if (index >= 0) {
-        grid->getItemPosition(index, &row, &column, &rowSpan, &columnSpan);
-        grid->setColumnStretch(column, 1);
-      }
+    for (QWidget* other : others) {
+      // the check box a plugin added, the details hidden until asked for
+      const bool hidden = other->isHidden();
+      shape.body->addWidget(other);
+      other->setHidden(hidden);
     }
+    buttons->setParent(shape.footer->parentWidget());
+    shape.footer->addWidget(buttons);
+    buttons->show();
+    equalButtons(buttons);
+    // the band is a widget of its own, whose minimum QMessageBox would not see yet
+    shape.footer->parentWidget()->setMinimumWidth(
+        48 + static_cast<int>(std::max<qsizetype>(1, buttons->buttons().size())) * 118);
   }
 
   matchTitleBar(box);
@@ -547,4 +850,13 @@ QPushButton* FluentContentDialog::addButton(const QString& text, bool primary)
   }
   m_buttons->addWidget(button);
   return button;
+}
+
+void FluentContentDialog::askFirst(QPushButton* cancel)
+{
+  for (auto* button : findChildren<QPushButton*>()) {
+    button->setDefault(false);
+  }
+  m_hasDefault = true;
+  cancel->setFocus();
 }

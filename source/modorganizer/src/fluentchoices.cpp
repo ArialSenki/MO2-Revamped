@@ -196,9 +196,9 @@ QFont FluentOptionCard::descriptionFont() const
 
 int FluentOptionCard::textWidth(int width) const
 {
-  return std::max(80, width - static_cast<int>(2 * FocusRoom) - OptionPadLeft -
-                          OptionGlyph - OptionGap - OptionGap - OptionChevron -
-                          OptionPadRight);
+  const int glyph = m_glyph != 0 ? OptionGlyph + OptionGap : 0;
+  return std::max(80, width - static_cast<int>(2 * FocusRoom) - OptionPadLeft - glyph -
+                          OptionGap - OptionChevron - OptionPadRight);
 }
 
 int FluentOptionCard::heightForWidth(int width) const
@@ -238,11 +238,13 @@ void FluentOptionCard::paintEvent(QPaintEvent*)
   p.setOpacity(fade);
 
   // glyph, in the accent for the recommended choice
-  p.setFont(FluentIcons::font(16));
-  p.setPen(FluentIcons::color(m_recommended ? FluentIcons::Tone::Accent
-                                            : FluentIcons::Tone::Ink));
-  p.drawText(QRectF(card.left() + OptionPadLeft, card.top(), OptionGlyph, card.height()),
-             Qt::AlignCenter, QString(QChar(m_glyph)));
+  if (m_glyph != 0) {
+    p.setFont(FluentIcons::font(16));
+    p.setPen(FluentIcons::color(m_recommended ? FluentIcons::Tone::Accent
+                                              : FluentIcons::Tone::Ink));
+    p.drawText(QRectF(card.left() + OptionPadLeft, card.top(), OptionGlyph, card.height()),
+               Qt::AlignCenter, QString(QChar(m_glyph)));
+  }
 
   // the chevron that says the card goes on
   p.setFont(FluentIcons::font(12));
@@ -264,7 +266,8 @@ void FluentOptionCard::paintEvent(QPaintEvent*)
                                               m_description)
                                 .height();
   const int blockH = titleH + (detailH > 0 ? 2 + detailH : 0);
-  const qreal left = card.left() + OptionPadLeft + OptionGlyph + OptionGap;
+  const qreal left =
+      card.left() + OptionPadLeft + (m_glyph != 0 ? OptionGlyph + OptionGap : 0);
   qreal top        = card.top() + std::max(0.0, (card.height() - blockH) / 2.0);
 
   p.setFont(font());

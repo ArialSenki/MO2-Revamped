@@ -37,6 +37,7 @@
 #include "modlistview.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
+#include "fluentdialogs.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
 #include "pluginlistview.h"
@@ -50,21 +51,10 @@ using namespace MOShared;
 
 namespace {
 
-QFrame* createGearActionCard(QWidget* parent, const QString& objectName)
+// the Cancel of Qt's button boxes, in the language they show it
+QString cancelText()
 {
-  auto* card = new QFrame(parent);
-  card->setObjectName(objectName);
-  card->setFrameShape(QFrame::StyledPanel);
-  return card;
-}
-
-QFrame* createGearActionDivider(QWidget* parent)
-{
-  auto* divider = new QFrame(parent);
-  divider->setObjectName(QStringLiteral("gearActionDivider"));
-  divider->setFrameShape(QFrame::NoFrame);
-  divider->setFixedHeight(1);
-  return divider;
+  return QCoreApplication::translate("QPlatformTheme", "Cancel");
 }
 
 QString promptForModListName(QWidget* parent, const QString& windowTitle,
@@ -73,54 +63,21 @@ QString promptForModListName(QWidget* parent, const QString& windowTitle,
                              const QString& placeholder,
                              const QString& acceptText, bool* accepted)
 {
-  QDialog dialog(parent);
-  dialog.setObjectName(QStringLiteral("modListNameDialog"));
+  FluentContentDialog dialog(parent, QStringLiteral("modListNameDialog"), heading,
+                             description);
   dialog.setWindowTitle(windowTitle);
-  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumWidth(440);
-
-  auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(10);
-
-  auto* title = new QLabel(heading, &dialog);
-  title->setObjectName(QStringLiteral("modListNameTitle"));
-  QFont titleFont = title->font();
-  titleFont.setPixelSize(20);
-  titleFont.setBold(true);
-  title->setFont(titleFont);
-  layout->addWidget(title);
-
-  auto* details = new QLabel(description, &dialog);
-  details->setObjectName(QStringLiteral("modListNameDescription"));
-  details->setWordWrap(true);
 
   auto* nameEdit = new QLineEdit(&dialog);
   nameEdit->setObjectName(QStringLiteral("modListNameEdit"));
   nameEdit->setClearButtonEnabled(true);
   nameEdit->setPlaceholderText(placeholder);
-  nameEdit->setMinimumHeight(36);
+  dialog.body()->addWidget(nameEdit);
 
-  auto* card = createGearActionCard(&dialog, QStringLiteral("gearActionCard"));
-  auto* cardLayout = new QVBoxLayout(card);
-  cardLayout->setContentsMargins(10, 8, 10, 8);
-  cardLayout->setSpacing(6);
-  cardLayout->addWidget(details);
-  cardLayout->addWidget(nameEdit);
-  layout->addWidget(card);
-  layout->addWidget(createGearActionDivider(&dialog));
-
-  auto* buttons = new QDialogButtonBox(&dialog);
-  buttons->addButton(QDialogButtonBox::Cancel);
-  auto* acceptButton = buttons->addButton(acceptText, QDialogButtonBox::AcceptRole);
-  acceptButton->setDefault(true);
+  auto* acceptButton = dialog.addButton(acceptText, true);
   acceptButton->setEnabled(false);
-  layout->addWidget(buttons);
-
-  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
-                   &QDialog::accept);
-  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
-                   &QDialog::reject);
+  auto* rejectButton = dialog.addButton(cancelText());
+  QObject::connect(acceptButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(rejectButton, &QPushButton::clicked, &dialog, &QDialog::reject);
   QObject::connect(nameEdit, &QLineEdit::textChanged, &dialog,
                    [acceptButton](const QString& text) {
                      QString validName = text;
@@ -140,106 +97,38 @@ bool confirmBulkModToggle(QWidget* parent, const QString& windowTitle,
                           const QString& heading, const QString& description,
                           const QString& acceptText)
 {
-  QDialog dialog(parent);
-  dialog.setObjectName(QStringLiteral("bulkModToggleDialog"));
+  FluentContentDialog dialog(parent, QStringLiteral("bulkModToggleDialog"), heading,
+                             description);
   dialog.setWindowTitle(windowTitle);
-  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumWidth(440);
 
-  auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(8);
-
-  auto* title = new QLabel(heading, &dialog);
-  title->setObjectName(QStringLiteral("bulkModToggleTitle"));
-  QFont titleFont = title->font();
-  titleFont.setPixelSize(20);
-  titleFont.setBold(true);
-  title->setFont(titleFont);
-  layout->addWidget(title);
-
-  auto* details = new QLabel(description, &dialog);
-  details->setObjectName(QStringLiteral("bulkModToggleDescription"));
-  details->setWordWrap(true);
-
-  auto* card = createGearActionCard(&dialog, QStringLiteral("gearActionCard"));
-  auto* cardLayout = new QVBoxLayout(card);
-  cardLayout->setContentsMargins(10, 5, 10, 5);
-  cardLayout->addWidget(details);
-  layout->addWidget(card);
-  layout->addWidget(createGearActionDivider(&dialog));
-
-  auto* buttons = new QDialogButtonBox(&dialog);
-  buttons->addButton(QDialogButtonBox::Cancel);
-  auto* acceptButton = buttons->addButton(acceptText, QDialogButtonBox::AcceptRole);
-  acceptButton->setAutoDefault(false);
-  if (auto* cancelButton = buttons->button(QDialogButtonBox::Cancel)) {
-    cancelButton->setDefault(true);
-  }
-  layout->addWidget(buttons);
-
-  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
-                   &QDialog::accept);
-  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
-                   &QDialog::reject);
+  auto* acceptButton = dialog.addButton(acceptText, true);
+  auto* rejectButton = dialog.addButton(cancelText());
+  dialog.askFirst(rejectButton);
+  QObject::connect(acceptButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(rejectButton, &QPushButton::clicked, &dialog, &QDialog::reject);
 
   return dialog.exec() == QDialog::Accepted;
 }
 
 bool confirmCategoryAssignment(QWidget* parent, bool* hideWarning)
 {
-  QDialog dialog(parent);
-  dialog.setObjectName(QStringLiteral("assignCategoriesDialog"));
-  dialog.setWindowTitle(QObject::tr("Auto assign categories"));
-  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumWidth(480);
-  dialog.resize(520, 205);
-
-  auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(6);
-
-  auto* title = new QLabel(QObject::tr("Assign Nexus categories"), &dialog);
-  title->setObjectName(QStringLiteral("assignCategoriesTitle"));
-  QFont titleFont = title->font();
-  titleFont.setPixelSize(20);
-  titleFont.setBold(true);
-  title->setFont(titleFont);
-  layout->addWidget(title);
-
-  auto* details = new QLabel(
+  FluentContentDialog dialog(
+      parent, QStringLiteral("assignCategoriesDialog"),
+      QObject::tr("Assign Nexus categories"),
       QObject::tr("For mods with a valid Nexus category mapping, MO2 replaces "
                   "their existing categories with the mapped category. "
-                  "This applies to the full mod list."),
-      &dialog);
-  details->setObjectName(QStringLiteral("assignCategoriesDescription"));
-  details->setWordWrap(true);
+                  "This applies to the full mod list."));
+  dialog.setWindowTitle(QObject::tr("Auto assign categories"));
 
   auto* hideWarningBox =
       new QCheckBox(QObject::tr("Don't show this again"), &dialog);
   hideWarningBox->setObjectName(QStringLiteral("hideAssignCategoriesWarning"));
+  dialog.body()->addWidget(hideWarningBox);
 
-  auto* card = createGearActionCard(&dialog, QStringLiteral("gearActionCard"));
-  auto* cardLayout = new QVBoxLayout(card);
-  cardLayout->setContentsMargins(10, 8, 10, 8);
-  cardLayout->setSpacing(8);
-  cardLayout->addWidget(details);
-  cardLayout->addWidget(hideWarningBox);
-  layout->addWidget(card);
-  layout->addWidget(createGearActionDivider(&dialog));
-
-  auto* buttons = new QDialogButtonBox(&dialog);
-  buttons->addButton(QDialogButtonBox::Cancel);
-  auto* assignButton =
-      buttons->addButton(QObject::tr("Assign categories"),
-                         QDialogButtonBox::AcceptRole);
-  assignButton->setDefault(true);
-  layout->addWidget(buttons);
-
-  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
-                   &QDialog::accept);
-  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
-                   &QDialog::reject);
+  auto* assignButton = dialog.addButton(QObject::tr("Assign categories"), true);
+  auto* rejectButton = dialog.addButton(cancelText());
+  QObject::connect(assignButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(rejectButton, &QPushButton::clicked, &dialog, &QDialog::reject);
 
   const bool accepted = dialog.exec() == QDialog::Accepted;
   if (hideWarning != nullptr) {
@@ -683,7 +572,6 @@ void ModListViewActions::exportModListCSV() const
   optionsLayout->addWidget(groupBoxRows, 1);
   optionsLayout->addWidget(groupBoxColumns, 2);
   rootLayout->addLayout(optionsLayout, 1);
-  rootLayout->addWidget(createGearActionDivider(&selection));
 
   auto* buttons =
       new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,

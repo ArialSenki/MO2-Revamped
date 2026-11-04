@@ -35,6 +35,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QMessageBox,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
@@ -524,55 +525,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _show_notice(
         self, parent, title: str, message: str, kind: str = "info"
     ) -> None:
-        dialog = QDialog(parent or self.__parent_widget)
-        dialog.setObjectName("EldenRingSaveIsolationNoticeDialog")
-        dialog.setWindowTitle(title)
-        dialog.setMinimumWidth(440)
-        dialog.setMaximumWidth(660)
-        layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(12)
-
-        header = QFrame(dialog)
-        header.setObjectName("saveIsolationPromptHeader")
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(12, 10, 12, 10)
-        header_layout.setSpacing(10)
-        icon_text = {
-            "info": "i",
-            "warning": "!",
-            "error": "×",
-            "success": "✓",
-        }.get(kind, "i")
-        icon = QLabel(icon_text, header)
-        icon.setObjectName("saveIsolationPromptIcon")
-        icon.setProperty("promptKind", kind)
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setFixedSize(28, 28)
-        heading = QLabel(title, header)
-        heading.setObjectName("saveIsolationPromptTitle")
-        heading.setWordWrap(True)
-        header_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
-        header_layout.addWidget(heading, 1)
-        layout.addWidget(header)
-
-        body = QLabel(message, dialog)
-        body.setObjectName("saveIsolationPromptMessage")
-        body.setWordWrap(True)
-        body.setTextFormat(Qt.TextFormat.PlainText)
-        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        layout.addWidget(body)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, parent=dialog)
-        buttons.setObjectName("saveIsolationPromptButtons")
-        ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
-        if ok_button is not None:
-            ok_button.setObjectName("saveIsolationPromptOkButton")
-            ok_button.setDefault(True)
-        buttons.accepted.connect(dialog.accept)
-        layout.addWidget(buttons)
-        dialog.adjustSize()
-        dialog.exec()
+        # MO2 gives every message box the shape of its Fluent dialogs
+        icon = {
+            "warning": QMessageBox.Icon.Warning,
+            "error": QMessageBox.Icon.Critical,
+        }.get(kind, QMessageBox.Icon.Information)
+        box = QMessageBox(
+            icon, title, message, QMessageBox.StandardButton.Ok,
+            parent or self.__parent_widget,
+        )
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        box.exec()
 
     def _ask_confirmation(
         self,
@@ -584,60 +548,22 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         kind: str = "warning",
         default_accept: bool = True,
     ) -> bool:
-        dialog = QDialog(parent or self.__parent_widget)
-        dialog.setObjectName("EldenRingSaveIsolationConfirmDialog")
-        dialog.setWindowTitle(title)
-        dialog.setMinimumWidth(500)
-        dialog.setMaximumWidth(720)
-        layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(12)
-
-        header = QFrame(dialog)
-        header.setObjectName("saveIsolationPromptHeader")
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(12, 10, 12, 10)
-        header_layout.setSpacing(10)
-        icon_text = {"info": "i", "warning": "!", "error": "×"}.get(kind, "!")
-        icon = QLabel(icon_text, header)
-        icon.setObjectName("saveIsolationPromptIcon")
-        icon.setProperty("promptKind", kind)
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setFixedSize(28, 28)
-        heading = QLabel(title, header)
-        heading.setObjectName("saveIsolationPromptTitle")
-        heading.setWordWrap(True)
-        header_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
-        header_layout.addWidget(heading, 1)
-        layout.addWidget(header)
-
-        body = QLabel(message, dialog)
-        body.setObjectName("saveIsolationPromptMessage")
-        body.setWordWrap(True)
-        body.setTextFormat(Qt.TextFormat.PlainText)
-        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        layout.addWidget(body)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.NoButton, parent=dialog
+        icon = {
+            "info": QMessageBox.Icon.Information,
+            "error": QMessageBox.Icon.Critical,
+        }.get(kind, QMessageBox.Icon.Warning)
+        box = QMessageBox(
+            icon, title, message, QMessageBox.StandardButton.NoButton,
+            parent or self.__parent_widget,
         )
-        buttons.setObjectName("saveIsolationConfirmButtons")
-        accept_button = buttons.addButton(
-            accept_text, QDialogButtonBox.ButtonRole.AcceptRole
-        )
-        accept_button.setObjectName("saveIsolationConfirmAcceptButton")
-        accept_button.setDefault(default_accept)
-        reject_button = buttons.addButton(
-            reject_text, QDialogButtonBox.ButtonRole.RejectRole
-        )
-        reject_button.setObjectName("saveIsolationConfirmRejectButton")
-        reject_button.setDefault(not default_accept)
-        reject_button.setAutoDefault(False)
-        accept_button.clicked.connect(dialog.accept)
-        reject_button.clicked.connect(dialog.reject)
-        layout.addWidget(buttons)
-        dialog.adjustSize()
-        return dialog.exec() == QDialog.DialogCode.Accepted
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        accept_button = box.addButton(accept_text, QMessageBox.ButtonRole.AcceptRole)
+        reject_button = box.addButton(reject_text, QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(accept_button if default_accept else reject_button)
+        box.setEscapeButton(reject_button)
+        box.exec()
+        return box.clickedButton() is accept_button
 
     def _dialog_ui_enabled(self) -> bool:
         return self._active_instance_is_elden_ring()

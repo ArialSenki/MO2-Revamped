@@ -33,6 +33,10 @@ public:
   // one added is the default
   QPushButton* addButton(const QString& text, bool primary = false);
 
+  // for a question: Enter does nothing, the accent stays on the action, and the
+  // focus starts on the given button
+  void askFirst(QPushButton* cancel);
+
 private:
   QVBoxLayout* m_body;
   QLabel* m_text;

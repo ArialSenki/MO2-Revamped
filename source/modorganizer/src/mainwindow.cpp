@@ -1030,79 +1030,17 @@ QIcon makeEndorsementMenuIcon(const QString& resourcePath)
 bool askNexusEndorsement(QWidget* parent, const QString& windowTitle,
                          const QString& headingText,
                          const QString& descriptionText,
-                         const QString& confirmText, const QString& cancelText,
-                         const QIcon& promptIcon)
+                         const QString& confirmText, const QString& cancelText)
 {
-  QDialog dialog(parent);
-  dialog.setObjectName(QStringLiteral("revampedEndorsementDialog"));
+  FluentContentDialog dialog(parent, QStringLiteral("revampedEndorsementDialog"), headingText,
+                             descriptionText);
   dialog.setWindowTitle(windowTitle);
-  if (parent != nullptr) {
-    dialog.setWindowIcon(parent->windowIcon());
-  }
-  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumWidth(440);
-  dialog.resize(520, 205);
 
-  auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(7);
-
-  auto* header = new QWidget(&dialog);
-  header->setObjectName(QStringLiteral("revampedEndorsementHeader"));
-  auto* headerLayout = new QHBoxLayout(header);
-  headerLayout->setContentsMargins(0, 0, 0, 0);
-  headerLayout->setSpacing(10);
-
-  auto* icon = new QLabel(header);
-  icon->setObjectName(QStringLiteral("revampedEndorsementIcon"));
-  icon->setFixedSize(42, 42);
-  icon->setAlignment(Qt::AlignCenter);
-  icon->setPixmap(promptIcon.pixmap(QSize(22, 22)));
-  headerLayout->addWidget(icon);
-
-  auto* heading = new QLabel(headingText, header);
-  heading->setObjectName(QStringLiteral("revampedEndorsementTitle"));
-  QFont headingFont = heading->font();
-  headingFont.setPixelSize(20);
-  headingFont.setBold(true);
-  heading->setFont(headingFont);
-  heading->setWordWrap(true);
-  headerLayout->addWidget(heading, 1);
-  layout->addWidget(header);
-
-  auto* card = new QFrame(&dialog);
-  card->setObjectName(QStringLiteral("revampedEndorsementCard"));
-  card->setFrameShape(QFrame::StyledPanel);
-  auto* cardLayout = new QVBoxLayout(card);
-  cardLayout->setContentsMargins(10, 7, 10, 7);
-  auto* description = new QLabel(descriptionText, card);
-  description->setObjectName(QStringLiteral("revampedEndorsementDescription"));
-  description->setWordWrap(true);
-  cardLayout->addWidget(description);
-  layout->addWidget(card);
-
-  auto* divider = new QFrame(&dialog);
-  divider->setObjectName(QStringLiteral("revampedEndorsementDivider"));
-  divider->setFrameShape(QFrame::HLine);
-  divider->setFrameShadow(QFrame::Plain);
-  layout->addWidget(divider);
-
-  auto* buttons = new QDialogButtonBox(&dialog);
-  buttons->setObjectName(QStringLiteral("revampedEndorsementButtons"));
-  auto* confirmButton = buttons->addButton(
-      confirmText, QDialogButtonBox::AcceptRole);
-  confirmButton->setObjectName(QStringLiteral("revampedEndorsementConfirmButton"));
-  confirmButton->setAutoDefault(false);
-  auto* cancelButton =
-      buttons->addButton(cancelText, QDialogButtonBox::RejectRole);
-  cancelButton->setAutoDefault(false);
-  cancelButton->setDefault(true);
-  layout->addWidget(buttons);
-
-  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
-                   &QDialog::accept);
-  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
-                   &QDialog::reject);
+  auto* confirmButton = dialog.addButton(confirmText, true);
+  auto* cancelButton  = dialog.addButton(cancelText);
+  dialog.askFirst(cancelButton);
+  QObject::connect(confirmButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
   return dialog.exec() == QDialog::Accepted;
 }
 
@@ -1126,10 +1064,9 @@ bool showProfileBackupPrompt(QWidget* parent, const QString& windowTitle,
   auto* primaryButton = dialog.addButton(primaryButtonText, true);
   QObject::connect(primaryButton, &QPushButton::clicked, &dialog, &QDialog::accept);
   if (!cancelButtonText.isEmpty()) {
-    // asking: Enter doesn't go ahead
     auto* cancelButton = dialog.addButton(cancelButtonText);
     QObject::connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
-    cancelButton->setDefault(true);
+    dialog.askFirst(cancelButton);
   }
   dialog.resize(540, dialog.sizeHint().height());
   return dialog.exec() == QDialog::Accepted;
@@ -1146,32 +1083,12 @@ ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
                                                     bool includePluginOrder,
                                                     bool pluginOrderAvailable)
 {
-  QDialog dialog(parent);
-  dialog.setObjectName(QStringLiteral("profileBackupDialog"));
-  dialog.setWindowTitle(QObject::tr("Create profile backup"));
-  dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumWidth(500);
-  dialog.resize(540, 320);
-
-  auto* layout = new QVBoxLayout(&dialog);
-  layout->setContentsMargins(16, 16, 16, 14);
-  layout->setSpacing(7);
-
-  auto* heading = new QLabel(QObject::tr("Back up this profile"), &dialog);
-  heading->setObjectName(QStringLiteral("profileBackupTitle"));
-  QFont headingFont = heading->font();
-  headingFont.setPixelSize(20);
-  headingFont.setBold(true);
-  heading->setFont(headingFont);
-  layout->addWidget(heading);
-
-  auto* description = new QLabel(
+  FluentContentDialog dialog(
+      parent, QStringLiteral("profileBackupDialog"), QObject::tr("Back up this profile"),
       QObject::tr("Choose which parts of the active profile to save. "
-                  "Each selected part gets a timestamped backup."),
-      &dialog);
-  description->setObjectName(QStringLiteral("profileBackupDescription"));
-  description->setWordWrap(true);
-  layout->addWidget(description);
+                  "Each selected part gets a timestamped backup."));
+  dialog.setWindowTitle(QObject::tr("Create profile backup"));
+  auto* layout = dialog.body();
 
   auto* contentsHeading = new QLabel(QObject::tr("Backup contents"), &dialog);
   contentsHeading->setObjectName(QStringLiteral("backupContentsHeading"));
@@ -1224,15 +1141,11 @@ ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
   pluginOrderCardLayout->addWidget(pluginOrderDetails);
   layout->addWidget(pluginOrderCard);
 
-  auto* buttons = new QDialogButtonBox(&dialog);
-  buttons->addButton(QDialogButtonBox::Cancel);
-  auto* createButton =
-      buttons->addButton(QObject::tr("Create backup"), QDialogButtonBox::AcceptRole);
-  createButton->setDefault(true);
+  auto* createButton = dialog.addButton(QObject::tr("Create backup"), true);
+  auto* rejectButton =
+      dialog.addButton(QCoreApplication::translate("QPlatformTheme", "Cancel"));
   createButton->setEnabled(modList->isChecked() ||
                            (pluginOrderAvailable && pluginOrder->isChecked()));
-  layout->addSpacing(2);
-  layout->addWidget(buttons);
 
   const auto updateCreateButton = [createButton, modList, pluginOrder,
                                    pluginOrderAvailable] {
@@ -1242,10 +1155,8 @@ ProfileBackupSelection chooseProfileBackupContents(QWidget* parent,
   QObject::connect(modList, &QCheckBox::toggled, &dialog, updateCreateButton);
   QObject::connect(pluginOrder, &QCheckBox::toggled, &dialog,
                    updateCreateButton);
-  QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog,
-                   &QDialog::accept);
-  QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog,
-                   &QDialog::reject);
+  QObject::connect(createButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(rejectButton, &QPushButton::clicked, &dialog, &QDialog::reject);
 
   ProfileBackupSelection selection;
   selection.accepted = dialog.exec() == QDialog::Accepted;
@@ -5055,8 +4966,7 @@ void MainWindow::actionEndorseMO()
   if (askNexusEndorsement(
           this, tr("Endorse MO2 Revamped"), tr("Support MO2 Revamped"),
           tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
-          tr("Endorse"), tr("Cancel"),
-          FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/endorse.svg")))) {
+          tr("Endorse"), tr("Cancel"))) {
     if (!revampedListingReachable(m_PluginContainer)) {
       return;
     }
@@ -5072,8 +4982,7 @@ void MainWindow::actionWontEndorseMO()
   if (askNexusEndorsement(
           this, tr("Endorsement preference"), tr("Don't endorse MO2 Revamped"),
           tr("This will record your choice not to endorse the listing on Nexus Mods."),
-          tr("Won't Endorse"), tr("Cancel"),
-          FluentIcons::icon(QStringLiteral(":/MO/gui/contextmenu/wont-endorse.svg")))) {
+          tr("Won't Endorse"), tr("Cancel"))) {
     if (!revampedListingReachable(m_PluginContainer)) {
       return;
     }
@@ -6033,7 +5942,7 @@ QString MainWindow::queryRestore(const QString& filePath)
       isModListBackup ? tr("Restore this saved mod list.")
                       : tr("Restore this saved plugin load order.");
   SelectionDialog dialog(
-      dialogDescription, this, QSize(28, 28));
+      dialogDescription, this);
   dialog.setWindowTitle(dialogTitle);
   if (auto* titleLabel = dialog.findChild<QLabel*>(QStringLiteral("titleLabel"))) {
     titleLabel->setText(dialogTitle);
@@ -6049,7 +5958,7 @@ QString MainWindow::queryRestore(const QString& filePath)
       incompleteLoadOrderBackupFound = true;
       return;
     }
-    dialog.addChoice(FluentIcons::icon(":/MO/gui/mainwindow/restore.svg"), displayName,
+    dialog.addChoice(displayName,
                      choiceDescription, suffix);
   };
   for (const QFileInfo& info : boost::adaptors::reverse(files)) {
@@ -6326,13 +6235,11 @@ void MainWindow::deleteProfileModListBackup()
     if (timestampMatch.hasMatch()) {
       const QDateTime time = QDateTime::fromString(
           timestampMatch.captured(1), PATTERN_BACKUP_DATE);
-      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                       tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)),
+      dialog.addChoice(tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)),
                        tr("Send this saved mod list backup to the Recycle Bin."),
                        info.absoluteFilePath());
     } else if (legacyMatch.hasMatch()) {
-      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                       legacyMatch.captured(1),
+      dialog.addChoice(legacyMatch.captured(1),
                        tr("Send this saved mod list backup to the Recycle Bin."),
                        info.absoluteFilePath());
     }
@@ -6411,13 +6318,11 @@ void MainWindow::deleteProfileLoadOrderBackup()
     if (timestampMatch.hasMatch()) {
       const QDateTime time = QDateTime::fromString(
           timestampMatch.captured(1), PATTERN_BACKUP_DATE);
-      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                       tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)),
+      dialog.addChoice(tr("Backup from %1").arg(QLocale().toString(time, QLocale::ShortFormat)),
                        tr("Send this saved plugin load order to the Recycle Bin."),
                        info.absoluteFilePath());
     } else if (legacyMatch.hasMatch()) {
-      dialog.addChoice(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                       legacyMatch.captured(1),
+      dialog.addChoice(legacyMatch.captured(1),
                        tr("Send this saved plugin load order to the Recycle Bin."),
                        info.absoluteFilePath());
     }

@@ -50,9 +50,6 @@ public:
   void addChoice(const QString& buttonText, const QString& description,
                  const QVariant& data);
 
-  void addChoice(const QIcon& icon, const QString& buttonText,
-                 const QString& description, const QVariant& data);
-
   int numChoices() const;
 
   QVariant getChoiceData();

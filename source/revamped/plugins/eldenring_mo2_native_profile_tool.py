@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QTreeWidget,
     QTreeWidgetItem,
     QPushButton,
@@ -639,52 +640,15 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
     @staticmethod
     def _show_notice(parent, title: str, message: str, kind: str = "info") -> None:
-        dialog = QDialog(parent)
-        dialog.setObjectName("NativeProfileNoticeDialog")
-        dialog.setWindowTitle(title)
-        dialog.setMinimumWidth(440)
-        dialog.setMaximumWidth(640)
-        layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(12)
-
-        header = QFrame(dialog)
-        header.setObjectName("nativeNoticeHeader")
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(12, 10, 12, 10)
-        header_layout.setSpacing(10)
-        icon_text = {"info": "i", "warning": "!", "error": "×", "success": "✓"}.get(
-            kind, "i"
-        )
-        icon = QLabel(icon_text, header)
-        icon.setObjectName("nativeNoticeIcon")
-        icon.setProperty("noticeKind", kind)
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setFixedSize(28, 28)
-        heading = QLabel(title, header)
-        heading.setObjectName("nativeNoticeTitle")
-        heading.setWordWrap(True)
-        header_layout.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
-        header_layout.addWidget(heading, 1)
-        layout.addWidget(header)
-
-        body = QLabel(message, dialog)
-        body.setObjectName("nativeNoticeMessage")
-        body.setWordWrap(True)
-        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        layout.addWidget(body)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, parent=dialog)
-        buttons.setObjectName("nativeNoticeButtons")
-        ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
-        if ok_button is not None:
-            ok_button.setObjectName("nativeNoticeOkButton")
-            ok_button.setDefault(True)
-        buttons.accepted.connect(dialog.accept)
-        layout.addWidget(buttons)
-        dialog.adjustSize()
-        dialog.exec()
-        dialog.deleteLater()
+        # MO2 gives every message box the shape of its Fluent dialogs
+        icon = {
+            "warning": QMessageBox.Icon.Warning,
+            "error": QMessageBox.Icon.Critical,
+        }.get(kind, QMessageBox.Icon.Information)
+        box = QMessageBox(icon, title, message, QMessageBox.StandardButton.Ok, parent)
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        box.exec()
 
     def _hidden_entries_to_keep(
         self, entries: list[dict], active_keys: set, enabled_mods: set

@@ -42,6 +42,9 @@ CategoryImportDialog::CategoryImportDialog(QWidget* parent)
   rows->setContentsMargins(0, 10, 0, 0);
   rows->setSpacing(0);
   const auto heading = [card, rows](const QString& text, int top) {
+    if (text.isEmpty()) {
+      return;
+    }
     auto* label = new QLabel(text, card);
     label->setObjectName(QStringLiteral("fluentCardTitle"));
     label->setContentsMargins(18, top, 18, 8);

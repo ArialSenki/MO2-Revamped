@@ -59,24 +59,6 @@ void SelectionDialog::addChoice(const QString& buttonText, const QString& descri
     m_ValidateByData = true;
 }
 
-void SelectionDialog::addChoice(const QIcon& icon, const QString& buttonText,
-                                const QString& description, const QVariant& data)
-{
-  QAbstractButton* button =
-      new QCommandLinkButton(buttonText, description, ui->buttonBox);
-  button->setMinimumHeight(68);
-  button->setToolTip(description);
-  button->setAccessibleDescription(description);
-  if (m_IconSize.isValid()) {
-    button->setIconSize(m_IconSize);
-  }
-  button->setIcon(icon);
-  button->setProperty("data", data);
-  ui->buttonBox->addButton(button, QDialogButtonBox::AcceptRole);
-  if (data.isValid())
-    m_ValidateByData = true;
-}
-
 int SelectionDialog::numChoices() const
 {
   return ui->buttonBox->findChildren<QCommandLinkButton*>(QString()).count();

@@ -37,8 +37,8 @@ private:
   bool m_keyboardFocus = false;
 };
 
-// a settings card that acts when clicked: glyph, title (with its access
-// key), a description below it and a chevron on the right
+// a settings card that acts when clicked: glyph (none if 0), title (with its
+// access key), a description below it and a chevron on the right
 class FluentOptionCard : public FluentCardButton
 {
 public:

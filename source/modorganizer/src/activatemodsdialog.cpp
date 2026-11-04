@@ -40,6 +40,7 @@ ActivateModsDialog::ActivateModsDialog(SaveGameInfo::MissingAssets const& missin
   QHeaderView* headerView = modsTable->horizontalHeader();
   headerView->setSectionResizeMode(0, QHeaderView::Stretch);
   headerView->setSectionResizeMode(1, QHeaderView::Interactive);
+  headerView->resizeSection(1, 240);
 
   int row = 0;
 

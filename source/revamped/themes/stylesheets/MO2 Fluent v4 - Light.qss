@@ -2490,29 +2490,8 @@ QDialog#EditExecutablesDialog QLabel#steamAppIdLabel {
     font-weight: 600;
 }
 
-QDialog#modListNameDialog QFrame#gearActionCard,
-QDialog#bulkModToggleDialog QFrame#gearActionCard,
-QDialog#assignCategoriesDialog QFrame#gearActionCard {
-    color: #1A1A1A;
-    background-color: #FBFBFB;
-    border: 1px solid #DDDDDD;
-    border-radius: 8px;
-}
 
-QDialog#modListNameDialog QFrame#gearActionCard QLabel,
-QDialog#bulkModToggleDialog QFrame#gearActionCard QLabel,
-QDialog#assignCategoriesDialog QFrame#gearActionCard QLabel {
-    background-color: transparent;
-}
 
-QDialog#modListNameDialog QFrame#gearActionDivider,
-QDialog#bulkModToggleDialog QFrame#gearActionDivider,
-QDialog#assignCategoriesDialog QFrame#gearActionDivider,
-QDialog#ExportModListDialog QFrame#gearActionDivider {
-    background-color: #DDDDDD;
-    border: none;
-    max-height: 1px;
-}
 
 QDialog#profileBackupDialog QLabel#backupContentsHeading {
     color: #1A1A1A;
@@ -2536,33 +2515,11 @@ QDialog#profileBackupDialog QLabel#backupContentsHeading {
     font-weight: 600;
 }
 
-QDialog#revampedEndorsementDialog QWidget#revampedEndorsementHeader { background-color: transparent; border: none; }
 
-QDialog#revampedEndorsementDialog QLabel#revampedEndorsementIcon { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#revampedEndorsementDialog QLabel#revampedEndorsementTitle {
-    color: #1A1A1A;
-    background-color: transparent;
-}
 
-QDialog#revampedEndorsementDialog QFrame#revampedEndorsementCard {
-    color: #1A1A1A;
-    background-color: #FBFBFB;
-    border: 1px solid #DDDDDD;
-    border-radius: 8px;
-}
 
-QDialog#revampedEndorsementDialog QLabel#revampedEndorsementDescription {
-    color: #5D5D5D;
-    background-color: transparent;
-}
 
-QDialog#revampedEndorsementDialog QFrame#revampedEndorsementDivider {
-    color: #DDDDDD;
-    background-color: #DDDDDD;
-    border: none;
-    max-height: 1px;
-}
 
 QDialog#ModInfoDialog QFrame#modInfoEmptyStateCard {
     background-color: #FBFBFB;
@@ -2682,24 +2639,8 @@ QDialog#CreateInstanceDialog QWidget#widget_19 {
     padding: 0px;
 }
 
-QDialog#revampedChoicePrompt QFrame#promptHeaderPanel,
-QDialog#revampedErrorPrompt QFrame#promptHeaderPanel { background-color: transparent; border: none; }
 
-QDialog#revampedChoicePrompt QLabel#promptHeading,
-QDialog#revampedErrorPrompt QLabel#promptHeading {
-    color: #1A1A1A;
-    background-color: transparent;
-    border: none;
-    font-size: 14pt;
-    font-weight: 600;
-}
 
-QDialog#revampedChoicePrompt QLabel#promptDescription,
-QDialog#revampedErrorPrompt QLabel#promptDescription {
-    color: #5D5D5D;
-    background-color: transparent;
-    border: none;
-}
 
 QDialog#EditExecutablesDialog QFrame#headerCard { background-color: transparent; border: none; }
 
@@ -2794,30 +2735,20 @@ QDialog#EldenRingNativeProfileDialog QLabel#nativeTableEmptyState {
     padding: 18px 0px;
 }
 
-QDialog#NativeProfileNoticeDialog QFrame#nativeNoticeHeader,
 QDialog#NativeProfileExportDialog QFrame#nativeExportHeader { background-color: transparent; border: none; }
 
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeIcon { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeIcon[noticeKind="warning"] { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeIcon[noticeKind="error"] { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeIcon[noticeKind="success"] { background-color: transparent; border: none; padding: 0px; }
-
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeTitle,
 QDialog#NativeProfileExportDialog QLabel#nativeExportTitle {
     color: #1A1A1A;
     font-size: 11pt;
     font-weight: 600;
 }
-
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeMessage,
 QDialog#NativeProfileExportDialog QLabel#nativeExportDescription {
     color: #5D5D5D;
     font-size: 9pt;
 }
-
 QDialog#NativeProfileExportDialog QLabel#nativeExportRoute {
     color: #5D5D5D;
     background-color: #F5F5F5;
@@ -2871,32 +2802,12 @@ QDialog#EldenRingSaveTransferDialog QLabel#saveTransferSubtitle {
     font-size: 9pt;
 }
 
-QDialog#EldenRingSaveIsolationNoticeDialog QFrame#saveIsolationPromptHeader,
-QDialog#EldenRingSaveIsolationConfirmDialog QFrame#saveIsolationPromptHeader { background-color: transparent; border: none; }
 
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptIcon,
-QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptIcon { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptIcon[promptKind="warning"],
-QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptIcon[promptKind="warning"] { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptIcon[promptKind="error"],
-QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptIcon[promptKind="error"] { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptIcon[promptKind="success"] { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptTitle,
-QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptTitle {
-    color: #1A1A1A;
-    font-size: 11pt;
-    font-weight: 600;
-}
 
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptMessage,
-QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptMessage {
-    color: #5D5D5D;
-    font-size: 9pt;
-}
 
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
@@ -2937,9 +2848,6 @@ QDialog#ForcedLoadDialog QGroupBox#rulesGroup {
     padding-top: 0;
 }
 
-QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeIcon,
-QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptIcon,
-QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptIcon { background-color: transparent; border: none; padding: 0px; }
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageIcon,
 QDialog#CategoriesDialog QLabel#categoriesHeaderIcon,
@@ -5523,6 +5431,11 @@ QDialog[fluentContentDialog="true"],
 QDialog[fluentContentDialog="true"] QWidget#fluentDialogContent {
     background-color: #FBFBFB;
 }
+QDialog[fluentContentDialog="true"] QLabel#qt_msgbox_label,
+QDialog[fluentContentDialog="true"] QLabel#qt_msgbox_informativelabel,
+QLabel#fluentDialogIcon {
+    background-color: transparent;
+}
 QLabel#fluentDialogTitle {
     color: #1A1A1A;
     font-size: 15pt;
@@ -5930,6 +5843,8 @@ QToolButton#startButton[runState="idle"]::menu-button:disabled {
     border-left-color: #EBEBEB;
 }
 /* uibase's question dialogs: their choices as the wizard's, the icon on the card */
+QDialog#TaskDialog QWidget#contentPanel,
+QDialog#TaskDialog QWidget#rememberPanel,
 QDialog#TaskDialog QWidget#iconPanel,
 QDialog#TaskDialog QWidget#widget_3,
 QDialog#TaskDialog QWidget#mainPanel,
@@ -5952,14 +5867,6 @@ QDialog#TaskDialog QCommandLinkButton:hover {
 }
 QDialog#TaskDialog QCommandLinkButton:pressed {
     background-color: #DFE1E4;
-}
-QLabel#revampedEndorsementTitle,
-QLabel#profileBackupTitle,
-QLabel#modListNameTitle,
-QLabel#bulkModToggleTitle,
-QLabel#assignCategoriesTitle {
-    font-size: 20px;
-    font-weight: 600;
 }
 QDialog#SelectionDialog QCommandLinkButton,
 QDialog#SelectionDialog QCommandLinkButton:default {
