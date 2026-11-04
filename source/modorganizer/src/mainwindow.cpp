@@ -274,6 +274,8 @@ constexpr char16_t DisableMappingsGlyph  = 0xE711;  // Cancel
 // Qt reads QTWEBENGINEPROCESS_PATH once, when the default profile creates the
 // web engine; the variable is removed afterwards so the game and tools started
 // by MO don't inherit it.
+static bool s_webEnginePrepared = false;
+
 class WebEngineProcessPath
 {
 public:
@@ -1313,21 +1315,16 @@ void setFilterShortcuts(QWidget* widget, QLineEdit* edit)
   hookReset(edit);
 }
 
-MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
-                       PluginContainer& pluginContainer, QWidget* parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), m_WasVisible(false),
-      m_FirstPaint(true), m_ToolMenuDirty(true), m_linksSeparator(nullptr),
-      m_OldProfileIndex(-1), m_OldExecutableIndex(-1),
-      m_CategoryFactory(CategoryFactory::instance()), m_OrganizerCore(organizerCore),
-      m_PluginContainer(pluginContainer),
-      m_ArchiveListWriter(std::bind(&MainWindow::saveArchiveList, this)),
-      m_LinkToolbar(nullptr), m_LinkDesktop(nullptr), m_LinkStartMenu(nullptr),
-      m_NumberOfProblems(0), m_ProblemsCheckRequired(false)
+void MainWindow::prepareWebEngine()
 {
-  setStartupDiagnosticPhase("mainwindow.construct.begin");
-  writeStartupDiagnosticEvent("mainwindow.construct.begin");
+  // starting it takes a noticeable part of MO2's startup, and only Mod information
+  // and LOOT's report show web pages: the first of them starts it
+  if (s_webEnginePrepared) {
+    return;
+  }
+  s_webEnginePrepared = true;
 
-  setStartupDiagnosticPhase("mainwindow.webengine.configure");
+  const Settings& settings = Settings::instance();
   {
     WebEngineProcessPath processPath;
     QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(
@@ -1341,6 +1338,21 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   // qt resets the thread name somewhere within the QWebEngineProfile calls
   // above
   MOShared::SetThisThreadName("main");
+}
+
+MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
+                       PluginContainer& pluginContainer, QWidget* parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_WasVisible(false),
+      m_FirstPaint(true), m_ToolMenuDirty(true), m_linksSeparator(nullptr),
+      m_OldProfileIndex(-1), m_OldExecutableIndex(-1),
+      m_CategoryFactory(CategoryFactory::instance()), m_OrganizerCore(organizerCore),
+      m_PluginContainer(pluginContainer),
+      m_ArchiveListWriter(std::bind(&MainWindow::saveArchiveList, this)),
+      m_LinkToolbar(nullptr), m_LinkDesktop(nullptr), m_LinkStartMenu(nullptr),
+      m_NumberOfProblems(0), m_ProblemsCheckRequired(false)
+{
+  setStartupDiagnosticPhase("mainwindow.construct.begin");
+  writeStartupDiagnosticEvent("mainwindow.construct.begin");
 
   // the theme styles the window's surfaces by this property; set before any of
   // them is polished, MOApplication doesn't have to polish them all again
@@ -2988,7 +3000,10 @@ bool MainWindow::canExit()
 
 void MainWindow::cleanup()
 {
-  QWebEngineProfile::defaultProfile()->clearAllVisitedLinks();
+  // starting the engine just to clear it would cost a moment at every close
+  if (s_webEnginePrepared) {
+    QWebEngineProfile::defaultProfile()->clearAllVisitedLinks();
+  }
 
   m_SaveMetaTimer.stop();
   m_MetaSave.waitForFinished();

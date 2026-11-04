@@ -955,6 +955,19 @@ void AdvancedConflictsTab::restoreState(const Settings& s)
   s.widgets().restoreChecked(ui->conflictsAdvancedShowNoConflict);
   s.widgets().restoreChecked(ui->conflictsAdvancedShowAll);
   s.widgets().restoreChecked(ui->conflictsAdvancedShowNearest);
+
+  // same as the General lists: the file takes the width, the mods at its sides
+  // keep a fixed share
+  QHeaderView* header = ui->conflictsAdvancedList->header();
+  header->setStretchLastSection(false);
+  for (int column = 0; column < header->count(); ++column) {
+    if (column == 1) {
+      header->setSectionResizeMode(column, QHeaderView::Stretch);
+    } else {
+      header->setSectionResizeMode(column, QHeaderView::Interactive);
+      header->resizeSection(column, 200);
+    }
+  }
 }
 
 void AdvancedConflictsTab::update()

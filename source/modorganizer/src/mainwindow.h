@@ -127,6 +127,9 @@ class MainWindow : public QMainWindow, public IUserInterface
   friend class OrganizerProxy;
 
 public:
+  // before the first web view: Mod information's Nexus page, LOOT's report
+  static void prepareWebEngine();
+
   explicit MainWindow(Settings& settings, OrganizerCore& organizerCore,
                       PluginContainer& pluginContainer, QWidget* parent = 0);
   ~MainWindow();

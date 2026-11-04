@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Faster
+
+- The main window appears about a second sooner: the splash no longer waits a
+  full second for itself, and the web engine starts only when a page needs it,
+  which adds a moment to the first Mod information of each session.
+- Mod information, tab changes, program lists and the Reforged sync wait less.
+
 ### Removed
 
 - Leftovers from the old Mod Organizer 2 that nothing used: its old themes and
@@ -10,6 +17,8 @@
 
 ### Fixed
 
+- Mod information's Advanced conflicts list gives its width to the file names,
+  which were cut down to their last few letters.
 - The installer wizard's updated look and the Form 43 checker's translated name
   now ship; they were only in the baseline plugin folder, which no build reads.
 

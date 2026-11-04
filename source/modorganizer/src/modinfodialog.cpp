@@ -39,6 +39,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <gameplugins.h>
 #include "shared/directoryentry.h"
 #include "shared/filesorigin.h"
+#include "mainwindow.h"
 #include "ui_modinfodialog.h"
 #include <filesystem>
 #include <QApplication>
@@ -192,6 +193,7 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       m_arrangingTabs(false)
 {
   FluentPerf::Timer perf("ModInfoDialog");
+  MainWindow::prepareWebEngine();
   ui->setupUi(this);
   perf.lap("setupUi");
   LCDNumber::useFrames(this);

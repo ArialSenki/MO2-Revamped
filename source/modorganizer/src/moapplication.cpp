@@ -41,6 +41,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "startupdiagnostics.h"
 #include "thread_utils.h"
 #include "tutorialmanager.h"
+#include <QWindow>
 #include <QAbstractItemView>
 #include <QColor>
 #include <QDebug>
@@ -1675,6 +1676,26 @@ void MOApplication::updateStyle(const QString& fileName)
   applyNativeTitleBarThemeToVisibleMainWindows(fileName);
 }
 
+namespace
+{
+// QSplashScreen blocks in its Show event until the window is exposed, which takes
+// its full second here; the wait below only needs the first paint
+class QuickSplashScreen : public QSplashScreen
+{
+public:
+  using QSplashScreen::QSplashScreen;
+
+protected:
+  bool event(QEvent* e) override
+  {
+    if (e->type() == QEvent::Show) {
+      return QWidget::event(e);
+    }
+    return QSplashScreen::event(e);
+  }
+};
+}  // namespace
+
 MOSplash::MOSplash(const Settings& settings, const QString& dataPath,
                    const MOBase::IPluginGame* game)
 {
@@ -1689,12 +1710,20 @@ MOSplash::MOSplash(const Settings& settings, const QString& dataPath,
     return;
   }
 
-  ss_.reset(new QSplashScreen(image));
+  ss_.reset(new QuickSplashScreen(image));
   ss_->setAttribute(Qt::WA_TranslucentBackground);
   settings.geometry().centerOnMainWindowMonitor(ss_.get());
 
   ss_->show();
   ss_->activateWindow();
+
+  // the startup work that follows doesn't return to the event loop
+  QElapsedTimer waited;
+  waited.start();
+  do {
+    QCoreApplication::processEvents();
+    ss_->repaint();
+  } while (waited.elapsed() < 50 && !(ss_->windowHandle() && ss_->windowHandle()->isExposed()));
 }
 
 void MOSplash::close()

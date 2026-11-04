@@ -3,6 +3,7 @@
 #include "loot.h"
 #include "organizercore.h"
 #include "revampedtheme.h"
+#include "mainwindow.h"
 #include "ui_lootdialog.h"
 #include <QBoxLayout>
 #include <QWebChannel>
@@ -187,6 +188,7 @@ void LootDialog::reject()
 
 void LootDialog::createUI()
 {
+  MainWindow::prepareWebEngine();
   ui->setupUi(this);
   ui->progressBar->setMaximum(0);
 
