@@ -201,7 +201,6 @@ void FluentDashboard::setupBanner(QWidget* central)
   row->addWidget(ui->startButton, 0, Qt::AlignVCenter);
 
   // the old homes of the pickers and Run stay in the .ui, empty
-  ui->label_3->hide();
   ui->startGroup->hide();
 
   auto* layout = qobject_cast<QBoxLayout*>(central->layout());
@@ -287,7 +286,6 @@ void FluentDashboard::setupModsHeader()
   ui->modFilterEdit->setMaximumWidth(320);
 
   // the active count lives in the summary row now
-  ui->activeModslabel->hide();
   ui->activeModsCounter->hide();
 
   // the Data tab searches at the top, like the Downloads tab, with refresh

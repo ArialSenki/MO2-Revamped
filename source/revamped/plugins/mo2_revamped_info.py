@@ -623,9 +623,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                              "https://github.com/ArialSenki/MO2-Revamped"),))
         add_row(people, 0xE8F1, _tr("Base project"),
                 _tr("Based on Mod Organizer 2 and its contributions. Revamped is not "
-                    "an official release from the MO2 team."),
-                (link_button(0xE8A7, _tr("Original Mod Organizer 2 project and source code"),
-                             "https://github.com/ModOrganizer2/modorganizer"),))
+                    "an official release from the MO2 team."))
         licenses_folder = os.path.join(QApplication.applicationDirPath(), "licenses")
         folder_button = QToolButton()
         folder_button.setObjectName("instanceIconButton")
@@ -640,11 +638,12 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         add_row(people, 0xE8A5, _tr("Licenses and source code"),
                 _tr("The authorship notices and licenses of MO2 and its dependencies are "
-                    "kept. See the licenses folder next to the program."),
+                    "kept. See the licenses folder next to the program. For the source "
+                    "code, see docs/UPSTREAMS.md in the MO2 Revamped repository."),
                 (folder_button,))
-        add_row(people, 0xE8B7, _tr("USVFS source code"), "github.com/ModOrganizer2/usvfs",
-                (link_button(0xE8A7, _tr("USVFS source code"),
-                             "https://github.com/ModOrganizer2/usvfs"),))
+        add_row(people, 0xE8B7, _tr("Virtual file system"),
+                _tr("USVFS, from the Mod Organizer 2 project. For its source code and "
+                    "license, see the licenses folder and docs/UPSTREAMS.md."))
         credits.addStretch(1)
 
         # --- Diagnostics -----------------------------------------------------

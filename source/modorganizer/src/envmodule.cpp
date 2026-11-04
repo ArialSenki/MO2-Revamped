@@ -64,15 +64,6 @@ const QString& Module::md5() const
   return m_md5;
 }
 
-QString Module::timestampString() const
-{
-  if (!m_timestamp.isValid()) {
-    return "(no timestamp)";
-  }
-
-  return m_timestamp.toString(Qt::DateFormat::ISODate);
-}
-
 QString Module::toString() const
 {
   QStringList sl;

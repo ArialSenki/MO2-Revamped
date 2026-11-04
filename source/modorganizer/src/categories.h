@@ -154,13 +154,6 @@ public:
   size_t numCategories() const { return m_Categories.size(); }
 
   /**
-   * @brief count all categories that match a specified filter
-   * @param filter the filter to test
-   * @return number of matching categories
-   */
-  unsigned int countCategories(std::function<bool(const Category& category)> filter);
-
-  /**
    * @brief get the id of the parent category
    *
    * @param index the index to look up

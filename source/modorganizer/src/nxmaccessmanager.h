@@ -221,8 +221,6 @@ public:
 
   void apiCheck(const QString& apiKey, bool force = false);
 
-  void showCookies() const;
-
   void clearCookies();
 
   QString userAgent(const QString& subModule = QString()) const;

@@ -257,11 +257,6 @@ void FileTreeModel::expandedAll()
   sortItem(*m_root, false);
 }
 
-const FileTreeModel::SortInfo& FileTreeModel::sortInfo() const
-{
-  return m_sort;
-}
-
 bool FileTreeModel::showArchives() const
 {
   return (m_flags.testFlag(Archives) && m_core.settings().archiveParsing());

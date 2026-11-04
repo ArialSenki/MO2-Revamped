@@ -49,15 +49,6 @@ public:
   //
   bool compatibilityMode() const;
 
-  // returns the Windows version, may not correspond to the actual version
-  // if the process is running in compatibility mode
-  //
-  const Version& reportedVersion() const;
-
-  // tries to guess the real Windows version that's running, can be empty
-  //
-  const Version& realVersion() const;
-
   // various information about the current release
   //
   const Release& release() const;

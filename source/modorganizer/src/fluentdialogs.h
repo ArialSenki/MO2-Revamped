@@ -29,9 +29,6 @@ public:
   // where the dialog's own content goes, below the text
   QVBoxLayout* body() const { return m_body; }
 
-  // the text below the title, for dialogs that change it after creation
-  QLabel* textLabel() const { return m_text; }
-
   // adds a button to the band; primary buttons get the accent, the first
   // one added is the default
   QPushButton* addButton(const QString& text, bool primary = false);

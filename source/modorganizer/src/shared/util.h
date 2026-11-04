@@ -73,8 +73,6 @@ struct ShellRemoveResult
 ShellRemoveResult shellRemove(const QStringList& paths, bool recycle, QWidget* parent);
 
 void SetThisThreadName(const QString& s);
-void checkDuplicateShortcuts(const QMenu& m);
-
 inline FILETIME ToFILETIME(std::filesystem::file_time_type t)
 {
   FILETIME ft;

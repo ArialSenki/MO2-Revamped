@@ -40,7 +40,6 @@ private:
   OrganizerCore& m_core;
   CategoryFactory& m_factory;
 
-  bool onClick(QMouseEvent* e);
   void onItemActivated(QTreeWidgetItem* item);
   void onOptionsChanged();
 

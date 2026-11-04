@@ -78,11 +78,6 @@ bool ModInfo::isBackupName(const QString& name)
   return backupExp.match(name).hasMatch();
 }
 
-bool ModInfo::isRegularName(const QString& name)
-{
-  return !isSeparatorName(name) && !isBackupName(name);
-}
-
 ModInfo::Ptr ModInfo::createFrom(const QDir& dir, OrganizerCore& core)
 {
   QMutexLocker locker(&s_Mutex);
@@ -219,16 +214,6 @@ unsigned int ModInfo::getIndex(const QString& name)
   }
 
   return iter->second;
-}
-
-unsigned int ModInfo::findMod(const boost::function<bool(ModInfo::Ptr)>& filter)
-{
-  for (unsigned int i = 0U; i < s_Collection.size(); ++i) {
-    if (filter(s_Collection[i])) {
-      return i;
-    }
-  }
-  return UINT_MAX;
 }
 
 void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
@@ -489,11 +474,6 @@ void ModInfo::manualUpdateCheck(QObject* receiver, std::multimap<QString, int> I
 void ModInfo::setVersion(const VersionInfo& version)
 {
   m_Version = version;
-}
-
-void ModInfo::setPluginSelected(const bool& isSelected)
-{
-  m_PluginSelected = isSelected;
 }
 
 void ModInfo::addCategory(const QString& categoryName)

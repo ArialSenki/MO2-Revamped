@@ -24,9 +24,6 @@ constexpr int Slow   = 333;
 bool enabled();
 void setEnabled(bool enabled);
 
-// returns the duration to use, or 0 when animations are disabled
-int duration(int ms);
-
 // creates a QVariantAnimation owned by parent with the Fluent easing; its
 // duration is set by start()
 QVariantAnimation* createAnimation(QObject* parent,

@@ -427,13 +427,6 @@ void NexusInterface::interpretNexusFileName(const QString& fileName, QString& mo
   }
 }
 
-bool NexusInterface::isURLGameRelated(const QUrl& url) const
-{
-  QString const name(url.toString());
-  return name.startsWith(getGameURL("") + "/") ||
-         name.startsWith(getOldModsURL("") + "/");
-}
-
 QString NexusInterface::getGameURL(QString gameName) const
 {
   IPluginGame* game = getGame(gameName);
@@ -482,16 +475,6 @@ NexusInterface::getGameChoices(const MOBase::IPluginGame* game)
     }
   }
   return choices;
-}
-
-bool NexusInterface::isModURL(int modID, const QString& url) const
-{
-  if (QUrl(url) == QUrl(getModURL(modID))) {
-    return true;
-  }
-  // Try the alternate (old style) mod name
-  QString alt = QString("%1/%2").arg(getOldModsURL("")).arg(modID);
-  return QUrl(alt) == QUrl(url);
 }
 
 void NexusInterface::setPluginContainer(PluginContainer* pluginContainer)
@@ -605,24 +588,6 @@ int NexusInterface::requestUpdates(const int& modID, QObject* receiver,
 
   nextRequest();
   return requestInfo.m_ID;
-}
-
-void NexusInterface::fakeFiles()
-{
-  static int id = 42;
-
-  QVariantList result;
-  QVariantMap fileMap;
-  fileMap["uri"]         = "fakeURI";
-  fileMap["name"]        = "fakeName";
-  fileMap["description"] = "fakeDescription";
-  fileMap["version"]     = "1.0.0";
-  fileMap["category_id"] = "1";
-  fileMap["id"]          = "1";
-  fileMap["size"]        = "512";
-  result.append(fileMap);
-
-  emit nxmFilesAvailable("fakeGame", 1234, "fake", result, id++);
 }
 
 int NexusInterface::requestFiles(QString gameName, int modID, QObject* receiver,

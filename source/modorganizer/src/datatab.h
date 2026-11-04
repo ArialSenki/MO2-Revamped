@@ -66,7 +66,6 @@ private:
   bool m_needUpdate;
 
   void onRefresh();
-  void onItemExpanded(QTreeWidgetItem* item);
   void onConflicts();
   void onArchives();
   void updateOptions();

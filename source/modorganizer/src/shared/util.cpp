@@ -352,39 +352,6 @@ char shortcutChar(const QAction* a)
   return 0;
 }
 
-void checkDuplicateShortcuts(const QMenu& m)
-{
-  const auto actions = m.actions();
-
-  for (int i = 0; i < actions.size(); ++i) {
-    const auto* action1 = actions[i];
-    if (action1->isSeparator()) {
-      continue;
-    }
-
-    const char shortcut1 = shortcutChar(action1);
-    if (shortcut1 == 0) {
-      continue;
-    }
-
-    for (int j = i + 1; j < actions.size(); ++j) {
-      const auto* action2 = actions[j];
-      if (action2->isSeparator()) {
-        continue;
-      }
-
-      const char shortcut2 = shortcutChar(action2);
-
-      if (shortcut1 == shortcut2) {
-        log::error("duplicate shortcut {} for {} and {}", shortcut1, action1->text(),
-                   action2->text());
-
-        break;
-      }
-    }
-  }
-}
-
 }  // namespace MOShared
 
 static bool g_exiting  = false;

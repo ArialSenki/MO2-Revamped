@@ -303,11 +303,6 @@ void ProblemsDialog::runDiagnosis()
   selectionChanged();
 }
 
-bool ProblemsDialog::hasProblems() const
-{
-  return m_hasProblems;
-}
-
 void ProblemsDialog::selectionChanged()
 {
   QListWidgetItem* item = m_list->currentItem();

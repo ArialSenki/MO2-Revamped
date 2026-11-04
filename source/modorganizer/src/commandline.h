@@ -121,10 +121,6 @@ protected:
   //
   virtual po::positional_options_description getPositional() const;
 
-  // returns the original command line
-  //
-  const std::wstring& originalCmd() const;
-
   // variables
   //
   const po::variables_map& vm() const;
@@ -335,10 +331,6 @@ public:
   // returns the data parsed from an moshortcut:// option, if any
   //
   const MOShortcut& shortcut() const;
-
-  // returns the nxm:// link, if any
-  //
-  std::optional<QString> nxmLink() const;
 
   // returns the executable/binary, if any
   //

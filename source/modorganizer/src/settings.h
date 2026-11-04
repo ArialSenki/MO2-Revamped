@@ -326,10 +326,6 @@ public:
   //
   QVariantMap descriptions(const QString& pluginName) const;
 
-  // overwrites all descriptions
-  //
-  void setDescriptions(const QString& pluginName, const QVariantMap& map);
-
   // ?
   QVariant persistent(const QString& pluginName, const QString& key,
                       const QVariant& def) const;
@@ -730,8 +726,6 @@ public:
   void setMaxCoreDumps(int n);
 
   std::chrono::seconds spawnDelay() const;
-  void setSpawnDelay(std::chrono::seconds t);
-
 private:
   QSettings& m_Settings;
 };
@@ -853,13 +847,9 @@ public:
   // whether to use spascreen or not
   //
   bool useSplash() const;
-  void setUseSplash(bool b);
-
   // number of threads to use when refreshing
   //
   std::size_t refreshThreadCount() const;
-  void setRefreshThreadCount(std::size_t n) const;
-
   GameSettings& game();
   const GameSettings& game() const;
 

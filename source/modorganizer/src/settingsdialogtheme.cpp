@@ -89,11 +89,6 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
     ui->colorTable->resetColors();
   });
 
-  // only the two Fluent themes are listed: what's in that folder has no use here
-  ui->exploreStyles->hide();
-  QObject::connect(ui->exploreStyles, &QPushButton::clicked, [&] {
-    onExploreStyles();
-  });
 }
 
 void ThemeSettingsTab::update()
@@ -163,11 +158,4 @@ void ThemeSettingsTab::selectStyle()
                    [box = ui->styleBox] {
                      box->setProperty("mo2Picked", true);
                    });
-}
-
-void ThemeSettingsTab::onExploreStyles()
-{
-  QString ssPath = QCoreApplication::applicationDirPath() + "/" +
-                   ToQString(AppConfig::stylesheetsPath());
-  shell::Explore(ssPath);
 }

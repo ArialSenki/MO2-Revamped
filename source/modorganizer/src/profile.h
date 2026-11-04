@@ -323,8 +323,6 @@ public:
    **/
   int getModPriority(unsigned int index) const;
 
-  void dumpModStatus() const;
-
   QVariant setting(const QString& section, const QString& name,
                    const QVariant& fallback = {}) const;
 
@@ -332,9 +330,6 @@ public:
                     const QVariant& value = {});
 
   void removeSetting(const QString& section, const QString& name);
-
-  QVariantMap settingsByGroup(const QString& section) const;
-  void storeSettingsByGroup(const QString& section, const QVariantMap& values);
 
   QList<QVariantMap> settingsByArray(const QString& prefix) const;
   void storeSettingsByArray(const QString& prefix, const QList<QVariantMap>& values);

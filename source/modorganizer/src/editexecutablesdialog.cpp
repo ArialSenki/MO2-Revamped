@@ -377,18 +377,6 @@ ExecutablesList EditExecutablesDialog::getExecutablesList() const
   return newList;
 }
 
-const EditExecutablesDialog::CustomOverwrites&
-EditExecutablesDialog::getCustomOverwrites() const
-{
-  return m_customOverwrites;
-}
-
-const EditExecutablesDialog::ForcedLibraries&
-EditExecutablesDialog::getForcedLibraries() const
-{
-  return m_forcedLibraries;
-}
-
 bool EditExecutablesDialog::checkOutputMods(const ExecutablesList& exes)
 {
   // make sure the output mods for exes exist since the combobox is editable

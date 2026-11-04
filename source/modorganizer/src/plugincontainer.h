@@ -47,11 +47,6 @@ public:
   bool isCorePlugin() const;
 
   /**
-   * @return true if this plugin has requirements (satisfied or not).
-   */
-  bool hasRequirements() const;
-
-  /**
    * @return the proxy that created this plugin, if any.
    */
   MOBase::IPluginProxy* proxy() const;
@@ -75,12 +70,6 @@ public:
    * @return the list of problems to be resolved before enabling the plugin.
    */
   std::vector<MOBase::IPluginRequirement::Problem> problems() const;
-
-  /**
-   * @return the name of the games (gameName()) this plugin can be used with, or an
-   * empty list if this plugin does not require particular games.
-   */
-  QStringList requiredGames() const;
 
   /**
    * @return the list of plugins currently enabled that would have to be disabled

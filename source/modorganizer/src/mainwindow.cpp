@@ -79,7 +79,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "startupdiagnostics.h"
 #include "spawn.h"
 #include "statusbar.h"
-#include "tutorialmanager.h"
 #include "versioninfo.h"
 #include <memory>
 #include <bsainvalidation.h>
@@ -1318,7 +1317,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
                        PluginContainer& pluginContainer, QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), m_WasVisible(false),
       m_FirstPaint(true), m_ToolMenuDirty(true), m_linksSeparator(nullptr),
-      m_Tutorial(this, "MainWindow"),
       m_OldProfileIndex(-1), m_OldExecutableIndex(-1),
       m_CategoryFactory(CategoryFactory::instance()), m_OrganizerCore(organizerCore),
       m_PluginContainer(pluginContainer),
@@ -1745,8 +1743,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   connect(&NexusInterface::instance(), &NexusInterface::requestsChanged, ui->statusBar,
           &StatusBar::setAPI);
 
-  connect(ui->tabWidget, SIGNAL(currentChanged(int)), &TutorialManager::instance(),
-          SIGNAL(tabChanged(int)));
   connect(ui->toolBar, SIGNAL(customContextMenuRequested(QPoint)), this,
           SLOT(toolBar_customContextMenuRequested(QPoint)));
   connect(ui->menuToolbars, &QMenu::aboutToShow, [&] {
@@ -1804,9 +1800,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   FileDialogMemory::restore(settings);
 
   fixCategories();
-
-  m_Tutorial.expose("modList", m_OrganizerCore.modList());
-  m_Tutorial.expose("espList", m_OrganizerCore.pluginList());
 
   m_OrganizerCore.setUserInterface(this);
   connect(m_OrganizerCore.modList(), &ModList::showMessage, [=](auto&& message) {
@@ -1873,8 +1866,6 @@ void MainWindow::setupModList()
   });
   connect(&ui->modList->actions(), &ModListViewActions::originModified, this,
           &MainWindow::originModified);
-  connect(&ui->modList->actions(), &ModListViewActions::modInfoDisplayed, this,
-          &MainWindow::modInfoDisplayed);
 
   connect(m_OrganizerCore.modList(), &ModList::modPrioritiesChanged, [&]() {
     m_ArchiveListWriter.write();
@@ -2030,12 +2021,6 @@ void MainWindow::updateStyle(const QString&)
   if (m_toolbarButtonGeometryInitialized) {
     stabilizeToolbarButtonGeometry(false);
   }
-}
-
-void MainWindow::resizeEvent(QResizeEvent* event)
-{
-  m_Tutorial.resize(event->size());
-  QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::setupToolbar()
@@ -2583,6 +2568,16 @@ void MainWindow::createHelpMenu()
   });
   menu->addAction(documentationAction);
 
+  QAction* mo2GitHubAction = new QAction(tr("Mod Organizer 2 on GitHub"), menu);
+  mo2GitHubAction->setObjectName(QStringLiteral("mo2GitHubAction"));
+  mo2GitHubAction->setIcon(
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/mod-page.svg")));
+  mo2GitHubAction->setToolTip(tr("Open the original Mod Organizer 2 project on GitHub."));
+  connect(mo2GitHubAction, &QAction::triggered, this, [] {
+    shell::Open(QUrl("https://github.com/ModOrganizer2/modorganizer"));
+  });
+  menu->addAction(mo2GitHubAction);
+
   QAction* whatsThisAction = new QAction(tr("Help on the interface"), menu);
   whatsThisAction->setObjectName(QStringLiteral("whatsThisAction"));
   whatsThisAction->setIcon(
@@ -2714,9 +2709,6 @@ void MainWindow::showEvent(QShowEvent* event)
       stabilizeToolbarButtonGeometry(true);
       m_toolbarButtonGeometryInitialized = true;
     });
-
-    // only the first time the window becomes visible
-    m_Tutorial.registerControl();
 
     QTimer::singleShot(0, this, [this] {
       offerReplacedModsRecovery();

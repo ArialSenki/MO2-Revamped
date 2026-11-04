@@ -75,10 +75,6 @@ public:
   virtual bool dropMimeData(const QMimeData* data, Qt::DropAction action, int row,
                             int column, const QModelIndex& parent);
 
-  /* QtGroupingProxy methods */
-  virtual QModelIndex addEmptyGroup(const RowData& data);
-  virtual bool removeGroup(const QModelIndex& idx);
-
 protected slots:
   virtual void buildTree();
 
@@ -108,8 +104,6 @@ protected:
   QList<int> addSourceRow(const QModelIndex& idx);
 
   bool isGroup(const QModelIndex& index) const;
-  bool isAGroupSelected(const QModelIndexList& list) const;
-
   /** Maintains the group -> sourcemodel row mapping
    * The reason a QList<int> is use instead of a QMultiHash is that the values have to
    * be reordered when rows are inserted or removed.
@@ -139,9 +133,6 @@ protected:
 
   QModelIndex m_rootNode;
   int m_groupedColumn;
-
-  /* debug function */
-  void dumpGroups() const;
 
 private:
   unsigned int m_flags;

@@ -142,7 +142,6 @@ void ProfileInputDialog::useContentDialogLayout()
   connect(m_accept, &QPushButton::clicked, this, &QDialog::accept);
   connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
   ui->buttonBox->hide();
-  ui->profileInputDivider->hide();
   ui->profileHeaderLayout->removeWidget(ui->profilePageTitle);
   ui->profileHeaderLayout->removeWidget(ui->profilePageSubtitle);
   ui->profileHeader->hide();

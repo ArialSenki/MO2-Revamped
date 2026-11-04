@@ -298,6 +298,15 @@ function Copy-RevampedSources {
     if ($saveIsolationSourceHash -ine $saveIsolationStageHash) {
         throw 'The Complete stage does not contain the maintained Save Isolation source.'
     }
+    # these replace the runtime's baseline copies
+    foreach ($overlaid in @('Form43Checker.py', 'installer_wizard\dialog.py')) {
+        $overlaySource = Join-Path $pluginSource $overlaid
+        $overlayStage = Join-Path $pluginDestination $overlaid
+        if ((Get-FileHash -LiteralPath $overlaySource -Algorithm SHA256).Hash -ine
+            (Get-FileHash -LiteralPath $overlayStage -Algorithm SHA256).Hash) {
+            throw "The Complete stage does not contain the maintained $overlaid."
+        }
+    }
     $bridgeDestination = Join-Path $pluginDestination 'basic_games\games\eldenring_mo2_bridge.dll'
     New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($bridgeDestination)) | Out-Null
     Copy-Item -LiteralPath $BridgePath -Destination $bridgeDestination -Force

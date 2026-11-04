@@ -118,13 +118,6 @@ public:
   void setProfile(Profile* profile);
 
   /**
-   * @brief retrieve the current sorting mode
-   * @note this is used to store the sorting mode between sessions
-   * @return current sorting mode, encoded to be compatible to previous versions
-   **/
-  int getCurrentSortingMode() const;
-
-  /**
    * @brief remove the specified mod without asking for confirmation
    * @param row the row to remove
    */
@@ -282,11 +275,6 @@ signals:
   void showMessage(const QString& message);
 
   /**
-   * @brief signals change to the count of headers
-   */
-  void resizeHeaders();
-
-  /**
    * @brief emitted to remove a file origin
    * @param name name of the orign to remove
    */
@@ -308,12 +296,6 @@ signals:
    * @param fileName filename of the mod being uninstalled
    */
   void modUninstalled(const QString& fileName);
-
-  /**
-   * @brief QML seems to handle overloaded signals poorly - create unique signal for
-   * tutorials
-   */
-  void tutorialModlistUpdate();
 
   /**
    * @brief fileMoved emitted when a file is moved from one mod to another

@@ -92,13 +92,9 @@ public:
 
   int originID() const { return m_originID; }
 
-  const QString& virtualParentPath() const { return m_virtualParentPath; }
-
   QString virtualPath() const;
 
   const QString& filename() const { return m_file; }
-
-  const std::wstring& filenameWs() const { return m_wsFile; }
 
   const std::wstring& filenameWsLowerCase() const { return m_wsLcFile; }
 
@@ -171,8 +167,6 @@ public:
       queueSort();
     }
   }
-
-  bool isStrictlyExpanded() const { return m_expanded; }
 
   bool areChildrenVisible() const;
 

@@ -1211,7 +1211,6 @@ void ModInfoDialog::buildFluentPages()
 
   // Categories: the primary one as a row above the list of all of them
   if (auto* page = qobject_cast<QVBoxLayout*>(ui->tabCategories->layout())) {
-    ui->label_12->hide();
     auto* card = addRowsCard(page, 0, ui->tabCategories);
     addEditRow(card, 0xE734, tr("Primary category"),
                tr("The one the mod list shows and groups by"), {ui->primaryCategories});
@@ -1222,10 +1221,6 @@ void ModInfoDialog::buildFluentPages()
     page->setSpacing(8);
     ui->categories->setFrameShape(QFrame::NoFrame);
   }
-
-  // the file list's own "Text files" label repeats the page title
-  ui->label_5->hide();
-  ui->label_6->hide();
 
   ui->previousMod->setIcon(FluentIcons::glyph(0xE76B));
   ui->nextMod->setIcon(FluentIcons::glyph(0xE76C));

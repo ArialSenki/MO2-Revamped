@@ -174,7 +174,6 @@ void ForcedLoadDialog::buildFluentLayout()
   if (root == nullptr) {
     return;
   }
-  ui->headerPanel->hide();
   ui->rulesGroup->hide();
   ui->addRowButton->hide();
   ui->deleteRowButton->hide();

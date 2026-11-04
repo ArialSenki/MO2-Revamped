@@ -131,16 +131,6 @@ void DirectoryEntry::addFromOrigin(env::DirectoryWalker& walker,
   m_Populated = true;
 }
 
-void DirectoryEntry::addFromList(const std::wstring& originName,
-                                 const std::wstring& directory, env::Directory& root,
-                                 int priority, DirectoryStats& stats)
-{
-  stats = {};
-
-  FilesOrigin& origin = createOrigin(originName, directory, priority, stats);
-  addDir(origin, root, stats);
-}
-
 void DirectoryEntry::addDir(FilesOrigin& origin, env::Directory& d,
                             DirectoryStats& stats)
 {
@@ -361,11 +351,6 @@ const FileEntryPtr DirectoryEntry::findFile(const DirectoryEntryFileKey& key) co
   }
 }
 
-bool DirectoryEntry::hasFile(const std::wstring& name) const
-{
-  return m_Files.contains(ToLowerCopy(name));
-}
-
 bool DirectoryEntry::containsArchive(std::wstring archiveName)
 {
   for (auto iter = m_Files.begin(); iter != m_Files.end(); ++iter) {
@@ -500,11 +485,6 @@ bool DirectoryEntry::remove(const std::wstring& fileName, int* origin)
   }
 
   return b;
-}
-
-bool DirectoryEntry::hasContentsFromOrigin(int originID) const
-{
-  return m_Origins.find(originID) != m_Origins.end();
 }
 
 FilesOrigin& DirectoryEntry::createOrigin(const std::wstring& originName,

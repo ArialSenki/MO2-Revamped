@@ -171,8 +171,6 @@ void MainWindow::setupFluentLayout()
   ui->horizontalLayout_6->insertWidget(gearIndex, m_moreActionsButton);
   updateMoreActionsMenu();
 
-  ui->activeModslabel->setText(tr("Active"));
-
   m_fluentDashboard = new FluentDashboard(ui, m_OrganizerCore, this);
   setupFluentCommandBar();
   new IconTint(ui->startButton, QStringLiteral(":/MO/gui/mainwindow/run.svg"));

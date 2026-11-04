@@ -615,34 +615,6 @@ Service::Status getServiceStatus(SC_HANDLE s, const QString& name)
   }
 }
 
-Service getService(const QString& name)
-{
-  // service manager
-  const LocalPtr<SC_HANDLE> scm(
-      OpenSCManager(NULL, NULL, SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG));
-
-  if (!scm) {
-    const auto e = GetLastError();
-    log::error("OpenSCManager() failed, {}", formatSystemMessage(e));
-    return Service(name);
-  }
-
-  // service
-  const LocalPtr<SC_HANDLE> s(OpenService(scm.get(), name.toStdWString().c_str(),
-                                          SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG));
-
-  if (!s) {
-    const auto e = GetLastError();
-    log::error("OpenService() failed for '{}', {}", name, formatSystemMessage(e));
-    return Service(name);
-  }
-
-  const auto startType = getServiceStartType(s.get(), name);
-  const auto status    = getServiceStatus(s.get(), name);
-
-  return {name, startType, status};
-}
-
 std::optional<QString> getAssocString(const QFileInfo& file, ASSOCSTR astr)
 {
   const auto ext = L"." + file.suffix().toStdWString();
@@ -911,40 +883,6 @@ bool isKeyEmpty(HKEY key)
 
   // key has no values and has either no subkeys or all subkeys are empty
   return true;
-}
-
-void deleteRegistryKeyIfEmpty(const QString& name)
-{
-  if (name.isEmpty()) {
-    return;
-  }
-
-  auto key = openRegistryKey(HKEY_CURRENT_USER, name.toStdWString().c_str());
-  if (!key) {
-    return;
-  }
-
-  if (!isKeyEmpty(key.get())) {
-    return;
-  }
-
-  ::RegDeleteTreeW(HKEY_CURRENT_USER, name.toStdWString().c_str());
-}
-
-bool registryValueExists(const QString& keyName, const QString& valueName)
-{
-  auto key = openRegistryKey(HKEY_CURRENT_USER, keyName.toStdWString().c_str());
-
-  if (!key) {
-    return false;
-  }
-
-  DWORD type = 0;
-
-  auto r = ::RegQueryValueExW(key.get(), valueName.toStdWString().c_str(), nullptr,
-                              &type, nullptr, nullptr);
-
-  return (r == ERROR_SUCCESS);
 }
 
 // returns the filename of the given process or the current one

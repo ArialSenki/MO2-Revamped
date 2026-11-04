@@ -160,7 +160,6 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
   // the facts, as the first card of the About page
   auto* page = qobject_cast<QVBoxLayout*>(ui->about->layout());
   if (page != nullptr) {
-    ui->aboutSummary->hide();
     auto* facts = new QFrame(ui->about);
     facts->setProperty("fluentCard", true);
     auto* rows = new QVBoxLayout(facts);
@@ -214,7 +213,7 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     actionsLayout->addWidget(issue);
     actionsLayout->addStretch(1);
     rows->addWidget(actions);
-    page->insertWidget(page->indexOf(ui->aboutSummary) + 1, facts);
+    page->insertWidget(page->indexOf(ui->aboutPageHeading) + 1, facts);
   }
 
   ui->creditsList->setFrameShape(QFrame::NoFrame);

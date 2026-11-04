@@ -59,16 +59,6 @@ QVariant IconFetcher::icon(const QString& path) const
   }
 }
 
-QPixmap IconFetcher::genericFileIcon() const
-{
-  return m_quickCache.file;
-}
-
-QPixmap IconFetcher::genericDirectoryIcon() const
-{
-  return m_quickCache.directory;
-}
-
 bool IconFetcher::hasOwnIcon(const QString& path) const
 {
   static const QString exe = ".exe";

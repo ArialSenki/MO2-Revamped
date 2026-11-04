@@ -93,14 +93,6 @@ public:
     }
   }
 
-  template <class F>
-  void forEach(F&& f)
-  {
-    for (auto& ti : m_threads) {
-      f(ti.o);
-    }
-  }
-
 private:
   struct ThreadInfo
   {
@@ -183,9 +175,6 @@ private:
 
 void forEachEntry(const std::wstring& path, void* cx, DirStartF* dirStartF,
                   DirEndF* dirEndF, FileF* fileF);
-
-Directory getFilesAndDirs(const std::wstring& path);
-Directory getFilesAndDirsWithFind(const std::wstring& path);
 
 }  // namespace env
 

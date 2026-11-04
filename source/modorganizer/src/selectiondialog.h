@@ -56,11 +56,6 @@ public:
   int numChoices() const;
 
   QVariant getChoiceData();
-  QString getChoiceString();
-  QString getChoiceDescription();
-
-  void disableCancel();
-
 private slots:
 
   void on_buttonBox_clicked(QAbstractButton* button);

@@ -655,15 +655,6 @@ void Profile::refreshModStatus()
   }
 }
 
-void Profile::dumpModStatus() const
-{
-  for (unsigned int i = 0; i < m_ModStatus.size(); ++i) {
-    ModInfo::Ptr info = ModInfo::getByIndex(i);
-    log::warn("{}: {} - {} ({})", i, info->name(), m_ModStatus[i].m_Priority,
-              m_ModStatus[i].m_Enabled ? "enabled" : "disabled");
-  }
-}
-
 void Profile::updateIndices()
 {
   m_ModIndexByPriority.clear();
@@ -1172,26 +1163,6 @@ void Profile::storeSetting(const QString& section, const QString& name,
 void Profile::removeSetting(const QString& section, const QString& name)
 {
   m_Settings->remove(keyName(section, name));
-}
-
-QVariantMap Profile::settingsByGroup(const QString& section) const
-{
-  QVariantMap results;
-  m_Settings->beginGroup(section);
-  for (auto key : m_Settings->childKeys()) {
-    results[key] = m_Settings->value(key);
-  }
-  m_Settings->endGroup();
-  return results;
-}
-
-void Profile::storeSettingsByGroup(const QString& section, const QVariantMap& values)
-{
-  m_Settings->beginGroup(section);
-  for (auto key : values.keys()) {
-    m_Settings->setValue(key, values[key]);
-  }
-  m_Settings->endGroup();
 }
 
 QList<QVariantMap> Profile::settingsByArray(const QString& prefix) const

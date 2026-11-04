@@ -151,19 +151,6 @@ public:
   void clearAdditionalInformation();
 
   /**
-   * @brief reset additional information on a mod
-   * @param name name of the plugin to clear the information of
-   */
-  void clearInformation(const QString& name);
-
-  /**
-   * @brief add additional information on a mod (i.e. from loot)
-   * @param name name of the plugin to add information about
-   * @param message the message to add to the plugin
-   */
-  void addInformation(const QString& name, const QString& message);
-
-  /**
    * adds information from a loot report
    */
   void addLootReport(const QString& name, Loot::Plugin plugin);
@@ -200,11 +187,6 @@ public:
    * @note also stores to disk the list of locked esps
    **/
   bool saveLoadOrder(MOShared::DirectoryEntry& directoryStructure);
-
-  /**
-   * @return number of enabled plugins in the list
-   */
-  int enabledCount() const;
 
   int timeElapsedSinceLastChecked() const;
 

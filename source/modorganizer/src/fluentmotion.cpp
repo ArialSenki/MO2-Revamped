@@ -102,11 +102,6 @@ void setEnabled(bool enabled)
   g_enabled = enabled;
 }
 
-int duration(int ms)
-{
-  return g_enabled ? ms : 0;
-}
-
 QVariantAnimation* createAnimation(QObject* parent, QEasingCurve::Type easing)
 {
   auto* animation = new QVariantAnimation(parent);

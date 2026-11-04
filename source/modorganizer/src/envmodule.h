@@ -60,11 +60,6 @@ public:
   //
   const QString& md5() const;
 
-  // converts timestamp() to a string for display, returns "(no timestamp)" if
-  // not available
-  //
-  QString timestampString() const;
-
   // returns false for modules in the Windows root directory
   //
   bool interesting() const;

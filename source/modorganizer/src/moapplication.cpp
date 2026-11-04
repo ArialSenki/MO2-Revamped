@@ -1118,13 +1118,6 @@ std::optional<int> MOApplication::setupInstanceLoop(Instance& currentInstance,
 
 void MOApplication::purgeOldFiles()
 {
-  // remove the temporary backup directory in case we're restarting after an
-  // update
-  QString backupDirectory = qApp->applicationDirPath() + "/update_backup";
-  if (QDir(backupDirectory).exists()) {
-    shellDelete(QStringList(backupDirectory));
-  }
-
   // Keep only the newest five usvfs logs. Avoid shellDelete here: its Windows
   // error UI can block startup when an older log is locked or access is denied.
   const QString logDirectory =

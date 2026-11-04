@@ -130,11 +130,6 @@ private:
    */
   EConflictType isLooseArchiveConflicted() const;
 
-  /**
-   * @return true if this mod is completely replaced by others
-   */
-  bool isRedundant() const;
-
   bool hasHiddenFiles() const;
 
 protected:

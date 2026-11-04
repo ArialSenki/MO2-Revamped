@@ -281,19 +281,9 @@ bool Settings::useSplash() const
   return get<bool>(m_Settings, "Settings", "use_splash", true);
 }
 
-void Settings::setUseSplash(bool b)
-{
-  set(m_Settings, "Settings", "use_splash", b);
-}
-
 std::size_t Settings::refreshThreadCount() const
 {
   return get<std::size_t>(m_Settings, "Settings", "refresh_thread_count", 10);
-}
-
-void Settings::setRefreshThreadCount(std::size_t n) const
-{
-  return set(m_Settings, "Settings", "refresh_thread_count", n);
 }
 
 std::optional<QVersionNumber> Settings::version() const
@@ -1523,11 +1513,6 @@ QVariantMap PluginSettings::descriptions(const QString& pluginName) const
   return m_PluginDescriptions[pluginName];
 }
 
-void PluginSettings::setDescriptions(const QString& pluginName, const QVariantMap& map)
-{
-  m_PluginDescriptions[pluginName] = map;
-}
-
 QVariant PluginSettings::persistent(const QString& pluginName, const QString& key,
                                     const QVariant& def) const
 {
@@ -2458,11 +2443,6 @@ void DiagnosticsSettings::setMaxCoreDumps(int n)
 std::chrono::seconds DiagnosticsSettings::spawnDelay() const
 {
   return std::chrono::seconds(get<int>(m_Settings, "Settings", "spawn_delay", 0));
-}
-
-void DiagnosticsSettings::setSpawnDelay(std::chrono::seconds t)
-{
-  set(m_Settings, "Settings", "spawn_delay", t.count());
 }
 
 QString GlobalSettings::currentInstance()

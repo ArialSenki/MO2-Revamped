@@ -939,11 +939,6 @@ DWORD ProcessRunner::exitCode() const
   return m_exitCode;
 }
 
-HANDLE ProcessRunner::getProcessHandle() const
-{
-  return m_handle.get();
-}
-
 env::HandlePtr ProcessRunner::stealProcessHandle()
 {
   auto h = m_handle.release();

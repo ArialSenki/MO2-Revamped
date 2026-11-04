@@ -125,7 +125,6 @@ private slots:
   void issueRemoveFromViewAll();
   void issueRemoveFromViewCompleted();
   void issueRemoveFromViewUninstalled();
-  void issueQueryInfo(int index);
   void issueQueryInfoMd5(int index);
 
 private:

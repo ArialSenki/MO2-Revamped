@@ -26,18 +26,9 @@ public:
   //
   bool primary();
 
-  // resolution
-  //
-  int resX() const;
-  int resY() const;
-
   // dpi
   //
   int dpi();
-
-  // refresh rate in hz
-  //
-  int refreshRate() const;
 
   // string representation
   //

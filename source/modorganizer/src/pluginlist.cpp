@@ -576,29 +576,9 @@ bool PluginList::isEnabled(const QString& name)
   }
 }
 
-void PluginList::clearInformation(const QString& name)
-{
-  std::map<QString, int>::iterator iter = m_ESPsByName.find(name);
-
-  if (iter != m_ESPsByName.end()) {
-    m_AdditionalInfo[name].messages.clear();
-  }
-}
-
 void PluginList::clearAdditionalInformation()
 {
   m_AdditionalInfo.clear();
-}
-
-void PluginList::addInformation(const QString& name, const QString& message)
-{
-  std::map<QString, int>::iterator iter = m_ESPsByName.find(name);
-
-  if (iter != m_ESPsByName.end()) {
-    m_AdditionalInfo[name].messages.append(message);
-  } else {
-    log::warn("failed to associate message for \"{}\"", name);
-  }
 }
 
 void PluginList::addLootReport(const QString& name, Loot::Plugin plugin)
@@ -793,17 +773,6 @@ bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure)
     }
   }
   return true;
-}
-
-int PluginList::enabledCount() const
-{
-  int enabled = 0;
-  for (const auto& info : m_ESPs) {
-    if (info.enabled) {
-      ++enabled;
-    }
-  }
-  return enabled;
 }
 
 QString PluginList::getIndexPriority(int index) const

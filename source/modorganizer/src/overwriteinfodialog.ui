@@ -91,13 +91,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="overwriteSectionHeading">
-     <property name="text">
-      <string>Items currently in Overwrite</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QTreeView" name="filesView">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>

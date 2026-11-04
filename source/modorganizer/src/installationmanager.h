@@ -51,7 +51,6 @@ public:
   // installation
   //
   QString name() const { return m_name; }
-  bool backupCreated() const { return m_backup; }
   bool merged() const { return m_merged; }
   bool replaced() const { return m_replaced; }
   bool hasIniTweaks() const { return m_iniTweaks; }

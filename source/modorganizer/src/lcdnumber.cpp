@@ -90,11 +90,6 @@ void LCDNumber::setDisplayText(const QString& text)
   update();
 }
 
-QString LCDNumber::displayText() const
-{
-  return m_displayText;
-}
-
 QString LCDNumber::shownText() const
 {
   // Fluent counters always read as text; without a set text, the number

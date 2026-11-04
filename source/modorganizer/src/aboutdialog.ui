@@ -170,16 +170,6 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="aboutSummary">
-           <property name="text">
-            <string>Build details appear in the header. This section keeps project copyright, warranty, and source information together.</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QGroupBox" name="legalGroup">
            <property name="title">
             <string>Copyright and warranty</string>

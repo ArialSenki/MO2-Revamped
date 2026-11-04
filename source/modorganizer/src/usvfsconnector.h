@@ -48,7 +48,6 @@ public slots:
 
 signals:
 
-  void outputLog(const QString& message);
   void finished();
 
 private:
@@ -94,8 +93,6 @@ private:
   LogWorker m_LogWorker;
   QThread m_WorkerThread;
 };
-
-CrashDumpsType crashDumpsType(int type);
 
 std::vector<HANDLE> getRunningUSVFSProcesses();
 

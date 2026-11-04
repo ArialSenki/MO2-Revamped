@@ -132,18 +132,6 @@ public:
   //
   DWORD exitCode() const;
 
-  // this may be INVALID_HANDLE_VALUE if:
-  //
-  //  1) no process was started, or
-  //  2) the process was started successfully, but the system didn't return a
-  //     handle for it; this can happen for inproc handlers, for example, such
-  //     the photo viewer
-  //
-  // note that the handle is still owned by this ProcessRunner and will be
-  // closed when destroyed; see stealProcessHandle()
-  //
-  HANDLE getProcessHandle() const;
-
   // releases ownership of the process handle; if this is called after the
   // process is completed, exitCode() will still return the correct value
   //

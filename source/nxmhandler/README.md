@@ -1,3 +1,5 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/2lu4vq3vxne2me08?svg=true)](https://ci.appveyor.com/project/Modorganizer2/modorganizer-nxmhandler)
+# NXM handler
 
-# modorganizer-nxmhandler
+This code is part of [MO2 Revamped](../../README.md), which is based on Mod Organizer 2.
+The base versions and revisions are listed in [docs/UPSTREAMS.md](../../docs/UPSTREAMS.md).
+Provenance and license terms are in [NOTICE.md](NOTICE.md).

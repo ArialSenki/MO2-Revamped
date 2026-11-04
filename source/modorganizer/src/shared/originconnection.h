@@ -32,8 +32,6 @@ public:
   const FilesOrigin* findByID(OriginID ID) const;
   FilesOrigin& getByName(const std::wstring& name);
 
-  void changePriorityLookup(int oldPriority, int newPriority);
-
   void changeNameLookup(const std::wstring& oldName, const std::wstring& newName);
 
 private:

@@ -895,66 +895,6 @@ void GeneralConflictsTab::updateUICounters()
               m_counts.numNonConflictingArchive, m_counts.numNonConflicting));
 }
 
-void GeneralConflictsTab::onOverwriteActivated(const QModelIndex& index)
-{
-  const auto* proxy = dynamic_cast<QAbstractProxyModel*>(ui->overwriteTree->model());
-
-  if (!proxy) {
-    log::error("tree doesn't have a SortProxyModel");
-    return;
-  }
-
-  const auto* model = dynamic_cast<ConflictListModel*>(proxy->sourceModel());
-
-  if (!model) {
-    log::error("tree doesn't have a ConflictListModel");
-    return;
-  }
-
-  auto modelIndex = proxy->mapToSource(index);
-
-  auto* item = model->getItem(static_cast<std::size_t>(modelIndex.row()));
-  if (!item) {
-    return;
-  }
-
-  const auto origin = item->altOrigin();
-  if (!origin.isEmpty()) {
-    emit modOpen(origin);
-  }
-}
-
-void GeneralConflictsTab::onOverwrittenActivated(const QModelIndex& index)
-{
-  const auto* proxy = dynamic_cast<QAbstractProxyModel*>(ui->overwrittenTree->model());
-
-  if (!proxy) {
-    log::error("tree doesn't have a SortProxyModel");
-    return;
-  }
-
-  const auto* model = dynamic_cast<ConflictListModel*>(proxy->sourceModel());
-
-  if (!model) {
-    log::error("tree doesn't have a ConflictListModel");
-    return;
-  }
-
-  proxy->mapSelectionToSource(ui->overwrittenTree->selectionModel()->selection());
-
-  auto modelIndex = proxy->mapToSource(index);
-
-  auto* item = model->getItem(static_cast<std::size_t>(modelIndex.row()));
-  if (!item) {
-    return;
-  }
-
-  const auto origin = item->altOrigin();
-  if (!origin.isEmpty()) {
-    emit modOpen(origin);
-  }
-}
-
 AdvancedConflictsTab::AdvancedConflictsTab(ConflictsTab* tab, Ui::ModInfoDialog* pui,
                                            OrganizerCore& oc)
     : m_tab(tab), ui(pui), m_core(oc),

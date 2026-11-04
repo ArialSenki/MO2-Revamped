@@ -98,9 +98,6 @@ public:
                   const std::wstring& archivePath, int priority, int order,
                   DirectoryStats& stats);
 
-  void addFromList(const std::wstring& originName, const std::wstring& directory,
-                   env::Directory& root, int priority, DirectoryStats& stats);
-
   void propagateOrigin(OriginID origin);
 
   const std::wstring& getName() const { return m_Name; }
@@ -117,16 +114,6 @@ public:
   std::vector<FileEntryPtr> getFiles() const;
 
   const SubDirectories& getSubDirectories() const { return m_SubDirectories; }
-
-  template <class F>
-  void forEachDirectory(F&& f) const
-  {
-    for (auto&& d : m_SubDirectories) {
-      if (!f(*d)) {
-        break;
-      }
-    }
-  }
 
   template <class F>
   void forEachFile(F&& f) const
@@ -168,7 +155,6 @@ public:
                               bool alreadyLowerCase = false) const;
   const FileEntryPtr findFile(const DirectoryEntryFileKey& key) const;
 
-  bool hasFile(const std::wstring& name) const;
   bool containsArchive(std::wstring archiveName);
 
   // search through this directory and all subdirectories for a file by the
@@ -193,8 +179,6 @@ public:
   void removeDir(const std::wstring& path);
 
   bool remove(const std::wstring& fileName, OriginID* origin);
-
-  bool hasContentsFromOrigin(OriginID originID) const;
 
   FilesOrigin& createOrigin(const std::wstring& originName,
                             const std::wstring& directory, int priority,

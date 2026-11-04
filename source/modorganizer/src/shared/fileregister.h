@@ -17,8 +17,6 @@ public:
   FileRegister(const FileRegister&)            = delete;
   FileRegister& operator=(const FileRegister&) = delete;
 
-  bool indexValid(FileIndex index) const;
-
   FileEntryPtr createFile(std::wstring name, DirectoryEntry* parent,
                           DirectoryStats& stats);
 

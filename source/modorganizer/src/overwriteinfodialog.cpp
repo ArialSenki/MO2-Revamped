@@ -164,9 +164,7 @@ void OverwriteInfoDialog::buildFluentLayout()
 
   // the intro panel's title and text become the card's header
   ui->overwriteIntroPanel->hide();
-  ui->overwriteSectionHeading->hide();
   for (QWidget* w : {static_cast<QWidget*>(ui->overwriteIntroPanel),
-                     static_cast<QWidget*>(ui->overwriteSectionHeading),
                      static_cast<QWidget*>(ui->filesView),
                      static_cast<QWidget*>(ui->overwriteContextHint),
                      static_cast<QWidget*>(ui->buttonBox)}) {

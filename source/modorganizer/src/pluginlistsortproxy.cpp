@@ -35,15 +35,6 @@ PluginListSortProxy::PluginListSortProxy(QObject* parent)
   this->setDynamicSortFilter(true);
 }
 
-void PluginListSortProxy::setEnabledColumns(unsigned int columns)
-{
-  emit layoutAboutToBeChanged();
-  for (int i = 0; i <= PluginList::COL_LASTCOLUMN; ++i) {
-    m_EnabledColumns.set(i, (columns & (1 << i)) != 0);
-  }
-  emit layoutChanged();
-}
-
 void PluginListSortProxy::updateFilter(const QString& filter)
 {
   if (m_CurrentFilter != filter) {

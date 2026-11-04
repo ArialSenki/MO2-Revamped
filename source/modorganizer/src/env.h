@@ -254,7 +254,6 @@ private:
   Status m_status;
 };
 
-Service getService(const QString& name);
 QString toString(Service::StartType st);
 QString toString(Service::Status st);
 
@@ -275,14 +274,6 @@ struct Association
 // error
 //
 Association getAssociation(const QFileInfo& file);
-
-// returns whether the given value exists
-//
-bool registryValueExists(const QString& key, const QString& value);
-
-// deletes a registry key if it's empty or only contains empty keys
-//
-void deleteRegistryKeyIfEmpty(const QString& name);
 
 // returns the path to this process
 //

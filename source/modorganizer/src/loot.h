@@ -126,7 +126,6 @@ private:
   void processOutputFile(Report& r) const;
   void deleteReportFile();
 
-  Message reportMessage(const QJsonObject& message) const;
   std::vector<Plugin> reportPlugins(const QJsonArray& plugins) const;
   Loot::Plugin reportPlugin(const QJsonObject& plugin) const;
   Loot::Stats reportStats(const QJsonObject& stats) const;

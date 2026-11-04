@@ -31,7 +31,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modlistsortproxy.h"
 #include "plugincontainer.h"  //class PluginContainer;
 #include "shared/fileregisterfwd.h"
-#include "tutorialcontrol.h"
 #include <log.h>
 
 class Executable;
@@ -164,10 +163,6 @@ public slots:
   bool reloadProfileFromPlugin();
 
 signals:
-  // emitted after the information dialog has been closed, used by tutorials
-  //
-  void modInfoDisplayed();
-
   /**
    * @brief emitted when the selected style changes
    */
@@ -180,7 +175,6 @@ protected:
   void paintEvent(QPaintEvent* event) override;
   void closeEvent(QCloseEvent* event) override;
   bool eventFilter(QObject* obj, QEvent* event) override;
-  void resizeEvent(QResizeEvent* event) override;
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dropEvent(QDropEvent* event) override;
 
@@ -320,8 +314,6 @@ private:
   // last separator on the toolbar, used to add spacer for right-alignment and
   // as an insert point for executables
   QAction* m_linksSeparator;
-
-  MOBase::TutorialControl m_Tutorial;
 
   std::unique_ptr<DataTab> m_DataTab;
   std::unique_ptr<DownloadsTab> m_DownloadsTab;

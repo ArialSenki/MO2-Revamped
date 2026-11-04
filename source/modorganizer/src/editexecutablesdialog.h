@@ -161,9 +161,6 @@ public:
   void reject() override;
 
   ExecutablesList getExecutablesList() const;
-  const CustomOverwrites& getCustomOverwrites() const;
-  const ForcedLibraries& getForcedLibraries() const;
-
 private slots:
   void on_list_itemSelectionChanged();
 

@@ -282,24 +282,6 @@ ModInfoWithConflictInfo::isLooseArchiveConflicted() const
   return m_Conflicts.value().m_ArchiveConflictLooseState;
 }
 
-bool ModInfoWithConflictInfo::isRedundant() const
-{
-  std::wstring name = ToWString(this->name());
-  if (m_Core.directoryStructure()->originExists(name)) {
-    FilesOrigin& origin = m_Core.directoryStructure()->getOriginByName(name);
-    std::vector<FileEntryPtr> files = origin.getFiles();
-    bool ignore                     = false;
-    for (auto iter = files.begin(); iter != files.end(); ++iter) {
-      if ((*iter)->getOrigin(ignore) == origin.getID()) {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool ModInfoWithConflictInfo::hasHiddenFiles() const
 {
   return m_Conflicts.value().m_HasHiddenFiles;

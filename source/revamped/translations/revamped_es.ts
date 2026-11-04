@@ -116,41 +116,6 @@
     </message>
   </context>
   <context>
-    <name>BrowserDialog</name>
-    <message>
-      <source>Nexus Browser</source>
-      <translation>Navegador de Nexus</translation>
-    </message>
-    <message>
-      <source>Browse Nexus Mods and manage downloads from MO2. Use Ctrl+U to show or hide the address bar.</source>
-      <translation>Explora Nexus Mods y gestiona las descargas desde MO2. Usa Ctrl+U para mostrar u ocultar la barra de direcciones.</translation>
-    </message>
-    <message>
-      <source>Back</source>
-      <translation>Atrás</translation>
-    </message>
-    <message>
-      <source>Forward</source>
-      <translation>Adelante</translation>
-    </message>
-    <message>
-      <source>Reload page</source>
-      <translation>Recargar página</translation>
-    </message>
-    <message>
-      <source>Web address</source>
-      <translation>Dirección web</translation>
-    </message>
-    <message>
-      <source>Find</source>
-      <translation>Buscar</translation>
-    </message>
-    <message>
-      <source>Find on this page</source>
-      <translation>Buscar en esta página</translation>
-    </message>
-  </context>
-  <context>
     <name>CategoriesDialog</name>
     <message>
       <source>Manage Categories</source>
@@ -7107,6 +7072,14 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Abre la documentación y las guías de Mod Organizer 2.</translation>
     </message>
     <message>
+      <source>Mod Organizer 2 on GitHub</source>
+      <translation>Mod Organizer 2 en GitHub</translation>
+    </message>
+    <message>
+      <source>Open the original Mod Organizer 2 project on GitHub.</source>
+      <translation>Abre el proyecto original de Mod Organizer 2 en GitHub.</translation>
+    </message>
+    <message>
       <source>Help on the interface</source>
       <translation>Ayuda sobre la interfaz</translation>
     </message>
@@ -7360,8 +7333,8 @@ Error: %1</translation>
       <translation>Licencias y código fuente</translation>
     </message>
     <message>
-      <source>The authorship notices and licenses of MO2 and its dependencies are kept. See the licenses folder next to the program.</source>
-      <translation>Se conservan los avisos de autoría y las licencias de MO2 y sus dependencias. Consulta la carpeta licenses junto al programa.</translation>
+      <source>The authorship notices and licenses of MO2 and its dependencies are kept. See the licenses folder next to the program. For the source code, see docs/UPSTREAMS.md in the MO2 Revamped repository.</source>
+      <translation>Se conservan los avisos de autoría y las licencias de MO2 y sus dependencias. Consulta la carpeta licenses junto al programa. Para el código fuente, consulta docs/UPSTREAMS.md en el repositorio de MO2 Revamped.</translation>
     </message>
     <message>
       <source>Credits and licenses</source>
@@ -7606,10 +7579,6 @@ OpenSSL · 3.5.9</translation>
       <translation>Edición comunitaria independiente.</translation>
     </message>
     <message>
-      <source>USVFS source code</source>
-      <translation>Código fuente de USVFS</translation>
-    </message>
-    <message>
       <source>Could not create the report</source>
       <translation>No se pudo crear el informe</translation>
     </message>
@@ -7644,8 +7613,8 @@ Review the ZIP and remove private paths before sharing it.</source>
 Revisa el ZIP y elimina las rutas privadas antes de compartirlo.</translation>
     </message>
     <message>
-      <source>Original Mod Organizer 2 project and source code</source>
-      <translation>Proyecto original y código fuente de Mod Organizer 2</translation>
+      <source>USVFS, from the Mod Organizer 2 project. For its source code and license, see the licenses folder and docs/UPSTREAMS.md.</source>
+      <translation>USVFS, del proyecto Mod Organizer 2. Para su código fuente y su licencia, consulta la carpeta licenses y docs/UPSTREAMS.md.</translation>
     </message>
     <message>
       <source>{error}
@@ -7696,6 +7665,10 @@ OpenSSL · {openssl}</translation>
 </context>
   <context>
     <name>ModInfoDialog</name>
+    <message>
+      <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mod ID for this mod on Nexus. This is filled in automatically if you downloaded and installed the mod from inside Mod Organizer 2 Revamped. Otherwise you can enter it manually. To find the correct ID, find the mod on Nexus. The URL will look like this: https://www.nexusmods.com/gamename/mods/1234. In this example, 1234 is the ID you're looking for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+      <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Identificador de este mod en Nexus. Se rellena automáticamente si descargaste e instalaste el mod desde Mod Organizer 2 Revamped. Si no, puedes escribirlo a mano. Para encontrar el identificador correcto, busca el mod en Nexus. La URL tendrá este aspecto: https://www.nexusmods.com/gamename/mods/1234. En este ejemplo, 1234 es el identificador que buscas.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
     <message>
       <source>Review documentation and other text files included with this mod.</source>
       <translation>Revisa la documentación y otros archivos de texto incluidos con este mod.</translation>
@@ -11379,147 +11352,6 @@ Restantes esta hora: %3</translation>
     <message>
       <source>Stores this instance with the MO2 installation. Other games and global instances are not used.</source>
       <translation>Guarda esta instancia junto a la instalación de MO2. No se usan otros juegos ni instancias globales.</translation>
-    </message>
-  </context>
-  <context>
-    <name>tutorial_eldenring_overview</name>
-    <message>
-      <source>Installed Elden Ring mods are listed here. Checked mods are active in this profile; their files are combined in the virtual game directory.</source>
-      <translation>Aquí se muestran los mods de Elden Ring instalados. Los mods marcados están activos en este perfil; sus archivos se combinan en el directorio virtual del juego.</translation>
-    </message>
-    <message>
-      <source>Profiles keep separate enabled mod lists. Configure Elden Ring save routes and named save profiles from Tools &gt; Elden Ring Save Isolation.</source>
-      <translation>Cada perfil mantiene su propia lista de mods activos. Configura las rutas de partidas de Elden Ring y los perfiles de partidas con nombre en Herramientas &gt; Aislamiento de partidas.</translation>
-    </message>
-    <message>
-      <source>Open the gear menu to manage the mod list, refresh data, check for updates, and create, restore, or delete mod-list and plugin-order backups for this profile.</source>
-      <translation>Abre el menú del engranaje para gestionar la lista de mods, refrescar los datos, buscar actualizaciones y crear, restaurar o eliminar copias de seguridad de la lista de mods y del orden de plugins de este perfil.</translation>
-    </message>
-    <message>
-      <source>Open the folders used by this MO2 instance, including its mods, profiles, downloads, and the Elden Ring game folder.</source>
-      <translation>Abre las carpetas que usa esta instancia de MO2, como sus mods, perfiles y descargas, y la carpeta del juego Elden Ring.</translation>
-    </message>
-    <message>
-      <source>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type.</source>
-      <translation>Muestra cuántos mods activos se ven en la lista de mods. Filtrar la lista cambia este número; pasa el cursor sobre el contador para ver los totales y los visibles por tipo.</translation>
-    </message>
-    <message>
-      <source>Group the installed mods by category or another available grouping.</source>
-      <translation>Agrupa los mods instalados por categoría u otra agrupación disponible.</translation>
-    </message>
-    <message>
-      <source>Show or hide the category and filter panel.</source>
-      <translation>Muestra u oculta el panel de categorías y filtros.</translation>
-    </message>
-    <message>
-      <source>Filter installed mods by name.</source>
-      <translation>Filtra los mods instalados por nombre.</translation>
-    </message>
-    <message>
-      <source>Switch between Data, Saves, and Downloads. Other tabs appear only when supported by the game.</source>
-      <translation>Cambia entre Datos, Partidas y Descargas. Las demás pestañas solo aparecen si el juego las admite.</translation>
-    </message>
-    <message>
-      <source>Select a category or built-in filter to narrow the visible mod list.</source>
-      <translation>Selecciona una categoría o un filtro integrado para acotar la lista de mods visible.</translation>
-    </message>
-    <message>
-      <source>Choose Elden Ring or another executable configured for this instance.</source>
-      <translation>Elige Elden Ring u otro ejecutable configurado para esta instancia.</translation>
-    </message>
-    <message>
-      <source>Launch the selected program through MO2 with this profile's virtual files. The arrow on the right opens shortcut options.</source>
-      <translation>Inicia el programa seleccionado mediante MO2 con los archivos virtuales de este perfil. La flecha de la derecha abre las opciones de accesos directos.</translation>
-    </message>
-    <message>
-      <source>Read messages from MO2 and its active plugins. Error messages can help diagnose an installation or launch issue.</source>
-      <translation>Lee los mensajes de MO2 y de sus plugins activos. Los mensajes de error pueden ayudar a diagnosticar un problema de instalación o de inicio.</translation>
-    </message>
-    <message>
-      <source>Shows the remaining Nexus Mods API request allowance for this account.</source>
-      <translation>Muestra las solicitudes a la API de Nexus Mods que le quedan a esta cuenta.</translation>
-    </message>
-    <message>
-      <source>Open Manage Instances to switch between independent MO2 setups, such as Elden Ring and Skyrim.</source>
-      <translation>Abre Gestionar instancias para cambiar entre configuraciones independientes de MO2, como Elden Ring y Skyrim.</translation>
-    </message>
-    <message>
-      <source>Install a mod archive stored on your computer.</source>
-      <translation>Instala un archivo de mod guardado en tu equipo.</translation>
-    </message>
-    <message>
-      <source>Open the Nexus Mods page for the currently managed game.</source>
-      <translation>Abre la página de Nexus Mods del juego gestionado actualmente.</translation>
-    </message>
-    <message>
-      <source>Open the Nexus Mods page for the selected mod when it has a Nexus link.</source>
-      <translation>Abre la página de Nexus Mods del mod seleccionado si tiene un enlace de Nexus.</translation>
-    </message>
-    <message>
-      <source>Create, copy, rename, or manage profiles and their enabled mods. Use Tools &gt; Elden Ring Save Isolation to choose Elden Ring save routes and named save profiles.</source>
-      <translation>Crea, copia, renombra o gestiona perfiles y sus mods activos. Usa Herramientas &gt; Aislamiento de partidas para elegir las rutas de partidas de Elden Ring y los perfiles de partidas con nombre.</translation>
-    </message>
-    <message>
-      <source>Refresh the active profile and virtual game file list.</source>
-      <translation>Refresca el perfil activo y la lista de archivos virtuales del juego.</translation>
-    </message>
-    <message>
-      <source>Add or edit programs that can be launched through this MO2 instance.</source>
-      <translation>Añade o edita los programas que se pueden iniciar mediante esta instancia de MO2.</translation>
-    </message>
-    <message>
-      <source>Open this instance's tools. The Native DLL Profile tool detects native DLLs and configures their order and optional initializer for each MO2 profile.</source>
-      <translation>Abre las herramientas de esta instancia. La herramienta Perfil de DLL nativas detecta las DLL nativas y configura su orden y su inicializador opcional para cada perfil de MO2.</translation>
-    </message>
-    <message>
-      <source>Change settings for this MO2 installation.</source>
-      <translation>Cambia los ajustes de esta instalación de MO2.</translation>
-    </message>
-    <message>
-      <source>Open interface help, the Elden Ring guide, the MO2 Revamped repository, and game support links.</source>
-      <translation>Abre la ayuda de la interfaz, la guía de Elden Ring, el repositorio de MO2 Revamped y los enlaces de soporte del juego.</translation>
-    </message>
-    <message>
-      <source>Browse the virtual Elden Ring game directory. The Mod column shows which mod supplies each file; select a row to inspect its source.</source>
-      <translation>Explora el directorio virtual del juego Elden Ring. La columna Mod indica qué mod aporta cada archivo; selecciona una fila para revisar su origen.</translation>
-    </message>
-    <message>
-      <source>Browse saves visible to the current profile. Hover a save briefly to see its details.</source>
-      <translation>Explora las partidas visibles para el perfil actual. Pasa el cursor un momento sobre una partida para ver sus detalles.</translation>
-    </message>
-    <message>
-      <source>Downloaded archives appear here. Double-click one to install it. The Elden Ring installer offers standard MO2 layout or the original archive paths.</source>
-      <translation>Aquí aparecen los archivos descargados. Haz doble clic en uno para instalarlo. El instalador de Elden Ring ofrece la estructura estándar de MO2 o las rutas originales del archivo.</translation>
-    </message>
-    <message>
-      <source>Click to quit</source>
-      <translation>Haz clic para salir</translation>
-    </message>
-  </context>
-  <context>
-    <name>tutorial_firststeps_main</name>
-    <message>
-      <source>Finally, there are tooltips and extra information available all across Mod Organizer. If there is a control you don't understand, please try hovering over it for a short description. Alternatively, you can use "Interface Help" from the Help menu to click on some controls and get a comprehensive explanation.</source>
-      <translation>Por último, hay descripciones emergentes e información adicional en todo Mod Organizer. Si no entiendes algún control, pasa el cursor sobre él para ver una breve descripción. También puedes usar "Ayuda sobre UI" del menú Ayuda para hacer clic en algunos controles y obtener una explicación completa.</translation>
-    </message>
-  </context>
-  <context>
-    <name>tutorial_primer_main</name>
-    <message>
-      <source>Open the gear menu to manage the mod list, refresh data, check for updates, and create, restore, or delete mod-list and plugin-order backups.</source>
-      <translation>Abre el menú del engranaje para gestionar la lista de mods, refrescar los datos, buscar actualizaciones y crear, restaurar o eliminar copias de seguridad de la lista de mods y del orden de plugins.</translation>
-    </message>
-    <message>
-      <source>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type.</source>
-      <translation>Muestra cuántos mods activos se ven en la lista de mods. Filtrar la lista cambia este número; pasa el cursor sobre el contador para ver los totales y los visibles por tipo.</translation>
-    </message>
-    <message>
-      <source>Click Run to start the selected program. Use the arrow for pinned programs and shortcut options for the toolbar, Start Menu or desktop.</source>
-      <translation>Haz clic en Ejecutar para iniciar el programa seleccionado. Usa la flecha para los programas fijados y las opciones de accesos directos en la barra de herramientas, el menú Inicio o el escritorio.</translation>
-    </message>
-    <message>
-      <source>Open interface help, guided tours, MO2 Revamped project information, and support links.</source>
-      <translation>Abre la ayuda de la interfaz, las visitas guiadas, la información del proyecto MO2 Revamped y los enlaces de soporte.</translation>
     </message>
   </context>
   <context>

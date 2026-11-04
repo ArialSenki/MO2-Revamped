@@ -359,11 +359,6 @@ void OrganizerCore::downloadRequestedNXM(const QString& url)
   }
 }
 
-void OrganizerCore::userInterfaceInitialized()
-{
-  m_UserInterfaceInitialized(m_UserInterface->mainWindow());
-}
-
 void OrganizerCore::profileCreated(MOBase::IProfile* profile)
 {
   m_ProfileCreated(profile);
@@ -378,20 +373,6 @@ void OrganizerCore::profileRenamed(MOBase::IProfile* profile, QString const& old
 void OrganizerCore::profileRemoved(QString const& profileName)
 {
   m_ProfileRemoved(profileName);
-}
-
-void OrganizerCore::downloadRequested(QNetworkReply* reply, QString gameName, int modID,
-                                      const QString& fileName)
-{
-  try {
-    if (m_DownloadManager.addDownload(reply, QStringList(), fileName, gameName, modID,
-                                      0, new ModRepositoryFileInfo(gameName, modID))) {
-      MessageDialog::showMessage(tr("Download started"), qApp->activeWindow());
-    }
-  } catch (const std::exception& e) {
-    MessageDialog::showMessage(tr("Download failed"), qApp->activeWindow());
-    log::error("exception starting download: {}", e.what());
-  }
 }
 
 void OrganizerCore::removeOrigin(const QString& name)
@@ -1528,58 +1509,6 @@ void OrganizerCore::loggedInAction(QWidget* parent, std::function<void()> f)
       NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
     } else {
       MessageDialog::showMessage(tr("You need to be logged in with Nexus"), parent);
-    }
-  }
-}
-
-void OrganizerCore::requestDownload(const QUrl& url, QNetworkReply* reply)
-{
-  if (!m_PluginContainer) {
-    return;
-  }
-  for (IPluginModPage* modPage : m_PluginContainer->plugins<MOBase::IPluginModPage>()) {
-    if (m_PluginContainer->isEnabled(modPage)) {
-      ModRepositoryFileInfo* fileInfo = new ModRepositoryFileInfo();
-      if (modPage->handlesDownload(url, reply->url(), *fileInfo)) {
-        fileInfo->repository = modPage->name();
-        m_DownloadManager.addDownload(reply, fileInfo);
-        return;
-      }
-    }
-  }
-
-  // no mod found that could handle the download. Is it a nexus mod?
-  if (url.host() == "www.nexusmods.com") {
-    QString gameName = "";
-    int modID        = 0;
-    int fileID       = 0;
-    QRegularExpression nameExp("www\\.nexusmods\\.com/(\\a+)/");
-    auto match = nameExp.match(url.toString());
-    if (match.hasMatch()) {
-      gameName = match.captured(1);
-    }
-    QRegularExpression modExp("mods/(\\d+)");
-    match = modExp.match(url.toString());
-    if (match.hasMatch()) {
-      modID = match.captured(1).toInt();
-    }
-    QRegularExpression fileExp("fid=(\\d+)");
-    match = fileExp.match(url.toString());
-    if (match.hasMatch()) {
-      fileID = match.captured(1).toInt();
-    }
-    m_DownloadManager.addDownload(reply,
-                                  new ModRepositoryFileInfo(gameName, modID, fileID));
-  } else {
-    if (QMessageBox::question(qApp->activeWindow(), tr("Download?"),
-                              tr("A download has been started but no installed "
-                                 "page plugin recognizes it.\n"
-                                 "If you download anyway no information (i.e. "
-                                 "version) will be associated with the "
-                                 "download.\n"
-                                 "Continue?"),
-                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-      m_DownloadManager.addDownload(reply, new ModRepositoryFileInfo());
     }
   }
 }

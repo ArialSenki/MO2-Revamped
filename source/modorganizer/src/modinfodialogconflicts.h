@@ -83,8 +83,6 @@ private:
 
   void updateUICounters();
 
-  void onOverwriteActivated(const QModelIndex& index);
-  void onOverwrittenActivated(const QModelIndex& index);
 };
 
 class AdvancedConflictsTab : public QObject

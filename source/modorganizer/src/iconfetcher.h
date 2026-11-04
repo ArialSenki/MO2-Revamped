@@ -14,9 +14,6 @@ public:
   void stop();
 
   QVariant icon(const QString& path) const;
-  QPixmap genericFileIcon() const;
-  QPixmap genericDirectoryIcon() const;
-
 private:
   struct QuickCache
   {

@@ -47,8 +47,6 @@ public:
   CSVBuilder(QIODevice* target);
   ~CSVBuilder();
 
-  void setFieldSeparator(char sep);
-  void setLineBreak(ELineBreak lineBreak);
   void setEscapeMode(EFieldType type, EQuoteMode mode);
   void setFields(const std::vector<std::pair<QString, EFieldType>>& fields);
   void setDefault(const QString& field, const QVariant& value);
@@ -58,13 +56,10 @@ public:
   void setRowField(const QString& field, const QVariant& value);
   void writeRow();
 
-  void addRow(const std::map<QString, QVariant>& data);
-
 private:
   const char* lineBreak();
   const char separator();
 
-  void fieldValid();
   void checkFields(const std::vector<QString>& fields);
   void checkValue(const QString& field, const QVariant& value);
   void writeData(const std::map<QString, QVariant>& data, bool check);

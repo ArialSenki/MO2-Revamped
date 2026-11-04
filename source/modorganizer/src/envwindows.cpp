@@ -36,16 +36,6 @@ bool WindowsInfo::compatibilityMode() const
   return (m_real != m_reported);
 }
 
-const WindowsInfo::Version& WindowsInfo::reportedVersion() const
-{
-  return m_reported;
-}
-
-const WindowsInfo::Version& WindowsInfo::realVersion() const
-{
-  return m_real;
-}
-
 const WindowsInfo::Release& WindowsInfo::release() const
 {
   return m_release;

@@ -505,16 +505,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="exploreStyles">
-            <property name="toolTip">
-             <string>Open the folder containing MO2's theme files.</string>
-            </property>
-            <property name="text">
-             <string>Open theme folder</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="horizontalSpacer_5">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

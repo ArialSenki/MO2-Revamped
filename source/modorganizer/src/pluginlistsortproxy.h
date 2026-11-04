@@ -37,8 +37,6 @@ public:
 public:
   explicit PluginListSortProxy(QObject* parent = 0);
 
-  void setEnabledColumns(unsigned int columns);
-
   virtual bool dropMimeData(const QMimeData* data, Qt::DropAction action, int row,
                             int column, const QModelIndex& parent);
 

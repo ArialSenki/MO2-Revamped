@@ -56,8 +56,6 @@ public:
   void aboutToExpandAll();
   void expandedAll();
 
-  const SortInfo& sortInfo() const;
-
   QModelIndex index(int row, int col, const QModelIndex& parent = {}) const override;
   QModelIndex parent(const QModelIndex& index) const override;
   int rowCount(const QModelIndex& parent = {}) const override;
@@ -151,7 +149,6 @@ private:
   QVariant displayData(const FileTreeItem* item, int column) const;
   std::wstring makeModName(const MOShared::FileEntry& file, int originID) const;
 
-  void ensureLoaded(FileTreeItem* item) const;
   bool shouldShowFile(const MOShared::FileEntry& file) const;
   bool shouldShowFolder(const MOShared::DirectoryEntry& dir,
                         const FileTreeItem* item) const;

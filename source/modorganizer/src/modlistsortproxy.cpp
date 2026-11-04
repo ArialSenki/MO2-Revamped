@@ -329,11 +329,6 @@ bool ModListSortProxy::filterMatchesModOr(ModInfo::Ptr info, bool enabled) const
   return true;
 }
 
-bool ModListSortProxy::optionsMatchMod(ModInfo::Ptr info, bool) const
-{
-  return true;
-}
-
 bool ModListSortProxy::criteriaMatchMod(ModInfo::Ptr info, bool enabled,
                                         const Criteria& c) const
 {

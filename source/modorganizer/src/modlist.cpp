@@ -558,7 +558,6 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
       m_Profile->setModEnabled(modID, enabled);
       m_Modified = true;
       m_LastCheck.restart();
-      emit tutorialModlistUpdate();
     }
     result = true;
     emit dataChanged(index, index);
@@ -582,7 +581,6 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
       int newID = value.toInt(&ok);
       if (ok) {
         info->setNexusID(newID);
-        emit tutorialModlistUpdate();
         result = true;
       } else {
         result = false;
@@ -1449,8 +1447,6 @@ bool ModList::toggleState(const QModelIndexList& indices)
   }
 
   m_Profile->setModsEnabled(modsToEnable, modsToDisable);
-
-  emit tutorialModlistUpdate();
 
   m_Modified = true;
   m_LastCheck.restart();

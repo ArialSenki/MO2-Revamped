@@ -150,24 +150,9 @@ bool Display::primary()
   return m_primary;
 }
 
-int Display::resX() const
-{
-  return m_resX;
-}
-
-int Display::resY() const
-{
-  return m_resY;
-}
-
 int Display::dpi()
 {
   return m_dpi;
-}
-
-int Display::refreshRate() const
-{
-  return m_refreshRate;
 }
 
 QString Display::toString() const

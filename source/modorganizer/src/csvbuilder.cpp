@@ -12,23 +12,6 @@ CSVBuilder::CSVBuilder(QIODevice* target)
 
 CSVBuilder::~CSVBuilder() {}
 
-void CSVBuilder::setFieldSeparator(char sep)
-{
-  char oldSeparator = m_Separator;
-  m_Separator       = sep;
-  try {
-    checkFields(m_Fields);
-  } catch (const CSVException&) {
-    m_Separator = oldSeparator;
-    throw;
-  }
-}
-
-void CSVBuilder::setLineBreak(CSVBuilder::ELineBreak lineBreak)
-{
-  m_LineBreak = lineBreak;
-}
-
 void CSVBuilder::setEscapeMode(CSVBuilder::EFieldType type, CSVBuilder::EQuoteMode mode)
 {
   m_QuoteMode[type] = mode;
@@ -202,11 +185,6 @@ void CSVBuilder::writeRow()
 {
   writeData(m_RowBuffer, false);  // data was tested on input
   m_RowBuffer.clear();
-}
-
-void CSVBuilder::addRow(const std::map<QString, QVariant>& data)
-{
-  writeData(data, true);
 }
 
 void CSVBuilder::checkFields(const std::vector<QString>& fields)

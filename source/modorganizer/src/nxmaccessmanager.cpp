@@ -816,15 +816,6 @@ NXMAccessManager::createRequest(QNetworkAccessManager::Operation operation,
   }
 }
 
-void NXMAccessManager::showCookies() const
-{
-  QUrl url(NexusBaseUrl + "/");
-  for (const QNetworkCookie& cookie : cookieJar()->cookiesForUrl(url)) {
-    log::debug("{} - {} (expires: {})", cookie.name().constData(),
-               cookie.value().constData(), cookie.expirationDate().toString());
-  }
-}
-
 void NXMAccessManager::clearCookies()
 {
   PersistentCookieJar* jar = qobject_cast<PersistentCookieJar*>(cookieJar());

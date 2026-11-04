@@ -362,41 +362,6 @@ void forEachEntry(const std::wstring& path, void* cx, DirStartF* dirStartF,
   DirectoryWalker().forEachEntry(path, cx, dirStartF, dirEndF, fileF);
 }
 
-Directory getFilesAndDirs(const std::wstring& path)
-{
-  struct Context
-  {
-    std::stack<Directory*> current;
-  };
-
-  Directory root;
-
-  Context cx;
-  cx.current.push(&root);
-
-  env::forEachEntry(
-      path, &cx,
-      [](void* pcx, std::wstring_view path) {
-        Context* cx = (Context*)pcx;
-
-        cx->current.top()->dirs.push_back(Directory(path));
-        cx->current.push(&cx->current.top()->dirs.back());
-      },
-
-      [](void* pcx, std::wstring_view path) {
-        Context* cx = (Context*)pcx;
-        cx->current.pop();
-      },
-
-      [](void* pcx, std::wstring_view path, FILETIME ft, uint64_t s) {
-        Context* cx = (Context*)pcx;
-
-        cx->current.top()->files.push_back(File(path, ft, s));
-      });
-
-  return root;
-}
-
 File::File(std::wstring_view n, FILETIME ft, uint64_t s)
     : name(n.begin(), n.end()), lcname(MOShared::ToLowerCopy(name)), lastModified(ft),
       size(s)
@@ -441,13 +406,6 @@ void getFilesAndDirsWithFindImpl(const std::wstring& path, Directory& d)
   }
 
   ::FindClose(searchHandle);
-}
-
-Directory getFilesAndDirsWithFind(const std::wstring& path)
-{
-  Directory d;
-  getFilesAndDirsWithFindImpl(path, d);
-  return d;
 }
 
 }  // namespace env

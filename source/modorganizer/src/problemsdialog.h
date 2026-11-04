@@ -27,8 +27,6 @@ public:
   //
   int exec() override;
 
-  bool hasProblems() const;
-
 signals:
   void manageOverwriteRequested();
 

@@ -739,27 +739,6 @@ void QtGroupingProxy::fetchMore(const QModelIndex& parent)
   return sourceModel()->fetchMore(mapToSource(parent));
 }
 
-QModelIndex QtGroupingProxy::addEmptyGroup(const RowData& data)
-{
-  int newRow = m_groupMaps.count();
-  beginInsertRows(QModelIndex(), newRow, newRow);
-  m_groupMaps << data;
-  endInsertRows();
-  return index(newRow, 0, QModelIndex());
-}
-
-bool QtGroupingProxy::removeGroup(const QModelIndex& idx)
-{
-  beginRemoveRows(idx.parent(), idx.row(), idx.row());
-  m_groupMap.remove(idx.row());
-  m_groupMaps.removeAt(idx.row());
-  m_parentCreateList.removeAt(idx.internalId());
-  endRemoveRows();
-
-  // TODO: only true if all data could be unset.
-  return true;
-}
-
 bool QtGroupingProxy::hasChildren(const QModelIndex& parent) const
 {
   if (!parent.isValid()) {
@@ -918,31 +897,3 @@ void QtGroupingProxy::modelDataChanged(const QModelIndex& topLeft,
   }
 }
 
-bool QtGroupingProxy::isAGroupSelected(const QModelIndexList& list) const
-{
-  foreach (const QModelIndex& index, list) {
-    if (isGroup(index))
-      return true;
-  }
-  return false;
-}
-
-void QtGroupingProxy::dumpGroups() const
-{
-  QString s;
-  QDebug debug(&s);
-
-  debug << "m_groupMap:\n";
-  for (int groupIndex = -1; groupIndex < m_groupMap.keys().count() - 1; groupIndex++) {
-    debug << groupIndex << " : " << m_groupMap.value(groupIndex) << "\n";
-  }
-
-  debug << "m_groupMaps:\n";
-  for (int groupIndex = 0; groupIndex < m_groupMaps.count(); groupIndex++) {
-    debug << m_groupMaps[groupIndex] << ": " << m_groupMap.value(groupIndex) << "\n";
-  }
-
-  debug << m_groupMap.value(std::numeric_limits<quint32>::max());
-
-  log::debug("{}", s);
-}

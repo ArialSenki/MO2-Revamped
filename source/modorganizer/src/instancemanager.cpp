@@ -1021,12 +1021,6 @@ QString InstanceManager::makeUniqueName(const QString& instanceName,
   }
 }
 
-bool InstanceManager::instanceExists(const QString& instanceName) const
-{
-  const QDir root = globalInstancesRootPath();
-  return root.exists(instanceName);
-}
-
 std::unique_ptr<Instance> selectInstance()
 {
   auto& m = InstanceManager::singleton();

@@ -42,8 +42,6 @@ public:
   // Fluent counters show plain text such as "2/4" in the widget font instead
   // of seven-segment digits; without one they show their number as text
   void setDisplayText(const QString& text);
-  QString displayText() const;
-
   // what the counter shows: the display text, else its number
   QString shownText() const;
 

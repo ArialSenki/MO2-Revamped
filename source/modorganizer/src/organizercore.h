@@ -340,8 +340,6 @@ public:
   bool bootstrap();
   void createDefaultProfile();
 
-  MOBase::DelayedFileWriter& pluginsWriter() { return m_PluginListsWriter; }
-
   void prepareVFS();
 
   void updateVFSParams(MOBase::log::Levels logLevel, env::CoreDumpTypes coreDumpType,
@@ -450,10 +448,7 @@ public slots:
   void modPrioritiesChanged(QModelIndexList const& indexes);
   void modStatusChanged(unsigned int index);
   void modStatusChanged(QList<unsigned int> index);
-  void requestDownload(const QUrl& url, QNetworkReply* reply);
   void downloadRequestedNXM(const QString& url);
-
-  void userInterfaceInitialized();
 
   void profileCreated(MOBase::IProfile* profile);
   void profileRenamed(MOBase::IProfile* profile, QString const& oldName,
@@ -521,8 +516,6 @@ private:
 private slots:
 
   void onDirectoryRefreshed();
-  void downloadRequested(QNetworkReply* reply, QString gameName, int modID,
-                         const QString& fileName);
   void removeOrigin(const QString& name);
   void downloadSpeed(const QString& serverName, int bytesPerSecond);
   void loginSuccessful(bool necessary);

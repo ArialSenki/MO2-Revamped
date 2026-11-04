@@ -350,10 +350,6 @@ public:
   QString makeUniqueName(const QString& instanceName,
                          const QString& parentDirectory = {}) const;
 
-  // returns whether a global instance with this name already exists
-  //
-  bool instanceExists(const QString& instanceName) const;
-
   // returns the absolute path of a global instance with the given name; this
   // does not check if the name is valid or if exists
   //

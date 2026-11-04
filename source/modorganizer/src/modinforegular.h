@@ -430,8 +430,6 @@ public:  // Plugin operations:
 
 private:
   void setEndorsedState(MOBase::EndorsedState endorsedState);
-  void setTrackedState(MOBase::TrackedState trackedState);
-
 private slots:
 
   void nxmDescriptionAvailable(QString, int modID, QVariant userData,

@@ -468,11 +468,6 @@ void DownloadListView::issueInstall(int index)
   emit installDownload(index);
 }
 
-void DownloadListView::issueQueryInfo(int index)
-{
-  emit queryInfo(index);
-}
-
 void DownloadListView::issueQueryInfoMd5(int index)
 {
   emit queryInfoMd5(index);

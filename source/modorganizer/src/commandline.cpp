@@ -414,11 +414,6 @@ const MOShortcut& CommandLine::shortcut() const
   return m_shortcut;
 }
 
-std::optional<QString> CommandLine::nxmLink() const
-{
-  return m_nxmLink;
-}
-
 std::optional<QString> CommandLine::executable() const
 {
   return m_executable;
@@ -553,11 +548,6 @@ std::optional<int> Command::runPostOrganizer(OrganizerCore&)
 bool Command::canForwardToPrimary() const
 {
   return false;
-}
-
-const std::wstring& Command::originalCmd() const
-{
-  return m_original;
 }
 
 const po::variables_map& Command::vm() const

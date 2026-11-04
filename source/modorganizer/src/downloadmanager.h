@@ -131,8 +131,6 @@ private:
      **/
     void setName(QString newName, bool renameFile);
 
-    unsigned int downloadID() { return m_DownloadID; }
-
     bool isPausedState();
 
     QString currentURL();
@@ -531,8 +529,6 @@ private slots:
   void downloadError(QNetworkReply::NetworkError error);
   void metaDataChanged();
   void directoryChanged(const QString& dirctory);
-  void checkDownloadTimeout();
-
 private:
   void createMetaFile(DownloadInfo* info);
   DownloadManager::DownloadInfo* getDownloadInfo(QString fileName);

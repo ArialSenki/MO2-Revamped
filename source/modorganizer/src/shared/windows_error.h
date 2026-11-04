@@ -33,8 +33,6 @@ public:
   windows_error(const std::string& message, int errorcode = ::GetLastError())
       : runtime_error(constructMessage(message, errorcode)), m_ErrorCode(errorcode)
   {}
-  int getErrorCode() const { return m_ErrorCode; }
-
 private:
   std::string constructMessage(const std::string& input, int errorcode);
 

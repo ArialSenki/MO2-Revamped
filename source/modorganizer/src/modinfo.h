@@ -194,16 +194,6 @@ public:  // Static functions:
   static ModInfo::Ptr getOverwrite() { return s_Overwrite; }
 
   /**
-   * @brief Find the first mod that fulfills the filter function (after no particular
-   * order).
-   *
-   * @param filter A function to filter mods by. Should return true for a match.
-   *
-   * @return index of the matching mod or UINT_MAX if there was no match.
-   */
-  static unsigned int findMod(const boost::function<bool(ModInfo::Ptr)>& filter);
-
-  /**
    * @brief Run a limited batch of mod update checks for "newest version" information.
    *
    */
@@ -237,13 +227,6 @@ public:  // Static functions:
    * @return whether the given name is used for backups.
    */
   static bool isBackupName(const QString& name);
-
-  /**
-   * @brief Check wheter a name corresponds to a regular mod or not,
-   *
-   * @return whether the given name corresponds to a regular mod.
-   */
-  static bool isRegularName(const QString& name);
 
 public:  // IModInterface implementations / Re-declaration
   // Note: This section contains default-implementation for some of the virtual methods
@@ -558,13 +541,6 @@ public:  // Methods after this do not come from IModInterface:
    * @param notes The new notes.
    */
   virtual void setNotes(const QString& notes) = 0;
-
-  /**
-   * @brief Controls if mod should be highlighted based on plugin selection.
-   *
-   * @param isSelected Whether or not the plugin has a selected mod.
-   */
-  virtual void setPluginSelected(const bool& isSelected);
 
   /**
    * @brief Sets the repository that was used to download the mod.

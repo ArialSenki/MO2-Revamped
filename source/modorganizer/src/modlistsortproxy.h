@@ -95,9 +95,6 @@ public:
   void setCriteria(const std::vector<Criteria>& criteria);
   void setOptions(FilterMode mode, SeparatorsMode separators);
 
-  auto filterMode() const { return m_FilterMode; }
-  auto separatorsMode() const { return m_FilterSeparators; }
-
   /**
    * @brief tests if the specified index has child nodes
    * @param parent the node to test
@@ -167,7 +164,6 @@ private:
 
   std::vector<Criteria> m_PreChangeCriteria;
 
-  bool optionsMatchMod(ModInfo::Ptr info, bool enabled) const;
   bool criteriaMatchMod(ModInfo::Ptr info, bool enabled, const Criteria& c) const;
   bool categoryMatchesMod(ModInfo::Ptr info, bool enabled, int category) const;
   bool contentMatchesMod(ModInfo::Ptr info, bool enabled, int content) const;

@@ -88,30 +88,6 @@ QVariant SelectionDialog::getChoiceData()
   return m_Choice->property("data");
 }
 
-QString SelectionDialog::getChoiceString()
-{
-  if ((m_Choice == nullptr) ||
-      (m_ValidateByData && !m_Choice->property("data").isValid())) {
-    return QString();
-  } else {
-    return m_Choice->text();
-  }
-}
-
-QString SelectionDialog::getChoiceDescription()
-{
-  if (m_Choice == nullptr)
-    return QString();
-  else
-    return m_Choice->accessibleDescription();
-}
-
-void SelectionDialog::disableCancel()
-{
-  ui->cancelButton->setEnabled(false);
-  ui->cancelButton->setHidden(true);
-}
-
 void SelectionDialog::on_buttonBox_clicked(QAbstractButton* button)
 {
   m_Choice = button;

@@ -291,18 +291,6 @@ void CategoryFactory::saveCategories()
   emit categoriesSaved();
 }
 
-unsigned int
-CategoryFactory::countCategories(std::function<bool(const Category& category)> filter)
-{
-  unsigned int result = 0;
-  for (const Category& cat : m_Categories) {
-    if (filter(cat)) {
-      ++result;
-    }
-  }
-  return result;
-}
-
 int CategoryFactory::addCategory(const QString& name,
                                  const std::vector<NexusCategory>& nexusCats,
                                  int parentID)

@@ -610,14 +610,6 @@ void ModInfoRegular::setEndorsedState(EndorsedState endorsedState)
   }
 }
 
-void ModInfoRegular::setTrackedState(TrackedState trackedState)
-{
-  if (trackedState != m_TrackedState) {
-    m_TrackedState    = trackedState;
-    m_MetaInfoChanged = true;
-  }
-}
-
 void ModInfoRegular::setInstallationFile(const QString& fileName)
 {
   m_InstallationFile = fileName;

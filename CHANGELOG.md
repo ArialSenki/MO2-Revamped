@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Removed
+
+- Leftovers from the old Mod Organizer 2 that nothing used: its old themes and
+  build files, unused icons and code, and stale translations. Links to the old
+  project now appear only in the "..." menu, which adds one to its GitHub.
+
+### Fixed
+
+- The installer wizard's updated look and the Form 43 checker's translated name
+  now ship; they were only in the baseline plugin folder, which no build reads.
+
 ## 1.1.0-beta.2 (pre-release) — November 4, 2026
 
 ### ELDEN RING Reforged

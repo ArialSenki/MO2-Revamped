@@ -245,25 +245,6 @@ bool PluginRequirements::isCorePlugin() const
   return s_CorePlugins.contains(m_Plugin->name());
 }
 
-bool PluginRequirements::hasRequirements() const
-{
-  return !m_Requirements.empty();
-}
-
-QStringList PluginRequirements::requiredGames() const
-{
-  // We look for a "GameDependencyRequirement" - There can be only one since otherwise
-  // it'd mean that the plugin requires two games at once.
-  for (auto& requirement : m_Requirements) {
-    if (auto* gdep =
-            dynamic_cast<const GameDependencyRequirement*>(requirement.get())) {
-      return gdep->gameNames();
-    }
-  }
-
-  return {};
-}
-
 std::vector<MOBase::IPlugin*> PluginRequirements::requiredFor() const
 {
   std::vector<MOBase::IPlugin*> required;

@@ -14,17 +14,6 @@ FileRegister::FileRegister(boost::shared_ptr<OriginConnection> originConnection)
     : m_OriginConnection(originConnection), m_NextIndex(0)
 {}
 
-bool FileRegister::indexValid(FileIndex index) const
-{
-  std::scoped_lock lock(m_Mutex);
-
-  if (index < m_Files.size()) {
-    return (m_Files[index].get() != nullptr);
-  }
-
-  return false;
-}
-
 FileEntryPtr FileRegister::createFile(std::wstring name, DirectoryEntry* parent,
                                       DirectoryStats& stats)
 {

@@ -145,10 +145,6 @@ signals:
   //
   void originModified(int originId) const;
 
-  // emitted when the mod info dialog has been shown and closed
-  //
-  void modInfoDisplayed() const;
-
 private:
   // find the priority where to install or create a mod for the
   // given index (e.g. above, below, inside separator or at the end)
