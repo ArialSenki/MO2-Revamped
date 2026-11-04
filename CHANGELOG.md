@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0-beta.2 (pre-release) — November 4, 2026
 
 ### ELDEN RING Reforged
 

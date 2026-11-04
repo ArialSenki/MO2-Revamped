@@ -15,6 +15,9 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 **Latest: [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2)**
 — `MO2-Revamped-Setup-1.0.2.exe` with its `SHA256SUMS.txt`.
 
+A pre-release, [v1.1.0-beta.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.2),
+has the newest changes.
+
 Earlier releases, [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)
 and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0),
 remain available.
