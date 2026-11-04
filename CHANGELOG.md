@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0-beta.3 (pre-release) — November 4, 2026
 
 ### Faster
 
