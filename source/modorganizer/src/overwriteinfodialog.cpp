@@ -148,8 +148,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   QObject::connect(m_NewFolderAction, SIGNAL(triggered()), this,
                    SLOT(createDirectoryTriggered()));
 
-    buildFluentLayout();
-
+  buildFluentLayout();
 }
 
 void OverwriteInfoDialog::buildFluentLayout()

@@ -75,8 +75,7 @@ ForcedLoadDialog::ForcedLoadDialog(const IPluginGame* game, QWidget* parent)
   ui->setupUi(this);
   addRulesGroupHeading(ui->rulesGroup);
   resize(860, 520);
-    buildFluentLayout();
-
+  buildFluentLayout();
 }
 
 ForcedLoadDialog::~ForcedLoadDialog()
@@ -101,7 +100,7 @@ void ForcedLoadDialog::setValues(QList<MOBase::ExecutableForcedLoadSetting>& val
 
   ui->tableWidget->resizeRowsToContents();
   refreshFluent();
-  if (m_fluent && m_list->count() > 0) {
+  if (m_list->count() > 0) {
     m_list->setCurrentRow(0);
   }
 }
@@ -126,13 +125,11 @@ ForcedLoadDialogWidget* ForcedLoadDialog::addRule()
   ForcedLoadDialogWidget* item = new ForcedLoadDialogWidget(m_GamePlugin, this);
   ui->tableWidget->setCellWidget(row, 0, item);
   ui->tableWidget->resizeRowsToContents();
-  if (m_fluent) {
-    // a new rule is on by default, like the game's own ones
-    item->setEnabled(true);
-    refreshFluent();
-    m_list->setCurrentRow(row);
-    m_library->setFocus();
-  }
+  // a new rule is on by default, like the game's own ones
+  item->setEnabled(true);
+  refreshFluent();
+  m_list->setCurrentRow(row);
+  m_library->setFocus();
   return item;
 }
 
@@ -143,7 +140,7 @@ void ForcedLoadDialog::removeSelectedRules()
   for (auto rowIndex : ui->tableWidget->selectionModel()->selectedRows()) {
     rows.append(rowIndex.row());
   }
-  if (m_fluent && m_list->currentRow() >= 0) {
+  if (m_list->currentRow() >= 0) {
     rows = {m_list->currentRow()};
   }
   std::sort(rows.begin(), rows.end(), std::greater<int>());
@@ -153,11 +150,9 @@ void ForcedLoadDialog::removeSelectedRules()
       ui->tableWidget->removeRow(row);
     }
   }
-  if (m_fluent) {
-    const int current = rows.isEmpty() ? 0 : rows.last();
-    refreshFluent();
-    m_list->setCurrentRow(std::min(current, m_list->count() - 1));
-  }
+  const int current = rows.isEmpty() ? 0 : rows.last();
+  refreshFluent();
+  m_list->setCurrentRow(std::min(current, m_list->count() - 1));
 }
 
 void ForcedLoadDialog::buildFluentLayout()
@@ -408,7 +403,7 @@ void ForcedLoadDialog::buildFluentLayout()
 
   setMinimumSize(860, 520);
   resize(960, 600);
-  m_fluent = true;
+  m_cardsBuilt = true;
   refreshFluent();
 }
 
@@ -434,7 +429,7 @@ QString ForcedLoadDialog::libraryFile(ForcedLoadDialogWidget* rule) const
 
 void ForcedLoadDialog::refreshFluent()
 {
-  if (!m_fluent) {
+  if (!m_cardsBuilt) {
     return;
   }
 

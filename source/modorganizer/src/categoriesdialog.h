@@ -106,7 +106,7 @@ private:
   int m_HighestID;
   std::set<int> m_IDs;
 
-  bool m_fluent              = false;
+  bool m_cardsBuilt          = false;
   bool m_fluentRefreshQueued = false;
   bool m_fluentSyncing       = false;
   QMap<int, int> m_modCounts;

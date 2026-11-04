@@ -110,8 +110,7 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
                           MOShared::getUsvfsVersionString());
   ui->licenseText->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
-    buildFluentLayout(applicationName, version);
-
+  buildFluentLayout(applicationName, version);
 }
 
 void AboutDialog::buildFluentLayout(const QString& applicationName, const QString& version)

@@ -194,8 +194,7 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
     ui->nexusImportButton->setDisabled(true);
   }
 
-    buildFluentLayout();
-
+  buildFluentLayout();
 }
 
 CategoriesDialog::~CategoriesDialog()
@@ -535,7 +534,7 @@ void CategoriesDialog::addCategory_clicked()
 
 void CategoriesDialog::removeCategory_clicked()
 {
-  if (m_ContextRow >= 0 && m_fluent) {
+  if (m_ContextRow >= 0) {
     // the subcategories move up to the removed category's parent
     QTableWidget* table = ui->categoriesTable;
     const int id     = table->item(m_ContextRow, 0) ? table->item(m_ContextRow, 0)->text().toInt() : 0;
@@ -1139,7 +1138,7 @@ void CategoriesDialog::buildFluentLayout()
   connect(nexusModel, &QAbstractItemModel::rowsRemoved, this, [this] { queueFluentRefresh(); });
   connect(nexusModel, &QAbstractItemModel::modelReset, this, [this] { queueFluentRefresh(); });
 
-  m_fluent = true;
+  m_cardsBuilt = true;
   refreshFluentTree();
   if (m_fluentTree->topLevelItemCount() > 0) {
     m_fluentTree->setCurrentItem(m_fluentTree->topLevelItem(0));
@@ -1396,7 +1395,7 @@ QWidget* CategoriesDialog::createFluentDetails()
 
 void CategoriesDialog::queueFluentRefresh()
 {
-  if (!m_fluent || m_fluentRefreshQueued) {
+  if (!m_cardsBuilt || m_fluentRefreshQueued) {
     return;
   }
   m_fluentRefreshQueued = true;
@@ -1444,7 +1443,7 @@ void CategoriesDialog::selectID(int id)
 
 void CategoriesDialog::refreshFluentTree()
 {
-  if (!m_fluent) {
+  if (!m_cardsBuilt) {
     return;
   }
 
@@ -1543,7 +1542,7 @@ void CategoriesDialog::refreshFluentTree()
 
 void CategoriesDialog::refreshFluentDetails()
 {
-  if (!m_fluent) {
+  if (!m_cardsBuilt) {
     return;
   }
 

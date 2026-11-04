@@ -29,7 +29,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QKeyEvent>
 #include <QLabel>
 #include <QPushButton>
-#include <QStyle>
 #include <QVBoxLayout>
 
 namespace
@@ -74,11 +73,7 @@ QueryOverwriteDialog::QueryOverwriteDialog(QWidget* parent, Backup b)
 {
   ui->setupUi(this);
   ui->backupBox->setChecked(b == BACKUP_YES);
-  QIcon icon = QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion);
-  ui->iconLabel->setPixmap(icon.pixmap(72));
-
-    buildFluentLayout();
-
+  buildFluentLayout();
 }
 
 void QueryOverwriteDialog::setModName(const QString& name)
@@ -96,12 +91,10 @@ void QueryOverwriteDialog::buildFluentLayout()
   if (root == nullptr) {
     return;
   }
-  ui->frame_2->hide();
   ui->backupCard->hide();
   for (QPushButton* button : {ui->mergeBtn, ui->replaceBtn, ui->renameBtn}) {
     button->hide();
   }
-  root->setStretch(1, 0);
 
   auto* card = new QFrame(this);
   card->setProperty("fluentCard", true);

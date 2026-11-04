@@ -150,74 +150,74 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="142"/>
+        <location filename="aboutdialog.cpp" line="141"/>
         <source>Version %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="153"/>
+        <location filename="aboutdialog.cpp" line="152"/>
         <source>unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="168"/>
+        <location filename="aboutdialog.cpp" line="167"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="169"/>
-        <location filename="aboutdialog.cpp" line="178"/>
+        <location filename="aboutdialog.cpp" line="168"/>
+        <location filename="aboutdialog.cpp" line="177"/>
         <source>Build</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="170"/>
+        <location filename="aboutdialog.cpp" line="169"/>
         <source>Virtual file system</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="170"/>
+        <location filename="aboutdialog.cpp" line="169"/>
         <source>usvfs %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="171"/>
+        <location filename="aboutdialog.cpp" line="170"/>
         <source>Qt</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="172"/>
+        <location filename="aboutdialog.cpp" line="171"/>
         <source>Windows</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="185"/>
-        <location filename="aboutdialog.cpp" line="191"/>
+        <location filename="aboutdialog.cpp" line="184"/>
+        <location filename="aboutdialog.cpp" line="190"/>
         <source>Copy for a bug report</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="188"/>
+        <location filename="aboutdialog.cpp" line="187"/>
         <source>Copies the version, build and system to paste in an issue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="192"/>
+        <location filename="aboutdialog.cpp" line="191"/>
         <source>Copied</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="197"/>
+        <location filename="aboutdialog.cpp" line="196"/>
         <source>MO2 Revamped on GitHub</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="203"/>
+        <location filename="aboutdialog.cpp" line="202"/>
         <source>Report a problem</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="aboutdialog.cpp" line="244"/>
+        <location filename="aboutdialog.cpp" line="243"/>
         <source>No license</source>
         <translation type="unfinished"></translation>
     </message>
@@ -314,8 +314,8 @@
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="77"/>
-        <location filename="categoriesdialog.cpp" line="1328"/>
-        <location filename="categoriesdialog.cpp" line="1857"/>
+        <location filename="categoriesdialog.cpp" line="1327"/>
+        <location filename="categoriesdialog.cpp" line="1856"/>
         <source>ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -357,7 +357,7 @@
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="106"/>
-        <location filename="categoriesdialog.cpp" line="1017"/>
+        <location filename="categoriesdialog.cpp" line="1016"/>
         <source>Add category</source>
         <translation type="unfinished"></translation>
     </message>
@@ -369,7 +369,7 @@
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="126"/>
-        <location filename="categoriesdialog.cpp" line="1338"/>
+        <location filename="categoriesdialog.cpp" line="1337"/>
         <source>Nexus categories</source>
         <translation type="unfinished"></translation>
     </message>
@@ -407,9 +407,9 @@
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="82"/>
+        <location filename="categoriesdialog.cpp" line="1301"/>
         <location filename="categoriesdialog.cpp" line="1302"/>
-        <location filename="categoriesdialog.cpp" line="1303"/>
-        <location filename="categoriesdialog.cpp" line="1857"/>
+        <location filename="categoriesdialog.cpp" line="1856"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -431,303 +431,303 @@
     </message>
     <message>
         <location filename="categoriesdialog.cpp" line="192"/>
-        <location filename="categoriesdialog.cpp" line="1655"/>
+        <location filename="categoriesdialog.cpp" line="1654"/>
         <source>Nexus category mapping is disabled in Settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="452"/>
-        <location filename="categoriesdialog.cpp" line="784"/>
+        <location filename="categoriesdialog.cpp" line="451"/>
+        <location filename="categoriesdialog.cpp" line="783"/>
         <source>Nexus category ID: %1. Drag this entry onto a local category to map it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="506"/>
+        <location filename="categoriesdialog.cpp" line="505"/>
         <source>No Nexus categories loaded. Use the button above to load this game&apos;s.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="507"/>
+        <location filename="categoriesdialog.cpp" line="506"/>
         <source>%1 Nexus categories available; full category names are shown in the mappings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="568"/>
+        <location filename="categoriesdialog.cpp" line="567"/>
         <source>Loading the active game&apos;s categories from Nexus…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="576"/>
+        <location filename="categoriesdialog.cpp" line="575"/>
         <source>The Nexus list is empty. Refresh it before importing categories.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="597"/>
+        <location filename="categoriesdialog.cpp" line="596"/>
         <source>Replace existing categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="598"/>
+        <location filename="categoriesdialog.cpp" line="597"/>
         <source>Mods using a category from the current list: %1. They will have no category after this, and you can assign the new ones afterwards. Replace the list?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="739"/>
+        <location filename="categoriesdialog.cpp" line="738"/>
         <source>Category list updated. Review the MO2 categories, then choose OK to save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="773"/>
+        <location filename="categoriesdialog.cpp" line="772"/>
         <source>Nexus returned no valid categories. The current list and mappings were kept.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="994"/>
+        <location filename="categoriesdialog.cpp" line="993"/>
         <source>Loaded %1 Nexus categories for %2. Kept %3 existing assignments and added %4 exact-name mappings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1005"/>
+        <location filename="categoriesdialog.cpp" line="1004"/>
         <source>Could not refresh the Nexus list. Check your connection and Nexus access.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1007"/>
+        <location filename="categoriesdialog.cpp" line="1006"/>
         <source>Error %1: Request to Nexus failed: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1023"/>
+        <location filename="categoriesdialog.cpp" line="1022"/>
         <source>Copy name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1029"/>
-        <location filename="categoriesdialog.cpp" line="1860"/>
+        <location filename="categoriesdialog.cpp" line="1028"/>
+        <location filename="categoriesdialog.cpp" line="1859"/>
         <source>Remove Nexus mappings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1037"/>
+        <location filename="categoriesdialog.cpp" line="1036"/>
         <source>Remove category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1114"/>
-        <location filename="categoriesdialog.cpp" line="1881"/>
+        <location filename="categoriesdialog.cpp" line="1113"/>
+        <location filename="categoriesdialog.cpp" line="1880"/>
         <source>What are categories for?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1163"/>
-        <location filename="categoriesdialog.cpp" line="1189"/>
+        <location filename="categoriesdialog.cpp" line="1162"/>
+        <location filename="categoriesdialog.cpp" line="1188"/>
         <source>Categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1174"/>
+        <location filename="categoriesdialog.cpp" line="1173"/>
         <source>Search categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1199"/>
-        <location filename="categoriesdialog.cpp" line="1747"/>
-        <location filename="categoriesdialog.cpp" line="1811"/>
+        <location filename="categoriesdialog.cpp" line="1198"/>
+        <location filename="categoriesdialog.cpp" line="1746"/>
+        <location filename="categoriesdialog.cpp" line="1810"/>
         <source>New category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1202"/>
+        <location filename="categoriesdialog.cpp" line="1201"/>
         <source>Add a category at the top level (Ctrl+N)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1215"/>
+        <location filename="categoriesdialog.cpp" line="1214"/>
         <source>Load from Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1216"/>
+        <location filename="categoriesdialog.cpp" line="1215"/>
         <source>Import...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1294"/>
+        <location filename="categoriesdialog.cpp" line="1293"/>
         <source>Choose a category in the list, or add one.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1304"/>
+        <location filename="categoriesdialog.cpp" line="1303"/>
         <source>Shown in the mod list, its filters and the mod&apos;s menu</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1315"/>
-        <location filename="categoriesdialog.cpp" line="1317"/>
+        <location filename="categoriesdialog.cpp" line="1314"/>
+        <location filename="categoriesdialog.cpp" line="1316"/>
         <source>Inside</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1318"/>
+        <location filename="categoriesdialog.cpp" line="1317"/>
         <source>A subcategory is listed under the category it belongs to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1329"/>
+        <location filename="categoriesdialog.cpp" line="1328"/>
         <source>Copy the ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1334"/>
+        <location filename="categoriesdialog.cpp" line="1333"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1350"/>
-        <location filename="categoriesdialog.cpp" line="1353"/>
+        <location filename="categoriesdialog.cpp" line="1349"/>
+        <location filename="categoriesdialog.cpp" line="1352"/>
         <source>Add a Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1354"/>
+        <location filename="categoriesdialog.cpp" line="1353"/>
         <source>Mods from Nexus in that category get this one when they are installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1374"/>
-        <location filename="categoriesdialog.cpp" line="1830"/>
+        <location filename="categoriesdialog.cpp" line="1373"/>
+        <location filename="categoriesdialog.cpp" line="1829"/>
         <source>New subcategory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1380"/>
+        <location filename="categoriesdialog.cpp" line="1379"/>
         <source>Remove the category; its subcategories move up a level (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1476"/>
+        <location filename="categoriesdialog.cpp" line="1475"/>
         <source>1 mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1476"/>
+        <location filename="categoriesdialog.cpp" line="1475"/>
         <source>%1 mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1479"/>
+        <location filename="categoriesdialog.cpp" line="1478"/>
         <source>1 Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1479"/>
+        <location filename="categoriesdialog.cpp" line="1478"/>
         <source>%1 Nexus categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1506"/>
-        <location filename="categoriesdialog.cpp" line="1571"/>
+        <location filename="categoriesdialog.cpp" line="1505"/>
+        <location filename="categoriesdialog.cpp" line="1570"/>
         <source>(no name)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1559"/>
+        <location filename="categoriesdialog.cpp" line="1558"/>
         <source>No category selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1560"/>
+        <location filename="categoriesdialog.cpp" line="1559"/>
         <source>Add one, or pick one in the list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1572"/>
+        <location filename="categoriesdialog.cpp" line="1571"/>
         <source>Top-level category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1573"/>
+        <location filename="categoriesdialog.cpp" line="1572"/>
         <source>Inside %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1579"/>
+        <location filename="categoriesdialog.cpp" line="1578"/>
         <source>No mod uses this category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1580"/>
+        <location filename="categoriesdialog.cpp" line="1579"/>
         <source>1 mod uses this category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1581"/>
+        <location filename="categoriesdialog.cpp" line="1580"/>
         <source>%1 mods use this category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1608"/>
+        <location filename="categoriesdialog.cpp" line="1607"/>
         <source>Nothing (top level)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1634"/>
+        <location filename="categoriesdialog.cpp" line="1633"/>
         <source>Take this Nexus category off</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1635"/>
+        <location filename="categoriesdialog.cpp" line="1634"/>
         <source>Nexus ID %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1652"/>
+        <location filename="categoriesdialog.cpp" line="1651"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1654"/>
+        <location filename="categoriesdialog.cpp" line="1653"/>
         <source>Mods from Nexus do not get this category by themselves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1680"/>
+        <location filename="categoriesdialog.cpp" line="1679"/>
         <source>Load the list from Nexus first</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1681"/>
+        <location filename="categoriesdialog.cpp" line="1680"/>
         <source>Choose a Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1686"/>
+        <location filename="categoriesdialog.cpp" line="1685"/>
         <source>%1 (now in %2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1818"/>
-        <location filename="categoriesdialog.cpp" line="1851"/>
+        <location filename="categoriesdialog.cpp" line="1817"/>
+        <location filename="categoriesdialog.cpp" line="1850"/>
         <source>Sort A to Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1834"/>
+        <location filename="categoriesdialog.cpp" line="1833"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1845"/>
+        <location filename="categoriesdialog.cpp" line="1844"/>
         <source>Move up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1848"/>
+        <location filename="categoriesdialog.cpp" line="1847"/>
         <source>Move down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1882"/>
+        <location filename="categoriesdialog.cpp" line="1881"/>
         <source>Categories sort your mods: the mod list can group and filter by them, and a mod can have several. A subcategory is listed inside another one.
 
 Nexus categories link a category to the ones mods have on Nexus Mods, so a mod installed from Nexus gets the matching category by itself. Load the list from Nexus to pick them, or import it to create the categories Nexus uses.
@@ -736,14 +736,14 @@ Changes are saved when you choose OK.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="categoriesdialog.cpp" line="1888"/>
+        <location filename="categoriesdialog.cpp" line="1887"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="categoriesdialog.ui" line="112"/>
-        <location filename="categoriesdialog.cpp" line="1377"/>
-        <location filename="categoriesdialog.cpp" line="1868"/>
+        <location filename="categoriesdialog.cpp" line="1376"/>
+        <location filename="categoriesdialog.cpp" line="1867"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1807,7 +1807,7 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="131"/>
-        <location filename="editexecutablesdialog.cpp" line="1208"/>
+        <location filename="editexecutablesdialog.cpp" line="1207"/>
         <source>Executables</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1850,8 +1850,8 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="204"/>
-        <location filename="editexecutablesdialog.cpp" line="1375"/>
-        <location filename="editexecutablesdialog.cpp" line="1520"/>
+        <location filename="editexecutablesdialog.cpp" line="1374"/>
+        <location filename="editexecutablesdialog.cpp" line="1519"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1916,7 +1916,7 @@ Canceling download &quot;%2&quot;...</source>
     <message>
         <location filename="editexecutablesdialog.ui" line="384"/>
         <location filename="editexecutablesdialog.cpp" line="194"/>
-        <location filename="editexecutablesdialog.cpp" line="1337"/>
+        <location filename="editexecutablesdialog.cpp" line="1336"/>
         <source>Program</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1989,8 +1989,8 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="405"/>
-        <location filename="editexecutablesdialog.cpp" line="1336"/>
-        <location filename="editexecutablesdialog.cpp" line="1514"/>
+        <location filename="editexecutablesdialog.cpp" line="1335"/>
+        <location filename="editexecutablesdialog.cpp" line="1513"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2023,14 +2023,14 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="459"/>
-        <location filename="editexecutablesdialog.cpp" line="1339"/>
+        <location filename="editexecutablesdialog.cpp" line="1338"/>
         <source>Start in</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="editexecutablesdialog.ui" line="483"/>
-        <location filename="editexecutablesdialog.cpp" line="1341"/>
-        <location filename="editexecutablesdialog.cpp" line="1516"/>
+        <location filename="editexecutablesdialog.cpp" line="1340"/>
+        <location filename="editexecutablesdialog.cpp" line="1515"/>
         <source>Arguments</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2067,13 +2067,13 @@ Canceling download &quot;%2&quot;...</source>
     </message>
     <message>
         <location filename="editexecutablesdialog.cpp" line="259"/>
-        <location filename="editexecutablesdialog.cpp" line="1484"/>
+        <location filename="editexecutablesdialog.cpp" line="1483"/>
         <source>Add from file...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="editexecutablesdialog.cpp" line="260"/>
-        <location filename="editexecutablesdialog.cpp" line="1486"/>
+        <location filename="editexecutablesdialog.cpp" line="1485"/>
         <source>Add empty</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2083,310 +2083,310 @@ Canceling download &quot;%2&quot;...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="407"/>
-        <location filename="editexecutablesdialog.cpp" line="415"/>
+        <location filename="editexecutablesdialog.cpp" line="406"/>
+        <location filename="editexecutablesdialog.cpp" line="414"/>
         <source>Output mod not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="396"/>
+        <location filename="editexecutablesdialog.cpp" line="395"/>
         <source>Output mod is empty</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="396"/>
-        <location filename="editexecutablesdialog.cpp" line="407"/>
-        <location filename="editexecutablesdialog.cpp" line="415"/>
+        <location filename="editexecutablesdialog.cpp" line="395"/>
+        <location filename="editexecutablesdialog.cpp" line="406"/>
+        <location filename="editexecutablesdialog.cpp" line="414"/>
         <source>Save programs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="397"/>
+        <location filename="editexecutablesdialog.cpp" line="396"/>
         <source>Output-mod routing is enabled for &quot;%1&quot;, but no mod is selected.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="408"/>
+        <location filename="editexecutablesdialog.cpp" line="407"/>
         <source>The mod &quot;%1&quot; assigned to &quot;%2&quot; no longer exists, so new files go to Overwrite again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="416"/>
+        <location filename="editexecutablesdialog.cpp" line="415"/>
         <source>The mod &quot;%1&quot; assigned to &quot;%2&quot; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="791"/>
+        <location filename="editexecutablesdialog.cpp" line="790"/>
         <source>Restore the game&apos;s programs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="792"/>
+        <location filename="editexecutablesdialog.cpp" line="791"/>
         <source>Restore the game-provided executables?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="795"/>
+        <location filename="editexecutablesdialog.cpp" line="794"/>
         <source>MO2 will add the executables supplied by the game plugin. Existing entries with matching names will be renamed and kept.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="799"/>
+        <location filename="editexecutablesdialog.cpp" line="798"/>
         <source>Restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="986"/>
-        <location filename="editexecutablesdialog.cpp" line="1042"/>
+        <location filename="editexecutablesdialog.cpp" line="985"/>
+        <location filename="editexecutablesdialog.cpp" line="1041"/>
         <source>New Executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1055"/>
+        <location filename="editexecutablesdialog.cpp" line="1054"/>
         <source>Select a directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1091"/>
+        <location filename="editexecutablesdialog.cpp" line="1090"/>
         <source>Unsaved changes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1131"/>
+        <location filename="editexecutablesdialog.cpp" line="1130"/>
         <source>Executables (*.exe *.bat *.jar)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1131"/>
+        <location filename="editexecutablesdialog.cpp" line="1130"/>
         <source>All Files (*.*)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1134"/>
-        <location filename="editexecutablesdialog.cpp" line="1150"/>
+        <location filename="editexecutablesdialog.cpp" line="1133"/>
+        <location filename="editexecutablesdialog.cpp" line="1149"/>
         <source>Select an executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1150"/>
+        <location filename="editexecutablesdialog.cpp" line="1149"/>
         <source>Java is required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1196"/>
-        <location filename="editexecutablesdialog.cpp" line="1530"/>
+        <location filename="editexecutablesdialog.cpp" line="1195"/>
+        <location filename="editexecutablesdialog.cpp" line="1529"/>
         <source>What can I add here?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1233"/>
+        <location filename="editexecutablesdialog.cpp" line="1232"/>
         <source>Programs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1255"/>
+        <location filename="editexecutablesdialog.cpp" line="1254"/>
         <source>Add program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1268"/>
-        <location filename="editexecutablesdialog.cpp" line="1489"/>
+        <location filename="editexecutablesdialog.cpp" line="1267"/>
+        <location filename="editexecutablesdialog.cpp" line="1488"/>
         <source>Restore the game&apos;s programs...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1318"/>
+        <location filename="editexecutablesdialog.cpp" line="1317"/>
         <source>Browse for the program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1319"/>
+        <location filename="editexecutablesdialog.cpp" line="1318"/>
         <source>Browse for the start folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1336"/>
+        <location filename="editexecutablesdialog.cpp" line="1335"/>
         <source>The name in the Program list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1337"/>
+        <location filename="editexecutablesdialog.cpp" line="1336"/>
         <source>The file Mod Organizer starts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1339"/>
+        <location filename="editexecutablesdialog.cpp" line="1338"/>
         <source>The folder the program runs from</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1341"/>
+        <location filename="editexecutablesdialog.cpp" line="1340"/>
         <source>Passed to the program as it starts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1346"/>
+        <location filename="editexecutablesdialog.cpp" line="1345"/>
         <source>App ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1347"/>
+        <location filename="editexecutablesdialog.cpp" line="1346"/>
         <source>Steam app ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1348"/>
+        <location filename="editexecutablesdialog.cpp" line="1347"/>
         <source>Starts the program as another Steam app, for tools that need it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1351"/>
+        <location filename="editexecutablesdialog.cpp" line="1350"/>
         <source>Save new files to a mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1352"/>
+        <location filename="editexecutablesdialog.cpp" line="1351"/>
         <source>New files go here instead of Overwrite</source>
         <oldsource>Files the program creates go to this mod instead of Overwrite</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1354"/>
+        <location filename="editexecutablesdialog.cpp" line="1353"/>
         <source>Configure...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1355"/>
+        <location filename="editexecutablesdialog.cpp" line="1354"/>
         <source>Force load libraries</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1356"/>
+        <location filename="editexecutablesdialog.cpp" line="1355"/>
         <source>Loads extra DLLs into the program when it starts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1358"/>
+        <location filename="editexecutablesdialog.cpp" line="1357"/>
         <source>Use the program&apos;s icon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1361"/>
+        <location filename="editexecutablesdialog.cpp" line="1360"/>
         <source>Hide from the Program list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1362"/>
+        <location filename="editexecutablesdialog.cpp" line="1361"/>
         <source>Keeps the program here without listing it in the main window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1265"/>
-        <location filename="editexecutablesdialog.cpp" line="1372"/>
-        <location filename="editexecutablesdialog.cpp" line="1502"/>
+        <location filename="editexecutablesdialog.cpp" line="1264"/>
+        <location filename="editexecutablesdialog.cpp" line="1371"/>
+        <location filename="editexecutablesdialog.cpp" line="1501"/>
         <source>Duplicate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1092"/>
+        <location filename="editexecutablesdialog.cpp" line="1091"/>
         <source>Save the changes to your programs?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1151"/>
+        <location filename="editexecutablesdialog.cpp" line="1150"/>
         <source>Mod Organizer needs Java to launch this JAR. If Java is already installed, browse to its javaw.exe file and select it as the binary.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1359"/>
+        <location filename="editexecutablesdialog.cpp" line="1358"/>
         <source>Desktop shortcuts show the program&apos;s own icon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1377"/>
+        <location filename="editexecutablesdialog.cpp" line="1376"/>
         <source>Remove the program from the list (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1378"/>
-        <location filename="editexecutablesdialog.cpp" line="1455"/>
+        <location filename="editexecutablesdialog.cpp" line="1377"/>
+        <location filename="editexecutablesdialog.cpp" line="1454"/>
         <source>Desktop shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1427"/>
+        <location filename="editexecutablesdialog.cpp" line="1426"/>
         <source>No program file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1429"/>
+        <location filename="editexecutablesdialog.cpp" line="1428"/>
         <source>Hidden</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1454"/>
+        <location filename="editexecutablesdialog.cpp" line="1453"/>
         <source>Remove desktop shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1457"/>
+        <location filename="editexecutablesdialog.cpp" line="1456"/>
         <source>Delete the shortcut on the desktop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1458"/>
+        <location filename="editexecutablesdialog.cpp" line="1457"/>
         <source>Start this program with Mod Organizer from the desktop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1459"/>
+        <location filename="editexecutablesdialog.cpp" line="1458"/>
         <source>Choose OK or Apply first, so the shortcut finds the program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1461"/>
+        <location filename="editexecutablesdialog.cpp" line="1460"/>
         <source>No program selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1462"/>
+        <location filename="editexecutablesdialog.cpp" line="1461"/>
         <source>Add one, or pick one in the list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1470"/>
+        <location filename="editexecutablesdialog.cpp" line="1469"/>
         <source>Choose the file it starts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1503"/>
+        <location filename="editexecutablesdialog.cpp" line="1502"/>
         <source>Move up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1506"/>
+        <location filename="editexecutablesdialog.cpp" line="1505"/>
         <source>Move down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1511"/>
+        <location filename="editexecutablesdialog.cpp" line="1510"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1515"/>
+        <location filename="editexecutablesdialog.cpp" line="1514"/>
         <source>Program path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1531"/>
+        <location filename="editexecutablesdialog.cpp" line="1530"/>
         <source>Any program Mod Organizer should start with your mods in place: the game, its launcher, a script extender or tools like xEdit or BodySlide. Programs started from here see the virtual game folder, so they find the mods of the profile in use.
 
 The programs that are not hidden appear in the main window&apos;s Program list, next to Run.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editexecutablesdialog.cpp" line="1536"/>
+        <location filename="editexecutablesdialog.cpp" line="1535"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3090,196 +3090,196 @@ Start it anyway?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="187"/>
-        <location filename="forcedloaddialog.cpp" line="203"/>
+        <location filename="forcedloaddialog.cpp" line="182"/>
+        <location filename="forcedloaddialog.cpp" line="198"/>
         <source>Libraries</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="213"/>
-        <location filename="forcedloaddialog.cpp" line="517"/>
+        <location filename="forcedloaddialog.cpp" line="208"/>
+        <location filename="forcedloaddialog.cpp" line="512"/>
         <source>Add library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="215"/>
+        <location filename="forcedloaddialog.cpp" line="210"/>
         <source>Load another DLL into a program (Ctrl+N)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="259"/>
+        <location filename="forcedloaddialog.cpp" line="254"/>
         <source>No library is forced into a program yet. Add one to load a DLL that a program does not load by itself.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="268"/>
+        <location filename="forcedloaddialog.cpp" line="263"/>
         <source>Load this library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="269"/>
+        <location filename="forcedloaddialog.cpp" line="264"/>
         <source>A rule that is off stays saved but is not applied</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="272"/>
+        <location filename="forcedloaddialog.cpp" line="267"/>
         <source>A DLL, relative to the game folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="275"/>
+        <location filename="forcedloaddialog.cpp" line="270"/>
         <source>For example %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="283"/>
+        <location filename="forcedloaddialog.cpp" line="278"/>
         <source>Browse for the library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="285"/>
+        <location filename="forcedloaddialog.cpp" line="280"/>
         <source>Browse for the program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="287"/>
+        <location filename="forcedloaddialog.cpp" line="282"/>
         <source>Library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="288"/>
+        <location filename="forcedloaddialog.cpp" line="283"/>
         <source>The DLL Mod Organizer loads into the program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="290"/>
-        <location filename="forcedloaddialog.cpp" line="542"/>
+        <location filename="forcedloaddialog.cpp" line="285"/>
+        <location filename="forcedloaddialog.cpp" line="537"/>
         <source>Program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="291"/>
+        <location filename="forcedloaddialog.cpp" line="286"/>
         <source>The process it is loaded into, by file name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="293"/>
+        <location filename="forcedloaddialog.cpp" line="288"/>
         <source>File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="294"/>
+        <location filename="forcedloaddialog.cpp" line="289"/>
         <source>Show the library in its folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="303"/>
+        <location filename="forcedloaddialog.cpp" line="298"/>
         <source>The game plugin needs this library, so it cannot be changed or removed. You can still turn it off.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="317"/>
-        <location filename="forcedloaddialog.cpp" line="528"/>
+        <location filename="forcedloaddialog.cpp" line="312"/>
+        <location filename="forcedloaddialog.cpp" line="523"/>
         <source>Duplicate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="320"/>
-        <location filename="forcedloaddialog.cpp" line="546"/>
+        <location filename="forcedloaddialog.cpp" line="315"/>
+        <location filename="forcedloaddialog.cpp" line="541"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="322"/>
+        <location filename="forcedloaddialog.cpp" line="317"/>
         <source>Remove the rule (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="388"/>
-        <location filename="forcedloaddialog.cpp" line="396"/>
+        <location filename="forcedloaddialog.cpp" line="383"/>
+        <location filename="forcedloaddialog.cpp" line="391"/>
         <source>When do I need this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="397"/>
+        <location filename="forcedloaddialog.cpp" line="392"/>
         <source>Some mods come as a DLL that the game does not load by itself, and some tools need a library loaded before they start. A rule here makes Mod Organizer load that DLL into the named program each time it starts from this entry.
 
 Most mods do not need it: script extenders and DLL loaders already load their plugins.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="402"/>
+        <location filename="forcedloaddialog.cpp" line="397"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="457"/>
+        <location filename="forcedloaddialog.cpp" line="452"/>
         <source>No program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="459"/>
+        <location filename="forcedloaddialog.cpp" line="454"/>
         <source>Off</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="462"/>
+        <location filename="forcedloaddialog.cpp" line="457"/>
         <source>Game plugin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="465"/>
-        <location filename="forcedloaddialog.cpp" line="487"/>
+        <location filename="forcedloaddialog.cpp" line="460"/>
+        <location filename="forcedloaddialog.cpp" line="482"/>
         <source>New library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="480"/>
+        <location filename="forcedloaddialog.cpp" line="475"/>
         <source>No library selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="481"/>
+        <location filename="forcedloaddialog.cpp" line="476"/>
         <source>Add one to load it into a program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="489"/>
+        <location filename="forcedloaddialog.cpp" line="484"/>
         <source>Choose the program it goes into</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="490"/>
+        <location filename="forcedloaddialog.cpp" line="485"/>
         <source>Loaded into %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="505"/>
+        <location filename="forcedloaddialog.cpp" line="500"/>
         <source>Choose the library first</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="507"/>
+        <location filename="forcedloaddialog.cpp" line="502"/>
         <source>Not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="530"/>
+        <location filename="forcedloaddialog.cpp" line="525"/>
         <source>Turn off</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="530"/>
+        <location filename="forcedloaddialog.cpp" line="525"/>
         <source>Turn on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="536"/>
+        <location filename="forcedloaddialog.cpp" line="531"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="forcedloaddialog.cpp" line="541"/>
+        <location filename="forcedloaddialog.cpp" line="536"/>
         <source>Library path</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9508,87 +9508,87 @@ Please enter a name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="185"/>
+        <location filename="overwriteinfodialog.cpp" line="184"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="193"/>
+        <location filename="overwriteinfodialog.cpp" line="192"/>
         <source>Create mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="194"/>
+        <location filename="overwriteinfodialog.cpp" line="193"/>
         <source>Move all files from Overwrite into a new regular mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="196"/>
+        <location filename="overwriteinfodialog.cpp" line="195"/>
         <source>Move to a mod...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="197"/>
+        <location filename="overwriteinfodialog.cpp" line="196"/>
         <source>Choose a regular mod and move all files from Overwrite into it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="216"/>
+        <location filename="overwriteinfodialog.cpp" line="215"/>
         <source>Search files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="220"/>
+        <location filename="overwriteinfodialog.cpp" line="219"/>
         <source>Expand all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="221"/>
+        <location filename="overwriteinfodialog.cpp" line="220"/>
         <source>Collapse all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="226"/>
+        <location filename="overwriteinfodialog.cpp" line="225"/>
         <source>Empty to Recycle Bin...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="228"/>
+        <location filename="overwriteinfodialog.cpp" line="227"/>
         <source>Move everything in Overwrite to the Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="328"/>
+        <location filename="overwriteinfodialog.cpp" line="327"/>
         <source>Empty: nothing here belongs outside the mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="330"/>
+        <location filename="overwriteinfodialog.cpp" line="329"/>
         <source>Only empty folders, safe to clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="334"/>
+        <location filename="overwriteinfodialog.cpp" line="333"/>
         <source>More than %1 files, not part of any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="338"/>
+        <location filename="overwriteinfodialog.cpp" line="337"/>
         <source>1 file, %1, not part of any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="339"/>
+        <location filename="overwriteinfodialog.cpp" line="338"/>
         <source>%1 files, %2, not part of any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="361"/>
+        <location filename="overwriteinfodialog.cpp" line="360"/>
         <source>Empty Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="362"/>
+        <location filename="overwriteinfodialog.cpp" line="361"/>
         <source>Everything in Overwrite goes to the Recycle Bin: %1. Logs and settings that DLL mods and tools wrote there are gone from the game until you restore them.
 
 To keep some files, move them to a mod first.</source>
@@ -9596,68 +9596,68 @@ To keep some files, move them to a mod first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="366"/>
+        <location filename="overwriteinfodialog.cpp" line="365"/>
         <source>Move to Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="367"/>
+        <location filename="overwriteinfodialog.cpp" line="366"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="379"/>
+        <location filename="overwriteinfodialog.cpp" line="378"/>
         <source>Overwrite could not be cleared: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="422"/>
+        <location filename="overwriteinfodialog.cpp" line="421"/>
         <source>mod not found: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="434"/>
+        <location filename="overwriteinfodialog.cpp" line="433"/>
         <source>Move &quot;%1&quot; to the Recycle Bin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="435"/>
+        <location filename="overwriteinfodialog.cpp" line="434"/>
         <source>Move the selected files to the Recycle Bin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="452"/>
+        <location filename="overwriteinfodialog.cpp" line="451"/>
         <source>Failed to delete the selected files: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="437"/>
+        <location filename="overwriteinfodialog.cpp" line="436"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="500"/>
-        <location filename="overwriteinfodialog.cpp" line="506"/>
+        <location filename="overwriteinfodialog.cpp" line="499"/>
+        <location filename="overwriteinfodialog.cpp" line="505"/>
         <source>New Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="512"/>
+        <location filename="overwriteinfodialog.cpp" line="511"/>
         <source>Failed to create &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="551"/>
+        <location filename="overwriteinfodialog.cpp" line="550"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="554"/>
+        <location filename="overwriteinfodialog.cpp" line="553"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="overwriteinfodialog.cpp" line="555"/>
+        <location filename="overwriteinfodialog.cpp" line="554"/>
         <source>Full path</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13007,77 +13007,66 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.ui" line="122"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Segoe UI&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:10px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Merge:&lt;/span&gt; Add files from this archive overwriting existing ones.&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:10px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Replace:&lt;/span&gt; Completely replace the existing mod (old files are deleted).&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Rename:&lt;/span&gt; Install this as a separate mod with a new name&lt;span style=&quot; font-style:italic;&quot;&gt; (recommended)&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="queryoverwritedialog.ui" line="159"/>
-        <location filename="queryoverwritedialog.cpp" line="141"/>
+        <location filename="queryoverwritedialog.ui" line="94"/>
+        <location filename="queryoverwritedialog.cpp" line="134"/>
         <source>Keep a backup of the current mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.ui" line="166"/>
+        <location filename="queryoverwritedialog.ui" line="101"/>
         <source>Creates a recoverable copy before files are changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.ui" line="209"/>
-        <location filename="queryoverwritedialog.cpp" line="134"/>
+        <location filename="queryoverwritedialog.ui" line="144"/>
+        <location filename="queryoverwritedialog.cpp" line="127"/>
         <source>Merge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.ui" line="216"/>
-        <location filename="queryoverwritedialog.cpp" line="137"/>
+        <location filename="queryoverwritedialog.ui" line="151"/>
+        <location filename="queryoverwritedialog.cpp" line="130"/>
         <source>Replace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.ui" line="223"/>
+        <location filename="queryoverwritedialog.ui" line="158"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.ui" line="233"/>
+        <location filename="queryoverwritedialog.ui" line="168"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.cpp" line="87"/>
+        <location filename="queryoverwritedialog.cpp" line="82"/>
         <source>&quot;%1&quot; is already installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.cpp" line="131"/>
+        <location filename="queryoverwritedialog.cpp" line="124"/>
         <source>Install as a new mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.cpp" line="132"/>
+        <location filename="queryoverwritedialog.cpp" line="125"/>
         <source>Keeps the installed mod and adds this one under another name (recommended)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.cpp" line="135"/>
+        <location filename="queryoverwritedialog.cpp" line="128"/>
         <source>Adds the new files to the installed mod; files with the same name are replaced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.cpp" line="138"/>
+        <location filename="queryoverwritedialog.cpp" line="131"/>
         <source>Sends the installed mod&apos;s files to the Recycle Bin once this one is installed in their place</source>
         <oldsource>Deletes the installed mod&apos;s files and installs this one in their place</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="queryoverwritedialog.cpp" line="142"/>
+        <location filename="queryoverwritedialog.cpp" line="135"/>
         <source>Saves a copy you can restore before any file changes</source>
         <translation type="unfinished"></translation>
     </message>

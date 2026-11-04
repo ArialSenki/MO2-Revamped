@@ -295,8 +295,7 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
     saveOrder();
   });
 
-    buildFluentLayout();
-
+  buildFluentLayout();
 }
 
 EditExecutablesDialog::~EditExecutablesDialog() = default;
@@ -1210,7 +1209,7 @@ void EditExecutablesDialog::buildFluentLayout()
   resize(std::max(width(), 1000), std::max(height(), 700));
 
   // only now: the refresh functions need the cards built above
-  m_fluent = true;
+  m_cardsBuilt = true;
   for (int i = 0; i < ui->list->count(); ++i) {
     refreshFluentItem(ui->list->item(i));
   }
@@ -1413,7 +1412,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
 
 void EditExecutablesDialog::refreshFluentItem(QListWidgetItem* item)
 {
-  if (!m_fluent || item == nullptr) {
+  if (!m_cardsBuilt || item == nullptr) {
     return;
   }
 
@@ -1435,7 +1434,7 @@ void EditExecutablesDialog::refreshFluentItem(QListWidgetItem* item)
 
 void EditExecutablesDialog::refreshFluent()
 {
-  if (!m_fluent) {
+  if (!m_cardsBuilt) {
     return;
   }
 

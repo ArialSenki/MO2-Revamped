@@ -49,7 +49,7 @@ private:
   Ui::ForcedLoadDialog* ui;
   const MOBase::IPluginGame* m_GamePlugin;
 
-  bool m_fluent         = false;
+  bool m_cardsBuilt     = false;
   bool m_fluentSyncing  = false;
   QListWidget* m_list   = nullptr;
   QLabel* m_count       = nullptr;

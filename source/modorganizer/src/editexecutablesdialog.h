@@ -239,7 +239,7 @@ private:
 
   // Fluent: the instance manager's list and details cards around the same
   // widgets, see buildFluentLayout()
-  bool m_fluent = false;
+  bool m_cardsBuilt = false;
   QLabel* m_fluentCount     = nullptr;
   QLabel* m_fluentIcon      = nullptr;
   QLabel* m_fluentName      = nullptr;
