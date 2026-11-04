@@ -2,18 +2,18 @@
 
 ## Pre-release candidate — November 4, 2026 (v1.1.0-beta.3)
 
-- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 379,084,800 bytes, SHA-256
-  `580DE3953846E5E6706ABDFCEEA83B0CF808C534D1EB86ED38DDD0EDBF84E80F`.
-- Built from commit 3ac9bc7 (design/fluent-v4) with ModOrganizer.exe compiled
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,908,160 bytes, SHA-256
+  `95CAC9F8E8468ED486CF5921B52E73C5212957CACC9D1224EF15401A938E22F2`.
+- Built from commit 6c1e203 (design/fluent-v4) with ModOrganizer.exe compiled
   from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
   on November 3 (Release).
-- Complete payload: 1,354 files; Elden Ring Isolated payload: 1,254 files.
+- Complete payload: 1,318 files; Elden Ring Isolated payload: 1,218 files.
 - Installer run through its backend, without administrator rights, in a test
   folder: fresh portable install, update keeping data, uninstall keeping data,
   and an update from the 1.1.0-beta.2 installer, which ends with the same files
   as a fresh install. Form43Checker.py and installer_wizard/dialog.py are in the
   payload with the source's content. Not Authenticode signed.
-- Every setup mode on this installer, in test folders: portable and standard install,
+- Setup modes, in test folders, on the build before the last cleanup (3ac9bc7): portable and standard install,
   update, uninstall keeping data and removing everything; restore after an update from
   beta.2, back to its files; isolated Elden Ring copy; copy data from another
   installation; reinstall over kept data. It refused foreign folders and MO2 running
@@ -24,8 +24,14 @@
   Portuguese started in that language and saved it; an update in another language
   kept the saved one. A global install was not run, to leave the user's AppData
   alone; it uses the same code.
-- On the build before this fix (a73ad72, which differs only in the language): the
-  installed copy, with the portable marker set aside, opened the ER Test instance
+- On this installer: standard install, update, uninstall; beta.2 to beta.3, which removes
+  the classic themes, and restore, which brings them back; isolated copy; a foreign
+  folder refused. The installed copy opened ER Test at 6c1e203 with 0 warnings or errors.
+- Windows after the cleanup, on the development build, Dark and Light: main window, About,
+  Mod information, Settings, Profiles, Executables, Overwrite, instances, new instance, CSV,
+  categories, forced libraries, 0 warnings or errors. Transfer saves was not opened: its
+  button is hidden on Elden Ring and Nightreign.
+- On an earlier build (a73ad72): the installed copy, with the portable marker set aside, opened the ER Test instance
   with 0 warnings or errors in the log: main window in 2.6 s, "..." menu, About, Mod
   information with the Nexus page, Settings. All windows were checked on
   the development build of the same changes, in Dark and Light. No game was played
