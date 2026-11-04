@@ -2327,6 +2327,14 @@ El juego no se inició.</translation>
       <translation>Versión del juego: {0}</translation>
     </message>
     <message>
+      <source>Elden Ring closed right after starting</source>
+      <translation>Elden Ring se cerró nada más iniciarse</translation>
+    </message>
+    <message>
+      <source>Check that Steam is open on the account that owns the game, and that the game starts from Steam. If it does, turn off your mods and add them back one by one to find the one stopping it.</source>
+      <translation>Comprueba que Steam esté abierto en la cuenta dueña del juego y que el juego se inicie desde Steam. Si es así, desactiva tus mods y vuelve a activarlos uno a uno para encontrar el que lo impide.</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Puede que los mods no se hayan cargado</translation>
     </message>

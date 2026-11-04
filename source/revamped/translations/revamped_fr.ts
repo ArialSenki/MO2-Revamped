@@ -2315,6 +2315,14 @@ Le jeu n'a pas été lancé.</translation>
       <translation>Version du jeu : {0}</translation>
     </message>
     <message>
+      <source>Elden Ring closed right after starting</source>
+      <translation>Elden Ring s&apos;est fermé juste après le démarrage</translation>
+    </message>
+    <message>
+      <source>Check that Steam is open on the account that owns the game, and that the game starts from Steam. If it does, turn off your mods and add them back one by one to find the one stopping it.</source>
+      <translation>Vérifie que Steam est ouvert sur le compte qui possède le jeu et que le jeu démarre depuis Steam. Si c&apos;est le cas, désactive tes mods et réactive-les un par un pour trouver celui qui l&apos;empêche.</translation>
+    </message>
+    <message>
       <source>Mods may not have loaded</source>
       <translation>Les mods n'ont peut-être pas été chargés</translation>
     </message>

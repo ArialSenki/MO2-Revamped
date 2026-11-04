@@ -2177,6 +2177,8 @@ class EldenRingMo2Game(BasicGame):
     # seconds a launcher stays open after its game closed before MO2 says so
     LauncherNoticeDelay = 15
     GameWatchInterval = 5000  # milliseconds between checks for the game process
+    EarlyExitSeconds = 30  # a game that closes sooner did not really start
+    EarlyExitRecheck = 3000  # milliseconds to see that it did not start again
     # while a launch waits for the game to appear: a game that crashes at
     # start lives about two seconds, and once seen its close restores the
     # saves without the launcher grace
@@ -2231,6 +2233,7 @@ class EldenRingMo2Game(BasicGame):
         self._launcher_notice_session: Path | None = None
         self._launcher_open_since: float | None = None
         self._loose_files_warning_shown = False
+        self._early_exit_warning_shown = False
         self._file_loader_scan: tuple[str, bool | None] = ("", None)
         self._save_extension_scan: tuple[str, bool | None] = ("", None)
         self._online_programs_selector = None
@@ -4451,6 +4454,38 @@ class EldenRingMo2Game(BasicGame):
             ),
         )
 
+    def _warn_if_game_closed_at_once(self, via_launcher: bool) -> None:
+        """Without the license on the Steam account, or with a mod that stops it,
+        the game closes in seconds with no message of its own."""
+        if (
+            via_launcher
+            or self._early_exit_warning_shown
+            or time.time() - self._last_launch_time >= self.EarlyExitSeconds
+        ):
+            return
+        launch_time = self._last_launch_time
+        # Steam can restart the game by itself: the notice waits to see that
+        QTimer.singleShot(
+            self.EarlyExitRecheck, lambda: self._show_early_exit_warning(launch_time)
+        )
+
+    def _show_early_exit_warning(self, launch_time: float) -> None:
+        if (
+            self._early_exit_warning_shown
+            or launch_time != self._last_launch_time
+            or self._elden_ring_process_state(_running_processes()) is not False
+        ):
+            return
+        self._early_exit_warning_shown = True
+        qWarning("Elden Ring MO2: the game closed right after starting.")
+        QMessageBox.warning(
+            None,
+            self._game_text(_tr("Elden Ring closed right after starting")),
+            _tr("Check that Steam is open on the account that owns the game, and that "
+            "the game starts from Steam. If it does, turn off your mods and add them "
+            "back one by one to find the one stopping it."),
+        )
+
     def _active_mods_have_game_files(self) -> bool:
         folders = EldenRingModDataChecker._asset_directories
         for _name, root, active in self._mod_folders():
@@ -4529,6 +4564,7 @@ class EldenRingMo2Game(BasicGame):
             return
 
         self._warn_if_loose_files_were_skipped()
+        self._warn_if_game_closed_at_once(via_launcher)
         # a later launch may have restored this session and started its own
         if session_directory is not None and self._active_save_quarantine == session_directory:
             try:
