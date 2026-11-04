@@ -13,6 +13,13 @@
   and an update from the 1.1.0-beta.2 installer, which ends with the same files
   as a fresh install. Form43Checker.py and installer_wizard/dialog.py are in the
   payload with the source's content. Not Authenticode signed.
+- Every setup mode on this installer, in test folders: portable and standard install,
+  update, uninstall keeping data and removing everything; restore after an update from
+  beta.2, back to its files; isolated Elden Ring copy; copy data from another
+  installation; reinstall over kept data. It refused foreign folders and MO2 running
+  from the target, changing nothing. One standard install went through the real window.
+  Not run: real shortcuts, opening MO2 at the end, erasing MO2 Revamped's AppData, and
+  installs elevated or on another Windows account.
 - Setup language, on this build: portable installs in German, English and Brazilian
   Portuguese started in that language and saved it; an update in another language
   kept the saved one. A global install was not run, to leave the user's AppData
