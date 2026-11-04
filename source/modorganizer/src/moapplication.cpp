@@ -515,7 +515,7 @@ public:
 
     // Windows 11 only underlines access keys while Alt is held; Fluent
     // themes keep menus and buttons free of the underlines
-    if (hint == SH_UnderlineShortcut && qApp->property("revampedFluent").toBool()) {
+    if (hint == SH_UnderlineShortcut) {
       return 0;
     }
 
@@ -525,20 +525,19 @@ public:
   QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption* option,
                      const QWidget* widget) const override
   {
-    if (qApp->property("revampedFluent").toBool()) {
-      switch (standardIcon) {
-      case SP_MessageBoxInformation:
-      case SP_MessageBoxQuestion:
-        return FluentIcons::glyph(standardIcon == SP_MessageBoxQuestion ? 0xE897 : 0xE946,
-                                  FluentIcons::Tone::Accent);
-      case SP_MessageBoxWarning:
-        return FluentIcons::glyph(0xE7BA, FluentIcons::Tone::Caution);
-      case SP_MessageBoxCritical:
-        return FluentIcons::glyph(0xEA39, FluentIcons::Tone::Critical);
-      default:
-        break;
-      }
+    switch (standardIcon) {
+    case SP_MessageBoxInformation:
+    case SP_MessageBoxQuestion:
+      return FluentIcons::glyph(standardIcon == SP_MessageBoxQuestion ? 0xE897 : 0xE946,
+                                FluentIcons::Tone::Accent);
+    case SP_MessageBoxWarning:
+      return FluentIcons::glyph(0xE7BA, FluentIcons::Tone::Caution);
+    case SP_MessageBoxCritical:
+      return FluentIcons::glyph(0xEA39, FluentIcons::Tone::Critical);
+    default:
+      break;
     }
+
     return QProxyStyle::standardIcon(standardIcon, option, widget);
   }
 
@@ -739,9 +738,10 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   QString selectedStyle;
   if (configuredStyle.compare("Light.qss", Qt::CaseInsensitive) == 0) {
     selectedStyle = "Light.qss";
-  } else if (configuredStyle.compare("dark.qss", Qt::CaseInsensitive) == 0 ||
-             configuredStyle.compare("dark-black.qss", Qt::CaseInsensitive) == 0) {
-    // Dark Black was retired; its users get Dark
+  } else if (configuredStyle.compare("classic-refined-light.qss", Qt::CaseInsensitive) == 0) {
+    // the classic themes were retired; their users get the same shade
+    selectedStyle = "Light.qss";
+  } else if (configuredStyle.compare("dark.qss", Qt::CaseInsensitive) == 0) {
     selectedStyle = "dark.qss";
   } else {
     selectedStyle = Settings::defaultInterfaceStyleName();
@@ -1218,17 +1218,6 @@ bool stylePrefersDarkTitleBar(const QString& styleName)
   return background.isValid() && background.lightness() < 128;
 }
 
-// The generated Fluent v4 themes name themselves in their header comment.
-bool styleIsFluent(const QString& styleName)
-{
-  QFile stylesheet(styleName);
-  if (!stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    return false;
-  }
-  return QString::fromUtf8(stylesheet.read(512)).contains(
-      QStringLiteral("MO2 Revamped Fluent v4"));
-}
-
 #ifdef Q_OS_WIN
 // Windows 11 Mica behind a translucent main window (see MainWindow). The
 // stylesheet leaves the window surfaces transparent while the
@@ -1236,8 +1225,7 @@ bool styleIsFluent(const QString& styleName)
 bool applyMica(QWidget* window)
 {
   const HWND handle = reinterpret_cast<HWND>(window->winId());
-  const bool mica   = window->testAttribute(Qt::WA_TranslucentBackground) &&
-                    qApp->property("revampedFluent").toBool();
+  const bool mica   = window->testAttribute(Qt::WA_TranslucentBackground);
 
   // DWMWA_SYSTEMBACKDROP_TYPE: 2 is DWMSBT_MAINWINDOW (Mica), 1 is none
   const int backdrop = mica ? 2 : 1;
@@ -1339,17 +1327,16 @@ void applyNativeTitleBarThemeToVisibleMainWindows(const QString& styleName)
   }
 }
 
-// Qt's own popup effects (a slow fade, the combo box roll-down) follow the
-// theme: Fluent replaces them with its entrance in MOApplication::dispatch,
-// classic themes keep the roll. This has to happen with the theme, not with
-// the main window: the instance wizard and the instance manager open before
-// it, and there Qt rolled a grabbed picture of a combo box list down and then
-// showed the real list, which the Fluent entrance faded and slid in again.
-void applyPopupEffects(bool fluent)
+// Qt's own popup effects (a slow fade, the combo box roll-down) give way to the
+// Fluent entrance in MOApplication::dispatch. This has to happen with the theme,
+// not with the main window: the instance wizard and the instance manager open
+// before it, and there Qt rolled a grabbed picture of a combo box list down and
+// then showed the real list, which the Fluent entrance faded and slid in again.
+void applyPopupEffects()
 {
   QApplication::setEffectEnabled(Qt::UI_FadeMenu, false);
-  QApplication::setEffectEnabled(Qt::UI_AnimateMenu, !fluent);
-  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, !fluent);
+  QApplication::setEffectEnabled(Qt::UI_AnimateMenu, false);
+  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, false);
   QApplication::setEffectEnabled(Qt::UI_AnimateTooltip, false);
   QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
 }
@@ -1381,9 +1368,7 @@ bool MOApplication::setStyleFile(const QString& styleName)
     // no style sheet: the system palette comes back, and the glyph inks
     // follow it rather than the theme that was active before
     setPalette(style()->standardPalette());
-    setProperty("revampedFluent", false);
     setProperty("revampedDark", palette().color(QPalette::Window).lightness() < 128);
-    applyPopupEffects(false);
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   m_appliedStyleFile = styleName;
@@ -1416,7 +1401,7 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
 bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
   // Fluent v4: trees open and close their branches with a slide
-  if (event->type() == QEvent::Polish && property("revampedFluent").toBool()) {
+  if (event->type() == QEvent::Polish) {
     if (auto* tree = qobject_cast<QTreeView*>(receiver)) {
       tree->setAnimated(FluentMotion::enabled());
     }
@@ -1431,45 +1416,41 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
         dialog != nullptr && dialog->isWindow()) {
       // Fluent trims a dialog to its opening size once, so the user can
       // still make it larger; message boxes keep their own size
-      const bool fluent = property("revampedFluent").toBool();
-      fitDialogToAvailableScreen(dialog, fluent && !FluentDialogs::polished(dialog) &&
+      fitDialogToAvailableScreen(dialog, !FluentDialogs::polished(dialog) &&
                                              qobject_cast<QMessageBox*>(dialog) == nullptr);
-      if (fluent) {
-        FluentDialogs::polish(dialog);
-        if (auto* box = qobject_cast<QMessageBox*>(dialog)) {
-          FluentDialogs::polishMessageBox(box);
-        }
+      FluentDialogs::polish(dialog);
+      if (auto* box = qobject_cast<QMessageBox*>(dialog)) {
+        FluentDialogs::polishMessageBox(box);
       }
     }
 
     // Fluent v4: menu and button icons in the theme's ink
-    if (property("revampedFluent").toBool()) {
-      if (auto* menu = qobject_cast<QMenu*>(receiver)) {
-        FluentIcons::apply(menu);
-      } else if (auto* window = qobject_cast<QWidget*>(receiver);
-                 window != nullptr && window->isWindow() &&
-                 window->windowType() != Qt::Popup && window->windowType() != Qt::ToolTip) {
-        // pages hidden in tabs and stacks take their style sheet now: polished
-        // only when first shown, their first frame drew the plain style and
-        // then their controls moved (as the Settings pages did)
-        for (QWidget* child : window->findChildren<QWidget*>()) {
-          child->ensurePolished();
-        }
-        // the theme may have set button icons after the buttons were shown
-        for (QAbstractButton* child : window->findChildren<QAbstractButton*>()) {
-          FluentIcons::apply(child);
-        }
-      } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
-                 button != nullptr && !button->icon().isNull()) {
-        FluentIcons::apply(button);
+        if (auto* menu = qobject_cast<QMenu*>(receiver)) {
+      FluentIcons::apply(menu);
+    } else if (auto* window = qobject_cast<QWidget*>(receiver);
+               window != nullptr && window->isWindow() &&
+               window->windowType() != Qt::Popup && window->windowType() != Qt::ToolTip) {
+      // pages hidden in tabs and stacks take their style sheet now: polished
+      // only when first shown, their first frame drew the plain style and
+      // then their controls moved (as the Settings pages did)
+      for (QWidget* child : window->findChildren<QWidget*>()) {
+        child->ensurePolished();
       }
-      // switches made anywhere (the Python tools' windows too) slide and are
-      // drawn smooth, instead of showing the theme's still image
-      if (auto* box = qobject_cast<QCheckBox*>(receiver);
-          box != nullptr && box->property("fluentSwitch").toBool()) {
-        FluentSwitch::animate(box);
+      // the theme may have set button icons after the buttons were shown
+      for (QAbstractButton* child : window->findChildren<QAbstractButton*>()) {
+        FluentIcons::apply(child);
       }
+    } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
+               button != nullptr && !button->icon().isNull()) {
+      FluentIcons::apply(button);
     }
+    // switches made anywhere (the Python tools' windows too) slide and are
+    // drawn smooth, instead of showing the theme's still image
+    if (auto* box = qobject_cast<QCheckBox*>(receiver);
+        box != nullptr && box->property("fluentSwitch").toBool()) {
+      FluentSwitch::animate(box);
+    }
+
   }
 
   if (event->type() == QEvent::Show) {
@@ -1494,8 +1475,7 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 
       // Fluent v4: menus and lists slide in, tooltips fade in; Qt's own effect
       // windows (a picture of a popup it rolls or fades in) are left alone
-      if (property("revampedFluent").toBool() && !event->spontaneous() &&
-          !popup->inherits("QRollEffect") && !popup->inherits("QAlphaWidget")) {
+      if (!event->spontaneous() && !popup->inherits("QRollEffect") && !popup->inherits("QAlphaWidget")) {
         FluentMotion::popIn(popup, isToolTip ? 0 : 6);
       }
 
@@ -1606,8 +1586,7 @@ QString extractBaseStyleFromStyleSheet(QFile& stylesheet, const QString& default
 void MOApplication::updateStyle(const QString& fileName)
 {
   setProperty("revampedDark", stylePrefersDarkTitleBar(fileName));
-  setProperty("revampedFluent", styleIsFluent(fileName));
-  applyPopupEffects(property("revampedFluent").toBool());
+  applyPopupEffects();
   const auto applyBaseStyle = [this](const QString& baseStyleName) {
     if (m_activeBaseStyle.compare(baseStyleName, Qt::CaseInsensitive) == 0) {
       return;
@@ -1626,7 +1605,7 @@ void MOApplication::updateStyle(const QString& fileName)
       applyBaseStyle(
           extractBaseStyleFromStyleSheet(stylesheet, m_defaultStyle));
       QPalette themePalette = style()->standardPalette();
-      if (property("revampedFluent").toBool() && property("revampedDark").toBool()) {
+      if (property("revampedDark").toBool()) {
         // Fluent Dark tokens. A dark palette also keeps Qt from switching the
         // native frame (and the Mica backdrop) back to light when it repolishes.
         themePalette.setColor(QPalette::Window, QColor("#202226"));
@@ -1646,7 +1625,7 @@ void MOApplication::updateStyle(const QString& fileName)
         for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
           themePalette.setColor(QPalette::Disabled, role, QColor("#9A9A9A"));
         }
-      } else if (property("revampedFluent").toBool()) {
+      } else {
         // Fluent Light tokens. The standard palette follows Windows, so on a dark
         // system it would keep the native frame and the Mica backdrop dark.
         themePalette.setColor(QPalette::Window, QColor("#F3F3F3"));

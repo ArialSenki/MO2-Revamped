@@ -17,9 +17,10 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
   information of each session takes a moment longer, because the web engine now
   starts only when a page needs it. Mod information, tab changes, program lists
   and the Reforged sync wait less.
-- **Less left over from the old program**: its old themes and build files, unused
-  icons and code, and stale translations are gone. Links to the old project now
-  appear only in the "..." menu.
+- **Less left over from the old program**: its old themes, including Classic
+  Refined, build files, unused icons and code, and stale translations are gone.
+  Light and Dark are the only themes, and changing between them needs no restart.
+  Links to the old project now appear only in the "..." menu.
 - **Fixed**: a new installation starts in the language picked in its setup, Mod
   information's Advanced conflicts list shows the file names, and the installer
   wizard's updated look and the Form 43 checker's translated name now ship.

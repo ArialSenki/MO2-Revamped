@@ -537,13 +537,6 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="steamAppIdLabel">
-                  <property name="text">
-                   <string>AppID</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QLineEdit" name="steamAppID">
                   <property name="enabled">
                    <bool>false</bool>

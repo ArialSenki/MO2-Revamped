@@ -105,9 +105,8 @@ QCheckBox* toggle(QWidget* parent, const char* name, const QString& text)
   auto* box = named(new QCheckBox(text, parent), name);
   box->setProperty("fluentSwitch", true);
   box->setCursor(Qt::PointingHandCursor);
-  if (FluentIcons::active()) {
     FluentSwitch::animate(box);
-  }
+
   return box;
 }
 
@@ -210,7 +209,6 @@ QVBoxLayout* addPage(QStackedWidget* stack, QWidget*& page, const char* name,
   auto* topLayout = new QVBoxLayout(top);
   topLayout->setContentsMargins(20, 18, 20, 14);
   topLayout->setSpacing(3);
-  // new names: the old Designer ones still have rules in the classic themes
   Q_UNUSED(headingName);
   Q_UNUSED(textName);
   heading = label(top, "wizardHeading", cid::plainHeading(headingText));

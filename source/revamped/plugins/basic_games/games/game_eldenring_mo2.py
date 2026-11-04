@@ -3682,15 +3682,7 @@ class EldenRingMo2Game(BasicGame):
     @staticmethod
     def _uses_dark_theme(application, window) -> bool:
         """Detect the selected MO2 stylesheet so Windows matches its title bar."""
-        style_sheets = (
-            application.styleSheet() if application is not None else "",
-            window.styleSheet() if window is not None else "",
-        )
-        return any(
-            "MO2 Classic Refined - Dark" in style_sheet
-            or "background-color: #242424" in style_sheet
-            for style_sheet in style_sheets
-        )
+        return application is not None and bool(application.property("revampedDark"))
 
     @staticmethod
     def _set_native_title_bar(window, dark_mode: bool) -> None:

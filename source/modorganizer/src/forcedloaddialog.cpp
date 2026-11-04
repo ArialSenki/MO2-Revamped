@@ -75,9 +75,8 @@ ForcedLoadDialog::ForcedLoadDialog(const IPluginGame* game, QWidget* parent)
   ui->setupUi(this);
   addRulesGroupHeading(ui->rulesGroup);
   resize(860, 520);
-  if (FluentIcons::active()) {
     buildFluentLayout();
-  }
+
 }
 
 ForcedLoadDialog::~ForcedLoadDialog()
@@ -120,11 +119,6 @@ QList<MOBase::ExecutableForcedLoadSetting> ForcedLoadDialog::values()
   return results;
 }
 
-void ForcedLoadDialog::on_addRowButton_clicked()
-{
-  addRule();
-}
-
 ForcedLoadDialogWidget* ForcedLoadDialog::addRule()
 {
   int row = ui->tableWidget->rowCount();
@@ -142,7 +136,7 @@ ForcedLoadDialogWidget* ForcedLoadDialog::addRule()
   return item;
 }
 
-void ForcedLoadDialog::on_deleteRowButton_clicked()
+void ForcedLoadDialog::removeSelectedRules()
 {
   // bottom up, so removing a row does not move the ones still to remove
   QList<int> rows;
@@ -168,15 +162,12 @@ void ForcedLoadDialog::on_deleteRowButton_clicked()
 
 void ForcedLoadDialog::buildFluentLayout()
 {
-  // the Designer layout stays for the classic themes; Fluent keeps the table
-  // of rule widgets hidden and edits the selected one from the details card
+  // the table of rule widgets stays hidden; this edits the selected one from the details card
   auto* root = qobject_cast<QVBoxLayout*>(layout());
   if (root == nullptr) {
     return;
   }
   ui->rulesGroup->hide();
-  ui->addRowButton->hide();
-  ui->deleteRowButton->hide();
   root->setContentsMargins(12, 12, 12, 12);
   root->setSpacing(10);
 
@@ -382,13 +373,13 @@ void ForcedLoadDialog::buildFluentLayout()
       refreshFluent();
     }
   });
-  connect(m_remove, &QPushButton::clicked, this, &ForcedLoadDialog::on_deleteRowButton_clicked);
+  connect(m_remove, &QPushButton::clicked, this, &ForcedLoadDialog::removeSelectedRules);
 
   auto* newShortcut = new QShortcut(QKeySequence::New, this);
   connect(newShortcut, &QShortcut::activated, this, [this] { addRule(); });
   auto* del = new QShortcut(QKeySequence(Qt::Key_Delete), m_list);
   del->setContext(Qt::WidgetShortcut);
-  connect(del, &QShortcut::activated, this, &ForcedLoadDialog::on_deleteRowButton_clicked);
+  connect(del, &QShortcut::activated, this, &ForcedLoadDialog::removeSelectedRules);
 
   // help on the left of OK and Cancel
   if (auto* buttons = qobject_cast<QHBoxLayout*>(ui->horizontalLayout)) {
@@ -554,7 +545,7 @@ void ForcedLoadDialog::showFluentListMenu(const QPoint& pos)
         FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
         tr("Remove") + QLatin1Char('\t') +
             QKeySequence(Qt::Key_Delete).toString(QKeySequence::NativeText),
-        this, &ForcedLoadDialog::on_deleteRowButton_clicked);
+        this, &ForcedLoadDialog::removeSelectedRules);
     remove->setEnabled(!rule->getForced());
   }
   menu.exec(m_list->viewport()->mapToGlobal(pos));

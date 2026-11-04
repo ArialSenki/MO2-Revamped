@@ -297,9 +297,7 @@ void FilterList::addContentCriteria()
   m_core.modDataContents().forEachContent(
       [this](auto const& content) {
         addCriteriaItem(nullptr,
-                        FluentIcons::active()
-                            ? tr("Contains %1").arg(content.name())
-                            : QString("<%1>").arg(tr("Contains %1").arg(content.name())),
+                        tr("Contains %1").arg(content.name()),
                         content.id(), ModListSortProxy::TypeContent);
       },
       true);

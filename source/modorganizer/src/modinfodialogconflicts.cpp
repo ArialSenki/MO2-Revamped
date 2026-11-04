@@ -606,7 +606,7 @@ GeneralConflictsTab::GeneralConflictsTab(ConflictsTab* tab, Ui::ModInfoDialog* p
       {&m_expanders.nonconflict, ui->noConflictTree}};
   for (const auto& [expander, content] : expanders) {
     QObject::connect(expander, &ExpanderWidget::toggled, content, [content](bool opened) {
-      if (opened && FluentIcons::active()) {
+      if (opened) {
         QTimer::singleShot(0, content, [content] {
           FluentMotion::pageIn(content, 8);
         });

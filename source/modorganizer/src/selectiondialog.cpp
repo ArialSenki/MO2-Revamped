@@ -51,9 +51,8 @@ void SelectionDialog::addChoice(const QString& buttonText, const QString& descri
     button->setIconSize(m_IconSize);
   }
   // Windows 11 choices have no arrow
-  if (FluentIcons::active()) {
     button->setIcon(QIcon());
-  }
+
   button->setProperty("data", data);
   ui->buttonBox->addButton(button, QDialogButtonBox::AcceptRole);
   if (data.isValid())

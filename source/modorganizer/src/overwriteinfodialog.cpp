@@ -76,11 +76,10 @@ public:
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override
   {
-    // Fluent headings start where their column's text starts, like every
-    // other list; classic themes keep them centered
+    // headings start where their column's text starts, like every other list
     if (orientation == Qt::Horizontal && role == Qt::TextAlignmentRole) {
       return static_cast<int>(
-          (FluentIcons::active() ? Qt::AlignLeft : Qt::AlignHCenter) | Qt::AlignVCenter);
+          Qt::AlignLeft | Qt::AlignVCenter);
     }
 
     return QFileSystemModel::headerData(section, orientation, role);
@@ -123,11 +122,10 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   ui->filesView->setColumnWidth(0, 250);
   ui->explorerButton->setToolTip(
       tr("Open the Overwrite folder in Windows File Explorer."));
-  if (FluentIcons::active()) {
     // a regular command button at the heading's right, with the folder glyph
-    ui->explorerButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
-    ui->explorerButton->setIcon(FluentIcons::glyph(0xE838));  // OpenFolderHorizontal
-  }
+  ui->explorerButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+  ui->explorerButton->setIcon(FluentIcons::glyph(0xE838));  // OpenFolderHorizontal
+
 
   m_DeleteAction    = new QAction(tr("&Delete…"), ui->filesView);
   m_RenameAction    = new QAction(tr("&Rename"), ui->filesView);
@@ -150,9 +148,8 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   QObject::connect(m_NewFolderAction, SIGNAL(triggered()), this,
                    SLOT(createDirectoryTriggered()));
 
-  if (FluentIcons::active()) {
     buildFluentLayout();
-  }
+
 }
 
 void OverwriteInfoDialog::buildFluentLayout()

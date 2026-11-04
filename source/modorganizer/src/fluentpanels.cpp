@@ -20,9 +20,7 @@ namespace
 {
 QColor mutedInk(const QStyleOptionViewItem& option)
 {
-  return FluentIcons::active()
-             ? FluentIcons::color(FluentIcons::Tone::Muted)
-             : option.palette.color(QPalette::Disabled, QPalette::WindowText);
+  return FluentIcons::color(FluentIcons::Tone::Muted);
 }
 
 // shows and hides a row along with the control it holds
@@ -99,8 +97,7 @@ void RowDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
     painter->drawRoundedRect(row, 4, 4);
   }
   if (selected) {
-    painter->setBrush(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Accent)
-                                            : option.palette.color(QPalette::Highlight));
+    painter->setBrush(FluentIcons::color(FluentIcons::Tone::Accent));
     painter->drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5);
   }
 
@@ -298,15 +295,13 @@ QFrame* addSwitchRow(QWidget* parent, char16_t glyph, const QString& title,
   box->setAccessibleDescription(description);
   box->setProperty("fluentSwitch", true);
   box->setCursor(Qt::PointingHandCursor);
-  if (FluentIcons::active()) {
     box->setProperty("fluentAnimated", true);
-  }
+
   // the properties select the switch rules, so the style must look again
   box->style()->unpolish(box);
   box->style()->polish(box);
-  if (FluentIcons::active()) {
     FluentSwitch::animate(box);
-  }
+
   layout->addWidget(box, 0, Qt::AlignVCenter | Qt::AlignRight);
   new VisibilityMirror(box, frame);
 

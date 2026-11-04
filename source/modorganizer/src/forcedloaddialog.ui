@@ -37,8 +37,6 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="spacing"><number>8</number></property>
-     <item><widget class="QPushButton" name="addRowButton"><property name="toolTip"><string>Add a process and library rule.</string></property><property name="text"><string>Add rule</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
-     <item><widget class="QPushButton" name="deleteRowButton"><property name="toolTip"><string>Remove the selected rule.</string></property><property name="text"><string>Remove rule</string></property><property name="autoDefault"><bool>false</bool></property></widget></item>
      <item><spacer name="footerSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item>
      <item><widget class="QDialogButtonBox" name="buttonBox"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="standardButtons"><set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set></property></widget></item>
     </layout>

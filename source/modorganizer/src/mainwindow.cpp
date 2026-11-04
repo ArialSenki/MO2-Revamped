@@ -226,21 +226,17 @@ const QSize SmallToolbarSize(24, 24);
 const QSize MediumToolbarSize(32, 32);
 const QSize LargeToolbarSize(42, 36);
 
-// Fluent command bars use the smaller Windows 11 icon sizes. None of them
-// equals a classic size, so a size saved by either kind of theme can be told
-// apart and mapped on startup.
-static QSize toolbarIconSize(const QSize& classic)
+// Command bars use the smaller Windows 11 icon sizes. A size saved by an older
+// version is mapped to them on startup.
+static QSize toolbarIconSize(const QSize& saved)
 {
-  if (!FluentIcons::active()) {
-    return classic;
+  if (saved == QSize(16, 16) || saved == QSize(20, 20) || saved == QSize(28, 28)) {
+    return saved;
   }
-  if (classic == QSize(16, 16) || classic == QSize(20, 20) || classic == QSize(28, 28)) {
-    return classic;
-  }
-  if (classic.height() <= SmallToolbarSize.height()) {
+  if (saved.height() <= SmallToolbarSize.height()) {
     return {16, 16};
   }
-  if (classic.height() <= MediumToolbarSize.height()) {
+  if (saved.height() <= MediumToolbarSize.height()) {
     return {20, 20};
   }
   return {28, 28};
@@ -407,8 +403,7 @@ private:
 };
 
 // Fluent v4 expander row for the log: a chevron, the title, and the latest
-// message; clicking the row folds the log list away with an animation. Classic
-// themes get the plain title row with the float and close buttons.
+// message; clicking the row folds the log list away with an animation.
 class LogDockTitleBar final : public QWidget
 {
 public:
@@ -418,7 +413,7 @@ public:
         m_FloatButton(new LogDockControlButton(
             LogDockControlButton::Glyph::Float, this)),
         m_Animation(FluentMotion::createAnimation(this)),
-        m_Foldable(FluentIcons::active())
+        m_Foldable(true)
   {
     setObjectName(QStringLiteral("logDockTitleBar"));
     setAttribute(Qt::WA_StyledBackground, true);
@@ -1003,9 +998,8 @@ private:
 QIcon makeEndorsementMenuIcon(const QString& resourcePath)
 {
   // Fluent menus show plain glyphs, like every other menu
-  if (FluentIcons::active()) {
     return FluentIcons::icon(resourcePath);
-  }
+
 
   const QString styleName =
       Settings::instance().interface().styleName().value_or(QString{});
@@ -2352,19 +2346,18 @@ void MainWindow::updateProblemsButton()
     ui->actionNotifications->setToolTip(tr("There are no notifications"));
   }
 
-  if (FluentIcons::active()) {
     const QIcon icon = fluentNotificationIcon(numProblems);
-    ui->actionNotifications->setEnabled(numProblems > 0);
-    ui->actionNotifications->setIcon(icon);
-    if (auto* button = qobject_cast<QAbstractButton*>(
-            ui->toolBar->widgetForAction(ui->actionNotifications))) {
-      button->setIcon(icon);
-    }
-    if (ui->statusBar) {
-      ui->statusBar->setNotifications(numProblems > 0);
-    }
-    return;
+  ui->actionNotifications->setEnabled(numProblems > 0);
+  ui->actionNotifications->setIcon(icon);
+  if (auto* button = qobject_cast<QAbstractButton*>(
+          ui->toolBar->widgetForAction(ui->actionNotifications))) {
+    button->setIcon(icon);
   }
+  if (ui->statusBar) {
+    ui->statusBar->setNotifications(numProblems > 0);
+  }
+  return;
+
 
   // original icon without a count painted on it
   const QIcon original = m_originalNotificationIcon.isNull()
@@ -2664,9 +2657,8 @@ void MainWindow::createHelpMenu()
 
   QAction* aboutQtAction = menu->addAction(tr("About Qt"), qApp, &QApplication::aboutQt);
   aboutQtAction->setObjectName(QStringLiteral("aboutQtAction"));
-  if (FluentIcons::active()) {
     aboutQtAction->setIcon(FluentIcons::glyph(0xE946));
-  }
+
   aboutQtAction->setToolTip(tr("Show the version and license of the Qt framework."));
 
   if (m_fluentOverflowAction != nullptr) {
@@ -2689,7 +2681,7 @@ void MainWindow::showEvent(QShowEvent* event)
     // Fluent v4 keeps the log folded to its one-line summary unless it was
     // left open last time
     if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget());
-        logBar != nullptr && FluentIcons::active()) {
+        logBar != nullptr) {
       const QString file = m_OrganizerCore.settings().filename();
       constexpr auto logExpandedKey = "Settings/fluent_v4_log_expanded";
       if (!QSettings(file, QSettings::IniFormat).value(logExpandedKey, false).toBool()) {
@@ -3489,16 +3481,6 @@ static bool BySortValue(const std::pair<UINT32, QTreeWidgetItem*>& LHS,
   return LHS.first < RHS.first;
 }
 
-template <typename InputIterator>
-static QStringList toStringList(InputIterator current, InputIterator end)
-{
-  QStringList result;
-  for (; current != end; ++current) {
-    result.append(*current);
-  }
-  return result;
-}
-
 void MainWindow::updateBSAList(const QStringList& defaultArchives,
                                const QStringList& activeArchives)
 {
@@ -3728,7 +3710,7 @@ void MainWindow::readSettings()
   // it can't stay hidden from an older session
   ui->toolBar->show();
   applyFluentToolbarDefaults(SmallToolbarSize);
-  if (FluentIcons::active() && ui->toolBar->iconSize() != toolbarIconSize(ui->toolBar->iconSize())) {
+  if (ui->toolBar->iconSize() != toolbarIconSize(ui->toolBar->iconSize())) {
     setToolbarSize(ui->toolBar->iconSize());
   }
   s.geometry().restoreState(ui->splitter);

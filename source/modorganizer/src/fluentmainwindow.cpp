@@ -107,8 +107,7 @@ void repolish(QWidget* w)
 
 bool MainWindow::usesFluentMica()
 {
-  return FluentIcons::active() &&
-         QOperatingSystemVersion::current() >=
+  return QOperatingSystemVersion::current() >=
              QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621);
 }
 
@@ -128,12 +127,6 @@ void MainWindow::setupFluentLayout()
     waitForRunningProcess();
     return true;
   });
-
-  // classic themes keep the original window; switching between Fluent and a
-  // classic theme takes effect after a restart
-  if (!FluentIcons::active()) {
-    return;
-  }
 
   // Mica needs a translucent window surface, which Qt only honors before the
   // native window exists. MOApplication turns the backdrop on and off with
@@ -255,7 +248,7 @@ void MainWindow::setRunState(RunState state)
 void MainWindow::applyFluentToolbarDefaults(const QSize& iconSize)
 {
   auto& geometry = m_OrganizerCore.settings().geometry();
-  if (!FluentIcons::active() || geometry.fluentToolbarApplied()) {
+  if (geometry.fluentToolbarApplied()) {
     return;
   }
 
@@ -342,16 +335,15 @@ void MainWindow::setupFluentCommandBar()
   applyFluentActionIcons();
 
   // the menus of the command bar (Tools, Nexus...) open with a turning chevron
-  if (FluentIcons::active()) {
     for (QAction* action : bar->actions()) {
-      auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(action));
-      if (button != nullptr && action != m_fluentOverflowAction) {
-        // the command bar's labels have no descenders, so the chevron sits
-        // a little higher than in the instance manager
-        FluentMotion::animateMenuChevron(button, 10.0, 0.5);
-      }
+    auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(action));
+    if (button != nullptr && action != m_fluentOverflowAction) {
+      // the command bar's labels have no descenders, so the chevron sits
+      // a little higher than in the instance manager
+      FluentMotion::animateMenuChevron(button, 10.0, 0.5);
     }
   }
+
 }
 
 void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
@@ -454,9 +446,6 @@ void MainWindow::applyFluentActionIcons()
 {
   // Fluent glyphs in the theme's ink replace the style sheet's colored
   // icons, so the command bar reads as one set with the rest of the window
-  if (!FluentIcons::active()) {
-    return;
-  }
 
   const std::pair<QAction*, char16_t> glyphs[] = {
       {ui->actionChange_Game, 0xE8AB},         // Switch

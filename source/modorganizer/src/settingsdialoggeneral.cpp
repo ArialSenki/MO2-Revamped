@@ -24,9 +24,6 @@ using namespace MOBase;
 
 namespace
 {
-const QSize SmallToolbarIconSize(24, 24);
-const QSize MediumToolbarIconSize(32, 32);
-const QSize LargeToolbarIconSize(42, 36);
 }  // namespace
 
 GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
@@ -123,17 +120,16 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   auto* mainToolbar =
       mainWindow ? mainWindow->findChild<QToolBar*>(QStringLiteral("toolBar"))
                  : nullptr;
-  // Fluent command bars use the Windows 11 sizes (see MainWindow)
-  const bool fluent = FluentIcons::active();
+  // command bars use the Windows 11 sizes (see MainWindow)
   ui->toolbarIconSizeCombo->addItem(
       QObject::tr("Small"),
-      QVariant::fromValue(fluent ? QSize(16, 16) : SmallToolbarIconSize));
+      QVariant::fromValue(QSize(16, 16)));
   ui->toolbarIconSizeCombo->addItem(
       QObject::tr("Medium"),
-      QVariant::fromValue(fluent ? QSize(20, 20) : MediumToolbarIconSize));
+      QVariant::fromValue(QSize(20, 20)));
   ui->toolbarIconSizeCombo->addItem(
       QObject::tr("Large"),
-      QVariant::fromValue(fluent ? QSize(28, 28) : LargeToolbarIconSize));
+      QVariant::fromValue(QSize(28, 28)));
   ui->toolbarIconSizeCombo->setMinimumWidth(170);
   ui->toolbarButtonStyleCombo->addItem(
       QObject::tr("Icons only"), static_cast<int>(Qt::ToolButtonIconOnly));

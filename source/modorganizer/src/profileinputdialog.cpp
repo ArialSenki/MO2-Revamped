@@ -46,15 +46,14 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
 
   // Fluent v4: the option is a Settings row with a switch, its explanation
   // as the row's description
-  if (FluentIcons::active()) {
     ui->defaultSettingsDescription->hide();
-    ui->profileSettingsLayout->setContentsMargins(0, 0, 0, 0);
-    ui->profileSettingsCard->setProperty("fluentCard", true);
-    FluentPanels::addSwitchRow(ui->profileSettingsCard, 0xE713,
-                               ui->defaultSettingsBox->text(),
-                               ui->defaultSettingsDescription->text(),
-                               ui->defaultSettingsBox);
-  }
+  ui->profileSettingsLayout->setContentsMargins(0, 0, 0, 0);
+  ui->profileSettingsCard->setProperty("fluentCard", true);
+  FluentPanels::addSwitchRow(ui->profileSettingsCard, 0xE713,
+                             ui->defaultSettingsBox->text(),
+                             ui->defaultSettingsDescription->text(),
+                             ui->defaultSettingsBox);
+
 
   if (purpose == Purpose::Copy || purpose == Purpose::Rename) {
     ui->profileSettingsCard->hide();
@@ -98,9 +97,8 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
   }
 
   setWindowTitle(ui->profilePageTitle->text());
-  if (FluentIcons::active()) {
     useContentDialogLayout();
-  }
+
 
   connect(ui->nameEdit, &QLineEdit::textChanged, this,
           [this]() { updateAcceptState(); });

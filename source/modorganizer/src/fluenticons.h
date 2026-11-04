@@ -27,9 +27,6 @@ enum class Tone
   Critical,  // red
 };
 
-// true while a Fluent theme is active
-bool active();
-
 // the color of a tone in the active theme
 QColor color(Tone tone);
 
@@ -40,8 +37,8 @@ QFont font(int pixelSize);
 // changes on its own
 QIcon glyph(char16_t codepoint, Tone tone = Tone::Ink);
 
-// the glyph assigned to an MO2 resource (":/MO/gui/...") when a Fluent theme
-// is active, the resource itself otherwise
+// the glyph assigned to an MO2 resource (":/MO/gui/..."), the resource itself
+// when it has none
 QIcon icon(const QString& resource);
 
 // the icon for a file or folder in the data, conflict and file trees, picked

@@ -1249,9 +1249,7 @@ QVariant PluginList::foregroundData(const QModelIndex& modelIndex) const
   const int index = modelIndex.row();
 
   if ((modelIndex.column() == COL_NAME) && m_ESPs[index].forceLoaded) {
-    return FluentIcons::active()
-               ? QBrush(FluentIcons::color(FluentIcons::Tone::Muted))
-               : QBrush(Qt::gray);
+    return QBrush(FluentIcons::color(FluentIcons::Tone::Muted));
   }
 
   if ((modelIndex.column() == COL_NAME) && m_ESPs[index].forceDisabled) {

@@ -67,9 +67,8 @@ void addCircularHeadingIcon(QBoxLayout* layout, QLabel* heading,
                             const QString& iconObjectName, int size)
 {
   // Fluent v4 headings are plain text, like Windows 11 Settings
-  if (layout == nullptr || heading == nullptr || FluentIcons::active()) {
     return;
-  }
+
 
   const int index = layout->indexOf(heading);
   if (index < 0) {
@@ -118,9 +117,8 @@ void addExecutableGroupHeading(QGroupBox* group, const QString& text,
   icon->setAlignment(Qt::AlignCenter);
   icon->setFixedSize(26, 26);
   // Fluent v4 headings are plain text, like Windows 11 Settings
-  if (FluentIcons::active()) {
     icon->hide();
-  }
+
   const QPixmap pixmap = FluentIcons::icon(iconPath).pixmap(14, 14);
   if (!pixmap.isNull()) {
     icon->setPixmap(pixmap);
@@ -297,9 +295,8 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
     saveOrder();
   });
 
-  if (FluentIcons::active()) {
     buildFluentLayout();
-  }
+
 }
 
 EditExecutablesDialog::~EditExecutablesDialog() = default;
@@ -1170,8 +1167,7 @@ void EditExecutablesDialog::setJarBinary(const QFileInfo& binary)
 
 void EditExecutablesDialog::buildFluentLayout()
 {
-  // the Designer layout stays for the classic themes; Fluent moves the same
-  // widgets into the instance manager's list and details cards, so all the
+  // moves the Designer widgets into the instance manager's list and details cards, so all the
   // handlers above keep working on them
   auto* root = qobject_cast<QVBoxLayout*>(layout());
   if (root == nullptr) {
@@ -1346,7 +1342,6 @@ QWidget* EditExecutablesDialog::createFluentDetails()
              {ui->arguments});
 
   using FluentPanels::addSwitchRow;
-  ui->steamAppIdLabel->hide();
   ui->steamAppID->setFixedWidth(140);
   ui->steamAppID->setPlaceholderText(tr("App ID"));
   addSwitchRow(rows, 0xE7FC, tr("Steam app ID"),

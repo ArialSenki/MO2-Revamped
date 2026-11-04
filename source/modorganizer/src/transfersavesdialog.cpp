@@ -58,9 +58,7 @@ TransferSavesDialog::TransferSavesDialog(const Profile& profile,
 {
   ui->setupUi(this);
   ui->label_2->setText(tr("Characters for profile %1").arg(m_Profile.name()));
-  if (FluentIcons::active()) {
-    buildFluentLayout();
-  }
+  buildFluentLayout();
 
   refreshGlobalSaves();
   refreshLocalSaves();
@@ -315,9 +313,7 @@ void TransferSavesDialog::refreshCharacters(const SaveCollection& saveCollection
                  QLocale().toString(saves.front()->getCreationTime(), QLocale::ShortFormat);
     }
     item->setData(FluentPanels::CaptionRole, caption);
-    if (FluentIcons::active()) {
-      item->setIcon(FluentIcons::glyph(0xE77B));
-    }
+    item->setIcon(FluentIcons::glyph(0xE77B));
   }
   if (charList->count() > 0) {
     charList->setCurrentRow(0);

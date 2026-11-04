@@ -206,19 +206,16 @@ void NexusTab::updateVersionColor()
     ui->version->setToolTip(known ? tr("No update available") : QString());
   }
 
-  if (FluentIcons::active()) {
-    // the theme colors it (versionState) in its critical and success tones
-    const QString state = !known     ? QString()
-                          : outdated ? QStringLiteral("outdated")
-                                     : QStringLiteral("current");
-    if (ui->version->property("versionState").toString() != state) {
-      ui->version->setProperty("versionState", state);
-      ui->version->style()->unpolish(ui->version);
-      ui->version->style()->polish(ui->version);
-    }
-  } else {
-    ui->version->setStyleSheet(!known ? "" : outdated ? "color: red" : "color: green");
+  // the theme colors it (versionState) in its critical and success tones
+  const QString state = !known     ? QString()
+                        : outdated ? QStringLiteral("outdated")
+                                   : QStringLiteral("current");
+  if (ui->version->property("versionState").toString() != state) {
+    ui->version->setProperty("versionState", state);
+    ui->version->style()->unpolish(ui->version);
+    ui->version->style()->polish(ui->version);
   }
+
 }
 
 void NexusTab::updateWebpage()
@@ -425,12 +422,11 @@ void NexusTab::onModChanged()
 
   ensureBrowserPage();
 
-  if (FluentIcons::active()) {
     descriptionAsHTML = fluentDescriptionStyle(descriptionAsHTML);
-    // no white frame while the page loads
-    ui->browser->page()->setBackgroundColor(
-        QColor(MOBase::RevampedTheme::isDark() ? 0x2B2B2B : 0xFBFBFB));
-  }
+  // no white frame while the page loads
+  ui->browser->page()->setBackgroundColor(
+      QColor(MOBase::RevampedTheme::isDark() ? 0x2B2B2B : 0xFBFBFB));
+
 
   ui->browser->page()->setHtml(descriptionAsHTML);
   updateVersionColor();

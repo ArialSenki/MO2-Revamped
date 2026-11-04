@@ -206,7 +206,7 @@ void LootDialog::createUI()
     QString html = f.readAll();
     if (!html.isEmpty()) {
       // the page is written for dark backgrounds
-      if (FluentIcons::active() && !RevampedTheme::isDark()) {
+      if (!RevampedTheme::isDark()) {
         html.replace(QStringLiteral("</head>"),
                      QStringLiteral("<style>html{color-scheme:light}"
                                     "body{background:#FBFBFB;color:#1B1B1B}"
@@ -215,7 +215,7 @@ void LootDialog::createUI()
                                     "blockquote p,blockquote cite{color:#5C5C5C}"
                                     "</style></head>"));
         page->setBackgroundColor(QColor(0xFB, 0xFB, 0xFB));
-      } else if (FluentIcons::active()) {
+      } else {
         html.replace(QStringLiteral("</head>"),
                      QStringLiteral("<style>html{color-scheme:dark}</style></head>"));
       }

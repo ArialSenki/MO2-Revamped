@@ -244,9 +244,9 @@ function Test-ExcludedRuntimeFile {
     if ($normalized -match '^stylesheets\\\+(dark|light)\.qss$') {
         return $true
     }
-    # Dark Black is retired (a stored choice becomes Dark); the 1.0.1 runtime
-    # still carries it and its icon folder
-    if ($normalized -match '^stylesheets\\(dark-black\.qss$|mo2-classic-refined-black\\)') {
+    # Dark Black and the classic themes are retired (a stored choice becomes Light
+    # or Dark); the 1.0.1 runtime still carries them and their icon folders
+    if ($normalized -match '^stylesheets\\(dark-black\.qss$|classic-refined-[^\\]+\.qss$|mo2-classic-refined-[^\\]+\\)') {
         return $true
     }
     if ($normalized -match '^plugins\\plugin_python\\data\\settings\.json$') {
@@ -324,8 +324,6 @@ function Copy-RevampedSources {
                 # themes are the default under those names
                 'MO2 Fluent v4 - Light.qss' { $relative = 'Light.qss' }
                 'MO2 Fluent v4 - Dark.qss' { $relative = 'dark.qss' }
-                'MO2 Classic Refined - Light.qss' { $relative = 'classic-refined-light.qss' }
-                'MO2 Classic Refined - Dark.qss' { $relative = 'classic-refined-dark.qss' }
                 default { throw "Unexpected Revamped theme stylesheet: $($file.Name)" }
             }
         }

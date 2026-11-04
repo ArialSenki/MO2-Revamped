@@ -27,9 +27,6 @@ using namespace MOBase;
 namespace
 {
 
-// style box item data: whether the style sheet is a Fluent v4 theme
-constexpr int FluentRole = Qt::UserRole + 1;
-
 void stackThemeStyleControls(QGroupBox* group)
 {
   auto* layout = group ? qobject_cast<QBoxLayout*>(group->layout()) : nullptr;
@@ -105,14 +102,6 @@ void ThemeSettingsTab::update()
   if (picked && oldStyle != newStyle) {
     settings().interface().setStyleName(newStyle);
     emit settings().styleChanged(newStyle);
-
-    // the Fluent layout is built with the main window, so going between a
-    // Fluent and a classic theme takes a restart to finish
-    const bool fluent =
-        ui->styleBox->itemData(ui->styleBox->currentIndex(), FluentRole).toBool();
-    if (fluent != FluentIcons::active()) {
-      dialog().setExitNeeded(dialog().exitNeeded() | Exit::Restart);
-    }
   }
 
   // colors
@@ -132,16 +121,10 @@ void ThemeSettingsTab::addStyles()
       continue;
     }
 
-    // the Fluent themes install under the same file names
-    QFile file(styleDirectory.filePath(fileName));
-    const bool fluent = file.open(QIODevice::ReadOnly) &&
-                        QString::fromUtf8(file.read(512)).contains(
-                            QStringLiteral("MO2 Revamped Fluent v4"));
     const QString displayName = fileName == QStringLiteral("Light.qss")
                                     ? QObject::tr("Light")
                                     : QObject::tr("Dark");
     ui->styleBox->addItem(displayName, fileName);
-    ui->styleBox->setItemData(ui->styleBox->count() - 1, fluent, FluentRole);
   }
 }
 

@@ -453,11 +453,6 @@ QString cacheKey(const QIcon& icon, const QColor& ink)
 namespace FluentIcons
 {
 
-bool active()
-{
-  return qApp != nullptr && qApp->property("revampedFluent").toBool();
-}
-
 QColor color(Tone tone)
 {
   const bool dark = RevampedTheme::isDark();
@@ -502,17 +497,15 @@ QIcon icon(const QString& resource)
   static QHash<QString, QIcon> glyphs;
   static QHash<QString, QIcon> originals;
 
-  if (active()) {
-    auto cached = glyphs.constFind(resource);
-    if (cached != glyphs.constEnd()) {
-      return *cached;
-    }
+  auto cached = glyphs.constFind(resource);
+  if (cached != glyphs.constEnd()) {
+    return *cached;
+  }
 
-    const auto& table = glyphTable();
-    auto it           = table.find(resource);
-    if (it != table.end()) {
-      return *glyphs.insert(resource, glyph(it->codepoint, it->tone));
-    }
+  const auto& table = glyphTable();
+  auto it           = table.find(resource);
+  if (it != table.end()) {
+    return *glyphs.insert(resource, glyph(it->codepoint, it->tone));
   }
 
   auto original = originals.constFind(resource);
@@ -586,7 +579,7 @@ bool isGlyph(const QIcon& icon)
 
 QIcon fluent(const QIcon& icon)
 {
-  if (!active() || icon.isNull() || isGlyph(icon)) {
+  if (icon.isNull() || isGlyph(icon)) {
     return icon;
   }
 
@@ -750,7 +743,7 @@ void apply(QAbstractButton* button)
     restyle(button, button->palette().color(QPalette::Active, QPalette::ButtonText));
   }
 
-  if (spaced && active() && !button->icon().isNull() && !button->text().isEmpty()) {
+  if (spaced && !button->icon().isNull() && !button->text().isEmpty()) {
     const QIcon inner = button->icon();
     const QSize size  = button->iconSize();
     const QIcon withGap(new GapEngine(inner));

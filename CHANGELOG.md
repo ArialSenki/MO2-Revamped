@@ -14,6 +14,11 @@
 - Leftovers from the old Mod Organizer 2 that nothing used: its old themes and
   build files, unused icons and code, and stale translations. Links to the old
   project now appear only in the "..." menu, which adds one to its GitHub.
+- The Classic Refined themes, and the code that kept the original look beside
+  Fluent. A stored classic theme becomes Light or Dark. Fluent is the only look,
+  so changing between Light and Dark no longer needs a restart.
+- Settings migrations for versions before MO2 2.4. Their leftover keys stay in the
+  file, unused.
 
 ### Fixed
 

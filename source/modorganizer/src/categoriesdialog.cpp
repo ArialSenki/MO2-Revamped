@@ -153,9 +153,7 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
   ui->nexusCategoryList->setUniformItemSizes(true);
   ui->nexusCategoryList->setSpacing(1);
   ui->nexusRefresh->setIcon(FluentIcons::icon(":/MO/gui/refresh"));
-  ui->nexusImportButton->setIcon(FluentIcons::active()
-                                     ? FluentIcons::glyph(0xE896)  // Download
-                                     : style()->standardIcon(QStyle::SP_DialogOpenButton));
+  ui->nexusImportButton->setIcon(FluentIcons::glyph(0xE896));  // Download
   ui->addCategoryButton->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
   ui->removeCategoryButton->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
   ui->nexusRefresh->setIconSize(QSize(16, 16));
@@ -196,9 +194,8 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
     ui->nexusImportButton->setDisabled(true);
   }
 
-  if (FluentIcons::active()) {
     buildFluentLayout();
-  }
+
 }
 
 CategoriesDialog::~CategoriesDialog()
@@ -1076,8 +1073,8 @@ QVariantList validMappings(const QTableWidgetItem* item)
 
 void CategoriesDialog::buildFluentLayout()
 {
-  // the Designer layout stays for the classic themes; Fluent keeps its table
-  // and Nexus list hidden as the data the cards edit, so loading, importing,
+  // the Designer table and Nexus list stay hidden as the data the cards edit, so
+  // loading, importing,
   // refreshing from Nexus and saving work as before
   auto* root = qobject_cast<QVBoxLayout*>(layout());
   if (root == nullptr) {

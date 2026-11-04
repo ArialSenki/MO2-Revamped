@@ -592,9 +592,7 @@ QString CategoryFactory::getSpecialCategoryName(SpecialCategories type) const
   default:
     return {};
   }
-  // Fluent lists the built-in filters by name; classic themes keep the
-  // angle brackets that set them apart from user categories
-  return FluentIcons::active() ? label : QString("<%1>").arg(label);
+  return label;
 }
 
 QString CategoryFactory::getCategoryNameByID(int id) const

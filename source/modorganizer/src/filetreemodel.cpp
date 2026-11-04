@@ -395,9 +395,7 @@ QVariant FileTreeModel::data(const QModelIndex& index, int role) const
     if (index.column() == 1) {
       if (auto* item = itemFromIndex(index)) {
         if (item->isConflicted()) {
-          return FluentIcons::active()
-                     ? QBrush(FluentIcons::color(FluentIcons::Tone::Critical))
-                     : QBrush(Qt::red);
+          return QBrush(FluentIcons::color(FluentIcons::Tone::Critical));
         }
       }
     }

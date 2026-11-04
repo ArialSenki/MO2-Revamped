@@ -15,7 +15,7 @@ inline bool isDark()
 }
 
 // Status text colors for item views: the Windows 11 foregrounds for dark
-// surfaces, or the classic dark tones on light ones.
+// surfaces, or dark tones on light ones.
 inline QColor criticalText()
 {
   return isDark() ? QColor("#FF99A4") : QColor(Qt::darkRed);

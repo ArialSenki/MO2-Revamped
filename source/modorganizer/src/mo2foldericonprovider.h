@@ -52,9 +52,8 @@ public:
   QIcon icon(const QFileInfo& info) const override
   {
     // Fluent themes use the same file glyphs as the Data tab
-    if (FluentIcons::active()) {
-      return FluentIcons::file(info.fileName(), info.isDir());
-    }
+    return FluentIcons::file(info.fileName(), info.isDir());
+
     if (info.isDir()) {
       return icon(Folder);
     }

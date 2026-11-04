@@ -137,75 +137,6 @@ void Settings::processUpdates(const QVersionNumber& currentVersion,
   log::info("updating from {} to {}", lastVersion.toString(),
             currentVersion.toString());
 
-  auto version = [&](const QVersionNumber& v, auto&& f) {
-    if (lastVersion < v) {
-      log::debug("processing updates for {}", v.toString());
-      f();
-    }
-  };
-
-  version({2, 2, 0}, [&] {
-    remove(m_Settings, "Settings", "steam_password");
-    remove(m_Settings, "Settings", "nexus_username");
-    remove(m_Settings, "Settings", "nexus_password");
-    remove(m_Settings, "Settings", "nexus_login");
-    remove(m_Settings, "Settings", "nexus_api_key");
-    remove(m_Settings, "Settings", "ask_for_nexuspw");
-    remove(m_Settings, "Settings", "nmm_version");
-
-    removeSection(m_Settings, "Servers");
-  });
-
-  version({2, 2, 1}, [&] {
-    remove(m_Settings, "General", "mod_info_tabs");
-    remove(m_Settings, "General", "mod_info_conflict_expanders");
-    remove(m_Settings, "General", "mod_info_conflicts");
-    remove(m_Settings, "General", "mod_info_advanced_conflicts");
-    remove(m_Settings, "General", "mod_info_conflicts_overwrite");
-    remove(m_Settings, "General", "mod_info_conflicts_noconflict");
-    remove(m_Settings, "General", "mod_info_conflicts_overwritten");
-  });
-
-  version({2, 2, 2}, [&] {
-    // log splitter is gone, it's a dock now
-    remove(m_Settings, "General", "log_split");
-
-    // moved to widgets
-    remove(m_Settings, "General", "mod_info_conflicts_tab");
-    remove(m_Settings, "General", "mod_info_conflicts_general_expanders");
-    remove(m_Settings, "General", "mod_info_conflicts_general_overwrite");
-    remove(m_Settings, "General", "mod_info_conflicts_general_noconflict");
-    remove(m_Settings, "General", "mod_info_conflicts_general_overwritten");
-    remove(m_Settings, "General", "mod_info_conflicts_advanced_list");
-    remove(m_Settings, "General", "mod_info_conflicts_advanced_options");
-    remove(m_Settings, "General", "mod_info_tab_order");
-    remove(m_Settings, "General", "mod_info_dialog_images_show_dds");
-
-    // moved to geometry
-    remove(m_Settings, "General", "window_geometry");
-    remove(m_Settings, "General", "window_state");
-    remove(m_Settings, "General", "toolbar_size");
-    remove(m_Settings, "General", "toolbar_button_style");
-    remove(m_Settings, "General", "menubar_visible");
-    remove(m_Settings, "General", "statusbar_visible");
-    remove(m_Settings, "General", "window_split");
-    remove(m_Settings, "General", "window_monitor");
-    remove(m_Settings, "General", "browser_geometry");
-    remove(m_Settings, "General", "filters_visible");
-
-    // this was supposed to have been removed above when updating from 2.2.0,
-    // but it wasn't in Settings, it was in General
-    remove(m_Settings, "General", "ask_for_nexuspw");
-
-    m_Network.updateFromOldMap();
-  });
-
-  version({2, 4, 0}, [&] {
-    // removed
-    remove(m_Settings, "Settings", "hide_unchecked_plugins");
-    remove(m_Settings, "Settings", "load_mechanism");
-  });
-
   // save version in all case
   set(m_Settings, "General", "version", currentVersion.toString());
 
@@ -911,28 +842,13 @@ QStringList GeometrySettings::modInfoTabOrder() const
 {
   QStringList v;
 
-  if (m_Settings.contains("mod_info_tabs")) {
-    // old byte array from 2.2.0
-    QDataStream stream(m_Settings.value("mod_info_tabs").toByteArray());
+  QString string = get<QString>(m_Settings, "Widgets", "ModInfoTabOrder", "");
+  QTextStream stream(&string);
 
-    int count = 0;
-    stream >> count;
-
-    for (int i = 0; i < count; ++i) {
-      QString s;
-      stream >> s;
-      v.push_back(s);
-    }
-  } else {
-    // string list since 2.2.1
-    QString string = get<QString>(m_Settings, "Widgets", "ModInfoTabOrder", "");
-    QTextStream stream(&string);
-
-    while (!stream.atEnd()) {
-      QString s;
-      stream >> s;
-      v.push_back(s);
-    }
+  while (!stream.atEnd()) {
+    QString s;
+    stream >> s;
+    v.push_back(s);
   }
 
   return v;
@@ -1872,31 +1788,6 @@ void NetworkSettings::updateServers(ServerList newServers)
   }
 }
 
-void NetworkSettings::updateFromOldMap()
-{
-  // servers used to be a map of byte arrays until 2.2.1, it's now an array of
-  // individual values instead
-  //
-  // so post 2.2.1, only one key is returned: "size", the size of the arrays;
-  // in 2.2.1, one key per server is returned
-
-  // sanity check that this is really 2.2.1
-  {
-    const QStringList keys = ScopedGroup(m_Settings, "Servers").keys();
-
-    for (auto&& k : keys) {
-      if (k == "size") {
-        // this looks like an array, so the upgrade was probably already done
-        return;
-      }
-    }
-  }
-
-  const auto servers = serversFromOldMap();
-  removeSection(m_Settings, "Servers");
-  updateServers(servers);
-}
-
 bool NetworkSettings::useCustomBrowser() const
 {
   return get<bool>(m_Settings, "Settings", "use_custom_browser", false);
@@ -1917,28 +1808,6 @@ void NetworkSettings::setCustomBrowserCommand(const QString& s)
 {
   set(m_Settings, "Settings", "custom_browser", s);
   updateCustomBrowser();
-}
-
-ServerList NetworkSettings::serversFromOldMap() const
-{
-  // for 2.2.1 and before
-
-  ServerList list;
-  const ScopedGroup sg(m_Settings, "Servers");
-
-  sg.for_each([&](auto&& serverKey) {
-    QVariantMap data = sg.get<QVariantMap>(serverKey);
-
-    ServerInfo server(serverKey, data["premium"].toBool(), data["lastSeen"].toDate(),
-                      data["preferred"].toInt(), {});
-
-    // ignoring download count and speed, it's now a list of values instead of
-    // a total
-
-    list.add(std::move(server));
-  });
-
-  return list;
 }
 
 void NetworkSettings::dump() const

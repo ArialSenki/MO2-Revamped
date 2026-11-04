@@ -339,17 +339,10 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     if (column == COL_NAME && modInfo->isOverwrite()) {
       return FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg");
     } else if (column == COL_VERSION) {
-      // with a Fluent theme a new version shows in the Status column; only
-      // the unusual "installed is newer" case keeps its mark here
-      const bool fluent = FluentIcons::active();
-      if (modInfo->updateAvailable()) {
-        if (!fluent) {
-          return QIcon(":/MO/gui/mainwindow/status/update.svg");
-        }
-      } else if (modInfo->downgradeAvailable()) {
+      // a new version shows in the Status column; only the unusual "installed
+      // is newer" case keeps its mark here
+      if (!modInfo->updateAvailable() && modInfo->downgradeAvailable()) {
         return FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg");
-      } else if (!fluent && modInfo->version().scheme() == VersionInfo::SCHEME_DATE) {
-        return QIcon(":/MO/gui/mainwindow/status/version.svg");
       }
     }
     return QVariant();
@@ -358,8 +351,7 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       int highlight = modInfo->getHighlight();
       if (highlight & ModInfo::HIGHLIGHT_IMPORTANT) {
         // Fluent: files waiting in Overwrite are a caution, not an error
-        return QBrush(FluentIcons::active() ? FluentIcons::color(FluentIcons::Tone::Caution)
-                                            : MOBase::RevampedTheme::criticalText());
+        return QBrush(FluentIcons::color(FluentIcons::Tone::Caution));
       } else if (highlight & ModInfo::HIGHLIGHT_INVALID) {
         return QBrush(MOBase::RevampedTheme::dimmedText());
       }
@@ -368,9 +360,8 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
         return QVariant();
       } else if (modInfo->updateAvailable() || modInfo->downgradeAvailable()) {
         // Fluent marks an available update in the accent, like Windows Update
-        if (FluentIcons::active()) {
-          return QBrush(FluentIcons::color(FluentIcons::Tone::Accent));
-        }
+        return QBrush(FluentIcons::color(FluentIcons::Tone::Accent));
+
         return QBrush(MOBase::RevampedTheme::isDark() ? MOBase::RevampedTheme::criticalText()
                                                      : QColor(Qt::red));
       } else {
@@ -628,8 +619,7 @@ QVariant ModList::headerData(int section, Qt::Orientation orientation, int role)
         return QVariant(Qt::AlignRight | Qt::AlignVCenter);
       }
       // the icon columns center their icons, and so their headings
-      if (section == COL_FLAGS || section == COL_CONTENT ||
-          (section == COL_CONFLICTFLAGS && !FluentIcons::active())) {
+      if (section == COL_FLAGS || section == COL_CONTENT) {
         return QVariant(Qt::AlignCenter);
       }
       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
@@ -1308,7 +1298,7 @@ QString ModList::getColumnName(int column)
   switch (column) {
   case COL_CONFLICTFLAGS:
     // the Fluent Status column also shows new versions
-    return FluentIcons::active() ? tr("Status") : tr("Conflicts");
+    return tr("Status");
   case COL_FLAGS:
     return tr("Flags");
   case COL_CONTENT:
@@ -1352,8 +1342,7 @@ QString ModList::getColumnToolTip(int column) const
   case COL_MODID:
     return tr("Id of the mod as used on Nexus.");
   case COL_CONFLICTFLAGS:
-    return FluentIcons::active() ? tr("New versions and file conflicts with other mods.")
-                                 : tr("Indicators of file conflicts between mods.");
+    return tr("New versions and file conflicts with other mods.");
   case COL_FLAGS:
     return tr("Emblems to highlight things that might require attention.");
   case COL_CONTENT: {

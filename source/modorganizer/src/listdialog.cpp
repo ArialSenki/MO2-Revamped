@@ -33,11 +33,10 @@ ListDialog::ListDialog(QWidget* parent)
 
   // Fluent v4: the choices are list rows with the hover fill and the accent
   // pill of the selected one, like the manager dialogs
-  if (FluentIcons::active()) {
     ui->choiceList->setItemDelegate(new FluentPanels::RowDelegate(ui->choiceList, 40, 0));
-    ui->choiceList->setMouseTracking(true);
-    ui->choiceList->setFrameShape(QFrame::NoFrame);
-  }
+  ui->choiceList->setMouseTracking(true);
+  ui->choiceList->setFrameShape(QFrame::NoFrame);
+
   connect(ui->choiceList, &QListWidget::itemDoubleClicked, this, &QDialog::accept);
   connect(ui->choiceList, &QListWidget::itemSelectionChanged, this,
           &ListDialog::updateAcceptButton);

@@ -152,9 +152,6 @@ bool FluentScrollBarPainter::eventFilter(QObject* watched, QEvent* event)
 void FluentScrollBarPainter::paintEvent(QPaintEvent*)
 {
   // a theme change away from Fluent v4 brings the theme's own handle back
-  if (!qApp->property("revampedFluent").toBool()) {
-    return;
-  }
   if (m_bar->maximum() <= m_bar->minimum()) {
     return;  // nothing to scroll: Windows draws no thumb either
   }

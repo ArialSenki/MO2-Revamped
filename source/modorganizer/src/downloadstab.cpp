@@ -27,10 +27,9 @@ DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
 
   m_filter.setEdit(ui.filter);
   // it brings its own text; the Fluent window names what's searched
-  if (FluentIcons::active()) {
     ui.filter->setPlaceholderText(
-        QCoreApplication::translate("FluentDashboard", "Search downloads"));
-  }
+      QCoreApplication::translate("FluentDashboard", "Search downloads"));
+
   m_filter.setList(ui.list);
   m_filter.setSortPredicate([sourceModel](auto&& left, auto&& right) {
     return sourceModel->lessThanPredicate(left, right);

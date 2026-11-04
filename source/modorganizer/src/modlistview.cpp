@@ -128,8 +128,7 @@ public:
 
     // Fluent: the priority is a quiet number next to the switch, the name
     // carries the row
-    if (index.column() == ModList::COL_PRIORITY && !color.isValid() &&
-        FluentIcons::active()) {
+    if (index.column() == ModList::COL_PRIORITY && !color.isValid()) {
       QColor muted = opt.palette.color(QPalette::Text);
       muted.setAlphaF(0.6);
       opt.palette.setColor(QPalette::Text, muted);
@@ -994,13 +993,8 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
 
   setItemDelegateForColumn(ModList::COL_FLAGS,
                            new ModFlagIconDelegate(this, ModList::COL_FLAGS, 120));
-  if (FluentIcons::active()) {
     setItemDelegateForColumn(ModList::COL_CONFLICTFLAGS, new FluentStatusDelegate(this));
-  } else {
-    setItemDelegateForColumn(
-        ModList::COL_CONFLICTFLAGS,
-        new ModConflictIconDelegate(this, ModList::COL_CONFLICTFLAGS, 80));
-  }
+
   setItemDelegateForColumn(ModList::COL_CONTENT,
                            new ModContentIconDelegate(this, ModList::COL_CONTENT, 150));
   setItemDelegateForColumn(ModList::COL_VERSION,
@@ -1099,7 +1093,7 @@ void ModListView::restoreState(const Settings& s)
   // header; a layout saved after this first run is never touched again.
   QSettings layout(s.filename(), QSettings::IniFormat);
   constexpr auto columnsAppliedKey = "Settings/fluent_v4_mod_columns_applied";
-  if (FluentIcons::active() && !layout.value(columnsAppliedKey, false).toBool()) {
+  if (!layout.value(columnsAppliedKey, false).toBool()) {
     QHeaderView* h = header();
     for (int column : {ModList::COL_CONTENT, ModList::COL_CATEGORY, ModList::COL_MODID,
                        ModList::COL_GAME, ModList::COL_INSTALLTIME, ModList::COL_NOTES}) {
@@ -1127,7 +1121,7 @@ void ModListView::restoreState(const Settings& s)
   // the first Fluent layouts hid Flags (invalid game data, hidden files, notes);
   // show it once to them too, after that hiding it is the user's choice
   constexpr auto flagsShownKey = "Settings/fluent_v4_mod_flags_shown";
-  if (FluentIcons::active() && !layout.value(flagsShownKey, false).toBool()) {
+  if (!layout.value(flagsShownKey, false).toBool()) {
     QHeaderView* h = header();
     if (h->isSectionHidden(ModList::COL_FLAGS)) {
       h->setSectionHidden(ModList::COL_FLAGS, false);

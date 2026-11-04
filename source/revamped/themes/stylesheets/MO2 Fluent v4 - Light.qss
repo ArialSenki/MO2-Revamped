@@ -1,7 +1,6 @@
 /* mo2-base-style: Fusion */
 /* MO2 Revamped Fluent v4 Light */
 
-
 QWidget {
     color: #1A1A1A;
     background-color: #EFF1F4;
@@ -820,12 +819,6 @@ QLCDNumber#activeModsCounter {
     color: #005FB8;
 }
 
-QFrame#activeModsCounterFrame {
-    background-color: #F2F2F2;
-    border: 1px solid #D0D0D0;
-    border-radius: 7px;
-}
-
 QComboBox#executablesListBox {
     color: #1A1A1A;
     background-color: #FFFFFF;
@@ -989,7 +982,6 @@ QTreeView::indicator {
     border-radius: 4px;
 }
 
-QFrame#notificationHeaderPanel,
 QFrame#overwriteIntroPanel { background-color: transparent; border: none; }
 
 QFrame#notificationListCard,
@@ -999,36 +991,16 @@ QFrame#notificationDetailsCard {
     border-radius: 8px;
 }
 
-QFrame#notificationHeaderPanel { background-color: transparent; border: none; }
-
-QLabel#notificationHeading,
 QLabel#overwriteHeading {
     color: #1A1A1A;
     font-size: 15pt;
     font-weight: 600;
 }
 
-QLabel#notificationIntro,
-QLabel#notificationCountLabel,
 QLabel#overwriteDescription {
     color: #5D5D5D;
 }
 
-QLabel#notificationListTitle,
-QLabel#notificationDetailsTitle,
-QLabel#overwriteSectionHeading {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
-QLabel#selectedTitleLabel {
-    color: #1A1A1A;
-    font-size: 12pt;
-    font-weight: 600;
-}
-
-QLabel#notificationContextLabel,
 QLabel#overwriteContextHint {
     color: #1A1A1A;
     background-color: #F7F7F7;
@@ -1689,12 +1661,6 @@ QDialog#ProfileInputDialog QFrame#profileSettingsCard {
     border-radius: 8px;
 }
 
-QDialog#ProfileInputDialog QFrame#profileInputDivider {
-    max-height: 1px;
-    background-color: #DFDFDF;
-    border: none;
-}
-
 QMessageBox#revampedProfileActionPrompt QLabel#qt_msgbox_label,
 QMessageBox#revampedProfileActionPrompt QLabel#qt_msgbox_informativelabel {
     color: #1A1A1A;
@@ -1853,21 +1819,12 @@ QDialog#DisableProxyPluginDialog QLabel#restartNoticeHeading {
     font-size: 10pt;
 }
 
-QDialog#BrowserDialog QWidget#headerPanel { background-color: transparent; border: none; }
-
-QDialog#BrowserDialog QWidget#toolBar {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#BrowserDialog QLabel#titleLabel,
 QDialog#ValidationProgressDialog QLabel#titleLabel {
     color: #1A1A1A;
     font-size: 15pt;
     font-weight: 600;
 }
 
-QDialog#BrowserDialog QLabel#subtitleLabel,
 QDialog#ValidationProgressDialog QLabel#helpLabel {
     color: #5D5D5D;
 }
@@ -1995,59 +1952,6 @@ QDialog#SelectionDialog QWidget#scrollAreaWidgetContents {
     border: none;
 }
 
-QDialog#EldenRingStartupOptionsDialog QFrame#startupHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#EldenRingStartupOptionsDialog QFrame#profileCard,
-QDialog#EldenRingStartupOptionsDialog QFrame#startupCard,
-QDialog#EldenRingStartupOptionsDialog QFrame#cleanupCard,
-QDialog#EldenRingStartupOptionsDialog QFrame#performanceCard,
-QDialog#EldenRingStartupOptionsDialog QFrame#bridgeLogCard {
-    color: #1A1A1A;
-    background-color: #FBFBFB;
-    border: 1px solid #DDDDDD;
-    border-radius: 8px;
-}
-
-QDialog#EldenRingStartupOptionsDialog QLabel#startupPageTitle {
-    color: #1A1A1A;
-    font-size: 15pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingStartupOptionsDialog QLabel#startupCardTitle {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingStartupOptionsDialog QLabel#startupPageSubtitle,
-QDialog#EldenRingStartupOptionsDialog QLabel#profileNote,
-QDialog#EldenRingStartupOptionsDialog QLabel#cleanupNote {
-    color: #8A8A8A;
-    font-size: 9pt;
-}
-
-QDialog#EldenRingStartupOptionsDialog QLabel#activeProfileName {
-    color: #1A1A1A;
-    font-weight: 600;
-}
-
-QDialog#EldenRingStartupOptionsDialog QLabel#startupCompatibilityNote {
-    color: #5D5D5D;
-    background-color: #F1F1F1;
-    border: 1px solid #DBDBDB;
-    border-radius: 4px;
-    padding: 6px 8px;
-}
-
-QDialog#EldenRingNativeProfileDialog QFrame#nativeHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#EldenRingNativeProfileDialog QFrame#nativeFooterPanel {
-    background-color: #FBFBFB;
-    border: 1px solid #E0E0E0;
-    border-radius: 8px;
-}
-
 QDialog#EldenRingNativeProfileDialog QGroupBox#detectedDllCard,
 QDialog#EldenRingNativeProfileDialog QGroupBox#nativeLoadOrderCard {
     margin-top: 8px;
@@ -2105,43 +2009,6 @@ QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileLocationPath {
 
 QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileStatus {
     color: #8A4B08;
-}
-
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#EldenRingSaveIsolationDialog QScrollArea#saveIsolationBody {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#EldenRingSaveIsolationDialog QWidget#saveIsolationContent {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationProfileCard,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationModeCard,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationGameProfileCard,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationRoutingCard,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationActionsCard {
-    color: #1A1A1A;
-    background-color: #FBFBFB;
-    border: 1px solid #DDDDDD;
-    border-radius: 8px;
-    margin-top: 8px;
-    padding: 12px 10px 10px;
-}
-
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationProfileCard::title,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationModeCard::title,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationGameProfileCard::title,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationRoutingCard::title,
-QDialog#EldenRingSaveIsolationDialog QGroupBox#saveIsolationActionsCard::title {
-    color: #1A1A1A;
-    font-weight: 600;
-    subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 4px;
 }
 
 QDialog#TaskDialog QWidget#topPanel {
@@ -2235,10 +2102,6 @@ QDialog#AboutDialog QLabel#aboutPageHeading {
     font-weight: 600;
 }
 
-QDialog#AboutDialog QLabel#aboutSummary {
-    color: #5D5D5D;
-}
-
 QDialog#AboutDialog QLabel#revisionLabel,
 QDialog#AboutDialog QLabel#usvfsLabel {
     color: #8A8A8A;
@@ -2266,108 +2129,14 @@ QDialog#AboutDialog QGroupBox::title {
     color: #005FB8;
 }
 
-QDialog#MO2RevampedAboutDialog QFrame#mo2RevampedAboutHeaderCard,
-QDialog#MO2RevampedAboutDialog QFrame#mo2RevampedAboutPageIntro { background-color: transparent; border: none; }
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutLogo {
-    background-color: #E8E8E8;
-    border: 1px solid #D6D6D6;
-    border-radius: 4px;
-    padding: 7px;
-}
-
-QDialog#MO2RevampedAboutDialog QWidget#mo2RevampedAboutHeaderText {
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutHeaderTitle {
-    color: #1A1A1A;
-    font-size: 16pt;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutHeaderSubtitle {
-    color: #5D5D5D;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutHeaderMeta {
-    color: #005FB8;
-    font-size: 9pt;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutHeaderContext {
-    color: #5D5D5D;
-    font-size: 9pt;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutPageTitle {
-    color: #1A1A1A;
-    font-size: 11pt;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutPageDescription {
-    color: #5D5D5D;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutCompatibilityNote,
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutVersionsNote {
-    color: #5D5D5D;
-    background-color: #F1F1F1;
-    border: 1px solid #D6D6D6;
-    border-radius: 4px;
-    padding: 7px 10px;
-}
-
-QDialog#MO2RevampedAboutDialog QFrame#mo2RevampedAboutFeatureCard,
-QDialog#MO2RevampedAboutDialog QFrame#mo2RevampedAboutLicenseCard {
-    color: #1A1A1A;
-    background-color: #FBFBFB;
-    border: 1px solid #D6D6D6;
-    border-radius: 8px;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutFeatureTitle,
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutLicenseTitle {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutFeatureText,
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutLicenseText {
-    color: #5D5D5D;
-    background-color: transparent;
-}
-
-QDialog#MO2RevampedAboutDialog QTextBrowser#mo2RevampedAboutSourceLinks a {
-    color: #005FB8;
-    text-decoration: none;
-}
-
-QDialog#MO2RevampedAboutDialog QTextBrowser#mo2RevampedAboutSourceLinks a:hover {
-    color: #1A1A1A;
-    text-decoration: underline;
-}
-
 QMenu#revampedHelpMenu,
-QMenu#revampedGuidedToursMenu,
 QMenu#revampedEndorseMenu {
     color: #1A1A1A;
     background-color: #FDFDFD;
     border: 1px solid #D4D4D4;
 }
 
-QMenu#revampedHelpMenu::item:selected,
-QMenu#revampedGuidedToursMenu::item:selected {
+QMenu#revampedHelpMenu::item:selected{
     color: #1A1A1A;
     background-color: #EEEEEE;
 }
@@ -2474,21 +2243,18 @@ QMessageBox#MO2RevampedReportErrorDialog QLabel#qt_msgbox_label {
 
 QDialog#ExportModListDialog QWidget#exportHeader { background-color: transparent; border: none; }
 
-QDialog#ExportModListDialog QLabel#exportTitle,
-QDialog#InstanceNameDialog QLabel#instanceNameHeading {
+QDialog#ExportModListDialog QLabel#exportTitle{
     color: #1A1A1A;
     font-size: 16pt;
     font-weight: 600;
 }
 
-QDialog#ExportModListDialog QLabel#exportDescription,
-QDialog#InstanceNameDialog QLabel#instanceNameDescription {
+QDialog#ExportModListDialog QLabel#exportDescription{
     color: #5D5D5D;
 }
 
 QDialog#ExportModListDialog QGroupBox#exportRowsGroup,
-QDialog#ExportModListDialog QGroupBox#exportColumnsGroup,
-QDialog#InstanceNameDialog QGroupBox#instanceNameCard {
+QDialog#ExportModListDialog QGroupBox#exportColumnsGroup{
     background-color: #FBFBFB;
     border: 1px solid #DDDDDD;
     border-radius: 8px;
@@ -2497,8 +2263,7 @@ QDialog#InstanceNameDialog QGroupBox#instanceNameCard {
 }
 
 QDialog#ExportModListDialog QGroupBox#exportRowsGroup::title,
-QDialog#ExportModListDialog QGroupBox#exportColumnsGroup::title,
-QDialog#InstanceNameDialog QGroupBox#instanceNameCard::title {
+QDialog#ExportModListDialog QGroupBox#exportColumnsGroup::title{
     color: #1A1A1A;
     subcontrol-origin: margin;
     left: 10px;
@@ -2601,34 +2366,11 @@ QDialog#CreateInstanceDialog QGroupBox#eldenRingSaveModeCard::title {
     font-weight: 600;
 }
 
-QDialog#CreateInstanceDialog QLabel#eldenRingWizardScopeNote {
-    color: #5D5D5D;
-    background-color: #F7F7F7;
-    border: 1px solid #DDDDDD;
-    border-radius: 4px;
-    padding: 5px 7px;
-}
-
-QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_description {
-    color: #5D5D5D;
-    padding: 2px 0px 0;
-}
-
-QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_status,
 QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceSaveStatus {
     color: #8A8A8A;
     padding: 2px 0px 0;
 }
 
-QDialog#CreateInstanceDialog QLabel#eldenRingStartingSaveHeading {
-    color: #1A1A1A;
-    font-weight: 600;
-    border-top: 1px solid #DDDDDD;
-    padding-top: 8px;
-    margin-top: 3px;
-}
-
-QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#qt_scrollarea_viewport,
 QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#games {
     background-color: #FBFBFB;
     border: none;
@@ -2665,105 +2407,6 @@ QDialog#filterOptionsDialog QGroupBox#categoriesGroup {
 
 border-radius: 8px;
 
-}
-
-QDialog#InstanceHelpDialog QFrame#instanceHelpHeaderPanel,
-QDialog#DeleteInstanceDialog QFrame#deleteInstanceHeader { background-color: transparent; border: none; }
-
-QDialog#InstanceHelpDialog QFrame#instanceHelpExampleCard,
-QDialog#DeleteInstanceDialog QFrame#deleteInstanceListCard {
-    background-color: #FBFBFB;
-    border: 1px solid #D7D7D7;
-    border-radius: 8px;
-}
-
-QDialog#InstanceHelpDialog QFrame#instanceHelpHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#InstanceHelpDialog QWidget#instanceHelpHeaderText,
-QDialog#InstanceNameDialog QWidget#instanceNameHeaderText {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#DeleteInstanceDialog QFrame#deleteInstanceHeader { background-color: transparent; border: none; }
-
-QDialog#InstanceHelpDialog QLabel#instanceHelpHeading,
-QDialog#DeleteInstanceDialog QLabel#deleteInstanceHeading {
-    color: #1A1A1A;
-    font-size: 14pt;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#InstanceHelpDialog QLabel#instanceHelpDescription,
-QDialog#InstanceHelpDialog QLabel#instanceHelpExampleText,
-QDialog#InstanceHelpDialog QLabel#instanceHelpFooter,
-QDialog#DeleteInstanceDialog QLabel#deleteInstanceDescription,
-QDialog#DeleteInstanceDialog QLabel#deleteInstanceActionHint {
-    color: #5D5D5D;
-    background-color: transparent;
-}
-
-QDialog#InstanceHelpDialog QLabel#instanceHelpGame,
-QDialog#DeleteInstanceDialog QLabel#deleteInstanceListTitle {
-    color: #1A1A1A;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#DeleteInstanceDialog QLabel#deleteInstanceItemCount {
-    color: #5D5D5D;
-    background-color: #F5F5F5;
-    border: 1px solid #DDDDDD;
-    border-radius: 4px;
-    padding: 3px 8px;
-}
-
-QDialog#DeleteInstanceDialog QFrame#deleteWarningBadge {
-    background-color: #FBEAE7;
-    border: 1px solid #E3B3AD;
-    border-radius: 8px;
-}
-
-QDialog#DeleteInstanceDialog QLabel#deleteWarningIcon { background-color: transparent; border: none; padding: 0px; }
-
-QDialog#DeleteInstanceDialog QWidget#deleteInstanceHeaderText {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#SwitchInstanceDialog QFrame#switchInstanceHeader { background-color: transparent; border: none; }
-
-QDialog#SwitchInstanceDialog QFrame#switchInstanceBadge {
-    background-color: #E7E7E7;
-    border: 1px solid #CCCCCC;
-    border-radius: 8px;
-}
-
-QDialog#SwitchInstanceDialog QLabel#switchInstanceIcon { background-color: transparent; border: none; padding: 0px; }
-
-QDialog#SwitchInstanceDialog QWidget#switchInstanceHeaderText {
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#SwitchInstanceDialog QLabel#switchInstanceHeading {
-    color: #1A1A1A;
-    font-size: 14pt;
-    font-weight: 600;
-    background-color: transparent;
-}
-
-QDialog#SwitchInstanceDialog QLabel#switchInstanceDescription,
-QDialog#SwitchInstanceDialog QLabel#switchInstanceSettingsText {
-    color: #5D5D5D;
-    background-color: transparent;
-}
-
-QDialog#SwitchInstanceDialog QFrame#switchInstanceSettingsHint {
-    background-color: #FBFBFB;
-    border: 1px solid #DBDBDB;
-    border-radius: 8px;
 }
 
 QDialog#EditExecutablesDialog QWidget#widget_2,
@@ -2871,32 +2514,22 @@ QDialog#ExportModListDialog QFrame#gearActionDivider {
     max-height: 1px;
 }
 
-QDialog#profileBackupPromptDialog QLabel#profileBackupPromptTitle,
 QDialog#profileBackupDialog QLabel#backupContentsHeading {
     color: #1A1A1A;
 }
 
-QDialog#profileBackupPromptDialog QLabel#profileBackupPromptDescription,
 QDialog#profileBackupDialog QLabel#backupModListDetails,
 QDialog#profileBackupDialog QLabel#backupPluginOrderDetails {
     color: #5D5D5D;
     background-color: transparent;
 }
 
-QDialog#profileBackupPromptDialog QFrame#profileBackupPromptCard,
 QDialog#profileBackupDialog QFrame#backupModListCard,
 QDialog#profileBackupDialog QFrame#backupPluginOrderCard {
     color: #1A1A1A;
     background-color: #FBFBFB;
     border: 1px solid #DDDDDD;
     border-radius: 8px;
-}
-
-QDialog#profileBackupPromptDialog QFrame#profileBackupPromptDivider {
-    color: #DDDDDD;
-    background-color: #DDDDDD;
-    border: none;
-    max-height: 1px;
 }
 
 QDialog#profileBackupDialog QLabel#backupContentsHeading {
@@ -3034,7 +2667,6 @@ QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 {
     border-radius: 7px;
 }
 
-QDialog#CreateInstanceDialog QScrollArea#scrollArea_3 QWidget#qt_scrollarea_viewport,
 QDialog#CreateInstanceDialog QWidget#games {
     background-color: transparent;
     border: none;
@@ -3138,60 +2770,11 @@ QFileDialog#forcedProcessFilePicker {
     background-color: #F5F5F5;
 }
 
-QDialog#EldenRingNativeProfileDialog QFrame#nativeHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#EldenRingNativeProfileDialog QLabel#nativePageTitle {
-    color: #1A1A1A;
-    font-size: 15pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingNativeProfileDialog QLabel#nativePageSubtitle,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeSectionNote,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeFooterNote {
-    color: #8A8A8A;
-    font-size: 9pt;
-}
-
-QDialog#EldenRingNativeProfileDialog QFrame#nativeProfilePanel {
-    background-color: #FBFBFB;
-    border: 1px solid #DBDBDB;
-    border-radius: 8px;
-}
-
-QDialog#EldenRingNativeProfileDialog QLabel#nativeProfileCaption {
-    color: #8A8A8A;
-    font-size: 9pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingNativeProfileDialog QLabel#nativeProfileName {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingNativeProfileDialog QLabel#nativeProfileMetrics {
-    color: #5D5D5D;
-    background-color: #F7F7F7;
-    border: 1px solid #DBDBDB;
-    border-radius: 4px;
-    padding: 5px 9px;
-    font-size: 8pt;
-    font-weight: 600;
-}
-
 QDialog#EldenRingNativeProfileDialog QFrame#detectedDllCard,
 QDialog#EldenRingNativeProfileDialog QFrame#nativeLoadOrderCard {
     background-color: #FBFBFB;
     border: 1px solid #DDDDDD;
     border-radius: 8px;
-}
-
-QDialog#EldenRingNativeProfileDialog QLabel#nativePanelTitle {
-    color: #1A1A1A;
-    font-size: 11pt;
-    font-weight: 600;
 }
 
 QDialog#EldenRingNativeProfileDialog QLabel#detectedDllStatus {
@@ -3250,86 +2833,15 @@ QDialog#NativeProfileExportDialog QLabel#nativeExportCaption {
     font-weight: 600;
 }
 
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationProfileCard,
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationModeCard,
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationGameProfileCard,
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationRoutingCard,
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationActionsCard,
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationSafetyCard {
-    background-color: #FBFBFB;
-    border: 1px solid #DDDDDD;
-    border-radius: 8px;
-}
-
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationHeaderPanel { background-color: transparent; border: none; }
-
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageTitle {
     color: #1A1A1A;
     font-size: 15pt;
     font-weight: 600;
 }
 
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageSubtitle,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSectionNote {
+QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageSubtitle{
     color: #8A8A8A;
     font-size: 9pt;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationCardTitle {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationProfileName {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationProfilePath,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSelectedPath {
-    color: #5D5D5D;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationFieldCaption {
-    color: #8A8A8A;
-    font-size: 9pt;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationModeDescription {
-    color: #5D5D5D;
-    padding: 2px 0px 0;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationRoutingStatus {
-    color: #1A1A1A;
-    background-color: #F1F1F1;
-    border: 1px solid #DBDBDB;
-    border-radius: 4px;
-    padding: 7px 9px;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationMo2SaveState {
-    color: #8A8A8A;
-    font-size: 8pt;
-}
-
-QDialog#EldenRingSaveIsolationDialog QFrame#saveIsolationSafetyCard {
-    background-color: #FFF9E9;
-    border-color: #E8D8AA;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSafetyCaption {
-    color: #80580D;
-    font-weight: 600;
-}
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSafetyNote {
-    color: #6C5B35;
-    font-size: 8pt;
 }
 
 QDialog#EldenRingCreateSaveProfileDialog QFrame#saveProfileDetailsCard,
@@ -3386,59 +2898,21 @@ QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptMessage {
     font-size: 9pt;
 }
 
-QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
-QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
 QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
 QDialog#ForcedLoadDialog QLabel#rulesSectionIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeHeaderIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeProfileIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeDetectedIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeLoadOrderIcon,
 QDialog#EldenRingNativeProfileDialog QLabel#nativeExportIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupHeaderIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupProfileIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupLaunchIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupCleanupIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupPerformanceIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupBridgeIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationHeaderIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationProfileIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationModeIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationGameProfileIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationStatusIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationActionsIcon,
 QDialog#EldenRingSaveTransferDialog QLabel#saveTransferHeaderIcon,
 QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileHeaderIcon { background-color: transparent; border: none; padding: 0px; }
 
-QDialog#InstanceNameDialog QLabel#instanceNameHeaderIcon,
-QDialog#InstanceHelpDialog QLabel#instanceHelpHeaderIcon { background-color: transparent; border: none; padding: 0px; }
-
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupHeaderIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeHeaderIcon,
 QDialog#EldenRingNativeProfileDialog QLabel#nativeExportIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationHeaderIcon,
 QDialog#EldenRingSaveTransferDialog QLabel#saveTransferHeaderIcon,
 QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileHeaderIcon { background-color: transparent; border: none; padding: 0px; }
 
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
-QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupProfileIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupLaunchIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupCleanupIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupPerformanceIcon,
-QDialog#EldenRingStartupOptionsDialog QLabel#startupBridgeIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeDetectedIcon,
-QDialog#EldenRingNativeProfileDialog QLabel#nativeLoadOrderIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationProfileIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationModeIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationGameProfileIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationStatusIcon,
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationActionsIcon { background-color: transparent; border: none; padding: 0px; }
-
-QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationSafetyIcon { background-color: transparent; border: none; padding: 0px; }
+QDialog#EditExecutablesDialog QLabel#executableOptionsIcon{ background-color: transparent; border: none; padding: 0px; }
 
 QDialog#EditExecutablesDialog QLabel#executableSectionTitle {
     color: #1A1A1A;
@@ -3466,8 +2940,6 @@ QDialog#ForcedLoadDialog QGroupBox#rulesGroup {
 QDialog#NativeProfileNoticeDialog QLabel#nativeNoticeIcon,
 QDialog#EldenRingSaveIsolationNoticeDialog QLabel#saveIsolationPromptIcon,
 QDialog#EldenRingSaveIsolationConfirmDialog QLabel#saveIsolationPromptIcon { background-color: transparent; border: none; padding: 0px; }
-
-QMessageBox#GeneralResetDialogsConfirmDialog QLabel#qt_msgboxex_icon { background-color: transparent; border: none; padding: 0px; }
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageIcon,
 QDialog#CategoriesDialog QLabel#categoriesHeaderIcon,
@@ -4035,13 +3507,6 @@ QDialog#__overwriteDialog QLabel#overwriteDescription {
     color: #5D5D5D;
 }
 
-QDialog#__overwriteDialog QLabel#overwriteSectionHeading {
-    color: #1A1A1A;
-    font-size: 10pt;
-    font-weight: 600;
-    padding: 2px 0px;
-}
-
 QDialog#__overwriteDialog QLabel#overwriteContextHint {
     color: #1A1A1A;
     background-color: #F1F1F1;
@@ -4293,17 +3758,6 @@ QDialog#EldenRingArchiveLayoutDialog QWidget#archiveDialogContent {
     border: none;
 }
 
-QDialog#EldenRingArchiveLayoutDialog QFrame#archiveHeaderPanel { background-color: transparent; border: none; }
-
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveHeaderBadge {
-    color: #1A1A1A;
-    background-color: #E6E6E6;
-    border: 1px solid #C5C5C5;
-    border-radius: 4px;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
 QDialog#EldenRingArchiveLayoutDialog QLabel#archivePageTitle {
     color: #1A1A1A;
     background-color: transparent;
@@ -4312,53 +3766,18 @@ QDialog#EldenRingArchiveLayoutDialog QLabel#archivePageTitle {
     font-weight: 600;
 }
 
-QDialog#EldenRingArchiveLayoutDialog QLabel#archivePageSubtitle,
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveSectionDescription,
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveFooterNote,
-QDialog#EldenRingArchiveLayoutDialog QLabel#archivePreviewNote {
+QDialog#EldenRingArchiveLayoutDialog QLabel#archivePageSubtitle{
     color: #5D5D5D;
     background-color: transparent;
     border: none;
 }
 
 QDialog#EldenRingArchiveLayoutDialog QFrame#archiveNameCard,
-QDialog#EldenRingArchiveLayoutDialog QFrame#archiveTextFilesCard,
-QDialog#EldenRingArchiveLayoutDialog QFrame#archivePackagePathsCard,
-QDialog#EldenRingArchiveLayoutDialog QFrame#archiveLayoutChoiceCard {
+QDialog#EldenRingArchiveLayoutDialog QFrame#archiveTextFilesCard{
     color: #1A1A1A;
     background-color: #FBFBFB;
     border: 1px solid #D7D7D7;
     border-radius: 8px;
-}
-
-QDialog#EldenRingArchiveLayoutDialog QFrame#archiveLayoutChoiceCard[preferredChoice="true"] {
-    background-color: #FBFBFB;
-    border: 1px solid #B6B6B6;
-}
-
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveSectionTitle,
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveLayoutChoiceTitle {
-    color: #1A1A1A;
-    background-color: transparent;
-    border: none;
-    font-weight: 600;
-}
-
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveLayoutChoiceTitle {
-    font-size: 11pt;
-}
-
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveLayoutChoiceDescription {
-    color: #5D5D5D;
-    background-color: transparent;
-    border: none;
-}
-
-QDialog#EldenRingArchiveLayoutDialog QLabel#archiveFieldLabel {
-    color: #1A1A1A;
-    background-color: transparent;
-    border: none;
-    font-weight: 600;
 }
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageIcon,
@@ -4925,13 +4344,6 @@ QFrame[lcdFrame="true"] {
     border: 1px solid #E5E5E5;
     border-radius: 4px;
 }
-QFrame#activeModsCounterFrame {
-    min-height: 30px;
-    max-height: 30px;
-    background-color: #DCE8F5;
-    border: 1px solid #DCE8F5;
-    border-radius: 4px;
-}
 
 /* Main window: mod list card. Enabled state uses Fluent switches. */
 QMainWindow#MainWindow QTreeView#modList {
@@ -5496,10 +4908,6 @@ QMainWindow#MainWindow QToolButton#moreActionsBtn::menu-indicator {
     image: none;
     width: 0px;
 }
-QMainWindow#MainWindow QLabel#activeModslabel {
-    color: #5D5D5D;
-    padding-left: 6px;
-}
 
 /* Run button states: Mounting and Starting keep the accent, Running turns green. */
 QToolButton#startButton[runState="busy"],
@@ -5852,10 +5260,7 @@ QDialog#SettingsDialog QTabWidget#tabWidget QWidget#pluginsTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QWidget#workaroundTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QWidget#diagnosticsTab,
 QDialog#SettingsDialog QTabWidget#tabWidget QWidget#developerTab,
-QDialog#SettingsDialog QTabWidget#tabWidget QStackedWidget#qt_tabwidget_stackedwidget,
 QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea,
-QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea > QWidget#qt_scrollarea_viewport,
-QDialog#SettingsDialog QTabWidget#tabWidget QScrollArea > QWidget#qt_scrollarea_viewport > QWidget,
 QDialog#SettingsDialog QWidget#fluentPageContent {
     background-color: transparent;
     border: none;
@@ -5872,42 +5277,11 @@ QDialog#SettingsDialog QWidget#fluentNavPage QLabel#fluentSettingSubheading {
 }
 
 /* About MO2 Revamped (python plugin): pivot tabs like the rest of Fluent. */
-QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs::pane {
-    background-color: #FBFBFB;
-    border: 1px solid #E5E5E5;
-    border-radius: 8px;
-    top: -1px;
-}
-QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab {
-    color: #5D5D5D;
-    background-color: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    border-radius: 0px;
-    min-height: 22px;
-    padding: 7px 12px 5px 12px;
-    margin: 0px 2px 0px 0px;
-}
-QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab:hover {
-    color: #1A1A1A;
-    background-color: transparent;
-    border-bottom-color: #EBEBEB;
-}
-QDialog#MO2RevampedAboutDialog QTabWidget#mo2RevampedAboutTabs QTabBar::tab:selected {
-    color: #1A1A1A;
-    background-color: transparent;
-    border-bottom: 3px solid #005FB8;
-}
 
 /* About: the program logo stands on its own, without the round badge. */
-QDialog#MO2RevampedAboutDialog QLabel#mo2RevampedAboutLogo {
-    background-color: transparent;
-    border: none;
-    padding: 0px;
-}
 
 /* Dialogs: every button and field at the Windows 11 height of 32px. These
-   generic rules replace the classic per-dialog looks, which the generator
+   generic rules replace the per-dialog looks, which the generator
    drops, and the per-widget style sheets FluentDialogs used to set. */
 QDialog QPushButton {
     min-height: 20px;
@@ -6004,7 +5378,7 @@ QDialog QToolButton[fluentButton="true"]::menu-button {
 }
 
 /* scrolling pages of dialogs share the dialog surface */
-QDialog QScrollArea, QDialog QScrollArea > QWidget#qt_scrollarea_viewport {
+QDialog QScrollArea{
     background-color: transparent;
     border: none;
 }
@@ -6206,7 +5580,6 @@ QDialog#CreateInstanceDialog QStackedWidget#pathPages > QWidget,
 QDialog#CreateInstanceDialog QWidget#wizardPageTop,
 QDialog#CreateInstanceDialog QWidget#wizardPadded,
 QDialog#CreateInstanceDialog QWidget#widget_9,
-QDialog#CreateInstanceDialog QWidget#detectedPrograms,
 QDialog#CreateInstanceDialog QWidget#widget_13,
 QDialog#CreateInstanceDialog QWidget#widget_15,
 QDialog#CreateInstanceDialog QWidget#widget_19,
@@ -6476,8 +5849,6 @@ QDialog#SettingsDialog QWidget#developerTab QLabel#developerPageSubtitle {
 
 /* the Elden Ring save rows of the New instance wizard (Save Isolation): their
    texts read as the other rows' descriptions */
-QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_description,
-QDialog#CreateInstanceDialog QLabel#eldenRingSaveModeCard_status,
 QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceSaveStatus,
 QDialog#CreateInstanceDialog QLabel#eldenRingCreateInstanceGameSaveProfileNote {
     color: #6E6E6E;

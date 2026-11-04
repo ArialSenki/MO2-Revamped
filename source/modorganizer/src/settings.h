@@ -462,8 +462,6 @@ public:
   void updateServers(ServerList servers);
 
   // for 2.2.1 and before, rewrites the old byte array map to the new format
-  //
-  void updateFromOldMap();
 
   // whether to use a custom command to open links
   //
@@ -482,7 +480,6 @@ private:
 
   // for pre 2.2.1 ini files
   //
-  ServerList serversFromOldMap() const;
 
   // sets the custom command in uibase, called when the settings change
   //

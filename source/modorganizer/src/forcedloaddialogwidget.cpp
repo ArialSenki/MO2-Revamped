@@ -34,14 +34,13 @@ ForcedLoadDialogWidget::ForcedLoadDialogWidget(const IPluginGame* game, QWidget*
   setMinimumHeight(42);
 
   // Fluent: browse glyphs like the executables dialog instead of "..."
-  if (FluentIcons::active()) {
     for (QPushButton* browse : {ui->processBrowseButton, ui->libraryPathBrowseButton}) {
-      browse->setText(QString());
-      browse->setIcon(FluentIcons::glyph(0xE8DA));
-      browse->setProperty("fluentKeepIcon", true);
-      browse->setAccessibleName(browse->toolTip());
-    }
+    browse->setText(QString());
+    browse->setIcon(FluentIcons::glyph(0xE8DA));
+    browse->setProperty("fluentKeepIcon", true);
+    browse->setAccessibleName(browse->toolTip());
   }
+
 }
 
 ForcedLoadDialogWidget::~ForcedLoadDialogWidget()

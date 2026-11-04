@@ -34,8 +34,7 @@ public:
   QList<MOBase::ExecutableForcedLoadSetting> values();
 
 private slots:
-  void on_addRowButton_clicked();
-  void on_deleteRowButton_clicked();
+  void removeSelectedRules();
 
 private:
   // Fluent v4: a list card of the rules and a details card of Settings rows;

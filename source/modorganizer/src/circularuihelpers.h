@@ -31,7 +31,7 @@ inline QLabel* createBadge(QWidget* parent, const QString& objectName,
 
   // Fluent v4 headings are plain text, like Windows 11 Settings
   if (const auto* app = QCoreApplication::instance();
-      app != nullptr && app->property("revampedFluent").toBool()) {
+      app != nullptr) {
     badge->hide();
     return badge;
   }

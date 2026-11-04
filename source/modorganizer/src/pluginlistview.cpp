@@ -126,22 +126,15 @@ void PluginListView::updatePluginCount()
 
 void PluginListView::onFilterChanged(const QString& filter)
 {
-  if (FluentIcons::active()) {
     // Fluent: the theme draws an accent edge around a filtered list
-    const bool active = !filter.isEmpty();
-    if (property("filterActive").toBool() != active) {
-      setProperty("filterActive", active);
-      style()->unpolish(this);
-      style()->polish(this);
-      update();
-    }
-  } else if (!filter.isEmpty()) {
-    setStyleSheet("QTreeView { border: 2px ridge #f00; }");
-    ui.counter->setStyleSheet("QLCDNumber { border: 2px ridge #f00; }");
-  } else {
-    setStyleSheet("");
-    ui.counter->setStyleSheet("");
+  const bool active = !filter.isEmpty();
+  if (property("filterActive").toBool() != active) {
+    setProperty("filterActive", active);
+    style()->unpolish(this);
+    style()->polish(this);
+    update();
   }
+
   updatePluginCount();
 }
 

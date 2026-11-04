@@ -400,13 +400,8 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
 
   if (auto* pageLayout = qobject_cast<QVBoxLayout*>(
           ui->nexusScrollAreaWidgetContents->layout())) {
-    // Fluent pages start their title at the page's own margin, like the
-    // other Settings pages; the classic theme keeps its inset
-    if (FluentIcons::active()) {
-      pageLayout->setContentsMargins(0, 0, 0, 8);
-    } else {
-      pageLayout->setContentsMargins(8, 6, 8, 8);
-    }
+    // the title starts at the page's own margin, like the other Settings pages
+    pageLayout->setContentsMargins(0, 0, 0, 8);
     pageLayout->setSpacing(10);
   }
 

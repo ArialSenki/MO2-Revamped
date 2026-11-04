@@ -4,8 +4,7 @@
 // Choices as cards, for the questions MO2 asks once (how to set up
 // categories, which theme to use): Windows 11 settings cards with a glyph, a
 // title and a line of description that act on a click, and theme tiles with a
-// small picture of each theme. Both paint themselves in the active theme's
-// colors, so they look right in the classic themes as well.
+// small picture of each theme. Both paint themselves in the active theme's colors.
 
 #include <QAbstractButton>
 #include <QColor>

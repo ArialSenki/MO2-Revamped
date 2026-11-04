@@ -139,15 +139,14 @@ bool ModListSortProxy::lessThan(const QModelIndex& left, const QModelIndex& righ
     }
   } break;
   case ModList::COL_CONFLICTFLAGS: {
-    if (FluentIcons::active()) {
-      // the Fluent Status column sorts by what its pills show
-      const quint64 leftKey  = FluentStatusDelegate::sortKey(leftMod);
-      const quint64 rightKey = FluentStatusDelegate::sortKey(rightMod);
-      if (leftKey != rightKey) {
-        lt = leftKey < rightKey;
-      }
-      break;
+    // the Fluent Status column sorts by what its pills show
+    const quint64 leftKey  = FluentStatusDelegate::sortKey(leftMod);
+    const quint64 rightKey = FluentStatusDelegate::sortKey(rightMod);
+    if (leftKey != rightKey) {
+      lt = leftKey < rightKey;
     }
+    break;
+
     std::vector<ModInfo::EConflictFlag> leftFlags  = leftMod->getConflictFlags();
     std::vector<ModInfo::EConflictFlag> rightFlags = rightMod->getConflictFlags();
     if (leftFlags.size() != rightFlags.size()) {

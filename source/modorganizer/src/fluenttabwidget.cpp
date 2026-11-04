@@ -157,9 +157,8 @@ FluentTabWidget::FluentTabWidget(QWidget* parent) : QTabWidget(parent)
   // with a Fluent theme the old page fades into the new one while the pill
   // slides; nothing moves, so icons and text stay where they will be
   connect(this, &QTabWidget::currentChanged, this, [this](int) {
-    if (qApp->property("revampedFluent").toBool()) {
-      FluentMotion::crossFade(findChild<QStackedWidget*>(), m_before);
-    }
+    FluentMotion::crossFade(findChild<QStackedWidget*>(), m_before);
+
     m_before = QPixmap();
   });
 }

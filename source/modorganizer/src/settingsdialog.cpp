@@ -160,45 +160,44 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   }
 
   // Fluent v4: pages listed on the left, like Windows 11 Settings
-  if (FluentIcons::active()) {
     QList<char16_t> glyphs = {
-        0xE713,  // General: Settings
-        0xE790,  // Theme: Color
-        0xE8FD,  // Mod List: BulletedList
-        0xE8B7,  // Paths: Folder
-        0xE774,  // Nexus: Globe
-        0xEA86,  // Plugins: Puzzle
-        0xE90F,  // Workarounds: Repair
-        0xE9D9,  // Diagnostics: Diagnostic
-    };
-    if (developerPage != nullptr) {
-      glyphs.append(0xEC7A);  // Developer: DeveloperTools
-    }
-    FluentNavigation::attach(ui->tabWidget, glyphs);
-    perf.lap("navigation");
-    // each page is titled as the rail names it, like Windows 11 Settings and
-    // the tools' own pages; the subtitle keeps saying what it holds
-    for (int i = 0; i < ui->tabWidget->count(); ++i) {
-      for (QLabel* title : ui->tabWidget->widget(i)->findChildren<QLabel*>()) {
-        if (title->objectName().endsWith(QLatin1String("PageTitle"))) {
-          title->setText(ui->tabWidget->tabText(i).remove(QLatin1Char('&')));
-          break;
-        }
+      0xE713,  // General: Settings
+      0xE790,  // Theme: Color
+      0xE8FD,  // Mod List: BulletedList
+      0xE8B7,  // Paths: Folder
+      0xE774,  // Nexus: Globe
+      0xEA86,  // Plugins: Puzzle
+      0xE90F,  // Workarounds: Repair
+      0xE9D9,  // Diagnostics: Diagnostic
+  };
+  if (developerPage != nullptr) {
+    glyphs.append(0xEC7A);  // Developer: DeveloperTools
+  }
+  FluentNavigation::attach(ui->tabWidget, glyphs);
+  perf.lap("navigation");
+  // each page is titled as the rail names it, like Windows 11 Settings and
+  // the tools' own pages; the subtitle keeps saying what it holds
+  for (int i = 0; i < ui->tabWidget->count(); ++i) {
+    for (QLabel* title : ui->tabWidget->widget(i)->findChildren<QLabel*>()) {
+      if (title->objectName().endsWith(QLatin1String("PageTitle"))) {
+        title->setText(ui->tabWidget->tabText(i).remove(QLatin1Char('&')));
+        break;
       }
     }
-    // the pages scroll at the window's edge; OK and Cancel keep their margin
-    if (QLayout* root = layout()) {
-      QMargins margins = root->contentsMargins();
-      ui->buttonBox->setContentsMargins(0, 0, std::max(16, margins.right()), 0);
-      margins.setRight(0);
-      root->setContentsMargins(margins);
-    }
-
-    // room for the navigation rail, still inside the available screen width
-    const int maxWidth = qMax(320, availableSize.width() - 48);
-    setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
-    resize(qMin(width() + 248, maxWidth), height());
   }
+  // the pages scroll at the window's edge; OK and Cancel keep their margin
+  if (QLayout* root = layout()) {
+    QMargins margins = root->contentsMargins();
+    ui->buttonBox->setContentsMargins(0, 0, std::max(16, margins.right()), 0);
+    margins.setRight(0);
+    root->setContentsMargins(margins);
+  }
+
+  // room for the navigation rail, still inside the available screen width
+  const int maxWidth = qMax(320, availableSize.width() - 48);
+  setMinimumWidth(qMin(minimumWidth() + 248, maxWidth));
+  resize(qMin(width() + 248, maxWidth), height());
+
 
   // Build less commonly used pages the first time they are opened. Plugins
   // scans installed plugins and Workarounds reads saved Steam credentials, so
@@ -319,23 +318,22 @@ void SettingsDialog::initializeTab(int index)
   FluentPerf::Timer perf("SettingsDialog page");
   m_tabs[index] = m_tabFactories[index]();
   perf.lap(qPrintable(ui->tabWidget->widget(index)->objectName()));
-  if (FluentIcons::active()) {
     FluentSettings::restyle(ui->tabWidget->widget(index));
-    FluentSettings::normalizePage(ui->tabWidget->widget(index));
-    FluentSettings::scrollAtEdge(ui->tabWidget->widget(index));
-    // the page's controls take their style sheet now: polished only when
-    // shown, the first frame drew them in the plain style and then they
-    // moved (the Paths buttons' text slid towards their icons)
-    for (QWidget* w : ui->tabWidget->widget(index)->findChildren<QWidget*>()) {
-      w->ensurePolished();
-    }
-    perf.lap("restyle");
+  FluentSettings::normalizePage(ui->tabWidget->widget(index));
+  FluentSettings::scrollAtEdge(ui->tabWidget->widget(index));
+  // the page's controls take their style sheet now: polished only when
+  // shown, the first frame drew them in the plain style and then they
+  // moved (the Paths buttons' text slid towards their icons)
+  for (QWidget* w : ui->tabWidget->widget(index)->findChildren<QWidget*>()) {
+    w->ensurePolished();
   }
+  perf.lap("restyle");
+
   const QString activeStyle = m_settings.interface().styleName().value_or("");
   configureSettingsComboPopups(
       ui->tabWidget->widget(index),
       activeStyle.compare("Light.qss", Qt::CaseInsensitive) == 0 &&
-          !FluentIcons::active());
+          !true);
 }
 
 PluginContainer* SettingsDialog::pluginContainer()

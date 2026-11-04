@@ -72,19 +72,6 @@ InstallationResult::InstallationResult(IPluginInstaller::EInstallResult result)
       m_replaced(false)
 {}
 
-template <typename T>
-static T resolveFunction(QLibrary& lib, const char* name)
-{
-  T temp = reinterpret_cast<T>(lib.resolve(name));
-  if (temp == nullptr) {
-    throw std::runtime_error(QObject::tr("invalid 7-zip32.dll: %1")
-                                 .arg(lib.errorString())
-                                 .toLatin1()
-                                 .constData());
-  }
-  return temp;
-}
-
 InstallationManager::InstallationManager() : m_ParentWidget(nullptr), m_IsRunning(false)
 {
   m_ArchiveHandler = CreateArchive();
@@ -138,13 +125,6 @@ std::optional<QString> askText(QWidget* parent, const QString& title, const QStr
                                bool password = false,
                                std::function<QString(const QString&)> problem = {})
 {
-  if (!FluentIcons::active()) {
-    bool ok             = false;
-    const QString typed = QInputDialog::getText(
-        parent, title, text.isEmpty() ? label : text,
-        password ? QLineEdit::Password : QLineEdit::Normal, value, &ok);
-    return ok ? std::optional<QString>(typed) : std::nullopt;
-  }
 
   FluentContentDialog dlg(parent, QStringLiteral("InstallTextDialog"), title, text);
   auto* caption = new QLabel(label, &dlg);

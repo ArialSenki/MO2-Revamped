@@ -402,9 +402,7 @@ QVariant QtGroupingProxy::data(const QModelIndex& index, int role) const
     if ((role != Qt::DisplayRole) && (role != Qt::EditRole)) {
       switch (role) {
       case Qt::ForegroundRole: {
-        return FluentIcons::active()
-               ? QBrush(FluentIcons::color(FluentIcons::Tone::Muted))
-               : QBrush(Qt::gray);
+        return QBrush(FluentIcons::color(FluentIcons::Tone::Muted));
       } break;
       case Qt::FontRole: {
         QFont font(m_groupMaps[row][column].value(Qt::FontRole).value<QFont>());

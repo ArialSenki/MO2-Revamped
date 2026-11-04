@@ -39,10 +39,9 @@ DataTab::DataTab(OrganizerCore& core, PluginContainer& pc, QWidget* parent,
   setStartupDiagnosticPhase("data_tab.filter.set_edit");
   m_filter.setEdit(mwui->dataTabFilter);
   // it brings its own text; the Fluent window names what's searched
-  if (FluentIcons::active()) {
     mwui->dataTabFilter->setPlaceholderText(
-        QCoreApplication::translate("FluentDashboard", "Search files"));
-  }
+      QCoreApplication::translate("FluentDashboard", "Search files"));
+
   setStartupDiagnosticPhase("data_tab.filter.set_list");
   m_filter.setList(mwui->dataTree);
   setStartupDiagnosticPhase("data_tab.filter.set_update_delay");

@@ -77,9 +77,8 @@ QueryOverwriteDialog::QueryOverwriteDialog(QWidget* parent, Backup b)
   QIcon icon = QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion);
   ui->iconLabel->setPixmap(icon.pixmap(72));
 
-  if (FluentIcons::active()) {
     buildFluentLayout();
-  }
+
 }
 
 void QueryOverwriteDialog::setModName(const QString& name)

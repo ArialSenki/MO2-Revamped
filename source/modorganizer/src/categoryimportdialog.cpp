@@ -34,37 +34,36 @@ CategoryImportDialog::CategoryImportDialog(QWidget* parent)
 
   // Fluent v4: one card of Settings rows, the list choice as radio rows and
   // the mappings as switches, instead of two group boxes side by side
-  if (FluentIcons::active()) {
     ui->strategyBox->hide();
-    ui->mappingBox->hide();
-    auto* card = new QFrame(this);
-    card->setProperty("fluentCard", true);
-    auto* rows = new QVBoxLayout(card);
-    rows->setContentsMargins(0, 10, 0, 0);
-    rows->setSpacing(0);
-    const auto heading = [card, rows](const QString& text, int top) {
-      auto* label = new QLabel(text, card);
-      label->setObjectName(QStringLiteral("fluentCardTitle"));
-      label->setContentsMargins(18, top, 18, 8);
-      rows->addWidget(label);
-    };
-    const auto radioRow = [card](QRadioButton* radio, char16_t glyph) {
-      const QString title = radio->text();
-      radio->setText(QString());
-      radio->setAccessibleName(title);
-      FluentPanels::addEditRow(card, glyph, title, radio->toolTip(), {radio});
-    };
-    heading(ui->strategyBox->title(), 0);
-    radioRow(ui->mergeOption, 0xE710);
-    radioRow(ui->replaceOption, 0xE72C);
-    heading(ui->mappingBox->title(), 14);
-    FluentPanels::addSwitchRow(card, 0xE71B, ui->assignOption->text(),
-                               ui->assignOption->toolTip(), ui->assignOption);
-    FluentPanels::addSwitchRow(card, 0xE8AB, ui->remapOption->text(),
-                               ui->remapOption->toolTip(), ui->remapOption);
-    ui->verticalLayout->insertWidget(ui->verticalLayout->indexOf(ui->buttonBox), card);
-    resize(640, sizeHint().height());
-  }
+  ui->mappingBox->hide();
+  auto* card = new QFrame(this);
+  card->setProperty("fluentCard", true);
+  auto* rows = new QVBoxLayout(card);
+  rows->setContentsMargins(0, 10, 0, 0);
+  rows->setSpacing(0);
+  const auto heading = [card, rows](const QString& text, int top) {
+    auto* label = new QLabel(text, card);
+    label->setObjectName(QStringLiteral("fluentCardTitle"));
+    label->setContentsMargins(18, top, 18, 8);
+    rows->addWidget(label);
+  };
+  const auto radioRow = [card](QRadioButton* radio, char16_t glyph) {
+    const QString title = radio->text();
+    radio->setText(QString());
+    radio->setAccessibleName(title);
+    FluentPanels::addEditRow(card, glyph, title, radio->toolTip(), {radio});
+  };
+  heading(ui->strategyBox->title(), 0);
+  radioRow(ui->mergeOption, 0xE710);
+  radioRow(ui->replaceOption, 0xE72C);
+  heading(ui->mappingBox->title(), 14);
+  FluentPanels::addSwitchRow(card, 0xE71B, ui->assignOption->text(),
+                             ui->assignOption->toolTip(), ui->assignOption);
+  FluentPanels::addSwitchRow(card, 0xE8AB, ui->remapOption->text(),
+                             ui->remapOption->toolTip(), ui->remapOption);
+  ui->verticalLayout->insertWidget(ui->verticalLayout->indexOf(ui->buttonBox), card);
+  resize(640, sizeHint().height());
+
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
           &CategoryImportDialog::accepted);
   connect(ui->buttonBox, &QDialogButtonBox::rejected, this,

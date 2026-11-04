@@ -332,7 +332,7 @@ QListWidget* attach(QTabWidget* tabs, GlyphFor glyphFor)
       nav->setCurrentRow(index);
     }
     QWidget* page = tabs->widget(index);
-    if (page != nullptr && qApp->property("revampedFluent").toBool()) {
+    if (page != nullptr) {
       // pages fill in their buttons late (Nexus info, conflicts)
       for (QAbstractButton* button : page->findChildren<QAbstractButton*>()) {
         FluentIcons::applyIfNew(button);

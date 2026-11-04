@@ -755,13 +755,12 @@ void CreateInstanceDialog::selectPage(std::size_t i)
 
   // switches a plugin added to the page (the Elden Ring save options) slide
   // like the wizard's own ones
-  if (FluentIcons::active()) {
     for (QCheckBox* box : ui->pages->currentWidget()->findChildren<QCheckBox*>()) {
-      if (box->property("fluentSwitch").toBool()) {
-        FluentSwitch::animate(box);
-      }
+    if (box->property("fluentSwitch").toBool()) {
+      FluentSwitch::animate(box);
     }
   }
+
 
   updateNavigation();
 
