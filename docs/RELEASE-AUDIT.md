@@ -13,9 +13,12 @@
   and an update from the 1.1.0-beta.2 installer, which ends with the same files
   as a fresh install. Form43Checker.py and installer_wizard/dialog.py are in the
   payload with the source's content. Not Authenticode signed.
-- Not done on this candidate: starting the installed Release copy. The windows
-  were checked on the development build of the same changes, in Dark and Light,
-  with 0 warnings or errors in the log. No game was played on these changes.
+- The installed copy started up to the instance wizard in its portable folder and,
+  with the portable marker set aside, opened the ER Test instance at revision
+  a73ad72 with 0 warnings or errors in the log: main window in 2.6 s, "..." menu,
+  About, Mod information with the Nexus page, Settings. All windows were checked on
+  the development build of the same changes, in Dark and Light. No game was played
+  on these changes.
 - Startup to the main window, on the development build: 3.73-3.93 s before these
   changes, 2.54-2.57 s after.
 
