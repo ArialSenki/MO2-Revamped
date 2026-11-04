@@ -2,9 +2,9 @@
 
 ## Pre-release candidate — November 4, 2026 (v1.1.0-beta.3)
 
-- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 379,083,264 bytes, SHA-256
-  `737EA5ABFE88B5B503CC6040D16701D2EEF06A695AA9D9A3E4DBB03F032B20E1`.
-- Built from commit a73ad72 (design/fluent-v4) with ModOrganizer.exe compiled
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 379,084,800 bytes, SHA-256
+  `580DE3953846E5E6706ABDFCEEA83B0CF808C534D1EB86ED38DDD0EDBF84E80F`.
+- Built from commit 3ac9bc7 (design/fluent-v4) with ModOrganizer.exe compiled
   from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
   on November 3 (Release).
 - Complete payload: 1,354 files; Elden Ring Isolated payload: 1,254 files.
@@ -13,10 +13,14 @@
   and an update from the 1.1.0-beta.2 installer, which ends with the same files
   as a fresh install. Form43Checker.py and installer_wizard/dialog.py are in the
   payload with the source's content. Not Authenticode signed.
-- The installed copy started up to the instance wizard in its portable folder and,
-  with the portable marker set aside, opened the ER Test instance at revision
-  a73ad72 with 0 warnings or errors in the log: main window in 2.6 s, "..." menu,
-  About, Mod information with the Nexus page, Settings. All windows were checked on
+- Setup language, on this build: portable installs in German, English and Brazilian
+  Portuguese started in that language and saved it; an update in another language
+  kept the saved one. A global install was not run, to leave the user's AppData
+  alone; it uses the same code.
+- On the build before this fix (a73ad72, which differs only in the language): the
+  installed copy, with the portable marker set aside, opened the ER Test instance
+  with 0 warnings or errors in the log: main window in 2.6 s, "..." menu, About, Mod
+  information with the Nexus page, Settings. All windows were checked on
   the development build of the same changes, in Dark and Light. No game was played
   on these changes.
 - Startup to the main window, on the development build: 3.73-3.93 s before these

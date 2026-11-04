@@ -12074,19 +12074,19 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1463"/>
-        <location filename="settings.cpp" line="1487"/>
-        <location filename="settings.cpp" line="1530"/>
+        <location filename="settings.cpp" line="1465"/>
+        <location filename="settings.cpp" line="1489"/>
+        <location filename="settings.cpp" line="1532"/>
         <source>attempt to store setting for unknown plugin &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2028"/>
+        <location filename="settings.cpp" line="2030"/>
         <source>Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2029"/>
+        <location filename="settings.cpp" line="2031"/>
         <source>Failed to start the helper application: %1</source>
         <translation type="unfinished"></translation>
     </message>
