@@ -2181,6 +2181,11 @@ class EldenRingMo2Game(BasicGame):
     # start lives about two seconds, and once seen its close restores the
     # saves without the launcher grace
     LaunchWatchInterval = 1000
+    # Steam Cloud looks at its save a second or two after the game closes: saves
+    # of a launch outside the VFS have to be back by then
+    SwapWatchInterval = 500
+    # what Steam Cloud syncs of this game, and the game's own copy of it
+    SteamCloudSaves = ("ER0000.sl2", "ER0000.sl2.bak")
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         if not super().init(organizer):
@@ -2553,13 +2558,22 @@ class EldenRingMo2Game(BasicGame):
         return self.launch_method_for(app_path, methods)[0]
 
     def _swap_route_saves_in(
-        self, session_directory: Path, manifest: dict, global_save_root: Path, route: Path
+        self,
+        session_directory: Path,
+        manifest: dict,
+        global_save_root: Path,
+        route: Path,
+        keep_steam_saves: bool = False,
     ) -> None:
         """Puts the route's saves where the game looks without the VFS: its
         account folders into the (now empty) Steam folder, and its loose files
         (GraphicsConfig.xml) in place of the Steam ones, which wait in the
         session. The manifest records each step first, so recovery after a
-        crash can take everything back."""
+        crash can take everything back.
+
+        With keep_steam_saves (a game that plays another file, like Reforged's
+        .err) Steam's own .sl2 stays visible instead of the route's: Steam Cloud
+        syncs that name when the game closes, whatever started it."""
         swap = {
             "route": str(route),
             "directories": [],
@@ -2583,6 +2597,8 @@ class EldenRingMo2Game(BasicGame):
         swap["steam_files_held"] = True
         self._write_save_quarantine_manifest(session_directory, manifest)
         if not route.is_dir():
+            if keep_steam_saves:
+                self._put_steam_saves_in_place(session_directory, manifest, global_save_root)
             swap["complete"] = True
             self._write_save_quarantine_manifest(session_directory, manifest)
             return
@@ -2595,9 +2611,21 @@ class EldenRingMo2Game(BasicGame):
                 and child.name not in {"save_profiles"}
                 and self._save_directory_contains_elden_ring_saves(child)
             ):
-                shutil.copytree(child, global_save_root / child.name)
+                shutil.copytree(
+                    child,
+                    global_save_root / child.name,
+                    ignore=(
+                        (lambda folder, names, top=str(child): [
+                            name for name in names if name in self.SteamCloudSaves
+                        ] if folder == top else [])
+                        if keep_steam_saves
+                        else None
+                    ),
+                )
                 swap["directories"].append(child.name)
             self._write_save_quarantine_manifest(session_directory, manifest)
+        if keep_steam_saves:
+            self._put_steam_saves_in_place(session_directory, manifest, global_save_root)
         swap["complete"] = True
         self._write_save_quarantine_manifest(session_directory, manifest)
         qInfo(
@@ -2605,6 +2633,44 @@ class EldenRingMo2Game(BasicGame):
             f"a launch outside the VFS: {len(swap['directories'])} account folder(s), "
             f"{len(swap['route_root_files'])} loose file(s)."
         )
+
+    def _put_steam_saves_in_place(
+        self, session_directory: Path, manifest: dict, global_save_root: Path
+    ) -> None:
+        swap = manifest["swap"]
+        placed = swap.setdefault("steam_saves_in_place", [])
+        for directory in manifest.get("directories", []):
+            name = str(directory.get("name", ""))
+            for save in self.SteamCloudSaves:
+                source = session_directory / name / save
+                if not source.is_file():
+                    continue
+                # recorded first: a cut copy is still recognised as Steam's
+                placed.append(f"{name}/{save}")
+                self._write_save_quarantine_manifest(session_directory, manifest)
+                target = global_save_root / name / save
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
+
+    def _clear_steam_saves_in_place(
+        self, session_directory: Path, swap: dict, global_save_root: Path
+    ) -> None:
+        """Takes out the copies of Steam's saves that stayed visible, when they
+        are still Steam's. One the game changed is the game's output, and goes on
+        to the route like the rest."""
+        placed = swap.get("steam_saves_in_place")
+        if not isinstance(placed, list):
+            return
+        for relative in placed:
+            copy = global_save_root / str(relative)
+            if copy.is_file() and self._file_is_held_by(copy, session_directory / str(relative)):
+                copy.unlink()
+            try:
+                # nothing else of this account: it mustn't block its folder's return
+                if copy.parent.is_dir() and not any(copy.parent.iterdir()):
+                    copy.parent.rmdir()
+            except OSError:
+                pass
 
     def _swap_route_saves_out(
         self, session_directory: Path, manifest: dict, swap: dict, global_save_root: Path
@@ -2622,6 +2688,7 @@ class EldenRingMo2Game(BasicGame):
         if not isinstance(restored, list):
             restored = []
         swap["restored_root_files"] = restored
+        self._clear_steam_saves_in_place(session_directory, swap, global_save_root)
         # a swap that stopped partway (records older than this finished theirs):
         # the game never ran, and what is here is the route's own copy, perhaps
         # cut short by the failure, so the route keeps what it has
@@ -3177,7 +3244,7 @@ class EldenRingMo2Game(BasicGame):
                 )
 
     def _hide_existing_global_save_directories(
-        self, swap_route: Path | None = None
+        self, swap_route: Path | None = None, keep_steam_saves: bool = False
     ) -> Path | None:
         """Moves the Steam account folders into a recovery session for the
         launch. With swap_route (a launch outside the VFS) the route's saves
@@ -3218,7 +3285,7 @@ class EldenRingMo2Game(BasicGame):
                 self._write_save_quarantine_manifest(session_directory, manifest)
             if swap_route is not None:
                 self._swap_route_saves_in(
-                    session_directory, manifest, global_save_root, swap_route
+                    session_directory, manifest, global_save_root, swap_route, keep_steam_saves
                 )
         except OSError:
             try:
@@ -3839,6 +3906,8 @@ class EldenRingMo2Game(BasicGame):
             return False
         if not self._save_extension_ready(app_path):
             return False
+        if not self._steam_cloud_swap_ready(app_path):
+            return False
         if self._active_save_quarantine is not None:
             starting = time.monotonic() < self._launch_pending_until
             state = self._elden_ring_process_state()
@@ -4101,7 +4170,10 @@ class EldenRingMo2Game(BasicGame):
                 return False
             try:
                 self._active_save_quarantine = self._hide_existing_global_save_directories(
-                    swap_route if swap_launch else None
+                    swap_route if swap_launch else None,
+                    # Reforged plays ER0000.err and has no use for the .sl2
+                    swap_launch
+                    and Path(app_path).name.casefold() == self.ReforgedOnlineLauncher,
                 )
             except OSError as error:
                 qCritical(f"Elden Ring MO2: save isolation could not begin: {error}")
@@ -4404,8 +4476,13 @@ class EldenRingMo2Game(BasicGame):
     ) -> None:
         state = self._elden_ring_process_state()
         seen = seen or state is True
+        interval = (
+            self.SwapWatchInterval
+            if via_launcher and session_directory is not None
+            else self.GameWatchInterval
+        )
         # seconds in a row the process list could not be read
-        unknown = unknown + self.GameWatchInterval / 1000 if state is None else 0.0
+        unknown = unknown + interval / 1000 if state is None else 0.0
         if unknown >= self.LauncherWaitLimit:
             # the saves stay hidden: the next launch, or the next MO2 start,
             # restores them once the game is known to be closed
@@ -4432,13 +4509,13 @@ class EldenRingMo2Game(BasicGame):
                     "restoring the Steam saves."
                 )
             QTimer.singleShot(
-                self.GameWatchInterval,
+                interval,
                 lambda: self._finish_when_game_closes(
                     via_launcher,
                     session_directory,
                     cleanup_armed,
                     overwrite_path,
-                    waited + self.GameWatchInterval / 1000,
+                    waited + interval / 1000,
                     seen,
                     run,
                     unknown,
@@ -6099,6 +6176,44 @@ class EldenRingMo2Game(BasicGame):
         except (OSError, struct.error):
             return None
         return matches == 1
+
+    def _steam_cloud_swap_ready(self, app_path: str) -> bool:
+        """A program started outside the VFS plays the route's ER0000.sl2 in the
+        Steam folder, and Steam Cloud can upload it as it closes. Reforged online
+        plays its own file, and Steam's stays in place."""
+        if (
+            not self._runs_outside_vfs(app_path)
+            or Path(app_path).name.casefold() == self.ReforgedOnlineLauncher
+        ):
+            return True
+        key = "steam_cloud_swap_accepted"
+        try:
+            if self._organizer.persistent(self.name(), key, False):
+                return True
+        except (AttributeError, RuntimeError):
+            pass
+        box = QMessageBox(QApplication.activeWindow())
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(_tr("Steam Cloud"))
+        box.setText(_tr("This program can send this profile's save to Steam Cloud"))
+        box.setInformativeText(
+            _tr("It starts outside MO2's virtual files, with this profile's saves in the Steam "
+                "folder. If Steam Cloud is on for this game, Steam may upload them when the game "
+                "closes, in place of your own Steam save. Your files stay on this PC.")
+        )
+        remember = QCheckBox(_tr("Don't warn again"))
+        box.setCheckBox(remember)
+        start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)
+        box.setDefaultButton(box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole))
+        box.exec()
+        if box.clickedButton() is not start:
+            return False
+        if remember.isChecked():
+            try:
+                self._organizer.setPersistent(self.name(), key, True)
+            except (AttributeError, RuntimeError) as error:
+                qWarning(f"Elden Ring MO2: could not remember the Steam Cloud choice: {error}")
+        return True
 
     def _save_extension_ready(self, app_path: str) -> bool:
         """Without its own save extension ELDEN RING Reforged uses the save of

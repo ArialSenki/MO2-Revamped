@@ -1934,6 +1934,22 @@ Reinstale o mod para alterar isso.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Steam Cloud</source>
+      <translation>Steam Cloud</translation>
+    </message>
+    <message>
+      <source>This program can send this profile&apos;s save to Steam Cloud</source>
+      <translation>Este programa pode enviar o save deste perfil para o Steam Cloud</translation>
+    </message>
+    <message>
+      <source>It starts outside MO2&apos;s virtual files, with this profile&apos;s saves in the Steam folder. If Steam Cloud is on for this game, Steam may upload them when the game closes, in place of your own Steam save. Your files stay on this PC.</source>
+      <translation>Ele inicia fora dos arquivos virtuais do MO2, com os saves deste perfil na pasta da Steam. Se o Steam Cloud estiver ativo para este jogo, a Steam pode enviá-los ao fechar o jogo, no lugar do seu save da Steam. Seus arquivos continuam neste PC.</translation>
+    </message>
+    <message>
+      <source>Don&apos;t warn again</source>
+      <translation>Não avisar novamente</translation>
+    </message>
+    <message>
       <source>Saves may mix</source>
       <translation>Os saves podem se misturar</translation>
     </message>

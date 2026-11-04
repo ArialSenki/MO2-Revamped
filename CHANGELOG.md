@@ -35,6 +35,11 @@
 
 ### Saves
 
+- Reforged online leaves Steam's ER0000.sl2 in place, so Steam Cloud can't upload
+  the online folder's copy over your Steam save when the game closes. The saves
+  also come back sooner after it closes.
+- A program set to start outside MO2's virtual files warns that Steam Cloud may
+  upload this profile's save.
 - Steam saves set aside for a launch come back when MO2 closes, if the game
   and its launchers are closed. MO2 closed right after the game used to leave
   them aside until its next start, and other MO2 installs refused to launch
