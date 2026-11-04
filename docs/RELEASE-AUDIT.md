@@ -1,5 +1,24 @@
 # Release audit
 
+## Pre-release candidate — November 4, 2026 (v1.1.0-beta.3)
+
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 379,083,264 bytes, SHA-256
+  `737EA5ABFE88B5B503CC6040D16701D2EEF06A695AA9D9A3E4DBB03F032B20E1`.
+- Built from commit a73ad72 (design/fluent-v4) with ModOrganizer.exe compiled
+  from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
+  on November 3 (Release).
+- Complete payload: 1,354 files; Elden Ring Isolated payload: 1,254 files.
+- Installer run through its backend, without administrator rights, in a test
+  folder: fresh portable install, update keeping data, uninstall keeping data,
+  and an update from the 1.1.0-beta.2 installer, which ends with the same files
+  as a fresh install. Form43Checker.py and installer_wizard/dialog.py are in the
+  payload with the source's content. Not Authenticode signed.
+- Not done on this candidate: starting the installed Release copy. The windows
+  were checked on the development build of the same changes, in Dark and Light,
+  with 0 warnings or errors in the log. No game was played on these changes.
+- Startup to the main window, on the development build: 3.73-3.93 s before these
+  changes, 2.54-2.57 s after.
+
 ## Pre-release — November 4, 2026 (v1.1.0-beta.2)
 
 - Installer: `MO2-Revamped-Setup-1.1.0-beta.2.exe`, 379,291,136 bytes, SHA-256
