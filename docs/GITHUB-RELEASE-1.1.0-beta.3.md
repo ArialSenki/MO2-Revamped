@@ -21,6 +21,8 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
   Refined, build files, unused icons and code, and stale translations are gone.
   Light and Dark are the only themes, and changing between them needs no restart.
   Links to the old project now appear only in the "..." menu.
+- **Small windows**: questions, warnings, prompts and the setup's own questions now
+  have the same Fluent look as the rest of the program.
 - **Fixed**: a new installation starts in the language picked in its setup, Mod
   information's Advanced conflicts list shows the file names, and the installer
   wizard's updated look and the Form 43 checker's translated name now ship.

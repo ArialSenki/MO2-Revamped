@@ -2,9 +2,9 @@
 
 ## Pre-release candidate — November 4, 2026 (v1.1.0-beta.3)
 
-- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,906,624 bytes, SHA-256
-  `C352D2FA5451FE2AA73DD41BCC968D1D82271FB48FFC4C2AA682013806F4BEEE`.
-- Built from commit f2274be (design/fluent-v4) with ModOrganizer.exe compiled
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,911,744 bytes, SHA-256
+  `94C745FB56CA0467C57601F4CDCE354F665412F1536D6CB6999E91147B4745B8`.
+- Built from commit 0c77e73 (design/fluent-v4) with ModOrganizer.exe compiled
   from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
   on November 3 (Release).
 - Complete payload: 1,318 files; Elden Ring Isolated payload: 1,218 files.
@@ -24,12 +24,18 @@
   Portuguese started in that language and saved it; an update in another language
   kept the saved one. A standard install with no saved language started in the
   language of its setup and saved it.
-- On this installer, in the real window: Start menu and desktop shortcuts, which leave
-  another installation's shortcut alone and are removed on uninstall, and opening MO2 at
-  the end.
+- On the build before the small windows changed (f2274be), in the real window: Start menu
+  and desktop shortcuts, which leave another installation's shortcut alone and are removed
+  on uninstall, and opening MO2 at the end.
+- On this installer, in the real window: the new question, answered No, leaves no folder.
+- Small windows, on the development build, Dark on ER Test and Light on NR Test: message
+  boxes, task dialogs, "remember my choice", text and number prompts, progress, and every
+  prompt of the mod list and tools opened and cancelled. Answers checked through a
+  temporary test build: option cards, band buttons, Yes, No, details and check boxes.
+  Accepting these prompts for real was not run, except Merge earlier.
 - On this installer, through the backend: standard install, update, uninstall; beta.2 to beta.3, which removes
   the classic themes, and restore, which brings them back; isolated copy; a foreign
-  folder refused. The installed copy opened ER Test at f2274be with 0 warnings or errors.
+  folder refused. The installed copy opened ER Test at 0c77e73 with 0 warnings or errors.
 - Windows after the cleanup, on the development build, Dark and Light: main window, About,
   Mod information, Settings, Profiles, Executables, Overwrite, instances, new instance, CSV,
   categories, forced libraries, 0 warnings or errors.
