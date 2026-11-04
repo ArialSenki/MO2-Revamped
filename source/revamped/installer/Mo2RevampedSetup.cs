@@ -514,6 +514,13 @@ namespace Mo2RevampedSetup
             {
                 states.Add(new InstallFileState { Path = "portable.txt", ExistedBefore = false, InstalledSha256 = HashBytes(new byte[0]), OriginalSha256 = null, IsPortableMarker = true });
             }
+            // MO2 reads it at its first start (an isolated copy has its own settings file below)
+            bool leavesSetupLanguage = request.Mode == SetupMode.Fresh || request.Mode == SetupMode.Migrate;
+            byte[] setupLanguage = Encoding.ASCII.GetBytes(InstallerText.Language == "en" ? "en_US" : InstallerText.Language.Replace('-', '_'));
+            if (leavesSetupLanguage)
+            {
+                states.Add(new InstallFileState { Path = "setup-language.txt", ExistedBefore = false, InstalledSha256 = HashBytes(setupLanguage), OriginalSha256 = null });
+            }
             if (request.Mode == SetupMode.EldenRingPortable)
             {
                 states.Add(new InstallFileState
@@ -608,6 +615,8 @@ namespace Mo2RevampedSetup
                     string marker = Path.Combine(target, "portable.txt");
                     File.WriteAllBytes(marker, new byte[0]);
                 }
+                if (leavesSetupLanguage)
+                    File.WriteAllBytes(Path.Combine(target, "setup-language.txt"), setupLanguage);
                 if (request.Mode == SetupMode.EldenRingPortable)
                 {
                     File.WriteAllBytes(Path.Combine(target, "eldenring-only.portable"), new byte[0]);

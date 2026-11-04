@@ -29,6 +29,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <expanderwidget.h>
 #include <iplugingame.h>
 #include <utility.h>
+#include <QRegularExpression>
+#include <QFile>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -2574,7 +2576,24 @@ void GlobalSettings::setHideCreateInstanceIntro(bool b)
 
 QString GlobalSettings::language()
 {
-  return settings().value("Language", QString()).toString();
+  const QString language = settings().value("Language", QString()).toString();
+  if (!language.isEmpty()) {
+    return language;
+  }
+
+  // a new installation leaves the language picked in its setup: the first start
+  // takes it as the choice, so it also outlasts the file
+  QFile file(QDir(QCoreApplication::applicationDirPath()).filePath("setup-language.txt"));
+  if (!file.open(QIODevice::ReadOnly)) {
+    return {};
+  }
+  const QString fromSetup = QString::fromLatin1(file.read(16)).trimmed();
+  static const QRegularExpression valid("^[a-z]{2}(_[A-Z]{2})?$");
+  if (!valid.match(fromSetup).hasMatch()) {
+    return {};
+  }
+  setLanguage(fromSetup);
+  return fromSetup;
 }
 
 void GlobalSettings::setLanguage(const QString& language)

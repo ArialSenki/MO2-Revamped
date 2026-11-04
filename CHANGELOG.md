@@ -17,6 +17,8 @@
 
 ### Fixed
 
+- A new installation starts in the language picked in its setup, unless MO2
+  Revamped already has a language saved. It used to follow Windows.
 - Mod information's Advanced conflicts list gives its width to the file names,
   which were cut down to their last few letters.
 - The installer wizard's updated look and the Form 43 checker's translated name

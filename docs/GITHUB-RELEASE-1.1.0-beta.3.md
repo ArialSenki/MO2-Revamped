@@ -20,9 +20,9 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
 - **Less left over from the old program**: its old themes and build files, unused
   icons and code, and stale translations are gone. Links to the old project now
   appear only in the "..." menu.
-- **Fixed**: Mod information's Advanced conflicts list shows the file names, the
-  installer wizard's updated look and the Form 43 checker's translated name now
-  ship.
+- **Fixed**: a new installation starts in the language picked in its setup, Mod
+  information's Advanced conflicts list shows the file names, and the installer
+  wizard's updated look and the Form 43 checker's translated name now ship.
 
 The full list is in the [changelog](https://github.com/ArialSenki/MO2-Revamped/blob/v1.1.0-beta.3/CHANGELOG.md).
 
