@@ -45,7 +45,14 @@ private:
   bool m_requestStarted;
   bool m_loading;
 
+  // the browser holds a page made since the last clear(), see ensureBrowserPage()
+  bool m_browserPageReady;
+
+  // the tab has shown a page at least once in this dialog
+  bool m_browserPageUsed;
+
   void cleanup();
+  void ensureBrowserPage();
   void updateVersionColor();
   void updateWebpage();
   void updateActions();

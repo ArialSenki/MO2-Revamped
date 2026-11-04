@@ -347,9 +347,12 @@ void EditExecutablesDialog::loadForcedLibraries()
 {
   const auto* p = m_organizerCore.currentProfile();
 
+  // the same answer for every executable, and the game plugin may scan for it
+  const auto gameLoads = p->gameForcedLoads();
+
   for (const auto& e : m_executablesList) {
     m_forcedLibraries.set(e.title(), p->forcedLibrariesEnabled(e.title()),
-                          p->determineForcedLibraries(e.title()));
+                          p->determineForcedLibraries(e.title(), gameLoads));
   }
 }
 
@@ -452,6 +455,9 @@ bool EditExecutablesDialog::commitChanges()
     profile->removeForcedLibraries(e.title());
   }
 
+  // the game plugin is asked once, if anything is stored
+  std::optional<QList<MOBase::ExecutableForcedLoadSetting>> gameLoads;
+
   // set the new custom overwrites and forced libraries
   for (const auto& e : newExecutables) {
     if (auto modName = m_customOverwrites.find(e.title())) {
@@ -465,7 +471,10 @@ bool EditExecutablesDialog::commitChanges()
         // also with no libraries: a switch turned off stays off
         profile->setForcedLibrariesEnabled(e.title(), libraryList->enabled);
         if (!libraryList->value.empty()) {
-          profile->storeForcedLibraries(e.title(), libraryList->value);
+          if (!gameLoads) {
+            gameLoads = profile->gameForcedLoads();
+          }
+          profile->storeForcedLibraries(e.title(), libraryList->value, *gameLoads);
         }
       }
     }

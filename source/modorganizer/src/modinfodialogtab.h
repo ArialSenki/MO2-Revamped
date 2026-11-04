@@ -132,6 +132,10 @@ public:
   //
   virtual void firstActivation();
 
+  // called every time this tab is selected, after firstActivation()
+  //
+  virtual void selected();
+
   // called when closing the dialog, can return false to stop the dialog from
   // closing
   //

@@ -124,6 +124,7 @@ public:
 
   void update() override;
   void clear() override;
+  void selected() override;
   void saveState(Settings& s) override;
   void restoreState(const Settings& s) override;
   bool canHandleUnmanaged() const override;
@@ -155,6 +156,11 @@ private:
 
   GeneralConflictsTab m_general;
   AdvancedConflictsTab m_advanced;
+
+  // the Advanced list has not been filled for the current files yet
+  bool m_advancedStale = false;
+
+  void updateAdvancedIfShown();
 
   Actions createMenuActions(QTreeView* tree);
   std::vector<QAction*> createGotoActions(const ConflictItem* item);

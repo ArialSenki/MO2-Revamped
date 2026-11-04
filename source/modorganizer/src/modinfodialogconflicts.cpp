@@ -81,19 +81,48 @@ ConflictsTab::ConflictsTab(ModInfoDialogTabContext cx)
   connect(&m_advanced, &AdvancedConflictsTab::modOpen, [&](const QString& name) {
     emitModOpen(name);
   });
+
+  connect(ui->tabConflictsTabs, &QTabWidget::currentChanged, this, [this] {
+    updateAdvancedIfShown();
+  });
 }
 
 void ConflictsTab::update()
 {
   setHasData(m_general.update());
-  m_advanced.update();
+
+  // it lists every file of the mod: filled when it comes on screen
+  m_advancedStale = true;
+  updateAdvancedIfShown();
 }
 
 void ConflictsTab::clear()
 {
   m_general.clear();
   m_advanced.clear();
+  m_advancedStale = false;
   setHasData(false);
+}
+
+void ConflictsTab::selected()
+{
+  updateAdvancedIfShown();
+}
+
+void ConflictsTab::updateAdvancedIfShown()
+{
+  if (!m_advancedStale) {
+    return;
+  }
+
+  const QWidget* page    = ui->tabWidget->currentWidget();
+  const QWidget* subPage = ui->tabConflictsTabs->currentWidget();
+
+  if (page != nullptr && subPage != nullptr && page->isAncestorOf(subPage) &&
+      subPage->isAncestorOf(ui->conflictsAdvancedList)) {
+    m_advancedStale = false;
+    m_advanced.update();
+  }
 }
 
 void ConflictsTab::saveState(Settings& s)

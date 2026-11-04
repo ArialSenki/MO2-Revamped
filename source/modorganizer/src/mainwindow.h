@@ -221,6 +221,7 @@ private:
     Running
   };
 
+  static bool usesFluentMica();
   void setupFluentLayout();
   void updateMoreActionsMenu();
   void setRunState(RunState state);

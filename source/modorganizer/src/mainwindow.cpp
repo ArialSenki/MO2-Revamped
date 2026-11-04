@@ -1344,6 +1344,12 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   // above
   MOShared::SetThisThreadName("main");
 
+  // the theme styles the window's surfaces by this property; set before any of
+  // them is polished, MOApplication doesn't have to polish them all again
+  if (usesFluentMica()) {
+    setProperty("fluentMica", true);
+  }
+
   setStartupDiagnosticPhase("mainwindow.setup_ui");
   ui->setupUi(this);
   LCDNumber::useFrames(this);
@@ -2828,7 +2834,11 @@ void MainWindow::showEvent(QShowEvent* event)
 
     m_OrganizerCore.settings().widgets().restoreIndex(ui->groupCombo);
 
-    m_OrganizerCore.settings().nexus().registerAsNXMHandler(false);
+    // starts a helper program; nothing here waits for it, so not while the
+    // window is coming up
+    QTimer::singleShot(250, this, [this] {
+      m_OrganizerCore.settings().nexus().registerAsNXMHandler(false);
+    });
     m_WasVisible = true;
     updateProblemsButton();
 

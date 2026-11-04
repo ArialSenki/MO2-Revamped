@@ -105,6 +105,13 @@ void repolish(QWidget* w)
 
 }  // namespace
 
+bool MainWindow::usesFluentMica()
+{
+  return FluentIcons::active() &&
+         QOperatingSystemVersion::current() >=
+             QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621);
+}
+
 void MainWindow::setupFluentLayout()
 {
   FluentMotion::setEnabled(m_OrganizerCore.settings().interface().animationsEnabled());
@@ -131,8 +138,7 @@ void MainWindow::setupFluentLayout()
   // Mica needs a translucent window surface, which Qt only honors before the
   // native window exists. MOApplication turns the backdrop on and off with
   // the theme.
-  if (QOperatingSystemVersion::current() >=
-          QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621)) {
+  if (usesFluentMica()) {
     setAttribute(Qt::WA_TranslucentBackground);
   }
 

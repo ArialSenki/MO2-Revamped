@@ -343,8 +343,19 @@ public:
   void setForcedLibrariesEnabled(const QString& executable, bool enabled);
   QList<MOBase::ExecutableForcedLoadSetting>
   determineForcedLibraries(const QString& executable) const;
+  QList<MOBase::ExecutableForcedLoadSetting>
+  determineForcedLibraries(
+      const QString& executable,
+      const QList<MOBase::ExecutableForcedLoadSetting>& forcedLoads) const;
   void storeForcedLibraries(const QString& executable,
                             const QList<MOBase::ExecutableForcedLoadSetting>& values);
+  void storeForcedLibraries(const QString& executable,
+                            const QList<MOBase::ExecutableForcedLoadSetting>& values,
+                            const QList<MOBase::ExecutableForcedLoadSetting>& defaults);
+
+  // what the game plugin wants loaded; it can be slow to answer, so a loop over
+  // the executables asks once and uses the overloads above
+  QList<MOBase::ExecutableForcedLoadSetting> gameForcedLoads() const;
   void removeForcedLibraries(const QString& executable);
 
   void debugDump() const;

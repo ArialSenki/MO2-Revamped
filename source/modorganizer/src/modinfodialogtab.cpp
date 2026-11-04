@@ -15,6 +15,8 @@ void ModInfoDialogTab::activated()
     m_firstActivation = false;
     firstActivation();
   }
+
+  selected();
 }
 
 void ModInfoDialogTab::resetFirstActivation()
@@ -34,6 +36,11 @@ bool ModInfoDialogTab::feedFile(const QString&, const QString&)
 }
 
 void ModInfoDialogTab::firstActivation()
+{
+  // no-op
+}
+
+void ModInfoDialogTab::selected()
 {
   // no-op
 }

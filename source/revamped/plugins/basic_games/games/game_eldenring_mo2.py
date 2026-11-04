@@ -2235,6 +2235,7 @@ class EldenRingMo2Game(BasicGame):
         self._save_extension_scan: tuple[str, bool | None] = ("", None)
         self._online_programs_selector = None
         self._online_program_locked = False
+        self._online_programs_sync_queued = False
         self._last_launch_time = 0.0
         self._mod_turned_on_for_launch: str | None = None
 
@@ -3132,15 +3133,17 @@ class EldenRingMo2Game(BasicGame):
                 self._recovering_earlier_session = False
         return True
 
-    def _launcher_running(self) -> bool:
-        return self._open_launcher() is not None
+    def _launcher_running(self, processes: list[tuple[int, str]] | None = None) -> bool:
+        return self._open_launcher(processes) is not None
 
-    def _open_launcher(self) -> str | None:
+    def _open_launcher(self, processes: list[tuple[int, str]] | None = None) -> str | None:
         """The executable name of a launcher of this game that is open. A launcher
         still open may yet start the game (an update prompt, a Steam sign-in, a
         slow first start). None too when the process list can't be read: the
-        watchers then rely on the game's own state and their time limit."""
-        processes = _running_processes()
+        watchers then rely on the game's own state and their time limit.
+        A watcher's tick passes the list it has read; without one it is read here."""
+        if processes is None:
+            processes = _running_processes()
         if processes is None:
             return None
         game_directory = None
@@ -3163,9 +3166,16 @@ class EldenRingMo2Game(BasicGame):
         return None
 
     @classmethod
-    def _elden_ring_process_state(cls) -> bool | None:
-        # this game's process: eldenring.exe or nightreign.exe
-        names = _running_process_names()
+    def _elden_ring_process_state(
+        cls, processes: list[tuple[int, str]] | None = None
+    ) -> bool | None:
+        # this game's process: eldenring.exe or nightreign.exe. A watcher's tick
+        # passes the list it has read; without one it is read here.
+        names = (
+            {name for _pid, name in processes}
+            if processes is not None
+            else _running_process_names()
+        )
         if names is not None:
             return cls.GameProcess in names
         try:
@@ -3321,13 +3331,14 @@ class EldenRingMo2Game(BasicGame):
         if self._active_save_quarantine != session_directory:
             self._launch_pending_until = 0.0
             return
-        state = self._elden_ring_process_state()
+        processes = _running_processes()
+        state = self._elden_ring_process_state(processes)
         if state is True:
             # the game is up: the finish watcher knows it was seen
             self._game_seen_run = self._game_run
             self._launch_pending_until = 0.0
             return
-        if state is False and (remaining > 0 or self._launcher_running()):
+        if state is False and (remaining > 0 or self._launcher_running(processes)):
             if remaining <= 0:
                 # keep new launches waiting while the launcher is still open
                 self._launch_pending_until = time.monotonic() + self.LaunchWatchInterval / 1000 + 1
@@ -4474,7 +4485,9 @@ class EldenRingMo2Game(BasicGame):
         run: int = 0,
         unknown: float = 0.0,
     ) -> None:
-        state = self._elden_ring_process_state()
+        # one reading per tick for the game and its launchers
+        processes = _running_processes()
+        state = self._elden_ring_process_state(processes)
         seen = seen or state is True
         interval = (
             self.SwapWatchInterval
@@ -4497,11 +4510,11 @@ class EldenRingMo2Game(BasicGame):
             not via_launcher
             or (
                 (seen or waited >= self.LauncherStartGrace)
-                and not self._launcher_running()
+                and not self._launcher_running(processes)
             )
         )
         if via_launcher:
-            self._update_launcher_notice(session_directory, state, seen)
+            self._update_launcher_notice(session_directory, state, seen, processes)
         if not game_closed:
             if waited == 0:
                 qInfo(
@@ -4567,14 +4580,18 @@ class EldenRingMo2Game(BasicGame):
                 self._clear_overwrite_contents(overwrite_path)
 
     def _update_launcher_notice(
-        self, session_directory: Path | None, state: bool | None, seen: bool
+        self,
+        session_directory: Path | None,
+        state: bool | None,
+        seen: bool,
+        processes: list[tuple[int, str]] | None = None,
     ) -> None:
         """Says so once when the game has closed and its launcher stays open: the
         saves wait for the launcher, and the user may not know it is there."""
         # a watch of an older launch, or one with no saves hidden
         if session_directory is None or session_directory != self._active_save_quarantine:
             return
-        launcher = self._open_launcher() if state is False and seen else None
+        launcher = self._open_launcher(processes) if state is False and seen else None
         if launcher is None:
             self._launcher_open_since = None
             self._close_launcher_notice()
@@ -5670,12 +5687,14 @@ class EldenRingMo2Game(BasicGame):
             )
         return executables
 
-    def _inactive_reforged_online_programs(self) -> set[str]:
+    def _inactive_reforged_online_programs(
+        self, executables: list[mobase.ExecutableInfo]
+    ) -> set[str]:
         """The online programs whose Reforged mod is off in this profile."""
         inactive = set()
         try:
             mod_list = self._organizer.modList()
-            for executable in self._reforged_online_executables():
+            for executable in executables:
                 mod_name = Path(executable.binary().absoluteFilePath()).parents[3].name
                 if not mod_list.state(mod_name) & mobase.ModState.ACTIVE:
                     inactive.add(executable.title())
@@ -5691,7 +5710,13 @@ class EldenRingMo2Game(BasicGame):
         self._online_programs_tooltip = selector.toolTip()
         self._online_program_lock = _ProgramListLock(selector)
         selector.installEventFilter(self._online_program_lock)
-        sync = lambda *_args: QTimer.singleShot(0, self._sync_reforged_online_programs)
+
+        def sync(*_args) -> None:
+            # several changes in a row need one look at the list
+            if not self._online_programs_sync_queued:
+                self._online_programs_sync_queued = True
+                QTimer.singleShot(0, self._sync_reforged_online_programs)
+
         selector.model().rowsInserted.connect(sync)
         # the wheel and the arrows can reach a row hidden from the popup
         selector.currentIndexChanged.connect(lambda _row: sync())
@@ -5702,12 +5727,16 @@ class EldenRingMo2Game(BasicGame):
     def _sync_reforged_online_programs(self) -> None:
         """A Reforged mod installed as the online version decides the program:
         while it is on, the list stays on its launcher."""
+        self._online_programs_sync_queued = False
         selector = self._online_programs_selector
         if selector is None or not self.isActive():
             return
-        hidden = self._inactive_reforged_online_programs()
+        # searches the mods folder: once per look, and anew each time, so a
+        # mod just installed is seen
+        executables = self._reforged_online_executables()
+        hidden = self._inactive_reforged_online_programs(executables)
         # the program of a Reforged mod that was removed stays saved: not offered
-        offered = {executable.title() for executable in self._reforged_online_executables()}
+        offered = {executable.title() for executable in executables}
         for row in range(selector.count()):
             text = selector.itemText(row)
             if text.startswith("ELDEN RING Reforged (online)") and text not in offered:
@@ -5717,7 +5746,7 @@ class EldenRingMo2Game(BasicGame):
             view.setRowHidden(row, selector.itemText(row) in hidden)
         online = [
             executable.title()
-            for executable in self._reforged_online_executables()
+            for executable in executables
             if executable.title() not in hidden
         ]
         row = selector.findText(online[0]) if online else -1

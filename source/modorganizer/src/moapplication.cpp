@@ -905,7 +905,11 @@ int MOApplication::run(MOMultiProcess& multiProcess)
 
   // styling
   setStartupDiagnosticPhase("application.run.style");
-  if (!setStyleFile(m_settings->interface().styleName().value_or(""))) {
+  // setup() has normally applied this theme already; no window can be missing
+  // it, the style sheet is application-wide
+  const QString runStyle = m_settings->interface().styleName().value_or("");
+  const bool styleApplied = !styleSheet().isEmpty() && m_appliedStyleFile == runStyle;
+  if (!styleApplied && !setStyleFile(runStyle)) {
     // disable invalid stylesheet
     m_settings->interface().setStyleName("");
   }
@@ -962,6 +966,10 @@ int MOApplication::run(MOMultiProcess& multiProcess)
     log::debug("displaying main window");
     setStartupDiagnosticPhase("application.run.main_window.show");
     installItemViewSelectionHighlightFilter(&mainWindow);
+    // the backdrop is there for the first frame: the window's surfaces are
+    // already transparent, and dialogs can open from its first show
+    applyNativeTitleBarTheme(
+        &mainWindow, m_settings->interface().styleName().value_or(QString()));
     mainWindow.show();
     mainWindow.activateWindow();
     applyNativeTitleBarTheme(
@@ -1384,6 +1392,7 @@ bool MOApplication::setStyleFile(const QString& styleName)
     applyPopupEffects(false);
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
+  m_appliedStyleFile = styleName;
   return true;
 }
 

@@ -34,7 +34,8 @@ public:
 }  // namespace
 
 NexusTab::NexusTab(ModInfoDialogTabContext cx)
-    : ModInfoDialogTab(std::move(cx)), m_requestStarted(false), m_loading(false)
+    : ModInfoDialogTab(std::move(cx)), m_requestStarted(false), m_loading(false),
+      m_browserPageReady(false), m_browserPageUsed(false)
 {
   ui->modID->setValidator(
       new ModIDValidator(0, std::numeric_limits<int>::max(), ui->modID));
@@ -92,6 +93,27 @@ void NexusTab::cleanup()
   }
 }
 
+// a web page is costly to create, and most visits to a mod never open this tab:
+// it is created when something is about to be shown in it. Once the tab has
+// been used, each mod gets a fresh one in update(), so the last mod's
+// description is never left behind.
+void NexusTab::ensureBrowserPage()
+{
+  if (m_browserPageReady) {
+    return;
+  }
+
+  auto* page = new NexusTabWebpage(ui->browser);
+  ui->browser->setPage(page);
+
+  connect(page, &NexusTabWebpage::linkClicked, [&](const QUrl& url) {
+    shell::Open(url);
+  });
+
+  m_browserPageReady = true;
+  m_browserPageUsed  = true;
+}
+
 void NexusTab::clear()
 {
   // the new mod is already set: nothing here may be taken for an edit of it
@@ -101,7 +123,7 @@ void NexusTab::clear()
   ui->sourceGame->clear();
   ui->version->clear();
   ui->category->clear();
-  ui->browser->setPage(new NexusTabWebpage(ui->browser));
+  m_browserPageReady = false;
   ui->hasCustomURL->setChecked(false);
   ui->customURL->clear();
   setHasData(false);
@@ -138,12 +160,9 @@ void NexusTab::update()
 
   ui->category->setText(QString("%1").arg(mod().getNexusCategory()));
 
-  auto* page = new NexusTabWebpage(ui->browser);
-  ui->browser->setPage(page);
-
-  connect(page, &NexusTabWebpage::linkClicked, [&](const QUrl& url) {
-    shell::Open(url);
-  });
+  if (m_browserPageUsed) {
+    ensureBrowserPage();
+  }
 
   updateActions();
 
@@ -152,6 +171,7 @@ void NexusTab::update()
 
 void NexusTab::firstActivation()
 {
+  ensureBrowserPage();
   updateWebpage();
 }
 
@@ -261,6 +281,7 @@ bool NexusTab::tryRefreshData(int modID)
 {
   if (isValidModID(modID) && !m_requestStarted) {
     if (mod().updateNXMInfo()) {
+      ensureBrowserPage();
       ui->browser->setHtml("");
       return true;
     }
@@ -401,6 +422,8 @@ void NexusTab::onModChanged()
   } else {
     descriptionAsHTML = descriptionAsHTML.arg(BBCode::convertToHTML(nexusDescription));
   }
+
+  ensureBrowserPage();
 
   if (FluentIcons::active()) {
     descriptionAsHTML = fluentDescriptionStyle(descriptionAsHTML);

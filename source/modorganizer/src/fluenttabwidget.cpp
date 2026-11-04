@@ -4,6 +4,8 @@
 #include <QApplication>
 #include <QPainter>
 #include <QEvent>
+#include <QKeyEvent>
+#include <QMouseEvent>
 #include <QPainterPath>
 #include <QStackedWidget>
 #include <QVariantAnimation>
@@ -113,7 +115,7 @@ public:
 protected:
   bool eventFilter(QObject*, QEvent* e) override
   {
-    if (e->type() == QEvent::MouseButtonPress || e->type() == QEvent::KeyPress) {
+    if (canChangeTab(e)) {
       if (auto* pages = m_tabs->findChild<QStackedWidget*>(); pages && pages->isVisible()) {
         *m_target = pages->grab();
       }
@@ -124,6 +126,26 @@ protected:
 private:
   QTabWidget* m_tabs;
   QPixmap* m_target;
+
+  bool canChangeTab(QEvent* e) const
+  {
+    if (e->type() == QEvent::MouseButtonPress) {
+      // only the left button selects, and the tab under it may be the current one
+      const auto* mouse = static_cast<QMouseEvent*>(e);
+      const int tab     = m_tabs->tabBar()->tabAt(mouse->position().toPoint());
+      return mouse->button() == Qt::LeftButton && tab >= 0 &&
+             tab != m_tabs->currentIndex();
+    }
+
+    if (e->type() == QEvent::KeyPress) {
+      // the arrows on the bar, and the tab widget's Ctrl shortcuts
+      const auto* key = static_cast<QKeyEvent*>(e);
+      return key->key() == Qt::Key_Left || key->key() == Qt::Key_Right ||
+             key->modifiers().testFlag(Qt::ControlModifier);
+    }
+
+    return false;
+  }
 };
 }  // namespace
 

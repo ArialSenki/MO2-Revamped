@@ -83,6 +83,7 @@ private:
   QFileSystemWatcher m_styleWatcher;
   QString m_defaultStyle;
   QString m_activeBaseStyle;
+  QString m_appliedStyleFile;
   std::unique_ptr<env::ModuleNotification> m_modules;
 
   std::unique_ptr<Instance> m_instance;
