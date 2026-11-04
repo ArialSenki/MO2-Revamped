@@ -2,9 +2,9 @@
 
 ## Pre-release candidate — November 4, 2026 (v1.1.0-beta.3)
 
-- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,908,160 bytes, SHA-256
-  `95CAC9F8E8468ED486CF5921B52E73C5212957CACC9D1224EF15401A938E22F2`.
-- Built from commit 6c1e203 (design/fluent-v4) with ModOrganizer.exe compiled
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,906,624 bytes, SHA-256
+  `C352D2FA5451FE2AA73DD41BCC968D1D82271FB48FFC4C2AA682013806F4BEEE`.
+- Built from commit f2274be (design/fluent-v4) with ModOrganizer.exe compiled
   from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
   on November 3 (Release).
 - Complete payload: 1,318 files; Elden Ring Isolated payload: 1,218 files.
@@ -18,19 +18,29 @@
   beta.2, back to its files; isolated Elden Ring copy; copy data from another
   installation; reinstall over kept data. It refused foreign folders and MO2 running
   from the target, changing nothing. One standard install went through the real window.
-  Not run: real shortcuts, opening MO2 at the end, erasing MO2 Revamped's AppData, and
-  installs elevated or on another Windows account.
+  Not run: erasing MO2 Revamped's AppData, which would remove real instances, and
+  installs on another Windows account.
 - Setup language, on this build: portable installs in German, English and Brazilian
   Portuguese started in that language and saved it; an update in another language
-  kept the saved one. A global install was not run, to leave the user's AppData
-  alone; it uses the same code.
-- On this installer: standard install, update, uninstall; beta.2 to beta.3, which removes
+  kept the saved one. A standard install with no saved language started in the
+  language of its setup and saved it.
+- On this installer, in the real window: Start menu and desktop shortcuts, which leave
+  another installation's shortcut alone and are removed on uninstall, and opening MO2 at
+  the end.
+- On this installer, through the backend: standard install, update, uninstall; beta.2 to beta.3, which removes
   the classic themes, and restore, which brings them back; isolated copy; a foreign
-  folder refused. The installed copy opened ER Test at 6c1e203 with 0 warnings or errors.
+  folder refused. The installed copy opened ER Test at f2274be with 0 warnings or errors.
 - Windows after the cleanup, on the development build, Dark and Light: main window, About,
   Mod information, Settings, Profiles, Executables, Overwrite, instances, new instance, CSV,
-  categories, forced libraries, 0 warnings or errors. Transfer saves was not opened: its
-  button is hidden on Elden Ring and Nightreign.
+  categories, forced libraries, 0 warnings or errors.
+- On the development build, on a test Skyrim folder without the game: Transfer saves opens
+  and looks right, with no real saves to list, so copying and moving were not run. Mod
+  already installed: its dialog opens and Merge adds the files. Forced libraries: add and
+  remove a rule. Categories opens.
+- On the build before the last cleanup (6c1e203): portable and standard install, copy data,
+  reinstall over kept data and the refusals, again, all as expected.
+- Elden Ring and Nightreign could not be started: Steam was on an account without their
+  license and refused them (`AppError_5 FamilySharing`), also outside MO2.
 - On an earlier build (a73ad72): the installed copy, with the portable marker set aside, opened the ER Test instance
   with 0 warnings or errors in the log: main window in 2.6 s, "..." menu, About, Mod
   information with the Nexus page, Settings. All windows were checked on
