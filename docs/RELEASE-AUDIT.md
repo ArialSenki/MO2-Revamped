@@ -1,5 +1,29 @@
 # Release audit
 
+## Pre-release — November 4, 2026 (v1.1.0-beta.2)
+
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.2.exe`, 379,291,136 bytes, SHA-256
+  `46565A591231AEFDEAE3A113B4D2DA671DF589DCE5A62AB9688D1DBB7390ACA9`.
+- Built from commit 8e0e1fc (design/fluent-v4) with ModOrganizer.exe compiled
+  from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
+  on November 3 (Release).
+- Complete payload: 1,354 files; Elden Ring Isolated payload: 1,254 files.
+  Elden Ring game plugin 0.5.0-alpha.84, native bridge 0.5.0-alpha.38.
+- Installer run through its backend, without administrator rights, in a test
+  folder: fresh portable install, update keeping data, uninstall keeping data.
+  The installed copy was started up to the instance wizard on the previous build
+  of this candidate only. Not Authenticode signed.
+- Played on the development build: Elden Ring with Convergence and with Reforged
+  online, and Nightreign. Logs and crash dumps confirm the mods loaded, saves went
+  to their routes, and Native DLL Profile switches take effect.
+- Steam Cloud with Reforged online, Cloud on: the upload of the route's
+  `ER0000.sl2` was reproduced, then gone with this fix.
+- Save swap code tested on temp folders, with a failure forced at each step.
+- Known at release: faults at game exit with Convergence (`ErdTools.dll`, and a
+  null read in the game's code) and Reforged online (game, `me3.exe`), with saves
+  written correctly. The launcher-open notices were not seen running. Other games
+  were not played; Skyrim was only checked on a folder without the game.
+
 ## Pre-release — October 27, 2026 (v1.1.0-beta.1)
 
 - Installer: `MO2-Revamped-Setup-1.1.0-beta.1.exe`, 378 MB, SHA-256
