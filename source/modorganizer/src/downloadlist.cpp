@@ -206,7 +206,10 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
         return MOBase::RevampedTheme::successText();
       else if (state == DownloadManager::STATE_UNINSTALLED)
         return MOBase::RevampedTheme::cautionText();
+      // a pause is the user's, not a fault: amber; a failed download is red
       else if (state == DownloadManager::STATE_PAUSED)
+        return MOBase::RevampedTheme::cautionText();
+      else if (state == DownloadManager::STATE_ERROR)
         return MOBase::RevampedTheme::criticalText();
     }
   } else if (role == Qt::ToolTipRole) {
@@ -219,8 +222,9 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
                    "menu to re-retrieve.");
       } else {
         const MOBase::ModRepositoryFileInfo* info = m_manager.getFileInfo(index.row());
+        // the tool tip is rich text: the name is shown as written
         return QString("%1 (ID %2) %3<br><span>%4</span>")
-            .arg(info->modName)
+            .arg(info->modName.toHtmlEscaped())
             .arg(m_manager.getModID(index.row()))
             .arg(info->version.canonicalString())
             .arg(info->description.mid(0, 4096));

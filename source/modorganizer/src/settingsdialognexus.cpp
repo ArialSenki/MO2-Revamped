@@ -155,7 +155,8 @@ public:
 
   void accept() override
   {
-    m_key = ui->key->toPlainText().trimmed();
+    // a key has no spaces: a pasted one can bring a line break or a space along
+    m_key = ui->key->toPlainText().simplified().remove(QLatin1Char(' '));
     QDialog::accept();
   }
 

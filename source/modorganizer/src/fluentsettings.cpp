@@ -225,6 +225,10 @@ void makeRow(QCheckBox* box, bool takeDetail = false)
 
   // the box keeps its name and tooltip for screen readers and the tutorial
   box->setAccessibleName(QString(title).remove(QLatin1Char('&')));
+  // and its description, which a screen reader reads after the name
+  if (labels.size() > 1) {
+    box->setAccessibleDescription(labels.last()->text());
+  }
   box->setText(QString());
   box->setProperty("fluentSwitch", true);
   // the theme hides its still image of the switch; FluentSwitch draws it
