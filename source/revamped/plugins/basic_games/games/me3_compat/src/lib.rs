@@ -88,8 +88,10 @@ fn keep_regulation_out_of_saves() {
                 let manager = manager.as_ptr();
                 let length = (*manager).raw_regulation_len;
                 if (*manager).raw_regulation.is_some() && length != 0 {
-                    (*manager).raw_regulation = None;
-                    (*manager).raw_regulation_len = 0;
+                    // the length first: a save racing these writes then sees
+                    // nothing to write rather than a length without its data
+                    std::ptr::write_volatile(&raw mut (*manager).raw_regulation_len, 0);
+                    std::ptr::write_volatile(&raw mut (*manager).raw_regulation, None);
                     log::info!("raw regulation ({length} bytes) kept out of the save");
                 }
             }

@@ -312,6 +312,9 @@ pub fn hook_heap_allocators() -> Result<(), String> {
         }
     };
 
+    // found before anything is changed, so a bad match leaves the game as it was
+    let table = allocator_table()?;
+
     // ELDEN RING: CSGraphicsImp's first virtual function does nothing
     let graphics = class_map
         .get("CS::CSGraphicsImp")
@@ -321,7 +324,7 @@ pub fn hook_heap_allocators() -> Result<(), String> {
     extern "C" fn nothing(_: NonNull<()>) {}
     unsafe { detour(graphics_fn as _, nothing as _) }?;
 
-    let table = allocator_table()?;
+    log::info!("mem_patch: {} heap allocators replaced", table.len());
     table.fill(Some(NonNull::from_ref(&MIMALLOC_DLALLOC)));
 
     unsafe { detour(vtable.init as _, nothing as _) }?;
@@ -350,6 +353,12 @@ fn allocator_table() -> Result<&'static mut [Option<NonNull<DlAllocator>>], Stri
     let last_ptr = *last_candidates.last().ok_or("last allocator pattern returned no matches")?;
     if first_ptr > last_ptr {
         return Err("malformed allocator range".into());
+    }
+    // a stray match far away would make the table cover unrelated memory
+    const MAX_ALLOCATORS: usize = 256;
+    let count = unsafe { last_ptr.offset_from_unsigned(first_ptr) } + 1;
+    if count > MAX_ALLOCATORS {
+        return Err(format!("allocator range of {count} entries is not the game's table"));
     }
     unsafe {
         Ok(slice::from_raw_parts_mut(
