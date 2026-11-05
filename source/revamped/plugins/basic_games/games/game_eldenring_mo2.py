@@ -2088,7 +2088,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.92"
+    Version = "0.5.0-alpha.93"
     NativeBridgeVersion = "0.5.0-alpha.61"
 
     GameName = "ELDEN RING"
@@ -5700,30 +5700,39 @@ class EldenRingMo2Game(BasicGame):
     # ELDEN RING Reforged's me3 profile saves to ER0000.err
     ReforgedSaveExtension = "err"
 
-    # What me3 does for ELDEN RING Reforged beside loading it: Arxan
-    # neutralized (disable_arxan), the raw regulation kept out of the
-    # save (its oversized_regulation_fix: Reforged's regulation.bin no longer
-    # fits in a save, so every save after the first failed with "run
-    # Reforged through its dedicated launcher") and the game's heaps replaced
-    # by mimalloc (mem_patch: without it Reforged's sound bank ran out of
-    # room and music and voices stopped on every dodge or hit). Source in
-    # me3_compat/.
+    # me3's BootBoost for every Elden Ring start (the archive headers the game
+    # decrypts on each start are cached decrypted), and what me3 does for
+    # ELDEN RING Reforged beside loading it: Arxan neutralized (disable_arxan),
+    # the raw regulation kept out of the save (its oversized_regulation_fix:
+    # Reforged's regulation.bin no longer fits in a save, so every save after
+    # the first failed with "run Reforged through its dedicated launcher") and
+    # the game's heaps replaced by mimalloc (mem_patch: without it Reforged's
+    # sound bank ran out of room and music and voices stopped on every dodge
+    # or hit). The Reforged part only runs when ME3_ATTACH_CONFIG is set for
+    # Reforged's natives. Source in me3_compat/.
     Me3Compat = "eldenring_mo2_me3_compat.dll"
 
     def _me3_compat_load(
         self, forced_loads: list[mobase.ExecutableForcedLoadSetting]
     ) -> mobase.ExecutableForcedLoadSetting | None:
-        """The me3 compatibility DLL's forced load when a mod needs it."""
-        if not any(
+        """The me3 compatibility DLL's forced load: on every Elden Ring start
+        for BootBoost, and what Reforged needs when it is among the loads."""
+        if self.GameShortName == "nightreign":
+            # BootBoost and the Reforged fixes are Elden Ring's
+            return None
+        reforged = any(
             Path(load.library()).name.casefold() == EldenRingModDataChecker._reforged_dll
             for load in forced_loads
-        ):
-            return None
+        )
         library = Path(__file__).with_name(self.Me3Compat)
         if not library.is_file():
             qWarning(
-                f"Elden Ring MO2: {self.Me3Compat} is missing; ELDEN RING "
-                "Reforged runs with Arxan active and cannot save."
+                f"Elden Ring MO2: {self.Me3Compat} is missing; "
+                + (
+                    "ELDEN RING Reforged runs with Arxan active and cannot save."
+                    if reforged
+                    else "the game starts without BootBoost."
+                )
             )
             return None
         return mobase.ExecutableForcedLoadSetting(

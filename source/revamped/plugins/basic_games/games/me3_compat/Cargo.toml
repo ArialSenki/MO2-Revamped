@@ -1,8 +1,8 @@
 [package]
 name = "eldenring_mo2_me3_compat"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
-description = "MO2 Revamped: what me3 does for ELDEN RING Reforged beside loading it: Arxan neutralized before the entry point, the oversized regulation kept out of the save and the game's heaps replaced by mimalloc"
+description = "MO2 Revamped: me3's BootBoost for every Elden Ring start, and what me3 does for ELDEN RING Reforged beside loading it: Arxan neutralized before the entry point, the oversized regulation kept out of the save and the game's heaps replaced by mimalloc"
 license = "MIT OR Apache-2.0"
 
 [lib]
@@ -12,6 +12,12 @@ crate-type = ["cdylib"]
 dearxan = "=0.5.6"
 libmimalloc-sys = { git = "https://github.com/Dasaav-dsv/mimalloc_rust.git", tag = "v0.1.49-mimalloc-v3.4.1", features = ["extended", "arena"] }
 me3-binary-analysis = { git = "https://github.com/garyttierney/me3.git", rev = "7c454ba53f5387dcd9fea3cdd9363f34408d2868" }
+me3-mod-host-assets = { git = "https://github.com/garyttierney/me3.git", rev = "7c454ba53f5387dcd9fea3cdd9363f34408d2868" }
+me3-mod-host-types = { git = "https://github.com/garyttierney/me3.git", rev = "7c454ba53f5387dcd9fea3cdd9363f34408d2868" }
+miniz_oxide = "0.8"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+# features me3's asset crate uses without asking for them (its workspace enables them)
+windows = { version = "0.62", features = ["Win32_Globalization", "Win32_System_LibraryLoader", "Win32_Media", "Win32_System_Memory", "Win32_System_Kernel", "Win32_System_Threading"] }
 pelite = "0.10"
 regex = "1"
 retour = "0.3"

@@ -35,6 +35,12 @@
   that one check, and the game now closes cleanly.
 - Elden Ring skips the intro logo screens unless the profile turns that off in
   its startup options.
+- Elden Ring reaches its title screen about 2 seconds sooner: me3's BootBoost
+  keeps the game's archive headers, which the game decrypts on every start,
+  decrypted in `%LOCALAPPDATA%\MO2 Revamped\BootBoost` after the first start (a
+  game update makes new ones). The me3 compatibility DLL now loads for every
+  Elden Ring start for this; without ELDEN RING Reforged it does only that, and
+  leaves Arxan and the game's memory as they are.
 - The bridge's log shows the time of each line since the game started, with the
   moments its window appears and hides and when the process exits.
 

@@ -64,6 +64,12 @@ struct DlAllocatorVtable {
     block_of: unsafe extern "C" fn(NonNull<DlAllocator>, *mut u8) -> *mut u8,
 }
 
+/// The allocator that takes the game's place, for code that must recognize
+/// it (the device manager search in boot_boost.rs).
+pub fn main_allocator() -> *const () {
+    (&raw const MIMALLOC_DLALLOC).cast()
+}
+
 pub static MIMALLOC_DLALLOC: DlAllocator = DlAllocator {
     vtable: NonNull::from_ref(&MIMALLOC_DLALLOC_VTABLE),
 };
@@ -260,7 +266,7 @@ unsafe fn detour(target: *const (), replacement: *const ()) -> Result<(), String
     Ok(())
 }
 
-fn game() -> PeView<'static> {
+pub(crate) fn game() -> PeView<'static> {
     extern "system" {
         fn GetModuleHandleW(name: *const u16) -> *const u8;
     }

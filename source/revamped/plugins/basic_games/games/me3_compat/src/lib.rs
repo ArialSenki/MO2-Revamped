@@ -10,7 +10,12 @@
 //! - me3's `mem_patch` (see mem_patch.rs): the game's fixed heaps replaced by
 //!   mimalloc, without which Reforged's sound bank runs out of room and music
 //!   and voices stop on every dodge or hit.
+//!
+//! MO2 loads it for every Elden Ring start for me3's BootBoost (see
+//! boot_boost.rs); the rest only runs with ELDEN RING Reforged, whose natives
+//! read the ME3_ATTACH_CONFIG that MO2 sets for them.
 
+mod boot_boost;
 mod mem_patch;
 
 use std::ffi::c_void;
@@ -104,6 +109,13 @@ fn keep_regulation_out_of_saves() {
     }
 }
 
+fn install_boot_boost(main_allocator: Option<*const ()>) {
+    match boot_boost::install(main_allocator) {
+        Ok(()) => log::info!("BootBoost: MountEbl hooked"),
+        Err(error) => log::warn!("BootBoost unavailable: {error}"),
+    }
+}
+
 const DLL_PROCESS_ATTACH: u32 = 1;
 
 #[no_mangle]
@@ -111,7 +123,24 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
     if reason == DLL_PROCESS_ATTACH {
         LOADED.get_or_init(Instant::now);
         open_log();
-        log::info!("MO2 me3 compatibility 0.4.0 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch) loaded");
+        // a panic's message in the log, before it is caught or ends the game
+        std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
+        log::info!("MO2 me3 compatibility 0.5.0 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
+        // me3's asset code reads the launched game from me3's launcher, as a
+        // JSON string; under MO2 there is none, so it is set here
+        if std::env::var_os("ME3_GAME_LAUNCHED").is_none() {
+            // still in DllMain, before any thread of this DLL runs
+            std::env::set_var("ME3_GAME_LAUNCHED", "\"eldenring\"");
+        }
+        if std::env::var_os("ME3_ATTACH_CONFIG").is_none() {
+            // not Reforged: Arxan stays as it is, and only BootBoost runs,
+            // once the game's code is readable, before its main
+            log::info!("ELDEN RING Reforged is not active: BootBoost only");
+            unsafe {
+                dearxan::disabler::schedule_after_arxan(|_, _| install_boot_boost(None));
+            }
+            return 1;
+        }
         unsafe {
             dearxan::disabler::neuter_arxan(|result| {
                 let mut before_entry = false;
@@ -147,6 +176,7 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
                 } else {
                     log::warn!("mem_patch skipped: the game has already started");
                 }
+                install_boot_boost(before_entry.then(mem_patch::main_allocator));
                 // the game's code is decrypted now: scanning it for the
                 // singletons is safe
                 std::thread::spawn(keep_regulation_out_of_saves);
