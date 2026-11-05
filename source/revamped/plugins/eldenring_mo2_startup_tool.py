@@ -269,6 +269,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             skip_intro_logos = config.getboolean(
                 "Startup", "skip_intro_logos", fallback=True
             )
+            # on unless the profile turned it off
+            boot_boost = config.getboolean("Startup", "boot_boost", fallback=True)
             exclude_cpu0 = config.getboolean(
                 "Performance", "exclude_cpu0_after_start", fallback=False
             )
@@ -306,6 +308,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             start_minimized = False
             black_startup_background = False
             skip_intro_logos = True
+            boot_boost = True
             exclude_cpu0 = False
             process_priority = 0
             bridge_log_history = 1
@@ -513,10 +516,21 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 "System > Network options."),
             (skip_logos_box,),
         )
+        boot_boost_box = QCheckBox()
+        boot_boost_box.setChecked(boot_boost and not nightreign)
+        boot_boost_row = add_row(
+            intro_card, 0xE945, _tr("Faster game start (BootBoost)"),
+            _tr("Keeps the game's archive headers, which it decrypts on every start, "
+                "ready in a cache after the first start, so the title screen comes "
+                "sooner. A game update makes new ones. From me3."),
+            (boot_boost_box,),
+        )
         if nightreign:
             # the patch matches Elden Ring's game code only
             skip_logos_box.setEnabled(False)
             skip_logos_row.setToolTip(_tr("Not available for Nightreign yet."))
+            boot_boost_box.setEnabled(False)
+            boot_boost_row.setToolTip(_tr("Not available for Nightreign yet."))
         launch_page.addStretch(1)
 
         # --- Performance ---------------------------------------------------
@@ -691,12 +705,15 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         defaults_button = QPushButton(_glyph_icon(0xE777), _tr("Restore defaults"))
         defaults_button.setObjectName("restoreStartupDefaults")
         defaults_button.setAutoDefault(False)
-        defaults_button.setToolTip(_tr("Turns every option off again; nothing changes until you save"))
+        defaults_button.setToolTip(_tr("Puts every option back as it comes; nothing changes until you save"))
 
         def restore_defaults() -> None:
-            for box in (minimized_box, black_background_box, skip_logos_box, cpu0_box,
+            for box in (minimized_box, black_background_box, cpu0_box,
                         clear_overwrite_logs_box, clear_overwrite_box):
                 box.setChecked(False)
+            # on by default, where the game has them
+            for box in (skip_logos_box, boot_boost_box):
+                box.setChecked(box.isEnabled())
             delay_combo.setCurrentIndex(max(0, delay_combo.findData(30)))
             priority_combo.setCurrentIndex(0)
             bridge_history_combo.setCurrentIndex(0)
@@ -737,6 +754,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 "1" if black_background_box.isChecked() else "0"
             ),
             "skip_intro_logos": "1" if skip_logos_box.isChecked() else "0",
+            "boot_boost": "1" if boot_boost_box.isChecked() else "0",
         })
         config["Startup"].pop("prevent_focus_steal", None)
         config["Startup"].pop("start_in_background", None)

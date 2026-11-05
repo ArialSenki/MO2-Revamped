@@ -110,6 +110,11 @@ fn keep_regulation_out_of_saves() {
 }
 
 fn install_boot_boost(main_allocator: Option<*const ()>) {
+    // MO2 sets "0" when the profile turned it off
+    if std::env::var("ELDENRING_MO2_BOOT_BOOST").is_ok_and(|value| value == "0") {
+        log::info!("BootBoost: off in this profile");
+        return;
+    }
     match boot_boost::install(main_allocator) {
         Ok(()) => log::info!("BootBoost: MountEbl hooked"),
         Err(error) => log::warn!("BootBoost unavailable: {error}"),

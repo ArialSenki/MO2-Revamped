@@ -2088,7 +2088,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.93"
+    Version = "0.5.0-alpha.94"
     NativeBridgeVersion = "0.5.0-alpha.61"
 
     GameName = "ELDEN RING"
@@ -4746,6 +4746,16 @@ class EldenRingMo2Game(BasicGame):
             # unreadable: nothing is deleted
             return False
 
+    def _read_boot_boost(self, path: Path) -> bool:
+        # on unless the profile turned it off (Elden Ring only)
+        default = self.GameShortName != "nightreign"
+        config = configparser.ConfigParser()
+        try:
+            config.read(path, encoding="utf-8-sig")
+            return config.getboolean("Startup", "boot_boost", fallback=default)
+        except (OSError, UnicodeError, configparser.Error, ValueError):
+            return default
+
     def _read_skip_intro_logos(self, path: Path) -> bool:
         # on unless the profile turned it off: the logos only cost time
         # (Elden Ring only; the bridge has no logo patch for Nightreign)
@@ -5603,8 +5613,12 @@ class EldenRingMo2Game(BasicGame):
                 self.ReforgedAttachEnvironment,
                 self.SaveExtensionEnvironment,
                 self.SoundFoldersEnvironment,
+                self.BootBoostEnvironment,
             )
         }
+        # the compatibility DLL also runs with Reforged: it skips BootBoost
+        # when the profile turned it off
+        os.environ[self.BootBoostEnvironment] = "1" if self._read_boot_boost(path) else "0"
         self._reforged_env_active = True
         reforged_natives = self._reforged_natives()
         # Seamless Co-op names the saves itself (its save_file_extension)
@@ -5651,6 +5665,9 @@ class EldenRingMo2Game(BasicGame):
             return False
         os.environ[key] = value
         return True
+
+    # "0" when the profile turned BootBoost off
+    BootBoostEnvironment = "ELDENRING_MO2_BOOT_BOOST"
 
     # the bridge opens mods' sound files from these folders, highest priority first
     SoundFoldersEnvironment = "ELDENRING_MO2_SOUND_FOLDERS"
@@ -5724,6 +5741,15 @@ class EldenRingMo2Game(BasicGame):
             Path(load.library()).name.casefold() == EldenRingModDataChecker._reforged_dll
             for load in forced_loads
         )
+        profile = self._organizer.profile()
+        boot_boost = (
+            self._read_boot_boost(Path(profile.absolutePath()) / self.ProfileLaunchConfig)
+            if profile is not None
+            else True
+        )
+        if not reforged and not boot_boost:
+            # nothing else for it to do
+            return None
         library = Path(__file__).with_name(self.Me3Compat)
         if not library.is_file():
             qWarning(
