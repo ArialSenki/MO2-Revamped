@@ -2,9 +2,9 @@
 
 ## Pre-release candidate — November 5, 2026 (v1.1.0-beta.3)
 
-- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,915,328 bytes, SHA-256
-  `206F493CE67FE554B523BD854E11DAD0B0151A82472AC14E07711E0F956952CA`.
-- Built from commit dd55438 (design/fluent-v4) with ModOrganizer.exe compiled
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,917,888 bytes, SHA-256
+  `483D5E0ABB47933BDAE1917E953C7BF9E18F6BE8BCA7ECE4CE81498FACFAF137`.
+- Built from commit 28f8c71 (design/fluent-v4) with ModOrganizer.exe compiled
   from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
   on November 3 (Release).
 - Complete payload: 1,318 files; Elden Ring Isolated payload: 1,218 files.
@@ -24,18 +24,32 @@
   Portuguese started in that language and saved it; an update in another language
   kept the saved one. A standard install with no saved language started in the
   language of its setup and saved it.
-- Games, on this installer, on the owner's Steam account: Elden Ring with Reforged offline
+- Games, installed, on the owner's Steam account. On dd55438: Elden Ring with Reforged offline
   and AdaptiveBarScaling, and Nightreign with Damage Competition, reached the title screen
   and the user loaded a save in each. Bridge hook installed in both, 128 loose files served
   in Elden Ring at the title screen, the Nightreign DLL loaded. Both closed with code 0 and no
   fault event. Elden Ring wrote only its profile save and the Steam save stayed unchanged;
-  Nightreign uses the Steam save here and wrote it. Nothing further was played. Not started:
-  Reforged online, Seamless Co-op, Convergence.
+  Nightreign uses the Steam save here and wrote it. On f613bf6: both reached the title screen
+  again and closed the same way. Nothing further was played. Not started: Reforged online,
+  Seamless Co-op, Convergence.
+- This installer (28f8c71) was not run on the owner's account. From f613bf6 only Mod information
+  and texts changed, nothing in the launch. With Steam on the other account it installed the
+  bridge hook, the game closed by itself, the notice appeared and the saves stayed unchanged.
+- Mod information, on this installer: no web engine process when it opens or on Nexus Info; one
+  when Description opens. The description window follows Next and Previous according to the
+  user, Close works, 0 warnings. The user saw no drop in smoothness at 240 Hz on the development
+  build of the same change. The description window itself was not measured.
+- Steam closed, on f613bf6: Elden Ring and Nightreign have steam_api64.dll in Game, so MO2's
+  Steam question doesn't appear. The game closed by itself in 7 s, the saves came back, the
+  notice appeared.
+- Setup, on f613bf6: drive root refused in the window; an uninstall keeping an edited file
+  removes the Windows entry; a second uninstall on that folder is refused as not recognized.
+  Enter on a focused Cancel, tested on the categories question, cancels and changes nothing.
+  Known and left: a failed reinstall over kept data can delete its portable markers (the data
+  stays); uninstalling through a folder link is refused; another administrator's elevation.
 - On the previous installer (0c77e73), in the real window: Start menu and desktop shortcuts,
   which leave another installation's shortcut alone and are removed on uninstall, opening
   MO2 at the end, and the new question, answered No, leaves no folder.
-- Game closing at once, on the development build, with Steam on an account without the
-  license: Nightreign closed in seconds and the new notice appeared.
 - Bridge signatures, read from the files: found once, with one target, in the installed
   Elden Ring and Nightreign and in Elden Ring 1.17, 1.17.1, 1.17.2 and both JP versions.
 - Small windows, on the development build, Dark on ER Test and Light on NR Test: message
@@ -48,7 +62,7 @@
   Nightreign's three tools were checked in Light. Other prompts were opened and cancelled.
 - On this installer, through the backend: standard install, update, uninstall; beta.2 to beta.3, which removes
   the classic themes, and restore, which brings them back; isolated copy; a foreign
-  folder refused. The installed copy opened ER Test at dd55438 with 0 warnings or errors.
+  folder refused. The installed copy opened ER Test at 28f8c71 with 0 warnings or errors.
 - Windows after the cleanup, on the development build, Dark and Light: main window, About,
   Mod information, Settings, Profiles, Executables, Overwrite, instances, new instance, CSV,
   categories, forced libraries, 0 warnings or errors.
