@@ -27,6 +27,12 @@
 
 ### Fixed
 
+- Mods' sound files load: custom music and sound banks in a mod's `sd` folder
+  (Wwise `.bnk` and `.wem`) play, Convergence's music for example.
+- ELDEN RING Reforged keeps its own sound: MO2 now applies me3's memory patch
+  (mimalloc), as me3 does, and switches Arxan off at the game's entry point.
+- Native DLLs load in the order the Native DLL Profile shows; they loaded in
+  reverse.
 - The update check compared GitHub releases with the version of the Mod Organizer
   2 it is based on (2.5.2), so it never found a newer MO2 Revamped. The build now
   carries its own version, and the release builder checks that the source and
