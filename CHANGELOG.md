@@ -25,6 +25,19 @@
   channel: `v1.2.0` is stable, `-beta.N` and `-rc.N` are betas, `-alpha.N`,
   `-dev.N`, `-test.N` and `-preview.N` are development builds.
 
+### Faster start and exit
+
+- Elden Ring closes in about 4 seconds instead of up to 20. One of the game's own
+  threads sleeps 16.7 seconds at a time and the game waited for it on exit; the
+  bridge now wakes it when the game starts waiting. The game also ended every
+  exit in a crash report (an internal check at shutdown, `int3` at
+  `eldenring.exe+0xc59276`) that cost a few more seconds; the bridge steps over
+  that one check, and the game now closes cleanly.
+- Elden Ring skips the intro logo screens unless the profile turns that off in
+  its startup options.
+- The bridge's log shows the time of each line since the game started, with the
+  moments its window appears and hides and when the process exits.
+
 ### Fixed
 
 - Mods' sound files load: custom music and sound banks in a mod's `sd` folder

@@ -17,12 +17,15 @@ use std::ffi::c_void;
 use std::fs::File;
 use std::io::Write;
 use std::ptr::NonNull;
-use std::sync::Mutex;
-use std::time::Duration;
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant};
 
 use from_singleton::FromSingleton;
 
 struct FileLog(Mutex<Option<File>>);
+
+/// When this DLL loaded: the first DLL MO2 loads, so about the game's start.
+static LOADED: OnceLock<Instant> = OnceLock::new();
 
 impl log::Log for FileLog {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
@@ -35,7 +38,8 @@ impl log::Log for FileLog {
         }
         if let Ok(mut file) = self.0.lock() {
             if let Some(file) = file.as_mut() {
-                let _ = writeln!(file, "[{}] {}", record.level(), record.args());
+                let elapsed = LOADED.get_or_init(Instant::now).elapsed().as_secs_f64();
+                let _ = writeln!(file, "[{elapsed:8.3} s] [{}] {}", record.level(), record.args());
             }
         }
     }
@@ -105,6 +109,7 @@ const DLL_PROCESS_ATTACH: u32 = 1;
 #[no_mangle]
 pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mut c_void) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
+        LOADED.get_or_init(Instant::now);
         open_log();
         log::info!("MO2 me3 compatibility 0.4.0 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch) loaded");
         unsafe {

@@ -2088,8 +2088,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.91"
-    NativeBridgeVersion = "0.5.0-alpha.60"
+    Version = "0.5.0-alpha.92"
+    NativeBridgeVersion = "0.5.0-alpha.61"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -4746,14 +4746,16 @@ class EldenRingMo2Game(BasicGame):
             # unreadable: nothing is deleted
             return False
 
-    @staticmethod
-    def _read_skip_intro_logos(path: Path) -> bool:
+    def _read_skip_intro_logos(self, path: Path) -> bool:
+        # on unless the profile turned it off: the logos only cost time
+        # (Elden Ring only; the bridge has no logo patch for Nightreign)
+        default = self.GameShortName != "nightreign"
         config = configparser.ConfigParser()
         try:
             config.read(path, encoding="utf-8-sig")
-            return config.getboolean("Startup", "skip_intro_logos", fallback=False)
+            return config.getboolean("Startup", "skip_intro_logos", fallback=default)
         except (OSError, UnicodeError, configparser.Error, ValueError):
-            return False
+            return default
 
     def _read_profile_launch_settings(
         self, path: Path

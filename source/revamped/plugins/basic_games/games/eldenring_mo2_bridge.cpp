@@ -119,8 +119,37 @@ void write_bytes(const char* text, DWORD length) {
   WriteFile(g_log, text, length, &written, nullptr);
 }
 
+// seconds since the game process was created, so the log shows where its
+// start and its exit spend their time
+double seconds_since_process_start() {
+  static ULONGLONG created = 0;
+  if (created == 0) {
+    FILETIME creation{}, exit{}, kernel{}, user{};
+    if (!GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user)) {
+      return 0.0;
+    }
+    created = (static_cast<ULONGLONG>(creation.dwHighDateTime) << 32) |
+              creation.dwLowDateTime;
+  }
+  FILETIME now{};
+  GetSystemTimePreciseAsFileTime(&now);
+  const ULONGLONG current =
+      (static_cast<ULONGLONG>(now.dwHighDateTime) << 32) | now.dwLowDateTime;
+  return current > created ? static_cast<double>(current - created) / 1e7 : 0.0;
+}
+
+void write_time_prefix() {
+  char prefix[32] = {};
+  const int length = std::snprintf(prefix, sizeof(prefix), "[%8.3f s] ",
+                                   seconds_since_process_start());
+  if (length > 0) {
+    write_bytes(prefix, static_cast<DWORD>(length));
+  }
+}
+
 void log_line(const char* message, const wchar_t* detail = nullptr) {
   AcquireSRWLockExclusive(&g_log_lock);
+  write_time_prefix();
   write_bytes(message, static_cast<DWORD>(lstrlenA(message)));
   if (detail != nullptr && detail[0] != L'\0') {
     write_bytes(" ", 1);
@@ -567,6 +596,208 @@ int initial_show_command(DWORD requested_style) {
     return SW_SHOWMAXIMIZED;
   }
   return SW_SHOW;
+}
+
+BOOL CALLBACK find_visible_game_window(HWND window, LPARAM result) {
+  if (IsWindowVisible(window) && is_process_top_level_window(window) &&
+      GetWindow(window, GW_OWNER) == nullptr) {
+    *reinterpret_cast<HWND*>(result) = window;
+    return FALSE;
+  }
+  return TRUE;
+}
+
+// the timeline of the game's window, for the log: when it appears and when
+// it goes, which with the exit logged below shows how long the game takes
+// to start and to close
+DWORD WINAPI watch_game_window(void*) {
+  HWND window = nullptr;
+  for (int wait = 0; window == nullptr && wait < 1200; ++wait) {
+    EnumWindows(find_visible_game_window, reinterpret_cast<LPARAM>(&window));
+    if (window == nullptr) {
+      Sleep(50);
+    }
+  }
+  if (window == nullptr) {
+    log_line("Timing: no game window within a minute.");
+    return 0;
+  }
+  log_line("Timing: the game window is shown.");
+  bool hidden_logged = false;
+  while (IsWindow(window)) {
+    if (!hidden_logged && !IsWindowVisible(window)) {
+      hidden_logged = true;
+      log_line("Timing: the game window was hidden.");
+    }
+    Sleep(50);
+  }
+  log_line("Timing: the game window was closed.");
+  return 0;
+}
+
+using ExitProcessFunction = void(WINAPI*)(UINT);
+using TerminateProcessFunction = BOOL(WINAPI*)(HANDLE, UINT);
+ExitProcessFunction g_original_exit_process = nullptr;
+TerminateProcessFunction g_original_terminate_process = nullptr;
+
+void log_exit_request(const char* message) {
+  // other threads may be stopped at any point now: never wait for the lock
+  if (TryAcquireSRWLockExclusive(&g_log_lock)) {
+    write_time_prefix();
+    write_bytes(message, static_cast<DWORD>(lstrlenA(message)));
+    write_bytes("\r\n", 2);
+    ReleaseSRWLockExclusive(&g_log_lock);
+  }
+}
+
+void WINAPI exit_process_hook(UINT code) {
+  log_exit_request("Timing: the game called ExitProcess.");
+  g_original_exit_process(code);
+}
+
+BOOL WINAPI terminate_process_hook(HANDLE process, UINT code) {
+  if (process == GetCurrentProcess() || GetProcessId(process) == GetCurrentProcessId()) {
+    log_exit_request("Timing: the game called TerminateProcess on itself.");
+  }
+  return g_original_terminate_process(process, code);
+}
+
+// Faster exit. One of the game's threads sleeps 16.7 seconds at a time
+// (mov ecx,16666 / call [Sleep]), and on exit the main thread waits for it
+// with no time limit, so closing the game took up to 17 seconds. That sleep
+// becomes a wait the bridge can end: when a thread starts waiting for the
+// sleeping one to finish, the sleeper wakes and finds it has to stop, as it
+// would have 16.7 seconds later. Nothing else changes.
+using SleepFunction = void(WINAPI*)(DWORD);
+using WaitForSingleObjectFunction = DWORD(WINAPI*)(HANDLE, DWORD);
+SleepFunction g_original_sleep = nullptr;
+WaitForSingleObjectFunction g_original_wait_for_single_object = nullptr;
+HANDLE g_long_sleep_wake = nullptr;
+volatile LONG g_long_sleeper_thread = 0;
+volatile LONG g_long_sleep_woken = 0;
+constexpr DWORD kGameLongSleep = 16666;
+
+bool called_from_game_long_sleep(const unsigned char* return_address) {
+  // mov ecx,16666 ; call qword ptr [rip+disp32] ; <return address>
+  static const unsigned char expected[] = {0xB9, 0x1A, 0x41, 0x00, 0x00, 0xFF, 0x15};
+  const unsigned char* call = return_address - 11;
+  // the caller's own code: readable, unless it starts a page after a gap
+  MEMORY_BASIC_INFORMATION info{};
+  if (VirtualQuery(call, &info, sizeof(info)) == 0 || info.State != MEM_COMMIT ||
+      (info.Protect & (PAGE_NOACCESS | PAGE_GUARD)) != 0 ||
+      reinterpret_cast<const unsigned char*>(info.BaseAddress) + info.RegionSize <
+          call + sizeof(expected)) {
+    return false;
+  }
+  return std::memcmp(call, expected, sizeof(expected)) == 0;
+}
+
+void WINAPI sleep_hook(DWORD milliseconds) {
+  if (milliseconds == kGameLongSleep && g_long_sleep_wake != nullptr &&
+      called_from_game_long_sleep(
+          static_cast<const unsigned char*>(__builtin_return_address(0)))) {
+    InterlockedExchange(&g_long_sleeper_thread, static_cast<LONG>(GetCurrentThreadId()));
+    g_original_wait_for_single_object(g_long_sleep_wake, milliseconds);
+    return;
+  }
+  g_original_sleep(milliseconds);
+}
+
+DWORD WINAPI wait_for_single_object_hook(HANDLE handle, DWORD milliseconds) {
+  if (milliseconds == INFINITE && g_long_sleep_wake != nullptr) {
+    const LONG sleeper = InterlockedCompareExchange(&g_long_sleeper_thread, 0, 0);
+    if (sleeper != 0 && GetThreadId(handle) == static_cast<DWORD>(sleeper)) {
+      SetEvent(g_long_sleep_wake);
+      if (InterlockedExchange(&g_long_sleep_woken, 1) == 0) {
+        log_line("Faster exit: woke the game thread that sleeps 16.7 seconds, which the game is waiting for.");
+      }
+    }
+  }
+  return g_original_wait_for_single_object(handle, milliseconds);
+}
+
+// The game's exit always ended in a crash report: while it frees a list on
+// the way out, an internal check (cmp byte [node+18h],0 / je / int3) stops
+// the process on a node still marked, and Windows then spends seconds on
+// the report before the process ends. Only at that exact instruction the
+// check is stepped over, so the game frees the node and finishes closing as
+// if the check were not there; every other breakpoint goes on as before.
+volatile LONG g_exit_check_skipped = 0;
+
+LONG CALLBACK skip_game_exit_check(EXCEPTION_POINTERS* info) {
+  if (info->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  const unsigned char* address =
+      static_cast<const unsigned char*>(info->ExceptionRecord->ExceptionAddress);
+  // cmp byte ptr [rdx+18h],0 ; je +1 ; int3 ; mov rcx,[rdi+8] ; mov r8d,28h
+  static const unsigned char before[] = {0x80, 0x7A, 0x18, 0x00, 0x74, 0x01};
+  static const unsigned char after[] = {0xCC, 0x48, 0x8B, 0x4F, 0x08, 0x41, 0xB8, 0x28};
+  const unsigned char* base =
+      reinterpret_cast<const unsigned char*>(GetModuleHandleW(nullptr));
+  if (base == nullptr) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+  const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(base + dos->e_lfanew);
+  const size_t image_size = nt->OptionalHeader.SizeOfImage;
+  if (address < base + sizeof(before) || address + sizeof(after) > base + image_size ||
+      std::memcmp(address - sizeof(before), before, sizeof(before)) != 0 ||
+      std::memcmp(address, after, sizeof(after)) != 0) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  info->ContextRecord->Rip += 1;
+  if (InterlockedExchange(&g_exit_check_skipped, 1) == 0) {
+    log_exit_request("Faster exit: stepped over the game's exit check that ended in a crash report.");
+  }
+  return EXCEPTION_CONTINUE_EXECUTION;
+}
+
+void install_exit_timing_hooks() {
+  AddVectoredExceptionHandler(1, skip_game_exit_check);
+  MH_STATUS status = MH_Initialize();
+  if (status != MH_OK && status != MH_ERROR_ALREADY_INITIALIZED) {
+    return;
+  }
+  HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+  if (kernel32 == nullptr) {
+    return;
+  }
+  void* exit_process = reinterpret_cast<void*>(GetProcAddress(kernel32, "ExitProcess"));
+  void* terminate_process =
+      reinterpret_cast<void*>(GetProcAddress(kernel32, "TerminateProcess"));
+  if (exit_process != nullptr &&
+      MH_CreateHook(exit_process, reinterpret_cast<void*>(&exit_process_hook),
+                    reinterpret_cast<void**>(&g_original_exit_process)) == MH_OK) {
+    MH_EnableHook(exit_process);
+  }
+  if (terminate_process != nullptr &&
+      MH_CreateHook(terminate_process, reinterpret_cast<void*>(&terminate_process_hook),
+                    reinterpret_cast<void**>(&g_original_terminate_process)) == MH_OK) {
+    MH_EnableHook(terminate_process);
+  }
+
+  // auto-reset: a wake ends one sleep only
+  g_long_sleep_wake = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+  void* sleep = reinterpret_cast<void*>(GetProcAddress(kernel32, "Sleep"));
+  void* wait = reinterpret_cast<void*>(GetProcAddress(kernel32, "WaitForSingleObject"));
+  if (g_long_sleep_wake == nullptr || sleep == nullptr || wait == nullptr) {
+    return;
+  }
+  // the wait hook first: the sleep hook calls the original wait
+  if (MH_CreateHook(wait, reinterpret_cast<void*>(&wait_for_single_object_hook),
+                    reinterpret_cast<void**>(&g_original_wait_for_single_object)) != MH_OK ||
+      MH_EnableHook(wait) != MH_OK) {
+    log_line("Faster exit unavailable: WaitForSingleObject could not be hooked.");
+    return;
+  }
+  if (MH_CreateHook(sleep, reinterpret_cast<void*>(&sleep_hook),
+                    reinterpret_cast<void**>(&g_original_sleep)) != MH_OK ||
+      MH_EnableHook(sleep) != MH_OK) {
+    log_line("Faster exit unavailable: Sleep could not be hooked.");
+    return;
+  }
+  log_line("Faster exit ready.");
 }
 
 void finish_initial_game_window(HWND window, DWORD requested_style) {
@@ -1917,15 +2148,24 @@ void inspect_loaded_mods() {
   CloseHandle(snapshot);
 }
 
+// on unless the profile turned it off; the patch is Elden Ring's only
 bool read_skip_intro_logos_setting() {
+  wchar_t executable[MAX_PATH] = {};
+  const DWORD executable_length = GetModuleFileNameW(nullptr, executable, MAX_PATH);
+  if (executable_length > 0 && executable_length < MAX_PATH) {
+    const wchar_t* name = std::wcsrchr(executable, L'\\');
+    if (_wcsicmp(name != nullptr ? name + 1 : executable, L"nightreign.exe") == 0) {
+      return false;
+    }
+  }
   wchar_t config_path[MAX_PATH] = {};
   const DWORD length = GetEnvironmentVariableW(
       L"ELDENRING_MO2_PROFILE_CONFIG", config_path, MAX_PATH);
   if (length == 0 || length >= MAX_PATH ||
       GetFileAttributesW(config_path) == INVALID_FILE_ATTRIBUTES) {
-    return false;
+    return true;
   }
-  return GetPrivateProfileIntW(L"Startup", L"skip_intro_logos", 0,
+  return GetPrivateProfileIntW(L"Startup", L"skip_intro_logos", 1,
                                config_path) != 0;
 }
 
@@ -2190,6 +2430,11 @@ void apply_save_extension_setting() {
 }
 
 DWORD WINAPI bridge_worker(void*) {
+  install_exit_timing_hooks();
+  HANDLE window_watch = CreateThread(nullptr, 0, watch_game_window, nullptr, 0, nullptr);
+  if (window_watch != nullptr) {
+    CloseHandle(window_watch);
+  }
   schedule_skip_intro_logos();
   read_native_initializer_requests();
   wchar_t executable_path[MAX_PATH] = {};
@@ -2242,7 +2487,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.60.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.61.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
@@ -2252,6 +2497,15 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     HANDLE thread = CreateThread(nullptr, 0, bridge_worker, nullptr, 0, nullptr);
     if (thread != nullptr) {
       CloseHandle(thread);
+    }
+  } else if (reason == DLL_PROCESS_DETACH) {
+    // the other threads are gone and one may have held the log's lock:
+    // write without it, or the game would hang on its way out
+    if (TryAcquireSRWLockExclusive(&g_log_lock)) {
+      write_time_prefix();
+      const char message[] = "Timing: the game process is exiting.\r\n";
+      write_bytes(message, sizeof(message) - 1);
+      ReleaseSRWLockExclusive(&g_log_lock);
     }
   }
   return TRUE;

@@ -265,8 +265,9 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             black_startup_background = config.getboolean(
                 "Startup", "black_startup_background", fallback=False
             )
+            # on unless the profile turned it off
             skip_intro_logos = config.getboolean(
-                "Startup", "skip_intro_logos", fallback=False
+                "Startup", "skip_intro_logos", fallback=True
             )
             exclude_cpu0 = config.getboolean(
                 "Performance", "exclude_cpu0_after_start", fallback=False
@@ -304,7 +305,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             )
             start_minimized = False
             black_startup_background = False
-            skip_intro_logos = False
+            skip_intro_logos = True
             exclude_cpu0 = False
             process_priority = 0
             bridge_log_history = 1
