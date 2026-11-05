@@ -2380,16 +2380,15 @@ void GlobalSettings::setCurrentInstanceForInstallation(
   settings().setValue(key, s);
 }
 
-QSettings GlobalSettings::settings()
+// where the global settings file is, without opening it
+static QString globalSettingsPath()
 {
   const QString applicationDirectory = QCoreApplication::applicationDirPath();
   const QDir localDirectory(applicationDirectory);
   const QString isolatedMarker =
       localDirectory.filePath("eldenring-only.portable");
   if (QFileInfo::exists(isolatedMarker)) {
-    return QSettings(
-        localDirectory.filePath("EldenRingOnly.ini"),
-        QSettings::IniFormat);
+    return localDirectory.filePath("EldenRingOnly.ini");
   }
 
   // settings already kept beside the program stay there, also once its
@@ -2404,16 +2403,19 @@ QSettings GlobalSettings::settings()
       : QDir(QStandardPaths::writableLocation(
                  QStandardPaths::GenericDataLocation))
             .filePath("MO2 Revamped");
-  const QString settingsPath =
-      QDir(settingsDirectory).filePath("MO2-Revamped-Global.ini");
+  return QDir(settingsDirectory).filePath("MO2-Revamped-Global.ini");
+}
 
-  QDir().mkpath(settingsDirectory);
-  return QSettings(settingsPath, QSettings::IniFormat);
+QSettings GlobalSettings::settings()
+{
+  const QString path = globalSettingsPath();
+  QDir().mkpath(QFileInfo(path).absolutePath());
+  return QSettings(path, QSettings::IniFormat);
 }
 
 QString GlobalSettings::directory()
 {
-  return QFileInfo(settings().fileName()).absolutePath();
+  return QFileInfo(globalSettingsPath()).absolutePath();
 }
 
 QVariant GlobalSettings::value(const QString& key, const QVariant& defaultValue)

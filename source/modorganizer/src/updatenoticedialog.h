@@ -44,6 +44,8 @@ private:
   QWidget* m_notesBox   = nullptr;
   QScrollArea* m_scroll = nullptr;
   QPushButton* m_github = nullptr;
+  // the index in m_releases of the release on the right, -1 before the first
+  int m_shown = -1;
 
   QWidget* createListCard(const QString& currentVersion);
   QWidget* createDetailsCard(Settings& settings);

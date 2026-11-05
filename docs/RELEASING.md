@@ -30,7 +30,7 @@ about the release:
 |---|---|---|
 | `v1.2.0` | stable | everyone |
 | `v1.2.0-beta.1`, `v1.2.0-rc.1` | beta | those on the beta or development channel |
-| `v1.2.0-alpha.1`, `-dev.1`, `-test.1`, `-preview.1` | development | only those on the development channel |
+| `v1.2.0-alpha.1`, `-dev.1`, `-devel.1`, `-test.1`, `-preview.1`, `-nightly.1` | development | only those on the development channel |
 
 Mark betas and development builds as pre-releases on GitHub. A pre-release
 without one of these suffixes counts as a beta. Drafts are never shown.
@@ -48,9 +48,11 @@ The notice shows the GitHub release's text as a changelog, so keep its shape:
 - A short summary first, as one paragraph.
 - `##` sections. `## Download` is not shown (the notice says how to update), nor
   a closing paragraph that starts with "MO2 Revamped is an independent".
-- Points as `- **Title**: text`; a point may continue on indented lines.
-- `**bold**`, `` `code` `` and `[links](https://...)` are shown; images and HTML
-  are not. Only web links open.
+- Points as `- **Title**: text` (or numbered, `1.`); a point may continue on
+  indented lines. Nested points show as points of their own, not indented.
+- `**bold**`, `` `code` ``, `[links](https://...)` and bare web addresses are
+  shown as such. An image shows as its text, and HTML, tables and code blocks
+  show as plain text, so leave them out. Only web links open.
 
 The other sections, such as `## Highlights` and `## Known issues`, are shown
 with their titles, in English, as written.
@@ -58,8 +60,10 @@ with their titles, in English, as written.
 ## How often MO2 asks
 
 MO2 asks GitHub at most once a day. The answer is kept in
-`update-releases.json` beside `MO2-Revamped-Global.ini`, shared by all
-instances. A new release reaches users within a day of being published, at
+`update-releases.json` beside the global settings file
+(`MO2-Revamped-Global.ini`, or `EldenRingOnly.ini` in the Elden Ring-only
+edition), shared by all instances. When GitHub doesn't answer, the last answer
+is used. A new release reaches users within a day of being published, at
 their next start of MO2. To see it at once on a test PC, delete that file. To
 test without publishing anything, see `MO2_REVAMPED_UPDATE_TEST` in
 [DIAGNOSTICS.md](DIAGNOSTICS.md).

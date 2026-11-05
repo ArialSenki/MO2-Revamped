@@ -4957,11 +4957,20 @@ void MainWindow::updateAvailable()
   ui->actionUpdate->setStatusTip(updateHint);
   ui->statusBar->setUpdateAvailable(true);
 
+  // a new answer (another channel) replaces a notice that is open
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->close();
+    m_UpdateNotice = nullptr;
+  }
   showUpdateNotice(true);
 }
 
 void MainWindow::clearUpdateAvailable()
 {
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->close();
+    m_UpdateNotice = nullptr;
+  }
   if (m_UpdateActionText.isEmpty()) {
     return;
   }

@@ -81,7 +81,7 @@ static VersionInfo parseRevampedVersion(QString tag)
   // VersionInfo knows alpha, beta and rc: a development build sorts as an
   // alpha, before the beta and the release it leads to
   static const QRegularExpression dev(
-      QStringLiteral("(?<![A-Za-z])(dev|test|preview|nightly)(?![A-Za-z])"),
+      QStringLiteral("(?<![A-Za-z])(dev|devel|test|preview|nightly)(?![A-Za-z])"),
       QRegularExpression::CaseInsensitiveOption);
   tag.replace(dev, QStringLiteral("alpha"));
   tag.replace(before, QString()).replace(after, QString());

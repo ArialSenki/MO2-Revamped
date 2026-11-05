@@ -16,6 +16,7 @@
 #include <QRegularExpression>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
 
@@ -49,78 +50,139 @@ char16_t channelGlyph(UpdateChannel channel)
 }
 
 // a release's notes as a changelog: the summary, then each section with its
-// points. GitHub's text is Markdown; only what release notes use is read:
-// "#" headings, "-" or "*" points (with their indented continuation lines),
-// paragraphs, **bold**, `code` and [links](url).
+// points, in the order they are written. GitHub's text is Markdown; only what
+// release notes use is read: "#" headings, "-", "*", "+" and "1." points (with
+// their indented continuation lines), paragraphs, **bold**, `code`,
+// [links](url) and bare web addresses. Anything else stays text.
+struct NotesBlock
+{
+  enum Kind
+  {
+    Paragraph,
+    Point,
+  };
+  Kind kind = Paragraph;
+  QString marker;  // a point's bullet or number
+  QString text;
+};
+
 struct NotesSection
 {
   QString title;
-  QStringList paragraphs;  // before the points
-  QStringList points;
-  QStringList after;       // paragraphs after the points
+  std::vector<NotesBlock> blocks;
 };
 
-// inline Markdown to rich text. The text is escaped first, so HTML in the
-// notes stays text; images become their text, so nothing loads a file or a
-// network share by itself
+// inline Markdown to rich text. Code, links and web addresses are set aside
+// first, so bold never lands inside them; the rest is escaped, so HTML in the
+// notes stays text, and images become their text, so nothing loads a file or
+// a network share by itself
 QString inlineHtml(const QString& text)
 {
   static const QRegularExpression image(QStringLiteral(R"(!\[([^\]]*)\]\([^)]*\))"));
-  static const QRegularExpression link(QStringLiteral(R"(\[([^\]]+)\]\(([^)\s]+)\))"));
+  static const QRegularExpression token(QStringLiteral(
+      R"((`[^`]+`)|\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)|<?(https?://[^\s<>()]+[^\s<>().,;:!?'"])>?)"));
   static const QRegularExpression bold(QStringLiteral(R"(\*\*(.+?)\*\*)"));
-  static const QRegularExpression code(QStringLiteral("`([^`]+)`"));
 
-  QString html = text;
-  html.replace(image, QStringLiteral("\\1"));
-  html = html.toHtmlEscaped();
-  html.replace(link, QStringLiteral("<a href=\"\\2\">\\1</a>"));
+  QString source = text;
+  source.replace(image, QStringLiteral("\\1"));
+
+  // the pieces that keep their own markup, replaced by \x01<n>\x02 meanwhile
+  QStringList kept;
+  QString rest;
+  qsizetype from = 0;
+  auto it = token.globalMatch(source);
+  while (it.hasNext()) {
+    const auto m = it.next();
+    rest += source.mid(from, m.capturedStart() - from);
+    from = m.capturedEnd();
+    QString html;
+    if (m.capturedLength(1) > 0) {
+      const QString code = m.captured(1).mid(1, m.capturedLength(1) - 2);
+      html = QStringLiteral("<code>%1</code>").arg(code.toHtmlEscaped());
+    } else {
+      const bool named = m.capturedLength(2) > 0;
+      const QString url   = named ? m.captured(3) : m.captured(4);
+      QString label       = named ? m.captured(2) : url;
+      label               = label.toHtmlEscaped();
+      label.replace(bold, QStringLiteral("<b>\\1</b>"));
+      html = QStringLiteral("<a href=\"%1\">%2</a>").arg(url.toHtmlEscaped(), label);
+    }
+    rest += QChar(0x01) + QString::number(kept.size()) + QChar(0x02);
+    kept.append(html);
+  }
+  rest += source.mid(from);
+
+  QString html = rest.toHtmlEscaped();
   html.replace(bold, QStringLiteral("<b>\\1</b>"));
-  html.replace(code, QStringLiteral("<code>\\1</code>"));
+  for (qsizetype i = 0; i < kept.size(); ++i) {
+    html.replace(QChar(0x01) + QString::number(i) + QChar(0x02), kept[i]);
+  }
   return html;
+}
+
+// a heading or a section title without its Markdown marks
+QString plainTitle(QString title)
+{
+  title.remove(QStringLiteral("**")).remove(QLatin1Char('`'));
+  return title.trimmed();
 }
 
 std::vector<NotesSection> parseNotes(const QString& notes)
 {
-  static const QRegularExpression heading(QStringLiteral(R"(^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$)"));
-  static const QRegularExpression point(QStringLiteral(R"(^\s{0,3}[-*+]\s+(.*)$)"));
+  // CommonMark: up to 3 spaces, 1 to 6 #, and closing #s only after a space,
+  // so "## Notes for C#" keeps its #
+  static const QRegularExpression heading(
+      QStringLiteral(R"(^ {0,3}#{1,6}(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$)"));
+  static const QRegularExpression point(
+      QStringLiteral(R"(^ {0,3}([-*+]|\d{1,3}[.)])[ \t]+(.*)$)"));
+  static const QRegularExpression indented(QStringLiteral(R"(^(?: {2,}|\t))"));
 
   std::vector<NotesSection> sections(1);
   QString paragraph;
-  bool inPoint = false;
+  bool afterPoint = false;  // a point was the last block, blank lines aside
+  bool pointOpen  = false;  // and the line before belonged to it
 
   const auto flush = [&] {
     if (!paragraph.isEmpty()) {
-      auto& s = sections.back();
-      (s.points.isEmpty() ? s.paragraphs : s.after).append(paragraph);
+      sections.back().blocks.push_back({NotesBlock::Paragraph, {}, paragraph});
       paragraph.clear();
     }
-    inPoint = false;
   };
 
-  for (const QString& raw : notes.split(QLatin1Char('\n'))) {
+  QString body = notes;
+  body.remove(QLatin1Char('\r'));
+  for (const QString& raw : body.split(QLatin1Char('\n'))) {
     const QString line = raw.trimmed();
     if (line.isEmpty()) {
       flush();
+      pointOpen = false;
       continue;
     }
     if (const auto m = heading.match(raw); m.hasMatch()) {
       flush();
-      sections.push_back({m.captured(1)});
+      sections.push_back({plainTitle(m.captured(1))});
+      afterPoint = pointOpen = false;
       continue;
     }
     if (const auto m = point.match(raw); m.hasMatch()) {
       flush();
-      sections.back().points.append(m.captured(1).trimmed());
-      inPoint = true;
+      const QString marker = m.captured(1);
+      const bool numbered  = marker.front().isDigit();
+      sections.back().blocks.push_back(
+          {NotesBlock::Point, numbered ? marker : QStringLiteral("•"),
+           m.captured(2).trimmed()});
+      afterPoint = pointOpen = true;
       continue;
     }
-    if (inPoint && raw.startsWith(QLatin1Char(' '))) {
-      sections.back().points.last() += QLatin1Char(' ') + line;
+    // an indented line goes on with the point before it, also after a blank
+    // line, and so does a line right below it (a lazy continuation); deeper
+    // points are flattened into it
+    if (paragraph.isEmpty() && ((afterPoint && indented.match(raw).hasMatch()) || pointOpen)) {
+      sections.back().blocks.back().text += QLatin1Char(' ') + line;
+      pointOpen = true;
       continue;
     }
-    if (inPoint) {
-      inPoint = false;
-    }
+    afterPoint = pointOpen = false;
     paragraph += (paragraph.isEmpty() ? QString() : QStringLiteral(" ")) + line;
   }
   flush();
@@ -134,14 +196,11 @@ std::vector<NotesSection> parseNotes(const QString& notes)
     if (download.match(s.title).hasMatch()) {
       continue;
     }
-    s.after.removeIf([](const QString& p) {
-      return p.startsWith(QLatin1String("MO2 Revamped is an independent"));
+    std::erase_if(s.blocks, [](const NotesBlock& b) {
+      return b.kind == NotesBlock::Paragraph &&
+             b.text.startsWith(QLatin1String("MO2 Revamped is an independent"));
     });
-    s.paragraphs.removeIf([](const QString& p) {
-      return p.startsWith(QLatin1String("MO2 Revamped is an independent"));
-    });
-    if (!s.title.isEmpty() || !s.paragraphs.isEmpty() || !s.points.isEmpty() ||
-        !s.after.isEmpty()) {
+    if (!s.title.isEmpty() || !s.blocks.empty()) {
       kept.push_back(std::move(s));
     }
   }
@@ -157,6 +216,13 @@ void openNotesLink(const QString& link)
   } else {
     log::warn("update notice: not opening '{}', only web links open", link);
   }
+}
+
+// a tool tip that shows text from GitHub as text: Qt reads a tool tip that
+// looks like HTML as HTML, which could load an image from anywhere
+QString plainTip(const QString& text)
+{
+  return QStringLiteral("<p style='white-space:pre'>%1</p>").arg(text.toHtmlEscaped());
 }
 
 // "v1.1.0-beta.4" is shown as "1.1.0-beta.4"
@@ -184,6 +250,9 @@ UpdateNoticeDialog::UpdateNoticeDialog(
   setWindowTitle(tr("MO2 Revamped %1 is out").arg(shownVersion(m_releases.front().tag)));
   setMinimumSize(820, 520);
   resize(980, 660);
+  // the section titles of the notes; set once here, not on each title
+  setStyleSheet(QStringLiteral("QLabel#updateNotesSection { font-size: 11pt; "
+                               "font-weight: 600; padding-top: 6px; }"));
 
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(12, 12, 12, 12);
@@ -260,7 +329,7 @@ QWidget* UpdateNoticeDialog::createListCard(const QString& currentVersion)
                                             : FluentIcons::Tone::Muted));
     item->setData(FluentPanels::CaptionRole, facts(release, QLocale::ShortFormat));
     item->setData(ReleaseRole, static_cast<int>(i));
-    item->setToolTip(release.name);
+    item->setToolTip(plainTip(release.name));
   }
 
   // where the user stands, for comparison; it can't be picked
@@ -268,14 +337,20 @@ QWidget* UpdateNoticeDialog::createListCard(const QString& currentVersion)
   auto* installed = new QListWidgetItem(currentVersion, m_list);
   installed->setIcon(FluentIcons::glyph(InstalledGlyph, FluentIcons::Tone::Muted));
   installed->setData(FluentPanels::CaptionRole, tr("Installed"));
-  installed->setFlags(Qt::ItemIsEnabled);
+  installed->setFlags(Qt::NoItemFlags);
 
   layout->addWidget(m_list, 1);
 
+  // a heading or the installed version can't be the current row: a click on
+  // one keeps the release that was shown
   connect(m_list, &QListWidget::currentItemChanged, this,
-          [this](QListWidgetItem* current) {
+          [this](QListWidgetItem* current, QListWidgetItem* previous) {
             if (current != nullptr && current->data(ReleaseRole).isValid()) {
               showRelease(current->data(ReleaseRole).toInt());
+            } else if (previous != nullptr && previous->data(ReleaseRole).isValid()) {
+              QTimer::singleShot(0, m_list, [list = m_list, previous] {
+                list->setCurrentItem(previous);
+              });
             }
           });
 
@@ -311,7 +386,7 @@ QWidget* UpdateNoticeDialog::createDetailsCard(Settings& settings)
   m_scroll->setObjectName(QStringLiteral("instanceDetailsScroll"));
   m_scroll->setFrameShape(QFrame::NoFrame);
   m_scroll->setWidgetResizable(true);
-  // wide tables or code in the notes scroll instead of being cut
+  // a long word or address in the notes scrolls instead of being cut
   m_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   auto* rows = new QWidget(m_scroll);
   rows->setObjectName(QStringLiteral("instanceDetailRows"));
@@ -356,26 +431,26 @@ QWidget* UpdateNoticeDialog::createDetailsCard(Settings& settings)
       new QPushButton(FluentIcons::glyph(OpenGlyph), tr("Open on Nexus"), actions);
   nexus->setObjectName(QStringLiteral("updateNexusButton"));
   nexus->setAutoDefault(false);
-  nexus->setToolTip(nexusPageUrl());
+  nexus->setToolTip(plainTip(nexusPageUrl()));
 
   const QString newest = m_releases.front().tag;
   auto* skip =
       new QPushButton(FluentIcons::glyph(SkipGlyph), tr("Skip this version"), actions);
   skip->setObjectName(QStringLiteral("updateSkipButton"));
   skip->setAutoDefault(false);
-  skip->setToolTip(tr("%1 no longer opens this window; a newer release does. The "
-                      "status bar still shows it.")
-                       .arg(shownVersion(newest)));
+  skip->setToolTip(plainTip(tr("%1 no longer opens this window; a newer release "
+                               "does. The status bar still shows it.")
+                                .arg(shownVersion(newest))));
   actionsLayout->addWidget(m_github);
   actionsLayout->addWidget(nexus);
   actionsLayout->addStretch(1);
   actionsLayout->addWidget(skip);
   layout->addWidget(actions);
 
+  // the shown release's page, and only a web page
   connect(m_github, &QPushButton::clicked, this, [this] {
-    const auto* item = m_list->currentItem();
-    if (item != nullptr && item->data(ReleaseRole).isValid()) {
-      shell::Open(QUrl(m_releases[item->data(ReleaseRole).toInt()].url));
+    if (m_shown >= 0) {
+      openNotesLink(m_releases[static_cast<std::size_t>(m_shown)].url);
     }
   });
   connect(nexus, &QPushButton::clicked, this, [] {
@@ -393,6 +468,7 @@ QWidget* UpdateNoticeDialog::createDetailsCard(Settings& settings)
 void UpdateNoticeDialog::showRelease(int index)
 {
   const auto& release = m_releases[static_cast<std::size_t>(index)];
+  m_shown             = index;
 
   m_name->setText(release.name.isEmpty()
                       ? QStringLiteral("MO2 Revamped %1").arg(shownVersion(release.tag))
@@ -403,7 +479,7 @@ void UpdateNoticeDialog::showRelease(int index)
   }
   m_caption->setText(caption);
   fillNotes(release.notes);
-  m_github->setToolTip(release.url);
+  m_github->setToolTip(plainTip(release.url));
   m_scroll->verticalScrollBar()->setValue(0);
 }
 
@@ -452,42 +528,44 @@ void UpdateNoticeDialog::fillNotes(const QString& notes)
     return;
   }
 
-  bool first = true;
-  for (const auto& section : sections) {
+  for (std::size_t i = 0; i < sections.size(); ++i) {
+    const auto& section = sections[i];
+    // the text before the first heading is the release's summary
+    const bool summary = (i == 0 && section.title.isEmpty());
     if (!section.title.isEmpty()) {
-      if (!first) {
+      if (i > 0) {
         layout->addSpacing(10);
       }
       auto* title = new QLabel(section.title, m_notesBox);
       title->setObjectName(QStringLiteral("updateNotesSection"));
       title->setTextFormat(Qt::PlainText);
       title->setWordWrap(true);
-      title->setStyleSheet(QStringLiteral(
-          "QLabel#updateNotesSection { font-size: 11pt; font-weight: 600; "
-          "padding-top: 6px; }"));
       layout->addWidget(title);
     }
-    for (const QString& p : section.paragraphs) {
-      // the summary before the first section reads as the release's caption
-      layout->addWidget(text(inlineHtml(p), section.title.isEmpty()
-                                                ? QStringLiteral("instanceDetailCaption")
-                                                : QString()));
+
+    bool afterPoints = false;
+    for (const auto& block : section.blocks) {
+      if (block.kind == NotesBlock::Point) {
+        auto* row = new QHBoxLayout;
+        row->setSpacing(8);
+        row->setContentsMargins(4, 2, 0, 2);
+        auto* marker = new QLabel(block.marker, m_notesBox);
+        marker->setTextFormat(Qt::PlainText);
+        marker->setAlignment(Qt::AlignTop | Qt::AlignRight);
+        marker->setMinimumWidth(10);
+        row->addWidget(marker, 0, Qt::AlignTop);
+        row->addWidget(text(inlineHtml(block.text)), 1);
+        layout->addLayout(row);
+        afterPoints = true;
+      } else {
+        // a summary reads as the release's caption, a remark after the points
+        // as a footnote
+        layout->addWidget(text(inlineHtml(block.text),
+                               summary       ? QStringLiteral("instanceDetailCaption")
+                               : afterPoints ? QStringLiteral("fluentSettingDescription")
+                                             : QString()));
+      }
     }
-    for (const QString& p : section.points) {
-      auto* row = new QHBoxLayout;
-      row->setSpacing(8);
-      row->setContentsMargins(4, 2, 0, 2);
-      auto* bullet = new QLabel(QStringLiteral("•"), m_notesBox);
-      bullet->setAlignment(Qt::AlignTop);
-      bullet->setFixedWidth(10);
-      row->addWidget(bullet, 0, Qt::AlignTop);
-      row->addWidget(text(inlineHtml(p)), 1);
-      layout->addLayout(row);
-    }
-    for (const QString& p : section.after) {
-      layout->addWidget(text(inlineHtml(p), QStringLiteral("fluentSettingDescription")));
-    }
-    first = false;
   }
   layout->addStretch(1);
 }
