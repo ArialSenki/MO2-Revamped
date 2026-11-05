@@ -1474,7 +1474,8 @@ private:
     void validate(std::function<void(bool)> done) {
         reinstall_ = false;
         const QString target = target_ ? QDir::cleanPath(target_->text().trimmed()) : QString();
-        if (target.isEmpty() || !QDir::isAbsolutePath(target) || target.size() < 3)
+        // the root of a drive could be installed to but never uninstalled from
+        if (target.isEmpty() || !QDir::isAbsolutePath(target) || target.size() < 3 || QDir(target).isRoot())
             return done(showError(tr(QStringLiteral("Falta la ubicación")), tr(QStringLiteral("Indica una carpeta válida."))));
         if (mode_ == 3) {
             // relative paths would be read against the working folder here and
@@ -1662,9 +1663,7 @@ private:
                 body += tr(QStringLiteral("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes, guardados compartidos, copias de seguridad de guardados y archivos añadidos. También se quitará la carpeta seleccionada y las contenedoras que queden vacías, hasta llegar a una carpeta con contenido o protegida por Windows. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer."));
             } else {
                 body += tr(QStringLiteral("\n\nSe quitarán las carpetas de componentes reconocidas y se conservarán los datos de usuario, como perfiles, mods, descargas, overwrite y ajustes. Los demás archivos fuera de esas carpetas también se mantienen. ")) +
-                        (inspection_.value(QStringLiteral("pendingRestore")).toBool() && inspection_.value(QStringLiteral("validBackup")).toBool()
-                            ? tr(QStringLiteral("Si hay una copia previa, se restaurará la versión original."))
-                            : tr(QStringLiteral("Los datos de usuario se mantendrán en su ubicación actual.")));
+                        tr(QStringLiteral("Los datos de usuario se mantendrán en su ubicación actual."));
             }
             if (checks_.value(QStringLiteral("removeAppData"))->isChecked()) {
                 destructive = true;

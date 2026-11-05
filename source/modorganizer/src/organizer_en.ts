@@ -9734,18 +9734,18 @@ To keep some files, move them to a mod first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="plugincontainer.cpp" line="1193"/>
+        <location filename="plugincontainer.cpp" line="1194"/>
         <source>Some plugins could not be loaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="plugincontainer.cpp" line="1196"/>
-        <location filename="plugincontainer.cpp" line="1216"/>
+        <location filename="plugincontainer.cpp" line="1197"/>
+        <location filename="plugincontainer.cpp" line="1217"/>
         <source>Description missing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="plugincontainer.cpp" line="1206"/>
+        <location filename="plugincontainer.cpp" line="1207"/>
         <source>The following plugins could not be loaded. The reason may be missing dependencies (i.e. python) or an outdated version:</source>
         <translation type="unfinished"></translation>
     </message>

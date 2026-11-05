@@ -770,19 +770,14 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
     m_profileName = profile->name();
   }
 
-  // saves profile, sets up usvfs, notifies plugins, etc.; can return false if
-  // a plugin doesn't want the program to run (such as when checkFNIS fails to
-  // run FNIS and the user clicks cancel)
-  if (!m_core.beforeRun(m_sp.binary, m_sp.currentDirectory, m_sp.arguments,
-                        m_profileName, m_customOverwrite, m_forcedLibraries)) {
-    return Error;
-  }
-
   // parent widget used for any dialog popped up while checking for things
   QWidget* parent = (m_ui ? m_ui->mainWindow() : nullptr);
 
   const auto* game = m_core.managedGame();
   auto& settings   = m_core.settings();
+
+  // these questions come before the plugins prepare the launch: a plugin that
+  // hides saves for it gives up when the game doesn't appear in a few seconds
 
   // start steam if needed
   if (!checkSteam(parent, m_sp, game->gameDirectory(), m_sp.steamAppID, settings)) {
@@ -791,6 +786,14 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
 
   // warn if the executable is on the blacklist
   if (!checkBlacklist(parent, m_sp, settings)) {
+    return Error;
+  }
+
+  // saves profile, sets up usvfs, notifies plugins, etc.; can return false if
+  // a plugin doesn't want the program to run (such as when checkFNIS fails to
+  // run FNIS and the user clicks cancel)
+  if (!m_core.beforeRun(m_sp.binary, m_sp.currentDirectory, m_sp.arguments,
+                        m_profileName, m_customOverwrite, m_forcedLibraries)) {
     return Error;
   }
 

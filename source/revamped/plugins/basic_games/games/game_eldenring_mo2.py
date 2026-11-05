@@ -4454,11 +4454,12 @@ class EldenRingMo2Game(BasicGame):
             ),
         )
 
-    def _warn_if_game_closed_at_once(self, via_launcher: bool) -> None:
+    def _warn_if_game_closed_at_once(self, via_launcher: bool, run: int) -> None:
         """Without the license on the Steam account, or with a mod that stops it,
         the game closes in seconds with no message of its own."""
         if (
             via_launcher
+            or run != self._game_run
             or self._early_exit_warning_shown
             or time.time() - self._last_launch_time >= self.EarlyExitSeconds
         ):
@@ -4479,7 +4480,7 @@ class EldenRingMo2Game(BasicGame):
         self._early_exit_warning_shown = True
         qWarning("Elden Ring MO2: the game closed right after starting.")
         QMessageBox.warning(
-            None,
+            self._main_window,
             self._game_text(_tr("Elden Ring closed right after starting")),
             _tr("Check that Steam is open on the account that owns the game, and that "
             "the game starts from Steam. If it does, turn off your mods and add them "
@@ -4564,7 +4565,7 @@ class EldenRingMo2Game(BasicGame):
             return
 
         self._warn_if_loose_files_were_skipped()
-        self._warn_if_game_closed_at_once(via_launcher)
+        self._warn_if_game_closed_at_once(via_launcher, run)
         # a later launch may have restored this session and started its own
         if session_directory is not None and self._active_save_quarantine == session_directory:
             try:

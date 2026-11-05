@@ -14,6 +14,7 @@
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLayout>
 #include <QMessageBox>
@@ -159,6 +160,35 @@ ContentShape toContentShape(QDialog* dialog, const QString& title,
 // a button box's buttons share the band's width, as in FluentContentDialog; a
 // box lays itself out again when its style changes, so this runs after the
 // show as well
+// Enter on a band button presses that button. These buttons have autoDefault off,
+// which keeps the accent on the action, and Qt would press the default one instead
+class EnterPressesFocused : public QObject
+{
+public:
+  using QObject::QObject;
+
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::KeyPress) {
+      const int key = static_cast<QKeyEvent*>(event)->key();
+      if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+        if (auto* button = qobject_cast<QAbstractButton*>(watched);
+            button != nullptr && button->isEnabled()) {
+          button->click();
+          return true;
+        }
+      }
+    }
+    return QObject::eventFilter(watched, event);
+  }
+};
+
+void enterPressesItself(QAbstractButton* button)
+{
+  button->installEventFilter(new EnterPressesFocused(button));
+}
+
 void equalButtons(QDialogButtonBox* box)
 {
   const auto apply = [box] {
@@ -263,6 +293,7 @@ void shapeTaskDialog(QDialog* dialog)
         button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         button->setMinimumWidth(110);
         button->setAutoDefault(false);
+        enterPressesItself(button);
         pressesOriginal(button, original);
         shape.footer->addWidget(button);
         if (first == nullptr) {
@@ -841,6 +872,7 @@ QPushButton* FluentContentDialog::addButton(const QString& text, bool primary)
   button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   button->setMinimumWidth(110);
   button->setAutoDefault(false);
+  enterPressesItself(button);
   if (primary && !m_hasDefault) {
     m_hasDefault = true;
     button->setDefault(true);

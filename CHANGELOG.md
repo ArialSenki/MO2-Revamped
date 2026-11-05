@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0-beta.3 (pre-release) — November 4, 2026
+## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
 ### Faster
 
@@ -27,6 +27,11 @@
 
 ### Fixed
 
+- Starting a game with Steam closed: MO2 now asks about Steam before it sets the Steam saves aside. Waiting at that question could bring them back early, and the game then ran with them in place.
+- Enter on a focused Cancel in the new dialogs cancels; it used to press the action.
+- Closing the "Plugin error" window skips the plugin for this session instead of blacklisting it.
+- "Use the global Steam save?" no longer accepts on Enter.
+- Setup: the root of a drive is refused as a target, since it could not be uninstalled later. An uninstall that keeps an edited file no longer leaves an entry in Windows pointing at a missing uninstaller. The uninstall question no longer promises to restore the old version after an update.
 - A new installation starts in the language picked in its setup, unless MO2
   Revamped already has a language saved. It used to follow Windows.
 - Mod information's Advanced conflicts list gives its width to the file names,

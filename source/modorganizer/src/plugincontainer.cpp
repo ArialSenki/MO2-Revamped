@@ -1077,7 +1077,7 @@ void PluginContainer::loadPlugins()
       MOBase::TaskDialog dlg;
 
       const auto Skip      = QMessageBox::Ignore;
-      const auto Blacklist = QMessageBox::Cancel;
+      const auto Blacklist = QMessageBox::Abort;
       const auto Load      = QMessageBox::Ok;
 
       const auto r =
@@ -1097,6 +1097,7 @@ void PluginContainer::loadPlugins()
 
       switch (r) {
       case Skip:
+      case QMessageBox::Cancel:  // Esc or the X decide nothing lasting
         log::warn("user wants to skip plugin '{}'", fileName);
         skipPlugin = fileName;
         break;

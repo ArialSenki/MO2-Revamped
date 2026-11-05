@@ -41,6 +41,9 @@ The full list is in the [changelog](https://github.com/ArialSenki/MO2-Revamped/b
   that is a link to another folder.
 - With Steam Cloud on, a mod profile hides the Steam save while the game runs.
   It came back before Steam looked in every test, by a second or two.
+- If you elevate the setup with a different administrator account, shortcuts go to that
+  account's desktop and Start menu. Installing through a folder link installs but can't
+  be uninstalled from that path.
 - Other games were not played for this beta. Skyrim was only checked on a test
   folder without the game, and Fallout not at all.
 

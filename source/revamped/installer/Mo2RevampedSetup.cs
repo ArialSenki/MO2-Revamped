@@ -867,7 +867,10 @@ namespace Mo2RevampedSetup
                 RemoveEmptyDirectories(target);
             }
             bool keptUninstallEntry = false;
-            if (notes.Count == 0)
+            // A kept file leaves a folder without MO2, which no setup can uninstall
+            // again: Windows shouldn't keep offering an uninstaller that is gone.
+            bool programGone = !restoreMode && !File.Exists(Path.Combine(Path.GetFullPath(target), "ModOrganizer.exe"));
+            if (notes.Count == 0 || programGone)
             {
                 // The restored version still lives in this folder. Keep it listed
                 // in Windows while its uninstaller exists; otherwise the entry
@@ -975,7 +978,8 @@ namespace Mo2RevampedSetup
                 List<string> shortcutNotes = RemoveShortcutsToMo2(target);
                 notes.AddRange(shortcutNotes);
             }
-            if (notes.Count == 0)
+            bool programGone = !File.Exists(executable);
+            if (notes.Count == 0 || programGone)
             {
                 List<string> registryNotes = RemoveMo2UninstallEntriesForTarget(target);
                 notes.AddRange(registryNotes);
@@ -1003,7 +1007,7 @@ namespace Mo2RevampedSetup
                     ? InstallerText.T("Se eliminó todo el contenido de la carpeta elegida. Las carpetas contenedoras se borran solo si quedan vacías y no están protegidas.")
                     : InstallerText.T("Se quitaron los componentes conocidos del programa. Los datos de usuario y los archivos que no se reconocieron se conservaron.")
                 : InstallerText.T("No se completaron estos elementos: ") + String.Join(", ", notes.ToArray()) +
-                  Environment.NewLine + InstallerText.T("Vuelve a ejecutar la desinstalación sobre la misma carpeta para terminar la limpieza.");
+                  (programGone ? "" : Environment.NewLine) + (programGone ? "" : InstallerText.T("Vuelve a ejecutar la desinstalación sobre la misma carpeta para terminar la limpieza."));
             if (notes.Count == 0 && request.RemoveRevampedAppData)
                 details += Environment.NewLine + String.Format(
                     InstallerText.T("Se completó la limpieza de datos globales de MO2 Revamped en:\n{0}"),

@@ -4914,6 +4914,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     _tr("Use global save"),
                     _tr("Keep current mode"),
                     "warning",
+                    default_accept=False,
                 )
                 if not confirmed_global:
                     restore_saved_selection()
