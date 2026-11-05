@@ -288,7 +288,12 @@ void UsvfsConnector::updateForcedLibraries(
     const QList<MOBase::ExecutableForcedLoadSetting>& forcedLibraries)
 {
   usvfsClearLibraryForceLoads();
-  for (auto setting : forcedLibraries) {
+  // usvfs puts each library at the front of its list and loads that list in
+  // order (SharedParameters::addForcedLibrary uses push_front), so handing
+  // them over from the last one makes them load in the order listed, as the
+  // Executables dialog shows them
+  for (auto it = forcedLibraries.crbegin(); it != forcedLibraries.crend(); ++it) {
+    const auto& setting = *it;
     if (setting.enabled()) {
       usvfsForceLoadLibrary(setting.process().toStdWString().data(),
                             setting.library().toStdWString().data());
