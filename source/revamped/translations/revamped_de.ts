@@ -12001,12 +12001,53 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
-    <message numerus="yes">
-      <source>%n older releases are not shown here; GitHub lists them all.</source>
-      <translation>
-        <numerusform>%n ältere Version wird hier nicht gezeigt; GitHub listet alle auf.</numerusform>
-        <numerusform>%n ältere Versionen werden hier nicht gezeigt; GitHub listet alle auf.</numerusform>
-      </translation>
+    <message>
+      <source>Versions</source>
+      <translation>Versionen</translation>
+    </message>
+    <message>
+      <source>Releases newer than yours</source>
+      <translation>Neuere Versionen als deine</translation>
+    </message>
+    <message>
+      <source>Newer than yours</source>
+      <translation>Neuer als deine</translation>
+    </message>
+    <message>
+      <source>Yours</source>
+      <translation>Deine</translation>
+    </message>
+    <message>
+      <source>Installed</source>
+      <translation>Installiert</translation>
+    </message>
+    <message>
+      <source>How to update</source>
+      <translation>So aktualisierst du</translation>
+    </message>
+    <message>
+      <source>Download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped. Your instances, mods and settings stay, and nothing is downloaded by itself.</source>
+      <translation>Lade das Setup von GitHub oder Nexus herunter, starte es und wähle „MO2 Revamped aktualisieren“. Deine Instanzen, Mods und Einstellungen bleiben erhalten, und nichts wird von selbst heruntergeladen.</translation>
+    </message>
+    <message>
+      <source>Notices</source>
+      <translation>Hinweise</translation>
+    </message>
+    <message>
+      <source>Turn them off, or pick which versions you hear about, in Settings, General, Updates.</source>
+      <translation>Schalte sie aus oder wähle, über welche Versionen du informiert wirst: Einstellungen, Allgemein, Updates.</translation>
+    </message>
+    <message>
+      <source>%1 no longer opens this window; a newer release does. The status bar still shows it.</source>
+      <translation>%1 öffnet dieses Fenster nicht mehr; eine neuere Version schon. Die Statusleiste zeigt sie weiterhin.</translation>
+    </message>
+    <message>
+      <source>The window opens again the next time MO2 starts.</source>
+      <translation>Das Fenster öffnet sich beim nächsten Start von MO2 wieder.</translation>
+    </message>
+    <message>
+      <source>%1 · newest</source>
+      <translation>%1 · neueste</translation>
     </message>
     <message>
       <source>Development build</source>
@@ -12015,21 +12056,6 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
     <message>
       <source>MO2 Revamped %1 is out</source>
       <translation>MO2 Revamped %1 ist erschienen</translation>
-    </message>
-    <message numerus="yes">
-      <source>You have %1, and %n newer releases are out. Here is what they change, newest first.</source>
-      <translation>
-        <numerusform>Du hast %1, und %n neuere Version ist erschienen. Hier steht, was sie ändert, die neueste zuerst.</numerusform>
-        <numerusform>Du hast %1, und %n neuere Versionen sind erschienen. Hier steht, was sie ändern, die neueste zuerst.</numerusform>
-      </translation>
-    </message>
-    <message>
-      <source>You have %1. Here is what the new one changes.</source>
-      <translation>Du hast %1. Das ändert die neue Version.</translation>
-    </message>
-    <message>
-      <source>To update, download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped: your instances, mods and settings stay. Nothing is downloaded or installed by itself. You can turn these notices off in Settings, General, Updates.</source>
-      <translation>Lade zum Aktualisieren das Setup von GitHub oder Nexus herunter, starte es und wähle „MO2 Revamped aktualisieren“: Deine Instanzen, Mods und Einstellungen bleiben erhalten. Nichts wird von selbst heruntergeladen oder installiert. Du kannst diese Hinweise unter Einstellungen, Allgemein, Updates ausschalten.</translation>
     </message>
     <message>
       <source>Open on GitHub</source>

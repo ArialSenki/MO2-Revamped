@@ -12001,12 +12001,53 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
-    <message numerus="yes">
-      <source>%n older releases are not shown here; GitHub lists them all.</source>
-      <translation>
-        <numerusform>%n versão mais antiga não aparece aqui; o GitHub lista todas.</numerusform>
-        <numerusform>%n versões mais antigas não aparecem aqui; o GitHub lista todas.</numerusform>
-      </translation>
+    <message>
+      <source>Versions</source>
+      <translation>Versões</translation>
+    </message>
+    <message>
+      <source>Releases newer than yours</source>
+      <translation>Versões mais novas que a sua</translation>
+    </message>
+    <message>
+      <source>Newer than yours</source>
+      <translation>Mais novas que a sua</translation>
+    </message>
+    <message>
+      <source>Yours</source>
+      <translation>A sua</translation>
+    </message>
+    <message>
+      <source>Installed</source>
+      <translation>Instalada</translation>
+    </message>
+    <message>
+      <source>How to update</source>
+      <translation>Como atualizar</translation>
+    </message>
+    <message>
+      <source>Download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped. Your instances, mods and settings stay, and nothing is downloaded by itself.</source>
+      <translation>Baixe o instalador do GitHub ou do Nexus, execute-o e escolha Atualizar MO2 Revamped. Suas instâncias, mods e configurações são mantidos, e nada é baixado sozinho.</translation>
+    </message>
+    <message>
+      <source>Notices</source>
+      <translation>Avisos</translation>
+    </message>
+    <message>
+      <source>Turn them off, or pick which versions you hear about, in Settings, General, Updates.</source>
+      <translation>Desative-os, ou escolha sobre quais versões ser avisado, em Configurações, Geral, Atualizações.</translation>
+    </message>
+    <message>
+      <source>%1 no longer opens this window; a newer release does. The status bar still shows it.</source>
+      <translation>A %1 não abrirá mais esta janela; uma mais nova, sim. A barra de status continua mostrando.</translation>
+    </message>
+    <message>
+      <source>The window opens again the next time MO2 starts.</source>
+      <translation>A janela abre de novo na próxima vez que o MO2 iniciar.</translation>
+    </message>
+    <message>
+      <source>%1 · newest</source>
+      <translation>%1 · a mais recente</translation>
     </message>
     <message>
       <source>Development build</source>
@@ -12015,21 +12056,6 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
     <message>
       <source>MO2 Revamped %1 is out</source>
       <translation>O MO2 Revamped %1 saiu</translation>
-    </message>
-    <message numerus="yes">
-      <source>You have %1, and %n newer releases are out. Here is what they change, newest first.</source>
-      <translation>
-        <numerusform>Você tem a %1, e saiu %n versão mais nova. Veja o que ela muda, da mais recente para a mais antiga.</numerusform>
-        <numerusform>Você tem a %1, e saíram %n versões mais novas. Veja o que elas mudam, da mais recente para a mais antiga.</numerusform>
-      </translation>
-    </message>
-    <message>
-      <source>You have %1. Here is what the new one changes.</source>
-      <translation>Você tem a %1. Veja o que a nova muda.</translation>
-    </message>
-    <message>
-      <source>To update, download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped: your instances, mods and settings stay. Nothing is downloaded or installed by itself. You can turn these notices off in Settings, General, Updates.</source>
-      <translation>Para atualizar, baixe o instalador do GitHub ou do Nexus, execute-o e escolha Atualizar MO2 Revamped: suas instâncias, mods e configurações são mantidos. Nada é baixado nem instalado sozinho. Você pode desativar estes avisos em Configurações, Geral, Atualizações.</translation>
     </message>
     <message>
       <source>Open on GitHub</source>

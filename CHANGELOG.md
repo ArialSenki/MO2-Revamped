@@ -4,9 +4,11 @@
 
 ### Added
 
-- **Update notice**: when a newer MO2 Revamped release is out, MO2 shows a window
-  with its version and what it changes (the release notes from GitHub, every
-  release newer than yours, newest first), with **Open on GitHub**, **Open on
+- **Update notice**: when a newer MO2 Revamped release is out, MO2 opens a window
+  laid out like Profiles and Instances. On the left, the releases newer than yours,
+  newest first, and yours below them. On the right, the selected release as a
+  changelog: its summary, then each section (Highlights, Known issues...) with its
+  points, read from the release notes on GitHub. **Open on GitHub**, **Open on
   Nexus**, **Skip this version** and **Remind me later**. Updating stays in your
   hands, with the setup; nothing is downloaded or installed by itself. A skipped
   version no longer opens the window, but the status bar and the Update command

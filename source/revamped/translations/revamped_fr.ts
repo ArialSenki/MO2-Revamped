@@ -12227,12 +12227,53 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
-    <message numerus="yes">
-      <source>%n older releases are not shown here; GitHub lists them all.</source>
-      <translation>
-        <numerusform>%n version plus ancienne n&apos;est pas affichée ici ; GitHub les liste toutes.</numerusform>
-        <numerusform>%n versions plus anciennes ne sont pas affichées ici ; GitHub les liste toutes.</numerusform>
-      </translation>
+    <message>
+      <source>Versions</source>
+      <translation>Versions</translation>
+    </message>
+    <message>
+      <source>Releases newer than yours</source>
+      <translation>Versions plus récentes que la vôtre</translation>
+    </message>
+    <message>
+      <source>Newer than yours</source>
+      <translation>Plus récentes que la vôtre</translation>
+    </message>
+    <message>
+      <source>Yours</source>
+      <translation>La vôtre</translation>
+    </message>
+    <message>
+      <source>Installed</source>
+      <translation>Installée</translation>
+    </message>
+    <message>
+      <source>How to update</source>
+      <translation>Comment mettre à jour</translation>
+    </message>
+    <message>
+      <source>Download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped. Your instances, mods and settings stay, and nothing is downloaded by itself.</source>
+      <translation>Téléchargez le programme d&apos;installation sur GitHub ou Nexus, lancez-le et choisissez Mettre à jour MO2 Revamped. Vos instances, mods et paramètres sont conservés, et rien n&apos;est téléchargé tout seul.</translation>
+    </message>
+    <message>
+      <source>Notices</source>
+      <translation>Avis</translation>
+    </message>
+    <message>
+      <source>Turn them off, or pick which versions you hear about, in Settings, General, Updates.</source>
+      <translation>Désactivez-les, ou choisissez les versions signalées, dans Paramètres, Général, Mises à jour.</translation>
+    </message>
+    <message>
+      <source>%1 no longer opens this window; a newer release does. The status bar still shows it.</source>
+      <translation>La %1 n&apos;ouvrira plus cette fenêtre ; une plus récente, si. La barre d&apos;état l&apos;affiche toujours.</translation>
+    </message>
+    <message>
+      <source>The window opens again the next time MO2 starts.</source>
+      <translation>La fenêtre s&apos;ouvrira de nouveau au prochain démarrage de MO2.</translation>
+    </message>
+    <message>
+      <source>%1 · newest</source>
+      <translation>%1 · la plus récente</translation>
     </message>
     <message>
       <source>Development build</source>
@@ -12241,21 +12282,6 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     <message>
       <source>MO2 Revamped %1 is out</source>
       <translation>MO2 Revamped %1 est sorti</translation>
-    </message>
-    <message numerus="yes">
-      <source>You have %1, and %n newer releases are out. Here is what they change, newest first.</source>
-      <translation>
-        <numerusform>Vous avez la %1, et %n version plus récente est sortie. Voici ce qu&apos;elle change, la plus récente d&apos;abord.</numerusform>
-        <numerusform>Vous avez la %1, et %n versions plus récentes sont sorties. Voici ce qu&apos;elles changent, la plus récente d&apos;abord.</numerusform>
-      </translation>
-    </message>
-    <message>
-      <source>You have %1. Here is what the new one changes.</source>
-      <translation>Vous avez la %1. Voici ce que change la nouvelle.</translation>
-    </message>
-    <message>
-      <source>To update, download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped: your instances, mods and settings stay. Nothing is downloaded or installed by itself. You can turn these notices off in Settings, General, Updates.</source>
-      <translation>Pour mettre à jour, téléchargez le programme d&apos;installation sur GitHub ou Nexus, lancez-le et choisissez Mettre à jour MO2 Revamped : vos instances, mods et paramètres sont conservés. Rien n&apos;est téléchargé ni installé tout seul. Vous pouvez désactiver ces avis dans Paramètres, Général, Mises à jour.</translation>
     </message>
     <message>
       <source>Open on GitHub</source>

@@ -15585,80 +15585,115 @@ Remaining this hour: %3</source>
 <context>
     <name>UpdateNoticeDialog</name>
     <message>
-        <location filename="updatenoticedialog.cpp" line="65"/>
+        <location filename="updatenoticedialog.cpp" line="184"/>
         <source>MO2 Revamped %1 is out</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <location filename="updatenoticedialog.cpp" line="73"/>
-        <source>You have %1, and %n newer releases are out. Here is what they change, newest first.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="78"/>
-        <source>You have %1. Here is what the new one changes.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="updatenoticedialog.cpp" line="81"/>
-        <source>To update, download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped: your instances, mods and settings stay. Nothing is downloaded or installed by itself. You can turn these notices off in Settings, General, Updates.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="updatenoticedialog.cpp" line="95"/>
+        <location filename="updatenoticedialog.cpp" line="351"/>
         <source>Open on GitHub</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="99"/>
+        <location filename="updatenoticedialog.cpp" line="356"/>
         <source>Open on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="104"/>
+        <location filename="updatenoticedialog.cpp" line="363"/>
         <source>Skip this version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="110"/>
+        <location filename="updatenoticedialog.cpp" line="202"/>
         <source>Remind me later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="166"/>
+        <location filename="updatenoticedialog.cpp" line="205"/>
+        <source>The window opens again the next time MO2 starts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="228"/>
+        <location filename="updatenoticedialog.cpp" line="246"/>
+        <source>Versions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="232"/>
+        <source>Releases newer than yours</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="254"/>
+        <source>Newer than yours</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="267"/>
+        <source>Yours</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="270"/>
+        <source>Installed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="335"/>
+        <source>How to update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="336"/>
+        <source>Download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped. Your instances, mods and settings stay, and nothing is downloaded by itself.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="340"/>
+        <source>Notices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="341"/>
+        <source>Turn them off, or pick which versions you hear about, in Settings, General, Updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="366"/>
+        <source>%1 no longer opens this window; a newer release does. The status bar still shows it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="402"/>
+        <source>%1 · newest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="updatenoticedialog.cpp" line="501"/>
         <source>Development build</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="169"/>
+        <location filename="updatenoticedialog.cpp" line="504"/>
         <source>Beta</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="172"/>
+        <location filename="updatenoticedialog.cpp" line="507"/>
         <source>Stable release</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="176"/>
+        <location filename="updatenoticedialog.cpp" line="518"/>
         <source>%1 · published %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updatenoticedialog.cpp" line="189"/>
+        <location filename="updatenoticedialog.cpp" line="449"/>
         <source>This release has no notes on GitHub.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="updatenoticedialog.cpp" line="201"/>
-        <source>%n older releases are not shown here; GitHub lists them all.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
     </message>
 </context>
 <context>
