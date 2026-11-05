@@ -42,14 +42,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <unmanagedmods.h>
 #include <iplugingame.h>
 
-#include <QAbstractItemView>
 #include <QColor>
 #include <QComboBox>
 #include <QFrame>
 #include <QPalette>
 #include <QScreen>
 #include <QSizePolicy>
-#include <QStyledItemDelegate>
 #include <QTabWidget>
 #include <QTimer>
 

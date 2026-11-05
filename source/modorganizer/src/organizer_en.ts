@@ -1228,7 +1228,7 @@ Changes are saved when you choose OK.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="405"/>
+        <location filename="downloadlistview.cpp" line="410"/>
         <source>Delete...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1239,7 +1239,7 @@ Changes are saved when you choose OK.</source>
     </message>
     <message>
         <location filename="downloadlistview.cpp" line="349"/>
-        <location filename="downloadlistview.cpp" line="484"/>
+        <location filename="downloadlistview.cpp" line="490"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1261,7 +1261,7 @@ Changes are saved when you choose OK.</source>
     <message>
         <location filename="downloadlistview.cpp" line="333"/>
         <location filename="downloadlistview.cpp" line="351"/>
-        <location filename="downloadlistview.cpp" line="357"/>
+        <location filename="downloadlistview.cpp" line="360"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1286,95 +1286,95 @@ Changes are saved when you choose OK.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="355"/>
+        <location filename="downloadlistview.cpp" line="358"/>
         <source>Resume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="368"/>
+        <location filename="downloadlistview.cpp" line="373"/>
         <source>Open downloads folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="374"/>
+        <location filename="downloadlistview.cpp" line="379"/>
         <source>Hide downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="375"/>
-        <location filename="downloadlistview.cpp" line="393"/>
+        <location filename="downloadlistview.cpp" line="380"/>
+        <location filename="downloadlistview.cpp" line="398"/>
         <source>Installed...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="378"/>
-        <location filename="downloadlistview.cpp" line="396"/>
+        <location filename="downloadlistview.cpp" line="383"/>
+        <location filename="downloadlistview.cpp" line="401"/>
         <source>Uninstalled...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="381"/>
-        <location filename="downloadlistview.cpp" line="399"/>
+        <location filename="downloadlistview.cpp" line="386"/>
+        <location filename="downloadlistview.cpp" line="404"/>
         <source>All...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="385"/>
+        <location filename="downloadlistview.cpp" line="390"/>
         <source>Un-hide all</source>
         <oldsource>Un-hide all...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="392"/>
+        <location filename="downloadlistview.cpp" line="397"/>
         <source>Delete downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="434"/>
-        <location filename="downloadlistview.cpp" line="438"/>
+        <location filename="downloadlistview.cpp" line="439"/>
+        <location filename="downloadlistview.cpp" line="444"/>
         <source>Cancel download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="435"/>
+        <location filename="downloadlistview.cpp" line="440"/>
         <source>Cancel this download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="436"/>
+        <location filename="downloadlistview.cpp" line="441"/>
         <source>What was downloaded so far is deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="439"/>
+        <location filename="downloadlistview.cpp" line="443"/>
         <source>Keep downloading</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="479"/>
+        <location filename="downloadlistview.cpp" line="485"/>
         <source>Delete download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="480"/>
+        <location filename="downloadlistview.cpp" line="486"/>
         <source>Are you sure you want to delete this download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="483"/>
+        <location filename="downloadlistview.cpp" line="489"/>
         <source>Move to the Recycle Bin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="553"/>
-        <location filename="downloadlistview.cpp" line="564"/>
-        <location filename="downloadlistview.cpp" line="575"/>
+        <location filename="downloadlistview.cpp" line="559"/>
+        <location filename="downloadlistview.cpp" line="570"/>
+        <location filename="downloadlistview.cpp" line="581"/>
         <source>Delete files?</source>
         <oldsource>Delete Files?</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="554"/>
+        <location filename="downloadlistview.cpp" line="560"/>
         <source>This will move all finished downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
@@ -1384,7 +1384,7 @@ Are you absolutely sure you want to proceed?</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="565"/>
+        <location filename="downloadlistview.cpp" line="571"/>
         <source>This will move all installed downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
@@ -1394,7 +1394,7 @@ Are you absolutely sure you want to proceed?</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="576"/>
+        <location filename="downloadlistview.cpp" line="582"/>
         <source>This will move all uninstalled downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
@@ -1404,35 +1404,35 @@ Are you absolutely sure you want to proceed?</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="585"/>
-        <location filename="downloadlistview.cpp" line="595"/>
-        <location filename="downloadlistview.cpp" line="605"/>
+        <location filename="downloadlistview.cpp" line="591"/>
+        <location filename="downloadlistview.cpp" line="601"/>
+        <location filename="downloadlistview.cpp" line="611"/>
         <source>Hide files?</source>
         <oldsource>Hide Files?</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="586"/>
+        <location filename="downloadlistview.cpp" line="592"/>
         <source>This will remove all finished downloads from this list (but NOT from disk).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="596"/>
+        <location filename="downloadlistview.cpp" line="602"/>
         <source>This will remove all installed downloads from this list (but NOT from disk).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="606"/>
+        <location filename="downloadlistview.cpp" line="612"/>
         <source>This will remove all uninstalled downloads from this list (but NOT from disk).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="644"/>
+        <location filename="downloadlistview.cpp" line="650"/>
         <source>No downloads to show</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadlistview.cpp" line="650"/>
+        <location filename="downloadlistview.cpp" line="656"/>
         <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1512,283 +1512,283 @@ File %3:	%4</source>
     </message>
     <message>
         <location filename="downloadmanager.cpp" line="775"/>
-        <location filename="downloadmanager.cpp" line="915"/>
+        <location filename="downloadmanager.cpp" line="913"/>
         <source>remove: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="863"/>
+        <location filename="downloadmanager.cpp" line="861"/>
         <source>restore: invalid download index: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="934"/>
+        <location filename="downloadmanager.cpp" line="932"/>
         <source>These downloads were not deleted. They may be in use, or the deletion was cancelled:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="943"/>
+        <location filename="downloadmanager.cpp" line="941"/>
         <source>cancel: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="955"/>
+        <location filename="downloadmanager.cpp" line="953"/>
         <source>pause: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="977"/>
+        <location filename="downloadmanager.cpp" line="975"/>
         <source>resume: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="988"/>
+        <location filename="downloadmanager.cpp" line="986"/>
         <source>resume (int): invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1013"/>
+        <location filename="downloadmanager.cpp" line="1011"/>
         <source>No known download urls. Sorry, this download can&apos;t be resumed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1056"/>
-        <location filename="downloadmanager.cpp" line="1116"/>
+        <location filename="downloadmanager.cpp" line="1054"/>
+        <location filename="downloadmanager.cpp" line="1114"/>
         <source>query: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1078"/>
+        <location filename="downloadmanager.cpp" line="1076"/>
         <source>Mod ID on Nexus</source>
         <oldsource>Please enter the nexus mod id</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1079"/>
+        <location filename="downloadmanager.cpp" line="1077"/>
         <source>Mod ID:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1092"/>
+        <location filename="downloadmanager.cpp" line="1090"/>
         <source>Which game is %1 for?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1150"/>
+        <location filename="downloadmanager.cpp" line="1148"/>
         <source>Reading &apos;%1&apos; to find it on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1151"/>
+        <location filename="downloadmanager.cpp" line="1149"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1153"/>
+        <location filename="downloadmanager.cpp" line="1151"/>
         <source>Query info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1181"/>
+        <location filename="downloadmanager.cpp" line="1179"/>
         <source>VisitNexus: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1201"/>
+        <location filename="downloadmanager.cpp" line="1199"/>
         <source>Nexus ID for this Mod is unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1208"/>
+        <location filename="downloadmanager.cpp" line="1206"/>
         <source>OpenFile: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1252"/>
+        <location filename="downloadmanager.cpp" line="1250"/>
         <source>OpenFileInDownloadsFolder: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1285"/>
+        <location filename="downloadmanager.cpp" line="1283"/>
         <source>get pending: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1294"/>
+        <location filename="downloadmanager.cpp" line="1292"/>
         <source>get path: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1304"/>
+        <location filename="downloadmanager.cpp" line="1302"/>
         <source>Main</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1306"/>
+        <location filename="downloadmanager.cpp" line="1304"/>
         <source>Update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1308"/>
+        <location filename="downloadmanager.cpp" line="1306"/>
         <source>Optional</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1310"/>
+        <location filename="downloadmanager.cpp" line="1308"/>
         <source>Old</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1312"/>
+        <location filename="downloadmanager.cpp" line="1310"/>
         <source>Miscellaneous</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1314"/>
+        <location filename="downloadmanager.cpp" line="1312"/>
         <source>Deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1316"/>
+        <location filename="downloadmanager.cpp" line="1314"/>
         <source>Archived</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1318"/>
+        <location filename="downloadmanager.cpp" line="1316"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1325"/>
+        <location filename="downloadmanager.cpp" line="1323"/>
         <source>display name: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1346"/>
+        <location filename="downloadmanager.cpp" line="1344"/>
         <source>file name: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1355"/>
+        <location filename="downloadmanager.cpp" line="1353"/>
         <source>file time: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1374"/>
+        <location filename="downloadmanager.cpp" line="1372"/>
         <source>file size: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1383"/>
+        <location filename="downloadmanager.cpp" line="1381"/>
         <source>progress: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1392"/>
+        <location filename="downloadmanager.cpp" line="1390"/>
         <source>state: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1401"/>
+        <location filename="downloadmanager.cpp" line="1399"/>
         <source>infocomplete: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1415"/>
-        <location filename="downloadmanager.cpp" line="1423"/>
-        <location filename="downloadmanager.cpp" line="1436"/>
+        <location filename="downloadmanager.cpp" line="1413"/>
+        <location filename="downloadmanager.cpp" line="1421"/>
+        <location filename="downloadmanager.cpp" line="1434"/>
         <source>mod id: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1444"/>
+        <location filename="downloadmanager.cpp" line="1442"/>
         <source>ishidden: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1452"/>
+        <location filename="downloadmanager.cpp" line="1450"/>
         <source>file info: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1461"/>
+        <location filename="downloadmanager.cpp" line="1459"/>
         <source>mark installed: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1502"/>
+        <location filename="downloadmanager.cpp" line="1500"/>
         <source>mark uninstalled: invalid download index %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1667"/>
+        <location filename="downloadmanager.cpp" line="1665"/>
         <source>%1% - %2 - ~%3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1678"/>
+        <location filename="downloadmanager.cpp" line="1676"/>
         <source>Memory allocation error (in processing progress event).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1687"/>
+        <location filename="downloadmanager.cpp" line="1685"/>
         <source>Memory allocation error (in processing downloaded data).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1808"/>
+        <location filename="downloadmanager.cpp" line="1806"/>
         <source>Information updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1810"/>
-        <location filename="downloadmanager.cpp" line="1833"/>
+        <location filename="downloadmanager.cpp" line="1808"/>
+        <location filename="downloadmanager.cpp" line="1831"/>
         <source>No matching file found on Nexus! Maybe this file is no longer available or it was renamed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="1813"/>
+        <location filename="downloadmanager.cpp" line="1811"/>
         <source>No file on Nexus matches the selected file by name. Please manually choose the correct one.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2010"/>
+        <location filename="downloadmanager.cpp" line="2008"/>
         <source>No download server available. Please try again later.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2180"/>
+        <location filename="downloadmanager.cpp" line="2178"/>
         <source>Failed to request file info from nexus: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2212"/>
+        <location filename="downloadmanager.cpp" line="2210"/>
         <source>Warning: Content type is: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2219"/>
+        <location filename="downloadmanager.cpp" line="2217"/>
         <source>Download header content length: %1 downloaded file size: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2223"/>
+        <location filename="downloadmanager.cpp" line="2221"/>
         <source>Download failed: %1 (%2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2248"/>
+        <location filename="downloadmanager.cpp" line="2246"/>
         <source>We were unable to download the file due to errors after four retries. There may be an issue with the Nexus servers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2337"/>
+        <location filename="downloadmanager.cpp" line="2335"/>
         <source>failed to re-open %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="downloadmanager.cpp" line="2369"/>
+        <location filename="downloadmanager.cpp" line="2367"/>
         <source>Unable to write download to drive (return %1).
 Check the drive&apos;s available storage.
 
@@ -14616,43 +14616,43 @@ Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="88"/>
+        <location filename="settingsdialog.cpp" line="86"/>
         <source>Developer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="226"/>
+        <location filename="settingsdialog.cpp" line="224"/>
         <source>Highlights</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="228"/>
+        <location filename="settingsdialog.cpp" line="226"/>
         <source>When you select a collapsed separator, highlight the mods it contains.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="236"/>
+        <location filename="settingsdialog.cpp" line="234"/>
         <source>Choose how much troubleshooting information MO2 collects. The recommended levels are suitable for everyday use.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="337"/>
+        <location filename="settingsdialog.cpp" line="335"/>
         <source>Base directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="338"/>
+        <location filename="settingsdialog.cpp" line="336"/>
         <source>This folder can&apos;t be created, so the settings weren&apos;t saved:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="350"/>
+        <location filename="settingsdialog.cpp" line="348"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="351"/>
+        <location filename="settingsdialog.cpp" line="349"/>
         <source>Changing the mod directory affects all your profiles! Mods not present (or named differently) in the new location will be disabled in all profiles. There is no way to undo this unless you backed up your profiles manually. Proceed?</source>
         <translation type="unfinished"></translation>
     </message>

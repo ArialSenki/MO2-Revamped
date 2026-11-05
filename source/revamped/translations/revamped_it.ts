@@ -5372,6 +5372,18 @@ La maggior parte delle mod non ne ha bisogno: gli script extender e i loader di 
   <context>
     <name>InstanceManagerDialog</name>
     <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>Altre istanze usano queste cartelle:
+
+%1
+
+Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translation>
+    </message>
+    <message>
       <source>Instance folder</source>
       <translation>Cartella dell'istanza</translation>
     </message>
@@ -9096,6 +9108,16 @@ Per conservare alcuni file, spostali prima in una mod.</translation>
   <context>
     <name>ProfilesDialog</name>
     <message>
+      <source>The folder below will be deleted:
+%1
+
+Proceed?</source>
+      <translation>La cartella seguente verrà eliminata:
+%1
+
+Procedere?</translation>
+    </message>
+    <message>
       <source>That name is already in use</source>
       <translation>Questo nome è già in uso</translation>
     </message>
@@ -10354,6 +10376,12 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>
+Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>
+      <translation>
+Scegli quanti dettagli MO2 scrive in ModOrganizer.log. Info è consigliato per l'uso quotidiano; seleziona Debug quando raccogli informazioni per risolvere un problema.</translation>
+    </message>
     <message>
       <source>Versions to hear about</source>
       <translation>Versioni da segnalare</translation>

@@ -5197,6 +5197,18 @@ Die meisten Mods brauchen das nicht: Script Extender und DLL-Loader laden ihre P
   <context>
     <name>InstanceManagerDialog</name>
     <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>Andere Instanzen verwenden diese Ordner:
+
+%1
+
+Wenn du sie löschst, werden auch die Dateien dieser Instanzen entfernt. Trotzdem löschen?</translation>
+    </message>
+    <message>
       <source>Instance folder</source>
       <translation>Instanzordner</translation>
     </message>
@@ -8766,6 +8778,16 @@ Um einige Dateien zu behalten, verschiebe sie vorher in eine Mod.</translation>
   <context>
     <name>ProfilesDialog</name>
     <message>
+      <source>The folder below will be deleted:
+%1
+
+Proceed?</source>
+      <translation>Der folgende Ordner wird gelöscht:
+%1
+
+Fortfahren?</translation>
+    </message>
+    <message>
       <source>That name is already in use</source>
       <translation>Dieser Name wird bereits verwendet</translation>
     </message>
@@ -9966,6 +9988,12 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>
+Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>
+      <translation>
+Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für den Alltag empfohlen; wähle Debug, wenn du Informationen zur Fehlersuche sammelst.</translation>
+    </message>
     <message>
       <source>Disconnect from Nexus</source>
       <translation>Von Nexus trennen</translation>

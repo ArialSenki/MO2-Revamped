@@ -5272,6 +5272,18 @@ La plupart des mods n&apos;en ont pas besoin : les extenseurs de scripts et les 
   <context>
     <name>InstanceManagerDialog</name>
     <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>D&apos;autres instances utilisent ces dossiers :
+
+%1
+
+Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même ?</translation>
+    </message>
+    <message>
       <source>Instance folder</source>
       <translation>Dossier de l'instance</translation>
     </message>
@@ -8988,6 +9000,16 @@ Pour garder certains fichiers, déplacez-les d&apos;abord dans un mod.</translat
   <context>
     <name>ProfilesDialog</name>
     <message>
+      <source>The folder below will be deleted:
+%1
+
+Proceed?</source>
+      <translation>Le dossier suivant sera supprimé :
+%1
+
+Continuer ?</translation>
+    </message>
+    <message>
       <source>That name is already in use</source>
       <translation>Ce nom est déjà utilisé</translation>
     </message>
@@ -10246,6 +10268,12 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>
+Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>
+      <translation>
+Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est recommandé au quotidien ; sélectionnez Debug pour recueillir des informations de dépannage.</translation>
+    </message>
     <message>
       <source>Versions to hear about</source>
       <translation>Versions à signaler</translation>

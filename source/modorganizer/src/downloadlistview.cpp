@@ -352,10 +352,15 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       } else if ((state == DownloadManager::STATE_PAUSED) ||
                  (state == DownloadManager::STATE_ERROR) ||
                  (state == DownloadManager::STATE_PAUSING)) {
+        // a download still pausing keeps its file open until it has paused:
+        // it can be resumed, deleted only once paused
+        const bool pausing = (state == DownloadManager::STATE_PAUSING);
         setDefaultMenuAction(&menu, addAction(menu, tr("Resume"), menuGlyph(MenuGlyphs::Run), onRow(&DownloadListView::issueResume)));
         menu.addSeparator();
         addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), onRow(&DownloadListView::issueOpenInDownloadsFolder));
-        remove = onRow(&DownloadListView::issueDelete);
+        if (!pausing) {
+          remove = onRow(&DownloadListView::issueDelete);
+        }
       }
     }
   } catch (std::exception&) {
@@ -435,8 +440,8 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
                                 .main(tr("Cancel this download?"))
                                 .content(tr("What was downloaded so far is deleted."))
                                 .icon(QMessageBox::Question)
-                                .button({tr("Cancel download"), QMessageBox::Yes})
                                 .button({tr("Keep downloading"), QMessageBox::Cancel})
+                                .button({tr("Cancel download"), QMessageBox::Yes})
                                 .exec();
         const int current = m_Manager->indexByName(fileName);
         if (answer == QMessageBox::Yes && current >= 0) {
@@ -450,7 +455,8 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
     } else if (state == DownloadManager::STATE_PAUSED ||
                state == DownloadManager::STATE_ERROR ||
                state == DownloadManager::STATE_PAUSING) {
-      if (event->key() == Qt::Key_Delete) {
+      // deleting waits until a pausing download has paused (see the menu)
+      if (event->key() == Qt::Key_Delete && state != DownloadManager::STATE_PAUSING) {
         issueDelete(row);
       } else if (event->key() == Qt::Key_Space) {
         issueResume(row);

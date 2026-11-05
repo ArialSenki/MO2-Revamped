@@ -1891,7 +1891,7 @@ void MainWindow::updateWindowTitle(const APIUserAccount& user)
 {
   //"\xe2\x80\x93" is an "em dash", a longer "-"
   // the MO2 Revamped release, not the 2.5.2 of the MO2 it is based on
-  QString title = QString("%1 \xe2\x80\x93 Mod Organizer 2: Revamped %2")
+  QString title = QString("%1 \xe2\x80\x93 Mod Organizer 2: Revamped v%2")
                       .arg(m_OrganizerCore.managedGame()->displayGameName(),
                            SelfUpdater::revampedVersionString());
 

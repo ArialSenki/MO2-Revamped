@@ -784,9 +784,7 @@ bool DownloadManager::removeFile(int index, bool deleteFile)
     return false;
   }
 
-  // a download still pausing has only its .unfinished file too
-  if ((download->m_State == STATE_PAUSED) || (download->m_State == STATE_ERROR) ||
-      (download->m_State == STATE_PAUSING)) {
+  if ((download->m_State == STATE_PAUSED) || (download->m_State == STATE_ERROR)) {
     filePath = download->m_Output.fileName();
   }
 

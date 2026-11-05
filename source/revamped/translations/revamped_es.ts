@@ -5229,6 +5229,18 @@ La mayoría de los mods no lo necesitan: los extensores de scripts y los cargado
   <context>
     <name>InstanceManagerDialog</name>
     <message>
+      <source>Other instances use these folders:
+
+%1
+
+Deleting them also removes those instances&apos; files. Delete anyway?</source>
+      <translation>Otras instancias usan estas carpetas:
+
+%1
+
+Si las borras, también se borran los archivos de esas instancias. ¿Borrar de todos modos?</translation>
+    </message>
+    <message>
       <source>Failed to rename &quot;%1&quot; to &quot;%2&quot;: %3</source>
       <translation>No se pudo cambiar el nombre de &quot;%1&quot; a &quot;%2&quot;: %3</translation>
     </message>
@@ -8926,6 +8938,16 @@ Para conservar algunos archivos, muévelos antes a un mod.</translation>
   <context>
     <name>ProfilesDialog</name>
     <message>
+      <source>The folder below will be deleted:
+%1
+
+Proceed?</source>
+      <translation>Se borrará la siguiente carpeta:
+%1
+
+¿Continuar?</translation>
+    </message>
+    <message>
       <source>That name is already in use</source>
       <translation>Ese nombre ya está en uso</translation>
     </message>
@@ -10146,6 +10168,12 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>
+Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>
+      <translation>
+Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado para el uso diario; selecciona Debug al recopilar información para solucionar un problema.</translation>
+    </message>
     <message>
       <source>Versions to hear about</source>
       <translation>Versiones de las que avisar</translation>

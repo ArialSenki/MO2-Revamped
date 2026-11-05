@@ -72,8 +72,7 @@
   Bin; it deleted them for good, whatever folder Paths pointed at.
 - Downloads: the right-click commands act on the download you clicked even if
   another one finishes while the menu is open, and Delete on a download under way
-  asks before cancelling it. A download still pausing can be deleted, and a paused
-  one shows in amber instead of red.
+  asks before cancelling it. A paused download shows in amber instead of red.
 - The window title and About show the MO2 Revamped version (About also the MO2
   base), and so do the Revamped About's header, components and diagnostic report.
 - Endorsing another mod no longer marks MO2 Revamped as endorsed after a failed
@@ -86,7 +85,7 @@
   the same name is no longer an error, and the active profile is recognised
   whatever the case of its name.
 - Translations: the Overwrite folder keeps its name in the wizard, older wording in
-  Spanish and German is corrected, and texts no longer used are gone.
+  Spanish and German is corrected, and many texts no longer used are gone.
 - The installed `licenses` folder now has every licence the third-party notices
   name, and the notices themselves as they are in this release; the release
   builder stops if one is missing.
