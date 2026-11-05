@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "env.h"
 #include "organizercore.h"
 
+#include <QScrollBar>
 #include <QStyle>
 #include <QIcon>
 
@@ -206,6 +207,12 @@ LogList::LogList(QWidget* parent)
 
 void LogList::onNewEntry()
 {
+  // follow new lines only while the list is at its end: someone who scrolled
+  // up to read keeps their place
+  const auto* bar = verticalScrollBar();
+  if (bar != nullptr && bar->value() < bar->maximum() - 2) {
+    return;
+  }
   m_timer.start(std::chrono::milliseconds(10));
 }
 

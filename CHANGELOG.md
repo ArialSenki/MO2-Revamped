@@ -34,6 +34,31 @@
   the game's entry point as intended.
 - Native DLLs load in the order the Native DLL Profile shows; they loaded in
   reverse.
+- Executables, Force load libraries now lists libraries in the order they load,
+  for every game, and libraries you add load after the game plugin's own (before,
+  usvfs loaded the list from the bottom up). If you added several for one program
+  and their order matters, check it there.
+- Elden Ring and Nightreign: the bridge, the me3 compatibility DLL and the mods'
+  DLLs show as the game plugin's own in Force load libraries. They can be switched
+  off there but no longer edited or removed (a removed one came back by itself,
+  and an edited one loaded twice).
+- Elden Ring: a sound file in Overwrite now wins over the same file in a mod, as
+  everything else in Overwrite does.
+- Elden Ring: an error while MO2 prepares a launch no longer leaves the Steam
+  saves hidden; the launch stops with a message and the saves come back at once.
+  MO2 also warns when the game ran without its bridge (Force load libraries off),
+  instead of leaving the mods out without a word.
+- Elden Ring: "could not restore the saves" no longer appears when the saves came
+  back and only their emptied recovery folder was still in use; the "still open
+  as MO2 closes" notice no longer appears when you cancel closing MO2.
+- Seamless Co-op starts from a mods folder reached through a link (junction).
+- The log panel's summary empties with **Clear all**, shows a log line with `<`
+  as written, and the log stays where you scrolled to instead of jumping to the
+  end on every new line.
+- Plugins: right-clicking a plugin in a sorted or filtered list with nothing
+  selected acts on that plugin, not on another one.
+- Mod information, Nexus page: the version uses the same checks and colors as the
+  mod list (accent for an update, caution for an older version on Nexus).
 - The update check compared GitHub releases with the version of the Mod Organizer
   2 it is based on (2.5.2), so it never found a newer MO2 Revamped. The build now
   carries its own version, and the release builder checks that the source and
@@ -51,8 +76,6 @@
   short while the game runs.
 - Rarely, the game can stall at start-up while MO2 installs its file hooks. Close
   it and start it again.
-- Executables, Force load libraries lists the game's own libraries in reverse
-  order; they load in the right one.
 
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 

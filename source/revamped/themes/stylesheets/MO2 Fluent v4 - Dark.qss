@@ -5366,8 +5366,11 @@ QDialog QGroupBox > QWidget {
 }
 
 /* Mod information, Nexus page: the installed version in the status tones */
-QDialog#ModInfoDialog QLineEdit#version[versionState="outdated"] {
-    color: #FF99A4;
+QDialog#ModInfoDialog QLineEdit#version[versionState="update"] {
+    color: #60CDFF;
+}
+QDialog#ModInfoDialog QLineEdit#version[versionState="older"] {
+    color: #FCE100;
 }
 QDialog#ModInfoDialog QLineEdit#version[versionState="current"] {
     color: #6CCB5F;

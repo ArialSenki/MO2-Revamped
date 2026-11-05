@@ -238,20 +238,27 @@ bool NexusTab::usesOriginFiles() const
 
 void NexusTab::updateVersionColor()
 {
-  // no newest version yet says nothing about this one
-  const bool known    = mod().newestVersion().isValid();
-  const bool outdated = known && mod().version() < mod().newestVersion();
-  if (outdated) {
+  // no newest version yet says nothing about this one; the same checks as
+  // the mod list's status column, so the two never disagree
+  const bool known  = mod().newestVersion().isValid();
+  const bool update = known && mod().updateAvailable();
+  const bool older  = known && !update && mod().downgradeAvailable();
+  if (update) {
     ui->version->setToolTip(
         tr("Current Version: %1").arg(mod().newestVersion().canonicalString()));
+  } else if (older) {
+    ui->version->setToolTip(tr("Older on Nexus: %1")
+                                .arg(mod().newestVersion().canonicalString()));
   } else {
     ui->version->setToolTip(known ? tr("No update available") : QString());
   }
 
-  // the theme colors it (versionState) in its critical and success tones
-  const QString state = !known     ? QString()
-                        : outdated ? QStringLiteral("outdated")
-                                   : QStringLiteral("current");
+  // the theme colors it (versionState): an update in the accent, as the mod
+  // list shows it, an older Nexus version in the caution tone
+  const QString state = !known  ? QString()
+                        : update ? QStringLiteral("update")
+                        : older  ? QStringLiteral("older")
+                                 : QStringLiteral("current");
   if (ui->version->property("versionState").toString() != state) {
     ui->version->setProperty("versionState", state);
     ui->version->style()->unpolish(ui->version);
