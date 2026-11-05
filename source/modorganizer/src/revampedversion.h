@@ -7,4 +7,8 @@
 // Build-Release.ps1 refuses to package a build whose version differs from it.
 #define MO2R_VERSION_STRING "1.1.0-beta.3"
 
+// the MO2 Revamped listing on Nexus, under Elden Ring: the update notice links
+// to it and the endorsement goes to it
+#define MO2R_NEXUS_MOD_ID 11314
+
 #endif  // REVAMPEDVERSION_H

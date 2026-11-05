@@ -217,6 +217,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modeltest.h"
 #endif  // TEST_MODELS
 
+#include "revampedversion.h"
 #include "selfupdater.h"
 #include "updatenoticedialog.h"
 
@@ -254,7 +255,7 @@ bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
 
 namespace {
 
-constexpr int kRevampedNexusModId = 11290;
+constexpr int kRevampedNexusModId = MO2R_NEXUS_MOD_ID;
 
 // the category setup choices (Segoe Fluent Icons)
 constexpr char16_t ImportNexusGlyph      = 0xE896;  // Download
@@ -5026,7 +5027,7 @@ void MainWindow::actionEndorseMO()
     }
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
-        m_OrganizerCore.getVersion().canonicalString(), true, this, QVariant(),
+        SelfUpdater::revampedVersionString(), true, this, QVariant(),
         QString());
   }
 }
@@ -5042,7 +5043,7 @@ void MainWindow::actionWontEndorseMO()
     }
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
-        m_OrganizerCore.getVersion().canonicalString(), false, this, QVariant(),
+        SelfUpdater::revampedVersionString(), false, this, QVariant(),
         QString());
   }
 }
