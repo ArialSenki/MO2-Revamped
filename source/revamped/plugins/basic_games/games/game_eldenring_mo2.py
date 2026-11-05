@@ -2085,8 +2085,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.84"
-    NativeBridgeVersion = "0.5.0-alpha.38"
+    Version = "0.5.0-alpha.85"
+    NativeBridgeVersion = "0.5.0-alpha.54"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -5515,7 +5515,12 @@ class EldenRingMo2Game(BasicGame):
 
         self._reforged_env_previous = {
             key: os.environ.get(key)
-            for key in (self.ReforgedAttachEnvironment, self.SaveExtensionEnvironment)
+            for key in (
+                self.ReforgedAttachEnvironment,
+                self.SaveExtensionEnvironment,
+                self.SoundFoldersEnvironment,
+                self.SkipModSoundsEnvironment,
+            )
         }
         self._reforged_env_active = True
         reforged_natives = self._reforged_natives()
@@ -5543,7 +5548,41 @@ class EldenRingMo2Game(BasicGame):
             )
         else:
             os.environ.pop(self.SaveExtensionEnvironment, None)
+        # Reforged's cs_smain.bnk cuts music and voices on hits when MO2 loads it
+        # (not with its own launcher); until that is solved its sound stays the
+        # game's own, as before mods' sound files could load
+        if reforged_natives is not None:
+            os.environ[self.SkipModSoundsEnvironment] = "1"
+            qInfo(
+                "Elden Ring MO2: ELDEN RING Reforged is active; mods' sound files "
+                "stay off for this run."
+            )
+        else:
+            os.environ.pop(self.SkipModSoundsEnvironment, None)
+        sound_folders = self._active_sound_folders()
+        if sound_folders:
+            os.environ[self.SoundFoldersEnvironment] = ";".join(sound_folders)
+        else:
+            os.environ.pop(self.SoundFoldersEnvironment, None)
         qInfo("Elden Ring MO2: profile launch options passed to bridge.")
+
+    # the bridge opens mods' sound files from these folders, highest priority first
+    SoundFoldersEnvironment = "ELDENRING_MO2_SOUND_FOLDERS"
+    SkipModSoundsEnvironment = "ELDENRING_MO2_SKIP_MOD_SOUNDS"
+
+    def _active_sound_folders(self) -> list[str]:
+        mod_list = self._organizer.modList()
+        folders = []
+        for name in reversed(list(mod_list.allModsByProfilePriority())):
+            if not mod_list.state(name) & mobase.ModState.ACTIVE:
+                continue
+            mod = mod_list.getMod(name)
+            if mod is None:
+                continue
+            folder = Path(mod.absolutePath())
+            if (folder / "sd").is_dir() and ";" not in str(folder):
+                folders.append(str(folder))
+        return folders
 
     # reforged.dll reads me3's attach config (JSON, the AttachConfig of me3's
     # launcher-attach-protocol crate) from this variable and stops the game

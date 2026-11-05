@@ -1,11 +1,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <tlhelp32.h>
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <cwchar>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "vendor/minhook/MinHook.h"
@@ -40,6 +43,23 @@ using ArchivePathResolver = void*(__cdecl*)(EldenRingLocalWString*, uint64_t,
                                              uint64_t);
 
 ArchivePathResolver g_original_archive_path = nullptr;
+
+using WwiseOpenFileByName = uintptr_t(__cdecl*)(uintptr_t, const wchar_t*,
+                                                uint64_t, uintptr_t, uintptr_t,
+                                                uintptr_t);
+constexpr uint64_t kAkOpenRead = 0;
+constexpr uint64_t kAkOpenReadEbl = 10;
+constexpr size_t kAkFlagsLanguageSpecific = 0x18;
+constexpr uint32_t kAkCodecPlainPath = 0x15;
+WwiseOpenFileByName g_original_wwise_open = nullptr;
+SRWLOCK g_wwise_overrides_lock = SRWLOCK_INIT;
+// never destroyed: the audio thread can still open files while the process exits
+auto& g_wwise_overrides = *new std::unordered_map<std::wstring, std::wstring>();
+volatile LONG g_logged_wwise_requests = 0;
+volatile LONG g_logged_wwise_stream_requests = 0;
+volatile LONG g_logged_wwise_open_failures = 0;
+volatile LONG g_logged_wwise_open_successes = 0;
+volatile LONG g_logged_wwise_overrides = 0;
 volatile LONG g_logged_asset_overrides = 0;
 volatile LONG g_logged_resolver_requests = 0;
 volatile LONG g_logged_data_paths = 0;
@@ -1281,6 +1301,319 @@ bool install_loose_asset_hook() {
   return true;
 }
 
+// Wwise opens its sound banks and streamed .wem files through its own low-level
+// IO, reading them from the encrypted archives without ever asking the resolver
+// above, so a mod's sd folder was never read. Adapted from me3's Wwise override
+// (see THIRD-PARTY-NOTICES.md): same call site, same places to look in.
+// The active mods that have sound files, highest priority first (from the plugin)
+std::vector<std::wstring> wwise_sound_folders() {
+  std::vector<std::wstring> folders;
+  std::wstring value(32768, L'\0');
+  const DWORD length = GetEnvironmentVariableW(
+      L"ELDENRING_MO2_SOUND_FOLDERS", value.data(),
+      static_cast<DWORD>(value.size()));
+  if (length == 0 || length >= value.size()) {
+    return folders;
+  }
+  value.resize(length);
+  size_t start = 0;
+  while (start < value.size()) {
+    size_t end = value.find(L';', start);
+    if (end == std::wstring::npos) {
+      end = value.size();
+    }
+    if (end > start) {
+      folders.push_back(value.substr(start, end - start));
+    }
+    start = end + 1;
+  }
+  return folders;
+}
+
+bool wwise_loose_path(const std::wstring& relative, std::wstring* absolute) {
+  // The file itself in its mod's folder, as me3 opens it, without going through
+  // MO2's virtual folder.
+  static const std::vector<std::wstring>& folders =
+      *new std::vector<std::wstring>(wwise_sound_folders());
+  for (const std::wstring& folder : folders) {
+    const std::wstring real = folder + L"\\" + relative;
+    HANDLE real_file = CreateFileW(real.c_str(), GENERIC_READ,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE |
+                                       FILE_SHARE_DELETE,
+                                   nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                                   nullptr);
+    if (real_file != INVALID_HANDLE_VALUE) {
+      CloseHandle(real_file);
+      *absolute = real;
+      return true;
+    }
+  }
+  wchar_t buffer[4096] = {};
+  const std::wstring candidate = L".\\" + relative;
+  const DWORD length = GetFullPathNameW(
+      candidate.c_str(), static_cast<DWORD>(sizeof(buffer) / sizeof(buffer[0])),
+      buffer, nullptr);
+  if (length == 0 || length >= sizeof(buffer) / sizeof(buffer[0])) {
+    return false;
+  }
+  HANDLE file = CreateFileW(buffer, GENERIC_READ,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE |
+                                FILE_SHARE_DELETE,
+                            nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                            nullptr);
+  if (file == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+  CloseHandle(file);
+  *absolute = buffer;
+  return true;
+}
+
+std::wstring find_wwise_override(const wchar_t* request) {
+  static const wchar_t* const stripped[] = {L"sd:/", L"sd_dlc02:/"};
+  bool found_prefix = true;
+  while (found_prefix) {
+    found_prefix = false;
+    for (const wchar_t* prefix : stripped) {
+      const size_t length = wcslen(prefix);
+      if (_wcsnicmp(request, prefix, length) == 0) {
+        request += length;
+        found_prefix = true;
+        break;
+      }
+    }
+  }
+
+  std::wstring name;
+  for (; *request != L'\0'; ++request) {
+    name += *request == L'/' ? L'\\' : *request;
+  }
+  if (name.empty() || name[0] == L'\\' ||
+      name.find(L':') != std::wstring::npos || has_parent_segment(name.c_str())) {
+    return {};
+  }
+
+  const bool is_wem = name.size() > 4 &&
+                      _wcsicmp(name.c_str() + name.size() - 4, L".wem") == 0;
+  // The game asks for ids from 2^31 up as negative numbers (sd:/-1631356907.wem),
+  // while the files are named by the unsigned id (2663610389.wem).
+  if (is_wem && name[0] == L'-') {
+    wchar_t* end = nullptr;
+    const long long id = wcstoll(name.c_str(), &end, 10);
+    if (end != nullptr && _wcsicmp(end, L".wem") == 0 && id < 0 &&
+        id >= -2147483648LL) {
+      name = std::to_wstring(id + 4294967296LL) + L".wem";
+    }
+  }
+
+  std::vector<std::wstring> names;
+  names.push_back(name);
+  if (is_wem) {
+    names.push_back(L"wem\\" + name);
+    // Elden Ring keeps them in wem\<first two digits of the id>\<id>.wem
+    names.push_back(L"wem\\" + name.substr(0, 2) + L"\\" + name);
+  }
+
+  std::wstring absolute;
+  for (const std::wstring& candidate : names) {
+    for (const wchar_t* folder : {L"sd\\", L"sd\\enus\\", L"sd\\ja\\"}) {
+      if (wwise_loose_path(folder + candidate, &absolute)) {
+        return absolute;
+      }
+    }
+  }
+  return {};
+}
+
+uintptr_t __cdecl wwise_open_file_hook(uintptr_t p1, const wchar_t* path,
+                                       uint64_t open_mode, uintptr_t p4,
+                                       uintptr_t p5, uintptr_t p6) {
+  if (path == nullptr ||
+      (open_mode != kAkOpenRead && open_mode != kAkOpenReadEbl)) {
+    return g_original_wwise_open(p1, path, open_mode, p4, p5, p6);
+  }
+
+  const std::wstring request = path;
+  const wchar_t* loose = nullptr;
+  bool known = false;
+  // A run's mods don't change and a sound can open many times: look on disk once.
+  AcquireSRWLockShared(&g_wwise_overrides_lock);
+  auto cached = g_wwise_overrides.find(request);
+  if (cached != g_wwise_overrides.end()) {
+    known = true;
+    loose = cached->second.empty() ? nullptr : cached->second.c_str();
+  }
+  ReleaseSRWLockShared(&g_wwise_overrides_lock);
+
+  if (!known) {
+    const size_t request_length = request.size();
+    const bool is_stream =
+        request_length > 4 &&
+        _wcsicmp(request.c_str() + request_length - 4, L".wem") == 0;
+    if (InterlockedIncrement(is_stream ? &g_logged_wwise_stream_requests
+                                       : &g_logged_wwise_requests) <= 32) {
+      log_line("Wwise file request:", path);
+    }
+    std::wstring found = find_wwise_override(path);
+    AcquireSRWLockExclusive(&g_wwise_overrides_lock);
+    // the map keeps its strings in place, so this pointer stays good
+    auto inserted = g_wwise_overrides.emplace(request, std::move(found));
+    loose = inserted.first->second.empty() ? nullptr
+                                           : inserted.first->second.c_str();
+    ReleaseSRWLockExclusive(&g_wwise_overrides_lock);
+    if (loose != nullptr &&
+        InterlockedIncrement(&g_logged_wwise_overrides) <= 256) {
+      log_line("MO2 Wwise loose override:", loose);
+    }
+  }
+
+  if (loose == nullptr) {
+    return g_original_wwise_open(p1, path, open_mode, p4, p5, p6);
+  }
+  // an ordinary read from disk instead of the read from the archives
+  const size_t loose_length = wcslen(loose);
+  const bool is_stream =
+      loose_length > 4 && _wcsicmp(loose + loose_length - 4, L".wem") == 0;
+  if (!is_stream) {
+    // Banks keep the game's flags, as me3 sends them: the game tries sd:/,
+    // sd_dlc02:/ and the bare name until one opens. Changing the flags so the
+    // first one worked left Reforged's boss music silent, and a fallback to the
+    // game's own here loaded the original bank instead of the mod's.
+    const uintptr_t opened =
+        g_original_wwise_open(p1, loose, kAkOpenRead, p4, p5, p6);
+    if (static_cast<uint32_t>(opened) == 1 &&
+        InterlockedIncrement(&g_logged_wwise_open_successes) <= 64) {
+      log_line("MO2 Wwise loose open worked:", loose);
+    }
+    return opened;
+  }
+
+  // With a known codec the game hands the name to its own lookup for that kind of
+  // file, which ruins a full path. A codec it doesn't know leaves the path as it
+  // is, and the language would be added after the path's colon.
+  unsigned char flags[0x40] = {};
+  uintptr_t flags_to_use = p4;
+  if (p4 != 0) {
+    memcpy(flags, reinterpret_cast<const void*>(p4), 0x20);
+    flags[kAkFlagsLanguageSpecific] = 0;
+    memcpy(flags + 4, &kAkCodecPlainPath, sizeof(kAkCodecPlainPath));
+    flags_to_use = reinterpret_cast<uintptr_t>(flags);
+  }
+  const uintptr_t opened =
+      g_original_wwise_open(p1, loose, kAkOpenRead, flags_to_use, p5, p6);
+  if (static_cast<uint32_t>(opened) == 1) {
+    if (InterlockedIncrement(&g_logged_wwise_open_successes) <= 64) {
+      log_line("MO2 Wwise loose open worked:", loose);
+    }
+    return opened;
+  }
+  if (InterlockedIncrement(&g_logged_wwise_open_failures) <= 32) {
+    log_line("MO2 Wwise loose open failed, using the game's own:", loose);
+  }
+  // better the game's own sound than silence
+  return g_original_wwise_open(p1, path, open_mode, p4, p5, p6);
+}
+
+// call WwiseOpenFileByName; cmp eax,1; je ?; add reg,38h; cmp qword [rbp+?],8
+bool is_wwise_open_call_site(const unsigned char* code, size_t available) {
+  if (available < 26 || code[0] != 0xE8 || code[5] != 0x83 || code[6] != 0xF8 ||
+      code[7] != 0x01) {
+    return false;
+  }
+  size_t at = 8;
+  if (code[at] == 0x74) {
+    at += 2;
+  } else if (code[at] == 0x0F && code[at + 1] == 0x84) {
+    at += 6;
+  } else {
+    return false;
+  }
+  if (code[at] < 0x48 || code[at] > 0x4F || code[at + 1] != 0x83 ||
+      code[at + 2] < 0xC0 || code[at + 2] > 0xC7 || code[at + 3] != 0x38) {
+    return false;
+  }
+  at += 4;
+  if (code[at] < 0x48 || code[at] > 0x4F || code[at + 1] != 0x83) {
+    return false;
+  }
+  if (code[at + 2] == 0x7D) {
+    at += 4;
+  } else if (code[at + 2] == 0xBD) {
+    at += 7;
+  } else {
+    return false;
+  }
+  return code[at] == 0x08;
+}
+
+bool install_wwise_hook() {
+  // ELDEN RING Reforged's cs_smain.bnk cuts music and voices on hits when MO2
+  // loads it, and not with Reforged's own launcher: until that is understood,
+  // its sound stays the game's own. The plugin sets this for Reforged.
+  wchar_t skip[8] = {};
+  if (GetEnvironmentVariableW(L"ELDENRING_MO2_SKIP_MOD_SOUNDS", skip, 8) > 0 &&
+      skip[0] == L'1') {
+    log_line("Wwise hook skipped: mods' sound files stay off for this run.");
+    return false;
+  }
+  HMODULE image = GetModuleHandleW(nullptr);
+  if (image == nullptr) {
+    return false;
+  }
+  const auto* image_base = reinterpret_cast<const unsigned char*>(image);
+  const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(
+      image_base + reinterpret_cast<const IMAGE_DOS_HEADER*>(image)->e_lfanew);
+  const size_t image_size = nt->OptionalHeader.SizeOfImage;
+  const IMAGE_SECTION_HEADER* sections = IMAGE_FIRST_SECTION(nt);
+
+  void* open_file = nullptr;
+  for (unsigned int index = 0; index < nt->FileHeader.NumberOfSections; ++index) {
+    const IMAGE_SECTION_HEADER& section = sections[index];
+    if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
+        section.VirtualAddress >= image_size) {
+      continue;
+    }
+    size_t size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
+                                                : section.SizeOfRawData;
+    size = (std::min)(size, image_size - section.VirtualAddress);
+    const unsigned char* code = image_base + section.VirtualAddress;
+    for (size_t offset = 0; offset + 26 <= size; ++offset) {
+      if (code[offset] != 0xE8 ||
+          !is_wwise_open_call_site(code + offset, size - offset)) {
+        continue;
+      }
+      int32_t displacement = 0;
+      memcpy(&displacement, code + offset + 1, sizeof(displacement));
+      auto* target = const_cast<unsigned char*>(code + offset + 5 + displacement);
+      if (!is_in_executable_section(target, image_base, image_size, sections,
+                                    nt->FileHeader.NumberOfSections)) {
+        continue;
+      }
+      // Nightreign has two functions here and it isn't known yet which one to take
+      if (open_file != nullptr && open_file != target) {
+        log_line("Wwise hook skipped: more than one candidate function.");
+        return false;
+      }
+      open_file = target;
+    }
+  }
+  if (open_file == nullptr) {
+    log_line("Wwise hook skipped: function not found. Mods' sound files won't load.");
+    return false;
+  }
+
+  const MH_STATUS initialized = MH_Initialize();
+  if ((initialized != MH_OK && initialized != MH_ERROR_ALREADY_INITIALIZED) ||
+      MH_CreateHook(open_file, reinterpret_cast<void*>(&wwise_open_file_hook),
+                    reinterpret_cast<void**>(&g_original_wwise_open)) != MH_OK ||
+      MH_EnableHook(open_file) != MH_OK) {
+    log_line("Wwise hook skipped: the detour could not be installed.");
+    return false;
+  }
+  log_line("Wwise hook installed for MO2.");
+  return true;
+}
+
 bool has_directory_segment(const wchar_t* path, const wchar_t* directory) {
   if (path == nullptr) {
     return false;
@@ -1845,6 +2178,7 @@ DWORD WINAPI bridge_worker(void*) {
   apply_process_priority_setting();
   schedule_cpu0_affinity_adjustment();
   install_loose_asset_hook();
+  install_wwise_hook();
 
   // Only explicit Revamped initializers need late DLL discovery. Without
   // requests, repeatedly enumerating every module in the game process has no
@@ -1877,7 +2211,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.38.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.54.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
