@@ -26,7 +26,7 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
   about 2 seconds sooner. Both are switches in the profile's startup options, on
   by default.
 - **Faster exit**: Elden Ring closes in about 4 seconds instead of up to 20, and
-  with Reforged it no longer ends in a crash report.
+  with Reforged or Convergence it no longer ends in a crash report.
 - **Fixed**: native DLLs load in the order the Native DLL Profile shows, a new
   instance no longer skips steps with Enter, Clear cache moves the cache to the
   Recycle Bin instead of deleting it, Downloads asks before cancelling a download
@@ -36,8 +36,6 @@ The full list is in the [changelog](https://github.com/ArialSenki/MO2-Revamped/b
 
 ## Known issues
 
-- With Convergence, the game can still fault as it closes, in its own code.
-  Saves are written before that happens.
 - With ELDEN RING Reforged, MO2 sets aside 12 GB of memory for the game, as me3
   does. On a PC with little RAM or a small page file, other programs may run short
   while the game runs.

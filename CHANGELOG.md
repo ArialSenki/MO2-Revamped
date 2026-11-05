@@ -32,6 +32,11 @@
   bridge now wakes it as soon as the game starts waiting. Every exit also ended
   in a crash report from a check the game makes at shutdown, which cost a few
   more seconds; the bridge steps over that one check, so the game closes cleanly.
+- With Convergence, the game closes cleanly too. Some of its DLLs crashed while
+  the game was closing (ErdTools.dll and erdyes.dll, and one game thread after
+  them), and Windows then spent seconds on a crash report. Once the game is
+  closing, the bridge now ends the process at once when that happens, with a
+  line in its log. While the game runs, crashes are handled as before.
 - Skipping the intro logo screens is now on by default; a profile can turn it
   off in its startup options.
 - Elden Ring reaches its title screen about 2 seconds sooner with me3's
@@ -116,9 +121,6 @@
   short while the game runs.
 - Rarely, the game can stall at start-up while MO2 installs its file hooks. Close
   it and start it again.
-- With Convergence, the game can still fault as it closes, in its own code, and
-  Windows then takes a few seconds to write its report. Saves are written before
-  that happens.
 
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
