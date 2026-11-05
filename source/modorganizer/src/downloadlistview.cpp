@@ -304,76 +304,58 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
 
       hidden = m_Manager->isHidden(row);
       const QString filePath = m_Manager->getFilePath(row);
+      // the list is rebuilt when a download finishes, possibly while this menu
+      // is open: each command finds its archive again by name, and does
+      // nothing once it is gone
+      const QString fileName = m_Manager->getFileName(row);
+      const auto onRow = [this, fileName](void (DownloadListView::*command)(int)) {
+        return [this, fileName, command] {
+          const int current = m_Manager->indexByName(fileName);
+          if (current >= 0) {
+            (this->*command)(current);
+          }
+        };
+      };
 
       if (state >= DownloadManager::STATE_READY) {
         setDefaultMenuAction(&menu, 
-            addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), [=] {
-              issueInstall(row);
-            }));
+            addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
         if (m_Manager->isInfoIncomplete(row)) {
           addAction(menu, tr("Query info"), svg(":/MO/gui/contextmenu/information.svg"),
-                    [=] {
-                      issueQueryInfoMd5(row);
-                    });
+                    onRow(&DownloadListView::issueQueryInfoMd5));
         } else {
           addAction(menu, tr("Visit on Nexus"), svg(":/MO/gui/contextmenu/visit.svg"),
-                    [=] {
-                      issueVisitOnNexus(row);
-                    });
+                    onRow(&DownloadListView::issueVisitOnNexus));
         }
-        addAction(menu, tr("Open"), svg(":/MO/gui/mainwindow/files/archive.svg"), [=] {
-          issueOpenFile(row);
-        });
+        addAction(menu, tr("Open"), svg(":/MO/gui/mainwindow/files/archive.svg"), onRow(&DownloadListView::issueOpenFile));
 
         menu.addSeparator();
-        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), [=] {
-          issueOpenInDownloadsFolder(row);
-        });
-        addAction(menu, tr("Open meta file"), menuGlyph(MenuGlyphs::Document), [=] {
-          issueOpenMetaFile(row);
-        });
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), onRow(&DownloadListView::issueOpenInDownloadsFolder));
+        addAction(menu, tr("Open meta file"), menuGlyph(MenuGlyphs::Document), onRow(&DownloadListView::issueOpenMetaFile));
         addCopyMenu(&menu, {{tr("File name"), QFileInfo(filePath).fileName()},
                             {tr("File path"), nativePath(filePath)}});
 
         menu.addSeparator();
         if (hidden) {
           addAction(menu, tr("Un-hide"), svg(":/MO/gui/contextmenu/visibility-show.svg"),
-                    [=] {
-                      issueRestoreToView(row);
-                    });
+                    onRow(&DownloadListView::issueRestoreToView));
         } else {
           addAction(menu, tr("Hide"), svg(":/MO/gui/contextmenu/visibility-hide.svg"),
-                    [=] {
-                      issueRemoveFromView(row);
-                    });
+                    onRow(&DownloadListView::issueRemoveFromView));
         }
-        remove = [=] {
-          issueDelete(row);
-        };
+        remove = onRow(&DownloadListView::issueDelete);
       } else if (state == DownloadManager::STATE_DOWNLOADING) {
-        addAction(menu, tr("Pause"), menuGlyph(0xE769), [=] {
-          issuePause(row);
-        });
-        addAction(menu, tr("Cancel"), menuGlyph(0xE711), [=] {
-          issueCancel(row);
-        });
+        addAction(menu, tr("Pause"), menuGlyph(0xE769), onRow(&DownloadListView::issuePause));
+        addAction(menu, tr("Cancel"), menuGlyph(0xE711), onRow(&DownloadListView::issueCancel));
         menu.addSeparator();
-        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), [=] {
-          issueOpenInDownloadsFolder(row);
-        });
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), onRow(&DownloadListView::issueOpenInDownloadsFolder));
       } else if ((state == DownloadManager::STATE_PAUSED) ||
                  (state == DownloadManager::STATE_ERROR) ||
                  (state == DownloadManager::STATE_PAUSING)) {
-        setDefaultMenuAction(&menu, addAction(menu, tr("Resume"), menuGlyph(MenuGlyphs::Run), [=] {
-          issueResume(row);
-        }));
+        setDefaultMenuAction(&menu, addAction(menu, tr("Resume"), menuGlyph(MenuGlyphs::Run), onRow(&DownloadListView::issueResume)));
         menu.addSeparator();
-        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), [=] {
-          issueOpenInDownloadsFolder(row);
-        });
-        remove = [=] {
-          issueDelete(row);
-        };
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), onRow(&DownloadListView::issueOpenInDownloadsFolder));
+        remove = onRow(&DownloadListView::issueDelete);
       }
     }
   } catch (std::exception&) {
@@ -446,7 +428,22 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
       }
     } else if (state == DownloadManager::STATE_DOWNLOADING) {
       if (event->key() == Qt::Key_Delete) {
-        issueCancel(row);
+        // a finished download asks before it goes; one under way too, as
+        // cancelling throws away what was downloaded so far
+        const QString fileName = m_Manager->getFileName(row);
+        const auto answer      = MOBase::TaskDialog(this, tr("Cancel download"))
+                                .main(tr("Cancel this download?"))
+                                .content(tr("What was downloaded so far is deleted."))
+                                .icon(QMessageBox::Question)
+                                .button({tr("Cancel download"), QMessageBox::Yes})
+                                .button({tr("Keep downloading"), QMessageBox::Cancel})
+                                .exec();
+        const int current = m_Manager->indexByName(fileName);
+        if (answer == QMessageBox::Yes && current >= 0) {
+          issueCancel(current);
+        }
+        event->accept();
+        return;
       } else if (event->key() == Qt::Key_Space) {
         issuePause(row);
       }

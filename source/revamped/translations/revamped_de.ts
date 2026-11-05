@@ -959,6 +959,22 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>Cancel download</source>
+      <translation>Download abbrechen</translation>
+    </message>
+    <message>
+      <source>Cancel this download?</source>
+      <translation>Diesen Download abbrechen?</translation>
+    </message>
+    <message>
+      <source>What was downloaded so far is deleted.</source>
+      <translation>Was bisher heruntergeladen wurde, wird gelöscht.</translation>
+    </message>
+    <message>
+      <source>Keep downloading</source>
+      <translation>Weiter herunterladen</translation>
+    </message>
+    <message>
       <source>This will move all finished downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
@@ -7265,6 +7281,10 @@ Fehler: %1</translation>
   <context>
     <name>Mo2RevampedInfo</name>
     <message>
+      <source>Version {version}  ·  ArialSenki</source>
+      <translation>Version {version}  ·  ArialSenki</translation>
+    </message>
+    <message>
       <source>About, credits, component versions, and clearer help for MO2 Revamped.</source>
       <translation>Info, Mitwirkende, Komponentenversionen und klarere Hilfe für MO2 Revamped.</translation>
     </message>
@@ -8482,6 +8502,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
   <context>
     <name>OrganizerCore</name>
     <message>
+      <source>Nexus sign-in</source>
+      <translation>Nexus-Anmeldung</translation>
+    </message>
+    <message>
       <source>The installation was cancelled while extracting files. Nothing was installed.</source>
       <translation>Die Installation wurde beim Entpacken abgebrochen. Es wurde nichts installiert.</translation>
     </message>
@@ -9236,6 +9260,16 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   <context>
     <name>QObject</name>
     <message>
+      <source>Move everything in this folder to the Recycle Bin?
+%1</source>
+      <translation>Alles in diesem Ordner in den Papierkorb verschieben?
+%1</translation>
+    </message>
+    <message>
+      <source>Nexus refused the API key: it may have been revoked or changed. Connect again in Settings, Nexus</source>
+      <translation>Nexus hat den API-Schlüssel abgelehnt: Er wurde vielleicht widerrufen oder geändert. Verbinde dich erneut unter Einstellungen, Nexus</translation>
+    </message>
+    <message>
       <source>Stable releases</source>
       <translation>Stabile Versionen</translation>
     </message>
@@ -9271,12 +9305,6 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>The cache folder also holds this instance's mods or profiles, so only the Nexus data in memory was cleared:
 %1</source>
       <translation>Der Cache-Ordner enthält auch Mods oder Profile dieser Instanz, daher wurden nur die Nexus-Daten im Speicher geleert:
-%1</translation>
-    </message>
-    <message>
-      <source>Delete everything in this folder? It doesn't go to the Recycle Bin.
-%1</source>
-      <translation>Alles in diesem Ordner löschen? Es landet nicht im Papierkorb.
 %1</translation>
     </message>
     <message>

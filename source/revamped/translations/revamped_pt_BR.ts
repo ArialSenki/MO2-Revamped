@@ -959,6 +959,22 @@ As alterações são salvas quando você escolhe OK.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>Cancel download</source>
+      <translation>Cancelar download</translation>
+    </message>
+    <message>
+      <source>Cancel this download?</source>
+      <translation>Cancelar este download?</translation>
+    </message>
+    <message>
+      <source>What was downloaded so far is deleted.</source>
+      <translation>O que foi baixado até agora é excluído.</translation>
+    </message>
+    <message>
+      <source>Keep downloading</source>
+      <translation>Continuar baixando</translation>
+    </message>
+    <message>
       <source>This will move all finished downloads to the Recycle Bin.
 
 Are you absolutely sure you want to proceed?</source>
@@ -7265,6 +7281,10 @@ Erro: %1</translation>
   <context>
     <name>Mo2RevampedInfo</name>
     <message>
+      <source>Version {version}  ·  ArialSenki</source>
+      <translation>Versão {version}  ·  ArialSenki</translation>
+    </message>
+    <message>
       <source>About, credits, component versions, and clearer help for MO2 Revamped.</source>
       <translation>Sobre, créditos, versões dos componentes e ajuda mais clara para o MO2 Revamped.</translation>
     </message>
@@ -8482,6 +8502,10 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
   <context>
     <name>OrganizerCore</name>
     <message>
+      <source>Nexus sign-in</source>
+      <translation>Entrar no Nexus</translation>
+    </message>
+    <message>
       <source>The installation was cancelled while extracting files. Nothing was installed.</source>
       <translation>A instalação foi cancelada durante a extração. Nada foi instalado.</translation>
     </message>
@@ -9236,6 +9260,16 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   <context>
     <name>QObject</name>
     <message>
+      <source>Move everything in this folder to the Recycle Bin?
+%1</source>
+      <translation>Mover todo o conteúdo desta pasta para a Lixeira?
+%1</translation>
+    </message>
+    <message>
+      <source>Nexus refused the API key: it may have been revoked or changed. Connect again in Settings, Nexus</source>
+      <translation>O Nexus recusou a chave de API: ela pode ter sido revogada ou alterada. Conecte-se novamente em Configurações, Nexus</translation>
+    </message>
+    <message>
       <source>Stable releases</source>
       <translation>Versões estáveis</translation>
     </message>
@@ -9271,12 +9305,6 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <source>The cache folder also holds this instance's mods or profiles, so only the Nexus data in memory was cleared:
 %1</source>
       <translation>A pasta de cache também contém mods ou perfis desta instância, então apenas os dados do Nexus na memória foram limpos:
-%1</translation>
-    </message>
-    <message>
-      <source>Delete everything in this folder? It doesn't go to the Recycle Bin.
-%1</source>
-      <translation>Excluir tudo nesta pasta? Não vai para a Lixeira.
 %1</translation>
     </message>
     <message>

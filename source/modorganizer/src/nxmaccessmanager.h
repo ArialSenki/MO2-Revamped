@@ -85,6 +85,10 @@ private:
   void onTimeout();
 };
 
+// the message of a key Nexus refused (401, 403): trying the same key again
+// can't help, so the failure says where to connect again
+QString nexusKeyRefusedMessage();
+
 class ValidationAttempt
 {
 public:

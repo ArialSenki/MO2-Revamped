@@ -35,6 +35,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "organizercore.h"
 #include "sanitychecks.h"
+#include "selfupdater.h"
 #include "settings.h"
 #include "shared/appconfig.h"
 #include "shared/util.h"
@@ -626,6 +627,10 @@ MOApplication::MOApplication(int& argc, char** argv) : QApplication(argc, argv)
   TimeThis tt("MOApplication()");
 
   qputenv("QML_DISABLE_DISK_CACHE", "true");
+
+  // the MO2 Revamped release, for the plugins (About, diagnostic report): the
+  // file version they could read is the MO2 base's, 2.5.2
+  setProperty("revampedVersion", SelfUpdater::revampedVersionString());
 
   // every window gets the icon with its drawn small sizes; scaling the large
   // logo down would shrink its "M2" into a smudge at 16 px

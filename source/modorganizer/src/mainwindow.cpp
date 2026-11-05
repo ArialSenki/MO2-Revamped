@@ -1890,9 +1890,10 @@ MainWindow::~MainWindow()
 void MainWindow::updateWindowTitle(const APIUserAccount& user)
 {
   //"\xe2\x80\x93" is an "em dash", a longer "-"
-  QString title = QString("%1 \xe2\x80\x93 Mod Organizer 2: Revamped v%2")
+  // the MO2 Revamped release, not the 2.5.2 of the MO2 it is based on
+  QString title = QString("%1 \xe2\x80\x93 Mod Organizer 2: Revamped %2")
                       .arg(m_OrganizerCore.managedGame()->displayGameName(),
-                           m_OrganizerCore.getVersion().displayString(3));
+                           SelfUpdater::revampedVersionString());
 
   if (!user.name().isEmpty()) {
     const QString premium = (user.type() == APIUserAccountTypes::Premium ? "*" : "");
@@ -2337,8 +2338,12 @@ void MainWindow::about()
   const auto* game = m_OrganizerCore.managedGame();
   const bool eldenRingEdition =
       game && game->gameShortName().compare("eldenring", Qt::CaseInsensitive) == 0;
-  AboutDialog(m_OrganizerCore.getVersion().displayString(3), this,
-              eldenRingEdition)
+  // both versions: the release, and the MO2 it is based on, also in the text
+  // copied for a bug report
+  AboutDialog(QStringLiteral("%1 (MO2 %2)")
+                  .arg(SelfUpdater::revampedVersionString(),
+                       m_OrganizerCore.getVersion().displayString(3)),
+              this, eldenRingEdition)
       .exec();
 }
 
@@ -4087,7 +4092,6 @@ void MainWindow::on_actionAdd_Profile_triggered()
 {
   for (;;) {
     QString selectedProfile;
-    bool profileDialogFailed = false;
     {
       ProfilesDialog profilesDialog(m_OrganizerCore.currentProfile()->name(),
                                     m_OrganizerCore, this);
@@ -4097,13 +4101,14 @@ void MainWindow::on_actionAdd_Profile_triggered()
       m_SavesTab->stopMonitorSaves();
       profilesDialog.exec();
       selectedProfile = profilesDialog.selectedProfile().value_or("");
-      profileDialogFailed = profilesDialog.failed();
     }
 
     m_SavesTab->refreshSaveList();  // since the save list may now be outdated we have
                                     // to refresh it completely
 
-    if (refreshProfiles(true, selectedProfile) && !profileDialogFailed) {
+    // the dialog opens again only while no profile is left: a profile that
+    // could not be created, with others there, no longer keeps it coming back
+    if (refreshProfiles(true, selectedProfile)) {
       break;
     }
   }
@@ -5374,8 +5379,17 @@ void MainWindow::nxmModInfoAvailable(QString gameName, int modID, QVariant userD
   }
 }
 
-void MainWindow::nxmEndorsementToggled(QString, int, QVariant, QVariant resultData, int)
+void MainWindow::nxmEndorsementToggled(QString gameName, int modID, QVariant,
+                                       QVariant resultData, int)
 {
+  // the signal is shared by every endorsement: after a failed one for MO2
+  // Revamped this slot stays connected, and endorsing any other mod must not
+  // count as endorsing MO2 Revamped
+  if (gameName.compare(QStringLiteral("eldenring"), Qt::CaseInsensitive) != 0 ||
+      modID != kRevampedNexusModId) {
+    return;
+  }
+
   const QMap results = resultData.toMap();
 
   auto itor = results.find("status");
