@@ -24,7 +24,10 @@
 
 - The update check compared GitHub releases with the version of the Mod Organizer
   2 it is based on (2.5.2), so it never found a newer MO2 Revamped. The build now
-  carries its own version, and the release builder checks that it matches.
+  carries its own version, and the release builder checks that the source and
+  ModOrganizer.exe both match.
+- Endorsing MO2 Revamped went to an old, removed Nexus page and sent the MO2 base
+  version; it now goes to the current page with the MO2 Revamped version.
 
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
