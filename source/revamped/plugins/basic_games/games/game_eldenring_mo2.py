@@ -2085,8 +2085,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.88"
-    NativeBridgeVersion = "0.5.0-alpha.59"
+    Version = "0.5.0-alpha.89"
+    NativeBridgeVersion = "0.5.0-alpha.60"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -5577,6 +5577,13 @@ class EldenRingMo2Game(BasicGame):
                 )
                 continue
             folders.append(str(folder))
+        # sound files that landed in Overwrite come last, as in MO2's own order
+        try:
+            overwrite = Path(self._organizer.overwritePath())
+        except (AttributeError, RuntimeError):
+            overwrite = None
+        if overwrite is not None and (overwrite / "sd").is_dir() and ";" not in str(overwrite):
+            folders.append(str(overwrite))
         if len(";".join(folders)) >= 32000:
             qWarning(
                 "Elden Ring MO2: too many mods with sound files for the bridge to "

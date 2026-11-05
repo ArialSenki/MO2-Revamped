@@ -1362,7 +1362,10 @@ void index_sound_folder(const std::wstring& root, const std::wstring& relative,
     }
     const std::wstring child = relative + L"\\" + name;
     if ((entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-      index_sound_folder(root, child, files);
+      // a junction or link could lead back into the folder and never end
+      if ((entry.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0) {
+        index_sound_folder(root, child, files);
+      }
     } else {
       // the first mod listed wins, as in MO2's own priority
       files.emplace(lowercase(child), root + L"\\" + child);
@@ -2239,7 +2242,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.59.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.60.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
