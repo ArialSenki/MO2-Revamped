@@ -1,5 +1,55 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Update notice**: when a newer MO2 Revamped release is out, MO2 opens a window
+  laid out like Profiles and Instances. On the left, the releases newer than yours,
+  newest first, and yours below them. On the right, the selected release as a
+  changelog: its summary, then each section (Highlights, Known issues...) with its
+  points, read from the release notes on GitHub. **Open on GitHub**, **Open on
+  Nexus**, **Skip this version** and **Remind me later**. Updating stays in your
+  hands, with the setup; nothing is downloaded or installed by itself. A skipped
+  version no longer opens the window, but the status bar and the Update command
+  still show it. The window waits until no other question is open, so it does not
+  appear while the game runs. MO2 asks GitHub at most once a day; the answer is
+  shared by all instances.
+- This is the first version that tells you about the next one. Earlier versions
+  can't, so update to this one by hand.
+- Settings, General, Updates: **Tell me when a new MO2 Revamped version is out**
+  turns the check and the window off. **Versions to hear about** picks the
+  channel: stable releases, stable and beta, or also development builds. Until
+  you choose, it follows the version you use, so a beta hears of the next beta and
+  early test builds reach only those who chose them. The GitHub tag gives the
+  channel: `v1.2.0` is stable, `-beta.N` and `-rc.N` are betas, `-alpha.N`,
+  `-dev.N`, `-test.N` and `-preview.N` are development builds.
+
+### Fixed
+
+- Mods' sound files load: custom music and sound banks in a mod's `sd` folder
+  (Wwise `.bnk` and `.wem`) play, Convergence's music for example.
+- ELDEN RING Reforged keeps its own sound: MO2 now applies me3's memory patch
+  (mimalloc), as me3 does, and switches Arxan off at the game's entry point.
+- Native DLLs load in the order the Native DLL Profile shows; they loaded in
+  reverse.
+- The update check compared GitHub releases with the version of the Mod Organizer
+  2 it is based on (2.5.2), so it never found a newer MO2 Revamped. The build now
+  carries its own version, and the release builder checks that the source and
+  ModOrganizer.exe both match.
+- Endorsing MO2 Revamped went to an old, removed Nexus page and sent the MO2 base
+  version; it now goes to the current page with the MO2 Revamped version.
+
+### Known issues
+
+- With ELDEN RING Reforged, MO2 now sets aside 12 GB of memory for the game, as
+  me3 does. On a PC with little RAM or a small page file, other programs may run
+  short while the game runs.
+- Rarely, the game can stall at start-up while MO2 installs its file hooks. Close
+  it and start it again.
+- Executables, Force load libraries lists the game's own libraries in reverse
+  order; they load in the right one.
+
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
 ### Faster

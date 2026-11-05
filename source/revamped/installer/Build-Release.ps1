@@ -30,6 +30,22 @@ $pythonRuntimeRoot = [System.IO.Path]::GetFullPath($PythonRuntimeDirectory).Trim
 $outputRoot = [System.IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
 $qtSdkRoot = [System.IO.Path]::GetFullPath($QtSdkDirectory).TrimEnd('\')
 
+# the update notice compares GitHub releases with the version built into
+# ModOrganizer.exe; a release whose header or executable still names the last
+# one would tell its users to update to themselves
+$versionHeader = Join-Path $repoRoot 'source\modorganizer\src\revampedversion.h'
+if ((Get-Content -LiteralPath $versionHeader -Raw) -notmatch ('(?m)^\s*#define\s+MO2R_VERSION_STRING\s+"' + [regex]::Escape($version) + '"')) {
+    throw "source\modorganizer\src\revampedversion.h does not name $version; update MO2R_VERSION_STRING and rebuild ModOrganizer.exe."
+}
+if (Test-Path -LiteralPath $organizerPath -PathType Leaf) {
+    # Qt keeps the string as UTF-16 in the executable
+    $organizerText = [Text.Encoding]::Unicode.GetString([IO.File]::ReadAllBytes($organizerPath))
+    if (-not $organizerText.Contains($version)) {
+        throw "$organizerPath was not built with MO2R_VERSION_STRING $version; rebuild it from this source."
+    }
+    Remove-Variable organizerText
+}
+
 foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $CscPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf) -and
         -not (Test-Path -LiteralPath $path -PathType Container)) {

@@ -22,7 +22,7 @@ public:
   void set(bool visible);
 
 protected:
-  void mouseDoubleClickEvent(QMouseEvent* e) override;
+  void mouseReleaseEvent(QMouseEvent* e) override;
 
 private:
   QAction* m_action;

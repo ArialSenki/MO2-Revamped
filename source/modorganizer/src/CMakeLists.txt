@@ -111,6 +111,7 @@ mo2_add_filter(NAME src/application GROUPS
 	multiprocess
 	sanitychecks
 	selfupdater
+	updatenoticedialog
 )
 
 mo2_add_filter(NAME src/categories GROUPS

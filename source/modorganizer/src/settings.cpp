@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "instancemanager.h"
 #include "modelutils.h"
 #include "serverinfo.h"
+#include "selfupdater.h"
 #include "settingsutilities.h"
 #include "shared/appconfig.h"
 #include <expanderwidget.h>
@@ -158,14 +159,47 @@ void Settings::setCheckForUpdates(bool b)
   set(m_Settings, "Settings", "check_for_updates", b);
 }
 
-bool Settings::usePrereleases() const
+// the channel follows the build: a beta build hears of the next beta, a
+// development build of everything, a stable build only of stable releases.
+// Betas are pre-releases on GitHub, and with a fixed "stable" someone on a beta
+// would never learn of the one that replaces it. Settings stores a channel only
+// when the user changes it. "use_prereleases" is the older switch: earlier
+// builds wrote it on every OK in Settings, so only "true" was a choice.
+UpdateChannel Settings::updateChannel() const
 {
-  return get<bool>(m_Settings, "Settings", "use_prereleases", false);
+  const int stored = get<int>(m_Settings, "Settings", "update_channel", -1);
+  if (stored >= static_cast<int>(UpdateChannel::Stable) &&
+      stored <= static_cast<int>(UpdateChannel::Dev)) {
+    return static_cast<UpdateChannel>(stored);
+  }
+
+  const UpdateChannel build = SelfUpdater::buildChannel();
+  if (get<bool>(m_Settings, "Settings", "use_prereleases", false) &&
+      build == UpdateChannel::Stable) {
+    return UpdateChannel::Beta;
+  }
+
+  return build;
 }
 
-void Settings::setUsePrereleases(bool b)
+void Settings::setUpdateChannel(UpdateChannel channel)
 {
-  set(m_Settings, "Settings", "use_prereleases", b);
+  remove(m_Settings, "Settings", "use_prereleases");
+  set(m_Settings, "Settings", "update_channel", static_cast<int>(channel));
+}
+
+QString Settings::skippedUpdate() const
+{
+  return get<QString>(m_Settings, "Settings", "skipped_update", QString());
+}
+
+void Settings::setSkippedUpdate(const QString& tag)
+{
+  if (tag.isEmpty()) {
+    remove(m_Settings, "Settings", "skipped_update");
+  } else {
+    set(m_Settings, "Settings", "skipped_update", tag);
+  }
 }
 
 bool Settings::profileLocalInis() const
@@ -2346,16 +2380,15 @@ void GlobalSettings::setCurrentInstanceForInstallation(
   settings().setValue(key, s);
 }
 
-QSettings GlobalSettings::settings()
+// where the global settings file is, without opening it
+static QString globalSettingsPath()
 {
   const QString applicationDirectory = QCoreApplication::applicationDirPath();
   const QDir localDirectory(applicationDirectory);
   const QString isolatedMarker =
       localDirectory.filePath("eldenring-only.portable");
   if (QFileInfo::exists(isolatedMarker)) {
-    return QSettings(
-        localDirectory.filePath("EldenRingOnly.ini"),
-        QSettings::IniFormat);
+    return localDirectory.filePath("EldenRingOnly.ini");
   }
 
   // settings already kept beside the program stay there, also once its
@@ -2370,11 +2403,19 @@ QSettings GlobalSettings::settings()
       : QDir(QStandardPaths::writableLocation(
                  QStandardPaths::GenericDataLocation))
             .filePath("MO2 Revamped");
-  const QString settingsPath =
-      QDir(settingsDirectory).filePath("MO2-Revamped-Global.ini");
+  return QDir(settingsDirectory).filePath("MO2-Revamped-Global.ini");
+}
 
-  QDir().mkpath(settingsDirectory);
-  return QSettings(settingsPath, QSettings::IniFormat);
+QSettings GlobalSettings::settings()
+{
+  const QString path = globalSettingsPath();
+  QDir().mkpath(QFileInfo(path).absolutePath());
+  return QSettings(path, QSettings::IniFormat);
+}
+
+QString GlobalSettings::directory()
+{
+  return QFileInfo(globalSettingsPath()).absolutePath();
 }
 
 QVariant GlobalSettings::value(const QString& key, const QVariant& defaultValue)

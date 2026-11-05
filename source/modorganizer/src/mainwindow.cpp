@@ -217,6 +217,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modeltest.h"
 #endif  // TEST_MODELS
 
+#include "revampedversion.h"
+#include "selfupdater.h"
+#include "updatenoticedialog.h"
+
 #pragma warning(disable : 4428)
 
 using namespace MOBase;
@@ -251,7 +255,7 @@ bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
 
 namespace {
 
-constexpr int kRevampedNexusModId = 11290;
+constexpr int kRevampedNexusModId = MO2R_NEXUS_MOD_ID;
 
 // the category setup choices (Segoe Fluent Icons)
 constexpr char16_t ImportNexusGlyph      = 0xE896;  // Download
@@ -4658,6 +4662,7 @@ void MainWindow::on_actionSettings_triggered()
   bool proxy                    = settings.network().useProxy();
   DownloadManager* dlManager    = m_OrganizerCore.downloadManager();
   const bool oldCheckForUpdates = settings.checkForUpdates();
+  const auto oldChannel         = settings.updateChannel();
   const int oldMaxDumps         = settings.diagnostics().maxCoreDumps();
   const QString oldLanguage     = settings.interface().language();
 
@@ -4778,10 +4783,13 @@ void MainWindow::on_actionSettings_triggered()
 
   toggleRevampedEndorseState();
 
-  if (oldCheckForUpdates != settings.checkForUpdates()) {
-    if (settings.checkForUpdates()) {
-      m_OrganizerCore.checkForUpdates();
-    }
+  // switching the check on or changing the channel looks again right away;
+  // switched off, nothing says there is an update any more
+  if (!settings.checkForUpdates()) {
+    clearUpdateAvailable();
+  } else if (
+      (!oldCheckForUpdates || oldChannel != settings.updateChannel())) {
+    m_OrganizerCore.checkForUpdates();
   }
 }
 
@@ -4924,18 +4932,99 @@ void MainWindow::originModified(int originID)
 
 void MainWindow::updateAvailable()
 {
+  const auto& releases = m_OrganizerCore.updater()->newerReleases();
+  if (releases.empty()) {
+    clearUpdateAvailable();
+    return;
+  }
+
+  if (m_UpdateActionText.isEmpty()) {
+    m_UpdateActionText = ui->actionUpdate->text();
+    m_UpdateActionTip  = ui->actionUpdate->toolTip();
+  }
+
+  QString version = releases.front().tag;
+  if (version.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
+    version.remove(0, 1);
+  }
+
   ui->actionUpdate->setEnabled(true);
+  // the command opens the notice from now on, in the menu and the status bar
+  ui->actionUpdate->setText(tr("MO2 Revamped %1 is out").arg(version));
   const QString updateHint =
-      tr("A newer MO2 Revamped release is available. Check MO2 Revamped on "
-         "GitHub for release details.");
+      tr("MO2 Revamped %1 is out. Click to see what it changes.").arg(version);
   ui->actionUpdate->setToolTip(updateHint);
   ui->actionUpdate->setStatusTip(updateHint);
   ui->statusBar->setUpdateAvailable(true);
+
+  // a new answer (another channel) replaces a notice that is open
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->close();
+    m_UpdateNotice = nullptr;
+  }
+  showUpdateNotice(true);
+}
+
+void MainWindow::clearUpdateAvailable()
+{
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->close();
+    m_UpdateNotice = nullptr;
+  }
+  if (m_UpdateActionText.isEmpty()) {
+    return;
+  }
+  ui->actionUpdate->setText(m_UpdateActionText);
+  ui->actionUpdate->setToolTip(m_UpdateActionTip);
+  ui->actionUpdate->setStatusTip(m_UpdateActionTip);
+  ui->statusBar->setUpdateAvailable(false);
+}
+
+void MainWindow::showUpdateNotice(bool onlyIfNotSkipped)
+{
+  const auto& releases = m_OrganizerCore.updater()->newerReleases();
+  if (releases.empty()) {
+    revampedRepositoryTriggered();
+    return;
+  }
+
+  if (onlyIfNotSkipped &&
+      m_OrganizerCore.settings().skippedUpdate() == releases.front().tag) {
+    log::debug("update notice: {} was skipped, only the status bar shows it",
+               releases.front().tag);
+    return;
+  }
+
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->raise();
+    m_UpdateNotice->activateWindow();
+    return;
+  }
+
+  // the check answers while the window is still starting, or while a question
+  // or the instance setup is open: the notice waits its turn
+  if (!isVisible() || QApplication::activeModalWidget() != nullptr) {
+    // one wait at a time: a second check while waiting needs no other
+    if (!m_UpdateNoticeWaiting) {
+      m_UpdateNoticeWaiting = true;
+      QTimer::singleShot(1000, this, [this, onlyIfNotSkipped] {
+        m_UpdateNoticeWaiting = false;
+        showUpdateNotice(onlyIfNotSkipped);
+      });
+    }
+    return;
+  }
+
+  auto* notice = new UpdateNoticeDialog(
+      this, m_OrganizerCore.settings(), SelfUpdater::revampedVersionString(), releases);
+  notice->setAttribute(Qt::WA_DeleteOnClose);
+  m_UpdateNotice = notice;
+  notice->show();
 }
 
 void MainWindow::on_actionUpdate_triggered()
 {
-  revampedRepositoryTriggered();
+  showUpdateNotice(false);
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -4972,7 +5061,7 @@ void MainWindow::actionEndorseMO()
     }
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
-        m_OrganizerCore.getVersion().canonicalString(), true, this, QVariant(),
+        SelfUpdater::revampedVersionString(), true, this, QVariant(),
         QString());
   }
 }
@@ -4988,7 +5077,7 @@ void MainWindow::actionWontEndorseMO()
     }
     NexusInterface::instance().requestToggleEndorsement(
         QStringLiteral("eldenring"), kRevampedNexusModId,
-        m_OrganizerCore.getVersion().canonicalString(), false, this, QVariant(),
+        SelfUpdater::revampedVersionString(), false, this, QVariant(),
         QString());
   }
 }

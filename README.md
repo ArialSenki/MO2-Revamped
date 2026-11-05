@@ -98,7 +98,8 @@ Start with the [build notes](docs/BUILDING.md). MO2's development environment
 is normally prepared with the upstream `mob` project; USVFS and the Revamped
 components have their own requirements. The release installer is produced by
 `source/revamped/installer/Build-Release.ps1`. Checks and hashes for each
-candidate are recorded in the [release audit](docs/RELEASE-AUDIT.md).
+candidate are recorded in the [release audit](docs/RELEASE-AUDIT.md). What a release needs for the update notice (version, tag,
+notes) is in [Releasing](docs/RELEASING.md).
 
 ## Reporting problems
 

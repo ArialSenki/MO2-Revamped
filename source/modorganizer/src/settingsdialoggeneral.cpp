@@ -98,7 +98,20 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
 
   // updates
   ui->checkForUpdates->setChecked(settings().checkForUpdates());
-  ui->usePrereleaseBox->setChecked(settings().usePrereleases());
+  // the channels, in the order of SelfUpdater::UpdateChannel
+  ui->updateChannelBox->clear();
+  ui->updateChannelBox->addItem(QObject::tr("Stable releases"));
+  ui->updateChannelBox->addItem(QObject::tr("Stable and beta"));
+  ui->updateChannelBox->addItem(QObject::tr("Stable, beta and development builds"));
+  ui->updateChannelBox->setCurrentIndex(static_cast<int>(settings().updateChannel()));
+  // the channel only matters while updates are looked for
+  const auto followCheck = [this](bool on) {
+    ui->updateChannelBox->setEnabled(on);
+    ui->updateChannelLabel->setEnabled(on);
+  };
+  followCheck(ui->checkForUpdates->isChecked());
+  QObject::connect(ui->checkForUpdates, &QCheckBox::toggled, ui->updateChannelBox,
+                   followCheck);
 
 
   // profile defaults
@@ -231,7 +244,11 @@ void GeneralSettingsTab::update()
 
   // updates
   settings().setCheckForUpdates(ui->checkForUpdates->isChecked());
-  settings().setUsePrereleases(ui->usePrereleaseBox->isChecked());
+  // stored only when changed: an unchanged channel keeps following the build
+  const auto channel = static_cast<UpdateChannel>(ui->updateChannelBox->currentIndex());
+  if (channel != settings().updateChannel()) {
+    settings().setUpdateChannel(channel);
+  }
 
   // profile defaults
   settings().setProfileLocalInis(ui->localINIs->isChecked());

@@ -174,30 +174,31 @@
              <property name="title">
               <string>Updates</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
-              <item>
+             <layout class="QGridLayout" name="updatesLayout">
+              <item row="0" column="0" colspan="2">
                <widget class="QCheckBox" name="checkForUpdates">
                 <property name="toolTip">
-                 <string>Check for MO2 Revamped updates on GitHub on startup.</string>
+                 <string>When MO2 starts, it asks GitHub for the latest MO2 Revamped release and shows a window with what changed if there is a newer one. Nothing is downloaded or installed: you update with the setup from GitHub or Nexus.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Check for MO2 Revamped updates on GitHub on startup.</string>
+                 <string>When MO2 starts, it asks GitHub for the latest MO2 Revamped release and shows a window with what changed if there is a newer one. Nothing is downloaded or installed: you update with the setup from GitHub or Nexus.</string>
                 </property>
                 <property name="text">
-                 <string>Check for MO2 Revamped updates</string>
+                 <string>Tell me when a new MO2 Revamped version is out</string>
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QCheckBox" name="usePrereleaseBox">
-                <property name="toolTip">
-                 <string>Update to non-stable releases.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Update to non-stable releases.</string>
-                </property>
+              <item row="1" column="0">
+               <widget class="QLabel" name="updateChannelLabel">
                 <property name="text">
-                 <string>Update to beta versions</string>
+                 <string>Versions to hear about</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QComboBox" name="updateChannelBox">
+                <property name="toolTip">
+                 <string>Stable releases are for everyone. Betas come before each stable release. Development builds are early tests, only for those who help try them. Until you choose, this follows the version you use.</string>
                 </property>
                </widget>
               </item>
@@ -2871,7 +2872,7 @@ Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for e
  </customwidgets>
  <tabstops>
   <tabstop>languageBox</tabstop>
-  <tabstop>usePrereleaseBox</tabstop>
+  <tabstop>updateChannelBox</tabstop>
   <tabstop>baseDirEdit</tabstop>
   <tabstop>browseBaseDirBtn</tabstop>
   <tabstop>downloadDirEdit</tabstop>
