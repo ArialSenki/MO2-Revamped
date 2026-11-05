@@ -32,9 +32,11 @@
   Nightreign uses the Steam save here and wrote it. On f613bf6: both reached the title screen
   again and closed the same way. Nothing further was played. Not started: Reforged online,
   Seamless Co-op, Convergence.
-- This installer (28f8c71) was not run on the owner's account. From f613bf6 only Mod information
-  and texts changed, nothing in the launch. With Steam on the other account it installed the
-  bridge hook, the game closed by itself, the notice appeared and the saves stayed unchanged.
+- This installer (28f8c71), on the owner's account: both reached the title screen, bridge hook
+  installed, 128 loose files in Elden Ring, the Nightreign DLL loaded, both closed with code 0
+  and no fault event, and the recorded saves stayed unchanged. No save was loaded on this build.
+  With Steam on the other account it installed the bridge hook, the game closed by itself, the
+  notice appeared and the saves stayed unchanged.
 - Mod information, on this installer: no web engine process when it opens or on Nexus Info; one
   when Description opens. Close and Next work in Mod information, 0 warnings. The user tried the
   window on the development build of the same change and found everything smooth at 240 Hz.
