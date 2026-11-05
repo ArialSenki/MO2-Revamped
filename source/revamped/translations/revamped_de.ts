@@ -12001,6 +12001,13 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
+    <message numerus="yes">
+      <source>%n older releases are not shown here; GitHub lists them all.</source>
+      <translation>
+        <numerusform>%n ältere Version wird hier nicht gezeigt; GitHub listet alle auf.</numerusform>
+        <numerusform>%n ältere Versionen werden hier nicht gezeigt; GitHub listet alle auf.</numerusform>
+      </translation>
+    </message>
     <message>
       <source>Development build</source>
       <translation>Entwicklungsversion</translation>

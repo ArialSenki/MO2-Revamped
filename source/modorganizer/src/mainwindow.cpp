@@ -4783,8 +4783,11 @@ void MainWindow::on_actionSettings_triggered()
 
   toggleRevampedEndorseState();
 
-  // switching the check on or changing the channel looks again right away
-  if (settings.checkForUpdates() &&
+  // switching the check on or changing the channel looks again right away;
+  // switched off, nothing says there is an update any more
+  if (!settings.checkForUpdates()) {
+    clearUpdateAvailable();
+  } else if (
       (!oldCheckForUpdates || oldChannel != settings.updateChannel())) {
     m_OrganizerCore.checkForUpdates();
   }
@@ -4931,7 +4934,13 @@ void MainWindow::updateAvailable()
 {
   const auto& releases = m_OrganizerCore.updater()->newerReleases();
   if (releases.empty()) {
+    clearUpdateAvailable();
     return;
+  }
+
+  if (m_UpdateActionText.isEmpty()) {
+    m_UpdateActionText = ui->actionUpdate->text();
+    m_UpdateActionTip  = ui->actionUpdate->toolTip();
   }
 
   QString version = releases.front().tag;
@@ -4949,6 +4958,17 @@ void MainWindow::updateAvailable()
   ui->statusBar->setUpdateAvailable(true);
 
   showUpdateNotice(true);
+}
+
+void MainWindow::clearUpdateAvailable()
+{
+  if (m_UpdateActionText.isEmpty()) {
+    return;
+  }
+  ui->actionUpdate->setText(m_UpdateActionText);
+  ui->actionUpdate->setToolTip(m_UpdateActionTip);
+  ui->actionUpdate->setStatusTip(m_UpdateActionTip);
+  ui->statusBar->setUpdateAvailable(false);
 }
 
 void MainWindow::showUpdateNotice(bool onlyIfNotSkipped)
@@ -4975,9 +4995,14 @@ void MainWindow::showUpdateNotice(bool onlyIfNotSkipped)
   // the check answers while the window is still starting, or while a question
   // or the instance setup is open: the notice waits its turn
   if (!isVisible() || QApplication::activeModalWidget() != nullptr) {
-    QTimer::singleShot(1000, this, [this, onlyIfNotSkipped] {
-      showUpdateNotice(onlyIfNotSkipped);
-    });
+    // one wait at a time: a second check while waiting needs no other
+    if (!m_UpdateNoticeWaiting) {
+      m_UpdateNoticeWaiting = true;
+      QTimer::singleShot(1000, this, [this, onlyIfNotSkipped] {
+        m_UpdateNoticeWaiting = false;
+        showUpdateNotice(onlyIfNotSkipped);
+      });
+    }
     return;
   }
 

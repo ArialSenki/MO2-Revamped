@@ -162,34 +162,30 @@ void Settings::setCheckForUpdates(bool b)
 // the channel follows the build: a beta build hears of the next beta, a
 // development build of everything, a stable build only of stable releases.
 // Betas are pre-releases on GitHub, and with a fixed "stable" someone on a beta
-// would never learn of the one that replaces it. The key is stored only when
-// the user picks another channel, so moving from a beta to a stable release
-// also moves the default. "use_prereleases" is the older switch.
-SelfUpdater::UpdateChannel Settings::updateChannel() const
+// would never learn of the one that replaces it. Settings stores a channel only
+// when the user changes it. "use_prereleases" is the older switch: earlier
+// builds wrote it on every OK in Settings, so only "true" was a choice.
+UpdateChannel Settings::updateChannel() const
 {
-  using Channel = SelfUpdater::UpdateChannel;
-
   const int stored = get<int>(m_Settings, "Settings", "update_channel", -1);
-  if (stored >= static_cast<int>(Channel::Stable) &&
-      stored <= static_cast<int>(Channel::Dev)) {
-    return static_cast<Channel>(stored);
+  if (stored >= static_cast<int>(UpdateChannel::Stable) &&
+      stored <= static_cast<int>(UpdateChannel::Dev)) {
+    return static_cast<UpdateChannel>(stored);
   }
 
-  if (const auto old = getOptional<bool>(m_Settings, "Settings", "use_prereleases")) {
-    return *old ? Channel::Beta : Channel::Stable;
+  const UpdateChannel build = SelfUpdater::buildChannel();
+  if (get<bool>(m_Settings, "Settings", "use_prereleases", false) &&
+      build == UpdateChannel::Stable) {
+    return UpdateChannel::Beta;
   }
 
-  return SelfUpdater::buildChannel();
+  return build;
 }
 
-void Settings::setUpdateChannel(SelfUpdater::UpdateChannel channel)
+void Settings::setUpdateChannel(UpdateChannel channel)
 {
   remove(m_Settings, "Settings", "use_prereleases");
-  if (channel == SelfUpdater::buildChannel()) {
-    remove(m_Settings, "Settings", "update_channel");
-  } else {
-    set(m_Settings, "Settings", "update_channel", static_cast<int>(channel));
-  }
+  set(m_Settings, "Settings", "update_channel", static_cast<int>(channel));
 }
 
 QString Settings::skippedUpdate() const

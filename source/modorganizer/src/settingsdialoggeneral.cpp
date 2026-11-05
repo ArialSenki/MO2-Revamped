@@ -244,8 +244,11 @@ void GeneralSettingsTab::update()
 
   // updates
   settings().setCheckForUpdates(ui->checkForUpdates->isChecked());
-  settings().setUpdateChannel(
-      static_cast<SelfUpdater::UpdateChannel>(ui->updateChannelBox->currentIndex()));
+  // stored only when changed: an unchanged channel keeps following the build
+  const auto channel = static_cast<UpdateChannel>(ui->updateChannelBox->currentIndex());
+  if (channel != settings().updateChannel()) {
+    settings().setUpdateChannel(channel);
+  }
 
   // profile defaults
   settings().setProfileLocalInis(ui->localINIs->isChecked());

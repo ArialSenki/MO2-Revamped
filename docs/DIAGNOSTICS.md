@@ -17,3 +17,18 @@ log records exception codes, addresses, registers, process and thread IDs, and
 the current startup phase. Review both files before sharing them because they
 can include local paths and machine-specific details. Remove the environment
 variable or set it to another value to return to the default behavior.
+
+## Testing the update notice
+
+The update check reads a local file instead of GitHub when this variable names
+one:
+
+```text
+MO2_REVAMPED_UPDATE_TEST=C:\path\to\releases.json
+```
+
+The file has the format of GitHub's releases list
+(`https://api.github.com/repos/ArialSenki/MO2-Revamped/releases`): an array of
+objects with `tag_name`, `name`, `body`, `html_url`, `published_at`,
+`prerelease` and `draft`. Add a release with a higher tag to see the notice
+without publishing anything. The log says when the file is used.

@@ -79,8 +79,9 @@ static VersionInfo parseRevampedVersion(QString tag)
   static const QRegularExpression after(QStringLiteral("(?<=[A-Za-z])[-.]"));
   // VersionInfo knows alpha, beta and rc: a development build sorts as an
   // alpha, before the beta and the release it leads to
-  static const QRegularExpression dev(QStringLiteral("(dev|test|preview|nightly)"),
-                                      QRegularExpression::CaseInsensitiveOption);
+  static const QRegularExpression dev(
+      QStringLiteral("(?<![A-Za-z])(dev|test|preview|nightly)(?![A-Za-z])"),
+      QRegularExpression::CaseInsensitiveOption);
   tag.replace(dev, QStringLiteral("alpha"));
   tag.replace(before, QString()).replace(after, QString());
   return VersionInfo(tag);
@@ -112,9 +113,10 @@ QString SelfUpdater::revampedVersionString()
 
 SelfUpdater::UpdateChannel SelfUpdater::channelOf(const QString& tag, bool prerelease)
 {
-  static const QRegularExpression dev(QStringLiteral("(alpha|dev|test|preview|nightly)"),
-                                      QRegularExpression::CaseInsensitiveOption);
-  static const QRegularExpression beta(QStringLiteral("(beta|rc)"),
+  static const QRegularExpression dev(
+      QStringLiteral("(?<![A-Za-z])(alpha|dev|devel|test|preview|nightly)(?![A-Za-z])"),
+      QRegularExpression::CaseInsensitiveOption);
+  static const QRegularExpression beta(QStringLiteral("(?<![A-Za-z])(beta|rc)(?![A-Za-z])"),
                                        QRegularExpression::CaseInsensitiveOption);
   if (dev.match(tag).hasMatch()) {
     return UpdateChannel::Dev;
@@ -213,9 +215,15 @@ void SelfUpdater::onReleases(const QJsonArray& releases)
     }
   }
 
+  const bool hadNewer = !m_NewerReleases.empty();
   m_NewerReleases.clear();
   for (auto& [version, info] : newer) {
     m_NewerReleases.push_back(info);
+  }
+
+  if (m_NewerReleases.empty() && hadNewer) {
+    // a narrower channel: what the last check showed no longer applies
+    emit updateAvailable();
   }
 
   if (!m_NewerReleases.empty()) {

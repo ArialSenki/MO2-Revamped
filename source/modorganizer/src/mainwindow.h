@@ -315,6 +315,13 @@ private:
 
   // the update notice while it is open, see showUpdateNotice()
   QPointer<QDialog> m_UpdateNotice;
+  // a notice waits for its turn, see showUpdateNotice()
+  bool m_UpdateNoticeWaiting = false;
+  // the Update command as it is without an update, to put back
+  QString m_UpdateActionText, m_UpdateActionTip;
+
+  // the status bar and the Update command no longer show an update
+  void clearUpdateAvailable();
 
   // opens the update notice once no other window waits for an answer; with
   // onlyIfNotSkipped, not for the release the user skipped

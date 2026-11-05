@@ -12286,6 +12286,13 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
+    <message numerus="yes">
+      <source>%n older releases are not shown here; GitHub lists them all.</source>
+      <translation>
+        <numerusform>%n versione più vecchia non è mostrata qui; GitHub le elenca tutte.</numerusform>
+        <numerusform>%n versioni più vecchie non sono mostrate qui; GitHub le elenca tutte.</numerusform>
+      </translation>
+    </message>
     <message>
       <source>Development build</source>
       <translation>Versione di sviluppo</translation>

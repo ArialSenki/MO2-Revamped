@@ -12298,6 +12298,13 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
+    <message numerus="yes">
+      <source>%n older releases are not shown here; GitHub lists them all.</source>
+      <translation>
+        <numerusform>%n versión más antigua no se muestra aquí; GitHub las lista todas.</numerusform>
+        <numerusform>%n versiones más antiguas no se muestran aquí; GitHub las lista todas.</numerusform>
+      </translation>
+    </message>
     <message>
       <source>Development build</source>
       <translation>Versión de desarrollo</translation>

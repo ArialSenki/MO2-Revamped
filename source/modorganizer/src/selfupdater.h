@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
 
+#include "updatechannel.h"
 #include <github.h>
 #include <versioninfo.h>
 
@@ -58,16 +59,7 @@ class SelfUpdater : public QObject
   Q_OBJECT
 
 public:
-  // which releases a user hears about. Each channel includes the ones before
-  // it. On GitHub the tag says the channel: "v1.2.0" is stable, "-beta.N" and
-  // "-rc.N" are betas, "-alpha.N", "-dev.N", "-test.N" and "-preview.N" are
-  // development builds, early tests that only reach those who chose them
-  enum class UpdateChannel
-  {
-    Stable = 0,
-    Beta   = 1,
-    Dev    = 2
-  };
+  using UpdateChannel = ::UpdateChannel;
 
   // the channel of a release tag, or of a version; a release marked as a
   // pre-release on GitHub without a known suffix counts as a beta
@@ -132,7 +124,8 @@ public:
 signals:
 
   /**
-   * @brief emitted if an update is available
+   * @brief emitted after a check finds releases newer than this build, and
+   *        after a check that no longer finds any once one did
    **/
   void updateAvailable();
 

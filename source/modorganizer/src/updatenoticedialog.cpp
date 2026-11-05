@@ -9,11 +9,35 @@
 #include <QLabel>
 #include <QLocale>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollArea>
 #include <QUrl>
 #include <QVBoxLayout>
 
 using namespace MOBase;
+
+// the release notes come from GitHub: images become their text and HTML image
+// tags go, so the page never loads a file or a network share by itself
+static QString safeNotes(QString notes)
+{
+  static const QRegularExpression markdownImage(QStringLiteral(R"(!\[([^\]]*)\]\([^)]*\))"));
+  static const QRegularExpression htmlImage(QStringLiteral("<img[^>]*>"),
+                                            QRegularExpression::CaseInsensitiveOption);
+  notes.replace(markdownImage, QStringLiteral("\\1"));
+  notes.replace(htmlImage, QString());
+  return notes;
+}
+
+// links from the notes open in the browser, and only web links
+static void openNotesLink(const QString& link)
+{
+  const QUrl url(link);
+  if (url.scheme() == QLatin1String("https") || url.scheme() == QLatin1String("http")) {
+    shell::Open(url);
+  } else {
+    log::warn("update notice: not opening '{}', only web links open", link);
+  }
+}
 
 // "v1.1.0-beta.4" is shown as "1.1.0-beta.4"
 static QString shownVersion(const QString& tag)
@@ -105,7 +129,8 @@ UpdateNoticeDialog::createNotes(const std::vector<SelfUpdater::ReleaseInfo>& rel
   scroll->setObjectName(QStringLiteral("updateNoticeNotes"));
   scroll->setFrameShape(QFrame::NoFrame);
   scroll->setWidgetResizable(true);
-  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  // wide tables or code in the notes scroll instead of being cut
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   // the notes are part of the page, not a panel of their own
   scroll->setStyleSheet(QStringLiteral(
       "QScrollArea#updateNoticeNotes, QWidget#updateNoticeNotesContent "
@@ -119,7 +144,10 @@ UpdateNoticeDialog::createNotes(const std::vector<SelfUpdater::ReleaseInfo>& rel
   layout->setSpacing(4);
 
   const QLocale& locale = m_locale;
-  for (const auto& release : releases) {
+  // the last ten are plenty to read; the rest are a link away
+  constexpr std::size_t shown = 10;
+  for (std::size_t i = 0; i < releases.size() && i < shown; ++i) {
+    const auto& release = releases[i];
     auto* heading = new QLabel(
         release.name.isEmpty() ? QStringLiteral("MO2 Revamped %1").arg(shownVersion(release.tag))
                                : release.name,
@@ -128,6 +156,7 @@ UpdateNoticeDialog::createNotes(const std::vector<SelfUpdater::ReleaseInfo>& rel
     heading->setObjectName(QStringLiteral("updateNoticeRelease"));
     heading->setStyleSheet(QStringLiteral(
         "QLabel#updateNoticeRelease { font-size: 13pt; font-weight: 600; }"));
+    heading->setTextFormat(Qt::PlainText);
     heading->setWordWrap(true);
     layout->addWidget(heading);
 
@@ -150,6 +179,7 @@ UpdateNoticeDialog::createNotes(const std::vector<SelfUpdater::ReleaseInfo>& rel
                                        QLocale::LongFormat));
     }
     auto* detail = new QLabel(facts, content);
+    detail->setTextFormat(Qt::PlainText);
     detail->setObjectName(QStringLiteral("fluentSettingDescription"));
     layout->addWidget(detail);
 
@@ -157,13 +187,23 @@ UpdateNoticeDialog::createNotes(const std::vector<SelfUpdater::ReleaseInfo>& rel
     notes->setTextFormat(Qt::MarkdownText);
     notes->setText(release.notes.trimmed().isEmpty()
                        ? tr("This release has no notes on GitHub.")
-                       : release.notes);
+                       : safeNotes(release.notes));
     notes->setWordWrap(true);
-    notes->setOpenExternalLinks(true);
+    notes->setOpenExternalLinks(false);
+    connect(notes, &QLabel::linkActivated, this, &openNotesLink);
     notes->setTextInteractionFlags(Qt::TextBrowserInteraction);
     notes->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     layout->addWidget(notes);
     layout->addSpacing(16);
+  }
+  if (releases.size() > shown) {
+    auto* more = new QLabel(
+        tr("%n older releases are not shown here; GitHub lists them all.", "",
+           static_cast<int>(releases.size() - shown)),
+        content);
+    more->setObjectName(QStringLiteral("fluentSettingDescription"));
+    more->setWordWrap(true);
+    layout->addWidget(more);
   }
   layout->addStretch(1);
 
