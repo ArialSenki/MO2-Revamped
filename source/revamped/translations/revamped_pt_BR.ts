@@ -7646,6 +7646,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>Description</source>
+      <translation>Descrição</translation>
+    </message>
+    <message>
       <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mod ID for this mod on Nexus. This is filled in automatically if you downloaded and installed the mod from inside Mod Organizer 2 Revamped. Otherwise you can enter it manually. To find the correct ID, find the mod on Nexus. The URL will look like this: https://www.nexusmods.com/gamename/mods/1234. In this example, 1234 is the ID you're looking for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
       <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ID deste mod na Nexus. É preenchido automaticamente se você baixou e instalou o mod pelo Mod Organizer 2 Revamped. Caso contrário, você pode digitá-lo manualmente. Para encontrar o ID correto, procure o mod na Nexus. A URL será parecida com esta: https://www.nexusmods.com/gamename/mods/1234. Neste exemplo, 1234 é o ID que você procura.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
@@ -11843,6 +11847,22 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
   </context>
 <context>
     <name>NexusTab</name>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>Open in Browser</source>
+      <translation>Abrir no navegador</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Atualizar</translation>
+    </message>
+    <message>
+      <source>The mod&apos;s description from Nexus, with its images, in its own window</source>
+      <translation>A descrição do mod na Nexus, com suas imagens, em uma janela própria</translation>
+    </message>
     <message>
       <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
       <translation>O Nexus não tem descrição para este mod, ou ela não pôde ser lida. Atualizar tenta de novo.</translation>

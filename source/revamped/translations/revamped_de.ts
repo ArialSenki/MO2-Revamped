@@ -7646,6 +7646,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>Description</source>
+      <translation>Beschreibung</translation>
+    </message>
+    <message>
       <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mod ID for this mod on Nexus. This is filled in automatically if you downloaded and installed the mod from inside Mod Organizer 2 Revamped. Otherwise you can enter it manually. To find the correct ID, find the mod on Nexus. The URL will look like this: https://www.nexusmods.com/gamename/mods/1234. In this example, 1234 is the ID you're looking for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
       <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mod-ID dieses Mods auf Nexus. Sie wird automatisch eingetragen, wenn du den Mod aus Mod Organizer 2 Revamped heraus heruntergeladen und installiert hast. Andernfalls kannst du sie von Hand eingeben. Suche dazu den Mod auf Nexus. Die URL sieht so aus: https://www.nexusmods.com/gamename/mods/1234. In diesem Beispiel ist 1234 die gesuchte ID.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
@@ -11843,6 +11847,22 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
   </context>
 <context>
     <name>NexusTab</name>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Open in Browser</source>
+      <translation>Im Browser öffnen</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Aktualisieren</translation>
+    </message>
+    <message>
+      <source>The mod&apos;s description from Nexus, with its images, in its own window</source>
+      <translation>Die Beschreibung der Mod von Nexus, mit ihren Bildern, in einem eigenen Fenster</translation>
+    </message>
     <message>
       <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
       <translation>Nexus hat keine Beschreibung für diese Mod, oder sie konnte nicht gelesen werden. Aktualisieren versucht es erneut.</translation>

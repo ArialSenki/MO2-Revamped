@@ -2,6 +2,10 @@
 #define MODINFODIALOGNEXUS_H
 
 #include "modinfodialogtab.h"
+#include <QPointer>
+
+class FluentContentDialog;
+class QWebEngineView;
 
 class NexusTabWebpage : public QWebEnginePage
 {
@@ -45,14 +49,17 @@ private:
   bool m_requestStarted;
   bool m_loading;
 
+  // the description's own window while it is open, see showDescription()
+  QPointer<FluentContentDialog> m_descriptionWindow;
+  QWebEngineView* m_browser = nullptr;
+
   // the browser holds a page made since the last clear(), see ensureBrowserPage()
   bool m_browserPageReady;
 
-  // the tab has shown a page at least once in this dialog
-  bool m_browserPageUsed;
-
   void cleanup();
+  void showDescription();
   void ensureBrowserPage();
+  void loadDescription();
   void updateVersionColor();
   void updateWebpage();
   void updateActions();

@@ -13,10 +13,11 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
 
 ## Highlights
 
-- **Faster**: the main window appears about a second sooner. The first Mod
-  information of each session takes a moment longer, because the web engine now
+- **Faster**: the main window appears about a second sooner, and the web engine
   starts only when a page needs it. Mod information, tab changes, program lists
   and the Reforged sync wait less.
+- **Smoother Mod information**: a mod's Nexus description now opens in a window of
+  its own with the **Description** button in Nexus Info, so the rest stays fluid.
 - **Less left over from the old program**: its old themes, including Classic
   Refined, build files, unused icons and code, and stale translations are gone.
   Light and Dark are the only themes, and changing between them needs no restart.

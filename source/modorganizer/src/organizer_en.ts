@@ -7090,7 +7090,7 @@ Recovery snapshots were kept at: %2</source>
     </message>
     <message>
         <location filename="modinfodialog.ui" line="45"/>
-        <location filename="modinfodialog.cpp" line="948"/>
+        <location filename="modinfodialog.cpp" line="947"/>
         <source>Review documentation and other text files included with this mod.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7303,8 +7303,8 @@ Most mods do not have optional esps, so chances are good you are looking at an e
     </message>
     <message>
         <location filename="modinfodialog.ui" line="990"/>
+        <location filename="modinfodialog.cpp" line="1137"/>
         <location filename="modinfodialog.cpp" line="1138"/>
-        <location filename="modinfodialog.cpp" line="1139"/>
         <source>Mod ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7339,7 +7339,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modinfodialog.ui" line="1031"/>
-        <location filename="modinfodialog.cpp" line="1143"/>
+        <location filename="modinfodialog.cpp" line="1142"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7349,89 +7349,89 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1104"/>
-        <location filename="modinfodialog.ui" line="1110"/>
+        <location filename="modinfodialog.ui" line="1098"/>
+        <source>Description</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialog.ui" line="1111"/>
+        <location filename="modinfodialog.ui" line="1117"/>
         <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1107"/>
+        <location filename="modinfodialog.ui" line="1114"/>
         <source>Refresh all information from Nexus.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1121"/>
-        <location filename="modinfodialog.ui" line="1246"/>
+        <location filename="modinfodialog.ui" line="1128"/>
+        <location filename="modinfodialog.ui" line="1208"/>
         <source>Open in Browser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1132"/>
+        <location filename="modinfodialog.ui" line="1139"/>
         <source>Endorse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1143"/>
+        <location filename="modinfodialog.ui" line="1150"/>
         <source>Track</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1210"/>
-        <source>about:blank</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="modinfodialog.ui" line="1236"/>
+        <location filename="modinfodialog.ui" line="1198"/>
         <source>Use Custom URL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1257"/>
-        <location filename="modinfodialog.cpp" line="1206"/>
+        <location filename="modinfodialog.ui" line="1219"/>
+        <location filename="modinfodialog.cpp" line="1208"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1265"/>
-        <location filename="modinfodialog.ui" line="1268"/>
-        <location filename="modinfodialog.ui" line="1271"/>
+        <location filename="modinfodialog.ui" line="1227"/>
+        <location filename="modinfodialog.ui" line="1230"/>
+        <location filename="modinfodialog.ui" line="1233"/>
         <source>Enter comments about the mod here.  These are displayed in the notes column of the mod list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1278"/>
+        <location filename="modinfodialog.ui" line="1240"/>
         <source>Set Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1285"/>
+        <location filename="modinfodialog.ui" line="1247"/>
         <source>Reset Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1294"/>
-        <location filename="modinfodialog.ui" line="1297"/>
-        <location filename="modinfodialog.ui" line="1303"/>
+        <location filename="modinfodialog.ui" line="1256"/>
+        <location filename="modinfodialog.ui" line="1259"/>
+        <location filename="modinfodialog.ui" line="1265"/>
         <source>Enter notes about the mod here.  These can be viewed in the mod list by hovering over the notes column or the flags column.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1311"/>
+        <location filename="modinfodialog.ui" line="1273"/>
         <source>Filetree</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1325"/>
+        <location filename="modinfodialog.ui" line="1287"/>
         <source>Open Mod in Explorer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1350"/>
+        <location filename="modinfodialog.ui" line="1312"/>
         <source>Preview appears only for file types supported by an enabled MO2 preview plugin. Open/Execute uses the app associated with the file type in Windows.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1353"/>
+        <location filename="modinfodialog.ui" line="1315"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -7442,218 +7442,218 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1390"/>
+        <location filename="modinfodialog.ui" line="1352"/>
         <source>Previous</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1400"/>
+        <location filename="modinfodialog.ui" line="1362"/>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.ui" line="1423"/>
+        <location filename="modinfodialog.ui" line="1385"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="936"/>
+        <location filename="modinfodialog.cpp" line="935"/>
         <source>Mod information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="938"/>
-        <location filename="modinfodialog.cpp" line="976"/>
+        <location filename="modinfodialog.cpp" line="937"/>
+        <location filename="modinfodialog.cpp" line="975"/>
         <source>Inspect this mod&apos;s contents, metadata, and file conflicts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="951"/>
+        <location filename="modinfodialog.cpp" line="950"/>
         <source>Inspect and edit configuration files provided by the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="954"/>
+        <location filename="modinfodialog.cpp" line="953"/>
         <source>Browse the images and previews packaged with the mod.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="957"/>
+        <location filename="modinfodialog.cpp" line="956"/>
         <source>Choose which optional ESP, ESM, and ESL files are active. Mods without optional plugins leave this list empty.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="961"/>
+        <location filename="modinfodialog.cpp" line="960"/>
         <source>See which files this mod wins, loses, or shares with other mods.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="964"/>
+        <location filename="modinfodialog.cpp" line="963"/>
         <source>Organize the mod and choose its primary category.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="967"/>
+        <location filename="modinfodialog.cpp" line="966"/>
         <source>Review Nexus metadata, refresh details, and open the mod page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="970"/>
+        <location filename="modinfodialog.cpp" line="969"/>
         <source>Add notes and a color marker to recognize this mod in your list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="973"/>
+        <location filename="modinfodialog.cpp" line="972"/>
         <source>Inspect the mod&apos;s folder structure and manage its files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1099"/>
+        <location filename="modinfodialog.cpp" line="1098"/>
         <source>Open the mod&apos;s folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1103"/>
+        <location filename="modinfodialog.cpp" line="1102"/>
         <source>Open the mod&apos;s page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1113"/>
+        <location filename="modinfodialog.cpp" line="1112"/>
         <source>Copy the mod&apos;s name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1131"/>
+        <location filename="modinfodialog.cpp" line="1130"/>
         <source>Nexus Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1139"/>
+        <location filename="modinfodialog.cpp" line="1138"/>
         <source>The number in the mod&apos;s Nexus address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1141"/>
+        <location filename="modinfodialog.cpp" line="1140"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1141"/>
+        <location filename="modinfodialog.cpp" line="1140"/>
         <source>The Nexus game the page belongs to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1143"/>
+        <location filename="modinfodialog.cpp" line="1142"/>
         <source>Red when Nexus has a newer one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1145"/>
+        <location filename="modinfodialog.cpp" line="1144"/>
         <source>Nexus category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1145"/>
+        <location filename="modinfodialog.cpp" line="1144"/>
         <source>The category number on Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1165"/>
+        <location filename="modinfodialog.cpp" line="1164"/>
         <source>Open the custom page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1168"/>
+        <location filename="modinfodialog.cpp" line="1167"/>
         <source>Custom web page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1169"/>
+        <location filename="modinfodialog.cpp" line="1168"/>
         <source>For mods from elsewhere: the page Open opens instead of Nexus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1198"/>
+        <location filename="modinfodialog.cpp" line="1200"/>
         <source>A short note shown in the mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1199"/>
+        <location filename="modinfodialog.cpp" line="1201"/>
         <source>Comment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1199"/>
+        <location filename="modinfodialog.cpp" line="1201"/>
         <source>Shown in the mod list&apos;s Notes column</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1204"/>
+        <location filename="modinfodialog.cpp" line="1206"/>
         <source>Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1204"/>
+        <location filename="modinfodialog.cpp" line="1206"/>
         <source>Marks the mod&apos;s row in the mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1216"/>
+        <location filename="modinfodialog.cpp" line="1218"/>
         <source>Primary category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1217"/>
+        <location filename="modinfodialog.cpp" line="1219"/>
         <source>The one the mod list shows and groups by</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1218"/>
+        <location filename="modinfodialog.cpp" line="1220"/>
         <source>Categories of this mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1229"/>
+        <location filename="modinfodialog.cpp" line="1231"/>
         <source>The mod above this one in the list (Page Up)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1230"/>
+        <location filename="modinfodialog.cpp" line="1232"/>
         <source>The mod below this one in the list (Page Down)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1243"/>
+        <location filename="modinfodialog.cpp" line="1245"/>
         <source>Separator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1245"/>
+        <location filename="modinfodialog.cpp" line="1247"/>
         <source>Files outside any mod</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1249"/>
+        <location filename="modinfodialog.cpp" line="1251"/>
         <source>Version %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1254"/>
+        <location filename="modinfodialog.cpp" line="1256"/>
         <source>Active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1254"/>
+        <location filename="modinfodialog.cpp" line="1256"/>
         <source>Inactive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1255"/>
+        <location filename="modinfodialog.cpp" line="1257"/>
         <source>Priority %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialog.cpp" line="1258"/>
+        <location filename="modinfodialog.cpp" line="1260"/>
         <source>Not managed by Mod Organizer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9190,37 +9190,58 @@ Please enter a name:</source>
 <context>
     <name>NexusTab</name>
     <message>
-        <location filename="modinfodialognexus.cpp" line="204"/>
+        <location filename="modinfodialognexus.cpp" line="122"/>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="125"/>
+        <source>Open in Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="129"/>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="246"/>
         <source>Current Version: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="206"/>
+        <location filename="modinfodialognexus.cpp" line="248"/>
         <source>No update available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="249"/>
+        <location filename="modinfodialognexus.cpp" line="290"/>
+        <source>The mod&apos;s description from Nexus, with its images, in its own window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="291"/>
+        <location filename="modinfodialognexus.cpp" line="295"/>
         <source>This mod has no Nexus ID.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="261"/>
+        <location filename="modinfodialognexus.cpp" line="307"/>
         <source>Tracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="264"/>
+        <location filename="modinfodialognexus.cpp" line="310"/>
         <source>Untracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="415"/>
+        <location filename="modinfodialognexus.cpp" line="474"/>
         <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="417"/>
+        <location filename="modinfodialognexus.cpp" line="476"/>
         <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
         <translation type="unfinished"></translation>
     </message>

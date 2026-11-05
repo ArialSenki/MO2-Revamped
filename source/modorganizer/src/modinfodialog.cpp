@@ -193,7 +193,6 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       m_arrangingTabs(false)
 {
   FluentPerf::Timer perf("ModInfoDialog");
-  MainWindow::prepareWebEngine();
   ui->setupUi(this);
   perf.lap("setupUi");
   LCDNumber::useFrames(this);
@@ -1123,8 +1122,8 @@ void ModInfoDialog::buildFluentPages()
 
   using FluentPanels::addEditRow;
 
-  // Nexus: the page's facts in two columns, the custom page, the commands and
-  // the description below
+  // Nexus: the page's facts in two columns, the custom page and the commands; the
+  // description opens in its own window
   if (auto* page = qobject_cast<QVBoxLayout*>(ui->tabNexus->layout())) {
     ui->widget_14->hide();
     ui->widget_13->hide();
@@ -1175,11 +1174,15 @@ void ModInfoDialog::buildFluentPages()
     auto* actionsLayout = new QHBoxLayout(actions);
     actionsLayout->setContentsMargins(12, 12, 12, 12);
     actionsLayout->setSpacing(8);
-    for (QPushButton* button : {ui->visitNexus, ui->refresh, ui->endorse, ui->track}) {
+    ui->showDescription->setIcon(FluentIcons::glyph(0xE8A5));
+    ui->showDescription->setProperty("fluentKeepIcon", true);
+    for (QPushButton* button :
+         {ui->showDescription, ui->visitNexus, ui->refresh, ui->endorse, ui->track}) {
       button->setParent(actions);
       button->setAutoDefault(false);
       actionsLayout->addWidget(button);
     }
+    ui->showDescription->show();
     ui->visitNexus->show();
     ui->refresh->show();
     ui->endorse->setVisible(m_core.settings().nexus().endorsementIntegration());
@@ -1187,8 +1190,7 @@ void ModInfoDialog::buildFluentPages()
     actionsLayout->addStretch(1);
     card->layout()->addWidget(actions);
 
-    // the description fills the rest of the page
-    ui->frame->setProperty("fluentCard", true);
+    page->addStretch(1);
     page->setSpacing(10);
   }
 

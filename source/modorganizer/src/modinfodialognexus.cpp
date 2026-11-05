@@ -1,14 +1,20 @@
 #include "revampedtheme.h"
 #include "modinfodialognexus.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "bbcode.h"
 #include "iplugingame.h"
+#include "mainwindow.h"
 #include "organizercore.h"
 #include "settings.h"
 #include "ui_modinfodialog.h"
 #include <log.h>
 #include <utility.h>
 #include <versioninfo.h>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QtWebEngineWidgets/QWebEngineView>
 
 using namespace MOBase;
 
@@ -35,7 +41,7 @@ public:
 
 NexusTab::NexusTab(ModInfoDialogTabContext cx)
     : ModInfoDialogTab(std::move(cx)), m_requestStarted(false), m_loading(false),
-      m_browserPageReady(false), m_browserPageUsed(false)
+      m_browserPageReady(false)
 {
   ui->modID->setValidator(
       new ModIDValidator(0, std::numeric_limits<int>::max(), ui->modID));
@@ -56,6 +62,9 @@ NexusTab::NexusTab(ModInfoDialogTabContext cx)
     onCategoryChanged();
   });
 
+  connect(ui->showDescription, &QPushButton::clicked, [&] {
+    showDescription();
+  });
   connect(ui->refresh, &QPushButton::clicked, [&] {
     onRefreshBrowser();
   });
@@ -93,25 +102,59 @@ void NexusTab::cleanup()
   }
 }
 
-// a web page is costly to create, and most visits to a mod never open this tab:
-// it is created when something is about to be shown in it. Once the tab has
-// been used, each mod gets a fresh one in update(), so the last mod's
-// description is never left behind.
+// the description has a window of its own: a window holding a web view is drawn
+// through the GPU until it closes, which shows in how smoothly it responds, and
+// Mod information stays clear of that. Everything web starts here, on request.
+void NexusTab::showDescription()
+{
+  if (m_descriptionWindow.isNull()) {
+    MainWindow::prepareWebEngine();
+
+    auto* dialog = new FluentContentDialog(parentWidget(),
+                                           QStringLiteral("nexusDescriptionDialog"),
+                                           mod().name());
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowFlag(Qt::WindowMaximizeButtonHint);
+
+    m_browser = new QWebEngineView(dialog);
+    dialog->body()->addWidget(m_browser, 1);
+
+    connect(dialog->addButton(tr("Refresh")), &QPushButton::clicked, this, [this] {
+      onRefreshBrowser();
+    });
+    connect(dialog->addButton(tr("Open in Browser")), &QPushButton::clicked, this,
+            [this] {
+              onVisitNexus();
+            });
+    connect(dialog->addButton(tr("Close")), &QPushButton::clicked, dialog,
+            &QDialog::close);
+
+    dialog->resize(980, 760);
+    m_descriptionWindow = dialog;
+    m_browserPageReady  = false;
+    loadDescription();
+  }
+
+  m_descriptionWindow->show();
+  m_descriptionWindow->raise();
+  m_descriptionWindow->activateWindow();
+}
+
+// each mod gets a fresh page, so the last mod's description is never left behind
 void NexusTab::ensureBrowserPage()
 {
   if (m_browserPageReady) {
     return;
   }
 
-  auto* page = new NexusTabWebpage(ui->browser);
-  ui->browser->setPage(page);
+  auto* page = new NexusTabWebpage(m_browser);
+  m_browser->setPage(page);
 
   connect(page, &NexusTabWebpage::linkClicked, [&](const QUrl& url) {
     shell::Open(url);
   });
 
   m_browserPageReady = true;
-  m_browserPageUsed  = true;
 }
 
 void NexusTab::clear()
@@ -160,8 +203,8 @@ void NexusTab::update()
 
   ui->category->setText(QString("%1").arg(mod().getNexusCategory()));
 
-  if (m_browserPageUsed) {
-    ensureBrowserPage();
+  if (!m_descriptionWindow.isNull()) {
+    loadDescription();
   }
 
   updateActions();
@@ -171,7 +214,6 @@ void NexusTab::update()
 
 void NexusTab::firstActivation()
 {
-  ensureBrowserPage();
   updateWebpage();
 }
 
@@ -243,6 +285,10 @@ void NexusTab::updateActions()
   const int modID  = mod().nexusId();
   const bool valid = isValidModID(modID);
 
+  ui->showDescription->setEnabled(valid);
+  ui->showDescription->setToolTip(
+      valid ? tr("The mod's description from Nexus, with its images, in its own window")
+            : tr("This mod has no Nexus ID."));
   ui->visitNexus->setEnabled(valid);
   ui->visitNexus->setToolTip(
       valid ? NexusInterface::instance().getModURL(modID, mod().gameName())
@@ -278,8 +324,10 @@ bool NexusTab::tryRefreshData(int modID)
 {
   if (isValidModID(modID) && !m_requestStarted) {
     if (mod().updateNXMInfo()) {
-      ensureBrowserPage();
-      ui->browser->setHtml("");
+      if (!m_descriptionWindow.isNull()) {
+        ensureBrowserPage();
+        m_browser->setHtml("");
+      }
       return true;
     }
   }
@@ -315,8 +363,11 @@ static QString fluentDescriptionStyle(QString html)
   html.replace("border: 1px solid black;", "border: 1px solid " + line + ";");
   html.replace("background-color: #454545;", "background-color: " + control + ";");
   html.replace("color: #E6E6E6;", "color: " + text + ";");
-  html.replace("</style>", "    div.empty { text-align: center; color: " + muted +
-                               "; padding-top: 24px; }\n    </style>");
+  // the page's scroll bar follows the theme too
+  html.replace("</style>", QStringLiteral("    :root { color-scheme: %1; }\n"
+                                          "    div.empty { text-align: center; color: %2; "
+                                          "padding-top: 24px; }\n    </style>")
+                               .arg(dark ? "dark" : "light", muted));
   return html;
 }
 
@@ -324,6 +375,17 @@ void NexusTab::onModChanged()
 {
   m_requestStarted = false;
 
+  if (!m_descriptionWindow.isNull()) {
+    loadDescription();
+  }
+
+  updateVersionColor();
+  updateTracking();
+  updateActions();
+}
+
+void NexusTab::loadDescription()
+{
   const QString nexusDescription = mod().getNexusDescription();
 
   QString descriptionAsHTML = R"(
@@ -422,16 +484,19 @@ void NexusTab::onModChanged()
 
   ensureBrowserPage();
 
-    descriptionAsHTML = fluentDescriptionStyle(descriptionAsHTML);
+  descriptionAsHTML = fluentDescriptionStyle(descriptionAsHTML);
   // no white frame while the page loads
-  ui->browser->page()->setBackgroundColor(
+  m_browser->page()->setBackgroundColor(
       QColor(MOBase::RevampedTheme::isDark() ? 0x2B2B2B : 0xFBFBFB));
 
+  m_browser->page()->setHtml(descriptionAsHTML);
 
-  ui->browser->page()->setHtml(descriptionAsHTML);
-  updateVersionColor();
-  updateTracking();
-  updateActions();
+  // the window names the mod it shows
+  m_descriptionWindow->setWindowTitle(mod().name());
+  if (auto* title = m_descriptionWindow->findChild<QLabel*>(
+          QStringLiteral("fluentDialogTitle"))) {
+    title->setText(mod().name());
+  }
 }
 
 void NexusTab::onModIDChanged()

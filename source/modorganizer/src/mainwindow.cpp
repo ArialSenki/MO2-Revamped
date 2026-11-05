@@ -1222,8 +1222,8 @@ void setFilterShortcuts(QWidget* widget, QLineEdit* edit)
 
 void MainWindow::prepareWebEngine()
 {
-  // starting it takes a noticeable part of MO2's startup, and only Mod information
-  // and LOOT's report show web pages: the first of them starts it
+  // starting it takes a noticeable part of MO2's startup, and only Mod information's
+  // Nexus tab and LOOT's report show web pages: the first of them starts it
   if (s_webEnginePrepared) {
     return;
   }

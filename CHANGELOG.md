@@ -5,8 +5,12 @@
 ### Faster
 
 - The main window appears about a second sooner: the splash no longer waits a
-  full second for itself, and the web engine starts only when a page needs it,
-  which adds a moment to the first Mod information of each session.
+  full second for itself, and the web engine starts only when a page needs it.
+- Mod information stays smooth: Nexus Info keeps the mod's facts and commands, and
+  its description opens in a window of its own with the **Description** button. A
+  window holding a web page is drawn through the GPU until it closes, which showed
+  in how the whole window responded on fast screens. The description window follows
+  the mod you move to, and has Refresh and Open in Browser.
 - Mod information, tab changes, program lists and the Reforged sync wait less.
 
 ### Removed
@@ -27,7 +31,7 @@
 
 ### Fixed
 
-- Starting a game with Steam closed: MO2 now asks about Steam before it sets the Steam saves aside. Waiting at that question could bring them back early, and the game then ran with them in place.
+- MO2 asks about Steam and blacklisted programs before plugins prepare a launch. Elden Ring and Nightreign don't reach that question, but a game that does could have its saves brought back early while it waited.
 - Enter on a focused Cancel in the new dialogs cancels; it used to press the action.
 - Closing the "Plugin error" window skips the plugin for this session instead of blacklisting it.
 - "Use the global Steam save?" no longer accepts on Enter.

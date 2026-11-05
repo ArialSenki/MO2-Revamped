@@ -7810,6 +7810,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>Description</source>
+      <translation>Description</translation>
+    </message>
+    <message>
       <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mod ID for this mod on Nexus. This is filled in automatically if you downloaded and installed the mod from inside Mod Organizer 2 Revamped. Otherwise you can enter it manually. To find the correct ID, find the mod on Nexus. The URL will look like this: https://www.nexusmods.com/gamename/mods/1234. In this example, 1234 is the ID you're looking for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
       <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Identifiant de ce mod sur Nexus. Il est renseigné automatiquement si vous avez téléchargé et installé le mod depuis Mod Organizer 2 Revamped. Sinon, vous pouvez le saisir à la main. Pour trouver le bon identifiant, cherchez le mod sur Nexus. L'URL ressemble à ceci : https://www.nexusmods.com/gamename/mods/1234. Dans cet exemple, 1234 est l'identifiant recherché.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
@@ -12069,6 +12073,22 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
   </context>
   <context>
     <name>NexusTab</name>
+    <message>
+      <source>Close</source>
+      <translation>Fermer</translation>
+    </message>
+    <message>
+      <source>Open in Browser</source>
+      <translation>Ouvrir dans le navigateur</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Actualiser</translation>
+    </message>
+    <message>
+      <source>The mod&apos;s description from Nexus, with its images, in its own window</source>
+      <translation>La description du mod sur Nexus, avec ses images, dans sa propre fenêtre</translation>
+    </message>
     <message>
       <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
       <translation>Nexus n'a pas de description pour ce mod, ou elle n'a pas pu être lue. Actualiser réessaie.</translation>
