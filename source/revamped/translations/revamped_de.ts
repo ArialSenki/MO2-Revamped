@@ -4352,6 +4352,18 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
   <context>
     <name>EldenRingStartupOptions</name>
     <message>
+      <source>Faster game start (BootBoost)</source>
+      <translation>Schnellerer Spielstart (BootBoost)</translation>
+    </message>
+    <message>
+      <source>Keeps the game's archive headers, which it decrypts on every start, ready in a cache after the first start, so the title screen comes sooner. A game update makes new ones. From me3.</source>
+      <translation>Hält die Archiv-Header, die das Spiel bei jedem Start entschlüsselt, nach dem ersten Start in einem Cache bereit, damit der Titelbildschirm früher kommt. Ein Spielupdate erzeugt neue. Aus me3.</translation>
+    </message>
+    <message>
+      <source>Puts every option back as it comes; nothing changes until you save</source>
+      <translation>Setzt jede Option auf ihren Standard zurück; nichts ändert sich, bis du speicherst</translation>
+    </message>
+    <message>
       <source>Per-profile Elden Ring startup, cleanup, and performance options.</source>
       <translation>Elden-Ring-Optionen für Start, Bereinigung und Leistung pro Profil.</translation>
     </message>
@@ -4726,10 +4738,6 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
     <message>
       <source>The launch before that one</source>
       <translation>Der Start davor</translation>
-    </message>
-    <message>
-      <source>Turns every option off again; nothing changes until you save</source>
-      <translation>Schaltet alle Optionen wieder aus; nichts ändert sich, bis du speicherst</translation>
     </message>
     <message>
       <source>Window</source>

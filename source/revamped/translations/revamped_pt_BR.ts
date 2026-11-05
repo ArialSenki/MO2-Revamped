@@ -4344,6 +4344,18 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
   <context>
     <name>EldenRingStartupOptions</name>
     <message>
+      <source>Faster game start (BootBoost)</source>
+      <translation>Início do jogo mais rápido (BootBoost)</translation>
+    </message>
+    <message>
+      <source>Keeps the game's archive headers, which it decrypts on every start, ready in a cache after the first start, so the title screen comes sooner. A game update makes new ones. From me3.</source>
+      <translation>Guarda em um cache, após o primeiro início, os cabeçalhos de arquivos que o jogo descriptografa a cada início, para que a tela de título apareça antes. Uma atualização do jogo cria novos. Do me3.</translation>
+    </message>
+    <message>
+      <source>Puts every option back as it comes; nothing changes until you save</source>
+      <translation>Volta cada opção ao padrão; nada muda até você salvar</translation>
+    </message>
+    <message>
       <source>Per-profile Elden Ring startup, cleanup, and performance options.</source>
       <translation>Opções de inicialização, limpeza e desempenho do Elden Ring por perfil.</translation>
     </message>
@@ -4718,10 +4730,6 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
     <message>
       <source>The launch before that one</source>
       <translation>A inicialização anterior a essa</translation>
-    </message>
-    <message>
-      <source>Turns every option off again; nothing changes until you save</source>
-      <translation>Desativa todas as opções novamente; nada muda até você salvar</translation>
     </message>
     <message>
       <source>Window</source>

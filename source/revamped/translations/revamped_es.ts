@@ -4384,6 +4384,18 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
   <context>
     <name>EldenRingStartupOptions</name>
     <message>
+      <source>Faster game start (BootBoost)</source>
+      <translation>Inicio del juego más rápido (BootBoost)</translation>
+    </message>
+    <message>
+      <source>Keeps the game's archive headers, which it decrypts on every start, ready in a cache after the first start, so the title screen comes sooner. A game update makes new ones. From me3.</source>
+      <translation>Guarda en una caché, tras el primer inicio, las cabeceras de los archivos del juego que este descifra en cada inicio, así la pantalla de título llega antes. Una actualización del juego crea otras nuevas. De me3.</translation>
+    </message>
+    <message>
+      <source>Puts every option back as it comes; nothing changes until you save</source>
+      <translation>Deja cada opción como viene; nada cambia hasta que guardes</translation>
+    </message>
+    <message>
       <source>Per-profile Elden Ring startup, cleanup, and performance options.</source>
       <translation>Opciones de inicio, limpieza y rendimiento de Elden Ring por perfil.</translation>
     </message>
@@ -4758,10 +4770,6 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
     <message>
       <source>The launch before that one</source>
       <translation>El inicio anterior a ese</translation>
-    </message>
-    <message>
-      <source>Turns every option off again; nothing changes until you save</source>
-      <translation>Vuelve a desactivar todas las opciones; nada cambia hasta que guardes</translation>
     </message>
     <message>
       <source>Window</source>
