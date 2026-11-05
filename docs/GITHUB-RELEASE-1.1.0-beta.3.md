@@ -23,6 +23,8 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
   Links to the old project now appear only in the "..." menu.
 - **Small windows**: questions, warnings, prompts and the setup's own questions now
   have the same Fluent look as the rest of the program.
+- **A game that closes at once**: MO2 now says so and suggests checking the Steam
+  account and the mods.
 - **Fixed**: a new installation starts in the language picked in its setup, Mod
   information's Advanced conflicts list shows the file names, and the installer
   wizard's updated look and the Form 43 checker's translated name now ship.

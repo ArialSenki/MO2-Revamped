@@ -1,10 +1,10 @@
 # Release audit
 
-## Pre-release candidate — November 4, 2026 (v1.1.0-beta.3)
+## Pre-release candidate — November 5, 2026 (v1.1.0-beta.3)
 
-- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,911,744 bytes, SHA-256
-  `94C745FB56CA0467C57601F4CDCE354F665412F1536D6CB6999E91147B4745B8`.
-- Built from commit 0c77e73 (design/fluent-v4) with ModOrganizer.exe compiled
+- Installer: `MO2-Revamped-Setup-1.1.0-beta.3.exe`, 378,915,328 bytes, SHA-256
+  `206F493CE67FE554B523BD854E11DAD0B0151A82472AC14E07711E0F956952CA`.
+- Built from commit dd55438 (design/fluent-v4) with ModOrganizer.exe compiled
   from that tree (Release, revision reconfigured) and nxmhandler.exe compiled
   on November 3 (Release).
 - Complete payload: 1,318 files; Elden Ring Isolated payload: 1,218 files.
@@ -24,18 +24,31 @@
   Portuguese started in that language and saved it; an update in another language
   kept the saved one. A standard install with no saved language started in the
   language of its setup and saved it.
-- On the build before the small windows changed (f2274be), in the real window: Start menu
-  and desktop shortcuts, which leave another installation's shortcut alone and are removed
-  on uninstall, and opening MO2 at the end.
-- On this installer, in the real window: the new question, answered No, leaves no folder.
+- Games, on this installer, on the owner's Steam account: Elden Ring with Reforged offline
+  and AdaptiveBarScaling, and Nightreign with Damage Competition, reached the title screen
+  and the user loaded a save in each. Bridge hook installed in both, 128 loose files served
+  in Elden Ring at the title screen, the Nightreign DLL loaded. Both closed with code 0 and no
+  fault event. Elden Ring wrote only its profile save and the Steam save stayed unchanged;
+  Nightreign uses the Steam save here and wrote it. Nothing further was played. Not started:
+  Reforged online, Seamless Co-op, Convergence.
+- On the previous installer (0c77e73), in the real window: Start menu and desktop shortcuts,
+  which leave another installation's shortcut alone and are removed on uninstall, opening
+  MO2 at the end, and the new question, answered No, leaves no folder.
+- Game closing at once, on the development build, with Steam on an account without the
+  license: Nightreign closed in seconds and the new notice appeared.
+- Bridge signatures, read from the files: found once, with one target, in the installed
+  Elden Ring and Nightreign and in Elden Ring 1.17, 1.17.1, 1.17.2 and both JP versions.
 - Small windows, on the development build, Dark on ER Test and Light on NR Test: message
   boxes, task dialogs, "remember my choice", text and number prompts, progress, and every
   prompt of the mod list and tools opened and cancelled. Answers checked through a
   temporary test build: option cards, band buttons, Yes, No, details and check boxes.
-  Accepting these prompts for real was not run, except Merge earlier.
+  Accepted for real on ER Test, on the development build: new empty mod and separator,
+  rename, mod backup and its restore, remove, enable and disable all, automatic categories,
+  mod list backup, restore and delete, bug report. Reinstall opened and was cancelled.
+  Nightreign's three tools were checked in Light. Other prompts were opened and cancelled.
 - On this installer, through the backend: standard install, update, uninstall; beta.2 to beta.3, which removes
   the classic themes, and restore, which brings them back; isolated copy; a foreign
-  folder refused. The installed copy opened ER Test at 0c77e73 with 0 warnings or errors.
+  folder refused. The installed copy opened ER Test at dd55438 with 0 warnings or errors.
 - Windows after the cleanup, on the development build, Dark and Light: main window, About,
   Mod information, Settings, Profiles, Executables, Overwrite, instances, new instance, CSV,
   categories, forced libraries, 0 warnings or errors.
@@ -45,8 +58,6 @@
   remove a rule. Categories opens.
 - On the build before the last cleanup (6c1e203): portable and standard install, copy data,
   reinstall over kept data and the refusals, again, all as expected.
-- Elden Ring and Nightreign could not be started: Steam was on an account without their
-  license and refused them (`AppError_5 FamilySharing`), also outside MO2.
 - On an earlier build (a73ad72): the installed copy, with the portable marker set aside, opened the ER Test instance
   with 0 warnings or errors in the log: main window in 2.6 s, "..." menu, About, Mod
   information with the Nexus page, Settings. All windows were checked on
