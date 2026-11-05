@@ -1947,6 +1947,22 @@ Reinstalla la mod per cambiarlo.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
+      <translation>Elden Ring è stato eseguito senza il bridge di MO2, quindi i file di gioco e le DLL delle tue mod non sono stati usati. Controlla che «Forza caricamento librerie» sia attivo per questo eseguibile in Eseguibili.</translation>
+    </message>
+    <message>
+      <source>Mods did not load</source>
+      <translation>Le mod non sono state caricate</translation>
+    </message>
+    <message>
+      <source>MO2 could not prepare the launch, so the game was not started. The details are in MO2's log.</source>
+      <translation>MO2 non è riuscito a preparare l'avvio, quindi il gioco non è partito. I dettagli sono nel log di MO2.</translation>
+    </message>
+    <message>
+      <source>Could not start Elden Ring</source>
+      <translation>Impossibile avviare Elden Ring</translation>
+    </message>
+    <message>
       <source>Steam Cloud</source>
       <translation>Steam Cloud</translation>
     </message>
@@ -7750,6 +7766,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>In the accent color when Nexus has a newer one</source>
+      <translation>Nel colore di accento quando Nexus ne ha una più recente</translation>
+    </message>
+    <message>
       <source>Description</source>
       <translation>Descrizione</translation>
     </message>
@@ -11981,6 +12001,10 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
   </context>
   <context>
     <name>NexusTab</name>
+    <message>
+      <source>Older on Nexus: %1</source>
+      <translation>Più vecchia su Nexus: %1</translation>
+    </message>
     <message>
       <source>Close</source>
       <translation>Chiudi</translation>

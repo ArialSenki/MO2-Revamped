@@ -1863,6 +1863,22 @@ Réinstallez le mod pour changer cela.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
+      <translation>Elden Ring a tourné sans le pont de MO2 : les fichiers de jeu et les DLL de vos mods n'ont pas été utilisés. Vérifiez que « Forcer le chargement de bibliothèques » est activé pour cet exécutable dans Exécutables.</translation>
+    </message>
+    <message>
+      <source>Mods did not load</source>
+      <translation>Les mods n'ont pas été chargés</translation>
+    </message>
+    <message>
+      <source>MO2 could not prepare the launch, so the game was not started. The details are in MO2's log.</source>
+      <translation>MO2 n'a pas pu préparer le lancement, le jeu n'a donc pas démarré. Les détails sont dans le journal de MO2.</translation>
+    </message>
+    <message>
+      <source>Could not start Elden Ring</source>
+      <translation>Impossible de lancer Elden Ring</translation>
+    </message>
+    <message>
       <source>Steam Cloud</source>
       <translation>Steam Cloud</translation>
     </message>
@@ -7642,6 +7658,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>In the accent color when Nexus has a newer one</source>
+      <translation>Dans la couleur d'accentuation quand Nexus en a une plus récente</translation>
+    </message>
+    <message>
       <source>Description</source>
       <translation>Description</translation>
     </message>
@@ -11873,6 +11893,10 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
   </context>
   <context>
     <name>NexusTab</name>
+    <message>
+      <source>Older on Nexus: %1</source>
+      <translation>Plus ancienne sur Nexus : %1</translation>
+    </message>
     <message>
       <source>Close</source>
       <translation>Fermer</translation>

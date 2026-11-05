@@ -4493,47 +4493,47 @@ Deleting them also removes those instances&apos; files. Delete anyway?</source>
 <context>
     <name>LogList</name>
     <message>
-        <location filename="loglist.cpp" line="290"/>
+        <location filename="loglist.cpp" line="297"/>
         <source>C&amp;lear all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="256"/>
+        <location filename="loglist.cpp" line="263"/>
         <source>&amp;Open logs folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="249"/>
+        <location filename="loglist.cpp" line="256"/>
         <source>&amp;Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="252"/>
+        <location filename="loglist.cpp" line="259"/>
         <source>Copy &amp;all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="261"/>
+        <location filename="loglist.cpp" line="268"/>
         <source>&amp;Level</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="283"/>
+        <location filename="loglist.cpp" line="290"/>
         <source>&amp;Debug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="284"/>
+        <location filename="loglist.cpp" line="291"/>
         <source>&amp;Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="285"/>
+        <location filename="loglist.cpp" line="292"/>
         <source>&amp;Warnings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="287"/>
+        <location filename="loglist.cpp" line="294"/>
         <source>&amp;Errors</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7570,7 +7570,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="modinfodialog.cpp" line="1142"/>
-        <source>Red when Nexus has a newer one</source>
+        <source>In the accent color when Nexus has a newer one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -9231,43 +9231,48 @@ Please enter a name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="246"/>
+        <location filename="modinfodialognexus.cpp" line="248"/>
         <source>Current Version: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="248"/>
+        <location filename="modinfodialognexus.cpp" line="250"/>
+        <source>Older on Nexus: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modinfodialognexus.cpp" line="253"/>
         <source>No update available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="290"/>
+        <location filename="modinfodialognexus.cpp" line="297"/>
         <source>The mod&apos;s description from Nexus, with its images, in its own window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="291"/>
-        <location filename="modinfodialognexus.cpp" line="295"/>
+        <location filename="modinfodialognexus.cpp" line="298"/>
+        <location filename="modinfodialognexus.cpp" line="302"/>
         <source>This mod has no Nexus ID.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="307"/>
+        <location filename="modinfodialognexus.cpp" line="314"/>
         <source>Tracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="310"/>
+        <location filename="modinfodialognexus.cpp" line="317"/>
         <source>Untracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="477"/>
+        <location filename="modinfodialognexus.cpp" line="484"/>
         <source>Nexus has no description for this mod, or it could not be read. Refresh tries again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modinfodialognexus.cpp" line="479"/>
+        <location filename="modinfodialognexus.cpp" line="486"/>
         <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11662,7 +11667,7 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="399"/>
+        <location filename="loglist.cpp" line="406"/>
         <location filename="loot.cpp" line="396"/>
         <location filename="organizercore.cpp" line="398"/>
         <location filename="settingsdialogdiagnostics.cpp" line="118"/>
@@ -11675,7 +11680,7 @@ Destination:<byte value="xd"/>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loglist.cpp" line="400"/>
+        <location filename="loglist.cpp" line="407"/>
         <location filename="organizercore.cpp" line="399"/>
         <source>Failed to create &quot;%1&quot;. Your user account probably lacks permission.</source>
         <translation type="unfinished"></translation>

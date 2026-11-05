@@ -1899,6 +1899,22 @@ Reinstala el mod para cambiarlo.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
+      <translation>Elden Ring se ejecutó sin el puente de MO2, así que no se usaron los archivos del juego ni las DLL de tus mods. Comprueba que «Forzar carga de bibliotecas» esté activado para este ejecutable en Ejecutables.</translation>
+    </message>
+    <message>
+      <source>Mods did not load</source>
+      <translation>Los mods no se cargaron</translation>
+    </message>
+    <message>
+      <source>MO2 could not prepare the launch, so the game was not started. The details are in MO2's log.</source>
+      <translation>MO2 no pudo preparar el lanzamiento, así que el juego no se inició. Los detalles están en el registro de MO2.</translation>
+    </message>
+    <message>
+      <source>Could not start Elden Ring</source>
+      <translation>No se pudo iniciar Elden Ring</translation>
+    </message>
+    <message>
       <source>Steam Cloud</source>
       <translation>Steam Cloud</translation>
     </message>
@@ -7534,6 +7550,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>In the accent color when Nexus has a newer one</source>
+      <translation>En el color de acento cuando Nexus tiene una más nueva</translation>
+    </message>
+    <message>
       <source>Description</source>
       <translation>Descripción</translation>
     </message>
@@ -11968,6 +11988,10 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
 </context>
 <context>
     <name>NexusTab</name>
+    <message>
+      <source>Older on Nexus: %1</source>
+      <translation>Más antigua en Nexus: %1</translation>
+    </message>
     <message>
       <source>Close</source>
       <translation>Cerrar</translation>

@@ -1859,6 +1859,22 @@ Reinstale o mod para alterar isso.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
+      <translation>O Elden Ring rodou sem a ponte do MO2, então os arquivos de jogo e as DLLs dos seus mods não foram usados. Verifique se &quot;Forçar carregamento de bibliotecas&quot; está ativado para este executável em Executáveis.</translation>
+    </message>
+    <message>
+      <source>Mods did not load</source>
+      <translation>Os mods não foram carregados</translation>
+    </message>
+    <message>
+      <source>MO2 could not prepare the launch, so the game was not started. The details are in MO2's log.</source>
+      <translation>O MO2 não conseguiu preparar a inicialização, então o jogo não foi iniciado. Os detalhes estão no log do MO2.</translation>
+    </message>
+    <message>
+      <source>Could not start Elden Ring</source>
+      <translation>Não foi possível iniciar o Elden Ring</translation>
+    </message>
+    <message>
       <source>Steam Cloud</source>
       <translation>Steam Cloud</translation>
     </message>
@@ -7478,6 +7494,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>In the accent color when Nexus has a newer one</source>
+      <translation>Na cor de destaque quando o Nexus tem uma mais nova</translation>
+    </message>
+    <message>
       <source>Description</source>
       <translation>Descrição</translation>
     </message>
@@ -11651,6 +11671,10 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
   </context>
 <context>
     <name>NexusTab</name>
+    <message>
+      <source>Older on Nexus: %1</source>
+      <translation>Mais antiga no Nexus: %1</translation>
+    </message>
     <message>
       <source>Close</source>
       <translation>Fechar</translation>

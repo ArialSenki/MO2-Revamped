@@ -1867,6 +1867,22 @@ Installiere die Mod neu, um das zu ändern.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
+      <translation>Elden Ring lief ohne die Bridge von MO2, daher wurden die Spieldateien und DLLs deiner Mods nicht verwendet. Prüfe, ob „Bibliotheken erzwingen“ für diese Anwendung unter „Programme“ eingeschaltet ist.</translation>
+    </message>
+    <message>
+      <source>Mods did not load</source>
+      <translation>Mods wurden nicht geladen</translation>
+    </message>
+    <message>
+      <source>MO2 could not prepare the launch, so the game was not started. The details are in MO2's log.</source>
+      <translation>MO2 konnte den Start nicht vorbereiten, daher wurde das Spiel nicht gestartet. Details stehen im Log von MO2.</translation>
+    </message>
+    <message>
+      <source>Could not start Elden Ring</source>
+      <translation>Elden Ring konnte nicht gestartet werden</translation>
+    </message>
+    <message>
       <source>Steam Cloud</source>
       <translation>Steam Cloud</translation>
     </message>
@@ -7486,6 +7502,10 @@ OpenSSL · {openssl}</translation>
   <context>
     <name>ModInfoDialog</name>
     <message>
+      <source>In the accent color when Nexus has a newer one</source>
+      <translation>In der Akzentfarbe, wenn Nexus eine neuere hat</translation>
+    </message>
+    <message>
       <source>Description</source>
       <translation>Beschreibung</translation>
     </message>
@@ -11679,6 +11699,10 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
   </context>
 <context>
     <name>NexusTab</name>
+    <message>
+      <source>Older on Nexus: %1</source>
+      <translation>Älter auf Nexus: %1</translation>
+    </message>
     <message>
       <source>Close</source>
       <translation>Schließen</translation>
