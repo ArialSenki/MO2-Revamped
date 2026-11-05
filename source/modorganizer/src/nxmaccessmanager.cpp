@@ -486,6 +486,12 @@ void ValidationAttempt::onFinished()
 
   const QJsonObject data = doc.object();
 
+  if (code == 401 || code == 403) {
+    // the key itself: revoked, changed on Nexus, or mistyped
+    setFailure(HardError, nexusKeyRefusedMessage() + QString(" (%1)").arg(code));
+    return;
+  }
+
   if (code != 200) {
     // http request failed
 
@@ -762,6 +768,12 @@ void NexusKeyValidator::setFinished(ValidationAttempt::Result r, const QString& 
   if (finished) {
     finished(r, message, user);
   }
+}
+
+QString nexusKeyRefusedMessage()
+{
+  return QObject::tr("Nexus refused the API key: it may have been revoked or changed. "
+                     "Connect again in Settings, Nexus");
 }
 
 NXMAccessManager::NXMAccessManager(QObject* parent, Settings* s,

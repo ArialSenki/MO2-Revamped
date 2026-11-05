@@ -42,90 +42,17 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <unmanagedmods.h>
 #include <iplugingame.h>
 
-#include <QAbstractItemView>
 #include <QColor>
 #include <QComboBox>
 #include <QFrame>
 #include <QPalette>
 #include <QScreen>
 #include <QSizePolicy>
-#include <QStyledItemDelegate>
 #include <QTabWidget>
 #include <QTimer>
 
 using namespace MOBase;
 
-namespace
-{
-
-class SettingsComboPopupDelegate final : public QStyledItemDelegate
-{
-public:
-  using QStyledItemDelegate::QStyledItemDelegate;
-
-  QSize sizeHint(const QStyleOptionViewItem& option,
-                 const QModelIndex& index) const override
-  {
-    QSize hint = QStyledItemDelegate::sizeHint(option, index);
-    // Keep the item geometry in step with the vertical padding in the Light
-    // theme. Without this, the popup can paint one row over the next one.
-    hint.setHeight(qMax(hint.height(), 32));
-    return hint;
-  }
-};
-
-void configureSettingsComboPopups(QWidget* root, bool lightStyle)
-{
-  if (!root || !lightStyle) {
-    return;
-  }
-
-  for (QComboBox* combo : root->findChildren<QComboBox*>()) {
-    QAbstractItemView* popupView = combo->view();
-    if (!popupView) {
-      continue;
-    }
-
-    if (combo->objectName() != QStringLiteral("languageBox")) {
-      popupView->setItemDelegate(new SettingsComboPopupDelegate(popupView));
-    }
-
-    combo->setMaxVisibleItems(8);
-    popupView->setMinimumWidth(qMax(320, combo->width()));
-    popupView->setMinimumHeight(0);
-    popupView->setMaximumHeight(260);
-    popupView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    QPalette popupPalette = popupView->palette();
-    popupPalette.setColor(QPalette::Base, QColor("#FFFFFF"));
-    popupPalette.setColor(QPalette::Window, QColor("#FFFFFF"));
-    popupPalette.setColor(QPalette::Text, QColor("#293847"));
-    popupPalette.setColor(QPalette::WindowText, QColor("#293847"));
-    popupPalette.setColor(QPalette::Highlight, QColor("#D7EAF9"));
-    popupPalette.setColor(QPalette::HighlightedText, QColor("#183E5F"));
-
-    popupView->setPalette(popupPalette);
-    popupView->viewport()->setPalette(popupPalette);
-    // Let the rounded popup frame provide the background. An opaque view or
-    // viewport paints a rectangular layer over its rounded corners.
-    popupView->setAutoFillBackground(false);
-    popupView->viewport()->setAutoFillBackground(false);
-    popupView->setFrameShape(QFrame::NoFrame);
-    QWidget* popupFrame = popupView->window();
-    if (popupFrame && popupFrame != popupView &&
-        popupFrame != combo->window()) {
-      popupFrame->setMaximumHeight(270);
-      popupFrame->setPalette(popupPalette);
-      popupFrame->setAutoFillBackground(true);
-      popupFrame->setAttribute(Qt::WA_StyledBackground, true);
-      popupFrame->setStyleSheet(
-          "QFrame { color: #293847; background-color: #FFFFFF; "
-          "border: 1px solid #C7D3DD; border-radius: 8px; }");
-    }
-  }
-}
-
-}  // namespace
 
 SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& settings,
                                QWidget* parent)
@@ -329,11 +256,6 @@ void SettingsDialog::initializeTab(int index)
   }
   perf.lap("restyle");
 
-  const QString activeStyle = m_settings.interface().styleName().value_or("");
-  configureSettingsComboPopups(
-      ui->tabWidget->widget(index),
-      activeStyle.compare("Light.qss", Qt::CaseInsensitive) == 0 &&
-          !true);
 }
 
 PluginContainer* SettingsDialog::pluginContainer()

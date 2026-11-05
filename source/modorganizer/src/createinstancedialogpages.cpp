@@ -1651,9 +1651,8 @@ NamePage::NamePage(CreateInstanceDialog& dlg)
     onChanged();
   });
 
-  QObject::connect(ui->instanceName, &QLineEdit::returnPressed, [&] {
-    next();
-  });
+  // Enter goes on through Next, the dialog's default button: a returnPressed
+  // here as well moved two steps at once
 
   QStringList groups;
   const auto& manager = InstanceManager::singleton();
@@ -2031,9 +2030,7 @@ PathsPage::PathsPage(CreateInstanceDialog& dlg)
     QObject::connect(e, &QLineEdit::textEdited, [&] {
       onChanged();
     });
-    QObject::connect(e, &QLineEdit::returnPressed, [&] {
-      next();
-    });
+    // Enter goes on through Next, the default button, as on the name page
   };
 
   auto setBrowse = [&](QAbstractButton* b, QLineEdit* e) {

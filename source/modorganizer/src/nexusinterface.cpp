@@ -854,15 +854,18 @@ void NexusInterface::nextRequest()
 
   if (m_User.exhausted()) {
     m_RequestQueue.clear();
-    QTime time = QTime::currentTime();
-    QTime targetTime;
-    targetTime.setHMS((time.hour() + 1) % 23, 5, 0);
+    // the hourly limit refills at five past the next hour; counted on the
+    // date and time, so 23:xx doesn't come out as a negative wait
+    const QDateTime now = QDateTime::currentDateTime();
+    QDateTime target    = now.addSecs(3600);
+    target.setTime(QTime(target.time().hour(), 5, 0));
+    const qint64 wait   = qMax<qint64>(0, now.secsTo(target));
     QString warning = tr("You've exceeded the Nexus API rate limit and requests are "
                          "now being throttled. "
                          "Your next batch of requests will be available in "
                          "approximately %1 minutes and %2 seconds.")
-                          .arg(time.secsTo(targetTime) / 60)
-                          .arg(time.secsTo(targetTime) % 60);
+                          .arg(wait / 60)
+                          .arg(wait % 60);
 
     log::warn("{}", warning);
     return;

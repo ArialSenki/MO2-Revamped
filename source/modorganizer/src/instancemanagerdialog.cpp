@@ -306,15 +306,21 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
   auto* ok     = dlg.addButton(okText.isEmpty() ? QObject::tr("Rename") : okText, true);
   auto* cancel = dlg.addButton(QObject::tr("Cancel"));
 
+  // spaces around the name are dropped, as in the New instance wizard: a
+  // leading one would become part of the folder's name
+  const auto typed = [text] {
+    return text->text().trimmed();
+  };
+
   auto check = [&] {
     bool okay = false;
 
-    if (text->text().isEmpty()) {
+    if (typed().isEmpty()) {
       error->setText("");
-    } else if (!MOBase::validFileName(text->text())) {
+    } else if (!MOBase::validFileName(typed())) {
       error->setText(QObject::tr("Use a name that's a valid folder name."));
     } else {
-      const auto name = MOBase::sanitizeFileName(text->text());
+      const auto name = MOBase::sanitizeFileName(typed());
       // renaming to a different case of the same name is allowed; the same
       // name is not a rename
       const bool sameFolder =
@@ -344,7 +350,7 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
     return {};
   }
 
-  return MOBase::sanitizeFileName(text->text());
+  return MOBase::sanitizeFileName(typed());
 }
 
 void showInstanceExample(QWidget* parent)

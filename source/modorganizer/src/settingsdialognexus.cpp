@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include "nexusinterface.h"
 #include "serverinfo.h"
+#include "shared/util.h"
 #include "ui_nexusmanualkey.h"
 #include "ui_settingsdialog.h"
 #include <utility.h>
@@ -154,7 +155,8 @@ public:
 
   void accept() override
   {
-    m_key = ui->key->toPlainText().trimmed();
+    // a key has no spaces: a pasted one can bring a line break or a space along
+    m_key = ui->key->toPlainText().simplified().remove(QLatin1Char(' '));
     QDialog::accept();
   }
 
@@ -656,16 +658,29 @@ void NexusSettingsTab::clearCache()
     return;
   }
 
-  // not to the Recycle Bin
+  // Paths accepts any folder, so what is in it goes to the Recycle Bin, where a
+  // folder chosen by mistake can be brought back
   if (QMessageBox::question(parentWidget(), QObject::tr("Clear Nexus cache"),
-                            QObject::tr("Delete everything in this folder? It doesn't go to "
-                                        "the Recycle Bin.\n%1")
+                            QObject::tr("Move everything in this folder to the Recycle "
+                                        "Bin?\n%1")
                                 .arg(QDir::toNativeSeparators(cache)),
                             QMessageBox::Yes | QMessageBox::No,
                             QMessageBox::No) != QMessageBox::Yes) {
     return;
   }
-  QDir(cache).removeRecursively();
+  QStringList entries;
+  const QDir folder(cache);
+  for (const QString& name : folder.entryList(QDir::AllEntries | QDir::Hidden |
+                                              QDir::System | QDir::NoDotAndDotDot)) {
+    entries.append(folder.filePath(name));
+  }
+  if (!entries.isEmpty()) {
+    const auto result = MOShared::shellRemove(entries, true, parentWidget());
+    if (!result.aborted && !result.removed()) {
+      log::warn("clear Nexus cache: {} item(s) still in '{}'", result.remaining.size(),
+                QDir::toNativeSeparators(cache));
+    }
+  }
   NexusInterface::instance().clearCache();
 }
 

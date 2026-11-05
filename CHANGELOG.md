@@ -65,6 +65,27 @@
   ModOrganizer.exe both match.
 - Endorsing MO2 Revamped went to an old, removed Nexus page and sent the MO2 base
   version; it now goes to the current page with the MO2 Revamped version.
+- New instance: one Enter moves one step; it moved two, and from the folders page
+  it could create the instance at once.
+- Profiles no longer opens again and again after a profile could not be created.
+- Settings, Nexus, Clear cache moves the cache folder's contents to the Recycle
+  Bin; it deleted them for good, whatever folder Paths pointed at.
+- Downloads: the right-click commands act on the download you clicked even if
+  another one finishes while the menu is open, and Delete on a download under way
+  asks before cancelling it. A paused download shows in amber instead of red.
+- The window title and About show the MO2 Revamped version (About also the MO2
+  base), and so do the Revamped About's header, components and diagnostic report.
+- Endorsing another mod no longer marks MO2 Revamped as endorsed after a failed
+  attempt.
+- A Nexus key that was revoked or changed fails at once, saying where to connect
+  again, instead of retrying and asking to try the same key again. A pasted key
+  loses any space or line break inside it, and the rate-limit wait no longer comes
+  out negative late in the evening.
+- Renaming a profile or an instance: spaces around an instance name are dropped,
+  the same name is no longer an error, and the active profile is recognised
+  whatever the case of its name.
+- Translations: the Overwrite folder keeps its name in the wizard, older wording in
+  Spanish and German is corrected, and many texts no longer used are gone.
 - The installed `licenses` folder now has every licence the third-party notices
   name, and the notices themselves as they are in this release; the release
   builder stops if one is missing.

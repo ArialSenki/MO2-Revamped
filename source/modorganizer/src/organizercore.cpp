@@ -1807,6 +1807,19 @@ void OrganizerCore::loginFailed(const QString& message)
 {
   qCritical().nospace().noquote() << "Nexus API validation failed: " << message;
 
+  // a refused key: asking to try the same key again would only loop
+  const bool refused = message.startsWith(nexusKeyRefusedMessage());
+  if (refused) {
+    QMessageBox::warning(qApp->activeWindow(), tr("Nexus sign-in"), message + ".");
+    for (QString url : m_PendingDownloads) {
+      downloadRequestedNXM(url);
+    }
+    m_PendingDownloads.clear();
+    m_PostLoginTasks.clear();
+    NexusInterface::instance().loginCompleted();
+    return;
+  }
+
   if (QMessageBox::question(qApp->activeWindow(), tr("Login failed"),
                             tr("Login failed, try again?")) == QMessageBox::Yes) {
     if (nexusApi(true)) {

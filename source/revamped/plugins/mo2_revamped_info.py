@@ -381,6 +381,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             versions["mo2"] = self._organizer.appVersion().displayString(3)
         except Exception:
             pass
+        # the MO2 Revamped release; appVersion() is the MO2 it is based on
+        app = QCoreApplication.instance()
+        revamped = app.property("revampedVersion") if app is not None else None
+        versions["revamped"] = str(revamped) if revamped else ""
         try:
             from PyQt6.QtNetwork import QSslSocket
 
@@ -441,7 +445,13 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         title.setObjectName("instanceDetailName")
         title.setWordWrap(True)
         program_layout.addWidget(title)
-        edition = QLabel(_tr("Revamped edition  ·  ArialSenki"), program_card)
+        revamped = self._component_versions().get("revamped", "")
+        edition = QLabel(
+            _tr("Version {version}  ·  ArialSenki").format(version=revamped)
+            if revamped
+            else _tr("Revamped edition  ·  ArialSenki"),
+            program_card,
+        )
         edition.setObjectName("instanceDetailCaption")
         edition.setWordWrap(True)
         program_layout.addWidget(edition)
@@ -588,6 +598,8 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 "necessarily the latest versions available."),
         )
         parts = add_card(components)
+        if versions.get("revamped"):
+            add_row(parts, 0xE946, "MO2 Revamped", versions["revamped"])
         base_row = add_row(parts, 0xE737, _tr("MO2 base"),
                            _tr("Mod Organizer 2 · {mo2}\nQt and PyQt · {qt}\nPython · {python}\n"
                                "OpenSSL · {openssl}").format(**versions))
@@ -764,6 +776,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             (
                 "MO2 Revamped diagnostic report",
                 f"Created UTC: {datetime.now(timezone.utc).isoformat()}",
+                f"MO2 Revamped: {versions.get('revamped') or 'unknown'}",
                 f"Base: Mod Organizer {versions['mo2']}",
                 "USVFS: 0.5.7.2",
                 f"Windows: {platform.platform()}",

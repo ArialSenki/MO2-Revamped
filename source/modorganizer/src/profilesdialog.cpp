@@ -209,7 +209,8 @@ ProfilesDialog::ProfilesDialog(const QString& profileName, OrganizerCore& organi
   while (profileIter.hasNext()) {
     profileIter.next();
     QListWidgetItem* item = addItem(profileIter.filePath());
-    if (profileName == profileIter.fileName()) {
+    // Windows folder names ignore case, as the other checks here do
+    if (profileName.compare(profileIter.fileName(), Qt::CaseInsensitive) == 0) {
       active = item;
     }
   }
@@ -555,7 +556,7 @@ void ProfilesDialog::updateItem(QListWidgetItem* item)
     return;
   }
 
-  const bool active = item->text() == m_ActiveProfileName;
+  const bool active = item->text().compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0;
   item->setIcon(FluentIcons::glyph(PersonGlyph, active ? FluentIcons::Tone::Accent
                                                         : FluentIcons::Tone::Muted));
 
@@ -964,7 +965,7 @@ void ProfilesDialog::renameProfile()
     return;
   }
 
-  if (profile->name() == m_ActiveProfileName) {
+  if (profile->name().compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
     showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning,
                       tr("This profile is currently active"),
                       tr("Switch to another profile before renaming it."));
@@ -996,6 +997,10 @@ void ProfilesDialog::renameProfile()
   }
 
   QString oldName = profile->name();
+  // the same name: nothing to do (a change of case alone still renames)
+  if (name == oldName) {
+    return;
+  }
   // a file open inside the profile (a save, a backup) blocks the rename
   if (!profile->rename(name)) {
     showProfileNotice(this, tr("Rename profile"), QMessageBox::Warning, tr("The profile was not renamed"),
