@@ -49,6 +49,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProcess>
 #include <QProgressDialog>
 #include <QRegularExpression>
+#include <QSaveFile>
 #include <QStringList>
 #include <QTimer>
 #include <QUrl>
@@ -159,15 +160,83 @@ void SelfUpdater::testForUpdate(const Settings& settings)
     return;
   }
 
+  // GitHub is asked at most once a day: its answer is kept beside the global
+  // settings, shared by every instance, and a start within a day reads it. The
+  // notice still opens at each start while a newer release is there, and a
+  // changed channel applies at once.
+  const QString cachePath = releasesCachePath();
+  const QFileInfo cache(cachePath);
+  if (cache.exists()) {
+    const qint64 age = cache.lastModified().secsTo(QDateTime::currentDateTime());
+    if (age >= 0 && age < 24 * 60 * 60) {
+      const QJsonArray cached = readReleasesCache(cachePath);
+      if (!cached.isEmpty()) {
+        log::debug("update check: GitHub was asked {} min ago, using its answer",
+                   age / 60);
+        onReleases(cached);
+        return;
+      }
+    }
+  }
+
   try {
     m_GitHub.releases(GitHub::Repository("ArialSenki", "MO2-Revamped"),
-                      [this](const QJsonArray& releases) {
+                      [this, cachePath](const QJsonArray& releases) {
+                        if (releases.isEmpty()) {
+                          // offline or refused: the last answer, however old,
+                          // still tells of the releases it knew
+                          const QJsonArray old = readReleasesCache(cachePath);
+                          if (!old.isEmpty()) {
+                            log::debug("update check: GitHub didn't answer, "
+                                       "using its last answer");
+                          }
+                          onReleases(old);
+                          return;
+                        }
+                        writeReleasesCache(cachePath, releases);
                         onReleases(releases);
                       });
   }
   // Catch all is bad by design, should be improved
   catch (...) {
     log::debug("Unable to connect to github.com to check version");
+  }
+}
+
+QString SelfUpdater::releasesCachePath()
+{
+  return QDir(GlobalSettings::directory()).filePath(QStringLiteral("update-releases.json"));
+}
+
+QJsonArray SelfUpdater::readReleasesCache(const QString& path)
+{
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return {};
+  }
+  return QJsonDocument::fromJson(file.readAll()).array();
+}
+
+// only what the check reads is kept, so the file stays small
+void SelfUpdater::writeReleasesCache(const QString& path, const QJsonArray& releases)
+{
+  QJsonArray kept;
+  for (const QJsonValue& value : releases) {
+    const QJsonObject release = value.toObject();
+    QJsonObject entry;
+    for (const char* key :
+         {"tag_name", "name", "body", "html_url", "published_at", "prerelease", "draft"}) {
+      entry.insert(QLatin1String(key), release.value(QLatin1String(key)));
+    }
+    kept.append(entry);
+  }
+
+  // written whole or not at all, also with two MO2 running
+  QSaveFile file(path);
+  if (!file.open(QIODevice::WriteOnly) ||
+      file.write(QJsonDocument(kept).toJson(QJsonDocument::Compact)) < 0 ||
+      !file.commit()) {
+    log::debug("update check: can't keep GitHub's answer in '{}'", path);
   }
 }
 

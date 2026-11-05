@@ -983,6 +983,10 @@ public:
   static void setValue(const QString& key, const QVariant& value);
   static void remove(const QString& key);
 
+  // the folder of the global settings file, for files that belong to no
+  // instance (the update check keeps GitHub's answer there)
+  static QString directory();
+
   // what the user keeps about an instance (its group, its notes), by section
   // and instance identifier; an empty value removes it
   static QString instanceValue(const QString& section, const QString& identifier);

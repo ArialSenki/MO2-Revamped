@@ -132,6 +132,11 @@ signals:
 private:
   void onReleases(const QJsonArray& releases);
 
+  // GitHub's last answer, kept for a day, see testForUpdate()
+  static QString releasesCachePath();
+  static QJsonArray readReleasesCache(const QString& path);
+  static void writeReleasesCache(const QString& path, const QJsonArray& releases);
+
   QWidget* m_Parent;
   MOBase::VersionInfo m_MOVersion;
   MOBase::VersionInfo m_RevampedVersion;

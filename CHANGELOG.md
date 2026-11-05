@@ -13,7 +13,10 @@
   hands, with the setup; nothing is downloaded or installed by itself. A skipped
   version no longer opens the window, but the status bar and the Update command
   still show it. The window waits until no other question is open, so it does not
-  appear while the game runs.
+  appear while the game runs. MO2 asks GitHub at most once a day; the answer is
+  shared by all instances.
+- This is the first version that tells you about the next one. Earlier versions
+  can't, so update to this one by hand.
 - Settings, General, Updates: **Tell me when a new MO2 Revamped version is out**
   turns the check and the window off. **Versions to hear about** picks the
   channel: stable releases, stable and beta, or also development builds. Until

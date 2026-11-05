@@ -2411,6 +2411,11 @@ QSettings GlobalSettings::settings()
   return QSettings(settingsPath, QSettings::IniFormat);
 }
 
+QString GlobalSettings::directory()
+{
+  return QFileInfo(settings().fileName()).absolutePath();
+}
+
 QVariant GlobalSettings::value(const QString& key, const QVariant& defaultValue)
 {
   return settings().value(key, defaultValue);
