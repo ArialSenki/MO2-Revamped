@@ -2085,8 +2085,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.87"
-    NativeBridgeVersion = "0.5.0-alpha.58"
+    Version = "0.5.0-alpha.88"
+    NativeBridgeVersion = "0.5.0-alpha.59"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -5567,8 +5567,22 @@ class EldenRingMo2Game(BasicGame):
             if mod is None:
                 continue
             folder = Path(mod.absolutePath())
-            if (folder / "sd").is_dir() and ";" not in str(folder):
-                folders.append(str(folder))
+            if not (folder / "sd").is_dir():
+                continue
+            # the bridge reads the folders as one ";"-separated variable
+            if ";" in str(folder):
+                qWarning(
+                    f"Elden Ring MO2: the sound files of '{name}' are not used: "
+                    "its folder path has a ';'."
+                )
+                continue
+            folders.append(str(folder))
+        if len(";".join(folders)) >= 32000:
+            qWarning(
+                "Elden Ring MO2: too many mods with sound files for the bridge to "
+                "read; mods' sound files are not used this run."
+            )
+            return []
         return folders
 
     # reforged.dll reads me3's attach config (JSON, the AttachConfig of me3's

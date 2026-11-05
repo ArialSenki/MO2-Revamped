@@ -1312,7 +1312,11 @@ std::vector<std::wstring> wwise_sound_folders() {
   const DWORD length = GetEnvironmentVariableW(
       L"ELDENRING_MO2_SOUND_FOLDERS", value.data(),
       static_cast<DWORD>(value.size()));
-  if (length == 0 || length >= value.size()) {
+  if (length >= value.size()) {
+    log_line("Wwise: the list of mods with sound files is too long to read; none is used.");
+    return folders;
+  }
+  if (length == 0) {
     return folders;
   }
   value.resize(length);
@@ -1330,42 +1334,63 @@ std::vector<std::wstring> wwise_sound_folders() {
   return folders;
 }
 
-bool wwise_loose_path(const std::wstring& relative, std::wstring* absolute) {
-  // The file itself in its mod's folder, as me3 opens it, without going through
-  // MO2's virtual folder.
-  static const std::vector<std::wstring>& folders =
-      *new std::vector<std::wstring>(wwise_sound_folders());
-  for (const std::wstring& folder : folders) {
-    const std::wstring real = folder + L"\\" + relative;
-    HANDLE real_file = CreateFileW(real.c_str(), GENERIC_READ,
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE |
-                                       FILE_SHARE_DELETE,
-                                   nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                                   nullptr);
-    if (real_file != INVALID_HANDLE_VALUE) {
-      CloseHandle(real_file);
-      *absolute = real;
-      return true;
+std::wstring lowercase(std::wstring text) {
+  CharLowerBuffW(text.data(), static_cast<DWORD>(text.size()));
+  return text;
+}
+
+// Every sound file of the active mods, by its path below the mod's folder
+// ("sd\wem\10\123.wem", lowercase) to its file, the highest priority mod's
+// copy first. Read once before the hook goes in, so a sound the game asks for
+// is looked up here instead of probing the disk on the audio thread. Never
+// destroyed: the audio thread can still open files while the process exits.
+std::unordered_map<std::wstring, std::wstring>* g_wwise_sound_files = nullptr;
+
+void index_sound_folder(const std::wstring& root, const std::wstring& relative,
+                        std::unordered_map<std::wstring, std::wstring>& files) {
+  WIN32_FIND_DATAW entry = {};
+  HANDLE find = FindFirstFileExW((root + L"\\" + relative + L"\\*").c_str(),
+                                 FindExInfoBasic, &entry, FindExSearchNameMatch,
+                                 nullptr, FIND_FIRST_EX_LARGE_FETCH);
+  if (find == INVALID_HANDLE_VALUE) {
+    return;
+  }
+  do {
+    const std::wstring name = entry.cFileName;
+    if (name == L"." || name == L"..") {
+      continue;
     }
+    const std::wstring child = relative + L"\\" + name;
+    if ((entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+      index_sound_folder(root, child, files);
+    } else {
+      // the first mod listed wins, as in MO2's own priority
+      files.emplace(lowercase(child), root + L"\\" + child);
+    }
+  } while (FindNextFileW(find, &entry));
+  FindClose(find);
+}
+
+size_t index_sound_files() {
+  auto* files = new std::unordered_map<std::wstring, std::wstring>();
+  for (const std::wstring& folder : wwise_sound_folders()) {
+    index_sound_folder(folder, L"sd", *files);
   }
-  wchar_t buffer[4096] = {};
-  const std::wstring candidate = L".\\" + relative;
-  const DWORD length = GetFullPathNameW(
-      candidate.c_str(), static_cast<DWORD>(sizeof(buffer) / sizeof(buffer[0])),
-      buffer, nullptr);
-  if (length == 0 || length >= sizeof(buffer) / sizeof(buffer[0])) {
+  g_wwise_sound_files = files;
+  return files->size();
+}
+
+bool wwise_loose_path(const std::wstring& relative, std::wstring* absolute) {
+  // the file itself in its mod's folder, as me3 opens it, not through MO2's
+  // virtual folder
+  if (g_wwise_sound_files == nullptr) {
     return false;
   }
-  HANDLE file = CreateFileW(buffer, GENERIC_READ,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE |
-                                FILE_SHARE_DELETE,
-                            nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                            nullptr);
-  if (file == INVALID_HANDLE_VALUE) {
+  const auto found = g_wwise_sound_files->find(lowercase(relative));
+  if (found == g_wwise_sound_files->end()) {
     return false;
   }
-  CloseHandle(file);
-  *absolute = buffer;
+  *absolute = found->second;
   return true;
 }
 
@@ -1547,6 +1572,18 @@ bool is_wwise_open_call_site(const unsigned char* code, size_t available) {
 }
 
 bool install_wwise_hook() {
+  // with no mod's sound files there is nothing to serve
+  const size_t sound_files = index_sound_files();
+  if (sound_files == 0) {
+    log_line("Wwise hook skipped: no active mod has sound files.");
+    return false;
+  }
+  {
+    char message[96] = {};
+    snprintf(message, sizeof(message), "Wwise: %zu sound files in the active mods.",
+             sound_files);
+    log_line(message);
+  }
   HMODULE image = GetModuleHandleW(nullptr);
   if (image == nullptr) {
     return false;
@@ -2202,7 +2239,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.58.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.59.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
