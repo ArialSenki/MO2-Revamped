@@ -2085,7 +2085,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.85"
+    Version = "0.5.0-alpha.86"
     NativeBridgeVersion = "0.5.0-alpha.54"
 
     GameName = "ELDEN RING"
@@ -5626,9 +5626,10 @@ class EldenRingMo2Game(BasicGame):
             os.path.normcase(str(Path(__file__).with_name(name)))
             for name in ("eldenring_mo2_bridge.dll", self.Me3Compat)
         }
+        # in load order: executableForcedLoads hands usvfs the list reversed
         libraries = [
             Path(load.library())
-            for load in self.executableForcedLoads()
+            for load in reversed(self.executableForcedLoads())
             if load.enabled() and os.path.normcase(str(Path(load.library()))) not in own
         ]
         if not any(
@@ -6065,7 +6066,12 @@ class EldenRingMo2Game(BasicGame):
             notes.append(f"Elden Ring MO2: queued the me3 compatibility DLL {self.Me3Compat}.")
             forced_loads.insert(0, arxan)
         self._log_forced_load_notes(notes)
-        return forced_loads
+        # usvfs keeps each forced library at the front of its list
+        # (SharedParameters::addForcedLibrary uses push_front) and loads them
+        # from there, so it loads them backwards: handed this list reversed it
+        # loads the me3 compatibility DLL first and the natives in the Native DLL
+        # Profile's order, as everything above means
+        return list(reversed(forced_loads))
 
     def _log_forced_load_notes(self, notes: list[str]) -> None:
         if notes == getattr(self, "_last_forced_load_notes", None):
