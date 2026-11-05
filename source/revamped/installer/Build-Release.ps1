@@ -706,6 +706,35 @@ function Test-IsolatedCoreParity {
     }
 }
 
+# The installed licenses\ folder: the runtime input brings MO2's own licence
+# files, and the repository's licenses\ adds and updates what MO2 Revamped
+# ships (the bridge's and the me3 compatibility DLL's components among them).
+# The notices themselves are THIRD-PARTY-NOTICES.md as it is in this source.
+function Copy-RevampedLicenses {
+    param([string]$DestinationRoot)
+    $destination = Join-Path $DestinationRoot 'licenses'
+    New-Item -ItemType Directory -Force -Path $destination | Out-Null
+    Copy-Item -Path (Join-Path $repoRoot 'licenses\*') -Destination $destination -Recurse -Force
+    # the older plain-text copy of the notices; the current ones replace it
+    Remove-Item -LiteralPath (Join-Path $destination 'MO2-Revamped-THIRD-PARTY-NOTICES.txt') -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'THIRD-PARTY-NOTICES.md') -Destination (Join-Path $destination 'MO2-Revamped-THIRD-PARTY-NOTICES.md') -Force
+}
+
+# Every licences\ file the notices name must be in the installed folder
+function Test-RevampedLicenses {
+    param([string]$StageRoot)
+    $notices = Get-Content -LiteralPath (Join-Path $repoRoot 'THIRD-PARTY-NOTICES.md') -Raw
+    $named = [regex]::Matches($notices, '\(licenses/([^)\s]+\.txt)\)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+    if (@($named).Count -eq 0) { throw 'THIRD-PARTY-NOTICES.md names no licence file; the check would prove nothing.' }
+    $missing = @($named | Where-Object { -not (Test-Path -LiteralPath (Join-Path $StageRoot ('licenses\' + ($_ -replace '/', '\'))) -PathType Leaf) })
+    if (-not (Test-Path -LiteralPath (Join-Path $StageRoot 'licenses\MO2-Revamped-THIRD-PARTY-NOTICES.md') -PathType Leaf)) {
+        $missing += 'MO2-Revamped-THIRD-PARTY-NOTICES.md'
+    }
+    if ($missing.Count -gt 0) {
+        throw "Licence files missing from ${StageRoot}\licenses: $($missing -join ', ')"
+    }
+}
+
 function New-PayloadArchive {
     param([string]$StagePath, [string]$ZipPath, [string]$ManifestPath)
     $files = @(Get-ChildItem -LiteralPath $StagePath -File -Recurse -Force | Sort-Object FullName)
@@ -818,6 +847,7 @@ Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath -Me3Com
 Copy-OpenSslRuntime -RuntimeSource $openSslRuntimeRoot -DestinationRoot $fullStage
 Copy-PythonRuntime -RuntimeSource $pythonRuntimeRoot -DestinationRoot $fullStage
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
+Copy-RevampedLicenses -DestinationRoot $fullStage
 
 New-Item -ItemType Directory -Force -Path $isolatedStage | Out-Null
 Copy-RuntimeTree -SourceRoot $fullStage -DestinationRoot $isolatedStage -SkipPlugins
@@ -828,6 +858,8 @@ foreach ($rootFile in @('ModOrganizer.exe', 'MO2-Revamped.ini', 'MO2-Revamped.in
 Copy-Item -LiteralPath $eldenRingUninstallerStub -Destination (Join-Path $isolatedStage 'unins000.exe') -Force
 
 Test-IsolatedCoreParity -CompleteStage $fullStage -IsolatedStage $isolatedStage
+Test-RevampedLicenses -StageRoot $fullStage
+Test-RevampedLicenses -StageRoot $isolatedStage
 Test-NoLocalBuildPaths -StagePaths @($fullStage, $isolatedStage)
 
 $fullZip = Join-Path $workRoot 'complete-payload.zip'

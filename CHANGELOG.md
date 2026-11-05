@@ -30,7 +30,8 @@
 - Mods' sound files load: custom music and sound banks in a mod's `sd` folder
   (Wwise `.bnk` and `.wem`) play, Convergence's music for example.
 - ELDEN RING Reforged keeps its own sound: MO2 now applies me3's memory patch
-  (mimalloc), as me3 does, and switches Arxan off at the game's entry point.
+  (mimalloc), and the compatibility DLL loads first, so Arxan is switched off at
+  the game's entry point as intended.
 - Native DLLs load in the order the Native DLL Profile shows; they loaded in
   reverse.
 - The update check compared GitHub releases with the version of the Mod Organizer
@@ -39,6 +40,9 @@
   ModOrganizer.exe both match.
 - Endorsing MO2 Revamped went to an old, removed Nexus page and sent the MO2 base
   version; it now goes to the current page with the MO2 Revamped version.
+- The installed `licenses` folder now has every licence the third-party notices
+  name, and the notices themselves as they are in this release; the release
+  builder stops if one is missing.
 
 ### Known issues
 
