@@ -36,9 +36,9 @@
   and texts changed, nothing in the launch. With Steam on the other account it installed the
   bridge hook, the game closed by itself, the notice appeared and the saves stayed unchanged.
 - Mod information, on this installer: no web engine process when it opens or on Nexus Info; one
-  when Description opens. The description window follows Next and Previous according to the
-  user, Close works, 0 warnings. The user saw no drop in smoothness at 240 Hz on the development
-  build of the same change. The description window itself was not measured.
+  when Description opens. Close and Next work in Mod information, 0 warnings. The user tried the
+  window on the development build of the same change and found everything smooth at 240 Hz.
+  That the open description follows Next and Previous was not checked separately.
 - Steam closed, on f613bf6: Elden Ring and Nightreign have steam_api64.dll in Game, so MO2's
   Steam question doesn't appear. The game closed by itself in 7 s, the saves came back, the
   notice appeared.
