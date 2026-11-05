@@ -354,7 +354,8 @@ fn allocator_table() -> Result<&'static mut [Option<NonNull<DlAllocator>>], Stri
     if first_ptr > last_ptr {
         return Err("malformed allocator range".into());
     }
-    // a stray match far away would make the table cover unrelated memory
+    // a stray match far away would make the table cover unrelated memory;
+    // the game's own table has 21 entries in every version from 1.17 to 1.17.2
     const MAX_ALLOCATORS: usize = 256;
     let count = unsafe { last_ptr.offset_from_unsigned(first_ptr) } + 1;
     if count > MAX_ALLOCATORS {

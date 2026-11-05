@@ -99,6 +99,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractItemDelegate>
 #include <QAction>
 #include <QApplication>
+#include <QTextDocument>
 #include <QBuffer>
 #include <QButtonGroup>
 #include <QCheckBox>
@@ -696,7 +697,8 @@ private:
 
     const int width = qMax(0, m_Summary->width());
     m_Summary->setText(m_Summary->fontMetrics().elidedText(text, Qt::ElideRight, width));
-    m_Summary->setToolTip(text.toHtmlEscaped());
+    // as rich text, so a "<data>" in the line shows as written
+    m_Summary->setToolTip(Qt::convertFromPlainText(text, Qt::WhiteSpaceNoWrap));
   }
 
   void retranslate()
