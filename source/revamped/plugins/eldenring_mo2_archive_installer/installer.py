@@ -133,6 +133,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         self._default_omit_txt = False
         self._default_omit_md = False
         self._default_recognize_mod_engine_paths = True
+        self._default_reforged_online = False
+        self._pending_reforged_layout: Optional[dict] = None
         self._default_mod_name: Optional[str] = None
         self._pending_choice: Optional[tuple[bool, bool, bool, bool]] = None
         self._pending_source_dll_routes: list[str] = []
@@ -203,7 +205,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         self._default_reforged_online = False
         self._pending_reforged_layout = None
         self._default_mod_name = None
-        if self._organizer is not None:
+        # every installer hears every install: only an Elden Ring instance's
+        # game plugin has the setting (isActive() also names that plugin)
+        if self._organizer is not None and self.isActive():
             self._organizer.setPluginSetting(
                 self._game_plugin_name, self._game_override_key, False
             )
@@ -322,8 +326,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 # installed some other way (Manual, FOMOD): a replace brings the
                 # old meta.ini back, and this window's choices no longer describe it
                 new_mod.clearPluginSettings(self.name())
+        except Exception as error:
+            # the mod is installed either way: an error here must not reach MO2
+            qCritical(f"Elden Ring MO2: could not finish the install's settings: {error!r}")
         finally:
-            if self._organizer is not None:
+            if self._organizer is not None and self.isActive():
                 self._organizer.setPluginSetting(
                     self._game_plugin_name, self._game_override_key, False
                 )

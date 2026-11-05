@@ -272,7 +272,10 @@ class _MainWindowCloseWatcher(QObject):
         self._on_close = on_close
 
     def eventFilter(self, watched, event) -> bool:
-        if event.type() == QEvent.Type.Close:
+        # the window hides once MO2 has accepted the close: a Close event
+        # comes first, also when the user then cancels MO2's "still running"
+        # question. Minimizing hides it too, but spontaneously.
+        if event.type() == QEvent.Type.Hide and not event.spontaneous():
             self._on_close()
         return False
 
@@ -2085,7 +2088,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.90"
+    Version = "0.5.0-alpha.91"
     NativeBridgeVersion = "0.5.0-alpha.60"
 
     GameName = "ELDEN RING"
@@ -3060,7 +3063,16 @@ class EldenRingMo2Game(BasicGame):
             return False
 
         manifest_path.unlink(missing_ok=True)
-        session_directory.rmdir()
+        try:
+            session_directory.rmdir()
+        except OSError as error:
+            # the saves are all back: an empty folder another MO2 window still
+            # holds open (its .owner.lock) is no reason to report a failure
+            qWarning(
+                "Elden Ring MO2: the saves were restored, but their emptied "
+                f"recovery folder could not be removed yet: {error}"
+            )
+            return True
         try:
             # the install's folder, then the shared one, once they are empty
             session_directory.parent.rmdir()
@@ -3875,9 +3887,22 @@ class EldenRingMo2Game(BasicGame):
         """A launch that doesn't go ahead leaves off the mod it turned on."""
         self._mod_turned_on_for_launch = None
         allowed = False
+        quarantine_before = self._active_save_quarantine
         try:
             allowed = self._check_profile_launch(app_path, working_directory, args)
             return allowed
+        except Exception as error:
+            # an error must not reach MO2 with the launch half prepared: the
+            # environment is cleared and saves hidden by this launch go back
+            qCritical(f"Elden Ring MO2: the launch could not be prepared: {error!r}")
+            self._undo_failed_launch(quarantine_before)
+            QMessageBox.warning(
+                self._message_parent(),
+                self._game_text(_tr("Could not start Elden Ring")),
+                _tr("MO2 could not prepare the launch, so the game was not started. "
+                "The details are in MO2's log."),
+            )
+            return False
         finally:
             if not allowed and self._mod_turned_on_for_launch:
                 try:
@@ -3885,6 +3910,28 @@ class EldenRingMo2Game(BasicGame):
                 except (AttributeError, RuntimeError) as error:
                     qWarning(f"Elden Ring MO2: could not turn the mod back off: {error}")
                 self._mod_turned_on_for_launch = None
+
+    def _undo_failed_launch(self, quarantine_before) -> None:
+        """Clears what a launch that failed half-way had set up."""
+        try:
+            self._restore_profile_config_environment()
+        except Exception as error:
+            qWarning(f"Elden Ring MO2: could not clear the launch environment: {error!r}")
+        session = self._active_save_quarantine
+        if session is None or session == quarantine_before:
+            return
+        try:
+            self._restore_global_save_quarantine(
+                session, Path(self.savesDirectory().absolutePath())
+            )
+            self._active_save_quarantine = None
+        except Exception as error:
+            qCritical(f"Elden Ring MO2: the saves of the failed launch need recovery: {error!r}")
+            self._report_displaced_saves()
+
+    def _message_parent(self):
+        """MO2's main window, so the plugin's messages open centred on it."""
+        return getattr(self, "_main_window", None) or QApplication.activeWindow()
 
     def _check_profile_launch(
         self, app_path: str, _working_directory, _args: str
@@ -4423,7 +4470,9 @@ class EldenRingMo2Game(BasicGame):
         self._overwrite_cleanup_path = None
         self._overwrite_cleanup_armed = False
 
-    def _warn_if_loose_files_were_skipped(self) -> None:
+    def _warn_if_loose_files_were_skipped(
+        self, via_launcher: bool = True, seen: bool = False
+    ) -> None:
         """A game update can change the code the bridge looks for; the mods'
         game files then stay out with nothing but a line in its log."""
         if self._loose_files_warning_shown:
@@ -4432,10 +4481,12 @@ class EldenRingMo2Game(BasicGame):
         try:
             # the bridge rewrites it when it loads: an older one is another run's
             if log.stat().st_mtime < self._last_launch_time:
+                self._warn_if_bridge_did_not_load(via_launcher, seen)
                 return
             if "Loose asset hook skipped" not in log.read_text("utf-8", "replace"):
                 return
         except OSError:
+            self._warn_if_bridge_did_not_load(via_launcher, seen)
             return
         qWarning("Elden Ring MO2: the bridge could not hook the game's file loader.")
         if not self._active_mods_have_game_files():
@@ -4451,6 +4502,30 @@ class EldenRingMo2Game(BasicGame):
                 "file loader, so the game files of your mods were not used (their DLLs "
                 "were not affected). This usually follows a game update: look for a new "
                 "version of MO2 Revamped.")),
+            ),
+        )
+
+    def _warn_if_bridge_did_not_load(self, via_launcher: bool, seen: bool) -> None:
+        """The game ran from MO2 but the bridge never wrote its log: Force
+        load libraries is off for the executable (or something stopped the
+        injection), and the mods' game files and DLLs were left out."""
+        if (
+            via_launcher
+            or not seen
+            or time.time() - self._last_launch_time < self.EarlyExitSeconds
+            or not self._active_mods_have_game_files()
+        ):
+            return
+        self._loose_files_warning_shown = True
+        qWarning("Elden Ring MO2: the bridge did not load in this run.")
+        QTimer.singleShot(
+            0,
+            lambda: QMessageBox.warning(
+                self._message_parent(),
+                _tr("Mods did not load"),
+                self._game_text(_tr("Elden Ring ran without MO2's bridge, so your mods' "
+                "game files and DLLs were not used. Check that Force load libraries "
+                "is on for this executable in Modify Executables.")),
             ),
         )
 
@@ -4564,8 +4639,12 @@ class EldenRingMo2Game(BasicGame):
             )
             return
 
-        self._warn_if_loose_files_were_skipped()
-        self._warn_if_game_closed_at_once(via_launcher, run)
+        # the notices must not stop the saves coming back below
+        try:
+            self._warn_if_loose_files_were_skipped(via_launcher, seen)
+            self._warn_if_game_closed_at_once(via_launcher, run)
+        except Exception as error:
+            qWarning(f"Elden Ring MO2: a notice after the game closed failed: {error!r}")
         # a later launch may have restored this session and started its own
         if session_directory is not None and self._active_save_quarantine == session_directory:
             try:
@@ -5495,12 +5574,15 @@ class EldenRingMo2Game(BasicGame):
         self._native_initializer_env_previous = os.environ.get(initializer_key)
         self._native_initializer_env_active = True
         initializer_values = [
-            f"{Path(entry['library']).resolve()}|{entry['initializer']}"
+            # the path as its forced load names it: the bridge compares the
+            # two exactly, so a linked mods folder must not be resolved here
+            f"{os.path.abspath(entry['library'])}|{entry['initializer']}"
             for entry in (initializers or [])
             if entry.get("initializer")
         ]
-        if initializer_values:
-            os.environ[initializer_key] = "\n".join(initializer_values)
+        if initializer_values and self._set_bridge_environment(
+            initializer_key, "\n".join(initializer_values)
+        ):
             qInfo(
                 "Elden Ring MO2: Revamped native initializer(s) passed to bridge: "
                 + ", ".join(
@@ -5529,10 +5611,10 @@ class EldenRingMo2Game(BasicGame):
             if reforged_natives is not None and self._active_seamless_dll() is None
             else None
         )
-        if reforged_natives is not None:
-            os.environ[self.ReforgedAttachEnvironment] = self._reforged_attach_config(
-                reforged_natives, save_extension
-            )
+        if reforged_natives is not None and self._set_bridge_environment(
+            self.ReforgedAttachEnvironment,
+            self._reforged_attach_config(reforged_natives, save_extension),
+        ):
             qInfo(
                 "Elden Ring MO2: ELDEN RING Reforged is active; its natives get "
                 "the me3 attach config of this MO2 run."
@@ -5553,6 +5635,20 @@ class EldenRingMo2Game(BasicGame):
         else:
             os.environ.pop(self.SoundFoldersEnvironment, None)
         qInfo("Elden Ring MO2: profile launch options passed to bridge.")
+
+    @staticmethod
+    def _set_bridge_environment(key: str, value: str) -> bool:
+        """Sets a variable for the game, unless Windows' limit of 32767
+        characters refuses it; then it is left out with a log line."""
+        if len(key) + len(value) >= 32000:
+            os.environ.pop(key, None)
+            qWarning(
+                f"Elden Ring MO2: {key} is too long for Windows "
+                f"({len(value)} characters); the game starts without it."
+            )
+            return False
+        os.environ[key] = value
+        return True
 
     # the bridge opens mods' sound files from these folders, highest priority first
     SoundFoldersEnvironment = "ELDENRING_MO2_SOUND_FOLDERS"
@@ -5630,7 +5726,7 @@ class EldenRingMo2Game(BasicGame):
             return None
         return mobase.ExecutableForcedLoadSetting(
             self.GameProcess, str(library)
-        ).withEnabled(True)
+        ).withEnabled(True).withForced(True)
 
     def _reforged_natives(self) -> list[Path] | None:
         """This run's native DLLs when ELDEN RING Reforged is among them."""
@@ -5638,10 +5734,10 @@ class EldenRingMo2Game(BasicGame):
             os.path.normcase(str(Path(__file__).with_name(name)))
             for name in ("eldenring_mo2_bridge.dll", self.Me3Compat)
         }
-        # in load order: executableForcedLoads hands usvfs the list reversed
+        # executableForcedLoads lists them in load order
         libraries = [
             Path(load.library())
-            for load in reversed(self.executableForcedLoads())
+            for load in self.executableForcedLoads()
             if load.enabled() and os.path.normcase(str(Path(load.library()))) not in own
         ]
         if not any(
@@ -5997,7 +6093,7 @@ class EldenRingMo2Game(BasicGame):
         mod_forced_loads = [
             mobase.ExecutableForcedLoadSetting(
                 self.GameProcess, str(library)
-            ).withEnabled(True)
+            ).withEnabled(True).withForced(True)
             for library in libraries
         ]
         if root_layout_libraries:
@@ -6021,7 +6117,7 @@ class EldenRingMo2Game(BasicGame):
         root_forced_loads = [
             mobase.ExecutableForcedLoadSetting(
                 self.GameProcess, str(library)
-            ).withEnabled(True)
+            ).withEnabled(True).withForced(True)
             for _, _, library, _ in root_layout_libraries
         ]
         bridge = Path(__file__).with_name("eldenring_mo2_bridge.dll")
@@ -6039,7 +6135,7 @@ class EldenRingMo2Game(BasicGame):
                 )
             bridge_load = mobase.ExecutableForcedLoadSetting(
                 Path(self.GameBinary).name, str(bridge)
-            ).withEnabled(True)
+            ).withEnabled(True).withForced(True)
             notes.append(
                 "Elden Ring MO2: placing the bridge before mod DLLs so its "
                 "startup window hooks are installed as early as possible."
@@ -6070,7 +6166,7 @@ class EldenRingMo2Game(BasicGame):
         ):
             notes.append(f"Elden Ring MO2: queued Seamless Co-op ({seamless.name}) from its MO2 mod.")
             forced_loads.append(
-                mobase.ExecutableForcedLoadSetting(self.GameProcess, str(seamless)).withEnabled(True)
+                mobase.ExecutableForcedLoadSetting(self.GameProcess, str(seamless)).withEnabled(True).withForced(True)
             )
         arxan = self._me3_compat_load(forced_loads)
         if arxan is not None:
@@ -6078,12 +6174,12 @@ class EldenRingMo2Game(BasicGame):
             notes.append(f"Elden Ring MO2: queued the me3 compatibility DLL {self.Me3Compat}.")
             forced_loads.insert(0, arxan)
         self._log_forced_load_notes(notes)
-        # usvfs keeps each forced library at the front of its list
-        # (SharedParameters::addForcedLibrary uses push_front) and loads them
-        # from there, so it loads them backwards: handed this list reversed it
-        # loads the me3 compatibility DLL first and the natives in the Native DLL
-        # Profile's order, as everything above means
-        return list(reversed(forced_loads))
+        # in load order: MO2 hands them to usvfs so that they load as listed
+        # (UsvfsConnector::updateForcedLibraries), the me3 compatibility DLL
+        # first and the natives in the Native DLL Profile's order. Marked as
+        # the game plugin's own, so Configure libraries can switch them off
+        # but not edit or remove them.
+        return forced_loads
 
     def _log_forced_load_notes(self, notes: list[str]) -> None:
         if notes == getattr(self, "_last_forced_load_notes", None):
@@ -6750,6 +6846,7 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     GameProcess = "nightreign.exe"
     SaveFolderName = "Nightreign"
     SavePrefix = "nr0000."
+    SteamCloudSaves = ("NR0000.sl2", "NR0000.sl2.bak")
     GlobalBackupsFolderName = "Nightreign Global Save Backups"
     LocalSavegamesClass = NightreignLocalSavegames
     RecoveryScope = "|nightreign"

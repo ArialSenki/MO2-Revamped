@@ -1139,7 +1139,7 @@ void ModInfoDialog::buildFluentPages()
                {ui->modID});
     addEditRow(left, 0xE7FC, tr("Game"), tr("The Nexus game the page belongs to"),
                {ui->sourceGame});
-    addEditRow(right, 0xE81C, tr("Version"), tr("Red when Nexus has a newer one"),
+    addEditRow(right, 0xE81C, tr("Version"), tr("In the accent color when Nexus has a newer one"),
                {ui->version});
     addEditRow(right, 0xE8EC, tr("Nexus category"), tr("The category number on Nexus"),
                {ui->category});
