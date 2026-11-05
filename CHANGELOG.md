@@ -40,6 +40,16 @@
 - Endorsing MO2 Revamped went to an old, removed Nexus page and sent the MO2 base
   version; it now goes to the current page with the MO2 Revamped version.
 
+### Known issues
+
+- With ELDEN RING Reforged, MO2 now sets aside 12 GB of memory for the game, as
+  me3 does. On a PC with little RAM or a small page file, other programs may run
+  short while the game runs.
+- Rarely, the game can stall at start-up while MO2 installs its file hooks. Close
+  it and start it again.
+- Executables, Force load libraries lists the game's own libraries in reverse
+  order; they load in the right one.
+
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
 ### Faster
