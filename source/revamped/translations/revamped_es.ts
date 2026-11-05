@@ -4,12 +4,16 @@
   <context>
     <name>AboutDialog</name>
     <message>
-      <source>Project information</source>
-      <translation>Información del proyecto</translation>
+      <source>Other Supporters &amp;&amp; Contributors</source>
+      <translation>Otros apoyos &amp;&amp; colaboradores</translation>
     </message>
     <message>
-      <source>Build details appear in the header. This section keeps project copyright, warranty, and source information together.</source>
-      <translation>Los detalles de la compilación aparecen en la cabecera. Esta sección reúne los derechos de autor, la garantía y la información del código fuente del proyecto.</translation>
+      <source>About</source>
+      <translation>Acerca de</translation>
+    </message>
+    <message>
+      <source>Project information</source>
+      <translation>Información del proyecto</translation>
     </message>
     <message>
       <source>Copyright and warranty</source>
@@ -520,12 +524,8 @@ Los cambios se guardan al elegir Aceptar.</translation>
   <context>
     <name>CreateInstanceDialog</name>
     <message>
-      <source>Create an MO2 setup</source>
-      <translation>Crear una configuración de MO2</translation>
-    </message>
-    <message>
-      <source>Step 1 of 9</source>
-      <translation>Paso 1 de 9</translation>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
     </message>
     <message>
       <source>&lt;h3&gt;A separate workspace for every game setup&lt;/h3&gt;
@@ -544,22 +544,6 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <translation>Selecciona un modelo de almacenamiento. MO2 mostrará las carpetas antes de crear nada.</translation>
     </message>
     <message>
-      <source>Stores this game setup's profiles, mods and downloads in your user folders, separate from other setups. This MO2 installation manages them, and you can move the data folders later.</source>
-      <translation>Guarda los perfiles, mods y descargas de esta configuración de juego en tus carpetas de usuario, separados de otras configuraciones. Esta instalación de MO2 los gestiona y puedes mover las carpetas de datos más adelante.</translation>
-    </message>
-    <message>
-      <source>Stores this setup's profiles, mods and downloads beside the current MO2 installation. Choose it when you want the application and its data to travel together.</source>
-      <translation>Guarda los perfiles, mods y descargas de esta configuración junto a la instalación actual de MO2. Elígelo cuando quieras que la aplicación y sus datos viajen juntos.</translation>
-    </message>
-    <message>
-      <source>Create an isolated MO2 copy</source>
-      <translation>Crear una copia aislada de MO2</translation>
-    </message>
-    <message>
-      <source>Copies MO2 into a separate folder with independent settings and data for one game. Elden Ring is the first game supported for isolated copies.</source>
-      <translation>Copia MO2 en una carpeta separada con ajustes y datos independientes para un juego. Elden Ring es el primer juego compatible con copias aisladas.</translation>
-    </message>
-    <message>
       <source>Each portable instance is stored in a separate folder under the MO2 installation.</source>
       <translation>Cada instancia portable se guarda en una carpeta separada dentro de la instalación de MO2.</translation>
     </message>
@@ -570,14 +554,6 @@ Los cambios se guardan al elegir Aceptar.</translation>
     <message>
       <source>MO2 detects installed games automatically. Browse to the game folder if it is stored elsewhere.</source>
       <translation>MO2 detecta los juegos instalados automáticamente. Busca la carpeta del juego si está en otra ubicación.</translation>
-    </message>
-    <message>
-      <source>Browse for game folder</source>
-      <translation>Buscar la carpeta del juego</translation>
-    </message>
-    <message>
-      <source>Filter games</source>
-      <translation>Filtrar juegos</translation>
     </message>
     <message>
       <source>&lt;h3&gt;Confirm the game edition.&lt;/h3&gt;</source>
@@ -592,16 +568,8 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <translation>&lt;h3&gt;Elige un nombre para esta instancia.&lt;/h3&gt;</translation>
     </message>
     <message>
-      <source>Choose a name that helps you recognize this setup in MO2. The name is also used for the data folder shown below.</source>
-      <translation>Elige un nombre que te ayude a reconocer esta configuración en MO2. El nombre también se usa para la carpeta de datos que se muestra abajo.</translation>
-    </message>
-    <message>
       <source>Storage folder preview</source>
       <translation>Vista previa de la carpeta de almacenamiento</translation>
-    </message>
-    <message>
-      <source>The preview updates as you type. MO2 will use this folder for the new setup, so choose a name that is easy to recognize when switching between instances.</source>
-      <translation>La vista previa se actualiza mientras escribes. MO2 usará esta carpeta para la nueva configuración, así que elige un nombre fácil de reconocer al cambiar entre instancias.</translation>
     </message>
     <message>
       <source>&lt;h3&gt;Select a folder where the data should be stored.&lt;/h3&gt;</source>
@@ -956,6 +924,10 @@ Los cambios se guardan al elegir Aceptar.</translation>
   <context>
     <name>DownloadList</name>
     <message>
+      <source>Pausing</source>
+      <translation>Pausando</translation>
+    </message>
+    <message>
       <source>Game %1, mod %2, file %3</source>
       <translation>Juego %1, mod %2, archivo %3</translation>
     </message>
@@ -966,6 +938,18 @@ Los cambios se guardan al elegir Aceptar.</translation>
   </context>
   <context>
     <name>DownloadListView</name>
+    <message>
+      <source>This will remove all uninstalled downloads from this list (but NOT from disk).</source>
+      <translation>Esto quita de la lista todas las descargas sin instalar (pero NO las borra del disco).</translation>
+    </message>
+    <message>
+      <source>This will remove all installed downloads from this list (but NOT from disk).</source>
+      <translation>Esto quita de la lista todas las descargas instaladas (pero NO las borra del disco).</translation>
+    </message>
+    <message>
+      <source>This will remove all finished downloads from this list (but NOT from disk).</source>
+      <translation>Esto quita de la lista todas las descargas terminadas (pero NO las borra del disco).</translation>
+    </message>
     <message>
       <source>Cancel download</source>
       <translation>Cancelar la descarga</translation>
@@ -1007,20 +991,8 @@ Are you absolutely sure you want to proceed?</source>
 ¿Seguro que quieres continuar?</translation>
     </message>
     <message>
-      <source>Selected download</source>
-      <translation>Descarga seleccionada</translation>
-    </message>
-    <message>
-      <source>Download cleanup</source>
-      <translation>Limpieza de descargas</translation>
-    </message>
-    <message>
       <source>Visibility</source>
       <translation>Visibilidad</translation>
-    </message>
-    <message>
-      <source>No downloads yet</source>
-      <translation>Aún no hay descargas</translation>
     </message>
     <message>
       <source>Archives you download with Nexus or add with Install appear here.</source>
@@ -1073,10 +1045,6 @@ Are you absolutely sure you want to proceed?</source>
     <message>
       <source>All...</source>
       <translation>Todas...</translation>
-    </message>
-    <message>
-      <source>Un-hide all...</source>
-      <translation>Mostrar todas...</translation>
     </message>
     <message>
       <source>Delete downloads</source>
@@ -5245,140 +5213,28 @@ La mayoría de los mods no lo necesitan: los extensores de scripts y los cargado
   <context>
     <name>InstanceManagerDialog</name>
     <message>
-      <source>Separate profiles, settings and mod folders by instance.</source>
-      <translation>Separa perfiles, ajustes y carpetas de mods por instancia.</translation>
-    </message>
-    <message>
-      <source>See an instance example</source>
-      <translation>Ver un ejemplo de instancia</translation>
-    </message>
-    <message>
-      <source>Available instances</source>
-      <translation>Instancias disponibles</translation>
-    </message>
-    <message>
-      <source>Instance details</source>
-      <translation>Detalles de la instancia</translation>
-    </message>
-    <message>
-      <source>Select an instance to review its folders, open its INI file, or switch to it.</source>
-      <translation>Selecciona una instancia para revisar sus carpetas, abrir su archivo INI o cambiar a ella.</translation>
+      <source>Failed to rename &quot;%1&quot; to &quot;%2&quot;: %3</source>
+      <translation>No se pudo cambiar el nombre de &quot;%1&quot; a &quot;%2&quot;: %3</translation>
     </message>
     <message>
       <source>Instance folder</source>
       <translation>Carpeta de la instancia</translation>
     </message>
     <message>
-      <source>Folder that contains this MO2 instance's configuration.</source>
-      <translation>Carpeta que contiene la configuración de esta instancia de MO2.</translation>
-    </message>
-    <message>
-      <source>Mod data folder</source>
-      <translation>Carpeta de datos de mods</translation>
-    </message>
-    <message>
-      <source>Base path resolved from this instance's settings for its profiles, mods, downloads, and overwrite data.</source>
-      <translation>Ruta base obtenida de los ajustes de esta instancia para sus perfiles, mods, descargas y datos de overwrite.</translation>
-    </message>
-    <message>
-      <source>Open this instance's ModOrganizer.ini with the associated editor.</source>
-      <translation>Abre el ModOrganizer.ini de esta instancia con el editor asociado.</translation>
-    </message>
-    <message>
-      <source>Folder where the game is installed.</source>
-      <translation>Carpeta donde está instalado el juego.</translation>
-    </message>
-    <message>
-      <source>Restart Mod Organizer and open the selected instance.</source>
-      <translation>Reinicia Mod Organizer y abre la instancia seleccionada.</translation>
-    </message>
-    <message>
-      <source>See a local example of how separate MO2 instances work.</source>
-      <translation>Mira un ejemplo local de cómo funcionan las instancias separadas de MO2.</translation>
-    </message>
-    <message>
-      <source>Available instances (%1)</source>
-      <translation>Instancias disponibles (%1)</translation>
-    </message>
-    <message>
-      <source>%1
-Game: %2
-Location: %3</source>
-      <translation>%1
-Juego: %2
-Ubicación: %3</translation>
-    </message>
-    <message>
-      <source>Portable instance</source>
-      <translation>Instancia portable</translation>
-    </message>
-    <message>
       <source>Global instance</source>
       <translation>Instancia global</translation>
-    </message>
-    <message>
-      <source>The selected instance will open after Mod Organizer restarts.</source>
-      <translation>La instancia seleccionada se abrirá cuando Mod Organizer se reinicie.</translation>
-    </message>
-    <message>
-      <source>You can turn off this confirmation in Settings.</source>
-      <translation>Puedes desactivar esta confirmación en Ajustes.</translation>
     </message>
     <message>
       <source>The portable instance in the MO2 installation folder cannot be renamed.</source>
       <translation>No se puede renombrar la instancia portable de la carpeta de instalación de MO2.</translation>
     </message>
     <message>
-      <source>Only checked paths will be removed. Required items stay selected.</source>
-      <translation>Solo se quitarán las rutas marcadas. Los elementos obligatorios permanecen seleccionados.</translation>
-    </message>
-    <message>
-      <source>Items to remove</source>
-      <translation>Elementos que se quitarán</translation>
-    </message>
-    <message>
-      <source>%1 item</source>
-      <translation>%1 elemento</translation>
-    </message>
-    <message>
-      <source>%1 items</source>
-      <translation>%1 elementos</translation>
-    </message>
-    <message>
       <source>No files or folders were found.</source>
       <translation>No se encontraron archivos ni carpetas.</translation>
     </message>
     <message>
-      <source>Choose how MO2 should remove the checked items.</source>
-      <translation>Elige cómo debe quitar MO2 los elementos marcados.</translation>
-    </message>
-    <message>
-      <source>Instance folder: %1</source>
-      <translation>Carpeta de la instancia: %1</translation>
-    </message>
-    <message>
-      <source>Mod data folder: %1</source>
-      <translation>Carpeta de datos de mods: %1</translation>
-    </message>
-    <message>
-      <source>Game folder: %1</source>
-      <translation>Carpeta del juego: %1</translation>
-    </message>
-    <message>
-      <source>Portable storage</source>
-      <translation>Almacenamiento portable</translation>
-    </message>
-    <message>
-      <source>Global storage</source>
-      <translation>Almacenamiento global</translation>
-    </message>
-    <message>
       <source>Current instance</source>
       <translation>Instancia actual</translation>
-    </message>
-    <message>
-      <source>Ready to switch</source>
-      <translation>Listo para cambiar</translation>
     </message>
     <message>
       <source>Instances</source>
@@ -5507,14 +5363,6 @@ Ubicación: %3</translation>
     <message>
       <source>Edit notes…</source>
       <translation>Editar notas…</translation>
-    </message>
-    <message>
-      <source>Open instance folder</source>
-      <translation>Abrir carpeta de la instancia</translation>
-    </message>
-    <message>
-      <source>Open game folder</source>
-      <translation>Abrir carpeta del juego</translation>
     </message>
     <message>
       <source>Open ModOrganizer.ini</source>
@@ -5859,18 +5707,6 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
     <message>
       <source>%1 (used by %2)</source>
       <translation>%1 (la usa %2)</translation>
-    </message>
-    <message>
-      <source>Other instances use these folders:
-
-%1
-
-Deleting them also removes those instances&apos; files. Delete anyway?</source>
-      <translation>Otras instancias usan estas carpetas:
-
-%1
-
-Si las borras, también se borran los archivos de esas instancias. ¿Borrar de todos modos?</translation>
     </message>
     <message>
       <source>The folder was renamed, but its settings file could not be updated and may still point to the old folder:
@@ -9090,22 +8926,6 @@ Para conservar algunos archivos, muévelos antes a un mod.</translation>
       <translation>Cierra el juego antes de renombrar un perfil.</translation>
     </message>
     <message>
-      <source>Profile management</source>
-      <translation>Gestión de perfiles</translation>
-    </message>
-    <message>
-      <source>Select a profile to manage and organize its settings.</source>
-      <translation>Selecciona un perfil para gestionar y organizar sus ajustes.</translation>
-    </message>
-    <message>
-      <source>PROFILE OPTIONS</source>
-      <translation>OPCIONES DEL PERFIL</translation>
-    </message>
-    <message>
-      <source>Elden Ring save routing is managed in Tools &gt; Elden Ring Save Isolation.</source>
-      <translation>La redirección de partidas de Elden Ring se gestiona en Herramientas &gt; Aislamiento de partidas.</translation>
-    </message>
-    <message>
       <source>Choose a valid name for this profile.</source>
       <translation>Elige un nombre válido para este perfil.</translation>
     </message>
@@ -9130,22 +8950,8 @@ Para conservar algunos archivos, muévelos antes a un mod.</translation>
       <translation>Este perfil parece estar dañado.</translation>
     </message>
     <message>
-      <source>The folder below will be deleted:
-%1
-
-Proceed?</source>
-      <translation>Se borrará la siguiente carpeta:
-%1
-
-¿Continuar?</translation>
-    </message>
-    <message>
       <source>Switch to another profile before renaming it.</source>
       <translation>Cambia a otro perfil antes de renombrarlo.</translation>
-    </message>
-    <message>
-      <source>Elden Ring save routing is managed in Tools &gt; Save Isolation.</source>
-      <translation>Las rutas de partidas de Elden Ring se gestionan en Herramientas &gt; Aislamiento de partidas.</translation>
     </message>
     <message>
       <source>Today at %1</source>
@@ -9182,10 +8988,6 @@ Proceed?</source>
     <message>
       <source>Open the profile folder</source>
       <translation>Abrir la carpeta del perfil</translation>
-    </message>
-    <message>
-      <source>Mod list changed</source>
-      <translation>Lista de mods modificada</translation>
     </message>
     <message>
       <source>Saves</source>
@@ -9399,6 +9201,10 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>Overwrite</source>
+      <translation>Overwrite</translation>
+    </message>
     <message>
       <source>Move everything in this folder to the Recycle Bin?
 %1</source>
@@ -10459,20 +10265,8 @@ p, li { white-space: pre-wrap; }
       <translation>Apariencia</translation>
     </message>
     <message>
-      <source>Choose Light, Dark Blue, or Dark Black, then customize the highlights used for mod conflicts and selected plugins.</source>
-      <translation>Elige Claro, Azul oscuro o Negro oscuro y personaliza los resaltados usados para los conflictos de mods y los plugins seleccionados.</translation>
-    </message>
-    <message>
       <source>Interface theme</source>
       <translation>Tema de la interfaz</translation>
-    </message>
-    <message>
-      <source>Open the folder containing MO2's theme files.</source>
-      <translation>Abre la carpeta que contiene los archivos de tema de MO2.</translation>
-    </message>
-    <message>
-      <source>Open theme folder</source>
-      <translation>Abrir carpeta de temas</translation>
     </message>
     <message>
       <source>Mod and plugin highlight colors</source>
@@ -10895,14 +10689,6 @@ p, li { white-space: pre-wrap; }
       <translation>Define el modo de conexión de MO2, el proxy y el navegador usado para los enlaces web.</translation>
     </message>
     <message>
-      <source>Disable automatic online features. Actions you start yourself, such as opening a link or checking for updates, remain available.</source>
-      <translation>Desactiva las funciones en línea automáticas. Las acciones que inicias tú, como abrir un enlace o buscar actualizaciones, siguen disponibles.</translation>
-    </message>
-    <message>
-      <source>Disable automatic internet features. This does not affect features that you explicitly start, such as checking mods for updates, endorsing, or opening the web browser.</source>
-      <translation>Desactiva las funciones automáticas de internet. No afecta a las funciones que inicias tú, como buscar actualizaciones de mods, respaldar o abrir el navegador.</translation>
-    </message>
-    <message>
       <source>Use offline mode</source>
       <translation>Usar modo sin conexión</translation>
     </message>
@@ -11037,12 +10823,6 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; Debug can help troubleshoot issues.</source>
       <translation>Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado para el uso diario; Debug puede ayudar a solucionar problemas.</translation>
-    </message>
-    <message>
-      <source>
-Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>
-      <translation>
-Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado para el uso diario; selecciona Debug al recopilar información para solucionar un problema.</translation>
     </message>
     <message>
       <source>Crash dump detail</source>
@@ -12227,6 +12007,10 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
 </context>
   <context>
     <name>Profile</name>
+    <message>
+      <source>Delete profile-specific save games?</source>
+      <translation>¿Eliminar las partidas propias del perfil?</translation>
+    </message>
     <message>
       <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
       <translation>No se pudieron eliminar las partidas del perfil. Cierra cualquier programa que las esté usando y vuelve a intentarlo.</translation>
