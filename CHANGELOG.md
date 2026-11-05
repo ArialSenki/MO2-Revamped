@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0-beta.4 (pre-release) — November 6, 2026
 
 ### Added
 
@@ -117,6 +117,9 @@
   short while the game runs.
 - Rarely, the game can stall at start-up while MO2 installs its file hooks. Close
   it and start it again.
+- With Convergence, the game can still fault as it closes, in its own code, and
+  Windows then takes a few seconds to write its report. Saves are written before
+  that happens.
 
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
