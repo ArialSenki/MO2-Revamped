@@ -40,7 +40,8 @@
   decrypted in `%LOCALAPPDATA%\MO2 Revamped\BootBoost` after the first start (a
   game update makes new ones). The me3 compatibility DLL now loads for every
   Elden Ring start for this; without ELDEN RING Reforged it does only that, and
-  leaves Arxan and the game's memory as they are.
+  leaves Arxan and the game's memory as they are. It is a switch in the profile's startup
+  options, **Faster game start (BootBoost)**, on by default.
 - The bridge's log shows the time of each line since the game started, with the
   moments its window appears and hides and when the process exits.
 
