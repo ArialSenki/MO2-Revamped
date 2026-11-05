@@ -6136,6 +6136,14 @@ Eliminarle rimuove anche i file di quelle istanze. Eliminare comunque?</translat
   <context>
     <name>MainWindow</name>
     <message>
+      <source>MO2 Revamped %1 is out</source>
+      <translation>È uscito MO2 Revamped %1</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped %1 is out. Click to see what it changes.</source>
+      <translation>È uscito MO2 Revamped %1. Fai clic per vedere cosa cambia.</translation>
+    </message>
+    <message>
       <source>Log</source>
       <translation>Registro</translation>
     </message>
@@ -6862,10 +6870,6 @@ In alternativa puoi disattivare del tutto l'associazione delle categorie Nexus, 
     <message>
       <source>Close</source>
       <translation>Chiudi</translation>
-    </message>
-    <message>
-      <source>A newer MO2 Revamped release is available. Check MO2 Revamped on GitHub for release details.</source>
-      <translation>È disponibile una versione più recente di MO2 Revamped. Consulta MO2 Revamped su GitHub per i dettagli.</translation>
     </message>
     <message>
       <source>Support MO2 Revamped</source>
@@ -9570,6 +9574,18 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
   <context>
     <name>QObject</name>
     <message>
+      <source>Stable releases</source>
+      <translation>Versioni stabili</translation>
+    </message>
+    <message>
+      <source>Stable and beta</source>
+      <translation>Stabili e beta</translation>
+    </message>
+    <message>
+      <source>Stable, beta and development builds</source>
+      <translation>Stabili, beta e di sviluppo</translation>
+    </message>
+    <message>
         <source>&quot;%1&quot; no longer exists. Save your changes as a new file?</source>
         <translation>&quot;%1&quot; non esiste più. Salvare le modifiche come nuovo file?</translation>
     </message>
@@ -10513,6 +10529,22 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SettingsDialog</name>
     <message>
+      <source>Versions to hear about</source>
+      <translation>Versioni da segnalare</translation>
+    </message>
+    <message>
+      <source>Stable releases are for everyone. Betas come before each stable release. Development builds are early tests, only for those who help try them. Until you choose, this follows the version you use.</source>
+      <translation>Le versioni stabili sono per tutti. Le beta escono prima di ogni versione stabile. Le versioni di sviluppo sono test preliminari, solo per chi aiuta a provarle. Finché non scegli, segue la versione che usi.</translation>
+    </message>
+    <message>
+      <source>When MO2 starts, it asks GitHub for the latest MO2 Revamped release and shows a window with what changed if there is a newer one. Nothing is downloaded or installed: you update with the setup from GitHub or Nexus.</source>
+      <translation>All&apos;avvio, MO2 chiede a GitHub l&apos;ultima versione di MO2 Revamped e, se ce n&apos;è una più recente, mostra una finestra con le novità. Non viene scaricato né installato nulla: aggiorni con il programma di installazione da GitHub o Nexus.</translation>
+    </message>
+    <message>
+      <source>Tell me when a new MO2 Revamped version is out</source>
+      <translation>Avvisami quando esce una nuova versione di MO2 Revamped</translation>
+    </message>
+    <message>
       <source>Base directory</source>
       <translation>Cartella di base</translation>
     </message>
@@ -10541,14 +10573,6 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>&lt;a href="https://discord.gg/ewUVAqyrQX"&gt;Help translate Mod Organizer on Discord&lt;/a&gt;</source>
       <translation>&lt;a href="https://discord.gg/ewUVAqyrQX"&gt;Aiuta a tradurre Mod Organizer su Discord&lt;/a&gt;</translation>
-    </message>
-    <message>
-      <source>Check for MO2 Revamped updates on GitHub on startup.</source>
-      <translation>Cerca aggiornamenti di MO2 Revamped su GitHub all'avvio.</translation>
-    </message>
-    <message>
-      <source>Check for MO2 Revamped updates</source>
-      <translation>Cerca aggiornamenti di MO2 Revamped</translation>
     </message>
     <message>
       <source>Profile Defaults</source>
@@ -12258,6 +12282,64 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
     <message>
       <source>You must authorize MO2 in Settings &gt; Nexus to use the Nexus API.</source>
       <translation>Devi autorizzare MO2 in Impostazioni &gt; Nexus per usare l&apos;API di Nexus.</translation>
+    </message>
+  </context>
+  <context>
+    <name>UpdateNoticeDialog</name>
+    <message>
+      <source>Development build</source>
+      <translation>Versione di sviluppo</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped %1 is out</source>
+      <translation>È uscito MO2 Revamped %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>You have %1, and %n newer releases are out. Here is what they change, newest first.</source>
+      <translation>
+        <numerusform>Hai la %1 ed è uscita %n versione più recente. Ecco cosa cambia, dalla più recente.</numerusform>
+        <numerusform>Hai la %1 e sono uscite %n versioni più recenti. Ecco cosa cambiano, dalla più recente.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>You have %1. Here is what the new one changes.</source>
+      <translation>Hai la %1. Ecco cosa cambia la nuova.</translation>
+    </message>
+    <message>
+      <source>To update, download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped: your instances, mods and settings stay. Nothing is downloaded or installed by itself. You can turn these notices off in Settings, General, Updates.</source>
+      <translation>Per aggiornare, scarica il programma di installazione da GitHub o Nexus, avvialo e scegli Aggiorna MO2 Revamped: istanze, mod e impostazioni restano. Non viene scaricato né installato nulla da solo. Puoi disattivare questi avvisi in Impostazioni, Generale, Aggiornamenti.</translation>
+    </message>
+    <message>
+      <source>Open on GitHub</source>
+      <translation>Apri su GitHub</translation>
+    </message>
+    <message>
+      <source>Open on Nexus</source>
+      <translation>Apri su Nexus</translation>
+    </message>
+    <message>
+      <source>Skip this version</source>
+      <translation>Salta questa versione</translation>
+    </message>
+    <message>
+      <source>Remind me later</source>
+      <translation>Ricordamelo più tardi</translation>
+    </message>
+    <message>
+      <source>Beta</source>
+      <translation>Beta</translation>
+    </message>
+    <message>
+      <source>Stable release</source>
+      <translation>Versione stabile</translation>
+    </message>
+    <message>
+      <source>%1 · published %2</source>
+      <translation>%1 · pubblicata il %2</translation>
+    </message>
+    <message>
+      <source>This release has no notes on GitHub.</source>
+      <translation>Questa versione non ha note su GitHub.</translation>
     </message>
   </context>
 </TS>

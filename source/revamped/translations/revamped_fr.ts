@@ -6036,6 +6036,14 @@ Les supprimer efface aussi les fichiers de ces instances. Supprimer quand même 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>MO2 Revamped %1 is out</source>
+      <translation>MO2 Revamped %1 est sorti</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped %1 is out. Click to see what it changes.</source>
+      <translation>MO2 Revamped %1 est sorti. Cliquez pour voir ce qui change.</translation>
+    </message>
+    <message>
       <source>Log</source>
       <translation>Journal</translation>
     </message>
@@ -6758,10 +6766,6 @@ Enfin, vous pouvez désactiver complètement la correspondance des catégories N
     <message>
       <source>Close</source>
       <translation>Fermer</translation>
-    </message>
-    <message>
-      <source>A newer MO2 Revamped release is available. Check MO2 Revamped on GitHub for release details.</source>
-      <translation>Une version plus récente de MO2 Revamped est disponible. Consultez MO2 Revamped sur GitHub pour les détails.</translation>
     </message>
     <message>
       <source>Support MO2 Revamped</source>
@@ -9462,6 +9466,18 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   <context>
     <name>QObject</name>
     <message>
+      <source>Stable releases</source>
+      <translation>Versions stables</translation>
+    </message>
+    <message>
+      <source>Stable and beta</source>
+      <translation>Stables et bêta</translation>
+    </message>
+    <message>
+      <source>Stable, beta and development builds</source>
+      <translation>Stables, bêta et de développement</translation>
+    </message>
+    <message>
         <source>&quot;%1&quot; no longer exists. Save your changes as a new file?</source>
         <translation>« %1 » n&apos;existe plus. Enregistrer les modifications dans un nouveau fichier ?</translation>
     </message>
@@ -10405,6 +10421,22 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SettingsDialog</name>
     <message>
+      <source>Versions to hear about</source>
+      <translation>Versions à signaler</translation>
+    </message>
+    <message>
+      <source>Stable releases are for everyone. Betas come before each stable release. Development builds are early tests, only for those who help try them. Until you choose, this follows the version you use.</source>
+      <translation>Les versions stables sont pour tout le monde. Les bêtas sortent avant chaque version stable. Les versions de développement sont des tests précoces, réservés à ceux qui aident à les essayer. Tant que vous ne choisissez pas, cela suit la version que vous utilisez.</translation>
+    </message>
+    <message>
+      <source>When MO2 starts, it asks GitHub for the latest MO2 Revamped release and shows a window with what changed if there is a newer one. Nothing is downloaded or installed: you update with the setup from GitHub or Nexus.</source>
+      <translation>Au démarrage, MO2 demande à GitHub la dernière version de MO2 Revamped et, s&apos;il y en a une plus récente, affiche une fenêtre avec ce qui change. Rien n&apos;est téléchargé ni installé : vous mettez à jour avec le programme d&apos;installation de GitHub ou Nexus.</translation>
+    </message>
+    <message>
+      <source>Tell me when a new MO2 Revamped version is out</source>
+      <translation>Me prévenir quand une nouvelle version de MO2 Revamped sort</translation>
+    </message>
+    <message>
       <source>Base directory</source>
       <translation>Dossier de base</translation>
     </message>
@@ -10433,14 +10465,6 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>&lt;a href="https://discord.gg/ewUVAqyrQX"&gt;Help translate Mod Organizer on Discord&lt;/a&gt;</source>
       <translation>&lt;a href="https://discord.gg/ewUVAqyrQX"&gt;Aidez à traduire Mod Organizer sur Discord&lt;/a&gt;</translation>
-    </message>
-    <message>
-      <source>Check for MO2 Revamped updates on GitHub on startup.</source>
-      <translation>Rechercher les mises à jour de MO2 Revamped sur GitHub au démarrage.</translation>
-    </message>
-    <message>
-      <source>Check for MO2 Revamped updates</source>
-      <translation>Rechercher les mises à jour de MO2 Revamped</translation>
     </message>
     <message>
       <source>Profile Defaults</source>
@@ -12199,6 +12223,64 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     <message>
       <source>You must authorize MO2 in Settings &gt; Nexus to use the Nexus API.</source>
       <translation>Vous devez autoriser MO2 dans Paramètres &gt; Nexus pour utiliser l&apos;API de Nexus.</translation>
+    </message>
+  </context>
+  <context>
+    <name>UpdateNoticeDialog</name>
+    <message>
+      <source>Development build</source>
+      <translation>Version de développement</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped %1 is out</source>
+      <translation>MO2 Revamped %1 est sorti</translation>
+    </message>
+    <message numerus="yes">
+      <source>You have %1, and %n newer releases are out. Here is what they change, newest first.</source>
+      <translation>
+        <numerusform>Vous avez la %1, et %n version plus récente est sortie. Voici ce qu&apos;elle change, la plus récente d&apos;abord.</numerusform>
+        <numerusform>Vous avez la %1, et %n versions plus récentes sont sorties. Voici ce qu&apos;elles changent, la plus récente d&apos;abord.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>You have %1. Here is what the new one changes.</source>
+      <translation>Vous avez la %1. Voici ce que change la nouvelle.</translation>
+    </message>
+    <message>
+      <source>To update, download the setup from GitHub or Nexus, run it and choose Update MO2 Revamped: your instances, mods and settings stay. Nothing is downloaded or installed by itself. You can turn these notices off in Settings, General, Updates.</source>
+      <translation>Pour mettre à jour, téléchargez le programme d&apos;installation sur GitHub ou Nexus, lancez-le et choisissez Mettre à jour MO2 Revamped : vos instances, mods et paramètres sont conservés. Rien n&apos;est téléchargé ni installé tout seul. Vous pouvez désactiver ces avis dans Paramètres, Général, Mises à jour.</translation>
+    </message>
+    <message>
+      <source>Open on GitHub</source>
+      <translation>Ouvrir sur GitHub</translation>
+    </message>
+    <message>
+      <source>Open on Nexus</source>
+      <translation>Ouvrir sur Nexus</translation>
+    </message>
+    <message>
+      <source>Skip this version</source>
+      <translation>Ignorer cette version</translation>
+    </message>
+    <message>
+      <source>Remind me later</source>
+      <translation>Me le rappeler plus tard</translation>
+    </message>
+    <message>
+      <source>Beta</source>
+      <translation>Bêta</translation>
+    </message>
+    <message>
+      <source>Stable release</source>
+      <translation>Version stable</translation>
+    </message>
+    <message>
+      <source>%1 · published %2</source>
+      <translation>%1 · publiée le %2</translation>
+    </message>
+    <message>
+      <source>This release has no notes on GitHub.</source>
+      <translation>Cette version n&apos;a pas de notes sur GitHub.</translation>
     </message>
   </context>
 </TS>

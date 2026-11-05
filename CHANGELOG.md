@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Update notice**: when a newer MO2 Revamped release is out, MO2 shows a window
+  with its version and what it changes (the release notes from GitHub, every
+  release newer than yours, newest first), with **Open on GitHub**, **Open on
+  Nexus**, **Skip this version** and **Remind me later**. Updating stays in your
+  hands, with the setup; nothing is downloaded or installed by itself. A skipped
+  version no longer opens the window, but the status bar and the Update command
+  still show it. The window waits until no other question is open, so it does not
+  appear while the game runs.
+- Settings, General, Updates: **Tell me when a new MO2 Revamped version is out**
+  turns the check and the window off. **Versions to hear about** picks the
+  channel: stable releases, stable and beta, or also development builds. Until
+  you choose, it follows the version you use, so a beta hears of the next beta and
+  early test builds reach only those who chose them. The GitHub tag gives the
+  channel: `v1.2.0` is stable, `-beta.N` and `-rc.N` are betas, `-alpha.N`,
+  `-dev.N`, `-test.N` and `-preview.N` are development builds.
+
+### Fixed
+
+- The update check compared GitHub releases with the version of the Mod Organizer
+  2 it is based on (2.5.2), so it never found a newer MO2 Revamped. The build now
+  carries its own version, and the release builder checks that it matches.
+
 ## 1.1.0-beta.3 (pre-release) — November 5, 2026
 
 ### Faster

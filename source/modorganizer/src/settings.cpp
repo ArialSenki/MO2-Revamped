@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "instancemanager.h"
 #include "modelutils.h"
 #include "serverinfo.h"
+#include "selfupdater.h"
 #include "settingsutilities.h"
 #include "shared/appconfig.h"
 #include <expanderwidget.h>
@@ -158,14 +159,51 @@ void Settings::setCheckForUpdates(bool b)
   set(m_Settings, "Settings", "check_for_updates", b);
 }
 
-bool Settings::usePrereleases() const
+// the channel follows the build: a beta build hears of the next beta, a
+// development build of everything, a stable build only of stable releases.
+// Betas are pre-releases on GitHub, and with a fixed "stable" someone on a beta
+// would never learn of the one that replaces it. The key is stored only when
+// the user picks another channel, so moving from a beta to a stable release
+// also moves the default. "use_prereleases" is the older switch.
+SelfUpdater::UpdateChannel Settings::updateChannel() const
 {
-  return get<bool>(m_Settings, "Settings", "use_prereleases", false);
+  using Channel = SelfUpdater::UpdateChannel;
+
+  const int stored = get<int>(m_Settings, "Settings", "update_channel", -1);
+  if (stored >= static_cast<int>(Channel::Stable) &&
+      stored <= static_cast<int>(Channel::Dev)) {
+    return static_cast<Channel>(stored);
+  }
+
+  if (const auto old = getOptional<bool>(m_Settings, "Settings", "use_prereleases")) {
+    return *old ? Channel::Beta : Channel::Stable;
+  }
+
+  return SelfUpdater::buildChannel();
 }
 
-void Settings::setUsePrereleases(bool b)
+void Settings::setUpdateChannel(SelfUpdater::UpdateChannel channel)
 {
-  set(m_Settings, "Settings", "use_prereleases", b);
+  remove(m_Settings, "Settings", "use_prereleases");
+  if (channel == SelfUpdater::buildChannel()) {
+    remove(m_Settings, "Settings", "update_channel");
+  } else {
+    set(m_Settings, "Settings", "update_channel", static_cast<int>(channel));
+  }
+}
+
+QString Settings::skippedUpdate() const
+{
+  return get<QString>(m_Settings, "Settings", "skipped_update", QString());
+}
+
+void Settings::setSkippedUpdate(const QString& tag)
+{
+  if (tag.isEmpty()) {
+    remove(m_Settings, "Settings", "skipped_update");
+  } else {
+    set(m_Settings, "Settings", "skipped_update", tag);
+  }
 }
 
 bool Settings::profileLocalInis() const

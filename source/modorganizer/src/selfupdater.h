@@ -33,7 +33,10 @@ namespace MOBase
 class IPluginGame;
 }
 
+#include <QDateTime>
 #include <QFile>
+#include <QJsonArray>
+#include <vector>
 #include <QObject>
 #include <QString>
 #include <QVariant>
@@ -46,7 +49,8 @@ class Settings;
 /**
  * @brief checks GitHub for newer MO2 Revamped releases
  * testForUpdate() emits updateAvailable() when a newer release exists. MO2 Revamped
- * is updated with its own setup, so the UI only links to the release page.
+ * is updated with its own setup: the UI shows what changed and links to the
+ * release pages, nothing is downloaded or installed here.
  **/
 class SelfUpdater : public QObject
 {
@@ -54,6 +58,41 @@ class SelfUpdater : public QObject
   Q_OBJECT
 
 public:
+  // which releases a user hears about. Each channel includes the ones before
+  // it. On GitHub the tag says the channel: "v1.2.0" is stable, "-beta.N" and
+  // "-rc.N" are betas, "-alpha.N", "-dev.N", "-test.N" and "-preview.N" are
+  // development builds, early tests that only reach those who chose them
+  enum class UpdateChannel
+  {
+    Stable = 0,
+    Beta   = 1,
+    Dev    = 2
+  };
+
+  // the channel of a release tag, or of a version; a release marked as a
+  // pre-release on GitHub without a known suffix counts as a beta
+  static UpdateChannel channelOf(const QString& tag, bool prerelease = false);
+
+  // the channel of this build, which is the default for its users
+  static UpdateChannel buildChannel();
+
+  // a GitHub release newer than this build
+  struct ReleaseInfo
+  {
+    MOBase::VersionInfo version;
+    QString tag;
+    QString name;
+    QString notes;  // the release's text, Markdown
+    QString url;    // its page on GitHub
+    QDateTime published;
+    bool prerelease       = false;
+    UpdateChannel channel = UpdateChannel::Stable;
+  };
+
+  // the MO2 Revamped release this build belongs to, see revampedversion.h
+  static QString revampedVersionString();
+
+
   /**
    * @brief constructor
    *
@@ -79,6 +118,17 @@ public:
    **/
   MOBase::VersionInfo getVersion() const { return m_MOVersion; }
 
+  /**
+   * @return the MO2 Revamped version of this build
+   **/
+  const MOBase::VersionInfo& revampedVersion() const { return m_RevampedVersion; }
+
+  /**
+   * @return the releases newer than this build found by the last check, newest
+   *         first; empty when there is none
+   **/
+  const std::vector<ReleaseInfo>& newerReleases() const { return m_NewerReleases; }
+
 signals:
 
   /**
@@ -87,8 +137,12 @@ signals:
   void updateAvailable();
 
 private:
+  void onReleases(const QJsonArray& releases);
+
   QWidget* m_Parent;
   MOBase::VersionInfo m_MOVersion;
+  MOBase::VersionInfo m_RevampedVersion;
+  std::vector<ReleaseInfo> m_NewerReleases;
   NexusInterface* m_Interface;
 
   GitHub m_GitHub;

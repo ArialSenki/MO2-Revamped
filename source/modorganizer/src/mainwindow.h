@@ -74,6 +74,7 @@ class DirectoryEntry;
 #include <QMainWindow>
 #include <QMargins>
 #include <QObject>
+#include <QPointer>
 #include <QPersistentModelIndex>
 #include <QProcess>
 #include <QString>
@@ -311,6 +312,13 @@ private:
   bool m_FirstPaint;
   bool m_ToolMenuDirty;
   QDialog* m_FilterOptionsDialog = nullptr;
+
+  // the update notice while it is open, see showUpdateNotice()
+  QPointer<QDialog> m_UpdateNotice;
+
+  // opens the update notice once no other window waits for an answer; with
+  // onlyIfNotSkipped, not for the release the user skipped
+  void showUpdateNotice(bool onlyIfNotSkipped);
   QLabel* m_FilterDialogTitle = nullptr;
   QLabel* m_FilterDialogDescription = nullptr;
 

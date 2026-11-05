@@ -217,6 +217,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modeltest.h"
 #endif  // TEST_MODELS
 
+#include "selfupdater.h"
+#include "updatenoticedialog.h"
+
 #pragma warning(disable : 4428)
 
 using namespace MOBase;
@@ -4658,6 +4661,7 @@ void MainWindow::on_actionSettings_triggered()
   bool proxy                    = settings.network().useProxy();
   DownloadManager* dlManager    = m_OrganizerCore.downloadManager();
   const bool oldCheckForUpdates = settings.checkForUpdates();
+  const auto oldChannel         = settings.updateChannel();
   const int oldMaxDumps         = settings.diagnostics().maxCoreDumps();
   const QString oldLanguage     = settings.interface().language();
 
@@ -4778,10 +4782,10 @@ void MainWindow::on_actionSettings_triggered()
 
   toggleRevampedEndorseState();
 
-  if (oldCheckForUpdates != settings.checkForUpdates()) {
-    if (settings.checkForUpdates()) {
-      m_OrganizerCore.checkForUpdates();
-    }
+  // switching the check on or changing the channel looks again right away
+  if (settings.checkForUpdates() &&
+      (!oldCheckForUpdates || oldChannel != settings.updateChannel())) {
+    m_OrganizerCore.checkForUpdates();
   }
 }
 
@@ -4924,18 +4928,68 @@ void MainWindow::originModified(int originID)
 
 void MainWindow::updateAvailable()
 {
+  const auto& releases = m_OrganizerCore.updater()->newerReleases();
+  if (releases.empty()) {
+    return;
+  }
+
+  QString version = releases.front().tag;
+  if (version.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
+    version.remove(0, 1);
+  }
+
   ui->actionUpdate->setEnabled(true);
+  // the command opens the notice from now on, in the menu and the status bar
+  ui->actionUpdate->setText(tr("MO2 Revamped %1 is out").arg(version));
   const QString updateHint =
-      tr("A newer MO2 Revamped release is available. Check MO2 Revamped on "
-         "GitHub for release details.");
+      tr("MO2 Revamped %1 is out. Click to see what it changes.").arg(version);
   ui->actionUpdate->setToolTip(updateHint);
   ui->actionUpdate->setStatusTip(updateHint);
   ui->statusBar->setUpdateAvailable(true);
+
+  showUpdateNotice(true);
+}
+
+void MainWindow::showUpdateNotice(bool onlyIfNotSkipped)
+{
+  const auto& releases = m_OrganizerCore.updater()->newerReleases();
+  if (releases.empty()) {
+    revampedRepositoryTriggered();
+    return;
+  }
+
+  if (onlyIfNotSkipped &&
+      m_OrganizerCore.settings().skippedUpdate() == releases.front().tag) {
+    log::debug("update notice: {} was skipped, only the status bar shows it",
+               releases.front().tag);
+    return;
+  }
+
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->raise();
+    m_UpdateNotice->activateWindow();
+    return;
+  }
+
+  // the check answers while the window is still starting, or while a question
+  // or the instance setup is open: the notice waits its turn
+  if (!isVisible() || QApplication::activeModalWidget() != nullptr) {
+    QTimer::singleShot(1000, this, [this, onlyIfNotSkipped] {
+      showUpdateNotice(onlyIfNotSkipped);
+    });
+    return;
+  }
+
+  auto* notice = new UpdateNoticeDialog(
+      this, m_OrganizerCore.settings(), SelfUpdater::revampedVersionString(), releases);
+  notice->setAttribute(Qt::WA_DeleteOnClose);
+  m_UpdateNotice = notice;
+  notice->show();
 }
 
 void MainWindow::on_actionUpdate_triggered()
 {
-  revampedRepositoryTriggered();
+  showUpdateNotice(false);
 }
 
 void MainWindow::on_actionExit_triggered()

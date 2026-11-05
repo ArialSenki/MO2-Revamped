@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define SETTINGS_H
 
 #include "envdump.h"
+#include "selfupdater.h"
 #include <filterwidget.h>
 #include <log.h>
 #include <lootcli/lootcli.h>
@@ -816,10 +817,16 @@ public:
   bool checkForUpdates() const;
   void setCheckForUpdates(bool b);
 
-  // whether the user wants to upgrade to pre-releases
+  // which releases the update check tells the user about; follows the build
+  // until the user picks one
   //
-  bool usePrereleases() const;
-  void setUsePrereleases(bool b);
+  SelfUpdater::UpdateChannel updateChannel() const;
+  void setUpdateChannel(SelfUpdater::UpdateChannel channel);
+
+  // the release the user chose to skip in the update notice, as its GitHub tag;
+  // that release no longer opens the notice by itself
+  QString skippedUpdate() const;
+  void setSkippedUpdate(const QString& tag);
 
   // whether profiles should default to local INIs
   //

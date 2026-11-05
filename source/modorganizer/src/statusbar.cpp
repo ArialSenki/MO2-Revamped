@@ -1,4 +1,5 @@
 #include "statusbar.h"
+#include <QMouseEvent>
 #include "instancemanager.h"
 #include "nexusinterface.h"
 #include "organizercore.h"
@@ -197,6 +198,7 @@ StatusBarAction::StatusBarAction(QAction* action)
   layout()->setContentsMargins(0, 0, 0, 0);
   layout()->addWidget(m_icon);
   layout()->addWidget(m_text);
+  setCursor(Qt::PointingHandCursor);
 }
 
 void StatusBarAction::set(bool visible)
@@ -204,14 +206,17 @@ void StatusBarAction::set(bool visible)
   if (visible) {
     m_icon->setPixmap(m_action->icon().pixmap(16, 16));
     m_text->setText(cleanupActionText(m_action->text()));
+    setToolTip(m_action->toolTip());
   }
 
   setVisible(visible);
 }
 
-void StatusBarAction::mouseDoubleClickEvent(QMouseEvent* e)
+// one click, like the other items of the status bar
+void StatusBarAction::mouseReleaseEvent(QMouseEvent* e)
 {
-  if (m_action->isEnabled()) {
+  if (e->button() == Qt::LeftButton && rect().contains(e->pos()) &&
+      m_action->isEnabled()) {
     m_action->trigger();
   }
 }
