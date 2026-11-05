@@ -607,6 +607,11 @@ BOOL CALLBACK find_visible_game_window(HWND window, LPARAM result) {
   return TRUE;
 }
 
+// the game's main window once shown, and whether the game has started to
+// close: its window hidden or gone, or ExitProcess called
+HWND volatile g_game_window = nullptr;
+volatile LONG g_game_closing = 0;
+
 // the timeline of the game's window, for the log: when it appears and when
 // it goes, which with the exit logged below shows how long the game takes
 // to start and to close
@@ -622,6 +627,7 @@ DWORD WINAPI watch_game_window(void*) {
     log_line("Timing: no game window within a minute.");
     return 0;
   }
+  g_game_window = window;
   log_line("Timing: the game window is shown.");
   bool hidden_logged = false;
   while (IsWindow(window)) {
@@ -633,6 +639,23 @@ DWORD WINAPI watch_game_window(void*) {
   }
   log_line("Timing: the game window was closed.");
   return 0;
+}
+
+// Whether the game is on its way out: ExitProcess called, or its window
+// hidden or gone with no other window of the game shown. Checked when asked,
+// so a window hidden for a moment during play, or a first window replaced by
+// another, does not count.
+bool game_is_closing() {
+  if (InterlockedCompareExchange(&g_game_closing, 0, 0) != 0) {
+    return true;
+  }
+  HWND window = g_game_window;
+  if (window == nullptr || (IsWindow(window) && IsWindowVisible(window))) {
+    return false;
+  }
+  HWND shown = nullptr;
+  EnumWindows(find_visible_game_window, reinterpret_cast<LPARAM>(&shown));
+  return shown == nullptr;
 }
 
 using ExitProcessFunction = void(WINAPI*)(UINT);
@@ -650,8 +673,78 @@ void log_exit_request(const char* message) {
   }
 }
 
+// Clean exit with mods that crash while the game closes. Convergence's
+// DLLs do, in three ways, all after the game has started to close:
+// ErdTools.dll destroys a std::thread it never joined while it unloads,
+// which calls std::terminate and ends in a crash report; erdyes.dll's own
+// thread and one game worker read game objects already freed. Each of those
+// ends the process anyway, only seconds later and with a crash report. So
+// once the game is closing, an unhandled crash or a std::terminate ends the
+// process at once, with a line in this log instead of a report. While the
+// game runs, both go on to the usual crash handling.
+UINT g_exit_code = 0;
+volatile LONG g_quiet_end_logged = 0;
+
+[[noreturn]] void end_process_quietly(UINT code) {
+  if (g_original_terminate_process != nullptr) {
+    g_original_terminate_process(GetCurrentProcess(), code);
+  }
+  TerminateProcess(GetCurrentProcess(), code);
+  for (;;) {
+    Sleep(INFINITE);
+  }
+}
+
+// std::terminate itself, not a handler set with set_terminate: the CRT keeps
+// handlers per thread, and Windows frees the exiting thread's CRT data before
+// the DLLs unload, so a handler set there is gone when ErdTools needs it
+using TerminateFunction = void(__cdecl*)();
+TerminateFunction g_original_terminate = nullptr;
+
+void __cdecl terminate_hook() {
+  if (game_is_closing()) {
+    if (InterlockedExchange(&g_quiet_end_logged, 1) == 0) {
+      log_exit_request("Clean exit: a DLL called std::terminate while the game was closing; the process ended here instead of a crash report.");
+    }
+    end_process_quietly(g_exit_code);
+  }
+  g_original_terminate();
+}
+
+using UnhandledExceptionFilterFunction = LONG(WINAPI*)(EXCEPTION_POINTERS*);
+UnhandledExceptionFilterFunction g_original_unhandled_exception_filter = nullptr;
+
+LONG WINAPI unhandled_exception_filter_hook(EXCEPTION_POINTERS* info) {
+  if (info != nullptr && info->ExceptionRecord != nullptr && game_is_closing()) {
+    if (InterlockedExchange(&g_quiet_end_logged, 1) == 0) {
+      const auto address = reinterpret_cast<uintptr_t>(info->ExceptionRecord->ExceptionAddress);
+      // no loader calls here: another thread may hold the loader lock
+      const auto game = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+      const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(game);
+      const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(game + dos->e_lfanew);
+      char message[256];
+      if (address >= game && address < game + nt->OptionalHeader.SizeOfImage) {
+        std::snprintf(message, sizeof(message),
+                      "Clean exit: a crash while the game was closing (0x%08lX at the game's +0x%llX); the process ended here instead of a crash report.",
+                      static_cast<unsigned long>(info->ExceptionRecord->ExceptionCode),
+                      static_cast<unsigned long long>(address - game));
+      } else {
+        std::snprintf(message, sizeof(message),
+                      "Clean exit: a crash while the game was closing (0x%08lX at 0x%llX, outside the game); the process ended here instead of a crash report.",
+                      static_cast<unsigned long>(info->ExceptionRecord->ExceptionCode),
+                      static_cast<unsigned long long>(address));
+      }
+      log_exit_request(message);
+    }
+    end_process_quietly(g_exit_code);
+  }
+  return g_original_unhandled_exception_filter(info);
+}
+
 void WINAPI exit_process_hook(UINT code) {
   log_exit_request("Timing: the game called ExitProcess.");
+  g_exit_code = code;
+  InterlockedExchange(&g_game_closing, 1);
   g_original_exit_process(code);
 }
 
@@ -775,6 +868,27 @@ void install_exit_timing_hooks() {
       MH_CreateHook(terminate_process, reinterpret_cast<void*>(&terminate_process_hook),
                     reinterpret_cast<void**>(&g_original_terminate_process)) == MH_OK) {
     MH_EnableHook(terminate_process);
+  }
+  // kernelbase holds the filter every thread's start code calls on a crash
+  HMODULE kernelbase = GetModuleHandleW(L"kernelbase.dll");
+  void* unhandled_filter =
+      kernelbase == nullptr
+          ? nullptr
+          : reinterpret_cast<void*>(GetProcAddress(kernelbase, "UnhandledExceptionFilter"));
+  if (unhandled_filter == nullptr ||
+      MH_CreateHook(unhandled_filter, reinterpret_cast<void*>(&unhandled_exception_filter_hook),
+                    reinterpret_cast<void**>(&g_original_unhandled_exception_filter)) != MH_OK ||
+      MH_EnableHook(unhandled_filter) != MH_OK) {
+    log_line("Clean exit unavailable: UnhandledExceptionFilter could not be hooked.");
+  }
+  HMODULE ucrt = GetModuleHandleW(L"ucrtbase.dll");
+  void* terminate_function =
+      ucrt == nullptr ? nullptr : reinterpret_cast<void*>(GetProcAddress(ucrt, "terminate"));
+  if (terminate_function == nullptr ||
+      MH_CreateHook(terminate_function, reinterpret_cast<void*>(&terminate_hook),
+                    reinterpret_cast<void**>(&g_original_terminate)) != MH_OK ||
+      MH_EnableHook(terminate_function) != MH_OK) {
+    log_line("Clean exit unavailable: std::terminate could not be hooked.");
   }
 
   // auto-reset: a wake ends one sleep only
@@ -2487,7 +2601,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.61.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.62.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
