@@ -4432,6 +4432,18 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
   <context>
     <name>EldenRingStartupOptions</name>
     <message>
+      <source>Faster game start (BootBoost)</source>
+      <translation>Avvio del gioco più rapido (BootBoost)</translation>
+    </message>
+    <message>
+      <source>Keeps the game's archive headers, which it decrypts on every start, ready in a cache after the first start, so the title screen comes sooner. A game update makes new ones. From me3.</source>
+      <translation>Tiene in una cache, dopo il primo avvio, le intestazioni degli archivi che il gioco decifra a ogni avvio, così la schermata del titolo arriva prima. Un aggiornamento del gioco ne crea di nuove. Da me3.</translation>
+    </message>
+    <message>
+      <source>Puts every option back as it comes; nothing changes until you save</source>
+      <translation>Riporta ogni opzione com'è all'origine; non cambia nulla finché non salvi</translation>
+    </message>
+    <message>
       <source>Per-profile Elden Ring startup, cleanup, and performance options.</source>
       <translation>Opzioni di avvio, pulizia e prestazioni di Elden Ring per profilo.</translation>
     </message>
@@ -4806,10 +4818,6 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
     <message>
       <source>The launch before that one</source>
       <translation>L&apos;avvio prima di quello</translation>
-    </message>
-    <message>
-      <source>Turns every option off again; nothing changes until you save</source>
-      <translation>Disattiva di nuovo tutte le opzioni; nulla cambia finché non salvi</translation>
     </message>
     <message>
       <source>Window</source>

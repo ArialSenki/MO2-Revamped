@@ -4348,6 +4348,18 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
   <context>
     <name>EldenRingStartupOptions</name>
     <message>
+      <source>Faster game start (BootBoost)</source>
+      <translation>Démarrage du jeu plus rapide (BootBoost)</translation>
+    </message>
+    <message>
+      <source>Keeps the game's archive headers, which it decrypts on every start, ready in a cache after the first start, so the title screen comes sooner. A game update makes new ones. From me3.</source>
+      <translation>Garde dans un cache, après le premier démarrage, les en-têtes d'archives que le jeu déchiffre à chaque démarrage, pour que l'écran titre arrive plus tôt. Une mise à jour du jeu en crée de nouveaux. Issu de me3.</translation>
+    </message>
+    <message>
+      <source>Puts every option back as it comes; nothing changes until you save</source>
+      <translation>Remet chaque option telle qu'elle est à l'origine ; rien ne change avant d'enregistrer</translation>
+    </message>
+    <message>
       <source>Per-profile Elden Ring startup, cleanup, and performance options.</source>
       <translation>Options de lancement, de nettoyage et de performance d'Elden Ring par profil.</translation>
     </message>
@@ -4722,10 +4734,6 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
     <message>
       <source>The launch before that one</source>
       <translation>Le lancement d&apos;avant</translation>
-    </message>
-    <message>
-      <source>Turns every option off again; nothing changes until you save</source>
-      <translation>Désactive à nouveau toutes les options ; rien ne change avant l&apos;enregistrement</translation>
     </message>
     <message>
       <source>Window</source>

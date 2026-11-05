@@ -28,20 +28,19 @@
 ### Faster start and exit
 
 - Elden Ring closes in about 4 seconds instead of up to 20. One of the game's own
-  threads sleeps 16.7 seconds at a time and the game waited for it on exit; the
-  bridge now wakes it when the game starts waiting. The game also ended every
-  exit in a crash report (an internal check at shutdown, `int3` at
-  `eldenring.exe+0xc59276`) that cost a few more seconds; the bridge steps over
-  that one check, and the game now closes cleanly.
-- Elden Ring skips the intro logo screens unless the profile turns that off in
-  its startup options.
-- Elden Ring reaches its title screen about 2 seconds sooner: me3's BootBoost
-  keeps the game's archive headers, which the game decrypts on every start,
-  decrypted in `%LOCALAPPDATA%\MO2 Revamped\BootBoost` after the first start (a
-  game update makes new ones). The me3 compatibility DLL now loads for every
-  Elden Ring start for this; without ELDEN RING Reforged it does only that, and
-  leaves Arxan and the game's memory as they are. It is a switch in the profile's startup
-  options, **Faster game start (BootBoost)**, on by default.
+  threads sleeps 16.7 seconds at a time, and the game waited for it on exit; the
+  bridge now wakes it as soon as the game starts waiting. Every exit also ended
+  in a crash report from a check the game makes at shutdown, which cost a few
+  more seconds; the bridge steps over that one check, so the game closes cleanly.
+- Skipping the intro logo screens is now on by default; a profile can turn it
+  off in its startup options.
+- Elden Ring reaches its title screen about 2 seconds sooner with me3's
+  BootBoost. The game decrypts its archive headers on every start; after the
+  first start they are kept, ready, in `%LOCALAPPDATA%\MO2 Revamped\BootBoost`,
+  and a game update makes new ones. For this the me3 compatibility DLL now loads
+  at every Elden Ring start; without ELDEN RING Reforged it does only that, and
+  leaves Arxan and the game's memory as they are. It is a switch in the profile's
+  startup options, **Faster game start (BootBoost)**, on by default.
 - The bridge's log shows the time of each line since the game started, with the
   moments its window appears and hides and when the process exits.
 
