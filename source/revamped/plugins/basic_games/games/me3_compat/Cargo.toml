@@ -1,15 +1,20 @@
 [package]
 name = "eldenring_mo2_me3_compat"
-version = "0.1.0"
+version = "0.4.0"
 edition = "2021"
-description = "MO2 Revamped: what me3 does for ELDEN RING Reforged beside loading it: Arxan neutralized before the entry point and the oversized regulation kept out of the save"
+description = "MO2 Revamped: what me3 does for ELDEN RING Reforged beside loading it: Arxan neutralized before the entry point, the oversized regulation kept out of the save and the game's heaps replaced by mimalloc"
 license = "MIT OR Apache-2.0"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-dearxan = "=0.5.2"
+dearxan = "=0.5.6"
+libmimalloc-sys = { git = "https://github.com/Dasaav-dsv/mimalloc_rust.git", tag = "v0.1.49-mimalloc-v3.4.1", features = ["extended", "arena"] }
+me3-binary-analysis = { git = "https://github.com/garyttierney/me3.git", rev = "7c454ba53f5387dcd9fea3cdd9363f34408d2868" }
+pelite = "0.10"
+regex = "1"
+retour = "0.3"
 log = "0.4"
 from-singleton = "=3.0.1"
 

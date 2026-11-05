@@ -2085,8 +2085,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.86"
-    NativeBridgeVersion = "0.5.0-alpha.54"
+    Version = "0.5.0-alpha.87"
+    NativeBridgeVersion = "0.5.0-alpha.58"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -5519,7 +5519,6 @@ class EldenRingMo2Game(BasicGame):
                 self.ReforgedAttachEnvironment,
                 self.SaveExtensionEnvironment,
                 self.SoundFoldersEnvironment,
-                self.SkipModSoundsEnvironment,
             )
         }
         self._reforged_env_active = True
@@ -5548,17 +5547,6 @@ class EldenRingMo2Game(BasicGame):
             )
         else:
             os.environ.pop(self.SaveExtensionEnvironment, None)
-        # Reforged's cs_smain.bnk cuts music and voices on hits when MO2 loads it
-        # (not with its own launcher); until that is solved its sound stays the
-        # game's own, as before mods' sound files could load
-        if reforged_natives is not None:
-            os.environ[self.SkipModSoundsEnvironment] = "1"
-            qInfo(
-                "Elden Ring MO2: ELDEN RING Reforged is active; mods' sound files "
-                "stay off for this run."
-            )
-        else:
-            os.environ.pop(self.SkipModSoundsEnvironment, None)
         sound_folders = self._active_sound_folders()
         if sound_folders:
             os.environ[self.SoundFoldersEnvironment] = ";".join(sound_folders)
@@ -5568,7 +5556,6 @@ class EldenRingMo2Game(BasicGame):
 
     # the bridge opens mods' sound files from these folders, highest priority first
     SoundFoldersEnvironment = "ELDENRING_MO2_SOUND_FOLDERS"
-    SkipModSoundsEnvironment = "ELDENRING_MO2_SKIP_MOD_SOUNDS"
 
     def _active_sound_folders(self) -> list[str]:
         mod_list = self._organizer.modList()
@@ -5594,10 +5581,13 @@ class EldenRingMo2Game(BasicGame):
     ReforgedSaveExtension = "err"
 
     # What me3 does for ELDEN RING Reforged beside loading it: Arxan
-    # neutralized (disable_arxan) and the raw regulation kept out of the
+    # neutralized (disable_arxan), the raw regulation kept out of the
     # save (its oversized_regulation_fix: Reforged's regulation.bin no longer
     # fits in a save, so every save after the first failed with "run
-    # Reforged through its dedicated launcher"). Source in me3_compat/.
+    # Reforged through its dedicated launcher") and the game's heaps replaced
+    # by mimalloc (mem_patch: without it Reforged's sound bank ran out of
+    # room and music and voices stopped on every dodge or hit). Source in
+    # me3_compat/.
     Me3Compat = "eldenring_mo2_me3_compat.dll"
 
     def _me3_compat_load(

@@ -6,7 +6,12 @@
 //!   it loaded and writes it into every save, and a regulation larger than
 //!   the game's own (Reforged's) no longer fits, so every save after the
 //!   first fails. me3 frees it once the regulation step is idle; this clears
-//!   it as soon as it appears.
+//!   it as soon as it appears;
+//! - me3's `mem_patch` (see mem_patch.rs): the game's fixed heaps replaced by
+//!   mimalloc, without which Reforged's sound bank runs out of room and music
+//!   and voices stop on every dodge or hit.
+
+mod mem_patch;
 
 use std::ffi::c_void;
 use std::fs::File;
@@ -99,16 +104,41 @@ const DLL_PROCESS_ATTACH: u32 = 1;
 pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mut c_void) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
         open_log();
-        log::info!("MO2 me3 compatibility 0.2.0 (dearxan 0.5.2, from-singleton 3.0.1) loaded");
+        log::info!("MO2 me3 compatibility 0.4.0 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch) loaded");
         unsafe {
             dearxan::disabler::neuter_arxan(|result| {
+                let mut before_entry = false;
                 match result {
-                    Ok(status) => log::info!(
-                        "Arxan detected: {}; before the entry point: {}",
-                        status.is_arxan_detected,
-                        status.is_executing_entrypoint
-                    ),
+                    Ok(status) => {
+                        before_entry = status.is_executing_entrypoint;
+                        log::info!(
+                            "Arxan detected: {}; before the entry point: {}",
+                            status.is_arxan_detected,
+                            status.is_executing_entrypoint
+                        )
+                    }
                     Err(error) => log::error!("Arxan could not be neutralized: {error}"),
+                }
+                // mem_patch, as me3 does before the game's main: only while the
+                // game has allocated nothing yet, or mimalloc would be asked to
+                // free the game's own blocks
+                if before_entry {
+                    match mem_patch::hook_system_allocator() {
+                        Ok(()) => {
+                            log::info!("mem_patch: system allocator hooked");
+                            if let Err(error) = mem_patch::after_steam_init(|| {
+                                match mem_patch::hook_heap_allocators() {
+                                    Ok(()) => log::info!("mem_patch: heap allocators hooked"),
+                                    Err(error) => log::error!("mem_patch: heap allocators not hooked: {error}"),
+                                }
+                            }) {
+                                log::error!("mem_patch: SteamAPI_Init not hooked: {error}");
+                            }
+                        }
+                        Err(error) => log::error!("mem_patch: system allocator not hooked: {error}"),
+                    }
+                } else {
+                    log::warn!("mem_patch skipped: the game has already started");
                 }
                 // the game's code is decrypted now: scanning it for the
                 // singletons is safe

@@ -1547,15 +1547,6 @@ bool is_wwise_open_call_site(const unsigned char* code, size_t available) {
 }
 
 bool install_wwise_hook() {
-  // ELDEN RING Reforged's cs_smain.bnk cuts music and voices on hits when MO2
-  // loads it, and not with Reforged's own launcher: until that is understood,
-  // its sound stays the game's own. The plugin sets this for Reforged.
-  wchar_t skip[8] = {};
-  if (GetEnvironmentVariableW(L"ELDENRING_MO2_SKIP_MOD_SOUNDS", skip, 8) > 0 &&
-      skip[0] == L'1') {
-    log_line("Wwise hook skipped: mods' sound files stay off for this run.");
-    return false;
-  }
   HMODULE image = GetModuleHandleW(nullptr);
   if (image == nullptr) {
     return false;
@@ -2211,7 +2202,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.54.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.58.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
