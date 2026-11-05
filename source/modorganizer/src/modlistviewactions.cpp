@@ -778,10 +778,6 @@ void ModListViewActions::displayModInformation(ModInfo::Ptr modInfo,
   }
 
   if (m_core.currentProfile()->modEnabled(modIndex) && !modInfo->isForeign()) {
-    FilesOrigin& origin =
-        m_core.directoryStructure()->getOriginByName(ToWString(modInfo->name()));
-    origin.enable(false);
-
     if (m_core.directoryStructure()->originExists(ToWString(modInfo->name()))) {
       FilesOrigin& origin =
           m_core.directoryStructure()->getOriginByName(ToWString(modInfo->name()));

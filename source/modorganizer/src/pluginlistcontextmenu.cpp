@@ -23,7 +23,8 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
   if (view->selectionModel()->hasSelection()) {
     m_selected = view->indexViewToModel(view->selectionModel()->selectedRows());
   } else if (index.isValid()) {
-    m_selected = {index};
+    // the clicked row, from the sorted and filtered view to the list itself
+    m_selected = {index.model() == view->model() ? view->indexViewToModel(index) : index};
   }
 
   // the default command first, the selection's commands next and the whole

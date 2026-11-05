@@ -432,6 +432,8 @@ public:
 
     m_Summary->setObjectName(QStringLiteral("logDockSummaryLabel"));
     m_Summary->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    // log lines are never markup: "<data>" in one must show as written
+    m_Summary->setTextFormat(Qt::PlainText);
     m_Summary->setAttribute(Qt::WA_TransparentForMouseEvents, true);
     m_Summary->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 
@@ -474,6 +476,9 @@ public:
     });
 
     connect(&LogModel::instance(), &QAbstractItemModel::rowsInserted, this,
+            [this] { updateSummary(); });
+    // Clear all resets the log at once, which inserts nothing
+    connect(&LogModel::instance(), &QAbstractItemModel::modelReset, this,
             [this] { updateSummary(); });
 
     updateChevron();
@@ -682,6 +687,7 @@ private:
     const auto& entries = LogModel::instance().entries();
     if (entries.empty()) {
       m_Summary->clear();
+      m_Summary->setToolTip({});
       return;
     }
 
@@ -690,7 +696,7 @@ private:
 
     const int width = qMax(0, m_Summary->width());
     m_Summary->setText(m_Summary->fontMetrics().elidedText(text, Qt::ElideRight, width));
-    m_Summary->setToolTip(text);
+    m_Summary->setToolTip(text.toHtmlEscaped());
   }
 
   void retranslate()
@@ -2250,9 +2256,6 @@ void MainWindow::scheduleCheckForProblems()
 
 void MainWindow::updateProblemsButton()
 {
-  // if the current stylesheet doesn't provide an icon, this is used instead
-  const char* DefaultIconName = ":/MO/gui/mainwindow/notifications.svg";
-
   const std::size_t numProblems = m_NumberOfProblems;
 
   if (numProblems > 0) {
@@ -2261,88 +2264,14 @@ void MainWindow::updateProblemsButton()
     ui->actionNotifications->setToolTip(tr("There are no notifications"));
   }
 
-    const QIcon icon = fluentNotificationIcon(numProblems);
+  const QIcon icon = fluentNotificationIcon(numProblems);
   ui->actionNotifications->setEnabled(numProblems > 0);
   ui->actionNotifications->setIcon(icon);
   if (auto* button = qobject_cast<QAbstractButton*>(
           ui->toolBar->widgetForAction(ui->actionNotifications))) {
     button->setIcon(icon);
   }
-  if (ui->statusBar) {
-    ui->statusBar->setNotifications(numProblems > 0);
-  }
-  return;
-
-
-  // original icon without a count painted on it
-  const QIcon original = m_originalNotificationIcon.isNull()
-                             ? QIcon(DefaultIconName)
-                             : m_originalNotificationIcon;
-
-  // Keep the toolbar icon canvas identical with and without a badge. Swapping
-  // between the theme icon and a composed pixmap can change the button's size
-  // hint and make Notifications jump vertically when the last item is cleared.
-  const QSize iconCanvasSize = ui->toolBar->iconSize();
-  const int iconExtent = qMax(1, qMin(iconCanvasSize.width(),
-                                      iconCanvasSize.height()));
-  const qreal iconScale = static_cast<qreal>(iconExtent) / 64.0;
-  const int iconOffsetX = (iconCanvasSize.width() - iconExtent) / 2;
-  const int iconOffsetY = (iconCanvasSize.height() - iconExtent) / 2;
-  const int bellSize = qMax(1, qRound(54.0 * iconScale));
-
-  QPixmap merged(iconCanvasSize);
-  merged.fill(Qt::transparent);
-  const QPixmap bell = original.pixmap(QSize(bellSize, bellSize)).scaled(
-      bellSize, bellSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-  {
-    QPainter painter(&merged);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::TextAntialiasing);
-    painter.drawPixmap(iconOffsetX + qRound(5.0 * iconScale),
-                       iconOffsetY + qRound(5.0 * iconScale), bell);
-
-    if (numProblems > 0) {
-      const QString badgeText =
-          QString::number(static_cast<qulonglong>(numProblems));
-      const qreal badgeWidth =
-          qMax<qreal>(22.0, 12.0 + 6.0 * badgeText.size()) * iconScale;
-      const qreal badgeHeight = 22.0 * iconScale;
-      const qreal badgeRightInset = 4.0 * iconScale;
-      const qreal badgeBottom = iconOffsetY + iconExtent * 0.80;
-      const QRectF badgeRect(
-          iconOffsetX + iconExtent - badgeRightInset - badgeWidth,
-          badgeBottom - badgeHeight, badgeWidth, badgeHeight);
-
-      painter.setPen(QPen(QColor("#FFFFFF"), 1.5 * iconScale));
-      painter.setBrush(QColor("#F2C84B"));
-      painter.drawEllipse(badgeRect);
-
-      QFont badgeFont = painter.font();
-      badgeFont.setBold(true);
-      badgeFont.setPixelSize(
-          qMax(5, qRound((badgeText.size() > 2 ? 12.0 : 14.0) * iconScale)));
-      painter.setFont(badgeFont);
-      painter.setPen(QColor("#342B16"));
-      painter.drawText(badgeRect, Qt::AlignCenter, badgeText);
-    }
-  }
-
-  const QIcon final(merged);
-
-  ui->actionNotifications->setEnabled(numProblems > 0);
-
-  // setting the icon on the action (shown on the menu)
-  ui->actionNotifications->setIcon(final);
-
-  // setting the icon on the toolbar button
-  if (auto* actionWidget = ui->toolBar->widgetForAction(ui->actionNotifications)) {
-    if (auto* button = dynamic_cast<QAbstractButton*>(actionWidget)) {
-      button->setIcon(final);
-    }
-  }
-
-  // updating the status bar, may be null very early when MO is starting
+  // may be null very early when MO is starting
   if (ui->statusBar) {
     ui->statusBar->setNotifications(numProblems > 0);
   }

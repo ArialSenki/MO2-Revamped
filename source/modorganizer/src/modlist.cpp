@@ -361,9 +361,6 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       } else if (modInfo->updateAvailable() || modInfo->downgradeAvailable()) {
         // Fluent marks an available update in the accent, like Windows Update
         return QBrush(FluentIcons::color(FluentIcons::Tone::Accent));
-
-        return QBrush(MOBase::RevampedTheme::isDark() ? MOBase::RevampedTheme::criticalText()
-                                                     : QColor(Qt::red));
       } else {
         return QBrush(MOBase::RevampedTheme::successText());
       }

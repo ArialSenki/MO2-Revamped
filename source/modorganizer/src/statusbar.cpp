@@ -155,7 +155,7 @@ void StatusBar::updateNormalMessage(OrganizerCore& core)
 
   QString profile = core.profileName();
 
-  const auto s = QString("%1 - %2 - %3").arg(game).arg(instance).arg(profile);
+  const auto s = QString("%1 - %2 - %3").arg(game, instance, profile);
 
   m_normal->setText(s);
 }
