@@ -210,6 +210,16 @@ void forEachEntryImpl(void* cx, HandleCloserThread& hc,
                       POBJECT_ATTRIBUTES poa, std::size_t depth, DirStartF* dirStartF,
                       DirEndF* dirEndF, FileF* fileF)
 {
+  // a junction to a parent folder would otherwise be followed until the stack
+  // runs out, with 1 MB of buffer for each level
+  const std::size_t MaxDepth = 64;
+  if (depth > MaxDepth) {
+    log::error("not reading '{}': more than {} folders deep, or a link to a parent "
+               "folder",
+               toString(poa), MaxDepth);
+    return;
+  }
+
   IO_STATUS_BLOCK iosb;
   UNICODE_STRING ObjectName;
   OBJECT_ATTRIBUTES oa = {sizeof(oa), 0, &ObjectName};
