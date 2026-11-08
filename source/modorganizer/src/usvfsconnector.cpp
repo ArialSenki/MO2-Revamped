@@ -334,7 +334,8 @@ std::vector<HANDLE> getRunningUSVFSProcesses()
 
     HANDLE handle = ::OpenProcess(rights, FALSE, pid);
 
-    if (handle == INVALID_HANDLE_VALUE) {
+    // OpenProcess() returns null on failure, not INVALID_HANDLE_VALUE
+    if (handle == nullptr) {
       const auto e = GetLastError();
 
       log::warn("failed to open usvfs process {}: {}", pid, formatSystemMessage(e));

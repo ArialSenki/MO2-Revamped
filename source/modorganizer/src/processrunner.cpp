@@ -7,6 +7,7 @@
 #include <iplugingame.h>
 #include <log.h>
 #include <report.h>
+#include <scopeguard.h>
 
 using namespace MOBase;
 
@@ -542,8 +543,39 @@ ProcessRunner& ProcessRunner::setFromFile(QWidget* parent, const QFileInfo& targ
   return *this;
 }
 
-ProcessRunner& ProcessRunner::setFromExecutable(const Executable& exe)
+ProcessRunner::ForcedLibraries ProcessRunner::forcedLibrariesFor(const QString& title)
 {
+  const auto* profile = m_core.currentProfile();
+  if (!profile || !profile->forcedLibrariesEnabled(title)) {
+    return {};
+  }
+
+  // game plugins resolve their forced loads against a finished refresh
+  m_core.waitForDirectoryRefresh();
+
+  // read again after the wait: the profile can be switched while it runs
+  profile = m_core.currentProfile();
+  if (!profile || !profile->forcedLibrariesEnabled(title)) {
+    return {};
+  }
+
+  return profile->determineForcedLibraries(title);
+}
+
+ProcessRunner& ProcessRunner::setFromExecutable(const Executable& exeEntry)
+{
+  // a copy: forcedLibrariesFor() runs events, and the executables list the
+  // entry comes from can change meanwhile
+  const Executable exe = exeEntry;
+
+  if (!m_core.currentProfile()) {
+    throw MyException(QObject::tr("No profile set"));
+  }
+
+  // a shortcut runs right after startup, while the first refresh may still
+  // be going
+  const ForcedLibraries forcedLibraries = forcedLibrariesFor(exe.title());
+
   const auto* profile = m_core.currentProfile();
   if (!profile) {
     throw MyException(QObject::tr("No profile set"));
@@ -551,14 +583,6 @@ ProcessRunner& ProcessRunner::setFromExecutable(const Executable& exe)
 
   const QString customOverwrite =
       profile->setting("custom_overwrites", exe.title()).toString();
-
-  ForcedLibraries forcedLibraries;
-  if (profile->forcedLibrariesEnabled(exe.title())) {
-    // a shortcut runs right after startup, while the first refresh may still
-    // be going; game plugins resolve their forced loads against its result
-    m_core.waitForDirectoryRefresh();
-    forcedLibraries = profile->determineForcedLibraries(exe.title());
-  }
 
   QString currentDirectory = exe.workingDirectory();
   if (currentDirectory.isEmpty()) {
@@ -638,30 +662,24 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
     }
 
     try {
-      const Executable& exe = m_core.executablesList()->getByBinary(m_sp.binary);
+      // a copy: forcedLibrariesFor() runs events
+      const Executable exe = m_core.executablesList()->getByBinary(m_sp.binary);
 
       setSteamID(exe.steamAppID());
       setCustomOverwrite(profile->setting("custom_overwrites", exe.title()).toString());
-
-      if (profile->forcedLibrariesEnabled(exe.title())) {
-        m_core.waitForDirectoryRefresh();
-        setForcedLibraries(profile->determineForcedLibraries(exe.title()));
-      }
+      setForcedLibraries(forcedLibrariesFor(exe.title()));
     } catch (const std::runtime_error&) {
       // nop
     }
   } else {
     // only a file name, search executables list
     try {
-      const Executable& exe = m_core.executablesList()->get(executable);
+      // a copy: forcedLibrariesFor() runs events
+      const Executable exe = m_core.executablesList()->get(executable);
 
       setSteamID(exe.steamAppID());
       setCustomOverwrite(profile->setting("custom_overwrites", exe.title()).toString());
-
-      if (profile->forcedLibrariesEnabled(exe.title())) {
-        m_core.waitForDirectoryRefresh();
-        setForcedLibraries(profile->determineForcedLibraries(exe.title()));
-      }
+      setForcedLibraries(forcedLibrariesFor(exe.title()));
 
       if (args.isEmpty()) {
         setArguments(exe.arguments());
@@ -964,6 +982,15 @@ ProcessRunner::waitForAllUSVFSProcessesWithLock(UILocker::Reasons reason)
   for (;;) {
     withLock([&](auto& ls) {
       const auto processes = getRunningUSVFSProcesses();
+
+      // the handles are opened for this round only; the loop opens them
+      // again for the processes still running
+      ON_BLOCK_EXIT([&] {
+        for (HANDLE h : processes) {
+          ::CloseHandle(h);
+        }
+      });
+
       if (processes.empty()) {
         r = Completed;
         return;
