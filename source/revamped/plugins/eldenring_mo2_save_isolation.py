@@ -321,17 +321,6 @@ _AUTO_SWAP_LAUNCHERS = frozenset(
 _LAUNCH_METHODS_FILENAME = "eldenring_mo2_launch_methods.json"
 
 
-class _Mo2DialogShowEventFilter(QObject):
-    """Qt event-filter object that forwards dialog events to the MO2 plugin."""
-
-    def __init__(self, plugin, parent=None):
-        super().__init__(parent)
-        self.__plugin = plugin
-
-    def eventFilter(self, watched, event) -> bool:
-        return self.__plugin._handle_dialog_show_event(watched, event)
-
-
 # The names that differ between the games this tool serves. "stem" is the
 # save's file name without extension (ER0000.sl2, NR0000.co2...).
 _GAMES = {
@@ -406,7 +395,6 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         super().__init__()
         self.__organizer = None
         self.__parent_widget = None
-        self.__ui_event_filter = None
         self.__refreshing_dialogs = False
         self.__pending_error_reported = set()
         self.__pending_wait_reported = set()
@@ -438,8 +426,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         application = QApplication.instance()
         if application is not None:
-            self.__ui_event_filter = _Mo2DialogShowEventFilter(self, application)
-            application.installEventFilter(self.__ui_event_filter)
+            # one call per window that takes the focus: an event filter on the
+            # application would run Python for every Qt event of the program
+            application.focusWindowChanged.connect(self._on_focus_window_changed)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
         qInfo("Elden Ring MO2: save isolation alpha.84 initialized.")
@@ -469,19 +458,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "warning",
             )
 
-    def _handle_dialog_show_event(self, watched, event) -> bool:
+    def _on_focus_window_changed(self, _window) -> None:
+        target = QApplication.activeWindow()
         if (
-            event.type() in (QEvent.Type.Show, QEvent.Type.ShowToParent)
-            and isinstance(watched, QDialog)
-            and not self.__refreshing_dialogs
+            not isinstance(target, QDialog)
+            or self.__refreshing_dialogs
+            or target.property("eldenringMo2DialogRefreshed")
         ):
-            # Run after Qt has completed this dialog's first layout pass. The
-            # event already identifies the dialog, so avoid rescanning every
-            # top-level widget after each dialog opens.
-            QTimer.singleShot(
-                0, lambda target=watched: self._refresh_mo2_dialogs(target)
-            )
-        return False
+            return
+        target.setProperty("eldenringMo2DialogRefreshed", True)
+        # Run after Qt has completed this dialog's first layout pass; only this
+        # dialog needs it, not every top-level widget.
+        QTimer.singleShot(0, lambda: self._refresh_mo2_dialogs(target))
 
     def name(self) -> str:
         return "Elden Ring MO2 Save Isolation"

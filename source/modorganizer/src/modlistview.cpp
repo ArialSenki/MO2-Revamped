@@ -247,10 +247,12 @@ private:
     auto* animation = FluentMotion::createAnimation(this);
     m_switchAnimations.insert(key, animation);
 
-    // the switch column is narrow; repainting it is cheaper than finding the
-    // mod's row again on every frame
+    // the switch's column only: cheaper than finding the mod's row again on
+    // every frame, and the rest of the list doesn't change
     connect(animation, &QVariantAnimation::valueChanged, this, [this] {
-      m_view->viewport()->update();
+      m_view->viewport()->update(m_view->columnViewportPosition(ModList::COL_NAME), 0,
+                                 m_view->columnWidth(ModList::COL_NAME),
+                                 m_view->viewport()->height());
     });
 
     connect(animation, &QVariantAnimation::finished, this, [this, key, animation] {
@@ -267,6 +269,11 @@ private:
   void paintSwitch(QPainter* painter, const QStyleOptionViewItem& viewOption,
                    const QModelIndex& index) const
   {
+    // only the name column has a switch: the rest skip the work below
+    if (index.column() != ModList::COL_NAME) {
+      return;
+    }
+
     // paint() hands over the view's option; the check state and the
     // indicator only appear once the option is filled in for the index
     QStyleOptionViewItem option(viewOption);
