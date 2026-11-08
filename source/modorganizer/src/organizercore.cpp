@@ -866,12 +866,16 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
 
       m_InstallationManager.notifyInstallationEnd(result, modInfo);
     } else {
+      // installer plugins still hear that the installation ended: one that
+      // set something up for it keeps it until it does
+      m_InstallationManager.notifyInstallationEnd(result, nullptr);
       reportError(tr("mod not found: %1").arg(qUtf8Printable(modName)));
     }
     emit modInstalled(modName);
     return {modIndex, modInfo};
   } else {
     if (result.result() == MOBase::IPluginInstaller::RESULT_CATEGORYREQUESTED) {
+      m_InstallationManager.notifyInstallationEnd(result, nullptr);
       CategoriesDialog dialog(qApp->activeWindow());
 
       if (dialog.exec() == QDialog::Accepted) {
