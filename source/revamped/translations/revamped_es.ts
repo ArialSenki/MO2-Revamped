@@ -8589,8 +8589,8 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
       <translation>Abre la carpeta Overwrite en el Explorador de archivos de Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Borrar…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Borrar...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>

@@ -8721,8 +8721,8 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
       <translation>Apre la cartella Overwrite in Esplora file di Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Elimina…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Elimina...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>

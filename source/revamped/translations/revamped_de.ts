@@ -8469,8 +8469,8 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
       <translation>Öffnet den Overwrite-Ordner im Windows-Explorer.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Löschen…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Löschen...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>

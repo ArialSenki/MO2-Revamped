@@ -127,7 +127,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   ui->explorerButton->setIcon(FluentIcons::glyph(0xE838));  // OpenFolderHorizontal
 
 
-  m_DeleteAction    = new QAction(tr("&Delete…"), ui->filesView);
+  m_DeleteAction    = new QAction(tr("&Delete..."), ui->filesView);
   m_RenameAction    = new QAction(tr("&Rename"), ui->filesView);
   m_OpenAction      = new QAction(tr("&Open file"), ui->filesView);
   m_NewFolderAction = new QAction(tr("&New folder"), ui->filesView);
@@ -213,6 +213,7 @@ void OverwriteInfoDialog::buildFluentLayout()
   auto* search = new QLineEdit(tools);
   search->setObjectName(QStringLiteral("instanceFilter"));
   search->setPlaceholderText(tr("Search files"));
+  search->setAccessibleName(tr("Search files"));
   search->setClearButtonEnabled(true);
   search->setMaximumWidth(320);
   toolsLayout->addWidget(search, 1);
@@ -302,13 +303,14 @@ void OverwriteInfoDialog::updateSummary()
                       QDir::System,
                   QDirIterator::Subdirectories);
   while (it.hasNext()) {
-    if (files + folders >= CountLimit) {
-      more = true;
-      break;
-    }
     it.next();
     if (it.fileInfo().isDir()) {
       ++folders;
+    } else if (files >= CountLimit) {
+      // "more than N files": only files count towards the limit, and one
+      // more file was found past it
+      more = true;
+      break;
     } else {
       ++files;
       bytes += it.fileInfo().size();

@@ -8613,8 +8613,8 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
       <translation>Ouvre le dossier Overwrite dans l'Explorateur de fichiers Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Supprimer…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Supprimer...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>

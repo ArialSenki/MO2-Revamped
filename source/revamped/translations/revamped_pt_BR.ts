@@ -8457,8 +8457,8 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>Abre a pasta Overwrite no Explorador de Arquivos do Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Excluir…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Excluir...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
