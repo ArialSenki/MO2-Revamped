@@ -1,4 +1,5 @@
 #include "modlistviewactions.h"
+#include "revampedtheme.h"
 
 #include <QButtonGroup>
 #include <QCheckBox>
@@ -93,6 +94,40 @@ QString promptForModListName(QWidget* parent, const QString& windowTitle,
   }
   return nameEdit->text();
 }
+
+// on Dark, the empty custom slots take the window's tone for as long as the
+// dialog is open; put back afterwards, as Qt shares these colors between
+// programs and keeps them between runs
+class DarkCustomColorSlots
+{
+public:
+  DarkCustomColorSlots()
+  {
+    if (!MOBase::RevampedTheme::isDark()) {
+      return;
+    }
+    for (int i = 0; i < QColorDialog::customCount(); ++i) {
+      if (QColorDialog::customColor(i) == QColor(Qt::white)) {
+        QColorDialog::setCustomColor(i, m_empty);
+        m_changed.push_back(i);
+      }
+    }
+  }
+
+  ~DarkCustomColorSlots()
+  {
+    for (const int i : m_changed) {
+      // one the user filled while the dialog was open stays
+      if (QColorDialog::customColor(i) == m_empty) {
+        QColorDialog::setCustomColor(i, Qt::white);
+      }
+    }
+  }
+
+private:
+  const QColor m_empty{0x2B, 0x2B, 0x2B};
+  std::vector<int> m_changed;
+};
 
 // Qt's color dialog in the program's capitalization, when it is in English
 void polishColorDialog(QColorDialog& dialog)
@@ -508,7 +543,7 @@ void ModListViewActions::exportModListCSV() const
   auto* optionsLayout = new QHBoxLayout;
   optionsLayout->setSpacing(14);
 
-  auto* groupBoxRows = new QGroupBox(&selection);
+  auto* groupBoxRows = new QFrame(&selection);
   groupBoxRows->setObjectName(QStringLiteral("exportRowsGroup"));
   groupBoxRows->setAccessibleName(tr("Mod rows"));
   auto* rowsTitle = new QLabel(tr("Mod rows"), groupBoxRows);
@@ -522,7 +557,7 @@ void ModListViewActions::exportModListCSV() const
   visible->setObjectName(QStringLiteral("exportVisibleRows"));
 
   auto* rowsLayout = new QVBoxLayout(groupBoxRows);
-  rowsLayout->setContentsMargins(12, 4, 12, 12);
+  rowsLayout->setContentsMargins(12, 10, 12, 11);
   rowsLayout->setSpacing(8);
   rowsLayout->addWidget(rowsTitle);
   rowsLayout->addWidget(all);
@@ -536,7 +571,7 @@ void ModListViewActions::exportModListCSV() const
   buttonGroupRows->addButton(visible, 2);
   buttonGroupRows->button(0)->setChecked(true);
 
-  auto* groupBoxColumns = new QGroupBox(&selection);
+  auto* groupBoxColumns = new QFrame(&selection);
   groupBoxColumns->setObjectName(QStringLiteral("exportColumnsGroup"));
   groupBoxColumns->setAccessibleName(tr("CSV columns"));
   auto* columnsTitle = new QLabel(tr("CSV columns"), groupBoxColumns);
@@ -567,7 +602,7 @@ void ModListViewActions::exportModListCSV() const
   download_File_Name->setObjectName(QStringLiteral("exportDownloadFileName"));
 
   auto* columnsLayout = new QGridLayout(groupBoxColumns);
-  columnsLayout->setContentsMargins(12, 4, 12, 12);
+  columnsLayout->setContentsMargins(12, 10, 12, 11);
   columnsLayout->setHorizontalSpacing(14);
   columnsLayout->setVerticalSpacing(6);
   columnsLayout->addWidget(columnsTitle, 0, 0, 1, 2);
@@ -1361,6 +1396,8 @@ void ModListViewActions::setColor(const QModelIndexList& indices,
   ModInfo::Ptr modInfo = ModInfo::getByIndex(refIndex.data(ModList::IndexRole).toInt());
 
   QColorDialog dialog(m_parent);
+  // after the dialog, to be undone before Qt saves the colors as it closes
+  const DarkCustomColorSlots darkSlots;
   dialog.setOption(QColorDialog::ShowAlphaChannel);
   polishColorDialog(dialog);
 
