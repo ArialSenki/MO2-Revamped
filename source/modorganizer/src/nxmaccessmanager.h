@@ -112,6 +112,8 @@ public:
   void cancel();
 
   bool done() const;
+  // started and still waiting for Nexus
+  bool running() const;
   Result result() const;
   const QString& message() const;
   std::chrono::seconds timeout() const;
@@ -166,6 +168,11 @@ private:
   NXMAccessManager& m_manager;
   QString m_key;
   std::vector<std::unique_ptr<ValidationAttempt>> m_attempts;
+
+  // the attempts of the check before: a new check can start from the callback
+  // of the last one (Login failed, try again?), whose attempt is still running
+  // its code, so they are only destroyed at the start after that
+  std::vector<std::unique_ptr<ValidationAttempt>> m_previousAttempts;
 
   void createAttempts(const std::vector<std::chrono::seconds>& timeouts);
   std::vector<std::chrono::seconds> getTimeouts() const;
