@@ -51,13 +51,16 @@ FileEntryPtr FileRegister::getFile(FileIndex index) const
 
 bool FileRegister::removeFile(FileIndex index)
 {
-  std::scoped_lock lock(m_Mutex);
+  std::unique_lock lock(m_Mutex);
 
   if (index < m_Files.size()) {
     FileEntryPtr p;
     m_Files[index].swap(p);
 
     if (p) {
+      // as removeOrigin() does: the error path of the parent's list looks the
+      // file up here, and this mutex isn't recursive
+      lock.unlock();
       unregisterFile(p);
       return true;
     }

@@ -781,7 +781,10 @@ DirectoryEntry* DirectoryEntry::getSubDirectoryRecursive(const std::wstring& pat
 void DirectoryEntry::removeDirRecursive()
 {
   while (!m_Files.empty()) {
-    m_FileRegister->removeFile(m_Files.begin()->second);
+    // an entry the register no longer knows would stay here and never end this
+    if (!m_FileRegister->removeFile(m_Files.begin()->second)) {
+      m_Files.erase(m_Files.begin());
+    }
   }
 
   m_FilesLookup.clear();
