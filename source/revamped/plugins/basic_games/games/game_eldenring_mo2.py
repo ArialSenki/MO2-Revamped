@@ -5304,7 +5304,16 @@ class EldenRingMo2Game(BasicGame):
                         _tr("MO2's winning mod '{0}' for '{1}' is unavailable.").format(winner, virtual_path)
                     )
                 winning_root = Path(winning_mod.absolutePath()).resolve()
-                library = winning_root.joinpath(*Path(virtual_path).parts).resolve(strict=True)
+                try:
+                    library = winning_root.joinpath(*Path(virtual_path).parts).resolve(strict=True)
+                except OSError:
+                    # MO2's file list is older than the disk (the file went
+                    # since its last refresh): the launch goes on without it
+                    qWarning(
+                        f"Elden Ring MO2: Revamped native '{virtual_path}' is missing from "
+                        f"'{winner}'; skipped."
+                    )
+                    continue
                 try:
                     library.relative_to(winning_root)
                 except ValueError as error:
