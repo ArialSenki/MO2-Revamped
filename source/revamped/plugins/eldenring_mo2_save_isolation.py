@@ -1951,7 +1951,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 ):
                     try:
                         destination_path.parent.mkdir(parents=True, exist_ok=True)
-                        os.replace(backup_path, destination_path)
+                        # the backups of the Steam route are in the instance,
+                        # often on another drive: os.replace can't cross it
+                        shutil.move(str(backup_path), str(destination_path))
                         backup_path = None
                     except OSError as restore_error:
                         recovery_note = (
