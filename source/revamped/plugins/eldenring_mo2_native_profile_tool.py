@@ -44,7 +44,16 @@ _game_name = "Elden Ring"
 def _tr(text: str) -> str:
     text = QCoreApplication.translate(_TR_CONTEXT, text)
     if _game_name != "Elden Ring":
-        text = text.replace("Elden Ring", _game_name).replace("eldenring.exe", "nightreign.exe")
+        # German joins the name with hyphens (Elden-Ring-Profil); French elides
+        # before it (d'Elden Ring)
+        for old, new in (
+            ("d'Elden Ring", f"de {_game_name}"),
+            ("d’Elden Ring", f"de {_game_name}"),
+            ("Elden-Ring", _game_name),
+            ("Elden Ring", _game_name),
+            ("eldenring.exe", "nightreign.exe"),
+        ):
+            text = text.replace(old, new)
     return text
 
 

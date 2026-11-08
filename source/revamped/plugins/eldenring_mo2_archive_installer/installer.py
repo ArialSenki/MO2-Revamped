@@ -2164,5 +2164,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         text = QtWidgets.QApplication.translate("EldenRingArchiveInstaller", value)
         # the texts name Elden Ring; a Nightreign instance gets its own name
         if self._nightreign_active():
-            text = text.replace("Elden Ring", "Nightreign")
+            # German joins the name with hyphens (Elden-Ring-Mod); French elides
+            # before it (d'Elden Ring)
+            for old, new in (
+                ("d'Elden Ring", "de Nightreign"),
+                ("d’Elden Ring", "de Nightreign"),
+                ("Elden-Ring", "Nightreign"),
+                ("Elden Ring", "Nightreign"),
+            ):
+                text = text.replace(old, new)
         return text

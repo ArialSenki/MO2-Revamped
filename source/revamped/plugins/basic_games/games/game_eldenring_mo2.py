@@ -3460,7 +3460,19 @@ class EldenRingMo2Game(BasicGame):
 
     def _game_text(self, text: str) -> str:
         # a translated text that names Elden Ring, for the game this plugin manages
-        return text.replace("Elden Ring", self.DisplayName)
+        name = self.DisplayName
+        if name == "Elden Ring":
+            return text
+        # German joins the name with hyphens (Elden-Ring-Spielstand); French
+        # elides before it (d'Elden Ring)
+        for old, new in (
+            ("d'Elden Ring", f"de {name}"),
+            ("d’Elden Ring", f"de {name}"),
+            ("Elden-Ring", name),
+            ("Elden Ring", name),
+        ):
+            text = text.replace(old, new)
+        return text
 
     def _show_recovery_failed(self, parent=None) -> None:
         QMessageBox.critical(
