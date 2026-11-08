@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 from typing import Optional, Union
 import json
@@ -1080,15 +1081,21 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 if not is_folder(item) and item.checkState(0) == Qt.CheckState.Checked
             ]
 
+        # what the window offers does not change while it is open
+        offered_files = len(self._file_paths(base)) + len(left_out)
+
         def refresh() -> None:
             if updating[0]:
                 return
             files = chosen_files()
             targets = [path.casefold() for path, _source in files]
-            repeated = sorted({path for path in targets if targets.count(path) > 1})
+            target_counts = Counter(targets)
+            repeated = sorted(path for path, count in target_counts.items() if count > 1)
             summary = self._classify_layout_paths([path for path, _source in files], True)
-            names = [path.rsplit("/", 1)[-1] for path in targets if path.endswith(".dll")]
-            twice = sorted({name for name in names if names.count(name) > 1})
+            name_counts = Counter(
+                path.rsplit("/", 1)[-1] for path in targets if path.endswith(".dll")
+            )
+            twice = sorted(name for name, count in name_counts.items() if count > 1)
             lines = []
             if any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets):
                 lines.append(
@@ -1115,9 +1122,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             notice.setVisible(bool(lines))
             total = len(files)
             status.setText(
-                self.tr("{0} of {1} files will be installed.").format(
-                    total, len(self._file_paths(base)) + len(left_out)
-                )
+                self.tr("{0} of {1} files will be installed.").format(total, offered_files)
             )
             install_button.setEnabled(
                 total > 0
@@ -1277,10 +1282,27 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             menu.exec(tree.viewport().mapToGlobal(position))
 
         tree.customContextMenuRequested.connect(show_menu)
-        tree.itemChanged.connect(lambda _item, _column: refresh())
+        # one look for a burst of changes: ticking a folder changes each file in
+        # it, and building or resetting the tree inserts each one
+        refresh_queued = [False]
+
+        def queued_refresh() -> None:
+            refresh_queued[0] = False
+            try:
+                refresh()
+            except RuntimeError:
+                # the window closed before the queued look ran
+                pass
+
+        def queue_refresh(*_args) -> None:
+            if not refresh_queued[0]:
+                refresh_queued[0] = True
+                QTimer.singleShot(0, queued_refresh)
+
+        tree.itemChanged.connect(queue_refresh)
         # a drop moves items without any item changing
-        tree.model().rowsInserted.connect(lambda *_args: QTimer.singleShot(0, refresh))
-        tree.model().rowsRemoved.connect(lambda *_args: QTimer.singleShot(0, refresh))
+        tree.model().rowsInserted.connect(queue_refresh)
+        tree.model().rowsRemoved.connect(queue_refresh)
 
         populate()
         screen = (parent.screen() if parent is not None else None) or (
