@@ -58,11 +58,12 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
   if (purpose == Purpose::Copy || purpose == Purpose::Rename) {
     ui->profileSettingsCard->hide();
     ui->defaultSettingsBox->setChecked(false);
-    ui->profileNameLabel->setText(tr("Profile name"));
+    ui->profileNameLabel->setText(purpose == Purpose::Copy ? tr("Name of the copy")
+                                                           : tr("Profile name"));
     ui->nameEdit->setText(purpose == Purpose::Rename ? initialName : QString());
     ui->nameEdit->setPlaceholderText(tr("For example: Challenge Run or Mod Test"));
     ui->profilePageTitle->setText(
-        purpose == Purpose::Copy ? tr("Name the copy")
+        purpose == Purpose::Copy ? tr("Duplicate profile")
                                  : tr("Set a new profile name"));
     ui->profilePageSubtitle->setText(
         purpose == Purpose::Copy
@@ -83,7 +84,7 @@ ProfileInputDialog::ProfileInputDialog(QWidget* parent, Purpose purpose,
       acceptButton->setText(tr("Create"));
       break;
     case Purpose::Copy:
-      acceptButton->setText(tr("Copy"));
+      acceptButton->setText(tr("Duplicate"));
       break;
     case Purpose::Rename:
       acceptButton->setText(tr("Rename"));

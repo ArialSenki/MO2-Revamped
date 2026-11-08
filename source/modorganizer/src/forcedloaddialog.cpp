@@ -190,7 +190,7 @@ void ForcedLoadDialog::buildFluentLayout()
 
   m_list = new QListWidget(listCard);
   m_list->setObjectName(QStringLiteral("forcedLoadList"));
-  m_list->setItemDelegate(new FluentPanels::RowDelegate(m_list, 56, 24));
+  m_list->setItemDelegate(new FluentPanels::RowDelegate(m_list, 56, 20));
   m_list->setFrameShape(QFrame::NoFrame);
   m_list->setMouseTracking(true);
   m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -394,7 +394,7 @@ void ForcedLoadDialog::buildFluentLayout()
              "Organizer load that DLL into the named program each time it starts from "
              "this entry.\n\nMost mods do not need it: script extenders and DLL "
              "loaders already load their plugins."));
-      auto* ok = dlg.addButton(tr("OK"), true);
+      auto* ok = dlg.addButton(tr("Close"), true);
       connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
       dlg.resize(520, dlg.sizeHint().height());
       dlg.exec();
@@ -486,6 +486,7 @@ void ForcedLoadDialog::refreshFluent()
   m_enabled->setChecked(rule->getEnabled());
   if (m_library->text() != rule->getLibraryPath()) {
     m_library->setText(rule->getLibraryPath());
+    m_library->setCursorPosition(0);
   }
   if (m_process->text() != rule->getProcess()) {
     m_process->setText(rule->getProcess());

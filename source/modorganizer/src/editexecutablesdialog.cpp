@@ -1209,7 +1209,7 @@ void EditExecutablesDialog::buildFluentLayout()
   connect(help, &QToolButton::clicked, this, &EditExecutablesDialog::showFluentHelp);
 
   // the toolbar's name for it, as Profiles shows its own
-  setWindowTitle(tr("Executables"));
+  setWindowTitle(tr("Programs"));
   setMinimumSize(900, 600);
   resize(std::max(width(), 1000), std::max(height(), 700));
 
@@ -1351,7 +1351,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
   addSwitchRow(rows, 0xE7FC, tr("Steam app ID"),
                tr("Starts the program as another Steam app, for tools that need it"),
                ui->overwriteSteamAppID, ui->steamAppID);
-  ui->mods->setMinimumWidth(180);
+  ui->mods->setFixedWidth(380 - 14 - 40);
   addSwitchRow(rows, 0xE74E, tr("Save new files to a mod"),
                tr("New files go here instead of Overwrite"),
                ui->createFilesInMod, ui->mods);
@@ -1537,7 +1537,7 @@ void EditExecutablesDialog::showFluentHelp()
          "started from here see the virtual game folder, so they find the mods of "
          "the profile in use.\n\nThe programs that are not hidden appear in the "
          "main window's Program list, next to Run."));
-  auto* ok = dlg.addButton(tr("OK"), true);
+  auto* ok = dlg.addButton(tr("Close"), true);
   connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
   dlg.resize(520, dlg.sizeHint().height());
   dlg.exec();
