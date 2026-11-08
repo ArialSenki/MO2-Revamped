@@ -2088,8 +2088,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.94"
-    NativeBridgeVersion = "0.5.0-alpha.62"
+    Version = "0.5.0-alpha.95"
+    NativeBridgeVersion = "0.5.0-alpha.63"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
