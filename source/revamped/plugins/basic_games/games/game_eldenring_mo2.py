@@ -3456,7 +3456,7 @@ class EldenRingMo2Game(BasicGame):
 
     def _show_recovery_failed(self, parent=None) -> None:
         QMessageBox.critical(
-            parent,
+            parent or self._message_parent(),
             self._game_text(_tr("Elden Ring save recovery needed")),
             self._game_text(_tr("MO2 found a previous save-isolation session that it could not "
             "restore automatically. The original saves remain in the "
@@ -3469,7 +3469,7 @@ class EldenRingMo2Game(BasicGame):
             launcher = self._open_launcher()
             if launcher and self._elden_ring_process_state() is False:
                 QMessageBox.warning(
-                    None,
+                    self._message_parent(),
                     _tr("Steam saves still hidden"),
                     _tr("The Steam save folders an earlier launch hid can't be put "
                         "back yet: {0} is still open. Close it and try again. The game "
@@ -3477,7 +3477,7 @@ class EldenRingMo2Game(BasicGame):
                 )
                 return
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 _tr("Steam saves still hidden"),
                 _tr("The Steam save folders an earlier launch hid can't be put "
                 "back yet: the game or one of its launchers is still running, "
@@ -3486,7 +3486,7 @@ class EldenRingMo2Game(BasicGame):
             )
             return
         QMessageBox.critical(
-            None,
+            self._message_parent(),
             self._game_text(_tr("Elden Ring save recovery needed")),
             _tr("MO2 could not restore an earlier global save folder. "
             "The game was not started. Restore the files from the "
@@ -3496,6 +3496,7 @@ class EldenRingMo2Game(BasicGame):
     def _report_displaced_saves(self, parent=None) -> None:
         """Tells the user about save folders with newer saves that a restore
         had to move into the recovery folder, and what a swap's return did."""
+        parent = parent or self._message_parent()
         if self._displaced_newer_saves:
             folders = "\n".join(str(folder) for folder in self._displaced_newer_saves)
             self._displaced_newer_saves = []
@@ -3931,7 +3932,15 @@ class EldenRingMo2Game(BasicGame):
 
     def _message_parent(self):
         """MO2's main window, so the plugin's messages open centred on it."""
-        return getattr(self, "_main_window", None) or QApplication.activeWindow()
+        window = getattr(self, "_main_window", None)
+        if window is not None:
+            try:
+                # a window Qt has already deleted can't be a parent
+                window.objectName()
+                return window
+            except RuntimeError:
+                self._main_window = None
+        return QApplication.activeWindow()
 
     def _check_profile_launch(
         self, app_path: str, _working_directory, _args: str
@@ -3973,7 +3982,7 @@ class EldenRingMo2Game(BasicGame):
                 if state is False and not launcher:
                     # nothing to close: only the wait for the game to appear
                     QMessageBox.information(
-                        None,
+                        self._message_parent(),
                         _tr("Steam saves still hidden"),
                         _tr("MO2 is still waiting for the last launch to start its game. "
                             "If it doesn't start, MO2 puts the saves back within a minute "
@@ -4006,7 +4015,7 @@ class EldenRingMo2Game(BasicGame):
         foreign_sessions = self._foreign_pending_sessions()
         if foreign_sessions:
             QMessageBox.critical(
-                None,
+                self._message_parent(),
                 self._game_text(_tr("Elden Ring save recovery needed")),
                 self._game_text(_tr("Another MO2 Revamped installation has just hidden the Steam "
                 "saves for a launch of its own. Wait until that game closes, then "
@@ -4047,7 +4056,7 @@ class EldenRingMo2Game(BasicGame):
         save_mode = self.LocalSavegamesClass.mode_for_profile(profile)
         if not self._local_savegames_feature.profile_route_is_current(profile):
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 self._game_text(_tr("Reload Elden Ring save routing")),
                 self._game_text(_tr("The save mode, named save profile, or MO2 profile-specific-save setting changed "
                 "after MO2 loaded this profile. The game was not started because "
@@ -4064,7 +4073,7 @@ class EldenRingMo2Game(BasicGame):
             Path(profile.absolutePath()), save_mode
         ):
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 self._game_text(_tr("Named Elden Ring save profile is missing")),
                 self._game_text(_tr("The selected named save profile could not be found or its metadata "
                 "is invalid. The game was not started. Open Tools > "
@@ -4081,7 +4090,7 @@ class EldenRingMo2Game(BasicGame):
             self.LocalSavegamesClass.InstanceShared,
         } and not profile_saves_enabled:
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 self._game_text(_tr("Elden Ring save isolation is not active")),
                 self._game_text(_tr("This profile is set to use isolated Elden Ring saves, but "
                 "MO2's 'Use profile-specific Save Games' option is still off "
@@ -4099,7 +4108,7 @@ class EldenRingMo2Game(BasicGame):
             and profile_saves_enabled
         ):
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 self._game_text(_tr("Elden Ring save mode does not match MO2")),
                 _tr("This profile is set to use the global Steam save, but MO2's "
                 "'Use profile-specific Save Games' option is still on in this "
@@ -4140,7 +4149,7 @@ class EldenRingMo2Game(BasicGame):
             active_save_dir
         ) == normalize(game_save_dir):
             QMessageBox.critical(
-                None,
+                self._message_parent(),
                 self._game_text(_tr("Elden Ring save path conflict")),
                 self._game_text(_tr("The selected isolated save folder resolves to the same path "
                 "as the global Elden Ring save folder. The game was not started "
@@ -4185,7 +4194,7 @@ class EldenRingMo2Game(BasicGame):
                 swap_route = self._reforged_online_route(active_save_dir)
             except OSError as error:
                 QMessageBox.critical(
-                    None,
+                    self._message_parent(),
                     self._game_text(_tr("Could not prepare the online saves")),
                     self._game_text(_tr("MO2 could not set up Reforged's online save folder, so the "
                     "game was not started. Your saves were not changed.\n\n{0}")).format(error),
@@ -4214,7 +4223,7 @@ class EldenRingMo2Game(BasicGame):
             # the save hiding below checks them once more
             if self._elden_ring_process_state() is not False:
                 QMessageBox.warning(
-                    None,
+                    self._message_parent(),
                     self._game_text(_tr("Could not safely isolate Elden Ring saves")),
                     self._game_text(_tr("MO2 could not confirm that Elden Ring is closed. Close any "
                     "running Elden Ring process and try again. Existing global "
@@ -4231,7 +4240,7 @@ class EldenRingMo2Game(BasicGame):
             except OSError as error:
                 qCritical(f"Elden Ring MO2: save isolation could not begin: {error}")
                 QMessageBox.critical(
-                    None,
+                    self._message_parent(),
                     self._game_text(_tr("Elden Ring saves could not be isolated")),
                     _tr("MO2 could not safely separate the existing Steam saves. "
                     "The game was not started. The original files remain in the "
@@ -4315,7 +4324,7 @@ class EldenRingMo2Game(BasicGame):
                         f"and its saves need recovery: {error}"
                     )
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 _tr("Could not start the launcher"),
                 _tr("MO2 could not start {0} outside its virtual file system. "
                 "The game was not started.").format(Path(app_path).name),
@@ -4348,7 +4357,7 @@ class EldenRingMo2Game(BasicGame):
                 )
                 return True, None
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 _tr("Revamped native profile could not be prepared"),
                 _tr("{0}\n\nThe game was not started.").format(message),
             )
@@ -4369,7 +4378,7 @@ class EldenRingMo2Game(BasicGame):
                 )
                 return True, None
             QMessageBox.warning(
-                None,
+                self._message_parent(),
                 _tr("Native DLL loading is disabled"),
                 self._game_text(_tr("This MO2 profile declares native DLLs in its Revamped native "
                 "profile, but "
@@ -4496,7 +4505,7 @@ class EldenRingMo2Game(BasicGame):
         QTimer.singleShot(
             0,
             lambda: QMessageBox.warning(
-                None,
+                self._message_parent(),
                 _tr("Mods may not have loaded"),
                 self._game_text(_tr("Elden Ring started, but MO2 could not connect to its "
                 "file loader, so the game files of your mods were not used (their DLLs "
@@ -4555,7 +4564,7 @@ class EldenRingMo2Game(BasicGame):
         self._early_exit_warning_shown = True
         qWarning("Elden Ring MO2: the game closed right after starting.")
         QMessageBox.warning(
-            self._main_window,
+            self._message_parent(),
             self._game_text(_tr("Elden Ring closed right after starting")),
             _tr("Check that Steam is open on the account that owns the game, and that "
             "the game starts from Steam. If it does, turn off your mods and add them "
@@ -4660,7 +4669,7 @@ class EldenRingMo2Game(BasicGame):
                     self._report_displaced_saves()
                 elif not restored_cleanly:
                     QMessageBox.warning(
-                        None,
+                        self._message_parent(),
                         self._game_text(_tr("Elden Ring save recovery folder retained")),
                         _tr("The original Steam saves were restored. Additional "
                         "save output created outside the selected MO2 route was "
@@ -4669,7 +4678,7 @@ class EldenRingMo2Game(BasicGame):
             except (OSError, RuntimeError, ValueError) as error:
                 qCritical(f"Elden Ring MO2: global save restoration failed: {error}")
                 QMessageBox.critical(
-                    None,
+                    self._message_parent(),
                     self._game_text(_tr("Elden Ring save recovery needed")),
                     self._game_text(_tr("MO2 could not restore the original Steam saves automatically. "
                     "The files remain in the MO2 Revamped recovery folder. Do not "
@@ -4714,7 +4723,7 @@ class EldenRingMo2Game(BasicGame):
             return
         self._launcher_notice_session = session_directory
         # not modal, and it doesn't take the focus: the watch goes on behind it
-        box = QMessageBox(self._main_window)
+        box = QMessageBox(self._message_parent())
         box.setWindowModality(Qt.WindowModality.NonModal)
         box.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         box.setIcon(QMessageBox.Icon.Information)
@@ -5996,7 +6005,7 @@ class EldenRingMo2Game(BasicGame):
                 return True
         except (AttributeError, RuntimeError):
             return True
-        box = QMessageBox()
+        box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Question)
         box.setWindowTitle("ELDEN RING Reforged")
         box.setText(_tr("Reforged is off in this profile"))
@@ -6324,7 +6333,7 @@ class EldenRingMo2Game(BasicGame):
                 return True
         except (AttributeError, RuntimeError):
             pass
-        box = QMessageBox(QApplication.activeWindow())
+        box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(_tr("Mods may not load"))
         box.setText(self._game_text(_tr("MO2 doesn't recognize this version of Elden Ring")))
@@ -6370,7 +6379,7 @@ class EldenRingMo2Game(BasicGame):
         except (AttributeError, RuntimeError):
             pass
         qInfo(f"Elden Ring MO2: several active mods have regulation.bin: {', '.join(mods)}.")
-        box = QMessageBox(QApplication.activeWindow())
+        box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle("regulation.bin")
         box.setText(_tr("Several active mods bring their own regulation.bin"))
@@ -6438,7 +6447,7 @@ class EldenRingMo2Game(BasicGame):
                 return True
         except (AttributeError, RuntimeError):
             pass
-        box = QMessageBox(QApplication.activeWindow())
+        box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(_tr("Steam Cloud"))
         box.setText(_tr("This program can send this profile's save to Steam Cloud"))
@@ -6489,7 +6498,7 @@ class EldenRingMo2Game(BasicGame):
                 return True
         except (AttributeError, RuntimeError):
             pass
-        box = QMessageBox(QApplication.activeWindow())
+        box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(_tr("Saves may mix"))
         box.setText(_tr("MO2 can't give ELDEN RING Reforged its own save file in this version of the game"))
@@ -6534,7 +6543,7 @@ class EldenRingMo2Game(BasicGame):
         if password:
             return True
         qWarning(f"Elden Ring MO2: Seamless Co-op has no session password in '{settings}'; launch stopped.")
-        box = QMessageBox(QApplication.activeWindow())
+        box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(_tr("Seamless Co-op"))
         box.setText(_tr("Seamless Co-op needs a session password"))
