@@ -1295,7 +1295,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
   m_FilterOptionsDialog->setMinimumSize(700, 560);
   m_FilterOptionsDialog->resize(780, 740);
-  m_FilterOptionsDialog->setSizeGripEnabled(true);
+  m_FilterOptionsDialog->setSizeGripEnabled(false);
 
   auto* filterDialogLayout = new QVBoxLayout(m_FilterOptionsDialog);
   filterDialogLayout->setContentsMargins(16, 16, 16, 14);

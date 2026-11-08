@@ -242,7 +242,7 @@ void LootDialog::createUI()
   }
 
   resize(760, 560);
-  setSizeGripEnabled(true);
+  setSizeGripEnabled(false);
 }
 
 void LootDialog::closeEvent(QCloseEvent* e)

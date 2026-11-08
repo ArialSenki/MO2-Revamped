@@ -136,7 +136,8 @@ CategoriesDialog::CategoriesDialog(QWidget* parent)
   ui->contentLayout->setStretch(1, 2);
   setMinimumSize(960, 600);
   resize(1080, 700);
-  setSizeGripEnabled(true);
+  // the window's border resizes it; the grip left a dark notch on Cancel
+  setSizeGripEnabled(false);
   ui->categoriesTable->setMinimumWidth(520);
   ui->categoriesTable->setAlternatingRowColors(true);
   ui->categoriesTable->setShowGrid(false);
@@ -1186,7 +1187,7 @@ QWidget* CategoriesDialog::createFluentList()
   m_fluentTree->setObjectName(QStringLiteral("categoryTree"));
   m_fluentTree->setHeaderHidden(true);
   m_fluentTree->setColumnCount(1);
-  m_fluentTree->setItemDelegate(new FluentPanels::RowDelegate(m_fluentTree, 48, 0));
+  m_fluentTree->setItemDelegate(new FluentPanels::RowDelegate(m_fluentTree, 44, 0));
   m_fluentTree->setFrameShape(QFrame::NoFrame);
   m_fluentTree->setMouseTracking(true);
   m_fluentTree->setIndentation(18);
@@ -1355,6 +1356,8 @@ QWidget* CategoriesDialog::createFluentDetails()
   nexusHeading->setContentsMargins(18, 16, 18, 8);
   rows->addWidget(nexusHeading);
   m_fluentMappings = new QWidget(m_fluentDetailRows);
+  // the rows' own name: without it the theme paints the window's color here
+  m_fluentMappings->setObjectName(QStringLiteral("instanceDetailRows"));
   auto* mappingRows = new QVBoxLayout(m_fluentMappings);
   mappingRows->setContentsMargins(0, 0, 0, 0);
   mappingRows->setSpacing(0);

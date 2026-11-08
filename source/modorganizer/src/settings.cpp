@@ -1298,7 +1298,7 @@ void ColorSettings::removePreviousSeparatorColor()
 
 bool ColorSettings::colorSeparatorScrollbar() const
 {
-  return get<bool>(m_Settings, "Settings", "colorSeparatorScrollbars", true);
+  return get<bool>(m_Settings, "Settings", "colorSeparatorScrollbars", false);
 }
 
 void ColorSettings::setColorSeparatorScrollbar(bool b)

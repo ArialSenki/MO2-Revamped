@@ -106,6 +106,9 @@ DiagnosticsSettingsTab::DiagnosticsSettingsTab(Settings& s, SettingsDialog& d)
                        QString::fromStdWString(OrganizerCore::getGlobalCoreDumpPath()))
                        .toString())
           .replace("DUMPS_DIR", QString::fromStdWString(AppConfig::dumpsDir())));
+  // the two lines of links have room between them
+  ui->diagnosticsExplainedLabel->setText(QStringLiteral("<p style=\"line-height:145%\">%1</p>")
+                                             .arg(ui->diagnosticsExplainedLabel->text()));
 }
 
 void DiagnosticsSettingsTab::setLogLevel()

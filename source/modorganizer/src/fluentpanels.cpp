@@ -121,7 +121,8 @@ void RowDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
   const QRectF nameRect =
       caption.isEmpty() ? text
                         : QRectF(text.left(), text.top(), text.width(), text.height() / 2);
-  painter->drawText(nameRect, Qt::AlignLeft | Qt::AlignVCenter,
+  // not clipped to its half of the row: letters like g and y reach below it
+  painter->drawText(nameRect, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextDontClip,
                     nameMetrics.elidedText(index.data().toString(), Qt::ElideRight,
                                            static_cast<int>(text.width())));
 
@@ -131,7 +132,7 @@ void RowDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
     painter->setFont(captionFont);
     painter->setPen(mutedInk(option));
     painter->drawText(QRectF(text.left(), text.center().y(), text.width(), text.height() / 2),
-                      Qt::AlignLeft | Qt::AlignVCenter,
+                      Qt::AlignLeft | Qt::AlignVCenter | Qt::TextDontClip,
                       QFontMetrics(captionFont).elidedText(caption, Qt::ElideRight,
                                                      static_cast<int>(text.width())));
   }

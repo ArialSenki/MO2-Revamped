@@ -126,7 +126,8 @@ PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
 
     ui->label_23->setObjectName(QStringLiteral("pathsWritableHint"));
     ui->label_23->setText(QObject::tr("All directories must be writable."));
-    ui->label_23->setContentsMargins(4, 0, 4, 0);
+    // below the cards, in line with their text
+    ui->label_23->setContentsMargins(24, 0, 4, 0);
 
     pageLayout->addWidget(storageGroup);
     pageLayout->addWidget(gameGroup);

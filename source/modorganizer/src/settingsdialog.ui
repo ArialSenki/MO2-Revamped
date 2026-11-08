@@ -812,7 +812,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>10</height>
+           <height>0</height>
           </size>
          </property>
         </spacer>

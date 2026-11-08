@@ -745,6 +745,7 @@ constexpr int HeaderSpacing = 6;
 constexpr int CardGap       = 12;
 constexpr int CardMargin    = 9;
 constexpr int CardSpacing   = 6;
+constexpr int RowInset      = 4;
 
 bool layoutHolds(QLayout* layout, const QWidget* w)
 {
@@ -917,6 +918,27 @@ void normalizePage(QWidget* page)
     group->layout()->setContentsMargins(CardMargin, CardMargin, CardMargin, CardMargin);
     if (qobject_cast<QBoxLayout*>(group->layout()) != nullptr) {
       group->layout()->setSpacing(CardSpacing);
+    }
+  }
+
+  // headings and notes start where the rows' titles do: a row keeps a small
+  // inset for its hover
+  for (QWidget* card : page->findChildren<QWidget*>()) {
+    if (asCard(card) == nullptr) {
+      continue;
+    }
+    for (QLabel* label : card->findChildren<QLabel*>()) {
+      bool inRow = false;
+      for (QWidget* w = label->parentWidget(); w != nullptr && w != card;
+           w = w->parentWidget()) {
+        inRow = inRow || w->objectName() == QLatin1String("fluentSettingRow");
+      }
+      if (inRow || label->objectName().endsWith(QLatin1String("Icon"))) {
+        continue;
+      }
+      QMargins margins = label->contentsMargins();
+      margins.setLeft(std::max(margins.left(), RowInset));
+      label->setContentsMargins(margins);
     }
   }
 }

@@ -153,6 +153,22 @@ public:
     paintSwitch(painter, opt, index);
   }
 
+  void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option,
+                            const QModelIndex& index) const override
+  {
+    QStyledItemDelegate::updateEditorGeometry(editor, option, index);
+
+    // centered on the tall row, its text where the name's text was (the
+    // editor adds its own padding), and a gap before the column's end
+    const int height = std::min(option.rect.height() - 8, 26);
+    QRect rect       = editor->geometry();
+    rect.setHeight(height);
+    rect.moveTop(option.rect.top() + (option.rect.height() - height) / 2);
+    rect.setLeft(rect.left() - 6);
+    rect.setRight(std::min(rect.right(), option.rect.right() - 8));
+    editor->setGeometry(rect);
+  }
+
   // a refresh renumbers the mods: the states painted before belong to
   // other mods now, which would animate as if toggled
   void forgetSwitchStates()

@@ -5895,3 +5895,25 @@ QDialog#SelectionDialog QCommandLinkButton:hover {
 QDialog#SelectionDialog QCommandLinkButton:pressed {
     background-color: #DFE1E4;
 }
+
+/* The mod list's rows are tall: its rename field is a normal field. */
+QTreeView#modList QLineEdit {
+    min-height: 20px;
+    max-height: 26px;
+    padding: 0px 6px;
+    border-radius: 4px;
+}
+/* The Nexus page's cards sit as far apart as the other pages' cards. */
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusAccountCard,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusUsageCard,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusConnectionCard,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusOptionsCard,
+QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusServersCard {
+    margin-top: 4px;
+}
+/* The list paints its own selection, row by row; only the arrow gap would
+   show this one. */
+QTreeWidget#categoryTree::item:selected,
+QTreeWidget#categoryTree::item:selected:!active {
+    background-color: transparent;
+}

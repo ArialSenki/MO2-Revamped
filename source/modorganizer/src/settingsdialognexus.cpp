@@ -4,6 +4,7 @@
 #include "log.h"
 #include "messagedialog.h"
 
+#include <QFormLayout>
 #include <QMessageBox>
 #include "nexusinterface.h"
 #include "serverinfo.h"
@@ -417,6 +418,22 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
       QStringLiteral("nexusUsageTitle"),
       QStringLiteral(":/MO/gui/mainwindow/github-updates.svg"),
       QStringLiteral("nexusUsageIcon"), QStringLiteral("U"));
+  // the two lists of values: one column for the values, with room after the
+  // longest label
+  for (QWidget* group : {static_cast<QWidget*>(ui->nexusAccountGroup),
+                         static_cast<QWidget*>(ui->nexusUsageGroup)}) {
+    for (auto* form : group->findChildren<QFormLayout*>()) {
+      form->setHorizontalSpacing(20);
+      form->setVerticalSpacing(8);
+      for (int row = 0; row < form->rowCount(); ++row) {
+        if (QLayoutItem* item = form->itemAt(row, QFormLayout::LabelRole)) {
+          if (item->widget() != nullptr) {
+            item->widget()->setMinimumWidth(120);
+          }
+        }
+      }
+    }
+  }
   wrapNexusGroupInCard(
       ui->nexusConnectionGroup, QStringLiteral("nexusConnectionCard"),
       QStringLiteral("nexusConnectionTitle"),
