@@ -418,6 +418,12 @@ namespace Mo2RevampedSetup
             // what the earlier MO2 Revamped setup installed: those files stay
             // Revamped's own after this update
             InstallState earlierState = request.Mode == SetupMode.Update ? LoadState(target) : null;
+            // an update cut short (a power cut, the setup closed by force) left
+            // the folder mixing two versions, and its backup is the only copy
+            // of the version before: updating again would back up the mix and
+            // prune that copy, so Restore could only bring the mix back
+            if (IsUnfinishedUpdate(earlierState, target))
+                throw new InvalidOperationException(InstallerText.T("Una actualización anterior de esta carpeta no terminó y la carpeta mezcla dos versiones. Usa «Restaurar copia anterior» para volver a la versión que tenías y después actualiza de nuevo. No se modificó la carpeta."));
             Dictionary<string, InstallFileState> earlierFiles = new Dictionary<string, InstallFileState>(StringComparer.OrdinalIgnoreCase);
             if (earlierState != null && earlierState.Files != null)
                 foreach (InstallFileState earlier in earlierState.Files)
@@ -512,7 +518,7 @@ namespace Mo2RevampedSetup
             }
             if ((request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable) && request.InstanceKind == InstanceKind.Portable)
             {
-                states.Add(new InstallFileState { Path = "portable.txt", ExistedBefore = false, InstalledSha256 = HashBytes(new byte[0]), OriginalSha256 = null, IsPortableMarker = true });
+                states.Add(MarkerState(target, "portable.txt", request.ReinstallOverKeptData));
             }
             // MO2 reads it at its first start (an isolated copy has its own settings file below)
             bool leavesSetupLanguage = request.Mode == SetupMode.Fresh || request.Mode == SetupMode.Migrate;
@@ -523,14 +529,7 @@ namespace Mo2RevampedSetup
             }
             if (request.Mode == SetupMode.EldenRingPortable)
             {
-                states.Add(new InstallFileState
-                {
-                    Path = "eldenring-only.portable",
-                    ExistedBefore = false,
-                    InstalledSha256 = HashBytes(new byte[0]),
-                    OriginalSha256 = null,
-                    IsPortableMarker = true
-                });
+                states.Add(MarkerState(target, "eldenring-only.portable", request.ReinstallOverKeptData));
             }
 
             List<string> requestedShortcutPaths = GetShortcutPaths(request);
@@ -582,8 +581,20 @@ namespace Mo2RevampedSetup
             {
                 state.Status = "Installing";
                 SaveState(state);
+                // first what makes the folder a recognised installation (its
+                // markers, MO2-Revamped.install, ModOrganizer.exe): a setup cut
+                // short then leaves a folder Uninstall can clear by its record,
+                // not one no mode accepts
+                if ((request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable) && request.InstanceKind == InstanceKind.Portable ||
+                    request.Mode == SetupMode.Migrate && request.InstanceKind == InstanceKind.Portable)
+                {
+                    string marker = Path.Combine(target, "portable.txt");
+                    if (!File.Exists(marker)) File.WriteAllBytes(marker, new byte[0]);
+                }
+                if (request.Mode == SetupMode.EldenRingPortable && !File.Exists(Path.Combine(target, "eldenring-only.portable")))
+                    File.WriteAllBytes(Path.Combine(target, "eldenring-only.portable"), new byte[0]);
                 int index = 0;
-                foreach (PayloadFile file in manifest.Files)
+                foreach (PayloadFile file in manifest.Files.OrderBy(entry => InstallOrder(entry.Path)))
                 {
                     WriteZipEntry(payload.Entries[file.Path], SafeCombine(target, file.Path));
                     index++;
@@ -609,17 +620,10 @@ namespace Mo2RevampedSetup
                     Report(worker, 76 + (int)(17.0 * dataIndex / Math.Max(1, dataCopies.Count)), String.Format(InstallerText.T("Copiando datos seleccionados ({0} / {1})…"), dataIndex, dataCopies.Count));
                 }
 
-                if ((request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable) && request.InstanceKind == InstanceKind.Portable ||
-                    request.Mode == SetupMode.Migrate && request.InstanceKind == InstanceKind.Portable)
-                {
-                    string marker = Path.Combine(target, "portable.txt");
-                    File.WriteAllBytes(marker, new byte[0]);
-                }
                 if (leavesSetupLanguage)
                     File.WriteAllBytes(Path.Combine(target, "setup-language.txt"), setupLanguage);
                 if (request.Mode == SetupMode.EldenRingPortable)
                 {
-                    File.WriteAllBytes(Path.Combine(target, "eldenring-only.portable"), new byte[0]);
                     // A fresh isolated copy starts in the setup language; an existing choice is kept.
                     string settings = Path.Combine(target, "EldenRingOnly.ini");
                     if (!File.Exists(settings))
@@ -710,6 +714,53 @@ namespace Mo2RevampedSetup
             };
             }
             finally { payload.Dispose(); }
+        }
+
+        // the program's marker and executable go first (see Execute); the
+        // rest keeps the manifest's order
+        private static int InstallOrder(string path)
+        {
+            if (String.Equals(path, "MO2-Revamped.install", StringComparison.OrdinalIgnoreCase)) return 0;
+            if (String.Equals(path, "ModOrganizer.exe", StringComparison.OrdinalIgnoreCase)) return 1;
+            return 2;
+        }
+
+        // a portable marker; one a reinstall over kept data finds stays the
+        // data's, so undoing a failed reinstall leaves it in place
+        private static InstallFileState MarkerState(string target, string name, bool keptData)
+        {
+            string path = Path.Combine(target, name);
+            bool existed = keptData && File.Exists(path);
+            return new InstallFileState
+            {
+                Path = name,
+                ExistedBefore = existed,
+                InstalledSha256 = HashBytes(new byte[0]),
+                OriginalSha256 = existed ? HashFile(path) : null,
+                IsPortableMarker = true
+            };
+        }
+
+        // the record of an update, or of the restore of one, that stopped
+        // before its end, with the backup Restore needs still in place (a run
+        // that rolled back cleanly put the earlier record back; a restore that
+        // ends, with or without pending files, changes the status)
+        private static bool IsUnfinishedUpdate(InstallState state, string target)
+        {
+            if (state == null || state.Files == null || String.IsNullOrWhiteSpace(state.BackupDirectory)) return false;
+            if (!new string[] { "Preparing", "Installing", "RollingBack", "Failed", "Restoring" }.Contains(state.Status ?? "", StringComparer.OrdinalIgnoreCase))
+                return false;
+            if (!IsBackupPathForTarget(state.BackupDirectory, target) || !Directory.Exists(state.BackupDirectory)) return false;
+            foreach (InstallFileState file in state.Files)
+            {
+                if (!file.ExistedBefore || file.IsUserData) continue;
+                try
+                {
+                    if (File.Exists(SafeCombine(state.BackupDirectory, file.Path))) return true;
+                }
+                catch { }
+            }
+            return false;
         }
 
         public static InstallState LoadState(string target)
@@ -852,6 +903,13 @@ namespace Mo2RevampedSetup
                     ShortcutPaths = state.CreatedShortcutPaths
                 };
             }
+            if (restoreMode)
+            {
+                // a restore cut short leaves the folder mixing both versions:
+                // until it ends, an update must not take this backup's place
+                state.Status = "Restoring";
+                SaveState(state);
+            }
             List<string> notes = RestoreFiles(filesState, true, !removeAllContents,
                 removeAllContents, !restoreMode, worker, out deferredCleanup);
             if (!restoreMode && !removeAllContents)
@@ -895,8 +953,17 @@ namespace Mo2RevampedSetup
                 try
                 {
                     CleanupBackup(state.BackupDirectory, target);
-                    DeleteState(target);
-                    CleanupInstallerDataRoot();
+                    if (restoreMode)
+                    {
+                        // the version brought back is still installed: its record
+                        // lets a later uninstall or update find its files
+                        SaveState(RecordOfRestoredVersion(state));
+                    }
+                    else
+                    {
+                        DeleteState(target);
+                        CleanupInstallerDataRoot();
+                    }
                 }
                 catch (Exception cleanupError)
                 {
@@ -947,6 +1014,34 @@ namespace Mo2RevampedSetup
                     RevampedAppDataDirectory());
             if (deferredCleanup) details += Environment.NewLine + InstallerText.T("El desinstalador abierto se retirará al cerrar esta ventana; si Windows mantiene un bloqueo, se completará al reiniciar.");
             return new OperationResult { Success = notes.Count == 0, Message = message, Details = details, LaunchPath = null };
+        }
+
+        // after a clean restore: the earlier version's program files are the
+        // ones the update had found (and its backup brought back), so they are
+        // recorded as installed by MO2 Revamped with the content they have now
+        private static InstallState RecordOfRestoredVersion(InstallState update)
+        {
+            List<InstallFileState> files = new List<InstallFileState>();
+            foreach (InstallFileState file in update.Files)
+            {
+                // a file of unknown origin stays out, so no uninstall can delete it
+                if (!file.ExistedBefore || !file.OwnedByRevamped || file.IsUserData || file.IsPortableMarker || String.IsNullOrEmpty(file.OriginalSha256)) continue;
+                files.Add(new InstallFileState { Path = file.Path, ExistedBefore = false, InstalledSha256 = file.OriginalSha256, OwnedByRevamped = true });
+            }
+            List<string> shortcuts = new List<string>();
+            foreach (string shortcut in update.ShortcutPaths ?? new List<string>())
+                if (update.CreatedShortcutPaths == null || !update.CreatedShortcutPaths.Exists(created => PathsEqual(created, shortcut)))
+                    shortcuts.Add(shortcut);
+            return new InstallState
+            {
+                TargetDirectory = update.TargetDirectory,
+                BackupDirectory = "",
+                Status = "Completed",
+                Version = update.PreviousDisplayVersion ?? "",
+                InstalledAt = DateTime.Now.ToString("o"),
+                Files = files,
+                ShortcutPaths = shortcuts
+            };
         }
 
         private static OperationResult UninstallUnregisteredMo2(SetupRequest request, BackgroundWorker worker)
@@ -1230,7 +1325,8 @@ namespace Mo2RevampedSetup
                             if (!file.ExistedBefore || file.OwnedByRevamped ||
                                 !PathsEqual(SafeCombine(target, file.Path), runningExecutable)) continue;
                             string backup = SafeCombine(state.BackupDirectory, file.Path);
-                            if (File.Exists(backup)) restoreRunningUninstaller = backup;
+                            if (File.Exists(backup) && (String.IsNullOrEmpty(file.OriginalSha256) || HashEquals(HashFile(backup), file.OriginalSha256)))
+                                restoreRunningUninstaller = backup;
                             break;
                         }
                         catch { }
@@ -1259,6 +1355,11 @@ namespace Mo2RevampedSetup
                 catch { notes.Add(InstallerText.T("ruta ignorada: ") + file.Path); continue; }
                 try
                 {
+                    // the copy a cut-short run was writing (WriteZipEntry,
+                    // CopyFileAtomically): the setup's own, never the user's
+                    string unfinishedCopy = destination + ".mo2setup.tmp";
+                    try { if (File.Exists(unfinishedCopy)) File.Delete(unfinishedCopy); }
+                    catch (Exception leftoverError) { SetupDiagnostics.Error("Could not remove '" + unfinishedCopy + "'.", leftoverError); }
                     if (runningUninstallerInTarget && PathsEqual(runningExecutable, destination))
                         continue;
                     bool exists = File.Exists(destination);
@@ -1299,6 +1400,13 @@ namespace Mo2RevampedSetup
                         if (!File.Exists(backup))
                         {
                             notes.Add(file.Path + InstallerText.T(" (copia ausente)"));
+                            continue;
+                        }
+                        // the copy lives in the user's AppData: what goes back
+                        // is what the update saved, or nothing
+                        if (!String.IsNullOrEmpty(file.OriginalSha256) && !HashEquals(HashFile(backup), file.OriginalSha256))
+                        {
+                            notes.Add(file.Path + InstallerText.T(" (la copia no coincide con el original)"));
                             continue;
                         }
                         if (PathsEqual(Application.ExecutablePath, destination))
@@ -1619,11 +1727,48 @@ namespace Mo2RevampedSetup
             else File.Move(temp, destination);
         }
 
+        // the Elden Ring / Nightreign saves an instance keeps beside its
+        // profiles: the saves shared by its profiles, their backups and the
+        // backups of the Steam route ("Profiles and saves" takes them along),
+        // as (source folder, name in the new installation). The shared saves
+        // are found as the game plugins find them (instance_shared_directory):
+        // in the instance's base folder, or beside a customised profiles folder
+        // where earlier builds kept them, when only that one holds anything
+        private static List<KeyValuePair<string, string>> InstanceSaveFolders(string dataRoot)
+        {
+            string baseDirectory = ResolveBaseDirectory(dataRoot);
+            string profilesParent = Path.GetDirectoryName(
+                ResolveConfiguredDirectory(dataRoot, "profiles_directory", "profiles").TrimEnd(Path.DirectorySeparatorChar));
+            List<KeyValuePair<string, string>> folders = new List<KeyValuePair<string, string>>();
+            foreach (string game in new string[] { "Elden Ring", "Nightreign" })
+            {
+                string name = game + " Shared Saves";
+                string shared = Path.Combine(baseDirectory, name);
+                if (!String.IsNullOrEmpty(profilesParent))
+                {
+                    string legacy = Path.Combine(profilesParent, name);
+                    if (!PathsEqual(shared, legacy) && !HasEntries(shared) && HasEntries(legacy)) shared = legacy;
+                }
+                folders.Add(new KeyValuePair<string, string>(shared, name));
+                folders.Add(new KeyValuePair<string, string>(shared + " Backups", name + " Backups"));
+                folders.Add(new KeyValuePair<string, string>(Path.Combine(baseDirectory, game + " Global Save Backups"), game + " Global Save Backups"));
+            }
+            return folders;
+        }
+
+        private static bool HasEntries(string directory)
+        {
+            try { return Directory.Exists(directory) && Directory.EnumerateFileSystemEntries(directory).Any(); }
+            catch { return false; }
+        }
+
         private static List<CopyEntry> EnumerateMigrationFiles(SetupRequest request)
         {
             List<CopyEntry> files = new List<CopyEntry>();
             string root = Path.GetFullPath(request.SourceDataDirectory);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "profiles_directory", "profiles"), "profiles", request.CopyProfiles);
+            foreach (KeyValuePair<string, string> folder in InstanceSaveFolders(root))
+                AddSelectedTree(files, folder.Key, folder.Value, request.CopyProfiles);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "mod_directory", "mods"), "mods", request.CopyMods);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "download_directory", "downloads"), "downloads", request.CopyDownloads);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"), "overwrite", request.CopyOverwrite);
@@ -1632,6 +1777,9 @@ namespace Mo2RevampedSetup
                 string ini = Path.Combine(root, "ModOrganizer.ini");
                 if (File.Exists(ini))
                     files.Add(new CopyEntry { Data = MakePortableIni(ini), RelativePath = "ModOrganizer.ini" });
+                // the Elden Ring plugins' instance settings: programs started
+                // outside the VFS and whether Reforged online keeps its own save
+                AddSelectedFile(files, ResolveBaseDirectory(root), "eldenring_mo2_launch_methods.json");
             }
             if (request.CopyCategories)
             {
@@ -1649,6 +1797,7 @@ namespace Mo2RevampedSetup
             {
                 string root = Path.GetFullPath(request.SourceDataDirectory);
                 if (request.CopyProfiles && TreeHasFile(ResolveConfiguredDirectory(root, "profiles_directory", "profiles"))) return true;
+                if (request.CopyProfiles && InstanceSaveFolders(root).Any(folder => TreeHasFile(folder.Key))) return true;
                 if (request.CopyMods && TreeHasFile(ResolveConfiguredDirectory(root, "mod_directory", "mods"))) return true;
                 if (request.CopyDownloads && TreeHasFile(ResolveConfiguredDirectory(root, "download_directory", "downloads"))) return true;
                 if (request.CopyOverwrite && TreeHasFile(ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"))) return true;
@@ -1686,11 +1835,17 @@ namespace Mo2RevampedSetup
         private static string ResolveConfiguredDirectory(string dataRoot, string key, string defaultName)
         {
             string iniPath = Path.Combine(dataRoot, "ModOrganizer.ini");
-            string iniBase = ReadIniSetting(iniPath, "base_directory");
-            string baseDirectory = String.IsNullOrEmpty(iniBase) ? dataRoot : ResolveIniPath(iniBase, dataRoot, dataRoot);
+            string baseDirectory = ResolveBaseDirectory(dataRoot);
             string configured = ReadIniSetting(iniPath, key);
             if (String.IsNullOrEmpty(configured)) configured = "%BASE_DIR%/" + defaultName;
             return ResolveIniPath(configured, baseDirectory, dataRoot);
+        }
+
+        // the instance's base_directory (MO2's basePath()), the data folder when unset
+        private static string ResolveBaseDirectory(string dataRoot)
+        {
+            string iniBase = ReadIniSetting(Path.Combine(dataRoot, "ModOrganizer.ini"), "base_directory");
+            return String.IsNullOrEmpty(iniBase) ? dataRoot : ResolveIniPath(iniBase, dataRoot, dataRoot);
         }
 
         private static string ResolveIniPath(string value, string baseDirectory, string fallbackRoot)

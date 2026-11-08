@@ -4069,6 +4069,42 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>Aucune sauvegarde trouvée.</translation>
     </message>
     <message>
+      <source>Starting save not copied yet</source>
+      <translation>La sauvegarde de départ n'a pas encore été copiée</translation>
+    </message>
+
+    <message>
+      <source>{reason}
+
+MO2 tries again the next time this profile loads.</source>
+      <translation>{reason}
+
+MO2 réessaiera au prochain chargement de ce profil.</translation>
+    </message>
+
+    <message>
+      <source>Starting save not copied</source>
+      <translation>La sauvegarde de départ n'a pas été copiée</translation>
+    </message>
+
+    <message>
+      <source>The new instance was created, but the save you chose could not be copied into it.
+
+{error}</source>
+      <translation>La nouvelle instance a été créée, mais la sauvegarde choisie n'a pas pu y être copiée.
+
+{error}</translation>
+    </message>
+
+    <message>
+      <source>Other MO2 profiles of this instance that use it will have to choose another one before launching the game.</source>
+      <translation>Les autres profils MO2 de cette instance qui l'utilisent devront en choisir un autre avant de lancer le jeu.</translation>
+    </message>
+    <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Dossier de récupération (sauvegardes mises de côté par MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Certaines sauvegardes n'ont pas pu être copiées</translation>
     </message>

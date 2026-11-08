@@ -4153,6 +4153,42 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>Nessun salvataggio trovato.</translation>
     </message>
     <message>
+      <source>Starting save not copied yet</source>
+      <translation>Il salvataggio iniziale non è ancora stato copiato</translation>
+    </message>
+
+    <message>
+      <source>{reason}
+
+MO2 tries again the next time this profile loads.</source>
+      <translation>{reason}
+
+MO2 riproverà al prossimo caricamento di questo profilo.</translation>
+    </message>
+
+    <message>
+      <source>Starting save not copied</source>
+      <translation>Il salvataggio iniziale non è stato copiato</translation>
+    </message>
+
+    <message>
+      <source>The new instance was created, but the save you chose could not be copied into it.
+
+{error}</source>
+      <translation>La nuova istanza è stata creata, ma non è stato possibile copiarvi il salvataggio scelto.
+
+{error}</translation>
+    </message>
+
+    <message>
+      <source>Other MO2 profiles of this instance that use it will have to choose another one before launching the game.</source>
+      <translation>Gli altri profili MO2 di questa istanza che lo usano dovranno sceglierne un altro prima di avviare il gioco.</translation>
+    </message>
+    <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Cartella di recupero (salvataggi messi da parte da MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Alcuni salvataggi non sono stati copiati</translation>
     </message>

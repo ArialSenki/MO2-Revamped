@@ -4073,6 +4073,42 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>Keine Spielstände gefunden.</translation>
     </message>
     <message>
+      <source>Starting save not copied yet</source>
+      <translation>Der Startspielstand wurde noch nicht kopiert</translation>
+    </message>
+
+    <message>
+      <source>{reason}
+
+MO2 tries again the next time this profile loads.</source>
+      <translation>{reason}
+
+MO2 versucht es erneut, wenn dieses Profil das nächste Mal geladen wird.</translation>
+    </message>
+
+    <message>
+      <source>Starting save not copied</source>
+      <translation>Der Startspielstand wurde nicht kopiert</translation>
+    </message>
+
+    <message>
+      <source>The new instance was created, but the save you chose could not be copied into it.
+
+{error}</source>
+      <translation>Die neue Instanz wurde erstellt, aber der gewählte Spielstand konnte nicht hineinkopiert werden.
+
+{error}</translation>
+    </message>
+
+    <message>
+      <source>Other MO2 profiles of this instance that use it will have to choose another one before launching the game.</source>
+      <translation>Andere MO2-Profile dieser Instanz, die es verwenden, müssen vor dem Spielstart ein anderes auswählen.</translation>
+    </message>
+    <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Wiederherstellungsordner (von MO2 beiseitegelegte Spielstände)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Einige Spielstände konnten nicht kopiert werden</translation>
     </message>

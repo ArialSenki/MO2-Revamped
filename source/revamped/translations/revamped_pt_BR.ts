@@ -4065,6 +4065,42 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>Nenhum save encontrado.</translation>
     </message>
     <message>
+      <source>Starting save not copied yet</source>
+      <translation>O save inicial ainda não foi copiado</translation>
+    </message>
+
+    <message>
+      <source>{reason}
+
+MO2 tries again the next time this profile loads.</source>
+      <translation>{reason}
+
+O MO2 tentará de novo na próxima vez que carregar este perfil.</translation>
+    </message>
+
+    <message>
+      <source>Starting save not copied</source>
+      <translation>O save inicial não foi copiado</translation>
+    </message>
+
+    <message>
+      <source>The new instance was created, but the save you chose could not be copied into it.
+
+{error}</source>
+      <translation>A nova instância foi criada, mas não foi possível copiar para ela o save escolhido.
+
+{error}</translation>
+    </message>
+
+    <message>
+      <source>Other MO2 profiles of this instance that use it will have to choose another one before launching the game.</source>
+      <translation>Os outros perfis do MO2 desta instância que o usam terão de escolher outro antes de iniciar o jogo.</translation>
+    </message>
+    <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Pasta de recuperação (saves separados pelo MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Alguns saves não puderam ser copiados</translation>
     </message>

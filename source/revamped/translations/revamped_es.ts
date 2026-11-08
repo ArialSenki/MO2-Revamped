@@ -4105,6 +4105,42 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <translation>No se encontraron partidas.</translation>
     </message>
     <message>
+      <source>Starting save not copied yet</source>
+      <translation>La partida inicial aún no se ha copiado</translation>
+    </message>
+
+    <message>
+      <source>{reason}
+
+MO2 tries again the next time this profile loads.</source>
+      <translation>{reason}
+
+MO2 lo intentará de nuevo la próxima vez que cargue este perfil.</translation>
+    </message>
+
+    <message>
+      <source>Starting save not copied</source>
+      <translation>No se copió la partida inicial</translation>
+    </message>
+
+    <message>
+      <source>The new instance was created, but the save you chose could not be copied into it.
+
+{error}</source>
+      <translation>La instancia nueva se creó, pero no se pudo copiar en ella la partida que elegiste.
+
+{error}</translation>
+    </message>
+
+    <message>
+      <source>Other MO2 profiles of this instance that use it will have to choose another one before launching the game.</source>
+      <translation>Los demás perfiles de MO2 de esta instancia que lo usen tendrán que elegir otro antes de iniciar el juego.</translation>
+    </message>
+    <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Carpeta de recuperación (partidas apartadas por MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Algunas partidas no se pudieron copiar</translation>
     </message>

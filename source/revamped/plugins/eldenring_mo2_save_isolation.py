@@ -409,6 +409,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         self.__ui_event_filter = None
         self.__refreshing_dialogs = False
         self.__pending_error_reported = set()
+        self.__pending_wait_reported = set()
         self.__pending_applied_paths = set()
         self.__pending_cleanup_failed_paths = set()
 
@@ -900,9 +901,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         chosen = QFileDialog.getExistingDirectory(parent, _tr("Export all my saves"))
         if not chosen:
             return
-        sources = self._create_instance_save_sources(
-            self._known_save_suffixes() + (".bak",), include_online=True
-        )
+        suffixes = self._known_save_suffixes() + (".bak",)
+        sources = self._create_instance_save_sources(suffixes, include_online=True)
+        # what a restore found in the way of the Steam saves and kept for the
+        # user: it can be the newest progress, and it lives beside the Steam
+        # folder, which a reinstall of Windows erases
+        for folder in EldenRingMo2SaveDiagnose._set_aside_folders():
+            for save_path in self._list_transferable_saves(folder, suffixes):
+                relative = save_path.relative_to(folder).as_posix()
+                sources.append(
+                    (f"{_tr('Recovery folder (saves set aside by MO2)')} — {relative}", save_path, relative)
+                )
         if not sources:
             self._show_notice(parent, _tr("Export all my saves"), _tr("No saves found."), "info")
             return
@@ -911,14 +920,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         root = Path(chosen) / f"{_game()['save_dir']} saves {stamp}"
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         copied, failed = 0, []
-        # two routes can share a name once it is a folder's: never over each other
-        route_folders: dict[str, str] = {}
+        # two routes can share a name once it is a folder's (a save profile
+        # named like a route's label): each folder holds one route's saves
+        route_folders: dict[tuple[str, str], str] = {}
         used_folders: set[str] = set()
         try:
             for label, source, relative in sources:
                 # the label names the route, then the file inside it
                 route_label = label.rsplit(" — ", 1)[0]
-                route = route_folders.get(route_label)
+                parts = len(Path(relative).parts)
+                route_root = source.parents[parts - 1] if parts else source.parent
+                route_key = (route_label, self._normalized_path(route_root))
+                route = route_folders.get(route_key)
                 if route is None:
                     base = re.sub(r'[<>:"/\\|?*]+', "-", route_label).strip(" .")
                     route, number = base, 1
@@ -926,7 +939,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         number += 1
                         route = f"{base} ({number})"
                     used_folders.add(route.casefold())
-                    route_folders[route_label] = route
+                    route_folders[route_key] = route
                 destination = root / route / relative
                 try:
                     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -1321,12 +1334,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def _restore_backup(self, backup: Path, route_root: Path, replaced_root: Path) -> Path | None:
-        """Puts a backup's saves into the route as one step: the backup's files
-        are copied beside their destinations first, then the route's files of
-        the same save families move to replaced_root/<now> (also across
-        drives) and the copies take their place. If anything fails, the moved
-        files go back and the copies are removed. Returns the folder holding
-        the replaced files, or None when nothing was replaced."""
+        """Puts a backup's saves into the route: the backup's files are copied
+        beside their destinations, the route's files of the same save families
+        are copied to replaced_root/<now> (also across drives), and only then
+        each copy takes its place, so a route is never left without its save
+        if MO2 dies halfway. If anything fails, the route goes back as it was.
+        Returns the folder holding the replaced files, or None when nothing
+        was replaced."""
         backup_files = [file for file in backup.rglob("*") if file.is_file()]
         if not backup_files:
             raise OSError(_tr("The backup is empty."))
@@ -1352,8 +1366,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             suffix += 1
 
         staged: list[tuple[Path, Path]] = []  # (temporary copy, destination)
-        moved: list[tuple[Path, Path]] = []  # (original place, place in replaced)
+        saved: list[tuple[Path, Path]] = []  # (original place, copy in replaced)
         placed: list[Path] = []  # destinations that already hold a backup copy
+        removed: list[tuple[Path, Path]] = []  # originals the backup has no file for
         try:
             for file in backup_files:
                 destination = route_root / file.relative_to(backup)
@@ -1375,13 +1390,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     ):
                         target = replaced / account / current.name
                         target.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.move(str(current), str(target))
-                        moved.append((current, target))
+                        shutil.copy2(current, target)
+                        saved.append((current, target))
 
             for temporary, destination in staged:
                 os.replace(temporary, destination)
                 placed.append(destination)
             staged = []
+
+            # a file of a restored family the backup doesn't have (its .bak):
+            # it belongs to the save just replaced, and its copy is in replaced
+            placed_keys = {os.path.normcase(str(path)) for path in placed}
+            for original, target in saved:
+                if os.path.normcase(str(original)) not in placed_keys:
+                    original.unlink()
+                    removed.append((original, target))
         except OSError as error:
             rollback_problems = []
             for temporary, _destination in staged:
@@ -1389,19 +1412,24 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     temporary.unlink(missing_ok=True)
                 except OSError as cleanup_error:
                     rollback_problems.append(str(cleanup_error))
-            # copies that already took their place go, so the files set aside
-            # can come back: the route is never left half old, half restored
+            # the route is never left half old, half restored
+            originals = {
+                os.path.normcase(str(original)): target for original, target in saved
+            }
             for destination in placed:
                 try:
-                    destination.unlink(missing_ok=True)
+                    saved_copy = originals.get(os.path.normcase(str(destination)))
+                    if saved_copy is None:
+                        destination.unlink(missing_ok=True)
+                    else:
+                        shutil.copy2(saved_copy, destination)
                 except OSError as cleanup_error:
                     rollback_problems.append(str(cleanup_error))
-            for original, target in reversed(moved):
+            for original, target in removed:
                 try:
-                    if not original.exists():
-                        shutil.move(str(target), str(original))
-                except OSError as move_error:
-                    rollback_problems.append(str(move_error))
+                    shutil.copy2(target, original)
+                except OSError as copy_error:
+                    rollback_problems.append(str(copy_error))
             if rollback_problems:
                 raise OSError(
                     _tr("{error}\n\nThe route could not be put back as it was. The "
@@ -1409,8 +1437,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         error=error, path=replaced
                     )
                 ) from error
+            # every original is back in the route: this folder repeats them
+            shutil.rmtree(replaced, ignore_errors=True)
             raise
-        return replaced if moved else None
+        return replaced if saved else None
 
     def _display_restore_dialog(
         self, profile_directory: Path, parent=None, route: Path | None = None, backup: Path | None = None
@@ -1442,13 +1472,29 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         route_row.addWidget(QLabel(_tr("Save route:"), dialog))
         route_combo = QComboBox(dialog)
         for label, route_id, route_path in routes:
-            route_combo.addItem(label, (route_id, str(route_path)))
+            is_global = route_id == self.GlobalShared
+            route_combo.addItem(
+                label,
+                (route_id, str(route_path), str(self._auto_backup_root(route_path, base, is_global))),
+            )
             if route_id == current_route:
                 route_combo.setCurrentIndex(route_combo.count() - 1)
+            # Reforged's online play keeps its own save inside the route, and
+            # the game plugin backs it up apart, to "<route> Backups/online"
+            online_backups = route_path.parent / f"{route_path.name} Backups" / "online"
+            if not is_global and online_backups.is_dir():
+                route_combo.addItem(
+                    f"{label} — ELDEN RING Reforged (online)",
+                    (
+                        f"{route_id}:online",
+                        str(route_path / self._ReforgedOnlineSavesFolder),
+                        str(online_backups),
+                    ),
+                )
         # the route this profile uses or the one asked for, not always the standard one
         if route is None:
             route = self._active_save_directory_directory(
-                profile_directory, self._read_mode_directory(profile_directory)
+                profile_directory, self._effective_mode_directory(profile_directory)
             )
         for index in range(route_combo.count()):
             if route is not None and self._normalized_path(
@@ -1478,21 +1524,23 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         layout.addLayout(buttons)
 
         def selected_route() -> tuple[str, Path, Path]:
-            route_id, route_path = route_combo.currentData()
-            route_root = Path(route_path)
-            root = self._auto_backup_root(route_root, base, route_id == self.GlobalShared)
-            return route_id, route_root, root
+            route_id, route_path, backup_root = route_combo.currentData()
+            return route_id, Path(route_path), Path(backup_root)
 
         def refresh() -> None:
             backup_list.clear()
             _route_id, _route_root, root = selected_route()
             backups = []
-            if root.is_dir():
-                backups = sorted(
-                    (entry for entry in root.iterdir() if entry.is_dir() and not entry.name.startswith(".")),
-                    key=self._backup_age_key,
-                    reverse=True,
-                )
+            try:
+                if root.is_dir():
+                    backups = sorted(
+                        (entry for entry in root.iterdir() if entry.is_dir() and not entry.name.startswith(".")),
+                        key=self._backup_age_key,
+                        reverse=True,
+                    )
+            except OSError as error:
+                # this runs from a Qt signal: the list stays empty instead
+                qInfo(f"Elden Ring MO2 Save Isolation: could not list '{root}': {error}")
             for backup in backups:
                 try:
                     label = self._backup_label(backup)
@@ -1703,7 +1751,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         button_row.addWidget(close_button)
         layout.addLayout(button_row)
 
-        active_mode = self._read_mode_directory(profile_directory)
+        active_mode = self._effective_mode_directory(profile_directory)
         active_path = self._active_save_directory_directory(profile_directory, active_mode)
         source_index = 0
         for index in range(source_combo.count()):
@@ -1876,6 +1924,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
             temporary_path = None
             backup_path = None
+            bak_backup = None
+            destination_bak = destination_path.with_name(destination_path.name + ".bak")
+            source_bak = source_path_resolved.with_name(source_path_resolved.name + ".bak")
+            try:
+                bak_is_plain = not os.path.lexists(destination_bak) or (
+                    destination_bak.is_file() and not self._is_reparse_point(destination_bak)
+                )
+            except OSError:
+                bak_is_plain = False
             # replaced saves of the Steam route are kept inside the instance,
             # never beside the Steam folder
             instance_base = self._instance_base()
@@ -1906,6 +1963,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         )
                         suffix += 1
                     shutil.move(str(destination_path), str(backup_path))
+                # the old .bak belongs to the character being replaced: it
+                # leaves before the new save arrives, never beside it
+                if bak_is_plain and destination_bak.is_file():
+                    bak_backup = (
+                        backup_path.with_name(backup_path.name + ".bak")
+                        if backup_path is not None
+                        else transfer_backup_root
+                        / destination_relative_path.parent
+                        / f"{_game()['stem']}.{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}{destination_path.suffix}.bak"
+                    )
+                    bak_backup.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(destination_bak), str(bak_backup))
                 with tempfile.NamedTemporaryFile(
                     prefix=f".{destination_path.name}.",
                     suffix=".copying",
@@ -1925,12 +1994,26 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 ):
                     try:
                         destination_path.parent.mkdir(parents=True, exist_ok=True)
-                        os.replace(backup_path, destination_path)
+                        # the backups of the Steam route are in the instance,
+                        # often on another drive: os.replace can't cross it
+                        shutil.move(str(backup_path), str(destination_path))
                         backup_path = None
                     except OSError as restore_error:
                         recovery_note = (
                             _tr("\n\nThe previous destination is preserved at:\n"
                             "{path}\n\nRestore error: {error}").format(path=backup_path, error=restore_error)
+                        )
+                if (
+                    bak_backup is not None
+                    and bak_backup.exists()
+                    and not os.path.lexists(destination_bak)
+                ):
+                    try:
+                        shutil.move(str(bak_backup), str(destination_bak))
+                    except OSError as restore_error:
+                        recovery_note += (
+                            _tr("\n\nThe previous destination is preserved at:\n"
+                            "{path}\n\nRestore error: {error}").format(path=bak_backup, error=restore_error)
                         )
                 self._show_notice(
                     dialog,
@@ -1947,25 +2030,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     except OSError:
                         pass
 
-            # the destination's old .bak belongs to the replaced character: it
-            # goes to the backups, and the source's .bak comes along
+            # the source's .bak comes along
             bak_note = ""
             try:
-                destination_bak = destination_path.with_name(destination_path.name + ".bak")
-                source_bak = source_path_resolved.with_name(source_path_resolved.name + ".bak")
-                bak_is_plain = not os.path.lexists(destination_bak) or (
-                    destination_bak.is_file() and not self._is_reparse_point(destination_bak)
-                )
-                if bak_is_plain and destination_bak.is_file():
-                    bak_backup = (
-                        backup_path.with_name(backup_path.name + ".bak")
-                        if backup_path is not None
-                        else transfer_backup_root
-                        / destination_relative_path.parent
-                        / f"{_game()['stem']}.{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}{destination_path.suffix}.bak"
-                    )
-                    bak_backup.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.move(str(destination_bak), str(bak_backup))
                 if (
                     bak_is_plain
                     and source_bak.is_file()
@@ -2060,13 +2127,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         dialog.setProperty("_eldenRingSaveUiInjected", False)
 
     def _is_elden_ring_create_dialog(self, dialog) -> bool:
-        games_container = dialog.findChild(QWidget, "games")
-        if games_container is not None:
-            game_buttons = [
-                button
-                for button in games_container.findChildren(QCommandLinkButton)
-                if button.isCheckable() and button.isChecked()
-            ]
+        if dialog.findChild(QWidget, "games") is not None:
             return self._create_dialog_game_key(dialog) is not None
 
         # Older MO2 variants may not expose the game picker widget.
@@ -2847,6 +2908,26 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     pass
         return "copied"
 
+    def _discard_pending_mode(self, profile_directory: Path) -> None:
+        # the user chose a route by hand: a waiting wizard choice must not undo it
+        key = self._normalized_path(profile_directory)
+        try:
+            pending = self._read_pending_modes(profile_directory)
+            remaining = [
+                item for item in pending
+                if self._normalized_path(Path(item["profile_path"])) != key
+            ]
+            if len(remaining) != len(pending):
+                self._write_pending_modes(remaining, profile_directory)
+                qInfo("Elden Ring MO2 Save Isolation: dropped the waiting wizard choice for this profile.")
+        except (OSError, UnicodeError, ValueError) as error:
+            qInfo(f"Elden Ring MO2 Save Isolation: could not update pending choices: {error}")
+
+    def _notify_later(self, title: str, message: str) -> None:
+        # out of the dialog refresh this is called from: a message box runs
+        # its own event loop
+        QTimer.singleShot(0, lambda: self._show_notice(None, title, message, "warning"))
+
     def _apply_pending_mode_to_active_profile(self) -> None:
         profile = self.__organizer.profile()
         if profile is None:
@@ -2857,12 +2938,43 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         pending = self._read_pending_modes(profile_directory)
         remaining = []
         changed = False
+        save_not_copied = ""
         for item in pending:
             if self._normalized_path(Path(item["profile_path"])) != active_path:
                 remaining.append(item)
                 continue
             if active_path in self.__pending_applied_paths:
                 changed = True
+                continue
+            # a running game, or Steam saves still set aside by an unfinished
+            # launch, would give the wrong save or none: it waits for later
+            blocked = (
+                self._transfer_blocked_reason()
+                if item.get("save_source_path") and item.get("mode") != self.GlobalShared
+                else ""
+            )
+            if blocked:
+                remaining.append(item)
+                # the route is chosen now, or the first launch would play from
+                # another one; only the copy waits
+                try:
+                    self._save_mode_directory(
+                        profile_directory, item["mode"], save_formats=item.get("save_formats")
+                    )
+                except (OSError, UnicodeError, configparser.Error, ValueError) as error:
+                    qInfo(
+                        "Elden Ring MO2 Save Isolation: could not store the "
+                        f"pending save mode: {error}"
+                    )
+                if active_path not in self.__pending_wait_reported:
+                    self.__pending_wait_reported.add(active_path)
+                    qInfo(f"Elden Ring MO2 Save Isolation: the queued save waits: {blocked}")
+                    self._notify_later(
+                        _tr("Starting save not copied yet"),
+                        _tr("{reason}\n\nMO2 tries again the next time this profile loads.").format(
+                            reason=blocked
+                        ),
+                    )
                 continue
             try:
                 mode = item["mode"]
@@ -2909,6 +3021,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                                     "Elden Ring MO2 Save Isolation: the selected "
                                     f"save was not imported: {error}"
                                 )
+                                save_not_copied = str(error)
                         selected_save_profile_id = self._create_named_save_profile(
                             profile_directory,
                             mode,
@@ -2983,7 +3096,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                             "Elden Ring MO2 Save Isolation: the new instance "
                             f"was created, but its selected save was not copied: {error}"
                         )
+                        save_not_copied = str(error)
             except (OSError, UnicodeError, configparser.Error, ValueError) as error:
+                # nothing was applied: the item stays queued and is tried again
+                save_not_copied = ""
                 if active_path not in self.__pending_error_reported:
                     qInfo(
                         "Elden Ring MO2 Save Isolation: could not apply the "
@@ -2991,6 +3107,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     )
                     self.__pending_error_reported.add(active_path)
                 remaining.append(item)
+
+        if save_not_copied:
+            self._notify_later(
+                _tr("Starting save not copied"),
+                _tr("The new instance was created, but the save you chose could not be "
+                    "copied into it.\n\n{error}").format(error=save_not_copied),
+            )
 
         if changed or len(remaining) != len(pending):
             if active_path in self.__pending_cleanup_failed_paths:
@@ -3260,6 +3383,20 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 except (AttributeError, RuntimeError):
                     pass
         return mode
+
+    def _effective_mode_directory(self, profile_directory: Path) -> str:
+        """The route a profile really uses. For the active profile that
+        follows MO2's profile-specific saves when no mode is stored, as the
+        game plugin does; other profiles are known by their file alone."""
+        try:
+            profile = self.__organizer.profile()
+            if profile is not None and self._normalized_path(
+                Path(profile.absolutePath())
+            ) == self._normalized_path(profile_directory):
+                return self._read_mode(profile)
+        except (AttributeError, RuntimeError):
+            pass
+        return self._read_mode_directory(profile_directory)
 
     @classmethod
     def _read_save_config_directory(
@@ -4578,8 +4715,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if base is not None:
                 backup_root = self._auto_backup_root(route, base, mode_box.currentData() == self.GlobalShared)
                 try:
+                    # a copy still being made (or cut short) is a hidden
+                    # ".<name>.copying" folder: as in the backups window, not one
                     backups = sorted(
-                        (entry for entry in backup_root.iterdir() if entry.is_dir()),
+                        (
+                            entry
+                            for entry in backup_root.iterdir()
+                            if entry.is_dir() and not entry.name.startswith(".")
+                        ),
                         key=self._backup_age_key,
                         reverse=True,
                     )[:5]
@@ -4816,7 +4959,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 _tr("Delete this save profile?"),
                 _tr("{name} is moved, with its saves, to a 'deleted' folder beside the "
                 "save profiles; nothing is erased. This MO2 profile goes back to its "
-                "standard saves.").format(name=save_profile_combo.currentText()),
+                "standard saves.").format(name=save_profile_combo.currentText())
+                + (
+                    "\n\n" + _tr("Other MO2 profiles of this instance that use it will have "
+                                 "to choose another one before launching the game.")
+                    if mode == self.InstanceShared
+                    else ""
+                ),
                 _tr("Delete"),
                 _tr("Cancel"),
                 "warning",
@@ -4950,6 +5099,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 self._show_notice(dialog, _tr("Could not save route"), str(error), "warning")
                 restore_saved_selection()
                 return
+            self._discard_pending_mode(profile_directory)
             qInfo(
                 "Elden Ring MO2 Save Isolation: saved and verified mode "
                 f"'{mode}' for profile '{profile.name()}'; named save profile "
@@ -5023,7 +5173,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # while the game or a launcher runs, or Steam saves are still set
         # aside, a route change could put one route's saves in another's
         # place: it waits, and this window applies it once closed again
-        busy = running is not None and (
+        # (a process list that can't be read counts as busy, as for copies)
+        busy = running is None or (
             _game()["process"] in running or bool(running & _GAME_LAUNCHERS)
         )
         if busy or EldenRingMo2SaveDiagnose._pending_sessions():
@@ -5158,15 +5309,30 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
             if recovery is not None and recovery.is_dir():
                 for session in recovery.iterdir():
                     # hidden account folders; the record, its lock file and
-                    # output set aside are not
-                    if session.is_dir() and any(
-                        child.is_dir() and child.name != "unrouted-global"
-                        for child in session.iterdir()
+                    # output set aside are not. A launch outside the VFS whose
+                    # route saves are not back yet is pending with no folder at
+                    # all (the Steam folder was empty), as the game plugin and
+                    # the copy check count it
+                    if session.is_dir() and (
+                        any(
+                            child.is_dir() and child.name != "unrouted-global"
+                            for child in session.iterdir()
+                        )
+                        or EldenRingMo2SaveDiagnose._swap_not_returned(session)
                     ):
                         sessions.append(session)
         except OSError:
             pass
         return sessions
+
+    @staticmethod
+    def _swap_not_returned(session: Path) -> bool:
+        try:
+            manifest = json.loads((session / "session.json").read_text(encoding="utf-8"))
+            swap = manifest.get("swap")
+        except (OSError, UnicodeError, ValueError, AttributeError):
+            return False
+        return isinstance(swap, dict) and not swap.get("returned")
 
     @staticmethod
     def _set_aside_folders() -> list[Path]:
@@ -5193,7 +5359,9 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         except (AttributeError, RuntimeError):
             return None
         tool = EldenRingMo2SaveIsolation
-        mode = tool._read_mode_directory(directory)
+        # with the fallback the game plugin applies: no stored mode and
+        # profile-specific saves off plays from the Steam folder
+        mode = tool._read_mode(profile)
         return mode, tool._save_directory_for_selection(directory, mode, None)
 
     def _follow_managed_game(self) -> bool:

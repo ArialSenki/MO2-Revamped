@@ -248,6 +248,31 @@ namespace Mo2RevampedSetup
             catch (UnauthorizedAccessException) { }
         }
 
+        private static bool IsElevated()
+        {
+#if INSTALLER_TEST
+            return Environment.GetEnvironmentVariable("MO2R_TEST_ELEVATED") == "1";
+#else
+            return new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
+#endif
+        }
+
+        // An elevated run reads its request and writes its answers only in the
+        // folder CreateWorkFolder protects. The Qt window falls back to %TEMP%
+        // when it can't use that folder, and %TEMP% belongs to any program of
+        // the user: there the backend stops instead of obeying what it finds.
+        private static void RequireProtectedPath(string path)
+        {
+            if (!IsElevated()) return;
+            string protectedRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "MO2 Revamped Setup");
+#if INSTALLER_TEST
+            protectedRoot = Environment.GetEnvironmentVariable("MO2R_TEST_PROTECTED_ROOT") ?? protectedRoot;
+#endif
+            string prefix = Path.GetFullPath(protectedRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (!Path.GetFullPath(path).StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("An elevated setup only works inside its protected folder: " + path);
+        }
+
         private static bool IsUninstallRequest(string[] args)
         {
             return args != null && args.Length >= 2 &&
@@ -331,6 +356,17 @@ namespace Mo2RevampedSetup
             string resultPath = args[3];
             if (args.Length > 4) InstallerText.SetLanguage(args[4]);
             SetupDiagnostics.Initialize(new string[0]);
+            try
+            {
+                RequireProtectedPath(requestPath);
+                RequireProtectedPath(eventsPath);
+                RequireProtectedPath(resultPath);
+            }
+            catch (Exception refused)
+            {
+                SetupDiagnostics.Error("The elevated backend refused its working files.", refused);
+                throw;
+            }
             SetupRequest request = NewSerializer().Deserialize<SetupRequest>(File.ReadAllText(requestPath, Encoding.UTF8));
             SetupDiagnostics.BeginOperation(request);
             // Without a UI thread, BackgroundWorker posts progress to the thread
@@ -464,6 +500,7 @@ namespace Mo2RevampedSetup
 
         private static void WriteAtomic(string path, string content)
         {
+            RequireProtectedPath(path);
             string directory = Path.GetDirectoryName(Path.GetFullPath(path));
             Directory.CreateDirectory(directory);
             string temporary = path + ".tmp-" + Guid.NewGuid().ToString("N");

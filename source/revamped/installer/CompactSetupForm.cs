@@ -2036,7 +2036,7 @@ namespace Mo2RevampedSetup
                         : InstallerText.T("\n\nSe quitarán las carpetas de componentes reconocidas y se conservarán los datos de usuario, como perfiles, mods, descargas, overwrite y ajustes. Los demás archivos fuera de esas carpetas también se mantienen. ") + (trackedInstall ? InstallerText.T("Si hay una copia previa, se restaurará la versión original.") : InstallerText.T("Los datos de usuario se mantendrán en su ubicación actual.")));
                 if (RemoveRevampedAppDataCheck != null && RemoveRevampedAppDataCheck.Checked)
                     body += String.Format(
-                        InstallerText.T("\n\nSe borrará por completo la carpeta global de MO2 Revamped:\n{0}\nIncluye todas las instancias globales y sus perfiles, mods, descargas y ajustes. Se comparte entre instalaciones no portables de Revamped."),
+                        InstallerText.T("\n\nSe borrará por completo la carpeta global de MO2 Revamped:\n{0}\nIncluye todas las instancias globales y sus perfiles, mods, descargas y ajustes, y también las partidas de Elden Ring y Nightreign que guardan: las de cada perfil, las compartidas y sus copias de seguridad. Se comparte entre instalaciones no portables de Revamped. Las partidas de Steam no se tocan."),
                         SetupEngine.RevampedAppDataDirectory());
                 body +=
                     (ForceCloseCheck != null && ForceCloseCheck.Checked
