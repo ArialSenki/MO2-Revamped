@@ -2115,6 +2115,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         mod_name_edit.textChanged.connect(lambda _text: refresh_name_notice())
         if reforged_online_box is not None:
             reforged_online_box.toggled.connect(lambda _checked: refresh_summary())
+            # arranged by hand, Reforged is installed as files only: the release
+            # its online launcher needs is laid out by Install alone
+            reforged_online_box.toggled.connect(
+                lambda checked: manual_button.setEnabled(not checked)
+            )
+            manual_button.setEnabled(not reforged_online_box.isChecked())
         refresh_summary()
         refresh_name_notice()
 
