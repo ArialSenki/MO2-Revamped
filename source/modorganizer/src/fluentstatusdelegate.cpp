@@ -190,7 +190,10 @@ void FluentStatusDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
       color = index.data(Qt::BackgroundRole).value<QColor>();
     }
     if (color.isValid()) {
-      painter->fillRect(option.rect, color);
+      const bool hovered = opt.state & QStyle::State_MouseOver;
+      painter->fillRect(option.rect,
+                        hovered ? color.lighter(ModListView::HoverLighter) : color);
+      opt.state &= ~QStyle::State_MouseOver;
     }
   }
   style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);

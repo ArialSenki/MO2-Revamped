@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QHash>
 #include <QMimeData>
+#include <QCursor>
 #include <QPainter>
 #include <QPersistentModelIndex>
 #include <QProxyStyle>
@@ -136,12 +137,16 @@ public:
 
     // the theme styles every row, and a styled row ignores the option's
     // background: the separator or conflict color is painted here. A selected
-    // row shows the selection instead
+    // row shows the selection instead. The theme's hover is opaque, so a
+    // colored row brightens its own color instead
+    const bool hovered = opt.state & QStyle::State_MouseOver;
     if (color.isValid() && !(opt.state & QStyle::State_Selected)) {
-      painter->fillRect(opt.rect, color);
+      painter->fillRect(opt.rect, hovered ? color.lighter(ModListView::HoverLighter) : color);
+      opt.state &= ~QStyle::State_MouseOver;
     }
 
     QStyledItemDelegate::paint(painter, opt, index);
+    opt.state.setFlag(QStyle::State_MouseOver, hovered);
     paintSwitch(painter, opt, index);
 
     // the selected row's accent edge, once per row at the start of the name
@@ -1211,7 +1216,10 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
       color = index.data(Qt::BackgroundRole).value<QColor>();
     }
     if (color.isValid()) {
-      painter->fillRect(rect, color);
+      const int cursor = viewport()->mapFromGlobal(QCursor::pos()).y();
+      const bool hovered =
+          viewport()->underMouse() && cursor >= rect.top() && cursor <= rect.bottom();
+      painter->fillRect(rect, hovered ? color.lighter(HoverLighter) : color);
     }
   }
   QTreeView::drawBranches(painter, r, index);
