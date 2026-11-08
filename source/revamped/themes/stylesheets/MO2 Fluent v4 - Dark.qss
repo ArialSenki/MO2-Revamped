@@ -6056,6 +6056,7 @@ QTreeWidget#pluginSettingsList QHeaderView::section {
 /* Settings pages: a scroll bar in a multi-line prompt sits on the field's colour. */
 QInputDialog QPlainTextEdit QScrollBar:vertical {
     background-color: #2F2F2F;
+}
 /* The log's rows reach the frame and line up with its title bar. */
 QDockWidget#logDock QTreeView#logList {
     padding: 0px 0px 2px 0px;
@@ -6077,6 +6078,7 @@ QWidget#savesTab QTreeWidget#savegameList QHeaderView::section {
 
 QWidget#downloadTab DownloadListView#downloadView QHeaderView::section {
     padding-left: 7px;
+}
 /* C++ windows, second visual pass */
 QPlainTextEdit#textFileEditor,
 QPlainTextEdit#iniFileEditor {
