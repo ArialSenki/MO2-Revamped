@@ -3464,10 +3464,12 @@ class EldenRingMo2Game(BasicGame):
         if name == "Elden Ring":
             return text
         # German joins the name with hyphens (Elden-Ring-Spielstand); French
-        # elides before it (d'Elden Ring)
+        # elides before it (d'Elden Ring, qu'Elden Ring)
         for old, new in (
             ("d'Elden Ring", f"de {name}"),
             ("d’Elden Ring", f"de {name}"),
+            ("qu'Elden Ring", f"que {name}"),
+            ("qu’Elden Ring", f"que {name}"),
             ("Elden-Ring", name),
             ("Elden Ring", name),
         ):

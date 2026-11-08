@@ -2165,10 +2165,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         # the texts name Elden Ring; a Nightreign instance gets its own name
         if self._nightreign_active():
             # German joins the name with hyphens (Elden-Ring-Mod); French elides
-            # before it (d'Elden Ring)
+            # before it (d'Elden Ring, qu'Elden Ring)
             for old, new in (
                 ("d'Elden Ring", "de Nightreign"),
                 ("d’Elden Ring", "de Nightreign"),
+                ("qu'Elden Ring", "que Nightreign"),
+                ("qu’Elden Ring", "que Nightreign"),
                 ("Elden-Ring", "Nightreign"),
                 ("Elden Ring", "Nightreign"),
             ):

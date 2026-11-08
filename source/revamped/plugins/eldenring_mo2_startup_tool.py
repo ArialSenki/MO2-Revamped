@@ -43,10 +43,14 @@ def _tr(text: str) -> str:
     text = QCoreApplication.translate(_TR_CONTEXT, text)
     if _game_name != "Elden Ring":
         # German joins the name with hyphens (Elden-Ring-Profil); French elides
-        # before it (d'Elden Ring)
+        # before it (d'Elden Ring, qu'Elden Ring)
         for old, new in (
             ("d'Elden Ring", f"de {_game_name}"),
             ("d’Elden Ring", f"de {_game_name}"),
+            ("qu'Elden Ring", f"que {_game_name}"),
+            ("qu’Elden Ring", f"que {_game_name}"),
+            ("d'eldenring.exe", "de nightreign.exe"),
+            ("d’eldenring.exe", "de nightreign.exe"),
             ("Elden-Ring", _game_name),
             ("Elden Ring", _game_name),
             ("eldenring.exe", "nightreign.exe"),
