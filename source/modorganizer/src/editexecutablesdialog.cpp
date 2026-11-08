@@ -639,6 +639,11 @@ void EditExecutablesDialog::setEdits(const Executable& e)
     ui->createFilesInMod->setChecked(hasCustomOverwrites);
     ui->mods->setEnabled(hasCustomOverwrites);
     ui->mods->setCurrentIndex(modIndex);
+    // a mod that no longer exists keeps its name in the field: saving another
+    // change to this program must not blank it
+    if (modIndex == -1 && modName && !modName->value.isEmpty()) {
+      ui->mods->setEditText(modName->value);
+    }
   }
 
   {
