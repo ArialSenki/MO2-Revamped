@@ -6944,7 +6944,7 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Ayuda</translation>
     </message>
     <message>
-      <source>Manage Instances...</source>
+      <source>Manage instances...</source>
       <translation>Gestionar instancias...</translation>
     </message>
     <message>
@@ -7964,7 +7964,7 @@ La mayoría de los mods no tienen esps opcionales, así que es probable que veas
       <translation>Mueve todos los archivos y carpetas de Overwrite a la Papelera de reciclaje.</translation>
     </message>
     <message>
-      <source>All Mods</source>
+      <source>All mods</source>
       <translation>Todos los mods</translation>
     </message>
     <message>
@@ -8277,6 +8277,12 @@ La mayoría de los mods no tienen esps opcionales, así que es probable que veas
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>This will move all files from Overwrite into a new, regular mod.
+Please enter a name:</source>
+      <translation>Esto moverá todos los archivos de Overwrite a un mod nuevo normal.
+Escribe un nombre:</translation>
+    </message>
     <message>
       <source>Files could not be moved from Overwrite: %1</source>
       <translation>No se pudieron mover los archivos de Overwrite: %1</translation>

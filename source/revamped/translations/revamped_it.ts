@@ -7164,7 +7164,7 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Aiuto</translation>
     </message>
     <message>
-      <source>Manage Instances...</source>
+      <source>Manage instances...</source>
       <translation>Gestisci istanze...</translation>
     </message>
     <message>
@@ -8128,6 +8128,10 @@ La maggior parte delle mod non ha esp opzionali, quindi è probabile che l&apos;
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>All mods</source>
+      <translation>Tutte le mod</translation>
+    </message>
+    <message>
       <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
       <translation>Sposta tutti i file e le cartelle di Overwrite nel Cestino.</translation>
     </message>
@@ -8413,6 +8417,12 @@ La maggior parte delle mod non ha esp opzionali, quindi è probabile che l&apos;
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>This will move all files from Overwrite into a new, regular mod.
+Please enter a name:</source>
+      <translation>Tutti i file di Overwrite verranno spostati in una nuova mod normale.
+Inserisci un nome:</translation>
+    </message>
     <message>
       <source>Files could not be moved from Overwrite: %1</source>
       <translation>Impossibile spostare i file da Overwrite: %1</translation>

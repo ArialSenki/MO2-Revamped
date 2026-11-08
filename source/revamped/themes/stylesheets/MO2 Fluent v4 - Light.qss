@@ -1890,14 +1890,19 @@ QDialog#PreviewDialog QLabel#modLabel {
 }
 
 QDialog#LootDialog QWidget#progressPanel,
-QDialog#ForcedLoadDialog QGroupBox#rulesGroup,
-QDialog#ListDialog QGroupBox#choicesGroup {
+QDialog#ForcedLoadDialog QGroupBox#rulesGroup {
     color: #1A1A1A;
     background-color: #FBFBFB;
     border: 1px solid #D7D7D7;
     border-radius: 8px;
     margin-top: 8px;
     padding-top: 8px;
+}
+
+QDialog#ListDialog QFrame#choicesGroup {
+    background-color: #FBFBFB;
+    border: 1px solid #DADADA;
+    border-radius: 8px;
 }
 
 QDialog#LootDialog QLabel#progressText {
@@ -1926,8 +1931,7 @@ QDialog#LootDialog QLabel#detailsDescription {
     color: #5D5D5D;
 }
 
-QDialog#ForcedLoadDialog QGroupBox#rulesGroup::title,
-QDialog#ListDialog QGroupBox#choicesGroup::title {
+QDialog#ForcedLoadDialog QGroupBox#rulesGroup::title {
     subcontrol-origin: margin;
     left: 11px;
     padding: 0 4px;
@@ -5879,8 +5883,8 @@ QDialog#TaskDialog QCommandLinkButton:pressed {
 QDialog#SelectionDialog QCommandLinkButton,
 QDialog#SelectionDialog QCommandLinkButton:default {
     color: #1A1A1A;
-    background-color: transparent;
-    border: 1px solid #EBEBEB;
+    background-color: #FBFBFB;
+    border: 1px solid #DADADA;
     border-radius: 6px;
     padding: 10px 14px;
     text-align: left;
@@ -5939,4 +5943,39 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
 /* Settings pages: the row titles of Paths are primary text, as on every other page. */
 QDialog#SettingsDialog QWidget#pathsTab QFrame#fluentSettingRow QLabel#fluentSettingTitle {
     color: #1A1A1A;
+}
+
+/* ======================================================================
+   Visual review: main window, menus, Overwrite, Filters, Notifications,
+   Downloads and the mod list action dialogs.
+   ====================================================================== */
+
+/* Card titles are the size of every other window's. */
+QDialog#filterOptionsDialog QLabel#filterCriteriaHeading,
+QDialog#filterOptionsDialog QLabel#filterActionsHeading,
+QDialog#filterOptionsDialog QLabel#filterBehaviorHeading {
+    font-size: 12pt;
+}
+
+/* The heading starts where its rows do. */
+QTreeWidget#filters QHeaderView::section {
+    padding-left: 6px;
+}
+
+QDialog#filterOptionsDialog QComboBox#filtersSeparators {
+    color: #1A1A1A;
+}
+
+/* Notifications: readable note, one frame around the list. */
+ProblemsDialog QLabel#fluentSettingDescription {
+    color: #5D5D5D;
+}
+
+QListWidget#problemsWidget {
+    border: none;
+}
+
+/* Overwrite: the header reaches the frame. */
+QTreeView#filesView {
+    padding: 0px;
 }

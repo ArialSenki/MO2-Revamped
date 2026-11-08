@@ -40,6 +40,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace MOBase;
 
+namespace
+{
+// what each column needs in the side panel, heading and sort arrow included
+constexpr int DownloadListStatusWidth   = 96;
+constexpr int DownloadListSizeWidth     = 80;
+constexpr int DownloadListFiletimeWidth = 136;
+}  // namespace
+
 DownloadProgressDelegate::DownloadProgressDelegate(DownloadManager* manager,
                                                    DownloadListView* list)
     : QStyledItemDelegate(list), m_Manager(manager), m_List(list)
@@ -122,10 +130,32 @@ void DownloadListHeader::customResizeSections()
   }
 }
 
+void DownloadListHeader::compactSections()
+{
+  if (isSectionHidden(DownloadList::COL_NAME)) {
+    return;
+  }
+
+  int spare = 0;
+  const auto compact = [&](int column, int width) {
+    if (!isSectionHidden(column) && sectionSize(column) > width) {
+      spare += sectionSize(column) - width;
+      resizeSection(column, width);
+    }
+  };
+  compact(DownloadList::COL_STATUS, DownloadListStatusWidth);
+  compact(DownloadList::COL_SIZE, DownloadListSizeWidth);
+  compact(DownloadList::COL_FILETIME, DownloadListFiletimeWidth);
+
+  if (spare > 0) {
+    resizeSection(DownloadList::COL_NAME, sectionSize(DownloadList::COL_NAME) + spare);
+  }
+}
+
 void DownloadListHeader::ensureReadableSections()
 {
-  constexpr int statusTargetWidth   = 120;
-  constexpr int filetimeTargetWidth = 155;
+  constexpr int statusTargetWidth   = DownloadListStatusWidth;
+  constexpr int filetimeTargetWidth = DownloadListFiletimeWidth;
   constexpr int minimumNameWidth    = 180;
 
   const int statusGrowth = isSectionHidden(DownloadList::COL_STATUS)

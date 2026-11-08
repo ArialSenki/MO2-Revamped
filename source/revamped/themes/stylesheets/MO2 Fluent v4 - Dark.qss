@@ -1954,14 +1954,19 @@ QDialog#PreviewDialog QLabel#modLabel {
 }
 
 QDialog#LootDialog QWidget#progressPanel,
-QDialog#ForcedLoadDialog QGroupBox#rulesGroup,
-QDialog#ListDialog QGroupBox#choicesGroup {
+QDialog#ForcedLoadDialog QGroupBox#rulesGroup {
     color: #FFFFFF;
     background-color: #2B2B2B;
     border: 1px solid #363636;
     border-radius: 8px;
     margin-top: 8px;
     padding-top: 8px;
+}
+
+QDialog#ListDialog QFrame#choicesGroup {
+    background-color: #2A2A2A;
+    border: 1px solid #4B4B4B;
+    border-radius: 8px;
 }
 
 QDialog#LootDialog QLabel#progressText {
@@ -1990,8 +1995,7 @@ QDialog#LootDialog QLabel#detailsDescription {
     color: #C5C5C5;
 }
 
-QDialog#ForcedLoadDialog QGroupBox#rulesGroup::title,
-QDialog#ListDialog QGroupBox#choicesGroup::title {
+QDialog#ForcedLoadDialog QGroupBox#rulesGroup::title {
     subcontrol-origin: margin;
     left: 11px;
     padding: 0 4px;
@@ -5995,4 +5999,39 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
 /* Settings pages: the row titles of Paths are primary text, as on every other page. */
 QDialog#SettingsDialog QWidget#pathsTab QFrame#fluentSettingRow QLabel#fluentSettingTitle {
     color: #FFFFFF;
+}
+
+/* ======================================================================
+   Visual review: main window, menus, Overwrite, Filters, Notifications,
+   Downloads and the mod list action dialogs.
+   ====================================================================== */
+
+/* Card titles are the size of every other window's. */
+QDialog#filterOptionsDialog QLabel#filterCriteriaHeading,
+QDialog#filterOptionsDialog QLabel#filterActionsHeading,
+QDialog#filterOptionsDialog QLabel#filterBehaviorHeading {
+    font-size: 12pt;
+}
+
+/* The heading starts where its rows do. */
+QTreeWidget#filters QHeaderView::section {
+    padding-left: 6px;
+}
+
+QDialog#filterOptionsDialog QComboBox#filtersSeparators {
+    color: #FFFFFF;
+}
+
+/* Notifications: readable note, one frame around the list. */
+ProblemsDialog QLabel#fluentSettingDescription {
+    color: #C5C5C5;
+}
+
+QListWidget#problemsWidget {
+    border: none;
+}
+
+/* Overwrite: the header reaches the frame. */
+QTreeView#filesView {
+    padding: 0px;
 }

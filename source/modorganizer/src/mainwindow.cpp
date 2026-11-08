@@ -719,7 +719,8 @@ private:
     QString text = QString::fromStdString(entries.back().message);
     text         = text.section(QLatin1Char('\n'), 0, 0).trimmed();
 
-    const int width = qMax(0, m_Summary->width());
+    // a little under the label's width: at the exact width its last dot is cut
+    const int width = qMax(0, m_Summary->contentsRect().width() - 4);
     m_Summary->setText(m_Summary->fontMetrics().elidedText(text, Qt::ElideRight, width));
     // as rich text, so a "<data>" in the line shows as written
     m_Summary->setToolTip(Qt::convertFromPlainText(text, Qt::WhiteSpaceNoWrap));
@@ -863,7 +864,7 @@ private:
       }
     } else if (objectName == QStringLiteral("downloadView")) {
       // name and status fit the side panel; more columns scroll
-      constexpr int widths[] = {130, 105, 90, 150, 130, 95, 80, 125};
+      constexpr int widths[] = {130, 96, 80, 136, 130, 95, 80, 125};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -1191,7 +1192,8 @@ void resizeBackupSelectionDialog(SelectionDialog& dialog)
       std::min(dialog.numChoices(), maximumVisibleChoices);
 
   dialog.setMinimumSize(520, 250);
-  dialog.resize(600, std::min(maximumHeight,
+  // wide enough for the two-sentence description to end its line
+  dialog.resize(700, std::min(maximumHeight,
                               baseHeight + visibleChoices * rowHeight));
 }
 
@@ -1371,6 +1373,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       new QLabel(tr("Available criteria"), filterCriteriaCard);
   filterCriteriaHeading->setObjectName(
       QStringLiteral("filterCriteriaHeading"));
+  filterCriteriaHeading->setIndent(0);
   filterCriteriaLayout->addWidget(filterCriteriaHeading);
   ui->filters->setParent(filterCriteriaCard);
   filterCriteriaLayout->addWidget(ui->filters, 1);
@@ -1389,10 +1392,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   filterActionsLayout->setSpacing(7);
   auto* filterActionsHeading = new QLabel(tr("Filter actions"), filterActionsCard);
   filterActionsHeading->setObjectName(QStringLiteral("filterActionsHeading"));
+  filterActionsHeading->setIndent(0);
   filterActionsLayout->addWidget(filterActionsHeading);
   ui->widget_2->setObjectName(QStringLiteral("filterActionButtonsContainer"));
   if (auto* actionButtonsLayout =
           qobject_cast<QHBoxLayout*>(ui->widget_2->layout())) {
+    // one above the other, level with the two rows of the card beside it
+    actionButtonsLayout->setDirection(QBoxLayout::TopToBottom);
     actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
     actionButtonsLayout->setSpacing(8);
   }
@@ -1414,6 +1420,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       new QLabel(tr("Filter behavior"), filterBehaviorCard);
   filterBehaviorHeading->setObjectName(
       QStringLiteral("filterBehaviorHeading"));
+  filterBehaviorHeading->setIndent(0);
   filterBehaviorLayout->addWidget(filterBehaviorHeading);
 
   ui->widget->setObjectName(QStringLiteral("filterBehaviorControls"));
@@ -1425,10 +1432,11 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   }
   auto* behaviorControlsLayout = new QVBoxLayout(ui->widget);
   behaviorControlsLayout->setContentsMargins(0, 0, 0, 0);
-  behaviorControlsLayout->setSpacing(6);
+  behaviorControlsLayout->setSpacing(8);
 
   auto* matchRow = new QWidget(ui->widget);
   matchRow->setObjectName(QStringLiteral("filterMatchRow"));
+  matchRow->setMinimumHeight(32);
   auto* matchLayout = new QHBoxLayout(matchRow);
   matchLayout->setContentsMargins(0, 0, 0, 0);
   matchLayout->setSpacing(8);
@@ -1594,8 +1602,12 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   }
 
   settings.geometry().restoreState(ui->downloadView->header());
-  qobject_cast<DownloadListHeader*>(ui->downloadView->header())
-      ->ensureReadableSections();
+  auto* downloadHeader = qobject_cast<DownloadListHeader*>(ui->downloadView->header());
+  if (!settings.geometry().downloadColumnsCompacted()) {
+    downloadHeader->compactSections();
+    settings.geometry().setDownloadColumnsCompacted(true);
+  }
+  downloadHeader->ensureReadableSections();
   settings.geometry().restoreState(ui->savegameList->header());
 
   ui->splitter->setStretchFactor(0, 3);
@@ -2398,7 +2410,7 @@ void MainWindow::createHelpMenu()
   if (isEldenRing) {
     QAction* guideAction = new QAction(gameGuideTitle(game), menu);
     guideAction->setObjectName(QStringLiteral("eldenRingGuideAction"));
-    guideAction->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
+    guideAction->setIcon(FluentIcons::glyph(0xE82D));  // a book
     guideAction->setToolTip(
         tr("Learn about profiles, archive layouts, native DLLs, and save profiles."));
     connect(guideAction, &QAction::triggered, this,
@@ -2413,8 +2425,7 @@ void MainWindow::createHelpMenu()
   // the original MO2 documentation still covers everything Revamped keeps
   QAction* documentationAction = new QAction(tr("Mod Organizer 2 documentation"), menu);
   documentationAction->setObjectName(QStringLiteral("mo2DocumentationAction"));
-  documentationAction->setIcon(
-      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")));
+  documentationAction->setIcon(FluentIcons::glyph(MenuGlyphs::Document));
   documentationAction->setToolTip(
       tr("Open the Mod Organizer 2 documentation and guides."));
   connect(documentationAction, &QAction::triggered, this, [] {
@@ -2424,8 +2435,8 @@ void MainWindow::createHelpMenu()
 
   QAction* mo2GitHubAction = new QAction(tr("Mod Organizer 2 on GitHub"), menu);
   mo2GitHubAction->setObjectName(QStringLiteral("mo2GitHubAction"));
-  mo2GitHubAction->setIcon(
-      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/mod-page.svg")));
+  // the same as MO2 Revamped's entry
+  mo2GitHubAction->setIcon(FluentIcons::glyph(0xE8A7));
   mo2GitHubAction->setToolTip(tr("Open the original Mod Organizer 2 project on GitHub."));
   connect(mo2GitHubAction, &QAction::triggered, this, [] {
     shell::Open(QUrl("https://github.com/ModOrganizer2/modorganizer"));
@@ -5724,6 +5735,12 @@ void MainWindow::on_displayCategoriesBtn_toggled(bool checked)
   }
 
   if (checked) {
+    // the dialog itself takes the focus: given to the list, Qt marks its first
+    // row as if it were selected. Tab still goes to the list
+    if (ui->filters->currentIndex().isValid()) {
+      ui->filters->setCurrentIndex({});
+    }
+    m_FilterOptionsDialog->setFocus();
     m_FilterOptionsDialog->show();
     m_FilterOptionsDialog->raise();
     m_FilterOptionsDialog->activateWindow();

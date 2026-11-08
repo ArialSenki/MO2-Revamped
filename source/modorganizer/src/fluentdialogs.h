@@ -37,6 +37,10 @@ public:
   // focus starts on the given button
   void askFirst(QPushButton* cancel);
 
+  // at least the minimum width: Qt measures wrapped text at this width, and a
+  // narrower one left room for a second line the text doesn't take
+  QSize sizeHint() const override;
+
 private:
   QVBoxLayout* m_body;
   QLabel* m_text;

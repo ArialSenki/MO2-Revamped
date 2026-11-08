@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QColorDialog>
 #include <QRadioButton>
 #include <QStandardPaths>
 #include <QVBoxLayout>
@@ -91,6 +92,22 @@ QString promptForModListName(QWidget* parent, const QString& windowTitle,
     *accepted = didAccept;
   }
   return nameEdit->text();
+}
+
+// Qt's color dialog in the program's capitalization, when it is in English
+void polishColorDialog(QColorDialog& dialog)
+{
+  if (dialog.windowTitle() == QLatin1String("Select Color")) {
+    dialog.setWindowTitle(QStringLiteral("Select color"));
+  }
+
+  for (auto* button : dialog.findChildren<QPushButton*>()) {
+    if (button->text() == QLatin1String("&Pick Screen Color")) {
+      button->setText(QStringLiteral("&Pick screen color"));
+    } else if (button->text() == QLatin1String("&Add to Custom Colors")) {
+      button->setText(QStringLiteral("&Add to custom colors"));
+    }
+  }
 }
 
 bool confirmBulkModToggle(QWidget* parent, const QString& windowTitle,
@@ -464,8 +481,7 @@ void ModListViewActions::exportModListCSV() const
   QDialog selection(m_parent);
   selection.setObjectName(QStringLiteral("ExportModListDialog"));
   selection.setWindowTitle(tr("Export mod list"));
-  selection.setMinimumSize(680, 470);
-  selection.resize(760, 560);
+  selection.setMinimumWidth(680);
 
   auto* rootLayout = new QVBoxLayout(&selection);
   rootLayout->setContentsMargins(16, 16, 16, 14);
@@ -580,6 +596,10 @@ void ModListViewActions::exportModListCSV() const
   connect(buttons, SIGNAL(accepted()), &selection, SLOT(accept()));
   connect(buttons, SIGNAL(rejected()), &selection, SLOT(reject()));
   rootLayout->addWidget(buttons);
+
+  // as tall as its options need
+  selection.ensurePolished();
+  selection.resize(760, selection.sizeHint().height());
 
   if (selection.exec() == QDialog::Accepted) {
 
@@ -1342,6 +1362,7 @@ void ModListViewActions::setColor(const QModelIndexList& indices,
 
   QColorDialog dialog(m_parent);
   dialog.setOption(QColorDialog::ShowAlphaChannel);
+  polishColorDialog(dialog);
 
   QColor currentColor = modInfo->color();
   if (currentColor.isValid()) {
@@ -1531,8 +1552,8 @@ void ModListViewActions::createModFromOverwrite() const
     bool ok;
     name.update(
         QInputDialog::getText(
-            m_parent, tr("Create mod..."),
-            tr("This will move all files from overwrite into a new, regular mod.\n"
+            m_parent, tr("Create mod"),
+            tr("This will move all files from Overwrite into a new, regular mod.\n"
                "Please enter a name:"),
             QLineEdit::Normal, "", &ok),
         GUESS_USER);

@@ -7056,7 +7056,7 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Aide</translation>
     </message>
     <message>
-      <source>Manage Instances...</source>
+      <source>Manage instances...</source>
       <translation>Gérer les instances...</translation>
     </message>
     <message>
@@ -8020,6 +8020,10 @@ La plupart des mods n&apos;ont pas d&apos;esps optionnels, cette liste est donc 
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>All mods</source>
+      <translation>Tous les mods</translation>
+    </message>
+    <message>
       <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
       <translation>Met tous les fichiers et dossiers d'Overwrite à la Corbeille.</translation>
     </message>
@@ -8305,6 +8309,12 @@ La plupart des mods n&apos;ont pas d&apos;esps optionnels, cette liste est donc 
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>This will move all files from Overwrite into a new, regular mod.
+Please enter a name:</source>
+      <translation>Tous les fichiers d'Overwrite seront déplacés vers un nouveau mod normal.
+Saisissez un nom :</translation>
+    </message>
     <message>
       <source>Files could not be moved from Overwrite: %1</source>
       <translation>Impossible de déplacer les fichiers d'Overwrite : %1</translation>

@@ -272,12 +272,14 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       return QVariant();
     }
   } else if (role == Qt::TextAlignmentRole) {
-    // Fluent tables: text columns start at the left edge, the priority
-    // number lines up on the right; icon columns stay centered
+    // Fluent tables: text columns start at the left edge, like their headings,
+    // the priority too (the sort arrow beside its heading would otherwise put
+    // the number under the arrow); icon columns stay centered
     if (column == COL_NAME || column == COL_VERSION || column == COL_NOTES ||
-        column == COL_CATEGORY || column == COL_GAME || column == COL_INSTALLTIME) {
+        column == COL_CATEGORY || column == COL_GAME || column == COL_INSTALLTIME ||
+        column == COL_PRIORITY) {
       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
-    } else if (column == COL_PRIORITY || column == COL_MODID) {
+    } else if (column == COL_MODID) {
       return QVariant(Qt::AlignRight | Qt::AlignVCenter);
     } else {
       return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
@@ -629,9 +631,6 @@ QVariant ModList::headerData(int section, Qt::Orientation orientation, int role)
       return getColumnToolTip(section);
     } else if (role == Qt::TextAlignmentRole) {
       // Fluent tables align headings with their content
-      if (section == COL_PRIORITY) {
-        return QVariant(Qt::AlignRight | Qt::AlignVCenter);
-      }
       // the icon columns center their icons, and so their headings
       if (section == COL_FLAGS || section == COL_CONTENT) {
         return QVariant(Qt::AlignCenter);

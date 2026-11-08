@@ -6892,7 +6892,7 @@ Os snapshots de recuperação foram mantidos em: %2</translation>
       <translation>Ajuda</translation>
     </message>
     <message>
-      <source>Manage Instances...</source>
+      <source>Manage instances...</source>
       <translation>Gerenciar instâncias...</translation>
     </message>
     <message>
@@ -7872,6 +7872,10 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>All mods</source>
+      <translation>Todos os mods</translation>
+    </message>
+    <message>
       <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
       <translation>Move todos os arquivos e pastas do Overwrite para a Lixeira.</translation>
     </message>
@@ -8149,6 +8153,12 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>This will move all files from Overwrite into a new, regular mod.
+Please enter a name:</source>
+      <translation>Isso moverá todos os arquivos do Overwrite para um novo mod normal.
+Digite um nome:</translation>
+    </message>
     <message>
       <source>Files could not be moved from Overwrite: %1</source>
       <translation>Não foi possível mover os arquivos do Overwrite: %1</translation>

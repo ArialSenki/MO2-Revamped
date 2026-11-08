@@ -411,8 +411,10 @@ void MainWindow::fillInstanceSwitchMenu(QMenu* menu)
                tr("No game plugin");
       }
       auto* action = menu->addAction(text);
-      action->setCheckable(true);
-      action->setChecked(entry.active);
+      // the same thin check as the rest of the menus
+      if (entry.active) {
+        action->setIcon(FluentIcons::glyph(0xE73E));
+      }
       action->setEnabled(entry.active || entry.hasPlugin);
       connect(action, &QAction::triggered, this, [this, entry] {
         if (entry.active) {

@@ -6900,7 +6900,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Hilfe</translation>
     </message>
     <message>
-      <source>Manage Instances...</source>
+      <source>Manage instances...</source>
       <translation>Instanzen verwalten...</translation>
     </message>
     <message>
@@ -7880,6 +7880,10 @@ Die meisten Mods haben keine optionalen esps, daher ist die Liste wahrscheinlich
   <context>
     <name>ModListContextMenu</name>
     <message>
+      <source>All mods</source>
+      <translation>Alle Mods</translation>
+    </message>
+    <message>
       <source>Move every file and folder in Overwrite to the Recycle Bin.</source>
       <translation>Verschiebt alle Dateien und Ordner in Overwrite in den Papierkorb.</translation>
     </message>
@@ -8157,6 +8161,12 @@ Die meisten Mods haben keine optionalen esps, daher ist die Liste wahrscheinlich
   </context>
   <context>
     <name>ModListViewActions</name>
+    <message>
+      <source>This will move all files from Overwrite into a new, regular mod.
+Please enter a name:</source>
+      <translation>Dadurch werden alle Dateien aus Overwrite in eine neue reguläre Mod verschoben.
+Gib einen Namen ein:</translation>
+    </message>
     <message>
       <source>Files could not be moved from Overwrite: %1</source>
       <translation>Dateien konnten nicht aus Overwrite verschoben werden: %1</translation>

@@ -107,7 +107,7 @@ const QHash<QString, Glyph>& glyphTable()
                                      {"information.svg", 0xE946, Tone::Ink},
                                      {"create-mod.svg", 0xE8F4, Tone::Ink},
                                      {"separator.svg", 0xE76F, Tone::Ink},
-                                     {"collapse.svg", 0xF165, Tone::Ink},
+                                     {"collapse.svg", 0xF166, Tone::Ink},
                                      {"expand.svg", 0xF164, Tone::Ink},
                                      {"export.svg", 0xEDE1, Tone::Ink},
                                      {"visibility-hide.svg", 0xED1A, Tone::Ink},
@@ -470,6 +470,8 @@ QColor color(Tone tone)
     return dark ? QColor(0xFC, 0xE1, 0x00) : QColor(0x9D, 0x5D, 0x00);
   case Tone::Critical:
     return dark ? QColor(0xFF, 0x99, 0xA4) : QColor(0xC4, 0x2B, 0x1C);
+  case Tone::OnAccent:
+    return dark ? QColor(0x00, 0x00, 0x00) : QColor(0xFF, 0xFF, 0xFF);
   }
 
   return {};

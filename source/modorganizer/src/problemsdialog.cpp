@@ -214,12 +214,14 @@ QWidget* ProblemsDialog::createDetails()
   auto* actionsLayout = new QHBoxLayout(actions);
   actionsLayout->setContentsMargins(12, 12, 12, 12);
   actionsLayout->setSpacing(8);
-  m_fix = new QPushButton(FluentIcons::glyph(RepairGlyph), tr("Fix it"), actions);
+  m_fix = new QPushButton(FluentIcons::glyph(RepairGlyph, FluentIcons::Tone::OnAccent),
+                          tr("Fix it"), actions);
   m_fix->setObjectName(QStringLiteral("fixButton"));
   m_fix->setProperty("fluentPrimary", true);
   m_fix->setAutoDefault(false);
   m_manageOverwrite =
-      new QPushButton(FluentIcons::glyph(FolderGlyph), tr("Manage Overwrite"), actions);
+      new QPushButton(FluentIcons::glyph(FolderGlyph, FluentIcons::Tone::OnAccent),
+                      tr("Manage Overwrite"), actions);
   m_manageOverwrite->setObjectName(QStringLiteral("manageOverwriteButton"));
   m_manageOverwrite->setAutoDefault(false);
   m_copy = new QPushButton(FluentIcons::glyph(CopyGlyph), tr("Copy text"), actions);

@@ -137,6 +137,8 @@ public:
   // whether the Fluent command bar defaults (small icons, text beside icons)
   // have been applied once; later changes by the user are kept
   bool fluentToolbarApplied() const;
+  bool downloadColumnsCompacted() const;
+  void setDownloadColumnsCompacted(bool b);
   void setFluentToolbarApplied(bool b);
 
   void saveDocks(const QMainWindow* w);
