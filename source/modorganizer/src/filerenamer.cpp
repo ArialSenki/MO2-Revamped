@@ -160,7 +160,7 @@ bool FileRenamer::removeFailed(const QString& name, const shell::Result& r)
 
   const auto answer = QMessageBox::critical(
       m_parent, QObject::tr("File operation failed"),
-      QObject::tr("Failed to remove \"%1\": %2").arg(name).arg(r.toString()), buttons);
+      QObject::tr("Failed to remove \"%1\": %2").arg(name, r.toString()), buttons);
 
   if (answer == QMessageBox::Cancel) {
     // user wants to stop
@@ -187,9 +187,8 @@ bool FileRenamer::renameFailed(const QString& oldName, const QString& newName,
                             QObject::tr("Failed to rename file: %1.\r\n\r\n"
                                         "Source:\r\n\"%2\"\r\n\r\n"
                                         "Destination:\r\n\"%3\"")
-                                .arg(r.toString())
-                                .arg(QDir::toNativeSeparators(oldName))
-                                .arg(QDir::toNativeSeparators(newName)),
+                                .arg(r.toString(), QDir::toNativeSeparators(oldName),
+                                     QDir::toNativeSeparators(newName)),
                             buttons);
 
   if (answer == QMessageBox::Cancel) {

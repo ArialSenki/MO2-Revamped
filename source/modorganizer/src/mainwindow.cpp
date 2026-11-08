@@ -3207,8 +3207,7 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
       profileBox->addItem(profileIter.fileName());
     } catch (const std::runtime_error& error) {
       reportError(QObject::tr("failed to parse profile %1: %2")
-                      .arg(profileIter.fileName())
-                      .arg(error.what()));
+                      .arg(profileIter.fileName(), QString::fromUtf8(error.what())));
     }
   }
 
@@ -4244,10 +4243,8 @@ void MainWindow::fileMoved(const QString& filePath, const QString& oldOriginName
       }
     } catch (const std::exception& e) {
       reportError(tr("failed to move \"%1\" from mod \"%2\" to \"%3\": %4")
-                      .arg(filePath)
-                      .arg(oldOriginName)
-                      .arg(newOriginName)
-                      .arg(e.what()));
+                      .arg(filePath, oldOriginName, newOriginName,
+                           QString::fromUtf8(e.what())));
     }
   } else {
     // this is probably not an error, the specified path is likely a directory
@@ -5585,7 +5582,8 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
       BSA::EErrorCode result =
           archive.read(archivePath.toLocal8Bit().constData(), true);
       if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
-        reportError(tr("failed to read %1: %2").arg(archivePath).arg(result));
+        reportError(
+            tr("failed to read %1: %2").arg(archivePath, QString::number(result)));
         return;
       }
 

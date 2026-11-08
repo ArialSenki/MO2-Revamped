@@ -1038,8 +1038,10 @@ void InstanceManagerDialog::updateList()
   m_view->setText(grouping);
   m_view->setAccessibleName(tr("Grouping: %1").arg(grouping));
 
-  m_filter->setVisible(m_instances.size() > 6);
-  if (!m_filter->isVisible()) {
+  // a short list hides the search, unless Ctrl+F opened it and it is in use
+  m_filter->setVisible(m_instances.size() > 6 || m_filter->hasFocus() ||
+                       !m_filter->text().isEmpty());
+  if (m_filter->isHidden()) {
     m_filter->clear();
   }
 

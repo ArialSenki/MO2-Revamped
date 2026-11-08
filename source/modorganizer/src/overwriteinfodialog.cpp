@@ -436,7 +436,8 @@ void OverwriteInfoDialog::deleteFiles(const QModelIndexList& indexes)
           : tr("Move the selected files to the Recycle Bin?");
 
   if (QMessageBox::question(this, tr("Confirm"), message,
-                            QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) != QMessageBox::Yes) {
     return;
   }
 
