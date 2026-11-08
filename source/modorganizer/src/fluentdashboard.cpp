@@ -309,6 +309,7 @@ void FluentDashboard::setupModsHeader()
   ui->horizontalLayout_12->addWidget(ui->dataTabFilter, 1);
   ui->horizontalLayout_12->addWidget(ui->dataTabRefresh);
   ui->dataTabRefresh->setFixedWidth(32);
+  ui->horizontalLayout_12->setSpacing(8);  // the same gap as in Downloads
   ui->horizontalLayout_12->invalidate();
 
   // the same for the Downloads tab: search and refresh on top, the hidden
