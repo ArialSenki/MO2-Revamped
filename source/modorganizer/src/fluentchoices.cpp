@@ -1,4 +1,5 @@
 #include "fluentchoices.h"
+#include "revampedtheme.h"
 #include "fluentdialogs.h"
 #include "fluenticons.h"
 
@@ -108,7 +109,15 @@ void FluentCardButton::paintCard(QPainter& p, bool selected) const
     fill = 15;
   }
   p.setPen(QPen(withAlpha(ink, isEnabled() ? 34 : 20), 1.0));
-  p.setBrush(withAlpha(ink, fill));
+  if (MOBase::RevampedTheme::isDark()) {
+    p.setBrush(withAlpha(ink, fill));
+  } else {
+    // on the Light window a fill of the text color reads darker than it; the
+    // cards are the near-white of the theme's other cards
+    p.setBrush(!isEnabled() || isDown() ? QColor(0xF5F5F5)
+               : underMouse()           ? QColor(0xF2F2F2)
+                                        : QColor(0xFBFBFB));
+  }
   p.drawRoundedRect(card, Radius, Radius);
 
   if (selected) {

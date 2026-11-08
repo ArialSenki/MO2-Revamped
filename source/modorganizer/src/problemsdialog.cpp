@@ -218,12 +218,15 @@ QWidget* ProblemsDialog::createDetails()
                           tr("Fix it"), actions);
   m_fix->setObjectName(QStringLiteral("fixButton"));
   m_fix->setProperty("fluentPrimary", true);
+  // its icon is the label's color; the default recoloring uses the palette's
+  m_fix->setProperty("fluentKeepIcon", true);
   m_fix->setAutoDefault(false);
   m_manageOverwrite =
       new QPushButton(FluentIcons::glyph(FolderGlyph, FluentIcons::Tone::OnAccent),
                       tr("Manage Overwrite"), actions);
   m_manageOverwrite->setObjectName(QStringLiteral("manageOverwriteButton"));
   m_manageOverwrite->setAutoDefault(false);
+  m_manageOverwrite->setProperty("fluentKeepIcon", true);
   m_copy = new QPushButton(FluentIcons::glyph(CopyGlyph), tr("Copy text"), actions);
   m_copy->setAutoDefault(false);
   m_copy->setToolTip(tr("Copy the notification, to paste it in a bug report or a post"));
