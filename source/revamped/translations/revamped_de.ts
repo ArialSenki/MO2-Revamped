@@ -4069,6 +4069,10 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>Keine Spielstände gefunden.</translation>
     </message>
     <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Wiederherstellungsordner (von MO2 beiseitegelegte Spielstände)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Einige Spielstände konnten nicht kopiert werden</translation>
     </message>

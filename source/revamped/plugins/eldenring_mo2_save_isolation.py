@@ -900,9 +900,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         chosen = QFileDialog.getExistingDirectory(parent, _tr("Export all my saves"))
         if not chosen:
             return
-        sources = self._create_instance_save_sources(
-            self._known_save_suffixes() + (".bak",), include_online=True
-        )
+        suffixes = self._known_save_suffixes() + (".bak",)
+        sources = self._create_instance_save_sources(suffixes, include_online=True)
+        # what a restore found in the way of the Steam saves and kept for the
+        # user: it can be the newest progress, and it lives beside the Steam
+        # folder, which a reinstall of Windows erases
+        for folder in EldenRingMo2SaveDiagnose._set_aside_folders():
+            for save_path in self._list_transferable_saves(folder, suffixes):
+                relative = save_path.relative_to(folder).as_posix()
+                sources.append(
+                    (f"{_tr('Recovery folder (saves set aside by MO2)')} — {relative}", save_path, relative)
+                )
         if not sources:
             self._show_notice(parent, _tr("Export all my saves"), _tr("No saves found."), "info")
             return
@@ -911,14 +919,18 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         root = Path(chosen) / f"{_game()['save_dir']} saves {stamp}"
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         copied, failed = 0, []
-        # two routes can share a name once it is a folder's: never over each other
-        route_folders: dict[str, str] = {}
+        # two routes can share a name once it is a folder's (a save profile
+        # named like a route's label): each folder holds one route's saves
+        route_folders: dict[tuple[str, str], str] = {}
         used_folders: set[str] = set()
         try:
             for label, source, relative in sources:
                 # the label names the route, then the file inside it
                 route_label = label.rsplit(" — ", 1)[0]
-                route = route_folders.get(route_label)
+                parts = len(Path(relative).parts)
+                route_root = source.parents[parts - 1] if parts else source.parent
+                route_key = (route_label, self._normalized_path(route_root))
+                route = route_folders.get(route_key)
                 if route is None:
                     base = re.sub(r'[<>:"/\\|?*]+', "-", route_label).strip(" .")
                     route, number = base, 1
@@ -926,7 +938,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         number += 1
                         route = f"{base} ({number})"
                     used_folders.add(route.casefold())
-                    route_folders[route_label] = route
+                    route_folders[route_key] = route
                 destination = root / route / relative
                 try:
                     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -2060,13 +2072,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         dialog.setProperty("_eldenRingSaveUiInjected", False)
 
     def _is_elden_ring_create_dialog(self, dialog) -> bool:
-        games_container = dialog.findChild(QWidget, "games")
-        if games_container is not None:
-            game_buttons = [
-                button
-                for button in games_container.findChildren(QCommandLinkButton)
-                if button.isCheckable() and button.isChecked()
-            ]
+        if dialog.findChild(QWidget, "games") is not None:
             return self._create_dialog_game_key(dialog) is not None
 
         # Older MO2 variants may not expose the game picker widget.
@@ -4578,8 +4584,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if base is not None:
                 backup_root = self._auto_backup_root(route, base, mode_box.currentData() == self.GlobalShared)
                 try:
+                    # a copy still being made (or cut short) is a hidden
+                    # ".<name>.copying" folder: as in the backups window, not one
                     backups = sorted(
-                        (entry for entry in backup_root.iterdir() if entry.is_dir()),
+                        (
+                            entry
+                            for entry in backup_root.iterdir()
+                            if entry.is_dir() and not entry.name.startswith(".")
+                        ),
                         key=self._backup_age_key,
                         reverse=True,
                     )[:5]
@@ -5158,15 +5170,30 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
             if recovery is not None and recovery.is_dir():
                 for session in recovery.iterdir():
                     # hidden account folders; the record, its lock file and
-                    # output set aside are not
-                    if session.is_dir() and any(
-                        child.is_dir() and child.name != "unrouted-global"
-                        for child in session.iterdir()
+                    # output set aside are not. A launch outside the VFS whose
+                    # route saves are not back yet is pending with no folder at
+                    # all (the Steam folder was empty), as the game plugin and
+                    # the copy check count it
+                    if session.is_dir() and (
+                        any(
+                            child.is_dir() and child.name != "unrouted-global"
+                            for child in session.iterdir()
+                        )
+                        or EldenRingMo2SaveDiagnose._swap_not_returned(session)
                     ):
                         sessions.append(session)
         except OSError:
             pass
         return sessions
+
+    @staticmethod
+    def _swap_not_returned(session: Path) -> bool:
+        try:
+            manifest = json.loads((session / "session.json").read_text(encoding="utf-8"))
+            swap = manifest.get("swap")
+        except (OSError, UnicodeError, ValueError, AttributeError):
+            return False
+        return isinstance(swap, dict) and not swap.get("returned")
 
     @staticmethod
     def _set_aside_folders() -> list[Path]:

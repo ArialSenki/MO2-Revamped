@@ -4065,6 +4065,10 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>Aucune sauvegarde trouvée.</translation>
     </message>
     <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Dossier de récupération (sauvegardes mises de côté par MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Certaines sauvegardes n'ont pas pu être copiées</translation>
     </message>

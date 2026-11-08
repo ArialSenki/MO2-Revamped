@@ -4101,6 +4101,10 @@ No se pudo dejar la ruta como estaba. Las partidas apartadas están en:
       <translation>No se encontraron partidas.</translation>
     </message>
     <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Carpeta de recuperación (partidas apartadas por MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Algunas partidas no se pudieron copiar</translation>
     </message>

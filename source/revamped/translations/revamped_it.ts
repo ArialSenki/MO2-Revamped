@@ -4149,6 +4149,10 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>Nessun salvataggio trovato.</translation>
     </message>
     <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Cartella di recupero (salvataggi messi da parte da MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Alcuni salvataggi non sono stati copiati</translation>
     </message>

@@ -4061,6 +4061,10 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>Nenhum save encontrado.</translation>
     </message>
     <message>
+      <source>Recovery folder (saves set aside by MO2)</source>
+      <translation>Pasta de recuperação (saves separados pelo MO2)</translation>
+    </message>
+    <message>
       <source>Some saves could not be copied</source>
       <translation>Alguns saves não puderam ser copiados</translation>
     </message>
