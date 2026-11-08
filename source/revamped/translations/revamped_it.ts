@@ -2079,7 +2079,7 @@ Riavvia MO2, oppure passa a un altro profilo e torna indietro, prima di avviare 
       <translation>Manca il profilo di salvataggio con nome di Elden Ring</translation>
     </message>
     <message>
-      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
+      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save isolation and choose an available profile, or restore the missing profile folder.</source>
       <translation>Il profilo di salvataggio con nome selezionato non è stato trovato o i suoi metadati non sono validi. Il gioco non è stato avviato. Apri Strumenti &gt; Isolamento salvataggi e scegli un profilo disponibile, oppure ripristina la cartella del profilo mancante.</translation>
     </message>
     <message>
@@ -2550,7 +2550,7 @@ Se uno contiene progressi che vuoi tenere, chiudi il gioco e ricopialo.</transla
       <translation>Rileva le DLL native di Elden Ring installate e ne gestisce l'ordine di caricamento e gli export di inizializzazione opzionali per ogni profilo MO2.</translation>
     </message>
     <message>
-      <source>Native DLL Profile</source>
+      <source>Native DLL profile</source>
       <translation>Profilo DLL native</translation>
     </message>
     <message>
@@ -2560,10 +2560,6 @@ Se uno contiene progressi che vuoi tenere, chiudi il gioco e ricopialo.</transla
     <message>
       <source>Elden Ring native DLL profile</source>
       <translation>Profilo DLL native di Elden Ring</translation>
-    </message>
-    <message>
-      <source>Native DLL profile</source>
-      <translation>Profilo DLL native</translation>
     </message>
     <message>
       <source>Choose the native DLLs for this MO2 profile, set their load order, and select optional initializer exports.</source>
@@ -2997,7 +2993,7 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>Scegli i percorsi dei salvataggi di Elden Ring e i profili di salvataggio con nome, controlla il percorso attivo e importa o trasferisci salvataggi .sl2.</translation>
     </message>
     <message>
-      <source>Save Isolation</source>
+      <source>Save isolation</source>
       <translation>Isolamento salvataggi</translation>
     </message>
     <message>
@@ -3057,7 +3053,7 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>Crea un profilo di salvataggio con nome</translation>
     </message>
     <message>
-      <source>Create a separate named save choice managed in Tools &gt; Save Isolation.</source>
+      <source>Create a separate named save choice managed in Tools &gt; Save isolation.</source>
       <translation>Crea una scelta di salvataggio con nome separata, gestita in Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
     <message>
@@ -3505,7 +3501,7 @@ Scegli Usa il salvataggio globale di Steam per memorizzare questo percorso per i
       <translation>Questo nome compare in Strumenti &gt; Isolamento salvataggi. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000.sl2.</translation>
     </message>
     <message>
-      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
+      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save isolation.</source>
       <translation>Facoltativo. Lascia deselezionato per usare i salvataggi standard. Puoi creare profili di salvataggio con nome in seguito da Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
     <message>
@@ -3873,7 +3869,7 @@ Il salvataggio è stato copiato, ma il suo .bak non è stato aggiornato: {error}
       <translation>Backup ripristinato</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
       <translation>&lt;p&gt;Il percorso dei salvataggi di questo profilo non ha ancora salvataggi di Elden Ring, mentre la cartella di Steam sì. Il gioco partirà senza i tuoi personaggi, e un nuovo personaggio verrà salvato solo in questo percorso.&lt;/p&gt;&lt;p&gt;Per giocare qui un personaggio esistente, apri Strumenti &amp;gt; Isolamento salvataggi e usa Trasferisci un salvataggio, oppure crea o importa un profilo di salvataggio con nome. Per usare direttamente i salvataggi di Steam, scegli lì il percorso globale.&lt;/p&gt;&lt;p&gt;Percorso: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
@@ -4453,11 +4449,11 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <translation>Attiva un tipo di salvataggio per scegliere un salvataggio iniziale.</translation>
     </message>
     <message>
-      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save Isolation.</source>
+      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save isolation.</source>
       <translation>Questa istanza può elencare solo i salvataggi del proprio gioco. Una volta aperta la nuova istanza, aggiungi un salvataggio da Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
     <message>
-      <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <source>This name appears in Tools &gt; Save isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
       <translation>Questo nome compare in Strumenti &gt; Isolamento salvataggi. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000 con la sua estensione.</translation>
     </message>
     <message>
@@ -4496,7 +4492,7 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <translation>Opzioni di avvio, pulizia e prestazioni di Elden Ring per profilo.</translation>
     </message>
     <message>
-      <source>Startup Options</source>
+      <source>Startup options</source>
       <translation>Opzioni di avvio</translation>
     </message>
     <message>

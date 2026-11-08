@@ -516,7 +516,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return True
 
     def displayName(self) -> str:
-        return _tr("Save Isolation")
+        return _tr("Save isolation")
 
     def tooltip(self) -> str:
         return _tr("Select the Elden Ring save route and named game save for this profile.")
@@ -538,9 +538,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             "help": QMessageBox.Icon.NoIcon,
         }.get(kind, QMessageBox.Icon.Information)
         box = QMessageBox(
-            icon, title, message, QMessageBox.StandardButton.Ok,
+            icon, title, message,
+            QMessageBox.StandardButton.NoButton if kind == "help" else QMessageBox.StandardButton.Ok,
             parent or self.__parent_widget,
         )
+        if kind == "help":
+            # MO2's other help windows close with a button of that name
+            box.setDefaultButton(box.addButton(_tr("Close"), QMessageBox.ButtonRole.AcceptRole))
         box.setTextFormat(Qt.TextFormat.PlainText)
         box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         box.exec()
@@ -1225,7 +1229,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             elif checkbox.isChecked():
                 note.setText(
-                    _trs("This name appears in Tools > Save Isolation. If "
+                    _trs("This name appears in Tools > Save isolation. If "
                     "you choose a starting save below, it will be copied into "
                     "this named save profile. "
                     "Elden Ring loads the selected file as ER0000 with its own "
@@ -1235,7 +1239,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 note.setText(
                     _tr("Optional. Leave this off to use standard saves. "
                     "You can create named game save profiles later from Tools > "
-                    "Save Isolation.")
+                    "Save isolation.")
                 )
 
         if status_label is not None and source_combo is not None:
@@ -1263,7 +1267,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 # the search only knows the running instance's game
                 status_label.setText(
                     _tr("This instance can only list saves of its own game. Once the new "
-                    "instance is open, add a save from Tools > Save Isolation.")
+                    "instance is open, add a save from Tools > Save isolation.")
                 )
             else:
                 status_label.setText(
@@ -2336,7 +2340,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         game_save_profile_checkbox.setToolTip(
             _tr("Create a separate named save choice managed in Tools > "
-            "Save Isolation.")
+            "Save isolation.")
         )
         _make_switch(
             game_save_profile_checkbox,
@@ -2507,7 +2511,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             qInfo(
                 "Elden Ring MO2 Save Isolation: could not read the new instance's "
                 "profiles path; configure its mode in Tools > Elden Ring "
-                "Save Isolation."
+                "Save isolation."
             )
             return
 
@@ -2525,7 +2529,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             qInfo(
                 "Elden Ring MO2 Save Isolation: the new instance's profile path "
                 "could not be resolved; configure its mode in Tools > Elden Ring "
-                "Save Isolation."
+                "Save isolation."
             )
             return
 
@@ -5451,7 +5455,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
             "while the Steam save folder has some. The game will start without "
             "your existing characters, and a new character is saved only to this "
             "route.</p>"
-            "<p>To play an existing character here, open Tools &gt; Save Isolation "
+            "<p>To play an existing character here, open Tools &gt; Save isolation "
             "and use Transfer one save, or create or import a named save "
             "profile. To use the Steam saves directly, choose the global route "
             "there.</p>"

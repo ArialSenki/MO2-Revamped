@@ -239,7 +239,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
     def displayName(self) -> str:
         self._follow_managed_game()
-        return _tr("Native DLL Profile")
+        return _tr("Native DLL profile")
 
     def tooltip(self) -> str:
         self._follow_managed_game()

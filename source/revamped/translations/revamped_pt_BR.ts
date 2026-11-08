@@ -1991,7 +1991,7 @@ Reinicie o MO2, ou mude para outro perfil e volte, antes de iniciar o Elden Ring
       <translation>O perfil de save nomeado do Elden Ring está ausente</translation>
     </message>
     <message>
-      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
+      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save isolation and choose an available profile, or restore the missing profile folder.</source>
       <translation>O perfil de save nomeado selecionado não foi encontrado ou os metadados são inválidos. O jogo não foi iniciado. Abra Ferramentas &gt; Isolamento de saves e escolha um perfil disponível, ou restaure a pasta do perfil ausente.</translation>
     </message>
     <message>
@@ -2462,7 +2462,7 @@ Se algum tiver progresso que você quer, feche o jogo e copie-o de volta.</trans
       <translation>Detecta as DLLs nativas do Elden Ring instaladas e gerencia a ordem de carregamento e os exports de inicialização opcionais para cada perfil do MO2.</translation>
     </message>
     <message>
-      <source>Native DLL Profile</source>
+      <source>Native DLL profile</source>
       <translation>Perfil de DLLs nativas</translation>
     </message>
     <message>
@@ -2472,10 +2472,6 @@ Se algum tiver progresso que você quer, feche o jogo e copie-o de volta.</trans
     <message>
       <source>Elden Ring native DLL profile</source>
       <translation>Perfil de DLLs nativas do Elden Ring</translation>
-    </message>
-    <message>
-      <source>Native DLL profile</source>
-      <translation>Perfil de DLLs nativas</translation>
     </message>
     <message>
       <source>Choose the native DLLs for this MO2 profile, set their load order, and select optional initializer exports.</source>
@@ -2909,7 +2905,7 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
       <translation>Escolha rotas de save do Elden Ring e perfis de save nomeados, veja o caminho de save ativo e importe ou transfira saves .sl2.</translation>
     </message>
     <message>
-      <source>Save Isolation</source>
+      <source>Save isolation</source>
       <translation>Isolamento de saves</translation>
     </message>
     <message>
@@ -2969,7 +2965,7 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
       <translation>Criar um perfil de save nomeado</translation>
     </message>
     <message>
-      <source>Create a separate named save choice managed in Tools &gt; Save Isolation.</source>
+      <source>Create a separate named save choice managed in Tools &gt; Save isolation.</source>
       <translation>Cria uma opção de save nomeada separada, gerenciada em Ferramentas &gt; Isolamento de saves.</translation>
     </message>
     <message>
@@ -3417,7 +3413,7 @@ Escolha Usar o save global da Steam para salvar esta rota no perfil atual. Fecha
       <translation>Este nome aparece em Ferramentas &gt; Isolamento de saves. Se você escolher um save inicial abaixo, ele será copiado para este perfil de save nomeado. O Elden Ring carrega o arquivo selecionado como ER0000.sl2.</translation>
     </message>
     <message>
-      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
+      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save isolation.</source>
       <translation>Opcional. Deixe desmarcado para usar os saves padrão. Você pode criar perfis de save nomeados depois em Ferramentas &gt; Isolamento de saves.</translation>
     </message>
     <message>
@@ -3785,7 +3781,7 @@ O save foi copiado, mas o .bak não pôde ser atualizado: {error}</translation>
       <translation>Backup restaurado</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
       <translation>&lt;p&gt;A rota de saves deste perfil ainda não tem saves do Elden Ring, enquanto a pasta da Steam tem. O jogo vai começar sem seus personagens, e um personagem novo será salvo só nesta rota.&lt;/p&gt;&lt;p&gt;Para jogar aqui com um personagem existente, abra Ferramentas &amp;gt; Isolamento de saves e use Transferir um save, ou crie ou importe um perfil de saves nomeado. Para usar os saves da Steam diretamente, escolha a rota global lá.&lt;/p&gt;&lt;p&gt;Rota: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
@@ -4365,11 +4361,11 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
       <translation>Ative um tipo de save para escolher um save inicial.</translation>
     </message>
     <message>
-      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save Isolation.</source>
+      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save isolation.</source>
       <translation>Esta instância só pode listar saves do próprio jogo. Com a nova instância aberta, adicione um save em Ferramentas &gt; Isolamento de saves.</translation>
     </message>
     <message>
-      <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <source>This name appears in Tools &gt; Save isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
       <translation>Este nome aparece em Ferramentas &gt; Isolamento de saves. Se você escolher um save inicial abaixo, ele será copiado para este perfil de save nomeado. Elden Ring carrega o arquivo selecionado como ER0000 com sua própria extensão.</translation>
     </message>
     <message>
@@ -4408,7 +4404,7 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
       <translation>Opções de inicialização, limpeza e desempenho do Elden Ring por perfil.</translation>
     </message>
     <message>
-      <source>Startup Options</source>
+      <source>Startup options</source>
       <translation>Opções de inicialização</translation>
     </message>
     <message>

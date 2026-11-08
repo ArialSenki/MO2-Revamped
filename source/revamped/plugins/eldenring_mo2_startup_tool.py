@@ -212,7 +212,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
 
     def displayName(self) -> str:
         self._follow_managed_game()
-        return _tr("Startup Options")
+        return _tr("Startup options")
 
     def tooltip(self) -> str:
         self._follow_managed_game()

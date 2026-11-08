@@ -2031,7 +2031,7 @@ Reinicia MO2, o cambia a otro perfil y vuelve, antes de iniciar Elden Ring.</tra
       <translation>Falta el perfil de partidas con nombre de Elden Ring</translation>
     </message>
     <message>
-      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
+      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save isolation and choose an available profile, or restore the missing profile folder.</source>
       <translation>No se encontró el perfil de partidas con nombre seleccionado o sus metadatos no son válidos. El juego no se inició. Abre Herramientas &gt; Aislamiento de partidas y elige un perfil disponible, o restaura la carpeta del perfil que falta.</translation>
     </message>
     <message>
@@ -2502,7 +2502,7 @@ Si alguna tiene un progreso que quieres, cierra el juego y vuelve a copiarla.</t
       <translation>Detecta las DLL nativas de Elden Ring instaladas y gestiona su orden de carga y exportaciones de inicialización opcionales para cada perfil de MO2.</translation>
     </message>
     <message>
-      <source>Native DLL Profile</source>
+      <source>Native DLL profile</source>
       <translation>Perfil de DLL nativas</translation>
     </message>
     <message>
@@ -2512,10 +2512,6 @@ Si alguna tiene un progreso que quieres, cierra el juego y vuelve a copiarla.</t
     <message>
       <source>Elden Ring native DLL profile</source>
       <translation>Perfil de DLL nativas de Elden Ring</translation>
-    </message>
-    <message>
-      <source>Native DLL profile</source>
-      <translation>Perfil de DLL nativas</translation>
     </message>
     <message>
       <source>Choose the native DLLs for this MO2 profile, set their load order, and select optional initializer exports.</source>
@@ -2949,7 +2945,7 @@ Las DLL detectadas de los mods activos aparecerán en el panel izquierdo.</trans
       <translation>Elige rutas de partidas de Elden Ring y perfiles de partidas con nombre, revisa la ruta de partidas activa e importa o transfiere partidas .sl2.</translation>
     </message>
     <message>
-      <source>Save Isolation</source>
+      <source>Save isolation</source>
       <translation>Aislamiento de partidas</translation>
     </message>
     <message>
@@ -3009,7 +3005,7 @@ Las DLL detectadas de los mods activos aparecerán en el panel izquierdo.</trans
       <translation>Crear un perfil de partidas con nombre</translation>
     </message>
     <message>
-      <source>Create a separate named save choice managed in Tools &gt; Save Isolation.</source>
+      <source>Create a separate named save choice managed in Tools &gt; Save isolation.</source>
       <translation>Crea una opción de partidas con nombre separada, gestionada en Herramientas &gt; Aislamiento de partidas.</translation>
     </message>
     <message>
@@ -3457,7 +3453,7 @@ Elige Usar partida global de Steam para guardar esta ruta en el perfil actual. C
       <translation>Este nombre aparece en Herramientas &gt; Aislamiento de partidas. Si eliges una partida inicial abajo, se copiará en este perfil de partidas con nombre. Elden Ring carga el archivo seleccionado como ER0000.sl2.</translation>
     </message>
     <message>
-      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
+      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save isolation.</source>
       <translation>Opcional. Déjalo sin marcar para usar las partidas estándar. Puedes crear perfiles de partidas con nombre más adelante desde Herramientas &gt; Aislamiento de partidas.</translation>
     </message>
     <message>
@@ -3825,7 +3821,7 @@ La partida se copió, pero su .bak no se pudo actualizar: {error}</translation>
       <translation>Copia restaurada</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
       <translation>&lt;p&gt;La ruta de partidas de este perfil aún no tiene partidas de Elden Ring, mientras que la carpeta de Steam sí. El juego empezará sin tus personajes, y un personaje nuevo se guardará solo en esta ruta.&lt;/p&gt;&lt;p&gt;Para jugar aquí con un personaje existente, abre Herramientas &amp;gt; Aislamiento de partidas y usa Transferir una partida, o crea o importa un perfil de partidas con nombre. Para usar directamente las partidas de Steam, elige allí la ruta global.&lt;/p&gt;&lt;p&gt;Ruta: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
@@ -4405,11 +4401,11 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
       <translation>Activa un tipo de partida para elegir una partida inicial.</translation>
     </message>
     <message>
-      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save Isolation.</source>
+      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save isolation.</source>
       <translation>Esta instancia solo puede mostrar partidas de su propio juego. Cuando abras la nueva instancia, añade una partida desde Herramientas &gt; Aislamiento de partidas.</translation>
     </message>
     <message>
-      <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <source>This name appears in Tools &gt; Save isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
       <translation>Este nombre aparece en Herramientas &gt; Aislamiento de partidas. Si eliges una partida inicial abajo, se copiará en este perfil de partidas con nombre. Elden Ring carga el archivo seleccionado como ER0000 con su propia extensión.</translation>
     </message>
     <message>
@@ -4448,7 +4444,7 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
       <translation>Opciones de inicio, limpieza y rendimiento de Elden Ring por perfil.</translation>
     </message>
     <message>
-      <source>Startup Options</source>
+      <source>Startup options</source>
       <translation>Opciones de inicio</translation>
     </message>
     <message>

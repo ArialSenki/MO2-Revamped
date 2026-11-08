@@ -1999,7 +1999,7 @@ Starte MO2 neu oder wechsle zu einem anderen Profil und zurück, bevor du Elden 
       <translation>Benanntes Elden-Ring-Spielstandprofil fehlt</translation>
     </message>
     <message>
-      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save Isolation and choose an available profile, or restore the missing profile folder.</source>
+      <source>The selected named save profile could not be found or its metadata is invalid. The game was not started. Open Tools &gt; Save isolation and choose an available profile, or restore the missing profile folder.</source>
       <translation>Das ausgewählte benannte Spielstandprofil wurde nicht gefunden oder seine Metadaten sind ungültig. Das Spiel wurde nicht gestartet. Öffne Werkzeuge &gt; Spielstand-Isolation und wähle ein verfügbares Profil oder stelle den fehlenden Profilordner wieder her.</translation>
     </message>
     <message>
@@ -2470,7 +2470,7 @@ Wenn einer davon Fortschritt enthält, den du behalten möchtest, schließe das 
       <translation>Erkennt installierte native Elden-Ring-DLLs und verwaltet ihre Ladereihenfolge und optionale Initialisierungs-Exporte für jedes MO2-Profil.</translation>
     </message>
     <message>
-      <source>Native DLL Profile</source>
+      <source>Native DLL profile</source>
       <translation>Native-DLL-Profil</translation>
     </message>
     <message>
@@ -2480,10 +2480,6 @@ Wenn einer davon Fortschritt enthält, den du behalten möchtest, schließe das 
     <message>
       <source>Elden Ring native DLL profile</source>
       <translation>Natives DLL-Profil für Elden Ring</translation>
-    </message>
-    <message>
-      <source>Native DLL profile</source>
-      <translation>Natives DLL-Profil</translation>
     </message>
     <message>
       <source>Choose the native DLLs for this MO2 profile, set their load order, and select optional initializer exports.</source>
@@ -2917,7 +2913,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <translation>Wähle Elden-Ring-Spielstandrouten und benannte Spielstandprofile, prüfe den aktiven Speicherpfad und importiere oder übertrage .sl2-Spielstände.</translation>
     </message>
     <message>
-      <source>Save Isolation</source>
+      <source>Save isolation</source>
       <translation>Spielstand-Isolation</translation>
     </message>
     <message>
@@ -2977,7 +2973,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <translation>Benanntes Spielstandprofil erstellen</translation>
     </message>
     <message>
-      <source>Create a separate named save choice managed in Tools &gt; Save Isolation.</source>
+      <source>Create a separate named save choice managed in Tools &gt; Save isolation.</source>
       <translation>Erstellt eine separate benannte Spielstand-Auswahl, die unter Werkzeuge &gt; Spielstand-Isolation verwaltet wird.</translation>
     </message>
     <message>
@@ -3425,7 +3421,7 @@ Wähle „Globalen Steam-Spielstand verwenden“, um diese Route für das aktuel
       <translation>Dieser Name erscheint unter Werkzeuge &gt; Spielstand-Isolation. Wenn du unten einen Start-Spielstand wählst, wird er in dieses benannte Spielstandprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000.sl2.</translation>
     </message>
     <message>
-      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
+      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save isolation.</source>
       <translation>Optional. Lass das Feld leer, um Standard-Spielstände zu nutzen. Benannte Spielstandprofile kannst du später unter Werkzeuge &gt; Spielstand-Isolation erstellen.</translation>
     </message>
     <message>
@@ -3793,7 +3789,7 @@ Der Spielstand wurde kopiert, aber seine .bak konnte nicht aktualisiert werden: 
       <translation>Sicherung wiederhergestellt</translation>
     </message>
     <message>
-      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save Isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save isolation and use Transfer one save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
       <translation>&lt;p&gt;Die Spielstandroute dieses Profils hat noch keine Elden-Ring-Spielstände, der Steam-Ordner aber schon. Das Spiel startet ohne deine Charaktere, und ein neuer Charakter wird nur in dieser Route gespeichert.&lt;/p&gt;&lt;p&gt;Um hier mit einem vorhandenen Charakter zu spielen, öffne Werkzeuge &amp;gt; Spielstand-Isolation und nutze „Einen Spielstand übertragen“ oder erstelle bzw. importiere ein benanntes Spielstandprofil. Für die Steam-Spielstände wähle dort die globale Route.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</translation>
     </message>
     <message>
@@ -4373,11 +4369,11 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
       <translation>Schalte einen Spielstandtyp ein, um einen Startspielstand zu wählen.</translation>
     </message>
     <message>
-      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save Isolation.</source>
+      <source>This instance can only list saves of its own game. Once the new instance is open, add a save from Tools &gt; Save isolation.</source>
       <translation>Diese Instanz kann nur Spielstände ihres eigenen Spiels anzeigen. Füge in der neuen Instanz einen Spielstand über Werkzeuge &gt; Speicherstand-Isolation hinzu.</translation>
     </message>
     <message>
-      <source>This name appears in Tools &gt; Save Isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
+      <source>This name appears in Tools &gt; Save isolation. If you choose a starting save below, it will be copied into this named save profile. Elden Ring loads the selected file as ER0000 with its own extension.</source>
       <translation>Dieser Name erscheint unter Werkzeuge &gt; Spielstand-Isolation. Wählst du unten einen Startspielstand, wird er in dieses benannte Spielstandprofil kopiert. Elden Ring lädt die gewählte Datei als ER0000 mit ihrer eigenen Endung.</translation>
     </message>
     <message>
@@ -4416,7 +4412,7 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
       <translation>Elden-Ring-Optionen für Start, Bereinigung und Leistung pro Profil.</translation>
     </message>
     <message>
-      <source>Startup Options</source>
+      <source>Startup options</source>
       <translation>Startoptionen</translation>
     </message>
     <message>
