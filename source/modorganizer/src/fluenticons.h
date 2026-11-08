@@ -25,6 +25,7 @@ enum class Tone
   Success,   // green
   Caution,   // amber
   Critical,  // red
+  OnAccent,  // what stands on an accent fill: a primary button's label
 };
 
 // the color of a tone in the active theme

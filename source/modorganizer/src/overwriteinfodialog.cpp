@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "overwriteinfodialog.h"
+#include <utility.h>
 #include "menuutils.h"
 #include "fluenticons.h"
 #include "mo2foldericonprovider.h"
@@ -103,11 +104,28 @@ public:
           Qt::AlignLeft | Qt::AlignVCenter);
     }
 
-    return QFileSystemModel::headerData(section, orientation, role);
+    const QVariant header = QFileSystemModel::headerData(section, orientation, role);
+
+    // Qt's own English heading, in the capitalization of every other list
+    if (role == Qt::DisplayRole && header.toString() == QLatin1String("Date Modified")) {
+      return QStringLiteral("Date modified");
+    }
+    return header;
   }
 
   QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override
   {
+    // sizes as in the other lists: left-aligned and in the same units
+    if (index.column() == 1) {
+      if (role == Qt::TextAlignmentRole) {
+        return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
+      }
+      if (role == Qt::DisplayRole) {
+        const QFileInfo info = fileInfo(index);
+        return info.isDir() ? QString() : MOBase::localizedByteSize(info.size());
+      }
+    }
+
     // Windows' type names come in the system language, or in English when Qt
     // has no translation; the type column names folders and file extensions
     if (index.column() == 2 && role == Qt::DisplayRole) {
@@ -242,7 +260,7 @@ void OverwriteInfoDialog::buildFluentLayout()
   new SwallowEnter(ui->filesView);
   toolsLayout->addWidget(search, 1);
   auto* expand = FluentPanels::iconButton(0xF164, tr("Expand all"), tools);
-  auto* collapse = FluentPanels::iconButton(0xF165, tr("Collapse all"), tools);
+  auto* collapse = FluentPanels::iconButton(0xF166, tr("Collapse all"), tools);
   toolsLayout->addWidget(expand);
   toolsLayout->addWidget(collapse);
   toolsLayout->addStretch(1);
@@ -370,7 +388,7 @@ void OverwriteInfoDialog::updateSummary()
   } else if (files == 0 && !more) {
     m_summary->setText(tr("Only empty folders, safe to clear"));
   } else {
-    const QString size = QLocale().formattedDataSize(bytes);
+    const QString size = MOBase::localizedByteSize(bytes);
     if (more) {
       m_summary->setText(tr("More than %1 files, not part of any mod")
                              .arg(QLocale().toString(files)));

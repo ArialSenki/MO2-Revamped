@@ -171,10 +171,10 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
 
   if (view->hasCollapsibleSeparators()) {
     addMenuSection(this, tr("List display"));
-    QAction* collapseAction = addAction(tr("Collapse all"), view, &QTreeView::collapseAll);
-    collapseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/collapse.svg"));
     QAction* expandAction = addAction(tr("Expand all"), view, &QTreeView::expandAll);
     expandAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/expand.svg"));
+    QAction* collapseAction = addAction(tr("Collapse all"), view, &QTreeView::collapseAll);
+    collapseAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/collapse.svg"));
   }
 
   addMenuSection(this, tr("Bulk actions"));
@@ -430,14 +430,14 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
   if (view->model()->hasChildren(viewIndex)) {
     bool expanded = view->isExpanded(viewIndex);
     addSeparator();
+    addAction(menuGlyph(MenuGlyphs::Expand), tr("Expand all"), view,
+              &QTreeView::expandAll);
     addAction(menuGlyph(MenuGlyphs::Collapse), tr("Collapse all"), view,
               &QTreeView::collapseAll);
-    addAction(tr("Collapse others"), [=]() {
+    addAction(menuGlyph(MenuGlyphs::Collapse), tr("Collapse others"), [=]() {
       m_view->collapseAll();
       m_view->setExpanded(viewIndex, expanded);
     });
-    addAction(menuGlyph(MenuGlyphs::Expand), tr("Expand all"), view,
-              &QTreeView::expandAll);
   }
 
   // install or create next to this mod: only by priority, where a position
@@ -453,7 +453,7 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
   // export) as upstream had them, also when sorted by something else
   addSeparator();
   auto* allMods = new ModListGlobalContextMenu(core, view, this);
-  allMods->setTitle(tr("All Mods"));
+  allMods->setTitle(tr("All mods"));
   allMods->setIcon(menuGlyph(MenuGlyphs::List));
   addMenu(allMods);
 
@@ -687,7 +687,7 @@ void ModListContextMenu::addColorActions(ModInfo::Ptr mod)
     m_actions.setColor(m_selected, m_index);
   });
   if (mod->color().isValid()) {
-    addAction(tr("Reset color"), [=]() {
+    addAction(menuGlyph(MenuGlyphs::Clear), tr("Reset color"), [=]() {
       m_actions.resetColor(m_selected);
     });
   }
@@ -964,7 +964,7 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
   // updates and the Nexus account commands
   addSeparator();
   if (mod->nexusId() > 0) {
-    addAction(FluentIcons::icon(":/MO/gui/contextmenu/updates.svg"),
+    addAction(FluentIcons::icon(":/MO/gui/contextmenu/update-check.svg"),
               tr("Check for updates"), [=]() {
                 m_actions.checkModsForUpdates(m_selected);
               });
