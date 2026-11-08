@@ -458,7 +458,7 @@ void DirectoryRefresher::refresh()
   TimeThis tt("DirectoryRefresher::refresh()");
   auto* p = new DirectoryRefreshProgress(this);
 
-  {
+  try {
     QMutexLocker locker(&m_RefreshLock);
 
     m_Root.reset(new DirectoryEntry(L"data", nullptr, 0));
@@ -493,6 +493,17 @@ void DirectoryRefresher::refresh()
 
     m_lastFileCount = m_Root->getFileRegister()->highestCount();
     log::debug("refresher saw {} files", m_lastFileCount);
+  } catch (const std::exception& e) {
+    // what was read is dropped: the plugin list built from a partial structure
+    // would be saved without the mods' plugins. The core keeps the previous one
+    log::error("the directory refresh failed: {}", e.what());
+    m_Root.reset();
+    emit error(tr("The list of files could not be read: %1").arg(e.what()));
+
+    p->finish();
+    emit progress(p);
+    emit refreshFailed();
+    return;
   }
 
   p->finish();

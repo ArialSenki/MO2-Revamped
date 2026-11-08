@@ -22,6 +22,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QDir>
 
+#include <atomic>
+#include <memory>
+
 #include "ifiletree.h"
 
 namespace MOShared
@@ -45,11 +48,14 @@ public:
    * @brief Create a new file tree representing the given VFS directory.
    *
    * @param root Root directory.
+   * @param valid Set to false when the root is about to be freed; a tree a plugin
+   *     still holds is empty from then on instead of reading freed memory.
    *
    * @return a file tree representing the VFS directory.
    */
   static std::shared_ptr<const VirtualFileTree>
-  makeTree(const MOShared::DirectoryEntry* root);
+  makeTree(const MOShared::DirectoryEntry* root,
+           std::shared_ptr<const std::atomic<bool>> valid);
 
 protected:
   using IFileTree::IFileTree;

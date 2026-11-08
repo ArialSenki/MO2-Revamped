@@ -146,6 +146,7 @@ signals:
   void progress(const DirectoryRefreshProgress* p);
   void error(const QString& error);
   void refreshed();
+  void refreshFailed();
 
 private:
   OrganizerCore& m_Core;

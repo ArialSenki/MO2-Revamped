@@ -516,6 +516,7 @@ private:
 private slots:
 
   void onDirectoryRefreshed();
+  void onDirectoryRefreshFailed();
   void removeOrigin(const QString& name);
   void downloadSpeed(const QString& serverName, int bytesPerSecond);
   void loginSuccessful(bool necessary);
@@ -563,6 +564,8 @@ private:
 
   std::unique_ptr<DirectoryRefresher> m_DirectoryRefresher;
   MOShared::DirectoryEntry* m_DirectoryStructure;
+  std::shared_ptr<std::atomic<bool>> m_VirtualFileTreeValid =
+      std::make_shared<std::atomic<bool>>(true);
   MOBase::MemoizedLocked<std::shared_ptr<const MOBase::IFileTree>> m_VirtualFileTree;
 
   DownloadManager m_DownloadManager;
