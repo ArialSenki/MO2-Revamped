@@ -2921,7 +2921,7 @@ Erkannte DLLs aus aktiven Mods erscheinen im linken Bereich.</translation>
       <translation>Elden-Ring-Profiloptionen</translation>
     </message>
     <message>
-      <source>Elden Ring Save Transfer</source>
+      <source>Elden Ring save transfer</source>
       <translation>Elden-Ring-Spielstandübertragung</translation>
     </message>
     <message>
@@ -3887,8 +3887,8 @@ Die Route konnte nicht wiederhergestellt werden. Die beiseitegelegten Spielstän
       <translation>&lt;p&gt;Als MO2 die Steam-Spielstände wiederhergestellt hat, die es für einen Start ausgeblendet hatte, war an ihrer Stelle ein Spielstandordner aufgetaucht: Das Spiel wurde inzwischen über Steam gestartet oder hat außerhalb der MO2-Route gespeichert. MO2 hat ihn nicht gelöscht; er liegt in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Wenn er Fortschritt enthält, den du behalten willst, schließe das Spiel und kopiere seine Dateien zurück. Lösche den Ordner, wenn du ihn nicht mehr brauchst, damit dieser Hinweis verschwindet.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>Elden Ring Saves</source>
-      <translation>Elden-Ring-Spielstände</translation>
+      <source>Elden Ring save isolation</source>
+      <translation>Elden-Ring-Spielstand-Isolation</translation>
     </message>
     <message>
       <source>Pages</source>
@@ -4163,10 +4163,6 @@ Nicht kopiert:
     <message>
       <source>Set aside while the game runs; they come back when it closes.</source>
       <translation>Beiseitegelegt, solange das Spiel läuft; sie kehren zurück, wenn es geschlossen wird.</translation>
-    </message>
-    <message>
-      <source>How saves work here</source>
-      <translation>Wie Spielstände hier funktionieren</translation>
     </message>
     <message>
       <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
@@ -4526,6 +4522,10 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
     <message>
       <source>The affinity change applies only to Elden Ring and resets when the game closes.</source>
       <translation>Die Affinitätsänderung gilt nur für Elden Ring und wird beim Schließen des Spiels zurückgesetzt.</translation>
+    </message>
+    <message>
+      <source>Log files</source>
+      <translation>Protokolldateien</translation>
     </message>
     <message>
       <source>Bridge logs</source>

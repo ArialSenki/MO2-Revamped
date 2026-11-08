@@ -672,7 +672,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 "stay in the log folder; the current log is recreated when the "
                 "bridge loads."),
         )
-        logs_card = add_card(logs_page, _tr("Bridge logs"))
+        logs_card = add_card(logs_page, _tr("Log files"))
         bridge_history_combo = QComboBox()
         for sessions in self.BridgeLogHistoryChoices:
             bridge_history_combo.addItem(
