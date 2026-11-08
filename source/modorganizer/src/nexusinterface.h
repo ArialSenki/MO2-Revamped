@@ -590,6 +590,10 @@ signals:
                             int requestID);
   void nxmRequestFailed(QString gameName, int modID, int fileID, QVariant userData,
                         int requestID, int errorCode, const QString& errorString);
+  // a queued request dropped at the rate limit: apart from nxmRequestFailed,
+  // which shows a message for each one, and an update check can queue hundreds
+  void nxmRequestDropped(QString gameName, int modID, int fileID, QVariant userData,
+                         int requestID, int errorCode, const QString& errorString);
   void requestsChanged(const APIStats& stats, const APIUserAccount& user);
 
 public slots:

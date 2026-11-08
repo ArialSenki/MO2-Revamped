@@ -229,6 +229,10 @@ DownloadManager::DownloadManager(NexusInterface* nexusInterface, QObject* parent
   m_OrganizerCore = dynamic_cast<OrganizerCore*>(parent);
   connect(&m_DirWatcher, SIGNAL(directoryChanged(QString)), this,
           SLOT(directoryChanged(QString)));
+  // requests dropped at the rate limit: the pending downloads and the ones
+  // fetching information don't stay that way
+  connect(m_NexusInterface, &NexusInterface::nxmRequestDropped, this,
+          &DownloadManager::nxmRequestFailed);
   m_TimeoutTimer.setSingleShot(false);
   // connect(&m_TimeoutTimer, SIGNAL(timeout()), this, SLOT(checkDownloadTimeout()));
   m_TimeoutTimer.start(5 * 1000);

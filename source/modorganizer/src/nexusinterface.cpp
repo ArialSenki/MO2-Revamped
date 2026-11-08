@@ -853,6 +853,7 @@ void NexusInterface::nextRequest()
   }
 
   if (m_User.exhausted()) {
+    const auto dropped = m_RequestQueue;
     m_RequestQueue.clear();
     // the hourly limit refills at five past the next hour; counted on the
     // date and time, so 23:xx doesn't come out as a negative wait
@@ -868,6 +869,15 @@ void NexusInterface::nextRequest()
                           .arg(wait % 60);
 
     log::warn("{}", warning);
+
+    // who waits for them is told; on the next turn of the event loop, as the
+    // request that got here may not have returned its id yet
+    QTimer::singleShot(0, this, [this, dropped, warning] {
+      for (const auto& request : dropped) {
+        emit nxmRequestDropped(request.m_GameName, request.m_ModID, request.m_FileID,
+                               request.m_UserData, request.m_ID, 429, warning);
+      }
+    });
     return;
   }
 
