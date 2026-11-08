@@ -357,39 +357,19 @@ void showInstanceExample(QWidget* parent)
 {
   FluentContentDialog dlg(
       parent, QStringLiteral("InstanceHelpDialog"), QObject::tr("What is an instance?"),
+      // plain text, as the other windows' help
       QObject::tr("An instance is its own Mod Organizer workspace. It keeps one game's "
                   "profiles, mods, downloads and settings together, so separate setups "
-                  "never mix."));
+                  "never mix.") +
+          QStringLiteral("\n\n%1: %2\n%3: %4\n%5: %6")
+              .arg(QObject::tr("Elden Ring"),
+                   QObject::tr("Its mods, profiles and saves stay in this instance."),
+                   QObject::tr("Skyrim Special Edition"),
+                   QObject::tr("A second instance manages Skyrim without touching Elden Ring."),
+                   QObject::tr("Global or portable"),
+                   QObject::tr("Global instances are stored in your user folder; portable ones "
+                               "live next to Mod Organizer and move with it.")));
 
-  auto addExample = [&](char16_t glyph, const QString& game, const QString& detail) {
-    auto* row = new QFrame(&dlg);
-    row->setObjectName(QStringLiteral("instanceHelpExample"));
-    auto* rowLayout = new QHBoxLayout(row);
-    rowLayout->setContentsMargins(14, 10, 14, 10);
-    rowLayout->setSpacing(14);
-    rowLayout->addWidget(glyphLabel(glyph, row));
-
-    auto* text = new QVBoxLayout;
-    text->setSpacing(1);
-    auto* gameLabel = new QLabel(game, row);
-    gameLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
-    auto* detailLabel = new QLabel(detail, row);
-    detailLabel->setObjectName(QStringLiteral("fluentSettingDescription"));
-    detailLabel->setWordWrap(true);
-    text->addWidget(gameLabel);
-    text->addWidget(detailLabel);
-    rowLayout->addLayout(text, 1);
-    dlg.body()->addWidget(row);
-  };
-
-  addExample(GameGlyph, QObject::tr("Elden Ring"),
-             QObject::tr("Its mods, profiles and saves stay in this instance."));
-  addExample(GameGlyph, QObject::tr("Skyrim Special Edition"),
-             QObject::tr("A second instance manages Skyrim without touching Elden Ring."));
-  addExample(DriveGlyph, QObject::tr("Global or portable"),
-             QObject::tr("Global instances are stored in your user folder; portable ones "
-                         "live next to Mod Organizer and move with it."));
-  dlg.body()->addStretch(1);
 
   auto* close = dlg.addButton(QObject::tr("Close"), true);
   QObject::connect(close, &QPushButton::clicked, &dlg, &QDialog::accept);
@@ -466,6 +446,7 @@ void InstanceManagerDialog::setupUi()
   m_switch->setAutoDefault(false);
   m_switch->setToolTip(tr("Restart Mod Organizer with this instance"));
   auto* close = new QPushButton(tr("Close"), this);
+  close->setMinimumWidth(102);
   close->setObjectName(QStringLiteral("close"));
   close->setAutoDefault(false);
   footer->addWidget(m_switch);

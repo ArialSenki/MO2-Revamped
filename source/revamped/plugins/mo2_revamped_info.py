@@ -593,7 +593,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         note.setObjectName("fluentSettingDescription")
         note.setWordWrap(True)
-        note.setContentsMargins(4, 0, 4, 0)
+        note.setContentsMargins(0, 0, 4, 0)
         overview.addWidget(note)
         overview.addStretch(1)
 
@@ -623,7 +623,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         developer_status = QLabel()
         developer_status.setObjectName("fluentSettingDescription")
         developer_status.setWordWrap(True)
-        developer_status.setContentsMargins(4, 0, 4, 0)
+        developer_status.setContentsMargins(0, 0, 4, 0)
         developer_status.hide()
         components.addWidget(developer_status)
         # the version's row, and its description where the version is shown

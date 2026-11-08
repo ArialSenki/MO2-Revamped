@@ -2266,7 +2266,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         mode_combo.setObjectName(f"{self.CreateInstanceCardName}_mode")
         mode_combo.setMaxVisibleItems(8)
         # the column of fields of the other steps (FieldColumnWidth in C++)
-        mode_combo.setFixedWidth(440)
+        mode_combo.setFixedWidth(460)
         for mode, title in (
             (self.ProfileIsolated, _tr("Separate saves per MO2 profile")),
             (self.InstanceShared, _tr("Share modded saves in this instance")),
@@ -2311,20 +2311,24 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         ):
             if suffix in {".err", ".cnv"} and (target_game or self._game_key) != "eldenring":
                 continue
-            type_box = QCheckBox(title, card)
+            type_box = QCheckBox(card)
             type_box.setObjectName(
                 f"{self.CreateInstanceCardName}_type_{suffix.lstrip('.')}"
             )
             type_box.setProperty("saveSuffix", suffix)
-            type_box.setProperty("fluentSwitch", True)
-            type_box.setCursor(Qt.CursorShape.PointingHandCursor)
+            # the title on the left, the switch on the right, as the rows below
+            _make_switch(type_box, title, "")
+            type_box.setFixedWidth(40)
             type_box.setChecked(suffix == ".sl2")
             type_box.toggled.connect(
                 lambda _checked, target=dialog: self._refresh_create_instance_save_sources(
                     target
                 )
             )
-            types_layout.addWidget(type_box)
+            type_row = QHBoxLayout()
+            type_row.addWidget(QLabel(title, card), 1)
+            type_row.addWidget(type_box, 0, Qt.AlignmentFlag.AlignVCenter)
+            types_layout.addLayout(type_row)
         types_note = QLabel(
             _tr("The saves of the types turned on can be copied in as the starting "
             "save. MO2 keeps every type apart in the same way."),
@@ -2354,7 +2358,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
         # with the switch beside it, as wide as the save mode list above
-        game_save_profile_name.setFixedWidth(440 - 40 - 16)
+        game_save_profile_name.setFixedWidth(460 - 40 - 16)
         game_save_profile_name.setToolTip(
             _trs("This name distinguishes the Elden Ring save profile in MO2. "
             "The game loads the selected file as ER0000.sl2.")
@@ -3209,6 +3213,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 layout = dialog.layout()
                 if layout is not None:
                     layout.invalidate()
+                    # or the old minimum height stays until the layout next runs
+                    layout.activate()
                 dialog.adjustSize()
         elif original_visible is not None:
             default_ini_checkbox.setVisible(bool(original_visible))
@@ -3225,6 +3231,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             layout = dialog.layout()
             if layout is not None:
                 layout.invalidate()
+                layout.activate()
             dialog.adjustSize()
         return True
 

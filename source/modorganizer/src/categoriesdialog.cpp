@@ -1341,7 +1341,7 @@ QWidget* CategoriesDialog::createFluentDetails()
     }
   });
 
-  auto idRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE8EC, tr("ID"),
+  auto idRow = FluentPanels::addDetailRow(m_fluentDetailRows, u'#', tr("ID"),
                                           tr("Copy the ID"), 0xE8C8);
   m_fluentID = idRow.value;
   connect(idRow.action, &QToolButton::clicked, this, [this] {

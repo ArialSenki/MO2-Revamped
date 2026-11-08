@@ -275,6 +275,13 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
   connect(ui->tabWidget->tabBar(), &QTabBar::tabMoved, [&] {
     onTabMoved();
   });
+  ui->close->setMinimumWidth(102);
+  // the Conflicts tables take the page's whole width, as the other pages
+  for (QLayout* pageLayout : {ui->tab->layout(), ui->tab_2->layout(), ui->widget->layout()}) {
+    if (pageLayout != nullptr) {
+      pageLayout->setContentsMargins(0, pageLayout == ui->widget->layout() ? 0 : 8, 0, 0);
+    }
+  }
   connect(ui->close, &QPushButton::clicked, [&] {
     onCloseButton();
   });
@@ -1137,13 +1144,13 @@ void ModInfoDialog::buildFluentPages()
     QWidget* left  = rowColumn(columns, card);
     QWidget* right = rowColumn(columns, card);
     ui->modID->setAccessibleName(tr("Mod ID"));
-    addEditRow(left, 0xE8EC, tr("Mod ID"), tr("The number in the mod's Nexus address"),
+    addEditRow(left, u'#', tr("Mod ID"), tr("The number in the mod's Nexus address"),
                {ui->modID});
     addEditRow(left, 0xE7FC, tr("Game"), tr("The Nexus game the page belongs to"),
                {ui->sourceGame});
     addEditRow(right, 0xE81C, tr("Version"), tr("In the accent color when Nexus has a newer one"),
                {ui->version});
-    addEditRow(right, 0xE8EC, tr("Nexus category"), tr("The category number on Nexus"),
+    addEditRow(right, u'#', tr("Nexus category"), tr("The category number on Nexus"),
                {ui->category});
     for (QWidget* field : std::initializer_list<QWidget*>{ui->modID, ui->sourceGame,
                                                          ui->version, ui->category}) {
