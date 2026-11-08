@@ -42,6 +42,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "startupdiagnostics.h"
 #include "thread_utils.h"
 #include "tutorialmanager.h"
+#include <QThread>
 #include <QWindow>
 #include <QAbstractItemView>
 #include <QColor>
@@ -1396,7 +1397,10 @@ bool MOApplication::event(QEvent* event)
 
 bool MOApplication::notify(QObject* receiver, QEvent* event)
 {
-  if (!Perf::enabled() || receiver == nullptr) {
+  // its counters are the UI thread's: notify() also runs for the events of
+  // worker threads
+  if (!Perf::enabled() || receiver == nullptr ||
+      QThread::currentThread() != thread()) {
     return dispatch(receiver, event);
   }
   Perf::Scope scope(receiver, event);
