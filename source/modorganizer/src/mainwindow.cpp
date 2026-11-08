@@ -4775,11 +4775,28 @@ void MainWindow::languageChange(const QString& newLanguage)
   ui->retranslateUi(this);
   // that also put back the original help on the interface
   configureEldenRingHelp();
+  // not in the .ui, so retranslateUi() left it; its short label is rebuilt below
+  if (m_fluentOverflowAction != nullptr) {
+    m_fluentOverflowAction->setText(tr("More"));
+    m_fluentOverflowAction->setIconText(QString());
+    m_fluentOverflowAction->setToolTip(tr("Links, updates and help"));
+  }
   // the command bar labels carry a leading gap; rebuild them in the new language
   applyFluentActionIcons();
   // a change while the window is up: the buttons were sized for the old
   // labels, and retranslateUi() put back the texts the dashboard replaces
   if (m_toolbarButtonGeometryInitialized) {
+    // the texts retranslateUi() knows nothing about or put back: Run, the
+    // "more" button and a waiting update's command
+    setRunState(m_runState);
+    if (m_moreActionsButton != nullptr) {
+      m_moreActionsButton->setToolTip(tr("Mod list actions, backups, and folders"));
+      m_moreActionsButton->setAccessibleName(tr("More actions"));
+    }
+    m_UpdateActionText.clear();
+    m_UpdateActionTip.clear();
+    applyUpdateActionTexts();
+
     setToolbarButtonStyle(ui->toolBar->toolButtonStyle());
     if (m_fluentDashboard != nullptr) {
       m_fluentDashboard->retranslate();
@@ -4864,6 +4881,25 @@ void MainWindow::updateAvailable()
     return;
   }
 
+  ui->actionUpdate->setEnabled(true);
+  applyUpdateActionTexts();
+  ui->statusBar->setUpdateAvailable(true);
+
+  // a new answer (another channel) replaces a notice that is open
+  if (!m_UpdateNotice.isNull()) {
+    m_UpdateNotice->close();
+    m_UpdateNotice = nullptr;
+  }
+  showUpdateNotice(true);
+}
+
+void MainWindow::applyUpdateActionTexts()
+{
+  const auto& releases = m_OrganizerCore.updater()->newerReleases();
+  if (releases.empty()) {
+    return;
+  }
+
   if (m_UpdateActionText.isEmpty()) {
     m_UpdateActionText = ui->actionUpdate->text();
     m_UpdateActionTip  = ui->actionUpdate->toolTip();
@@ -4874,21 +4910,12 @@ void MainWindow::updateAvailable()
     version.remove(0, 1);
   }
 
-  ui->actionUpdate->setEnabled(true);
   // the command opens the notice from now on, in the menu and the status bar
   ui->actionUpdate->setText(tr("MO2 Revamped %1 is out").arg(version));
   const QString updateHint =
       tr("MO2 Revamped %1 is out. Click to see what it changes.").arg(version);
   ui->actionUpdate->setToolTip(updateHint);
   ui->actionUpdate->setStatusTip(updateHint);
-  ui->statusBar->setUpdateAvailable(true);
-
-  // a new answer (another channel) replaces a notice that is open
-  if (!m_UpdateNotice.isNull()) {
-    m_UpdateNotice->close();
-    m_UpdateNotice = nullptr;
-  }
-  showUpdateNotice(true);
 }
 
 void MainWindow::clearUpdateAvailable()
