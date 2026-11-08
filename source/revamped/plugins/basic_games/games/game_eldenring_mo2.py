@@ -5259,6 +5259,11 @@ class EldenRingMo2Game(BasicGame):
                     ) from error
                 if not library.is_file():
                     raise ValueError(_tr("The winning file for '{0}' is not a DLL.").format(virtual_path))
+                # loaded by its path inside MO2's mods folder, not the resolved
+                # one: through a linked mods folder the resolved path loses the
+                # folder names the bridge looks for (SeamlessCoop's DLL is known
+                # by "mods"), and Seamless Co-op's own load names it this way
+                load_path = Path(winning_mod.absolutePath()).joinpath(*Path(virtual_path).parts)
 
                 initializer = native.get("initializer")
                 if initializer is not None and not isinstance(initializer, dict):
@@ -5307,7 +5312,7 @@ class EldenRingMo2Game(BasicGame):
                     )
                     # an initializer names an export of its own copy of the DLL
                     if initializer_function and not earlier["initializer"]:
-                        if os.path.normcase(str(_source_path)) == os.path.normcase(str(earlier["library"])):
+                        if os.path.normcase(str(_source_path)) == os.path.normcase(str(earlier["real_library"])):
                             earlier["initializer"] = initializer_function
                         else:
                             qInfo(
@@ -5319,7 +5324,8 @@ class EldenRingMo2Game(BasicGame):
                     "route": route,
                     "virtual_path": virtual_path,
                     "mod_name": winner,
-                    "library": library,
+                    "library": load_path,
+                    "real_library": library,
                     "initializer": initializer_function,
                 }
                 seen_virtual_paths[virtual_key] = entry
