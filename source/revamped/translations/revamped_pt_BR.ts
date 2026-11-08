@@ -4932,6 +4932,14 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
       <source>Search files</source>
       <translation>Pesquisar arquivos</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mostrar os mods com conflitos</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mostrar os mods com atualizações</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>

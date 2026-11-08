@@ -5020,6 +5020,14 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <source>Search files</source>
       <translation>Cerca file</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mostra le mod con conflitti</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mostra le mod con aggiornamenti</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>

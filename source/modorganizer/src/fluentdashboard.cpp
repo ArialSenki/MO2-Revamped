@@ -84,11 +84,11 @@ FluentStatTile::FluentStatTile(char16_t glyph, const QString& caption, QWidget* 
 
   auto* text = new QVBoxLayout;
   text->setSpacing(0);
-  auto* captionLabel = new QLabel(caption, this);
-  captionLabel->setObjectName(QStringLiteral("fluentStatCaption"));
+  m_caption = new QLabel(caption, this);
+  m_caption->setObjectName(QStringLiteral("fluentStatCaption"));
   m_value = new QLabel(this);
   m_value->setObjectName(QStringLiteral("fluentStatValue"));
-  text->addWidget(captionLabel);
+  text->addWidget(m_caption);
   text->addWidget(m_value);
   m_layout->addLayout(text, 1);
 }
@@ -100,6 +100,11 @@ void FluentStatTile::setValue(const QString& value, const QString& tone)
     m_badge->setProperty("tone", tone);
     repolish(m_badge);
   }
+}
+
+void FluentStatTile::setCaption(const QString& caption)
+{
+  m_caption->setText(caption);
 }
 
 QPushButton* FluentStatTile::addAction(const QString& text)
@@ -168,12 +173,14 @@ void FluentDashboard::setupBanner(QWidget* central)
 
   auto* profileLabel = new QLabel(tr("Profile"), m_banner);
   profileLabel->setObjectName(QStringLiteral("fluentHeroLabel"));
+  m_profileLabel = profileLabel;
   row->addWidget(profileLabel);
   row->addWidget(ui->profileBox);
   ui->profileBox->setMinimumWidth(180);
   row->addSpacing(12);
   auto* programLabel = new QLabel(tr("Program"), m_banner);
   programLabel->setObjectName(QStringLiteral("fluentHeroLabel"));
+  m_programLabel = programLabel;
   row->addWidget(programLabel);
   row->addWidget(ui->executablesListBox);
   ui->executablesListBox->setMinimumWidth(260);
@@ -225,6 +232,8 @@ void FluentDashboard::setupStats(QWidget* central)
   }
 
   m_conflictsAction = m_conflicts->addAction(tr("Show"));
+  // two buttons say "Show": screen readers hear what each one shows
+  m_conflictsAction->setAccessibleName(tr("Show mods with conflicts"));
   connect(m_conflictsAction, &QPushButton::clicked, this, [this] {
     ui->modList->setQuickFilter(CategoryFactory::Conflict);
   });
@@ -238,6 +247,7 @@ void FluentDashboard::setupStats(QWidget* central)
   });
 
   m_updatesAction = m_updates->addAction(tr("Show"));
+  m_updatesAction->setAccessibleName(tr("Show mods with updates"));
   connect(m_updatesAction, &QPushButton::clicked, this, [this] {
     ui->modList->setQuickFilter(CategoryFactory::UpdateAvailable);
   });
@@ -252,6 +262,7 @@ void FluentDashboard::setupModsHeader()
 
   auto* title = new QLabel(tr("Mods"), ui->layoutWidget);
   title->setObjectName(QStringLiteral("fluentCardTitle"));
+  m_modsTitle = title;
   header->insertWidget(0, title);
   header->insertSpacing(1, 8);
 
@@ -297,11 +308,7 @@ void FluentDashboard::setupModsHeader()
   ui->horizontalSpacer_4->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
   ui->horizontalLayout_12->addWidget(ui->dataTabFilter, 1);
   ui->horizontalLayout_12->addWidget(ui->dataTabRefresh);
-  ui->dataTabFilter->setPlaceholderText(tr("Search files"));
-  ui->dataTabFilter->setAccessibleName(tr("Search files"));
-  ui->dataTabRefresh->setText(QString());
   ui->dataTabRefresh->setFixedWidth(32);
-  ui->dataTabRefresh->setAccessibleName(tr("Refresh"));
   ui->horizontalLayout_12->invalidate();
 
   // the same for the Downloads tab: search and refresh on top, the hidden
@@ -311,12 +318,49 @@ void FluentDashboard::setupModsHeader()
   ui->horizontalSpacer_7->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
   ui->horizontalLayout->addWidget(ui->downloadFilterEdit, 1);
   ui->horizontalLayout->addWidget(ui->btnRefreshDownloads);
+  ui->btnRefreshDownloads->setFixedWidth(32);
+  ui->horizontalLayout->invalidate();
+
+  applyTabTexts();
+}
+
+void FluentDashboard::applyTabTexts()
+{
+  // the Data and Downloads tabs: icon-only refresh buttons and search fields
+  ui->dataTabFilter->setPlaceholderText(tr("Search files"));
+  ui->dataTabFilter->setAccessibleName(tr("Search files"));
+  ui->dataTabRefresh->setText(QString());
+  ui->dataTabRefresh->setAccessibleName(tr("Refresh"));
   ui->downloadFilterEdit->setPlaceholderText(tr("Search downloads"));
   ui->downloadFilterEdit->setAccessibleName(tr("Search downloads"));
   ui->btnRefreshDownloads->setText(QString());
-  ui->btnRefreshDownloads->setFixedWidth(32);
   ui->btnRefreshDownloads->setAccessibleName(tr("Refresh"));
-  ui->horizontalLayout->invalidate();
+}
+
+void FluentDashboard::retranslate()
+{
+  m_profileLabel->setText(tr("Profile"));
+  m_programLabel->setText(tr("Program"));
+  m_modsTitle->setText(tr("Mods"));
+  m_active->setCaption(tr("Active mods"));
+  m_conflicts->setCaption(tr("With conflicts"));
+  m_overwrite->setCaption(tr("Overwrite"));
+  m_updates->setCaption(tr("Updates"));
+  m_conflictsAction->setText(tr("Show"));
+  m_conflictsAction->setAccessibleName(tr("Show mods with conflicts"));
+  m_overwriteAction->setText(tr("Manage"));
+  m_updatesAction->setText(tr("Show"));
+  m_updatesAction->setAccessibleName(tr("Show mods with updates"));
+  for (QPushButton* chip : m_chips) {
+    const int id = chip->property("specialCategory").toInt();
+    chip->setText(id == CategoryFactory::Checked    ? tr("Active")
+                  : id == CategoryFactory::Conflict ? tr("Conflicts")
+                                                    : tr("All"));
+  }
+  applyTabTexts();
+
+  refreshStats();
+  refreshDisk();
 }
 
 void FluentDashboard::refreshGame()

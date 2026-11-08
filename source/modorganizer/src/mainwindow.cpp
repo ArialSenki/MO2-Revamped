@@ -4801,6 +4801,14 @@ void MainWindow::languageChange(const QString& newLanguage)
   configureEldenRingHelp();
   // the command bar labels carry a leading gap; rebuild them in the new language
   applyFluentActionIcons();
+  // a change while the window is up: the buttons were sized for the old
+  // labels, and retranslateUi() put back the texts the dashboard replaces
+  if (m_toolbarButtonGeometryInitialized) {
+    setToolbarButtonStyle(ui->toolBar->toolButtonStyle());
+    if (m_fluentDashboard != nullptr) {
+      m_fluentDashboard->retranslate();
+    }
+  }
   if (m_FilterOptionsDialog) {
     m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
     m_FilterDialogTitle->setText(tr("Filter options"));

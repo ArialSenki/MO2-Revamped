@@ -4940,6 +4940,14 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
       <source>Search files</source>
       <translation>Dateien suchen</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mods mit Konflikten anzeigen</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mods mit Updates anzeigen</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>

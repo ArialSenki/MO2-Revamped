@@ -4936,6 +4936,14 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <source>Search files</source>
       <translation>Rechercher des fichiers</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Afficher les mods en conflit</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Afficher les mods avec des mises à jour</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>

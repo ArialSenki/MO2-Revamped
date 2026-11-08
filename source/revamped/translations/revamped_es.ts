@@ -4972,6 +4972,14 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
       <source>Search files</source>
       <translation>Buscar archivos</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mostrar los mods con conflictos</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mostrar los mods con actualizaciones</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
