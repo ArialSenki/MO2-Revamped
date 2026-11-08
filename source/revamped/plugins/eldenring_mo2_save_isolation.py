@@ -1454,9 +1454,25 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         route_row.addWidget(QLabel(_tr("Save route:"), dialog))
         route_combo = QComboBox(dialog)
         for label, route_id, route_path in routes:
-            route_combo.addItem(label, (route_id, str(route_path)))
+            is_global = route_id == self.GlobalShared
+            route_combo.addItem(
+                label,
+                (route_id, str(route_path), str(self._auto_backup_root(route_path, base, is_global))),
+            )
             if route_id == current_route:
                 route_combo.setCurrentIndex(route_combo.count() - 1)
+            # Reforged's online play keeps its own save inside the route, and
+            # the game plugin backs it up apart, to "<route> Backups/online"
+            online_backups = route_path.parent / f"{route_path.name} Backups" / "online"
+            if not is_global and online_backups.is_dir():
+                route_combo.addItem(
+                    f"{label} — ELDEN RING Reforged (online)",
+                    (
+                        f"{route_id}:online",
+                        str(route_path / self._ReforgedOnlineSavesFolder),
+                        str(online_backups),
+                    ),
+                )
         # the route this profile uses or the one asked for, not always the standard one
         if route is None:
             route = self._active_save_directory_directory(
@@ -1490,10 +1506,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         layout.addLayout(buttons)
 
         def selected_route() -> tuple[str, Path, Path]:
-            route_id, route_path = route_combo.currentData()
-            route_root = Path(route_path)
-            root = self._auto_backup_root(route_root, base, route_id == self.GlobalShared)
-            return route_id, route_root, root
+            route_id, route_path, backup_root = route_combo.currentData()
+            return route_id, Path(route_path), Path(backup_root)
 
         def refresh() -> None:
             backup_list.clear()
