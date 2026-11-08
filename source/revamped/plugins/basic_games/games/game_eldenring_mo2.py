@@ -3986,6 +3986,10 @@ class EldenRingMo2Game(BasicGame):
             # hidden Steam saves of a game that may still be running, nor the
             # Overwrite cleanup and save restore that wait for that game
             return True
+        # each launch's log says once what its native profile and forced
+        # loads are, even when nothing changed since the last refresh
+        self.__dict__.get("_logged_notes", {}).clear()
+        self._last_forced_load_notes = None
         if not self._reforged_online_mod_ready(app_path):
             return False
         if not self._seamless_password_ready(app_path):
