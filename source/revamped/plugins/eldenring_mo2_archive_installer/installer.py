@@ -674,7 +674,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         window_name = default_mod_name
         manual_state: dict = {}
         while True:
-            choice = self._ask_archive_layout(window_name, tree, package)
+            try:
+                choice = self._ask_archive_layout(window_name, tree, package)
+            except Exception as error:
+                # an odd archive must not take MO2's install down with it
+                qCritical(f"Elden Ring MO2: could not show the install window for {window_name}: {error!r}")
+                return mobase.InstallResult.FAILED
             keep_reforged_online = self._chosen_reforged_online
             if choice is None:
                 return mobase.InstallResult.CANCELED
