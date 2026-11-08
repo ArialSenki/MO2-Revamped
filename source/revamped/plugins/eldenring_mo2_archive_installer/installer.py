@@ -1725,7 +1725,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         notice_lines = []
         if package in {"reforged", "convergence"} and self._nightreign_active():
             notice_lines.append(
-                self.tr("This is an Elden Ring mod: this instance manages Nightreign.")
+                # names both games: not through self.tr, which would make both Nightreign
+                QtWidgets.QApplication.translate(
+                    "EldenRingArchiveInstaller",
+                    "This is an Elden Ring mod: this instance manages Nightreign.",
+                )
             )
         # game files a mod rarely means to replace
         executables = sorted(self._game_files_in(archive_tree) - {"regulation.bin"})
