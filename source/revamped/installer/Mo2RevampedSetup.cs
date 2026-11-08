@@ -1646,11 +1646,23 @@ namespace Mo2RevampedSetup
             else File.Move(temp, destination);
         }
 
+        // the Elden Ring / Nightreign saves an instance keeps beside its
+        // profiles: the saves shared by its profiles, their backups and the
+        // backups of the Steam route ("Profiles and saves" takes them along)
+        private static readonly string[] InstanceSaveFolders = new string[]
+        {
+            "Elden Ring Shared Saves", "Elden Ring Shared Saves Backups", "Elden Ring Global Save Backups",
+            "Nightreign Shared Saves", "Nightreign Shared Saves Backups", "Nightreign Global Save Backups"
+        };
+
         private static List<CopyEntry> EnumerateMigrationFiles(SetupRequest request)
         {
             List<CopyEntry> files = new List<CopyEntry>();
             string root = Path.GetFullPath(request.SourceDataDirectory);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "profiles_directory", "profiles"), "profiles", request.CopyProfiles);
+            string baseDirectory = ResolveBaseDirectory(root);
+            foreach (string folder in InstanceSaveFolders)
+                AddSelectedTree(files, Path.Combine(baseDirectory, folder), folder, request.CopyProfiles);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "mod_directory", "mods"), "mods", request.CopyMods);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "download_directory", "downloads"), "downloads", request.CopyDownloads);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"), "overwrite", request.CopyOverwrite);
@@ -1676,6 +1688,7 @@ namespace Mo2RevampedSetup
             {
                 string root = Path.GetFullPath(request.SourceDataDirectory);
                 if (request.CopyProfiles && TreeHasFile(ResolveConfiguredDirectory(root, "profiles_directory", "profiles"))) return true;
+                if (request.CopyProfiles && InstanceSaveFolders.Any(folder => TreeHasFile(Path.Combine(ResolveBaseDirectory(root), folder)))) return true;
                 if (request.CopyMods && TreeHasFile(ResolveConfiguredDirectory(root, "mod_directory", "mods"))) return true;
                 if (request.CopyDownloads && TreeHasFile(ResolveConfiguredDirectory(root, "download_directory", "downloads"))) return true;
                 if (request.CopyOverwrite && TreeHasFile(ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"))) return true;
@@ -1713,11 +1726,17 @@ namespace Mo2RevampedSetup
         private static string ResolveConfiguredDirectory(string dataRoot, string key, string defaultName)
         {
             string iniPath = Path.Combine(dataRoot, "ModOrganizer.ini");
-            string iniBase = ReadIniSetting(iniPath, "base_directory");
-            string baseDirectory = String.IsNullOrEmpty(iniBase) ? dataRoot : ResolveIniPath(iniBase, dataRoot, dataRoot);
+            string baseDirectory = ResolveBaseDirectory(dataRoot);
             string configured = ReadIniSetting(iniPath, key);
             if (String.IsNullOrEmpty(configured)) configured = "%BASE_DIR%/" + defaultName;
             return ResolveIniPath(configured, baseDirectory, dataRoot);
+        }
+
+        // the instance's base_directory (MO2's basePath()), the data folder when unset
+        private static string ResolveBaseDirectory(string dataRoot)
+        {
+            string iniBase = ReadIniSetting(Path.Combine(dataRoot, "ModOrganizer.ini"), "base_directory");
+            return String.IsNullOrEmpty(iniBase) ? dataRoot : ResolveIniPath(iniBase, dataRoot, dataRoot);
         }
 
         private static string ResolveIniPath(string value, string baseDirectory, string fallbackRoot)
