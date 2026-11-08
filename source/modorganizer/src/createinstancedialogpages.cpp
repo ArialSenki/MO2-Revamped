@@ -1487,8 +1487,7 @@ bool GamePage::confirmUnknown(const QString& path, IPluginGame* game)
                           "<span style=\"white-space: nowrap; font-weight: "
                           "bold;\">%2</span> or "
                           "for any other game Mod Organizer can manage.")
-                  .arg(path)
-                  .arg(game->displayGameName()))
+                  .arg(path, game->displayGameName()))
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
 
@@ -1511,9 +1510,8 @@ IPluginGame* GamePage::confirmOtherGame(const QString& path, IPluginGame* select
                   "<span style=\"white-space: nowrap; font-weight: bold;\">%2</span>, "
                   "not "
                   "<span style=\"white-space: nowrap; font-weight: bold;\">%3</span>.")
-                  .arg(path)
-                  .arg(guessedGame->displayGameName())
-                  .arg(selectedGame->displayGameName()))
+                  .arg(path, guessedGame->displayGameName(),
+                       selectedGame->displayGameName()))
           .button({QObject::tr("Manage %1 instead").arg(guessedGame->displayGameName()),
                    QMessageBox::Ok})
           .button({QObject::tr("Use this folder for %1")
