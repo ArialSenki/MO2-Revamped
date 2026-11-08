@@ -1300,7 +1300,9 @@ void ModListView::onDoubleClicked(const QModelIndex& index)
       reportError(e.what());
     }
   } else if (hasCollapsibleSeparators() && modInfo->isSeparator()) {
-    setExpanded(index, !isExpanded(index));
+    // only the first column knows whether the row is expanded
+    const QModelIndex first = index.siblingAtColumn(0);
+    setExpanded(first, !isExpanded(first));
   } else {
     try {
       auto tab = ModInfoTabIDs::None;
@@ -1829,8 +1831,9 @@ bool ModListView::event(QEvent* event)
       // shift+enter expand
       if ((keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) &&
           selectionModel()->selectedRows().count() == 1) {
-        if (model()->hasChildren(index)) {
-          setExpanded(index, !isExpanded(index));
+        const QModelIndex first = index.siblingAtColumn(0);
+        if (model()->hasChildren(first)) {
+          setExpanded(first, !isExpanded(first));
         } else if (index.parent().isValid()) {
           setExpanded(index.parent(), false);
           selectionModel()->select(index.parent(), QItemSelectionModel::SelectCurrent |

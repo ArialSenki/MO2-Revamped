@@ -445,7 +445,8 @@ void SavesTab::onContextMenu(const QPoint& pos)
 {
   QItemSelectionModel* selection = ui.list->selectionModel();
 
-  if (!selection->hasSelection()) {
+  // on empty space there is no save to act on, whatever stayed selected
+  if (!selection->hasSelection() || !ui.list->indexAt(pos).isValid()) {
     return;
   }
 

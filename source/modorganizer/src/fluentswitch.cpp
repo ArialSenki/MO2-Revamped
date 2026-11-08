@@ -103,6 +103,7 @@ FluentSwitchPainter::FluentSwitchPainter(QCheckBox* box)
   // the row around a Settings switch toggles it too; hover the row as well
   if (QWidget* row = box->parentWidget();
       row != nullptr && row->objectName() == QLatin1String("fluentSettingRow")) {
+    row->setProperty("switchRow", true);
     row->installEventFilter(this);
   }
 

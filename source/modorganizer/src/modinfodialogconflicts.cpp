@@ -314,6 +314,11 @@ void ConflictsTab::exploreItems(QTreeView* tree)
 
 void ConflictsTab::showContextMenu(const QPoint& pos, QTreeView* tree)
 {
+  // on empty space there is no file to act on, whatever stayed selected
+  if (!tree->indexAt(pos).isValid()) {
+    return;
+  }
+
   auto actions = createMenuActions(tree);
 
   QMenu menu;

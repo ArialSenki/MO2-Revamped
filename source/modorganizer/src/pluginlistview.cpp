@@ -1,7 +1,9 @@
 #include "pluginlistview.h"
 
 #include <QMimeData>
+#include <QPainter>
 #include <QStyle>
+#include <QStyledItemDelegate>
 #include <QUrl>
 
 #include <report.h>
@@ -18,6 +20,34 @@
 #include "pluginlistcontextmenu.h"
 #include "pluginlistsortproxy.h"
 #include "ui_mainwindow.h"
+
+namespace
+{
+// the theme styles every row, and a styled row ignores the option's background:
+// the plugins of the selected mod are tinted here, as the mod list does
+class PluginRowDelegate : public QStyledItemDelegate
+{
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+
+  void paint(QPainter* painter, const QStyleOptionViewItem& option,
+             const QModelIndex& index) const override
+  {
+    QStyleOptionViewItem opt(option);
+    const QColor color = index.data(Qt::BackgroundRole).value<QColor>();
+    if (color.isValid()) {
+      painter->fillRect(opt.rect,
+                        (opt.state & QStyle::State_Selected)
+                            ? color.lighter(ModListView::SelectedLighter)
+                        : (opt.state & QStyle::State_MouseOver)
+                            ? color.lighter(ModListView::HoverLighter)
+                            : color);
+      opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
+    }
+    QStyledItemDelegate::paint(painter, opt, index);
+  }
+};
+}  // namespace
 
 using namespace MOBase;
 
@@ -209,6 +239,7 @@ void PluginListView::setup(OrganizerCore& core, MainWindow* mw, Ui::MainWindow* 
   setModel(m_sortProxy);
 
   sortByColumn(PluginList::COL_PRIORITY, Qt::AscendingOrder);
+  setItemDelegate(new PluginRowDelegate(this));
   setItemDelegateForColumn(PluginList::COL_FLAGS, new GenericIconDelegate(this));
 
   // counter
@@ -299,7 +330,8 @@ void PluginListView::onDoubleClicked(const QModelIndex& index)
     if (selectionModel()->hasSelection() &&
         selectionModel()->selectedRows().count() == 1) {
 
-      QModelIndex idx  = selectionModel()->currentIndex();
+      // the name, whichever column was clicked
+      QModelIndex idx  = selectionModel()->currentIndex().siblingAtColumn(PluginList::COL_NAME);
       QString fileName = idx.data().toString();
 
       if (ModInfo::getIndex(m_core->pluginList()->origin(fileName)) == UINT_MAX) {
@@ -364,7 +396,8 @@ bool PluginListView::event(QEvent* event)
         (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)) {
       if (selectionModel()->hasSelection() &&
           selectionModel()->selectedRows().count() == 1) {
-        QModelIndex idx  = selectionModel()->currentIndex();
+        QModelIndex idx =
+            selectionModel()->currentIndex().siblingAtColumn(PluginList::COL_NAME);
         QString fileName = idx.data().toString();
 
         if (ModInfo::getIndex(m_core->pluginList()->origin(fileName)) == UINT_MAX) {

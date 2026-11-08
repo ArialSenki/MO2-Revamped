@@ -1,5 +1,88 @@
 # Changelog
 
+## 1.1.0-beta.5 (pre-release) — November 8, 2026
+
+### Nightreign
+
+- Custom sounds in a mod's `sd` folder play. Nightreign has two functions that open
+  sound files, where Elden Ring has one, and the bridge now hooks both.
+- BootBoost works in Nightreign too, and the switch is available in its startup
+  options.
+- The intro logos are skipped, with me3's method for this game. It is a switch in
+  the startup options, on by default.
+- The game closes in about 3 seconds.
+
+### Saves
+
+- If MO2 can't give ELDEN RING Reforged its own save file, the bridge closes the game
+  before it reads any save, and MO2 explains why. Without this it could write to
+  ER0000.sl2, the save of your other mods. Choosing **Start anyway** in the warning
+  before the launch still starts the game.
+- Export keeps every route apart and includes the saves set aside while a mod profile
+  runs.
+- A failed transfer into the Steam route puts the old save back, also across drives.
+- The backups window offers Reforged's online backups, a route chosen by hand drops a
+  waiting wizard choice, and deleting a profile's saves checks what was left.
+
+### Mod list
+
+- Separator colors show again, over the whole row, under the cursor and when selected.
+  The conflict colors shown when you select a mod came back with them.
+- The blue edge on the selected row is gone.
+- The categories menu is more compact and fits on the screen in one column.
+- Double-clicking a separator collapses it from any column, not only the first.
+- Group headings are no longer read as the first mod, an older version on Nexus shows
+  in amber, and categories put back from the menu restore each selected mod.
+
+### Mods and launching
+
+- Seamless Co-op starts from a mods folder with any name, and a linked mods folder
+  loads each DLL once.
+- Arranging a large archive by hand no longer freezes MO2.
+- Mods with a loose file beside their game folders are no longer marked "No valid
+  game data".
+- A winning DLL missing from disk no longer blocks the launch.
+- Without any active mod, Nightreign still gets BootBoost.
+- Faster exit: the check the game makes at shutdown is only stepped over while the
+  game is closing.
+- BootBoost's cache has a checksum and is written safely; the old cache is replaced
+  at the next start.
+
+### Setup
+
+- An interrupted install or restore can be finished or undone, and no update goes over
+  one that did not finish.
+- A restore checks its backup first, and an elevated run stays in its folder.
+- Copy data brings the shared saves, save backups and Elden Ring launch settings.
+
+### Reliability
+
+- Refresh: no stuck refresh flag, a second refresh after changes made during one, and
+  a failed refresh no longer rebuilds or saves the plugin list.
+- Downloads: a retry after an error no longer appends the whole file to the partial
+  one, and several crashes when a download ends, fails or is removed are fixed.
+- Removing a mod checks that its folder is gone, and the installer never extracts
+  outside the mods folder.
+- Nexus: a cancelled or refused check no longer blocks the next one.
+
+### Interface
+
+- New category no longer renames another one.
+- Selected rows show in the lists that had no highlight: plugins, downloads, Saves,
+  Archives, filters, Conflicts, Overwrite and Settings. Row colors stay under the
+  cursor, such as a conflicted origin or a download's status.
+- Selecting a mod tints its plugins in the plugin list again.
+- Double-clicking a plugin opens its mod from any column.
+- A right-click on empty space no longer opens the menu of what stayed selected in
+  Saves, Conflicts and Overwrite.
+- Only rows that do something when clicked react to the cursor.
+- Tab reaches the log panel and status bar buttons, with a visible focus ring.
+- Changing the language while MO2 is open updates the toolbar, the dashboard and the
+  Data column titles.
+- Enter no longer confirms destructive questions by accident, a '%1' or '%2' in a name
+  or path stays as written, and the folded log follows new lines.
+- Nightreign instances name the right game in German and French.
+
 ## 1.1.0-beta.4 (pre-release) — November 6, 2026
 
 ### Added

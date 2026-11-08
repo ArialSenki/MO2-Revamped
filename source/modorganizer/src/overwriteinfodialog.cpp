@@ -569,6 +569,12 @@ void OverwriteInfoDialog::on_filesView_customContextMenuRequested(const QPoint& 
   QItemSelectionModel* selectionModel = ui->filesView->selectionModel();
   m_FileSelection                     = selectionModel->selectedRows(0);
 
+  // on empty space the menu is for the folder, not for what stayed selected
+  if (!ui->filesView->indexAt(pos).isValid()) {
+    ui->filesView->selectionModel()->clearSelection();
+    m_FileSelection.clear();
+  }
+
   QMenu menu(ui->filesView);
   menu.setToolTipsVisible(true);
 
