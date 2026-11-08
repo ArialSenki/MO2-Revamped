@@ -42,7 +42,20 @@ _game_name = "Elden Ring"
 def _tr(text: str) -> str:
     text = QCoreApplication.translate(_TR_CONTEXT, text)
     if _game_name != "Elden Ring":
-        text = text.replace("Elden Ring", _game_name).replace("eldenring.exe", "nightreign.exe")
+        # German joins the name with hyphens (Elden-Ring-Profil); French elides
+        # before it (d'Elden Ring, qu'Elden Ring)
+        for old, new in (
+            ("d'Elden Ring", f"de {_game_name}"),
+            ("d’Elden Ring", f"de {_game_name}"),
+            ("qu'Elden Ring", f"que {_game_name}"),
+            ("qu’Elden Ring", f"que {_game_name}"),
+            ("d'eldenring.exe", "de nightreign.exe"),
+            ("d’eldenring.exe", "de nightreign.exe"),
+            ("Elden-Ring", _game_name),
+            ("Elden Ring", _game_name),
+            ("eldenring.exe", "nightreign.exe"),
+        ):
+            text = text.replace(old, new)
     return text
 
 
@@ -182,6 +195,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return "ArialSenki"
 
     def description(self) -> str:
+        self._follow_managed_game()
         return _tr("Per-profile Elden Ring startup, cleanup, and performance options.")
 
     def version(self) -> mobase.VersionInfo:
@@ -197,13 +211,29 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return True
 
     def displayName(self) -> str:
+        self._follow_managed_game()
         return _tr("Startup Options")
 
     def tooltip(self) -> str:
+        self._follow_managed_game()
         return _tr("Startup, cleanup, and performance options for the active Elden Ring profile.")
 
     def icon(self) -> QIcon:
         return QIcon()
+
+    def _follow_managed_game(self) -> None:
+        """The menu and the plugin list ask for these texts before the tool
+        opens: they name the game this instance manages from the start."""
+        global _game_name
+        try:
+            game = self.__organizer.managedGame() if self.__organizer else None
+            short_name = game.gameShortName().casefold() if game is not None else ""
+        except Exception:
+            return
+        if short_name == "nightreign":
+            _game_name = "Nightreign"
+        elif short_name == "eldenring":
+            _game_name = "Elden Ring"
 
     def setParentWidget(self, widget) -> None:
         self.__parent_widget = widget

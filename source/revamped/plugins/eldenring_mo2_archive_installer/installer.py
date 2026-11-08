@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 from typing import Optional, Union
 import json
@@ -256,17 +257,18 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     if layout is not None:
                         missing = self._link_reforged_release(Path(new_mod.absolutePath()), layout)
                         if missing:
-                            settings_to_store = tuple(
-                                (key, False if key == self._reforged_online_key else value)
-                                for key, value in settings_to_store
-                            )
+                            # the online choice stays: the reinstall the message
+                            # asks for lays the release out again (with it off,
+                            # the reinstall would remove the online version)
                             QtWidgets.QMessageBox.warning(
                                 self._parentWidget(),
                                 "ELDEN RING Reforged",
                                 self.tr(
                                     "{0} files of Reforged's online version could not be "
-                                    "placed, so its launcher may refuse to start. Free some "
-                                    "disk space and reinstall the mod."
+                                    "placed, so its launcher may refuse to start. MO2's log "
+                                    "names them; the usual causes are a path too long for "
+                                    "Windows or an antivirus holding the files. Fix that and "
+                                    "reinstall the mod."
                                 ).format(missing),
                             )
                     elif not self._pending_reforged_layout["keep"]:
@@ -673,7 +675,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         window_name = default_mod_name
         manual_state: dict = {}
         while True:
-            choice = self._ask_archive_layout(window_name, tree, package)
+            try:
+                choice = self._ask_archive_layout(window_name, tree, package)
+            except Exception as error:
+                # an odd archive must not take MO2's install down with it
+                qCritical(f"Elden Ring MO2: could not show the install window for {window_name}: {error!r}")
+                return mobase.InstallResult.FAILED
             keep_reforged_online = self._chosen_reforged_online
             if choice is None:
                 return mobase.InstallResult.CANCELED
@@ -1080,15 +1087,21 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 if not is_folder(item) and item.checkState(0) == Qt.CheckState.Checked
             ]
 
+        # what the window offers does not change while it is open
+        offered_files = len(self._file_paths(base)) + len(left_out)
+
         def refresh() -> None:
             if updating[0]:
                 return
             files = chosen_files()
             targets = [path.casefold() for path, _source in files]
-            repeated = sorted({path for path in targets if targets.count(path) > 1})
+            target_counts = Counter(targets)
+            repeated = sorted(path for path, count in target_counts.items() if count > 1)
             summary = self._classify_layout_paths([path for path, _source in files], True)
-            names = [path.rsplit("/", 1)[-1] for path in targets if path.endswith(".dll")]
-            twice = sorted({name for name in names if names.count(name) > 1})
+            name_counts = Counter(
+                path.rsplit("/", 1)[-1] for path in targets if path.endswith(".dll")
+            )
+            twice = sorted(name for name, count in name_counts.items() if count > 1)
             lines = []
             if any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets):
                 lines.append(
@@ -1115,9 +1128,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             notice.setVisible(bool(lines))
             total = len(files)
             status.setText(
-                self.tr("{0} of {1} files will be installed.").format(
-                    total, len(self._file_paths(base)) + len(left_out)
-                )
+                self.tr("{0} of {1} files will be installed.").format(total, offered_files)
             )
             install_button.setEnabled(
                 total > 0
@@ -1125,7 +1136,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 and not any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets)
             )
 
-        def move_items(items: list, target) -> None:
+        def move_items(items: list, target, nested: bool = False) -> None:
             updating[0] = True
             for item in items:
                 # a folder can't go inside itself
@@ -1161,10 +1172,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 else:
                     # the same folder there already: they become one
                     updating[0] = False
-                    move_items(item.takeChildren(), same)
+                    move_items(item.takeChildren(), same, nested=True)
                     updating[0] = True
             updating[0] = False
-            refresh()
+            # one look once every merged folder is in place
+            if not nested:
+                refresh()
 
         def selected_items() -> list:
             selected = tree.selectedItems()
@@ -1277,10 +1290,27 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             menu.exec(tree.viewport().mapToGlobal(position))
 
         tree.customContextMenuRequested.connect(show_menu)
-        tree.itemChanged.connect(lambda _item, _column: refresh())
+        # one look for a burst of changes: ticking a folder changes each file in
+        # it, and building or resetting the tree inserts each one
+        refresh_queued = [False]
+
+        def queued_refresh() -> None:
+            refresh_queued[0] = False
+            try:
+                refresh()
+            except RuntimeError:
+                # the window closed before the queued look ran
+                pass
+
+        def queue_refresh(*_args) -> None:
+            if not refresh_queued[0]:
+                refresh_queued[0] = True
+                QTimer.singleShot(0, queued_refresh)
+
+        tree.itemChanged.connect(queue_refresh)
         # a drop moves items without any item changing
-        tree.model().rowsInserted.connect(lambda *_args: QTimer.singleShot(0, refresh))
-        tree.model().rowsRemoved.connect(lambda *_args: QTimer.singleShot(0, refresh))
+        tree.model().rowsInserted.connect(queue_refresh)
+        tree.model().rowsRemoved.connect(queue_refresh)
 
         populate()
         screen = (parent.screen() if parent is not None else None) or (
@@ -1703,7 +1733,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         notice_lines = []
         if package in {"reforged", "convergence"} and self._nightreign_active():
             notice_lines.append(
-                self.tr("This is an Elden Ring mod: this instance manages Nightreign.")
+                # names both games: not through self.tr, which would make both Nightreign
+                QtWidgets.QApplication.translate(
+                    "EldenRingArchiveInstaller",
+                    "This is an Elden Ring mod: this instance manages Nightreign.",
+                )
             )
         # game files a mod rarely means to replace
         executables = sorted(self._game_files_in(archive_tree) - {"regulation.bin"})
@@ -2093,6 +2127,17 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         mod_name_edit.textChanged.connect(lambda _text: refresh_name_notice())
         if reforged_online_box is not None:
             reforged_online_box.toggled.connect(lambda _checked: refresh_summary())
+            # arranged by hand, Reforged is installed as files only: the release
+            # its online launcher needs is laid out by Install alone
+            manual_tooltip = manual_button.toolTip()
+            online_tooltip = self.tr("Turn off the online version to arrange the files by hand.")
+
+            def follow_online(checked: bool) -> None:
+                manual_button.setEnabled(not checked)
+                manual_button.setToolTip(online_tooltip if checked else manual_tooltip)
+
+            reforged_online_box.toggled.connect(follow_online)
+            follow_online(reforged_online_box.isChecked())
         refresh_summary()
         refresh_name_notice()
 
@@ -2126,5 +2171,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         text = QtWidgets.QApplication.translate("EldenRingArchiveInstaller", value)
         # the texts name Elden Ring; a Nightreign instance gets its own name
         if self._nightreign_active():
-            text = text.replace("Elden Ring", "Nightreign")
+            # German joins the name with hyphens (Elden-Ring-Mod); French elides
+            # before it (d'Elden Ring, qu'Elden Ring)
+            for old, new in (
+                ("d'Elden Ring", "de Nightreign"),
+                ("d’Elden Ring", "de Nightreign"),
+                ("qu'Elden Ring", "que Nightreign"),
+                ("qu’Elden Ring", "que Nightreign"),
+                ("Elden-Ring", "Nightreign"),
+                ("Elden Ring", "Nightreign"),
+            ):
+                text = text.replace(old, new)
         return text

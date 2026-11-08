@@ -1816,8 +1816,12 @@ Reinstala el mod para cambiarlo.</translation>
       <translation>{0} archivos quedarían dentro de la carpeta {1}, donde el juego no los busca. Organizar para MO2 los coloca en su sitio.</translation>
     </message>
     <message>
-      <source>{0} files of Reforged's online version could not be placed, so its launcher may refuse to start. Free some disk space and reinstall the mod.</source>
-      <translation>No se pudieron colocar {0} archivos de la versión online de Reforged, así que su lanzador puede negarse a arrancar. Libera espacio en disco y reinstala el mod.</translation>
+      <source>{0} files of Reforged's online version could not be placed, so its launcher may refuse to start. MO2's log names them; the usual causes are a path too long for Windows or an antivirus holding the files. Fix that and reinstall the mod.</source>
+      <translation>No se pudieron colocar {0} archivos de la versión online de Reforged, así que su lanzador puede negarse a arrancar. El registro de MO2 los nombra; lo habitual es una ruta demasiado larga para Windows o un antivirus que bloquea los archivos. Corrígelo y reinstala el mod.</translation>
+    </message>
+    <message>
+      <source>Turn off the online version to arrange the files by hand.</source>
+      <translation>Desactiva la versión online para organizar los archivos a mano.</translation>
     </message>
     <message>
       <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
