@@ -1168,11 +1168,9 @@ void DownloadManager::queryInfoMd5(int index)
   info->m_GamesToQuery << m_ManagedGame->gameShortName();
   info->m_GamesToQuery << m_ManagedGame->validShortNames();
 
-  QFile downloadFile(info->m_FileName);
-  if (!downloadFile.exists()) {
-    downloadFile.setFileName(m_OrganizerCore->downloadsPath() + "\\" +
-                             info->m_FileName);
-  }
+  // the name is a bare file name: read on its own it would be looked for in the
+  // working directory first, where a file of the same name would be hashed
+  QFile downloadFile(m_OutputDirectory + "/" + info->m_FileName);
   if (!downloadFile.exists()) {
     log::error("Can't find download file '{}'", info->m_FileName);
     return;
