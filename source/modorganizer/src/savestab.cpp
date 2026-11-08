@@ -128,8 +128,13 @@ void SavesTab::updateRoute(const QDir& savesDir)
       path.compare(profile, Qt::CaseInsensitive) == 0) {
     kind = tr("This profile's own saves");
   } else if (path.compare(game, Qt::CaseInsensitive) == 0) {
-    kind   = tr("Steam's saves");
-    detail = tr("The game's saves, shared with Steam") + QStringLiteral("\n");
+    // only Elden Ring and Nightreign keep their saves in Steam's folder
+    if (EldenRingSaveSettings::supports(m_core.managedGame())) {
+      kind   = tr("Steam's saves");
+      detail = tr("The game's saves, shared with Steam") + QStringLiteral("\n");
+    } else {
+      kind = tr("The game's saves");
+    }
   } else {
     kind = tr("Shared saves");
   }

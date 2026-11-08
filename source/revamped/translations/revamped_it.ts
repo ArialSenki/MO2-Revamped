@@ -10386,6 +10386,10 @@ p, li { white-space: pre-wrap; }
 
 %1</translation>
     </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Salvataggi del gioco</translation>
+    </message>
   </context>
   <context>
     <name>SelectionDialog</name>

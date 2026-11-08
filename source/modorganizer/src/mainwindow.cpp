@@ -552,6 +552,7 @@ public:
                           FluentMotion::Normal);
     }
 
+    setListFocusable(expanded);
     updateChevron();
   }
 
@@ -639,9 +640,21 @@ private:
     relaxContentMinimum(false);
     m_Dock->setMinimumHeight(m_ExpandedMinimum);
     m_Dock->resize(m_Dock->width(), qMax(m_ExpandedHeight, m_ExpandedMinimum));
+    setListFocusable(true);
     updateChevron();
     if (expandedChanged) {
       expandedChanged(true);
+    }
+  }
+
+  // folded, the list is still there at one pixel: Tab must not land in it
+  void setListFocusable(bool focusable)
+  {
+    if (m_Dock->widget() == nullptr) {
+      return;
+    }
+    for (auto* view : m_Dock->widget()->findChildren<QAbstractItemView*>()) {
+      view->setFocusPolicy(focusable ? Qt::StrongFocus : Qt::NoFocus);
     }
   }
 
@@ -4808,6 +4821,8 @@ void MainWindow::languageChange(const QString& newLanguage)
     if (m_UpdateShown) {
       applyUpdateActionTexts();
     }
+    createEndorseMenu();
+    toggleRevampedEndorseState();
 
     setToolbarButtonStyle(ui->toolBar->toolButtonStyle());
     if (m_fluentDashboard != nullptr) {

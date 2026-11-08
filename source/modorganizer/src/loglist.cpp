@@ -200,9 +200,8 @@ LogList::LogList(QWidget* parent)
   // a full log drops its oldest line for each new one; someone reading further
   // up keeps the same line in view instead of watching the text creep up
   connect(model(), &LogModel::rowsAboutToBeRemoved, this, [&](const QModelIndex&, int first) {
-    const auto* bar = verticalScrollBar();
-    m_keepRow       = -1;
-    if (first == 0 && bar != nullptr && bar->value() < bar->maximum() - 2) {
+    m_keepRow = -1;
+    if (first == 0 && !m_atEnd) {
       m_keepRow = indexAt(QPoint(1, 1)).row();
     }
   });
@@ -214,6 +213,17 @@ LogList::LogList(QWidget* parent)
     m_keepRow     = -1;
     if (row >= 0) {
       scrollTo(model()->index(row, 0), QAbstractItemView::PositionAtTop);
+    }
+  });
+
+  // a range that changes keeps a list at its end there: new lines, and a
+  // panel that folds or unfolds
+  connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [this](int value) {
+    m_atEnd = value >= verticalScrollBar()->maximum() - 2;
+  });
+  connect(verticalScrollBar(), &QScrollBar::rangeChanged, this, [this] {
+    if (m_atEnd) {
+      m_timer.start(std::chrono::milliseconds(10));
     }
   });
 
@@ -229,11 +239,9 @@ void LogList::onNewEntry()
 {
   // follow new lines only while the list is at its end: someone who scrolled
   // up to read keeps their place
-  const auto* bar = verticalScrollBar();
-  if (bar != nullptr && bar->value() < bar->maximum() - 2) {
-    return;
+  if (m_atEnd) {
+    m_timer.start(std::chrono::milliseconds(10));
   }
-  m_timer.start(std::chrono::milliseconds(10));
 }
 
 void LogList::setCore(OrganizerCore& core)

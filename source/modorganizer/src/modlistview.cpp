@@ -873,11 +873,21 @@ void ModListView::updateGroupByProxy()
     }
   }
 
+  updateBranchDecoration();
+}
+
+void ModListView::updateBranchDecoration()
+{
   // a list with nothing to open (no grouping, or collapsible separators but no
   // separator) keeps no branch slot: every row showed an empty one between
   // the priority and the switch
-  bool branches = (nextModel != m_core->modList());
-  if (nextModel == m_byPriorityProxy) {
+  const QAbstractItemModel* model = m_sortProxy->sourceModel();
+  if (model == nullptr) {
+    return;
+  }
+
+  bool branches = (model != m_core->modList());
+  if (model == m_byPriorityProxy) {
     branches = false;
     for (unsigned int i = 0; i < ModInfo::getNumMods() && !branches; ++i) {
       branches = ModInfo::getByIndex(i)->isSeparator();
@@ -885,8 +895,8 @@ void ModListView::updateGroupByProxy()
   } else if (branches) {
     // grouped, but with no group to open
     branches = false;
-    for (int i = 0; i < nextModel->rowCount() && !branches; ++i) {
-      branches = nextModel->hasChildren(nextModel->index(i, 0));
+    for (int i = 0; i < model->rowCount() && !branches; ++i) {
+      branches = model->hasChildren(model->index(i, 0));
     }
   }
   setRootIsDecorated(branches);
@@ -957,6 +967,8 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
   m_sortProxy = new ModListSortProxy(core.currentProfile(), &core);
   setModel(m_sortProxy);
   connect(m_sortProxy, &ModList::modelReset, [=] {
+    // the first separator was created or the last one removed
+    updateBranchDecoration();
     refreshExpandedItems();
   });
 
