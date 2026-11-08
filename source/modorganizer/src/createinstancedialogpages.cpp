@@ -1027,6 +1027,13 @@ void GamePage::select(IPluginGame* game, const QString& dir)
     }
   }
 
+  if (checked == nullptr && m_selection != nullptr) {
+    // cancelling the installation picker, the folder browser or a question
+    // keeps the game chosen before, as selectCustom() does
+    selectButton(m_selection);
+    return;
+  }
+
   // select this plugin, if any
   m_selection = checked;
 
