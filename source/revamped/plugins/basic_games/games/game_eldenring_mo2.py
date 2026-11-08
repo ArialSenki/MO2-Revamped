@@ -535,6 +535,14 @@ class EldenRingModDataChecker(BasicModDataChecker):
             return self.FIXABLE
 
         status = super().dataLooksValid(filetree)
+        if status is self.VALID:
+            return status
+        # game folders with loose files beside them (notes kept by the install
+        # window's choice, a README, Seamless Co-op's ersc_launcher.exe): the
+        # game never reads those files, and MO2 flags an installed mod that
+        # isn't VALID as having no game data
+        if self._valid_apart_from_loose_files(filetree):
+            return self.VALID
         if status is not self.INVALID:
             return status
 
@@ -550,6 +558,21 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if self._contains_supported_payload(filetree):
             return self.FIXABLE
         return status
+
+    def _valid_apart_from_loose_files(self, filetree: mobase.IFileTree) -> bool:
+        """Whether every folder at the top is a game folder MO2 takes as it is,
+        with at least one of them or a game file there, and the rest only loose
+        files."""
+        patterns = self._regex_patterns
+        found = False
+        for entry in filetree:
+            name = entry.name().casefold()
+            if patterns.valid.match(name):
+                found = True
+            elif is_directory(entry) or patterns.unfold.match(name):
+                # a wrapper or an option folder: left to the checks below
+                return False
+        return found
 
     def fix(self, filetree: mobase.IFileTree) -> mobase.IFileTree:
         if self._preserve_archive_layout_requested():
