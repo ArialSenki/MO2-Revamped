@@ -4614,17 +4614,22 @@ void MainWindow::on_actionSettings_triggered()
   }
 
   if (e.testFlag(Exit::Restart)) {
+    // a restart already agreed to in Settings (Reset window geometries) isn't
+    // asked again
     const auto r =
-        MOBase::TaskDialog(this)
-            .title(tr("Restart Mod Organizer"))
-            .main(tr("Restart Mod Organizer"))
-            .content(tr("Mod Organizer must restart to finish configuration changes"))
-            .icon(QMessageBox::Question)
-            .button({tr("Restart"), QMessageBox::Yes})
-            .button(
-                {tr("Continue"), tr("Some changes won't apply until you restart."),
-                 QMessageBox::No})
-            .exec();
+        dialog.restartConfirmed()
+            ? QMessageBox::Yes
+            : MOBase::TaskDialog(this)
+                  .title(tr("Restart Mod Organizer"))
+                  .main(tr("Restart Mod Organizer"))
+                  .content(
+                      tr("Mod Organizer must restart to finish configuration changes"))
+                  .icon(QMessageBox::Question)
+                  .button({tr("Restart"), QMessageBox::Yes})
+                  .button({tr("Continue"),
+                           tr("Some changes won't apply until you restart."),
+                           QMessageBox::No})
+                  .exec();
 
     if (r == QMessageBox::Yes) {
       ExitModOrganizer(e);

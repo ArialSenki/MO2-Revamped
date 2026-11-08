@@ -8,6 +8,7 @@
 #include "fluentswitch.h"
 #include "organizercore.h"
 #include "plugincontainer.h"
+#include "revampedtheme.h"
 
 #include <QAbstractItemView>
 #include <QApplication>
@@ -55,9 +56,16 @@ public:
     const QStyle* style = blank.widget != nullptr ? blank.widget->style() : QApplication::style();
     style->drawControl(QStyle::CE_ItemViewItem, &blank, painter, blank.widget);
 
-    FluentSwitch::Colors colors{QColor(0x4C, 0xC2, 0xFF), QColor(0x2F, 0x2F, 0x2F),
-                                QColor(0x9A, 0x9A, 0x9A), QColor(0, 0, 0),
-                                QColor(0xC5, 0xC5, 0xC5)};
+    // the theme's switch colors (FluentSwitchPainter in the stylesheets),
+    // until a painter is found to read them from
+    FluentSwitch::Colors colors =
+        MOBase::RevampedTheme::isDark()
+            ? FluentSwitch::Colors{QColor(0x4C, 0xC2, 0xFF), QColor(0x2F, 0x2F, 0x2F),
+                                   QColor(0x9A, 0x9A, 0x9A), QColor(0, 0, 0),
+                                   QColor(0xC5, 0xC5, 0xC5)}
+            : FluentSwitch::Colors{QColor(0x00, 0x5F, 0xB8), QColor(0xF7, 0xF7, 0xF7),
+                                   QColor(0x8A, 0x8A, 0x8A), QColor(0xFF, 0xFF, 0xFF),
+                                   QColor(0x5D, 0x5D, 0x5D)};
     if (m_colorsFrom != nullptr) {
       if (auto* painterWidget = m_colorsFrom->findChild<FluentSwitchPainter*>()) {
         colors = {painterWidget->property("onColor").value<QColor>(),
@@ -572,11 +580,20 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
 {
   storeSettings(previous);
 
-  if (!current->data(0, PluginRole).isValid()) {
+  ui->pluginSettingsList->clear();
+  if (current == nullptr || !current->data(0, PluginRole).isValid()) {
+    // a group heading, or nothing after the filter emptied the list: the
+    // previous plugin's options must go too, or edits to them would be lost
+    ui->pluginSettingsList->setEnabled(false);
+    ui->enabledCheckbox->setVisible(false);
+    m_pluginName->setText(current != nullptr ? current->text(0) : QString());
+    m_pluginCaption->clear();
+    ui->authorLabel->clear();
+    ui->versionLabel->clear();
+    ui->descriptionLabel->clear();
     return;
   }
 
-  ui->pluginSettingsList->clear();
   IPlugin* plugin = this->plugin(current);
   ui->authorLabel->setText(plugin->author());
   ui->versionLabel->setText(plugin->version().canonicalString());
@@ -629,6 +646,12 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
   QVariantMap settings     = current->data(0, SettingsRole).toMap();
   QVariantMap descriptions = current->data(0, DescriptionsRole).toMap();
   ui->pluginSettingsList->setEnabled(settings.count() != 0);
+  // the option names can't be edited; one delegate for the list, not a new
+  // one without a parent for every option
+  if (ui->pluginSettingsList->itemDelegateForColumn(0) == nullptr) {
+    ui->pluginSettingsList->setItemDelegateForColumn(
+        0, new NoEditDelegate(ui->pluginSettingsList));
+  }
   for (auto iter = settings.begin(); iter != settings.end(); ++iter) {
     QTreeWidgetItem* newItem =
         new QTreeWidgetItem(QStringList(readableOptionName(iter.key())));
@@ -642,7 +665,6 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
       }
     }
 
-    ui->pluginSettingsList->setItemDelegateForColumn(0, new NoEditDelegate());
     newItem->setData(1, Qt::DisplayRole, value);
     newItem->setData(1, Qt::EditRole, value);
     newItem->setToolTip(1, description);

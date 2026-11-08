@@ -5088,9 +5088,10 @@ QLabel#fluentSettingDescription {
     font-size: 8.5pt;
     background-color: transparent;
 }
+/* Fluent's disabled text tone: still readable, clearly off. */
 QLabel#fluentSettingTitle:disabled,
 QLabel#fluentSettingDescription:disabled {
-    color: #C8C8C8;
+    color: #A0A0A0;
 }
 QCheckBox[fluentSwitch="true"] {
     spacing: 0px;
