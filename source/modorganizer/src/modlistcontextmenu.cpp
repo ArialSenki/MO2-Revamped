@@ -6,6 +6,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 
 #include "modlist.h"
 #include "modlistview.h"
@@ -534,23 +535,48 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
   categoriesMenu->setTitle(tr("Categories"));
   categoriesMenu->setIcon(menuGlyph(MenuGlyphs::Tag));
   // the submenu also closes when the pointer only passes over it, so only the
-  // boxes toggled since the last time it closed are applied, to every selected
-  // mod: unticking a box ticked a moment ago applies too
-  auto applied = std::make_shared<std::map<int, bool>>();
+  // boxes toggled since the last time it closed are applied. A box that differs
+  // from how the menu opened is applied to every selected mod; one put back as
+  // it was gives each mod back its own state, so ticking and unticking again
+  // changes nothing
+  struct Snapshot
+  {
+    std::map<int, bool> opened;   // the boxes when the menu opened
+    std::map<int, bool> applied;  // the boxes as last applied
+    std::vector<std::pair<ModInfo::Ptr, std::set<int>>> mods;
+  };
+  auto snapshot = std::make_shared<Snapshot>();
   for (const auto& [id, enabled] : categoriesMenu->categories()) {
-    (*applied)[id] = enabled;
+    snapshot->opened[id] = enabled;
+  }
+  snapshot->applied = snapshot->opened;
+  QModelIndexList targets = m_selected;
+  if (!targets.contains(m_index)) {
+    targets.append(m_index);
+  }
+  for (const auto& idx : targets) {
+    const QVariant modIndex = idx.data(ModList::IndexRole);
+    if (modIndex.isValid()) {
+      ModInfo::Ptr info = ModInfo::getByIndex(modIndex.toInt());
+      snapshot->mods.emplace_back(info, info->getCategories());
+    }
   }
   connect(categoriesMenu, &QMenu::aboutToHide, [=]() {
-    std::vector<std::pair<int, bool>> toggled;
+    bool changed = false;
     for (const auto& [id, enabled] : categoriesMenu->categories()) {
-      const auto it = applied->find(id);
-      if (it == applied->end() || it->second != enabled) {
-        toggled.emplace_back(id, enabled);
-        (*applied)[id] = enabled;
+      if (snapshot->applied[id] == enabled) {
+        continue;
+      }
+      snapshot->applied[id] = enabled;
+      changed               = true;
+      const bool fromOpened = snapshot->opened[id] != enabled;
+      for (const auto& [info, categories] : snapshot->mods) {
+        info->setCategory(id, fromOpened ? enabled : categories.count(id) > 0);
       }
     }
-    if (!toggled.empty()) {
-      m_actions.setCategories(m_selected, m_index, toggled);
+    if (changed) {
+      // nothing left to change: this refreshes the rows and the selection
+      m_actions.setCategories(m_selected, m_index, {});
     }
   });
   addMenu(categoriesMenu);
