@@ -688,13 +688,44 @@ bool InstallationManager::restoreLeftover(const QString& aside)
 {
   const QString target = QDir::fromNativeSeparators(m_ModsDirectory) + "/" +
                          QFileInfo(aside).fileName();
-  if (QFileInfo::exists(target) && !shellRemove({target}, true, m_ParentWidget).removed()) {
-    return false;
+
+  // the version in its place waits aside too, and goes to the Recycle Bin only
+  // once the leftover is back: a rename that fails (a file in use, a mods folder
+  // linked to another drive) would otherwise leave neither in the mods folder
+  QString current;
+  if (QFileInfo::exists(target)) {
+    current = setAsideMod(target);
+    if (current.isEmpty()) {
+      return false;
+    }
   }
+
   if (!QDir().rename(aside, target)) {
+    if (!current.isEmpty()) {
+      if (QDir().rename(current, target)) {
+        removeAsideSlot(current);
+      } else {
+        log::error("failed to put back {} as {}", current, target);
+      }
+    }
     return false;
   }
+
+  if (!current.isEmpty() && !shellRemove({current}, true, m_ParentWidget).removed()) {
+    // as before: the leftover aside, the current version in place
+    if (QDir().rename(target, aside) && QDir().rename(current, target)) {
+      removeAsideSlot(current);
+    } else {
+      log::error("failed to undo restoring {}; the version it replaced is in {}", aside,
+                 current);
+    }
+    return false;
+  }
+
   removeAsideSlot(aside);
+  if (!current.isEmpty()) {
+    removeAsideSlot(current);
+  }
   return true;
 }
 
