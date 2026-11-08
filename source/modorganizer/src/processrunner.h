@@ -162,6 +162,10 @@ private:
   bool shouldRunShell() const;
   bool shouldRefresh(Results r) const;
 
+  // the current profile's forced libraries for the program `title`, once a
+  // directory refresh in progress has finished; runs events while it waits
+  ForcedLibraries forcedLibrariesFor(const QString& title);
+
   // runs the command in m_shellOpen; returns empty if it can be waited for
   //
   std::optional<Results> runShell();

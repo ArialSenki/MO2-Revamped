@@ -820,9 +820,15 @@ int copyProfileTree(const QString& source, const QString& destination)
       ++failed;
     }
   }
-  // symlinks are left out: they could make the copy endless
+  // links are left out: they could make the copy endless. Qt doesn't count a
+  // junction as a symlink, so NoSymLinks alone lets those through
   for (const QString& folder : sourceDir.entryList(
            QDir::AllDirs | QDir::NoDotAndDotDot | QDir::NoSymLinks | QDir::Hidden)) {
+    const QFileInfo info(source + "/" + folder);
+    if (info.isJunction() || info.isSymLink()) {
+      log::warn("not copying the link '{}' to the new profile", info.filePath());
+      continue;
+    }
     failed += copyProfileTree(source + "/" + folder, destination + "/" + folder);
   }
   return failed;
@@ -966,8 +972,11 @@ bool Profile::enableLocalSaves(bool enable)
         QDialogButtonBox::No | QDialogButtonBox::Yes | QDialogButtonBox::Cancel,
         QDialogButtonBox::No);
     if (res == QMessageBox::Yes) {
-      // to the Recycle Bin, as the INI files and whole profiles go
-      if (!shellDelete(QStringList(m_Directory.absoluteFilePath("saves")), true)) {
+      // to the Recycle Bin, as the INI files and whole profiles go; Windows asks
+      // first where there is no bin, and a save it skipped counts as a failure
+      if (!MOShared::shellRemove({m_Directory.absoluteFilePath("saves")}, true,
+                                 QApplication::activeModalWidget())
+               .removed()) {
         reportError(tr("The profile's saves could not be deleted. Close any program "
                        "using them and try again."));
         return false;

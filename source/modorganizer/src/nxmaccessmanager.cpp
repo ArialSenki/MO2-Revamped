@@ -434,6 +434,11 @@ bool ValidationAttempt::done() const
   return (m_result != None);
 }
 
+bool ValidationAttempt::running() const
+{
+  return (m_reply != nullptr) && (m_result == None);
+}
+
 ValidationAttempt::Result ValidationAttempt::result() const
 {
   return m_result;
@@ -486,8 +491,10 @@ void ValidationAttempt::onFinished()
 
   const QJsonObject data = doc.object();
 
-  if (code == 401 || code == 403) {
-    // the key itself: revoked, changed on Nexus, or mistyped
+  // the key itself: revoked, changed on Nexus, or mistyped. A 403 that isn't
+  // Nexus' own JSON answer comes from something in between (a firewall or
+  // proxy page) and is retried as any other failed request
+  if (code == 401 || (code == 403 && doc.isObject())) {
     setFailure(HardError, nexusKeyRefusedMessage() + QString(" (%1)").arg(code));
     return;
   }
@@ -651,6 +658,8 @@ void NexusKeyValidator::start(const QString& key, Behaviour b)
 void NexusKeyValidator::createAttempts(
     const std::vector<std::chrono::seconds>& timeouts)
 {
+  // kept one more check, see m_previousAttempts
+  m_previousAttempts = std::move(m_attempts);
   m_attempts.clear();
 
   for (auto&& t : timeouts) {
@@ -669,8 +678,12 @@ void NexusKeyValidator::cancel()
 
 bool NexusKeyValidator::isActive() const
 {
+  // the attempts left over after a cancel or a refused key never start: one
+  // still not done would keep every later check from starting, and
+  // NXMAccessManager::validated() showing a progress that never ends.
+  // The next attempt starts as the one before fails, so there is no gap
   for (auto&& a : m_attempts) {
-    if (!a->done()) {
+    if (a->running()) {
       return true;
     }
   }
@@ -976,6 +989,9 @@ void NXMAccessManager::clearApiKey()
 
 void NXMAccessManager::setLinkedAccount(const APIUserAccount& user)
 {
+  // a check of the previous key may still be going (the one at startup): its
+  // answer would replace this account or mark it as failed
+  m_validator.cancel();
   m_validationState = Valid;
   emit credentialsReceived(user);
 }

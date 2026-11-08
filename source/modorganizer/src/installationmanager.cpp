@@ -439,6 +439,19 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
   m_NewModRemoved    = false;
   m_NewModFolder.clear();
 
+  // the installed mod as its folder is named: a guess that differs only in
+  // case would rename the folder on Replace, or when a cancel puts it back, and
+  // the mod list would take it for another mod, disabled and at the end
+  const QString guessed = modName;
+  for (const QString& entry : QDir(m_ModsDirectory)
+                                  .entryList(QDir::Dirs | QDir::NoDotAndDotDot |
+                                             QDir::Hidden)) {
+    if (entry != guessed && entry.compare(guessed, Qt::CaseInsensitive) == 0) {
+      modName.update(entry, GUESS_USER);
+      break;
+    }
+  }
+
   QString targetDirectory =
       QDir::fromNativeSeparators(m_ModsDirectory + "\\" + modName);
 
@@ -675,13 +688,44 @@ bool InstallationManager::restoreLeftover(const QString& aside)
 {
   const QString target = QDir::fromNativeSeparators(m_ModsDirectory) + "/" +
                          QFileInfo(aside).fileName();
-  if (QFileInfo::exists(target) && !shellRemove({target}, true, m_ParentWidget).removed()) {
-    return false;
+
+  // the version in its place waits aside too, and goes to the Recycle Bin only
+  // once the leftover is back: a rename that fails (a file in use, a mods folder
+  // linked to another drive) would otherwise leave neither in the mods folder
+  QString current;
+  if (QFileInfo::exists(target)) {
+    current = setAsideMod(target);
+    if (current.isEmpty()) {
+      return false;
+    }
   }
+
   if (!QDir().rename(aside, target)) {
+    if (!current.isEmpty()) {
+      if (QDir().rename(current, target)) {
+        removeAsideSlot(current);
+      } else {
+        log::error("failed to put back {} as {}", current, target);
+      }
+    }
     return false;
   }
+
+  if (!current.isEmpty() && !shellRemove({current}, true, m_ParentWidget).removed()) {
+    // as before: the leftover aside, the current version in place
+    if (QDir().rename(target, aside) && QDir().rename(current, target)) {
+      removeAsideSlot(current);
+    } else {
+      log::error("failed to undo restoring {}; the version it replaced is in {}", aside,
+                 current);
+    }
+    return false;
+  }
+
   removeAsideSlot(aside);
+  if (!current.isEmpty()) {
+    removeAsideSlot(current);
+  }
   return true;
 }
 
@@ -774,12 +818,15 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
     return {IPluginInstaller::RESULT_FAILED};
   }
 
-  bool merge = false;
   // determine target directory
   InstallationResult result = testOverwrite(modName);
   if (!result) {
     return result;
   }
+
+  // merging into the installed mod keeps its newer version and its list of
+  // installed files
+  const bool merge = result.merged();
 
   // does nothing once the install has finished
   ON_BLOCK_EXIT([this]() {
@@ -791,6 +838,17 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
 
   QString targetDirectory       = QDir(m_ModsDirectory + "/" + modName).canonicalPath();
   QString targetDirectoryNative = QDir::toNativeSeparators(targetDirectory);
+
+  // empty when the folder could not be created (a path too long, no rights):
+  // the files would land in the working directory and meta.ini at the root
+  if (targetDirectory.isEmpty()) {
+    log::error("the folder for the mod '{}' could not be created in {}",
+               static_cast<QString>(modName), m_ModsDirectory);
+    reportError(tr("The folder for the mod \"%1\" could not be created in the mods "
+                   "folder.")
+                    .arg(static_cast<QString>(modName)));
+    return {IPluginInstaller::RESULT_FAILED};
+  }
 
   log::debug("installing to \"{}\"", targetDirectoryNative);
   if (!extractFiles(targetDirectory, "", true, false)) {
@@ -1055,7 +1113,9 @@ InstallationResult InstallationManager::install(const QString& fileName,
 
   bool archiveOpen = m_ArchiveHandler->open(fileName.toStdWString(), askPassword);
   // a wrong password keeps the archive from opening
-  while (!archiveOpen && m_PasswordAsked && !m_PasswordCancelled) {
+  // a few tries: a damaged encrypted archive never opens, whatever is typed
+  for (int tries = 1; !archiveOpen && m_PasswordAsked && !m_PasswordCancelled && tries < 5;
+       ++tries) {
     m_PasswordRejected = true;
     m_PasswordAsked    = false;
     m_ArchiveHandler->close();

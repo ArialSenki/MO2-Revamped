@@ -516,6 +516,7 @@ private:
 private slots:
 
   void onDirectoryRefreshed();
+  void onDirectoryRefreshFailed();
   void removeOrigin(const QString& name);
   void downloadSpeed(const QString& serverName, int bytesPerSecond);
   void loginSuccessful(bool necessary);
@@ -563,6 +564,8 @@ private:
 
   std::unique_ptr<DirectoryRefresher> m_DirectoryRefresher;
   MOShared::DirectoryEntry* m_DirectoryStructure;
+  std::shared_ptr<std::atomic<bool>> m_VirtualFileTreeValid =
+      std::make_shared<std::atomic<bool>>(true);
   MOBase::MemoizedLocked<std::shared_ptr<const MOBase::IFileTree>> m_VirtualFileTree;
 
   DownloadManager m_DownloadManager;
@@ -573,6 +576,16 @@ private:
   std::thread m_StructureDeleter;
 
   std::atomic<bool> m_DirectoryUpdate;
+
+  // mods enabled, disabled or moved, or another profile chosen, while a
+  // refresh was running: the structure it delivers is built from the mods as
+  // they were when it started, so another one follows. UI thread only
+  bool m_RefreshPending = false;
+
+  // the last refresh failed, so the plugin list and the structure may not match
+  // the current profile: they aren't rebuilt or saved until one works, while
+  // programs can still be launched
+  bool m_LastRefreshFailed = false;
   bool m_ArchivesInit;
 
   MOBase::DelayedFileWriter m_PluginListsWriter;

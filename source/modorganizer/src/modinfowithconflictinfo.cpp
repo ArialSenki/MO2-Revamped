@@ -110,7 +110,7 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
     }
   }
 
-  std::wstring name          = ToWString(this->name());
+  std::wstring name          = ToWString(this->internalName());
   const std::wstring hideExt = ToWString(ModInfo::s_HiddenExt);
 
   if (m_Core.directoryStructure()->originExists(name)) {

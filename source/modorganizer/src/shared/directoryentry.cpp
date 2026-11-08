@@ -325,37 +325,37 @@ DirectoryEntry* DirectoryEntry::findSubDirectoryRecursive(const std::wstring& pa
 const FileEntryPtr DirectoryEntry::findFile(const std::wstring& name,
                                             bool alreadyLowerCase) const
 {
-  FilesLookup::const_iterator iter;
-
-  if (alreadyLowerCase) {
-    iter = m_FilesLookup.find(DirectoryEntryFileKey(name));
-  } else {
-    iter = m_FilesLookup.find(DirectoryEntryFileKey(ToLowerCopy(name)));
-  }
-
-  if (iter != m_FilesLookup.end()) {
-    return m_FileRegister->getFile(iter->second);
-  } else {
-    return FileEntryPtr();
-  }
+  return alreadyLowerCase ? findFile(DirectoryEntryFileKey(name))
+                          : findFile(DirectoryEntryFileKey(ToLowerCopy(name)));
 }
 
 const FileEntryPtr DirectoryEntry::findFile(const DirectoryEntryFileKey& key) const
 {
-  auto iter = m_FilesLookup.find(key);
+  FileIndex index = 0;
 
-  if (iter != m_FilesLookup.end()) {
-    return m_FileRegister->getFile(iter->second);
-  } else {
-    return FileEntryPtr();
+  {
+    // a refresh's threads insert while the mods that steal files look theirs up
+    std::scoped_lock lock(m_FilesMutex);
+
+    auto iter = m_FilesLookup.find(key);
+    if (iter == m_FilesLookup.end()) {
+      return FileEntryPtr();
+    }
+
+    index = iter->second;
   }
+
+  return m_FileRegister->getFile(index);
 }
 
 bool DirectoryEntry::containsArchive(std::wstring archiveName)
 {
+  // every mod's thread gets here while the others insert into the same root
+  std::scoped_lock lock(m_FilesMutex);
+
   for (auto iter = m_Files.begin(); iter != m_Files.end(); ++iter) {
     FileEntryPtr entry = m_FileRegister->getFile(iter->second);
-    if (entry->isFromArchive(archiveName)) {
+    if (entry && entry->isFromArchive(archiveName)) {
       return true;
     }
   }
@@ -781,7 +781,10 @@ DirectoryEntry* DirectoryEntry::getSubDirectoryRecursive(const std::wstring& pat
 void DirectoryEntry::removeDirRecursive()
 {
   while (!m_Files.empty()) {
-    m_FileRegister->removeFile(m_Files.begin()->second);
+    // an entry the register no longer knows would stay here and never end this
+    if (!m_FileRegister->removeFile(m_Files.begin()->second)) {
+      m_Files.erase(m_Files.begin());
+    }
   }
 
   m_FilesLookup.clear();

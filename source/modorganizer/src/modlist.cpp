@@ -1168,9 +1168,21 @@ void ModList::removeRowForce(int row, const QModelIndex& parent)
 
   m_Profile->cancelModlistWrite();
   beginRemoveRows(parent, row, row);
-  ModInfo::removeMod(row);
+  const bool removed = ModInfo::removeMod(row);
   m_Profile->refreshModStatus();  // removes the mod from the status list
   endRemoveRows();
+
+  if (!removed) {
+    // still there (a file in use, or the deletion was cancelled; removeMod()
+    // said so): the views were told the row went, so they start over, and the
+    // mod keeps its state
+    beginResetModel();
+    endResetModel();
+    m_Profile->setModEnabled(row, wasEnabled);
+    m_Profile->writeModlist();
+    return;
+  }
+
   m_Profile->writeModlist();  // this ensures the modified list gets written back before
                               // new mods can be installed
 
@@ -1203,8 +1215,19 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
     }
   }
 
+  // by name: removing one moves the rows after it
+  QStringList names;
   for (int i = 0; i < count; ++i) {
-    ModInfo::Ptr modInfo = ModInfo::getByIndex(row + i);
+    names.append(ModInfo::getByIndex(row + i)->name());
+  }
+
+  for (const QString& name : names) {
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index == UINT_MAX) {
+      continue;
+    }
+
+    ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
     if (!modInfo->isRegular()) {
       continue;
     }
@@ -1217,8 +1240,8 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
         QMessageBox::Yes | QMessageBox::No);
 
     if (confirmBox.exec() == QMessageBox::Yes) {
-      m_Profile->setModEnabled(row + i, false);
-      removeRowForce(row + i, parent);
+      // removeRowForce() disables it, and enables it again if it can't go
+      removeRowForce(static_cast<int>(ModInfo::getIndex(name)), parent);
     }
   }
 

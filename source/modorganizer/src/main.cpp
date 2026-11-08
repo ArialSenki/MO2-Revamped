@@ -269,8 +269,11 @@ HANDLE openStartupDiagnosticLog() noexcept
                      nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
-void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
-                           const char* stage) noexcept
+// never inlined: its 8 KB buffer is reserved on entry, and a crash handler
+// that does so with diagnostics off has no stack left after a stack overflow
+// to write the dump
+__declspec(noinline) void writeMemoryDiagnostic(_EXCEPTION_POINTERS* exceptionInfo,
+                                                const char* stage) noexcept
 {
   if (!diagnosticsEnabled()) {
     return;
@@ -669,7 +672,10 @@ int run(int argc, char* argv[])
 
 LONG WINAPI onUnhandledException(_EXCEPTION_POINTERS* ptrs)
 {
-  writeMemoryDiagnostic(ptrs, "unhandled");
+  // checked here so the function and its buffer are only entered when on
+  if (diagnosticsEnabled()) {
+    writeMemoryDiagnostic(ptrs, "unhandled");
+  }
 
   const auto path = OrganizerCore::getGlobalCoreDumpPath();
   const auto type = OrganizerCore::getGlobalCoreDumpType();

@@ -1,6 +1,7 @@
 #include "envmodule.h"
 #include "env.h"
 #include <log.h>
+#include <memory>
 #include <utility.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -724,10 +725,12 @@ QString getProcessName(HANDLE process)
     return badName;
   }
 
-  const DWORD bufferSize         = MAX_PATH;
-  wchar_t buffer[bufferSize + 1] = {};
+  // the device path form is longer than the usual one; a process on a long path
+  // came back as unknown with MAX_PATH
+  const DWORD bufferSize = 32768;
+  auto buffer            = std::make_unique<wchar_t[]>(bufferSize);
 
-  const auto realSize = ::GetProcessImageFileNameW(process, buffer, bufferSize);
+  const auto realSize = ::GetProcessImageFileNameW(process, buffer.get(), bufferSize);
 
   if (realSize == 0) {
     const auto e = ::GetLastError();
@@ -735,7 +738,7 @@ QString getProcessName(HANDLE process)
     return badName;
   }
 
-  auto s = QString::fromWCharArray(buffer, realSize);
+  auto s = QString::fromWCharArray(buffer.get(), realSize);
 
   const auto lastSlash = s.lastIndexOf("\\");
   if (lastSlash != -1) {

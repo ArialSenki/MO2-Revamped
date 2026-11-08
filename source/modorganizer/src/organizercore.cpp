@@ -102,7 +102,7 @@ OrganizerCore::OrganizerCore(Settings& settings)
       m_DirectoryRefresher(new DirectoryRefresher(this, settings.refreshThreadCount())),
       m_DirectoryStructure(new DirectoryEntry(L"data", nullptr, 0)),
       m_VirtualFileTree([this]() {
-        return VirtualFileTree::makeTree(m_DirectoryStructure);
+        return VirtualFileTree::makeTree(m_DirectoryStructure, m_VirtualFileTreeValid);
       }),
       m_DownloadManager(&NexusInterface::instance(), this), m_DirectoryUpdate(false),
       m_ArchivesInit(false),
@@ -120,6 +120,8 @@ OrganizerCore::OrganizerCore(Settings& settings)
           SLOT(downloadSpeed(QString, int)));
   connect(m_DirectoryRefresher.get(), &DirectoryRefresher::refreshed, this,
           &OrganizerCore::onDirectoryRefreshed);
+  connect(m_DirectoryRefresher.get(), &DirectoryRefresher::refreshFailed, this,
+          &OrganizerCore::onDirectoryRefreshFailed);
 
   connect(&m_ModList, SIGNAL(removeOrigin(QString)), this, SLOT(removeOrigin(QString)));
   connect(&m_ModList, &ModList::modStatesChanged, [=] {
@@ -377,6 +379,12 @@ void OrganizerCore::profileRemoved(QString const& profileName)
 
 void OrganizerCore::removeOrigin(const QString& name)
 {
+  // a mod removed before the structure knew it (or after a refresh dropped it)
+  if (!m_DirectoryStructure->originExists(ToWString(name))) {
+    refreshLists();
+    return;
+  }
+
   FilesOrigin& origin = m_DirectoryStructure->getOriginByName(ToWString(name));
   origin.enable(false);
   refreshLists();
@@ -608,6 +616,13 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
                     .arg(QDir(profileDir).dirName()));
   }
 
+  // a change still waiting to be written goes to disk first: reloading the
+  // same profile reads its modlist.txt, and the old object would otherwise
+  // write it back after the new one has read the stale file
+  if (m_CurrentProfile != nullptr) {
+    m_CurrentProfile->writeModlistNow(true);
+  }
+
   // first: one that can't be read throws here, and the current one stays
   auto newProfile =
       std::make_unique<Profile>(QDir(profileDir), managedGame(), gameFeatures());
@@ -635,6 +650,11 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
           [this](auto&& indexes) {
             modStatusChanged(indexes);
           });
+
+  // a refresh still running is for the previous profile's mods
+  if (m_DirectoryUpdate) {
+    m_RefreshPending = true;
+  }
   refreshDirectoryStructure();
 
   m_CurrentProfile->debugDump();
@@ -836,6 +856,10 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
         },
         Qt::SingleShotConnection);
 
+    // the new files aren't in a refresh that is already running
+    if (m_DirectoryUpdate) {
+      m_RefreshPending = true;
+    }
     refresh();
 
     const auto modIndex  = ModInfo::getIndex(modName);
@@ -859,12 +883,17 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
 
       m_InstallationManager.notifyInstallationEnd(result, modInfo);
     } else {
+      // installer plugins still hear that the installation ended: one that
+      // set something up for it keeps it until it does (the bundled
+      // installers accept no mod)
+      m_InstallationManager.notifyInstallationEnd(result, nullptr);
       reportError(tr("mod not found: %1").arg(qUtf8Printable(modName)));
     }
     emit modInstalled(modName);
     return {modIndex, modInfo};
   } else {
     if (result.result() == MOBase::IPluginInstaller::RESULT_CATEGORYREQUESTED) {
+      m_InstallationManager.notifyInstallationEnd(result, nullptr);
       CategoriesDialog dialog(qApp->activeWindow());
 
       if (dialog.exec() == QDialog::Accepted) {
@@ -1318,6 +1347,11 @@ void OrganizerCore::refreshESPList(bool force)
 {
   onNextRefresh(
       [this, force] {
+        if (m_LastRefreshFailed) {
+          log::warn("not refreshing the plugin list after a failed directory update");
+          return;
+        }
+
         TimeThis tt("OrganizerCore::refreshESPList()");
 
         m_CurrentProfile->writeModlist();
@@ -1459,7 +1493,7 @@ void OrganizerCore::updateModsInDirectoryStructure(
   std::vector<DirectoryRefresher::EntryInfo> entries;
 
   for (auto idx : modInfo.keys()) {
-    entries.push_back({modInfo[idx]->name(),
+    entries.push_back({modInfo[idx]->internalName(),
                        modInfo[idx]->absolutePath(),
                        modInfo[idx]->stealFiles(),
                        {},
@@ -1473,9 +1507,13 @@ void OrganizerCore::updateModsInDirectoryStructure(
   refreshESPList(true);
   // activate all esps of the specified mod so the bsas get activated along with
   // it
-  m_PluginList.blockSignals(true);
-  updateModsActiveState(modInfo.keys(), true);
-  m_PluginList.blockSignals(false);
+  // not after a failed refresh: the plugin list wasn't rebuilt above, and each
+  // plugin it doesn't know would be reported as an error
+  if (!m_LastRefreshFailed) {
+    m_PluginList.blockSignals(true);
+    updateModsActiveState(modInfo.keys(), true);
+    m_PluginList.blockSignals(false);
+  }
   // now we need to refresh the bsa list and save it so there is no confusion
   // about what archives are available and active
   refreshBSAList();
@@ -1490,7 +1528,7 @@ void OrganizerCore::updateModsInDirectoryStructure(
   // finally also add files from bsas to the directory structure
   for (auto idx : modInfo.keys()) {
     m_DirectoryRefresher->addModBSAToStructure(
-        m_DirectoryStructure, modInfo[idx]->name(),
+        m_DirectoryStructure, modInfo[idx]->internalName(),
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
         modInfo[idx]->archives());
   }
@@ -1558,12 +1596,19 @@ void OrganizerCore::refreshDirectoryStructure()
   log::debug("refreshing structure");
   m_DirectoryUpdate = true;
 
-  m_CurrentProfile->writeModlistNow(true);
-  const auto activeModList = m_CurrentProfile->getActiveMods();
-  const auto archives      = enabledArchives();
+  try {
+    m_CurrentProfile->writeModlistNow(true);
+    const auto activeModList = m_CurrentProfile->getActiveMods();
+    const auto archives      = enabledArchives();
 
-  m_DirectoryRefresher->setMods(activeModList,
-                                std::set<QString>(archives.begin(), archives.end()));
+    m_DirectoryRefresher->setMods(activeModList,
+                                  std::set<QString>(archives.begin(), archives.end()));
+  } catch (...) {
+    // no refresh starts: left set, every later refresh would be refused and
+    // waitForDirectoryRefresh() (before each launch) would never return
+    m_DirectoryUpdate = false;
+    throw;
+  }
 
   // runs refresh() in a thread
   QTimer::singleShot(0, m_DirectoryRefresher.get(), &DirectoryRefresher::refresh);
@@ -1571,15 +1616,30 @@ void OrganizerCore::refreshDirectoryStructure()
 
 void OrganizerCore::waitForDirectoryRefresh()
 {
-  if (!m_DirectoryUpdate) {
-    return;
-  }
+  // a loop: another refresh can follow the one that just ended
+  while (m_DirectoryUpdate) {
+    log::debug("waiting until the directory refresh finishes");
+    QEventLoop loop;
+    connect(this, &OrganizerCore::directoryStructureReady, &loop, &QEventLoop::quit,
+            Qt::ConnectionType::QueuedConnection);
 
-  log::debug("waiting until the directory refresh finishes");
-  QEventLoop loop;
-  connect(this, &OrganizerCore::directoryStructureReady, &loop, &QEventLoop::quit,
-          Qt::ConnectionType::QueuedConnection);
-  loop.exec();
+    // negative when MO2 is exiting: no event runs any more, so the refresh
+    // can't be seen to end and this would spin
+    if (loop.exec() < 0) {
+      break;
+    }
+  }
+}
+
+void OrganizerCore::onDirectoryRefreshFailed()
+{
+  // the previous structure stays; without this MO2 would believe the refresh
+  // never ended, and every launch would wait for it
+  log::debug("the directory refresh failed, keeping the previous structure");
+  m_LastRefreshFailed = true;
+  m_DirectoryUpdate   = false;
+  m_RefreshPending    = false;
+  emit directoryStructureReady();
 }
 
 void OrganizerCore::onDirectoryRefreshed()
@@ -1597,6 +1657,10 @@ void OrganizerCore::onDirectoryRefreshed()
   }
 
   std::swap(m_DirectoryStructure, newStructure);
+
+  // trees plugins still hold point into the old structure, deleted below
+  m_VirtualFileTreeValid->store(false);
+  m_VirtualFileTreeValid = std::make_shared<std::atomic<bool>>(true);
   m_VirtualFileTree.invalidate();
 
   if (m_StructureDeleter.joinable()) {
@@ -1619,8 +1683,15 @@ void OrganizerCore::onDirectoryRefreshed()
   m_DirectoryUpdate = false;
 
   log::debug("running post refresh tasks");
-  m_OnNextRefreshCallbacks();
-  m_OnNextRefreshCallbacks.disconnect_all_slots();
+  // run from a copy: one registered by these callbacks waits for the next
+  // refresh, where clearing the list afterwards would have dropped it
+  boost::signals2::signal<void()> callbacks;
+  callbacks.swap(m_OnNextRefreshCallbacks);
+  callbacks();
+
+  // only now: a save queued while the last refresh had failed would write a
+  // plugin list that may be another profile's. refreshLists() rebuilds it
+  m_LastRefreshFailed = false;
 
   if (m_CurrentProfile != nullptr) {
     log::debug("refreshing lists");
@@ -1630,6 +1701,14 @@ void OrganizerCore::onDirectoryRefreshed()
   emit directoryStructureReady();
 
   log::debug("refresh done");
+
+  // not when something above already started one: it may not include the change
+  // that set this, and its own end looks at this again
+  if (m_RefreshPending && !m_DirectoryUpdate) {
+    m_RefreshPending = false;
+    log::debug("mods changed during the refresh, refreshing again");
+    refreshDirectoryStructure();
+  }
 }
 
 void OrganizerCore::clearCaches(std::vector<unsigned int> const& indices) const
@@ -1672,14 +1751,23 @@ void OrganizerCore::clearCaches(std::vector<unsigned int> const& indices) const
 
 void OrganizerCore::modPrioritiesChanged(const QModelIndexList& indices)
 {
+  // the structure in use now is replaced when the refresh ends
+  if (m_DirectoryUpdate) {
+    m_RefreshPending = true;
+  }
+
   for (unsigned int i = 0; i < currentProfile()->numMods(); ++i) {
     int priority = currentProfile()->getModPriority(i);
     if (currentProfile()->modEnabled(i)) {
       ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
+      const std::wstring origin = MOBase::ToWString(modInfo->internalName());
+      // not there yet when it was enabled while a refresh was running: the
+      // lookup would throw and skip the rest
+      if (!directoryStructure()->originExists(origin)) {
+        continue;
+      }
       // priorities in the directory structure are one higher because data is 0
-      directoryStructure()
-          ->getOriginByName(MOBase::ToWString(modInfo->internalName()))
-          .setPriority(priority + 1);
+      directoryStructure()->getOriginByName(origin).setPriority(priority + 1);
     }
   }
   refreshBSAList();
@@ -1697,15 +1785,20 @@ void OrganizerCore::modPrioritiesChanged(const QModelIndexList& indices)
 
 void OrganizerCore::modStatusChanged(unsigned int index)
 {
+  // the structure in use now is replaced when the refresh ends
+  if (m_DirectoryUpdate) {
+    m_RefreshPending = true;
+  }
+
   try {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
     if (m_CurrentProfile->modEnabled(index)) {
       updateModInDirectoryStructure(index, modInfo);
     } else {
       updateModActiveState(index, false);
-      if (m_DirectoryStructure->originExists(ToWString(modInfo->name()))) {
+      if (m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         FilesOrigin& origin =
-            m_DirectoryStructure->getOriginByName(ToWString(modInfo->name()));
+            m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()));
         origin.enable(false);
       }
       if (m_UserInterface != nullptr) {
@@ -1716,10 +1809,10 @@ void OrganizerCore::modStatusChanged(unsigned int index)
     for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
       ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
       int priority         = m_CurrentProfile->getModPriority(i);
-      if (m_DirectoryStructure->originExists(ToWString(modInfo->name()))) {
+      if (m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         // priorities in the directory structure are one higher because data is
         // 0
-        m_DirectoryStructure->getOriginByName(ToWString(modInfo->name()))
+        m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()))
             .setPriority(priority + 1);
       }
     }
@@ -1736,6 +1829,11 @@ void OrganizerCore::modStatusChanged(unsigned int index)
 
 void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 {
+  // the structure in use now is replaced when the refresh ends
+  if (m_DirectoryUpdate) {
+    m_RefreshPending = true;
+  }
+
   try {
     QMap<unsigned int, ModInfo::Ptr> modsToEnable;
     QMap<unsigned int, ModInfo::Ptr> modsToDisable;
@@ -1754,9 +1852,9 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
     if (!modsToDisable.isEmpty()) {
       updateModsActiveState(modsToDisable.keys(), false);
       for (auto idx : modsToDisable.keys()) {
-        if (m_DirectoryStructure->originExists(ToWString(modsToDisable[idx]->name()))) {
+        if (m_DirectoryStructure->originExists(ToWString(modsToDisable[idx]->internalName()))) {
           FilesOrigin& origin = m_DirectoryStructure->getOriginByName(
-              ToWString(modsToDisable[idx]->name()));
+              ToWString(modsToDisable[idx]->internalName()));
           origin.enable(false);
         }
       }
@@ -1768,10 +1866,10 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
     for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
       ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
       int priority         = m_CurrentProfile->getModPriority(i);
-      if (m_DirectoryStructure->originExists(ToWString(modInfo->name()))) {
+      if (m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         // priorities in the directory structure are one higher because data is
         // 0
-        m_DirectoryStructure->getOriginByName(ToWString(modInfo->name()))
+        m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()))
             .setPriority(priority + 1);
       }
     }
@@ -1846,12 +1944,19 @@ void OrganizerCore::loginFailed(const QString& message)
 
 void OrganizerCore::syncOverwrite()
 {
+  // the dialog keeps the structure it is given: one a refresh in progress
+  // replaces (and frees) right after would be read when it applies
+  waitForDirectoryRefresh();
+
   ModInfo::Ptr modInfo = ModInfo::getOverwrite();
   SyncOverwriteDialog syncDialog(modInfo->absolutePath(), m_DirectoryStructure,
                                  qApp->activeWindow());
   if (syncDialog.exec() == QDialog::Accepted) {
     syncDialog.apply(QDir::fromNativeSeparators(m_Settings.paths().mods()));
     modInfo->diskContentModified();
+    if (m_DirectoryUpdate) {
+      m_RefreshPending = true;
+    }
     refreshDirectoryStructure();
   }
 }
@@ -1930,6 +2035,11 @@ bool OrganizerCore::saveCurrentLists()
     return false;
   }
 
+  if (m_LastRefreshFailed) {
+    log::warn("not saving lists after a failed directory update");
+    return false;
+  }
+
   try {
     savePluginList();
     if (m_UserInterface != nullptr) {
@@ -1946,6 +2056,11 @@ void OrganizerCore::savePluginList()
 {
   onNextRefresh(
       [this]() {
+        if (m_LastRefreshFailed) {
+          log::warn("not saving the plugin list after a failed directory update");
+          return;
+        }
+
         m_PluginList.saveTo(m_CurrentProfile->getLockedOrderFileName());
         m_PluginList.saveLoadOrder(*m_DirectoryStructure);
       },
@@ -2017,6 +2132,10 @@ void OrganizerCore::afterRun(const QFileInfo& binary, DWORD exitCode)
     QFile::remove(m_CurrentProfile->getLoadOrderFileName());
   }
 
+  // what the program wrote isn't in a refresh that is already running
+  if (m_DirectoryUpdate) {
+    m_RefreshPending = true;
+  }
   refreshDirectoryStructure();
 
   refreshESPList(true);
