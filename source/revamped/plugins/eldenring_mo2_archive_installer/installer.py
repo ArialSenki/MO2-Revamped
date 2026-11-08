@@ -257,10 +257,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     if layout is not None:
                         missing = self._link_reforged_release(Path(new_mod.absolutePath()), layout)
                         if missing:
-                            settings_to_store = tuple(
-                                (key, False if key == self._reforged_online_key else value)
-                                for key, value in settings_to_store
-                            )
+                            # the online choice stays: the reinstall the message
+                            # asks for lays the release out again (with it off,
+                            # the reinstall would remove the online version)
                             QtWidgets.QMessageBox.warning(
                                 self._parentWidget(),
                                 "ELDEN RING Reforged",
