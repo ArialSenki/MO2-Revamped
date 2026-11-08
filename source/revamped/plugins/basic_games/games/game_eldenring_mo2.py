@@ -3436,7 +3436,9 @@ class EldenRingMo2Game(BasicGame):
             still_open = self.GameProcess if state is True else launcher
             if still_open:
                 QMessageBox.information(
-                    self._main_window,
+                    # closed from the taskbar while minimized, MO2's window
+                    # would hide this box and MO2 would seem not to close
+                    self._message_parent(),
                     _tr("Steam saves still hidden"),
                     _tr("{0} is still open as MO2 closes. The Steam saves come back the "
                         "next time MO2 runs, once it has closed. Don't start the game "
@@ -3449,7 +3451,7 @@ class EldenRingMo2Game(BasicGame):
             )
             self._active_save_quarantine = None
             qInfo("Elden Ring MO2: MO2 closes; the Steam saves are back in their folder.")
-            self._report_displaced_saves(self._main_window)
+            self._report_displaced_saves()
         except (OSError, RuntimeError, ValueError) as error:
             qCritical(
                 "Elden Ring MO2: the Steam saves could not be restored as MO2 "
