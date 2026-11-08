@@ -1667,7 +1667,7 @@ private:
             }
             if (checks_.value(QStringLiteral("removeAppData"))->isChecked()) {
                 destructive = true;
-                QString dataWarning = tr(QStringLiteral("\n\nSe borrará por completo la carpeta global de MO2 Revamped:\n{0}\nIncluye todas las instancias globales y sus perfiles, mods, descargas y ajustes. Se comparte entre instalaciones no portables de Revamped."));
+                QString dataWarning = tr(QStringLiteral("\n\nSe borrará por completo la carpeta global de MO2 Revamped:\n{0}\nIncluye todas las instancias globales y sus perfiles, mods, descargas y ajustes, y también las partidas de Elden Ring y Nightreign que guardan: las de cada perfil, las compartidas y sus copias de seguridad. Se comparte entre instalaciones no portables de Revamped. Las partidas de Steam no se tocan."));
                 dataWarning.replace(QStringLiteral("{0}"), QDir::toNativeSeparators(inspection_.value(QStringLiteral("globalDataPath")).toString()));
                 body += dataWarning;
             }
