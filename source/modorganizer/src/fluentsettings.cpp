@@ -187,7 +187,6 @@ void makeRow(QCheckBox* box, bool takeDetail = false)
 
   auto* row = new QFrame(parent);
   row->setObjectName(QStringLiteral("fluentSettingRow"));
-  row->setProperty("fluentGridRow", qobject_cast<QGridLayout*>(parent->layout()) != nullptr);
 
   // a box alone on a form row sat in the label column, which then took the
   // whole row's width and squeezed the fields above it; the row spans both
@@ -469,6 +468,13 @@ void flattenOptionGrids(QWidget* root)
             box->setDirection(QBoxLayout::TopToBottom);
             box->setSpacing(0);
             box->setContentsMargins(0, 0, 0, 0);
+            // the spacer that pushed the side-by-side rows left would now add
+            // an empty line under them
+            for (int i = box->count() - 1; i >= 0; --i) {
+              if (box->itemAt(i)->spacerItem() != nullptr) {
+                delete box->takeAt(i);
+              }
+            }
           }
         }
         matches = true;
@@ -559,7 +565,11 @@ void makeFormRows(QFormLayout* form)
     if (control == nullptr && fieldLayout != nullptr && fieldLayout->count() > 0) {
       control = fieldLayout->itemAt(0)->widget();
     }
-    if (control == nullptr || !isFieldControl(control)) {
+    // a card can ask for its "label | value" lines as rows too
+    auto* valueLabel = parent->property("fluentValueRows").toBool()
+                           ? qobject_cast<QLabel*>(control)
+                           : nullptr;
+    if (control == nullptr || (valueLabel == nullptr && !isFieldControl(control))) {
       continue;
     }
 
@@ -585,7 +595,11 @@ void makeFormRows(QFormLayout* form)
       layout->addWidget(title);
     } else {
       layout->addWidget(title, 1);
-      if (qobject_cast<QAbstractSpinBox*>(control) != nullptr) {
+      if (valueLabel != nullptr) {
+        // as tall as a one-line switch row, the value at the row's end
+        valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        rowFrame->setMinimumHeight(37);
+      } else if (qobject_cast<QAbstractSpinBox*>(control) != nullptr) {
         control->setFixedWidth(140);
       } else {
         control->setMinimumWidth(260);
@@ -746,6 +760,8 @@ constexpr int CardGap       = 12;
 constexpr int CardMargin    = 9;
 constexpr int CardSpacing   = 6;
 constexpr int RowInset      = 4;
+constexpr int ButtonGap     = 8;
+constexpr int ControlWidth  = 260;
 
 bool layoutHolds(QLayout* layout, const QWidget* w)
 {
@@ -864,6 +880,125 @@ bool spaceCards(QLayout* layout)
   }
   return holds;
 }
+
+bool isSettingRow(const QWidget* w)
+{
+  return w != nullptr && w->objectName() == QLatin1String("fluentSettingRow");
+}
+
+// the same space between rows however a page laid them out: a row's height is
+// one value per kind of row, and the gap is part of it
+void spaceRows(QWidget* page)
+{
+  const auto countRows = [](QLayout* layout) {
+    int rows = 0;
+    for (int i = 0; i < layout->count(); ++i) {
+      rows += isSettingRow(layout->itemAt(i)->widget()) ? 1 : 0;
+    }
+    return rows;
+  };
+
+  for (QLayout* layout : page->findChildren<QLayout*>()) {
+    if (countRows(layout) < 2) {
+      continue;
+    }
+    if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+      grid->setVerticalSpacing(CardSpacing);
+    } else if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+      form->setVerticalSpacing(CardSpacing);
+    } else {
+      layout->setSpacing(CardSpacing);
+    }
+  }
+}
+
+void addSideMargins(QLayout* layout, int side)
+{
+  QMargins margins = layout->contentsMargins();
+  margins.setLeft(margins.left() + side);
+  margins.setRight(margins.right() + side);
+  layout->setContentsMargins(margins);
+}
+
+void insetCardContent(QLayout* layout);
+
+// a row keeps a small inset for its hover, so its text and controls start and
+// end RowInset inside the card; the buttons, fields and lists that aren't in a
+// row start and end there too
+void insetBoxContent(QBoxLayout* box)
+{
+  const bool horizontal = box->direction() == QBoxLayout::LeftToRight ||
+                          box->direction() == QBoxLayout::RightToLeft;
+
+  bool columns = false, onlyLabels = true, onlyButtons = true;
+  int buttons = 0;
+  for (int i = 0; i < box->count(); ++i) {
+    QLayoutItem* item = box->itemAt(i);
+    if (item->spacerItem() != nullptr) {
+      continue;
+    }
+    QWidget* w = item->widget();
+    columns    = columns || item->layout() != nullptr || (w != nullptr && w->layout() != nullptr);
+    onlyLabels = onlyLabels && qobject_cast<QLabel*>(w) != nullptr;
+    onlyButtons = onlyButtons && qobject_cast<QAbstractButton*>(w) != nullptr;
+    buttons += qobject_cast<QAbstractButton*>(w) != nullptr ? 1 : 0;
+  }
+
+  if (horizontal && !columns) {
+    // one line of controls moves as a whole; a heading already starts at the
+    // text's edge
+    if (!onlyLabels) {
+      addSideMargins(box, RowInset);
+    }
+    if (onlyButtons && buttons >= 2 && !box->property("fluentKeepSpacing").toBool()) {
+      box->setSpacing(ButtonGap);
+    }
+    return;
+  }
+
+  for (int i = 0; i < box->count(); ++i) {
+    QLayoutItem* item = box->itemAt(i);
+    if (item->layout() != nullptr) {
+      insetCardContent(item->layout());
+      continue;
+    }
+    QWidget* w = item->widget();
+    if (w == nullptr || isSettingRow(w) || qobject_cast<QLabel*>(w) != nullptr) {
+      continue;
+    }
+    if (w->layout() != nullptr) {
+      insetCardContent(w->layout());
+      continue;
+    }
+    if (horizontal) {
+      continue;
+    }
+
+    const int stretch = box->stretch(i);
+    delete box->takeAt(i);
+    auto* inset = new QHBoxLayout;
+    inset->setContentsMargins(RowInset, 0, RowInset, 0);
+    inset->setSpacing(0);
+    inset->addWidget(w);
+    box->insertLayout(i, inset, stretch);
+  }
+}
+
+void insetCardContent(QLayout* layout)
+{
+  if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+    insetBoxContent(box);
+  } else if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+    // a grid of rows has its inset already; a bare control doesn't
+    bool rows = false;
+    for (int i = 0; i < grid->count() && !rows; ++i) {
+      rows = isSettingRow(grid->itemAt(i)->widget());
+    }
+    if (!rows) {
+      addSideMargins(grid, RowInset);
+    }
+  }
+}
 }  // namespace
 
 namespace FluentSettings
@@ -939,6 +1074,29 @@ void normalizePage(QWidget* page)
       QMargins margins = label->contentsMargins();
       margins.setLeft(std::max(margins.left(), RowInset));
       label->setContentsMargins(margins);
+    }
+  }
+
+  spaceRows(page);
+
+  // the top-level cards only: a card inside a card is reached from it
+  for (QWidget* card : page->findChildren<QWidget*>()) {
+    if (asCard(card) == nullptr || card->layout() == nullptr) {
+      continue;
+    }
+    bool nested = false;
+    for (QWidget* w = card->parentWidget(); w != nullptr && w != page; w = w->parentWidget()) {
+      nested = nested || asCard(w) != nullptr;
+    }
+    if (!nested) {
+      insetCardContent(card->layout());
+    }
+  }
+
+  // a spin box shares the column of the combo boxes
+  for (QAbstractSpinBox* spin : page->findChildren<QAbstractSpinBox*>()) {
+    if (isSettingRow(spin->parentWidget())) {
+      spin->setFixedWidth(ControlWidth);
     }
   }
 }

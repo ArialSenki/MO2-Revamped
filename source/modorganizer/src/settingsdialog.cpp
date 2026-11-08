@@ -115,7 +115,8 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   // the pages scroll at the window's edge; OK and Cancel keep their margin
   if (QLayout* root = layout()) {
     QMargins margins = root->contentsMargins();
-    ui->buttonBox->setContentsMargins(0, 0, std::max(16, margins.right()), 0);
+    // and end where the cards do: the scroll gap plus the page margin
+    ui->buttonBox->setContentsMargins(0, 0, std::max(16, margins.right()) + 9, 0);
     margins.setRight(0);
     root->setContentsMargins(margins);
   }

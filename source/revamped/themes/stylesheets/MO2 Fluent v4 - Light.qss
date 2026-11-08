@@ -1175,7 +1175,7 @@ QDialog#SettingsDialog QWidget#generalTab QWidget#generalActionsCard {
 }
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
 }
 
@@ -1192,7 +1192,7 @@ QDialog#SettingsDialog QWidget#pathsTab QLabel#label_29 {
 
 QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsBaseDirHint,
 QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsWritableHint {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px;
 }
@@ -1243,7 +1243,7 @@ QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsSectionIcon { b
 QDialog#SettingsDialog QWidget#uiTab QLabel#modListDisplayDescription,
 QDialog#SettingsDialog QWidget#uiTab QLabel#modListWorkflowDescription,
 QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -1292,7 +1292,7 @@ QDialog#SettingsDialog QWidget#themeTab QLabel#themeColorsIcon { background-colo
 
 QDialog#SettingsDialog QWidget#themeTab QLabel#themePageSubtitle,
 QDialog#SettingsDialog QWidget#themeTab QLabel#themeColorDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -1351,7 +1351,7 @@ QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusPageDescription,
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusConnectionDescription,
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusFeaturesDescription,
 QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusToolsDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -1414,7 +1414,7 @@ QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginPageSubtitle,
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginBrowserDescription,
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSettingsDescription,
 QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginBlacklistDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -1442,7 +1442,7 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel {
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#label_13,
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#label_14,
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#label_15 {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-weight: 600;
 }
 
@@ -1483,7 +1483,7 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#steamSettingsDescription,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#networkSettingsDescription,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#maintenanceToolsDescription,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#virtualFilesystemDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -1534,7 +1534,7 @@ QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsPageSubtitle,
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsLogDescription,
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsLootDescription,
 QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsFilesDescription {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -1581,7 +1581,7 @@ QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageTitle {
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageSubtitle,
 QDialog#SettingsDialog QWidget#uiTab QLabel#modListPageSubtitle,
 QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsPageSubtitle {
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
     padding: 1px 0px 3px;
 }
@@ -5116,9 +5116,6 @@ QCheckBox[fluentSwitch="true"]::indicator:unchecked:disabled {
 QCheckBox[fluentSwitch="true"]::indicator:checked:disabled {
     image: url(./mo2-fluent-v4-light/switch-on-disabled.svg);
 }
-QFrame#fluentSettingRow[fluentGridRow="true"] {
-    border-top: none;
-}
 
 /* Animated switches: FluentSwitchPainter draws them in these colors over the
    indicator, so the still images above are hidden. */
@@ -5812,7 +5809,7 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsName,
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption,
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#descriptionLabel {
-    padding: 0px 0px 0px 4px;
+    padding: 0px;
 }
 /* Settings > Nexus: its groups sit inside cards, without an inset of their own */
 QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusAccountGroup,
@@ -5938,4 +5935,9 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundNetworkTitle,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundSteamTitle,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
     font-size: 12pt;
+}
+
+/* Settings pages: the row titles of Paths are primary text, as on every other page. */
+QDialog#SettingsDialog QWidget#pathsTab QFrame#fluentSettingRow QLabel#fluentSettingTitle {
+    color: #1A1A1A;
 }

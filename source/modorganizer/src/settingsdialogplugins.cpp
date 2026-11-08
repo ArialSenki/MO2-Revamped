@@ -255,10 +255,12 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
                                         QSizePolicy::Expanding);
   ui->pluginBlacklist->setSizePolicy(QSizePolicy::Expanding,
                                      QSizePolicy::Expanding);
-  ui->splitter->setHandleWidth(7);
+  // the gap between the cards of every other page: the top margin of the card
+  // below it adds 4
+  ui->splitter->setHandleWidth(13);
   ui->splitter->setStretchFactor(0, 4);
   ui->splitter->setStretchFactor(1, 1);
-  ui->splitter_2->setHandleWidth(7);
+  ui->splitter_2->setHandleWidth(17);
   ui->splitter_2->setStretchFactor(0, 2);
   ui->splitter_2->setStretchFactor(1, 3);
   ui->verticalLayout_15->setContentsMargins(8, 6, 8, 8);

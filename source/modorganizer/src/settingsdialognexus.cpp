@@ -450,6 +450,10 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
       QStringLiteral(":/MO/gui/mainwindow/install.svg"),
       QStringLiteral("nexusServersIcon"), QStringLiteral("S"));
 
+  // the account's and the usage's lines are rows, as in every other card
+  ui->nexusAccountGroup->setProperty("fluentValueRows", true);
+  ui->nexusUsageGroup->setProperty("fluentValueRows", true);
+
   if (accountCard) {
     auto* accountRow = qobject_cast<QHBoxLayout*>(findContainingLayout(
         ui->nexusScrollAreaWidgetContents->layout(), accountCard));
@@ -464,7 +468,8 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   if (auto* connectionLayout =
           qobject_cast<QHBoxLayout*>(ui->nexusConnectionGroup->layout())) {
     connectionLayout->setContentsMargins(0, 0, 0, 0);
-    connectionLayout->setSpacing(12);
+    // with the inset of each column's content, 12 between them
+    connectionLayout->setSpacing(4);
     connectionLayout->setStretch(0, 3);
     connectionLayout->setStretch(1, 5);
   }
@@ -496,7 +501,9 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
     toolsLayout->removeWidget(ui->associateButton);
     toolsLayout->removeWidget(ui->clearCacheButton);
     auto* buttons = new QHBoxLayout;
-    buttons->setSpacing(8);
+    // a gap of 12, as between the columns of the blocks around it
+    buttons->setSpacing(12);
+    buttons->setProperty("fluentKeepSpacing", true);
     buttons->addWidget(ui->associateButton, 1);
     buttons->addWidget(ui->clearCacheButton, 1);
     toolsLayout->addLayout(buttons);
@@ -510,7 +517,7 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   if (auto* serversLayout =
           qobject_cast<QHBoxLayout*>(ui->nexusServersGroup->layout())) {
     serversLayout->setContentsMargins(0, 0, 0, 0);
-    serversLayout->setSpacing(12);
+    serversLayout->setSpacing(4);
     serversLayout->setStretch(0, 1);
     serversLayout->setStretch(1, 1);
   }
@@ -530,9 +537,9 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
 
   ui->nexusActivityPanel->setMinimumWidth(0);
   ui->nexusConnectionActions->setMinimumWidth(0);
-  ui->nexusLog->setMinimumHeight(132);
-  ui->nexusLog->setMaximumHeight(180);
-  ui->nexusLog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  // the log takes the height of the actions beside it
+  ui->nexusLog->setMinimumHeight(0);
+  ui->nexusLog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Ignored);
   ui->nexusLog->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
   ui->knownServersList->setMinimumHeight(150);
   ui->preferredServersList->setMinimumHeight(150);
