@@ -1696,6 +1696,9 @@ namespace Mo2RevampedSetup
                 string ini = Path.Combine(root, "ModOrganizer.ini");
                 if (File.Exists(ini))
                     files.Add(new CopyEntry { Data = MakePortableIni(ini), RelativePath = "ModOrganizer.ini" });
+                // the Elden Ring plugins' instance settings: programs started
+                // outside the VFS and whether Reforged online keeps its own save
+                AddSelectedFile(files, ResolveBaseDirectory(root), "eldenring_mo2_launch_methods.json");
             }
             if (request.CopyCategories)
             {
