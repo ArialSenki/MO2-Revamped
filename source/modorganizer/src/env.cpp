@@ -1079,17 +1079,21 @@ HandlePtr tempFile(const std::wstring dir)
 
 HandlePtr dumpFile(const wchar_t* dir)
 {
+  // tempFile() returns an empty handle when it fails, never
+  // INVALID_HANDLE_VALUE: comparing with that took a failure for a file and
+  // never tried the other folders
+
   // try the given directory, if any
   if (dir) {
     HandlePtr h = tempFile(dir);
-    if (h.get() != INVALID_HANDLE_VALUE) {
+    if (h) {
       return h;
     }
   }
 
   // try the current directory
   HandlePtr h = tempFile(L".");
-  if (h.get() != INVALID_HANDLE_VALUE) {
+  if (h) {
     return h;
   }
 
@@ -1100,7 +1104,7 @@ HandlePtr dumpFile(const wchar_t* dir)
 
   if (!temp.empty()) {
     h = tempFile(temp.c_str());
-    if (h.get() != INVALID_HANDLE_VALUE) {
+    if (h) {
       return h;
     }
   }

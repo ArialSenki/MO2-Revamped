@@ -573,6 +573,11 @@ private:
   std::thread m_StructureDeleter;
 
   std::atomic<bool> m_DirectoryUpdate;
+
+  // mods enabled, disabled or moved, or another profile chosen, while a
+  // refresh was running: the structure it delivers is built from the mods as
+  // they were when it started, so another one follows. UI thread only
+  bool m_RefreshPending = false;
   bool m_ArchivesInit;
 
   MOBase::DelayedFileWriter m_PluginListsWriter;
