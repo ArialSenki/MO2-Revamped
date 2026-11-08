@@ -100,7 +100,19 @@ def _tr(text: str) -> str:
     tool = globals().get("EldenRingMo2SaveIsolation")
     # the new instance wizard speaks of the game picked there
     if tool is not None and (tool._wizard_text_game or tool._game_key) == "nightreign":
-        text = text.replace("Elden Ring", "Nightreign").replace("eldenring.exe", "nightreign.exe")
+        # German joins the name with hyphens; French elides before it
+        for old, new in (
+            ("d'Elden Ring", "de Nightreign"),
+            ("d’Elden Ring", "de Nightreign"),
+            ("qu'Elden Ring", "que Nightreign"),
+            ("qu’Elden Ring", "que Nightreign"),
+            ("d'eldenring.exe", "de nightreign.exe"),
+            ("d’eldenring.exe", "de nightreign.exe"),
+            ("Elden-Ring", "Nightreign"),
+            ("Elden Ring", "Nightreign"),
+            ("eldenring.exe", "nightreign.exe"),
+        ):
+            text = text.replace(old, new)
     return text
 
 
@@ -204,6 +216,10 @@ def _theme_kind() -> str:
 
 def _accent_color() -> QColor:
     return QColor({"dark": "#4CC2FF"}.get(_theme_kind(), "#005FB8"))
+
+
+# the text buttons at the end of a page's rows share one width
+_ROW_BUTTON_WIDTH = 88
 
 
 def _glyph_font(pixels: int) -> QFont:
@@ -518,6 +534,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         icon = {
             "warning": QMessageBox.Icon.Warning,
             "error": QMessageBox.Icon.Critical,
+            # like MO2's other help windows: a heading and text, no icon
+            "help": QMessageBox.Icon.NoIcon,
         }.get(kind, QMessageBox.Icon.Information)
         box = QMessageBox(
             icon, title, message, QMessageBox.StandardButton.Ok,
@@ -1442,8 +1460,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         dialog.setMinimumSize(720, 460)
         dialog.resize(820, 520)
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(9)
+        layout.setContentsMargins(16, 16, 16, 12)
+        layout.setSpacing(12)
 
         intro = QLabel(
             _tr("Before each launch MO2 copies the saves of the route the game "
@@ -1613,14 +1631,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     ) -> None:
         dialog = QDialog(parent or self.__parent_widget)
         dialog.setObjectName("EldenRingSaveTransferDialog")
-        dialog.setWindowTitle(_tr("Elden Ring Save Transfer"))
+        dialog.setWindowTitle(_tr("Elden Ring save transfer"))
         dialog.setMinimumSize(780, 520)
         dialog.resize(900, 600)
         dialog.setSizeGripEnabled(True)
 
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(9)
+        layout.setContentsMargins(16, 16, 16, 12)
+        layout.setSpacing(12)
 
         header = QFrame(dialog)
         header.setObjectName("saveTransferHeader")
@@ -3751,8 +3769,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         dialog.resize(780, 500)
         dialog.setSizeGripEnabled(True)
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(16, 16, 16, 14)
-        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 12)
+        layout.setSpacing(12)
 
         header = QFrame(dialog)
         header.setObjectName("saveProfileHeader")
@@ -4296,7 +4314,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         reload_on_close = {"needed": stale_route}
         dialog = QDialog(self.__parent_widget)
         dialog.setObjectName("EldenRingSaveIsolationDialog")
-        dialog.setWindowTitle(_tr("Elden Ring Saves"))
+        dialog.setWindowTitle(_tr("Elden Ring save isolation"))
         dialog.setMinimumSize(900, 600)
         dialog.resize(1000, 680)
         dialog.setSizeGripEnabled(True)
@@ -4328,6 +4346,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         page_subtitle.setWordWrap(True)
         # room for two lines on every page: the cards below don't jump between them
         page_subtitle.setMinimumHeight(2 * page_subtitle.fontMetrics().lineSpacing())
+        # one line sits right under the title, as the first of two does
+        page_subtitle.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         # the root has no right margin (the pages scroll at the window's
         # edge), so the header keeps the cards' gap itself
         page_title.setContentsMargins(0, 0, 16, 0)
@@ -4415,8 +4435,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             description_label.setObjectName("fluentSettingDescription")
             description_label.setWordWrap(True)
             description_label.setVisible(bool(description))
+            # the row's spare height goes around the text, not between its
+            # lines: title and description are as close on every row
+            texts.addStretch(1)
             texts.addWidget(title_label)
             texts.addWidget(description_label)
+            texts.addStretch(1)
             row_layout.addLayout(texts, 1)
             for widget in widgets:
                 widget.setParent(row)
@@ -4529,18 +4553,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         backups_card = add_card(backups_page, _tr("Latest backups"))
         tools_card = add_card(backups_page, _tr("Tools"))
         transfer_button = QPushButton(_tr("Transfer…"))
+        transfer_button.setMinimumWidth(_ROW_BUTTON_WIDTH)
         add_row(
             tools_card, 0xE8AB, _tr("Transfer a save"),
             _tr("Copy one save between this profile, the shared route and Steam's folder."),
             (transfer_button,),
         )
         all_backups_button = QPushButton(_tr("Open…"))
+        all_backups_button.setMinimumWidth(_ROW_BUTTON_WIDTH)
         add_row(
             tools_card, 0xE81C, _tr("All backups"),
             _tr("Browse every backup of a route and restore one."),
             (all_backups_button,),
         )
         export_button = QPushButton(_tr("Export…"))
+        export_button.setMinimumWidth(_ROW_BUTTON_WIDTH)
         add_row(
             tools_card, 0xEDE1, _tr("Export all my saves"),
             _tr("Copies the saves of every route to a folder you choose, for example "
@@ -4548,6 +4575,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             (export_button,),
         )
         copy_report_button = QPushButton(_tr("Copy"))
+        copy_report_button.setMinimumWidth(_ROW_BUTTON_WIDTH)
         add_row(
             tools_card, 0xE9D9, _tr("Diagnostics"),
             _tr("Copies the routes and settings for a bug report."),
@@ -4723,6 +4751,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 except OSError:
                     when, count = backup.name, 0
                 restore = QPushButton(_tr("Restore…"))
+                restore.setMinimumWidth(_ROW_BUTTON_WIDTH)
                 restore.clicked.connect(
                     lambda _checked=False, chosen=backup: (
                         self._display_restore_dialog(
@@ -4861,7 +4890,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         def show_help() -> None:
             self._show_notice(
                 dialog,
-                _tr("How saves work here"),
+                _tr("How do saves work here?"),
                 _tr("Each MO2 profile can keep its own saves, so modded play never "
                 "touches your Steam character. While the game runs, Steam's save "
                 "folder is set aside; it comes back unchanged when the game closes.\n\n"
@@ -4879,7 +4908,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "Launchers that fail inside MO2's virtual folder start outside it: MO2 "
                 "puts the route's saves in Steam's folder for the run and takes them "
                 "back afterwards. A backup of the route is made before every launch."),
-                "info",
+                "help",
             )
 
         def save_profiles_busy() -> bool:

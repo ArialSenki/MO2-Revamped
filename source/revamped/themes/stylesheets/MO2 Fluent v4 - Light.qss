@@ -2770,7 +2770,7 @@ QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageTitle {
 }
 
 QDialog#EldenRingSaveIsolationDialog QLabel#saveIsolationPageSubtitle{
-    color: #8A8A8A;
+    color: #5D5D5D;
     font-size: 9pt;
 }
 

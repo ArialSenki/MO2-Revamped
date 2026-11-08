@@ -2917,7 +2917,7 @@ Les DLL détectées des mods activés apparaîtront dans le panneau de gauche.</
       <translation>Options de profil Elden Ring</translation>
     </message>
     <message>
-      <source>Elden Ring Save Transfer</source>
+      <source>Elden Ring save transfer</source>
       <translation>Transfert de sauvegarde Elden Ring</translation>
     </message>
     <message>
@@ -3883,8 +3883,8 @@ La route n’a pas pu être remise en l’état. Les sauvegardes mises de côté
       <translation>&lt;p&gt;Quand MO2 a remis en place les sauvegardes Steam qu&apos;il avait masquées pour un lancement, un dossier de sauvegarde était apparu à leur place : le jeu a été lancé depuis Steam entre-temps, ou a sauvegardé en dehors de la route MO2. MO2 ne l&apos;a pas supprimé ; il se trouve dans :&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;S&apos;il contient une progression que vous voulez garder, fermez le jeu et recopiez ses fichiers. Supprimez le dossier quand vous n&apos;en avez plus besoin pour faire disparaître cet avis.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>Elden Ring Saves</source>
-      <translation>Sauvegardes d'Elden Ring</translation>
+      <source>Elden Ring save isolation</source>
+      <translation>Isolation des sauvegardes d'Elden Ring</translation>
     </message>
     <message>
       <source>Pages</source>
@@ -4159,10 +4159,6 @@ Non copiées :
     <message>
       <source>Set aside while the game runs; they come back when it closes.</source>
       <translation>Mises de côté pendant que le jeu tourne ; elles reviennent à sa fermeture.</translation>
-    </message>
-    <message>
-      <source>How saves work here</source>
-      <translation>Comment fonctionnent les sauvegardes ici</translation>
     </message>
     <message>
       <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
@@ -4522,6 +4518,10 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
     <message>
       <source>The affinity change applies only to Elden Ring and resets when the game closes.</source>
       <translation>Le changement d'affinité ne s'applique qu'à Elden Ring et se réinitialise à la fermeture du jeu.</translation>
+    </message>
+    <message>
+      <source>Log files</source>
+      <translation>Fichiers journaux</translation>
     </message>
     <message>
       <source>Bridge logs</source>

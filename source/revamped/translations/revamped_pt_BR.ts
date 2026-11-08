@@ -2913,7 +2913,7 @@ As DLLs detectadas dos mods ativos aparecerão no painel esquerdo.</translation>
       <translation>Opções de perfil do Elden Ring</translation>
     </message>
     <message>
-      <source>Elden Ring Save Transfer</source>
+      <source>Elden Ring save transfer</source>
       <translation>Transferência de saves do Elden Ring</translation>
     </message>
     <message>
@@ -3879,8 +3879,8 @@ Não foi possível deixar a rota como estava. Os saves separados estão em:
       <translation>&lt;p&gt;Quando o MO2 devolveu os saves da Steam que havia ocultado para uma inicialização, uma pasta de saves tinha aparecido no lugar deles: o jogo foi iniciado pela Steam nesse meio tempo, ou salvou fora da rota do MO2. O MO2 não a excluiu; ela está em:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Se ela tiver progresso que você quer manter, feche o jogo e copie os arquivos de volta. Exclua a pasta quando não precisar mais dela para remover este aviso.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>Elden Ring Saves</source>
-      <translation>Saves do Elden Ring</translation>
+      <source>Elden Ring save isolation</source>
+      <translation>Isolamento de saves do Elden Ring</translation>
     </message>
     <message>
       <source>Pages</source>
@@ -4155,10 +4155,6 @@ Não copiados:
     <message>
       <source>Set aside while the game runs; they come back when it closes.</source>
       <translation>Separados enquanto o jogo roda; voltam quando ele fecha.</translation>
-    </message>
-    <message>
-      <source>How saves work here</source>
-      <translation>Como os saves funcionam aqui</translation>
     </message>
     <message>
       <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
@@ -4518,6 +4514,10 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
     <message>
       <source>The affinity change applies only to Elden Ring and resets when the game closes.</source>
       <translation>A mudança de afinidade vale só para o Elden Ring e é redefinida quando o jogo fecha.</translation>
+    </message>
+    <message>
+      <source>Log files</source>
+      <translation>Arquivos de log</translation>
     </message>
     <message>
       <source>Bridge logs</source>

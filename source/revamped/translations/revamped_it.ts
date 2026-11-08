@@ -3001,7 +3001,7 @@ Le DLL rilevate dalle mod attive compariranno nel pannello sinistro.</translatio
       <translation>Opzioni del profilo di Elden Ring</translation>
     </message>
     <message>
-      <source>Elden Ring Save Transfer</source>
+      <source>Elden Ring save transfer</source>
       <translation>Trasferimento salvataggi di Elden Ring</translation>
     </message>
     <message>
@@ -3967,8 +3967,8 @@ Non è stato possibile riportare il percorso com’era. I salvataggi messi da pa
       <translation>&lt;p&gt;Quando MO2 ha rimesso a posto i salvataggi di Steam che aveva nascosto per un avvio, al loro posto era comparsa una cartella di salvataggio: nel frattempo il gioco è stato avviato da Steam, oppure ha salvato fuori dal percorso di MO2. MO2 non l&apos;ha eliminata; si trova in:&lt;/p&gt;&lt;p&gt;{folders}&lt;/p&gt;&lt;p&gt;Se contiene progressi che vuoi tenere, chiudi il gioco e ricopia i suoi file. Elimina la cartella quando non ti serve più per far sparire questo avviso.&lt;/p&gt;</translation>
     </message>
     <message>
-      <source>Elden Ring Saves</source>
-      <translation>Salvataggi di Elden Ring</translation>
+      <source>Elden Ring save isolation</source>
+      <translation>Isolamento salvataggi di Elden Ring</translation>
     </message>
     <message>
       <source>Pages</source>
@@ -4243,10 +4243,6 @@ Non copiati:
     <message>
       <source>Set aside while the game runs; they come back when it closes.</source>
       <translation>Messi da parte mentre il gioco è in esecuzione; tornano quando si chiude.</translation>
-    </message>
-    <message>
-      <source>How saves work here</source>
-      <translation>Come funzionano i salvataggi qui</translation>
     </message>
     <message>
       <source>Each MO2 profile can keep its own saves, so modded play never touches your Steam character. While the game runs, Steam's save folder is set aside; it comes back unchanged when the game closes.
@@ -4606,6 +4602,10 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
     <message>
       <source>The affinity change applies only to Elden Ring and resets when the game closes.</source>
       <translation>La modifica dell'affinità vale solo per Elden Ring e si ripristina alla chiusura del gioco.</translation>
+    </message>
+    <message>
+      <source>Log files</source>
+      <translation>File di registro</translation>
     </message>
     <message>
       <source>Bridge logs</source>
