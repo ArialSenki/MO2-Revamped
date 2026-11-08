@@ -5995,3 +5995,12 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundSteamTitle,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
     font-size: 12pt;
 }
+
+/* Mod information and new instance wizard (visual review) */
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"],
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
+    qproperty-descriptionColor: #9A9A9A;
+}
+QDialog#ModInfoDialog QTabWidget#tabConflictsTabs::pane {
+    border: none;
+}

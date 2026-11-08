@@ -39,7 +39,6 @@ void TextEditor::setDefaultStyle()
 
   QColor textColor(Qt::black);
   QColor altTextColor(Qt::darkGray);
-  QColor backgroundColor(Qt::white);
 
   {
     auto w = std::make_unique<QWidget>();
@@ -50,16 +49,19 @@ void TextEditor::setDefaultStyle()
 
     textColor       = w->palette().color(QPalette::WindowText);
     altTextColor    = w->palette().color(QPalette::Disabled, QPalette::WindowText);
-    backgroundColor = w->palette().color(QPalette::Window);
   }
 
   setTextColor(textColor);
   m_lineNumbers->setTextColor(altTextColor);
 
-  setBackgroundColor(backgroundColor);
-  m_lineNumbers->setBackgroundColor(backgroundColor);
+  // no colour of its own: the theme's field surface shows through, the
+  // same one the Notes editor has
+  setBackgroundColor(Qt::transparent);
+  m_lineNumbers->setBackgroundColor(Qt::transparent);
+  // the theme's rule for plain widgets would paint the window colour here
+  m_lineNumbers->setStyleSheet(QStringLiteral("background: transparent;"));
 
-  setHighlightBackgroundColor(backgroundColor);
+  setHighlightBackgroundColor(Qt::transparent);
 }
 
 void TextEditor::clear()
@@ -548,6 +550,7 @@ void TextEditorToolbar::onLoaded(const QString& path)
   m_wordWrap->setEnabled(hasDoc);
   m_path->setEnabled(hasDoc);
   m_path->setText(QDir::toNativeSeparators(path));
+  m_path->setCursorPosition(0);
 }
 
 void HTMLEditor::focusOutEvent(QFocusEvent* e)

@@ -122,7 +122,7 @@ void NexusTab::showDescription()
     connect(dialog->addButton(tr("Refresh")), &QPushButton::clicked, this, [this] {
       onRefreshBrowser();
     });
-    connect(dialog->addButton(tr("Open in Browser")), &QPushButton::clicked, this,
+    connect(dialog->addButton(tr("Open in browser")), &QPushButton::clicked, this,
             [this] {
               onVisitNexus();
             });
@@ -245,7 +245,7 @@ void NexusTab::updateVersionColor()
   const bool older  = known && !update && mod().downgradeAvailable();
   if (update) {
     ui->version->setToolTip(
-        tr("Current Version: %1").arg(mod().newestVersion().canonicalString()));
+        tr("Current version: %1").arg(mod().newestVersion().canonicalString()));
   } else if (older) {
     ui->version->setToolTip(tr("Older on Nexus: %1")
                                 .arg(mod().newestVersion().canonicalString()));

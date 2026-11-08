@@ -302,12 +302,12 @@ void ConflictListModel::doSort()
 
 OverwriteConflictListModel::OverwriteConflictListModel(QTreeView* tree)
     : ConflictListModel(tree, {{tr("File"), &ConflictItem::relativeName},
-                               {tr("Overwritten Mods"), &ConflictItem::before}})
+                               {tr("Overwritten mods"), &ConflictItem::before}})
 {}
 
 OverwrittenConflictListModel::OverwrittenConflictListModel(QTreeView* tree)
     : ConflictListModel(tree, {{tr("File"), &ConflictItem::relativeName},
-                               {tr("Providing Mod"), &ConflictItem::after}})
+                               {tr("Providing mod"), &ConflictItem::after}})
 {}
 
 NoConflictListModel::NoConflictListModel(QTreeView* tree)
@@ -317,5 +317,5 @@ NoConflictListModel::NoConflictListModel(QTreeView* tree)
 AdvancedConflictListModel::AdvancedConflictListModel(QTreeView* tree)
     : ConflictListModel(tree, {{tr("Overwrites"), &ConflictItem::before},
                                {tr("File"), &ConflictItem::relativeName},
-                               {tr("Overwritten By"), &ConflictItem::after}})
+                               {tr("Overwritten by"), &ConflictItem::after}})
 {}

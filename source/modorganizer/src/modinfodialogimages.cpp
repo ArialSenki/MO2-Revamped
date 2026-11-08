@@ -91,6 +91,8 @@ ImagesTab::ImagesTab(ModInfoDialogTabContext cx)
   });
 
   ui->imagesShowDDS->setEnabled(m_ddsAvailable);
+  // as wide as the file lists and filters of the other pages
+  ui->widget_8->setMinimumWidth(200);
 
   m_filter.setEdit(ui->imagesFilter);
   connect(&m_filter, &FilterWidget::changed, [&] {
@@ -206,12 +208,17 @@ void ImagesTab::updateEmptyState()
   const bool noImages = m_files.empty();
   m_image->setVisible(!noImages);
   m_emptyStatePage->setVisible(noImages);
+  // nothing to act on, and the empty state centred in the whole page: the
+  // list and its filter stay while a filter is what hides the images
+  ui->widget_12->setVisible(!noImages);
+
+  const bool noFilterMatches = m_files.isFiltered() && !m_files.allFiles().empty();
+  ui->widget_8->setVisible(!noImages || noFilterMatches);
 
   if (!noImages) {
     return;
   }
 
-  const bool noFilterMatches = m_files.isFiltered() && !m_files.allFiles().empty();
   m_emptyStateTitle->setText(noFilterMatches ? tr("No matching images")
                                              : tr("No images to display"));
   m_emptyStateDescription->setText(
@@ -314,6 +321,7 @@ void ImagesTab::select(std::size_t i, Visibility v)
     f->ensureOriginalLoaded();
 
     ui->imagesPath->setText(QDir::toNativeSeparators(f->path()));
+    ui->imagesPath->setCursorPosition(0);
     ui->imagesExplore->setEnabled(true);
     if (plugin().previewGenerator().previewSupported(
             QFileInfo(f->path()).suffix().toLower(), false))

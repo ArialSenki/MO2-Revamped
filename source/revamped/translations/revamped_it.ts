@@ -465,6 +465,10 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <source>Manage categories - %1</source>
       <translation>Gestisci categorie - %1</translation>
     </message>
+    <message>
+      <source>Close</source>
+      <translation>Chiudi</translation>
+    </message>
   </context>
   <context>
     <name>CategoryFactory</name>
@@ -1491,6 +1495,10 @@ I programmi non nascosti compaiono nell’elenco Programma della finestra princi
     <message>
       <source>Output mod not found</source>
       <translation>Mod di output non trovata</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Chiudi</translation>
     </message>
   </context>
   <context>
@@ -3497,7 +3505,7 @@ Scegli Usa il salvataggio globale di Steam per memorizzare questo percorso per i
       <translation>Questo nome compare in Strumenti &gt; Isolamento salvataggi. Se scegli un salvataggio iniziale qui sotto, verrà copiato in questo profilo di salvataggio con nome. Elden Ring carica il file selezionato come ER0000.sl2.</translation>
     </message>
     <message>
-      <source>Optional. Leave this unchecked to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
+      <source>Optional. Leave this off to use standard saves. You can create named game save profiles later from Tools &gt; Save Isolation.</source>
       <translation>Facoltativo. Lascia deselezionato per usare i salvataggi standard. Puoi creare profili di salvataggio con nome in seguito da Strumenti &gt; Isolamento salvataggi.</translation>
     </message>
     <message>
@@ -5076,8 +5084,8 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
   <context>
     <name>ForcedLoadDialog</name>
     <message>
-      <source>Force-load settings</source>
-      <translation>Impostazioni di caricamento forzato</translation>
+      <source>Force load libraries</source>
+      <translation>Forza caricamento librerie</translation>
     </message>
     <message>
       <source>Force-load libraries</source>
@@ -5258,6 +5266,10 @@ La maggior parte delle mod non ne ha bisogno: gli script extender e i loader di 
     <message>
       <source>When do I need this?</source>
       <translation>Quando mi serve?</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Chiudi</translation>
     </message>
   </context>
   <context>
@@ -8065,6 +8077,54 @@ La maggior parte delle mod non ha esp opzionali, quindi è probabile che l&apos;
       <source>This moves a esp to the esp directory so it can be enabled in the main window. Please note that the ESP merely becomes &quot;available&quot;, it will not necessarily be loaded! That is configured in the main window of MO2.</source>
       <translation>Sposta un esp nella cartella degli esp per poterlo attivare nella finestra principale. L&apos;ESP diventa solo &quot;disponibile&quot;, non verrà necessariamente caricato! Questo si imposta nella finestra principale di MO2.</translation>
     </message>
+    <message>
+      <source>Nexus info</source>
+      <translation>Info Nexus</translation>
+    </message>
+    <message>
+      <source>Set color</source>
+      <translation>Imposta colore</translation>
+    </message>
+    <message>
+      <source>Reset color</source>
+      <translation>Reimposta colore</translation>
+    </message>
+    <message>
+      <source>Enter comments about the mod here. These are displayed in the notes column of the mod list.</source>
+      <translation>Inserisci qui i commenti sulla mod. Vengono mostrati nella colonna note dell'elenco delle mod.</translation>
+    </message>
+    <message>
+      <source>Enter notes about the mod here. These can be viewed in the mod list by hovering over the notes column or the flags column.</source>
+      <translation>Inserisci qui le note sulla mod. Si vedono nell'elenco delle mod passando il cursore sulla colonna note o indicatori.</translation>
+    </message>
+    <message>
+      <source>Text files</source>
+      <translation>File di testo</translation>
+    </message>
+    <message>
+      <source>INI files</source>
+      <translation>File INI</translation>
+    </message>
+    <message>
+      <source>File tree</source>
+      <translation>Albero dei file</translation>
+    </message>
+    <message>
+      <source>Open mod in Explorer</source>
+      <translation>Apri la mod in Esplora file</translation>
+    </message>
+    <message>
+      <source>Open in browser</source>
+      <translation>Apri nel browser</translation>
+    </message>
+    <message>
+      <source>Open with preview plugin</source>
+      <translation>Apri con il plugin di anteprima</translation>
+    </message>
+    <message>
+      <source>Full notes</source>
+      <translation>Note complete</translation>
+    </message>
   </context>
   <context>
     <name>ModList</name>
@@ -9141,8 +9201,8 @@ Per conservare alcuni file, spostali prima in una mod.</translation>
       <translation>Ad esempio: Sfida o Test mod</translation>
     </message>
     <message>
-      <source>Name the copy</source>
-      <translation>Dai un nome alla copia</translation>
+      <source>Duplicate profile</source>
+      <translation>Duplica profilo</translation>
     </message>
     <message>
       <source>Set a new profile name</source>
@@ -9171,6 +9231,14 @@ Per conservare alcuni file, spostali prima in una mod.</translation>
     <message>
       <source>If checked, the new profile will use the default game INI settings instead of the global settings. Global settings are the settings you configure when running the game launcher directly, without MO2.</source>
       <translation>Se selezionato, il nuovo profilo usa le impostazioni INI predefinite del gioco invece di quelle globali. Le impostazioni globali sono quelle che configuri avviando direttamente il launcher del gioco, senza MO2.</translation>
+    </message>
+    <message>
+      <source>Name of the copy</source>
+      <translation>Nome della copia</translation>
+    </message>
+    <message>
+      <source>Duplicate</source>
+      <translation>Duplica</translation>
     </message>
   </context>
   <context>
@@ -9477,6 +9545,10 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
     <message>
       <source>Rename profile</source>
       <translation>Rinomina profilo</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Chiudi</translation>
     </message>
   </context>
   <context>
@@ -11634,6 +11706,22 @@ Avviarlo comunque?</translation>
       <source>Failed to create &quot;%1&quot;</source>
       <translation>Impossibile creare &quot;%1&quot;</translation>
     </message>
+    <message>
+      <source>Date modified</source>
+      <translation>Data di modifica</translation>
+    </message>
+    <message>
+      <source>Folder</source>
+      <translation>Cartella</translation>
+    </message>
+    <message>
+      <source>File</source>
+      <translation>File</translation>
+    </message>
+    <message>
+      <source>%1 file</source>
+      <translation>File %1</translation>
+    </message>
   </context>
   <context>
     <name>LogList</name>
@@ -12114,7 +12202,7 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
       <translation>Chiudi</translation>
     </message>
     <message>
-      <source>Open in Browser</source>
+      <source>Open in browser</source>
       <translation>Apri nel browser</translation>
     </message>
     <message>
@@ -12136,6 +12224,10 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
     <message>
       <source>This mod has no valid Nexus ID. To open another site for it, turn on Custom web page above and enter its address.</source>
       <translation>Questa mod non ha un ID Nexus valido. Per aprire un altro sito, attiva Pagina web personalizzata qui sopra e inserisci il suo indirizzo.</translation>
+    </message>
+    <message>
+      <source>Current version: %1</source>
+      <translation>Versione attuale: %1</translation>
     </message>
 </context>
   <context>
@@ -12279,4 +12371,25 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
       <translation>Questa versione non ha note su GitHub.</translation>
     </message>
   </context>
+<context>
+    <name>OverwriteConflictListModel</name>
+    <message>
+      <source>Overwritten mods</source>
+      <translation>Mod sovrascritte</translation>
+    </message>
+</context>
+<context>
+    <name>OverwrittenConflictListModel</name>
+    <message>
+      <source>Providing mod</source>
+      <translation>Mod fornitrice</translation>
+    </message>
+</context>
+<context>
+    <name>AdvancedConflictListModel</name>
+    <message>
+      <source>Overwritten by</source>
+      <translation>Sovrascritto da</translation>
+    </message>
+</context>
 </TS>

@@ -217,7 +217,8 @@ public:
   {
     const bool selected = option.state & QStyle::State_Selected;
     const bool hovered  = option.state & QStyle::State_MouseOver;
-    const bool dimmed   = index.data(DimmedRole).toBool() ||
+    // an empty page is dimmed in the list, but the one being shown is not
+    const bool dimmed   = (index.data(DimmedRole).toBool() && !selected) ||
                         !(option.state & QStyle::State_Enabled);
     const QColor text = option.palette.color(
         dimmed ? QPalette::Disabled : QPalette::Active, QPalette::WindowText);

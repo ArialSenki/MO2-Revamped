@@ -35,7 +35,7 @@
       <item>
        <widget class="QLabel" name="modInfoPageTitle">
         <property name="text">
-         <string>Text Files</string>
+         <string>Text files</string>
         </property>
        </widget>
       </item>
@@ -65,7 +65,7 @@
      </property>
      <widget class="QWidget" name="tabText">
       <attribute name="title">
-       <string>Text Files</string>
+       <string>Text files</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_15">
        <item>
@@ -136,7 +136,7 @@
      </widget>
      <widget class="QWidget" name="tabIni">
       <attribute name="title">
-       <string>INI Files</string>
+       <string>INI files</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
@@ -300,7 +300,7 @@
               <item>
                <widget class="QToolButton" name="previewPluginButton">
                 <property name="text">
-                 <string>Open with Preview Plugin</string>
+                 <string>Open with preview plugin</string>
                 </property>
                </widget>
               </item>
@@ -867,6 +867,13 @@ text-align: left;</string>
                   </widget>
                  </item>
                  <item>
+                  <spacer name="conflictsAdvancedOptionsGap">
+                   <property name="orientation"><enum>Qt::Horizontal</enum></property>
+                   <property name="sizeType"><enum>QSizePolicy::Fixed</enum></property>
+                   <property name="sizeHint" stdset="0"><size><width>8</width><height>0</height></size></property>
+                  </spacer>
+                 </item>
+                 <item>
                   <widget class="QRadioButton" name="conflictsAdvancedShowAll">
                    <property name="toolTip">
                     <string>Shows all mods overwriting or being overwritten by this mod</string>
@@ -964,7 +971,7 @@ text-align: left;</string>
         <normaloff>:/MO/gui/resources/internet-web-browser.png</normaloff>:/MO/gui/resources/internet-web-browser.png</iconset>
       </attribute>
       <attribute name="title">
-       <string>Nexus Info</string>
+       <string>Nexus info</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
@@ -1224,27 +1231,27 @@ p, li { white-space: pre-wrap; }
          <item>
           <widget class="QLineEdit" name="comments">
            <property name="toolTip">
-            <string>Enter comments about the mod here.  These are displayed in the notes column of the mod list.</string>
+            <string>Enter comments about the mod here. These are displayed in the notes column of the mod list.</string>
            </property>
            <property name="whatsThis">
-            <string>Enter comments about the mod here.  These are displayed in the notes column of the mod list.</string>
+            <string>Enter comments about the mod here. These are displayed in the notes column of the mod list.</string>
            </property>
            <property name="placeholderText">
-            <string>Enter comments about the mod here.  These are displayed in the notes column of the mod list.</string>
+            <string>Enter comments about the mod here. These are displayed in the notes column of the mod list.</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="setColorButton">
            <property name="text">
-            <string>Set Color</string>
+            <string>Set color</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="resetColorButton">
            <property name="text">
-            <string>Reset Color</string>
+            <string>Reset color</string>
            </property>
           </widget>
          </item>
@@ -1253,16 +1260,16 @@ p, li { white-space: pre-wrap; }
        <item>
         <widget class="HTMLEditor" name="notes">
          <property name="toolTip">
-          <string>Enter notes about the mod here.  These can be viewed in the mod list by hovering over the notes column or the flags column.</string>
+          <string>Enter notes about the mod here. These can be viewed in the mod list by hovering over the notes column or the flags column.</string>
          </property>
          <property name="whatsThis">
-          <string>Enter notes about the mod here.  These can be viewed in the mod list by hovering over the notes column or the flags column.</string>
+          <string>Enter notes about the mod here. These can be viewed in the mod list by hovering over the notes column or the flags column.</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
          <property name="placeholderText">
-          <string>Enter notes about the mod here.  These can be viewed in the mod list by hovering over the notes column or the flags column.</string>
+          <string>Enter notes about the mod here. These can be viewed in the mod list by hovering over the notes column or the flags column.</string>
          </property>
         </widget>
        </item>
@@ -1270,7 +1277,7 @@ p, li { white-space: pre-wrap; }
      </widget>
      <widget class="QWidget" name="tabFiles">
       <attribute name="title">
-       <string>Filetree</string>
+       <string>File tree</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
@@ -1284,7 +1291,7 @@ p, li { white-space: pre-wrap; }
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Open Mod in Explorer</string>
+            <string>Open mod in Explorer</string>
            </property>
           </widget>
          </item>

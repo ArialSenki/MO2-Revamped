@@ -1137,7 +1137,7 @@ void ModInfoDialog::buildFluentPages()
     QWidget* left  = rowColumn(columns, card);
     QWidget* right = rowColumn(columns, card);
     ui->modID->setAccessibleName(tr("Mod ID"));
-    addEditRow(left, 0xE8C8, tr("Mod ID"), tr("The number in the mod's Nexus address"),
+    addEditRow(left, 0xE8EC, tr("Mod ID"), tr("The number in the mod's Nexus address"),
                {ui->modID});
     addEditRow(left, 0xE7FC, tr("Game"), tr("The Nexus game the page belongs to"),
                {ui->sourceGame});
@@ -1181,6 +1181,9 @@ void ModInfoDialog::buildFluentPages()
     actionsLayout->setSpacing(8);
     ui->showDescription->setIcon(FluentIcons::glyph(0xE8A5));
     ui->showDescription->setProperty("fluentKeepIcon", true);
+    // an outline, like the buttons beside it
+    ui->endorse->setIcon(FluentIcons::glyph(0xE734));
+    ui->endorse->setProperty("fluentKeepIcon", true);
     for (QPushButton* button :
          {ui->showDescription, ui->visitNexus, ui->refresh, ui->endorse, ui->track}) {
       button->setParent(actions);
@@ -1210,7 +1213,7 @@ void ModInfoDialog::buildFluentPages()
     }
     addEditRow(card, 0xE790, tr("Color"), tr("Marks the mod's row in the mod list"),
                {ui->setColorButton, ui->resetColorButton});
-    auto* heading = new QLabel(tr("Notes"), ui->tabNotes);
+    auto* heading = new QLabel(tr("Full notes"), ui->tabNotes);
     heading->setObjectName(QStringLiteral("fluentCardTitle"));
     heading->setContentsMargins(2, 6, 0, 0);
     page->insertWidget(1, heading);
