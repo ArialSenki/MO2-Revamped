@@ -49,6 +49,27 @@ using namespace MOBase;
 
 namespace
 {
+// the search filters as you type, and the tree has no use for Enter: it must
+// not press a dialog button
+class SwallowEnter : public QObject
+{
+public:
+  explicit SwallowEnter(QWidget* field) : QObject(field)
+  {
+    field->installEventFilter(this);
+  }
+
+protected:
+  bool eventFilter(QObject*, QEvent* event) override
+  {
+    if (event->type() == QEvent::KeyPress) {
+      const int key = static_cast<QKeyEvent*>(event)->key();
+      return key == Qt::Key_Return || key == Qt::Key_Enter;
+    }
+    return false;
+  }
+};
+
 // a folder takes what's inside it along, and the shell would stop at the rest
 QStringList topmostPaths(QStringList paths)
 {
@@ -127,7 +148,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   ui->explorerButton->setIcon(FluentIcons::glyph(0xE838));  // OpenFolderHorizontal
 
 
-  m_DeleteAction    = new QAction(tr("&Delete…"), ui->filesView);
+  m_DeleteAction    = new QAction(tr("&Delete..."), ui->filesView);
   m_RenameAction    = new QAction(tr("&Rename"), ui->filesView);
   m_OpenAction      = new QAction(tr("&Open file"), ui->filesView);
   m_NewFolderAction = new QAction(tr("&New folder"), ui->filesView);
@@ -213,8 +234,12 @@ void OverwriteInfoDialog::buildFluentLayout()
   auto* search = new QLineEdit(tools);
   search->setObjectName(QStringLiteral("instanceFilter"));
   search->setPlaceholderText(tr("Search files"));
+  search->setAccessibleName(tr("Search files"));
   search->setClearButtonEnabled(true);
   search->setMaximumWidth(320);
+  new SwallowEnter(search);
+  // the same in the tree, which ignores Enter and would pass it to a button
+  new SwallowEnter(ui->filesView);
   toolsLayout->addWidget(search, 1);
   auto* expand = FluentPanels::iconButton(0xF164, tr("Expand all"), tools);
   auto* collapse = FluentPanels::iconButton(0xF165, tr("Collapse all"), tools);
@@ -240,6 +265,22 @@ void OverwriteInfoDialog::buildFluentLayout()
       ui->filesView->expandAll();
     }
   });
+  // the model loads folders as they open: a match deeper down needs the
+  // expansion to go on as each level arrives; one pass per burst of folders
+  auto* expandAgain = new QTimer(this);
+  expandAgain->setSingleShot(true);
+  expandAgain->setInterval(100);
+  connect(expandAgain, &QTimer::timeout, this, [this, search] {
+    if (!search->text().trimmed().isEmpty()) {
+      ui->filesView->expandAll();
+    }
+  });
+  connect(m_FileSystemModel, &QFileSystemModel::directoryLoaded, expandAgain,
+          [expandAgain, search] {
+            if (!search->text().trimmed().isEmpty()) {
+              expandAgain->start();
+            }
+          });
   connect(m_empty, &QPushButton::clicked, this, &OverwriteInfoDialog::emptyOverwrite);
 
   auto* files = new QFrame(card);
@@ -302,13 +343,14 @@ void OverwriteInfoDialog::updateSummary()
                       QDir::System,
                   QDirIterator::Subdirectories);
   while (it.hasNext()) {
-    if (files + folders >= CountLimit) {
-      more = true;
-      break;
-    }
     it.next();
     if (it.fileInfo().isDir()) {
       ++folders;
+    } else if (files >= CountLimit) {
+      // "more than N files": only files count towards the limit, and one
+      // more file was found past it
+      more = true;
+      break;
     } else {
       ++files;
       bytes += it.fileInfo().size();
@@ -434,7 +476,8 @@ void OverwriteInfoDialog::deleteFiles(const QModelIndexList& indexes)
           : tr("Move the selected files to the Recycle Bin?");
 
   if (QMessageBox::question(this, tr("Confirm"), message,
-                            QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) != QMessageBox::Yes) {
     return;
   }
 

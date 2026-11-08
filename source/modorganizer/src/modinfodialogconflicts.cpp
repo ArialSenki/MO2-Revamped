@@ -682,20 +682,25 @@ void GeneralConflictsTab::restoreState(const Settings& s)
   s.geometry().restoreState(&m_expanders.overwrite);
   s.geometry().restoreState(&m_expanders.overwritten);
   s.geometry().restoreState(&m_expanders.nonconflict);
-  s.geometry().restoreState(ui->overwriteTree->header());
-  s.geometry().restoreState(ui->noConflictTree->header());
-  s.geometry().restoreState(ui->overwrittenTree->header());
+  const std::pair<QTreeView*, bool> trees[] = {
+      {ui->overwriteTree, s.geometry().restoreState(ui->overwriteTree->header())},
+      {ui->noConflictTree, s.geometry().restoreState(ui->noConflictTree->header())},
+      {ui->overwrittenTree, s.geometry().restoreState(ui->overwrittenTree->header())}};
 
   // the file is what the lists are about: it takes the width, and the mod
-  // column keeps a fixed share at the right (the name column was a hundred
-  // pixels wide, the file names cut down to "...Ashes.log")
-  for (QTreeView* tree : {ui->overwriteTree, ui->overwrittenTree, ui->noConflictTree}) {
+  // column keeps a share at the right (the name column was a hundred pixels
+  // wide, the file names cut down to "...Ashes.log"). A width the user chose
+  // stays, unless a saved layout would leave the file too little room.
+  constexpr int ModColumn = 240, ModColumnMax = 400;
+  for (const auto& [tree, restored] : trees) {
     QHeaderView* header = tree->header();
     header->setStretchLastSection(false);
     header->setSectionResizeMode(0, QHeaderView::Stretch);
     for (int column = 1; column < header->count(); ++column) {
       header->setSectionResizeMode(column, QHeaderView::Interactive);
-      header->resizeSection(column, 240);
+      if (!restored || header->sectionSize(column) > ModColumnMax) {
+        header->resizeSection(column, ModColumn);
+      }
     }
   }
 }
@@ -951,7 +956,7 @@ void AdvancedConflictsTab::saveState(Settings& s)
 
 void AdvancedConflictsTab::restoreState(const Settings& s)
 {
-  s.geometry().restoreState(ui->conflictsAdvancedList->header());
+  const bool restored = s.geometry().restoreState(ui->conflictsAdvancedList->header());
   s.widgets().restoreChecked(ui->conflictsAdvancedShowNoConflict);
   s.widgets().restoreChecked(ui->conflictsAdvancedShowAll);
   s.widgets().restoreChecked(ui->conflictsAdvancedShowNearest);
@@ -965,7 +970,10 @@ void AdvancedConflictsTab::restoreState(const Settings& s)
       header->setSectionResizeMode(column, QHeaderView::Stretch);
     } else {
       header->setSectionResizeMode(column, QHeaderView::Interactive);
-      header->resizeSection(column, 200);
+      // as in the General lists: a chosen width stays
+      if (!restored || header->sectionSize(column) > 400) {
+        header->resizeSection(column, 200);
+      }
     }
   }
 }

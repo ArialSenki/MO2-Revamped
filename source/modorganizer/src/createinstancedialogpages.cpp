@@ -1027,6 +1027,13 @@ void GamePage::select(IPluginGame* game, const QString& dir)
     }
   }
 
+  if (checked == nullptr && m_selection != nullptr) {
+    // cancelling the installation picker, the folder browser or a question
+    // keeps the game chosen before, as selectCustom() does
+    selectButton(m_selection);
+    return;
+  }
+
   // select this plugin, if any
   m_selection = checked;
 
@@ -1487,8 +1494,7 @@ bool GamePage::confirmUnknown(const QString& path, IPluginGame* game)
                           "<span style=\"white-space: nowrap; font-weight: "
                           "bold;\">%2</span> or "
                           "for any other game Mod Organizer can manage.")
-                  .arg(path)
-                  .arg(game->displayGameName()))
+                  .arg(path, game->displayGameName()))
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
 
@@ -1511,23 +1517,18 @@ IPluginGame* GamePage::confirmOtherGame(const QString& path, IPluginGame* select
                   "<span style=\"white-space: nowrap; font-weight: bold;\">%2</span>, "
                   "not "
                   "<span style=\"white-space: nowrap; font-weight: bold;\">%3</span>.")
-                  .arg(path)
-                  .arg(guessedGame->displayGameName())
-                  .arg(selectedGame->displayGameName()))
+                  .arg(path, guessedGame->displayGameName(),
+                       selectedGame->displayGameName()))
           .button({QObject::tr("Manage %1 instead").arg(guessedGame->displayGameName()),
                    QMessageBox::Ok})
-          .button({QObject::tr("Use this folder for %1")
-                       .arg(selectedGame->displayGameName()),
-                   QObject::tr("I know what I'm doing"), QMessageBox::Ignore})
+          // no "use this folder anyway": the selected game's plugin rejects the
+          // folder, so the instance would not open, as in confirmUnknown()
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
 
   switch (r) {
   case QMessageBox::Ok:
     return guessedGame;
-
-  case QMessageBox::Ignore:
-    return selectedGame;
 
   case QMessageBox::Cancel:
   default:

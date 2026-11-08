@@ -325,7 +325,8 @@ public:
                       : QStringLiteral("logDockFloatButton"));
     setFixedSize(24, 24);
     setAutoRaise(false);
-    setFocusPolicy(Qt::NoFocus);
+    // reachable with Tab and pressed with Space, like any other button
+    setFocusPolicy(Qt::TabFocus);
     setMouseTracking(true);
   }
 
@@ -347,16 +348,21 @@ protected:
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     const QColor accent = palette().color(QPalette::ButtonText);
-    const QColor hoverSurface =
-        accent.lightness() > 128 ? QColor(48, 58, 65) : QColor(237, 244, 249);
     if (underMouse() || isDown()) {
-      QColor fill = isDown() ? accent : hoverSurface;
-      fill.setAlpha(isDown() ? 42 : 255);
+      // Fluent's subtle fill: the glyph's own color, faint, so it follows the
+      // theme
+      QColor fill = accent;
+      fill.setAlpha(isDown() ? 42 : 22);
       QColor outline = accent;
       outline.setAlpha(isDown() ? 105 : 25);
       painter.setPen(QPen(outline, 0.9));
       painter.setBrush(fill);
       painter.drawEllipse(QRectF(rect()).adjusted(3.0, 3.0, -3.0, -3.0));
+    }
+    if (hasFocus()) {
+      painter.setPen(QPen(palette().color(QPalette::Highlight), 1.5));
+      painter.setBrush(Qt::NoBrush);
+      painter.drawEllipse(QRectF(rect()).adjusted(1.5, 1.5, -1.5, -1.5));
     }
 
     QPen pen(accent);
@@ -445,7 +451,7 @@ public:
     m_Chevron->setObjectName(QStringLiteral("logDockExpandButton"));
     m_Chevron->setFont(glyphs);
     m_Chevron->setFixedSize(24, 24);
-    m_Chevron->setFocusPolicy(Qt::NoFocus);
+    m_Chevron->setFocusPolicy(Qt::TabFocus);
 
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(6, 0, 8, 0);
@@ -546,6 +552,7 @@ public:
                           FluentMotion::Normal);
     }
 
+    setListFocusable(expanded);
     updateChevron();
   }
 
@@ -633,9 +640,25 @@ private:
     relaxContentMinimum(false);
     m_Dock->setMinimumHeight(m_ExpandedMinimum);
     m_Dock->resize(m_Dock->width(), qMax(m_ExpandedHeight, m_ExpandedMinimum));
+    setListFocusable(true);
     updateChevron();
     if (expandedChanged) {
       expandedChanged(true);
+    }
+  }
+
+  // folded, the list is still there at one pixel: Tab must not land in it
+  void setListFocusable(bool focusable)
+  {
+    if (m_Dock->widget() == nullptr) {
+      return;
+    }
+    for (auto* view : m_Dock->widget()->findChildren<QAbstractItemView*>()) {
+      // keys must not keep going to a list that was folded away
+      if (!focusable && view->hasFocus()) {
+        m_Chevron->setFocus();
+      }
+      view->setFocusPolicy(focusable ? Qt::StrongFocus : Qt::NoFocus);
     }
   }
 
@@ -1010,33 +1033,7 @@ private:
 QIcon makeEndorsementMenuIcon(const QString& resourcePath)
 {
   // Fluent menus show plain glyphs, like every other menu
-    return FluentIcons::icon(resourcePath);
-
-
-  const QString styleName =
-      Settings::instance().interface().styleName().value_or(QString{});
-  const bool darkTheme = styleName.contains(QStringLiteral("dark"),
-                                            Qt::CaseInsensitive);
-  const QColor badgeColor = RevampedTheme::accent(
-      darkTheme ? QColor("#293F50") : QColor("#DCEAF4"));
-  const QColor borderColor = RevampedTheme::accent(
-      darkTheme ? QColor("#4D697E") : QColor("#C7D9E6"));
-
-  QPixmap badge(48, 48);
-  badge.fill(Qt::transparent);
-
-  QPainter painter(&badge);
-  painter.setRenderHint(QPainter::Antialiasing);
-  painter.setRenderHint(QPainter::SmoothPixmapTransform);
-  painter.setPen(QPen(borderColor, 2.0));
-  painter.setBrush(badgeColor);
-  painter.drawEllipse(QRectF(2.0, 2.0, 44.0, 44.0));
-
-  const QPixmap glyph = QIcon(resourcePath).pixmap(QSize(28, 28));
-  painter.setPen(Qt::NoPen);
-  painter.setBrush(Qt::NoBrush);
-  painter.drawPixmap(QRect(10, 10, 28, 28), glyph);
-  return QIcon(badge);
+  return FluentIcons::icon(resourcePath);
 }
 
 bool askNexusEndorsement(QWidget* parent, const QString& windowTitle,
@@ -3227,8 +3224,7 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
       profileBox->addItem(profileIter.fileName());
     } catch (const std::runtime_error& error) {
       reportError(QObject::tr("failed to parse profile %1: %2")
-                      .arg(profileIter.fileName())
-                      .arg(error.what()));
+                      .arg(profileIter.fileName(), QString::fromUtf8(error.what())));
     }
   }
 
@@ -4264,10 +4260,8 @@ void MainWindow::fileMoved(const QString& filePath, const QString& oldOriginName
       }
     } catch (const std::exception& e) {
       reportError(tr("failed to move \"%1\" from mod \"%2\" to \"%3\": %4")
-                      .arg(filePath)
-                      .arg(oldOriginName)
-                      .arg(newOriginName)
-                      .arg(e.what()));
+                      .arg(filePath, oldOriginName, newOriginName,
+                           QString::fromUtf8(e.what())));
     }
   } else {
     // this is probably not an error, the specified path is likely a directory
@@ -4603,7 +4597,11 @@ void MainWindow::on_actionSettings_triggered()
   const QString oldLanguage     = settings.interface().language();
 
   SettingsDialog dialog(&m_PluginContainer, settings, this);
-  dialog.exec();
+  const int settingsResult = dialog.exec();
+  // Reset window geometries, only if Settings really saved and closes for it
+  if (dialog.restartConfirmed() && settingsResult == QDialog::Accepted) {
+    settings.geometry().requestReset();
+  }
 
   auto e = dialog.exitNeeded();
 
@@ -4634,17 +4632,22 @@ void MainWindow::on_actionSettings_triggered()
   }
 
   if (e.testFlag(Exit::Restart)) {
+    // a restart already agreed to in Settings (Reset window geometries) isn't
+    // asked again, unless Settings refused to save and was then cancelled
     const auto r =
-        MOBase::TaskDialog(this)
-            .title(tr("Restart Mod Organizer"))
-            .main(tr("Restart Mod Organizer"))
-            .content(tr("Mod Organizer must restart to finish configuration changes"))
-            .icon(QMessageBox::Question)
-            .button({tr("Restart"), QMessageBox::Yes})
-            .button(
-                {tr("Continue"), tr("Some changes won't apply until you restart."),
-                 QMessageBox::No})
-            .exec();
+        dialog.restartConfirmed() && settingsResult == QDialog::Accepted
+            ? QMessageBox::Yes
+            : MOBase::TaskDialog(this)
+                  .title(tr("Restart Mod Organizer"))
+                  .main(tr("Restart Mod Organizer"))
+                  .content(
+                      tr("Mod Organizer must restart to finish configuration changes"))
+                  .icon(QMessageBox::Question)
+                  .button({tr("Restart"), QMessageBox::Yes})
+                  .button({tr("Continue"),
+                           tr("Some changes won't apply until you restart."),
+                           QMessageBox::No})
+                  .exec();
 
     if (r == QMessageBox::Yes) {
       ExitModOrganizer(e);
@@ -4662,7 +4665,10 @@ void MainWindow::on_actionSettings_triggered()
 
   InstallationManager* instManager = m_OrganizerCore.installationManager();
   instManager->setModsDirectory(settings.paths().mods());
-  instManager->setDownloadDirectory(settings.paths().downloads());
+  // the folder the downloads really are in, which stays during a download
+  instManager->setDownloadDirectory(dlManager->downloadsInProgress()
+                                        ? dlManager->getOutputDirectory()
+                                        : settings.paths().downloads());
 
   // Schedule a problem check since diagnose plugins may have been enabled / disabled.
   scheduleCheckForProblems();
@@ -4679,7 +4685,10 @@ void MainWindow::on_actionSettings_triggered()
     refreshProfiles();
   }
 
-  if (dlManager->getOutputDirectory() != settings.paths().downloads()) {
+  // while a download runs the folder stays, as the message above said; a Base
+  // Directory change reaches the downloads path without the setting changing
+  if (dlManager->getOutputDirectory() != settings.paths().downloads() &&
+      !dlManager->downloadsInProgress()) {
     dlManager->setOutputDirectory(settings.paths().downloads());
   }
 
@@ -4793,8 +4802,37 @@ void MainWindow::languageChange(const QString& newLanguage)
   ui->retranslateUi(this);
   // that also put back the original help on the interface
   configureEldenRingHelp();
+  // not in the .ui, so retranslateUi() left it; its short label is rebuilt below
+  if (m_fluentOverflowAction != nullptr) {
+    m_fluentOverflowAction->setText(tr("More"));
+    m_fluentOverflowAction->setIconText(QString());
+    m_fluentOverflowAction->setToolTip(tr("Links, updates and help"));
+  }
   // the command bar labels carry a leading gap; rebuild them in the new language
   applyFluentActionIcons();
+  // a change while the window is up: the buttons were sized for the old
+  // labels, and retranslateUi() put back the texts the dashboard replaces
+  if (m_toolbarButtonGeometryInitialized) {
+    // the texts retranslateUi() knows nothing about or put back: Run, the
+    // "more" button and a waiting update's command
+    setRunState(m_runState);
+    if (m_moreActionsButton != nullptr) {
+      m_moreActionsButton->setToolTip(tr("Mod list actions, backups, and folders"));
+      m_moreActionsButton->setAccessibleName(tr("More actions"));
+    }
+    m_UpdateActionText.clear();
+    m_UpdateActionTip.clear();
+    if (m_UpdateShown) {
+      applyUpdateActionTexts();
+    }
+    createEndorseMenu();
+    toggleRevampedEndorseState();
+
+    setToolbarButtonStyle(ui->toolBar->toolButtonStyle());
+    if (m_fluentDashboard != nullptr) {
+      m_fluentDashboard->retranslate();
+    }
+  }
   if (m_FilterOptionsDialog) {
     m_FilterOptionsDialog->setWindowTitle(tr("Filter options"));
     m_FilterDialogTitle->setText(tr("Filter options"));
@@ -4874,23 +4912,9 @@ void MainWindow::updateAvailable()
     return;
   }
 
-  if (m_UpdateActionText.isEmpty()) {
-    m_UpdateActionText = ui->actionUpdate->text();
-    m_UpdateActionTip  = ui->actionUpdate->toolTip();
-  }
-
-  QString version = releases.front().tag;
-  if (version.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
-    version.remove(0, 1);
-  }
-
   ui->actionUpdate->setEnabled(true);
-  // the command opens the notice from now on, in the menu and the status bar
-  ui->actionUpdate->setText(tr("MO2 Revamped %1 is out").arg(version));
-  const QString updateHint =
-      tr("MO2 Revamped %1 is out. Click to see what it changes.").arg(version);
-  ui->actionUpdate->setToolTip(updateHint);
-  ui->actionUpdate->setStatusTip(updateHint);
+  m_UpdateShown = true;
+  applyUpdateActionTexts();
   ui->statusBar->setUpdateAvailable(true);
 
   // a new answer (another channel) replaces a notice that is open
@@ -4901,8 +4925,34 @@ void MainWindow::updateAvailable()
   showUpdateNotice(true);
 }
 
+void MainWindow::applyUpdateActionTexts()
+{
+  const auto& releases = m_OrganizerCore.updater()->newerReleases();
+  if (releases.empty()) {
+    return;
+  }
+
+  if (m_UpdateActionText.isEmpty()) {
+    m_UpdateActionText = ui->actionUpdate->text();
+    m_UpdateActionTip  = ui->actionUpdate->toolTip();
+  }
+
+  QString version = releases.front().tag;
+  if (version.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
+    version.remove(0, 1);
+  }
+
+  // the command opens the notice from now on, in the menu and the status bar
+  ui->actionUpdate->setText(tr("MO2 Revamped %1 is out").arg(version));
+  const QString updateHint =
+      tr("MO2 Revamped %1 is out. Click to see what it changes.").arg(version);
+  ui->actionUpdate->setToolTip(updateHint);
+  ui->actionUpdate->setStatusTip(updateHint);
+}
+
 void MainWindow::clearUpdateAvailable()
 {
+  m_UpdateShown = false;
   if (!m_UpdateNotice.isNull()) {
     m_UpdateNotice->close();
     m_UpdateNotice = nullptr;
@@ -5592,7 +5642,8 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
       BSA::EErrorCode result =
           archive.read(archivePath.toLocal8Bit().constData(), true);
       if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
-        reportError(tr("failed to read %1: %2").arg(archivePath).arg(result));
+        reportError(
+            tr("failed to read %1: %2").arg(archivePath, QString::number(result)));
         return;
       }
 

@@ -873,11 +873,21 @@ void ModListView::updateGroupByProxy()
     }
   }
 
+  updateBranchDecoration();
+}
+
+void ModListView::updateBranchDecoration()
+{
   // a list with nothing to open (no grouping, or collapsible separators but no
   // separator) keeps no branch slot: every row showed an empty one between
   // the priority and the switch
-  bool branches = (nextModel != m_core->modList());
-  if (nextModel == m_byPriorityProxy) {
+  const QAbstractItemModel* model = m_sortProxy->sourceModel();
+  if (model == nullptr) {
+    return;
+  }
+
+  bool branches = (model != m_core->modList());
+  if (model == m_byPriorityProxy) {
     branches = false;
     for (unsigned int i = 0; i < ModInfo::getNumMods() && !branches; ++i) {
       branches = ModInfo::getByIndex(i)->isSeparator();
@@ -885,8 +895,8 @@ void ModListView::updateGroupByProxy()
   } else if (branches) {
     // grouped, but with no group to open
     branches = false;
-    for (int i = 0; i < nextModel->rowCount() && !branches; ++i) {
-      branches = nextModel->hasChildren(nextModel->index(i, 0));
+    for (int i = 0; i < model->rowCount() && !branches; ++i) {
+      branches = model->hasChildren(model->index(i, 0));
     }
   }
   setRootIsDecorated(branches);
@@ -957,6 +967,8 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
   m_sortProxy = new ModListSortProxy(core.currentProfile(), &core);
   setModel(m_sortProxy);
   connect(m_sortProxy, &ModList::modelReset, [=] {
+    // the first separator was created or the last one removed
+    updateBranchDecoration();
     refreshExpandedItems();
   });
 
@@ -1376,7 +1388,13 @@ void ModListView::setHighlightedMods(const std::vector<unsigned int>& pluginIndi
 
 QColor ModListView::markerColor(const QModelIndex& index) const
 {
-  unsigned int modIndex = index.data(ModList::IndexRole).toInt();
+  // a group heading (by category or Nexus ID) is no mod: without the check it
+  // would light up with the first mod's conflict marker
+  const QVariant modData = index.data(ModList::IndexRole);
+  if (!modData.isValid()) {
+    return {};
+  }
+  unsigned int modIndex = modData.toInt();
   bool highligth = m_markers.highlight.find(modIndex) != m_markers.highlight.end();
   bool overwrite = m_markers.overwrite.find(modIndex) != m_markers.overwrite.end();
   bool archiveOverwrite =
@@ -1438,6 +1456,13 @@ QColor ModListView::markerColor(const QModelIndex& index) const
 std::vector<ModInfo::EFlag> ModListView::modFlags(const QModelIndex& index,
                                                   bool* forceCompact) const
 {
+  // group headings have no mod
+  if (!index.data(ModList::IndexRole).isValid()) {
+    if (forceCompact) {
+      *forceCompact = true;
+    }
+    return {};
+  }
   ModInfo::Ptr info = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
 
   auto flags   = info->getFlags();
@@ -1470,6 +1495,13 @@ std::vector<ModInfo::EFlag> ModListView::modFlags(const QModelIndex& index,
 std::vector<ModInfo::EConflictFlag> ModListView::conflictFlags(const QModelIndex& index,
                                                                bool* forceCompact) const
 {
+  // group headings have no mod
+  if (!index.data(ModList::IndexRole).isValid()) {
+    if (forceCompact) {
+      *forceCompact = true;
+    }
+    return {};
+  }
   ModInfo::Ptr info = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
 
   auto flags   = info->getConflictFlags();

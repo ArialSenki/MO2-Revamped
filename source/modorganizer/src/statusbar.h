@@ -23,6 +23,8 @@ public:
 
 protected:
   void mouseReleaseEvent(QMouseEvent* e) override;
+  void keyPressEvent(QKeyEvent* e) override;
+  void paintEvent(QPaintEvent* e) override;
 
 private:
   QAction* m_action;

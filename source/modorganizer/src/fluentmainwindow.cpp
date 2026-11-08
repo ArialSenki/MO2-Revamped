@@ -118,7 +118,7 @@ void MainWindow::setupFluentLayout()
   // the Run button follows the process from the moment it is clicked; other
   // launches (shortcuts, plugins) leave it alone
   setRunState(RunState::Idle);
-  m_OrganizerCore.onAboutToRun([this](auto&&...) {
+  m_aboutToRunConnection = m_OrganizerCore.onAboutToRun([this](auto&&...) {
     if (m_runState != RunState::Mounting) {
       return true;
     }

@@ -26,7 +26,8 @@ QString shown(const QString& path)
 
 QString stored(const QLineEdit* edit)
 {
-  return QDir::fromNativeSeparators(edit->text());
+  // a pasted " D:\MO2" would otherwise be saved as a relative path
+  return QDir::fromNativeSeparators(edit->text().trimmed());
 }
 }  // namespace
 
@@ -39,6 +40,9 @@ void addPathRow(QGridLayout* layout, int row, QLabel* label, QLineEdit* edit,
   label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
   label->setMinimumWidth(128);
   browseButton->setText(QObject::tr("Browse"));
+  // six buttons named the same: screen readers hear which folder each is for
+  browseButton->setAccessibleName(QObject::tr("Browse") + QStringLiteral(": ") +
+                                  QString(label->text()).remove(QLatin1Char('&')));
   browseButton->setMinimumWidth(108);
   browseButton->setMinimumHeight(34);
   browseButton->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
@@ -402,7 +406,7 @@ void PathsSettingsTab::on_overwriteDirEdit_editingFinished()
 
 void PathsSettingsTab::normalizePath(QLineEdit* lineEdit)
 {
-  QString text = lineEdit->text();
+  QString text = lineEdit->text().trimmed();
   while (text.endsWith('/') || text.endsWith('\\')) {
     text.chop(1);
   }

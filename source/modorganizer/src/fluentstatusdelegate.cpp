@@ -231,7 +231,13 @@ quint64 FluentStatusDelegate::sortKey(const ModInfo::Ptr& mod)
   if (!mod || mod->isSeparator() || mod->isOverwrite() || mod->isForeign()) {
     return 0;
   }
-  const quint64 update = mod->updateAvailable() || mod->downgradeAvailable() ? 1 : 0;
+  // every Nexus label the column draws sorts with the others: a file removed
+  // from Nexus as well as a newer or older version
+  const quint64 update =
+      mod->getNexusFileStatus() == NexusInterface::FileStatus::REMOVED ||
+              mod->updateAvailable() || mod->downgradeAvailable()
+          ? 1
+          : 0;
   const Side side      = sideOf(mod);
   const quint64 count =
       side == Side::Redundant

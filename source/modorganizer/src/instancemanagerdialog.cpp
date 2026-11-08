@@ -992,9 +992,10 @@ void InstanceManagerDialog::updateList()
 
     if (headings) {
       auto* heading = new QStandardItem(
+          // one arg() call: a "%1" typed in a group name stays as written
           QStringLiteral("%1 (%2)")
-              .arg(group.isEmpty() ? tr("No group") : group)
-              .arg(members.size()));
+              .arg(group.isEmpty() ? tr("No group") : group,
+                   QString::number(members.size())));
       heading->setData(true, HeaderRole);
       heading->setData(-1, IndexRole);
       heading->setData(group, GroupRole);
@@ -1037,8 +1038,10 @@ void InstanceManagerDialog::updateList()
   m_view->setText(grouping);
   m_view->setAccessibleName(tr("Grouping: %1").arg(grouping));
 
-  m_filter->setVisible(m_instances.size() > 6);
-  if (!m_filter->isVisible()) {
+  // a short list hides the search, unless Ctrl+F opened it and it is in use
+  m_filter->setVisible(m_instances.size() > 6 || m_filter->hasFocus() ||
+                       !m_filter->text().isEmpty());
+  if (m_filter->isHidden()) {
     m_filter->clear();
   }
 
@@ -1046,7 +1049,7 @@ void InstanceManagerDialog::updateList()
 
   // keep current selection or select the next one if there was a selection;
   // there's no selection when opening the dialog, that's handled in the ctor
-  if (prevSel) {
+  if (prevSelIndex != NoSelection) {
     if (m_instances.empty()) {
       select(-1);
     } else {
@@ -1339,9 +1342,7 @@ void InstanceManagerDialog::rename()
   if (!r) {
     QMessageBox::critical(this, tr("Error"),
                           tr("Failed to rename \"%1\" to \"%2\": %3")
-                              .arg(src)
-                              .arg(dest)
-                              .arg(r.toString()));
+                              .arg(src, dest, r.toString()));
 
     return;
   }
@@ -1503,6 +1504,8 @@ void InstanceManagerDialog::deleteInstance()
   auto* recycle   = dlg.addButton(tr("Move to Recycle Bin"), true);
   auto* permanent = dlg.addButton(tr("Delete permanently"));
   auto* cancel    = dlg.addButton(tr("Cancel"));
+  // Enter must not delete an instance
+  dlg.askFirst(cancel);
   connect(recycle, &QPushButton::clicked, &dlg, [&dlg] {
     dlg.done(Recycle);
   });
@@ -1564,8 +1567,8 @@ void InstanceManagerDialog::deleteInstance()
         });
         if (inside) {
           usedElsewhere.append(tr("%1 (used by %2)")
-                                   .arg(QDir::toNativeSeparators(path))
-                                   .arg(other->displayName()));
+                                   .arg(QDir::toNativeSeparators(path),
+                                        other->displayName()));
         }
       }
     }
@@ -1701,8 +1704,10 @@ std::size_t InstanceManagerDialog::singleSelectionIndex() const
 
 const Instance* InstanceManagerDialog::singleSelection() const
 {
+  // the selection can still be the previous list's while the list is rebuilt:
+  // an index past the instances there are now is no instance
   const auto i = singleSelectionIndex();
-  if (i == NoSelection) {
+  if (i == NoSelection || i >= m_instances.size()) {
     return nullptr;
   }
 

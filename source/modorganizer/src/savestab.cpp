@@ -128,8 +128,13 @@ void SavesTab::updateRoute(const QDir& savesDir)
       path.compare(profile, Qt::CaseInsensitive) == 0) {
     kind = tr("This profile's own saves");
   } else if (path.compare(game, Qt::CaseInsensitive) == 0) {
-    kind   = tr("Steam's saves");
-    detail = tr("The game's saves, shared with Steam") + QStringLiteral("\n");
+    // only Elden Ring and Nightreign keep their saves in Steam's folder
+    if (EldenRingSaveSettings::supports(m_core.managedGame())) {
+      kind   = tr("Steam's saves");
+      detail = tr("The game's saves, shared with Steam") + QStringLiteral("\n");
+    } else {
+      kind = tr("The game's saves");
+    }
   } else {
     kind = tr("Shared saves");
   }
@@ -453,6 +458,7 @@ void SavesTab::onContextMenu(const QPoint& pos)
     auto& save = m_SaveGames[rows[0].row()];
     SaveGameInfo::MissingAssets missing = info->getMissingAssets(*save);
     if (missing.size() != 0) {
+      menu.setToolTipsVisible(true);
       QAction* action = menu.addAction(tr("Restore required plugins..."));
       action->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
       action->setToolTip(

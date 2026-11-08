@@ -4917,6 +4917,10 @@ QToolButton#logDockExpandButton:hover {
     color: #FFFFFF;
     background-color: #2F3237;
 }
+/* Tab reaches the fold button: the focus shows as on other buttons. */
+QToolButton#logDockExpandButton:focus {
+    border: 1px solid #60CDFF;
+}
 
 /* The animated pill replaces the stylesheet underline in the main window. */
 QWidget#centralWidget QTabWidget#tabWidget FluentTabBar::tab,
@@ -5140,9 +5144,10 @@ QLabel#fluentSettingDescription {
     font-size: 8.5pt;
     background-color: transparent;
 }
+/* Fluent's disabled text tone: still readable, clearly off. */
 QLabel#fluentSettingTitle:disabled,
 QLabel#fluentSettingDescription:disabled {
-    color: #555555;
+    color: #787878;
 }
 QCheckBox[fluentSwitch="true"] {
     spacing: 0px;
@@ -5887,6 +5892,11 @@ QDialog#SettingsDialog QWidget#nexusTab QWidget#nexusIntegrationTools {
 QFrame#fluentSettingRow:hover {
     border-radius: 6px;
     border-top: 1px solid transparent;
+}
+/* The choice rows of "already installed" take the keyboard focus. */
+QFrame#fluentSettingRow[choiceRow="true"]:focus {
+    border: 1px solid #60CDFF;
+    border-radius: 6px;
 }
 QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"]:hover,
 QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:hover {

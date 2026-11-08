@@ -6,6 +6,8 @@
 #include "settings.h"
 #include "ui_mainwindow.h"
 
+#include <QKeyEvent>
+#include <QPainter>
 #include <QStyle>
 
 StatusBar::StatusBar(QWidget* parent)
@@ -199,14 +201,25 @@ StatusBarAction::StatusBarAction(QAction* action)
   layout()->addWidget(m_icon);
   layout()->addWidget(m_text);
   setCursor(Qt::PointingHandCursor);
+  // reachable with Tab and run with Enter or Space, like a button
+  setFocusPolicy(Qt::TabFocus);
+
+  // a theme change gives the action a new icon; the label keeps a copy
+  QObject::connect(m_action, &QAction::changed, this, [this] {
+    if (!isHidden()) {
+      set(true);
+    }
+  });
 }
 
 void StatusBarAction::set(bool visible)
 {
   if (visible) {
-    m_icon->setPixmap(m_action->icon().pixmap(16, 16));
+    m_icon->setPixmap(m_action->icon().pixmap(QSize(16, 16), devicePixelRatioF()));
     m_text->setText(cleanupActionText(m_action->text()));
     setToolTip(m_action->toolTip());
+    setAccessibleName(m_text->text());
+    setAccessibleDescription(m_action->toolTip());
   }
 
   setVisible(visible);
@@ -218,6 +231,38 @@ void StatusBarAction::mouseReleaseEvent(QMouseEvent* e)
   if (e->button() == Qt::LeftButton && rect().contains(e->pos()) &&
       m_action->isEnabled()) {
     m_action->trigger();
+  }
+}
+
+void StatusBarAction::keyPressEvent(QKeyEvent* e)
+{
+  // the keypad's Enter comes with the keypad modifier; a held key runs it once
+  if ((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ||
+       e->key() == Qt::Key_Space) &&
+      (e->modifiers() & ~Qt::KeypadModifier) == Qt::NoModifier) {
+    if (m_action->isEnabled() && !e->isAutoRepeat()) {
+      m_action->trigger();
+    }
+    e->accept();
+    return;
+  }
+
+  QWidget::keyPressEvent(e);
+}
+
+void StatusBarAction::paintEvent(QPaintEvent* e)
+{
+  QWidget::paintEvent(e);
+
+  // the keyboard focus shows as a ring in the theme's focus color
+  if (hasFocus()) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    QPen pen(palette().color(QPalette::Highlight));
+    pen.setWidthF(1.5);
+    painter.setPen(pen);
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRoundedRect(QRectF(rect()).adjusted(0.75, 0.75, -0.75, -0.75), 4, 4);
   }
 }
 

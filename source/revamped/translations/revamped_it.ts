@@ -947,8 +947,8 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <translation>Gioco %1, mod %2, file %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Modificato</translation>
+      <source>Date downloaded</source>
+      <translation>Data di download</translation>
     </message>
   </context>
   <context>
@@ -1066,16 +1066,16 @@ Vuoi davvero continuare?</translation>
       <translation>Nessun download da mostrare</translation>
     </message>
     <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Qui compaiono gli archivi scaricati da Nexus o aggiunti con Installa. I download nascosti compaiono quando si mostrano i download nascosti.</translation>
-    </message>
-    <message>
       <source>Delete files?</source>
       <translation>Eliminare i file?</translation>
     </message>
     <message>
       <source>Hide files?</source>
       <translation>Nascondere i file?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Qui compaiono gli archivi scaricati da Nexus o aggiunti con Installa. Attiva Mostra download nascosti per vedere quelli che hai nascosto.</translation>
     </message>
   </context>
   <context>
@@ -5060,6 +5060,14 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <source>Search files</source>
       <translation>Cerca file</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mostra le mod con conflitti</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mostra le mod con aggiornamenti</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
@@ -7433,6 +7441,14 @@ Errore: %1</translation>
       <source>Activating network proxy</source>
       <translation>Attivazione del proxy di rete</translation>
     </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Mostra download nascosti</translation>
+    </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Criteri di filtro</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8753,8 +8769,8 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
       <translation>Apre la cartella Overwrite in Esplora file di Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Elimina…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Elimina...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
@@ -10410,6 +10426,10 @@ p, li { white-space: pre-wrap; }
 
 %1</translation>
     </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Salvataggi del gioco</translation>
+    </message>
   </context>
   <context>
     <name>SelectionDialog</name>
@@ -11605,6 +11625,10 @@ Avviarlo comunque?</translation>
     <message>
       <source>Full path</source>
       <translation>Percorso completo</translation>
+    </message>
+    <message>
+      <source>Failed to create &quot;%1&quot;</source>
+      <translation>Impossibile creare &quot;%1&quot;</translation>
     </message>
   </context>
   <context>

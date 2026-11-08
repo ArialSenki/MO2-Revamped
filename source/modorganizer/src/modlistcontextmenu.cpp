@@ -4,6 +4,10 @@
 
 #include <report.h>
 
+#include <map>
+#include <memory>
+#include <set>
+
 #include "modlist.h"
 #include "modlistview.h"
 #include "modlistviewactions.h"
@@ -530,13 +534,67 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
       new ModListChangeCategoryMenu(m_categories, mod, this);
   categoriesMenu->setTitle(tr("Categories"));
   categoriesMenu->setIcon(menuGlyph(MenuGlyphs::Tag));
-  // the submenu also closes when the pointer only passes over it, so the
-  // selection is changed only when a box was actually toggled
-  const auto initialCategories = categoriesMenu->categories();
+  // the submenu also closes when the pointer only passes over it, so only the
+  // boxes toggled since the last time it closed are applied. A box that differs
+  // from how the menu opened is applied to every selected mod; one put back as
+  // it was gives each mod back its own state, so ticking and unticking again
+  // changes nothing
+  struct Snapshot
+  {
+    std::map<int, bool> opened;   // the boxes when the menu opened
+    std::map<int, bool> applied;  // the boxes as last applied
+    struct Mod
+    {
+      ModInfo::Ptr info;
+      std::set<int> categories;
+      int primary;
+    };
+    std::vector<Mod> mods;
+  };
+  auto snapshot = std::make_shared<Snapshot>();
+  for (const auto& [id, enabled] : categoriesMenu->categories()) {
+    snapshot->opened[id] = enabled;
+  }
+  snapshot->applied = snapshot->opened;
+  QModelIndexList targets = m_selected;
+  if (!targets.contains(m_index)) {
+    targets.append(m_index);
+  }
+  for (const auto& idx : targets) {
+    const QVariant modIndex = idx.data(ModList::IndexRole);
+    if (modIndex.isValid()) {
+      ModInfo::Ptr info = ModInfo::getByIndex(modIndex.toInt());
+      snapshot->mods.push_back({info, info->getCategories(), info->primaryCategory()});
+    }
+  }
   connect(categoriesMenu, &QMenu::aboutToHide, [=]() {
-    const auto categories = categoriesMenu->categories();
-    if (categories != initialCategories) {
-      m_actions.setCategories(m_selected, m_index, categories);
+    bool changed = false;
+    for (const auto& [id, enabled] : categoriesMenu->categories()) {
+      if (snapshot->applied[id] == enabled) {
+        continue;
+      }
+      snapshot->applied[id] = enabled;
+      changed               = true;
+      const bool fromOpened = snapshot->opened[id] != enabled;
+      for (const auto& m : snapshot->mods) {
+        m.info->setCategory(id, fromOpened ? enabled : m.categories.count(id) > 0);
+      }
+    }
+    if (changed) {
+      // unticking a primary category moves the primary to another one; a mod
+      // whose categories are back as they were gets its primary back too
+      for (const auto& m : snapshot->mods) {
+        if (m.info->getCategories() == m.categories &&
+            m.info->primaryCategory() != m.primary && m.categories.count(m.primary) > 0) {
+          m.info->setPrimaryCategory(m.primary);
+        }
+      }
+      // nothing left to change: this refreshes the rows and the selection
+      m_actions.setCategories(m_selected, m_index, {});
+      // the clicked row, when it is not part of the selection
+      if (!m_selected.contains(m_index) && m_index.data(ModList::IndexRole).isValid()) {
+        m_core.modList()->notifyChange(m_index.data(ModList::IndexRole).toInt());
+      }
     }
   });
   addMenu(categoriesMenu);
@@ -550,11 +608,18 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
     primaryCategoryMenu->setIcon(menuGlyph(MenuGlyphs::Star));
     // as above: hovering over the submenu must not give every selected mod
     // this mod's primary category
-    const int initialPrimary = mod->primaryCategory();
+    auto appliedPrimary = std::make_shared<int>(mod->primaryCategory());
     connect(primaryCategoryMenu, &QMenu::aboutToHide, [=]() {
       int category = primaryCategoryMenu->primaryCategory();
-      if (category != -1 && category != initialPrimary) {
+      if (category != -1 && category != *appliedPrimary) {
         m_actions.setPrimaryCategory(m_selected, category);
+        *appliedPrimary = category;
+        // a primary picked here is not undone by putting a category back
+        for (auto& m : snapshot->mods) {
+          if (m.info->categorySet(category)) {
+            m.primary = m.info->primaryCategory();
+          }
+        }
       }
     });
     addMenu(primaryCategoryMenu);
@@ -684,7 +749,11 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
          "into regular mods."));
   setDefaultMenuAction(this, manageAction);
 
-  if (QDir(mod->absolutePath()).count() > 2) {
+  // hidden and system files count too, as Clear Overwrite removes them
+  if (!QDir(mod->absolutePath())
+           .entryList(QDir::AllEntries | QDir::Hidden | QDir::System |
+                      QDir::NoDotAndDotDot)
+           .isEmpty()) {
     addMenuSection(this, tr("Organize files"));
     QAction* syncAction = addAction(menuGlyph(MenuGlyphs::Sync), tr("Sync to mods..."),
                                     [=]() {

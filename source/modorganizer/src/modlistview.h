@@ -353,6 +353,7 @@ private:  // private functions
   // current one (e.g. when changing the sort column)
   //
   void updateGroupByProxy();
+  void updateBranchDecoration();
 
 public:  // member variables
   OrganizerCore* m_core;

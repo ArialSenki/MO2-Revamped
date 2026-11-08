@@ -41,10 +41,12 @@ public:
   // tone is "accent", "caution", "critical" or "neutral"; the stylesheet
   // colors the glyph badge from it
   void setValue(const QString& value, const QString& tone);
+  void setCaption(const QString& caption);
   QPushButton* addAction(const QString& text);
 
 private:
   QLabel* m_badge;
+  QLabel* m_caption;
   QLabel* m_value;
   QBoxLayout* m_layout;
 };
@@ -65,6 +67,10 @@ public:
   // where the current profile keeps its saves, for "last played"
   void setSavesDirectory(std::function<QDir()> provider);
 
+  // the texts again after a language change, and the main window's own that
+  // retranslateUi() put back
+  void retranslate();
+
 private:
   Ui::MainWindow* ui;
   OrganizerCore& m_core;
@@ -81,11 +87,15 @@ private:
   QPushButton* m_conflictsAction;
   QPushButton* m_updatesAction;
   QList<QPushButton*> m_chips;
+  QLabel* m_profileLabel = nullptr;
+  QLabel* m_programLabel = nullptr;
+  QLabel* m_modsTitle    = nullptr;
   QTimer m_refreshTimer;
 
   void setupBanner(QWidget* central);
   void setupStats(QWidget* central);
   void setupModsHeader();
+  void applyTabTexts();
   void refreshStats();
   void refreshLastPlayed();
   void refreshDisk();

@@ -526,6 +526,9 @@ protected:
 private:
   QLabel* m_label;
   bool m_applying = false;
+  // what apply() last wrote, so a theme change can give it the new tone
+  QString m_written;
+  bool m_bad = false;
 
   void apply()
   {
@@ -534,18 +537,27 @@ private:
         QRegularExpression::CaseInsensitiveOption);
     const QString sheet = m_label->styleSheet();
     const auto match    = plain.match(sheet);
-    if (!match.hasMatch()) {
+    qsizetype start = -1, length = 0;
+    if (match.hasMatch()) {
+      m_bad  = match.captured(1).contains(QLatin1String("red"), Qt::CaseInsensitive);
+      start  = match.capturedStart();
+      length = match.capturedLength();
+    } else if (!m_written.isEmpty() && sheet.contains(m_written)) {
+      start  = sheet.indexOf(m_written);
+      length = m_written.size();
+    } else {
       return;
     }
-    const bool bad = match.captured(1).contains(QLatin1String("red"), Qt::CaseInsensitive);
     const QColor ink =
-        FluentIcons::color(bad ? FluentIcons::Tone::Critical : FluentIcons::Tone::Success);
-    m_applying = true;
+        FluentIcons::color(m_bad ? FluentIcons::Tone::Critical : FluentIcons::Tone::Success);
+    m_written     = QStringLiteral("color: %1;").arg(ink.name());
     QString fixed = sheet;
-    fixed.replace(match.capturedStart(), match.capturedLength(),
-                  QStringLiteral("color: %1;").arg(ink.name()));
-    m_label->setStyleSheet(fixed);
-    m_applying = false;
+    fixed.replace(start, length, m_written);
+    if (fixed != sheet) {
+      m_applying = true;
+      m_label->setStyleSheet(fixed);
+      m_applying = false;
+    }
   }
 };
 

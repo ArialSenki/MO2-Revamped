@@ -76,6 +76,10 @@ public:
   void setExitNeeded(ExitFlags e);
   ExitFlags exitNeeded() const;
 
+  // the user already agreed to restart in the dialog: no second question
+  void setRestartConfirmed(bool b) { m_restartConfirmed = b; }
+  bool restartConfirmed() const { return m_restartConfirmed; }
+
   int exec() override;
 
 public slots:
@@ -91,6 +95,7 @@ private:
   std::vector<std::function<std::unique_ptr<SettingsTab>()>> m_tabFactories;
   std::vector<std::unique_ptr<SettingsTab>> m_tabs;
   ExitFlags m_exit;
+  bool m_restartConfirmed = false;
   PluginContainer* m_pluginContainer;
 };
 

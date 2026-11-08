@@ -252,7 +252,15 @@ void CategoriesDialog::commitChanges()
       parentID = 0;
     }
 
-    PendingCategory pending{id, nameItem->text(), parentID, {}};
+    // categories.dat is separated by '|'; a name holding one would break the
+    // line, and an empty one could not be picked anywhere
+    QString categoryName = nameItem->text();
+    categoryName.remove(QLatin1Char('|'));
+    if (categoryName.trimmed().isEmpty()) {
+      categoryName = tr("New category");
+    }
+
+    PendingCategory pending{id, categoryName, parentID, {}};
     const auto* mappingItem = table->item(row, 3);
     const QVariantList nexusData = mappingItem
                                        ? mappingItem->data(Qt::UserRole).toList()
@@ -991,10 +999,9 @@ void CategoriesDialog::nxmGameInfoAvailable(QString gameName, QVariant,
 
   ui->nexusStatus->setText(
       tr("Loaded %1 Nexus categories for %2. Kept %3 existing assignments and added %4 exact-name mappings.")
-          .arg(refreshedCategories.size())
-          .arg(gameDisplayName)
-          .arg(preservedAssignments)
-          .arg(exactNameMappings));
+          .arg(QString::number(refreshedCategories.size()), gameDisplayName,
+               QString::number(preservedAssignments),
+               QString::number(exactNameMappings)));
 }
 
 void CategoriesDialog::nxmRequestFailed(QString, int, int, QVariant, int, int errorCode,
@@ -1302,7 +1309,16 @@ QWidget* CategoriesDialog::createFluentDetails()
   FluentPanels::addEditRow(m_fluentDetailRows, 0xE8AC, tr("Name"),
                            tr("Shown in the mod list, its filters and the mod's menu"),
                            {m_fluentNameEdit});
-  connect(m_fluentNameEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
+  connect(m_fluentNameEdit, &QLineEdit::textEdited, this, [this](const QString& edited) {
+    // categories.dat separates its fields with '|'; a pasted one just goes
+    QString text = edited;
+    if (text.contains(QLatin1Char('|'))) {
+      const int cursor = m_fluentNameEdit->cursorPosition();
+      const int before = text.left(cursor).count(QLatin1Char('|'));
+      text.remove(QLatin1Char('|'));
+      m_fluentNameEdit->setText(text);
+      m_fluentNameEdit->setCursorPosition(cursor - before);
+    }
     const int row = rowForID(selectedID());
     if (row >= 0 && ui->categoriesTable->item(row, 1) != nullptr) {
       ui->categoriesTable->item(row, 1)->setText(text);
@@ -1741,8 +1757,11 @@ void CategoriesDialog::addFluentCategory(int parentID)
   // new categories go at the end, so the order of the others stays
   m_ContextRow = ui->categoriesTable->rowCount();
   addCategory_clicked();
-  const int row = ui->categoriesTable->rowCount() - 1;
-  const int id  = ui->categoriesTable->item(row, 0)->text().toInt();
+  const int id  = m_HighestID;
+  const int row = rowForID(id);
+  if (row < 0) {
+    return;
+  }
   ui->categoriesTable->item(row, 1)->setText(tr("New category"));
   if (parentID > 0) {
     ui->categoriesTable->item(row, 2)->setData(Qt::DisplayRole, parentID);

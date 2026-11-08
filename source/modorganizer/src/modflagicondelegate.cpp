@@ -74,8 +74,10 @@ QString ModFlagIconDelegate::getFlagIcon(ModInfo::EFlag flag)
 
 size_t ModFlagIconDelegate::getNumIcons(const QModelIndex& index) const
 {
-  unsigned int modIdx = index.data(ModList::IndexRole).toInt();
-  if (modIdx < ModInfo::getNumMods()) {
+  // a group heading has no mod index; toInt() would make it the first mod
+  const QVariant modData = index.data(ModList::IndexRole);
+  unsigned int modIdx    = modData.toInt();
+  if (modData.isValid() && modIdx < ModInfo::getNumMods()) {
     ModInfo::Ptr info                 = ModInfo::getByIndex(modIdx);
     std::vector<ModInfo::EFlag> flags = info->getFlags();
     return flags.size();

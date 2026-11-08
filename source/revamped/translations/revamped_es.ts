@@ -932,8 +932,8 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <translation>Juego %1, mod %2, archivo %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Modificado</translation>
+      <source>Date downloaded</source>
+      <translation>Fecha de descarga</translation>
     </message>
   </context>
   <context>
@@ -1067,16 +1067,16 @@ Are you absolutely sure you want to proceed?</source>
       <translation>No hay descargas que mostrar</translation>
     </message>
     <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Aquí aparecen los archivos que descargas de Nexus o añades con Instalar. Las descargas ocultas aparecen al mostrar las descargas ocultas.</translation>
-    </message>
-    <message>
       <source>Delete files?</source>
       <translation>¿Eliminar archivos?</translation>
     </message>
     <message>
       <source>Hide files?</source>
       <translation>¿Ocultar archivos?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Aquí aparecen los archivos que descargas de Nexus o añades con Instalar. Activa Mostrar descargas ocultas para ver las que ocultaste.</translation>
     </message>
   </context>
   <context>
@@ -5012,6 +5012,14 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
       <source>Search files</source>
       <translation>Buscar archivos</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mostrar los mods con conflictos</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mostrar los mods con actualizaciones</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
@@ -5967,10 +5975,6 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
     <message>
       <source>Saves</source>
       <translation>Partidas</translation>
-    </message>
-    <message>
-      <source>Hidden files</source>
-      <translation>Archivos ocultos</translation>
     </message>
     <message>
       <source>Filter state: off, included, or excluded.</source>
@@ -7216,6 +7220,30 @@ Error: %1</translation>
     <message>
       <source>Activating network proxy</source>
       <translation>Activando el proxy de red</translation>
+    </message>
+    <message>
+      <source>&amp;Import Nexus categories</source>
+      <translation>&amp;Importar categorías de Nexus</translation>
+    </message>
+    <message>
+      <source>Do &amp;nothing</source>
+      <translation>&amp;No hacer nada</translation>
+    </message>
+    <message>
+      <source>&amp;Open categories dialog</source>
+      <translation>&amp;Abrir el editor de categorías</translation>
+    </message>
+    <message>
+      <source>&amp;Disable Nexus mappings</source>
+      <translation>&amp;Desactivar las asignaciones de Nexus</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Mostrar descargas ocultas</translation>
+    </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Criterios de filtro</translation>
     </message>
   </context>
   <context>
@@ -8605,8 +8633,8 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
       <translation>Abre la carpeta Overwrite en el Explorador de archivos de Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Borrar…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Borrar...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
@@ -10007,6 +10035,24 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;Desactivar el plugin &apos;%1&apos; también desactivará los siguientes plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;¿Quieres continuar?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Download URL must start with https://</source>
+      <translation>La URL de descarga debe empezar por https://</translation>
+    </message>
+    <message>
+      <source>Enter one file suffix per line to be skipped / ignored from the virtual file system.
+Not to be confused with file extensions, file suffixes are simply how the filename ends.
+
+Example:
+  .txt - Would skip all files that end with .txt, &lt;any text&gt;.txt
+  some_file.txt - Would skip all files that end with some_file.txt, &lt;any text&gt;some_file.txt</source>
+      <translation>Escribe un sufijo de archivo por línea para que el sistema de archivos virtual lo omita.
+No es lo mismo que la extensión: el sufijo es simplemente cómo termina el nombre del archivo.
+
+Ejemplo:
+  .txt - Omitiría todos los archivos que terminan en .txt, &lt;cualquier texto&gt;.txt
+  some_file.txt - Omitiría todos los archivos que terminan en some_file.txt, &lt;cualquier texto&gt;some_file.txt</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10201,6 +10247,10 @@ p, li { white-space: pre-wrap; }
       <translation>Ningún mod instalado tiene estos plugins, así que no se han restaurado:
 
 %1</translation>
+    </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Partidas del juego</translation>
     </message>
   </context>
   <context>
@@ -12297,6 +12347,25 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
     <message>
       <source>This release has no notes on GitHub.</source>
       <translation>Esta versión no tiene notas en GitHub.</translation>
+    </message>
+  </context>
+  <context>
+    <name>PluginList</name>
+    <message>
+      <source>This %1 is flagged as a light plugin (ESL). It will adhere to the %1 load order but the records will be loaded in ESL space (FE/FF). You can have up to 4096 light plugins in addition to other plugin types.</source>
+      <translation>Este %1 está marcado como plugin ligero (ESL). Sigue el orden de carga de los %1, pero sus registros se cargan en el espacio ESL (FE/FF). Puedes tener hasta 4096 plugins ligeros además de los de otros tipos.</translation>
+    </message>
+    <message>
+      <source>This ESM is flagged as a medium plugin (ESH). It adheres to the ESM load order but loads records in ESH space (FD). You can have 256 medium plugins in addition to other plugin types.</source>
+      <translation>Este ESM está marcado como plugin mediano (ESH). Sigue el orden de carga de los ESM, pero sus registros se cargan en el espacio ESH (FD). Puedes tener 256 plugins medianos además de los de otros tipos.</translation>
+    </message>
+    <message>
+      <source>WARNING: This plugin is both light and medium flagged. This could indicate that the file was saved improperly and may have mismatched record references. Use it at your own risk.</source>
+      <translation>AVISO: este plugin está marcado a la vez como ligero y como mediano. Puede que el archivo se guardara mal y tenga referencias a registros que no coinciden. Úsalo bajo tu responsabilidad.</translation>
+    </message>
+    <message>
+      <source>Light plugins (ESL) are not supported by this game.</source>
+      <translation>Este juego no admite plugins ligeros (ESL).</translation>
     </message>
   </context>
 </TS>

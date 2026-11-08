@@ -125,7 +125,7 @@
           </column>
           <column>
            <property name="text">
-           <string notr="true">Filter criteria</string>
+           <string>Filter criteria</string>
            </property>
            <property name="toolTip">
             <string>Click a filter to cycle between off, included, and excluded. Choose below whether mods must match all of them or any.</string>
@@ -1371,7 +1371,7 @@
                   <string>Show downloads marked as hidden.</string>
                  </property>
                  <property name="text">
-                  <string>Hidden files</string>
+                  <string>Show hidden downloads</string>
                  </property>
                 </widget>
                </item>

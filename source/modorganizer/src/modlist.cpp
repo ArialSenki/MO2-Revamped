@@ -54,6 +54,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QStringList>
+#include <QTextDocumentFragment>
 #include <QWidgetAction>
 
 #include <algorithm>
@@ -358,9 +359,13 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     } else if (column == COL_VERSION) {
       if (!modInfo->newestVersion().isValid()) {
         return QVariant();
-      } else if (modInfo->updateAvailable() || modInfo->downgradeAvailable()) {
+      } else if (modInfo->updateAvailable()) {
         // Fluent marks an available update in the accent, like Windows Update
         return QBrush(FluentIcons::color(FluentIcons::Tone::Accent));
+      } else if (modInfo->downgradeAvailable()) {
+        // an older Nexus version is a caution, as its warning mark, the Status
+        // column and the mod's information say
+        return QBrush(FluentIcons::color(FluentIcons::Tone::Caution));
       } else {
         return QBrush(MOBase::RevampedTheme::successText());
       }
@@ -471,7 +476,7 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
           categoryString << "<span style=\"white-space: nowrap;\"><i>"
                          << ToWString(categoryFactory.getCategoryName(
                                 categoryFactory.getCategoryIndex(*catIter)))
-                         << "</font></span>";
+                         << "</i></span>";
         } catch (const std::exception& e) {
           log::error("failed to generate tooltip: {}", e.what());
           return QString();
@@ -484,6 +489,18 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     } else {
       return QVariant();
     }
+  } else if (role == Qt::AccessibleTextRole) {
+    // the Status and Flags columns only draw icons: screen readers read what
+    // their tool tips say, as plain text
+    if (column == COL_FLAGS || column == COL_CONFLICTFLAGS) {
+      const QString html = data(modelIndex, Qt::ToolTipRole).toString();
+      if (html.isEmpty()) {
+        return QVariant();
+      }
+      return QTextDocumentFragment::fromHtml(html).toPlainText().replace(
+          QChar('\n'), QStringLiteral("; "));
+    }
+    return QVariant();
   } else {
     return QVariant();
   }

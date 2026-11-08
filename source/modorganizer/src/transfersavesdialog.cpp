@@ -166,7 +166,8 @@ bool TransferSavesDialog::testOverwrite(OverwriteMode& overwriteMode,
     res = QMessageBox::question(this, tr("Overwrite"),
                                 tr("Overwrite the file \"%1\"?").arg(destinationFile),
                                 QMessageBox::Yes | QMessageBox::No |
-                                    QMessageBox::YesToAll | QMessageBox::NoToAll);
+                                    QMessageBox::YesToAll | QMessageBox::NoToAll,
+                                QMessageBox::No);
     if (res == QMessageBox::YesToAll) {
       overwriteMode = OVERWRITE_YES;
       res           = QMessageBox::Yes;

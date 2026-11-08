@@ -261,6 +261,10 @@ QFrame* addEditRow(QWidget* parent, char16_t glyph, const QString& title,
     const bool field = qobject_cast<QLineEdit*>(w) || qobject_cast<QComboBox*>(w);
     if (field) {
       w->setMinimumWidth(300);
+      // the title is a separate label: screen readers need the name here
+      if (w->accessibleName().isEmpty()) {
+        w->setAccessibleName(title);
+      }
     }
     layout->addWidget(w, field ? 2 : 0, Qt::AlignVCenter);
     w->show();

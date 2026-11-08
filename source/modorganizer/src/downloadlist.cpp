@@ -84,7 +84,8 @@ QVariant DownloadList::headerData(int section, Qt::Orientation orientation,
     case COL_STATUS:
       return tr("Status");
     case COL_FILETIME:
-      return tr("Modified");
+      // the date the archive was downloaded (its file's creation time)
+      return tr("Date downloaded");
     case COL_SOURCEGAME:
       return tr("Source Game");
     default:
@@ -223,11 +224,11 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
       } else {
         const MOBase::ModRepositoryFileInfo* info = m_manager.getFileInfo(index.row());
         // the tool tip is rich text: the name is shown as written
+        // one arg() call: a "%2" in the mod's name stays as written
         return QString("%1 (ID %2) %3<br><span>%4</span>")
-            .arg(info->modName.toHtmlEscaped())
-            .arg(m_manager.getModID(index.row()))
-            .arg(info->version.canonicalString())
-            .arg(info->description.mid(0, 4096));
+            .arg(info->modName.toHtmlEscaped(),
+                 QString::number(m_manager.getModID(index.row())),
+                 info->version.canonicalString(), info->description.mid(0, 4096));
       }
       return text;
     }

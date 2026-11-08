@@ -916,8 +916,8 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
       <translation>Jeu %1, mod %2, fichier %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Modifié</translation>
+      <source>Date downloaded</source>
+      <translation>Date de téléchargement</translation>
     </message>
   </context>
   <context>
@@ -1035,16 +1035,16 @@ Voulez-vous vraiment continuer ?</translation>
       <translation>Aucun téléchargement à afficher</translation>
     </message>
     <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Les archives téléchargées depuis Nexus ou ajoutées avec Installer apparaissent ici. Les téléchargements masqués apparaissent quand les téléchargements masqués sont affichés.</translation>
-    </message>
-    <message>
       <source>Delete files?</source>
       <translation>Supprimer les fichiers ?</translation>
     </message>
     <message>
       <source>Hide files?</source>
       <translation>Masquer les fichiers ?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Les archives téléchargées depuis Nexus ou ajoutées avec Installer apparaissent ici. Activez « Afficher les téléchargements masqués » pour voir ceux que vous avez masqués.</translation>
     </message>
   </context>
   <context>
@@ -4976,6 +4976,14 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <source>Search files</source>
       <translation>Rechercher des fichiers</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Afficher les mods en conflit</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Afficher les mods avec des mises à jour</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
@@ -7325,6 +7333,14 @@ Erreur : %1</translation>
       <source>Activating network proxy</source>
       <translation>Activation du proxy réseau</translation>
     </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Afficher les téléchargements masqués</translation>
+    </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Critères de filtre</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8645,8 +8661,8 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
       <translation>Ouvre le dossier Overwrite dans l'Explorateur de fichiers Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Supprimer…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Supprimer...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
@@ -10107,6 +10123,10 @@ Exemple :
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;Désactiver le plugin « %1 » désactivera aussi les plugins suivants :&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Voulez-vous continuer ?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Failed to create &quot;%1&quot;, you may not have the necessary permissions. Path remains unchanged.</source>
+      <translation>Impossible de créer &quot;%1&quot;, vous ne disposez peut-être pas de l&apos;autorisation nécessaire. Le chemin reste inchangé.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10301,6 +10321,10 @@ p, li { white-space: pre-wrap; }
       <translation>Aucun mod installé ne contient ces plugins, ils n&apos;ont donc pas été restaurés :
 
 %1</translation>
+    </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Sauvegardes du jeu</translation>
     </message>
   </context>
   <context>

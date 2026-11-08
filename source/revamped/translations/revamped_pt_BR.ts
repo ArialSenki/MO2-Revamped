@@ -912,8 +912,8 @@ As alterações são salvas quando você escolhe OK.</translation>
       <translation>Jogo %1, mod %2, arquivo %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Modificado</translation>
+      <source>Date downloaded</source>
+      <translation>Data do download</translation>
     </message>
   </context>
   <context>
@@ -1031,16 +1031,16 @@ Tem certeza de que deseja continuar?</translation>
       <translation>Nenhum download para mostrar</translation>
     </message>
     <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Aqui aparecem os arquivos baixados pelo Nexus ou adicionados com Instalar. Os downloads ocultos aparecem quando os downloads ocultos são exibidos.</translation>
-    </message>
-    <message>
       <source>Delete files?</source>
       <translation>Excluir arquivos?</translation>
     </message>
     <message>
       <source>Hide files?</source>
       <translation>Ocultar arquivos?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Aqui aparecem os arquivos baixados pelo Nexus ou adicionados com Instalar. Ative Mostrar downloads ocultos para ver os que você ocultou.</translation>
     </message>
   </context>
   <context>
@@ -4972,6 +4972,14 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
       <source>Search files</source>
       <translation>Pesquisar arquivos</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mostrar os mods com conflitos</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mostrar os mods com atualizações</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
@@ -7161,6 +7169,34 @@ Erro: %1</translation>
       <source>Activating network proxy</source>
       <translation>Ativando o proxy de rede</translation>
     </message>
+    <message>
+      <source>&amp;Import Nexus categories</source>
+      <translation>&amp;Importar categorias do Nexus</translation>
+    </message>
+    <message>
+      <source>Use &amp;old category defaults</source>
+      <translation>Usar as categorias padrão &amp;antigas</translation>
+    </message>
+    <message>
+      <source>Do &amp;nothing</source>
+      <translation>&amp;Não fazer nada</translation>
+    </message>
+    <message>
+      <source>&amp;Open categories dialog</source>
+      <translation>&amp;Abrir o editor de categorias</translation>
+    </message>
+    <message>
+      <source>&amp;Disable Nexus mappings</source>
+      <translation>&amp;Desativar os mapeamentos do Nexus</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Mostrar downloads ocultos</translation>
+    </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Critérios de filtro</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8469,8 +8505,8 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>Abre a pasta Overwrite no Explorador de Arquivos do Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Excluir…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Excluir...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
@@ -10005,6 +10041,10 @@ p, li { white-space: pre-wrap; }
       <translation>Nenhum mod instalado tem estes plugins, então eles não foram restaurados:
 
 %1</translation>
+    </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Saves do jogo</translation>
     </message>
   </context>
   <context>

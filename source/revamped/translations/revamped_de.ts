@@ -920,8 +920,8 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
       <translation>Spiel %1, Mod %2, Datei %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Geändert</translation>
+      <source>Date downloaded</source>
+      <translation>Heruntergeladen am</translation>
     </message>
   </context>
   <context>
@@ -1039,16 +1039,16 @@ Möchtest du wirklich fortfahren?</translation>
       <translation>Keine Downloads anzuzeigen</translation>
     </message>
     <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Hier erscheinen Archive, die du über Nexus herunterlädst oder mit Installieren hinzufügst. Ausgeblendete Downloads erscheinen, wenn ausgeblendete Downloads angezeigt werden.</translation>
-    </message>
-    <message>
       <source>Delete files?</source>
       <translation>Dateien löschen?</translation>
     </message>
     <message>
       <source>Hide files?</source>
       <translation>Dateien ausblenden?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Hier erscheinen Archive, die du über Nexus herunterlädst oder mit Installieren hinzufügst. Schalte „Ausgeblendete Downloads anzeigen“ ein, um die ausgeblendeten zu sehen.</translation>
     </message>
   </context>
   <context>
@@ -4980,6 +4980,14 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
       <source>Search files</source>
       <translation>Dateien suchen</translation>
     </message>
+    <message>
+      <source>Show mods with conflicts</source>
+      <translation>Mods mit Konflikten anzeigen</translation>
+    </message>
+    <message>
+      <source>Show mods with updates</source>
+      <translation>Mods mit Updates anzeigen</translation>
+    </message>
   </context>
   <context>
     <name>ForcedLoadDialog</name>
@@ -7169,6 +7177,34 @@ Fehler: %1</translation>
       <source>Activating network proxy</source>
       <translation>Netzwerk-Proxy wird aktiviert</translation>
     </message>
+    <message>
+      <source>&amp;Import Nexus categories</source>
+      <translation>Nexus-Kategorien &amp;importieren</translation>
+    </message>
+    <message>
+      <source>Use &amp;old category defaults</source>
+      <translation>&amp;Alte Standardkategorien verwenden</translation>
+    </message>
+    <message>
+      <source>Do &amp;nothing</source>
+      <translation>&amp;Nichts tun</translation>
+    </message>
+    <message>
+      <source>&amp;Open categories dialog</source>
+      <translation>Kategorien-&amp;Editor öffnen</translation>
+    </message>
+    <message>
+      <source>&amp;Disable Nexus mappings</source>
+      <translation>Nexus-Zuordnungen &amp;deaktivieren</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Ausgeblendete Downloads anzeigen</translation>
+    </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Filterkriterien</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8355,6 +8391,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
       <source>You are not currently authenticated with Nexus. Please do so under Settings &gt; Nexus.</source>
       <translation>Du bist derzeit nicht bei Nexus angemeldet. Melde dich unter Einstellungen &gt; Nexus an.</translation>
     </message>
+    <message>
+      <source>Failed to display overwrite dialog: %1</source>
+      <translation>Das Overwrite-Fenster konnte nicht angezeigt werden: %1</translation>
+    </message>
   </context>
   <context>
     <name>NexusManualKeyDialog</name>
@@ -8477,8 +8517,8 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
       <translation>Öffnet den Overwrite-Ordner im Windows-Explorer.</translation>
     </message>
     <message>
-      <source>&amp;Delete…</source>
-      <translation>&amp;Löschen…</translation>
+      <source>&amp;Delete...</source>
+      <translation>&amp;Löschen...</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
@@ -10021,6 +10061,10 @@ p, li { white-space: pre-wrap; }
       <translation>Kein installierter Mod enthält diese Plugins, daher wurden sie nicht wiederhergestellt:
 
 %1</translation>
+    </message>
+    <message>
+      <source>The game&apos;s saves</source>
+      <translation>Spielstände des Spiels</translation>
     </message>
   </context>
   <context>

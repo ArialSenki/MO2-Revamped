@@ -282,15 +282,26 @@ void FileTree::activate(FileTreeItem* item)
     }
   }
 
-  if (spawn::getFileExecutionType(QFileInfo(item->realPath())) ==
-          spawn::FileExecutionTypes::Executable &&
-      QMessageBox::question(m_tree->window(), tr("Start without your mods?"),
-                            tr("\"%1\" would start without your mods, and a game would "
-                               "not use this profile's saves. To start it with them, use "
-                               "Run.\n\nStart it anyway?")
-                                .arg(item->filename()),
-                            QMessageBox::Yes | QMessageBox::No,
-                            QMessageBox::No) != QMessageBox::Yes) {
+  if (!item->isFromArchive() && !item->isDirectory() &&
+      spawn::getFileExecutionType(QFileInfo(item->realPath())) ==
+          spawn::FileExecutionTypes::Executable) {
+    // a refresh while the question is open can delete the item: keep its path
+    const QFileInfo target(item->realPath());
+    if (QMessageBox::question(m_tree->window(), tr("Start without your mods?"),
+                              tr("\"%1\" would start without your mods, and a game would "
+                                 "not use this profile's saves. To start it with them, use "
+                                 "Run.\n\nStart it anyway?")
+                                  .arg(item->filename()),
+                              QMessageBox::Yes | QMessageBox::No,
+                              QMessageBox::No) != QMessageBox::Yes) {
+      return;
+    }
+
+    m_core.processRunner()
+        .setFromFile(m_tree->window(), target)
+        .setHooked(false)
+        .setWaitForCompletion(ProcessRunner::TriggerRefresh)
+        .run();
     return;
   }
 
@@ -687,11 +698,16 @@ void FileTree::addDirectoryMenus(QMenu& menu, FileTreeItem& item)
   // a virtual folder can come from many mods, so it has no single real
   // folder; it can still be expanded at once and its path copied
   // the row the menu was built for, not whatever row has the focus frame
-  const QModelIndex index = m_tree->selectionModel()->selectedRows().value(0);
+  // persistent: the Data tab can refresh while the menu is open
+  const QPersistentModelIndex index(m_tree->selectionModel()->selectedRows().value(0));
 
   MenuItem(tr("Expand all below"))
       .icon(menuGlyph(MenuGlyphs::Expand))
       .callback([this, index] {
+        if (!index.isValid()) {
+          return;
+        }
+
         // the model loads folders when they are first shown; load everything
         // below first or only the folders already opened would expand, and
         // keep sorting off meanwhile, as expandAll() does

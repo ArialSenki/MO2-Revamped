@@ -979,7 +979,8 @@ void ModListViewActions::removeMods(const QModelIndexList& indices) const
       if (QMessageBox::question(
               m_parent, tr("Confirm"),
               tr("Remove the following mods?<br><ul>%1</ul>").arg(mods),
-              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+              // Enter keeps the mods, as in the other deletions
+              QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
         // use mod names instead of indexes because those become invalid during the
         // removal
         DownloadManager::startDisableDirWatcher();
@@ -1463,7 +1464,7 @@ void ModListViewActions::restoreBackup(const QModelIndex& index) const
         (QMessageBox::question(
              m_parent, tr("Overwrite?"),
              tr("This will replace the existing mod \"%1\". Continue?").arg(regName),
-             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)) {
+             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)) {
       // the mod goes aside and is only removed once the backup is in its place:
       // a file in use can stop any of these steps
       QString aside;

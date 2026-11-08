@@ -680,7 +680,10 @@ void CreateInstanceDialog::finish()
                                        ui->instanceNotes->text());
       if (ui->desktopShortcut->isChecked() &&
           !env::instanceShortcut(created).add(env::Shortcut::Desktop)) {
+        // the dialog closes right after this: the log would not be seen
         logCreation(tr("The desktop shortcut could not be added."));
+        QMessageBox::warning(this, tr("New instance"),
+                             tr("The desktop shortcut could not be added."));
       }
     }
 
@@ -696,8 +699,11 @@ void CreateInstanceDialog::finish()
           m_switching = true;
         } else {
           SetRestartExecutable(QString());
-          logCreation(tr("Close Mod Organizer, then start the isolated copy: %1")
-                          .arg(QDir::toNativeSeparators(executable)));
+          // as above: said in a message, the dialog closes at once
+          const QString text = tr("Close Mod Organizer, then start the isolated copy: %1")
+                                   .arg(QDir::toNativeSeparators(executable));
+          logCreation(text);
+          QMessageBox::information(this, tr("Isolated copy created"), text);
         }
       } else if (!mustRestart) {
         InstanceManager::singleton().setCurrentInstance(
