@@ -37,10 +37,45 @@ static QStringList topmostPaths(QStringList paths)
   return topmost;
 }
 
+namespace
+{
+// the file system model takes its Type column from Windows, in Windows'
+// language, and its headers from Qt; these follow MO2's language and casing
+class FileTreeModel : public QFileSystemModel
+{
+public:
+  using QFileSystemModel::QFileSystemModel;
+
+  QVariant headerData(int section, Qt::Orientation orientation,
+                      int role = Qt::DisplayRole) const override
+  {
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole && section == 3) {
+      return QCoreApplication::translate("FileTreeTab", "Date modified");
+    }
+    return QFileSystemModel::headerData(section, orientation, role);
+  }
+
+  QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override
+  {
+    if (index.isValid() && index.column() == 2 && role == Qt::DisplayRole) {
+      if (isDir(index)) {
+        return QCoreApplication::translate("FileTreeTab", "Folder");
+      }
+      const QString suffix = fileInfo(index).suffix();
+      return suffix.isEmpty()
+                 ? QCoreApplication::translate("FileTreeTab", "File")
+                 : QCoreApplication::translate("FileTreeTab", "%1 file")
+                       .arg(suffix.toUpper());
+    }
+    return QFileSystemModel::data(index, role);
+  }
+};
+}  // namespace
+
 FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
     : ModInfoDialogTab(std::move(cx)), m_fs(nullptr)
 {
-  m_fs = new QFileSystemModel(this);
+  m_fs = new FileTreeModel(this);
   m_fs->setIconProvider(mo2FolderIconProvider());
   m_fs->setReadOnly(false);
   ui->filetree->setModel(m_fs);

@@ -1187,7 +1187,7 @@ QWidget* CategoriesDialog::createFluentList()
   m_fluentTree->setObjectName(QStringLiteral("categoryTree"));
   m_fluentTree->setHeaderHidden(true);
   m_fluentTree->setColumnCount(1);
-  m_fluentTree->setItemDelegate(new FluentPanels::RowDelegate(m_fluentTree, 44, 0));
+  m_fluentTree->setItemDelegate(new FluentPanels::RowDelegate(m_fluentTree, 56, 0));
   m_fluentTree->setFrameShape(QFrame::NoFrame);
   m_fluentTree->setMouseTracking(true);
   m_fluentTree->setIndentation(18);
@@ -1341,7 +1341,7 @@ QWidget* CategoriesDialog::createFluentDetails()
     }
   });
 
-  auto idRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE8C8, tr("ID"),
+  auto idRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE8EC, tr("ID"),
                                           tr("Copy the ID"), 0xE8C8);
   m_fluentID = idRow.value;
   connect(idRow.action, &QToolButton::clicked, this, [this] {
@@ -1906,7 +1906,7 @@ void CategoriesDialog::showFluentHelp()
          "installed from Nexus gets the matching category by itself. Load the list from "
          "Nexus to pick them, or import it to create the categories Nexus uses.\n\n"
          "Changes are saved when you choose OK."));
-  auto* ok = dlg.addButton(tr("OK"), true);
+  auto* ok = dlg.addButton(tr("Close"), true);
   connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
   dlg.resize(540, dlg.sizeHint().height());
   dlg.exec();

@@ -325,7 +325,7 @@ QWidget* ProfilesDialog::createListCard()
   // a QListWidget named profilesList, as plugins expect it
   m_list = new QListWidget(card);
   m_list->setObjectName(QStringLiteral("profilesList"));
-  m_list->setItemDelegate(new FluentPanels::RowDelegate(m_list, 56, 24));
+  m_list->setItemDelegate(new FluentPanels::RowDelegate(m_list, 56, 20));
   m_list->setFrameShape(QFrame::NoFrame);
   m_list->setMouseTracking(true);
   m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -785,7 +785,7 @@ void ProfilesDialog::showHelp()
          "the instance's mods and downloads, so a second profile costs no disk "
          "space.\n\nUse one per playthrough or per mod list you want to try. The "
          "profile in use is chosen next to Program in the main window."));
-  auto* ok = dlg.addButton(tr("OK"), true);
+  auto* ok = dlg.addButton(tr("Close"), true);
   connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
   dlg.resize(520, dlg.sizeHint().height());
   dlg.exec();

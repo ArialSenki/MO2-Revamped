@@ -481,6 +481,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         page_subtitle.setProperty("wizardPageText", True)
         page_subtitle.setWordWrap(True)
         page_subtitle.setContentsMargins(0, 0, 16, 0)
+        # room for two lines on every page, from the top: the cards below
+        # start at the same height on all of them
+        page_subtitle.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        page_subtitle.setMinimumHeight(2 * page_subtitle.fontMetrics().lineSpacing())
         page_column.addWidget(page_title)
         page_column.addWidget(page_subtitle)
         page_column.addSpacing(8)
@@ -527,9 +531,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             row_layout = QHBoxLayout(row)
             row_layout.setContentsMargins(18, 10, 12, 10)
             row_layout.setSpacing(14)
-            row_layout.addWidget(_glyph_label(glyph, row), 0, Qt.AlignmentFlag.AlignTop)
+            row_layout.addWidget(_glyph_label(glyph, row), 0, Qt.AlignmentFlag.AlignVCenter)
             texts = QVBoxLayout()
             texts.setSpacing(2)
+            # the lines keep together and centred, however tall the row
+            texts.addStretch(1)
             title_label = QLabel(title, row)
             title_label.setObjectName("fluentSettingTitle")
             title_label.setWordWrap(True)
@@ -542,6 +548,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                     Qt.TextInteractionFlag.TextSelectableByMouse
                 )
                 texts.addWidget(description_label)
+            texts.addStretch(1)
             row_layout.addLayout(texts, 1)
             for widget in widgets:
                 widget.setParent(row)
@@ -660,7 +667,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
 
         # --- Diagnostics -----------------------------------------------------
         diagnostics = add_page(
-            0xE9D9, _tr("Diagnostics"), _tr("Bug reports"),
+            0xE9D9, _tr("Diagnostics"), _tr("Diagnostics"),
             _tr("Collects the logs needed to help locate MO2 Revamped problems."),
         )
         report = add_card(diagnostics)

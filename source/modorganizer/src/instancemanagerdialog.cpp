@@ -526,7 +526,8 @@ QWidget* InstanceManagerDialog::createListCard()
   heading->setObjectName(QStringLiteral("fluentCardTitle"));
   m_listCount = new QLabel(card);
   m_listCount->setObjectName(QStringLiteral("fluentStatCaption"));
-  title->addWidget(heading);
+  // at the top of its row: the group button beside it makes the row taller
+  title->addWidget(heading, 0, Qt::AlignTop);
   title->addStretch(1);
   title->addWidget(m_listCount);
 

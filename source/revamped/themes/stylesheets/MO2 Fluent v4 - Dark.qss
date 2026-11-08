@@ -6001,8 +6001,7 @@ QDialog#SettingsDialog QWidget#pathsTab QFrame#fluentSettingRow QLabel#fluentSet
     color: #FFFFFF;
 }
 
-/* ======================================================================
-   Visual review: main window, menus, Overwrite, Filters, Notifications,
+/* ===============================================================   Visual review: main window, menus, Overwrite, Filters, Notifications,
    Downloads and the mod list action dialogs.
    ====================================================================== */
 
@@ -6034,4 +6033,13 @@ QListWidget#problemsWidget {
 /* Overwrite: the header reaches the frame. */
 QTreeView#filesView {
     padding: 0px;
+}
+=======
+/* Mod information and new instance wizard (visual review) */
+QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"],
+QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
+    qproperty-descriptionColor: #9A9A9A;
+}
+QDialog#ModInfoDialog QTabWidget#tabConflictsTabs::pane {
+    border: none;
 }

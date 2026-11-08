@@ -1013,12 +1013,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if file_key in seen_files:
                     continue
                 seen_files.add(file_key)
-                relative_parts = relative_path.as_posix().split("/")
-                display_parts = list(relative_parts)
-                for index, part in enumerate(relative_parts[:-1]):
-                    if part.isdigit() and len(part) > 12:
-                        display_parts[index] = f"…{part[-6:]}"
-                display_path = "/".join(display_parts)
+                display_path = str(relative_path)
                 sources.append(
                     (
                         f"{label} — {display_path}",
@@ -1238,7 +1233,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             else:
                 note.setText(
-                    _tr("Optional. Leave this unchecked to use standard saves. "
+                    _tr("Optional. Leave this off to use standard saves. "
                     "You can create named game save profiles later from Tools > "
                     "Save Isolation.")
                 )
@@ -2266,7 +2261,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         mode_combo = QComboBox(card)
         mode_combo.setObjectName(f"{self.CreateInstanceCardName}_mode")
         mode_combo.setMaxVisibleItems(8)
-        mode_combo.setFixedWidth(300)
+        # the column of fields of the other steps (FieldColumnWidth in C++)
+        mode_combo.setFixedWidth(440)
         for mode, title in (
             (self.ProfileIsolated, _tr("Separate saves per MO2 profile")),
             (self.InstanceShared, _tr("Share modded saves in this instance")),
@@ -2354,7 +2350,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
         # with the switch beside it, as wide as the save mode list above
-        game_save_profile_name.setFixedWidth(244)
+        game_save_profile_name.setFixedWidth(440 - 40 - 16)
         game_save_profile_name.setToolTip(
             _trs("This name distinguishes the Elden Ring save profile in MO2. "
             "The game loads the selected file as ER0000.sl2.")

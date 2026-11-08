@@ -19,9 +19,84 @@
 #include <QRegularExpression>
 #include <QScrollArea>
 #include <QStackedWidget>
+#include <QStyleOptionButton>
+#include <QStylePainter>
 #include <QTextEdit>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+WizardChoiceButton::WizardChoiceButton(const QString& text, const QString& description,
+                                       QWidget* parent)
+    : QCommandLinkButton(text, description, parent)
+{}
+
+void WizardChoiceButton::paintEvent(QPaintEvent*)
+{
+  // QCommandLinkButton's own painting, with the description in the
+  // secondary text colour the wizard's other rows use (Qt gives both
+  // lines one colour); its layout values are Qt's
+  constexpr int LeftMargin = 7, RightMargin = 4, TopMargin = 10, BottomMargin = 10;
+  QStylePainter p(this);
+  p.save();
+  QStyleOptionButton option;
+  initStyleOption(&option);
+  option.features |= QStyleOptionButton::CommandLinkButton;
+  option.text = QString();
+  option.icon = QIcon();
+  const QSize pixmapSize = icon().actualSize(iconSize());
+  const int vOffset =
+      isDown() ? style()->pixelMetric(QStyle::PM_ButtonShiftVertical, &option) : 0;
+  const int hOffset =
+      isDown() ? style()->pixelMetric(QStyle::PM_ButtonShiftHorizontal, &option) : 0;
+  p.drawControl(QStyle::CE_PushButton, option);
+  if (!icon().isNull()) {
+    p.drawPixmap(LeftMargin + hOffset, TopMargin + vOffset,
+                 icon().pixmap(pixmapSize, devicePixelRatio(),
+                               isEnabled() ? QIcon::Normal : QIcon::Disabled,
+                               isChecked() ? QIcon::On : QIcon::Off));
+  }
+
+  const auto resolved = [this](QFont changed) {
+    const auto mask = changed.resolveMask();
+    QFont result    = font().resolve(changed);
+    result.setResolveMask(mask);
+    return result;
+  };
+  QFont titleBase = font();
+  titleBase.setBold(true);
+  titleBase.setPointSizeF(9.0);
+  const QFont titleFont = resolved(titleBase);
+  QFont descriptionBase = font();
+  descriptionBase.setPointSizeF(9.0);
+  const QFont descriptionFont = resolved(descriptionBase);
+
+  int flags = Qt::TextShowMnemonic;
+  if (!style()->styleHint(QStyle::SH_UnderlineShortcut, &option, this)) {
+    flags |= Qt::TextHideMnemonic;
+  }
+  const int textLeft         = pixmapSize.width() + LeftMargin + 6;
+  const int descriptionTop   = TopMargin + QFontMetrics(titleFont).height();
+  const QRect titleRect =
+      description().isEmpty()
+          ? rect().adjusted(textLeft, 0, -RightMargin, 0)
+          : rect().adjusted(textLeft, TopMargin, -RightMargin, 0);
+  p.setFont(titleFont);
+  p.drawItemText(titleRect.translated(hOffset, vOffset),
+                 flags | (description().isEmpty() ? Qt::AlignVCenter : Qt::AlignTop),
+                 option.palette, isEnabled(), text(), QPalette::ButtonText);
+  if (!description().isEmpty()) {
+    p.setFont(descriptionFont);
+    p.setPen(isEnabled() && m_descriptionColor.isValid()
+                 ? m_descriptionColor
+                 : option.palette.color(QPalette::ButtonText));
+    p.drawItemText(rect()
+                       .adjusted(textLeft, descriptionTop, -RightMargin, -BottomMargin)
+                       .translated(hOffset, vOffset),
+                   flags | Qt::TextWordWrap | Qt::ElideRight, option.palette, isEnabled(),
+                   description(), QPalette::NoRole);
+  }
+  p.restore();
+}
 
 namespace
 {
@@ -134,10 +209,13 @@ QFrame* row(QWidget* parent, QVBoxLayout* rows, bool first = false)
   return frame;
 }
 
+// one column of fields on every step (the plugin's save step uses it too)
+constexpr int FieldColumnWidth = 440;
+
 // a row with a title and a description on the left and a control on the
 // right, like a Windows 11 Settings row; returns the description label
 QLabel* fieldRow(QWidget* parent, QVBoxLayout* rows, const QString& title,
-                 const QString& description, QWidget* control, int controlWidth = 340,
+                 const QString& description, QWidget* control, int controlWidth = FieldColumnWidth,
                  QLabel* descriptionLabel = nullptr, QWidget* underText = nullptr)
 {
   auto* frame  = row(parent, rows);
@@ -238,7 +316,7 @@ QVBoxLayout* addPage(QStackedWidget* stack, QWidget*& page, const char* name,
 QCommandLinkButton* choice(QWidget* parent, const char* name, const QString& text,
                            const QString& description)
 {
-  auto* b = named(new QCommandLinkButton(text, description, parent), name);
+  auto* b = named(new WizardChoiceButton(text, description, parent), name);
   b->setProperty("wizardChoice", true);
   // its icon is drawn for the row (padded, the game's colours): the Fluent
   // pass would turn it into a one-colour shape
@@ -459,6 +537,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     tools->addWidget(browseGameFolderButton);
     inner->addLayout(tools);
     showAllGames = toggle(page_3, "showAllGames", tr("Show all supported games"));
+    inner->addSpacing(6);
     inner->addWidget(showAllGames);
 
     scrollArea_3 = named(new QScrollArea(page_3), "scrollArea_3");
@@ -520,7 +599,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     instanceName->setPlaceholderText(tr("Instance name"));
     instanceName->setAccessibleName(tr("Instance name"));
     fieldRow(widget_9, fields, tr("Name"), tr("How it's listed in Manage Instances."),
-             instanceName, 340);
+             instanceName);
 
     // the folder it makes, at full width so a long path reads whole, then
     // any warning
@@ -668,7 +747,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     diskBar->setAccessibleName(tr("Disk usage"));
     label_6 = new QLabel(tr("Location"), simple);
     label_6->hide();
-    fieldRow(simple, simpleRows, tr("Location"), {}, locationBox, 420, diskSpace, diskBar);
+    fieldRow(simple, simpleRows, tr("Location"), {}, locationBox, FieldColumnWidth, diskSpace, diskBar);
     QVBoxLayout* simpleBars = nullptr;
     paddedBox(simple, simpleRows, simpleBars);
     locationExists = infoBar(simple, "locationExists",
@@ -685,7 +764,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     fieldRow(simple, simpleRows, tr("Downloads"),
              tr("Another instance's downloads can be shared, so the same archives "
                 "aren't kept twice."),
-             sharedDownloads, 420);
+             sharedDownloads);
     folderPreview = infoRow(simple, simpleRows, FoldersGlyph, tr("Folders it creates"), {});
     folderPreview->setTextInteractionFlags(Qt::TextSelectableByMouse);
     simpleRows->addStretch(1);
@@ -764,7 +843,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
     buttonsLayout->addWidget(nexusConnect);
     buttonsLayout->addWidget(nexusManual);
     fieldRow(page_7, rows, tr("Nexus account"),
-             tr("You can also do this later in Settings."), buttons, 340);
+             tr("You can also do this later in Settings."), buttons);
 
     QVBoxLayout* inner = nullptr;
     paddedBox(page_7, rows, inner);
@@ -822,9 +901,11 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
   back->setAutoDefault(false);
   next = named(new QPushButton(tr("Next"), dialog), "next");
   next->setDefault(true);
-  next->setMinimumWidth(130);
   cancel = named(new QPushButton(tr("Cancel"), dialog), "cancel");
   cancel->setAutoDefault(false);
+  for (QPushButton* button : {back, next, cancel}) {
+    button->setMinimumWidth(102);  // the width of the other windows' footers
+  }
   footer->addWidget(title, 1);
   footer->addWidget(back);
   footer->addWidget(next);
