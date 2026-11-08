@@ -1231,13 +1231,6 @@ QDialog#SettingsDialog QWidget#generalTab QLabel#generalSectionTitle {
     padding: 0 0px;
 }
 
-QDialog#SettingsDialog QWidget#generalTab QWidget#generalActionsCard {
-    color: #FFFFFF;
-    background-color: #2B2B2B;
-    border: 1px solid #363636;
-    border-radius: 8px;
-}
-
 QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription {
     color: #C5C5C5;
     font-size: 9pt;
@@ -5229,6 +5222,10 @@ QDialog#SettingsDialog QWidget#fluentPageContent {
     background-color: transparent;
     border: none;
 }
+QFrame#fluentSettingRow[fluentGridRow="true"] {
+    border-top: none;
+}
+
 QDialog#SettingsDialog QWidget#fluentNavPage QFrame#fluentSettingRow QLabel#fluentSettingTitle {
     font-weight: normal;
     padding: 0px;
@@ -5863,9 +5860,11 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
     padding: 0px;
 }
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsName,
-QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption,
-QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#descriptionLabel {
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption {
     padding: 0px;
+}
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#descriptionLabel {
+    padding: 0px 0px 0px 4px;
 }
 /* Settings > Nexus: its groups sit inside cards, without an inset of their own */
 QDialog#SettingsDialog QWidget#nexusTab QGroupBox#nexusAccountGroup,

@@ -32,15 +32,17 @@ QString askLines(QWidget* parent, const QString& title, const QString& label,
   dialog.setWindowTitle(title);
   dialog.setLabelText(label);
   dialog.setTextValue(text);
+  if (auto* edit = dialog.findChild<QPlainTextEdit*>()) {
+    edit->setMinimumHeight(170);
+  }
 
-  // the field exists once the dialog is laid out for showing
+  // showing the dialog selects the whole text; undone once it is up
   QTimer::singleShot(0, &dialog, [&dialog] {
     if (auto* edit = dialog.findChild<QPlainTextEdit*>()) {
       QTextCursor cursor = edit->textCursor();
       cursor.clearSelection();
       cursor.movePosition(QTextCursor::Start);
       edit->setTextCursor(cursor);
-      edit->setMinimumHeight(170);
     }
   });
 
@@ -130,6 +132,8 @@ WorkaroundsSettingsTab::WorkaroundsSettingsTab(Settings& s, SettingsDialog& d)
   ui->customBrowserLayout->setSpacing(4);
   // the same button as the Paths page's
   ui->browseCustomBrowser->setMinimumWidth(108);
+  ui->browseCustomBrowser->setMinimumHeight(34);
+  ui->browseCustomBrowser->setAccessibleName(QObject::tr("Browse"));
   ui->browseCustomBrowser->setIcon(
       FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
   ui->browseCustomBrowser->setIconSize(QSize(16, 16));

@@ -588,6 +588,10 @@ void makeFormRows(QFormLayout* form)
     title->setToolTip(label->toolTip());
     title->setBuddy(control);
     new EnabledMirror(control, title);
+    if (valueLabel != nullptr && title->text().endsWith(QLatin1Char(':'))) {
+      // row titles have no colon
+      title->setText(title->text().chopped(1));
+    }
 
     const bool wide = qobject_cast<QLineEdit*>(control) != nullptr;
     if (wide) {
@@ -989,13 +993,27 @@ void insetCardContent(QLayout* layout)
   if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
     insetBoxContent(box);
   } else if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-    // a grid of rows has its inset already; a bare control doesn't
-    bool rows = false;
-    for (int i = 0; i < grid->count() && !rows; ++i) {
-      rows = isSettingRow(grid->itemAt(i)->widget());
+    // a grid of rows has its inset already; a bare control gets one of its
+    // own, and a heading that was moved into the grid stays where it is
+    std::vector<QWidget*> controls;
+    for (int i = 0; i < grid->count(); ++i) {
+      QWidget* w = grid->itemAt(i)->widget();
+      if (isSettingRow(w)) {
+        return;
+      }
+      if (w != nullptr && qobject_cast<QLabel*>(w) == nullptr) {
+        controls.push_back(w);
+      }
     }
-    if (!rows) {
-      addSideMargins(grid, RowInset);
+    for (QWidget* w : controls) {
+      int row, column, rowSpan, columnSpan;
+      grid->getItemPosition(grid->indexOf(w), &row, &column, &rowSpan, &columnSpan);
+      grid->removeWidget(w);
+      auto* inset = new QHBoxLayout;
+      inset->setContentsMargins(RowInset, 0, RowInset, 0);
+      inset->setSpacing(0);
+      inset->addWidget(w);
+      grid->addLayout(inset, row, column, rowSpan, columnSpan);
     }
   }
 }

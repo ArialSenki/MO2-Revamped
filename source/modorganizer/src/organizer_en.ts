@@ -11289,7 +11289,7 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
         <location filename="instancemanagerdialog.cpp" line="307"/>
         <location filename="settingsdialognexus.cpp" line="375"/>
         <location filename="settingsdialognexus.cpp" line="382"/>
-        <location filename="settingsdialogworkarounds.cpp" line="406"/>
+        <location filename="settingsdialogworkarounds.cpp" line="410"/>
         <location filename="spawn.cpp" line="205"/>
         <location filename="spawn.cpp" line="229"/>
         <location filename="spawn.cpp" line="298"/>
@@ -12291,7 +12291,8 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <location filename="settingsdialognexus.cpp" line="377"/>
         <location filename="settingsdialognexus.cpp" line="387"/>
         <location filename="settingsdialognexus.cpp" line="392"/>
-        <source>Enter API Key Manually</source>
+        <source>Enter API key manually</source>
+        <oldsource>Enter API Key Manually</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12302,55 +12303,56 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialognexus.cpp" line="676"/>
-        <location filename="settingsdialognexus.cpp" line="687"/>
+        <location filename="settingsdialognexus.cpp" line="677"/>
+        <location filename="settingsdialognexus.cpp" line="688"/>
         <source>Clear Nexus cache</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialognexus.cpp" line="677"/>
+        <location filename="settingsdialognexus.cpp" line="678"/>
         <source>The cache folder also holds this instance&apos;s mods or profiles, so only the Nexus data in memory was cleared:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialognexus.cpp" line="688"/>
+        <location filename="settingsdialognexus.cpp" line="689"/>
         <source>Move everything in this folder to the Recycle Bin?
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialognexus.cpp" line="714"/>
+        <location filename="settingsdialognexus.cpp" line="715"/>
         <source>Registered for Nexus download links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialognexus.cpp" line="735"/>
         <location filename="settingsdialognexus.cpp" line="736"/>
         <location filename="settingsdialognexus.cpp" line="737"/>
         <location filename="settingsdialognexus.cpp" line="738"/>
         <location filename="settingsdialognexus.cpp" line="739"/>
+        <location filename="settingsdialognexus.cpp" line="740"/>
         <source>N/A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="384"/>
+        <location filename="settingsdialogworkarounds.cpp" line="388"/>
         <source>Executables (*.exe)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="384"/>
+        <location filename="settingsdialogworkarounds.cpp" line="388"/>
         <source>All Files (*.*)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="387"/>
+        <location filename="settingsdialogworkarounds.cpp" line="391"/>
         <source>Select the browser executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdialogpaths.cpp" line="42"/>
         <location filename="settingsdialogpaths.cpp" line="44"/>
+        <location filename="settingsdialogworkarounds.cpp" line="136"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12446,13 +12448,13 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="254"/>
+        <location filename="settingsdialogworkarounds.cpp" line="258"/>
         <source>Executables blacklist</source>
         <oldsource>Executables Blacklist</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="255"/>
+        <location filename="settingsdialogworkarounds.cpp" line="259"/>
         <source>Enter one executable per line to be blacklisted from the virtual file system.
 Mods and other virtualized files will not be visible to these executables and
 any executables launched by them.
@@ -12463,13 +12465,13 @@ Example:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="286"/>
+        <location filename="settingsdialogworkarounds.cpp" line="290"/>
         <source>Skip file suffixes</source>
         <oldsource>Skip File Suffixes</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="287"/>
+        <location filename="settingsdialogworkarounds.cpp" line="291"/>
         <source>Enter one file suffix per line to be skipped / ignored from the virtual file system.
 Not to be confused with file extensions, file suffixes are simply how the filename ends.
 
@@ -12479,13 +12481,13 @@ Example:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="320"/>
+        <location filename="settingsdialogworkarounds.cpp" line="324"/>
         <source>Skip directories</source>
         <oldsource>Skip Directories</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="321"/>
+        <location filename="settingsdialogworkarounds.cpp" line="325"/>
         <source>Enter one directory per line to be skipped / ignored from the virtual file system.
 
 Example:
@@ -12494,13 +12496,13 @@ Example:
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="400"/>
-        <location filename="settingsdialogworkarounds.cpp" line="405"/>
+        <location filename="settingsdialogworkarounds.cpp" line="404"/>
+        <location filename="settingsdialogworkarounds.cpp" line="409"/>
         <source>Restart Mod Organizer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogworkarounds.cpp" line="401"/>
+        <location filename="settingsdialogworkarounds.cpp" line="405"/>
         <source>Window sizes and positions will be reset to their defaults.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13104,12 +13106,12 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogtheme.cpp" line="134"/>
+        <location filename="settingsdialogtheme.cpp" line="135"/>
         <source>Light</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogtheme.cpp" line="135"/>
+        <location filename="settingsdialogtheme.cpp" line="136"/>
         <source>Dark</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14704,12 +14706,6 @@ Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for e
     <message>
         <location filename="settingsdialog.cpp" line="235"/>
         <source>Choose how much troubleshooting information MO2 collects. The recommended levels are suitable for everyday use.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog.ui" line="1222"/>
-        <location filename="settingsdialog.cpp" line="336"/>
-        <source>Base directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

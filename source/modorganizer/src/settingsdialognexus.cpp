@@ -374,7 +374,7 @@ void NexusConnectionUI::updateState()
     // api key is in the process of being retrieved
     setButton(m_connect, true, QObject::tr("Cancel"));
     setButton(m_disconnect, false);
-    setButton(m_manual, false, QObject::tr("Enter API Key Manually"));
+    setButton(m_manual, false, QObject::tr("Enter API key manually"));
   } else if (m_nexusValidator && m_nexusValidator->isActive()) {
     // api key is in the process of being tested
     setButton(m_connect, false, QObject::tr("Connect to Nexus"));
@@ -384,12 +384,12 @@ void NexusConnectionUI::updateState()
     // api key is present
     setButton(m_connect, false, QObject::tr("Connect to Nexus"));
     setButton(m_disconnect, true);
-    setButton(m_manual, false, QObject::tr("Enter API Key Manually"));
+    setButton(m_manual, false, QObject::tr("Enter API key manually"));
   } else {
     // api key not present
     setButton(m_connect, true, QObject::tr("Connect to Nexus"));
     setButton(m_disconnect, false);
-    setButton(m_manual, true, QObject::tr("Enter API Key Manually"));
+    setButton(m_manual, true, QObject::tr("Enter API key manually"));
   }
 
   emit stateChanged();
@@ -480,6 +480,7 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   if (auto* activityLayout =
           qobject_cast<QVBoxLayout*>(ui->nexusActivityPanel->layout())) {
     activityLayout->setSpacing(8);
+    activityLayout->setStretch(1, 1);
   }
   // one column, as the other pages: the switches end at the card's edge, with
   // the two tools side by side below them

@@ -89,6 +89,7 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   ui->resetColorsBtn->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
   ui->horizontalLayout_3->addStretch(1);
   // the cards stay at the top now that the table fits its rows
+  ui->verticalLayout_20->setStretchFactor(ui->verticalLayout_18, 0);
   ui->verticalLayout_20->addStretch(1);
 
   QObject::connect(ui->resetColorsBtn, &QPushButton::clicked, [&] {
