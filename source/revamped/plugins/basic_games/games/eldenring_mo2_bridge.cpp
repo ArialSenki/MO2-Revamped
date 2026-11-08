@@ -2352,15 +2352,20 @@ void inspect_loaded_mods() {
   entry.dwSize = sizeof(entry);
   if (Module32FirstW(snapshot, &entry)) {
     do {
-      if (entry.hModule == g_module ||
-          !has_managed_dll_path_segment(entry.szExePath) ||
+      if (entry.hModule == g_module) {
+        continue;
+      }
+      // what MO2 asked for by path counts wherever the mods folder is and
+      // whatever it is called; the folder names only sort out the rest.
+      // was_seen last: its table only has room for these
+      NativeInitializerRequest* request =
+          find_native_initializer(entry.szExePath);
+      if ((request == nullptr && !has_managed_dll_path_segment(entry.szExePath)) ||
           was_seen(entry.hModule)) {
         continue;
       }
 
       log_line("Found MO2-managed DLL:", entry.szExePath);
-      NativeInitializerRequest* request =
-          find_native_initializer(entry.szExePath);
       if (request != nullptr) {
         request->module = entry.hModule;
         if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
