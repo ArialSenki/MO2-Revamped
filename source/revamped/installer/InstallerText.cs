@@ -357,6 +357,7 @@ namespace Mo2RevampedSetup
             add(" (modificado; se conservó)", " (modified; kept)", " (modifié ; conservé)", " (geändert; beibehalten)", " (modificato; conservato)", " (modificado; mantido)");
             add(" (sin copia)", " (no backup)", " (aucune sauvegarde)", " (kein Backup)", " (nessun backup)", " (sem backup)");
             add(" (copia ausente)", " (backup missing)", " (sauvegarde manquante)", " (Backup fehlt)", " (backup mancante)", " (backup ausente)");
+            add(" (la copia no coincide con el original)", " (the backup does not match the original)", " (la sauvegarde ne correspond pas à l'original)", " (das Backup stimmt nicht mit dem Original überein)", " (il backup non corrisponde all'originale)", " (o backup não corresponde ao original)");
             add(" (Windows no pudo programar su sustitución)", " (Windows could not schedule its replacement)", " (Windows n'a pas pu planifier son remplacement)", " (Windows konnte das Ersetzen nicht planen)", " (Windows non ha potuto pianificarne la sostituzione)", " (o Windows não conseguiu agendar a substituição)");
             add("ruta ignorada: ", "ignored path: ", "chemin ignoré : ", "ignorierter Pfad: ", "percorso ignorato: ", "caminho ignorado: ");
             add("acceso directo: ", "shortcut: ", "raccourci : ", "Verknüpfung: ", "collegamento: ", "atalho: ");

@@ -589,9 +589,9 @@ namespace Mo2RevampedSetup
                     request.Mode == SetupMode.Migrate && request.InstanceKind == InstanceKind.Portable)
                 {
                     string marker = Path.Combine(target, "portable.txt");
-                    File.WriteAllBytes(marker, new byte[0]);
+                    if (!File.Exists(marker)) File.WriteAllBytes(marker, new byte[0]);
                 }
-                if (request.Mode == SetupMode.EldenRingPortable)
+                if (request.Mode == SetupMode.EldenRingPortable && !File.Exists(Path.Combine(target, "eldenring-only.portable")))
                     File.WriteAllBytes(Path.Combine(target, "eldenring-only.portable"), new byte[0]);
                 int index = 0;
                 foreach (PayloadFile file in manifest.Files.OrderBy(entry => InstallOrder(entry.Path)))
@@ -1024,7 +1024,8 @@ namespace Mo2RevampedSetup
             List<InstallFileState> files = new List<InstallFileState>();
             foreach (InstallFileState file in update.Files)
             {
-                if (!file.ExistedBefore || file.IsUserData || file.IsPortableMarker || String.IsNullOrEmpty(file.OriginalSha256)) continue;
+                // a file of unknown origin stays out, so no uninstall can delete it
+                if (!file.ExistedBefore || !file.OwnedByRevamped || file.IsUserData || file.IsPortableMarker || String.IsNullOrEmpty(file.OriginalSha256)) continue;
                 files.Add(new InstallFileState { Path = file.Path, ExistedBefore = false, InstalledSha256 = file.OriginalSha256, OwnedByRevamped = true });
             }
             List<string> shortcuts = new List<string>();
@@ -1324,7 +1325,8 @@ namespace Mo2RevampedSetup
                             if (!file.ExistedBefore || file.OwnedByRevamped ||
                                 !PathsEqual(SafeCombine(target, file.Path), runningExecutable)) continue;
                             string backup = SafeCombine(state.BackupDirectory, file.Path);
-                            if (File.Exists(backup)) restoreRunningUninstaller = backup;
+                            if (File.Exists(backup) && (String.IsNullOrEmpty(file.OriginalSha256) || HashEquals(HashFile(backup), file.OriginalSha256)))
+                                restoreRunningUninstaller = backup;
                             break;
                         }
                         catch { }
@@ -1398,6 +1400,13 @@ namespace Mo2RevampedSetup
                         if (!File.Exists(backup))
                         {
                             notes.Add(file.Path + InstallerText.T(" (copia ausente)"));
+                            continue;
+                        }
+                        // the copy lives in the user's AppData: what goes back
+                        // is what the update saved, or nothing
+                        if (!String.IsNullOrEmpty(file.OriginalSha256) && !HashEquals(HashFile(backup), file.OriginalSha256))
+                        {
+                            notes.Add(file.Path + InstallerText.T(" (la copia no coincide con el original)"));
                             continue;
                         }
                         if (PathsEqual(Application.ExecutablePath, destination))
