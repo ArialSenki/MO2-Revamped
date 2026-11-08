@@ -1045,6 +1045,15 @@ void DownloadManager::resumeDownloadInt(int index)
       info->m_ResumePos      = info->m_Output.size();
       QByteArray rangeHeader = "bytes=" + QByteArray::number(info->m_ResumePos) + "-";
       request.setRawHeader("Range", rangeHeader);
+    } else {
+      // after an error the download starts over without a range, and the file
+      // is opened to append: what was there must go, or the archive would hold
+      // the partial bytes followed by the whole file
+      info->m_ResumePos = 0;
+      if (!QFile::resize(info->m_Output.fileName(), 0)) {
+        log::warn("failed to empty {} before downloading it again",
+                  info->m_Output.fileName());
+      }
     }
     info->m_DownloadLast     = 0;
     info->m_DownloadTimeLast = 0;
@@ -2299,7 +2308,7 @@ void DownloadManager::downloadFinished(int index)
     if (info->m_State == STATE_CANCELED || (info->m_Tries == 0 && error)) {
       emit aboutToUpdate();
       info->m_Output.remove();
-      // a download paused before it was cancelled has one
+      // startDownload() writes one for every download
       QFile::remove(info->m_Output.fileName() + ".meta");
       // where it is now: the signals above reach plugins, which can run events
       const int at = indexByInfo(info);
