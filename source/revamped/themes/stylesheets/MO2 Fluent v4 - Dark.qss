@@ -2309,22 +2309,11 @@ QDialog#ExportModListDialog QLabel#exportDescription{
     color: #C5C5C5;
 }
 
-QDialog#ExportModListDialog QGroupBox#exportRowsGroup,
-QDialog#ExportModListDialog QGroupBox#exportColumnsGroup{
-    color: #FFFFFF;
-    background-color: #2E2E2E;
-    border: 1px solid #464646;
+QDialog#ExportModListDialog QFrame#exportRowsGroup,
+QDialog#ExportModListDialog QFrame#exportColumnsGroup {
+    background-color: #2A2A2A;
+    border: 1px solid #4B4B4B;
     border-radius: 8px;
-    margin-top: 10px;
-    padding-top: 8px;
-}
-
-QDialog#ExportModListDialog QGroupBox#exportRowsGroup::title,
-QDialog#ExportModListDialog QGroupBox#exportColumnsGroup::title{
-    color: #FFFFFF;
-    subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 5px;
 }
 
 QDialog#InstanceNameDialog QLabel#instanceNameValidation {
@@ -6023,6 +6012,7 @@ ProblemsDialog QLabel#fluentSettingDescription {
 }
 
 QListWidget#problemsWidget {
+    background-color: transparent;
     border: none;
 }
 
@@ -6066,4 +6056,25 @@ QTreeWidget#pluginSettingsList QHeaderView::section {
 /* Settings pages: a scroll bar in a multi-line prompt sits on the field's colour. */
 QInputDialog QPlainTextEdit QScrollBar:vertical {
     background-color: #2F2F2F;
+/* The log's rows reach the frame and line up with its title bar. */
+QDockWidget#logDock QTreeView#logList {
+    padding: 0px 0px 2px 0px;
+}
+
+/* Each list's headings start where its values do. */
+QMainWindow#MainWindow QTreeView#modList QHeaderView::section {
+    padding-left: 13px;
+    padding-right: 13px;
+}
+
+QWidget#dataTab QTreeView#dataTree QHeaderView::section {
+    padding-left: 12px;
+}
+
+QWidget#savesTab QTreeWidget#savegameList QHeaderView::section {
+    padding-left: 11px;
+}
+
+QWidget#downloadTab DownloadListView#downloadView QHeaderView::section {
+    padding-left: 7px;
 }

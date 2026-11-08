@@ -864,7 +864,7 @@ private:
       }
     } else if (objectName == QStringLiteral("downloadView")) {
       // name and status fit the side panel; more columns scroll
-      constexpr int widths[] = {130, 96, 80, 136, 130, 95, 80, 125};
+      constexpr int widths[] = {130, 92, 80, 130, 130, 95, 80, 125};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -2531,6 +2531,9 @@ void MainWindow::showEvent(QShowEvent* event)
   QMainWindow::showEvent(event);
 
   if (!m_WasVisible) {
+    // no control looks focused on opening; Tab still reaches the first one
+    setFocus(Qt::OtherFocusReason);
+
     ui->modList->refreshFilters();
     readSettings();
     // readSettings() restores the mod-list header state. Install its
