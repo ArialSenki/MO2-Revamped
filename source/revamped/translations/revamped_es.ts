@@ -9676,7 +9676,7 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <translation>Estilo personalizado actual</translation>
     </message>
     <message>
-      <source>Enter API Key Manually</source>
+      <source>Enter API key manually</source>
       <translation>Introducir la clave API manualmente</translation>
     </message>
     <message>
@@ -10057,6 +10057,26 @@ Ejemplo:
   .txt - Omitiría todos los archivos que terminan en .txt, &lt;cualquier texto&gt;.txt
   some_file.txt - Omitiría todos los archivos que terminan en some_file.txt, &lt;cualquier texto&gt;some_file.txt</translation>
     </message>
+    <message>
+      <source>Enter one executable per line to be blacklisted from the virtual file system.
+Mods and other virtualized files will not be visible to these executables and
+any executables launched by them.
+
+Example:
+  Chrome.exe
+  Firefox.exe</source>
+      <translation>Ingrese un ejecutable por línea que se incluirá en la lista negra del sistema de archivos virtual.
+Las modificaciones y otros archivos virtualizados no serán visibles para estos ejecutables y
+cualquier ejecutable lanzado por ellos.
+
+Ejemplo:
+  Chrome.exe
+  Firefox.exe</translation>
+    </message>
+    <message>
+      <source>Window sizes and positions will be reset to their defaults.</source>
+      <translation>El tamaño y la posición de las ventanas volverán a sus valores predeterminados.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10303,7 +10323,7 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
 %1</translation>
     </message>
     <message>
-      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</source>
       <translation>Desactiva lo que MO2 pide a Nexus: las comprobaciones de actualizaciones, los avales y el seguimiento no funcionan, tampoco si los inicias tú. Los enlaces se siguen abriendo en el navegador.</translation>
     </message>
     <message>
@@ -10311,16 +10331,12 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
       <translation>ID de usuario:</translation>
     </message>
     <message>
-      <source>Use %BASE_DIR% to refer to the Base Directory.</source>
+      <source>Use %BASE_DIR% to refer to the base directory.</source>
       <translation>Usa %BASE_DIR% para referirte a la carpeta base.</translation>
     </message>
     <message>
       <source>Overwrite</source>
       <translation>Overwrite</translation>
-    </message>
-    <message>
-      <source>Base Directory</source>
-      <translation>Carpeta base</translation>
     </message>
     <message>
       <source>Save the current filters when closing MO2 and restore them on startup.</source>
@@ -10343,11 +10359,11 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
       <translation>Muestra la metainformación en lugar de los nombres de archivo en la lista de descargas.</translation>
     </message>
     <message>
-      <source>Download List</source>
+      <source>Download list</source>
       <translation>Lista de descargas</translation>
     </message>
     <message>
-      <source>Mod List</source>
+      <source>Mod list</source>
       <translation>Lista de mods</translation>
     </message>
     <message>
@@ -11057,6 +11073,34 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
     <message>
       <source>Developer</source>
       <translation>Desarrollador</translation>
+    </message>
+    <message>
+      <source>Profile defaults</source>
+      <translation>Valores Predeterminados del Perfil</translation>
+    </message>
+    <message>
+      <source>Local saves</source>
+      <translation>Guardados Locales</translation>
+    </message>
+    <message>
+      <source>Automatic archive invalidation</source>
+      <translation>Invalidación Automática de Archivos</translation>
+    </message>
+    <message>
+      <source>Reset dialog choices</source>
+      <translation>Restablecer Opciones de Diálogo</translation>
+    </message>
+    <message>
+      <source>Configure mod categories</source>
+      <translation>Configurar Categorías de Mod</translation>
+    </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Introduzca manualmente la clave API</translation>
+    </message>
+    <message>
+      <source>Do not share the collapsed/expanded state of separators between profiles.</source>
+      <translation>No comparta el estado contraído/expandido de los separadores entre perfiles.</translation>
     </message>
   </context>
   <context>

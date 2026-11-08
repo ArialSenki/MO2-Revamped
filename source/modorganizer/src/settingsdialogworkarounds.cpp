@@ -1,6 +1,7 @@
 #include "settingsdialogworkarounds.h"
 #include "circularuihelpers.h"
 #include "eldenringsavesettings.h"
+#include "fluenticons.h"
 #include "settings.h"
 #include "spawn.h"
 #include "ui_settingsdialog.h"
@@ -12,8 +13,46 @@
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QSizePolicy>
+#include <QTimer>
 #include <QVBoxLayout>
+
+namespace
+{
+// QInputDialog::getMultiLineText() without its whole text selected on opening,
+// which painted a band behind every line, and tall enough for several entries
+QString askLines(QWidget* parent, const QString& title, const QString& label,
+                 const QString& text, bool* ok)
+{
+  QInputDialog dialog(parent);
+  dialog.setOptions(QInputDialog::UsePlainTextEditForTextInput);
+  dialog.setWindowTitle(title);
+  dialog.setLabelText(label);
+  dialog.setTextValue(text);
+  if (auto* edit = dialog.findChild<QPlainTextEdit*>()) {
+    edit->setMinimumHeight(170);
+  }
+
+  // showing the dialog selects the whole text; undone once it is up
+  QTimer::singleShot(0, &dialog, [&dialog] {
+    if (auto* edit = dialog.findChild<QPlainTextEdit*>()) {
+      QTextCursor cursor = edit->textCursor();
+      cursor.clearSelection();
+      cursor.movePosition(QTextCursor::Start);
+      edit->setTextCursor(cursor);
+    }
+  });
+
+  const bool accepted = dialog.exec() == QDialog::Accepted;
+  if (ok != nullptr) {
+    *ok = accepted;
+  }
+  return accepted ? dialog.textValue() : QString();
+}
+}  // namespace
 
 WorkaroundsSettingsTab::WorkaroundsSettingsTab(Settings& s, SettingsDialog& d)
     : SettingsTab(s, d)
@@ -91,6 +130,13 @@ WorkaroundsSettingsTab::WorkaroundsSettingsTab(Settings& s, SettingsDialog& d)
   ui->verticalLayout_23->setSpacing(4);
 
   ui->customBrowserLayout->setSpacing(4);
+  // the same button as the Paths page's
+  ui->browseCustomBrowser->setMinimumWidth(108);
+  ui->browseCustomBrowser->setMinimumHeight(34);
+  ui->browseCustomBrowser->setAccessibleName(QObject::tr("Browse"));
+  ui->browseCustomBrowser->setIcon(
+      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
+  ui->browseCustomBrowser->setIconSize(QSize(16, 16));
   ui->browserCommandLayout->setSpacing(8);
   ui->maintenanceToolsLayout->setContentsMargins(9, 8, 9, 9);
   ui->maintenanceToolsLayout->setSpacing(6);
@@ -208,7 +254,7 @@ WorkaroundsSettingsTab::changeBlacklistLater(QWidget* parent, const QString& cur
 {
   bool ok = false;
 
-  QString result = QInputDialog::getMultiLineText(
+  QString result = askLines(
       parent, QObject::tr("Executables blacklist"),
       QObject::tr("Enter one executable per line to be blacklisted from the virtual "
                   "file system.\n"
@@ -216,8 +262,8 @@ WorkaroundsSettingsTab::changeBlacklistLater(QWidget* parent, const QString& cur
                   "executables and\n"
                   "any executables launched by them.\n\n"
                   "Example:\n"
-                  "    Chrome.exe\n"
-                  "    Firefox.exe"),
+                  "  Chrome.exe\n"
+                  "  Firefox.exe"),
       current.split(";").join("\n"), &ok);
 
   if (!ok) {
@@ -240,7 +286,7 @@ WorkaroundsSettingsTab::changeSkipFileSuffixes(QWidget* parent,
 {
   bool ok = false;
 
-  QString result = QInputDialog::getMultiLineText(
+  QString result = askLines(
       parent, QObject::tr("Skip file suffixes"),
       QObject::tr(
           "Enter one file suffix per line to be skipped / ignored from the virtual "
@@ -274,7 +320,7 @@ WorkaroundsSettingsTab::changeSkipDirectories(QWidget* parent,
 {
   bool ok = false;
 
-  QString result = QInputDialog::getMultiLineText(
+  QString result = askLines(
       parent, QObject::tr("Skip directories"),
       QObject::tr(
           "Enter one directory per line to be skipped / ignored from the virtual "
@@ -354,17 +400,19 @@ void WorkaroundsSettingsTab::browseCustomBrowser()
 
 void WorkaroundsSettingsTab::on_resetGeometryBtn_clicked()
 {
-  const auto r =
-      MOBase::TaskDialog(parentWidget())
-          .title(QObject::tr("Restart Mod Organizer"))
-          .main(QObject::tr("Restart Mod Organizer"))
-          .content(QObject::tr("Geometries will be reset to their default values."))
-          .icon(QMessageBox::Question)
-          .button({QObject::tr("Restart Mod Organizer"), QMessageBox::Ok})
-          .button({QObject::tr("Cancel"), QMessageBox::Cancel})
-          .exec();
+  // a message box, as Settings' other questions: the same heading and body
+  QMessageBox question(QMessageBox::Question, QObject::tr("Restart Mod Organizer"),
+                       QObject::tr("Window sizes and positions will be reset to "
+                                   "their defaults."),
+                       QMessageBox::NoButton, parentWidget());
+  auto* restart =
+      question.addButton(QObject::tr("Restart Mod Organizer"), QMessageBox::AcceptRole);
+  auto* cancel = question.addButton(QObject::tr("Cancel"), QMessageBox::RejectRole);
+  question.setDefaultButton(restart);
+  question.setEscapeButton(cancel);
+  question.exec();
 
-  if (r == QMessageBox::Ok) {
+  if (question.clickedButton() == restart) {
     // the main window asks for the reset and restarts once Settings has
     // saved: closing the dialog threw the other changes made in it away, and
     // quitting from here would skip the questions accepting it can still ask

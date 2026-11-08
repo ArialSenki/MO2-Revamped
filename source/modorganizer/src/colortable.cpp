@@ -190,6 +190,24 @@ ColorTable::ColorTable(QWidget* parent) : QTableWidget(parent), m_settings(nullp
   connect(this, &QTableWidget::cellActivated, [&] {
     onColorActivated();
   });
+
+  // the page has room for more, but a table with blank space below its rows
+  // looks unfinished
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+}
+
+QSize ColorTable::sizeHint() const
+{
+  int height = verticalHeader()->length() + 2 * frameWidth();
+  if (!horizontalHeader()->isHidden()) {
+    height += horizontalHeader()->height();
+  }
+  return QSize(QTableWidget::sizeHint().width(), height);
+}
+
+QSize ColorTable::minimumSizeHint() const
+{
+  return QSize(QTableWidget::minimumSizeHint().width(), sizeHint().height());
 }
 
 void ColorTable::load(Settings& s)

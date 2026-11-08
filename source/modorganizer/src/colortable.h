@@ -25,6 +25,10 @@ public:
   //
   void commitColors();
 
+  // as tall as its visible rows
+  QSize sizeHint() const override;
+  QSize minimumSizeHint() const override;
+
 private:
   Settings* m_settings;
 

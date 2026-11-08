@@ -116,8 +116,6 @@ PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
     ui->label_29->setText(QObject::tr("Executable"));
     addPathRow(gameLayout, 0, ui->label_29, ui->managedGameDirEdit,
                ui->browseGameDirBtn);
-    ui->browseGameDirBtn->setIcon(
-        FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/executable.svg")));
     gameLayout->setColumnStretch(1, 1);
     MOBase::CircularUi::addGroupHeading(
         gameGroup, ":/MO/gui/mainwindow/files/executable.svg",

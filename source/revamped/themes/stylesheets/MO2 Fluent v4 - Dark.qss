@@ -1231,13 +1231,6 @@ QDialog#SettingsDialog QWidget#generalTab QLabel#generalSectionTitle {
     padding: 0 0px;
 }
 
-QDialog#SettingsDialog QWidget#generalTab QWidget#generalActionsCard {
-    color: #FFFFFF;
-    background-color: #2B2B2B;
-    border: 1px solid #363636;
-    border-radius: 8px;
-}
-
 QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription {
     color: #C5C5C5;
     font-size: 9pt;
@@ -5172,9 +5165,6 @@ QCheckBox[fluentSwitch="true"]::indicator:unchecked:disabled {
 QCheckBox[fluentSwitch="true"]::indicator:checked:disabled {
     image: url(./mo2-fluent-v4-dark/switch-on-disabled.svg);
 }
-QFrame#fluentSettingRow[fluentGridRow="true"] {
-    border-top: none;
-}
 
 /* Animated switches: FluentSwitchPainter draws them in these colors over the
    indicator, so the still images above are hidden. */
@@ -5232,6 +5222,10 @@ QDialog#SettingsDialog QWidget#fluentPageContent {
     background-color: transparent;
     border: none;
 }
+QFrame#fluentSettingRow[fluentGridRow="true"] {
+    border-top: none;
+}
+
 QDialog#SettingsDialog QWidget#fluentNavPage QFrame#fluentSettingRow QLabel#fluentSettingTitle {
     font-weight: normal;
     padding: 0px;
@@ -5866,7 +5860,9 @@ QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription {
     padding: 0px;
 }
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsName,
-QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption,
+QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#pluginDetailsCaption {
+    padding: 0px;
+}
 QDialog#SettingsDialog QWidget#pluginsTab QWidget#pluginDescription QLabel#descriptionLabel {
     padding: 0px 0px 0px 4px;
 }
@@ -5994,4 +5990,9 @@ QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundNetworkTitle,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundSteamTitle,
 QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
     font-size: 12pt;
+}
+
+/* Settings pages: the row titles of Paths are primary text, as on every other page. */
+QDialog#SettingsDialog QWidget#pathsTab QFrame#fluentSettingRow QLabel#fluentSettingTitle {
+    color: #FFFFFF;
 }

@@ -10235,6 +10235,30 @@ Esempio:
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;La disattivazione del plugin &apos;%1&apos; disattiverà anche i seguenti plugin:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Vuoi continuare?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Inserisci a Mano la Chiave API</translation>
+    </message>
+    <message>
+      <source>Enter one executable per line to be blacklisted from the virtual file system.
+Mods and other virtualized files will not be visible to these executables and
+any executables launched by them.
+
+Example:
+  Chrome.exe
+  Firefox.exe</source>
+      <translation>Inserisci un eseguibile per linea per bandirlo dal sistema di file virtuale.
+Le mod e altri file virtualizzati non saranno visibili a quegli eseguibili e
+qualsiasi eseguibile aperto da loro.
+
+Esempio:
+  Chrome.exe
+  Firefox.exe</translation>
+    </message>
+    <message>
+      <source>Window sizes and positions will be reset to their defaults.</source>
+      <translation>Le dimensioni e le posizioni delle finestre verranno riportate ai valori predefiniti.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10481,7 +10505,7 @@ Scegli quanti dettagli MO2 scrive in ModOrganizer.log. Info è consigliato per l
 %1</translation>
     </message>
     <message>
-      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</source>
       <translation>Disattiva ciò che MO2 chiede a Nexus: controlli degli aggiornamenti, approvazioni e tracciamento non funzionano, anche se li avvii tu. I link si aprono comunque nel browser.</translation>
     </message>
     <message>
@@ -10497,7 +10521,7 @@ Scegli quanti dettagli MO2 scrive in ModOrganizer.log. Info è consigliato per l
       <translation>Imposta i valori predefiniti di interfaccia, download, aggiornamenti, profili e pannelli dell'area di lavoro.</translation>
     </message>
     <message>
-      <source>Profile Defaults</source>
+      <source>Profile defaults</source>
       <translation>Impostazioni predefinite del profilo</translation>
     </message>
     <message>
@@ -10505,11 +10529,11 @@ Scegli quanti dettagli MO2 scrive in ModOrganizer.log. Info è consigliato per l
       <translation>INI locali</translation>
     </message>
     <message>
-      <source>Local Saves</source>
+      <source>Local saves</source>
       <translation>Salvataggi locali</translation>
     </message>
     <message>
-      <source>Automatic Archive Invalidation</source>
+      <source>Automatic archive invalidation</source>
       <translation>Invalidazione automatica degli archivi</translation>
     </message>
     <message>
@@ -11199,6 +11223,34 @@ Scegli quanti dettagli MO2 scrive in ModOrganizer.log. Info è consigliato per l
     <message>
       <source>Developer</source>
       <translation>Sviluppatore</translation>
+    </message>
+    <message>
+      <source>Download list</source>
+      <translation>Lista dei Download</translation>
+    </message>
+    <message>
+      <source>Reset dialog choices</source>
+      <translation>Resetta Scelte Dialogo</translation>
+    </message>
+    <message>
+      <source>Configure mod categories</source>
+      <translation>Configura le Categorie Mod</translation>
+    </message>
+    <message>
+      <source>Mod list</source>
+      <translation>Lista delle Mod</translation>
+    </message>
+    <message>
+      <source>Use %BASE_DIR% to refer to the base directory.</source>
+      <translation>Usa %BASE_DIR% per fare riferimento alla Cartella di Base</translation>
+    </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Inserisci a Mano la Chiave API</translation>
+    </message>
+    <message>
+      <source>Do not share the collapsed/expanded state of separators between profiles.</source>
+      <translation>Non condividere lo stato dei separatori ridotti o espansi tra i profili.</translation>
     </message>
   </context>
   <context>

@@ -9851,6 +9851,30 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;Desativar o plugin &apos;%1&apos; também desativará os seguintes plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Deseja continuar?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Inserir Chave da API Manualmente</translation>
+    </message>
+    <message>
+      <source>Enter one executable per line to be blacklisted from the virtual file system.
+Mods and other virtualized files will not be visible to these executables and
+any executables launched by them.
+
+Example:
+  Chrome.exe
+  Firefox.exe</source>
+      <translation>Insira um executável por linha para ser bloqueado do sistema de arquivos virtual.
+Mods e outros arquivos virtualizados não serão visíveis para esses executáveis e
+para quaisquer executáveis abertos por eles.
+
+Exemplos:
+  Chrome.exe
+  Firefox.exe</translation>
+    </message>
+    <message>
+      <source>Window sizes and positions will be reset to their defaults.</source>
+      <translation>Os tamanhos e as posições das janelas voltarão aos valores padrão.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10097,7 +10121,7 @@ Escolha quanto detalhe o MO2 grava em ModOrganizer.log. Info é o recomendado no
 %1</translation>
     </message>
     <message>
-      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</source>
       <translation>Desativa o que o MO2 pede ao Nexus: verificações de atualização, endossos e acompanhamento não funcionam, mesmo se você os iniciar. Os links continuam abrindo no navegador.</translation>
     </message>
     <message>
@@ -10795,6 +10819,46 @@ Escolha quanto detalhe o MO2 grava em ModOrganizer.log. Info é o recomendado no
     <message>
       <source>Developer</source>
       <translation>Desenvolvedor</translation>
+    </message>
+    <message>
+      <source>Download list</source>
+      <translation>Lista de Downloads</translation>
+    </message>
+    <message>
+      <source>Profile defaults</source>
+      <translation>Padrões de Perfil</translation>
+    </message>
+    <message>
+      <source>Local saves</source>
+      <translation>Saves Locais</translation>
+    </message>
+    <message>
+      <source>Automatic archive invalidation</source>
+      <translation>Invalidação Automática de Arquivos</translation>
+    </message>
+    <message>
+      <source>Reset dialog choices</source>
+      <translation>Redefinir Escolhas de Diálogo</translation>
+    </message>
+    <message>
+      <source>Configure mod categories</source>
+      <translation>Configurar Categorias de Mod</translation>
+    </message>
+    <message>
+      <source>Mod list</source>
+      <translation>Lista de Mods</translation>
+    </message>
+    <message>
+      <source>Use %BASE_DIR% to refer to the base directory.</source>
+      <translation>Use %BASE_DIR% para se referir ao Diretório Base.</translation>
+    </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Inserir a Chave da API Manualmente</translation>
+    </message>
+    <message>
+      <source>Do not share the collapsed/expanded state of separators between profiles.</source>
+      <translation>Não compartilhar o estado aberto/fechado de separadores entre perfis.</translation>
     </message>
   </context>
   <context>

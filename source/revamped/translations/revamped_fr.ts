@@ -10131,6 +10131,31 @@ Exemple :
       <source>Failed to create &quot;%1&quot;, you may not have the necessary permissions. Path remains unchanged.</source>
       <translation>Impossible de créer &quot;%1&quot;, vous ne disposez peut-être pas de l&apos;autorisation nécessaire. Le chemin reste inchangé.</translation>
     </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Entrez la clé API manuellement</translation>
+    </message>
+    <message>
+      <source>Enter one executable per line to be blacklisted from the virtual file system.
+Mods and other virtualized files will not be visible to these executables and
+any executables launched by them.
+
+Example:
+  Chrome.exe
+  Firefox.exe</source>
+      <translation>Entrez un exécutable par ligne pour le mettre sur la liste noire du système
+de fichiers virtuel.
+Les mods et les autres fichiers virtualisés ne seront pas visibles pour ces
+exécutables, ni aucun exécutables lancés par eux.
+
+Exemple :
+ Chrome.exe
+ Firefox.exe</translation>
+    </message>
+    <message>
+      <source>Window sizes and positions will be reset to their defaults.</source>
+      <translation>Les tailles et positions des fenêtres seront rétablies à leurs valeurs par défaut.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10377,7 +10402,7 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
 %1</translation>
     </message>
     <message>
-      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</source>
       <translation>Désactive ce que MO2 demande à Nexus : les vérifications de mises à jour, les recommandations et le suivi ne fonctionnent pas, même lancés par vous. Les liens s'ouvrent toujours dans le navigateur.</translation>
     </message>
     <message>
@@ -10393,7 +10418,7 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
       <translation>Définissez les valeurs par défaut de l'interface, des téléchargements, des mises à jour, des profils et des panneaux de l'espace de travail.</translation>
     </message>
     <message>
-      <source>Profile Defaults</source>
+      <source>Profile defaults</source>
       <translation>Valeurs par défaut du profil</translation>
     </message>
     <message>
@@ -10401,11 +10426,11 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
       <translation>INI locaux</translation>
     </message>
     <message>
-      <source>Local Saves</source>
+      <source>Local saves</source>
       <translation>Sauvegardes locales</translation>
     </message>
     <message>
-      <source>Automatic Archive Invalidation</source>
+      <source>Automatic archive invalidation</source>
       <translation>Invalidation automatique des archives</translation>
     </message>
     <message>
@@ -11095,6 +11120,34 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
     <message>
       <source>Developer</source>
       <translation>Développeur</translation>
+    </message>
+    <message>
+      <source>Download list</source>
+      <translation>Liste des téléchargements</translation>
+    </message>
+    <message>
+      <source>Reset dialog choices</source>
+      <translation>Réinitialiser les boites de dialogue</translation>
+    </message>
+    <message>
+      <source>Configure mod categories</source>
+      <translation>Configurer les catégories de mod</translation>
+    </message>
+    <message>
+      <source>Mod list</source>
+      <translation>Liste de Mods</translation>
+    </message>
+    <message>
+      <source>Use %BASE_DIR% to refer to the base directory.</source>
+      <translation>Utilisez %BASE_DIR% pour faire référence au répertoire de base.</translation>
+    </message>
+    <message>
+      <source>Enter API key manually</source>
+      <translation>Entrez la clé API manuellement</translation>
+    </message>
+    <message>
+      <source>Do not share the collapsed/expanded state of separators between profiles.</source>
+      <translation>Ne pas partager l&apos;état replié/ouvert des séparateurs entre les profils.</translation>
     </message>
   </context>
   <context>

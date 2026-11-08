@@ -60,6 +60,7 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   // Keep the two General-page actions in a card that matches the settings
   // sections above, while retaining the same buttons and click behavior.
   ui->widget_10->setObjectName(QStringLiteral("generalActionsCard"));
+  ui->widget_10->setTitle(QObject::tr("Categories and dialog choices"));
   if (QLayout* oldLayout = ui->widget_10->layout()) {
     while (QLayoutItem* item = oldLayout->takeAt(0)) {
       delete item;
@@ -67,14 +68,6 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     delete oldLayout;
   }
   auto* actionsLayout = new QVBoxLayout(ui->widget_10);
-  actionsLayout->setContentsMargins(10, 8, 10, 8);
-  actionsLayout->setSpacing(7);
-  auto* actionsHeading = new QLabel(
-      QObject::tr("Categories and dialog choices"), ui->widget_10);
-  actionsHeading->setObjectName(QStringLiteral("generalSectionTitle"));
-  actionsLayout->addLayout(CircularUi::createHeadingRow(
-      ui->widget_10, actionsHeading, ":/MO/gui/mainwindow/tools.svg",
-      QStringLiteral("generalActionsIcon"), 26, QStringLiteral("A")));
   auto* actionButtonsLayout = new QHBoxLayout;
   actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
   actionButtonsLayout->setSpacing(8);
@@ -82,10 +75,14 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   actionButtonsLayout->addWidget(ui->categoriesBtn);
   actionButtonsLayout->addStretch(1);
   actionsLayout->addLayout(actionButtonsLayout);
+  // a card as the ones above it: same heading, margins and background
+  CircularUi::addGroupHeading(
+      ui->widget_10, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("generalActionsIcon"), 26,
+      QStringLiteral("generalSectionTitle"), QStringLiteral("A"));
 
   // language
-  ui->languageBox->setMinimumWidth(180);
-  ui->languageBox->setMinimumHeight(28);
+  ui->languageBox->setFixedWidth(260);
   ui->languageBox->setMaxVisibleItems(8);
   addLanguages();
   selectLanguage();

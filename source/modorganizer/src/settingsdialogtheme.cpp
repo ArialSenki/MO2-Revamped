@@ -81,6 +81,16 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
     ui->colorTable->setRowHidden(4, !plugins);
     ui->colorTable->setRowHidden(5, !plugins);
   }
+  ui->colorTable->updateGeometry();
+
+  // the width of the other pickers, and the Restore button as wide as its
+  // text, as the other pages' action buttons
+  ui->styleBox->setFixedWidth(260);
+  ui->resetColorsBtn->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+  ui->horizontalLayout_3->addStretch(1);
+  // the cards stay at the top now that the table fits its rows
+  ui->verticalLayout_20->setStretchFactor(ui->verticalLayout_18, 0);
+  ui->verticalLayout_20->addStretch(1);
 
   QObject::connect(ui->resetColorsBtn, &QPushButton::clicked, [&] {
     ui->colorTable->resetColors();
