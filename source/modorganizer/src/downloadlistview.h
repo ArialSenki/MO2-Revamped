@@ -63,6 +63,10 @@ public:
   void customResizeSections();
   void ensureReadableSections();
 
+  // once, for columns saved when Status and the date took more than they
+  // need: what they give up goes to the name
+  void compactSections();
+
   // whether the first real layout already widened status and date; later
   // resizes keep the widths the user chose
   bool m_readableChecked = false;

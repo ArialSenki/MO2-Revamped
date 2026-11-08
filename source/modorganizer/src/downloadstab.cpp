@@ -77,7 +77,8 @@ void DownloadsTab::update()
     ui.list->setStyleSheet("DownloadListView::item { padding: 4px 2px; }");
   } else {
     ui.list->setProperty("downloadView", "standard");
-    ui.list->setStyleSheet("DownloadListView::item { padding: 16px 4px; }");
+    // the same row height as the Saves list next to it
+    ui.list->setStyleSheet("DownloadListView::item { padding: 6px 4px; }");
   }
 
   setStartupDiagnosticPhase("downloads_tab.update.style_unpolish");

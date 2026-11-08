@@ -841,6 +841,16 @@ void GeometrySettings::restoreToolbars(QMainWindow* w) const
 // that took an earlier one ("fluent_toolbar_v4" stored 28 px icons only)
 static constexpr auto FluentToolbarKey = "fluent_toolbar_v4_compact";
 
+bool GeometrySettings::downloadColumnsCompacted() const
+{
+  return get<bool>(m_Settings, "Geometry", "download_columns_compact", false);
+}
+
+void GeometrySettings::setDownloadColumnsCompacted(bool b)
+{
+  set(m_Settings, "Geometry", "download_columns_compact", b);
+}
+
 bool GeometrySettings::fluentToolbarApplied() const
 {
   return get<bool>(m_Settings, "Geometry", FluentToolbarKey, false);

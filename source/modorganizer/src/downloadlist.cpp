@@ -241,10 +241,7 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
     return FluentIcons::file(QStringLiteral("archive.zip"), false);
 
   } else if (role == Qt::TextAlignmentRole) {
-    if (index.column() == COL_SIZE)
-      return QVariant(Qt::AlignVCenter | Qt::AlignRight);
-    else
-      return QVariant(Qt::AlignVCenter | Qt::AlignLeft);
+    return QVariant(Qt::AlignVCenter | Qt::AlignLeft);
   }
   return QVariant();
 }
