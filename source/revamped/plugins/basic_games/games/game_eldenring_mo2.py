@@ -5603,6 +5603,15 @@ class EldenRingMo2Game(BasicGame):
         self._profile_config_env_active = True
         if path.is_file():
             os.environ[config_key] = str(path)
+            if len(str(path)) >= 260:
+                # the bridge reads this path into a MAX_PATH buffer
+                qWarning(
+                    f"Elden Ring MO2: the profile's settings path is {len(str(path))} "
+                    "characters long; the bridge reads at most 259, so it ignores this "
+                    "profile's startup options (minimized start, black background, "
+                    "CPU 0, priority) and skips the intro logos whatever the profile "
+                    "says. A shorter instance or profile path fixes it."
+                )
         else:
             os.environ.pop(config_key, None)
 
