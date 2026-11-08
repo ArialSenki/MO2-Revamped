@@ -439,6 +439,19 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
   m_NewModRemoved    = false;
   m_NewModFolder.clear();
 
+  // the installed mod as its folder is named: a guess that differs only in
+  // case would rename the folder on Replace, or when a cancel puts it back, and
+  // the mod list would take it for another mod, disabled and at the end
+  const QString guessed = modName;
+  for (const QString& entry : QDir(m_ModsDirectory)
+                                  .entryList(QDir::Dirs | QDir::NoDotAndDotDot |
+                                             QDir::Hidden)) {
+    if (entry != guessed && entry.compare(guessed, Qt::CaseInsensitive) == 0) {
+      modName.update(entry, GUESS_USER);
+      break;
+    }
+  }
+
   QString targetDirectory =
       QDir::fromNativeSeparators(m_ModsDirectory + "\\" + modName);
 
@@ -774,12 +787,15 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
     return {IPluginInstaller::RESULT_FAILED};
   }
 
-  bool merge = false;
   // determine target directory
   InstallationResult result = testOverwrite(modName);
   if (!result) {
     return result;
   }
+
+  // merging into the installed mod keeps its newer version and its list of
+  // installed files
+  const bool merge = result.merged();
 
   // does nothing once the install has finished
   ON_BLOCK_EXIT([this]() {
@@ -791,6 +807,17 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
 
   QString targetDirectory       = QDir(m_ModsDirectory + "/" + modName).canonicalPath();
   QString targetDirectoryNative = QDir::toNativeSeparators(targetDirectory);
+
+  // empty when the folder could not be created (a path too long, no rights):
+  // the files would land in the working directory and meta.ini at the root
+  if (targetDirectory.isEmpty()) {
+    log::error("the folder for the mod '{}' could not be created in {}",
+               static_cast<QString>(modName), m_ModsDirectory);
+    reportError(tr("The folder for the mod \"%1\" could not be created in the mods "
+                   "folder.")
+                    .arg(static_cast<QString>(modName)));
+    return {IPluginInstaller::RESULT_FAILED};
+  }
 
   log::debug("installing to \"{}\"", targetDirectoryNative);
   if (!extractFiles(targetDirectory, "", true, false)) {
