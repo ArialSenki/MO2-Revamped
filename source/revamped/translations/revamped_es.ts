@@ -932,10 +932,6 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <translation>Juego %1, mod %2, archivo %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Modificado</translation>
-    </message>
-    <message>
       <source>Date downloaded</source>
       <translation>Fecha de descarga</translation>
     </message>
@@ -1069,10 +1065,6 @@ Are you absolutely sure you want to proceed?</source>
     <message>
       <source>No downloads to show</source>
       <translation>No hay descargas que mostrar</translation>
-    </message>
-    <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Aquí aparecen los archivos que descargas de Nexus o añades con Instalar. Las descargas ocultas aparecen al mostrar las descargas ocultas.</translation>
     </message>
     <message>
       <source>Delete files?</source>
@@ -5943,10 +5935,6 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
     <message>
       <source>Saves</source>
       <translation>Partidas</translation>
-    </message>
-    <message>
-      <source>Hidden files</source>
-      <translation>Archivos ocultos</translation>
     </message>
     <message>
       <source>Filter state: off, included, or excluded.</source>

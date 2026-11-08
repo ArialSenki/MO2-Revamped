@@ -920,10 +920,6 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
       <translation>Spiel %1, Mod %2, Datei %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Geändert</translation>
-    </message>
-    <message>
       <source>Date downloaded</source>
       <translation>Heruntergeladen am</translation>
     </message>
@@ -1041,10 +1037,6 @@ Möchtest du wirklich fortfahren?</translation>
     <message>
       <source>No downloads to show</source>
       <translation>Keine Downloads anzuzeigen</translation>
-    </message>
-    <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Hier erscheinen Archive, die du über Nexus herunterlädst oder mit Installieren hinzufügst. Ausgeblendete Downloads erscheinen, wenn ausgeblendete Downloads angezeigt werden.</translation>
     </message>
     <message>
       <source>Delete files?</source>

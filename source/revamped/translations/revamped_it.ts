@@ -947,10 +947,6 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <translation>Gioco %1, mod %2, file %3</translation>
     </message>
     <message>
-      <source>Modified</source>
-      <translation>Modificato</translation>
-    </message>
-    <message>
       <source>Date downloaded</source>
       <translation>Data di download</translation>
     </message>
@@ -1068,10 +1064,6 @@ Vuoi davvero continuare?</translation>
     <message>
       <source>No downloads to show</source>
       <translation>Nessun download da mostrare</translation>
-    </message>
-    <message>
-      <source>Archives you download with Nexus or add with Install appear here. Hidden downloads appear when hidden downloads are shown.</source>
-      <translation>Qui compaiono gli archivi scaricati da Nexus o aggiunti con Installa. I download nascosti compaiono quando si mostrano i download nascosti.</translation>
     </message>
     <message>
       <source>Delete files?</source>
