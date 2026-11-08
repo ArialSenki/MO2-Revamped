@@ -1229,7 +1229,7 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
         QMessageBox::Yes | QMessageBox::No);
 
     if (confirmBox.exec() == QMessageBox::Yes) {
-      m_Profile->setModEnabled(row + i, false);
+      // removeRowForce() disables it, and enables it again if it can't go
       removeRowForce(row + i, parent);
     }
   }
