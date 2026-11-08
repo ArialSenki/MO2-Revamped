@@ -124,7 +124,7 @@
            <item>
             <widget class="QGroupBox" name="groupBox_5">
              <property name="title">
-              <string>Download List</string>
+              <string>Download list</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
@@ -208,7 +208,7 @@
            <item>
             <widget class="QGroupBox" name="groupBox_8">
              <property name="title">
-              <string>Profile Defaults</string>
+              <string>Profile defaults</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_11">
               <item>
@@ -221,14 +221,14 @@
               <item>
                <widget class="QCheckBox" name="localSaves">
                 <property name="text">
-                 <string>Local Saves</string>
+                 <string>Local saves</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QCheckBox" name="automaticArchiveInvalidation">
                 <property name="text">
-                 <string>Automatic Archive Invalidation</string>
+                 <string>Automatic archive invalidation</string>
                 </property>
                </widget>
               </item>
@@ -302,35 +302,35 @@
               <string>Toolbar and panels</string>
              </property>
              <layout class="QGridLayout" name="toolbarViewLayout">
-              <item row="0" column="0">
+              <item row="1" column="0">
                <widget class="QLabel" name="toolbarSizeLabel">
                 <property name="text">
                  <string>Toolbar icon size</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
+              <item row="1" column="1">
                <widget class="QComboBox" name="toolbarIconSizeCombo">
                 <property name="toolTip">
                  <string>Choose the size of toolbar icons.</string>
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
+              <item row="2" column="0">
                <widget class="QLabel" name="toolbarStyleLabel">
                 <property name="text">
                  <string>Toolbar button style</string>
                 </property>
                </widget>
               </item>
-              <item row="1" column="1">
+              <item row="2" column="1">
                <widget class="QComboBox" name="toolbarButtonStyleCombo">
                 <property name="toolTip">
                  <string>Choose whether toolbar buttons show icons, text, or both.</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="0" colspan="2">
+              <item row="0" column="0" colspan="2">
                <widget class="QLabel" name="toolbarViewDescription">
                 <property name="text">
                  <string>Set the toolbar appearance and choose which workspace panels stay visible.</string>
@@ -374,7 +374,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QWidget" name="widget_10" native="true">
+            <widget class="QGroupBox" name="widget_10">
              <layout class="QHBoxLayout" name="horizontalLayout_12">
               <property name="leftMargin">
                <number>0</number>
@@ -403,7 +403,7 @@
                  <string>Reset all choices made in dialogs.</string>
                 </property>
                 <property name="text">
-                 <string>Reset Dialog Choices</string>
+                 <string>Reset dialog choices</string>
                 </property>
                </widget>
               </item>
@@ -416,7 +416,7 @@
                  <string>Modify the categories available to arrange your mods.</string>
                 </property>
                 <property name="text">
-                 <string>Configure Mod Categories</string>
+                 <string>Configure mod categories</string>
                 </property>
                </widget>
               </item>
@@ -613,7 +613,7 @@
        <string/>
       </property>
       <attribute name="title">
-       <string>Mod List</string>
+       <string>Mod list</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
@@ -1004,10 +1004,10 @@ If you disable this feature, MO will only display official DLCs this way. Please
             <item row="9" column="1" colspan="2">
              <widget class="QCheckBox" name="collapsibleSeparatorsPerProfileBox">
               <property name="toolTip">
-               <string>Do not share the collapse/expanded state of separators between profiles.</string>
+               <string>Do not share the collapsed/expanded state of separators between profiles.</string>
               </property>
               <property name="whatsThis">
-               <string>Do not share the collapse/expanded state of separators between profiles.</string>
+               <string>Do not share the collapsed/expanded state of separators between profiles.</string>
               </property>
               <property name="text">
                <string>Keep separator collapse state per profile</string>
@@ -1219,14 +1219,14 @@ If you disable this feature, MO will only display official DLCs this way. Please
          <item row="0" column="0">
           <widget class="QLabel" name="label_25">
            <property name="text">
-            <string>Base Directory</string>
+            <string>Base directory</string>
            </property>
           </widget>
          </item>
          <item row="9" column="0" colspan="3">
           <widget class="QLabel" name="label_26">
            <property name="text">
-            <string>Use %BASE_DIR% to refer to the Base Directory.</string>
+            <string>Use %BASE_DIR% to refer to the base directory.</string>
            </property>
           </widget>
          </item>
@@ -1467,7 +1467,7 @@ If you disable this feature, MO will only display official DLCs this way. Please
                      <string>Open the dialog to enter and validate a Nexus API key.</string>
                    </property>
                    <property name="text">
-                    <string>Enter API Key Manually</string>
+                    <string>Enter API key manually</string>
                    </property>
                   </widget>
                  </item>
@@ -2074,23 +2074,6 @@ If you disable this feature, MO will only display official DLCs this way. Please
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="QLabel" name="workaroundPageTitle">
-         <property name="text">
-          <string>Compatibility and advanced options</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="workaroundPageSubtitle">
-         <property name="text">
-          <string>Optional compatibility, network, and maintenance controls. Change these only when needed; hover over an option for details.</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QScrollArea" name="workaroundScrollArea">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
@@ -2113,473 +2096,498 @@ If you disable this feature, MO will only display official DLCs this way. Please
           <property name="autoFillBackground">
            <bool>false</bool>
           </property>
-          <layout class="QGridLayout" name="workaroundsLayout">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item row="0" column="0">
-            <widget class="QGroupBox" name="workaroundsOptionsBox">
-             <property name="title">
-              <string>MO2 behavior and archive handling</string>
+          <layout class="QVBoxLayout" name="workaroundContentLayout">
+           <property name="leftMargin"><number>0</number></property>
+           <property name="topMargin"><number>0</number></property>
+           <property name="rightMargin"><number>0</number></property>
+           <property name="bottomMargin"><number>0</number></property>
+             <item>
+              <widget class="QLabel" name="workaroundPageTitle">
+               <property name="text">
+                <string>Compatibility and advanced options</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="workaroundPageSubtitle">
+               <property name="text">
+                <string>Optional compatibility, network, and maintenance controls. Change these only when needed; hover over an option for details.</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+           <item>
+              <layout class="QGridLayout" name="workaroundsLayout">
+             <property name="leftMargin">
+              <number>0</number>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_23">
-              <property name="leftMargin">
-               <number>9</number>
-              </property>
-              <property name="topMargin">
-               <number>9</number>
-              </property>
-              <property name="rightMargin">
-               <number>9</number>
-              </property>
-              <property name="bottomMargin">
-               <number>9</number>
+             <property name="topMargin">
+              <number>0</number>
              </property>
-              <item>
-               <widget class="QLabel" name="workaroundsBehaviorDescription">
-                <property name="text">
-                 <string>Adjust how MO2 treats core game files, archives, and the interface while an executable runs.</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="forceEnableBox">
-                <property name="toolTip">
-                 <string>Prevent core game files such as plugins and archives from being disabled in the UI. Disable this only for total conversions; required game files may otherwise be missing.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Prevent core game files from being disabled in the UI. For a total conversion, you may need to disable this option, but the game can fail to start if required files are not enabled.</string>
-                </property>
-                <property name="text">
-                 <string>Keep core game files enabled</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="enableArchiveParsingBox">
-                <property name="toolTip">
-                 <string>Inspect archive contents to calculate file conflicts. This experimental scan can slow down conflict checks and may report incorrect results; it does not load archives into the game.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Archive parsing compares files inside supported archives with other files to display conflicts. It has a performance cost and does not extract or load archives into the game.</string>
-                </property>
-                <property name="text">
-                 <string>Check archive contents for conflicts (experimental)</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="lockGUIBox">
-                <property name="toolTip">
-                 <string>Keep MO2's interface locked while a launched executable is running. Disabling the lock can cause abnormal behavior.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Keep the MO2 interface unavailable while a launched executable runs. Disabling the lock can cause abnormal behavior.</string>
-                </property>
-                <property name="text">
-                 <string>Keep MO2 locked while a program runs</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QGroupBox" name="steamSettingsGroup">
-             <property name="title">
-              <string>Steam launch settings</string>
+             <property name="rightMargin">
+              <number>0</number>
              </property>
-             <layout class="QGridLayout" name="gridLayout_7">
-              <item row="0" column="0" colspan="4">
-               <widget class="QLabel" name="steamSettingsDescription">
-                <property name="text">
-                 <string>Set an App ID override or optional Steam login details when a game's launch setup requires them.</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1" colspan="3">
-               <widget class="QLineEdit" name="steamUserEdit">
-                <property name="toolTip">
-                 <string>Optional Steam username for launch configurations that use MO2's Steam login settings.</string>
-                </property>
-                <property name="placeholderText">
-                 <string>Optional</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1" colspan="3">
-               <widget class="QLineEdit" name="steamPassEdit">
-                <property name="toolTip">
-                 <string>Optional Steam password. It remains masked while entered.</string>
-                </property>
-                <property name="echoMode">
-                 <enum>QLineEdit::Password</enum>
-                </property>
-                <property name="placeholderText">
-                 <string>Optional</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_19">
-                <property name="text">
-                 <string>Steam username</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_20">
-                <property name="text">
-                 <string>Steam password</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>App ID override</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1" colspan="3">
-               <widget class="QLineEdit" name="appIDEdit">
-                <property name="toolTip">
-                 <string>Optional override for direct Steam launch. Leave empty to use the game's default Steam App ID.</string>
-                </property>
-                <property name="placeholderText">
-                 <string>Leave empty to use the game default</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Leave empty to use the Steam App ID supplied by the selected game plugin. Enter an override only when the game uses a different launch entry.</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="0" column="1">
-           <widget class="QGroupBox" name="networkSettingsGroup">
-             <property name="title">
-              <string>Network and browser</string>
+             <property name="bottomMargin">
+              <number>0</number>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_22">
-              <item>
-               <widget class="QLabel" name="networkSettingsDescription">
-                <property name="text">
-                 <string>Set MO2's connection mode, proxy, and browser used for web links.</string>
+             <item row="0" column="0">
+              <widget class="QGroupBox" name="workaroundsOptionsBox">
+               <property name="title">
+                <string>MO2 behavior and archive handling</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_23">
+                <property name="leftMargin">
+                 <number>9</number>
                 </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
+                <property name="topMargin">
+                 <number>9</number>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="offlineBox">
-                <property name="toolTip">
-                 <string>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</string>
+                <property name="rightMargin">
+                 <number>9</number>
                 </property>
-                <property name="statusTip">
-                 <string>Disable automatic internet features</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</string>
-                </property>
-                <property name="text">
-                 <string>Use offline mode</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="proxyBox">
-                <property name="toolTip">
-                 <string>Use the system-wide HTTP proxy for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</string>
-                </property>
-                <property name="statusTip">
-                 <string>Use a proxy for network connections.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Use the system-wide proxy settings for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</string>
-                </property>
-                <property name="text">
-                 <string>Use system HTTP proxy</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QWidget" name="customBrowserRow">
-                <layout class="QVBoxLayout" name="customBrowserLayout">
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QCheckBox" name="useCustomBrowser">
-                   <property name="toolTip">
-                    <string>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</string>
+                <property name="bottomMargin">
+                 <number>9</number>
+               </property>
+                <item>
+                 <widget class="QLabel" name="workaroundsBehaviorDescription">
+                  <property name="text">
+                   <string>Adjust how MO2 treats core game files, archives, and the interface while an executable runs.</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="forceEnableBox">
+                  <property name="toolTip">
+                   <string>Prevent core game files such as plugins and archives from being disabled in the UI. Disable this only for total conversions; required game files may otherwise be missing.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Prevent core game files from being disabled in the UI. For a total conversion, you may need to disable this option, but the game can fail to start if required files are not enabled.</string>
+                  </property>
+                  <property name="text">
+                   <string>Keep core game files enabled</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="enableArchiveParsingBox">
+                  <property name="toolTip">
+                   <string>Inspect archive contents to calculate file conflicts. This experimental scan can slow down conflict checks and may report incorrect results; it does not load archives into the game.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Archive parsing compares files inside supported archives with other files to display conflicts. It has a performance cost and does not extract or load archives into the game.</string>
+                  </property>
+                  <property name="text">
+                   <string>Check archive contents for conflicts (experimental)</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="lockGUIBox">
+                  <property name="toolTip">
+                   <string>Keep MO2's interface locked while a launched executable is running. Disabling the lock can cause abnormal behavior.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Keep the MO2 interface unavailable while a launched executable runs. Disabling the lock can cause abnormal behavior.</string>
+                  </property>
+                  <property name="text">
+                   <string>Keep MO2 locked while a program runs</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QGroupBox" name="steamSettingsGroup">
+               <property name="title">
+                <string>Steam launch settings</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_7">
+                <item row="0" column="0" colspan="4">
+                 <widget class="QLabel" name="steamSettingsDescription">
+                  <property name="text">
+                   <string>Set an App ID override or optional Steam login details when a game's launch setup requires them.</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1" colspan="3">
+                 <widget class="QLineEdit" name="steamUserEdit">
+                  <property name="toolTip">
+                   <string>Optional Steam username for launch configurations that use MO2's Steam login settings.</string>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Optional</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1" colspan="3">
+                 <widget class="QLineEdit" name="steamPassEdit">
+                  <property name="toolTip">
+                   <string>Optional Steam password. It remains masked while entered.</string>
+                  </property>
+                  <property name="echoMode">
+                   <enum>QLineEdit::Password</enum>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Optional</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_19">
+                  <property name="text">
+                   <string>Steam username</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_20">
+                  <property name="text">
+                   <string>Steam password</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_4">
+                  <property name="text">
+                   <string>App ID override</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="3">
+                 <widget class="QLineEdit" name="appIDEdit">
+                  <property name="toolTip">
+                   <string>Optional override for direct Steam launch. Leave empty to use the game's default Steam App ID.</string>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Leave empty to use the game default</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Leave empty to use the Steam App ID supplied by the selected game plugin. Enter an override only when the game uses a different launch entry.</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="0" column="1">
+             <widget class="QGroupBox" name="networkSettingsGroup">
+               <property name="title">
+                <string>Network and browser</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_22">
+                <item>
+                 <widget class="QLabel" name="networkSettingsDescription">
+                  <property name="text">
+                   <string>Set MO2's connection mode, proxy, and browser used for web links.</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="offlineBox">
+                  <property name="toolTip">
+                   <string>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</string>
+                  </property>
+                  <property name="statusTip">
+                   <string>Disable automatic internet features</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</string>
+                  </property>
+                  <property name="text">
+                   <string>Use offline mode</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="proxyBox">
+                  <property name="toolTip">
+                   <string>Use the system-wide HTTP proxy for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</string>
+                  </property>
+                  <property name="statusTip">
+                   <string>Use a proxy for network connections.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Use the system-wide proxy settings for MO2 network connections. Some systems may start more slowly when a proxy is enabled.</string>
+                  </property>
+                  <property name="text">
+                   <string>Use system HTTP proxy</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QWidget" name="customBrowserRow">
+                  <layout class="QVBoxLayout" name="customBrowserLayout">
+                   <property name="leftMargin">
+                    <number>0</number>
                    </property>
-                   <property name="statusTip">
-                    <string>Use %1 as the URL placeholder in the browser command.</string>
+                   <property name="topMargin">
+                    <number>0</number>
                    </property>
-                   <property name="whatsThis">
-                    <string>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</string>
+                   <property name="rightMargin">
+                    <number>0</number>
                    </property>
-                   <property name="text">
-                    <string>Use custom browser</string>
+                   <property name="bottomMargin">
+                    <number>0</number>
                    </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QWidget" name="browserCommandRow">
-                   <layout class="QHBoxLayout" name="browserCommandLayout">
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QLineEdit" name="browserCommand">
-                      <property name="toolTip">
-                       <string>Browser command with %1 in place of the target URL.</string>
+                   <item>
+                    <widget class="QCheckBox" name="useCustomBrowser">
+                     <property name="toolTip">
+                      <string>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</string>
+                     </property>
+                     <property name="statusTip">
+                      <string>Use %1 as the URL placeholder in the browser command.</string>
+                     </property>
+                     <property name="whatsThis">
+                      <string>Use a custom browser for MO2 web links. Put %1 where the URL should appear in the command.</string>
+                     </property>
+                     <property name="text">
+                      <string>Use custom browser</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QWidget" name="browserCommandRow">
+                     <layout class="QHBoxLayout" name="browserCommandLayout">
+                      <property name="leftMargin">
+                       <number>0</number>
                       </property>
-                      <property name="statusTip">
-                       <string>Use %1 as the URL placeholder in the browser command.</string>
+                      <property name="topMargin">
+                       <number>0</number>
                       </property>
-                      <property name="whatsThis">
-                       <string>Browser command with %1 in place of the target URL.</string>
+                      <property name="rightMargin">
+                       <number>0</number>
                       </property>
-                      <property name="placeholderText">
-                       <string>Browser command (%1 = URL)</string>
+                      <property name="bottomMargin">
+                       <number>0</number>
                       </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="browseCustomBrowser">
-                      <property name="text">
-                       <string>Browse</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-           </widget>
-           </item>
-           <item row="2" column="0" colspan="2">
-            <widget class="QGroupBox" name="maintenanceActionsGroup">
-             <property name="title">
-              <string>Maintenance tools</string>
-             </property>
-             <layout class="QVBoxLayout" name="maintenanceToolsLayout">
-              <item>
-               <widget class="QLabel" name="maintenanceToolsDescription">
-                <property name="text">
-                 <string>Run occasional repair actions for MO2 windows or supported game archives.</string>
+                      <item>
+                       <widget class="QLineEdit" name="browserCommand">
+                        <property name="toolTip">
+                         <string>Browser command with %1 in place of the target URL.</string>
+                        </property>
+                        <property name="statusTip">
+                         <string>Use %1 as the URL placeholder in the browser command.</string>
+                        </property>
+                        <property name="whatsThis">
+                         <string>Browser command with %1 in place of the target URL.</string>
+                        </property>
+                        <property name="placeholderText">
+                         <string>Browser command (%1 = URL)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="browseCustomBrowser">
+                        <property name="text">
+                         <string>Browse</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+             </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QGroupBox" name="maintenanceActionsGroup">
+               <property name="title">
+                <string>Maintenance tools</string>
+               </property>
+               <layout class="QVBoxLayout" name="maintenanceToolsLayout">
+                <item>
+                 <widget class="QLabel" name="maintenanceToolsDescription">
+                  <property name="text">
+                   <string>Run occasional repair actions for MO2 windows or supported game archives.</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QWidget" name="maintenanceActionsRow">
+                  <layout class="QHBoxLayout" name="maintenanceActionsLayout">
+                <property name="leftMargin">
+                 <number>0</number>
                 </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
+                <property name="topMargin">
+                 <number>0</number>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QWidget" name="maintenanceActionsRow">
-                <layout class="QHBoxLayout" name="maintenanceActionsLayout">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QPushButton" name="resetGeometryBtn">
-                <property name="toolTip">
-                 <string>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</string>
+                <property name="rightMargin">
+                 <number>0</number>
                 </property>
-                <property name="whatsThis">
-                 <string>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</string>
+                <property name="bottomMargin">
+                 <number>0</number>
                 </property>
-                <property name="text">
-                 <string>Reset window geometry</string>
+                <item>
+                 <widget class="QPushButton" name="resetGeometryBtn">
+                  <property name="toolTip">
+                   <string>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Restore default sizes and positions for MO2 windows and columns. MO2 will restart to apply the reset.</string>
+                  </property>
+                  <property name="text">
+                   <string>Reset window geometry</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="bsaDateBtn">
+                  <property name="toolTip">
+                   <string>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</string>
+                  </property>
+                  <property name="text">
+                   <string>Back-date BSA archives</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="maintenanceHorizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QGroupBox" name="virtualFilesystemGroup">
+               <property name="title">
+                <string>Virtual file system exclusions</string>
+               </property>
+               <layout class="QVBoxLayout" name="virtualFilesystemLayout">
+                <item>
+                 <widget class="QLabel" name="virtualFilesystemDescription">
+                  <property name="text">
+                   <string>Exclude specific programs, file endings, or folders from MO2's virtual file system.</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QWidget" name="virtualFilesystemActionsRow">
+                  <layout class="QHBoxLayout" name="virtualFilesystemActionsLayout">
+                <property name="leftMargin">
+                 <number>0</number>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="bsaDateBtn">
-                <property name="toolTip">
-                 <string>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</string>
+                <property name="topMargin">
+                 <number>0</number>
                 </property>
-                <property name="whatsThis">
-                 <string>For Skyrim, back-dating archives can replace Archive Invalidation. This is not a sufficient replacement for Archive Invalidation in other games.</string>
+                <property name="rightMargin">
+                 <number>0</number>
                 </property>
-                <property name="text">
-                 <string>Back-date BSA archives</string>
+                <property name="bottomMargin">
+                 <number>0</number>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="maintenanceHorizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QGroupBox" name="virtualFilesystemGroup">
-             <property name="title">
-              <string>Virtual file system exclusions</string>
-             </property>
-             <layout class="QVBoxLayout" name="virtualFilesystemLayout">
-              <item>
-               <widget class="QLabel" name="virtualFilesystemDescription">
-                <property name="text">
-                 <string>Exclude specific programs, file endings, or folders from MO2's virtual file system.</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QWidget" name="virtualFilesystemActionsRow">
-                <layout class="QHBoxLayout" name="virtualFilesystemActionsLayout">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QPushButton" name="execBlacklistBtn">
-                <property name="toolTip">
-                 <string>Edit the executables that must not see MO2's virtual files. Use this to keep unrelated programs from being hooked.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Executables on this list and programs they start cannot access MO2's virtual files.</string>
-                </property>
-                <property name="text">
-                 <string>Executables</string>
-                </property>
-                <property name="autoDefault">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="skipFileSuffixBtn">
-                <property name="toolTip">
-                 <string>Edit filename endings that MO2 should skip in the virtual file system. A suffix is the end of a filename, not necessarily its extension.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Files whose names end with a listed suffix are skipped by the virtual file system.</string>
-                </property>
-                <property name="text">
-                 <string>File suffixes</string>
-                </property>
-                <property name="autoDefault">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="skipDirectoriesBtn">
-                <property name="toolTip">
-                 <string>Edit directories that MO2 should skip in the virtual file system.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Directories on this list are skipped by the virtual file system.</string>
-                </property>
-                <property name="text">
-                 <string>Directories</string>
-                </property>
-                <property name="autoDefault">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="virtualFilesystemHorizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
+                <item>
+                 <widget class="QPushButton" name="execBlacklistBtn">
+                  <property name="toolTip">
+                   <string>Edit the executables that must not see MO2's virtual files. Use this to keep unrelated programs from being hooked.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Executables on this list and programs they start cannot access MO2's virtual files.</string>
+                  </property>
+                  <property name="text">
+                   <string>Executables</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="skipFileSuffixBtn">
+                  <property name="toolTip">
+                   <string>Edit filename endings that MO2 should skip in the virtual file system. A suffix is the end of a filename, not necessarily its extension.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Files whose names end with a listed suffix are skipped by the virtual file system.</string>
+                  </property>
+                  <property name="text">
+                   <string>File suffixes</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="skipDirectoriesBtn">
+                  <property name="toolTip">
+                   <string>Edit directories that MO2 should skip in the virtual file system.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Directories on this list are skipped by the virtual file system.</string>
+                  </property>
+                  <property name="text">
+                   <string>Directories</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="virtualFilesystemHorizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>

@@ -9180,7 +9180,7 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <translation>Mit Nexus verbinden</translation>
     </message>
     <message>
-      <source>Enter API Key Manually</source>
+      <source>Enter API key manually</source>
       <translation>API-Schlüssel manuell eingeben</translation>
     </message>
     <message>
@@ -9871,6 +9871,26 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;Wenn du das Plugin &apos;%1&apos; deaktivierst, werden auch die folgenden Plugins deaktiviert:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Möchtest du fortfahren?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Enter one executable per line to be blacklisted from the virtual file system.
+Mods and other virtualized files will not be visible to these executables and
+any executables launched by them.
+
+Example:
+  Chrome.exe
+  Firefox.exe</source>
+      <translation>Geben Sie eine ausführbare Datei pro Zeile ein, die aus dem virtuellen Dateisystem auf die schwarze Liste gesetzt werden soll.
+Mods und andere virtualisierte Dateien sind für diese ausführbaren Dateien nicht sichtbar und
+alle von ihnen gestarteten ausführbaren Dateien.
+
+Beispiel:
+Chrome.exe
+Firefox.exe</translation>
+    </message>
+    <message>
+      <source>Window sizes and positions will be reset to their defaults.</source>
+      <translation>Fenstergrößen und -positionen werden auf ihre Standardwerte zurückgesetzt.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -10099,7 +10119,7 @@ Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für de
       <translation>Mit Nexus verbinden</translation>
     </message>
     <message>
-      <source>Enter API Key Manually</source>
+      <source>Enter API key manually</source>
       <translation>API-Schlüssel manuell eingeben</translation>
     </message>
     <message>
@@ -10129,7 +10149,7 @@ Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für de
 %1</translation>
     </message>
     <message>
-      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, also when you start them. Links still open in your browser.</source>
+      <source>Turn off what MO2 asks Nexus: update checks, endorsements and tracking don't run, not even when you start them. Links still open in your browser.</source>
       <translation>Schaltet aus, was MO2 bei Nexus anfragt: Update-Prüfungen, Empfehlungen und Tracking laufen nicht, auch wenn du sie selbst startest. Links öffnen sich weiterhin im Browser.</translation>
     </message>
     <message>
@@ -10827,6 +10847,42 @@ Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für de
     <message>
       <source>Developer</source>
       <translation>Entwickler</translation>
+    </message>
+    <message>
+      <source>Download list</source>
+      <translation>Download Liste</translation>
+    </message>
+    <message>
+      <source>Profile defaults</source>
+      <translation>Profil-Standardeinstellungen</translation>
+    </message>
+    <message>
+      <source>Local saves</source>
+      <translation>Lokale Spielstände</translation>
+    </message>
+    <message>
+      <source>Automatic archive invalidation</source>
+      <translation>Automatische Archiv Invalidierung</translation>
+    </message>
+    <message>
+      <source>Reset dialog choices</source>
+      <translation>Dialogoptionen zurücksetzen</translation>
+    </message>
+    <message>
+      <source>Configure mod categories</source>
+      <translation>Mod Kategorien anpassen</translation>
+    </message>
+    <message>
+      <source>Mod list</source>
+      <translation>Mod Liste</translation>
+    </message>
+    <message>
+      <source>Use %BASE_DIR% to refer to the base directory.</source>
+      <translation>Verwenden Sie %BASE_DIR%, um auf das Basisverzeichnis zu verweisen.</translation>
+    </message>
+    <message>
+      <source>Do not share the collapsed/expanded state of separators between profiles.</source>
+      <translation>Teile nicht den Zustand der Eingeklappten/Ausgeklappten Trenner mit anderen Profilen</translation>
     </message>
   </context>
   <context>
