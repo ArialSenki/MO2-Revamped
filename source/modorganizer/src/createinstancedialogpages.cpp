@@ -659,9 +659,9 @@ TypePage::TypePage(CreateInstanceDialog& dlg)
       InstanceManager::singleton().isEldenRingOnlyPortableMode();
 
   ui->portableExistsLabel->setVisible(false);
-  setChoiceIcon(ui->createGlobal, choiceIcon(HomeGlyph, 22), 22);
-  setChoiceIcon(ui->createPortable, choiceIcon(DriveGlyph, 22), 22);
-  setChoiceIcon(ui->createIsolated, choiceIcon(LockGlyph, 22), 22);
+  setChoiceIcon(ui->createGlobal, choiceIcon(HomeGlyph), 16);
+  setChoiceIcon(ui->createPortable, choiceIcon(DriveGlyph), 16);
+  setChoiceIcon(ui->createIsolated, choiceIcon(LockGlyph), 16);
 
   // each kind with the folder it goes to and the instances already there
   {
@@ -1175,7 +1175,7 @@ GamePage::Game* GamePage::findGame(IPluginGame* game)
 
 void GamePage::createGameButton(Game* g)
 {
-  g->button = new QCommandLinkButton;
+  g->button = new WizardChoiceButton(QString(), QString(), nullptr);
   g->button->setObjectName(QStringLiteral("gameChoice"));
   g->button->setProperty("fluentKeepIcon", true);
   g->button->setCheckable(true);
@@ -1619,7 +1619,7 @@ void VariantsPage::fillList()
 
   // for each variant, create a checkable button and add it
   for (auto& v : g->gameVariants()) {
-    auto* b = new QCommandLinkButton(v);
+    auto* b = new WizardChoiceButton(v, QString(), nullptr);
     b->setCheckable(true);
     b->setAutoDefault(false);
     b->setObjectName(QStringLiteral("editionChoice"));

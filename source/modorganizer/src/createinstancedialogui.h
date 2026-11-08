@@ -10,11 +10,12 @@
 // because the pages and the Elden Ring plugin look them up by name ("pages",
 // "games", "profileSavesCheckbox"...).
 
+#include <QColor>
+#include <QCommandLinkButton>
 #include <QString>
 
 class QCheckBox;
 class QComboBox;
-class QCommandLinkButton;
 class QDialog;
 class QDialogButtonBox;
 class QLabel;
@@ -28,6 +29,22 @@ class QTextEdit;
 class QToolButton;
 class QVBoxLayout;
 class QWidget;
+
+// a selectable row of the wizard whose description is in the secondary text
+// colour (descriptionColor is set by the theme)
+class WizardChoiceButton : public QCommandLinkButton
+{
+  Q_OBJECT
+  Q_PROPERTY(QColor descriptionColor MEMBER m_descriptionColor)
+public:
+  WizardChoiceButton(const QString& text, const QString& description, QWidget* parent);
+
+protected:
+  void paintEvent(QPaintEvent* event) override;
+
+private:
+  QColor m_descriptionColor;
+};
 
 namespace Ui
 {
