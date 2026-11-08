@@ -1314,9 +1314,10 @@ QWidget* CategoriesDialog::createFluentDetails()
     QString text = edited;
     if (text.contains(QLatin1Char('|'))) {
       const int cursor = m_fluentNameEdit->cursorPosition();
+      const int before = text.left(cursor).count(QLatin1Char('|'));
       text.remove(QLatin1Char('|'));
       m_fluentNameEdit->setText(text);
-      m_fluentNameEdit->setCursorPosition(qMin(cursor, text.size()));
+      m_fluentNameEdit->setCursorPosition(cursor - before);
     }
     const int row = rowForID(selectedID());
     if (row >= 0 && ui->categoriesTable->item(row, 1) != nullptr) {

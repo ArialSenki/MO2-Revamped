@@ -221,7 +221,12 @@ LogList::LogList(QWidget* parent)
   connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [this](int value) {
     m_atEnd = value >= verticalScrollBar()->maximum() - 2;
   });
-  connect(verticalScrollBar(), &QScrollBar::rangeChanged, this, [this] {
+  connect(verticalScrollBar(), &QScrollBar::rangeChanged, this, [this](int, int max) {
+    // emptied or enlarged, the list can end up at its last line without the
+    // scroll bar moving; a range that grows never clears this
+    if (verticalScrollBar()->value() >= max - 2) {
+      m_atEnd = true;
+    }
     if (m_atEnd) {
       m_timer.start(std::chrono::milliseconds(10));
     }

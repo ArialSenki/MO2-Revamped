@@ -49,7 +49,8 @@ using namespace MOBase;
 
 namespace
 {
-// the search filters as you type: Enter in it must not press a dialog button
+// the search filters as you type, and the tree has no use for Enter: it must
+// not press a dialog button
 class SwallowEnter : public QObject
 {
 public:
@@ -237,6 +238,8 @@ void OverwriteInfoDialog::buildFluentLayout()
   search->setClearButtonEnabled(true);
   search->setMaximumWidth(320);
   new SwallowEnter(search);
+  // the same in the tree, which ignores Enter and would pass it to a button
+  new SwallowEnter(ui->filesView);
   toolsLayout->addWidget(search, 1);
   auto* expand = FluentPanels::iconButton(0xF164, tr("Expand all"), tools);
   auto* collapse = FluentPanels::iconButton(0xF165, tr("Collapse all"), tools);

@@ -654,6 +654,10 @@ private:
       return;
     }
     for (auto* view : m_Dock->widget()->findChildren<QAbstractItemView*>()) {
+      // keys must not keep going to a list that was folded away
+      if (!focusable && view->hasFocus()) {
+        m_Chevron->setFocus();
+      }
       view->setFocusPolicy(focusable ? Qt::StrongFocus : Qt::NoFocus);
     }
   }
