@@ -543,7 +543,13 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
   {
     std::map<int, bool> opened;   // the boxes when the menu opened
     std::map<int, bool> applied;  // the boxes as last applied
-    std::vector<std::pair<ModInfo::Ptr, std::set<int>>> mods;
+    struct Mod
+    {
+      ModInfo::Ptr info;
+      std::set<int> categories;
+      int primary;
+    };
+    std::vector<Mod> mods;
   };
   auto snapshot = std::make_shared<Snapshot>();
   for (const auto& [id, enabled] : categoriesMenu->categories()) {
@@ -558,7 +564,7 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
     const QVariant modIndex = idx.data(ModList::IndexRole);
     if (modIndex.isValid()) {
       ModInfo::Ptr info = ModInfo::getByIndex(modIndex.toInt());
-      snapshot->mods.emplace_back(info, info->getCategories());
+      snapshot->mods.push_back({info, info->getCategories(), info->primaryCategory()});
     }
   }
   connect(categoriesMenu, &QMenu::aboutToHide, [=]() {
@@ -570,13 +576,25 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
       snapshot->applied[id] = enabled;
       changed               = true;
       const bool fromOpened = snapshot->opened[id] != enabled;
-      for (const auto& [info, categories] : snapshot->mods) {
-        info->setCategory(id, fromOpened ? enabled : categories.count(id) > 0);
+      for (const auto& m : snapshot->mods) {
+        m.info->setCategory(id, fromOpened ? enabled : m.categories.count(id) > 0);
       }
     }
     if (changed) {
+      // unticking a primary category moves the primary to another one; a mod
+      // whose categories are back as they were gets its primary back too
+      for (const auto& m : snapshot->mods) {
+        if (m.info->getCategories() == m.categories &&
+            m.info->primaryCategory() != m.primary && m.categories.count(m.primary) > 0) {
+          m.info->setPrimaryCategory(m.primary);
+        }
+      }
       // nothing left to change: this refreshes the rows and the selection
       m_actions.setCategories(m_selected, m_index, {});
+      // the clicked row, when it is not part of the selection
+      if (!m_selected.contains(m_index) && m_index.data(ModList::IndexRole).isValid()) {
+        m_core.modList()->notifyChange(m_index.data(ModList::IndexRole).toInt());
+      }
     }
   });
   addMenu(categoriesMenu);
