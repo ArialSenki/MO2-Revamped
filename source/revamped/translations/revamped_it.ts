@@ -11566,6 +11566,10 @@ Avviarlo comunque?</translation>
       <source>Full path</source>
       <translation>Percorso completo</translation>
     </message>
+    <message>
+      <source>Failed to create &quot;%1&quot;</source>
+      <translation>Impossibile creare &quot;%1&quot;</translation>
+    </message>
   </context>
   <context>
     <name>LogList</name>

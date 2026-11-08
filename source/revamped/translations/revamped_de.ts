@@ -7129,6 +7129,26 @@ Fehler: %1</translation>
       <source>Activating network proxy</source>
       <translation>Netzwerk-Proxy wird aktiviert</translation>
     </message>
+    <message>
+      <source>&amp;Import Nexus categories</source>
+      <translation>Nexus-Kategorien &amp;importieren</translation>
+    </message>
+    <message>
+      <source>Use &amp;old category defaults</source>
+      <translation>&amp;Alte Standardkategorien verwenden</translation>
+    </message>
+    <message>
+      <source>Do &amp;nothing</source>
+      <translation>&amp;Nichts tun</translation>
+    </message>
+    <message>
+      <source>&amp;Open categories dialog</source>
+      <translation>Kategorien-&amp;Editor öffnen</translation>
+    </message>
+    <message>
+      <source>&amp;Disable Nexus mappings</source>
+      <translation>Nexus-Zuordnungen &amp;deaktivieren</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8314,6 +8334,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
     <message>
       <source>You are not currently authenticated with Nexus. Please do so under Settings &gt; Nexus.</source>
       <translation>Du bist derzeit nicht bei Nexus angemeldet. Melde dich unter Einstellungen &gt; Nexus an.</translation>
+    </message>
+    <message>
+      <source>Failed to display overwrite dialog: %1</source>
+      <translation>Das Overwrite-Fenster konnte nicht angezeigt werden: %1</translation>
     </message>
   </context>
   <context>

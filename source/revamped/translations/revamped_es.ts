@@ -7177,6 +7177,22 @@ Error: %1</translation>
       <source>Activating network proxy</source>
       <translation>Activando el proxy de red</translation>
     </message>
+    <message>
+      <source>&amp;Import Nexus categories</source>
+      <translation>&amp;Importar categorías de Nexus</translation>
+    </message>
+    <message>
+      <source>Do &amp;nothing</source>
+      <translation>&amp;No hacer nada</translation>
+    </message>
+    <message>
+      <source>&amp;Open categories dialog</source>
+      <translation>&amp;Abrir el editor de categorías</translation>
+    </message>
+    <message>
+      <source>&amp;Disable Nexus mappings</source>
+      <translation>&amp;Desactivar las asignaciones de Nexus</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>

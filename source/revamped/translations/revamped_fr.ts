@@ -10067,6 +10067,10 @@ Exemple :
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;Désactiver le plugin « %1 » désactivera aussi les plugins suivants :&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Voulez-vous continuer ?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Failed to create &quot;%1&quot;, you may not have the necessary permissions. Path remains unchanged.</source>
+      <translation>Impossible de créer &quot;%1&quot;, vous ne disposez peut-être pas de l&apos;autorisation nécessaire. Le chemin reste inchangé.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
