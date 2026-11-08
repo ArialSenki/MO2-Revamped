@@ -97,6 +97,9 @@ def _safe_qt_log(qt_function, level):
 qCritical = _safe_qt_log(qCritical, logging.CRITICAL)
 qInfo = _safe_qt_log(qInfo, logging.INFO)
 qWarning = _safe_qt_log(qWarning, logging.WARNING)
+# for code that shadows the names to collect its lines first
+_module_qinfo = qInfo
+_module_qwarning = qWarning
 
 
 def _with_true_case(path) -> str:
@@ -4903,7 +4906,32 @@ class EldenRingMo2Game(BasicGame):
         return route_index_by_source, installed_native_routes
 
     def _resolve_revamped_native_profile(self, profile) -> dict | None:
-        """Resolve Revamped's ordered native list against installed mod routes."""
+        """Resolve Revamped's ordered native list against installed mod routes.
+        MO2 asks for the forced loads on every refresh and a launch resolves the
+        profile several times: its log lines are written when they change."""
+        notes: list = []
+        try:
+            return self._read_revamped_native_profile(profile, notes)
+        finally:
+            self._log_when_changed("native_profile", notes)
+
+    def _log_when_changed(self, key: str, notes: list) -> None:
+        """Writes (log function, text) lines unless they are the ones last
+        written under this key."""
+        logged = self.__dict__.setdefault("_logged_notes", {})
+        if logged.get(key) == notes:
+            return
+        logged[key] = list(notes)
+        for log, text in notes:
+            log(text)
+
+    def _read_revamped_native_profile(self, profile, notes: list) -> dict | None:
+        def qInfo(text):  # noqa: N802 - collected for _log_when_changed
+            notes.append((_module_qinfo, text))
+
+        def qWarning(text):  # noqa: N802
+            notes.append((_module_qwarning, text))
+
         mo2_mod_name = ""
         try:
             profile_root = Path(profile.absolutePath()).resolve()
@@ -5369,8 +5397,12 @@ class EldenRingMo2Game(BasicGame):
                 "declared_names": set(),
             }
 
-    def _apply_revamped_native_load_order(self, libraries: list[Path], profile_data: dict) -> list[Path]:
-        """Apply the Revamped profile's declared native DLL order."""
+    def _apply_revamped_native_load_order(
+        self, libraries: list[Path], profile_data: dict, notes: list | None = None
+    ) -> list[Path]:
+        """Apply the Revamped profile's declared native DLL order. With notes,
+        its log lines join the forced loads' summary instead."""
+        note = notes.append if notes is not None else _module_qinfo
         scope_root = profile_data.get("scope_root")
         declared_libraries = profile_data.get("declared_libraries", set())
         disabled_libraries = profile_data.get("disabled_libraries", set())
@@ -5420,7 +5452,7 @@ class EldenRingMo2Game(BasicGame):
                     active_mods[owner].casefold(),
                     library_path.name.casefold(),
                 ) in disabled_libraries:
-                    qInfo(
+                    note(
                         f"Elden Ring MO2: not loading '{library_path.name}' from "
                         f"'{active_mods[owner]}'; it is switched off in the native profile."
                     )
@@ -5439,7 +5471,7 @@ class EldenRingMo2Game(BasicGame):
         )
         ordered = [Path(entry["library"]) for entry in profile_data.get("entries", [])]
         for entry in profile_data.get("entries", []):
-            qInfo(
+            note(
                 f"Elden Ring MO2: Revamped native load order queued '{entry['route']}' "
                 f"as '{entry['virtual_path']}' from '{entry['mod_name']}'."
             )
@@ -6121,7 +6153,7 @@ class EldenRingMo2Game(BasicGame):
             and not revamped_native_profile.get("error")
         ):
             libraries = self._apply_revamped_native_load_order(
-                libraries, revamped_native_profile
+                libraries, revamped_native_profile, notes
             )
         root_layout_libraries = (
             self._active_root_layout_dlls(active_mods) if native_loading else []
@@ -6616,11 +6648,14 @@ class EldenRingMo2Game(BasicGame):
             and not native_profile.get("error")
             and (mod_name.casefold(), dll.name.casefold()) in native_profile.get("disabled_libraries", set())
         ):
-            qInfo(
+            # asked several times per launch and on every refresh
+            self._log_when_changed("seamless", [(
+                _module_qinfo,
                 f"Elden Ring MO2: not loading '{dll.name}' from '{mod_name}'; "
-                "it is switched off in the native profile."
-            )
+                "it is switched off in the native profile.",
+            )])
             return None
+        self._log_when_changed("seamless", [])
         return dll
 
     def _seamless_initializer(self) -> list[dict]:
