@@ -608,6 +608,13 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
                     .arg(QDir(profileDir).dirName()));
   }
 
+  // a change still waiting to be written goes to disk first: reloading the
+  // same profile reads its modlist.txt, and the old object would otherwise
+  // write it back after the new one has read the stale file
+  if (m_CurrentProfile != nullptr) {
+    m_CurrentProfile->writeModlistNow(true);
+  }
+
   // first: one that can't be read throws here, and the current one stays
   auto newProfile =
       std::make_unique<Profile>(QDir(profileDir), managedGame(), gameFeatures());
