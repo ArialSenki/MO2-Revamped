@@ -1514,18 +1514,14 @@ IPluginGame* GamePage::confirmOtherGame(const QString& path, IPluginGame* select
                        selectedGame->displayGameName()))
           .button({QObject::tr("Manage %1 instead").arg(guessedGame->displayGameName()),
                    QMessageBox::Ok})
-          .button({QObject::tr("Use this folder for %1")
-                       .arg(selectedGame->displayGameName()),
-                   QObject::tr("I know what I'm doing"), QMessageBox::Ignore})
+          // no "use this folder anyway": the selected game's plugin rejects the
+          // folder, so the instance would not open, as in confirmUnknown()
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
 
   switch (r) {
   case QMessageBox::Ok:
     return guessedGame;
-
-  case QMessageBox::Ignore:
-    return selectedGame;
 
   case QMessageBox::Cancel:
   default:
