@@ -4,7 +4,10 @@
 //! decrypts them on every start, which takes seconds. The first start keeps
 //! each decrypted header, compressed, in a cache; later starts hand the game
 //! that copy and skip the decryption. A cached copy is named by a hash of the
-//! encrypted file, so a game update simply makes new ones.
+//! encrypted file, so a game update simply makes new ones. Each copy is
+//! `[decrypted length: u32][xxh3 of the decrypted header: u64][deflate]`,
+//! written to a temporary file and renamed into place, so a damaged or half
+//! written copy is never handed to the game.
 //!
 //! me3 moves the mounted archives into its own file system; MO2 leaves them
 //! with the game, where they would have been without the cache.
@@ -12,8 +15,7 @@
 use std::{
     alloc::{GlobalAlloc, Layout},
     ffi::OsString,
-    fs::OpenOptions,
-    io::{Read, Write},
+    io::Write,
     mem,
     os::windows::ffi::{OsStrExt, OsStringExt},
     path::{Path, PathBuf},
@@ -74,11 +76,24 @@ fn device_manager() -> Option<NonNull<DlDeviceManager>> {
         .0
 }
 
+/// The cache files' extension; the first format, `.bhd.zz`, had no checksum.
+const CACHE_EXTENSION: &str = "bhd.zz2";
+const CACHE_HEADER: usize = 4 + 8;
+
 /// Where the decrypted headers are kept, beside MO2 Revamped's other data.
 fn cache_folder() -> Option<PathBuf> {
     let base = std::env::var_os("LOCALAPPDATA")?;
     let folder = Path::new(&base).join("MO2 Revamped").join("BootBoost");
     std::fs::create_dir_all(&folder).ok()?;
+    // copies in the first format and leftovers of an interrupted write
+    if let Ok(entries) = std::fs::read_dir(&folder) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
+            if name.ends_with(".bhd.zz") || name.ends_with(".tmp") {
+                let _ = std::fs::remove_file(entry.path());
+            }
+        }
+    }
     Some(folder)
 }
 
@@ -117,7 +132,7 @@ unsafe extern "C" fn mount_ebl_hook(
     };
     // a panic must not cross into the game: it would end the process
     let cached = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        load_cached(bhd_path, allocator, rsa_key, &mount)
+        load_cached(bhd_path, allocator, rsa_key, key_len, &mount)
     }));
     match cached {
         Ok(Ok(())) => true,
@@ -151,10 +166,14 @@ fn wide_len(path: *const u16) -> usize {
 }
 
 /// The RSA block size: the length of the modulus in the PKCS#1 public key.
-fn rsa_block_size(key: *const u8) -> Result<usize, String> {
-    let text = unsafe { std::ffi::CStr::from_ptr(key.cast()) }
-        .to_str()
-        .map_err(|_| "the key is not text")?;
+fn rsa_block_size(key: *const u8, key_len: usize) -> Result<usize, String> {
+    if key.is_null() || key_len == 0 {
+        return Err("no key".into());
+    }
+    // the game's length, which may count a terminating zero
+    let bytes = unsafe { slice::from_raw_parts(key, key_len) };
+    let bytes = bytes.split(|&byte| byte == 0).next().unwrap_or(bytes);
+    let text = std::str::from_utf8(bytes).map_err(|_| "the key is not text")?;
     let mut lines = text.lines();
     if lines.next() != Some("-----BEGIN RSA PUBLIC KEY-----") {
         return Err("malformed PEM".into());
@@ -249,6 +268,7 @@ fn load_cached(
     bhd_path: *const u16,
     allocator: DlStdAllocator,
     rsa_key: *const u8,
+    key_len: usize,
     mount: &dyn Fn(*const u16) -> bool,
 ) -> Result<(), String> {
     let manager = device_manager().ok_or("no device manager")?;
@@ -259,25 +279,17 @@ fn load_cached(
         let path = unsafe { slice::from_raw_parts(bhd_path, wide_len(bhd_path)) };
         OsString::from_wide(&guard.expand_path(path))
     };
-    let block_size = rsa_block_size(rsa_key)?;
+    let block_size = rsa_block_size(rsa_key, key_len)?;
     let original = std::fs::read(&disk_path)
         .map_err(|error| format!("{}: {error}", PathBuf::from(&disk_path).display()))?;
     let hash = xxh3::xxh3_128_with_seed(&original, 1);
-    let cached_path = cache.join(format!("{hash:032x}.bhd.zz"));
+    let cached_path = cache.join(format!("{hash:032x}.{CACHE_EXTENSION}"));
 
-    let mut cached = OpenOptions::new()
-        .create(true)
-        .read(true)
-        .write(true)
-        .truncate(false)
-        .open(&cached_path)
-        .map_err(|error| format!("cache file: {error}"))?;
-    let cached_len = {
-        let mut bytes = [0u8; 4];
-        cached.read_exact(&mut bytes).ok().map(|_| u32::from_le_bytes(bytes))
-    };
-
-    if let Some(cached_len) = cached_len {
+    // a copy too short for its own header counts as missing
+    let cached = std::fs::read(&cached_path).ok().filter(|bytes| bytes.len() > CACHE_HEADER);
+    if let Some(cached) = cached {
+        let cached_len = u32::from_le_bytes(cached[0..4].try_into().unwrap());
+        let checksum = u64::from_le_bytes(cached[4..12].try_into().unwrap());
         // the game mounts a one-block copy, which gives the device and the
         // decrypted size without decrypting the whole header
         let stub = std::env::temp_dir().join(format!("mo2-bootboost-{hash:032x}.bhd"));
@@ -286,31 +298,33 @@ fn load_cached(
         let stub_wide = wide_null(&stub);
         let taken = mount_and_take(manager, mount, stub_wide.as_ptr());
         let _ = std::fs::remove_file(&stub);
+        // from here, returning an error drops the stub's mount: the game
+        // then mounts the archive itself
         let (device, mounts) = taken?;
         let holder = unsafe { bhd_holder(device).as_mut() };
         let original_len = holder.bhd_header().map(Bhd5Header::file_size);
         if original_len != Some(cached_len) {
-            let _ = cached.set_len(0);
+            let _ = std::fs::remove_file(&cached_path);
             return Err("the cached header does not match; it is made again".into());
         }
-        let mut compressed = Vec::new();
-        cached
-            .read_to_end(&mut compressed)
-            .map_err(|error| format!("cache read: {error}"))?;
         let length = cached_len as usize;
+        let layout = unsafe { Layout::from_size_align_unchecked(length, 4096) };
         // the game's own allocator: the game frees it later
         let buffer = unsafe {
-            let pointer = allocator.alloc(Layout::from_size_align_unchecked(length, 4096));
+            let pointer = allocator.alloc(layout);
             if pointer.is_null() {
                 return Err("no memory for the cached header".into());
             }
             slice::from_raw_parts_mut(pointer, length)
         };
         let mut state = InflateState::new_boxed(DataFormat::Raw);
-        let result = inflate(&mut state, &compressed, buffer, MZFlush::Finish);
-        if result.status.is_err() || result.bytes_written != length {
-            let _ = cached.set_len(0);
-            unsafe { allocator.dealloc(buffer.as_mut_ptr(), Layout::from_size_align_unchecked(length, 4096)) };
+        let result = inflate(&mut state, &cached[CACHE_HEADER..], buffer, MZFlush::Finish);
+        if result.status.is_err()
+            || result.bytes_written != length
+            || xxh3::xxh3_64(buffer) != checksum
+        {
+            unsafe { allocator.dealloc(buffer.as_mut_ptr(), layout) };
+            let _ = std::fs::remove_file(&cached_path);
             return Err("the cached header is damaged; it is made again".into());
         }
         unsafe { holder.assign_bhd_contents(buffer.as_mut_ptr().cast()) };
@@ -319,21 +333,30 @@ fn load_cached(
     }
 
     // not cached yet: the game decrypts it, and the result is kept
-    let _ = cached.set_len(0);
     let (device, mounts) = mount_and_take(manager, mount, bhd_path)?;
-    // mounted the game's own way: it stays, whatever happens to the cache
+    // mounted the game's own way: it stays, whatever happens to the cache,
+    // and no error may follow, or the hook would mount it a second time
     keep(manager, &mounts);
-    let header = unsafe { bhd_holder(device).as_ref() }
-        .bhd_header()
-        .ok_or("the mounted archive has no header")?;
-    // mounted already: a failure to cache costs nothing more
-    let written = cached
-        .write_all(&header.file_size().to_le_bytes())
-        .and_then(|_| cached.write_all(&compress_to_vec(header.as_slice(), 7)))
-        .and_then(|_| cached.flush());
-    if written.is_err() {
-        let _ = std::fs::remove_file(&cached_path);
+    let Some(header) = (unsafe { bhd_holder(device).as_ref() }).bhd_header() else {
+        log::warn!("BootBoost: the mounted archive has no header; not cached");
+        return Ok(());
+    };
+    let contents = header.as_slice();
+    let mut file = Vec::with_capacity(CACHE_HEADER + contents.len() / 2);
+    file.extend_from_slice(&header.file_size().to_le_bytes());
+    file.extend_from_slice(&xxh3::xxh3_64(contents).to_le_bytes());
+    file.extend_from_slice(&compress_to_vec(contents, 7));
+    // a temporary name first: a copy cut short by a crash is never read
+    let temporary = cache.join(format!("{hash:032x}.{}.tmp", std::process::id()));
+    let written = std::fs::File::create(&temporary)
+        .and_then(|mut out| out.write_all(&file).and_then(|_| out.sync_all()))
+        .and_then(|_| std::fs::rename(&temporary, &cached_path));
+    match written {
+        Ok(()) => log::info!("BootBoost: cached {}", PathBuf::from(&disk_path).display()),
+        Err(error) => {
+            let _ = std::fs::remove_file(&temporary);
+            log::warn!("BootBoost: {} not cached: {error}", PathBuf::from(&disk_path).display());
+        }
     }
-    log::info!("BootBoost: cached {}", PathBuf::from(&disk_path).display());
     Ok(())
 }

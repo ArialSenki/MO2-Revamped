@@ -130,20 +130,22 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
         open_log();
         // a panic's message in the log, before it is caught or ends the game
         std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
-        log::info!("MO2 me3 compatibility 0.5.0 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
+        log::info!("MO2 me3 compatibility 0.5.1 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
         // me3's asset code reads the launched game from me3's launcher, as a
         // JSON string; under MO2 there is none, so it is set here from the
         // executable's name
+        let nightreign = std::env::current_exe()
+            .ok()
+            .and_then(|exe| exe.file_name().map(|name| name.to_ascii_lowercase()))
+            .is_some_and(|name| name == "nightreign.exe");
         if std::env::var_os("ME3_GAME_LAUNCHED").is_none() {
-            let nightreign = std::env::current_exe()
-                .ok()
-                .and_then(|exe| exe.file_name().map(|name| name.to_ascii_lowercase()))
-                .is_some_and(|name| name == "nightreign.exe");
             let game = if nightreign { "\"nightreign\"" } else { "\"eldenring\"" };
             // still in DllMain, before any thread of this DLL runs
             std::env::set_var("ME3_GAME_LAUNCHED", game);
         }
-        if std::env::var_os("ME3_ATTACH_CONFIG").is_none() {
+        // the rest matches Elden Ring's code only: in Nightreign, a
+        // ME3_ATTACH_CONFIG left over from somewhere is not followed
+        if nightreign || std::env::var_os("ME3_ATTACH_CONFIG").is_none() {
             // not Reforged: Arxan stays as it is, and only BootBoost runs,
             // once the game's code is readable, before its main
             log::info!("ELDEN RING Reforged is not active: BootBoost only");
@@ -169,9 +171,11 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
                 // mem_patch, as me3 does before the game's main: only while the
                 // game has allocated nothing yet, or mimalloc would be asked to
                 // free the game's own blocks
+                let mut allocator_hooked = false;
                 if before_entry {
                     match mem_patch::hook_system_allocator() {
                         Ok(()) => {
+                            allocator_hooked = true;
                             log::info!("mem_patch: system allocator hooked");
                             if let Err(error) = mem_patch::after_steam_init(|| {
                                 match mem_patch::hook_heap_allocators() {
@@ -187,10 +191,14 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
                 } else {
                     log::warn!("mem_patch skipped: the game has already started");
                 }
-                install_boot_boost(before_entry.then(mem_patch::main_allocator));
+                // mimalloc is the game's allocator only when the hook took
+                install_boot_boost(allocator_hooked.then(mem_patch::main_allocator));
                 // the game's code is decrypted now: scanning it for the
-                // singletons is safe
-                std::thread::spawn(keep_regulation_out_of_saves);
+                // singletons is safe; a thread that cannot start must not
+                // panic inside the game
+                if let Err(error) = std::thread::Builder::new().spawn(keep_regulation_out_of_saves) {
+                    log::error!("the regulation fix could not start: {error}");
+                }
             });
         }
     }

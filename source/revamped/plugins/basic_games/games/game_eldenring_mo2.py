@@ -4758,8 +4758,7 @@ class EldenRingMo2Game(BasicGame):
 
     def _read_skip_intro_logos(self, path: Path) -> bool:
         # on unless the profile turned it off: the logos only cost time
-        # (Elden Ring only; the bridge has no logo patch for Nightreign)
-        default = self.GameShortName != "nightreign"
+        default = True
         config = configparser.ConfigParser()
         try:
             config.read(path, encoding="utf-8-sig")

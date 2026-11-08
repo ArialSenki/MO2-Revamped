@@ -20,6 +20,8 @@ HANDLE g_log = INVALID_HANDLE_VALUE;
 HMODULE g_seen[1024] = {};
 unsigned int g_seen_count = 0;
 SRWLOCK g_log_lock = SRWLOCK_INIT;
+// set once ExitProcess is called (see exit_process_hook)
+volatile LONG g_game_closing = 0;
 
 struct NativeInitializerRequest {
   std::wstring module_path;
@@ -149,7 +151,15 @@ void write_time_prefix() {
 }
 
 void log_line(const char* message, const wchar_t* detail = nullptr) {
-  AcquireSRWLockExclusive(&g_log_lock);
+  // once the game exits, other threads may be stopped at any point, holding
+  // the lock: skip the line rather than wait forever
+  if (InterlockedCompareExchange(&g_game_closing, 0, 0) != 0) {
+    if (!TryAcquireSRWLockExclusive(&g_log_lock)) {
+      return;
+    }
+  } else {
+    AcquireSRWLockExclusive(&g_log_lock);
+  }
   write_time_prefix();
   write_bytes(message, static_cast<DWORD>(lstrlenA(message)));
   if (detail != nullptr && detail[0] != L'\0') {
@@ -164,6 +174,59 @@ void log_line(const char* message, const wchar_t* detail = nullptr) {
   }
   write_bytes("\r\n", 2);
   ReleaseSRWLockExclusive(&g_log_lock);
+}
+
+bool is_nightreign_process() {
+  wchar_t executable[MAX_PATH] = {};
+  const DWORD executable_length = GetModuleFileNameW(nullptr, executable, MAX_PATH);
+  if (executable_length == 0 || executable_length >= MAX_PATH) {
+    return false;
+  }
+  const wchar_t* name = std::wcsrchr(executable, L'\\');
+  return _wcsicmp(name != nullptr ? name + 1 : executable, L"nightreign.exe") == 0;
+}
+
+bool is_readable_page(const MEMORY_BASIC_INFORMATION& info) {
+  const DWORD readable = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
+                         PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                         PAGE_EXECUTE_WRITECOPY;
+  return info.State == MEM_COMMIT && (info.Protect & readable) != 0 &&
+         (info.Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0;
+}
+
+// The committed, readable parts of [start, start + size), as {start, size}
+// pairs: the game's protected code faults when read while it starts.
+std::vector<std::pair<const unsigned char*, size_t>> readable_ranges(
+    const unsigned char* start, size_t size) {
+  std::vector<std::pair<const unsigned char*, size_t>> ranges;
+  const unsigned char* end = start + size;
+  for (const unsigned char* region = start; region < end;) {
+    MEMORY_BASIC_INFORMATION info = {};
+    if (VirtualQuery(region, &info, sizeof(info)) == 0) {
+      break;
+    }
+    const unsigned char* region_end =
+        static_cast<const unsigned char*>(info.BaseAddress) + info.RegionSize;
+    if (region_end > end) {
+      region_end = end;
+    }
+    if (is_readable_page(info)) {
+      if (!ranges.empty() && ranges.back().first + ranges.back().second == region) {
+        ranges.back().second += static_cast<size_t>(region_end - region);
+      } else {
+        ranges.emplace_back(region, static_cast<size_t>(region_end - region));
+      }
+    }
+    region = region_end;
+  }
+  return ranges;
+}
+
+bool is_readable_address(const void* address, size_t size) {
+  MEMORY_BASIC_INFORMATION info = {};
+  return VirtualQuery(address, &info, sizeof(info)) != 0 && is_readable_page(info) &&
+         static_cast<const unsigned char*>(address) + size <=
+             static_cast<const unsigned char*>(info.BaseAddress) + info.RegionSize;
 }
 
 bool read_focus_guard_setting() {
@@ -611,7 +674,6 @@ BOOL CALLBACK find_visible_game_window(HWND window, LPARAM result) {
 // the game's main window once shown, and whether the game has started to
 // close: its window hidden or gone, or ExitProcess called
 HWND volatile g_game_window = nullptr;
-volatile LONG g_game_closing = 0;
 
 // the timeline of the game's window, for the log: when it appears and when
 // it goes, which with the exit logged below shows how long the game takes
@@ -743,9 +805,11 @@ LONG WINAPI unhandled_exception_filter_hook(EXCEPTION_POINTERS* info) {
 }
 
 void WINAPI exit_process_hook(UINT code) {
-  log_exit_request("Timing: the game called ExitProcess.");
-  g_exit_code = code;
-  InterlockedExchange(&g_game_closing, 1);
+  // two of the game's threads can call it a moment apart: the first one counts
+  if (InterlockedExchange(&g_game_closing, 1) == 0) {
+    g_exit_code = code;
+    log_exit_request("Timing: the game called ExitProcess.");
+  }
   g_original_exit_process(code);
 }
 
@@ -800,12 +864,18 @@ void WINAPI sleep_hook(DWORD milliseconds) {
 DWORD WINAPI wait_for_single_object_hook(HANDLE handle, DWORD milliseconds) {
   if (milliseconds == INFINITE && g_long_sleep_wake != nullptr) {
     const LONG sleeper = InterlockedCompareExchange(&g_long_sleeper_thread, 0, 0);
-    if (sleeper != 0 && GetThreadId(handle) == static_cast<DWORD>(sleeper)) {
+    // GetThreadId fails on handles that are not threads: keep the caller's
+    // last error as it was
+    const DWORD last_error = GetLastError();
+    const bool waits_for_sleeper =
+        sleeper != 0 && GetThreadId(handle) == static_cast<DWORD>(sleeper);
+    if (waits_for_sleeper) {
       SetEvent(g_long_sleep_wake);
       if (InterlockedExchange(&g_long_sleep_woken, 1) == 0) {
         log_line("Faster exit: woke the game thread that sleeps 16.7 seconds, which the game is waiting for.");
       }
     }
+    SetLastError(last_error);
   }
   return g_original_wait_for_single_object(handle, milliseconds);
 }
@@ -838,6 +908,11 @@ LONG CALLBACK skip_game_exit_check(EXCEPTION_POINTERS* info) {
   if (address < base + sizeof(before) || address + sizeof(after) > base + image_size ||
       std::memcmp(address - sizeof(before), before, sizeof(before)) != 0 ||
       std::memcmp(address, after, sizeof(after)) != 0) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  // only on the way out: during play the check goes on to the game's own
+  // handling, as without the bridge
+  if (!game_is_closing()) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
   info->ContextRecord->Rip += 1;
@@ -1569,7 +1644,10 @@ bool install_loose_asset_hook() {
     if (section_size > available_size) {
       section_size = available_size;
     }
-    const unsigned char* code = image_base + section.VirtualAddress;
+    for (const auto& range :
+         readable_ranges(image_base + section.VirtualAddress, section_size)) {
+    const unsigned char* code = range.first;
+    const size_t section_size = range.second;
     for (const ResolverCallSite& site : call_sites) {
       const size_t first = 5 + site.before_size;
       if (section_size < site.after_size + first) {
@@ -1596,7 +1674,7 @@ bool install_loose_asset_hook() {
         }
 
         unsigned int jumps = 0;
-        while (target[0] == 0xE9 && jumps++ < 8) {
+        while (is_readable_address(target, 5) && target[0] == 0xE9 && jumps++ < 8) {
           int32_t jump_displacement = 0;
           memcpy(&jump_displacement, target + 1, sizeof(jump_displacement));
           target = reinterpret_cast<unsigned char*>(
@@ -1619,6 +1697,7 @@ bool install_loose_asset_hook() {
         resolver = target;
         ++matches;
       }
+    }
     }
   }
 
@@ -1959,6 +2038,7 @@ bool install_wwise_hook() {
   // only in where their object keeps its data: both are hooked
   void* open_files[2] = {nullptr, nullptr};
   unsigned int open_file_count = 0;
+  const unsigned int expected_open_files = is_nightreign_process() ? 2 : 1;
   for (unsigned int index = 0; index < nt->FileHeader.NumberOfSections; ++index) {
     const IMAGE_SECTION_HEADER& section = sections[index];
     if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
@@ -1968,10 +2048,14 @@ bool install_wwise_hook() {
     size_t size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
                                                 : section.SizeOfRawData;
     size = (std::min)(size, image_size - section.VirtualAddress);
-    const unsigned char* code = image_base + section.VirtualAddress;
-    for (size_t offset = 0; offset + 26 <= size; ++offset) {
+    // only committed, readable code: a protected page would fault here
+    for (const auto& range :
+         readable_ranges(image_base + section.VirtualAddress, size)) {
+    const unsigned char* code = range.first;
+    const size_t readable_size = range.second;
+    for (size_t offset = 0; offset + 26 <= readable_size; ++offset) {
       if (code[offset] != 0xE8 ||
-          !is_wwise_open_call_site(code + offset, size - offset)) {
+          !is_wwise_open_call_site(code + offset, readable_size - offset)) {
         continue;
       }
       int32_t displacement = 0;
@@ -1988,11 +2072,14 @@ bool install_wwise_hook() {
       if (known) {
         continue;
       }
-      if (open_file_count == 2) {
-        log_line("Wwise hook skipped: more than two candidate functions.");
+      if (open_file_count == expected_open_files) {
+        log_line(expected_open_files == 1
+                     ? "Wwise hook skipped: more than one candidate function; this game version is not recognized."
+                     : "Wwise hook skipped: more than two candidate functions; this game version is not recognized.");
         return false;
       }
       open_files[open_file_count++] = target;
+    }
     }
   }
   if (open_file_count == 0) {
@@ -2305,16 +2392,8 @@ void inspect_loaded_mods() {
   CloseHandle(snapshot);
 }
 
-// on unless the profile turned it off; the patch is Elden Ring's only
+// on unless the profile turned it off
 bool read_skip_intro_logos_setting() {
-  wchar_t executable[MAX_PATH] = {};
-  const DWORD executable_length = GetModuleFileNameW(nullptr, executable, MAX_PATH);
-  if (executable_length > 0 && executable_length < MAX_PATH) {
-    const wchar_t* name = std::wcsrchr(executable, L'\\');
-    if (_wcsicmp(name != nullptr ? name + 1 : executable, L"nightreign.exe") == 0) {
-      return false;
-    }
-  }
   wchar_t config_path[MAX_PATH] = {};
   const DWORD length = GetEnvironmentVariableW(
       L"ELDENRING_MO2_PROFILE_CONFIG", config_path, MAX_PATH);
@@ -2456,6 +2535,165 @@ bool apply_skip_intro_logos(bool final_attempt) {
   return true;
 }
 
+// The game image's section with this name, clipped to the image.
+bool find_image_section(const char* name, unsigned char** start, size_t* size,
+                        DWORD* characteristics) {
+  HMODULE image = GetModuleHandleW(nullptr);
+  const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
+  if (image == nullptr || dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0) {
+    return false;
+  }
+  const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(
+      reinterpret_cast<const unsigned char*>(image) + dos->e_lfanew);
+  if (nt->Signature != IMAGE_NT_SIGNATURE ||
+      nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    return false;
+  }
+  const size_t image_size = nt->OptionalHeader.SizeOfImage;
+  const IMAGE_SECTION_HEADER* sections = IMAGE_FIRST_SECTION(nt);
+  for (unsigned int index = 0; index < nt->FileHeader.NumberOfSections; ++index) {
+    const IMAGE_SECTION_HEADER& section = sections[index];
+    if (std::strncmp(reinterpret_cast<const char*>(section.Name), name,
+                     IMAGE_SIZEOF_SHORT_NAME) != 0 ||
+        section.VirtualAddress >= image_size) {
+      continue;
+    }
+    size_t section_size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
+                                                        : section.SizeOfRawData;
+    if (section_size > image_size - section.VirtualAddress) {
+      section_size = image_size - section.VirtualAddress;
+    }
+    *start = reinterpret_cast<unsigned char*>(image) + section.VirtualAddress;
+    *size = section_size;
+    if (characteristics != nullptr) {
+      *characteristics = section.Characteristics;
+    }
+    return true;
+  }
+  return false;
+}
+
+// Nightreign: me3's skip_logos for the games from Elden Ring on. The title
+// screen runs its steps from a table in .data of {step function, step name}
+// entries; the entry of "TitleStep::STEP_BeginLogo" gets the function of the
+// step after it, so the title goes straight to the next step. Returns false
+// only when the table was not found yet and a later attempt may find it.
+bool apply_skip_logo_step(bool final_attempt) {
+  static const wchar_t step_name[] = L"TitleStep::STEP_BeginLogo";
+  const size_t name_bytes = (sizeof(step_name) / sizeof(step_name[0]) - 1) * sizeof(wchar_t);
+
+  unsigned char* rdata = nullptr;
+  size_t rdata_size = 0;
+  unsigned char* data = nullptr;
+  size_t data_size = 0;
+  unsigned char* text = nullptr;
+  size_t text_size = 0;
+  if (!find_image_section(".rdata", &rdata, &rdata_size, nullptr) ||
+      !find_image_section(".data", &data, &data_size, nullptr) ||
+      !find_image_section(".text", &text, &text_size, nullptr)) {
+    log_line("Intro logo skip unavailable: the game image has no title step table.");
+    return true;
+  }
+
+  // the step name, exactly once; kept between attempts, since only the
+  // table may still be on its way
+  static unsigned char* found_name = nullptr;
+  unsigned char* name = found_name;
+  unsigned int name_matches = name != nullptr ? 1 : 0;
+  for (unsigned char* region = rdata; found_name == nullptr && region < rdata + rdata_size;) {
+    MEMORY_BASIC_INFORMATION info = {};
+    if (VirtualQuery(region, &info, sizeof(info)) == 0) {
+      break;
+    }
+    unsigned char* region_end = static_cast<unsigned char*>(info.BaseAddress) + info.RegionSize;
+    if (region_end > rdata + rdata_size) {
+      region_end = rdata + rdata_size;
+    }
+    if (is_readable_page(info)) {
+      // a name across two regions is not looked for: .rdata is one region
+      for (unsigned char* match = region; match + name_bytes <= region_end; match += 2) {
+        if (match[0] == 'T' && std::memcmp(match, step_name, name_bytes) == 0) {
+          ++name_matches;
+          name = match;
+        }
+      }
+    }
+    region = region_end;
+  }
+  if (name_matches == 1) {
+    found_name = name;
+  } else if (name_matches > 1) {
+    // more than one name does not become one later
+    final_attempt = true;
+  }
+
+  // the table entry that points to it, exactly once
+  uintptr_t* entry = nullptr;
+  unsigned int entry_matches = 0;
+  if (name_matches == 1) {
+    const uintptr_t target = reinterpret_cast<uintptr_t>(name);
+    unsigned char* aligned = reinterpret_cast<unsigned char*>(
+        (reinterpret_cast<uintptr_t>(data) + 7) & ~static_cast<uintptr_t>(7));
+    for (unsigned char* region = aligned; region < data + data_size;) {
+      MEMORY_BASIC_INFORMATION info = {};
+      if (VirtualQuery(region, &info, sizeof(info)) == 0) {
+        break;
+      }
+      unsigned char* region_end = static_cast<unsigned char*>(info.BaseAddress) + info.RegionSize;
+      if (region_end > data + data_size) {
+        region_end = data + data_size;
+      }
+      if (is_readable_page(info)) {
+        for (auto* slot = reinterpret_cast<uintptr_t*>(region);
+             reinterpret_cast<unsigned char*>(slot + 1) <= region_end; ++slot) {
+          if (*slot == target) {
+            ++entry_matches;
+            entry = slot;
+          }
+        }
+      }
+      region = region_end;
+    }
+  }
+
+  if (entry_matches == 0 && !final_attempt) {
+    return false;
+  }
+  if (name_matches != 1 || entry_matches != 1 ||
+      reinterpret_cast<unsigned char*>(entry - 1) < data ||
+      reinterpret_cast<unsigned char*>(entry + 2) > data + data_size ||
+      !is_readable_address(entry - 1, 3 * sizeof(uintptr_t))) {
+    char summary[160] = {};
+    wsprintfA(summary,
+              "Intro logo skip unavailable: title step name found %u time(s), its table entry %u time(s); logos unchanged.",
+              name_matches, entry_matches);
+    log_line(summary);
+    return true;
+  }
+
+  // both neighbours must be functions in the game's code
+  const uintptr_t text_start = reinterpret_cast<uintptr_t>(text);
+  const uintptr_t text_end = text_start + text_size;
+  const uintptr_t logo_step = entry[-1];
+  const uintptr_t next_step = entry[1];
+  if (logo_step < text_start || logo_step >= text_end || next_step < text_start ||
+      next_step >= text_end) {
+    log_line("Intro logo skip unavailable: the title step table did not match safely; logos unchanged.");
+    return true;
+  }
+
+  DWORD previous_protection = 0;
+  if (!VirtualProtect(entry - 1, sizeof(uintptr_t), PAGE_READWRITE, &previous_protection)) {
+    log_line("Intro logo skip unavailable: the title step table could not be made writable.");
+    return true;
+  }
+  InterlockedExchangePointer(reinterpret_cast<void* volatile*>(entry - 1),
+                             reinterpret_cast<void*>(next_step));
+  VirtualProtect(entry - 1, sizeof(uintptr_t), previous_protection, &previous_protection);
+  log_line("Intro logo screens skipped (title step table).");
+  return true;
+}
+
 BOOL CALLBACK find_game_window(HWND window, LPARAM parameter) {
   if (is_process_top_level_window(window)) {
     *reinterpret_cast<bool*>(parameter) = true;
@@ -2468,6 +2706,18 @@ BOOL CALLBACK find_game_window(HWND window, LPARAM parameter) {
 // Touching game code then can stop the launch, so wait until the game has
 // created its first window; the logos are only checked after that.
 DWORD WINAPI skip_intro_logos_worker(void*) {
+  if (is_nightreign_process()) {
+    // only data is changed, and before the title reads its first step;
+    // the game decrypts its image while it starts, so the table can take a
+    // moment to become readable
+    for (unsigned int attempt = 0; attempt < 600; ++attempt) {
+      if (apply_skip_logo_step(attempt == 599)) {
+        return 0;
+      }
+      Sleep(50);
+    }
+    return 0;
+  }
   for (unsigned int attempt = 0; attempt < 1200; ++attempt) {
     bool found = false;
     EnumWindows(find_game_window, reinterpret_cast<LPARAM>(&found));

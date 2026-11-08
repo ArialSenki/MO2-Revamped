@@ -401,7 +401,12 @@ pub fn after_steam_init(after: fn()) -> Result<(), String> {
         let result = original();
         static RAN: std::sync::Once = std::sync::Once::new();
         if result {
-            RAN.call_once(|| (AFTER.get().unwrap())());
+            // a panic must not cross into the game: it would end the process
+            RAN.call_once(|| {
+                if std::panic::catch_unwind(|| (AFTER.get().unwrap())()).is_err() {
+                    log::error!("mem_patch: the heap allocators' hook panicked");
+                }
+            });
         }
         result
     }

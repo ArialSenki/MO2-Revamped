@@ -507,8 +507,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         )
         intro_card = add_card(launch_page, _tr("Intro"))
         skip_logos_box = QCheckBox()
-        skip_logos_box.setChecked(skip_intro_logos and not nightreign)
-        skip_logos_row = add_row(
+        skip_logos_box.setChecked(skip_intro_logos)
+        add_row(
             intro_card, 0xE893, _tr("Skip the intro logo screens"),
             _tr("Goes straight to the title screen. If the game version is not "
                 "recognized, the logos play normally. To avoid the online connection "
@@ -525,10 +525,6 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
                 "sooner. A game update makes new ones. From me3."),
             (boot_boost_box,),
         )
-        if nightreign:
-            # the patch matches Elden Ring's game code only
-            skip_logos_box.setEnabled(False)
-            skip_logos_row.setToolTip(_tr("Not available for Nightreign yet."))
         launch_page.addStretch(1)
 
         # --- Performance ---------------------------------------------------

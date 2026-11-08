@@ -1,6 +1,6 @@
 [package]
 name = "eldenring_mo2_me3_compat"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 description = "MO2 Revamped: me3's BootBoost for every Elden Ring start, and what me3 does for ELDEN RING Reforged beside loading it: Arxan neutralized before the entry point, the oversized regulation kept out of the save and the game's heaps replaced by mimalloc"
 license = "MIT OR Apache-2.0"
