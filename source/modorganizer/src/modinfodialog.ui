@@ -1132,7 +1132,7 @@ p, li { white-space: pre-wrap; }
              <item>
               <widget class="QPushButton" name="visitNexus">
                <property name="text">
-                <string>Open in Browser</string>
+                <string>Open in browser</string>
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
@@ -1212,7 +1212,7 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QPushButton" name="visitCustomURL">
             <property name="text">
-             <string>Open in Browser</string>
+             <string>Open in browser</string>
             </property>
            </widget>
           </item>

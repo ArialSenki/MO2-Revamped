@@ -271,6 +271,7 @@ void ProfilesDialog::setupUi()
   m_select->setProperty("fluentPrimary", true);
   m_select->setAutoDefault(false);
   auto* close = new QPushButton(tr("Close"), this);
+  close->setMinimumWidth(102);
   close->setObjectName(QStringLiteral("close"));
   close->setAutoDefault(false);
   footer->addWidget(m_select);

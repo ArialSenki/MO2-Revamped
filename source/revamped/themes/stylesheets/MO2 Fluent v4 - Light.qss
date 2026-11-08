@@ -5986,3 +5986,26 @@ QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
 QDialog#ModInfoDialog QTabWidget#tabConflictsTabs::pane {
     border: none;
 }
+
+/* C++ windows, second visual pass */
+QPlainTextEdit#textFileEditor,
+QPlainTextEdit#iniFileEditor {
+    padding: 0px;
+}
+QPlainTextEdit#textFileEditor > QWidget,
+QPlainTextEdit#iniFileEditor > QWidget,
+QPlainTextEdit#textFileEditor QScrollBar:vertical,
+QPlainTextEdit#iniFileEditor QScrollBar:vertical,
+QPlainTextEdit#textFileEditor QScrollBar:horizontal,
+QPlainTextEdit#iniFileEditor QScrollBar:horizontal {
+    background-color: #FFFFFF;
+}
+QLineEdit:disabled, QComboBox:disabled, QAbstractSpinBox:disabled {
+    background-color: #F5F5F5;
+    border: 1px solid #E5E5E5;
+    border-bottom: 1px solid #E5E5E5;
+}
+QDialog#CreateInstanceDialog QPushButton#next {
+    padding-left: 8px;
+    padding-right: 8px;
+}
