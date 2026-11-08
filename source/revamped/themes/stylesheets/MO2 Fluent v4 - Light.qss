@@ -2249,21 +2249,11 @@ QDialog#ExportModListDialog QLabel#exportDescription{
     color: #5D5D5D;
 }
 
-QDialog#ExportModListDialog QGroupBox#exportRowsGroup,
-QDialog#ExportModListDialog QGroupBox#exportColumnsGroup{
+QDialog#ExportModListDialog QFrame#exportRowsGroup,
+QDialog#ExportModListDialog QFrame#exportColumnsGroup {
     background-color: #FBFBFB;
-    border: 1px solid #DDDDDD;
+    border: 1px solid #DADADA;
     border-radius: 8px;
-    margin-top: 10px;
-    padding-top: 8px;
-}
-
-QDialog#ExportModListDialog QGroupBox#exportRowsGroup::title,
-QDialog#ExportModListDialog QGroupBox#exportColumnsGroup::title{
-    color: #1A1A1A;
-    subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 5px;
 }
 
 QDialog#InstanceNameDialog QLabel#instanceNameValidation {
@@ -5971,6 +5961,7 @@ ProblemsDialog QLabel#fluentSettingDescription {
 }
 
 QListWidget#problemsWidget {
+    background-color: transparent;
     border: none;
 }
 
@@ -5985,4 +5976,27 @@ QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
 }
 QDialog#ModInfoDialog QTabWidget#tabConflictsTabs::pane {
     border: none;
+}
+
+/* The log's rows reach the frame and line up with its title bar. */
+QDockWidget#logDock QTreeView#logList {
+    padding: 0px 0px 2px 0px;
+}
+
+/* Each list's headings start where its values do. */
+QMainWindow#MainWindow QTreeView#modList QHeaderView::section {
+    padding-left: 13px;
+    padding-right: 13px;
+}
+
+QWidget#dataTab QTreeView#dataTree QHeaderView::section {
+    padding-left: 12px;
+}
+
+QWidget#savesTab QTreeWidget#savegameList QHeaderView::section {
+    padding-left: 11px;
+}
+
+QWidget#downloadTab DownloadListView#downloadView QHeaderView::section {
+    padding-left: 7px;
 }
