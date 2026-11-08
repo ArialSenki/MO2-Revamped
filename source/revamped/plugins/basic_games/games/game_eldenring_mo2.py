@@ -6033,27 +6033,42 @@ class EldenRingMo2Game(BasicGame):
         executable = mobase.ExecutableInfo(f"{self.GameName} (MO2)", game_exe)
         executable = executable.withWorkingDirectory(self.dataDirectory())
         executable = executable.withSteamAppId(str(self.GameSteamId))
+        # MO2 asks when it builds its program list, not on every mod toggle
+        self._online_launchers_found = None
         return [executable, *self._reforged_online_executables()]
+
+    # Reforged's launchers found in the mods folder, and the mods it held then
+    _online_launchers_found: list[Path] | None = None
+    _online_launchers_mods: frozenset[str] | None = None
+
+    def _online_launchers(self) -> list[Path]:
+        """Reforged's launchers in the mods folder. The folder is searched only
+        when a mod was installed or removed, MO2 asks for its programs, or the
+        mods it holds have changed (a refresh that found a new folder)."""
+        if not self.AutoSwapLaunchers:
+            return []
+        try:
+            mod_names = frozenset(self._organizer.modList().allMods())
+            mods_path = Path(self._organizer.modsPath())
+        except (AttributeError, RuntimeError, TypeError):
+            return []
+        if self._online_launchers_found is None or mod_names != self._online_launchers_mods:
+            online = EldenRingModDataChecker.ReforgedOnlineDirectory
+            try:
+                self._online_launchers_found = sorted(
+                    mods_path.glob(f"*/{online}/{EldenRingModDataChecker.ReforgedLauncherPath}")
+                )
+            except OSError:
+                return []
+            self._online_launchers_mods = mod_names
+        return self._online_launchers_found
 
     def _reforged_online_executables(self) -> list[mobase.ExecutableInfo]:
         """Reforged's own launcher, for its online mode, from each installed
         ELDEN RING Reforged that kept its release (archive installer choice).
         It starts outside the VFS (AutoSwapLaunchers), as online needs."""
-        if not self.AutoSwapLaunchers:
-            return []
-        try:
-            mods_path = Path(self._organizer.modsPath())
-        except (AttributeError, RuntimeError, TypeError):
-            return []
-        online = EldenRingModDataChecker.ReforgedOnlineDirectory
         executables = []
-        try:
-            launchers = sorted(
-                mods_path.glob(f"*/{online}/{EldenRingModDataChecker.ReforgedLauncherPath}")
-            )
-        except OSError:
-            return []
-        for index, launcher in enumerate(launchers):
+        for index, launcher in enumerate(self._online_launchers()):
             title = "ELDEN RING Reforged (online)"
             if index:
                 title += f" ({launcher.parents[3].name})"
@@ -6097,7 +6112,21 @@ class EldenRingMo2Game(BasicGame):
         selector.model().rowsInserted.connect(sync)
         # the wheel and the arrows can reach a row hidden from the popup
         selector.currentIndexChanged.connect(lambda _row: sync())
-        self._organizer.modList().onModStateChanged(lambda _changes: sync())
+
+        def mods_toggled(changes) -> None:
+            # only a mod holding one of Reforged's launchers changes the list
+            online_mods = {launcher.parents[3].name for launcher in self._online_launchers()}
+            if not online_mods.isdisjoint(changes):
+                sync()
+
+        def mods_replaced(*_args) -> None:
+            self._online_launchers_found = None
+            sync()
+
+        mod_list = self._organizer.modList()
+        mod_list.onModStateChanged(mods_toggled)
+        mod_list.onModInstalled(mods_replaced)
+        mod_list.onModRemoved(mods_replaced)
         self._organizer.onProfileChanged(sync)
         sync()
 
@@ -6108,8 +6137,6 @@ class EldenRingMo2Game(BasicGame):
         selector = self._online_programs_selector
         if selector is None or not self.isActive():
             return
-        # searches the mods folder: once per look, and anew each time, so a
-        # mod just installed is seen
         executables = self._reforged_online_executables()
         hidden = self._inactive_reforged_online_programs(executables)
         # the program of a Reforged mod that was removed stays saved: not offered
