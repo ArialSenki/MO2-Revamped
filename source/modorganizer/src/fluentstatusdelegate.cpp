@@ -2,6 +2,7 @@
 
 #include "modinfo.h"
 #include "modlist.h"
+#include "modlistview.h"
 #include "nexusinterface.h"
 #include "revampedtheme.h"
 
@@ -179,6 +180,19 @@ void FluentStatusDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
   opt.icon = QIcon();
   const QWidget* widget = option.widget;
   QStyle* style         = widget ? widget->style() : QApplication::style();
+  // as in the other columns: the theme hides the option's background
+  if (!(opt.state & QStyle::State_Selected)) {
+    QColor color;
+    if (auto* view = qobject_cast<const ModListView*>(widget)) {
+      color = view->markerColor(index);
+    }
+    if (!color.isValid()) {
+      color = index.data(Qt::BackgroundRole).value<QColor>();
+    }
+    if (color.isValid()) {
+      painter->fillRect(option.rect, color);
+    }
+  }
   style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
 
   const auto statuses = statusesFor(index);

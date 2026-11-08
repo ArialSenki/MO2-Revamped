@@ -360,7 +360,8 @@ protected:
       painter.drawEllipse(QRectF(rect()).adjusted(3.0, 3.0, -3.0, -3.0));
     }
     if (hasFocus()) {
-      painter.setPen(QPen(palette().color(QPalette::Highlight), 1.5));
+      // the accent and thick enough to find at a glance while tabbing
+      painter.setPen(QPen(FluentIcons::color(FluentIcons::Tone::Accent), 2.0));
       painter.setBrush(Qt::NoBrush);
       painter.drawEllipse(QRectF(rect()).adjusted(1.5, 1.5, -1.5, -1.5));
     }
@@ -4800,6 +4801,8 @@ void MainWindow::languageChange(const QString& newLanguage)
     installTranslator(QFileInfo(fileName).baseName());
   }
   ui->retranslateUi(this);
+  // the Data tree's column titles come from its model
+  ui->dataTree->header()->viewport()->update();
   // that also put back the original help on the interface
   configureEldenRingHelp();
   // not in the .ui, so retranslateUi() left it; its short label is rebuilt below

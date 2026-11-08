@@ -134,8 +134,23 @@ public:
       opt.palette.setColor(QPalette::Text, muted);
     }
 
+    // the theme styles every row, and a styled row ignores the option's
+    // background: the separator or conflict color is painted here. A selected
+    // row shows the selection instead
+    if (color.isValid() && !(opt.state & QStyle::State_Selected)) {
+      painter->fillRect(opt.rect, color);
+    }
+
     QStyledItemDelegate::paint(painter, opt, index);
     paintSwitch(painter, opt, index);
+
+    // the selected row's accent edge, once per row at the start of the name
+    // column whatever the row's indentation
+    if (index.column() == ModList::COL_NAME && (opt.state & QStyle::State_Selected)) {
+      const int left = m_view->header()->sectionViewportPosition(ModList::COL_NAME);
+      painter->fillRect(QRect(left, opt.rect.top(), 3, opt.rect.height()),
+                        FluentIcons::color(FluentIcons::Tone::Accent));
+    }
   }
 
   // a refresh renumbers the mods: the states painted before belong to
@@ -1186,6 +1201,18 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
   QRect r(rect);
   if (hasCollapsibleSeparators() && index.parent().isValid()) {
     r.adjust(-indentation(), 0, 0 - indentation(), 0);
+  }
+
+  // the gap before the name of a colored separator or marked mod; the
+  // delegate only paints the cells
+  if (!selectionModel()->isSelected(index)) {
+    QColor color = markerColor(index);
+    if (!color.isValid()) {
+      color = index.data(Qt::BackgroundRole).value<QColor>();
+    }
+    if (color.isValid()) {
+      painter->fillRect(rect, color);
+    }
   }
   QTreeView::drawBranches(painter, r, index);
 }

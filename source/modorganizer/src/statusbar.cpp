@@ -1,3 +1,4 @@
+#include "fluenticons.h"
 #include "statusbar.h"
 #include <QMouseEvent>
 #include "instancemanager.h"
@@ -254,12 +255,12 @@ void StatusBarAction::paintEvent(QPaintEvent* e)
 {
   QWidget::paintEvent(e);
 
-  // the keyboard focus shows as a ring in the theme's focus color
+  // the keyboard focus shows as a ring in the accent, easy to find while tabbing
   if (hasFocus()) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    QPen pen(palette().color(QPalette::Highlight));
-    pen.setWidthF(1.5);
+    QPen pen(FluentIcons::color(FluentIcons::Tone::Accent));
+    pen.setWidthF(2.0);
     painter.setPen(pen);
     painter.setBrush(Qt::NoBrush);
     painter.drawRoundedRect(QRectF(rect()).adjusted(0.75, 0.75, -0.75, -0.75), 4, 4);

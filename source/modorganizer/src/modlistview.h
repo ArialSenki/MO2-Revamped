@@ -229,6 +229,7 @@ protected slots:
 private:  // friend classes
   friend class ModConflictIconDelegate;
   friend class ModContentIconDelegate;
+  friend class FluentStatusDelegate;
   friend class ModFlagIconDelegate;
   friend class ModListContextMenu;
   friend class ModListStyledItemDelegate;

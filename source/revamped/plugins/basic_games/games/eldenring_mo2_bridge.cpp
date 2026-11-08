@@ -2756,6 +2756,20 @@ void schedule_skip_intro_logos() {
   }
 }
 
+// Without its own extension the game would write ER0000.sl2, the save of the
+// other mods, so it is closed here, before it reads any save. Only when the
+// user was told before the launch and chose to start anyway does it go on.
+void save_extension_failed(const char* message, const wchar_t* detail = nullptr) {
+  log_line(message, detail);
+  wchar_t accepted[2] = {};
+  if (GetEnvironmentVariableW(L"ELDENRING_MO2_SAVE_EXTENSION_ACCEPTED", accepted, 2) != 0) {
+    log_line("The game goes on with its usual save: the user chose to start anyway.");
+    return;
+  }
+  log_line("Save extension refused: the game was closed so it would not write to the other mods' save.");
+  TerminateProcess(GetCurrentProcess(), 1);
+}
+
 // The game names every save from one ".sl2" literal (ER0000.sl2, its .bak).
 // MO2 asks for another extension through ELDENRING_MO2_SAVE_EXTENSION (three
 // letters, "err" for ELDEN RING Reforged, as its me3 launch saves), and the
@@ -2769,7 +2783,7 @@ void apply_save_extension_setting() {
     return;
   }
   if (length != 3) {
-    log_line("Save extension skipped: MO2 asked for an extension that is not three letters:",
+    save_extension_failed("Save extension skipped: MO2 asked for an extension that is not three letters:",
              length < 8 ? extension : nullptr);
     return;
   }
@@ -2777,14 +2791,14 @@ void apply_save_extension_setting() {
   HMODULE image = GetModuleHandleW(nullptr);
   const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
   if (image == nullptr || dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0) {
-    log_line("Save extension skipped: invalid game image header.");
+    save_extension_failed("Save extension skipped: invalid game image header.");
     return;
   }
   const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(
       reinterpret_cast<const unsigned char*>(image) + dos->e_lfanew);
   if (nt->Signature != IMAGE_NT_SIGNATURE ||
       nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
-    log_line("Save extension skipped: game image is not 64-bit PE.");
+    save_extension_failed("Save extension skipped: game image is not 64-bit PE.");
     return;
   }
 
@@ -2823,13 +2837,13 @@ void apply_save_extension_setting() {
     snprintf(message, sizeof(message),
              "Save extension skipped: expected one .sl2 literal in the game, found %u.",
              matches);
-    log_line(message);
+    save_extension_failed(message);
     return;
   }
 
   DWORD old_protection = 0;
   if (!VirtualProtect(found, kPatternSize, PAGE_READWRITE, &old_protection)) {
-    log_line("Save extension skipped: the .sl2 literal could not be made writable.");
+    save_extension_failed("Save extension skipped: the .sl2 literal could not be made writable.");
     return;
   }
   wchar_t* literal = reinterpret_cast<wchar_t*>(found);
@@ -2899,7 +2913,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.63.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.64.");
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.

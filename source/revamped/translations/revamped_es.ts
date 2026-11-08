@@ -1935,6 +1935,10 @@ Reinstala el mod para cambiarlo.</translation>
       <translation>No volver a avisar</translation>
     </message>
     <message>
+        <source>MO2 closed ELDEN RING Reforged to protect your saves. It couldn&apos;t give Reforged its own save file (ER0000.err), and the game would have written to ER0000.sl2, the save of your other mods. This usually follows a game update: look for a new version of MO2 Revamped.</source>
+        <translation>MO2 ha cerrado ELDEN RING Reforged para proteger tus partidas. No pudo darle a Reforged su propio archivo de guardado (ER0000.err), y el juego habría escrito en ER0000.sl2, la partida de tus otros mods. Suele ocurrir tras una actualización del juego: busca una versión nueva de MO2 Revamped.</translation>
+    </message>
+    <message>
       <source>Saves may mix</source>
       <translation>Las partidas pueden mezclarse</translation>
     </message>

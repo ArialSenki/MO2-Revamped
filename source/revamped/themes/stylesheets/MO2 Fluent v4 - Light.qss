@@ -4276,12 +4276,6 @@ QMainWindow#MainWindow QTreeView#modList::item:hover:selected {
     color: #1A1A1A;
     background-color: #E6EBF1;
 }
-QMainWindow#MainWindow QTreeView#modList::item:selected:first,
-QMainWindow#MainWindow QTreeView#modList::item:selected:focus:first,
-QMainWindow#MainWindow QTreeView#modList::item:hover:selected:first {
-    border-left: 3px solid #005FB8;
-    padding-left: 7px;
-}
 /* Rows as tall as the Windows 11 list rows: the switch gets air above and
    below, and the names read as a list instead of a dense grid. */
 QMainWindow#MainWindow QTreeView#modList::item {

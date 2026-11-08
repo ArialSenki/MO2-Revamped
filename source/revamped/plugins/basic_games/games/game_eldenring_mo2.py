@@ -2117,8 +2117,8 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.95"
-    NativeBridgeVersion = "0.5.0-alpha.63"
+    Version = "0.5.0-alpha.96"
+    NativeBridgeVersion = "0.5.0-alpha.64"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -2268,6 +2268,8 @@ class EldenRingMo2Game(BasicGame):
         self._early_exit_warning_shown = False
         self._file_loader_scan: tuple[str, bool | None] = ("", None)
         self._save_extension_scan: tuple[str, bool | None] = ("", None)
+        # the user was told Reforged can't have its own save and started anyway
+        self._save_extension_accepted = False
         self._online_programs_selector = None
         self._online_program_locked = False
         self._online_programs_sync_queued = False
@@ -4540,6 +4542,32 @@ class EldenRingMo2Game(BasicGame):
         self._overwrite_cleanup_path = None
         self._overwrite_cleanup_armed = False
 
+    def _warn_if_saves_were_protected(self) -> bool:
+        """The bridge closes Reforged when it can't give it its own save."""
+        log = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.log"
+        try:
+            if log.stat().st_mtime < self._last_launch_time:
+                return False
+            if "Save extension refused" not in log.read_text("utf-8", "replace"):
+                return False
+        except OSError:
+            return False
+        qWarning("Elden Ring MO2: the bridge closed the game to protect the saves.")
+        self._early_exit_warning_shown = True
+        # not from inside MO2's finished-run hook
+        QTimer.singleShot(
+            0,
+            lambda: QMessageBox.warning(
+                self._message_parent(),
+                _tr("Saves may mix"),
+                _tr("MO2 closed ELDEN RING Reforged to protect your saves. It couldn't "
+                "give Reforged its own save file (ER0000.err), and the game would have "
+                "written to ER0000.sl2, the save of your other mods. This usually "
+                "follows a game update: look for a new version of MO2 Revamped."),
+            ),
+        )
+        return True
+
     def _warn_if_loose_files_were_skipped(
         self, via_launcher: bool = True, seen: bool = False
     ) -> None:
@@ -4711,8 +4739,9 @@ class EldenRingMo2Game(BasicGame):
 
         # the notices must not stop the saves coming back below
         try:
-            self._warn_if_loose_files_were_skipped(via_launcher, seen)
-            self._warn_if_game_closed_at_once(via_launcher, run)
+            if not self._warn_if_saves_were_protected():
+                self._warn_if_loose_files_were_skipped(via_launcher, seen)
+                self._warn_if_game_closed_at_once(via_launcher, run)
         except Exception as error:
             qWarning(f"Elden Ring MO2: a notice after the game closed failed: {error!r}")
         # a later launch may have restored this session and started its own
@@ -5740,6 +5769,7 @@ class EldenRingMo2Game(BasicGame):
             for key in (
                 self.ReforgedAttachEnvironment,
                 self.SaveExtensionEnvironment,
+                self.SaveExtensionAcceptedEnvironment,
                 self.SoundFoldersEnvironment,
                 self.BootBoostEnvironment,
             )
@@ -5765,6 +5795,10 @@ class EldenRingMo2Game(BasicGame):
             )
         else:
             os.environ.pop(self.ReforgedAttachEnvironment, None)
+        if save_extension is not None and self._save_extension_accepted:
+            os.environ[self.SaveExtensionAcceptedEnvironment] = "1"
+        else:
+            os.environ.pop(self.SaveExtensionAcceptedEnvironment, None)
         if save_extension is not None:
             os.environ[self.SaveExtensionEnvironment] = save_extension
             qInfo(
@@ -5842,6 +5876,7 @@ class EldenRingMo2Game(BasicGame):
     ReforgedAttachEnvironment = "ME3_ATTACH_CONFIG"
     # the bridge replaces the game's .sl2 with these three letters
     SaveExtensionEnvironment = "ELDENRING_MO2_SAVE_EXTENSION"
+    SaveExtensionAcceptedEnvironment = "ELDENRING_MO2_SAVE_EXTENSION_ACCEPTED"
     # ELDEN RING Reforged's me3 profile saves to ER0000.err
     ReforgedSaveExtension = "err"
 
@@ -6609,6 +6644,7 @@ class EldenRingMo2Game(BasicGame):
     def _save_extension_ready(self, app_path: str) -> bool:
         """Without its own save extension ELDEN RING Reforged uses the save of
         the other mods: said before the launch, as for the file loader."""
+        self._save_extension_accepted = False
         if (
             self._runs_outside_vfs(app_path)
             or self._reforged_natives() is None
@@ -6631,6 +6667,7 @@ class EldenRingMo2Game(BasicGame):
         key = "save_extension_accepted"
         try:
             if self._organizer.persistent(self.name(), key, "") == stamp:
+                self._save_extension_accepted = True
                 return True
         except (AttributeError, RuntimeError):
             pass
@@ -6654,6 +6691,7 @@ class EldenRingMo2Game(BasicGame):
         box.deleteLater()
         if box.clickedButton() is not start:
             return False
+        self._save_extension_accepted = True
         if remember.isChecked():
             try:
                 self._organizer.setPersistent(self.name(), key, stamp)
