@@ -79,7 +79,7 @@ QSize choiceIconSize(int glyph)
 
 QIcon paddedChoiceIcon(const QIcon& source, int size)
 {
-  const int left = 23 - size / 2;
+  const int left = 25 - size / 2;
   QIcon icon;
   for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
     QPixmap pixmap((QSizeF(ChoiceIconWidth, size) * ratio).toSize());
@@ -109,7 +109,7 @@ QIcon choiceIcon(char16_t glyph, int size = 16)
 {
   // the glyph drawn as text in the icon font, as FluentIcons does: its own
   // engine gives no pixmap outside a widget
-  const int left = 23 - size / 2;
+  const int left = 25 - size / 2;
   QIcon icon;
   for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
     QPixmap pixmap((QSizeF(ChoiceIconWidth, size) * ratio).toSize());
@@ -1639,6 +1639,18 @@ void VariantsPage::fillList()
 
 }
 
+// the names shown in the wizard's sentences, as its other texts write them
+static QString shownGameName(const QString& name)
+{
+  if (name.compare(QStringLiteral("ELDEN RING"), Qt::CaseInsensitive) == 0) {
+    return QStringLiteral("Elden Ring");
+  }
+  if (name.compare(QStringLiteral("ELDEN RING NIGHTREIGN"), Qt::CaseInsensitive) == 0) {
+    return QStringLiteral("Nightreign");
+  }
+  return name;
+}
+
 NamePage::NamePage(CreateInstanceDialog& dlg)
     : Page(dlg), m_modified(false), m_okay(false),
       m_exists(ui->instanceNameExists), m_invalid(ui->instanceNameInvalid)
@@ -1722,7 +1734,7 @@ void NamePage::doActivated(bool)
     ui->instanceNameLabel->setText(plainHeading(
         QCoreApplication::translate("cid::NamePage",
                                     "<h3>Name your isolated MO2 copy for %1.</h3>")
-            .arg(g->gameName())));
+            .arg(shownGameName(g->gameName()))));
   } else {
     const QString typeName =
         type == CreateInstanceDialog::Portable
@@ -1731,7 +1743,7 @@ void NamePage::doActivated(bool)
     ui->instanceNameLabel->setText(plainHeading(
         QCoreApplication::translate("cid::NamePage",
                                     "<h3>Name this %1 instance for %2.</h3>")
-            .arg(typeName, g->gameName())));
+            .arg(typeName, shownGameName(g->gameName()))));
   }
 
   const auto& manager = InstanceManager::singleton();
@@ -1740,7 +1752,7 @@ void NamePage::doActivated(bool)
         QCoreApplication::translate(
             "cid::NamePage",
             "<h3>This setup will create one isolated portable instance for %1.</h3>")
-            .arg(g->gameName())));
+            .arg(shownGameName(g->gameName()))));
     ui->instanceName->setVisible(false);
     ui->instanceNameContext->setVisible(false);
     m_exists.setVisible(false);
@@ -2116,9 +2128,9 @@ void PathsPage::doActivated(bool firstTime)
   if (type == CreateInstanceDialog::Isolated) {
     ui->pathsLabel->setText(QObject::tr(
         "These folders belong to the separate MO2 copy for %1. Its application files and settings will be kept together in that folder.")
-                                 .arg(m_dlg.rawCreationInfo().game->gameName()));
+                                 .arg(shownGameName(m_dlg.rawCreationInfo().game->gameName())));
   } else {
-    m_label.setText(m_dlg.rawCreationInfo().game->gameName());
+    m_label.setText(shownGameName(m_dlg.rawCreationInfo().game->gameName()));
   }
   m_lastInstanceName = name;
   m_lastType         = type;

@@ -210,7 +210,7 @@ QFrame* row(QWidget* parent, QVBoxLayout* rows, bool first = false)
 }
 
 // one column of fields on every step (the plugin's save step uses it too)
-constexpr int FieldColumnWidth = 440;
+constexpr int FieldColumnWidth = 460;
 
 // a row with a title and a description on the left and a control on the
 // right, like a Windows 11 Settings row; returns the description label
@@ -903,9 +903,12 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
   next->setDefault(true);
   cancel = named(new QPushButton(tr("Cancel"), dialog), "cancel");
   cancel->setAutoDefault(false);
-  for (QPushButton* button : {back, next, cancel}) {
-    button->setMinimumWidth(102);  // the width of the other windows' footers
-  }
+  back->setMinimumWidth(102);  // the width of the other windows' footers
+  cancel->setMinimumWidth(102);
+  // one width on every step, "Create instance" included (the theme trims its
+  // padding), so Back doesn't move on the last step
+  next->setFixedWidth(qMax(102, next->fontMetrics().horizontalAdvance(
+                                    QCoreApplication::translate("CreateInstanceDialog", "Create instance")) + 16));
   footer->addWidget(title, 1);
   footer->addWidget(back);
   footer->addWidget(next);
