@@ -418,6 +418,12 @@ namespace Mo2RevampedSetup
             // what the earlier MO2 Revamped setup installed: those files stay
             // Revamped's own after this update
             InstallState earlierState = request.Mode == SetupMode.Update ? LoadState(target) : null;
+            // an update cut short (a power cut, the setup closed by force) left
+            // the folder mixing two versions, and its backup is the only copy
+            // of the version before: updating again would back up the mix and
+            // prune that copy, so Restore could only bring the mix back
+            if (IsUnfinishedUpdate(earlierState, target))
+                throw new InvalidOperationException(InstallerText.T("Una actualización anterior de esta carpeta no terminó y la carpeta mezcla dos versiones. Usa «Restaurar copia anterior» para volver a la versión que tenías y después actualiza de nuevo. No se modificó la carpeta."));
             Dictionary<string, InstallFileState> earlierFiles = new Dictionary<string, InstallFileState>(StringComparer.OrdinalIgnoreCase);
             if (earlierState != null && earlierState.Files != null)
                 foreach (InstallFileState earlier in earlierState.Files)
@@ -710,6 +716,27 @@ namespace Mo2RevampedSetup
             };
             }
             finally { payload.Dispose(); }
+        }
+
+        // the record of an update that stopped before its end, with the backup
+        // Restore needs still in place (a run that rolled back cleanly put the
+        // earlier record back; a restore, finished or not, changes the status)
+        private static bool IsUnfinishedUpdate(InstallState state, string target)
+        {
+            if (state == null || state.Files == null || String.IsNullOrWhiteSpace(state.BackupDirectory)) return false;
+            if (!new string[] { "Preparing", "Installing", "RollingBack", "Failed" }.Contains(state.Status ?? "", StringComparer.OrdinalIgnoreCase))
+                return false;
+            if (!IsBackupPathForTarget(state.BackupDirectory, target) || !Directory.Exists(state.BackupDirectory)) return false;
+            foreach (InstallFileState file in state.Files)
+            {
+                if (!file.ExistedBefore || file.IsUserData) continue;
+                try
+                {
+                    if (File.Exists(SafeCombine(state.BackupDirectory, file.Path))) return true;
+                }
+                catch { }
+            }
+            return false;
         }
 
         public static InstallState LoadState(string target)
