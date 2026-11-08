@@ -1306,12 +1306,18 @@ QWidget* CategoriesDialog::createFluentDetails()
   m_fluentNameEdit = new QLineEdit(m_fluentDetailRows);
   m_fluentNameEdit->setObjectName(QStringLiteral("categoryNameEdit"));
   m_fluentNameEdit->setAccessibleName(tr("Name"));
-  m_fluentNameEdit->setValidator(new QRegularExpressionValidator(
-      QRegularExpression(QStringLiteral("[^|]*")), m_fluentNameEdit));
   FluentPanels::addEditRow(m_fluentDetailRows, 0xE8AC, tr("Name"),
                            tr("Shown in the mod list, its filters and the mod's menu"),
                            {m_fluentNameEdit});
-  connect(m_fluentNameEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
+  connect(m_fluentNameEdit, &QLineEdit::textEdited, this, [this](const QString& edited) {
+    // categories.dat separates its fields with '|'; a pasted one just goes
+    QString text = edited;
+    if (text.contains(QLatin1Char('|'))) {
+      const int cursor = m_fluentNameEdit->cursorPosition();
+      text.remove(QLatin1Char('|'));
+      m_fluentNameEdit->setText(text);
+      m_fluentNameEdit->setCursorPosition(qMin(cursor, text.size()));
+    }
     const int row = rowForID(selectedID());
     if (row >= 0 && ui->categoriesTable->item(row, 1) != nullptr) {
       ui->categoriesTable->item(row, 1)->setText(text);

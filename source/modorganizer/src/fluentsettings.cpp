@@ -99,8 +99,6 @@ private:
   }
 };
 
-// settings code shows and hides some controls (per game, per option); the
-// row that now holds a control follows it
 // a form row's title dims with its field; the original label is hidden
 class EnabledMirror : public QObject
 {
@@ -126,6 +124,8 @@ private:
   QWidget* m_title;
 };
 
+// settings code shows and hides some controls (per game, per option); the
+// row that now holds a control follows it
 class VisibilityMirror : public QObject
 {
 public:

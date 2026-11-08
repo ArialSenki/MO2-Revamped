@@ -321,6 +321,7 @@ private:
   bool m_UpdateNoticeWaiting = false;
   // the Update command as it is without an update, to put back
   QString m_UpdateActionText, m_UpdateActionTip;
+  bool m_UpdateShown = false;
   void applyUpdateActionTexts();
 
   // the status bar and the Update command no longer show an update

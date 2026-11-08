@@ -616,7 +616,9 @@ void ModListContextMenu::addCategoryContextMenus(ModInfo::Ptr mod)
         *appliedPrimary = category;
         // a primary picked here is not undone by putting a category back
         for (auto& m : snapshot->mods) {
-          m.primary = m.info->primaryCategory();
+          if (m.info->categorySet(category)) {
+            m.primary = m.info->primaryCategory();
+          }
         }
       }
     });

@@ -1504,6 +1504,8 @@ void InstanceManagerDialog::deleteInstance()
   auto* recycle   = dlg.addButton(tr("Move to Recycle Bin"), true);
   auto* permanent = dlg.addButton(tr("Delete permanently"));
   auto* cancel    = dlg.addButton(tr("Cancel"));
+  // Enter must not delete an instance
+  dlg.askFirst(cancel);
   connect(recycle, &QPushButton::clicked, &dlg, [&dlg] {
     dlg.done(Recycle);
   });

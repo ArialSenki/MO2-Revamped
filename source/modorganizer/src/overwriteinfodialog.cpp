@@ -49,6 +49,26 @@ using namespace MOBase;
 
 namespace
 {
+// the search filters as you type: Enter in it must not press a dialog button
+class SwallowEnter : public QObject
+{
+public:
+  explicit SwallowEnter(QWidget* field) : QObject(field)
+  {
+    field->installEventFilter(this);
+  }
+
+protected:
+  bool eventFilter(QObject*, QEvent* event) override
+  {
+    if (event->type() == QEvent::KeyPress) {
+      const int key = static_cast<QKeyEvent*>(event)->key();
+      return key == Qt::Key_Return || key == Qt::Key_Enter;
+    }
+    return false;
+  }
+};
+
 // a folder takes what's inside it along, and the shell would stop at the rest
 QStringList topmostPaths(QStringList paths)
 {
@@ -149,11 +169,6 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
                    SLOT(createDirectoryTriggered()));
 
   buildFluentLayout();
-
-  // Enter in the search box filters; it must not press a button
-  for (auto* button : findChildren<QPushButton*>()) {
-    button->setAutoDefault(false);
-  }
 }
 
 void OverwriteInfoDialog::buildFluentLayout()
@@ -221,6 +236,7 @@ void OverwriteInfoDialog::buildFluentLayout()
   search->setAccessibleName(tr("Search files"));
   search->setClearButtonEnabled(true);
   search->setMaximumWidth(320);
+  new SwallowEnter(search);
   toolsLayout->addWidget(search, 1);
   auto* expand = FluentPanels::iconButton(0xF164, tr("Expand all"), tools);
   auto* collapse = FluentPanels::iconButton(0xF165, tr("Collapse all"), tools);

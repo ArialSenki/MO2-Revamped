@@ -4581,6 +4581,10 @@ void MainWindow::on_actionSettings_triggered()
 
   SettingsDialog dialog(&m_PluginContainer, settings, this);
   const int settingsResult = dialog.exec();
+  // Reset window geometries, only if Settings really saved and closes for it
+  if (dialog.restartConfirmed() && settingsResult == QDialog::Accepted) {
+    settings.geometry().requestReset();
+  }
 
   auto e = dialog.exitNeeded();
 
@@ -4644,7 +4648,10 @@ void MainWindow::on_actionSettings_triggered()
 
   InstallationManager* instManager = m_OrganizerCore.installationManager();
   instManager->setModsDirectory(settings.paths().mods());
-  instManager->setDownloadDirectory(settings.paths().downloads());
+  // the folder the downloads really are in, which stays during a download
+  instManager->setDownloadDirectory(dlManager->downloadsInProgress()
+                                        ? dlManager->getOutputDirectory()
+                                        : settings.paths().downloads());
 
   // Schedule a problem check since diagnose plugins may have been enabled / disabled.
   scheduleCheckForProblems();
@@ -4798,7 +4805,9 @@ void MainWindow::languageChange(const QString& newLanguage)
     }
     m_UpdateActionText.clear();
     m_UpdateActionTip.clear();
-    applyUpdateActionTexts();
+    if (m_UpdateShown) {
+      applyUpdateActionTexts();
+    }
 
     setToolbarButtonStyle(ui->toolBar->toolButtonStyle());
     if (m_fluentDashboard != nullptr) {
@@ -4885,6 +4894,7 @@ void MainWindow::updateAvailable()
   }
 
   ui->actionUpdate->setEnabled(true);
+  m_UpdateShown = true;
   applyUpdateActionTexts();
   ui->statusBar->setUpdateAvailable(true);
 
@@ -4923,6 +4933,7 @@ void MainWindow::applyUpdateActionTexts()
 
 void MainWindow::clearUpdateAvailable()
 {
+  m_UpdateShown = false;
   if (!m_UpdateNotice.isNull()) {
     m_UpdateNotice->close();
     m_UpdateNotice = nullptr;

@@ -365,10 +365,9 @@ void WorkaroundsSettingsTab::on_resetGeometryBtn_clicked()
           .exec();
 
   if (r == QMessageBox::Ok) {
-    settings().geometry().requestReset();
-    // the main window restarts once Settings has saved: closing the dialog
-    // threw the other changes made in it away, and quitting from here would
-    // skip the questions accepting it can still ask
+    // the main window asks for the reset and restarts once Settings has
+    // saved: closing the dialog threw the other changes made in it away, and
+    // quitting from here would skip the questions accepting it can still ask
     dialog().setExitNeeded(dialog().exitNeeded() | Exit::Restart);
     dialog().setRestartConfirmed(true);
     dialog().accept();

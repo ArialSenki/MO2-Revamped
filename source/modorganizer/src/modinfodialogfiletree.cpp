@@ -343,8 +343,9 @@ void FileTreeTab::onDelete()
     message += "\n\n" + metaFileReason();
   }
 
-  if (QMessageBox::question(parentWidget(), tr("Confirm"), message) !=
-      QMessageBox::Yes) {
+  if (QMessageBox::question(parentWidget(), tr("Confirm"), message,
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) != QMessageBox::Yes) {
     return;
   }
 

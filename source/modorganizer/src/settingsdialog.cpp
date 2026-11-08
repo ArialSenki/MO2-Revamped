@@ -351,7 +351,7 @@ void SettingsDialog::accept()
                 "will be disabled in all profiles. "
                 "There is no way to undo this unless you backed up your "
                 "profiles manually. Proceed?"),
-             QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)) {
+             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)) {
       return;
     }
   }
