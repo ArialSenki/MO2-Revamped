@@ -1134,7 +1134,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 and not any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets)
             )
 
-        def move_items(items: list, target) -> None:
+        def move_items(items: list, target, nested: bool = False) -> None:
             updating[0] = True
             for item in items:
                 # a folder can't go inside itself
@@ -1170,10 +1170,12 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 else:
                     # the same folder there already: they become one
                     updating[0] = False
-                    move_items(item.takeChildren(), same)
+                    move_items(item.takeChildren(), same, nested=True)
                     updating[0] = True
             updating[0] = False
-            refresh()
+            # one look once every merged folder is in place
+            if not nested:
+                refresh()
 
         def selected_items() -> list:
             selected = tree.selectedItems()
