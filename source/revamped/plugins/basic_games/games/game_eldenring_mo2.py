@@ -3376,6 +3376,9 @@ class EldenRingMo2Game(BasicGame):
             return
 
         self._main_window = _main_window
+        if _main_window is not None:
+            # MO2 deletes its window itself: no message may use it after that
+            _main_window.destroyed.connect(self._forget_main_window)
 
         global _log_game_name
         _log_game_name = self.DisplayName
@@ -3930,15 +3933,21 @@ class EldenRingMo2Game(BasicGame):
             qCritical(f"Elden Ring MO2: the saves of the failed launch need recovery: {error!r}")
             self._report_displaced_saves()
 
+    def _forget_main_window(self, *_args) -> None:
+        self._main_window = None
+
     def _message_parent(self):
         """MO2's main window, so the plugin's messages open centred on it."""
         window = getattr(self, "_main_window", None)
         if window is not None:
             try:
-                # a window Qt has already deleted can't be a parent
-                window.objectName()
+                # minimized, it would hide a box it owns (a message after the
+                # game closed): such a box gets a taskbar button of its own
+                if window.isMinimized():
+                    return None
                 return window
             except RuntimeError:
+                # a window Qt has already deleted can't be a parent
                 self._main_window = None
         return QApplication.activeWindow()
 
@@ -6022,6 +6031,9 @@ class EldenRingMo2Game(BasicGame):
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(start)
         box.exec()
+        # a child of MO2's window: freed once MO2's event loop runs again,
+        # after the choice below is read
+        box.deleteLater()
         if box.clickedButton() is not start:
             return False
         mod_list.setActive(mod_name, True)
@@ -6354,6 +6366,9 @@ class EldenRingMo2Game(BasicGame):
         box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(start)
         box.exec()
+        # a child of MO2's window: freed once MO2's event loop runs again,
+        # after the choice below is read
+        box.deleteLater()
         if box.clickedButton() is not start:
             return False
         if remember.isChecked():
@@ -6401,6 +6416,9 @@ class EldenRingMo2Game(BasicGame):
         box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(start)
         box.exec()
+        # a child of MO2's window: freed once MO2's event loop runs again,
+        # after the choice below is read
+        box.deleteLater()
         if box.clickedButton() is not start:
             return False
         if remember.isChecked():
@@ -6467,6 +6485,9 @@ class EldenRingMo2Game(BasicGame):
         start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)
         box.setDefaultButton(box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole))
         box.exec()
+        # a child of MO2's window: freed once MO2's event loop runs again,
+        # after the choice below is read
+        box.deleteLater()
         if box.clickedButton() is not start:
             return False
         if remember.isChecked():
@@ -6519,6 +6540,9 @@ class EldenRingMo2Game(BasicGame):
         start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)
         box.setDefaultButton(box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole))
         box.exec()
+        # a child of MO2's window: freed once MO2's event loop runs again,
+        # after the choice below is read
+        box.deleteLater()
         if box.clickedButton() is not start:
             return False
         if remember.isChecked():
@@ -6562,6 +6586,9 @@ class EldenRingMo2Game(BasicGame):
         box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(open_file)
         box.exec()
+        # a child of MO2's window: freed once MO2's event loop runs again,
+        # after the choice below is read
+        box.deleteLater()
         if box.clickedButton() is open_file:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(settings)))
         return False
