@@ -1168,9 +1168,21 @@ void ModList::removeRowForce(int row, const QModelIndex& parent)
 
   m_Profile->cancelModlistWrite();
   beginRemoveRows(parent, row, row);
-  ModInfo::removeMod(row);
+  const bool removed = ModInfo::removeMod(row);
   m_Profile->refreshModStatus();  // removes the mod from the status list
   endRemoveRows();
+
+  if (!removed) {
+    // still there (a file in use, or the deletion was cancelled; removeMod()
+    // said so): the views were told the row went, so they start over, and the
+    // mod keeps its state
+    beginResetModel();
+    endResetModel();
+    m_Profile->setModEnabled(row, wasEnabled);
+    m_Profile->writeModlist();
+    return;
+  }
+
   m_Profile->writeModlist();  // this ensures the modified list gets written back before
                               // new mods can be installed
 

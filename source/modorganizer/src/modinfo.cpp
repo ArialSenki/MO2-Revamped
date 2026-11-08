@@ -177,7 +177,12 @@ bool ModInfo::removeMod(unsigned int index)
 
   // remove the actual mod (this is the most likely to fail so we do this first)
   if (modInfo->isRegular()) {
-    if (!shellDelete(QStringList(modInfo->absolutePath()), true)) {
+    // Windows reports success when a file in use is skipped, and uibase's
+    // shellDelete() deletes for good where there is no Recycle Bin; a mod half
+    // gone would come back at the next refresh with part of its files
+    if (!MOShared::shellRemove({modInfo->absolutePath()}, true,
+                               QApplication::activeWindow())
+             .removed()) {
       reportError(
           tr("remove: failed to delete mod '%1' directory").arg(modInfo->name()));
       return false;
