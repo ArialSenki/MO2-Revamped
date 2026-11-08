@@ -2079,6 +2079,11 @@ void DownloadManager::nxmFileInfoFromMd5Available(QString gameName, QVariant use
   }
 
   DownloadInfo* info = downloadInfoByID(userData.toInt());
+  if (info == nullptr) {
+    // removed while Nexus was asked, as the other answers check
+    log::debug("the download of an MD5 answer is gone");
+    return;
+  }
 
   // This can come back with multiple results with the same file was uploaded multiple
   // times (for whatever reason)
