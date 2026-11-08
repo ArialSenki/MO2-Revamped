@@ -4580,7 +4580,7 @@ void MainWindow::on_actionSettings_triggered()
   const QString oldLanguage     = settings.interface().language();
 
   SettingsDialog dialog(&m_PluginContainer, settings, this);
-  dialog.exec();
+  const int settingsResult = dialog.exec();
 
   auto e = dialog.exitNeeded();
 
@@ -4612,9 +4612,9 @@ void MainWindow::on_actionSettings_triggered()
 
   if (e.testFlag(Exit::Restart)) {
     // a restart already agreed to in Settings (Reset window geometries) isn't
-    // asked again
+    // asked again, unless Settings refused to save and was then cancelled
     const auto r =
-        dialog.restartConfirmed()
+        dialog.restartConfirmed() && settingsResult == QDialog::Accepted
             ? QMessageBox::Yes
             : MOBase::TaskDialog(this)
                   .title(tr("Restart Mod Organizer"))
