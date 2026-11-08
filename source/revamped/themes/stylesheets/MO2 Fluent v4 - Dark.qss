@@ -5888,6 +5888,11 @@ QFrame#fluentSettingRow:hover {
     border-radius: 6px;
     border-top: 1px solid transparent;
 }
+/* The choice rows of "already installed" take the keyboard focus. */
+QFrame#fluentSettingRow[choiceRow="true"]:focus {
+    border: 1px solid #60CDFF;
+    border-radius: 6px;
+}
 QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"]:hover,
 QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice:hover {
     border-radius: 6px;

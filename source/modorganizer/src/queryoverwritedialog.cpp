@@ -28,6 +28,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -38,19 +39,28 @@ namespace
 class ChoiceRow : public QObject
 {
 public:
-  ChoiceRow(QFrame* row, QPushButton* button) : QObject(row), m_button(button)
+  ChoiceRow(QFrame* row, QPushButton* button)
+      : QObject(row), m_row(row), m_button(button)
   {
     row->installEventFilter(this);
     row->setFocusPolicy(Qt::StrongFocus);
     row->setCursor(Qt::PointingHandCursor);
     row->setAccessibleName(button->text().remove(QLatin1Char('&')));
+    // the theme draws the keyboard focus on these rows
+    row->setProperty("choiceRow", true);
   }
 
 protected:
   bool eventFilter(QObject* watched, QEvent* event) override
   {
     if (event->type() == QEvent::MouseButtonRelease) {
-      m_button->click();
+      // a left click on the row, as on a button: a right click, or letting go
+      // after dragging off the row, does not install anything
+      const auto* mouse = static_cast<QMouseEvent*>(event);
+      if (mouse->button() == Qt::LeftButton &&
+          m_row->rect().contains(mouse->position().toPoint())) {
+        m_button->click();
+      }
       return true;
     }
     if (event->type() == QEvent::KeyPress) {
@@ -64,6 +74,7 @@ protected:
   }
 
 private:
+  QFrame* m_row;
   QPushButton* m_button;
 };
 }  // namespace
