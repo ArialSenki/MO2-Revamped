@@ -205,7 +205,6 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	fluentscrollbar
 	fluentmotion
 	fluenttabwidget
-	iconfetcher
 	filetree
 	filetreeitem
 	filetreemodel

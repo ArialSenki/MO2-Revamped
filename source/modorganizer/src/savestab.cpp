@@ -453,6 +453,7 @@ void SavesTab::onContextMenu(const QPoint& pos)
     auto& save = m_SaveGames[rows[0].row()];
     SaveGameInfo::MissingAssets missing = info->getMissingAssets(*save);
     if (missing.size() != 0) {
+      menu.setToolTipsVisible(true);
       QAction* action = menu.addAction(tr("Restore required plugins..."));
       action->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
       action->setToolTip(

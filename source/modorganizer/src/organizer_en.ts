@@ -8641,7 +8641,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ModListSortProxy</name>
     <message>
-        <location filename="modlistsortproxy.cpp" line="661"/>
+        <location filename="modlistsortproxy.cpp" line="640"/>
         <source>Drag&amp;Drop is only supported when sorting by priority</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13341,53 +13341,53 @@ You can restart Mod Organizer as administrator and try launching the program aga
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="456"/>
+        <location filename="savestab.cpp" line="457"/>
         <source>Restore required plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="459"/>
+        <location filename="savestab.cpp" line="460"/>
         <source>Choose installed mods to activate the plugins required by this save.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="468"/>
+        <location filename="savestab.cpp" line="469"/>
         <source>Show in folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="472"/>
+        <location filename="savestab.cpp" line="473"/>
         <source>File name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="473"/>
+        <location filename="savestab.cpp" line="474"/>
         <source>File path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="474"/>
+        <location filename="savestab.cpp" line="475"/>
         <source>Folder path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="479"/>
+        <location filename="savestab.cpp" line="480"/>
         <source>Delete...</source>
         <oldsource>Delete %n save(s)...</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="480"/>
+        <location filename="savestab.cpp" line="481"/>
         <source>Delete %1 saves...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="517"/>
+        <location filename="savestab.cpp" line="518"/>
         <source>Restore required plugins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="savestab.cpp" line="518"/>
+        <location filename="savestab.cpp" line="519"/>
         <source>No installed mod has these plugins, so they were not restored:
 
 %1</source>
