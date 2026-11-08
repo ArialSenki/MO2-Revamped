@@ -517,7 +517,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             (skip_logos_box,),
         )
         boot_boost_box = QCheckBox()
-        boot_boost_box.setChecked(boot_boost and not nightreign)
+        boot_boost_box.setChecked(boot_boost)
         boot_boost_row = add_row(
             intro_card, 0xE945, _tr("Faster game start (BootBoost)"),
             _tr("Keeps the game's archive headers, which it decrypts on every start, "
@@ -529,8 +529,6 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             # the patch matches Elden Ring's game code only
             skip_logos_box.setEnabled(False)
             skip_logos_row.setToolTip(_tr("Not available for Nightreign yet."))
-            boot_boost_box.setEnabled(False)
-            boot_boost_row.setToolTip(_tr("Not available for Nightreign yet."))
         launch_page.addStretch(1)
 
         # --- Performance ---------------------------------------------------

@@ -51,7 +51,8 @@ constexpr uint64_t kAkOpenRead = 0;
 constexpr uint64_t kAkOpenReadEbl = 10;
 constexpr size_t kAkFlagsLanguageSpecific = 0x18;
 constexpr uint32_t kAkCodecPlainPath = 0x15;
-WwiseOpenFileByName g_original_wwise_open = nullptr;
+// one per hooked function: Elden Ring has one, Nightreign two of the same shape
+WwiseOpenFileByName g_original_wwise_open[2] = {nullptr, nullptr};
 SRWLOCK g_wwise_overrides_lock = SRWLOCK_INIT;
 // never destroyed: the audio thread can still open files while the process exits
 auto& g_wwise_overrides = *new std::unordered_map<std::wstring, std::wstring>();
@@ -1798,12 +1799,12 @@ std::wstring find_wwise_override(const wchar_t* request) {
   return {};
 }
 
-uintptr_t __cdecl wwise_open_file_hook(uintptr_t p1, const wchar_t* path,
-                                       uint64_t open_mode, uintptr_t p4,
-                                       uintptr_t p5, uintptr_t p6) {
+uintptr_t wwise_open_file(WwiseOpenFileByName original, uintptr_t p1,
+                          const wchar_t* path, uint64_t open_mode, uintptr_t p4,
+                          uintptr_t p5, uintptr_t p6) {
   if (path == nullptr ||
       (open_mode != kAkOpenRead && open_mode != kAkOpenReadEbl)) {
-    return g_original_wwise_open(p1, path, open_mode, p4, p5, p6);
+    return original(p1, path, open_mode, p4, p5, p6);
   }
 
   const std::wstring request = path;
@@ -1841,7 +1842,7 @@ uintptr_t __cdecl wwise_open_file_hook(uintptr_t p1, const wchar_t* path,
   }
 
   if (loose == nullptr) {
-    return g_original_wwise_open(p1, path, open_mode, p4, p5, p6);
+    return original(p1, path, open_mode, p4, p5, p6);
   }
   // an ordinary read from disk instead of the read from the archives
   const size_t loose_length = wcslen(loose);
@@ -1853,7 +1854,7 @@ uintptr_t __cdecl wwise_open_file_hook(uintptr_t p1, const wchar_t* path,
     // first one worked left Reforged's boss music silent, and a fallback to the
     // game's own here loaded the original bank instead of the mod's.
     const uintptr_t opened =
-        g_original_wwise_open(p1, loose, kAkOpenRead, p4, p5, p6);
+        original(p1, loose, kAkOpenRead, p4, p5, p6);
     if (static_cast<uint32_t>(opened) == 1 &&
         InterlockedIncrement(&g_logged_wwise_open_successes) <= 64) {
       log_line("MO2 Wwise loose open worked:", loose);
@@ -1873,7 +1874,7 @@ uintptr_t __cdecl wwise_open_file_hook(uintptr_t p1, const wchar_t* path,
     flags_to_use = reinterpret_cast<uintptr_t>(flags);
   }
   const uintptr_t opened =
-      g_original_wwise_open(p1, loose, kAkOpenRead, flags_to_use, p5, p6);
+      original(p1, loose, kAkOpenRead, flags_to_use, p5, p6);
   if (static_cast<uint32_t>(opened) == 1) {
     if (InterlockedIncrement(&g_logged_wwise_open_successes) <= 64) {
       log_line("MO2 Wwise loose open worked:", loose);
@@ -1884,7 +1885,19 @@ uintptr_t __cdecl wwise_open_file_hook(uintptr_t p1, const wchar_t* path,
     log_line("MO2 Wwise loose open failed, using the game's own:", loose);
   }
   // better the game's own sound than silence
-  return g_original_wwise_open(p1, path, open_mode, p4, p5, p6);
+  return original(p1, path, open_mode, p4, p5, p6);
+}
+
+uintptr_t __cdecl wwise_open_file_hook_0(uintptr_t p1, const wchar_t* path,
+                                         uint64_t open_mode, uintptr_t p4,
+                                         uintptr_t p5, uintptr_t p6) {
+  return wwise_open_file(g_original_wwise_open[0], p1, path, open_mode, p4, p5, p6);
+}
+
+uintptr_t __cdecl wwise_open_file_hook_1(uintptr_t p1, const wchar_t* path,
+                                         uint64_t open_mode, uintptr_t p4,
+                                         uintptr_t p5, uintptr_t p6) {
+  return wwise_open_file(g_original_wwise_open[1], p1, path, open_mode, p4, p5, p6);
 }
 
 // call WwiseOpenFileByName; cmp eax,1; je ?; add reg,38h; cmp qword [rbp+?],8
@@ -1942,7 +1955,10 @@ bool install_wwise_hook() {
   const size_t image_size = nt->OptionalHeader.SizeOfImage;
   const IMAGE_SECTION_HEADER* sections = IMAGE_FIRST_SECTION(nt);
 
-  void* open_file = nullptr;
+  // Elden Ring has one function, Nightreign two of the same shape that differ
+  // only in where their object keeps its data: both are hooked
+  void* open_files[2] = {nullptr, nullptr};
+  unsigned int open_file_count = 0;
   for (unsigned int index = 0; index < nt->FileHeader.NumberOfSections; ++index) {
     const IMAGE_SECTION_HEADER& section = sections[index];
     if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
@@ -1965,28 +1981,55 @@ bool install_wwise_hook() {
                                     nt->FileHeader.NumberOfSections)) {
         continue;
       }
-      // Nightreign has two functions here and it isn't known yet which one to take
-      if (open_file != nullptr && open_file != target) {
-        log_line("Wwise hook skipped: more than one candidate function.");
+      bool known = false;
+      for (unsigned int i = 0; i < open_file_count; ++i) {
+        known = known || open_files[i] == target;
+      }
+      if (known) {
+        continue;
+      }
+      if (open_file_count == 2) {
+        log_line("Wwise hook skipped: more than two candidate functions.");
         return false;
       }
-      open_file = target;
+      open_files[open_file_count++] = target;
     }
   }
-  if (open_file == nullptr) {
+  if (open_file_count == 0) {
     log_line("Wwise hook skipped: function not found. Mods' sound files won't load.");
     return false;
   }
 
   const MH_STATUS initialized = MH_Initialize();
-  if ((initialized != MH_OK && initialized != MH_ERROR_ALREADY_INITIALIZED) ||
-      MH_CreateHook(open_file, reinterpret_cast<void*>(&wwise_open_file_hook),
-                    reinterpret_cast<void**>(&g_original_wwise_open)) != MH_OK ||
-      MH_EnableHook(open_file) != MH_OK) {
-    log_line("Wwise hook skipped: the detour could not be installed.");
+  if (initialized != MH_OK && initialized != MH_ERROR_ALREADY_INITIALIZED) {
+    log_line("Wwise hook skipped: MinHook could not start.");
     return false;
   }
-  log_line("Wwise hook installed for MO2.");
+  void* const hooks[2] = {reinterpret_cast<void*>(&wwise_open_file_hook_0),
+                          reinterpret_cast<void*>(&wwise_open_file_hook_1)};
+  // created first, then enabled together: a half-installed pair would serve
+  // mods' sounds through one function only
+  for (unsigned int i = 0; i < open_file_count; ++i) {
+    if (MH_CreateHook(open_files[i], hooks[i],
+                      reinterpret_cast<void**>(&g_original_wwise_open[i])) != MH_OK) {
+      for (unsigned int j = 0; j < i; ++j) {
+        MH_RemoveHook(open_files[j]);
+      }
+      log_line("Wwise hook skipped: the detour could not be installed.");
+      return false;
+    }
+  }
+  for (unsigned int i = 0; i < open_file_count; ++i) {
+    if (MH_EnableHook(open_files[i]) != MH_OK) {
+      for (unsigned int j = 0; j < open_file_count; ++j) {
+        MH_DisableHook(open_files[j]);
+      }
+      log_line("Wwise hook skipped: the detour could not be enabled.");
+      return false;
+    }
+  }
+  log_line(open_file_count == 1 ? "Wwise hook installed for MO2."
+                                : "Wwise hook installed for MO2 (2 functions).");
   return true;
 }
 

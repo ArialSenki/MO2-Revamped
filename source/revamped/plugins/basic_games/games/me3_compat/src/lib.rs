@@ -132,10 +132,16 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
         std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
         log::info!("MO2 me3 compatibility 0.5.0 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
         // me3's asset code reads the launched game from me3's launcher, as a
-        // JSON string; under MO2 there is none, so it is set here
+        // JSON string; under MO2 there is none, so it is set here from the
+        // executable's name
         if std::env::var_os("ME3_GAME_LAUNCHED").is_none() {
+            let nightreign = std::env::current_exe()
+                .ok()
+                .and_then(|exe| exe.file_name().map(|name| name.to_ascii_lowercase()))
+                .is_some_and(|name| name == "nightreign.exe");
+            let game = if nightreign { "\"nightreign\"" } else { "\"eldenring\"" };
             // still in DllMain, before any thread of this DLL runs
-            std::env::set_var("ME3_GAME_LAUNCHED", "\"eldenring\"");
+            std::env::set_var("ME3_GAME_LAUNCHED", game);
         }
         if std::env::var_os("ME3_ATTACH_CONFIG").is_none() {
             // not Reforged: Arxan stays as it is, and only BootBoost runs,

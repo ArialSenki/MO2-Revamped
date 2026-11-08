@@ -4747,8 +4747,8 @@ class EldenRingMo2Game(BasicGame):
             return False
 
     def _read_boot_boost(self, path: Path) -> bool:
-        # on unless the profile turned it off (Elden Ring only)
-        default = self.GameShortName != "nightreign"
+        # on unless the profile turned it off
+        default = True
         config = configparser.ConfigParser()
         try:
             config.read(path, encoding="utf-8-sig")
@@ -5734,9 +5734,7 @@ class EldenRingMo2Game(BasicGame):
     ) -> mobase.ExecutableForcedLoadSetting | None:
         """The me3 compatibility DLL's forced load: on every Elden Ring start
         for BootBoost, and what Reforged needs when it is among the loads."""
-        if self.GameShortName == "nightreign":
-            # BootBoost and the Reforged fixes are Elden Ring's
-            return None
+        # Nightreign too, for BootBoost (Reforged is an Elden Ring mod)
         reforged = any(
             Path(load.library()).name.casefold() == EldenRingModDataChecker._reforged_dll
             for load in forced_loads
