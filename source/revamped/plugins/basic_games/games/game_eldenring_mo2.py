@@ -3939,6 +3939,7 @@ class EldenRingMo2Game(BasicGame):
         self._mod_turned_on_for_launch = None
         allowed = False
         quarantine_before = self._active_save_quarantine
+        EldenRingMo2Game._executable_reads = {}
         try:
             allowed = self._check_profile_launch(app_path, working_directory, args)
             return allowed
@@ -3955,6 +3956,7 @@ class EldenRingMo2Game(BasicGame):
             )
             return False
         finally:
+            EldenRingMo2Game._executable_reads = None
             if not allowed and self._mod_turned_on_for_launch:
                 try:
                     self._organizer.modList().setActive(self._mod_turned_on_for_launch, False)
@@ -6400,12 +6402,27 @@ class EldenRingMo2Game(BasicGame):
             and self._launch_method(app_path) == self.LaunchMethodSwap
         )
 
+    # the checks of one launch share their read of the game's executable (it
+    # is large); None outside a launch, so its bytes aren't kept in memory
+    _executable_reads: dict | None = None
+
+    @staticmethod
+    def _read_game_executable(executable: Path) -> bytes:
+        reads = EldenRingMo2Game._executable_reads
+        if reads is None:
+            return executable.read_bytes()
+        info = executable.stat()
+        key = (str(executable), info.st_size, info.st_mtime_ns)
+        if key not in reads:
+            reads[key] = executable.read_bytes()
+        return reads[key]
+
     @classmethod
     def file_loader_found(cls, executable: Path) -> bool | None:
         """Whether the bridge will find the game's file loader in this executable,
         by the rules of its own search; None when the file can't be read."""
         try:
-            data = executable.read_bytes()
+            data = EldenRingMo2Game._read_game_executable(executable)
             header = struct.unpack_from("<I", data, 0x3C)[0]
             count = struct.unpack_from("<H", data, header + 6)[0]
             optional_size = struct.unpack_from("<H", data, header + 20)[0]
@@ -6457,7 +6474,7 @@ class EldenRingMo2Game(BasicGame):
         """The version as the game shows it (Elden Ring keeps it in the text
         "Gr v1.17.2#1131") with the file's own, or whichever of them is there."""
         try:
-            data = executable.read_bytes()
+            data = EldenRingMo2Game._read_game_executable(executable)
         except OSError:
             return ""
         file_version = ""
@@ -6579,7 +6596,7 @@ class EldenRingMo2Game(BasicGame):
         only, at even offsets. None when the file can't be read."""
         pattern = ".sl2".encode("utf-16-le")
         try:
-            data = executable.read_bytes()
+            data = EldenRingMo2Game._read_game_executable(executable)
             header = struct.unpack_from("<I", data, 0x3C)[0]
             count = struct.unpack_from("<H", data, header + 6)[0]
             optional_size = struct.unpack_from("<H", data, header + 20)[0]
