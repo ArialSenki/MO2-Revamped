@@ -1067,6 +1067,8 @@ QFrame* addRowsCard(QBoxLayout* page, int index, QWidget* parent, const QString&
 QWidget* rowColumn(QHBoxLayout* columns, QWidget* parent)
 {
   auto* column = new QWidget(parent);
+  // the rows' own name: without it the theme paints the window's color here
+  column->setObjectName(QStringLiteral("instanceDetailRows"));
   auto* layout = new QVBoxLayout(column);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
@@ -1149,6 +1151,7 @@ void ModInfoDialog::buildFluentPages()
     }
 
     auto* custom       = new QWidget(card);
+    custom->setObjectName(QStringLiteral("instanceDetailRows"));
     auto* customLayout = new QHBoxLayout(custom);
     customLayout->setContentsMargins(0, 0, 0, 0);
     customLayout->setSpacing(6);

@@ -5973,3 +5973,25 @@ QTreeWidget#categoryTree::item:selected,
 QTreeWidget#categoryTree::item:selected:!active {
     background-color: transparent;
 }
+
+/* Card titles as large as in the other windows. */
+QDialog#SettingsDialog QWidget#generalTab QLabel#generalSectionTitle,
+QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsSectionTitle,
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListDisplaySectionTitle,
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListWorkflowSectionTitle,
+QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsSectionTitle,
+QDialog#SettingsDialog QWidget#themeTab QLabel#themeSectionTitle,
+QDialog#SettingsDialog QWidget#pluginsTab QLabel#pluginSectionTitle,
+QDialog#SettingsDialog QWidget#diagnosticsTab QLabel#diagnosticsSectionTitle,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusAccountTitle,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusUsageTitle,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusConnectionTitle,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusOptionsTitle,
+QDialog#SettingsDialog QWidget#nexusTab QLabel#nexusServersTitle,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundBehaviorTitle,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundMaintenanceTitle,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundNetworkTitle,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundSteamTitle,
+QDialog#SettingsDialog QWidget#workaroundTab QLabel#workaroundVfsTitle {
+    font-size: 12pt;
+}
