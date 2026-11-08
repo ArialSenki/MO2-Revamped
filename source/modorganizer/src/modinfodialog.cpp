@@ -249,7 +249,7 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
     });
 
     // in a multi-line editor these keys scroll the text
-    connect(qApp, &QApplication::focusChanged, this, [next, previous](QWidget*, QWidget* now) {
+    connect(qApp, &QApplication::focusChanged, next, [next, previous](QWidget*, QWidget* now) {
       const bool multiLine =
           qobject_cast<QPlainTextEdit*>(now) != nullptr || qobject_cast<QTextEdit*>(now) != nullptr;
       next->setEnabled(!multiLine);
@@ -1164,6 +1164,8 @@ void ModInfoDialog::buildFluentPages()
     ui->visitCustomURL->setToolTip(tr("Open the custom page"));
     ui->visitCustomURL->setAccessibleName(ui->visitCustomURL->toolTip());
     ui->visitCustomURL->setProperty("fluentKeepIcon", true);
+    // Enter in a field of this page must not open the browser
+    ui->visitCustomURL->setAutoDefault(false);
     FluentPanels::addSwitchRow(card, 0xE71B, tr("Custom web page"),
                                tr("For mods from elsewhere: the page Open opens instead "
                                   "of Nexus"),

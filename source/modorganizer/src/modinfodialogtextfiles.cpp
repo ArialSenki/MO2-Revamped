@@ -3,6 +3,7 @@
 #include "settings.h"
 #include "ui_modinfodialog.h"
 #include <QFile>
+#include <QFileInfo>
 #include <QMessageBox>
 
 class FileListModel : public QAbstractItemModel
@@ -166,15 +167,29 @@ void GenericFilesTab::update()
   // opens a file right away instead of an empty editor, the readme first
   auto* model = m_list->model();
   if (!m_list->currentIndex().isValid() && model != nullptr && model->rowCount() > 0) {
-    QModelIndex first = model->index(0, 0);
+    // a huge log would freeze the dialog each time it updates: those wait
+    // until they are picked
+    constexpr qint64 AutoOpenLimit = 2 * 1024 * 1024;
+    const auto openable = [&](const QModelIndex& index) {
+      return QFileInfo(m_model->fullPath(m_filter.mapToSource(index))).size() <=
+             AutoOpenLimit;
+    };
+
+    QModelIndex first;
     for (int row = 0; row < model->rowCount(); ++row) {
       const QModelIndex index = model->index(row, 0);
-      if (index.data().toString().contains(QStringLiteral("readme"), Qt::CaseInsensitive)) {
+      const bool readme =
+          index.data().toString().contains(QStringLiteral("readme"), Qt::CaseInsensitive);
+      if ((readme || !first.isValid()) && openable(index)) {
         first = index;
-        break;
+        if (readme) {
+          break;
+        }
       }
     }
-    m_list->selectionModel()->setCurrentIndex(first, QItemSelectionModel::ClearAndSelect);
+    if (first.isValid()) {
+      m_list->selectionModel()->setCurrentIndex(first, QItemSelectionModel::ClearAndSelect);
+    }
   }
 }
 

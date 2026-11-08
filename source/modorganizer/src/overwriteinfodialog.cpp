@@ -149,6 +149,11 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
                    SLOT(createDirectoryTriggered()));
 
   buildFluentLayout();
+
+  // Enter in the search box filters; it must not press a button
+  for (auto* button : findChildren<QPushButton*>()) {
+    button->setAutoDefault(false);
+  }
 }
 
 void OverwriteInfoDialog::buildFluentLayout()
@@ -241,6 +246,22 @@ void OverwriteInfoDialog::buildFluentLayout()
       ui->filesView->expandAll();
     }
   });
+  // the model loads folders as they open: a match deeper down needs the
+  // expansion to go on as each level arrives; one pass per burst of folders
+  auto* expandAgain = new QTimer(this);
+  expandAgain->setSingleShot(true);
+  expandAgain->setInterval(100);
+  connect(expandAgain, &QTimer::timeout, this, [this, search] {
+    if (!search->text().trimmed().isEmpty()) {
+      ui->filesView->expandAll();
+    }
+  });
+  connect(m_FileSystemModel, &QFileSystemModel::directoryLoaded, expandAgain,
+          [expandAgain, search] {
+            if (!search->text().trimmed().isEmpty()) {
+              expandAgain->start();
+            }
+          });
   connect(m_empty, &QPushButton::clicked, this, &OverwriteInfoDialog::emptyOverwrite);
 
   auto* files = new QFrame(card);

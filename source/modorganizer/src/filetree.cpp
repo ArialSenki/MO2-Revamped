@@ -282,15 +282,26 @@ void FileTree::activate(FileTreeItem* item)
     }
   }
 
-  if (spawn::getFileExecutionType(QFileInfo(item->realPath())) ==
-          spawn::FileExecutionTypes::Executable &&
-      QMessageBox::question(m_tree->window(), tr("Start without your mods?"),
-                            tr("\"%1\" would start without your mods, and a game would "
-                               "not use this profile's saves. To start it with them, use "
-                               "Run.\n\nStart it anyway?")
-                                .arg(item->filename()),
-                            QMessageBox::Yes | QMessageBox::No,
-                            QMessageBox::No) != QMessageBox::Yes) {
+  if (!item->isFromArchive() && !item->isDirectory() &&
+      spawn::getFileExecutionType(QFileInfo(item->realPath())) ==
+          spawn::FileExecutionTypes::Executable) {
+    // a refresh while the question is open can delete the item: keep its path
+    const QFileInfo target(item->realPath());
+    if (QMessageBox::question(m_tree->window(), tr("Start without your mods?"),
+                              tr("\"%1\" would start without your mods, and a game would "
+                                 "not use this profile's saves. To start it with them, use "
+                                 "Run.\n\nStart it anyway?")
+                                  .arg(item->filename()),
+                              QMessageBox::Yes | QMessageBox::No,
+                              QMessageBox::No) != QMessageBox::Yes) {
+      return;
+    }
+
+    m_core.processRunner()
+        .setFromFile(m_tree->window(), target)
+        .setHooked(false)
+        .setWaitForCompletion(ProcessRunner::TriggerRefresh)
+        .run();
     return;
   }
 
