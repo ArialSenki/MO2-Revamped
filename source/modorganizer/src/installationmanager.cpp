@@ -1113,7 +1113,9 @@ InstallationResult InstallationManager::install(const QString& fileName,
 
   bool archiveOpen = m_ArchiveHandler->open(fileName.toStdWString(), askPassword);
   // a wrong password keeps the archive from opening
-  while (!archiveOpen && m_PasswordAsked && !m_PasswordCancelled) {
+  // a few tries: a damaged encrypted archive never opens, whatever is typed
+  for (int tries = 1; !archiveOpen && m_PasswordAsked && !m_PasswordCancelled && tries < 5;
+       ++tries) {
     m_PasswordRejected = true;
     m_PasswordAsked    = false;
     m_ArchiveHandler->close();

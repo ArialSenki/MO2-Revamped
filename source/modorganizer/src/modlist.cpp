@@ -1215,8 +1215,19 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
     }
   }
 
+  // by name: removing one moves the rows after it
+  QStringList names;
   for (int i = 0; i < count; ++i) {
-    ModInfo::Ptr modInfo = ModInfo::getByIndex(row + i);
+    names.append(ModInfo::getByIndex(row + i)->name());
+  }
+
+  for (const QString& name : names) {
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index == UINT_MAX) {
+      continue;
+    }
+
+    ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
     if (!modInfo->isRegular()) {
       continue;
     }
@@ -1230,7 +1241,7 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
 
     if (confirmBox.exec() == QMessageBox::Yes) {
       // removeRowForce() disables it, and enables it again if it can't go
-      removeRowForce(row + i, parent);
+      removeRowForce(static_cast<int>(ModInfo::getIndex(name)), parent);
     }
   }
 
