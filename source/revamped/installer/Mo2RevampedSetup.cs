@@ -1648,21 +1648,46 @@ namespace Mo2RevampedSetup
 
         // the Elden Ring / Nightreign saves an instance keeps beside its
         // profiles: the saves shared by its profiles, their backups and the
-        // backups of the Steam route ("Profiles and saves" takes them along)
-        private static readonly string[] InstanceSaveFolders = new string[]
+        // backups of the Steam route ("Profiles and saves" takes them along),
+        // as (source folder, name in the new installation). The shared saves
+        // are found as the game plugins find them (instance_shared_directory):
+        // in the instance's base folder, or beside a customised profiles folder
+        // where earlier builds kept them, when only that one holds anything
+        private static List<KeyValuePair<string, string>> InstanceSaveFolders(string dataRoot)
         {
-            "Elden Ring Shared Saves", "Elden Ring Shared Saves Backups", "Elden Ring Global Save Backups",
-            "Nightreign Shared Saves", "Nightreign Shared Saves Backups", "Nightreign Global Save Backups"
-        };
+            string baseDirectory = ResolveBaseDirectory(dataRoot);
+            string profilesParent = Path.GetDirectoryName(
+                ResolveConfiguredDirectory(dataRoot, "profiles_directory", "profiles").TrimEnd(Path.DirectorySeparatorChar));
+            List<KeyValuePair<string, string>> folders = new List<KeyValuePair<string, string>>();
+            foreach (string game in new string[] { "Elden Ring", "Nightreign" })
+            {
+                string name = game + " Shared Saves";
+                string shared = Path.Combine(baseDirectory, name);
+                if (!String.IsNullOrEmpty(profilesParent))
+                {
+                    string legacy = Path.Combine(profilesParent, name);
+                    if (!PathsEqual(shared, legacy) && !HasEntries(shared) && HasEntries(legacy)) shared = legacy;
+                }
+                folders.Add(new KeyValuePair<string, string>(shared, name));
+                folders.Add(new KeyValuePair<string, string>(shared + " Backups", name + " Backups"));
+                folders.Add(new KeyValuePair<string, string>(Path.Combine(baseDirectory, game + " Global Save Backups"), game + " Global Save Backups"));
+            }
+            return folders;
+        }
+
+        private static bool HasEntries(string directory)
+        {
+            try { return Directory.Exists(directory) && Directory.EnumerateFileSystemEntries(directory).Any(); }
+            catch { return false; }
+        }
 
         private static List<CopyEntry> EnumerateMigrationFiles(SetupRequest request)
         {
             List<CopyEntry> files = new List<CopyEntry>();
             string root = Path.GetFullPath(request.SourceDataDirectory);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "profiles_directory", "profiles"), "profiles", request.CopyProfiles);
-            string baseDirectory = ResolveBaseDirectory(root);
-            foreach (string folder in InstanceSaveFolders)
-                AddSelectedTree(files, Path.Combine(baseDirectory, folder), folder, request.CopyProfiles);
+            foreach (KeyValuePair<string, string> folder in InstanceSaveFolders(root))
+                AddSelectedTree(files, folder.Key, folder.Value, request.CopyProfiles);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "mod_directory", "mods"), "mods", request.CopyMods);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "download_directory", "downloads"), "downloads", request.CopyDownloads);
             AddSelectedTree(files, ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"), "overwrite", request.CopyOverwrite);
@@ -1688,7 +1713,7 @@ namespace Mo2RevampedSetup
             {
                 string root = Path.GetFullPath(request.SourceDataDirectory);
                 if (request.CopyProfiles && TreeHasFile(ResolveConfiguredDirectory(root, "profiles_directory", "profiles"))) return true;
-                if (request.CopyProfiles && InstanceSaveFolders.Any(folder => TreeHasFile(Path.Combine(ResolveBaseDirectory(root), folder)))) return true;
+                if (request.CopyProfiles && InstanceSaveFolders(root).Any(folder => TreeHasFile(folder.Key))) return true;
                 if (request.CopyMods && TreeHasFile(ResolveConfiguredDirectory(root, "mod_directory", "mods"))) return true;
                 if (request.CopyDownloads && TreeHasFile(ResolveConfiguredDirectory(root, "download_directory", "downloads"))) return true;
                 if (request.CopyOverwrite && TreeHasFile(ResolveConfiguredDirectory(root, "overwrite_directory", "overwrite"))) return true;
