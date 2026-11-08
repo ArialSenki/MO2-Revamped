@@ -846,10 +846,6 @@ QComboBox#executablesListBox QAbstractItemView {
     max-height: 320px;
 }
 
-QComboBox#styleBox {
-    min-width: 320px;
-}
-
 QTreeWidget#pluginSettingsList::item,
 QTreeWidget#pluginSettingsList::item:hover,
 QTreeWidget#pluginSettingsList::item:selected,
@@ -1144,9 +1140,9 @@ QDialog#SettingsDialog QWidget#generalTab QScrollArea#generalScrollArea {
 
 QDialog#SettingsDialog QWidget#generalTab QGroupBox {
     color: #1A1A1A;
-    background-color: #FFFFFF;
+    background-color: #FBFBFB;
     border: 1px solid #D8D8D8;
-    border-radius: 7px;
+    border-radius: 8px;
     margin-top: 4px;
     padding: 8px 10px;
 }
@@ -5985,4 +5981,33 @@ QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
 }
 QDialog#ModInfoDialog QTabWidget#tabConflictsTabs::pane {
     border: none;
+}
+
+/* Settings pages: the slot of Restore default colors takes the card's colour. */
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeColorsGroup QWidget#widget_5 {
+    background-color: #FBFBFB;
+    border: none;
+}
+
+/* Settings pages: the selected plugin is one pill across its branch and its text. */
+QTreeWidget#pluginsList::item:selected {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+QTreeWidget#pluginsList::branch:selected:!has-children {
+    background-color: #E6EBF1;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+/* Settings pages: the options table's headers start where its rows do. */
+QTreeWidget#pluginSettingsList QHeaderView::section {
+    padding-left: 5px;
+}
+
+/* Settings pages: a scroll bar in a multi-line prompt sits on the field's colour. */
+QInputDialog QPlainTextEdit QScrollBar:vertical {
+    background-color: #FFFFFF;
 }

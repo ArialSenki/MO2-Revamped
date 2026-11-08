@@ -24,7 +24,8 @@ ModListSettingsTab::ModListSettingsTab(Settings& s, SettingsDialog& d)
   // the sub-headings start where the rows' titles do, with room above them
   for (QLabel* label : {ui->collapsibleSeparatorsLabel,
                         ui->collapsibleSeparatorsHighlightLabel,
-                        ui->collapsibleSeparatorsIconsLabel}) {
+                        ui->collapsibleSeparatorsIconsLabel,
+                        ui->collapsibleSeparatorsProfilesLabel}) {
     label->setContentsMargins(4, 8, 4, 0);
   }
   CircularUi::addGroupHeading(

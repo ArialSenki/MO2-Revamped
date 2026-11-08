@@ -101,6 +101,10 @@ PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
     ui->label_26->setWordWrap(true);
     ui->label_26->setContentsMargins(4, 0, 4, 0);
     storageLayout->addWidget(ui->label_26, 6, 0, 1, 3);
+    ui->label_23->setObjectName(QStringLiteral("pathsWritableHint"));
+    ui->label_23->setText(QObject::tr("All directories must be writable."));
+    ui->label_23->setContentsMargins(4, 0, 4, 0);
+    storageLayout->addWidget(ui->label_23, 7, 0, 1, 3);
     storageLayout->setColumnStretch(1, 1);
     MOBase::CircularUi::addGroupHeading(
         storageGroup, ":/MO/gui/mainwindow/files/folder.svg",
@@ -122,14 +126,8 @@ PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
         QStringLiteral("pathsGameIcon"), 26,
         QStringLiteral("pathsSectionTitle"), QStringLiteral("G"));
 
-    ui->label_23->setObjectName(QStringLiteral("pathsWritableHint"));
-    ui->label_23->setText(QObject::tr("All directories must be writable."));
-    // below the cards, in line with their text
-    ui->label_23->setContentsMargins(24, 0, 4, 0);
-
     pageLayout->addWidget(storageGroup);
     pageLayout->addWidget(gameGroup);
-    pageLayout->addWidget(ui->label_23);
     pageLayout->addStretch(1);
   }
 

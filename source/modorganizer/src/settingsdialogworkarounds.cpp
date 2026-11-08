@@ -17,7 +17,9 @@
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QSizePolicy>
+#include <QTextDocument>
 #include <QTimer>
+#include <QtMath>
 #include <QVBoxLayout>
 
 namespace
@@ -43,6 +45,16 @@ QString askLines(QWidget* parent, const QString& title, const QString& label,
       cursor.clearSelection();
       cursor.movePosition(QTextCursor::Start);
       edit->setTextCursor(cursor);
+
+      // whole lines: a height that fits a part of one cut the last entry
+      const int line = edit->fontMetrics().lineSpacing();
+      if (line > 0) {
+        const int chrome =
+            edit->height() - edit->viewport()->height() +
+            2 * qCeil(edit->document()->documentMargin());
+        const int lines = qCeil(double(edit->height() - chrome) / line);
+        edit->setFixedHeight(chrome + lines * line);
+      }
     }
   });
 
@@ -132,7 +144,6 @@ WorkaroundsSettingsTab::WorkaroundsSettingsTab(Settings& s, SettingsDialog& d)
   ui->customBrowserLayout->setSpacing(4);
   // the same button as the Paths page's
   ui->browseCustomBrowser->setMinimumWidth(108);
-  ui->browseCustomBrowser->setMinimumHeight(34);
   ui->browseCustomBrowser->setAccessibleName(QObject::tr("Browse"));
   ui->browseCustomBrowser->setIcon(
       FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
