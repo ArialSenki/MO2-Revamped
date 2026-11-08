@@ -559,7 +559,8 @@ void DownloadListView::issueDeleteAll()
           this, tr("Delete files?"),
           tr("This will move all finished downloads to the Recycle Bin.\n\n"
              "Are you absolutely sure you want to proceed?"),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+          QMessageBox::Yes | QMessageBox::No,
+          QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-1, true);
   }
 }
@@ -570,7 +571,8 @@ void DownloadListView::issueDeleteCompleted()
           this, tr("Delete files?"),
           tr("This will move all installed downloads to the Recycle Bin.\n\n"
              "Are you absolutely sure you want to proceed?"),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+          QMessageBox::Yes | QMessageBox::No,
+          QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-2, true);
   }
 }
@@ -581,7 +583,8 @@ void DownloadListView::issueDeleteUninstalled()
           this, tr("Delete files?"),
           tr("This will move all uninstalled downloads to the Recycle Bin.\n\n"
              "Are you absolutely sure you want to proceed?"),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+          QMessageBox::Yes | QMessageBox::No,
+          QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-3, true);
   }
 }
@@ -591,7 +594,8 @@ void DownloadListView::issueRemoveFromViewAll()
   if (QMessageBox::question(this, tr("Hide files?"),
                             tr("This will remove all finished downloads from this list "
                                "(but NOT from disk)."),
-                            QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-1, false);
   }
 }
@@ -601,7 +605,8 @@ void DownloadListView::issueRemoveFromViewCompleted()
   if (QMessageBox::question(this, tr("Hide files?"),
                             tr("This will remove all installed downloads from this "
                                "list (but NOT from disk)."),
-                            QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-2, false);
   }
 }
@@ -611,7 +616,8 @@ void DownloadListView::issueRemoveFromViewUninstalled()
   if (QMessageBox::question(this, tr("Hide files?"),
                             tr("This will remove all uninstalled downloads from this "
                                "list (but NOT from disk)."),
-                            QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                            QMessageBox::Yes | QMessageBox::No,
+                            QMessageBox::No) == QMessageBox::Yes) {
     emit removeDownload(-3, false);
   }
 }
@@ -651,8 +657,14 @@ void DownloadListView::paintEvent(QPaintEvent* event)
 
   p.setFont(font());
   p.setPen(FluentIcons::color(FluentIcons::Tone::Muted));
-  const QRect help(area.left(), title.bottom() + 4, area.width(), 44);
-  p.drawText(help, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap,
-             tr("Archives you download with Nexus or add with Install appear here. "
-                "Hidden downloads appear when hidden downloads are shown."));
+  // as tall as the wrapped text needs, so a narrow panel or a larger font
+  // doesn't cut its last line
+  const QString helpText =
+      tr("Archives you download with Nexus or add with Install appear here. "
+         "Turn on Show hidden downloads to see the ones you hid.");
+  const QRect needed = p.fontMetrics().boundingRect(
+      QRect(area.left(), 0, area.width(), 10000),
+      Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, helpText);
+  const QRect help(area.left(), title.bottom() + 4, area.width(), needed.height());
+  p.drawText(help, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, helpText);
 }

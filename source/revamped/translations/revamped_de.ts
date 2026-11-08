@@ -923,6 +923,10 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
       <source>Modified</source>
       <translation>Geändert</translation>
     </message>
+    <message>
+      <source>Date downloaded</source>
+      <translation>Heruntergeladen am</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -1049,6 +1053,10 @@ Möchtest du wirklich fortfahren?</translation>
     <message>
       <source>Hide files?</source>
       <translation>Dateien ausblenden?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Hier erscheinen Archive, die du über Nexus herunterlädst oder mit Installieren hinzufügst. Schalte „Ausgeblendete Downloads anzeigen“ ein, um die ausgeblendeten zu sehen.</translation>
     </message>
   </context>
   <context>
@@ -7156,6 +7164,10 @@ Fehler: %1</translation>
     <message>
       <source>&amp;Disable Nexus mappings</source>
       <translation>Nexus-Zuordnungen &amp;deaktivieren</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Ausgeblendete Downloads anzeigen</translation>
     </message>
   </context>
   <context>

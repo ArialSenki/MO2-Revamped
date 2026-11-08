@@ -950,6 +950,10 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <source>Modified</source>
       <translation>Modificato</translation>
     </message>
+    <message>
+      <source>Date downloaded</source>
+      <translation>Data di download</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -1076,6 +1080,10 @@ Vuoi davvero continuare?</translation>
     <message>
       <source>Hide files?</source>
       <translation>Nascondere i file?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Qui compaiono gli archivi scaricati da Nexus o aggiunti con Installa. Attiva Mostra download nascosti per vedere quelli che hai nascosto.</translation>
     </message>
   </context>
   <context>
@@ -7400,6 +7408,10 @@ Errore: %1</translation>
     <message>
       <source>Activating network proxy</source>
       <translation>Attivazione del proxy di rete</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Mostra download nascosti</translation>
     </message>
   </context>
   <context>

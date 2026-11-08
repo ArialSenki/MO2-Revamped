@@ -919,6 +919,10 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
       <source>Modified</source>
       <translation>Modifié</translation>
     </message>
+    <message>
+      <source>Date downloaded</source>
+      <translation>Date de téléchargement</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -1045,6 +1049,10 @@ Voulez-vous vraiment continuer ?</translation>
     <message>
       <source>Hide files?</source>
       <translation>Masquer les fichiers ?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Les archives téléchargées depuis Nexus ou ajoutées avec Installer apparaissent ici. Activez « Afficher les téléchargements masqués » pour voir ceux que vous avez masqués.</translation>
     </message>
   </context>
   <context>
@@ -7292,6 +7300,10 @@ Erreur : %1</translation>
     <message>
       <source>Activating network proxy</source>
       <translation>Activation du proxy réseau</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Afficher les téléchargements masqués</translation>
     </message>
   </context>
   <context>

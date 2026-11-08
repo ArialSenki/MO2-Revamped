@@ -935,6 +935,10 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <source>Modified</source>
       <translation>Modificado</translation>
     </message>
+    <message>
+      <source>Date downloaded</source>
+      <translation>Fecha de descarga</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -1077,6 +1081,10 @@ Are you absolutely sure you want to proceed?</source>
     <message>
       <source>Hide files?</source>
       <translation>¿Ocultar archivos?</translation>
+    </message>
+    <message>
+      <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
+      <translation>Aquí aparecen los archivos que descargas de Nexus o añades con Instalar. Activa Mostrar descargas ocultas para ver las que ocultaste.</translation>
     </message>
   </context>
   <context>
@@ -7200,6 +7208,10 @@ Error: %1</translation>
     <message>
       <source>&amp;Disable Nexus mappings</source>
       <translation>&amp;Desactivar las asignaciones de Nexus</translation>
+    </message>
+    <message>
+      <source>Show hidden downloads</source>
+      <translation>Mostrar descargas ocultas</translation>
     </message>
   </context>
   <context>

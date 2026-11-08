@@ -1371,7 +1371,7 @@
                   <string>Show downloads marked as hidden.</string>
                  </property>
                  <property name="text">
-                  <string>Hidden files</string>
+                  <string>Show hidden downloads</string>
                  </property>
                 </widget>
                </item>
