@@ -1347,6 +1347,11 @@ void OrganizerCore::refreshESPList(bool force)
 {
   onNextRefresh(
       [this, force] {
+        if (m_LastRefreshFailed) {
+          log::warn("not refreshing the plugin list after a failed directory update");
+          return;
+        }
+
         TimeThis tt("OrganizerCore::refreshESPList()");
 
         m_CurrentProfile->writeModlist();
@@ -1502,9 +1507,13 @@ void OrganizerCore::updateModsInDirectoryStructure(
   refreshESPList(true);
   // activate all esps of the specified mod so the bsas get activated along with
   // it
-  m_PluginList.blockSignals(true);
-  updateModsActiveState(modInfo.keys(), true);
-  m_PluginList.blockSignals(false);
+  // not after a failed refresh: the plugin list wasn't rebuilt above, and each
+  // plugin it doesn't know would be reported as an error
+  if (!m_LastRefreshFailed) {
+    m_PluginList.blockSignals(true);
+    updateModsActiveState(modInfo.keys(), true);
+    m_PluginList.blockSignals(false);
+  }
   // now we need to refresh the bsa list and save it so there is no confusion
   // about what archives are available and active
   refreshBSAList();
@@ -1627,8 +1636,9 @@ void OrganizerCore::onDirectoryRefreshFailed()
   // the previous structure stays; without this MO2 would believe the refresh
   // never ended, and every launch would wait for it
   log::debug("the directory refresh failed, keeping the previous structure");
-  m_DirectoryUpdate = false;
-  m_RefreshPending  = false;
+  m_LastRefreshFailed = true;
+  m_DirectoryUpdate   = false;
+  m_RefreshPending    = false;
   emit directoryStructureReady();
 }
 
@@ -1678,6 +1688,10 @@ void OrganizerCore::onDirectoryRefreshed()
   boost::signals2::signal<void()> callbacks;
   callbacks.swap(m_OnNextRefreshCallbacks);
   callbacks();
+
+  // only now: a save queued while the last refresh had failed would write a
+  // plugin list that may be another profile's. refreshLists() rebuilds it
+  m_LastRefreshFailed = false;
 
   if (m_CurrentProfile != nullptr) {
     log::debug("refreshing lists");
@@ -2021,6 +2035,11 @@ bool OrganizerCore::saveCurrentLists()
     return false;
   }
 
+  if (m_LastRefreshFailed) {
+    log::warn("not saving lists after a failed directory update");
+    return false;
+  }
+
   try {
     savePluginList();
     if (m_UserInterface != nullptr) {
@@ -2037,6 +2056,11 @@ void OrganizerCore::savePluginList()
 {
   onNextRefresh(
       [this]() {
+        if (m_LastRefreshFailed) {
+          log::warn("not saving the plugin list after a failed directory update");
+          return;
+        }
+
         m_PluginList.saveTo(m_CurrentProfile->getLockedOrderFileName());
         m_PluginList.saveLoadOrder(*m_DirectoryStructure);
       },

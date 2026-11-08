@@ -497,7 +497,10 @@ void DirectoryRefresher::refresh()
     // what was read is dropped: the plugin list built from a partial structure
     // would be saved without the mods' plugins. The core keeps the previous one
     log::error("the directory refresh failed: {}", e.what());
-    m_Root.reset();
+    {
+      QMutexLocker locker(&m_RefreshLock);
+      m_Root.reset();
+    }
     emit error(tr("The list of files could not be read: %1").arg(e.what()));
 
     p->finish();
