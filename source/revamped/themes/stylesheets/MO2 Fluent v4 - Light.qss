@@ -5978,7 +5978,6 @@ QListWidget#problemsWidget {
 QTreeView#filesView {
     padding: 0px;
 }
-=======
 /* Mod information and new instance wizard (visual review) */
 QDialog#CreateInstanceDialog QCommandLinkButton[wizardChoice="true"],
 QDialog#CreateInstanceDialog QCommandLinkButton#gameChoice {
