@@ -4319,6 +4319,9 @@ class EldenRingMo2Game(BasicGame):
         the game closes, as for any launcher run."""
         session = self._active_save_quarantine
         self._game_run += 1
+        # this run has no bridge: the bridge log left by an earlier run is not
+        # this one's, and must not bring back that run's warnings
+        self._last_launch_time = time.time()
         try:
             started = self._start_outside_vfs(app_path, working_directory, args)
         except Exception as error:
@@ -6129,8 +6132,13 @@ class EldenRingMo2Game(BasicGame):
                 "Elden Ring MO2: no active mods or bridge-dependent profile "
                 "options; no native or asset bridge needed."
             )
+            # BootBoost still speeds up a start without mods (Nightreign has
+            # no intro-logo option to keep the bridge in)
+            compat = self._me3_compat_load([])
+            if compat is not None:
+                notes.append(f"Elden Ring MO2: queued the me3 compatibility DLL {self.Me3Compat}.")
             self._log_forced_load_notes(notes)
-            return []
+            return [compat] if compat is not None else []
         if not active_mods:
             notes.append(
                 "Elden Ring MO2: no active mods; loading the native bridge "
