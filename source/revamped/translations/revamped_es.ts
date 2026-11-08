@@ -9991,6 +9991,24 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
       <translation>&lt;p&gt;Desactivar el plugin &apos;%1&apos; también desactivará los siguientes plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;¿Quieres continuar?&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Download URL must start with https://</source>
+      <translation>La URL de descarga debe empezar por https://</translation>
+    </message>
+    <message>
+      <source>Enter one file suffix per line to be skipped / ignored from the virtual file system.
+Not to be confused with file extensions, file suffixes are simply how the filename ends.
+
+Example:
+  .txt - Would skip all files that end with .txt, &lt;any text&gt;.txt
+  some_file.txt - Would skip all files that end with some_file.txt, &lt;any text&gt;some_file.txt</source>
+      <translation>Escribe un sufijo de archivo por línea para que el sistema de archivos virtual lo omita.
+No es lo mismo que la extensión: el sufijo es simplemente cómo termina el nombre del archivo.
+
+Ejemplo:
+  .txt - Omitiría todos los archivos que terminan en .txt, &lt;cualquier texto&gt;.txt
+  some_file.txt - Omitiría todos los archivos que terminan en some_file.txt, &lt;cualquier texto&gt;some_file.txt</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -12281,6 +12299,25 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
     <message>
       <source>This release has no notes on GitHub.</source>
       <translation>Esta versión no tiene notas en GitHub.</translation>
+    </message>
+  </context>
+  <context>
+    <name>PluginList</name>
+    <message>
+      <source>This %1 is flagged as a light plugin (ESL). It will adhere to the %1 load order but the records will be loaded in ESL space (FE/FF). You can have up to 4096 light plugins in addition to other plugin types.</source>
+      <translation>Este %1 está marcado como plugin ligero (ESL). Sigue el orden de carga de los %1, pero sus registros se cargan en el espacio ESL (FE/FF). Puedes tener hasta 4096 plugins ligeros además de los de otros tipos.</translation>
+    </message>
+    <message>
+      <source>This ESM is flagged as a medium plugin (ESH). It adheres to the ESM load order but loads records in ESH space (FD). You can have 256 medium plugins in addition to other plugin types.</source>
+      <translation>Este ESM está marcado como plugin mediano (ESH). Sigue el orden de carga de los ESM, pero sus registros se cargan en el espacio ESH (FD). Puedes tener 256 plugins medianos además de los de otros tipos.</translation>
+    </message>
+    <message>
+      <source>WARNING: This plugin is both light and medium flagged. This could indicate that the file was saved improperly and may have mismatched record references. Use it at your own risk.</source>
+      <translation>AVISO: este plugin está marcado a la vez como ligero y como mediano. Puede que el archivo se guardara mal y tenga referencias a registros que no coinciden. Úsalo bajo tu responsabilidad.</translation>
+    </message>
+    <message>
+      <source>Light plugins (ESL) are not supported by this game.</source>
+      <translation>Este juego no admite plugins ligeros (ESL).</translation>
     </message>
   </context>
 </TS>
