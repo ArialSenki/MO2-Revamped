@@ -84,8 +84,6 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
                                               const QString outputDirectory,
                                               std::optional<uint64_t> fileSize)
 {
-  DownloadInfo* info = new DownloadInfo;
-
   QString metaFileName = filePath + ".meta";
   QFileInfo metaFileInfo(metaFileName);
   if (QDir::fromNativeSeparators(metaFileInfo.path())
@@ -93,11 +91,14 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
       0)
     return nullptr;
   QSettings metaFile(metaFileName, QSettings::IniFormat);
+  // a hidden download isn't listed; created only past this point so it can't
+  // leak, as it did on every refresh for each hidden download
   if (!showHidden && metaFile.value("removed", false).toBool()) {
     return nullptr;
-  } else {
-    info->m_Hidden = metaFile.value("removed", false).toBool();
   }
+
+  DownloadInfo* info = new DownloadInfo;
+  info->m_Hidden     = metaFile.value("removed", false).toBool();
 
   QString fileName = QFileInfo(filePath).fileName();
 
@@ -371,8 +372,14 @@ void DownloadManager::refreshList()
       }
     }
     if (orphans.size() > 0) {
+      // straight away, not to the Recycle Bin: a .meta without its archive is
+      // of no use, and each cancelled download used to leave one there
       log::debug("{} orphaned meta files will be deleted", orphans.size());
-      shellDelete(orphans, true);
+      for (const QString& orphan : orphans) {
+        if (!QFile::remove(orphan)) {
+          log::warn("failed to delete the orphaned meta file {}", orphan);
+        }
+      }
     }
 
     std::set<std::wstring> seen;
@@ -621,7 +628,7 @@ void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
           setState(newDownload, STATE_DOWNLOADING);
       }
     } else
-      connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
+      connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(replyFinished()));
 
     QCoreApplication::processEvents();
 
@@ -635,7 +642,7 @@ void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
       return;
     }
   } else
-    connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
+    connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(replyFinished()));
 }
 
 void DownloadManager::addNXMDownload(const QString& url)
@@ -790,8 +797,11 @@ bool DownloadManager::removeFile(int index, bool deleteFile)
 
   if (deleteFile) {
     // Windows reports success when the user skips a file in use, so the file
-    // itself says; removeDownload() tells them once the list is consistent
-    if (!shellDelete(QStringList(filePath), true) || QFile::exists(filePath)) {
+    // itself says; removeDownload() tells them once the list is consistent.
+    // One already gone (an .unfinished file deleted outside MO2) is no failure:
+    // Windows refuses to delete a missing file, and the row would stay for good
+    if (QFile::exists(filePath) &&
+        (!shellDelete(QStringList(filePath), true) || QFile::exists(filePath))) {
       m_RemovalFailures.append(QFileInfo(filePath).fileName());
       return false;
     }
@@ -877,6 +887,26 @@ void DownloadManager::restoreDownload(int index)
   }
 }
 
+bool DownloadManager::removeListed(unsigned int downloadID, bool deleteFile)
+{
+  DownloadInfo* info = downloadInfoByID(downloadID);
+  const int before   = info != nullptr ? indexByInfo(info) : -1;
+  if (before < 0 || !removeFile(before, deleteFile)) {
+    return false;
+  }
+
+  // removeFile() can run events, as above
+  info            = downloadInfoByID(downloadID);
+  const int after = info != nullptr ? indexByInfo(info) : -1;
+  if (after < 0) {
+    return false;
+  }
+
+  delete info;
+  m_ActiveDownloads.erase(m_ActiveDownloads.begin() + after);
+  return true;
+}
+
 void DownloadManager::removeDownload(int index, bool deleteFile)
 {
   try {
@@ -889,24 +919,20 @@ void DownloadManager::removeDownload(int index, bool deleteFile)
       bool removeAll            = (index == -1);
       DownloadState removeState = (index == -2 ? STATE_INSTALLED : STATE_UNINSTALLED);
 
-      index = 0;
-      for (QVector<DownloadInfo*>::iterator iter = m_ActiveDownloads.begin();
-           iter != m_ActiveDownloads.end();) {
-        DownloadState downloadState = (*iter)->m_State;
-        if ((removeAll && (downloadState >= STATE_READY)) ||
-            (removeState == downloadState)) {
-          // one that couldn't be removed stays listed
-          if (removeFile(index, deleteFile)) {
-            delete *iter;
-            iter = m_ActiveDownloads.erase(iter);
-          } else {
-            ++iter;
-            ++index;
-          }
-        } else {
-          ++iter;
-          ++index;
+      // chosen first and found again by pointer: Windows' delete can show a
+      // dialog (a file in use) whose message loop runs Qt's events, and a
+      // finished or failed download can leave the list meanwhile
+      std::vector<unsigned int> chosen;
+      for (const DownloadInfo* info : m_ActiveDownloads) {
+        if ((removeAll && (info->m_State >= STATE_READY)) ||
+            (removeState == info->m_State)) {
+          chosen.push_back(info->m_DownloadID);
         }
+      }
+
+      for (const unsigned int id : chosen) {
+        // one that couldn't be removed stays listed
+        removeListed(id, deleteFile);
       }
     } else {
       if (index >= m_ActiveDownloads.size()) {
@@ -915,10 +941,7 @@ void DownloadManager::removeDownload(int index, bool deleteFile)
         return;
       }
 
-      if (removeFile(index, deleteFile)) {
-        delete m_ActiveDownloads.at(index);
-        m_ActiveDownloads.erase(m_ActiveDownloads.begin() + index);
-      }
+      removeListed(m_ActiveDownloads.at(index)->m_DownloadID, deleteFile);
     }
     emit update(-1);
   } catch (const std::exception& e) {
@@ -1066,19 +1089,31 @@ void DownloadManager::queryInfo(int index)
     return;
   }
 
+  // the dialogs below process events: a refresh of the downloads folder can
+  // delete this download or move it in the list, so it is looked up again by
+  // its id after each one
+  const unsigned int downloadID = info->m_DownloadID;
+  const auto stillThere         = [&] {
+    info  = downloadInfoByID(downloadID);
+    index = info != nullptr ? indexByInfo(info) : -1;
+    return info != nullptr && index >= 0;
+  };
+
   if (info->m_FileInfo->modID <= 0) {
     QString fileName = getFileName(index);
     QString ignore;
-    NexusInterface::interpretNexusFileName(fileName, ignore, info->m_FileInfo->modID,
-                                           true);
+    int modID = info->m_FileInfo->modID;
+    NexusInterface::interpretNexusFileName(fileName, ignore, modID, true);
+    if (!stillThere()) {
+      return;
+    }
+    info->m_FileInfo->modID = modID;
     if (info->m_FileInfo->modID < 0) {
       bool ok   = false;
       int modId = QInputDialog::getInt(m_ParentWidget, tr("Mod ID on Nexus"),
                                        tr("Mod ID:"), 1, 1,
                                        std::numeric_limits<int>::max(), 1, &ok);
-      // careful now: while the dialog was displayed, events were processed.
-      // the download list might have changed and our info-ptr invalidated.
-      if (!ok || index >= m_ActiveDownloads.size() || m_ActiveDownloads[index] != info) {
+      if (!ok || !stillThere()) {
         return;
       }
       info->m_FileInfo->modID = modId;
@@ -1097,7 +1132,11 @@ void DownloadManager::queryInfo(int index)
       for (auto choice : choices) {
         selection.addChoice(choice.first, choice.second, choice.first);
       }
-      if (selection.exec() == QDialog::Accepted) {
+      const bool accepted = selection.exec() == QDialog::Accepted;
+      if (!stillThere()) {
+        return;
+      }
+      if (accepted) {
         info->m_FileInfo->gameName = selection.getChoiceData().toString();
       } else {
         info->m_FileInfo->gameName = m_ManagedGame->gameShortName();
@@ -1573,17 +1612,24 @@ void DownloadManager::setState(DownloadManager::DownloadInfo* info,
   info->m_State = state;
   switch (state) {
   case STATE_PAUSED: {
-    info->m_Reply->abort();
+    // no reply once the last one has finished (a paused or failed download)
+    if (info->m_Reply != nullptr) {
+      info->m_Reply->abort();
+    }
     info->m_Output.close();
     m_DownloadPaused(row);
   } break;
   case STATE_ERROR: {
-    info->m_Reply->abort();
+    if (info->m_Reply != nullptr) {
+      info->m_Reply->abort();
+    }
     info->m_Output.close();
     m_DownloadFailed(row);
   } break;
   case STATE_CANCELED: {
-    info->m_Reply->abort();
+    if (info->m_Reply != nullptr) {
+      info->m_Reply->abort();
+    }
     m_DownloadFailed(row);
   } break;
   case STATE_FETCHINGMODINFO: {
@@ -2178,20 +2224,28 @@ void DownloadManager::nxmRequestFailed(QString gameName, int modID, int fileID,
   emit showMessage(tr("Failed to request file info from nexus: %1").arg(errorString));
 }
 
-void DownloadManager::downloadFinished(int index)
+void DownloadManager::replyFinished()
 {
-  DownloadInfo* info;
-  if (index > 0)
-    info = m_ActiveDownloads[index];
-  else {
-    info = findDownload(this->sender(), &index);
-    if (info == nullptr && index == 0) {
-      info = m_ActiveDownloads[index];
-    }
+  // the download whose reply this is; one already removed has nothing to finish
+  int index = -1;
+  if (findDownload(sender(), &index) == nullptr) {
+    log::debug("a download reply finished after its download was removed");
+    return;
   }
 
-  if (info != nullptr) {
-    QNetworkReply* reply = info->m_Reply;
+  downloadFinished(index);
+}
+
+void DownloadManager::downloadFinished(int index)
+{
+  DownloadInfo* info = nullptr;
+  if (index >= 0 && index < m_ActiveDownloads.size()) {
+    info = m_ActiveDownloads[index];
+  }
+
+  if (info != nullptr && info->m_Reply != nullptr) {
+    QNetworkReply* reply          = info->m_Reply;
+    const unsigned int downloadID = info->m_DownloadID;
     QByteArray data;
     if (reply->isOpen() && info->m_HasData) {
       data = reply->readAll();
@@ -2236,11 +2290,22 @@ void DownloadManager::downloadFinished(int index)
       setState(info, STATE_PAUSED);
     }
 
+    // set once info is deleted below: nothing may read it after that
+    bool removed = false;
+
     if (info->m_State == STATE_CANCELED || (info->m_Tries == 0 && error)) {
       emit aboutToUpdate();
       info->m_Output.remove();
+      // a download paused before it was cancelled has one
+      QFile::remove(info->m_Output.fileName() + ".meta");
+      // where it is now: the signals above reach plugins, which can run events
+      const int at = indexByInfo(info);
       delete info;
-      m_ActiveDownloads.erase(m_ActiveDownloads.begin() + index);
+      info    = nullptr;
+      removed = true;
+      if (at >= 0) {
+        m_ActiveDownloads.erase(m_ActiveDownloads.begin() + at);
+      }
       if (error)
         emit showMessage(
             tr("We were unable to download the file due to errors after four retries. "
@@ -2299,12 +2364,24 @@ void DownloadManager::downloadFinished(int index)
     reply->close();
     reply->deleteLater();
 
-    if ((info->m_Tries > 0) && error) {
+    if (!removed) {
+      // writing the .meta and renaming the file run events (see
+      // endDisableDirWatcher()): the download may have been removed, or
+      // resumed with a new reply, meanwhile
+      info = downloadInfoByID(downloadID);
+    }
+
+    if (info != nullptr && info->m_Reply == reply) {
+      // a resume creates a new reply; until then nothing may use this one
+      info->m_Reply = nullptr;
+    }
+
+    if (info != nullptr && (info->m_Tries > 0) && error) {
       --info->m_Tries;
-      resumeDownloadInt(index);
+      resumeDownloadInt(indexByInfo(info));
     }
   } else {
-    log::warn("no download index {}", index);
+    log::warn("no download or reply at index {}", index);
   }
 }
 

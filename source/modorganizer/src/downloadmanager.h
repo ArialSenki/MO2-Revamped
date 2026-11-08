@@ -525,7 +525,9 @@ private slots:
 
   void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
   void downloadReadyRead();
-  void downloadFinished(int index = 0);
+  // the finished() of a download's reply
+  void replyFinished();
+  void downloadFinished(int index);
   void downloadError(QNetworkReply::NetworkError error);
   void metaDataChanged();
   void directoryChanged(const QString& dirctory);
@@ -565,6 +567,10 @@ private:
   DownloadInfo* findDownload(QObject* reply, int* index = nullptr) const;
 
   bool removeFile(int index, bool deleteFile);
+
+  // removes a download that is still listed, with its file if deleteFile;
+  // false if it is gone or removeFile() failed
+  bool removeListed(unsigned int downloadID, bool deleteFile);
   QStringList m_RemovalFailures;
 
   void refreshAlphabeticalTranslation();
