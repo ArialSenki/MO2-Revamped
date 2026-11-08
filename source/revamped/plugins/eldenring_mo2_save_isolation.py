@@ -409,6 +409,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         self.__ui_event_filter = None
         self.__refreshing_dialogs = False
         self.__pending_error_reported = set()
+        self.__pending_wait_reported = set()
         self.__pending_applied_paths = set()
         self.__pending_cleanup_failed_paths = set()
 
@@ -1926,9 +1927,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             bak_backup = None
             destination_bak = destination_path.with_name(destination_path.name + ".bak")
             source_bak = source_path_resolved.with_name(source_path_resolved.name + ".bak")
-            bak_is_plain = not os.path.lexists(destination_bak) or (
-                destination_bak.is_file() and not self._is_reparse_point(destination_bak)
-            )
+            try:
+                bak_is_plain = not os.path.lexists(destination_bak) or (
+                    destination_bak.is_file() and not self._is_reparse_point(destination_bak)
+                )
+            except OSError:
+                bak_is_plain = False
             # replaced saves of the Steam route are kept inside the instance,
             # never beside the Steam folder
             instance_base = self._instance_base()
@@ -2936,8 +2940,19 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
             if blocked:
                 remaining.append(item)
-                if active_path not in self.__pending_error_reported:
-                    self.__pending_error_reported.add(active_path)
+                # the route is chosen now, or the first launch would play from
+                # another one; only the copy waits
+                try:
+                    self._save_mode_directory(
+                        profile_directory, item["mode"], save_formats=item.get("save_formats")
+                    )
+                except (OSError, UnicodeError, configparser.Error, ValueError) as error:
+                    qInfo(
+                        "Elden Ring MO2 Save Isolation: could not store the "
+                        f"pending save mode: {error}"
+                    )
+                if active_path not in self.__pending_wait_reported:
+                    self.__pending_wait_reported.add(active_path)
                     qInfo(f"Elden Ring MO2 Save Isolation: the queued save waits: {blocked}")
                     self._notify_later(
                         _tr("Starting save not copied yet"),
@@ -3068,6 +3083,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         )
                         save_not_copied = str(error)
             except (OSError, UnicodeError, configparser.Error, ValueError) as error:
+                # nothing was applied: the item stays queued and is tried again
+                save_not_copied = ""
                 if active_path not in self.__pending_error_reported:
                     qInfo(
                         "Elden Ring MO2 Save Isolation: could not apply the "
