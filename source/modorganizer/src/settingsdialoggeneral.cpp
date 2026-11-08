@@ -412,8 +412,6 @@ void GeneralSettingsTab::onResetDialogs()
   prompt.setText(QObject::tr(
       "This will reset all the choices you made to dialogs and make them all "
       "visible again. Continue?"));
-  prompt.setIconPixmap(
-      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/help.svg")).pixmap(28, 28));
   prompt.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
   const auto r = prompt.exec();
 
