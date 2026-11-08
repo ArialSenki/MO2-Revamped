@@ -4340,6 +4340,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         page_subtitle.setWordWrap(True)
         # room for two lines on every page: the cards below don't jump between them
         page_subtitle.setMinimumHeight(2 * page_subtitle.fontMetrics().lineSpacing())
+        # one line sits right under the title, as the first of two does
+        page_subtitle.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         # the root has no right margin (the pages scroll at the window's
         # edge), so the header keeps the cards' gap itself
         page_title.setContentsMargins(0, 0, 16, 0)
@@ -4427,8 +4429,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             description_label.setObjectName("fluentSettingDescription")
             description_label.setWordWrap(True)
             description_label.setVisible(bool(description))
+            # the row's spare height goes around the text, not between its
+            # lines: title and description are as close on every row
+            texts.addStretch(1)
             texts.addWidget(title_label)
             texts.addWidget(description_label)
+            texts.addStretch(1)
             row_layout.addLayout(texts, 1)
             for widget in widgets:
                 widget.setParent(row)

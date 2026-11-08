@@ -410,6 +410,8 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         page_subtitle.setWordWrap(True)
         # room for two lines on every page: the cards below don't jump between them
         page_subtitle.setMinimumHeight(2 * page_subtitle.fontMetrics().lineSpacing())
+        # one line sits right under the title, as the first of two does
+        page_subtitle.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         page_subtitle.setContentsMargins(0, 0, 16, 0)
         page_column.addWidget(page_title)
         page_column.addWidget(page_subtitle)
@@ -474,12 +476,16 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             title_label = QLabel(title, row)
             title_label.setObjectName("fluentSettingTitle")
             title_label.setWordWrap(True)
+            # the row's spare height goes around the text, not between its
+            # lines: title and description are as close on every row
+            texts.addStretch(1)
             texts.addWidget(title_label)
             if description:
                 description_label = QLabel(description, row)
                 description_label.setObjectName("fluentSettingDescription")
                 description_label.setWordWrap(True)
                 texts.addWidget(description_label)
+            texts.addStretch(1)
             row_layout.addLayout(texts, 1)
             for widget in widgets:
                 widget.setParent(row)
