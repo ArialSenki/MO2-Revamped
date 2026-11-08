@@ -2908,6 +2908,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     pass
         return "copied"
 
+    def _discard_pending_mode(self, profile_directory: Path) -> None:
+        # the user chose a route by hand: a waiting wizard choice must not undo it
+        key = self._normalized_path(profile_directory)
+        try:
+            pending = self._read_pending_modes(profile_directory)
+            remaining = [
+                item for item in pending
+                if self._normalized_path(Path(item["profile_path"])) != key
+            ]
+            if len(remaining) != len(pending):
+                self._write_pending_modes(remaining, profile_directory)
+                qInfo("Elden Ring MO2 Save Isolation: dropped the waiting wizard choice for this profile.")
+        except (OSError, UnicodeError, ValueError) as error:
+            qInfo(f"Elden Ring MO2 Save Isolation: could not update pending choices: {error}")
+
     def _notify_later(self, title: str, message: str) -> None:
         # out of the dialog refresh this is called from: a message box runs
         # its own event loop
@@ -5084,6 +5099,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 self._show_notice(dialog, _tr("Could not save route"), str(error), "warning")
                 restore_saved_selection()
                 return
+            self._discard_pending_mode(profile_directory)
             qInfo(
                 "Elden Ring MO2 Save Isolation: saved and verified mode "
                 f"'{mode}' for profile '{profile.name()}'; named save profile "
