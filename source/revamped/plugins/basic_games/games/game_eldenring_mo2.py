@@ -568,7 +568,10 @@ class EldenRingModDataChecker(BasicModDataChecker):
         for entry in filetree:
             name = entry.name().casefold()
             if patterns.valid.match(name):
-                found = True
+                # game data: a game folder, a DLL or regulation.bin, not a
+                # loose picture or settings file that also matches a pattern
+                if is_directory(entry) or name.endswith(".dll") or name == "regulation.bin":
+                    found = True
             elif is_directory(entry) or patterns.unfold.match(name):
                 # a wrapper or an option folder: left to the checks below
                 return False
