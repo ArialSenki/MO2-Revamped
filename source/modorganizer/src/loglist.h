@@ -79,6 +79,8 @@ private:
   OrganizerCore* m_core;
   QTimer m_timer;
   CopyEventFilter m_copyFilter;
+  // the first line shown while old lines are trimmed off the top, or -1
+  int m_keepRow = -1;
 
   void onContextMenu(const QPoint& pos);
   void onNewEntry();

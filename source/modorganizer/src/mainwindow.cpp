@@ -1016,33 +1016,7 @@ private:
 QIcon makeEndorsementMenuIcon(const QString& resourcePath)
 {
   // Fluent menus show plain glyphs, like every other menu
-    return FluentIcons::icon(resourcePath);
-
-
-  const QString styleName =
-      Settings::instance().interface().styleName().value_or(QString{});
-  const bool darkTheme = styleName.contains(QStringLiteral("dark"),
-                                            Qt::CaseInsensitive);
-  const QColor badgeColor = RevampedTheme::accent(
-      darkTheme ? QColor("#293F50") : QColor("#DCEAF4"));
-  const QColor borderColor = RevampedTheme::accent(
-      darkTheme ? QColor("#4D697E") : QColor("#C7D9E6"));
-
-  QPixmap badge(48, 48);
-  badge.fill(Qt::transparent);
-
-  QPainter painter(&badge);
-  painter.setRenderHint(QPainter::Antialiasing);
-  painter.setRenderHint(QPainter::SmoothPixmapTransform);
-  painter.setPen(QPen(borderColor, 2.0));
-  painter.setBrush(badgeColor);
-  painter.drawEllipse(QRectF(2.0, 2.0, 44.0, 44.0));
-
-  const QPixmap glyph = QIcon(resourcePath).pixmap(QSize(28, 28));
-  painter.setPen(Qt::NoPen);
-  painter.setBrush(Qt::NoBrush);
-  painter.drawPixmap(QRect(10, 10, 28, 28), glyph);
-  return QIcon(badge);
+  return FluentIcons::icon(resourcePath);
 }
 
 bool askNexusEndorsement(QWidget* parent, const QString& windowTitle,

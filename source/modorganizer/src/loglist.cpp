@@ -197,6 +197,26 @@ LogList::LogList(QWidget* parent)
     onNewEntry();
   });
 
+  // a full log drops its oldest line for each new one; someone reading further
+  // up keeps the same line in view instead of watching the text creep up
+  connect(model(), &LogModel::rowsAboutToBeRemoved, this, [&](const QModelIndex&, int first) {
+    const auto* bar = verticalScrollBar();
+    m_keepRow       = -1;
+    if (first == 0 && bar != nullptr && bar->value() < bar->maximum() - 2) {
+      m_keepRow = indexAt(QPoint(1, 1)).row();
+    }
+  });
+  connect(model(), &LogModel::rowsRemoved, this, [&](const QModelIndex&, int first, int last) {
+    if (m_keepRow < 0) {
+      return;
+    }
+    const int row = m_keepRow - (last - first + 1);
+    m_keepRow     = -1;
+    if (row >= 0) {
+      scrollTo(model()->index(row, 0), QAbstractItemView::PositionAtTop);
+    }
+  });
+
   m_timer.setSingleShot(true);
   connect(&m_timer, &QTimer::timeout, [&] {
     scrollToBottom();

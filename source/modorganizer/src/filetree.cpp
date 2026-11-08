@@ -687,11 +687,16 @@ void FileTree::addDirectoryMenus(QMenu& menu, FileTreeItem& item)
   // a virtual folder can come from many mods, so it has no single real
   // folder; it can still be expanded at once and its path copied
   // the row the menu was built for, not whatever row has the focus frame
-  const QModelIndex index = m_tree->selectionModel()->selectedRows().value(0);
+  // persistent: the Data tab can refresh while the menu is open
+  const QPersistentModelIndex index(m_tree->selectionModel()->selectedRows().value(0));
 
   MenuItem(tr("Expand all below"))
       .icon(menuGlyph(MenuGlyphs::Expand))
       .callback([this, index] {
+        if (!index.isValid()) {
+          return;
+        }
+
         // the model loads folders when they are first shown; load everything
         // below first or only the folders already opened would expand, and
         // keep sorting off meanwhile, as expandAll() does

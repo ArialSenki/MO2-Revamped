@@ -235,6 +235,8 @@ private:
   FluentDashboard* m_fluentDashboard = nullptr;
   QAction* m_fluentOverflowAction     = nullptr;
   RunState m_runState              = RunState::Idle;
+  // the core outlives the window: the run state callback goes with it
+  boost::signals2::scoped_connection m_aboutToRunConnection;
 
   bool m_toolbarButtonGeometryInitialized = false;
   QMargins m_toolbarContentsMargins;
