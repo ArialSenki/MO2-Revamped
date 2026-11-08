@@ -7405,6 +7405,10 @@ Errore: %1</translation>
       <source>Show hidden downloads</source>
       <translation>Mostra download nascosti</translation>
     </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Criteri di filtro</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>

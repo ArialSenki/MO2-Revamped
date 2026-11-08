@@ -7201,6 +7201,10 @@ Error: %1</translation>
       <source>Show hidden downloads</source>
       <translation>Mostrar descargas ocultas</translation>
     </message>
+    <message>
+      <source>Filter criteria</source>
+      <translation>Criterios de filtro</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>

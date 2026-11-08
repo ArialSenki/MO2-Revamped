@@ -643,6 +643,11 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
     }
   }
 
+  // the switch sits in a Settings row: why it is locked shows over all of it
+  if (ui->enabledCheckbox->parentWidget() != nullptr) {
+    ui->enabledCheckbox->parentWidget()->setToolTip(ui->enabledCheckbox->toolTip());
+  }
+
   QVariantMap settings     = current->data(0, SettingsRole).toMap();
   QVariantMap descriptions = current->data(0, DescriptionsRole).toMap();
   ui->pluginSettingsList->setEnabled(settings.count() != 0);

@@ -101,6 +101,31 @@ private:
 
 // settings code shows and hides some controls (per game, per option); the
 // row that now holds a control follows it
+// a form row's title dims with its field; the original label is hidden
+class EnabledMirror : public QObject
+{
+public:
+  EnabledMirror(QWidget* control, QWidget* title)
+      : QObject(title), m_control(control), m_title(title)
+  {
+    control->installEventFilter(this);
+    m_title->setEnabled(control->isEnabled());
+  }
+
+protected:
+  bool eventFilter(QObject*, QEvent* event) override
+  {
+    if (event->type() == QEvent::EnabledChange) {
+      m_title->setEnabled(m_control->isEnabled());
+    }
+    return false;
+  }
+
+private:
+  QWidget* m_control;
+  QWidget* m_title;
+};
+
 class VisibilityMirror : public QObject
 {
 public:
@@ -552,6 +577,7 @@ void makeFormRows(QFormLayout* form)
     title->setTextFormat(label->textFormat());
     title->setToolTip(label->toolTip());
     title->setBuddy(control);
+    new EnabledMirror(control, title);
 
     const bool wide = qobject_cast<QLineEdit*>(control) != nullptr;
     if (wide) {
@@ -616,6 +642,7 @@ void makeFormRows(QGridLayout* grid)
     title->setTextFormat(label->textFormat());
     title->setToolTip(label->toolTip());
     title->setBuddy(control);
+    new EnabledMirror(control, title);
 
     const bool wide = qobject_cast<QLineEdit*>(control) != nullptr;
     grid->removeWidget(label);

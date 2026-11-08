@@ -339,7 +339,7 @@ void SettingsDialog::accept()
       return;
     }
 
-    QString newModPath = ui->modDirEdit->text();
+    QString newModPath = ui->modDirEdit->text().trimmed();
     newModPath = PathSettings::resolve(newModPath, newBase);
 
     if ((QDir::fromNativeSeparators(newModPath) !=

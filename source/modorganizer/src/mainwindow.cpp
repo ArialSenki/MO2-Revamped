@@ -4661,7 +4661,10 @@ void MainWindow::on_actionSettings_triggered()
     refreshProfiles();
   }
 
-  if (dlManager->getOutputDirectory() != settings.paths().downloads()) {
+  // while a download runs the folder stays, as the message above said; a Base
+  // Directory change reaches the downloads path without the setting changing
+  if (dlManager->getOutputDirectory() != settings.paths().downloads() &&
+      !dlManager->downloadsInProgress()) {
     dlManager->setOutputDirectory(settings.paths().downloads());
   }
 
