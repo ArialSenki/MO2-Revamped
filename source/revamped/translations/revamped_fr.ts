@@ -1784,6 +1784,10 @@ Réinstallez le mod pour changer cela.</translation>
       <translation>{0} fichiers de la version en ligne de Reforged n'ont pas pu être placés : son lanceur peut refuser de démarrer. Le journal de MO2 les indique ; en général, c'est un chemin trop long pour Windows ou un antivirus qui bloque les fichiers. Corrigez cela et réinstallez le mod.</translation>
     </message>
     <message>
+      <source>Turn off the online version to arrange the files by hand.</source>
+      <translation>Désactivez la version en ligne pour organiser les fichiers à la main.</translation>
+    </message>
+    <message>
       <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
       <translation>Ceci est un mod d'Elden Ring : cette instance gère Nightreign.</translation>
     </message>

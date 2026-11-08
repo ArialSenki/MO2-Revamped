@@ -5699,8 +5699,14 @@ class EldenRingMo2Game(BasicGame):
                     f"Elden Ring MO2: the profile's settings path is {len(str(path))} "
                     "characters long; the bridge reads at most 259, so it ignores this "
                     "profile's startup options (minimized start, black background, "
-                    "CPU 0, priority) and skips the intro logos whatever the profile "
-                    "says. A shorter instance or profile path fixes it."
+                    "CPU 0, priority)"
+                    # Nightreign has no intro-logo patch
+                    + (
+                        ""
+                        if self.GameProcess == "nightreign.exe"
+                        else " and skips the intro logos whatever the profile says"
+                    )
+                    + ". A shorter instance or profile path fixes it."
                 )
         else:
             os.environ.pop(config_key, None)

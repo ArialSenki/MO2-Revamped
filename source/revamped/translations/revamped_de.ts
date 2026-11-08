@@ -1788,6 +1788,10 @@ Installiere die Mod neu, um das zu ändern.</translation>
       <translation>{0} Dateien der Online-Version von Reforged konnten nicht abgelegt werden, daher startet ihr Launcher möglicherweise nicht. Das MO2-Protokoll nennt sie; meist ist ein für Windows zu langer Pfad oder ein Virenscanner, der die Dateien sperrt, die Ursache. Behebe das und installiere die Mod neu.</translation>
     </message>
     <message>
+      <source>Turn off the online version to arrange the files by hand.</source>
+      <translation>Schalte die Online-Version aus, um die Dateien von Hand anzuordnen.</translation>
+    </message>
+    <message>
       <source>This is an Elden Ring mod: this instance manages Nightreign.</source>
       <translation>Dies ist eine Elden-Ring-Mod: Diese Instanz verwaltet Nightreign.</translation>
     </message>

@@ -2129,10 +2129,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             reforged_online_box.toggled.connect(lambda _checked: refresh_summary())
             # arranged by hand, Reforged is installed as files only: the release
             # its online launcher needs is laid out by Install alone
-            reforged_online_box.toggled.connect(
-                lambda checked: manual_button.setEnabled(not checked)
-            )
-            manual_button.setEnabled(not reforged_online_box.isChecked())
+            manual_tooltip = manual_button.toolTip()
+            online_tooltip = self.tr("Turn off the online version to arrange the files by hand.")
+
+            def follow_online(checked: bool) -> None:
+                manual_button.setEnabled(not checked)
+                manual_button.setToolTip(online_tooltip if checked else manual_tooltip)
+
+            reforged_online_box.toggled.connect(follow_online)
+            follow_online(reforged_online_box.isChecked())
         refresh_summary()
         refresh_name_notice()
 
