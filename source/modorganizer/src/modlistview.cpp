@@ -1376,7 +1376,13 @@ void ModListView::setHighlightedMods(const std::vector<unsigned int>& pluginIndi
 
 QColor ModListView::markerColor(const QModelIndex& index) const
 {
-  unsigned int modIndex = index.data(ModList::IndexRole).toInt();
+  // a group heading (by category or Nexus ID) is no mod: without the check it
+  // would light up with the first mod's conflict marker
+  const QVariant modData = index.data(ModList::IndexRole);
+  if (!modData.isValid()) {
+    return {};
+  }
+  unsigned int modIndex = modData.toInt();
   bool highligth = m_markers.highlight.find(modIndex) != m_markers.highlight.end();
   bool overwrite = m_markers.overwrite.find(modIndex) != m_markers.overwrite.end();
   bool archiveOverwrite =
@@ -1438,6 +1444,13 @@ QColor ModListView::markerColor(const QModelIndex& index) const
 std::vector<ModInfo::EFlag> ModListView::modFlags(const QModelIndex& index,
                                                   bool* forceCompact) const
 {
+  // group headings have no mod
+  if (!index.data(ModList::IndexRole).isValid()) {
+    if (forceCompact) {
+      *forceCompact = true;
+    }
+    return {};
+  }
   ModInfo::Ptr info = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
 
   auto flags   = info->getFlags();
@@ -1470,6 +1483,13 @@ std::vector<ModInfo::EFlag> ModListView::modFlags(const QModelIndex& index,
 std::vector<ModInfo::EConflictFlag> ModListView::conflictFlags(const QModelIndex& index,
                                                                bool* forceCompact) const
 {
+  // group headings have no mod
+  if (!index.data(ModList::IndexRole).isValid()) {
+    if (forceCompact) {
+      *forceCompact = true;
+    }
+    return {};
+  }
   ModInfo::Ptr info = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
 
   auto flags   = info->getConflictFlags();
