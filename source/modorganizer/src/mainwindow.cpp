@@ -325,7 +325,8 @@ public:
                       : QStringLiteral("logDockFloatButton"));
     setFixedSize(24, 24);
     setAutoRaise(false);
-    setFocusPolicy(Qt::NoFocus);
+    // reachable with Tab and pressed with Space, like any other button
+    setFocusPolicy(Qt::TabFocus);
     setMouseTracking(true);
   }
 
@@ -347,16 +348,21 @@ protected:
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     const QColor accent = palette().color(QPalette::ButtonText);
-    const QColor hoverSurface =
-        accent.lightness() > 128 ? QColor(48, 58, 65) : QColor(237, 244, 249);
     if (underMouse() || isDown()) {
-      QColor fill = isDown() ? accent : hoverSurface;
-      fill.setAlpha(isDown() ? 42 : 255);
+      // Fluent's subtle fill: the glyph's own color, faint, so it follows the
+      // theme
+      QColor fill = accent;
+      fill.setAlpha(isDown() ? 42 : 22);
       QColor outline = accent;
       outline.setAlpha(isDown() ? 105 : 25);
       painter.setPen(QPen(outline, 0.9));
       painter.setBrush(fill);
       painter.drawEllipse(QRectF(rect()).adjusted(3.0, 3.0, -3.0, -3.0));
+    }
+    if (hasFocus()) {
+      painter.setPen(QPen(palette().color(QPalette::Highlight), 1.5));
+      painter.setBrush(Qt::NoBrush);
+      painter.drawEllipse(QRectF(rect()).adjusted(1.5, 1.5, -1.5, -1.5));
     }
 
     QPen pen(accent);
@@ -445,7 +451,7 @@ public:
     m_Chevron->setObjectName(QStringLiteral("logDockExpandButton"));
     m_Chevron->setFont(glyphs);
     m_Chevron->setFixedSize(24, 24);
-    m_Chevron->setFocusPolicy(Qt::NoFocus);
+    m_Chevron->setFocusPolicy(Qt::TabFocus);
 
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(6, 0, 8, 0);

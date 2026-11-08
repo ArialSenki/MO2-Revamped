@@ -4861,6 +4861,10 @@ QToolButton#logDockExpandButton:hover {
     color: #1A1A1A;
     background-color: #E6E8EB;
 }
+/* Tab reaches the fold button: the focus shows as on other buttons. */
+QToolButton#logDockExpandButton:focus {
+    border: 1px solid #005FB8;
+}
 
 /* The animated pill replaces the stylesheet underline in the main window. */
 QWidget#centralWidget QTabWidget#tabWidget FluentTabBar::tab,
