@@ -22,11 +22,12 @@
    </item>
    <item><widget class="MOBase::LineEditClear" name="filterEdit"><property name="toolTip"><string>Filter the available choices.</string></property><property name="placeholderText"><string>Filter choices</string></property></widget></item>
    <item>
-    <widget class="QGroupBox" name="choicesGroup">
-     <property name="title"><string>Available choices</string></property>
+    <widget class="QFrame" name="choicesGroup">
      <layout class="QVBoxLayout" name="choicesLayout">
-      <property name="leftMargin"><number>10</number></property><property name="topMargin"><number>12</number></property>
-      <property name="rightMargin"><number>10</number></property><property name="bottomMargin"><number>10</number></property>
+      <property name="spacing"><number>8</number></property>
+      <property name="leftMargin"><number>12</number></property><property name="topMargin"><number>10</number></property>
+      <property name="rightMargin"><number>12</number></property><property name="bottomMargin"><number>11</number></property>
+      <item><widget class="QLabel" name="fluentCardTitle"><property name="text"><string>Available choices</string></property></widget></item>
       <item>
        <widget class="QListWidget" name="choiceList">
         <property name="minimumSize"><size><width>240</width><height>240</height></size></property>

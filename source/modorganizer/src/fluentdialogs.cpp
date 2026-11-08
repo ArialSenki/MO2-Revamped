@@ -896,6 +896,13 @@ QPushButton* FluentContentDialog::addButton(const QString& text, bool primary)
   return button;
 }
 
+QSize FluentContentDialog::sizeHint() const
+{
+  QSize size = QDialog::sizeHint();
+  size.setWidth(qMax(size.width(), minimumWidth()));
+  return size;
+}
+
 void FluentContentDialog::askFirst(QPushButton* cancel)
 {
   for (auto* button : findChildren<QPushButton*>()) {
