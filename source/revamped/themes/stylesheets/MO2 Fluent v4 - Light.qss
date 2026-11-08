@@ -3861,12 +3861,17 @@ QMenu::right-arrow {
    padding and hover of a menu row */
 QMenu QCheckBox,
 QMenu QRadioButton {
-    min-height: 22px;
-    padding: 5px 28px 5px 10px;
-    margin: 1px 0px;
+    min-height: 18px;
+    padding: 3px 24px 3px 10px;
+    margin: 0px;
     border-radius: 4px;
     spacing: 10px;
     background-color: transparent;
+}
+/* the same height as a menu row: long lists of categories fit on the screen */
+QMenu QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
 }
 QMenu QCheckBox:hover,
 QMenu QRadioButton:hover {

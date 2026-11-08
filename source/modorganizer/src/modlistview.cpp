@@ -136,26 +136,21 @@ public:
     }
 
     // the theme styles every row, and a styled row ignores the option's
-    // background: the separator or conflict color is painted here. A selected
-    // row shows the selection instead. The theme's hover is opaque, so a
-    // colored row brightens its own color instead
-    const bool hovered = opt.state & QStyle::State_MouseOver;
-    if (color.isValid() && !(opt.state & QStyle::State_Selected)) {
-      painter->fillRect(opt.rect, hovered ? color.lighter(ModListView::HoverLighter) : color);
-      opt.state &= ~QStyle::State_MouseOver;
+    // background: the separator or conflict color is painted here. The
+    // theme's hover and selection are opaque, so a colored row brightens its
+    // own color instead
+    const bool hovered  = opt.state & QStyle::State_MouseOver;
+    const bool selected = opt.state & QStyle::State_Selected;
+    if (color.isValid()) {
+      painter->fillRect(opt.rect, selected  ? color.lighter(ModListView::SelectedLighter)
+                                  : hovered ? color.lighter(ModListView::HoverLighter)
+                                            : color);
+      opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
     }
 
     QStyledItemDelegate::paint(painter, opt, index);
     opt.state.setFlag(QStyle::State_MouseOver, hovered);
     paintSwitch(painter, opt, index);
-
-    // the selected row's accent edge, once per row at the start of the name
-    // column whatever the row's indentation
-    if (index.column() == ModList::COL_NAME && (opt.state & QStyle::State_Selected)) {
-      const int left = m_view->header()->sectionViewportPosition(ModList::COL_NAME);
-      painter->fillRect(QRect(left, opt.rect.top(), 3, opt.rect.height()),
-                        FluentIcons::color(FluentIcons::Tone::Accent));
-    }
   }
 
   // a refresh renumbers the mods: the states painted before belong to
@@ -1210,17 +1205,17 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
 
   // the gap before the name of a colored separator or marked mod; the
   // delegate only paints the cells
-  if (!selectionModel()->isSelected(index)) {
-    QColor color = markerColor(index);
-    if (!color.isValid()) {
-      color = index.data(Qt::BackgroundRole).value<QColor>();
-    }
-    if (color.isValid()) {
-      const int cursor = viewport()->mapFromGlobal(QCursor::pos()).y();
-      const bool hovered =
-          viewport()->underMouse() && cursor >= rect.top() && cursor <= rect.bottom();
-      painter->fillRect(rect, hovered ? color.lighter(HoverLighter) : color);
-    }
+  QColor color = markerColor(index);
+  if (!color.isValid()) {
+    color = index.data(Qt::BackgroundRole).value<QColor>();
+  }
+  if (color.isValid()) {
+    const int cursor = viewport()->mapFromGlobal(QCursor::pos()).y();
+    const bool hovered =
+        viewport()->underMouse() && cursor >= rect.top() && cursor <= rect.bottom();
+    painter->fillRect(rect, selectionModel()->isSelected(index) ? color.lighter(SelectedLighter)
+                            : hovered                           ? color.lighter(HoverLighter)
+                                                                : color);
   }
   QTreeView::drawBranches(painter, r, index);
 }

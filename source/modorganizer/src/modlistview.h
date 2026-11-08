@@ -42,8 +42,10 @@ class ModListView : public QTreeView
   Q_PROPERTY(QColor switchKnobOffColor MEMBER m_switchKnobOffColor)
 
 public:
-  // how much a colored row brightens under the cursor (QColor::lighter)
-  static constexpr int HoverLighter = 118;
+  // how much a colored row brightens under the cursor and when selected
+  // (QColor::lighter)
+  static constexpr int HoverLighter    = 115;
+  static constexpr int SelectedLighter = 135;
 
   struct SwitchColors
   {
