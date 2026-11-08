@@ -265,8 +265,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                                 "ELDEN RING Reforged",
                                 self.tr(
                                     "{0} files of Reforged's online version could not be "
-                                    "placed, so its launcher may refuse to start. Free some "
-                                    "disk space and reinstall the mod."
+                                    "placed, so its launcher may refuse to start. MO2's log "
+                                    "names them; the usual causes are a path too long for "
+                                    "Windows or an antivirus holding the files. Fix that and "
+                                    "reinstall the mod."
                                 ).format(missing),
                             )
                     elif not self._pending_reforged_layout["keep"]:
