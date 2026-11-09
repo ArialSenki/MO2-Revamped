@@ -561,9 +561,9 @@ QIcon file(const QString& fileName, bool directory)
       extension == "gif" || extension == "webp") {
     return fileIcon(QStringLiteral("image"));
   }
-  // Elden Ring saves, Seamless Co-op (co2) and Convergence (cnv) saves
+  // Elden Ring saves, Seamless Co-op (co2), Convergence (cnv) and Reforged (err)
   if (extension == "sl2" || extension == "co2" || extension == "cnv" ||
-      extension == "bak") {
+      extension == "err" || extension == "bak") {
     return fileIcon(QStringLiteral("save"));
   }
   if (extension == "txt" || extension == "md" || extension == "log" ||
