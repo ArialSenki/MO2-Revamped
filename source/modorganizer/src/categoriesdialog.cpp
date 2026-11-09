@@ -1095,7 +1095,7 @@ void CategoriesDialog::buildFluentLayout()
   root->removeItem(ui->contentLayout);
   root->removeItem(ui->actionsLayout);
   ui->actionsLayout->removeWidget(ui->buttonBox);
-  root->setContentsMargins(12, 12, 12, 12);
+  root->setContentsMargins(16, 16, 16, 12);
   root->setSpacing(10);
 
   // how many mods use each category, for the captions
@@ -1908,6 +1908,6 @@ void CategoriesDialog::showFluentHelp()
          "Changes are saved when you choose OK."));
   auto* ok = dlg.addButton(tr("Close"), true);
   connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
-  dlg.resize(540, dlg.sizeHint().height());
+  dlg.resize(520, dlg.sizeHint().height());
   dlg.exec();
 }

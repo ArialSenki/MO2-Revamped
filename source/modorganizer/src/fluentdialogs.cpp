@@ -808,6 +808,11 @@ void polishMessageBox(QMessageBox* box)
       text->setMinimumWidth(392);
     }
     text->setWordWrap(wrap);
+    // a plugin's help box, as wide as the other help dialogs
+    if (const int width = box->property("fluentTextWidth").toInt(); width > 0) {
+      text->setWordWrap(true);
+      text->setFixedWidth(width);
+    }
     shape.body->addWidget(text);
     text->show();
     if (informative != nullptr) {
