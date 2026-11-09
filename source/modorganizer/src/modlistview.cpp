@@ -135,7 +135,8 @@ public:
     const bool hovered  = opt.state & QStyle::State_MouseOver;
     const bool selected = opt.state & QStyle::State_Selected;
     if (color.isValid()) {
-      painter->fillRect(opt.rect, selected  ? color.lighter(ModListView::SelectedLighter)
+      painter->fillRect(ModListView::colorBand(opt.rect),
+                        selected  ? color.lighter(ModListView::SelectedLighter)
                                   : hovered ? color.lighter(ModListView::HoverLighter)
                                             : color);
       opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
@@ -1240,7 +1241,8 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
     const int cursor = viewport()->mapFromGlobal(QCursor::pos()).y();
     const bool hovered =
         viewport()->underMouse() && cursor >= rect.top() && cursor <= rect.bottom();
-    painter->fillRect(rect, selectionModel()->isSelected(index) ? color.lighter(SelectedLighter)
+    painter->fillRect(colorBand(rect),
+                      selectionModel()->isSelected(index) ? color.lighter(SelectedLighter)
                             : hovered                           ? color.lighter(HoverLighter)
                                                                 : color);
   }

@@ -42,6 +42,10 @@ class ModListView : public QTreeView
   Q_PROPERTY(QColor switchKnobOffColor MEMBER m_switchKnobOffColor)
 
 public:
+  // the part of a tall row a separator's or a conflict's color fills: as a full
+  // block, a colored row looks taller than the mods around it
+  static QRect colorBand(const QRect& row) { return row.adjusted(0, 6, 0, -6); }
+
   // the indentation a row loses so a mod's name doesn't move when the list has
   // collapsible separators
   int removedIndentation(const QModelIndex& index) const;

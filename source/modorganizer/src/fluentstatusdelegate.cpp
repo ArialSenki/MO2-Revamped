@@ -189,7 +189,7 @@ void FluentStatusDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
     color = index.data(Qt::BackgroundRole).value<QColor>();
   }
   if (color.isValid()) {
-    painter->fillRect(option.rect,
+    painter->fillRect(ModListView::colorBand(option.rect),
                       (opt.state & QStyle::State_Selected)    ? color.lighter(ModListView::SelectedLighter)
                       : (opt.state & QStyle::State_MouseOver) ? color.lighter(ModListView::HoverLighter)
                                                               : color);
