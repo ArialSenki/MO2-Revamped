@@ -1547,7 +1547,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->espList->setBackupActions([this] { createPluginOrderBackup(); },
                                 [this] { restorePluginOrderBackup(); });
   ui->bsaList->setLocalMoveOnly(true);
-  ui->bsaList->setHeaderHidden(true);
+  ui->bsaList->setHeaderLabels({tr("Name")});
 
   const bool pluginListAdjusted =
       settings.geometry().restoreState(ui->espList->header());
@@ -1942,14 +1942,23 @@ void MainWindow::allowListResize()
   const bool nameStretches =
       header->count() > 0 && header->sectionResizeMode(0) == QHeaderView::Stretch;
 
-  for (int i = nameStretches ? 1 : 0; i < header->count(); ++i) {
+  // a layout saved before the switches: the name still takes what's left, and
+  // the numbers give back room when that would cut the plugin names
+  if (!nameStretches && header->count() > 0) {
+    header->setSectionResizeMode(0, QHeaderView::Stretch);
+    for (int i = 1; i < header->count() && header->sectionSize(0) < 220; ++i) {
+      header->resizeSection(i, header->sectionSizeHint(i) + 14);
+    }
+  }
+
+  for (int i = 1; i < header->count(); ++i) {
     header->setSectionResizeMode(i, QHeaderView::Interactive);
     // room for the sort arrow, which the contents' width leaves out
     if (nameStretches) {
       header->resizeSection(i, header->sectionSize(i) + 14);
     }
   }
-  header->setStretchLastSection(!nameStretches);
+  header->setStretchLastSection(false);
 }
 
 void MainWindow::updateStyle(const QString&)
@@ -2970,6 +2979,7 @@ void MainWindow::updateToolMenu()
   for (auto submenuKey : submenuMap.keys()) {
     if (submenuMap[submenuKey].length() > 1) {
       QMenu* submenu = new QMenu(submenuKey, this);
+      submenu->setIcon(fluentToolIcon(submenuKey));
       for (auto info : submenuMap[submenuKey]) {
         registerPluginTool(info.second, info.first, submenu);
       }

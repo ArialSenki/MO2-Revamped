@@ -235,6 +235,8 @@ void SettingsDialog::hideUnsupportedOptions()
     ui->workaroundsOptionsBox->setTitle(tr("MO2 behavior"));
     ui->workaroundsBehaviorDescription->setText(
         tr("Adjust how MO2's interface behaves while a program runs."));
+  }
+  if (!(hasArchives && hasInvalidation)) {
     ui->maintenanceToolsDescription->setText(
         tr("Run occasional repair actions for MO2 windows."));
   }

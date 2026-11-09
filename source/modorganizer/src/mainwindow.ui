@@ -767,10 +767,16 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <property name="spacing">
-              <number>2</number>
+              <number>8</number>
              </property>
              <property name="topMargin">
-              <number>6</number>
+              <number>8</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
              </property>
              <property name="bottomMargin">
               <number>0</number>
@@ -943,10 +949,16 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <property name="spacing">
-              <number>2</number>
+              <number>8</number>
              </property>
              <property name="topMargin">
-              <number>6</number>
+              <number>8</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
              </property>
              <property name="bottomMargin">
               <number>0</number>
@@ -1723,7 +1735,7 @@
     <string>Browse Mod Page</string>
    </property>
    <property name="iconText">
-    <string>Browse Mod Page</string>
+    <string>Nexus</string>
    </property>
    <property name="toolTip">
     <string>Browse Mod Page</string>

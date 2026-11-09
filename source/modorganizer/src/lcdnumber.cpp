@@ -64,7 +64,10 @@ void LCDNumber::useFrames(QWidget* root)
   }
 
   for (LCDNumber* lcd : root->findChildren<LCDNumber*>()) {
-    lcd->useFrame();
+    // this one is a plain count below the plugin list
+    if (lcd->objectName() != QLatin1String("activePluginsCounter")) {
+      lcd->useFrame();
+    }
   }
 }
 

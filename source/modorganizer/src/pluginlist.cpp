@@ -1276,8 +1276,10 @@ QVariant PluginList::fontData(const QModelIndex& modelIndex) const
 
   QFont result;
 
-  if (m_ESPs[index].hasMasterExtension || m_ESPs[index].isMasterFlagged ||
-      m_ESPs[index].hasLightExtension)
+  // the name says it's a master; the numbers beside it stay plain
+  if (modelIndex.column() == COL_NAME &&
+      (m_ESPs[index].hasMasterExtension || m_ESPs[index].isMasterFlagged ||
+       m_ESPs[index].hasLightExtension))
     result.setWeight(QFont::Bold);
   if (m_ESPs[index].isLightFlagged || m_ESPs[index].hasLightExtension)
     result.setItalic(true);
@@ -1291,7 +1293,7 @@ QVariant PluginList::alignmentData(const QModelIndex& modelIndex) const
 {
   const int index = modelIndex.row();
 
-  if (modelIndex.column() == 0) {
+  if (modelIndex.column() != COL_FLAGS) {
     return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
   } else {
     return QVariant(Qt::AlignHCenter | Qt::AlignVCenter);

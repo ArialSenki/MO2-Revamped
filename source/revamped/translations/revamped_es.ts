@@ -5009,6 +5009,10 @@ Los lanzadores que fallan dentro de la carpeta virtual de MO2 se inician fuera d
       <translation>Última partida %1</translation>
     </message>
     <message>
+      <source>Search plugins</source>
+      <translation>Buscar plugins</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Buscar descargas</translation>
     </message>

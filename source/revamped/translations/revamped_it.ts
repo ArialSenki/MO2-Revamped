@@ -5057,6 +5057,10 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
       <translation>Ultima partita %1</translation>
     </message>
     <message>
+      <source>Search plugins</source>
+      <translation>Cerca plugin</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Cerca download</translation>
     </message>

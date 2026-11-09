@@ -4977,6 +4977,10 @@ Launcher, die im virtuellen Ordner von MO2 scheitern, starten außerhalb davon: 
       <translation>Zuletzt gespielt %1</translation>
     </message>
     <message>
+      <source>Search plugins</source>
+      <translation>Plugins suchen</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Downloads suchen</translation>
     </message>

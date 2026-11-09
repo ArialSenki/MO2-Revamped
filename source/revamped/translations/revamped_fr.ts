@@ -4973,6 +4973,10 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
       <translation>Dernière partie %1</translation>
     </message>
     <message>
+      <source>Search plugins</source>
+      <translation>Rechercher des plugins</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Rechercher des téléchargements</translation>
     </message>

@@ -4969,6 +4969,10 @@ Launchers que falham dentro da pasta virtual do MO2 iniciam fora dela: o MO2 col
       <translation>Jogado pela última vez %1</translation>
     </message>
     <message>
+      <source>Search plugins</source>
+      <translation>Pesquisar plugins</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Pesquisar downloads</translation>
     </message>

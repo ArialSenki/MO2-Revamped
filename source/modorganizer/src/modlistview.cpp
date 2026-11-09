@@ -73,7 +73,8 @@ public:
       option->backgroundBrush = backgroundColor;
     }
 
-    if (index.column() == ModList::COL_NAME) {
+    if (index.column() == ModList::COL_NAME &&
+        !ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())->isSeparator()) {
       alignWithSwitches(option);
     }
   }
@@ -192,9 +193,13 @@ private:
   // its icon, so its text starts where the mods' names start
   static void alignWithSwitches(QStyleOptionViewItem* option)
   {
-    if ((option->features & QStyleOptionViewItem::HasCheckIndicator) ||
-        !(option->features & QStyleOptionViewItem::HasDecoration)) {
+    if (option->features & QStyleOptionViewItem::HasCheckIndicator) {
       return;
+    }
+    // or without an icon either (the game's own DLC)
+    if (!(option->features & QStyleOptionViewItem::HasDecoration)) {
+      option->features |= QStyleOptionViewItem::HasDecoration;
+      option->decorationSize = QSize(1, option->decorationSize.height());
     }
 
     const QWidget* widget = option->widget;

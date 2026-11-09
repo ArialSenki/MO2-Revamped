@@ -326,6 +326,24 @@ void FluentDashboard::setupModsHeader()
   ui->btnRefreshDownloads->setFixedWidth(32);
   ui->horizontalLayout->invalidate();
 
+  // Plugins: the search on top as in the other tabs, Sort beside it, and the
+  // count below the list like the Saves tab's caption
+  ui->horizontalLayout_10->removeWidget(ui->espFilterEdit);
+  ui->horizontalLayout_7->removeWidget(ui->activePluginsLabel);
+  ui->horizontalLayout_7->removeWidget(ui->activePluginsCounter);
+  ui->horizontalSpacer_3->changeSize(0, 0, QSizePolicy::Ignored, QSizePolicy::Ignored);
+  ui->horizontalLayout_7->insertWidget(0, ui->espFilterEdit, 1);
+  ui->horizontalLayout_7->setSpacing(8);
+  ui->horizontalLayout_7->invalidate();
+  ui->horizontalLayout_10->insertWidget(0, ui->activePluginsLabel);
+  ui->horizontalLayout_10->insertWidget(1, ui->activePluginsCounter);
+  ui->activePluginsCounter->setFrameShape(QFrame::NoFrame);
+  ui->horizontalLayout_10->invalidate();
+
+  // Archives: what the list is about goes below it, under the column title
+  ui->verticalLayout_9->removeItem(ui->horizontalLayout_9);
+  ui->verticalLayout_9->addItem(ui->horizontalLayout_9);
+
   applyTabTexts();
 }
 
@@ -340,6 +358,8 @@ void FluentDashboard::applyTabTexts()
   ui->downloadFilterEdit->setAccessibleName(tr("Search downloads"));
   ui->btnRefreshDownloads->setText(QString());
   ui->btnRefreshDownloads->setAccessibleName(tr("Refresh"));
+  ui->espFilterEdit->setPlaceholderText(tr("Search plugins"));
+  ui->espFilterEdit->setAccessibleName(tr("Search plugins"));
 }
 
 void FluentDashboard::retranslate()

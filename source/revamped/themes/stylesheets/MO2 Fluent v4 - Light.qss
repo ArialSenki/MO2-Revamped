@@ -6054,3 +6054,26 @@ QDialog#CreateInstanceDialog QPushButton#next {
     padding-left: 8px;
     padding-right: 8px;
 }
+
+/* Games with plugin files: the Plugins and Archives tabs, as the other tabs. */
+QWidget#espTab PluginListView#espList::indicator { width: 36px; height: 18px; }
+QWidget#espTab PluginListView#espList::indicator:unchecked { image: url(./mo2-fluent-v4-light/switch-off.svg); }
+QWidget#espTab PluginListView#espList::indicator:unchecked:hover { image: url(./mo2-fluent-v4-light/switch-off-hover.svg); }
+QWidget#espTab PluginListView#espList::indicator:checked { image: url(./mo2-fluent-v4-light/switch-on.svg); }
+QWidget#espTab PluginListView#espList::indicator:checked:hover { image: url(./mo2-fluent-v4-light/switch-on-hover.svg); }
+QWidget#espTab PluginListView#espList::item,
+QWidget#espTab PluginListView#espList::item:hover,
+QWidget#espTab PluginListView#espList::item:selected { padding: 4px 9px; }
+QWidget#bsaTab QTreeWidget#bsaList::indicator { width: 36px; height: 18px; }
+QWidget#bsaTab QTreeWidget#bsaList::indicator:unchecked,
+QWidget#bsaTab QTreeWidget#bsaList::indicator:unchecked:disabled { image: url(./mo2-fluent-v4-light/switch-off-disabled.svg); }
+QWidget#bsaTab QTreeWidget#bsaList::indicator:checked,
+QWidget#bsaTab QTreeWidget#bsaList::indicator:checked:disabled { image: url(./mo2-fluent-v4-light/switch-on-disabled.svg); }
+QWidget#bsaTab QTreeWidget#bsaList::item { padding: 4px 9px; }
+QWidget#espTab QLineEdit#espFilterEdit { min-height: 24px; }
+/* Tools that come as plugins of their own. */
+MOBase--TextViewer QTabWidget::pane { border: none; }
+MOBase--TextViewer QCheckBox::indicator { width: 36px; height: 18px; }
+MOBase--TextViewer QCheckBox::indicator:unchecked { image: url(./mo2-fluent-v4-light/switch-off.svg); }
+MOBase--TextViewer QCheckBox::indicator:checked { image: url(./mo2-fluent-v4-light/switch-on.svg); }
+BsaPacker--PackerDialog { min-width: 440px; min-height: 360px; }
