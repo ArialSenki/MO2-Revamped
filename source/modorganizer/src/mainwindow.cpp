@@ -1943,10 +1943,10 @@ void MainWindow::allowListResize()
       header->count() > 0 && header->sectionResizeMode(0) == QHeaderView::Stretch;
 
   // a layout saved before the switches: the name still takes what's left, and
-  // the numbers give back room when that would cut the plugin names
+  // the numbers keep just the room they need
   if (!nameStretches && header->count() > 0) {
     header->setSectionResizeMode(0, QHeaderView::Stretch);
-    for (int i = 1; i < header->count() && header->sectionSize(0) < 220; ++i) {
+    for (int i = 1; i < header->count(); ++i) {
       header->resizeSection(i, header->sectionSizeHint(i) + 14);
     }
   }
