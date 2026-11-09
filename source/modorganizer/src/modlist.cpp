@@ -19,8 +19,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modlist.h"
-#include "modlistview.h"
-#include <QSize>
 #include "fluenticons.h"
 
 #include "messagedialog.h"
@@ -194,11 +192,6 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
   int column            = modelIndex.column();
 
   ModInfo::Ptr modInfo = ModInfo::getByIndex(modIndex);
-  if (role == Qt::SizeHintRole) {
-    // every delegate answers with this, so the whole row takes it
-    return modInfo->isSeparator() ? QVariant(QSize(0, ModListView::SeparatorRowHeight))
-                                  : QVariant();
-  }
   if ((role == Qt::DisplayRole) || (role == Qt::EditRole)) {
     if ((column == COL_FLAGS) || (column == COL_CONTENT) ||
         (column == COL_CONFLICTFLAGS)) {
