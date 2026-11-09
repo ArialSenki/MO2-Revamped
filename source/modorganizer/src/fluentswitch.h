@@ -56,6 +56,7 @@ private:
   QCheckBox* m_box;
   QVariantAnimation* m_position;
   QVariantAnimation* m_hover;
+  bool m_keyboardFocus = false;
   QColor m_on, m_off, m_border, m_knobOn, m_knobOff;
 
   void place();

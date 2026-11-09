@@ -51,6 +51,8 @@ ModListSettingsTab::ModListSettingsTab(Settings& s, SettingsDialog& d)
   });
 
   ui->colorSeparatorsBox->setChecked(settings().colors().colorSeparatorScrollbar());
+  ui->newSeparatorColorBox->setCurrentIndex(
+      static_cast<int>(settings().colors().newSeparatorColor()));
   ui->displayForeignBox->setChecked(settings().interface().displayForeign());
   ui->collapsibleSeparatorsAscBox->setChecked(
       settings().interface().collapsibleSeparators(Qt::AscendingOrder));
@@ -76,6 +78,8 @@ void ModListSettingsTab::update()
 {
   // mod list
   settings().colors().setColorSeparatorScrollbar(ui->colorSeparatorsBox->isChecked());
+  settings().colors().setNewSeparatorColor(static_cast<ColorSettings::NewSeparatorColor>(
+      ui->newSeparatorColorBox->currentIndex()));
   settings().interface().setDisplayForeign(ui->displayForeignBox->isChecked());
   settings().interface().setCollapsibleSeparators(
       ui->collapsibleSeparatorsAscBox->isChecked(),

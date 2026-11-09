@@ -687,6 +687,60 @@
               </widget>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="newSeparatorColorRow">
+               <item>
+                <widget class="QLabel" name="newSeparatorColorLabel">
+                 <property name="text">
+                  <string>Color of new separators</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>What color a separator gets when you create it. A random color avoids the ones your other separators use.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="newSeparatorColorSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QComboBox" name="newSeparatorColorBox">
+                 <property name="minimumSize">
+                  <size>
+                   <width>260</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>What color a separator gets when you create it. A random color avoids the ones your other separators use.</string>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>A random color</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Choose it each time</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>The last color used</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>No color</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <widget class="QCheckBox" name="displayForeignBox">
                <property name="toolTip">
                 <string>Show mods installed by other tools in the left pane so their priority can be managed alongside MO2 mods.</string>

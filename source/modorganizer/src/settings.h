@@ -273,6 +273,18 @@ public:
   void setPreviousSeparatorColor(const QColor& c) const;
   void removePreviousSeparatorColor();
 
+  // the color a separator gets when it's created
+  //
+  enum class NewSeparatorColor
+  {
+    Random = 0,
+    Choose,
+    Previous,
+    None
+  };
+  NewSeparatorColor newSeparatorColor() const;
+  void setNewSeparatorColor(NewSeparatorColor mode);
+
   // whether the scrollbar of the mod list should have colors for custom
   // separator colors
   //

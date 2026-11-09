@@ -135,10 +135,10 @@ public:
     const bool hovered  = opt.state & QStyle::State_MouseOver;
     const bool selected = opt.state & QStyle::State_Selected;
     if (color.isValid()) {
-      painter->fillRect(ModListView::colorBand(opt.rect),
-                        selected  ? color.lighter(ModListView::SelectedLighter)
-                                  : hovered ? color.lighter(ModListView::HoverLighter)
-                                            : color);
+      m_view->paintColorBand(painter, opt.rect,
+                             selected  ? color.lighter(ModListView::SelectedLighter)
+                                       : hovered ? color.lighter(ModListView::HoverLighter)
+                                                 : color);
       opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
     }
 
@@ -161,6 +161,10 @@ public:
     rect.setHeight(height);
     rect.moveTop(option.rect.top() + (option.rect.height() - height) / 2);
     rect.setLeft(rect.left() - 6 - textShift(index));
+    // clear of the switch
+    if (index.column() == ModList::COL_NAME && index.data(Qt::CheckStateRole).isValid()) {
+      rect.setLeft(rect.left() + 10);
+    }
     rect.setRight(std::min(rect.right(), option.rect.right() - 8));
     editor->setGeometry(rect);
   }
@@ -1249,6 +1253,21 @@ int ModListView::removedIndentation(const QModelIndex& index) const
   return indentation() * (index.parent().isValid() ? 2 : 1);
 }
 
+void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
+                                 const QColor& color) const
+{
+  // one rounded shape across the row; each cell paints its slice of it
+  const QRect row = colorBand(
+      QRect(2 - horizontalOffset(), cell.top(), header()->length() - 4, cell.height()));
+  painter->save();
+  painter->setClipRect(cell, Qt::IntersectClip);
+  painter->setRenderHint(QPainter::Antialiasing);
+  painter->setPen(Qt::NoPen);
+  painter->setBrush(color);
+  painter->drawRoundedRect(row, 5, 5);
+  painter->restore();
+}
+
 void ModListView::drawBranches(QPainter* painter, const QRect& rect,
                                const QModelIndex& index) const
 {
@@ -1274,10 +1293,19 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
     const int cursor = viewport()->mapFromGlobal(QCursor::pos()).y();
     const bool hovered =
         viewport()->underMouse() && cursor >= rect.top() && cursor <= rect.bottom();
-    painter->fillRect(colorBand(rect),
-                      selectionModel()->isSelected(index) ? color.lighter(SelectedLighter)
-                            : hovered                           ? color.lighter(HoverLighter)
-                                                                : color);
+    const bool selected = selectionModel()->isSelected(index);
+    if (hovered || selected) {
+      // the view has already filled the whole gutter with the row's hover or
+      // selection: above and below the band the row stays as it was
+      const int row = (rect.top() + verticalOffset()) / std::max(rect.height(), 1);
+      painter->fillRect(rect, alternatingRowColors() && (row & 1) != 0
+                                  ? palette().alternateBase()
+                                  : palette().base());
+    }
+    paintColorBand(painter, rect,
+                   selected  ? color.lighter(SelectedLighter)
+                   : hovered ? color.lighter(HoverLighter)
+                             : color);
   }
   QTreeView::drawBranches(painter, r, index);
 }

@@ -10545,6 +10545,30 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
       <translation>Mostrar colores de separadores en la barra de desplazamiento</translation>
     </message>
     <message>
+      <source>Color of new separators</source>
+      <translation>Color de los separadores nuevos</translation>
+    </message>
+    <message>
+      <source>What color a separator gets when you create it. A random color avoids the ones your other separators use.</source>
+      <translation>Qué color recibe un separador al crearlo. El color aleatorio evita los que ya usan tus otros separadores.</translation>
+    </message>
+    <message>
+      <source>A random color</source>
+      <translation>Un color aleatorio</translation>
+    </message>
+    <message>
+      <source>Choose it each time</source>
+      <translation>Elegirlo cada vez</translation>
+    </message>
+    <message>
+      <source>The last color used</source>
+      <translation>El último color usado</translation>
+    </message>
+    <message>
+      <source>No color</source>
+      <translation>Sin color</translation>
+    </message>
+    <message>
       <source>Show mods installed by other tools in the left pane so their priority can be managed alongside MO2 mods.</source>
       <translation>Muestra en el panel izquierdo los mods instalados por otras herramientas para gestionar su prioridad junto a los mods de MO2.</translation>
     </message>

@@ -41,6 +41,7 @@
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "fluentdialogs.h"
+#include <QRandomGenerator>
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
 #include "pluginlistview.h"
@@ -144,6 +145,31 @@ void polishColorDialog(QColorDialog& dialog)
       button->setText(QStringLiteral("&Add to custom colors"));
     }
   }
+}
+
+// colors that read well in both themes, with light or dark text on them
+QColor randomSeparatorColor()
+{
+  static const QRgb palette[] = {0x2F6F9F, 0x2E8B7A, 0x4C8C4A, 0x8A7A2E, 0xB0722E, 0xA94F3D,
+                                 0xA8435F, 0x8C4A96, 0x5F55A8, 0x3F86A8, 0x6B7A8F, 0x7A5A3E};
+
+  // the colors no separator has yet, or any of them once all are in use
+  QList<QColor> unused;
+  for (QRgb rgb : palette) {
+    unused.append(QColor::fromRgb(rgb));
+  }
+  for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+    ModInfo::Ptr info = ModInfo::getByIndex(i);
+    if (info->isSeparator()) {
+      unused.removeAll(info->color());
+    }
+  }
+  if (unused.isEmpty()) {
+    for (QRgb rgb : palette) {
+      unused.append(QColor::fromRgb(rgb));
+    }
+  }
+  return unused.at(QRandomGenerator::global()->bounded(unused.size()));
 }
 
 bool confirmBulkModToggle(QWidget* parent, const QString& windowTitle,
@@ -332,6 +358,32 @@ void ModListViewActions::createSeparator(const QModelIndex& index) const
     reportError(tr("A separator with this name already exists"));
     return;
   }
+
+  QColor color;
+  auto& colors = m_core.settings().colors();
+  switch (colors.newSeparatorColor()) {
+  case ColorSettings::NewSeparatorColor::Random:
+    color = randomSeparatorColor();
+    break;
+  case ColorSettings::NewSeparatorColor::Choose: {
+    QColorDialog dialog(m_parent);
+    const DarkCustomColorSlots darkSlots;
+    dialog.setOption(QColorDialog::ShowAlphaChannel);
+    polishColorDialog(dialog);
+    dialog.setCurrentColor(randomSeparatorColor());
+    if (!dialog.exec() || !dialog.currentColor().isValid()) {
+      return;
+    }
+    color = dialog.currentColor();
+    colors.setPreviousSeparatorColor(color);
+    break;
+  }
+  case ColorSettings::NewSeparatorColor::Previous:
+    color = colors.previousSeparatorColor().value_or(QColor());
+    break;
+  case ColorSettings::NewSeparatorColor::None:
+    break;
+  }
   name->append("_separator");
   if (m_core.modList()->getMod(name) != nullptr) {
     return;
@@ -359,8 +411,8 @@ void ModListViewActions::createSeparator(const QModelIndex& index) const
     m_core.modList()->changeModPriority(mIndex, newPriority);
   }
 
-  if (auto c = m_core.settings().colors().previousSeparatorColor()) {
-    ModInfo::getByIndex(mIndex)->setColor(*c);
+  if (color.isValid()) {
+    ModInfo::getByIndex(mIndex)->setColor(color);
   }
 
   m_view->scrollToAndSelect(

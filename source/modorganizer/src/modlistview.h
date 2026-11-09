@@ -46,6 +46,7 @@ public:
   // the part of a tall row a separator's or a conflict's color fills: as a full
   // block, a colored row looks taller than the mods around it
   static QRect colorBand(const QRect& row) { return row.adjusted(0, 6, 0, -6); }
+  void paintColorBand(QPainter* painter, const QRect& cell, const QColor& color) const;
 
   // the indentation a row loses so a mod's name doesn't move when the list has
   // collapsible separators

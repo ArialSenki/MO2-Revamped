@@ -18,6 +18,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "moapplication.h"
+#include <QFocusEvent>
+#include <QPushButton>
+#include <QToolButton>
 #include "revampedtheme.h"
 #include "fluentchoices.h"
 #include "fluentdialogs.h"
@@ -1407,8 +1410,36 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
   return dispatch(receiver, event);
 }
 
+namespace
+{
+// a button shows the focus when the keyboard brought it there; after a click
+// it looks as it did. The theme reads the property
+void markKeyboardFocus(QObject* receiver, QEvent* event)
+{
+  if (qobject_cast<QPushButton*>(receiver) == nullptr &&
+      qobject_cast<QToolButton*>(receiver) == nullptr) {
+    return;
+  }
+
+  auto* widget      = static_cast<QWidget*>(receiver);
+  const auto reason = static_cast<QFocusEvent*>(event)->reason();
+  const bool marked = event->type() == QEvent::FocusIn &&
+                      (reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason);
+  if (widget->property("keyboardFocus").toBool() != marked) {
+    widget->setProperty("keyboardFocus", marked);
+    widget->style()->unpolish(widget);
+    widget->style()->polish(widget);
+    widget->update();
+  }
+}
+}  // namespace
+
 bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
+  if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut) {
+    markKeyboardFocus(receiver, event);
+  }
+
   // Fluent v4: trees open and close their branches with a slide
   if (event->type() == QEvent::Polish) {
     if (auto* tree = qobject_cast<QTreeView*>(receiver)) {

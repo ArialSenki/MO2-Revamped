@@ -10355,6 +10355,30 @@ Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für de
       <translation>Trennerfarben in der Bildlaufleiste anzeigen</translation>
     </message>
     <message>
+      <source>Color of new separators</source>
+      <translation>Farbe neuer Trennlinien</translation>
+    </message>
+    <message>
+      <source>What color a separator gets when you create it. A random color avoids the ones your other separators use.</source>
+      <translation>Welche Farbe eine Trennlinie beim Erstellen erhält. Eine zufällige Farbe meidet die Farben deiner anderen Trennlinien.</translation>
+    </message>
+    <message>
+      <source>A random color</source>
+      <translation>Eine zufällige Farbe</translation>
+    </message>
+    <message>
+      <source>Choose it each time</source>
+      <translation>Jedes Mal auswählen</translation>
+    </message>
+    <message>
+      <source>The last color used</source>
+      <translation>Die zuletzt verwendete Farbe</translation>
+    </message>
+    <message>
+      <source>No color</source>
+      <translation>Keine Farbe</translation>
+    </message>
+    <message>
       <source>Show mods installed by other tools in the left pane so their priority can be managed alongside MO2 mods.</source>
       <translation>Zeigt im linken Bereich Mods anderer Werkzeuge an, damit ihre Priorität zusammen mit MO2-Mods verwaltet werden kann.</translation>
     </message>

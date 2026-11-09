@@ -325,8 +325,7 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     QFont result;
     if (column == COL_NAME) {
       if (modInfo->isSeparator()) {
-        result.setItalic(true);
-        result.setBold(true);
+        result.setWeight(QFont::DemiBold);
       } else if (modInfo->getHighlight() & ModInfo::HIGHLIGHT_INVALID) {
         result.setItalic(true);
       }
@@ -466,6 +465,9 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
       return text;
     } else if (column == COL_CATEGORY) {
       const std::set<int>& categories = modInfo->getCategories();
+      if (categories.empty()) {
+        return QVariant();
+      }
       std::wostringstream categoryString;
       categoryString << ToWString(tr("Categories: <br>"));
       CategoryFactory& categoryFactory = CategoryFactory::instance();

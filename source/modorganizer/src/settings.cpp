@@ -1306,6 +1306,19 @@ void ColorSettings::removePreviousSeparatorColor()
   remove(m_Settings, "General", "previousSeparatorColor");
 }
 
+ColorSettings::NewSeparatorColor ColorSettings::newSeparatorColor() const
+{
+  const int mode = get<int>(m_Settings, "Settings", "newSeparatorColor", 0);
+  return mode >= 0 && mode <= static_cast<int>(NewSeparatorColor::None)
+             ? static_cast<NewSeparatorColor>(mode)
+             : NewSeparatorColor::Random;
+}
+
+void ColorSettings::setNewSeparatorColor(NewSeparatorColor mode)
+{
+  set(m_Settings, "Settings", "newSeparatorColor", static_cast<int>(mode));
+}
+
 bool ColorSettings::colorSeparatorScrollbar() const
 {
   return get<bool>(m_Settings, "Settings", "colorSeparatorScrollbars", false);

@@ -182,17 +182,22 @@ void FluentStatusDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
   QStyle* style         = widget ? widget->style() : QApplication::style();
   // as in the other columns: the theme hides the option's background
   QColor color;
-  if (auto* view = qobject_cast<const ModListView*>(widget)) {
+  auto* view = qobject_cast<const ModListView*>(widget);
+  if (view != nullptr) {
     color = view->markerColor(index);
   }
   if (!color.isValid()) {
     color = index.data(Qt::BackgroundRole).value<QColor>();
   }
   if (color.isValid()) {
-    painter->fillRect(ModListView::colorBand(option.rect),
-                      (opt.state & QStyle::State_Selected)    ? color.lighter(ModListView::SelectedLighter)
-                      : (opt.state & QStyle::State_MouseOver) ? color.lighter(ModListView::HoverLighter)
-                                                              : color);
+    const QColor fill = (opt.state & QStyle::State_Selected)    ? color.lighter(ModListView::SelectedLighter)
+                        : (opt.state & QStyle::State_MouseOver) ? color.lighter(ModListView::HoverLighter)
+                                                                : color;
+    if (view != nullptr) {
+      view->paintColorBand(painter, option.rect, fill);
+    } else {
+      painter->fillRect(ModListView::colorBand(option.rect), fill);
+    }
     opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
   }
   style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);

@@ -1212,13 +1212,12 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         name_edit.setEnabled(supports_named_profiles and checkbox.isChecked())
 
         if copy_checkbox is not None:
-            copy_text = (
+            # a switch: what it does is its accessible name, its row says the rest
+            copy_checkbox.setAccessibleName(
                 _tr("Copy an existing save into this named profile")
                 if checkbox.isChecked()
                 else _tr("Copy an existing save into the new instance")
             )
-            copy_checkbox.setText(copy_text)
-            copy_checkbox.setAccessibleName(copy_text)
             # Global mode plays from the Steam folder; nothing is copied into it
             copy_checkbox.setEnabled(
                 mode != self.GlobalShared
@@ -2320,20 +2319,24 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         ):
             if suffix in {".err", ".cnv"} and (target_game or self._game_key) != "eldenring":
                 continue
-            type_box = QCheckBox(title, card)
+            type_box = QCheckBox(card)
             type_box.setObjectName(
                 f"{self.CreateInstanceCardName}_type_{suffix.lstrip('.')}"
             )
             type_box.setProperty("saveSuffix", suffix)
-            type_box.setProperty("fluentSwitch", True)
-            type_box.setCursor(Qt.CursorShape.PointingHandCursor)
+            # the title on the left, the switch on the right, as the rows below
+            _make_switch(type_box, title, "")
+            type_box.setFixedWidth(40)
             type_box.setChecked(suffix == ".sl2")
             type_box.toggled.connect(
                 lambda _checked, target=dialog: self._refresh_create_instance_save_sources(
                     target
                 )
             )
-            types_layout.addWidget(type_box)
+            type_row = QHBoxLayout()
+            type_row.addWidget(QLabel(title, card), 1)
+            type_row.addWidget(type_box, 0, Qt.AlignmentFlag.AlignVCenter)
+            types_layout.addLayout(type_row)
         types_note = QLabel(
             _tr("The saves of the types turned on can be copied in as the starting "
             "save. MO2 keeps every type apart in the same way."),
@@ -2343,7 +2346,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         wizard_row(_tr("Save types"), types_note, [], types_layout)
 
         # a named game save profile: its switch and its name
-        game_save_profile_checkbox = QCheckBox(_tr("Create a named game save profile"), card)
+        game_save_profile_checkbox = QCheckBox(card)
         game_save_profile_checkbox.setObjectName(
             self.CreateInstanceGameSaveProfileCheckboxName
         )
@@ -2351,8 +2354,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             _tr("Create a separate named save choice managed in Tools > "
             "Save isolation.")
         )
-        game_save_profile_checkbox.setProperty("fluentSwitch", True)
-        game_save_profile_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        _make_switch(
+            game_save_profile_checkbox,
+            _tr("Create a named game save profile"),
+            game_save_profile_checkbox.toolTip(),
+        )
         game_save_profile_name = QLineEdit(card)
         game_save_profile_name.setObjectName(
             self.CreateInstanceGameSaveProfileNameEditName
@@ -2370,27 +2376,28 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_note.setObjectName(
             self.CreateInstanceGameSaveProfileNoteName
         )
-        # labelled and on the left, like the switches of the other steps
-        under_profile = QVBoxLayout()
-        under_profile.setContentsMargins(0, 8, 0, 0)
-        under_profile.addWidget(game_save_profile_checkbox)
+        # a switch without text: only the switch, flush with the lists above
+        game_save_profile_checkbox.setFixedWidth(40)
         wizard_row(
             _tr("Game save profile"),
             game_save_profile_note,
-            [game_save_profile_name],
-            under_profile,
+            [game_save_profile_name, game_save_profile_checkbox],
         )
 
         # a starting save: its switch, and which one with a refresh beside it
-        copy_checkbox = QCheckBox(_tr("Copy an existing save into the new instance"), card)
+        copy_checkbox = QCheckBox(card)
         copy_checkbox.setObjectName(self.CreateInstanceSaveCopyCheckboxName)
         copy_checkbox.setToolTip(
             _trs("Choose a save from Steam or a detected Elden Ring MO2 profile. "
             "The file is copied as ER0000 with its own extension after the new "
             "instance is opened.")
         )
-        copy_checkbox.setProperty("fluentSwitch", True)
-        copy_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        _make_switch(
+            copy_checkbox,
+            _tr("Copy an existing save into the new instance"),
+            copy_checkbox.toolTip(),
+        )
+        copy_checkbox.setFixedWidth(40)
         source_combo = QComboBox(card)
         source_combo.setObjectName(self.CreateInstanceSaveSourceComboName)
         source_combo.setSizeAdjustPolicy(
@@ -2410,16 +2417,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_row.setSpacing(8)
         source_row.addWidget(source_combo, 1)
         source_row.addWidget(refresh_button)
-        under_source = QVBoxLayout()
-        under_source.setContentsMargins(0, 8, 0, 0)
-        under_source.setSpacing(0)
-        under_source.addWidget(copy_checkbox)
-        under_source.addLayout(source_row)
         wizard_row(
             _tr("Optional starting save"),
             source_status,
-            [],
-            under_source,
+            [copy_checkbox],
+            source_row,
         )
 
         copy_checkbox.toggled.connect(
