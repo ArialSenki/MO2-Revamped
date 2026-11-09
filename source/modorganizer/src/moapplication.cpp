@@ -1440,11 +1440,11 @@ public:
 
     const auto reason = static_cast<QFocusEvent*>(event)->reason();
     if ((reason != Qt::TabFocusReason && reason != Qt::BacktabFocusReason) ||
-        target->parentWidget() == nullptr) {
+        target->isWindow()) {
       return;
     }
     if (ring == nullptr) {
-      ring = new KeyboardFocusRing(target->parentWidget());
+      ring = new KeyboardFocusRing(target->window());
     }
     ring->attach(target);
   }
@@ -1452,22 +1452,25 @@ public:
 protected:
   bool eventFilter(QObject* watched, QEvent* event) override
   {
-    if (watched == m_target) {
-      switch (event->type()) {
-      case QEvent::Move:
-      case QEvent::Resize:
-        place();
-        break;
-      case QEvent::Hide:
+    switch (event->type()) {
+    case QEvent::Move:
+    case QEvent::Resize:
+      // the control, or anything it sits in: a scrolled page moves its contents
+      place();
+      break;
+    case QEvent::Hide:
+      if (watched == m_target) {
         hide();
-        break;
-      case QEvent::Show:
+      }
+      break;
+    case QEvent::Show:
+      if (watched == m_target) {
         place();
         show();
-        break;
-      default:
-        break;
       }
+      break;
+    default:
+      break;
     }
     return false;
   }
@@ -1500,17 +1503,25 @@ private:
   {
     detach();
     m_target = target;
-    setParent(target->parentWidget());
-    target->installEventFilter(this);
+    // on the window, so that no panel around the control cuts the ring
+    setParent(target->window());
+    for (QWidget* widget = target; widget != nullptr && !widget->isWindow();
+         widget          = widget->parentWidget()) {
+      widget->installEventFilter(this);
+      m_watched.append(widget);
+    }
     place();
     show();
   }
 
   void detach()
   {
-    if (m_target != nullptr) {
-      m_target->removeEventFilter(this);
+    for (const auto& widget : std::as_const(m_watched)) {
+      if (widget != nullptr) {
+        widget->removeEventFilter(this);
+      }
     }
+    m_watched.clear();
     m_target = nullptr;
     hide();
   }
@@ -1536,12 +1547,15 @@ private:
       area = bar->tabRect(bar->currentIndex());
     }
 
+    // inside a scrolled page a control can be out of sight
+    setVisible(!m_target->visibleRegion().isEmpty());
     const QPoint origin = m_target->mapTo(parentWidget(), area.topLeft());
     setGeometry(QRect(origin, area.size()).adjusted(-3, -3, 3, 3));
     raise();
   }
 
   QPointer<QWidget> m_target;
+  QList<QPointer<QWidget>> m_watched;
 };
 }  // namespace
 
