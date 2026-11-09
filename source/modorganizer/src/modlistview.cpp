@@ -142,6 +142,8 @@ public:
       opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
     }
 
+    // after the color fill: it stays inside the cell
+    opt.rect.adjust(-textShift(index), 0, 0, 0);
     QStyledItemDelegate::paint(painter, opt, index);
     opt.state.setFlag(QStyle::State_MouseOver, hovered);
     paintSwitch(painter, opt, index);
@@ -158,7 +160,7 @@ public:
     QRect rect       = editor->geometry();
     rect.setHeight(height);
     rect.moveTop(option.rect.top() + (option.rect.height() - height) / 2);
-    rect.setLeft(rect.left() - 6);
+    rect.setLeft(rect.left() - 6 - textShift(index));
     rect.setRight(std::min(rect.right(), option.rect.right() - 8));
     editor->setGeometry(rect);
   }
@@ -206,6 +208,23 @@ private:
         style->subElementRect(QStyle::SE_ItemViewItemText, option, widget).left();
     if (shift > 0) {
       option->decorationSize.rwidth() += shift;
+    }
+  }
+
+  // the text columns start where their headings do: the row padding suits the
+  // Name column, which keeps the switch after it
+  static int textShift(const QModelIndex& index)
+  {
+    switch (index.column()) {
+    case ModList::COL_PRIORITY:
+    case ModList::COL_VERSION:
+    case ModList::COL_CATEGORY:
+    case ModList::COL_GAME:
+    case ModList::COL_INSTALLTIME:
+    case ModList::COL_NOTES:
+      return 4;
+    default:
+      return 0;
     }
   }
 
@@ -370,6 +389,8 @@ ModListView::ModListView(QWidget* parent)
 
 void ModListView::refresh()
 {
+  // the colors and options behind the markers may have changed
+  clearMarkerColors();
   updateGroupByProxy();
 }
 
@@ -1093,6 +1114,18 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
   connect(selectionModel(), &QItemSelectionModel::selectionChanged, [=] {
     m_refreshMarkersTimer.start();
   });
+  // what a row's marker depends on, besides the markers themselves
+  const auto clearColors = [this] {
+    clearMarkerColors();
+  };
+  connect(m_sortProxy, &QAbstractItemModel::modelReset, this, clearColors);
+  connect(m_sortProxy, &QAbstractItemModel::layoutChanged, this, clearColors);
+  connect(m_sortProxy, &QAbstractItemModel::rowsInserted, this, clearColors);
+  connect(m_sortProxy, &QAbstractItemModel::rowsRemoved, this, clearColors);
+  connect(m_sortProxy, &QAbstractItemModel::rowsMoved, this, clearColors);
+  connect(this, &QTreeView::collapsed, this, clearColors);
+  connect(this, &QTreeView::expanded, this, clearColors);
+
   connect(this, &QTreeView::collapsed, [=] {
     m_refreshMarkersTimer.start();
   });
@@ -1376,6 +1409,7 @@ void ModListView::clearOverwriteMarkers()
   m_markers.archiveOverwritten.clear();
   m_markers.archiveLooseOverwrite.clear();
   m_markers.archiveLooseOverwritten.clear();
+  clearMarkerColors();
 }
 
 void ModListView::setOverwriteMarkers(const QModelIndexList& indexes)
@@ -1397,7 +1431,7 @@ void ModListView::setOverwriteMarkers(const QModelIndexList& indexes)
     }
   }
   viewport()->update();
-  verticalScrollBar()->update();
+  clearMarkerColors();
 }
 
 void ModListView::refreshMarkersAndPlugins()
@@ -1422,7 +1456,12 @@ void ModListView::refreshMarkersAndPlugins()
     modIndices.push_back(idx.data(ModList::IndexRole).toInt());
   }
   m_core->pluginList()->highlightPlugins(modIndices, m_core->directoryStructure());
-  ui.pluginList->verticalScrollBar()->update();
+  // highlighted plugins are its marks too
+  if (auto* bar = dynamic_cast<ViewMarkingScrollBar*>(ui.pluginList->verticalScrollBar())) {
+    bar->invalidateMarks();
+  } else {
+    ui.pluginList->verticalScrollBar()->update();
+  }
 }
 
 void ModListView::setHighlightedMods(const std::vector<unsigned int>& pluginIndices)
@@ -1444,10 +1483,30 @@ void ModListView::setHighlightedMods(const std::vector<unsigned int>& pluginIndi
     }
   }
   viewport()->update();
-  verticalScrollBar()->update();
+  clearMarkerColors();
+}
+
+void ModListView::clearMarkerColors() const
+{
+  m_markerColors.clear();
+  m_scrollbar->invalidateMarks();
 }
 
 QColor ModListView::markerColor(const QModelIndex& index) const
+{
+  // the same for every cell of a row, and each row paints many
+  const QModelIndex rowIndex = index.sibling(index.row(), 0);
+  auto cached                = m_markerColors.constFind(rowIndex);
+  if (cached != m_markerColors.constEnd()) {
+    return *cached;
+  }
+
+  const QColor color = computeMarkerColor(rowIndex);
+  m_markerColors.insert(rowIndex, color);
+  return color;
+}
+
+QColor ModListView::computeMarkerColor(const QModelIndex& index) const
 {
   // a group heading (by category or Nexus ID) is no mod: without the check it
   // would light up with the first mod's conflict marker
@@ -1483,9 +1542,9 @@ QColor ModListView::markerColor(const QModelIndex& index) const
 
   // collapsed separator
   auto rowIndex = index.sibling(index.row(), 0);
-  if (hasCollapsibleSeparators() &&
-      m_core->settings().interface().collapsibleSeparatorsHighlightTo() &&
-      model()->hasChildren(rowIndex) && !isExpanded(rowIndex)) {
+  if (model()->hasChildren(rowIndex) && !isExpanded(rowIndex) &&
+      hasCollapsibleSeparators() &&
+      m_core->settings().interface().collapsibleSeparatorsHighlightTo()) {
 
     std::vector<QColor> colors;
     for (int i = 0; i < model()->rowCount(rowIndex); ++i) {

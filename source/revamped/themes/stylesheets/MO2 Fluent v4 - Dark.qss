@@ -6063,17 +6063,25 @@ QDockWidget#logDock QTreeView#logList {
 }
 
 /* Each list's headings start where its values do. */
-QMainWindow#MainWindow QTreeView#modList QHeaderView::section {
-    padding-left: 13px;
-    padding-right: 13px;
-}
-
-QWidget#dataTab QTreeView#dataTree QHeaderView::section {
-    padding-left: 12px;
-}
-
+QWidget#dataTab QTreeView#dataTree QHeaderView::section,
 QWidget#savesTab QTreeWidget#savegameList QHeaderView::section {
-    padding-left: 11px;
+    padding-left: 7px;
+}
+
+/* The first column starts at the same place in the three tabs. */
+QWidget#dataTab QTreeView#dataTree::item,
+QWidget#dataTab QTreeView#dataTree::item:hover,
+QWidget#dataTab QTreeView#dataTree::item:selected,
+QWidget#dataTab QTreeView#dataTree::item:focus,
+QWidget#dataTab QTreeView#dataTree::item:selected:focus,
+QWidget#dataTab QTreeView#dataTree::item:hover:selected,
+QWidget#savesTab QTreeWidget#savegameList::item,
+QWidget#savesTab QTreeWidget#savegameList::item:hover,
+QWidget#savesTab QTreeWidget#savegameList::item:selected,
+QWidget#savesTab QTreeWidget#savegameList::item:focus,
+QWidget#savesTab QTreeWidget#savegameList::item:selected:focus,
+QWidget#savesTab QTreeWidget#savegameList::item:hover:selected {
+    padding-left: 4px;
 }
 
 QWidget#downloadTab DownloadListView#downloadView QHeaderView::section {

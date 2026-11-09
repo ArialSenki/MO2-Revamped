@@ -843,12 +843,12 @@ static constexpr auto FluentToolbarKey = "fluent_toolbar_v4_compact";
 
 bool GeometrySettings::downloadColumnsCompacted() const
 {
-  return get<bool>(m_Settings, "Geometry", "download_columns_compact_2", false);
+  return get<bool>(m_Settings, "Geometry", "download_columns_compact_3", false);
 }
 
 void GeometrySettings::setDownloadColumnsCompacted(bool b)
 {
-  set(m_Settings, "Geometry", "download_columns_compact_2", b);
+  set(m_Settings, "Geometry", "download_columns_compact_3", b);
 }
 
 bool GeometrySettings::fluentToolbarApplied() const

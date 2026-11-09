@@ -106,6 +106,9 @@ public:
   void setColor(const QModelIndexList& indices, const QModelIndex& refIndex) const;
   void resetColor(const QModelIndexList& indices) const;
 
+  // the scroll bar's marks read the separators' colors again
+  void refreshColorMarks() const;
+
   // set the category of the mods in the given list, using the given index as reference
   // - the categories are set as-is on the refernce mod
   // - for the other mods, the category is only set if the current state of the category
