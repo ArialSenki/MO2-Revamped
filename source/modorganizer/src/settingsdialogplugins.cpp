@@ -7,7 +7,11 @@
 #include "disableproxyplugindialog.h"
 #include "fluentswitch.h"
 #include "organizercore.h"
+#include "game_features.h"
 #include "plugincontainer.h"
+#include <dataarchives.h>
+#include <gameplugins.h>
+#include <iplugingame.h>
 #include "revampedtheme.h"
 
 #include <QAbstractItemView>
@@ -414,6 +418,12 @@ void PluginsSettingsTab::filterPluginList()
   auto selectedItems              = ui->pluginsList->selectedItems();
   QTreeWidgetItem* firstNotHidden = nullptr;
 
+  // only what means something for this game is listed; hiding a row doesn't
+  // change the plugin, which stays loaded and as it was
+  const auto listed = [this](IPlugin* plugin) {
+    return appliesToGame(plugin);
+  };
+
   for (auto i = 0; i < ui->pluginsList->topLevelItemCount(); ++i) {
     auto* topLevelItem = ui->pluginsList->topLevelItem(i);
 
@@ -424,13 +434,18 @@ void PluginsSettingsTab::filterPluginList()
 
       // Check the item or the child - If any match (item or child), the whole
       // group is displayed.
-      bool match = m_filter.matches([plugin](const QRegularExpression& regex) {
+      bool match = listed(plugin) && m_filter.matches([plugin](const QRegularExpression& regex) {
         return regex.match(plugin->localizedName()).hasMatch();
       });
-      for (auto* child : m_pluginContainer->requirements(plugin).children()) {
-        match = match || m_filter.matches([child](const QRegularExpression& regex) {
-          return regex.match(child->localizedName()).hasMatch();
-        });
+      for (int k = 0; k < item->childCount(); ++k) {
+        item->child(k)->setHidden(!listed(this->plugin(item->child(k))));
+      }
+      if (listed(plugin)) {
+        for (auto* child : m_pluginContainer->requirements(plugin).children()) {
+          match = match || m_filter.matches([child](const QRegularExpression& regex) {
+            return regex.match(child->localizedName()).hasMatch();
+          });
+        }
       }
 
       if (match) {
@@ -467,6 +482,31 @@ void PluginsSettingsTab::filterPluginList()
     ui->pluginSettingsList->setVisible(false);
     ui->noPluginLabel->setVisible(true);
   }
+}
+
+bool PluginsSettingsTab::appliesToGame(IPlugin* plugin)
+{
+  const IPluginGame* game = settings().game().plugin();
+  if (m_pluginContainer->implementInterface<IPluginGame>(plugin)) {
+    return game == nullptr || plugin->name() == game->name();
+  }
+  if (!m_pluginContainer->requirements(plugin).problems().empty()) {
+    return false;
+  }
+  if (game == nullptr) {
+    return true;
+  }
+
+  // these work on the Bethesda formats and have no requirement that says so
+  const QString name = plugin->name();
+  if (name == QLatin1String("BSA Packer") || name == QLatin1String("BSA Extractor") ||
+      name == QLatin1String("Preview BSA")) {
+    return m_pluginContainer->gameFeatures().gameFeature<DataArchives>() != nullptr;
+  }
+  if (name == QLatin1String("INI Bakery") || name == QLatin1String("INI Editor")) {
+    return !game->iniFiles().isEmpty();
+  }
+  return true;
 }
 
 IPlugin* PluginsSettingsTab::plugin(QTreeWidgetItem* pluginItem) const
@@ -575,6 +615,8 @@ void PluginsSettingsTab::on_checkboxEnabled_clicked(bool checked)
   }
 
   updateListItems();
+  // a plugin that needs this one comes and goes with it
+  filterPluginList();
 }
 
 void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* current,
@@ -662,6 +704,12 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
         0, new NoEditDelegate(ui->pluginSettingsList));
   }
   for (auto iter = settings.begin(); iter != settings.end(); ++iter) {
+    // masters only exist in games with plugin files; the value stays stored
+    if (iter.key() == QLatin1String("check_missingmasters") &&
+        !m_pluginContainer->gameFeatures().gameFeature<GamePlugins>()) {
+      continue;
+    }
+
     QTreeWidgetItem* newItem =
         new QTreeWidgetItem(QStringList(readableOptionName(iter.key())));
     newItem->setData(0, Qt::UserRole, iter.key());
