@@ -55,6 +55,15 @@ public:
     return std::dynamic_pointer_cast<T>(gameFeature(typeid(T)));
   }
 
+  // whether a game other than the managed one has a feature: the wizard asks
+  // about the game being set up
+  //
+  template <class T>
+  bool gameHasFeature(MOBase::IPluginGame const* game) const
+  {
+    return gameHasFeature(typeid(T), game);
+  }
+
 signals:
   void modDataCheckerUpdated(const MOBase::ModDataChecker* check);
   void modDataContentUpdated(const MOBase::ModDataContent* check);
@@ -91,6 +100,7 @@ private:
   // retrieve a game feature from info
   //
   std::shared_ptr<MOBase::GameFeature> gameFeature(std::type_info const& index) const;
+  bool gameHasFeature(std::type_info const& index, MOBase::IPluginGame const* game) const;
 
   // update current features by filtering
   //

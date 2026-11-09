@@ -810,8 +810,8 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <translation>Opcional. Las instancias de un grupo aparecen juntas en Gestionar instancias.</translation>
     </message>
     <message>
-      <source>Stable setup with Seamless Co-op, for example</source>
-      <translation>Configuración estable con Seamless Co-op, por ejemplo</translation>
+      <source>Main playthrough, for example</source>
+      <translation>Partida principal, por ejemplo</translation>
     </message>
     <message>
       <source>Notes</source>
@@ -5691,8 +5691,8 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
       <translation>Para qué es esta instancia, qué tiene o cualquier cosa que recordar. La búsqueda también encuentra las notas.</translation>
     </message>
     <message>
-      <source>Stable setup with Seamless Co-op, for example</source>
-      <translation>Configuración estable con Seamless Co-op, por ejemplo</translation>
+      <source>Main playthrough, for example</source>
+      <translation>Partida principal, por ejemplo</translation>
     </message>
     <message>
       <source>Save</source>
@@ -6907,7 +6907,7 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Save isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
       <translation>
                                   &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
@@ -6916,7 +6916,7 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Esta lista muestra las partidas de la carpeta asignada al perfil activo de MO2. Pasa el ratón por una partida para ver más detalles cuando el plugin del juego los ofrece.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Si una partida seleccionada necesita plugins que faltan, usa Restaurar plugins necesarios... para activar los mods instalados que los aportan. También puedes borrar la partida o abrir su carpeta. En Elden Ring, elige la ruta de partidas y el perfil de partidas con nombre en Herramientas &amp;gt; Aislamiento de partidas.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Si una partida seleccionada necesita plugins que faltan, usa Restaurar plugins necesarios... para activar los mods instalados que los aportan. También puedes borrar la partida o abrir su carpeta.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </translation>
     </message>
     <message>
@@ -11172,6 +11172,18 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
       <source>Do not share the collapsed/expanded state of separators between profiles.</source>
       <translation>No comparta el estado contraído/expandido de los separadores entre perfiles.</translation>
     </message>
+    <message>
+      <source>MO2 behavior</source>
+      <translation>Comportamiento de MO2</translation>
+    </message>
+    <message>
+      <source>Adjust how MO2&apos;s interface behaves while a program runs.</source>
+      <translation>Ajusta cómo se comporta la interfaz de MO2 mientras se ejecuta un programa.</translation>
+    </message>
+    <message>
+      <source>Run occasional repair actions for MO2 windows.</source>
+      <translation>Ejecuta acciones de reparación ocasionales para las ventanas de MO2.</translation>
+    </message>
   </context>
   <context>
     <name>StatusBar</name>
@@ -12508,6 +12520,13 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
     <message>
       <source>Light plugins (ESL) are not supported by this game.</source>
       <translation>Este juego no admite plugins ligeros (ESL).</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModInfoRegular</name>
+    <message>
+      <source>%1 has no files this game can use</source>
+      <translation>%1 no contiene archivos que este juego pueda usar</translation>
     </message>
   </context>
 </TS>

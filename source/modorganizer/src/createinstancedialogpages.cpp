@@ -4,6 +4,8 @@
 #include "gameiconutils.h"
 #include "instancemanager.h"
 #include "plugincontainer.h"
+#include "game_features.h"
+#include <bsainvalidation.h>
 #include "settings.h"
 #include "settingsdialognexus.h"
 #include "shared/appconfig.h"
@@ -1978,13 +1980,19 @@ void ProfilePage::doActivated(bool firstTime)
   ui->widget_25->layout()->setContentsMargins(padded ? 20 : 0, padded ? 4 : 0, padded ? 20 : 0,
                                               padded ? 12 : 0);
   m_eldenRingSaveGroup->setVisible(isEldenRing && !pluginOwnsSaveControls);
-  ui->profileInisCheckbox->setVisible(!isEldenRing);
+  // by what the game has; a game not chosen yet shows them all
+  const auto* chosen = gamePage != nullptr ? gamePage->selectedGame() : nullptr;
+  const bool hasInis = chosen == nullptr || !chosen->iniFiles().isEmpty();
+  const bool hasInvalidation =
+      chosen == nullptr ||
+      m_pc.gameFeatures().gameHasFeature<MOBase::BSAInvalidation>(chosen);
+  ui->profileInisCheckbox->setVisible(hasInis);
   ui->profileSavesCheckbox->setVisible(!isEldenRing);
-  ui->archiveInvalidationCheckbox->setVisible(!isEldenRing);
-  ui->profileInisDescription->setVisible(!isEldenRing);
+  ui->archiveInvalidationCheckbox->setVisible(hasInvalidation);
+  ui->profileInisDescription->setVisible(hasInis);
   ui->profileSavesDescription->setVisible(!isEldenRing);
-  ui->archiveInvalidationDescription->setVisible(!isEldenRing);
-  ui->gameInisPath->parentWidget()->setVisible(!isEldenRing);
+  ui->archiveInvalidationDescription->setVisible(hasInvalidation);
+  ui->gameInisPath->parentWidget()->setVisible(hasInis);
   ui->gameSavesPath->parentWidget()->setVisible(!isEldenRing);
   if (!isEldenRing && gamePage != nullptr && gamePage->selectedGame() != nullptr) {
     const auto* game = gamePage->selectedGame();

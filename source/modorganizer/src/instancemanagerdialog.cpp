@@ -2095,7 +2095,7 @@ void InstanceManagerDialog::editNotes()
   auto* edit = new QPlainTextEdit(instanceValue(NotesSection, i->instanceIdentifier()), &dlg);
   edit->setObjectName(QStringLiteral("instanceNotesEdit"));
   edit->setAccessibleName(tr("Notes"));
-  edit->setPlaceholderText(tr("Stable setup with Seamless Co-op, for example"));
+  edit->setPlaceholderText(tr("Main playthrough, for example"));
   edit->setMinimumHeight(130);
   dlg.body()->addWidget(edit, 1);
 

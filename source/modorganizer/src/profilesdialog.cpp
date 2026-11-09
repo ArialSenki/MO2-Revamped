@@ -443,21 +443,15 @@ QWidget* ProfilesDialog::createDetails()
                              m_invalidation);
   rowsLayout->addStretch(1);
 
-  if (m_eldenRing) {
-    // Elden Ring routes saves through its dedicated Tools dialog
+  // Elden Ring routes saves through its dedicated Tools dialog
+  if (m_eldenRing || !m_GameFeatures.gameFeature<LocalSavegames>()) {
     m_localSaves->hide();
-    m_localIniFiles->hide();
+  }
+  if (m_GameFeatures.gameFeature<BSAInvalidation>() == nullptr) {
     m_invalidation->hide();
-  } else {
-    if (m_GameFeatures.gameFeature<BSAInvalidation>() == nullptr) {
-      m_invalidation->hide();
-    }
-    if (!m_GameFeatures.gameFeature<LocalSavegames>()) {
-      m_localSaves->hide();
-    }
-    if (m_Game->iniFiles().isEmpty()) {
-      m_localIniFiles->hide();
-    }
+  }
+  if (m_Game->iniFiles().isEmpty()) {
+    m_localIniFiles->hide();
   }
 
   connect(m_localSaves, &QCheckBox::toggled, this, &ProfilesDialog::onLocalSavesChanged);

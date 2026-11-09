@@ -2939,19 +2939,20 @@ void MainWindow::updateToolMenu()
 
                                      const auto* game =
                                          m_OrganizerCore.managedGame();
-                                     // FromSoftware games have no BSA archives or
-                                     // Bethesda-style INI files
-                                     if (!game || (game->gameShortName().compare(
-                                                       "eldenring", Qt::CaseInsensitive) != 0 &&
-                                                   !game->gameShortName().contains(
-                                                       "nightreign", Qt::CaseInsensitive))) {
+                                     if (!game) {
                                        return false;
                                      }
 
+                                     // nothing to pack or edit in a game
+                                     // without archives or INI files
                                      const QString name =
                                          tool->name().toCaseFolded();
-                                     return name.contains("bsa packer") ||
-                                            name.contains("ini editor");
+                                     if (name.contains("bsa packer")) {
+                                       return !m_PluginContainer.gameFeatures()
+                                                   .gameFeature<DataArchives>();
+                                     }
+                                     return name.contains("ini editor") &&
+                                            game->iniFiles().isEmpty();
                                    }),
                     toolPlugins.end());
 
@@ -3607,9 +3608,7 @@ void MainWindow::readSettings()
   s.widgets().restoreIndex(ui->tabWidget);
 
   const auto* managedGame = m_OrganizerCore.managedGame();
-  if (managedGame &&
-      managedGame->gameShortName().compare("eldenring", Qt::CaseInsensitive) ==
-          0) {
+  if (EldenRingSaveSettings::supports(managedGame)) {
     ui->tabWidget->setCurrentWidget(ui->dataTab);
   }
 

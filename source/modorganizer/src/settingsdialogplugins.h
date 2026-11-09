@@ -45,6 +45,8 @@ private slots:
    *
    */
   MOBase::IPlugin* plugin(QTreeWidgetItem* pluginItem) const;
+  // whether the plugin has anything to do with the managed game
+  bool appliesToGame(MOBase::IPlugin* plugin);
 
   enum
   {

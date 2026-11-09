@@ -4,6 +4,8 @@
 #include "categoriesdialog.h"
 #include "organizercore.h"
 #include "plugincontainer.h"
+#include "game_features.h"
+#include <unmanagedmods.h>
 #include "settings.h"
 #include "ui_mainwindow.h"
 #include <QHeaderView>
@@ -340,7 +342,11 @@ void FilterList::refresh()
   addSpecialCriteria(F::Checked);
   addSpecialCriteria(F::UpdateAvailable);
   addSpecialCriteria(F::Backup);
-  addSpecialCriteria(F::Managed);
+  // tells managed mods from unmanaged ones (DLCs, loose plugins), which a game
+  // without that feature doesn't have
+  if (m_core.pluginContainer().gameFeatures().gameFeature<MOBase::UnmanagedMods>()) {
+    addSpecialCriteria(F::Managed);
+  }
   addSpecialCriteria(F::HasCategory);
   addSpecialCriteria(F::Conflict);
   addSpecialCriteria(F::HasHiddenFiles);

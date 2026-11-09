@@ -802,8 +802,8 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
       <translation>Optional. Instanzen einer Gruppe stehen in Instanzen verwalten zusammen.</translation>
     </message>
     <message>
-      <source>Stable setup with Seamless Co-op, for example</source>
-      <translation>Stabiles Setup mit Seamless Co-op, zum Beispiel</translation>
+      <source>Main playthrough, for example</source>
+      <translation>Zum Beispiel Hauptdurchgang</translation>
     </message>
     <message>
       <source>Notes</source>
@@ -5655,8 +5655,8 @@ Sie suchen weiter im alten Ordner und finden nichts, bis ihre Pfade geändert we
       <translation>Wofür diese Instanz ist, was sie enthält oder alles, woran du denken willst. Die Suche findet auch die Notizen.</translation>
     </message>
     <message>
-      <source>Stable setup with Seamless Co-op, for example</source>
-      <translation>Stabiles Setup mit Seamless Co-op, zum Beispiel</translation>
+      <source>Main playthrough, for example</source>
+      <translation>Zum Beispiel Hauptdurchgang</translation>
     </message>
     <message>
       <source>Save</source>
@@ -6863,7 +6863,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Save isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
       <translation>
                                   &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
@@ -6872,7 +6872,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Diese Liste zeigt die Spielstände im Ordner, der dem aktiven MO2-Profil zugeordnet ist. Fahre mit der Maus über einen Spielstand, um weitere Details zu sehen, wenn das Spiel-Plugin sie liefert.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Fehlen einem ausgewählten Spielstand benötigte Plugins, aktiviere mit Benötigte Plugins wiederherstellen... die installierten Mods, die sie liefern. Du kannst den Spielstand auch löschen oder seinen Ordner öffnen. Wähle für Elden Ring die Spielstandroute und das benannte Spielstandprofil unter Werkzeuge &amp;gt; Spielstand-Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Fehlen einem ausgewählten Spielstand benötigte Plugins, aktiviere mit Benötigte Plugins wiederherstellen... die installierten Mods, die sie liefern. Du kannst den Spielstand auch löschen oder seinen Ordner öffnen.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </translation>
     </message>
     <message>
@@ -10978,6 +10978,18 @@ Lege fest, wie viele Details MO2 in ModOrganizer.log schreibt. Info wird für de
       <source>Do not share the collapsed/expanded state of separators between profiles.</source>
       <translation>Teile nicht den Zustand der Eingeklappten/Ausgeklappten Trenner mit anderen Profilen</translation>
     </message>
+    <message>
+      <source>MO2 behavior</source>
+      <translation>Verhalten von MO2</translation>
+    </message>
+    <message>
+      <source>Adjust how MO2&apos;s interface behaves while a program runs.</source>
+      <translation>Lege fest, wie sich die Oberfläche von MO2 verhält, während ein Programm läuft.</translation>
+    </message>
+    <message>
+      <source>Run occasional repair actions for MO2 windows.</source>
+      <translation>Führe gelegentliche Reparaturen an den MO2-Fenstern aus.</translation>
+    </message>
   </context>
   <context>
     <name>StatusBar</name>
@@ -12237,4 +12249,11 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
       <translation>Überschrieben von</translation>
     </message>
 </context>
+  <context>
+    <name>ModInfoRegular</name>
+    <message>
+      <source>%1 has no files this game can use</source>
+      <translation>%1 enthält keine Dateien, die dieses Spiel verwenden kann</translation>
+    </message>
+  </context>
 </TS>
