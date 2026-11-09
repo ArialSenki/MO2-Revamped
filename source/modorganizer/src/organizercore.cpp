@@ -2074,6 +2074,7 @@ void OrganizerCore::saveCurrentProfile()
   }
 
   m_CurrentProfile->writeModlist();
+  m_CurrentProfile->fillEmptyGamePrefs();
   m_CurrentProfile->createTweakedIniFile();
   saveCurrentLists();
   storeSettings();

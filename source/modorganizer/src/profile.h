@@ -244,6 +244,13 @@ public:
   void createTweakedIniFile();
 
   /**
+   * @brief fill this profile's empty *Prefs.ini files from the game's own
+   *
+   * a profile made before the game's launcher ever ran gets 0-byte prefs, and
+   * New Vegas then quits and opens its launcher instead of starting */
+  void fillEmptyGamePrefs();
+
+  /**
    * @brief re-read the modlist.txt and update the mod status from it
    **/
   void refreshModStatus();

@@ -374,6 +374,37 @@ void Profile::createTweakedIniFile()
   }
 }
 
+void Profile::fillEmptyGamePrefs()
+{
+  if (!localSettingsEnabled()) {
+    return;
+  }
+
+  for (const QString& file : m_GamePlugin->iniFiles()) {
+    const QString name = QFileInfo(file).fileName();
+    if (!name.contains("prefs", Qt::CaseInsensitive)) {
+      continue;
+    }
+
+    const QFileInfo local(m_Directory.filePath(name));
+    const QFileInfo game(m_GamePlugin->documentsDirectory(), file);
+    if (!local.exists() || local.size() != 0 || !game.exists() || game.size() == 0) {
+      continue;
+    }
+
+    const QString target = local.absoluteFilePath();
+    if (!QFile::remove(target) || !QFile::copy(game.absoluteFilePath(), target)) {
+      log::warn("could not fill the empty {} from {}", target, game.absoluteFilePath());
+      continue;
+    }
+
+    // a copy keeps the source's read-only flag, and MO2 needs to write this file
+    QFile::setPermissions(target, QFile::permissions(target) | QFile::WriteOwner |
+                                      QFile::WriteUser);
+    log::info("filled the empty {} from {}", target, game.absoluteFilePath());
+  }
+}
+
 // static
 void Profile::renameModInAllProfiles(const QString& oldName, const QString& newName)
 {
