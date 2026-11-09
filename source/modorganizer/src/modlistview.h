@@ -14,6 +14,7 @@
 #include "modlistsortproxy.h"
 #include "qtgroupingproxy.h"
 #include "viewmarkingscrollbar.h"
+#include <QHash>
 
 namespace Ui
 {
@@ -328,6 +329,12 @@ private:  // private functions
   //
   QColor markerColor(const QModelIndex& index) const;
 
+  // the computation behind markerColor(), for a row's first column
+  QColor computeMarkerColor(const QModelIndex& index) const;
+
+  // forgets the colors worked out so far; for when the markers change
+  void clearMarkerColors() const;
+
   // retrieve the mod flags for the given index
   //
   std::vector<ModInfo::EFlag> modFlags(const QModelIndex& index,
@@ -387,6 +394,9 @@ public:  // member variables
 
   MarkerInfos m_markers;
   ViewMarkingScrollBar* m_scrollbar;
+
+  // markerColor() per row, see clearMarkerColors()
+  mutable QHash<QModelIndex, QColor> m_markerColors;
 
   bool m_inDragMoveEvent = false;
 

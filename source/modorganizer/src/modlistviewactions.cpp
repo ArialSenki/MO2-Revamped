@@ -37,6 +37,7 @@
 #include "modinfodialog.h"
 #include "modlist.h"
 #include "modlistview.h"
+#include "viewmarkingscrollbar.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "fluentdialogs.h"
@@ -1421,6 +1422,7 @@ void ModListViewActions::setColor(const QModelIndexList& indices,
     ModInfo::Ptr info = ModInfo::getByIndex(idx.data(ModList::IndexRole).toInt());
     info->setColor(currentColor);
   }
+  refreshColorMarks();
 }
 
 void ModListViewActions::resetColor(const QModelIndexList& indices) const
@@ -1430,6 +1432,16 @@ void ModListViewActions::resetColor(const QModelIndexList& indices) const
     info->setColor(QColor());
   }
   m_core.settings().colors().removePreviousSeparatorColor();
+  refreshColorMarks();
+}
+
+void ModListViewActions::refreshColorMarks() const
+{
+  // a separator's color is also a mark on the scroll bar, and setting one
+  // tells no model
+  if (auto* bar = dynamic_cast<ViewMarkingScrollBar*>(m_view->verticalScrollBar())) {
+    bar->invalidateMarks();
+  }
 }
 
 void ModListViewActions::setCategories(
