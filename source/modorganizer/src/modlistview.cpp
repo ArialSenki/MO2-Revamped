@@ -135,10 +135,7 @@ public:
     const bool hovered  = opt.state & QStyle::State_MouseOver;
     const bool selected = opt.state & QStyle::State_Selected;
     if (color.isValid()) {
-      m_view->paintColorBand(painter, opt.rect,
-                             selected  ? color.lighter(ModListView::SelectedLighter)
-                                       : hovered ? color.lighter(ModListView::HoverLighter)
-                                                 : color);
+      m_view->paintColorBand(painter, opt.rect, index, color, hovered, selected);
       opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
     }
 
@@ -1254,8 +1251,17 @@ int ModListView::removedIndentation(const QModelIndex& index) const
 }
 
 void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
-                                 const QColor& color) const
+                                 const QModelIndex& index, const QColor& color,
+                                 bool hovered, bool selected) const
 {
+  // a separator's color is what it says, so it stays: an outline shows the state
+  const QVariant mod = index.data(ModList::IndexRole);
+  const bool outlined =
+      mod.isValid() && ModInfo::getByIndex(mod.toInt())->isSeparator();
+  const QColor fill = outlined || !(hovered || selected)
+                          ? color
+                          : color.lighter(selected ? SelectedLighter : HoverLighter);
+
   // one rounded shape across the row; each cell paints its slice of it
   const QRect row = colorBand(
       QRect(2 - horizontalOffset(), cell.top(), header()->length() - 4, cell.height()));
@@ -1263,8 +1269,18 @@ void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
   painter->setClipRect(cell, Qt::IntersectClip);
   painter->setRenderHint(QPainter::Antialiasing);
   painter->setPen(Qt::NoPen);
-  painter->setBrush(color);
+  painter->setBrush(fill);
   painter->drawRoundedRect(row, 5, 5);
+
+  if (outlined && (hovered || selected)) {
+    QColor ink = FluentIcons::color(FluentIcons::Tone::Ink);
+    ink.setAlpha(selected ? 255 : 130);
+    const qreal width = selected ? 2.0 : 1.0;
+    painter->setBrush(Qt::NoBrush);
+    painter->setPen(QPen(ink, width));
+    painter->drawRoundedRect(
+        QRectF(row).adjusted(width / 2, width / 2, -width / 2, -width / 2), 5, 5);
+  }
   painter->restore();
 }
 
@@ -1302,10 +1318,7 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
                                   ? palette().alternateBase()
                                   : palette().base());
     }
-    paintColorBand(painter, rect,
-                   selected  ? color.lighter(SelectedLighter)
-                   : hovered ? color.lighter(HoverLighter)
-                             : color);
+    paintColorBand(painter, rect, index, color, hovered, selected);
   }
   QTreeView::drawBranches(painter, r, index);
 }

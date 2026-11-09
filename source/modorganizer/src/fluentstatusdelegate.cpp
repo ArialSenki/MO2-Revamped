@@ -190,13 +190,15 @@ void FluentStatusDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
     color = index.data(Qt::BackgroundRole).value<QColor>();
   }
   if (color.isValid()) {
-    const QColor fill = (opt.state & QStyle::State_Selected)    ? color.lighter(ModListView::SelectedLighter)
-                        : (opt.state & QStyle::State_MouseOver) ? color.lighter(ModListView::HoverLighter)
-                                                                : color;
+    const bool selected = opt.state & QStyle::State_Selected;
+    const bool hovered  = opt.state & QStyle::State_MouseOver;
     if (view != nullptr) {
-      view->paintColorBand(painter, option.rect, fill);
+      view->paintColorBand(painter, option.rect, index, color, hovered, selected);
     } else {
-      painter->fillRect(ModListView::colorBand(option.rect), fill);
+      painter->fillRect(ModListView::colorBand(option.rect),
+                        selected  ? color.lighter(ModListView::SelectedLighter)
+                        : hovered ? color.lighter(ModListView::HoverLighter)
+                                  : color);
     }
     opt.state &= ~(QStyle::State_MouseOver | QStyle::State_Selected);
   }

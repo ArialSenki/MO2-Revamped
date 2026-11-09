@@ -48,7 +48,8 @@ public:
   // as tall as a mod's row and its highlight; the pixel it leaves keeps stacked
   // separators apart
   static QRect colorBand(const QRect& row) { return row.adjusted(0, 1, 0, -1); }
-  void paintColorBand(QPainter* painter, const QRect& cell, const QColor& color) const;
+  void paintColorBand(QPainter* painter, const QRect& cell, const QModelIndex& index,
+                      const QColor& color, bool hovered, bool selected) const;
 
   // the indentation a row loses so a mod's name doesn't move when the list has
   // collapsible separators
