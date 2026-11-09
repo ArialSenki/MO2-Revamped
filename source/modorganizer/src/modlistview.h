@@ -9,6 +9,7 @@
 #include <QLCDNumber>
 #include <QLabel>
 #include <QTreeView>
+#include <algorithm>
 
 #include "lcdnumber.h"
 #include "modlistsortproxy.h"
@@ -45,7 +46,15 @@ class ModListView : public QTreeView
 public:
   // the part of a tall row a separator's or a conflict's color fills: as a full
   // block, a colored row looks taller than the mods around it
-  static QRect colorBand(const QRect& row) { return row.adjusted(0, 6, 0, -6); }
+  // a separator's row is just taller than its band: stacked separators read as
+  // one group, and the band is no taller than a mod's row looks
+  static constexpr int ColorBandHeight  = 28;
+  static constexpr int SeparatorRowHeight = 30;
+  static QRect colorBand(const QRect& row)
+  {
+    const int margin = std::max((row.height() - ColorBandHeight) / 2, 0);
+    return row.adjusted(0, margin, 0, -margin);
+  }
   void paintColorBand(QPainter* painter, const QRect& cell, const QColor& color) const;
 
   // the indentation a row loses so a mod's name doesn't move when the list has

@@ -687,7 +687,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QWidget" name="newSeparatorColorRow">
+              <widget class="QFrame" name="newSeparatorColorRow">
               <layout class="QHBoxLayout" name="newSeparatorColorLayout">
                <property name="leftMargin">
                 <number>0</number>

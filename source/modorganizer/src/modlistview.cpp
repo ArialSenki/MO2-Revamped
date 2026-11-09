@@ -156,7 +156,7 @@ public:
 
     // centered on the tall row, its text where the name's text was (the
     // editor adds its own padding), and a gap before the column's end
-    const int height = std::min(option.rect.height() - 8, 26);
+    const int height = std::min(option.rect.height() - 2, 26);
     QRect rect       = editor->geometry();
     rect.setHeight(height);
     rect.moveTop(option.rect.top() + (option.rect.height() - height) / 2);

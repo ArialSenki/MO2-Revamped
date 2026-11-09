@@ -51,10 +51,9 @@ ModListSettingsTab::ModListSettingsTab(Settings& s, SettingsDialog& d)
   });
 
   ui->colorSeparatorsBox->setChecked(settings().colors().colorSeparatorScrollbar());
-  // a row of the card, with the card's color and its text where the others' is
-  ui->newSeparatorColorRow->setStyleSheet(QStringLiteral(
-      "#newSeparatorColorRow { background: transparent; }"
-      "#newSeparatorColorLabel { padding-left: 0px; margin-left: 0px; }"));
+  // one more row of the card, as the switches around it
+  ui->newSeparatorColorRow->setObjectName(QStringLiteral("fluentSettingRow"));
+  ui->newSeparatorColorLayout->setContentsMargins(4, 8, 4, 8);
   ui->newSeparatorColorBox->setCurrentIndex(
       static_cast<int>(settings().colors().newSeparatorColor()));
   ui->displayForeignBox->setChecked(settings().interface().displayForeign());
