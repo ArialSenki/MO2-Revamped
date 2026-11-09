@@ -43,9 +43,9 @@ using namespace MOBase;
 namespace
 {
 // what each column needs in the side panel, heading and sort arrow included
-constexpr int DownloadListStatusWidth   = 92;
-constexpr int DownloadListSizeWidth     = 80;
-constexpr int DownloadListFiletimeWidth = 130;
+constexpr int DownloadListStatusWidth   = 84;
+constexpr int DownloadListSizeWidth     = 72;
+constexpr int DownloadListFiletimeWidth = 124;
 }  // namespace
 
 DownloadProgressDelegate::DownloadProgressDelegate(DownloadManager* manager,

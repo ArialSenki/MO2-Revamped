@@ -864,7 +864,7 @@ private:
       }
     } else if (objectName == QStringLiteral("downloadView")) {
       // name and status fit the side panel; more columns scroll
-      constexpr int widths[] = {130, 92, 80, 130, 130, 95, 80, 125};
+      constexpr int widths[] = {130, 84, 72, 124, 130, 95, 80, 125};
       if (column >= 0 && column < static_cast<int>(std::size(widths))) {
         return std::max(widths[column], naturalMinimum);
       }
@@ -1306,7 +1306,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   auto* filterDialogHeader = new QFrame(m_FilterOptionsDialog);
   filterDialogHeader->setObjectName(QStringLiteral("filterDialogHeaderPanel"));
   auto* filterDialogHeaderLayout = new QHBoxLayout(filterDialogHeader);
-  filterDialogHeaderLayout->setContentsMargins(12, 11, 14, 11);
+  filterDialogHeaderLayout->setContentsMargins(0, 11, 14, 11);
   filterDialogHeaderLayout->setSpacing(12);
 
   auto* filterDialogIcon = new QLabel(filterDialogHeader);
