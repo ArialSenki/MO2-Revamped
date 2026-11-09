@@ -1663,7 +1663,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             name_card, 0xE8AC, self.tr("Mod name:").rstrip(": "), name_help, (mod_name_edit,)
         )
         reforged_online_box = None
-        if package == "reforged":
+        # the online version needs Elden Ring: a Nightreign instance has no
+        # launcher to start it from
+        if package == "reforged" and not self._nightreign_active():
             reforged_online_box = switch(
                 QtWidgets.QCheckBox(self.tr("Install as the online version"))
             )

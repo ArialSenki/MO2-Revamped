@@ -4784,10 +4784,6 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
 {path}</translation>
     </message>
     <message>
-      <source>Not available for Nightreign yet.</source>
-      <translation>Non ancora disponibile per Nightreign.</translation>
-    </message>
-    <message>
       <source>Cleanup</source>
       <translation>Pulizia</translation>
     </message>
@@ -7464,6 +7460,26 @@ Errore: %1</translation>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
+    <message>
+      <source>Choose global or portable setups.</source>
+      <translation>Scegli configurazioni globali o portable.</translation>
+    </message>
+    <message>
+      <source>Fluent themes · Light and Dark</source>
+      <translation>Temi Fluent · Chiaro e Scuro</translation>
+    </message>
+    <message>
+      <source>Saves a report with the MO2 and USVFS logs.</source>
+      <translation>Salva un rapporto con i registri di MO2 e USVFS.</translation>
+    </message>
+    <message>
+      <source>Includes the main MO2 log and recent USVFS logs, along with program, system, game and instance versions.</source>
+      <translation>Include il registro principale di MO2 e i registri USVFS recenti, insieme alle versioni di programma, sistema, gioco e istanza.</translation>
+    </message>
+    <message>
+      <source>Includes MO2 and USVFS logs. They can contain Windows paths and profile names. The ZIP does not include mods, downloads, saves, Nexus keys or memory dumps.</source>
+      <translation>Include i registri di MO2 e USVFS. Possono contenere percorsi di Windows e nomi di profili. Lo ZIP non include mod, download, salvataggi, chiavi Nexus né dump di memoria.</translation>
+    </message>
     <message>
       <source>Version {version}  ·  ArialSenki</source>
       <translation>Versione {version}  ·  ArialSenki</translation>

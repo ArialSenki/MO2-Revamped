@@ -4700,10 +4700,6 @@ Les lanceurs qui échouent dans le dossier virtuel de MO2 démarrent en dehors :
 {path}</translation>
     </message>
     <message>
-      <source>Not available for Nightreign yet.</source>
-      <translation>Pas encore disponible pour Nightreign.</translation>
-    </message>
-    <message>
       <source>Cleanup</source>
       <translation>Nettoyage</translation>
     </message>
@@ -7356,6 +7352,26 @@ Erreur : %1</translation>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
+    <message>
+      <source>Choose global or portable setups.</source>
+      <translation>Choisissez des configurations globales ou portables.</translation>
+    </message>
+    <message>
+      <source>Fluent themes · Light and Dark</source>
+      <translation>Thèmes Fluent · Clair et Sombre</translation>
+    </message>
+    <message>
+      <source>Saves a report with the MO2 and USVFS logs.</source>
+      <translation>Enregistre un rapport avec les journaux de MO2 et d'USVFS.</translation>
+    </message>
+    <message>
+      <source>Includes the main MO2 log and recent USVFS logs, along with program, system, game and instance versions.</source>
+      <translation>Inclut le journal principal de MO2 et les journaux USVFS récents, avec les versions du programme, du système, du jeu et de l'instance.</translation>
+    </message>
+    <message>
+      <source>Includes MO2 and USVFS logs. They can contain Windows paths and profile names. The ZIP does not include mods, downloads, saves, Nexus keys or memory dumps.</source>
+      <translation>Inclut les journaux de MO2 et d'USVFS. Ils peuvent contenir des chemins Windows et des noms de profils. Le ZIP n'inclut ni mods, ni téléchargements, ni sauvegardes, ni clés Nexus, ni vidages mémoire.</translation>
+    </message>
     <message>
       <source>Version {version}  ·  ArialSenki</source>
       <translation>Version {version}  ·  ArialSenki</translation>

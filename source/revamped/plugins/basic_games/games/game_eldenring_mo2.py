@@ -4004,13 +4004,13 @@ class EldenRingMo2Game(BasicGame):
         self, app_path: str, _working_directory, _args: str
     ) -> bool:
         self._restore_profile_config_environment()
+        # every game plugin hears every run; only the managed game's acts
+        if not self.isActive():
+            return True
         qInfo(
             "Elden Ring MO2: about-to-run save guard received "
             f"'{Path(app_path).name}'."
         )
-        # every game plugin hears every run; only the managed game's acts
-        if not self.isActive():
-            return True
         if not self._is_game_launch(app_path, _args or ""):
             # tools (save editors and the like) run without touching the
             # hidden Steam saves of a game that may still be running, nor the
@@ -4513,13 +4513,13 @@ class EldenRingMo2Game(BasicGame):
         self._overwrite_cleanup_path = None
 
     def _finish_profile_launch(self, app_path: str, _exit_code: int) -> None:
+        # every game plugin hears every run; only the managed game's acts
+        if not self.isActive():
+            return
         qInfo(
             "Elden Ring MO2: finished-run save cleanup received "
             f"'{Path(app_path).name}'."
         )
-        # every game plugin hears every run; only the managed game's acts
-        if not self.isActive():
-            return
         launch_key = os.path.normcase(str(app_path))
         guarded = self._is_game_launch(app_path) or launch_key in self._guarded_launches
         if not guarded:
