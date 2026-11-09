@@ -1957,9 +1957,12 @@ CreateInstanceDialog::ProfileSettings ProfilePage::profileSettings() const
     return profileSettings;
   }
 
-  profileSettings.localInis           = ui->profileInisCheckbox->isChecked();
+  // a switch hidden for this game keeps what it had for the one before
+  profileSettings.localInis =
+      ui->profileInisCheckbox->isChecked() && !ui->profileInisCheckbox->isHidden();
   profileSettings.localSaves          = ui->profileSavesCheckbox->isChecked();
-  profileSettings.archiveInvalidation = ui->archiveInvalidationCheckbox->isChecked();
+  profileSettings.archiveInvalidation = ui->archiveInvalidationCheckbox->isChecked() &&
+                                        !ui->archiveInvalidationCheckbox->isHidden();
   return profileSettings;
 }
 
@@ -1983,9 +1986,12 @@ void ProfilePage::doActivated(bool firstTime)
   // by what the game has; a game not chosen yet shows them all
   const auto* chosen = gamePage != nullptr ? gamePage->selectedGame() : nullptr;
   const bool hasInis = chosen == nullptr || !chosen->iniFiles().isEmpty();
-  const bool hasInvalidation =
-      chosen == nullptr ||
-      m_pc.gameFeatures().gameHasFeature<MOBase::BSAInvalidation>(chosen);
+  // with no instance open the plugins aren't initialized and register nothing
+  const auto& features       = m_pc.gameFeatures();
+  const bool hasInvalidation = chosen == nullptr ||
+                               (features.featuresKnown()
+                                    ? features.gameHasFeature<MOBase::BSAInvalidation>(chosen)
+                                    : !isEldenRing);
   ui->profileInisCheckbox->setVisible(hasInis);
   ui->profileSavesCheckbox->setVisible(!isEldenRing);
   ui->archiveInvalidationCheckbox->setVisible(hasInvalidation);
