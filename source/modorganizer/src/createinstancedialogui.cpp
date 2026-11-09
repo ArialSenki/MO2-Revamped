@@ -50,7 +50,7 @@ void WizardChoiceButton::paintEvent(QPaintEvent*)
       isDown() ? style()->pixelMetric(QStyle::PM_ButtonShiftHorizontal, &option) : 0;
   p.drawControl(QStyle::CE_PushButton, option);
   if (!icon().isNull()) {
-    p.drawPixmap(LeftMargin + hOffset, TopMargin + vOffset,
+    p.drawPixmap(LeftMargin + hOffset, (height() - pixmapSize.height()) / 2 + vOffset,
                  icon().pixmap(pixmapSize, devicePixelRatio(),
                                isEnabled() ? QIcon::Normal : QIcon::Disabled,
                                isChecked() ? QIcon::On : QIcon::Off));

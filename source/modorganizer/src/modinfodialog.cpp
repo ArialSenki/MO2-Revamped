@@ -276,6 +276,7 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
     onTabMoved();
   });
   ui->close->setMinimumWidth(102);
+  layout()->setContentsMargins(16, 16, 16, 12);
   // the Conflicts tables take the page's whole width, as the other pages
   for (QLayout* pageLayout : {ui->tab->layout(), ui->tab_2->layout(), ui->widget->layout()}) {
     if (pageLayout != nullptr) {

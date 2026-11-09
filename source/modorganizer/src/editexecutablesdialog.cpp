@@ -1183,7 +1183,7 @@ void EditExecutablesDialog::buildFluentLayout()
   root->removeWidget(ui->headerCard);
   root->removeWidget(ui->splitter);
   root->removeWidget(ui->buttons);
-  root->setContentsMargins(12, 12, 12, 12);
+  root->setContentsMargins(16, 16, 16, 12);
   root->setSpacing(10);
 
   auto* body = new QHBoxLayout;

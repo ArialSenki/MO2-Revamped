@@ -365,6 +365,11 @@ def _game() -> dict:
     return _GAMES[EldenRingMo2SaveIsolation._game_key]
 
 
+def _keep_menu_path(text: str) -> str:
+    """"Tools > Save isolation" stays on one line when the text wraps."""
+    return re.sub(r" > (\S+) (\S+)", "\u00a0>\u00a0\\1\u00a0\\2", text)
+
+
 def _trs(text: str) -> str:
     # a translated text that names the Elden Ring save file, for this game
     tool = EldenRingMo2SaveIsolation
@@ -547,6 +552,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             box.setDefaultButton(box.addButton(_tr("Close"), QMessageBox.ButtonRole.AcceptRole))
         box.setTextFormat(Qt.TextFormat.PlainText)
         box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        if kind == "help":
+            # the width of the other help dialogs
+            box.setProperty("fluentTextWidth", 472)
         box.exec()
 
     def _ask_confirmation(
@@ -1204,12 +1212,13 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         name_edit.setEnabled(supports_named_profiles and checkbox.isChecked())
 
         if copy_checkbox is not None:
-            # a switch: what it does is its accessible name, its row says the rest
-            copy_checkbox.setAccessibleName(
+            copy_text = (
                 _tr("Copy an existing save into this named profile")
                 if checkbox.isChecked()
                 else _tr("Copy an existing save into the new instance")
             )
+            copy_checkbox.setText(copy_text)
+            copy_checkbox.setAccessibleName(copy_text)
             # Global mode plays from the Steam folder; nothing is copied into it
             copy_checkbox.setEnabled(
                 mode != self.GlobalShared
@@ -1229,17 +1238,17 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 )
             elif checkbox.isChecked():
                 note.setText(
-                    _trs("This name appears in Tools > Save isolation. If "
+                    _keep_menu_path(_trs("This name appears in Tools > Save isolation. If "
                     "you choose a starting save below, it will be copied into "
                     "this named save profile. "
                     "Elden Ring loads the selected file as ER0000 with its own "
-                    "extension.")
+                    "extension."))
                 )
             else:
                 note.setText(
-                    _tr("Optional. Leave this off to use standard saves. "
+                    _keep_menu_path(_tr("Optional. Leave this off to use standard saves. "
                     "You can create named game save profiles later from Tools > "
-                    "Save isolation.")
+                    "Save isolation."))
                 )
 
         if status_label is not None and source_combo is not None:
@@ -2311,24 +2320,20 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         ):
             if suffix in {".err", ".cnv"} and (target_game or self._game_key) != "eldenring":
                 continue
-            type_box = QCheckBox(card)
+            type_box = QCheckBox(title, card)
             type_box.setObjectName(
                 f"{self.CreateInstanceCardName}_type_{suffix.lstrip('.')}"
             )
             type_box.setProperty("saveSuffix", suffix)
-            # the title on the left, the switch on the right, as the rows below
-            _make_switch(type_box, title, "")
-            type_box.setFixedWidth(40)
+            type_box.setProperty("fluentSwitch", True)
+            type_box.setCursor(Qt.CursorShape.PointingHandCursor)
             type_box.setChecked(suffix == ".sl2")
             type_box.toggled.connect(
                 lambda _checked, target=dialog: self._refresh_create_instance_save_sources(
                     target
                 )
             )
-            type_row = QHBoxLayout()
-            type_row.addWidget(QLabel(title, card), 1)
-            type_row.addWidget(type_box, 0, Qt.AlignmentFlag.AlignVCenter)
-            types_layout.addLayout(type_row)
+            types_layout.addWidget(type_box)
         types_note = QLabel(
             _tr("The saves of the types turned on can be copied in as the starting "
             "save. MO2 keeps every type apart in the same way."),
@@ -2338,7 +2343,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         wizard_row(_tr("Save types"), types_note, [], types_layout)
 
         # a named game save profile: its switch and its name
-        game_save_profile_checkbox = QCheckBox(card)
+        game_save_profile_checkbox = QCheckBox(_tr("Create a named game save profile"), card)
         game_save_profile_checkbox.setObjectName(
             self.CreateInstanceGameSaveProfileCheckboxName
         )
@@ -2346,11 +2351,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             _tr("Create a separate named save choice managed in Tools > "
             "Save isolation.")
         )
-        _make_switch(
-            game_save_profile_checkbox,
-            _tr("Create a named game save profile"),
-            game_save_profile_checkbox.toolTip(),
-        )
+        game_save_profile_checkbox.setProperty("fluentSwitch", True)
+        game_save_profile_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
         game_save_profile_name = QLineEdit(card)
         game_save_profile_name.setObjectName(
             self.CreateInstanceGameSaveProfileNameEditName
@@ -2358,7 +2360,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
         # with the switch beside it, as wide as the save mode list above
-        game_save_profile_name.setFixedWidth(460 - 40 - 16)
+        game_save_profile_name.setFixedWidth(460)
         game_save_profile_name.setToolTip(
             _trs("This name distinguishes the Elden Ring save profile in MO2. "
             "The game loads the selected file as ER0000.sl2.")
@@ -2368,28 +2370,27 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_note.setObjectName(
             self.CreateInstanceGameSaveProfileNoteName
         )
-        # a switch without text: only the switch, flush with the lists above
-        game_save_profile_checkbox.setFixedWidth(40)
+        # labelled and on the left, like the switches of the other steps
+        under_profile = QVBoxLayout()
+        under_profile.setContentsMargins(0, 8, 0, 0)
+        under_profile.addWidget(game_save_profile_checkbox)
         wizard_row(
             _tr("Game save profile"),
             game_save_profile_note,
-            [game_save_profile_name, game_save_profile_checkbox],
+            [game_save_profile_name],
+            under_profile,
         )
 
         # a starting save: its switch, and which one with a refresh beside it
-        copy_checkbox = QCheckBox(card)
+        copy_checkbox = QCheckBox(_tr("Copy an existing save into the new instance"), card)
         copy_checkbox.setObjectName(self.CreateInstanceSaveCopyCheckboxName)
         copy_checkbox.setToolTip(
             _trs("Choose a save from Steam or a detected Elden Ring MO2 profile. "
             "The file is copied as ER0000 with its own extension after the new "
             "instance is opened.")
         )
-        _make_switch(
-            copy_checkbox,
-            _tr("Copy an existing save into the new instance"),
-            copy_checkbox.toolTip(),
-        )
-        copy_checkbox.setFixedWidth(40)
+        copy_checkbox.setProperty("fluentSwitch", True)
+        copy_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
         source_combo = QComboBox(card)
         source_combo.setObjectName(self.CreateInstanceSaveSourceComboName)
         source_combo.setSizeAdjustPolicy(
@@ -2409,11 +2410,16 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_row.setSpacing(8)
         source_row.addWidget(source_combo, 1)
         source_row.addWidget(refresh_button)
+        under_source = QVBoxLayout()
+        under_source.setContentsMargins(0, 8, 0, 0)
+        under_source.setSpacing(0)
+        under_source.addWidget(copy_checkbox)
+        under_source.addLayout(source_row)
         wizard_row(
             _tr("Optional starting save"),
             source_status,
-            [copy_checkbox],
-            source_row,
+            [],
+            under_source,
         )
 
         copy_checkbox.toggled.connect(
@@ -3177,6 +3183,19 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
         )
 
+    @staticmethod
+    def _relayout_dialog(dialog, changed) -> None:
+        # the layout holding the hidden card runs first: its parent's cached
+        # size only changes then, and adjustSize asks for that one
+        holder = changed.parentWidget() if changed is not None else None
+        if holder is not None and holder.layout() is not None:
+            holder.layout().activate()
+        layout = dialog.layout()
+        if layout is not None:
+            layout.invalidate()
+            layout.activate()
+        dialog.adjustSize()
+
     def _sync_profile_input_dialog(self, dialog) -> bool:
         default_ini_checkbox = dialog.findChild(QCheckBox, "defaultSettingsBox")
         if default_ini_checkbox is None:
@@ -3210,12 +3229,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if card_shown and subtitle is not None:
                     subtitle.setProperty("_eldenRingOriginalSubtitle", subtitle.text())
                     subtitle.setText(_tr("Name this profile."))
-                layout = dialog.layout()
-                if layout is not None:
-                    layout.invalidate()
-                    # or the old minimum height stays until the layout next runs
-                    layout.activate()
-                dialog.adjustSize()
+                self._relayout_dialog(dialog, settings_card)
         elif original_visible is not None:
             default_ini_checkbox.setVisible(bool(original_visible))
             if settings_card is not None:
@@ -3228,11 +3242,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             default_ini_checkbox.setProperty(
                 "_eldenRingOriginalDefaultIniVisible", None
             )
-            layout = dialog.layout()
-            if layout is not None:
-                layout.invalidate()
-                layout.activate()
-            dialog.adjustSize()
+            self._relayout_dialog(dialog, settings_card)
         return True
 
     def _sync_create_instance_dialog(self, dialog) -> None:

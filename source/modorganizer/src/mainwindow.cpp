@@ -3812,7 +3812,7 @@ void MainWindow::configureEldenRingHelp()
       "The Origin column says which mod supplies each file."));
   ui->savegameList->setWhatsThis(tr(
       "Browse the save files available to this profile. Configure "
-      "its route in Tools > Save Isolation to keep saves separate "
+      "its route in Tools > Save isolation to keep saves separate "
       "per MO2 profile, share a named save profile in this instance, or use "
       "the global Steam save folder."));
   ui->downloadView->setWhatsThis(tr(
@@ -4000,7 +4000,7 @@ void MainWindow::showEldenRingGuide()
       {{tr("Profiles"),
         tr("<p>Enable mods with their switches. Each profile keeps its own "
            "enabled mod list. Configure save routes in "
-           "<b>Tools &gt; Save Isolation</b>.</p>")},
+           "<b>Tools &gt; Save isolation</b>.</p>")},
        {tr("Mod priority"),
         tr("<p>The left list controls file priority when mods provide the same "
            "file. The <b>Data</b> tab shows which mod wins. Avoid enabling two "
