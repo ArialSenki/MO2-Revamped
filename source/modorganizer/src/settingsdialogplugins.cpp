@@ -505,7 +505,13 @@ bool PluginsSettingsTab::appliesToGame(IPlugin* plugin)
     return m_pluginContainer->gameFeatures().gameFeature<DataArchives>() != nullptr;
   }
   if (name == QLatin1String("INI Bakery") || name == QLatin1String("INI Editor")) {
-    return !game->iniFiles().isEmpty();
+    return !game->iniFiles().filter(".ini", Qt::CaseInsensitive).isEmpty();
+  }
+  // packages with these formats only exist for the games with plugin files
+  if (name == QLatin1String("BAIN Installer") ||
+      name == QLatin1String("BAIN Wizard Installer") ||
+      name.compare(QLatin1String("Omod Installer"), Qt::CaseInsensitive) == 0) {
+    return m_pluginContainer->gameFeatures().gameFeature<GamePlugins>() != nullptr;
   }
   return true;
 }

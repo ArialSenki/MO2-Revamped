@@ -142,8 +142,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
-        qInfo("Elden Ring MO2: archive layout installer alpha.76 initialized.")
+        organizer.onUserInterfaceInitialized(self._report_ready)
         return True
+
+    def _report_ready(self, _main_window) -> None:
+        # the installer loads in every instance; only say so in its own games
+        if self.isActive():
+            qInfo("Elden Ring MO2: archive layout installer alpha.76 initialized.")
 
     def name(self) -> str:
         return "Elden Ring Archive Layout Installer"

@@ -229,14 +229,18 @@ void SettingsDialog::hideUnsupportedOptions()
   }
   ui->forceEnableBox->setVisible(hasPlugins || hasArchives);
   ui->enableArchiveParsingBox->setVisible(hasArchives);
-  ui->bsaDateBtn->setVisible(hasArchives && hasInvalidation);
+  // back-dating only stands in for Archive Invalidation in Skyrim
+  const bool canBackDate =
+      hasArchives && hasInvalidation &&
+      game->gameShortName().contains(QLatin1String("skyrim"), Qt::CaseInsensitive);
+  ui->bsaDateBtn->setVisible(canBackDate);
   if (!hasPlugins && !hasArchives) {
     // only MO2's own options are left on these cards
     ui->workaroundsOptionsBox->setTitle(tr("MO2 behavior"));
     ui->workaroundsBehaviorDescription->setText(
         tr("Adjust how MO2's interface behaves while a program runs."));
   }
-  if (!(hasArchives && hasInvalidation)) {
+  if (!canBackDate) {
     ui->maintenanceToolsDescription->setText(
         tr("Run occasional repair actions for MO2 windows."));
   }

@@ -2295,11 +2295,6 @@ class EldenRingMo2Game(BasicGame):
         if not organizer.onFinishedRun(self._finish_profile_launch):
             qCritical("Elden Ring MO2: could not register the profile cleanup hook.")
             return False
-        qInfo(
-            "Elden Ring MO2 support "
-            f"{self.Version} initialized; native bridge component "
-            f"{self.NativeBridgeVersion}."
-        )
         return True
 
     def setGamePath(self, path) -> None:
@@ -3405,6 +3400,12 @@ class EldenRingMo2Game(BasicGame):
             if self._recovery_waiting:
                 self._retry_recovery_later()
             return
+
+        qInfo(
+            "Elden Ring MO2 support "
+            f"{self.Version} initialized; native bridge component "
+            f"{self.NativeBridgeVersion}."
+        )
 
         self._main_window = _main_window
         if _main_window is not None:

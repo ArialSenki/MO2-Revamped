@@ -397,9 +397,9 @@ class IniEdit(mobase.IPluginTool):
         return []
 
     def requirements(self):
-        # nothing to edit in a game without INI files
+        # only the games listed in __iniFiles have something to edit here
         return [mobase.PluginRequirementFactory.basic(
-            lambda organizer: bool(organizer.managedGame() and organizer.managedGame().iniFiles()),
+            lambda organizer: bool(organizer.managedGame() and self.__iniFiles()),
             self.tr("The managed game has no INI files to edit."),
         )]
 

@@ -2961,7 +2961,9 @@ void MainWindow::updateToolMenu()
                                                    .gameFeature<DataArchives>();
                                      }
                                      return name.contains("ini editor") &&
-                                            game->iniFiles().isEmpty();
+                                            game->iniFiles()
+                                                .filter(".ini", Qt::CaseInsensitive)
+                                                .isEmpty();
                                    }),
                     toolPlugins.end());
 
