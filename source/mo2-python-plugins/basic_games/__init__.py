@@ -3,6 +3,7 @@
 import glob
 import importlib
 import os
+import pathlib
 import site
 import sys
 import typing
@@ -57,5 +58,14 @@ def createPlugins():
                             "Failed to instantiate {}: {}".format(name, e),
                             file=sys.stderr,
                         )
+
+    # A game can bring its own tools in games/<name>/plugins:
+    for path in pathlib.Path(curpath, "games").rglob("plugins/__init__.py"):
+        module_path = "." + os.path.relpath(path.parent, curpath).replace(os.sep, ".")
+        try:
+            module = importlib.import_module(module_path, __package__)
+            game_plugins.extend(module.createPlugins())
+        except Exception as e:
+            print("Failed to load {}: {}".format(module_path, e), file=sys.stderr)
 
     return game_plugins
