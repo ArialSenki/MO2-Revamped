@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Other games
+
+- Baldur's Gate 3 is supported, with MO2's official game plugin and its tools. The
+  plugin downloads LSLib on the first launch and tells you if the .NET 8 Runtime it
+  needs is missing.
+- Each game lists only what it can use: Cyberpunk no longer shows the INI tools, the
+  BAIN and OMOD installers stay in the games with plugin files, and Back-date BSA
+  archives is only for Skyrim.
+- The Plugins and Archives tabs and their tools match the rest of the design, with
+  the search on top and number columns that keep just the room they need.
+- New Vegas starts from a profile made before its launcher ever ran. An empty prefs
+  file in a profile is now filled from the game's own, instead of sending the game
+  to its launcher.
+- Lines about Elden Ring no longer appear in the log of other games.
+
+### Interface
+
+- The keyboard focus ring only appears after a real press of Tab, not on a window's
+  first control.
+
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 
 ### Nightreign

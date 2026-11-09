@@ -1,9 +1,11 @@
 import json
+import os
 import shutil
 import traceback
 import urllib.request
 import zipfile
 from functools import cached_property
+from pathlib import Path
 
 from PyQt6.QtCore import qDebug, qWarning
 from PyQt6.QtWidgets import QApplication, QMessageBox
@@ -12,6 +14,8 @@ from . import bg3_utils
 
 
 class LSLibRetriever:
+    _dotnet_warned = False
+
     def __init__(self, utils: bg3_utils.BG3Utils):
         self._utils = utils
 
@@ -28,7 +32,41 @@ class LSLibRetriever:
             }
         }
 
+    def _has_dotnet_8(self) -> bool:
+        # Divine.exe only runs on the .NET 8 runtime
+        roots = (
+            os.environ.get("DOTNET_ROOT"),
+            os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), "dotnet"),
+        )
+        return any(
+            any(Path(root, "shared", "Microsoft.NETCore.App").glob("8.*"))
+            for root in roots
+            if root
+        )
+
+    def _warn_missing_dotnet(self) -> None:
+        if LSLibRetriever._dotnet_warned:
+            return
+        LSLibRetriever._dotnet_warned = True
+        msg_box = QMessageBox(self._utils.main_window)
+        msg_box.setIcon(QMessageBox.Icon.Warning)
+        msg_box.setWindowTitle(
+            self._utils.tr("Baldur's Gate 3 Plugin - Missing dependencies")
+        )
+        msg_box.setText(
+            self._utils.tr(
+                "LSLib needs the .NET 8 Runtime (x64), which is not installed.<br>"
+                "The game will start, but your mods won't be in its load order.<br><br>"
+                '<a href="https://dotnet.microsoft.com/download/dotnet/8.0">'
+                "Download .NET 8</a>"
+            )
+        )
+        msg_box.exec()
+
     def download_lslib_if_missing(self, force: bool = False) -> bool:
+        if not self._has_dotnet_8():
+            self._warn_missing_dotnet()
+            return False
         if not force and all(x.exists() for x in self._needed_lslib_files):
             return True
         try:

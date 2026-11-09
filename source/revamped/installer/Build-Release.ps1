@@ -293,6 +293,22 @@ function Copy-RuntimeTree {
     }
 }
 
+function Copy-PythonPluginOverlay {
+    # newer than the runtime's baseline: Baldur's Gate 3 and the game checks of the Configurator
+    param([string]$DestinationRoot)
+    $source = Join-Path $repoRoot 'source\mo2-python-plugins'
+    $baldursGate = Join-Path $source 'basic_games\games\baldursgate3'
+    $files = @('pyCfg.py', 'basic_games\__init__.py', 'basic_games\games\game_baldursgate3.py' |
+        ForEach-Object { Get-Item -LiteralPath (Join-Path $source $_) })
+    $files += @(Get-ChildItem -LiteralPath $baldursGate -File -Recurse -Filter '*.py')
+    foreach ($file in $files) {
+        $relative = $file.FullName.Substring($source.Length).TrimStart('\')
+        $destination = Join-Path (Join-Path $DestinationRoot 'plugins') $relative
+        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
+    }
+}
+
 function Copy-RevampedSources {
     param([string]$DestinationRoot, [string]$BridgePath, [string]$Me3CompatPath)
     $pluginSource = Join-Path $repoRoot 'source\revamped\plugins'
@@ -843,6 +859,7 @@ $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
 Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage
 Move-WebEngineProcessToDlls -DestinationRoot $fullStage
+Copy-PythonPluginOverlay -DestinationRoot $fullStage
 Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath -Me3CompatPath $me3CompatPath
 Copy-OpenSslRuntime -RuntimeSource $openSslRuntimeRoot -DestinationRoot $fullStage
 Copy-PythonRuntime -RuntimeSource $pythonRuntimeRoot -DestinationRoot $fullStage
