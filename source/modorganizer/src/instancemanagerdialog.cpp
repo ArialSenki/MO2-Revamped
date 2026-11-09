@@ -418,7 +418,7 @@ void InstanceManagerDialog::setupUi()
   resize(1000, 680);
 
   auto* layout = new QVBoxLayout(this);
-  layout->setContentsMargins(12, 12, 12, 12);
+  layout->setContentsMargins(16, 16, 16, 12);
   layout->setSpacing(10);
 
   auto* body = new QHBoxLayout;

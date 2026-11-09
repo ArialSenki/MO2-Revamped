@@ -244,7 +244,7 @@ void ProfilesDialog::setupUi()
   resize(940, m_eldenRing ? 470 : 620);
 
   auto* layout = new QVBoxLayout(this);
-  layout->setContentsMargins(12, 12, 12, 12);
+  layout->setContentsMargins(16, 16, 16, 12);
   layout->setSpacing(10);
 
   auto* body = new QHBoxLayout;
@@ -676,7 +676,7 @@ void ProfilesDialog::fillDetails()
   m_folderRow.value->setFullText(QDir::toNativeSeparators(profile->absolutePath()));
   m_changedRow.value->setFullText(
       whenText(QFileInfo(profile->getModlistFileName()).lastModified()));
-  m_savesRow.value->setFullText(tr("Chosen in Tools > Save Isolation"));
+  m_savesRow.value->setFullText(tr("Chosen in Tools > Save isolation"));
 
   m_localSaves->setEnabled(true);
   m_localIniFiles->setEnabled(true);

@@ -6867,7 +6867,7 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Save isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
       <translation>
                                   &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
@@ -6916,11 +6916,11 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Beenden</translation>
     </message>
     <message>
-      <source>Browse the save files available to this profile. Configure its route in Tools &gt; Save Isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
+      <source>Browse the save files available to this profile. Configure its route in Tools &gt; Save isolation to keep saves separate per MO2 profile, share a named save profile in this instance, or use the global Steam save folder.</source>
       <translation>Durchsuche die Spielstände, die diesem Profil zur Verfügung stehen. Lege ihren Pfad unter Werkzeuge &gt; Spielstand-Isolation fest, um Spielstände pro MO2-Profil zu trennen, ein benanntes Spielstandprofil in dieser Instanz zu teilen oder den globalen Steam-Spielstandordner zu verwenden.</translation>
     </message>
     <message>
-      <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save Isolation&lt;/b&gt;.&lt;/p&gt;</source>
+      <source>&lt;p&gt;Enable mods with their switches. Each profile keeps its own enabled mod list. Configure save routes in &lt;b&gt;Tools &amp;gt; Save isolation&lt;/b&gt;.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Aktiviere Mods über ihre Schalter. Jedes Profil hat seine eigene Liste aktiver Mods. Lege die Spielstandrouten unter &lt;b&gt;Werkzeuge &amp;gt; Spielstand-Isolation&lt;/b&gt; fest.&lt;/p&gt;</translation>
     </message>
     <message>
@@ -9146,7 +9146,7 @@ Fortfahren?</translation>
       <translation>%1 von %2 Mods aktiviert</translation>
     </message>
     <message>
-      <source>Chosen in Tools &gt; Save Isolation</source>
+      <source>Chosen in Tools &gt; Save isolation</source>
       <translation>Werden unter Werkzeuge &gt; Spielstand-Isolation gewählt</translation>
     </message>
     <message>
