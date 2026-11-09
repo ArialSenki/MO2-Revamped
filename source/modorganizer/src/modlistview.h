@@ -42,6 +42,10 @@ class ModListView : public QTreeView
   Q_PROPERTY(QColor switchKnobOffColor MEMBER m_switchKnobOffColor)
 
 public:
+  // the indentation a row loses so a mod's name doesn't move when the list has
+  // collapsible separators
+  int removedIndentation(const QModelIndex& index) const;
+
   // how much a colored row brightens under the cursor and when selected
   // (QColor::lighter)
   static constexpr int HoverLighter    = 115;

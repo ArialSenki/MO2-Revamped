@@ -84,14 +84,7 @@ public:
     QStyleOptionViewItem opt(option);
 
     // remove items indentaiton when using collapsible separators
-    if (index.column() == 0 && m_view->hasCollapsibleSeparators()) {
-      if (!index.model()->hasChildren(index) && index.parent().isValid()) {
-        auto parentIndex = index.parent().data(ModList::IndexRole).toInt();
-        if (ModInfo::getByIndex(parentIndex)->isSeparator()) {
-          opt.rect.adjust(-m_view->indentation(), 0, 0, 0);
-        }
-      }
-    }
+    opt.rect.adjust(-m_view->removedIndentation(index), 0, 0, 0);
 
     // compute required color from children, otherwise fallback to the
     // color from the model, and draw the background here
@@ -1204,11 +1197,22 @@ QRect ModListView::visualRect(const QModelIndex& index) const
   // this shift the visualRect() from QTreeView to match the new actual
   // zone after removing indentation (see the ModListStyledItemDelegate)
   QRect rect = QTreeView::visualRect(index);
-  if (hasCollapsibleSeparators() && index.column() == 0 && index.isValid() &&
-      index.parent().isValid()) {
-    rect.adjust(-indentation(), 0, 0, 0);
-  }
+  rect.adjust(-removedIndentation(index), 0, 0, 0);
   return rect;
+}
+
+int ModListView::removedIndentation(const QModelIndex& index) const
+{
+  if (!index.isValid() || index.column() != 0 || !hasCollapsibleSeparators()) {
+    return 0;
+  }
+  const QVariant mod = index.data(ModList::IndexRole);
+  if (!mod.isValid() || ModInfo::getByIndex(mod.toInt())->isSeparator()) {
+    return 0;
+  }
+  // the mods stay where they are without separators: only a separator keeps
+  // the gutter, for its arrow
+  return indentation() * (index.parent().isValid() ? 2 : 1);
 }
 
 void ModListView::drawBranches(QPainter* painter, const QRect& rect,
