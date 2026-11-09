@@ -6109,9 +6109,3 @@ QDialog#CreateInstanceDialog QPushButton#next {
     padding-left: 8px;
     padding-right: 8px;
 }
-
-/* Reached with Tab: the button says so. A click leaves it as it was. */
-QPushButton[keyboardFocus="true"],
-QToolButton[keyboardFocus="true"] {
-    border: 1px solid #FFFFFF;
-}

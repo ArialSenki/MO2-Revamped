@@ -18,9 +18,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "moapplication.h"
+#include <QAbstractButton>
+#include <QAbstractItemView>
+#include <QCheckBox>
 #include <QFocusEvent>
-#include <QPushButton>
-#include <QToolButton>
+#include <QPainter>
+#include <QPointer>
+#include <QStyleOptionButton>
+#include <QTabBar>
 #include "revampedtheme.h"
 #include "fluentchoices.h"
 #include "fluentdialogs.h"
@@ -1412,32 +1417,138 @@ bool MOApplication::notify(QObject* receiver, QEvent* event)
 
 namespace
 {
-// a button shows the focus when the keyboard brought it there; after a click
-// it looks as it did. The theme reads the property
-void markKeyboardFocus(QObject* receiver, QEvent* event)
+// a ring around the control the keyboard reached, as in Windows; a click shows
+// none. Fields keep their own focus line. It's a widget over the control, not
+// a style change, so nothing in the layout moves
+class KeyboardFocusRing : public QWidget
 {
-  if (qobject_cast<QPushButton*>(receiver) == nullptr &&
-      qobject_cast<QToolButton*>(receiver) == nullptr) {
-    return;
+public:
+  static void follow(QObject* receiver, QEvent* event)
+  {
+    auto* target = qobject_cast<QWidget*>(receiver);
+    if (target == nullptr || !isRingControl(target)) {
+      return;
+    }
+
+    static QPointer<KeyboardFocusRing> ring;
+    if (event->type() == QEvent::FocusOut) {
+      if (ring != nullptr && ring->m_target == target) {
+        ring->detach();
+      }
+      return;
+    }
+
+    const auto reason = static_cast<QFocusEvent*>(event)->reason();
+    if ((reason != Qt::TabFocusReason && reason != Qt::BacktabFocusReason) ||
+        target->parentWidget() == nullptr) {
+      return;
+    }
+    if (ring == nullptr) {
+      ring = new KeyboardFocusRing(target->parentWidget());
+    }
+    ring->attach(target);
   }
 
-  auto* widget      = static_cast<QWidget*>(receiver);
-  const auto reason = static_cast<QFocusEvent*>(event)->reason();
-  const bool marked = event->type() == QEvent::FocusIn &&
-                      (reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason);
-  if (widget->property("keyboardFocus").toBool() != marked) {
-    widget->setProperty("keyboardFocus", marked);
-    widget->style()->unpolish(widget);
-    widget->style()->polish(widget);
-    widget->update();
+protected:
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (watched == m_target) {
+      switch (event->type()) {
+      case QEvent::Move:
+      case QEvent::Resize:
+        place();
+        break;
+      case QEvent::Hide:
+        hide();
+        break;
+      case QEvent::Show:
+        place();
+        show();
+        break;
+      default:
+        break;
+      }
+    }
+    return false;
   }
-}
+
+  void paintEvent(QPaintEvent*) override
+  {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(FluentIcons::color(FluentIcons::Tone::Ink), 2));
+    painter.drawRoundedRect(QRectF(rect()).adjusted(1, 1, -1, -1), 5, 5);
+  }
+
+private:
+  explicit KeyboardFocusRing(QWidget* parent) : QWidget(parent)
+  {
+    setAttribute(Qt::WA_TransparentForMouseEvents);
+    setAttribute(Qt::WA_NoSystemBackground);
+    setFocusPolicy(Qt::NoFocus);
+  }
+
+  static bool isRingControl(QWidget* widget)
+  {
+    return qobject_cast<QAbstractButton*>(widget) != nullptr ||
+           qobject_cast<QTabBar*>(widget) != nullptr ||
+           qobject_cast<QAbstractItemView*>(widget) != nullptr;
+  }
+
+  void attach(QWidget* target)
+  {
+    detach();
+    m_target = target;
+    setParent(target->parentWidget());
+    target->installEventFilter(this);
+    place();
+    show();
+  }
+
+  void detach()
+  {
+    if (m_target != nullptr) {
+      m_target->removeEventFilter(this);
+    }
+    m_target = nullptr;
+    hide();
+  }
+
+  // the part of the control that is what you act on, in the parent's coordinates
+  void place()
+  {
+    if (m_target == nullptr) {
+      return;
+    }
+
+    QRect area = m_target->rect();
+    if (auto* box = qobject_cast<QCheckBox*>(m_target.data());
+        box != nullptr && box->property("fluentSwitch").toBool()) {
+      QStyleOptionButton option;
+      option.initFrom(box);
+      const QRect indicator =
+          box->style()->subElementRect(QStyle::SE_CheckBoxIndicator, &option, box);
+      if (indicator.isValid()) {
+        area = indicator;
+      }
+    } else if (auto* bar = qobject_cast<QTabBar*>(m_target.data())) {
+      area = bar->tabRect(bar->currentIndex());
+    }
+
+    const QPoint origin = m_target->mapTo(parentWidget(), area.topLeft());
+    setGeometry(QRect(origin, area.size()).adjusted(-3, -3, 3, 3));
+    raise();
+  }
+
+  QPointer<QWidget> m_target;
+};
 }  // namespace
 
 bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
   if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut) {
-    markKeyboardFocus(receiver, event);
+    KeyboardFocusRing::follow(receiver, event);
   }
 
   // Fluent v4: trees open and close their branches with a slide

@@ -3,7 +3,6 @@
 
 #include <QCheckBox>
 #include <QEvent>
-#include <QFocusEvent>
 #include <QPainter>
 #include <QStyle>
 #include <QStyleOptionButton>
@@ -132,20 +131,6 @@ bool FluentSwitchPainter::eventFilter(QObject* watched, QEvent* event)
   case QEvent::EnabledChange:
     update();
     break;
-  case QEvent::FocusIn:
-    if (watched == m_box) {
-      const auto reason = static_cast<QFocusEvent*>(event)->reason();
-      m_keyboardFocus =
-          reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason;
-      update();
-    }
-    break;
-  case QEvent::FocusOut:
-    if (watched == m_box) {
-      m_keyboardFocus = false;
-      update();
-    }
-    break;
   default:
     break;
   }
@@ -175,14 +160,6 @@ void FluentSwitchPainter::paintEvent(QPaintEvent*)
   // cover the theme's still image of the switch underneath
   FluentSwitch::paint(&painter, QRectF(rect()), position(),
                       m_hover->currentValue().toReal(), colors, m_box->isEnabled());
-
-  if (m_keyboardFocus) {
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setBrush(Qt::NoBrush);
-    painter.setPen(QPen(m_box->palette().color(QPalette::WindowText), 2));
-    const QRectF ring = QRectF(rect()).adjusted(1, 1, -1, -1);
-    painter.drawRoundedRect(ring, ring.height() / 2, ring.height() / 2);
-  }
 }
 
 qreal FluentSwitchPainter::position() const

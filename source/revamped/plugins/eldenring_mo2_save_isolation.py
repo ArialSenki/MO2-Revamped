@@ -2366,7 +2366,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         game_save_profile_name.setPlaceholderText(_tr("For example: Main playthrough"))
         game_save_profile_name.setMaxLength(64)
         # with the switch beside it, as wide as the save mode list above
-        game_save_profile_name.setFixedWidth(460)
+        game_save_profile_name.setFixedWidth(460 - 40 - 16)
         game_save_profile_name.setToolTip(
             _trs("This name distinguishes the Elden Ring save profile in MO2. "
             "The game loads the selected file as ER0000.sl2.")

@@ -687,7 +687,20 @@
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="newSeparatorColorRow">
+              <widget class="QWidget" name="newSeparatorColorRow">
+              <layout class="QHBoxLayout" name="newSeparatorColorLayout">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QLabel" name="newSeparatorColorLabel">
                  <property name="text">
@@ -739,6 +752,7 @@
                 </widget>
                </item>
               </layout>
+              </widget>
              </item>
              <item>
               <widget class="QCheckBox" name="displayForeignBox">
