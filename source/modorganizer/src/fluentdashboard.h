@@ -92,6 +92,17 @@ private:
   QLabel* m_modsTitle    = nullptr;
   QTimer m_refreshTimer;
 
+  // the mod counts are worked out a little at a time, as asking each mod for
+  // its conflicts on the UI thread stalls the window with many mods
+  QTimer m_countSlice;
+  struct ModCounts
+  {
+    unsigned int next = 0;
+    int total = 0, active = 0, conflicts = 0, updates = 0;
+  } m_counts;
+
+  void countMods();
+
   void setupBanner(QWidget* central);
   void setupStats(QWidget* central);
   void setupModsHeader();

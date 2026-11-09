@@ -1,4 +1,5 @@
 #include "fluentdashboard.h"
+#include <QElapsedTimer>
 
 #include "categories.h"
 #include "eldenringsavesettings.h"
@@ -36,7 +37,7 @@ constexpr char16_t UpdateGlyph    = 0xE898;
 
 // Overwrite can hold a whole game's worth of files; the tile only needs to
 // know there are some
-constexpr int OverwriteCountLimit = 9999;
+constexpr int OverwriteCountLimit = 1000;
 
 QFont iconFont(int pointSize)
 {
@@ -128,6 +129,9 @@ FluentDashboard::FluentDashboard(Ui::MainWindow* mainUi, OrganizerCore& core,
   m_refreshTimer.setSingleShot(true);
   m_refreshTimer.setInterval(150);
   connect(&m_refreshTimer, &QTimer::timeout, this, &FluentDashboard::refreshStats);
+  m_countSlice.setSingleShot(true);
+  m_countSlice.setInterval(0);
+  connect(&m_countSlice, &QTimer::timeout, this, &FluentDashboard::countMods);
   connect(ui->modList, &ModListView::modCountChanged, this,
           &FluentDashboard::scheduleRefresh);
   connect(ui->modList, &ModListView::quickFilterChanged, this,
@@ -380,6 +384,7 @@ void FluentDashboard::refreshGame()
 
 void FluentDashboard::scheduleRefresh()
 {
+  // refreshStats() starts the count over; one in progress goes on until then
   m_refreshTimer.start();
 }
 
@@ -392,27 +397,45 @@ void FluentDashboard::refreshStats()
     frame->hide();
   }
 
+  m_countSlice.stop();
+  m_counts = {};
+  countMods();
+}
+
+void FluentDashboard::countMods()
+{
   const Profile* profile = m_core.currentProfile();
   if (profile == nullptr) {
     return;
   }
 
-  int total = 0, active = 0, conflicts = 0, updates = 0;
-  for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
-    ModInfo::Ptr mod = ModInfo::getByIndex(i);
-    if (mod->isSeparator() || mod->isForeign() || mod->isBackup() || mod->isOverwrite()) {
-      continue;
-    }
-    ++total;
-    if (profile->modEnabled(i)) {
-      ++active;
-      if (!mod->getConflictFlags().empty()) {
-        ++conflicts;
+  // a frame's worth of work at a time
+  constexpr qint64 SliceMs = 8;
+  QElapsedTimer slice;
+  slice.start();
+
+  auto& [next, total, active, conflicts, updates] = m_counts;
+  const unsigned int count = qMin<unsigned int>(ModInfo::getNumMods(), profile->numMods());
+  while (next < count) {
+    const unsigned int i = next++;
+    ModInfo::Ptr mod     = ModInfo::getByIndex(i);
+    if (!(mod->isSeparator() || mod->isForeign() || mod->isBackup() || mod->isOverwrite())) {
+      ++total;
+      if (profile->modEnabled(i)) {
+        ++active;
+        if (!mod->getConflictFlags().empty()) {
+          ++conflicts;
+        }
+      }
+      // the same as the filter behind Show
+      if (mod->updateAvailable() || mod->downgradeAvailable()) {
+        ++updates;
       }
     }
-    // the same as the filter behind Show
-    if (mod->updateAvailable() || mod->downgradeAvailable()) {
-      ++updates;
+
+    if (slice.elapsed() >= SliceMs && next < count) {
+      m_countSlice.start();
+      return;
     }
   }
 
