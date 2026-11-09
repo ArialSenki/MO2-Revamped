@@ -58,11 +58,15 @@ public:
   // whether a game other than the managed one has a feature: the wizard asks
   // about the game being set up
   //
+  // (false for everything until a game plugin has been initialized: see
+  // featuresKnown())
   template <class T>
   bool gameHasFeature(MOBase::IPluginGame const* game) const
   {
     return gameHasFeature(typeid(T), game);
   }
+
+  bool featuresKnown() const { return !m_allFeatures.empty(); }
 
 signals:
   void modDataCheckerUpdated(const MOBase::ModDataChecker* check);

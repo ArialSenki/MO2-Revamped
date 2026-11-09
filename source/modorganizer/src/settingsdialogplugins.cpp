@@ -442,9 +442,10 @@ void PluginsSettingsTab::filterPluginList()
       }
       if (listed(plugin)) {
         for (auto* child : m_pluginContainer->requirements(plugin).children()) {
-          match = match || m_filter.matches([child](const QRegularExpression& regex) {
-            return regex.match(child->localizedName()).hasMatch();
-          });
+          match = match || (listed(child) &&
+                            m_filter.matches([child](const QRegularExpression& regex) {
+                              return regex.match(child->localizedName()).hasMatch();
+                            }));
         }
       }
 
@@ -500,7 +501,7 @@ bool PluginsSettingsTab::appliesToGame(IPlugin* plugin)
   // these work on the Bethesda formats and have no requirement that says so
   const QString name = plugin->name();
   if (name == QLatin1String("BSA Packer") || name == QLatin1String("BSA Extractor") ||
-      name == QLatin1String("Preview BSA")) {
+      name.compare(QLatin1String("Preview BSA"), Qt::CaseInsensitive) == 0) {
     return m_pluginContainer->gameFeatures().gameFeature<DataArchives>() != nullptr;
   }
   if (name == QLatin1String("INI Bakery") || name == QLatin1String("INI Editor")) {

@@ -11285,7 +11285,7 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
     </message>
     <message>
         <location filename="createinstancedialogpages.cpp" line="1248"/>
-        <location filename="createinstancedialogpages.cpp" line="2500"/>
+        <location filename="createinstancedialogpages.cpp" line="2506"/>
         <source>In Program Files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11377,175 +11377,175 @@ Use one per playthrough or per mod list you want to try. The profile in use is c
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2111"/>
+        <location filename="createinstancedialogpages.cpp" line="2117"/>
         <source>This instance&apos;s own folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2116"/>
+        <location filename="createinstancedialogpages.cpp" line="2122"/>
         <source>Shared with %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2137"/>
+        <location filename="createinstancedialogpages.cpp" line="2143"/>
         <source>These folders belong to the separate MO2 copy for %1. Its application files and settings will be kept together in that folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2207"/>
+        <location filename="createinstancedialogpages.cpp" line="2213"/>
         <source>%1 free on %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2216"/>
+        <location filename="createinstancedialogpages.cpp" line="2222"/>
         <source>%1 of %2 used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2246"/>
+        <location filename="createinstancedialogpages.cpp" line="2252"/>
         <source>%1 in %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2248"/>
+        <location filename="createinstancedialogpages.cpp" line="2254"/>
         <source>Downloads from %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2447"/>
+        <location filename="createinstancedialogpages.cpp" line="2453"/>
         <source>Change</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2450"/>
+        <location filename="createinstancedialogpages.cpp" line="2456"/>
         <source>Change %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2466"/>
+        <location filename="createinstancedialogpages.cpp" line="2472"/>
         <source>MO2 will copy its application files into a separate folder for this game. If you start the copy after setup, this MO2 closes first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2468"/>
+        <location filename="createinstancedialogpages.cpp" line="2474"/>
         <source>Start the isolated copy after setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2470"/>
+        <location filename="createinstancedialogpages.cpp" line="2476"/>
         <source>Check the details, then select Create instance. Nothing is written before that.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2496"/>
+        <location filename="createinstancedialogpages.cpp" line="2502"/>
         <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2497"/>
+        <location filename="createinstancedialogpages.cpp" line="2503"/>
         <source>Game folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2504"/>
+        <location filename="createinstancedialogpages.cpp" line="2510"/>
         <source>Storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2506"/>
+        <location filename="createinstancedialogpages.cpp" line="2512"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2511"/>
+        <location filename="createinstancedialogpages.cpp" line="2517"/>
         <source>Group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2515"/>
+        <location filename="createinstancedialogpages.cpp" line="2521"/>
         <source>Notes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2518"/>
+        <location filename="createinstancedialogpages.cpp" line="2524"/>
         <source>Instance folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2523"/>
-        <location filename="createinstancedialogpages.cpp" line="2533"/>
+        <location filename="createinstancedialogpages.cpp" line="2529"/>
+        <location filename="createinstancedialogpages.cpp" line="2539"/>
         <source>Base directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2540"/>
+        <location filename="createinstancedialogpages.cpp" line="2546"/>
         <source>Disk</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2543"/>
+        <location filename="createinstancedialogpages.cpp" line="2549"/>
         <source>Shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2543"/>
+        <location filename="createinstancedialogpages.cpp" line="2549"/>
         <source>On the desktop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2547"/>
+        <location filename="createinstancedialogpages.cpp" line="2553"/>
         <source>Saves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2553"/>
+        <location filename="createinstancedialogpages.cpp" line="2559"/>
         <source>Local INIs: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2555"/>
+        <location filename="createinstancedialogpages.cpp" line="2561"/>
         <source>Local Saves: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2557"/>
+        <location filename="createinstancedialogpages.cpp" line="2563"/>
         <source>Automatic Archive Invalidation: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2473"/>
+        <location filename="createinstancedialogpages.cpp" line="2479"/>
         <source>Launch the new instance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2488"/>
+        <location filename="createinstancedialogpages.cpp" line="2494"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2488"/>
+        <location filename="createinstancedialogpages.cpp" line="2494"/>
         <source>no</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2526"/>
-        <location filename="createinstancedialogpages.cpp" line="2534"/>
+        <location filename="createinstancedialogpages.cpp" line="2532"/>
+        <location filename="createinstancedialogpages.cpp" line="2540"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2535"/>
+        <location filename="createinstancedialogpages.cpp" line="2541"/>
         <source>Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2536"/>
-        <location filename="createinstancedialogpages.cpp" line="2552"/>
+        <location filename="createinstancedialogpages.cpp" line="2542"/>
+        <location filename="createinstancedialogpages.cpp" line="2558"/>
         <source>Profiles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2537"/>
+        <location filename="createinstancedialogpages.cpp" line="2543"/>
         <source>Overwrite</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12471,28 +12471,28 @@ This program is known to cause issues with Mod Organizer, such as freezing or bl
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="569"/>
+        <location filename="settingsdialogplugins.cpp" line="570"/>
         <source>Cannot disable plugin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="570"/>
+        <location filename="settingsdialogplugins.cpp" line="571"/>
         <source>The &apos;%1&apos; plugin is used by the current game plugin and cannot disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="598"/>
+        <location filename="settingsdialogplugins.cpp" line="599"/>
         <source>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%2&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</source>
         <oldsource>&lt;p&gt;Disabling the &apos;%1&apos; plugin will also disable the following plugins:&lt;/p&gt;&lt;ul&gt;%1&lt;/ul&gt;&lt;p&gt;Do you want to continue?&lt;/p&gt;</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="602"/>
+        <location filename="settingsdialogplugins.cpp" line="603"/>
         <source>Really disable plugin?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialogplugins.cpp" line="665"/>
+        <location filename="settingsdialogplugins.cpp" line="666"/>
         <source>This plugin is required for Mod Organizer to work properly and cannot be disabled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15965,7 +15965,7 @@ Remaining this hour: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="createinstancedialogpages.cpp" line="2017"/>
+        <location filename="createinstancedialogpages.cpp" line="2023"/>
         <source>&lt;h3&gt;Choose how Elden Ring saves are handled.&lt;/h3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
