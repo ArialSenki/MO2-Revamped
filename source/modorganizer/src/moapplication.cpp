@@ -21,7 +21,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractButton>
 #include <QAbstractItemView>
 #include <QCheckBox>
+#include <QElapsedTimer>
 #include <QFocusEvent>
+#include <QKeyEvent>
 #include <QPainter>
 #include <QPointer>
 #include <QStyleOptionButton>
@@ -1438,15 +1440,25 @@ public:
       return;
     }
 
+    // a window also hands its first control the focus with the Tab reason, so
+    // only a key really pressed just before counts
     const auto reason = static_cast<QFocusEvent*>(event)->reason();
     if ((reason != Qt::TabFocusReason && reason != Qt::BacktabFocusReason) ||
-        target->isWindow()) {
+        target->isWindow() || !s_tabPressed.isValid() || s_tabPressed.elapsed() > 300) {
       return;
     }
     if (ring == nullptr) {
       ring = new KeyboardFocusRing(target->window());
     }
     ring->attach(target);
+  }
+
+  static void noteKey(QEvent* event)
+  {
+    const int key = static_cast<QKeyEvent*>(event)->key();
+    if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
+      s_tabPressed.start();
+    }
   }
 
 protected:
@@ -1556,6 +1568,7 @@ private:
 
   QPointer<QWidget> m_target;
   QList<QPointer<QWidget>> m_watched;
+  static inline QElapsedTimer s_tabPressed;
 };
 }  // namespace
 
@@ -1563,6 +1576,8 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
   if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut) {
     KeyboardFocusRing::follow(receiver, event);
+  } else if (event->type() == QEvent::KeyPress) {
+    KeyboardFocusRing::noteKey(event);
   }
 
   // Fluent v4: trees open and close their branches with a slide
