@@ -829,8 +829,8 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <translation>Facoltativo. Le istanze di un gruppo sono elencate insieme in Gestisci istanze.</translation>
     </message>
     <message>
-      <source>Stable setup with Seamless Co-op, for example</source>
-      <translation>Configurazione stabile con Seamless Co-op, per esempio</translation>
+      <source>Main playthrough, for example</source>
+      <translation>Partita principale, ad esempio</translation>
     </message>
     <message>
       <source>Notes</source>
@@ -5834,8 +5834,8 @@ Continueranno a cercare nella vecchia cartella senza trovare nulla finché non n
       <translation>A cosa serve questa istanza, cosa contiene o qualsiasi cosa da ricordare. La ricerca trova anche le note.</translation>
     </message>
     <message>
-      <source>Stable setup with Seamless Co-op, for example</source>
-      <translation>Configurazione stabile con Seamless Co-op, per esempio</translation>
+      <source>Main playthrough, for example</source>
+      <translation>Partita principale, ad esempio</translation>
     </message>
     <message>
       <source>Save</source>
@@ -7131,7 +7131,7 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;This list shows save files in the folder routed to the active MO2 profile. Hover over a save for additional details when the game plugin provides them.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
       <translation>
                                   &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
@@ -7140,7 +7140,7 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Questo elenco mostra i salvataggi nella cartella assegnata al profilo MO2 attivo. Passa il mouse su un salvataggio per altri dettagli quando il plugin del gioco li fornisce.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Per un salvataggio selezionato a cui mancano plugin richiesti, usa Ripristina plugin richiesti... per attivare le mod installate che li forniscono. Puoi anche eliminare il salvataggio o aprirne la cartella. Per Elden Ring, scegli il percorso dei salvataggi e il profilo di salvataggio con nome in Strumenti &amp;gt; Isolamento salvataggi.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Per un salvataggio selezionato a cui mancano plugin richiesti, usa Ripristina plugin richiesti... per attivare le mod installate che li forniscono. Puoi anche eliminare il salvataggio o aprirne la cartella.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </translation>
     </message>
     <message>
@@ -11330,6 +11330,18 @@ Scegli quanti dettagli MO2 scrive in ModOrganizer.log. Info è consigliato per l
       <source>Do not share the collapsed/expanded state of separators between profiles.</source>
       <translation>Non condividere lo stato dei separatori ridotti o espansi tra i profili.</translation>
     </message>
+    <message>
+      <source>MO2 behavior</source>
+      <translation>Comportamento di MO2</translation>
+    </message>
+    <message>
+      <source>Adjust how MO2&apos;s interface behaves while a program runs.</source>
+      <translation>Regola il comportamento dell&apos;interfaccia di MO2 mentre un programma è in esecuzione.</translation>
+    </message>
+    <message>
+      <source>Run occasional repair actions for MO2 windows.</source>
+      <translation>Esegui riparazioni occasionali per le finestre di MO2.</translation>
+    </message>
   </context>
   <context>
     <name>StatusBar</name>
@@ -12450,4 +12462,11 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
       <translation>Sovrascritto da</translation>
     </message>
 </context>
+  <context>
+    <name>ModInfoRegular</name>
+    <message>
+      <source>%1 has no files this game can use</source>
+      <translation>%1 non contiene file utilizzabili da questo gioco</translation>
+    </message>
+  </context>
 </TS>

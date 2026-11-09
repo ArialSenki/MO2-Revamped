@@ -6,6 +6,8 @@
 #include "moddatacontent.h"
 #include "organizercore.h"
 #include "plugincontainer.h"
+#include "game_features.h"
+#include <gameplugins.h>
 #include "report.h"
 #include "settings.h"
 #include <iplugingame.h>
@@ -768,6 +770,9 @@ int ModInfoRegular::getHighlight() const
 QString ModInfoRegular::getDescription() const
 {
   if (!isValid() && !m_Validated) {
+    if (!m_Core.pluginContainer().gameFeatures().gameFeature<GamePlugins>()) {
+      return tr("%1 has no files this game can use").arg(name());
+    }
     return tr("%1 contains no esp/esm/esl and no asset (textures, meshes, interface, "
               "...) directory")
         .arg(name());

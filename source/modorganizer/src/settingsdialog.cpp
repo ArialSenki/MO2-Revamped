@@ -40,6 +40,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <dataarchives.h>
 #include <gameplugins.h>
 #include <unmanagedmods.h>
+#include <moddatacontent.h>
 #include <iplugingame.h>
 
 #include <QColor>
@@ -229,6 +230,16 @@ void SettingsDialog::hideUnsupportedOptions()
   ui->forceEnableBox->setVisible(hasPlugins || hasArchives);
   ui->enableArchiveParsingBox->setVisible(hasArchives);
   ui->bsaDateBtn->setVisible(hasArchives && hasInvalidation);
+  if (!hasPlugins && !hasArchives) {
+    // only MO2's own options are left on these cards
+    ui->workaroundsOptionsBox->setTitle(tr("MO2 behavior"));
+    ui->workaroundsBehaviorDescription->setText(
+        tr("Adjust how MO2's interface behaves while a program runs."));
+    ui->maintenanceToolsDescription->setText(
+        tr("Run occasional repair actions for MO2 windows."));
+  }
+  ui->collapsibleSeparatorsIconsContentsBox->setVisible(
+      features.gameFeature<MOBase::ModDataContent>() != nullptr);
   if (game->sortMechanism() == MOBase::IPluginGame::SortMechanism::NONE) {
     ui->diagnosticsLootGroup->hide();
     ui->diagnosticsPageSubtitle->setText(

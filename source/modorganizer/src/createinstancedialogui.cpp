@@ -631,7 +631,7 @@ void CreateInstanceDialog::setupUi(QDialog* dialog)
              instanceGroup);
 
     instanceNotes = named(new QLineEdit, "instanceNotes");
-    instanceNotes->setPlaceholderText(tr("Stable setup with Seamless Co-op, for example"));
+    instanceNotes->setPlaceholderText(tr("Main playthrough, for example"));
     instanceNotes->setAccessibleName(tr("Notes"));
     fieldRow(widget_9, fields, tr("Notes"),
              tr("Optional. What this instance is for; the search finds it."),

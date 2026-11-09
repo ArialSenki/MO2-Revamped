@@ -181,6 +181,22 @@ GameFeatures::CombinedModDataContent& GameFeatures::modDataContent() const
   return dynamic_cast<CombinedModDataContent&>(*m_modDataContent);
 }
 
+bool GameFeatures::gameHasFeature(std::type_info const& index, IPluginGame const* game) const
+{
+  const auto it = m_allFeatures.find(std::type_index(index));
+  if (it == m_allFeatures.end() || game == nullptr) {
+    return false;
+  }
+
+  // not isEnabled(): only the managed game's plugin counts as enabled
+  for (const auto& data : it->second) {
+    if (data.games().isEmpty() || data.games().contains(game->gameName())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void GameFeatures::updateCurrentFeatures(std::type_index const& index)
 {
   auto& features = m_allFeatures[index];
