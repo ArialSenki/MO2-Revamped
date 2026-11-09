@@ -777,7 +777,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
     moveAction->setToolTip(
         tr("Choose a regular mod and move all files from Overwrite into it."));
 
-    m_remove = new QAction(menuGlyph(MenuGlyphs::Clear), tr("Clear Overwrite..."), this);
+    m_remove = new QAction(menuGlyph(MenuGlyphs::Delete), tr("Clear Overwrite..."), this);
     connect(m_remove, &QAction::triggered, this, [=]() {
       m_actions.clearOverwrite();
     });

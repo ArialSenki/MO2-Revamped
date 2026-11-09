@@ -33,7 +33,7 @@ namespace
 constexpr char16_t ActiveGlyph    = 0xE73E;
 constexpr char16_t ConflictGlyph  = 0xE7BA;
 constexpr char16_t OverwriteGlyph = 0xE8B7;
-constexpr char16_t UpdateGlyph    = 0xE898;
+constexpr char16_t UpdateGlyph    = 0xE896;
 
 // Overwrite can hold a whole game's worth of files; the tile only needs to
 // know there are some

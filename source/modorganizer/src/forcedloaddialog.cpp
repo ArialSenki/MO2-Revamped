@@ -222,7 +222,7 @@ void ForcedLoadDialog::buildFluentLayout()
   auto* head = new QHBoxLayout;
   head->setContentsMargins(18, 14, 12, 14);
   head->setSpacing(12);
-  auto* glyph = new QLabel(QString(QChar(char16_t(0xE8F1))), card);
+  auto* glyph = new QLabel(QString(QChar(char16_t(0xE950))), card);
   glyph->setObjectName(QStringLiteral("instanceRowGlyph"));
   glyph->setFont(FluentIcons::font(24));
   glyph->setFixedSize(32, 32);
@@ -279,7 +279,7 @@ void ForcedLoadDialog::buildFluentLayout()
   m_browseLibrary->setAccessibleName(m_browseLibrary->toolTip());
   m_browseProcess->setToolTip(tr("Browse for the program"));
   m_browseProcess->setAccessibleName(m_browseProcess->toolTip());
-  FluentPanels::addEditRow(m_rows, 0xE8F1, tr("Library"),
+  FluentPanels::addEditRow(m_rows, 0xE950, tr("Library"),
                            tr("The DLL Mod Organizer loads into the program"),
                            {m_library, m_browseLibrary});
   FluentPanels::addEditRow(m_rows, 0xE756, tr("Program"),
@@ -459,7 +459,7 @@ void ForcedLoadDialog::refreshFluent()
     QListWidgetItem* item = m_list->item(row);
     item->setText(library.isEmpty() ? tr("New library") : library);
     item->setData(FluentPanels::CaptionRole, caption.join(QStringLiteral(" · ")));
-    item->setIcon(FluentIcons::glyph(0xE8F1, rule->getEnabled() ? FluentIcons::Tone::Ink
+    item->setIcon(FluentIcons::glyph(0xE950, rule->getEnabled() ? FluentIcons::Tone::Ink
                                                                  : FluentIcons::Tone::Muted));
   }
   m_list->setCurrentRow(std::min(current, m_list->count() - 1));

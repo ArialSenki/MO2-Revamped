@@ -45,7 +45,7 @@ void addPathRow(QGridLayout* layout, int row, QLabel* label, QLineEdit* edit,
                                   QString(label->text()).remove(QLatin1Char('&')));
   browseButton->setMinimumWidth(108);
   browseButton->setMinimumHeight(34);
-  browseButton->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
+  browseButton->setIcon(FluentIcons::glyph(0xE8DA));
   browseButton->setIconSize(QSize(16, 16));
 
   layout->addWidget(label, row, 0);

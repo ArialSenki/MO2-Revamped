@@ -4440,6 +4440,7 @@ QMenu* MainWindow::openFolderMenu()
 
   addFolderAction(tr("Game"), ":/MO/gui/mainwindow/files/game-data.svg",
                   SLOT(openGameFolder()), QStringLiteral("game"));
+  FolderMenu->actions().constLast()->setIcon(FluentIcons::glyph(0xE7FC));
   if (documentsAreSaves) {
     addFolderAction(tr("Saves"), ":/MO/gui/mainwindow/files/save.svg",
                     SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
@@ -4472,7 +4473,7 @@ QMenu* MainWindow::openFolderMenu()
   QAction* logsAction = FolderMenu->addAction(tr("Logs"), [=] {
     ui->logList->openLogsFolder();
   });
-  logsAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/status/debug.svg"));
+  logsAction->setIcon(FluentIcons::glyph(0xE9F9));
   logsAction->setProperty("folderRoute", QStringLiteral("logs"));
 
   connect(FolderMenu, &QMenu::aboutToShow, this, [this, FolderMenu] {

@@ -155,7 +155,7 @@ const QHash<QString, Glyph>& glyphTable()
             {"attachment.svg", 0xE723, Tone::Ink},
             {"notes.svg", 0xE70B, Tone::Ink},
             {"hidden-files.svg", 0xED1A, Tone::Muted},
-            {"not-endorsed.svg", 0xEB51, Tone::Muted},
+            {"not-endorsed.svg", 0xE8E1, Tone::Muted},
             {"alternate-game.svg", 0xE7FC, Tone::Caution},
             {"tracked.svg", 0xE7B3, Tone::Accent},
             {"awaiting.svg", 0xE823, Tone::Muted},
@@ -178,14 +178,14 @@ const QHash<QString, Glyph>& glyphTable()
                                           {"folder.svg", 0xE8B7, Tone::Ink},
                                           {"file.svg", 0xE7C3, Tone::Ink},
                                           {"executable.svg", 0xECAA, Tone::Ink},
-                                          {"library.svg", 0xE943, Tone::Ink},
+                                          {"library.svg", 0xE950, Tone::Ink},
                                           {"game-data.svg", 0xE7B8, Tone::Ink},
                                           {"archive.svg", 0xF012, Tone::Ink},
                                           {"config.svg", 0xE713, Tone::Ink},
                                           {"script.svg", 0xE943, Tone::Ink},
                                           {"image.svg", 0xEB9F, Tone::Ink},
                                           {"save.svg", 0xE74E, Tone::Ink},
-                                          {"text.svg", 0xE8A5, Tone::Ink},
+                                          {"text.svg", 0xF000, Tone::Ink},
                                       });
 
     add(":/MO/gui/content/", {
@@ -525,6 +525,13 @@ QIcon file(const QString& fileName, bool directory)
                              QStringLiteral(".svg"));
   };
 
+  const auto typeGlyph = [](char16_t codepoint) {
+    static QHash<char16_t, QIcon> icons;
+    auto found = icons.constFind(codepoint);
+    return found != icons.constEnd() ? *found
+                                     : *icons.insert(codepoint, glyph(codepoint));
+  };
+
   if (directory) {
     return fileIcon(QStringLiteral("folder"));
   }
@@ -536,11 +543,12 @@ QIcon file(const QString& fileName, bool directory)
   if (extension == "dll" || extension == "so" || extension == "dylib") {
     return fileIcon(QStringLiteral("library"));
   }
-  if (extension == "bdt" || extension == "bhd" || extension == "bin" ||
+  // the game's containers also come as tpfbhd, hkxbdt, anibnd, behbnd...
+  if (extension.endsWith("bdt") || extension.endsWith("bhd") || extension == "bin" ||
       extension == "dat") {
     return fileIcon(QStringLiteral("game-data"));
   }
-  if (extension == "dcx" || extension == "bnd" || extension == "zip" ||
+  if (extension == "dcx" || extension.endsWith("bnd") || extension == "zip" ||
       extension == "7z" || extension == "rar" || extension == "tar" ||
       extension == "gz" || extension == "xz" || extension == "bsa" ||
       extension == "ba2" || extension == "pak") {
@@ -548,23 +556,46 @@ QIcon file(const QString& fileName, bool directory)
   }
   if (extension == "ini" || extension == "json" || extension == "xml" ||
       extension == "toml" || extension == "yaml" || extension == "yml" ||
-      extension == "cfg" || extension == "conf") {
+      extension == "cfg" || extension == "conf" || extension == "me3" ||
+      extension == "vdf" || extension == "layout") {
     return fileIcon(QStringLiteral("config"));
   }
   if (extension == "hks" || extension == "lua" || extension == "py" ||
       extension == "js" || extension == "bat" || extension == "cmd" ||
-      extension == "ps1") {
+      extension == "ps1" || extension == "sh") {
     return fileIcon(QStringLiteral("script"));
   }
   if (extension == "png" || extension == "jpg" || extension == "jpeg" ||
       extension == "dds" || extension == "tga" || extension == "bmp" ||
-      extension == "gif" || extension == "webp") {
+      extension == "gif" || extension == "webp" || extension == "ico") {
     return fileIcon(QStringLiteral("image"));
   }
   // Elden Ring saves, Seamless Co-op (co2), Convergence (cnv) and Reforged (err)
-  if (extension == "sl2" || extension == "co2" || extension == "cnv" ||
-      extension == "err" || extension == "bak") {
+  const auto isSave = [](const QString& suffix) {
+    return suffix == "sl2" || suffix == "co2" || suffix == "cnv" || suffix == "err";
+  };
+  if (isSave(extension)) {
     return fileIcon(QStringLiteral("save"));
+  }
+  // a copy of a save still reads as a save; a copy of anything else doesn't
+  if (extension.startsWith("bak") || extension == "prev" || extension == "dsasbak") {
+    if (isSave(QFileInfo(QFileInfo(fileName).completeBaseName()).suffix().toLower())) {
+      return fileIcon(QStringLiteral("save"));
+    }
+    return typeGlyph(0xEA35);
+  }
+  if (extension == "wem" || extension == "wav" || extension == "bnk" ||
+      extension == "mp3" || extension == "ogg" || extension == "flac") {
+    return typeGlyph(0xE8D6);
+  }
+  if (extension == "bk2" || extension == "mp4" || extension == "webm") {
+    return typeGlyph(0xE714);
+  }
+  if (extension == "gfx") {
+    return typeGlyph(0xE7F4);
+  }
+  if (extension == "lnk") {
+    return typeGlyph(0xE71B);
   }
   if (extension == "txt" || extension == "md" || extension == "log" ||
       extension == "csv") {

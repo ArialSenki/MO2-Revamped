@@ -58,7 +58,7 @@ CategoryImportDialog::CategoryImportDialog(QWidget* parent)
   };
   heading(ui->strategyBox->title(), 0);
   radioRow(ui->mergeOption, 0xE710);
-  radioRow(ui->replaceOption, 0xE72C);
+  radioRow(ui->replaceOption, 0xE8AB);
   heading(ui->mappingBox->title(), 14);
   FluentPanels::addSwitchRow(card, 0xE71B, ui->assignOption->text(),
                              ui->assignOption->toolTip(), ui->assignOption);

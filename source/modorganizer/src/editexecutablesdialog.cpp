@@ -211,8 +211,7 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
     ui->actionsSpacer = nullptr;
   }
   ui->browseBinary->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/files/executable.svg"));
-  ui->browseWorkingDirectory->setIcon(
-      FluentIcons::icon(":/MO/gui/mainwindow/files/folder.svg"));
+  ui->browseWorkingDirectory->setIcon(FluentIcons::glyph(0xE8DA));
   ui->configureLibraries->setIcon(
       FluentIcons::icon(":/MO/gui/mainwindow/files/library.svg"));
   if (auto* button = ui->buttons->button(QDialogButtonBox::Ok)) {
@@ -1356,7 +1355,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
                tr("New files go here instead of Overwrite"),
                ui->createFilesInMod, ui->mods);
   ui->configureLibraries->setText(tr("Configure..."));
-  addSwitchRow(rows, 0xE8F1, tr("Force load libraries"),
+  addSwitchRow(rows, 0xE950, tr("Force load libraries"),
                tr("Loads extra DLLs into the program when it starts"),
                ui->forceLoadLibraries, ui->configureLibraries);
   addSwitchRow(rows, 0xE91B, tr("Use the program's icon"),
@@ -1379,7 +1378,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
                                    tr("Remove"), actions);
   m_fluentRemove->setAutoDefault(false);
   m_fluentRemove->setToolTip(tr("Remove the program from the list (Delete)"));
-  m_fluentShortcut = new QPushButton(FluentIcons::glyph(0xE718), tr("Desktop shortcut"), actions);
+  m_fluentShortcut = new QPushButton(FluentIcons::glyph(0xE71B), tr("Desktop shortcut"), actions);
   m_fluentShortcut->setAutoDefault(false);
   actionsLayout->addWidget(m_fluentDuplicate);
   actionsLayout->addWidget(m_fluentShortcut);

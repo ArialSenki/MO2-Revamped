@@ -459,7 +459,7 @@ void MainWindow::applyFluentActionIcons()
       {ui->actionModify_Executables, 0xE71D},  // AllApps
       {ui->actionTool, 0xE90F},                // Repair
       {ui->actionSettings, 0xE713},            // Settings
-      {ui->actionEndorseMO, 0xEB51},           // Heart
+      {ui->actionEndorseMO, 0xE8E1},           // Like
       {ui->actionNotifications, 0xEA8F},       // Ringer
       {ui->actionUpdate, 0xE8A7},              // OpenInNewWindow: the repository
       {ui->actionHelp, 0xE897},                // Help

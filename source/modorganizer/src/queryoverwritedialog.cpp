@@ -132,13 +132,13 @@ void QueryOverwriteDialog::buildFluentLayout()
     new ChoiceRow(row, button);
     return row;
   };
-  QFrame* rename = addChoice(ui->renameBtn, 0xE8AC, tr("Install as a new mod"),
+  QFrame* rename = addChoice(ui->renameBtn, 0xE8F4, tr("Install as a new mod"),
                              tr("Keeps the installed mod and adds this one under another "
                                 "name (recommended)"));
   addChoice(ui->mergeBtn, 0xEA3C, tr("Merge"),
             tr("Adds the new files to the installed mod; files with the same name are "
                "replaced"));
-  addChoice(ui->replaceBtn, 0xE72C, tr("Replace"),
+  addChoice(ui->replaceBtn, 0xE8AB, tr("Replace"),
             tr("Sends the installed mod's files to the Recycle Bin once this one is "
                "installed in their place"));
 

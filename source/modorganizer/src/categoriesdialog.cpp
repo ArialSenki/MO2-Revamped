@@ -1034,8 +1034,7 @@ void CategoriesDialog::on_categoriesTable_customContextMenuRequested(const QPoin
   if (Settings::instance().nexus().categoryMappings() && m_ContextRow >= 0) {
     QAction* removeMappingAction = menu.addAction(
         tr("Remove Nexus mappings"), this, SLOT(removeNexusMap_clicked()));
-    removeMappingAction->setIcon(
-        FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"));
+    removeMappingAction->setIcon(FluentIcons::glyph(0xE711));
   }
 
   if (m_ContextRow >= 0) {
@@ -1347,7 +1346,7 @@ QWidget* CategoriesDialog::createFluentDetails()
   connect(idRow.action, &QToolButton::clicked, this, [this] {
     QGuiApplication::clipboard()->setText(QString::number(selectedID()));
   });
-  auto modsRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE74C, tr("Mods"));
+  auto modsRow = FluentPanels::addDetailRow(m_fluentDetailRows, 0xE8F1, tr("Mods"));
   m_fluentMods = modsRow.value;
 
   // the Nexus categories that turn into this one when a mod is installed
@@ -1877,7 +1876,7 @@ void CategoriesDialog::showFluentListMenu(const QPoint& pos)
       ui->categoriesTable->item(row, 1) ? ui->categoriesTable->item(row, 1)->text() : QString();
   addCopyMenu(&menu, {{tr("Name"), name}, {tr("ID"), QString::number(id)}});
   if (Settings::instance().nexus().categoryMappings()) {
-    auto* unmap = menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remap-category.svg"),
+    auto* unmap = menu.addAction(FluentIcons::glyph(0xE711),
                                  tr("Remove Nexus mappings"), this, [this, row] {
                                    setRowMappings(row, {});
                                  });

@@ -858,6 +858,40 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         return summary
 
     @staticmethod
+    def _file_glyph(name: str) -> int:
+        """The same icon per file type as the Data tab."""
+        parts = name.lower().rsplit(".", 2)
+        extension = parts[-1] if len(parts) > 1 else ""
+        saves = ("sl2", "co2", "cnv", "err")
+        if extension in saves:
+            return 0xE74E
+        if extension.startswith("bak") or extension in ("prev", "dsasbak"):
+            return 0xE74E if len(parts) > 2 and parts[-2] in saves else 0xEA35
+        if extension.endswith(("bdt", "bhd")) or extension in ("bin", "dat"):
+            return 0xE7B8
+        if extension.endswith("bnd") or extension in (
+            "dcx", "zip", "7z", "rar", "tar", "gz", "xz", "bsa", "ba2", "pak"
+        ):
+            return 0xF012
+        groups = (
+            (("exe", "com"), 0xECAA),
+            (("dll", "so", "dylib"), 0xE950),
+            (("ini", "json", "xml", "toml", "yaml", "yml", "cfg", "conf", "me3",
+              "vdf", "layout"), 0xE713),
+            (("hks", "lua", "py", "js", "bat", "cmd", "ps1", "sh"), 0xE943),
+            (("png", "jpg", "jpeg", "dds", "tga", "bmp", "gif", "webp", "ico"), 0xEB9F),
+            (("wem", "wav", "bnk", "mp3", "ogg", "flac"), 0xE8D6),
+            (("bk2", "mp4", "webm"), 0xE714),
+            (("gfx",), 0xE7F4),
+            (("lnk",), 0xE71B),
+            (("txt", "md", "log", "csv"), 0xF000),
+        )
+        for extensions, glyph in groups:
+            if extension in extensions:
+                return glyph
+        return 0xE7C3
+
+    @staticmethod
     def _glyph_icon(glyph: int) -> QtGui.QIcon:
         font = QtGui.QFont()
         font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])
@@ -977,7 +1011,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         layout.addWidget(buttons)
 
         folder_icon = self._glyph_icon(0xE8B7)
-        file_icon = self._glyph_icon(0xE7C3)
+        file_icons: dict = {}
         updating = [True]
 
         def make_folder(name: str) -> QtWidgets.QTreeWidgetItem:
@@ -997,7 +1031,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
         def make_file(name: str, source: str, checked: bool = True) -> QtWidgets.QTreeWidgetItem:
             item = QtWidgets.QTreeWidgetItem([name])
-            item.setIcon(0, file_icon)
+            glyph = self._file_glyph(name)
+            if glyph not in file_icons:
+                file_icons[glyph] = self._glyph_icon(glyph)
+            item.setIcon(0, file_icons[glyph])
             item.setData(0, source_role, source)
             # nothing can be dropped on a file
             item.setFlags(
@@ -1706,7 +1743,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         preview_button.setObjectName("archivePreviewButton")
         preview_button.setCheckable(True)
         preview_button.setAccessibleName(self.tr("Show all files"))
-        add_row(summary_card, 0xE8B9, self.tr("All files"), "", (preview_button,))
+        add_row(summary_card, 0xE8B7, self.tr("All files"), "", (preview_button,))
         preview_note = QtWidgets.QLabel(summary_card)
         preview_note.setObjectName("fluentSettingDescription")
         preview_note.setWordWrap(True)
@@ -1909,7 +1946,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 summary_row(0xE8B7, self.tr("Game files"), files(summary["game"]))
             if summary["dlls"]:
                 summary_row(
-                    0xE943,
+                    0xE950,
                     self.tr("Native DLLs"),
                     (
                         self.tr("{0} in DLLs + {1} settings").format(

@@ -459,7 +459,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
         row_buttons = QHBoxLayout()
         row_buttons.setSpacing(7)
-        remove_button = QPushButton(_glyph_icon(0xE72C), _tr("Reset"), profile_group)
+        remove_button = QPushButton(_glyph_icon(0xE777), _tr("Reset"), profile_group)
         remove_button.setObjectName("resetNativeProfileButton")
         remove_button.setToolTip(
             _tr("Switch every DLL on again, in the mod list's order. Initializers are kept.")

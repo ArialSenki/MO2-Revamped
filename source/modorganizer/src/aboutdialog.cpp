@@ -199,7 +199,7 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     connect(github, &QPushButton::clicked, this, [] {
       MOBase::shell::Open(QUrl(QStringLiteral("https://github.com/ArialSenki/MO2-Revamped")));
     });
-    auto* issue = new QPushButton(FluentIcons::glyph(0xEBE8), tr("Report a problem"),
+    auto* issue = new QPushButton(FluentIcons::glyph(0xE7BA), tr("Report a problem"),
                                   actions);
     issue->setAutoDefault(false);
     connect(issue, &QPushButton::clicked, this, [] {

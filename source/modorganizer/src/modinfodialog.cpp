@@ -1190,7 +1190,7 @@ void ModInfoDialog::buildFluentPages()
     ui->showDescription->setIcon(FluentIcons::glyph(0xE8A5));
     ui->showDescription->setProperty("fluentKeepIcon", true);
     // an outline, like the buttons beside it
-    ui->endorse->setIcon(FluentIcons::glyph(0xE734));
+    ui->endorse->setIcon(FluentIcons::glyph(0xE8E1));
     ui->endorse->setProperty("fluentKeepIcon", true);
     for (QPushButton* button :
          {ui->showDescription, ui->visitNexus, ui->refresh, ui->endorse, ui->track}) {

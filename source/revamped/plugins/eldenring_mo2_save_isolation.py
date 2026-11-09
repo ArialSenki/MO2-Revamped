@@ -4564,7 +4564,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
 
         # --- Backups -------------------------------------------------------
         backups_page = add_page(
-            0xE81C, _tr("Backups"),
+            0xEA35, _tr("Backups"),
             _tr("MO2 copies this route's saves before every launch."),
         )
         backups_card = add_card(backups_page, _tr("Latest backups"))
@@ -4579,7 +4579,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         all_backups_button = QPushButton(_tr("Open…"))
         all_backups_button.setMinimumWidth(_ROW_BUTTON_WIDTH)
         add_row(
-            tools_card, 0xE81C, _tr("All backups"),
+            tools_card, 0xEA35, _tr("All backups"),
             _tr("Browse every backup of a route and restore one."),
             (all_backups_button,),
         )
@@ -4640,7 +4640,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     continue
                 state = save_state(route, save_format["extension"])
                 add_row(
-                    files_card, 0xE8A5, save_format["name"],
+                    files_card, 0xE74E, save_format["name"],
                     f"{file_name} · {state} · {save_format['source']}",
                 )
                 if (

@@ -530,7 +530,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         black_background_box = QCheckBox()
         black_background_box.setChecked(black_startup_background)
         add_row(
-            window_card, 0xE7B3, _tr("Use a black startup background"),
+            window_card, 0xE708, _tr("Use a black startup background"),
             _tr("Sets the Windows window-class background to black before the first "
                 "visible display. This covers a blank client area; it cannot cover "
                 "game-rendered frames, videos, or graphics-mode transitions."),

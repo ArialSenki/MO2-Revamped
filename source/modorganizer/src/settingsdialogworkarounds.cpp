@@ -145,8 +145,7 @@ WorkaroundsSettingsTab::WorkaroundsSettingsTab(Settings& s, SettingsDialog& d)
   // the same button as the Paths page's
   ui->browseCustomBrowser->setMinimumWidth(108);
   ui->browseCustomBrowser->setAccessibleName(QObject::tr("Browse"));
-  ui->browseCustomBrowser->setIcon(
-      FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/folder.svg")));
+  ui->browseCustomBrowser->setIcon(FluentIcons::glyph(0xE8DA));
   ui->browseCustomBrowser->setIconSize(QSize(16, 16));
   ui->browserCommandLayout->setSpacing(8);
   ui->maintenanceToolsLayout->setContentsMargins(9, 8, 9, 9);
