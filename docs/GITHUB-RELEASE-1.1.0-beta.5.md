@@ -21,8 +21,14 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
   file, it now closes the game before it reads any save and tells you why, so it
   can't write over the save of your other mods.
 - **Seamless Co-op** starts from a mods folder with any name.
-- **Mod list**: separator colors show again, and so do the conflict colors when you
-  select a mod.
+- **Mod list**: separators are a colored band as tall as a mod, and new ones get a
+  random color or the one you choose. The conflict colors when you select a mod are
+  back.
+- **Each game shows what applies to it**: Elden Ring and Nightreign no longer list
+  options and tools for other games' file formats.
+- **Icons and windows**: every icon was checked, the game's file types have their own,
+  and every window got a pass for alignment and spacing in both themes. Tab now shows
+  where you are.
 - **Saves**: export keeps every route apart and includes the set-aside saves, and a
   failed transfer puts the old save back.
 - **Setup**: an interrupted install or restore can be finished or undone, a restore

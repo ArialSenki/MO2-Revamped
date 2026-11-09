@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0-beta.5 (pre-release) — November 8, 2026
+## 1.1.0-beta.5 (pre-release) — November 9, 2026
 
 ### Nightreign
 
@@ -26,8 +26,14 @@
 
 ### Mod list
 
-- Separator colors show again, over the whole row, under the cursor and when selected.
-  The conflict colors shown when you select a mod came back with them.
+- Separator colors show again, as one rounded band as tall as a mod's row. A separator
+  keeps its color under the cursor and when selected: an outline shows the state. The
+  conflict colors shown when you select a mod came back with them.
+- New separators get a random color that your other separators don't use. Settings,
+  Mod list, **Color of new separators** can ask each time, reuse the last color or
+  use none.
+- Mods keep their position when the list has separators.
+- The rename field is centered on the row and stays clear of the switch.
 - The blue edge on the selected row is gone.
 - The categories menu is more compact and fits on the screen in one column.
 - Double-clicking a separator collapses it from any column, not only the first.
@@ -76,12 +82,39 @@
 - A right-click on empty space no longer opens the menu of what stayed selected in
   Saves, Conflicts and Overwrite.
 - Only rows that do something when clicked react to the cursor.
-- Tab reaches the log panel and status bar buttons, with a visible focus ring.
+- Tab reaches the log panel and status bar buttons, and a ring shows the button,
+  switch, tab or list it reached. A click shows none.
+- Every icon was checked against what it stands for. Endorse, Browse, desktop shortcut,
+  libraries and backups each have one icon everywhere, and the game's file types have
+  their own in the Data tab and the archive installer: sound, video, containers. A
+  `.bak` only looks like a save when it is a copy of one, and Reforged's `.err` does.
+- Settings, Manage Categories, Log and every window got a pass for alignment, spacing,
+  backgrounds and text in both themes.
+- A mod without categories no longer shows an empty tooltip.
 - Changing the language while MO2 is open updates the toolbar, the dashboard and the
   Data column titles.
 - Enter no longer confirms destructive questions by accident, a '%1' or '%2' in a name
   or path stays as written, and the folded log follows new lines.
 - Nightreign instances name the right game in German and French.
+
+### Each game shows what applies to it
+
+- Settings, Plugins lists only what means something for the game: other games' support
+  plugins and the BSA and INI tools are hidden where they do nothing. Hiding a row
+  doesn't change the plugin.
+- The Managed filter, the Contents icons, the BSA Packer, the INI Editor and the
+  Configurator appear according to what the game has, not its name, and the texts of
+  Workarounds, Maintenance, Saves and invalid mods no longer talk about what the game
+  doesn't use.
+- About and the bug report show the Elden Ring tools only in their games, Nightreign
+  has its own names there, and it no longer offers Reforged's online switch.
+
+### Performance
+
+- The mod list caches its scroll bar marks and marker colors and repaints only the
+  switch that moves.
+- The dashboard counts in slices and stops counting Overwrite at 1000 files.
+- Save isolation looks at new dialogs once, instead of on every Qt event.
 
 ## 1.1.0-beta.4 (pre-release) — November 6, 2026
 
