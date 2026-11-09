@@ -56,6 +56,21 @@ def _tr(text: str) -> str:
     return QCoreApplication.translate(_TR_CONTEXT, text)
 
 
+def _named_for_nightreign(text: str) -> str:
+    """A translated text that names Elden Ring, for a Nightreign instance.
+    German joins the name with hyphens; French elides before it."""
+    for old, new in (
+        ("d'Elden Ring", "de Nightreign"),
+        ("d\u2019Elden Ring", "de Nightreign"),
+        ("qu'Elden Ring", "que Nightreign"),
+        ("qu\u2019Elden Ring", "que Nightreign"),
+        ("Elden-Ring", "Nightreign"),
+        ("Elden Ring", "Nightreign"),
+    ):
+        text = text.replace(old, new)
+    return text
+
+
 _GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
 
 
@@ -316,12 +331,32 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             )
             self._diagnostics_action.setObjectName("mo2RevampedDiagnosticsAction")
             self._diagnostics_action.setToolTip(
-                _tr("Saves a report with the MO2, USVFS and Elden Ring bridge logs.")
+                self._game_tr("Saves a report with the MO2, USVFS and Elden Ring bridge logs.")
+                if self._has_elden_ring_tools()
+                else _tr("Saves a report with the MO2 and USVFS logs.")
             )
             self._diagnostics_action.triggered.connect(
                 lambda _checked=False: self._create_diagnostics_bundle(main_window)
             )
             help_menu.addAction(self._diagnostics_action)
+
+    def _managed_game_key(self) -> str:
+        try:
+            game = self._organizer.managedGame()
+            return game.gameShortName().casefold() if game is not None else ""
+        except Exception:
+            return ""
+
+    def _has_elden_ring_tools(self) -> bool:
+        """Whether this instance manages a game with the Elden Ring tools."""
+        return self._managed_game_key() in {"eldenring", "nightreign"}
+
+    def _game_tr(self, text: str) -> str:
+        """A translated text that names Elden Ring, for the managed game."""
+        translated = _tr(text)
+        if self._managed_game_key() == "nightreign":
+            return _named_for_nightreign(translated)
+        return translated
 
     def _context_text(self) -> str:
         game_name = _tr("Not detected")
@@ -575,26 +610,31 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 "mods, separate setups and recognize each environment more easily."),
         )
         features = add_card(overview)
-        add_row(features, 0xE896, _tr("Mod installation"),
-                _tr("Detects Elden Ring paths and recognizes nested folders to "
-                    "install mods and native add-ons."))
-        add_row(features, 0xE77B, _tr("Profiles and saves"),
-                _tr("Organizes profiles and, for Elden Ring, can route saves per "
-                    "profile."))
+        elden_ring_tools = self._has_elden_ring_tools()
+        if elden_ring_tools:
+            add_row(features, 0xE896, _tr("Mod installation"),
+                    self._game_tr("Detects Elden Ring paths and recognizes nested folders to "
+                                  "install mods and native add-ons."))
+            add_row(features, 0xE77B, _tr("Profiles and saves"),
+                    self._game_tr("Organizes profiles and, for Elden Ring, can route saves per "
+                                  "profile."))
         add_row(features, 0xE8B7, _tr("Independent instances"),
-                _tr("Choose global or portable setups. You can also create an "
-                    "isolated MO2 copy for Elden Ring."))
+                self._game_tr("Choose global or portable setups. You can also create an "
+                              "isolated MO2 copy for Elden Ring.")
+                if elden_ring_tools
+                else _tr("Choose global or portable setups."))
         add_row(features, 0xE790, _tr("Interface and diagnostics"),
                 _tr("Includes Windows 11 style themes (Light and Dark) "
                     "with Fluent icons, plus tools to prepare diagnostic reports."))
-        note = QLabel(
-            _tr("Elden Ring-specific features are only enabled in an instance "
-                "for that game."),
-        )
-        note.setObjectName("fluentSettingDescription")
-        note.setWordWrap(True)
-        note.setContentsMargins(0, 0, 4, 0)
-        overview.addWidget(note)
+        if elden_ring_tools:
+            note = QLabel(
+                self._game_tr("Elden Ring-specific features are only enabled in an instance "
+                              "for that game."),
+            )
+            note.setObjectName("fluentSettingDescription")
+            note.setWordWrap(True)
+            note.setContentsMargins(0, 0, 4, 0)
+            overview.addWidget(note)
         overview.addStretch(1)
 
         # --- Components ------------------------------------------------------
@@ -614,12 +654,15 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 "USVFS · 0.5.7.2\n"
                 + _tr("Deploys mods virtually without changing the game's "
                       "original files."))
-        add_row(parts, 0xE7FC, _tr("Elden Ring tools"),
-                _tr("Game plugin · {plugin}\nNative bridge · {bridge}\n"
-                    "Archive installer · {installer}").format(**versions))
+        if elden_ring_tools:
+            add_row(parts, 0xE7FC, self._game_tr("Elden Ring tools"),
+                    _tr("Game plugin · {plugin}\nNative bridge · {bridge}\n"
+                        "Archive installer · {installer}").format(**versions))
         add_row(parts, 0xE771, _tr("Profiles and interface"),
                 _tr("Save isolation · {saves}\nStartup options · {startup}\n"
-                    "Fluent themes · Light and Dark").format(**versions))
+                    "Fluent themes · Light and Dark").format(**versions)
+                if elden_ring_tools
+                else _tr("Fluent themes · Light and Dark"))
         developer_status = QLabel()
         developer_status.setObjectName("fluentSettingDescription")
         developer_status.setWordWrap(True)
@@ -672,9 +715,12 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         report = add_card(diagnostics)
         add_row(report, 0xE8A5, _tr("Report contents"),
-                _tr("Includes the main MO2 log, recent USVFS logs and the current and "
-                    "previous Elden Ring bridge logs when available, along with program, "
-                    "system, game and instance versions."))
+                self._game_tr("Includes the main MO2 log, recent USVFS logs and the current and "
+                              "previous Elden Ring bridge logs when available, along with program, "
+                              "system, game and instance versions.")
+                if elden_ring_tools
+                else _tr("Includes the main MO2 log and recent USVFS logs, along with "
+                         "program, system, game and instance versions."))
         add_row(report, 0xE72E, _tr("Privacy"),
                 _tr("Mods, downloads, saves, Nexus keys and memory dumps are not included. "
                     "Logs can contain Windows paths and profile names; review them "
@@ -860,6 +906,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             if memory_log.is_file():
                 candidates.append(("logs/memory_diagnostics.log", memory_log))
 
+        # the bridge runs only with these games: another instance's report
+        # must not pick up a log left by an Elden Ring run
+        if not self._has_elden_ring_tools():
+            return candidates
         temp_dir = Path(tempfile.gettempdir())
         for archive_name, filename in (
             ("bridge/current.log", "EldenRingMO2Bridge.log"),
@@ -902,9 +952,13 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         confirmation.setIcon(QMessageBox.Icon.NoIcon)
         confirmation.setText(_tr("Review the report before sharing it"))
         confirmation.setInformativeText(
-            _tr("Includes MO2, USVFS and Elden Ring bridge logs. They can contain "
-                "Windows paths and profile names. The ZIP does not include mods, "
-                "downloads, saves, Nexus keys or memory dumps.")
+            self._game_tr("Includes MO2, USVFS and Elden Ring bridge logs. They can contain "
+                          "Windows paths and profile names. The ZIP does not include mods, "
+                          "downloads, saves, Nexus keys or memory dumps.")
+            if self._has_elden_ring_tools()
+            else _tr("Includes MO2 and USVFS logs. They can contain "
+                     "Windows paths and profile names. The ZIP does not include mods, "
+                     "downloads, saves, Nexus keys or memory dumps.")
         )
         create_button = confirmation.addButton(
             _tr("Create report"), QMessageBox.ButtonRole.AcceptRole
