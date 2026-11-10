@@ -429,6 +429,9 @@ public:
   {
     setObjectName(QStringLiteral("logDockTitleBar"));
     setAttribute(Qt::WA_StyledBackground, true);
+    // folding resizes the dock vertically: on a side it would do nothing yet be
+    // saved as folded, so the log docks at the bottom (or floats)
+    dock->setAllowedAreas(Qt::BottomDockWidgetArea);
     if (m_Foldable) {
       setCursor(Qt::PointingHandCursor);
     }
@@ -483,8 +486,16 @@ public:
       }
     });
 
+    // a burst of lines updates the summary once
+    m_SummaryTimer.setSingleShot(true);
+    m_SummaryTimer.setInterval(40);
+    connect(&m_SummaryTimer, &QTimer::timeout, this, [this] { updateSummary(); });
     connect(&LogModel::instance(), &QAbstractItemModel::rowsInserted, this,
-            [this] { updateSummary(); });
+            [this] {
+              if (!m_SummaryTimer.isActive()) {
+                m_SummaryTimer.start();
+              }
+            });
     // Clear all resets the log at once, which inserts nothing
     connect(&LogModel::instance(), &QAbstractItemModel::modelReset, this,
             [this] { updateSummary(); });
@@ -504,8 +515,17 @@ public:
     connect(m_FloatButton, &QToolButton::clicked, dock, [dock] {
       dock->setFloating(!dock->isFloating());
     });
-    connect(dock, &QDockWidget::windowTitleChanged, m_Title,
-            &QLabel::setText);
+    connect(dock, &QDockWidget::windowTitleChanged, this, [this](const QString& title) {
+      m_Title->setText(title);
+      updateSummary();
+    });
+    // a log closed while folded folds once it is shown again
+    connect(dock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+      if (visible && m_FoldWhenShown) {
+        m_FoldWhenShown = false;
+        QTimer::singleShot(0, this, [this] { setExpanded(false); });
+      }
+    });
     connect(dock, &QDockWidget::topLevelChanged, this, [this](bool floating) {
       updateFloatControl(floating);
       // a folded log that leaves the window (float button or a drag) opens
@@ -524,6 +544,24 @@ public:
   bool isExpanded() const { return m_Expanded; }
   std::function<void(bool)> expandedChanged;
 
+  // the height the log opens to, remembered while it is folded
+  int expandedHeight() const { return m_ExpandedHeight; }
+
+  // folds the log as it was left, opening later to the height it had then; a
+  // hidden log (closed last time) folds once it is shown
+  void foldAtStart(int expandedHeight)
+  {
+    if (expandedHeight > sizeHint().height()) {
+      m_ExpandedHeight = qMax(expandedHeight, m_ExpandedMinimum);
+      m_KeepHeight     = true;
+    }
+    if (m_Dock->isVisible()) {
+      setExpanded(false);
+    } else {
+      m_FoldWhenShown = true;
+    }
+  }
+
   QSize sizeHint() const override { return QSize(180, 34); }
   QSize minimumSizeHint() const override { return QSize(82, 34); }
 
@@ -535,6 +573,17 @@ public:
 
     m_Expanded            = expanded;
     const int titleHeight = sizeHint().height();
+    if (!expanded) {
+      // the height it was open at, unless it was just restored from the
+      // settings (the dock itself comes back at its folded height)
+      if (m_KeepHeight) {
+        m_KeepHeight = false;
+      } else if (m_Animation->state() != QAbstractAnimation::Running) {
+        // folded again while it was still opening: the height it was opening
+        // to stays
+        m_ExpandedHeight = qMax(m_Dock->height(), m_ExpandedMinimum);
+      }
+    }
     if (expandedChanged) {
       expandedChanged(expanded);
     }
@@ -548,8 +597,7 @@ public:
       FluentMotion::start(m_Animation, titleHeight, m_ExpandedHeight,
                           FluentMotion::Normal);
     } else {
-      m_ExpandedHeight = m_Dock->height();
-      FluentMotion::start(m_Animation, m_ExpandedHeight, titleHeight,
+      FluentMotion::start(m_Animation, m_Dock->height(), titleHeight,
                           FluentMotion::Normal);
     }
 
@@ -564,12 +612,18 @@ protected:
     if (e->type() == QEvent::LanguageChange && m_CloseButton != nullptr) {
       retranslate();
     }
+    // new font metrics: the summary is elided again
+    if ((e->type() == QEvent::StyleChange || e->type() == QEvent::FontChange) &&
+        !m_SummaryTimer.isActive()) {
+      m_SummaryTimer.start();
+    }
     QWidget::changeEvent(e);
   }
 
   void mousePressEvent(QMouseEvent* e) override
   {
     m_PressPosition = e->position().toPoint();
+    m_PressFloating = m_Dock->isFloating();
     QWidget::mousePressEvent(e);
   }
 
@@ -579,7 +633,11 @@ protected:
     // right handle their own clicks, and dragging the row moves the dock
     const QPoint moved = e->position().toPoint() - m_PressPosition;
     if (m_Foldable && e->button() == Qt::LeftButton && moved.manhattanLength() < 4) {
-      if (m_SkipRelease) {
+      // a double-click that docked the log ends here: it was not a click on
+      // the row
+      if (m_PressFloating != m_Dock->isFloating()) {
+        m_SkipRelease = false;
+      } else if (m_SkipRelease) {
         m_SkipRelease = false;
       } else {
         setExpanded(!m_Expanded);
@@ -594,7 +652,8 @@ protected:
     // QDockWidget floats on a title bar double-click; the expander row already
     // toggled on the first click, so a double-click counts as that one click
     // (the float button floats the log)
-    if (m_Foldable) {
+    // a floating log can't fold: a double-click docks it, as in any window
+    if (m_Foldable && !m_Dock->isFloating()) {
       m_SkipRelease = e->button() == Qt::LeftButton;
       e->accept();
       return;
@@ -637,7 +696,8 @@ private:
     }
 
     m_Animation->stop();
-    m_Expanded = true;
+    m_Expanded   = true;
+    m_KeepHeight = false;
     relaxContentMinimum(false);
     m_Dock->setMinimumHeight(m_ExpandedMinimum);
     m_Dock->resize(m_Dock->width(), qMax(m_ExpandedHeight, m_ExpandedMinimum));
@@ -716,14 +776,23 @@ private:
       return;
     }
 
-    QString text = QString::fromStdString(entries.back().message);
-    text         = text.section(QLatin1Char('\n'), 0, 0).trimmed();
+    // the first line with text: a message can start with a line break; a
+    // very long one (a dumped response) is cut before it is measured
+    const QString message = QString::fromStdString(entries.back().message);
+    QString text;
+    for (const QStringView line : QStringView(message).split(QLatin1Char('\n'))) {
+      text = line.trimmed().toString();
+      if (!text.isEmpty()) {
+        break;
+      }
+    }
+    text.truncate(512);
 
     // a little under the label's width: at the exact width its last dot is cut
     const int width = qMax(0, m_Summary->contentsRect().width() - 4);
     m_Summary->setText(m_Summary->fontMetrics().elidedText(text, Qt::ElideRight, width));
-    // as rich text, so a "<data>" in the line shows as written
-    m_Summary->setToolTip(Qt::convertFromPlainText(text, Qt::WhiteSpaceNoWrap));
+    // as rich text, so a "<data>" in the line shows as written; it wraps
+    m_Summary->setToolTip(Qt::convertFromPlainText(text, Qt::WhiteSpaceNormal));
   }
 
   void retranslate()
@@ -741,6 +810,9 @@ private:
     }
 
     m_FloatButton->setFloating(floating);
+    // a floating log can't fold: no chevron, and the row isn't a button
+    m_Chevron->setVisible(m_Foldable && !floating);
+    setCursor(m_Foldable && !floating ? Qt::PointingHandCursor : Qt::ArrowCursor);
     const QString action = floating ? QObject::tr("Dock log panel")
                                     : QObject::tr("Float log panel");
     m_FloatButton->setToolTip(action);
@@ -756,6 +828,10 @@ private:
   QVariantAnimation* m_Animation;
   bool m_Foldable;
   bool m_SkipRelease    = false;
+  bool m_KeepHeight     = false;
+  bool m_FoldWhenShown  = false;
+  bool m_PressFloating  = false;
+  QTimer m_SummaryTimer;
   bool m_Expanded       = true;
   int m_ExpandedHeight  = 175;
   int m_ExpandedMinimum = 175;
@@ -2581,11 +2657,20 @@ void MainWindow::showEvent(QShowEvent* event)
         logBar != nullptr) {
       const QString file = m_OrganizerCore.settings().filename();
       constexpr auto logExpandedKey = "Settings/fluent_v4_log_expanded";
-      if (!QSettings(file, QSettings::IniFormat).value(logExpandedKey, false).toBool()) {
-        QTimer::singleShot(0, logBar, [logBar] { logBar->setExpanded(false); });
+      constexpr auto logHeightKey   = "Settings/fluent_v4_log_height";
+      const QSettings saved(file, QSettings::IniFormat);
+      if (!saved.value(logExpandedKey, false).toBool()) {
+        const int height = saved.value(logHeightKey, 0).toInt();
+        QTimer::singleShot(0, logBar, [logBar, height] { logBar->foldAtStart(height); });
       }
-      logBar->expandedChanged = [file](bool expanded) {
-        QSettings(file, QSettings::IniFormat).setValue("Settings/fluent_v4_log_expanded", expanded);
+      // folded, the dock is saved at its folded height: the height it opens
+      // to is kept here
+      logBar->expandedChanged = [file, logBar](bool expanded) {
+        QSettings settings(file, QSettings::IniFormat);
+        settings.setValue("Settings/fluent_v4_log_expanded", expanded);
+        if (!expanded) {
+          settings.setValue("Settings/fluent_v4_log_height", logBar->expandedHeight());
+        }
       };
     }
 
@@ -3606,6 +3691,12 @@ void MainWindow::readSettings()
 
   s.geometry().restoreState(this);
   s.geometry().restoreDocks(this);
+  // the log folds vertically and docks at the bottom only (see
+  // LogDockTitleBar); a layout saved before that can have it on a side
+  if (!ui->logDock->isFloating() &&
+      dockWidgetArea(ui->logDock) != Qt::BottomDockWidgetArea) {
+    addDockWidget(Qt::BottomDockWidgetArea, ui->logDock);
+  }
   s.geometry().restoreToolbars(this);
   // the command bar holds every main command now that the menu bar is gone, so
   // it can't stay hidden from an older session

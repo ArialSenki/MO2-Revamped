@@ -47,6 +47,13 @@
   1009 x 568 instead of 1140 x 800. "Last saved" shortens with an ellipsis, and the
   command bar's notifications and More buttons and the grouping choice keep their
   room when the window narrows.
+- The log opens again at the height you left it, even after quitting with it
+  folded, and a log closed while folded comes back folded. It docks at the bottom
+  or floats; floating, its fold arrow is hidden and a double-click docks it.
+- The log's one-line summary keeps up with bursts of lines without slowing the
+  window, and long game, instance and profile names in the status bar shorten
+  instead of keeping the window wide.
+- The gap above the log matches the gaps between the other cards.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

@@ -24,6 +24,13 @@ QStatusBar {
     background-color: transparent;
 }
 
+/* the gap above the log matches the gaps between the cards */
+QMainWindow::separator {
+    width: 10px;
+    height: 10px;
+    background-color: transparent;
+}
+
 QCheckBox::indicator,
 QGroupBox::indicator,
 QTreeView::indicator {

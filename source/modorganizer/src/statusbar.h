@@ -14,6 +14,11 @@ namespace Ui
 class MainWindow;
 }
 
+namespace FluentPanels
+{
+class ElidedLabel;
+}
+
 class StatusBarAction : public QWidget
 {
 public:
@@ -56,7 +61,7 @@ protected:
 
 private:
   Ui::MainWindow* ui;
-  QLabel* m_normal;
+  FluentPanels::ElidedLabel* m_normal;
   QProgressBar* m_progress;
   QWidget* m_progressSpacer1;
   QWidget* m_progressSpacer2;

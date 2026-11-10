@@ -1,4 +1,5 @@
 #include "fluenticons.h"
+#include "fluentpanels.h"
 #include "statusbar.h"
 #include <QMouseEvent>
 #include "instancemanager.h"
@@ -12,7 +13,7 @@
 #include <QStyle>
 
 StatusBar::StatusBar(QWidget* parent)
-    : QStatusBar(parent), ui(nullptr), m_normal(new QLabel),
+    : QStatusBar(parent), ui(nullptr), m_normal(new FluentPanels::ElidedLabel),
       m_progress(new QProgressBar), m_progressSpacer1(new QWidget),
       m_progressSpacer2(new QWidget), m_notifications(nullptr), m_update(nullptr),
       m_api(new QLabel)
@@ -27,7 +28,10 @@ void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
   m_notifications = new StatusBarAction(ui->actionNotifications);
   m_update        = new StatusBarAction(ui->actionUpdate);
 
-  addWidget(m_normal);
+  // long game, instance and profile names shorten instead of keeping the
+  // window from narrowing; the whole text is in the tool tip
+  m_normal->setElideMode(Qt::ElideRight);
+  addWidget(m_normal, 1);
 
   m_progressSpacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   addPermanentWidget(m_progressSpacer1, 0);
@@ -49,13 +53,6 @@ void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
   m_notifications->set(false);
 
   m_api->setObjectName("apistats");
-  m_api->setToolTip(QObject::tr(
-      "This tracks the number of queued Nexus API requests, as well as the "
-      "remaining daily and hourly requests. The Nexus API limits you to a pool "
-      "of requests per day and requests per hour. It is dynamically updated "
-      "every time a request is completed. If you run out of requests, you will "
-      "be unable to queue downloads, check updates, parse mod info, or even log "
-      "in. Both pools must be consumed before this happens."));
 
   clearMessage();
   setProgress(-1);
@@ -105,7 +102,10 @@ void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
                ? tr("Nexus API: %1 left today").arg(user.limits().remainingDailyRequests)
                : tr("Nexus API: %1 left this hour")
                      .arg(user.limits().remainingHourlyRequests);
-    m_api->setToolTip(tr("Queued requests: %1\nRemaining today: %2\nRemaining this hour: %3")
+    m_api->setToolTip(
+        tr("Queued requests: %1\nRemaining today: %2\nRemaining this hour: %3\n\n"
+           "Nexus allows a number of requests per day and per hour;\n"
+           "downloads, update checks and mod information use them.")
                           .arg(stats.requestsQueued)
                           .arg(user.limits().remainingDailyRequests)
                           .arg(user.limits().remainingHourlyRequests));
@@ -160,7 +160,7 @@ void StatusBar::updateNormalMessage(OrganizerCore& core)
 
   const auto s = QString("%1 - %2 - %3").arg(game, instance, profile);
 
-  m_normal->setText(s);
+  m_normal->setFullText(s);
 }
 
 void StatusBar::showEvent(QShowEvent*)

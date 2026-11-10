@@ -219,12 +219,15 @@ LogList::LogList(QWidget* parent)
   // a range that changes keeps a list at its end there: new lines, and a
   // panel that folds or unfolds
   connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [this](int value) {
-    m_atEnd = value >= verticalScrollBar()->maximum() - 2;
+    // per item, one step up is one line: only the very end counts as the end
+    const int slack = verticalScrollMode() == QAbstractItemView::ScrollPerPixel ? 2 : 0;
+    m_atEnd         = value >= verticalScrollBar()->maximum() - slack;
   });
   connect(verticalScrollBar(), &QScrollBar::rangeChanged, this, [this](int, int max) {
     // emptied or enlarged, the list can end up at its last line without the
     // scroll bar moving; a range that grows never clears this
-    if (verticalScrollBar()->value() >= max - 2) {
+    const int slack = verticalScrollMode() == QAbstractItemView::ScrollPerPixel ? 2 : 0;
+    if (verticalScrollBar()->value() >= max - slack) {
       m_atEnd = true;
     }
     if (m_atEnd) {
