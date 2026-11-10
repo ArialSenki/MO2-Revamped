@@ -1350,6 +1350,7 @@ void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
   // under it, so it still looks like the same separator
   const QColor own =
       outlined ? index.data(Qt::BackgroundRole).value<QColor>() : QColor();
+  const bool layered = own.isValid() && own != color;
 
   // one square shape across the row, like the theme's hover and selection;
   // each cell paints its slice of it
@@ -1359,7 +1360,7 @@ void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
   painter->setClipRect(cell, Qt::IntersectClip);
   painter->setRenderHint(QPainter::Antialiasing);
   painter->setPen(Qt::NoPen);
-  if (own.isValid() && own != color) {
+  if (layered) {
     painter->setBrush(own);
     painter->drawRect(row);
   }
@@ -1979,11 +1980,12 @@ bool ModListView::edit(const QModelIndex& index, EditTrigger trigger, QEvent* ev
   // toggled from here too
   // (the double click may open the mod's info, whose event loop runs the timer
   // while the double click is still being handled)
+  // the dropped rename counts as handled: refused, Qt logs "editing failed"
   if (trigger == AllEditTriggers && event == nullptr &&
       (m_inDoubleClick ||
        (m_doubleClick.isValid() &&
         m_doubleClick.elapsed() <= 2 * QApplication::doubleClickInterval()))) {
-    return false;
+    return true;
   }
   return QTreeView::edit(index, trigger, event);
 }
