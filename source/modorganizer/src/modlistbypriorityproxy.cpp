@@ -238,6 +238,11 @@ bool ModListByPriorityProxy::canDropMimeData(const QMimeData* data,
     return QAbstractProxyModel::canDropMimeData(data, action, row, column, parent);
   }
 
+  // in descending priority the first row is Overwrite: nothing goes above it
+  if (m_sortOrder == Qt::DescendingOrder && !parent.isValid() && row == 0) {
+    return false;
+  }
+
   if (dropInfo.isModDrop()) {
     bool hasSeparator          = false;
     unsigned int firstRowIndex = -1;
@@ -320,6 +325,10 @@ bool ModListByPriorityProxy::dropMimeData(const QMimeData* data, Qt::DropAction 
               sourceRow = m_Root.children[row - 1]->children[0]->index;
             }
           } else {
+            // above Overwrite, the first row (refused in canDropMimeData())
+            if (row == 0) {
+              return false;
+            }
             sourceRow = m_Root.children[row - 1]->index;
 
             // fix drop below a collapsed separator or at the end of an expanded

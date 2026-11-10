@@ -18,6 +18,7 @@
 
 #include "qtgroupingproxy.h"
 #include "fluenticons.h"
+#include "modlist.h"
 #include <log.h>
 
 #include <QDebug>
@@ -432,6 +433,12 @@ QVariant QtGroupingProxy::data(const QModelIndex& index, int role) const
           return Qt::PartiallyChecked;
       } break;
       default: {
+        // a heading is no mod: answering with its first mod's index made the
+        // list treat the heading as that mod (its colors, flags and actions)
+        if (role == ModList::IndexRole || role == Qt::BackgroundRole ||
+            role == ModList::ScrollMarkRole) {
+          return QVariant();
+        }
         QModelIndex parentIndex = this->index(row, 0, index.parent());
         if (m_groupMap.value(row).count() > 0) {
           return this->index(0, column, parentIndex).data(role);

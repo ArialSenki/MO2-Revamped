@@ -253,8 +253,9 @@ int ModListViewActions::findInstallPriority(const QModelIndex& index) const
           newPriority = -1;
         }
       } else {
-        auto it = std::find_if(std::reverse_iterator{ibp.find(newPriority - 1)},
-                               ibp.rend(), isSeparator);
+        // a reverse iterator from an entry starts at the entry before it
+        auto it = std::find_if(std::reverse_iterator{ibp.find(newPriority)}, ibp.rend(),
+                               isSeparator);
         if (it != ibp.rend()) {
           newPriority = it->first + 1;
         } else {
@@ -977,8 +978,10 @@ void ModListViewActions::sendModsToSeparator(const QModelIndexList& indexes) con
       priority = Profile::MaximumPriority;
     }
   } else {
-    auto it = std::find_if(--std::reverse_iterator{ibp.find(sepPriority - 1)},
-                           ibp.rend(), isSeparator);
+    // a reverse iterator from the separator starts at the entry before it (and
+    // is already the end for a separator at priority 0)
+    auto it = std::find_if(std::reverse_iterator{ibp.find(sepPriority)}, ibp.rend(),
+                           isSeparator);
     if (it != ibp.rend()) {
       priority = it->first + 1;
     } else {

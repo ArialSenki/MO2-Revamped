@@ -85,9 +85,14 @@ QModelIndex indexViewToModel(const QModelIndex& index, const QAbstractItemModel*
 QModelIndexList indexViewToModel(const QModelIndexList& index,
                                  const QAbstractItemModel* model)
 {
+  // rows with no row in the model (a group heading) are left out: kept as an
+  // invalid index, their IndexRole reads as 0 and an action hits the first mod
   QModelIndexList result;
   for (auto& idx : index) {
-    result.append(indexViewToModel(idx, model));
+    const QModelIndex mapped = indexViewToModel(idx, model);
+    if (mapped.isValid()) {
+      result.append(mapped);
+    }
   }
   return result;
 }

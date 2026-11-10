@@ -45,6 +45,13 @@
 using namespace MOBase;
 using namespace MOShared;
 
+// whether the row is a separator; a group heading is no mod at all
+static bool isSeparatorRow(const QModelIndex& index)
+{
+  const QVariant mod = index.data(ModList::IndexRole);
+  return mod.isValid() && ModInfo::getByIndex(mod.toInt())->isSeparator();
+}
+
 // delegate to remove indentation for mods when using collapsible
 // separator
 //
@@ -75,8 +82,7 @@ public:
 
     if (index.column() == ModList::COL_NAME) {
       // a separator's cell already starts after the gutter with its arrow
-      const bool separator =
-          ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())->isSeparator();
+      const bool separator = isSeparatorRow(index);
       alignWithSwitches(option, separator && m_view->hasCollapsibleSeparators()
                                     ? m_view->indentation()
                                     : 0);
@@ -111,8 +117,7 @@ public:
     if (color.isValid()) {
       if (((index.column() == ModList::COL_NAME ||
             index.column() == ModList::COL_PRIORITY) &&
-           ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())
-               ->isSeparator()) ||
+           isSeparatorRow(index)) ||
           index.column() == ModList::COL_NOTES) {
 
         // combine the colors with the background as paintColorBand() paints
@@ -124,10 +129,9 @@ public:
                         int((1 - a) * under.blue() + a * top.blue()));
         };
         QColor shown = bg;
-        const QColor own =
-            ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())->isSeparator()
-                ? index.data(Qt::BackgroundRole).value<QColor>()
-                : QColor();
+        const QColor own = isSeparatorRow(index)
+                               ? index.data(Qt::BackgroundRole).value<QColor>()
+                               : QColor();
         if (own.isValid() && own != color) {
           shown = over(shown, own);
         }
@@ -516,7 +520,12 @@ std::optional<unsigned int> ModListView::nextMod(unsigned int modIndex) const
       break;
     }
 
-    modIndex = index.data(ModList::IndexRole).toInt();
+    // a group heading is no mod
+    const QVariant modData = index.data(ModList::IndexRole);
+    if (!modData.isValid()) {
+      continue;
+    }
+    modIndex = modData.toInt();
 
     ModInfo::Ptr mod = ModInfo::getByIndex(modIndex);
 
@@ -545,7 +554,12 @@ std::optional<unsigned int> ModListView::prevMod(unsigned int modIndex) const
       break;
     }
 
-    modIndex = index.data(ModList::IndexRole).toInt();
+    // a group heading is no mod
+    const QVariant modData = index.data(ModList::IndexRole);
+    if (!modData.isValid()) {
+      continue;
+    }
+    modIndex = modData.toInt();
 
     // skip overwrite, backups and separators
     ModInfo::Ptr mod = ModInfo::getByIndex(modIndex);
@@ -1603,7 +1617,10 @@ void ModListView::refreshMarkersAndPlugins()
   // highligth plugins
   std::vector<unsigned int> modIndices;
   for (auto& idx : indexes) {
-    modIndices.push_back(idx.data(ModList::IndexRole).toInt());
+    const QVariant mod = idx.data(ModList::IndexRole);
+    if (mod.isValid()) {
+      modIndices.push_back(mod.toInt());
+    }
   }
   m_core->pluginList()->highlightPlugins(modIndices, m_core->directoryStructure());
   // highlighted plugins are its marks too
@@ -1945,7 +1962,8 @@ void ModListView::dropEvent(QDropEvent* event)
   // this event is used by the byPriorityProxy to know if allow
   // dropping mod between a separator and its first mod (there
   // is no way to deduce this except using dropIndicatorPosition())
-  emit dropEntered(event->mimeData(), isExpanded(index),
+  // only the first column knows whether the row is expanded
+  emit dropEntered(event->mimeData(), isExpanded(index.siblingAtColumn(0)),
                    static_cast<DropPosition>(dropIndicatorPosition()));
 
   // see selectedIndexes()
@@ -1961,7 +1979,8 @@ void ModListView::timerEvent(QTimerEvent* event)
     QPoint pos = viewport()->mapFromGlobal(QCursor::pos());
     if (state() == QAbstractItemView::DraggingState &&
         viewport()->rect().contains(pos)) {
-      QModelIndex index = indexAt(pos);
+      // only the first column knows whether the row is expanded
+      const QModelIndex index = indexAt(pos).siblingAtColumn(0);
       setExpanded(index, !m_core->settings().interface().autoCollapseOnHover() ||
                              !isExpanded(index));
     }
@@ -2134,7 +2153,9 @@ bool ModListView::event(QEvent* event)
     if (keyEvent->modifiers() == Qt::ControlModifier) {
       // ctrl+enter open explorer
       if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
-        if (selectionModel()->selectedRows().count() == 1) {
+        // a group heading has no folder
+        if (selectionModel()->selectedRows().count() == 1 &&
+            indexViewToModel(index).isValid()) {
           m_actions->openExplorer({indexViewToModel(index)});
           return true;
         }

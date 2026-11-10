@@ -360,6 +360,14 @@ void FluentDashboard::applyTabTexts()
   ui->btnRefreshDownloads->setAccessibleName(tr("Refresh"));
   ui->espFilterEdit->setPlaceholderText(tr("Search plugins"));
   ui->espFilterEdit->setAccessibleName(tr("Search plugins"));
+
+  // the Mods panel: its lists and controls have no visible label of their own
+  // (a placeholder or an icon), so screen readers get one here
+  ui->modFilterEdit->setAccessibleName(tr("Search mods"));
+  ui->groupCombo->setAccessibleName(tr("Group mods by"));
+  ui->displayCategoriesBtn->setAccessibleName(tr("Filter options"));
+  ui->modList->setAccessibleName(tr("Mods"));
+  ui->espList->setAccessibleName(tr("Plugins"));
 }
 
 void FluentDashboard::retranslate()

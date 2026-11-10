@@ -29,6 +29,16 @@
   separator no longer renames it either.
 - A collapsed separator keeps its color while it shows its mods' conflicts, and a
   mod's conflict color no longer looks darker around its switch.
+- With the list grouped by category or Nexus ID, a group heading no longer acts as
+  its first mod: keys, menu actions and removing skip it, and it no longer shows
+  that mod's status, marks and colors.
+- In descending priority, "Disable its mods" switches the mods shown inside the
+  separator, installing into an empty separator stays there, and sending mods to a
+  separator at the top no longer risks a crash.
+- Dropping right below an open separator puts the mod first in it whichever column
+  you drop on.
+- The Mods panel's search, grouping, filter button and lists have names for screen
+  readers.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

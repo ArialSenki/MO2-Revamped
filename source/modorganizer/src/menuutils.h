@@ -50,6 +50,7 @@ constexpr char16_t Sync        = 0xE895;
 constexpr char16_t Add         = 0xE710;
 constexpr char16_t Merge       = 0xEA3C;
 constexpr char16_t Clear       = 0xE894;
+constexpr char16_t Undo        = 0xE7A7;  // back to the default (a color)
 constexpr char16_t Document    = 0xE8A5;
 constexpr char16_t Run         = 0xE768;
 constexpr char16_t Save        = 0xE74E;

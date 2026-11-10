@@ -134,9 +134,10 @@ QSize ModConflictIconDelegate::sizeHint(const QStyleOptionViewItem& option,
                                         const QModelIndex& modelIndex) const
 {
   size_t count       = getNumIcons(modelIndex);
-  unsigned int index = modelIndex.data(ModList::IndexRole).toInt();
+  // a group heading is no mod
+  const QVariant modData = modelIndex.data(ModList::IndexRole);
   QSize result;
-  if (index < ModInfo::getNumMods()) {
+  if (modData.isValid() && modData.toUInt() < ModInfo::getNumMods()) {
     result = QSize(static_cast<int>(count) * 40, 20);
   } else {
     result = QSize(1, 20);

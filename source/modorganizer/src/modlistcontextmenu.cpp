@@ -426,7 +426,8 @@ ModListContextMenu::ModListContextMenu(const QModelIndex& index, OrganizerCore& 
     addRegularActions(info);
   }
 
-  auto viewIndex = view->indexModelToView(m_index);
+  // only the first column knows whether the row is expanded
+  auto viewIndex = view->indexModelToView(m_index).siblingAtColumn(0);
   if (view->model()->hasChildren(viewIndex)) {
     bool expanded = view->isExpanded(viewIndex);
     addSeparator();
@@ -687,7 +688,7 @@ void ModListContextMenu::addColorActions(ModInfo::Ptr mod)
     m_actions.setColor(m_selected, m_index);
   });
   if (mod->color().isValid()) {
-    addAction(menuGlyph(MenuGlyphs::Clear), tr("Reset color"), [=]() {
+    addAction(menuGlyph(MenuGlyphs::Undo), tr("Reset color"), [=]() {
       m_actions.resetColor(m_selected);
     });
   }
@@ -810,14 +811,25 @@ QStringList ModListContextMenu::modsUnderSelectedSeparators() const
       continue;
     }
     const int priority = profile->getModPriority(index.toInt());
-    for (auto it = byPriority.upper_bound(priority); it != byPriority.end(); ++it) {
-      const auto info = ModInfo::getByIndex(it->second);
-      if (info->isSeparator() || info->isOverwrite()) {
-        break;
+    // the mods the list shows inside the separator: after it by priority, or
+    // before it when the list is in descending priority
+    const auto collect = [&](auto it, auto end) {
+      for (; it != end; ++it) {
+        const auto info = ModInfo::getByIndex(it->second);
+        if (info->isSeparator() || info->isOverwrite()) {
+          break;
+        }
+        if (!info->isForeign() && !info->isBackup() && !names.contains(info->name())) {
+          names.append(info->name());
+        }
       }
-      if (!info->isForeign() && !info->isBackup() && !names.contains(info->name())) {
-        names.append(info->name());
-      }
+    };
+    if (m_view->sortColumn() == ModList::COL_PRIORITY &&
+        m_view->sortOrder() == Qt::DescendingOrder) {
+      collect(std::make_reverse_iterator(byPriority.lower_bound(priority)),
+              byPriority.rend());
+    } else {
+      collect(byPriority.upper_bound(priority), byPriority.end());
     }
   }
   return names;
