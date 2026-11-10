@@ -443,6 +443,24 @@ function Copy-PythonPluginOverlay {
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
     }
+    # the BAIN wizard interpreter as its wheel installed it: every staged file
+    # matches its RECORD hash, and nothing else is in wizard\
+    $lib = Join-Path $DestinationRoot 'plugins\installer_wizard\lib'
+    $listed = New-Object System.Collections.Generic.HashSet[string] ([StringComparer]::OrdinalIgnoreCase)
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    foreach ($line in [IO.File]::ReadAllLines((Join-Path $lib 'bain_wizard_interpreter-1.0.4.dist-info\RECORD'))) {
+        $path, $hash, $null = $line -split ','
+        if (-not $hash) { continue }
+        $staged = Join-Path $lib $path.Replace('/', '\')
+        [void]$listed.Add($staged)
+        $actual = if (Test-Path -LiteralPath $staged -PathType Leaf) {
+            'sha256=' + [Convert]::ToBase64String($sha256.ComputeHash([IO.File]::ReadAllBytes($staged))).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+        }
+        if ($actual -cne $hash) { throw "The staged BAIN wizard interpreter file $path does not match its RECORD." }
+    }
+    foreach ($file in Get-ChildItem -LiteralPath (Join-Path $lib 'wizard') -File -Recurse -Force) {
+        if (-not $listed.Contains($file.FullName)) { throw "The staged BAIN wizard interpreter has a file its RECORD does not list: $($file.FullName)" }
+    }
 }
 
 function Copy-RevampedSources {
