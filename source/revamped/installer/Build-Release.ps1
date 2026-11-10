@@ -21,6 +21,10 @@ param(
     [string]$OutputDirectory,
     [Parameter(Mandatory = $true)]
     [string]$QtSdkDirectory,
+    # the official Qt 6.12.0 msvc2022_64 with Qt WebEngine 6.140.0: MO2's Qt
+    # runtime comes from it (Copy-QtRuntime.ps1), not from the runtime folder
+    [Parameter(Mandatory = $true)]
+    [string]$QtRuntimeDirectory,
     [string]$CscPath = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 )
 
@@ -35,6 +39,7 @@ $openSslRuntimeRoot = [System.IO.Path]::GetFullPath($OpenSslRuntimeDirectory).Tr
 $pythonRuntimeRoot = [System.IO.Path]::GetFullPath($PythonRuntimeDirectory).TrimEnd('\')
 $outputRoot = [System.IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
 $qtSdkRoot = [System.IO.Path]::GetFullPath($QtSdkDirectory).TrimEnd('\')
+$qtRuntimeRoot = [System.IO.Path]::GetFullPath($QtRuntimeDirectory).TrimEnd('\')
 
 # the update notice compares GitHub releases with the version built into
 # ModOrganizer.exe; a release whose header or executable still names the last
@@ -52,7 +57,7 @@ if (Test-Path -LiteralPath $organizerPath -PathType Leaf) {
     Remove-Variable organizerText
 }
 
-foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $CscPath)) {
+foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $qtRuntimeRoot, $CscPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf) -and
         -not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Required build input was not found: $path"
@@ -339,8 +344,21 @@ function Test-ExcludedRuntimeFile {
     )
 }
 
+# the runtime's Qt (2.5.2's): MO2's Qt comes from -QtRuntimeDirectory. Only for
+# the copy from the runtime: the isolated stage is copied from the complete one,
+# whose Qt is the new one
+function Test-RuntimeQtFile {
+    param([string]$RelativePath)
+    $normalized = $RelativePath.Replace('/', '\')
+    return $normalized -match '^dlls\\(Qt6[^\\]+\.dll|QtWebEngineProcess\.exe|qt\.conf|d3dcompiler_47\.dll|opengl32sw\.dll|imageformats\\|tls\\)' -or
+        $normalized -match '^(platforms|styles|qml)\\' -or
+        $normalized -match '^QtWebEngineProcess\.exe$' -or
+        $normalized -match '^resources\\(qtwebengine_[^\\]+\.pak|icudtl\.dat|v8_context_snapshot[^\\]*\.bin)$' -or
+        $normalized -match '^translations\\(qt_[^\\]+\.qm|qtbase_[^\\]+\.qm|qtwebengine_locales\\)'
+}
+
 function Copy-RuntimeTree {
-    param([string]$SourceRoot, [string]$DestinationRoot, [switch]$SkipPlugins, [string[]]$Exclude = @(), [string[]]$ExcludePrefix = @())
+    param([string]$SourceRoot, [string]$DestinationRoot, [switch]$SkipPlugins, [switch]$SkipRuntimeQt, [string[]]$Exclude = @(), [string[]]$ExcludePrefix = @())
     $sourceLength = $SourceRoot.Length
     $files = Get-ChildItem -LiteralPath $SourceRoot -File -Recurse -Force |
         Sort-Object FullName
@@ -352,6 +370,7 @@ function Copy-RuntimeTree {
         if ($Exclude -contains $relative) { continue }
         if (@($ExcludePrefix | Where-Object { $relative.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) }).Count) { continue }
         if (Test-ExcludedRuntimeFile -RelativePath $relative) { continue }
+        if ($SkipRuntimeQt -and (Test-RuntimeQtFile -RelativePath $relative)) { continue }
         $destination = Join-Path $DestinationRoot $relative
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
@@ -1008,16 +1027,26 @@ Test-EmbeddedResources -InstallerPath $eldenRingUninstallerStub -ExpectedResourc
 $fullStage = Join-Path $stageRoot 'complete'
 $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
-Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage `
+Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage -SkipRuntimeQt `
     -Exclude ($upstreamFiles + @($organizerFiles.Keys) + $mo2TranslationFiles + @('loot\loot.dll')) -ExcludePrefix $pythonPluginPrefixes
 Copy-UpstreamBinaries -DestinationRoot $fullStage
 Copy-OrganizerFiles -DestinationRoot $fullStage
 Copy-Mo2Translations -DestinationRoot $fullStage
-Move-WebEngineProcessToDlls -DestinationRoot $fullStage
 Copy-PythonPluginOverlay -DestinationRoot $fullStage
 Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath -Me3CompatPath $me3CompatPath
 Copy-OpenSslRuntime -RuntimeSource $openSslRuntimeRoot -DestinationRoot $fullStage
 Copy-PythonRuntime -RuntimeSource $pythonRuntimeRoot -DestinationRoot $fullStage
+# Qt last: the Qt libraries it copies are the ones everything above imports,
+# and it writes dlls\dlls.manifest for what dlls\ then holds
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+if (-not (Test-Path -LiteralPath $vswhere -PathType Leaf)) { throw "vswhere.exe was not found: $vswhere" }
+$vsRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+if (-not $vsRoot) { throw 'No Visual Studio with the C++ x64 tools was found (dumpbin is needed to copy Qt).' }
+$msvcVersion = (Get-Content -LiteralPath (Join-Path $vsRoot 'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt') -TotalCount 1).Trim()
+$dumpbin = Join-Path $vsRoot "VC\Tools\MSVC\$msvcVersion\bin\Hostx64\x64\dumpbin.exe"
+if (-not (Test-Path -LiteralPath $dumpbin -PathType Leaf)) { throw "dumpbin.exe was not found: $dumpbin" }
+& (Join-Path $PSScriptRoot 'Copy-QtRuntime.ps1') -QtDirectory $qtRuntimeRoot -Destination $fullStage -Dumpbin $dumpbin
+Move-WebEngineProcessToDlls -DestinationRoot $fullStage
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
 Copy-RevampedLicenses -DestinationRoot $fullStage
 

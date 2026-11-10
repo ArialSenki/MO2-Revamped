@@ -97,6 +97,8 @@ public slots:
 private:
   DownloadManager& m_manager;
   Settings& m_settings;
+  // MO2 Revamped: a reset aboutToUpdate() began and update(-1) has not ended
+  bool m_resetting = false;
 };
 
 #endif  // DOWNLOADLIST_H

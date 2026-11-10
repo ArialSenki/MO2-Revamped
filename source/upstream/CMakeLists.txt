@@ -43,7 +43,8 @@ if (MSVC)
 	add_link_options("/PDBALTPATH:%_PDB%")
 endif()
 
-# the sip.h of the sip module PyQt6 6.7.1 ships (ABI 13.8)
+# sip.h for sip ABI 13.8 (2.5.2's); the PyQt6-sip 13.13 module shipped with
+# PyQt6 6.12 accepts extensions built for any 13.y up to 13.13
 include_directories(BEFORE "${CMAKE_CURRENT_LIST_DIR}/deps/sip")
 
 set(S ${CMAKE_CURRENT_LIST_DIR}/modorganizer_super)

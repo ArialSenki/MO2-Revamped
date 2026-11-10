@@ -1,7 +1,7 @@
 # Build guidance
 
 The repository contains a consolidated source snapshot. The application was
-compiled from the current source tree on Windows with MSVC 14.44, Qt 6.7.1,
+compiled from the current source tree on Windows with MSVC 14.44, Qt 6.12.0,
 Python 3.12.15, and the MO2 build dependencies recorded in
 [`UPSTREAMS.md`](UPSTREAMS.md). A new external CMake build directory completed
 successfully. Every Mod Organizer 2 binary of a release is built from this
@@ -32,7 +32,8 @@ It maps the reviewed Light and Dark styles to `stylesheets/Light.qss` and
 
 Use the official [MO2 build project (`mob`)](https://github.com/ModOrganizer2/mob)
 to prepare the third-party dependencies (Boost, spdlog, zlib, lz4, libbsarch,
-DirectXTex) and Qt 6.7.1. libloot is the official
+DirectXTex). Qt is the official Qt 6.12.0 `msvc2022_64` with Qt WebEngine
+6.140.0 (see below). libloot is the official
 [0.29.7 release](https://github.com/loot/libloot/releases/tag/0.29.7),
 extracted into that folder as `libloot-0.29.7-win64`; the build refuses any
 other `libloot.dll`. Do not mix Qt, Python, compiler, or
@@ -48,7 +49,7 @@ the repository:
 powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-UpstreamPlugins.ps1 `
   -OutputDirectory C:\path\to\upstream-out `
   -ThirdPartyDirectory C:\path\to\mo\build `
-  -QtDirectory C:\path\to\Qt\6.7.1\msvc2019_64 `
+  -QtDirectory C:\path\to\Qt\6.12.0\msvc2022_64 `
   -PythonDirectory C:\path\to\python-3.12 `
   -BuildPython C:\path\to\installed\Python312\python.exe
 ```
@@ -58,15 +59,22 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Upstrea
 installed CPython 3.12 with `venv` and `pip`: the script makes a virtual
 environment from it and installs sip and PyQt-builder there with
 `pip --require-hashes` from `source/upstream/third-party/pyqt-build-requirements.txt`.
-`-QtDirectory` is the official Qt 6.7.1 `msvc2019_64` with the modules PyQt6
-binds, for example with aqtinstall:
-`aqt install-qt windows desktop 6.7.1 win64_msvc2019_64 -m qtactiveqt qtconnectivity qtmultimedia qtquick3d qtshadertools qtremoteobjects qtsensors qtserialport qtspeech qtpositioning qtwebchannel qtwebsockets qtpdf`.
+`-QtDirectory` is the official Qt 6.12.0 `msvc2022_64` from
+`download.qt.io/online/qtsdkrepository/windows_x86/`: from
+`desktop/qt6_6120/qt6_6120_msvc2022_64/`, the packages
+`qt.qt6.6120.win64_msvc2022_64` (qtbase, qtdeclarative, qtsvg, qttools,
+qttranslations, d3dcompiler, opengl32sw) and the addons qtwebchannel,
+qtwebsockets, qtpositioning and qtimageformats; and from
+`extensions/qtwebengine/6120/61400/msvc2022_64/`, Qt WebEngine 6.140.0. Check
+each `.7z` against the `.sha1` beside it and extract them all into one
+folder. Since Qt 6.12, Qt WebEngine is a product of its own with its own
+versions; the `6120/msvc2022_64` folder holds a pre-release, not 6.140.0.
 
 `7z.dll` and PyQt6 are built from the official sources in
 `source/upstream/third-party/` (see its README), checked against
 `SHA256SUMS.txt`: 7-Zip 26.06 with `nmake` in `CPP/7zip/Bundles/Format7zF`,
-PyQt6 6.7.1 with `sip-install --link-full-dll`, and PyQt6-sip 13.8.0 as a wheel,
-as `mob` built them for 2.5.2. PyQt-builder gets `pyqt-builder-link-full-dll.patch`,
+PyQt6 6.12.0 with `sip-install --link-full-dll`, and PyQt6-sip 13.13.0 as a
+wheel, built as `mob` built 2.5.2's. PyQt-builder gets `pyqt-builder-link-full-dll.patch`,
 the linker part of `mob`'s own patch, so the modules link `python312.dll` (the
 release ships no `python3.dll`). The Designer and qmlscene plugins are not
 built; MO2 does not ship them. The two C++/CLI installers
@@ -131,14 +139,14 @@ upstream modorganizer-nxmhandler at the commit shipped with MO2 2.5.2 (see
 with a Fluent version; the command line, the registration and the
 `nxmhandler.ini` format stay compatible. It builds like the Organizer target,
 against `source/upstream` (`cmake_common`, `uibase`), the install tree of
-`Build-UpstreamPlugins.ps1` and Qt 6.7.1, in a build directory of its own:
+`Build-UpstreamPlugins.ps1` and Qt 6.12.0, in a build directory of its own:
 
 ```bat
 call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 cmake -G "Visual Studio 17 2022" -A x64 -S source/nxmhandler -B C:\path\to\nxmhandler-build ^
   -DDEPENDENCIES_DIR=C:/path/to/repository/source/upstream ^
   -DMO2_INSTALL_PATH=C:/path/to/upstream-out/install -DBOOST_ROOT=C:/path/to/mo/build/boost_1_85_0 ^
-  -DQT_ROOT=C:/path/to/Qt/6.7.1/msvc2019_64 -DPYTHON_ROOT=C:/path/to/mo/build/python-3.12.3 ^
+  -DQT_ROOT=C:/path/to/Qt/6.12.0/msvc2022_64 -DPYTHON_ROOT=C:/path/to/mo/build/python-3.12.3 ^
   -DCMAKE_INSTALL_PREFIX:PATH=C:/path/to/nxmhandler-install
 cmake --build C:\path\to\nxmhandler-build --config Release --target nxmhandler
 ```
@@ -201,13 +209,21 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
   -OpenSslRuntimeDirectory C:\path\to\openssl-3.5.9 `
   -PythonRuntimeDirectory C:\path\to\python-3.12.15-overlay `
   -QtSdkDirectory C:\path\to\QtSdk `
+  -QtRuntimeDirectory C:\path\to\Qt\6.12.0\msvc2022_64 `
   -OutputDirectory C:\path\to\new-release-directory
 ```
 
-From the Complete runtime the builder takes only what has no source here (Qt,
-lz4, libbsarch, Explorer++, the third-party Python libraries the plugins
-bundle, and Qt's `qt_`/`qtbase_` translations); 2.5.2's `loot/loot.dll` is
-left out, as libloot now comes from the upstream stage. It never
+From the Complete runtime the builder takes only what has no source here
+(lz4, libbsarch, Explorer++ and the third-party Python libraries the plugins
+bundle); 2.5.2's `loot/loot.dll` is left out, as libloot now comes from the
+upstream stage, and so is its Qt 6.7.1. Qt comes from `-QtRuntimeDirectory`:
+`Copy-QtRuntime.ps1` copies the Qt libraries MO2's binaries, its Qt plugins
+and `QtWebEngineProcess.exe` import (following their imports with
+`dumpbin`), in MO2's layout (libraries, image format and TLS plugins in
+`dlls\`; platform and style plugins at the root), the QML modules MO2 uses,
+WebEngine's resources and Qt's translations, and writes `dlls\dlls.manifest`
+for what `dlls\` then holds: `dlls\` is a private assembly, and Windows only
+loads the files its manifest names. It never
 stages the runtime's copies of the files `-UpstreamStageDirectory` lists: those
 come from the upstream stage, whose manifest must match its files and the
 committed `source/upstream`. The Python plugins, with the BAIN wizard

@@ -1,7 +1,7 @@
 # Python packages Build-UpstreamPlugins.ps1 installs to build PyQt6 (pip --require-hashes),
-# sip and PyQt-builder at the versions mob uses for Mod Organizer 2.5.2, with what they
-# need; hashes as published on PyPI
-sip==6.8.6 --hash=sha256:3d715cb29396db8ff5258cfd2082dc24a75ed0821d9c3d53acccdc83a7f2617f --hash=sha256:7fc959e48e6ec5d5af8bd026f69f5e24d08b3cb8abb342176f5ab8030cc07d7a
-PyQt-builder==1.16.4 --hash=sha256:fe6e75bcf8426feee3eb73ae7f6aaa4e38edc2f8d670d8cf28638b21d9924eb7 --hash=sha256:4515e41ae379be2e54f88a89ecf47cd6e4cac43e862c4abfde18389c2666afdf
+# sip and PyQt-builder at the versions PyQt6 6.12 needs (PyQt-builder 1.21 builds
+# against Qt 6.12), with what they need; hashes as published on PyPI
+sip==6.17.2 --hash=sha256:6c77dbc4d15c07ace4a2a5101da736e5e10182ce7d7886230629bc4738e1a3df --hash=sha256:f9e3e765b662b1a93a57440efd3f99a4001bf1bfe282fc0e24566d8d6122de3c
+PyQt-builder==1.21.0 --hash=sha256:c36aafc1230e278caf1b28271b9964e85397a5092cc51f3c1c090d7c037edc7f --hash=sha256:673efa27237a81ffefc7d9a6419565600a129b4f4cf4d358c89a348b39b3a454
 packaging==26.3 --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79
 setuptools==84.2.1 --hash=sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2 --hash=sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc

@@ -29,7 +29,7 @@ param(
     # libbsarch-0.0.12-release-x64, DirectXTex and
     # the official libloot-0.29.7-win64 release (checked against its hash)
     [string]$ThirdPartyDirectory,
-    # Qt 6.7.1 msvc2019_64 with the modules PyQt6 binds (see BUILDING.md)
+    # Qt 6.12.0 msvc2022_64 with Qt WebEngine 6.140.0 (see BUILDING.md)
     [string]$QtDirectory,
     # CPython 3.12 with Include\ and PCBuild\amd64\ (python.exe, python312.lib)
     [string]$PythonDirectory,
@@ -337,15 +337,18 @@ if (-not ([IO.File]::ReadAllText($builderPy)).Contains($patchedLine)) {
     }
 }
 
+# PyQt6 and its sip module, the official source distributions on PyPI
+$pyqtVersion = '6.12.0'
+$pyqtSipVersion = '13.13.0'
 $pyqtRoot = Join-Path $outputRoot 'pyqt'
-Expand-SourceArchive 'PyQt6-6.7.1.tar.gz' $pyqtRoot
-Expand-SourceArchive 'PyQt6_sip-13.8.0.tar.gz' (Join-Path $outputRoot 'pyqt-sip')
+Expand-SourceArchive "pyqt6-$pyqtVersion.tar.gz" $pyqtRoot
+Expand-SourceArchive "pyqt6_sip-$pyqtSipVersion.tar.gz" (Join-Path $outputRoot 'pyqt-sip')
 $pyqtSite = Join-Path $outputRoot 'pyqt-site'
 if (Test-Path -LiteralPath $pyqtSite) { Remove-Item -LiteralPath $pyqtSite -Recurse -Force }
 $pyqtSetup = $quietTools + @(
     "set PATH=$qtRoot\bin;$pyqtVenv\Scripts;%PATH%",
     'set CL=/MP',
-    "cd /d `"$pyqtRoot\PyQt6-6.7.1`" || exit /b 1"
+    "cd /d `"$pyqtRoot\pyqt6-$pyqtVersion`" || exit /b 1"
 )
 # the Designer and qmlscene plugins are not shipped, and their .pro files do
 # not quote a Python path with spaces
@@ -354,15 +357,15 @@ Invoke-InVsShell -Setup $pyqtSetup ("sip-install --confirm-license --pep484-pyi 
 $sipWheels = Join-Path $outputRoot 'pyqt-sip-wheel'
 if (Test-Path -LiteralPath $sipWheels) { Remove-Item -LiteralPath $sipWheels -Recurse -Force }
 Invoke-InVsShell -Setup $quietTools ("`"$venvPython`" -m pip wheel --no-deps --no-build-isolation --disable-pip-version-check " +
-    "-w `"$sipWheels`" `"$outputRoot\pyqt-sip\PyQt6_sip-13.8.0`"")
+    "-w `"$sipWheels`" `"$outputRoot\pyqt-sip\pyqt6_sip-$pyqtSipVersion`"")
 $pyqtInstall = Join-Path $installBin 'plugins\plugin_python\libs\PyQt6'
 New-Item -ItemType Directory -Force -Path $pyqtInstall | Out-Null
 Get-ChildItem -LiteralPath (Join-Path $pyqtSite 'PyQt6') -File |
     Where-Object { $_.Extension -in '.pyd', '.pyi' -or $_.Name -eq '__init__.py' } |
     Copy-Item -Destination $pyqtInstall -Force
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$sipWheel = @(Get-ChildItem -LiteralPath $sipWheels -Filter 'PyQt6_sip-13.8.0-cp312-*.whl')
-if ($sipWheel.Count -ne 1) { throw "pip did not build one PyQt6_sip 13.8.0 wheel in $sipWheels" }
+$sipWheel = @(Get-ChildItem -LiteralPath $sipWheels -Filter "pyqt6_sip-$pyqtSipVersion-cp312-*.whl")
+if ($sipWheel.Count -ne 1) { throw "pip did not build one PyQt6_sip $pyqtSipVersion wheel in $sipWheels" }
 $zip = [IO.Compression.ZipFile]::OpenRead($sipWheel[0].FullName)
 try {
     foreach ($entry in $zip.Entries) {

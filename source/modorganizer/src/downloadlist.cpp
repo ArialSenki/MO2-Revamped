@@ -248,13 +248,24 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
 
 void DownloadList::aboutToUpdate()
 {
-  emit beginResetModel();
+  if (!m_resetting) {
+    beginResetModel();
+    m_resetting = true;
+  }
 }
 
 void DownloadList::update(int row)
 {
-  if (row < 0)
-    emit endResetModel();
+  // MO2 Revamped: the download manager also asks for a full update without
+  // announcing it first; a reset is only ended once it began (Qt 6.8 and later
+  // warn, and views can lose track of the rows otherwise)
+  if (row < 0) {
+    if (!m_resetting) {
+      beginResetModel();
+    }
+    m_resetting = false;
+    endResetModel();
+  }
   else if (row < this->rowCount())
     emit dataChanged(
         this->index(row, 0, QModelIndex()),

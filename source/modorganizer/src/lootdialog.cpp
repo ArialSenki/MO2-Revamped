@@ -219,6 +219,22 @@ void LootDialog::createUI()
         html.replace(QStringLiteral("</head>"),
                      QStringLiteral("<style>html{color-scheme:dark}</style></head>"));
       }
+      // MO2 Revamped: the page gets qwebchannel.js inline. A page from setHtml()
+      // has no origin, and the Chromium of Qt WebEngine 6.140 no longer lets it
+      // load qrc: scripts, so QWebChannel was undefined and the report empty
+      QFile channelScript(QStringLiteral(":/qtwebchannel/qwebchannel.js"));
+      if (channelScript.open(QIODevice::ReadOnly)) {
+        html.replace(
+            QStringLiteral("<script src=\"qrc:/qtwebchannel/qwebchannel.js\"></script>"),
+            QStringLiteral("<script>") + QString::fromUtf8(channelScript.readAll()) +
+                QStringLiteral("</script>"));
+        if (html.contains(QStringLiteral("qrc:/qtwebchannel"))) {
+          log::warn("markdown.html loads qwebchannel.js some other way; the report may "
+                    "stay empty");
+        }
+      } else {
+        log::error("qwebchannel.js is missing from Qt WebChannel's resources");
+      }
       ui->report->setHtml(html);
     } else {
       log::error("failed to read '{}', {}", path, f.errorString());

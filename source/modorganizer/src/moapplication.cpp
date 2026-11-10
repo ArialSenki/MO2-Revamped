@@ -81,6 +81,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStyleHintReturnMask>
 #include <QVariant>
 #include <QProxyStyle>
+#include <QStyleHints>
 #include <QCheckBox>
 #include <QRegularExpression>
 #include <QSSLSocket>
@@ -1419,6 +1420,12 @@ bool MOApplication::setStyleFile(const QString& styleName)
     // follow it rather than the theme that was active before
     setPalette(style()->standardPalette());
     setProperty("revampedDark", palette().color(QPalette::Window).lightness() < 128);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    // the frame Qt gives the windows follows the palette now in use (the base
+    // style's is light even on a dark Windows), see updateStyle()
+    styleHints()->setColorScheme(property("revampedDark").toBool() ? Qt::ColorScheme::Dark
+                                                                   : Qt::ColorScheme::Light);
+#endif
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   m_appliedStyleFile = styleName;
@@ -1800,6 +1807,15 @@ QString extractBaseStyleFromStyleSheet(QFile& stylesheet, const QString& default
 void MOApplication::updateStyle(const QString& fileName)
 {
   setProperty("revampedDark", stylePrefersDarkTitleBar(fileName));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+  // MO2 Revamped: since Qt 6.8 Qt sets the windows' light or dark frame and
+  // backdrop itself, from its color scheme, and sets it again whenever a window
+  // is activated or deactivated. Left to follow Windows, a dark theme on a light
+  // Windows turned the Mica backdrop behind the toolbar light whenever MO2 lost
+  // the focus, and the light toolbar icons disappeared on it
+  styleHints()->setColorScheme(property("revampedDark").toBool() ? Qt::ColorScheme::Dark
+                                                                 : Qt::ColorScheme::Light);
+#endif
   applyPopupEffects();
   const auto applyBaseStyle = [this](const QString& baseStyleName) {
     if (m_activeBaseStyle.compare(baseStyleName, Qt::CaseInsensitive) == 0) {

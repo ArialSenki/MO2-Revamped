@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Qt 6.12
+
+- MO2 runs on Qt 6.12, the current long-term support release, with Qt WebEngine
+  6.140 (Chromium 140) for the web views, instead of Mod Organizer 2.5.2's Qt 6.7,
+  which no longer gets updates. The organizer, its plugins and PyQt6 (now 6.12) are
+  built against it; the design does not change.
+- The Python plugins' PyQt6 offers the modules for the Qt libraries MO2 ships;
+  the 13 for libraries it never shipped (Bluetooth, Multimedia, PDF and others),
+  which could not be imported, are gone.
+
 ### Archives 7-Zip can't open
 
 - When 7-Zip, which MO2 uses, can't open a mod archive and WinRAR is installed,

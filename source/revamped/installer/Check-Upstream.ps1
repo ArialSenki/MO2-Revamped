@@ -182,7 +182,7 @@ foreach ($t in $third) {
     $latest = if ($release) { "$($release.tag_name) ($(([datetime]$release.published_at).ToString('yyyy-MM-dd')))" } else { 'not found' }
     $out.Add("| $($t.Name) | $($t.Here) | $latest |")
 }
-foreach ($p in @(@{ Name = 'PyQt6'; Here = '6.7.1' }, @{ Name = 'PyQt6-sip'; Here = '13.8.0' })) {
+foreach ($p in @(@{ Name = 'PyQt6'; Here = '6.12.0' }, @{ Name = 'PyQt6-sip'; Here = '13.13.0' })) {
     try {
         $pypi = Invoke-RestMethod -Uri "https://pypi.org/pypi/$($p.Name)/json" -Headers @{ 'User-Agent' = 'mo2-revamped-upstream-check' }
         $latest = $pypi.info.version
