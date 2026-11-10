@@ -1,0 +1,19 @@
+PyQt-builder 1.16.4 works out the full Python library for --link-full-dll
+(python312) but does not pass it to the linker, so Python.h links python3.dll,
+which MO2 does not ship. mob patches builder.py for Mod Organizer 2.5.2 the
+same way (patches/pyqt/builder.py.manual_patch); this is only its -l part.
+
+--- builder.py
++++ builder.py
+@@ -453,8 +453,9 @@ macx {
+         # TODO: is this still necessary for Python v3.8?
+         if not buildable.static:
+             pro_lines.extend(['win32 {',
+-                    '    LIBS += -L{}'.format(
+-                            self.qmake_quote(project.py_pylib_dir)),
++                    '    LIBS += -L{}{}'.format(
++                            self.qmake_quote(project.py_pylib_dir),
++                            ' -l' + project.py_pylib_lib if project.py_pylib_lib else ''),
+                     '}'])
+ 
+         # Add any installables from the buildable.

@@ -1,7 +1,8 @@
-# Files the release takes from the builds of source/upstream and source/usvfs (Build-UpstreamPlugins.ps1)
+# Files the release takes from the builds of source/upstream, source/usvfs and source/upstream/third-party (Build-UpstreamPlugins.ps1)
 # instead of the Mod Organizer 2.5.2 runtime, by runtime path. "native" files are
 # checked against abi/binaries.json; "dotnet" files are the NuGet libraries
-# installer_omod restores.
+# installer_omod restores; "file" files are other built files, staged with no ABI to
+# compare (PyQt6's .pyi stubs and __init__.py).
 native uibase.dll
 native helper.exe
 native dlls/archive.dll
@@ -47,3 +48,75 @@ dotnet plugins/installer_omod/OMODFramework.Scripting.dll
 dotnet plugins/installer_omod/RtfPipe.dll
 dotnet plugins/installer_omod/ICSharpCode.SharpZipLib.dll
 dotnet plugins/installer_omod/System.Drawing.Common.dll
+native dlls/7z.dll
+native plugins/plugin_python/libs/PyQt6/QAxContainer.pyd
+native plugins/plugin_python/libs/PyQt6/QtBluetooth.pyd
+native plugins/plugin_python/libs/PyQt6/QtCore.pyd
+native plugins/plugin_python/libs/PyQt6/QtDBus.pyd
+native plugins/plugin_python/libs/PyQt6/QtDesigner.pyd
+native plugins/plugin_python/libs/PyQt6/QtGui.pyd
+native plugins/plugin_python/libs/PyQt6/QtHelp.pyd
+native plugins/plugin_python/libs/PyQt6/QtMultimedia.pyd
+native plugins/plugin_python/libs/PyQt6/QtMultimediaWidgets.pyd
+native plugins/plugin_python/libs/PyQt6/QtNetwork.pyd
+native plugins/plugin_python/libs/PyQt6/QtNfc.pyd
+native plugins/plugin_python/libs/PyQt6/QtOpenGL.pyd
+native plugins/plugin_python/libs/PyQt6/QtOpenGLWidgets.pyd
+native plugins/plugin_python/libs/PyQt6/QtPdf.pyd
+native plugins/plugin_python/libs/PyQt6/QtPdfWidgets.pyd
+native plugins/plugin_python/libs/PyQt6/QtPositioning.pyd
+native plugins/plugin_python/libs/PyQt6/QtPrintSupport.pyd
+native plugins/plugin_python/libs/PyQt6/QtQml.pyd
+native plugins/plugin_python/libs/PyQt6/QtQuick.pyd
+native plugins/plugin_python/libs/PyQt6/QtQuick3D.pyd
+native plugins/plugin_python/libs/PyQt6/QtQuickWidgets.pyd
+native plugins/plugin_python/libs/PyQt6/QtRemoteObjects.pyd
+native plugins/plugin_python/libs/PyQt6/QtSensors.pyd
+native plugins/plugin_python/libs/PyQt6/QtSerialPort.pyd
+native plugins/plugin_python/libs/PyQt6/QtSpatialAudio.pyd
+native plugins/plugin_python/libs/PyQt6/QtSql.pyd
+native plugins/plugin_python/libs/PyQt6/QtSvg.pyd
+native plugins/plugin_python/libs/PyQt6/QtSvgWidgets.pyd
+native plugins/plugin_python/libs/PyQt6/QtTest.pyd
+native plugins/plugin_python/libs/PyQt6/QtTextToSpeech.pyd
+native plugins/plugin_python/libs/PyQt6/QtWebChannel.pyd
+native plugins/plugin_python/libs/PyQt6/QtWebSockets.pyd
+native plugins/plugin_python/libs/PyQt6/QtWidgets.pyd
+native plugins/plugin_python/libs/PyQt6/QtXml.pyd
+native plugins/plugin_python/libs/PyQt6/sip.cp312-win_amd64.pyd
+file plugins/plugin_python/libs/PyQt6/__init__.py
+file plugins/plugin_python/libs/PyQt6/QAxContainer.pyi
+file plugins/plugin_python/libs/PyQt6/QtBluetooth.pyi
+file plugins/plugin_python/libs/PyQt6/QtCore.pyi
+file plugins/plugin_python/libs/PyQt6/QtDBus.pyi
+file plugins/plugin_python/libs/PyQt6/QtDesigner.pyi
+file plugins/plugin_python/libs/PyQt6/QtGui.pyi
+file plugins/plugin_python/libs/PyQt6/QtHelp.pyi
+file plugins/plugin_python/libs/PyQt6/QtMultimedia.pyi
+file plugins/plugin_python/libs/PyQt6/QtMultimediaWidgets.pyi
+file plugins/plugin_python/libs/PyQt6/QtNetwork.pyi
+file plugins/plugin_python/libs/PyQt6/QtNfc.pyi
+file plugins/plugin_python/libs/PyQt6/QtOpenGL.pyi
+file plugins/plugin_python/libs/PyQt6/QtOpenGLWidgets.pyi
+file plugins/plugin_python/libs/PyQt6/QtPdf.pyi
+file plugins/plugin_python/libs/PyQt6/QtPdfWidgets.pyi
+file plugins/plugin_python/libs/PyQt6/QtPositioning.pyi
+file plugins/plugin_python/libs/PyQt6/QtPrintSupport.pyi
+file plugins/plugin_python/libs/PyQt6/QtQml.pyi
+file plugins/plugin_python/libs/PyQt6/QtQuick.pyi
+file plugins/plugin_python/libs/PyQt6/QtQuick3D.pyi
+file plugins/plugin_python/libs/PyQt6/QtQuickWidgets.pyi
+file plugins/plugin_python/libs/PyQt6/QtRemoteObjects.pyi
+file plugins/plugin_python/libs/PyQt6/QtSensors.pyi
+file plugins/plugin_python/libs/PyQt6/QtSerialPort.pyi
+file plugins/plugin_python/libs/PyQt6/QtSpatialAudio.pyi
+file plugins/plugin_python/libs/PyQt6/QtSql.pyi
+file plugins/plugin_python/libs/PyQt6/QtSvg.pyi
+file plugins/plugin_python/libs/PyQt6/QtSvgWidgets.pyi
+file plugins/plugin_python/libs/PyQt6/QtTest.pyi
+file plugins/plugin_python/libs/PyQt6/QtTextToSpeech.pyi
+file plugins/plugin_python/libs/PyQt6/QtWebChannel.pyi
+file plugins/plugin_python/libs/PyQt6/QtWebSockets.pyi
+file plugins/plugin_python/libs/PyQt6/QtWidgets.pyi
+file plugins/plugin_python/libs/PyQt6/QtXml.pyi
+file plugins/plugin_python/libs/PyQt6/sip.pyi

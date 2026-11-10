@@ -2,3 +2,4 @@
 source/mo2-python-plugins/installer_wizard/lib/bain_wizard_interpreter-1.0.4.dist-info/** -text
 source/mo2-python-plugins/installer_wizard/lib/wizard/** -text
 source/upstream/translations/*.ts -text
+source/upstream/third-party/*.patch -text

@@ -1,8 +1,9 @@
 <#
 Builds what MO2 Revamped used to ship precompiled from Mod Organizer 2.5.2
 (uibase, the plugins, plugin_python, archive, lootcli, helper) from
-source\upstream, and USVFS (x64 and x86) from source\usvfs, and stages the
-files the release takes from them.
+source\upstream, USVFS (x64 and x86) from source\usvfs, and 7z.dll and PyQt6
+from the official sources in source\upstream\third-party, built the way mob
+built them for 2.5.2, and stages the files the release takes from them.
 
   -OutputDirectory\build          CMake build tree of source\upstream
   -OutputDirectory\usvfs-x64|x86  CMake build trees of source\usvfs (vcpkg)
@@ -25,12 +26,16 @@ param(
     # vcpkg for USVFS's dependencies; Visual Studio's own by default
     [string]$VcpkgRoot,
     # folder with boost_1_85_0, spdlog-v1.14.1, zlib-v1.3.1, lz4-v1.9.4,
-    # libbsarch-0.0.12-release-x64, DirectXTex, 7zip-26.01 and
+    # libbsarch-0.0.12-release-x64, DirectXTex and
     # libloot-0.23.0-win64, as mob prepares them
     [string]$ThirdPartyDirectory,
+    # Qt 6.7.1 msvc2019_64 with the modules PyQt6 binds (see BUILDING.md)
     [string]$QtDirectory,
     # CPython 3.12 with Include\ and PCBuild\amd64\ (python.exe, python312.lib)
     [string]$PythonDirectory,
+    # an installed CPython 3.12 (python.exe with venv and pip) that runs sip and
+    # PyQt-builder for PyQt6
+    [string]$BuildPython,
     # writes source\upstream\abi from this folder of official 2.5.2 binaries
     # (a runtime tree) instead of building
     [string]$WriteAbiReference
@@ -51,9 +56,12 @@ $listed = foreach ($line in Get-Content -LiteralPath (Join-Path $upstreamSource 
 $nativeFiles = @($listed | Where-Object Kind -eq 'native' | ForEach-Object Path)
 # the .NET libraries installer_omod restores from NuGet, shipped beside it
 $dotNetFiles = @($listed | Where-Object Kind -eq 'dotnet' | ForEach-Object Path)
-$shippedFiles = $nativeFiles + $dotNetFiles
+# other built files (PyQt6's .pyi stubs and __init__.py): staged and scanned,
+# with no ABI to compare
+$plainFiles = @($listed | Where-Object Kind -eq 'file' | ForEach-Object Path)
+$shippedFiles = $nativeFiles + $dotNetFiles + $plainFiles
 if ($nativeFiles.Count -eq 0 -or $dotNetFiles.Count -eq 0 -or
-    @($listed | Where-Object { $_.Kind -notin 'native', 'dotnet' }).Count) {
+    @($listed | Where-Object { $_.Kind -notin 'native', 'dotnet', 'file' }).Count) {
     throw 'source\upstream\shipped-files.txt lists no native or no dotnet files, or an unknown kind.'
 }
 
@@ -136,8 +144,9 @@ function Get-BinaryRecord {
         dependents = @(Get-Dependents $Path)
         interfaces = @(Get-InterfaceIds $Path)
     }
-    # the organizer and the hooked games call into USVFS by these names
-    if ([IO.Path]::GetFileName($Path) -match '^usvfs_x(64|86)\.dll$') {
+    # called by name: USVFS by the organizer and the hooked games, 7z.dll by
+    # archive, a PyQt6 module by Python (PyInit_<module>)
+    if ([IO.Path]::GetFileName($Path) -match '^(usvfs_x(64|86)\.dll|7z\.dll|.+\.pyd)$') {
         $record.exports = @(Get-Exports $Path)
     }
     return $record
@@ -178,6 +187,28 @@ if ($outputRoot.StartsWith($repoRoot.TrimEnd('\') + '\', [StringComparison]::Ord
 $thirdParty = [IO.Path]::GetFullPath($ThirdPartyDirectory).TrimEnd('\')
 $qtRoot = [IO.Path]::GetFullPath($QtDirectory).TrimEnd('\')
 $pythonRoot = [IO.Path]::GetFullPath($PythonDirectory).TrimEnd('\')
+
+# the official sources of 7z.dll and PyQt6, built as mob builds them for 2.5.2
+$thirdPartySource = Join-Path $upstreamSource 'third-party'
+foreach ($line in Get-Content -LiteralPath (Join-Path $thirdPartySource 'SHA256SUMS.txt')) {
+    if (-not $line.Trim()) { continue }
+    $hash, $name = $line.Trim() -split '\s+', 2
+    if ((Get-FileHash -LiteralPath (Join-Path $thirdPartySource $name) -Algorithm SHA256).Hash -ne $hash) {
+        throw "source\upstream\third-party\$name does not match SHA256SUMS.txt."
+    }
+}
+function Expand-SourceArchive {
+    param([string]$Name, [string]$Destination)
+    if (Test-Path -LiteralPath $Destination) { Remove-Item -LiteralPath $Destination -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+    # Windows' tar is libarchive, which reads .7z and .tar.gz
+    & (Join-Path $env:SystemRoot 'System32\tar.exe') -xf (Join-Path $thirdPartySource $Name) -C $Destination
+    if ($LASTEXITCODE -ne 0) { throw "Extracting $Name failed." }
+}
+# archive compiles against these 7-Zip headers too, as it did for 2.5.2
+$sevenZipRoot = Join-Path $outputRoot '7zip-24.05'
+Expand-SourceArchive '7z2405-src.7z' $sevenZipRoot
+
 $roots = [ordered]@{
     BOOST_ROOT       = Join-Path $thirdParty 'boost_1_85_0'
     SPDLOG_ROOT      = Join-Path $thirdParty 'spdlog-v1.14.1'
@@ -185,7 +216,7 @@ $roots = [ordered]@{
     LZ4_ROOT         = Join-Path $thirdParty 'lz4-v1.9.4'
     LIBBSARCH_ROOT   = Join-Path $thirdParty 'libbsarch-0.0.12-release-x64'
     DIRECTXTEX_ROOT  = Join-Path $thirdParty 'DirectXTex'
-    SEVENZ_ROOT      = Join-Path $thirdParty '7zip-26.01'
+    SEVENZ_ROOT      = $sevenZipRoot
     LOOT_PATH        = Join-Path $thirdParty 'libloot-0.23.0-win64'
     QT_ROOT          = $qtRoot
     PYTHON_ROOT      = $pythonRoot
@@ -251,6 +282,89 @@ Invoke-InVsShell $configure
 Invoke-InVsShell "cmake --build `"$buildRoot`" --config RelWithDebInfo --parallel -- /restore /nodeReuse:false /v:minimal /clp:ErrorsOnly"
 Invoke-InVsShell "cmake --install `"$buildRoot`" --config RelWithDebInfo"
 
+# 7z.dll and PyQt6
+# the developer tools' messages are read as text by PyQt-builder; latin-1
+# accepts every byte, whatever language Visual Studio speaks
+$quietTools = @('set VSLANG=1033', 'set PYTHONIOENCODING=latin-1')
+$installBin = Join-Path $installRoot 'bin'
+
+$format7z = Join-Path $sevenZipRoot 'CPP\7zip\Bundles\Format7zF'
+# mob's options; 24.05's makefiles also need PLATFORM to pick the x64 assembler
+Invoke-InVsShell -Setup ($quietTools + "cd /d `"$format7z`" || exit /b 1") 'nmake /NOLOGO PLATFORM=x64 CPU=x64 NEW_COMPILER=1 MY_STATIC_LINK=1 NO_BUFFEROVERFLOWU=1'
+New-Item -ItemType Directory -Force -Path (Join-Path $installBin 'dlls') | Out-Null
+Copy-Item -LiteralPath (Join-Path $format7z 'x64\7z.dll') -Destination (Join-Path $installBin 'dlls\7z.dll') -Force
+
+if (-not $BuildPython -or -not (Test-Path -LiteralPath $BuildPython -PathType Leaf)) {
+    throw "-BuildPython must be a CPython 3.12 python.exe: $BuildPython"
+}
+if ((& $BuildPython -c 'import sys; print(sys.version_info[:2] == (3, 12))') -ne 'True') {
+    throw "-BuildPython is not CPython 3.12: $BuildPython"
+}
+$pyqtVenv = Join-Path $outputRoot 'pyqt-venv'
+$venvPython = Join-Path $pyqtVenv 'Scripts\python.exe'
+# PyQt compiles against the headers and libraries of the venv's interpreter: a
+# venv left by another Python is made again
+$versionScript = 'import sys; print(sys.version, sys.base_prefix)'
+$wanted = & $BuildPython -c $versionScript
+if ((Test-Path -LiteralPath $venvPython -PathType Leaf) -and (& $venvPython -c $versionScript) -ne $wanted) {
+    Remove-Item -LiteralPath $pyqtVenv -Recurse -Force
+}
+if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
+    & $BuildPython -m venv $pyqtVenv
+    if ($LASTEXITCODE -ne 0) { throw "Creating $pyqtVenv failed." }
+}
+& $venvPython -m pip install --quiet --disable-pip-version-check --require-hashes -r (Join-Path $thirdPartySource 'pyqt-build-requirements.txt')
+if ($LASTEXITCODE -ne 0) { throw 'Installing sip and PyQt-builder failed.' }
+# link python312.dll, as mob's patched PyQt-builder does: MO2 ships no python3.dll
+$pyqtBuild = Join-Path $pyqtVenv 'Lib\site-packages\pyqtbuild'
+$builderPatch = Join-Path $thirdPartySource 'pyqt-builder-link-full-dll.patch'
+$builderPy = Join-Path $pyqtBuild 'builder.py'
+$patchedLine = "' -l' + project.py_pylib_lib"
+if (-not ([IO.File]::ReadAllText($builderPy)).Contains($patchedLine)) {
+    # --unsafe-paths and --directory keep git from treating an enclosing
+    # repository as the root and skipping the file
+    & git apply -p0 --unsafe-paths "--directory=$pyqtBuild" $builderPatch
+    if ($LASTEXITCODE -ne 0 -or -not ([IO.File]::ReadAllText($builderPy)).Contains($patchedLine)) {
+        throw "Patching PyQt-builder failed: $builderPatch"
+    }
+}
+
+$pyqtRoot = Join-Path $outputRoot 'pyqt'
+Expand-SourceArchive 'PyQt6-6.7.1.tar.gz' $pyqtRoot
+Expand-SourceArchive 'PyQt6_sip-13.8.0.tar.gz' (Join-Path $outputRoot 'pyqt-sip')
+$pyqtSite = Join-Path $outputRoot 'pyqt-site'
+if (Test-Path -LiteralPath $pyqtSite) { Remove-Item -LiteralPath $pyqtSite -Recurse -Force }
+$pyqtSetup = $quietTools + @(
+    "set PATH=$qtRoot\bin;$pyqtVenv\Scripts;%PATH%",
+    'set CL=/MP',
+    "cd /d `"$pyqtRoot\PyQt6-6.7.1`" || exit /b 1"
+)
+# the Designer and qmlscene plugins are not shipped, and their .pro files do
+# not quote a Python path with spaces
+Invoke-InVsShell -Setup $pyqtSetup ("sip-install --confirm-license --pep484-pyi --link-full-dll --no-designer-plugin --no-qml-plugin " +
+    "--qmake `"$qtRoot\bin\qmake.exe`" --build-dir `"$pyqtRoot\build`" --target-dir `"$pyqtSite`"")
+$sipWheels = Join-Path $outputRoot 'pyqt-sip-wheel'
+if (Test-Path -LiteralPath $sipWheels) { Remove-Item -LiteralPath $sipWheels -Recurse -Force }
+Invoke-InVsShell -Setup $quietTools ("`"$venvPython`" -m pip wheel --no-deps --no-build-isolation --disable-pip-version-check " +
+    "-w `"$sipWheels`" `"$outputRoot\pyqt-sip\PyQt6_sip-13.8.0`"")
+$pyqtInstall = Join-Path $installBin 'plugins\plugin_python\libs\PyQt6'
+New-Item -ItemType Directory -Force -Path $pyqtInstall | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $pyqtSite 'PyQt6') -File |
+    Where-Object { $_.Extension -in '.pyd', '.pyi' -or $_.Name -eq '__init__.py' } |
+    Copy-Item -Destination $pyqtInstall -Force
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$sipWheel = @(Get-ChildItem -LiteralPath $sipWheels -Filter 'PyQt6_sip-13.8.0-cp312-*.whl')
+if ($sipWheel.Count -ne 1) { throw "pip did not build one PyQt6_sip 13.8.0 wheel in $sipWheels" }
+$zip = [IO.Compression.ZipFile]::OpenRead($sipWheel[0].FullName)
+try {
+    foreach ($entry in $zip.Entries) {
+        # sip.pyi comes with PyQt6 itself
+        if ($entry.FullName -match '^PyQt6/sip\.[^/]+\.pyd$') {
+            [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, (Join-Path $pyqtInstall $entry.Name), $true)
+        }
+    }
+} finally { $zip.Dispose() }
+
 # the ABI checks, on the installed files
 $installBin = Join-Path $installRoot 'bin'
 $reference = Get-Content -LiteralPath (Join-Path $abiRoot 'binaries.json') -Raw | ConvertFrom-Json
@@ -275,7 +389,18 @@ if ($problems.Count -eq 0) {
         $expected = $reference.($relative.Replace('\', '/'))
         if (-not $expected) { $problems.Add("no ABI reference for $relative"); continue }
         $record = Get-BinaryRecord $path
-        if (Compare-Object @($expected.dependents) @($record.dependents)) {
+        # which Universal CRT DLLs, and whether vcruntime140_1.dll, a file
+        # imports follows the compiler version. Those may differ, but only in a
+        # file that already used the dynamic runtime (7z.dll links it
+        # statically), and no other Visual C++ runtime DLL may appear
+        $expectedDeps = @($expected.dependents)
+        $builtDeps = @($record.dependents)
+        if (@($expectedDeps | Where-Object { $_ -match '^vcruntime140\.dll$' }).Count) {
+            $loose = '^(api-ms-win-crt-.+|vcruntime140_1)\.dll$'
+            $expectedDeps = @($expectedDeps | Where-Object { $_ -notmatch $loose })
+            $builtDeps = @($builtDeps | Where-Object { $_ -notmatch $loose })
+        }
+        if (Compare-Object $expectedDeps $builtDeps) {
             $problems.Add("$relative depends on [$($record.dependents -join ', ')] instead of [$($expected.dependents -join ', ')]")
         }
         if (Compare-Object @($expected.interfaces) @($record.interfaces)) {

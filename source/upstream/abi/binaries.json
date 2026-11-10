@@ -854,7 +854,10 @@
                                                                                      "com.tannin.ModOrganizer.PluginModPage/1.0",
                                                                                      "com.tannin.ModOrganizer.PluginPreview/1.0",
                                                                                      "com.tannin.ModOrganizer.PluginTool/1.0"
-                                                                                 ]
+                                                                                 ],
+                                                                  "exports":  [
+                                                                                  "PyInit_mobase"
+                                                                              ]
                                                               },
     "usvfs_x64.dll":  {
                           "dependents":  [
@@ -1181,5 +1184,673 @@
                                 "interfaces":  [
 
                                                ]
-                            }
+                            },
+    "dlls/7z.dll":  {
+                        "dependents":  [
+                                           "advapi32.dll",
+                                           "kernel32.dll",
+                                           "oleaut32.dll",
+                                           "user32.dll"
+                                       ],
+                        "interfaces":  [
+
+                                       ],
+                        "exports":  [
+                                        "CreateDecoder",
+                                        "CreateEncoder",
+                                        "CreateObject",
+                                        "GetHandlerProperty",
+                                        "GetHandlerProperty2",
+                                        "GetHashers",
+                                        "GetIsArc",
+                                        "GetMethodProperty",
+                                        "GetModuleProp",
+                                        "GetNumberOfFormats",
+                                        "GetNumberOfMethods",
+                                        "SetCaseSensitive",
+                                        "SetCodecs",
+                                        "SetLargePageMode"
+                                    ]
+                    },
+    "plugins/plugin_python/libs/PyQt6/QAxContainer.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-string-l1-1-0.dll",
+                                                                                 "gdi32.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "msvcp140.dll",
+                                                                                 "ole32.dll",
+                                                                                 "oleaut32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6gui.dll",
+                                                                                 "qt6widgets.dll",
+                                                                                 "user32.dll",
+                                                                                 "vcruntime140.dll",
+                                                                                 "vcruntime140_1.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QAxContainer"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtBluetooth.pyd":  {
+                                                             "dependents":  [
+                                                                                "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                "kernel32.dll",
+                                                                                "python312.dll",
+                                                                                "qt6bluetooth.dll",
+                                                                                "qt6core.dll",
+                                                                                "vcruntime140.dll"
+                                                                            ],
+                                                             "interfaces":  [
+
+                                                                            ],
+                                                             "exports":  [
+                                                                             "PyInit_QtBluetooth"
+                                                                         ]
+                                                         },
+    "plugins/plugin_python/libs/PyQt6/QtCore.pyd":  {
+                                                        "dependents":  [
+                                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                           "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                                           "api-ms-win-crt-string-l1-1-0.dll",
+                                                                           "kernel32.dll",
+                                                                           "msvcp140.dll",
+                                                                           "python312.dll",
+                                                                           "qt6core.dll",
+                                                                           "vcruntime140.dll",
+                                                                           "vcruntime140_1.dll"
+                                                                       ],
+                                                        "interfaces":  [
+
+                                                                       ],
+                                                        "exports":  [
+                                                                        "PyInit_QtCore"
+                                                                    ]
+                                                    },
+    "plugins/plugin_python/libs/PyQt6/QtDBus.pyd":  {
+                                                        "dependents":  [
+                                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                           "kernel32.dll",
+                                                                           "python312.dll",
+                                                                           "qt6core.dll",
+                                                                           "qt6dbus.dll",
+                                                                           "vcruntime140.dll"
+                                                                       ],
+                                                        "interfaces":  [
+
+                                                                       ],
+                                                        "exports":  [
+                                                                        "PyInit_QtDBus"
+                                                                    ]
+                                                    },
+    "plugins/plugin_python/libs/PyQt6/QtDesigner.pyd":  {
+                                                            "dependents":  [
+                                                                               "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                               "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                               "api-ms-win-crt-string-l1-1-0.dll",
+                                                                               "kernel32.dll",
+                                                                               "python312.dll",
+                                                                               "qt6core.dll",
+                                                                               "qt6designer.dll",
+                                                                               "qt6gui.dll",
+                                                                               "qt6widgets.dll",
+                                                                               "vcruntime140.dll"
+                                                                           ],
+                                                            "interfaces":  [
+
+                                                                           ],
+                                                            "exports":  [
+                                                                            "PyInit_QtDesigner"
+                                                                        ]
+                                                        },
+    "plugins/plugin_python/libs/PyQt6/QtGui.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "msvcp140_2.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6gui.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtGui"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/QtHelp.pyd":  {
+                                                        "dependents":  [
+                                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                           "kernel32.dll",
+                                                                           "msvcp140.dll",
+                                                                           "python312.dll",
+                                                                           "qt6core.dll",
+                                                                           "qt6help.dll",
+                                                                           "qt6widgets.dll",
+                                                                           "vcruntime140.dll",
+                                                                           "vcruntime140_1.dll"
+                                                                       ],
+                                                        "interfaces":  [
+
+                                                                       ],
+                                                        "exports":  [
+                                                                        "PyInit_QtHelp"
+                                                                    ]
+                                                    },
+    "plugins/plugin_python/libs/PyQt6/QtMultimedia.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6gui.dll",
+                                                                                 "qt6multimedia.dll",
+                                                                                 "vcruntime140.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QtMultimedia"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtMultimediaWidgets.pyd":  {
+                                                                     "dependents":  [
+                                                                                        "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                        "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                        "kernel32.dll",
+                                                                                        "python312.dll",
+                                                                                        "qt6core.dll",
+                                                                                        "qt6gui.dll",
+                                                                                        "qt6multimediawidgets.dll",
+                                                                                        "qt6widgets.dll",
+                                                                                        "vcruntime140.dll"
+                                                                                    ],
+                                                                     "interfaces":  [
+
+                                                                                    ],
+                                                                     "exports":  [
+                                                                                     "PyInit_QtMultimediaWidgets"
+                                                                                 ]
+                                                                 },
+    "plugins/plugin_python/libs/PyQt6/QtNetwork.pyd":  {
+                                                           "dependents":  [
+                                                                              "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                              "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                              "kernel32.dll",
+                                                                              "msvcp140.dll",
+                                                                              "python312.dll",
+                                                                              "qt6core.dll",
+                                                                              "qt6network.dll",
+                                                                              "vcruntime140.dll",
+                                                                              "vcruntime140_1.dll"
+                                                                          ],
+                                                           "interfaces":  [
+
+                                                                          ],
+                                                           "exports":  [
+                                                                           "PyInit_QtNetwork"
+                                                                       ]
+                                                       },
+    "plugins/plugin_python/libs/PyQt6/QtNfc.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6nfc.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtNfc"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/QtOpenGL.pyd":  {
+                                                          "dependents":  [
+                                                                             "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                             "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                             "kernel32.dll",
+                                                                             "python312.dll",
+                                                                             "qt6core.dll",
+                                                                             "qt6gui.dll",
+                                                                             "qt6opengl.dll",
+                                                                             "vcruntime140.dll"
+                                                                         ],
+                                                          "interfaces":  [
+
+                                                                         ],
+                                                          "exports":  [
+                                                                          "PyInit_QtOpenGL"
+                                                                      ]
+                                                      },
+    "plugins/plugin_python/libs/PyQt6/QtOpenGLWidgets.pyd":  {
+                                                                 "dependents":  [
+                                                                                    "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                    "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                    "kernel32.dll",
+                                                                                    "python312.dll",
+                                                                                    "qt6core.dll",
+                                                                                    "qt6gui.dll",
+                                                                                    "qt6openglwidgets.dll",
+                                                                                    "qt6widgets.dll",
+                                                                                    "vcruntime140.dll"
+                                                                                ],
+                                                                 "interfaces":  [
+
+                                                                                ],
+                                                                 "exports":  [
+                                                                                 "PyInit_QtOpenGLWidgets"
+                                                                             ]
+                                                             },
+    "plugins/plugin_python/libs/PyQt6/QtPdf.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6gui.dll",
+                                                                          "qt6pdf.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtPdf"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/QtPdfWidgets.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6pdfwidgets.dll",
+                                                                                 "qt6widgets.dll",
+                                                                                 "vcruntime140.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QtPdfWidgets"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtPositioning.pyd":  {
+                                                               "dependents":  [
+                                                                                  "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                  "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                  "kernel32.dll",
+                                                                                  "python312.dll",
+                                                                                  "qt6core.dll",
+                                                                                  "qt6positioning.dll",
+                                                                                  "vcruntime140.dll"
+                                                                              ],
+                                                               "interfaces":  [
+
+                                                                              ],
+                                                               "exports":  [
+                                                                               "PyInit_QtPositioning"
+                                                                           ]
+                                                           },
+    "plugins/plugin_python/libs/PyQt6/QtPrintSupport.pyd":  {
+                                                                "dependents":  [
+                                                                                   "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                   "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                   "kernel32.dll",
+                                                                                   "python312.dll",
+                                                                                   "qt6core.dll",
+                                                                                   "qt6gui.dll",
+                                                                                   "qt6printsupport.dll",
+                                                                                   "qt6widgets.dll",
+                                                                                   "vcruntime140.dll"
+                                                                               ],
+                                                                "interfaces":  [
+
+                                                                               ],
+                                                                "exports":  [
+                                                                                "PyInit_QtPrintSupport"
+                                                                            ]
+                                                            },
+    "plugins/plugin_python/libs/PyQt6/QtQml.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6gui.dll",
+                                                                          "qt6qml.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtQml"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/QtQuick.pyd":  {
+                                                         "dependents":  [
+                                                                            "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                            "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                            "kernel32.dll",
+                                                                            "python312.dll",
+                                                                            "qt6core.dll",
+                                                                            "qt6gui.dll",
+                                                                            "qt6qml.dll",
+                                                                            "qt6quick.dll",
+                                                                            "vcruntime140.dll"
+                                                                        ],
+                                                         "interfaces":  [
+
+                                                                        ],
+                                                         "exports":  [
+                                                                         "PyInit_QtQuick"
+                                                                     ]
+                                                     },
+    "plugins/plugin_python/libs/PyQt6/QtQuick3D.pyd":  {
+                                                           "dependents":  [
+                                                                              "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                              "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                              "kernel32.dll",
+                                                                              "python312.dll",
+                                                                              "qt6core.dll",
+                                                                              "qt6quick3d.dll",
+                                                                              "vcruntime140.dll"
+                                                                          ],
+                                                           "interfaces":  [
+
+                                                                          ],
+                                                           "exports":  [
+                                                                           "PyInit_QtQuick3D"
+                                                                       ]
+                                                       },
+    "plugins/plugin_python/libs/PyQt6/QtQuickWidgets.pyd":  {
+                                                                "dependents":  [
+                                                                                   "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                   "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                   "kernel32.dll",
+                                                                                   "python312.dll",
+                                                                                   "qt6core.dll",
+                                                                                   "qt6gui.dll",
+                                                                                   "qt6quickwidgets.dll",
+                                                                                   "qt6widgets.dll",
+                                                                                   "vcruntime140.dll"
+                                                                               ],
+                                                                "interfaces":  [
+
+                                                                               ],
+                                                                "exports":  [
+                                                                                "PyInit_QtQuickWidgets"
+                                                                            ]
+                                                            },
+    "plugins/plugin_python/libs/PyQt6/QtRemoteObjects.pyd":  {
+                                                                 "dependents":  [
+                                                                                    "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                    "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                    "kernel32.dll",
+                                                                                    "python312.dll",
+                                                                                    "qt6core.dll",
+                                                                                    "qt6remoteobjects.dll",
+                                                                                    "vcruntime140.dll"
+                                                                                ],
+                                                                 "interfaces":  [
+
+                                                                                ],
+                                                                 "exports":  [
+                                                                                 "PyInit_QtRemoteObjects"
+                                                                             ]
+                                                             },
+    "plugins/plugin_python/libs/PyQt6/QtSensors.pyd":  {
+                                                           "dependents":  [
+                                                                              "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                              "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                              "kernel32.dll",
+                                                                              "python312.dll",
+                                                                              "qt6core.dll",
+                                                                              "qt6sensors.dll",
+                                                                              "vcruntime140.dll"
+                                                                          ],
+                                                           "interfaces":  [
+
+                                                                          ],
+                                                           "exports":  [
+                                                                           "PyInit_QtSensors"
+                                                                       ]
+                                                       },
+    "plugins/plugin_python/libs/PyQt6/QtSerialPort.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6serialport.dll",
+                                                                                 "vcruntime140.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QtSerialPort"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtSpatialAudio.pyd":  {
+                                                                "dependents":  [
+                                                                                   "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                   "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                   "kernel32.dll",
+                                                                                   "python312.dll",
+                                                                                   "qt6core.dll",
+                                                                                   "qt6spatialaudio.dll",
+                                                                                   "vcruntime140.dll"
+                                                                               ],
+                                                                "interfaces":  [
+
+                                                                               ],
+                                                                "exports":  [
+                                                                                "PyInit_QtSpatialAudio"
+                                                                            ]
+                                                            },
+    "plugins/plugin_python/libs/PyQt6/QtSql.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6sql.dll",
+                                                                          "qt6widgets.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtSql"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/QtSvg.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6gui.dll",
+                                                                          "qt6svg.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtSvg"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/QtSvgWidgets.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6gui.dll",
+                                                                                 "qt6svgwidgets.dll",
+                                                                                 "qt6widgets.dll",
+                                                                                 "vcruntime140.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QtSvgWidgets"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtTest.pyd":  {
+                                                        "dependents":  [
+                                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                           "kernel32.dll",
+                                                                           "python312.dll",
+                                                                           "qt6core.dll",
+                                                                           "qt6gui.dll",
+                                                                           "qt6test.dll",
+                                                                           "qt6widgets.dll",
+                                                                           "vcruntime140.dll"
+                                                                       ],
+                                                        "interfaces":  [
+
+                                                                       ],
+                                                        "exports":  [
+                                                                        "PyInit_QtTest"
+                                                                    ]
+                                                    },
+    "plugins/plugin_python/libs/PyQt6/QtTextToSpeech.pyd":  {
+                                                                "dependents":  [
+                                                                                   "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                   "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                   "kernel32.dll",
+                                                                                   "python312.dll",
+                                                                                   "qt6core.dll",
+                                                                                   "qt6texttospeech.dll",
+                                                                                   "vcruntime140.dll"
+                                                                               ],
+                                                                "interfaces":  [
+
+                                                                               ],
+                                                                "exports":  [
+                                                                                "PyInit_QtTextToSpeech"
+                                                                            ]
+                                                            },
+    "plugins/plugin_python/libs/PyQt6/QtWebChannel.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6webchannel.dll",
+                                                                                 "vcruntime140.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QtWebChannel"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtWebSockets.pyd":  {
+                                                              "dependents":  [
+                                                                                 "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                 "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                 "kernel32.dll",
+                                                                                 "python312.dll",
+                                                                                 "qt6core.dll",
+                                                                                 "qt6network.dll",
+                                                                                 "qt6websockets.dll",
+                                                                                 "vcruntime140.dll"
+                                                                             ],
+                                                              "interfaces":  [
+
+                                                                             ],
+                                                              "exports":  [
+                                                                              "PyInit_QtWebSockets"
+                                                                          ]
+                                                          },
+    "plugins/plugin_python/libs/PyQt6/QtWidgets.pyd":  {
+                                                           "dependents":  [
+                                                                              "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                              "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                              "kernel32.dll",
+                                                                              "msvcp140.dll",
+                                                                              "python312.dll",
+                                                                              "qt6core.dll",
+                                                                              "qt6gui.dll",
+                                                                              "qt6widgets.dll",
+                                                                              "vcruntime140.dll",
+                                                                              "vcruntime140_1.dll"
+                                                                          ],
+                                                           "interfaces":  [
+
+                                                                          ],
+                                                           "exports":  [
+                                                                           "PyInit_QtWidgets"
+                                                                       ]
+                                                       },
+    "plugins/plugin_python/libs/PyQt6/QtXml.pyd":  {
+                                                       "dependents":  [
+                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                          "kernel32.dll",
+                                                                          "python312.dll",
+                                                                          "qt6core.dll",
+                                                                          "qt6xml.dll",
+                                                                          "vcruntime140.dll"
+                                                                      ],
+                                                       "interfaces":  [
+
+                                                                      ],
+                                                       "exports":  [
+                                                                       "PyInit_QtXml"
+                                                                   ]
+                                                   },
+    "plugins/plugin_python/libs/PyQt6/sip.cp312-win_amd64.pyd":  {
+                                                                     "dependents":  [
+                                                                                        "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                        "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                                                        "api-ms-win-crt-utility-l1-1-0.dll",
+                                                                                        "kernel32.dll",
+                                                                                        "python312.dll",
+                                                                                        "vcruntime140.dll"
+                                                                                    ],
+                                                                     "interfaces":  [
+
+                                                                                    ],
+                                                                     "exports":  [
+                                                                                     "PyInit_sip"
+                                                                                 ]
+                                                                 }
 }

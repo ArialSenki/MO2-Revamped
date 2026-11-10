@@ -5,10 +5,13 @@ compiled from the current source tree on Windows with MSVC 14.44, Qt 6.7.1,
 Python 3.12.15, and the MO2 build dependencies recorded in
 [`UPSTREAMS.md`](UPSTREAMS.md). A new external CMake build directory completed
 successfully. Every Mod Organizer 2 binary of a release is built from this
-repository (see below), and so are its translations and the BAIN wizard
-interpreter; Qt (with its own `qt_`/`qtbase_` translations), PyQt6, Python,
-7-Zip, lz4, libbsarch, LOOT, Explorer++ and the third-party Python libraries
-are still supplied separately, from the runtime and the overlays.
+repository (see below), and so are its translations, the BAIN wizard
+interpreter, and the two third-party binaries MO2 compiled itself, `7z.dll`
+and PyQt6. Qt (with its own `qt_`/`qtbase_` translations), Python, lz4,
+libbsarch, LOOT, Explorer++ and the third-party Python libraries are still
+supplied separately, from the runtime and the overlays; when this was written,
+the Qt, lz4, libbsarch and LOOT files there were byte for byte the projects'
+official releases (compared by hand, not by the builder).
 
 For release builds, the Organizer target maps `%USERPROFILE%` to the neutral
 `MO2_USER` prefix in MSVC Release builds with `/pathmap` and
@@ -28,7 +31,7 @@ It maps the reviewed Light and Dark styles to `stylesheets/Light.qss` and
 
 Use the official [MO2 build project (`mob`)](https://github.com/ModOrganizer2/mob)
 to prepare the third-party dependencies (Boost, spdlog, zlib, lz4, libbsarch,
-DirectXTex, 7-Zip, libloot) and Qt 6.7.1. Do not mix Qt, Python, compiler, or
+DirectXTex, libloot) and Qt 6.7.1. Do not mix Qt, Python, compiler, or
 USVFS versions without rebuilding and checking the native extensions.
 
 The Mod Organizer 2 libraries and plugins come from `source/upstream/`, not
@@ -42,11 +45,27 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Upstrea
   -OutputDirectory C:\path\to\upstream-out `
   -ThirdPartyDirectory C:\path\to\mo\build `
   -QtDirectory C:\path\to\Qt\6.7.1\msvc2019_64 `
-  -PythonDirectory C:\path\to\python-3.12
+  -PythonDirectory C:\path\to\python-3.12 `
+  -BuildPython C:\path\to\installed\Python312\python.exe
 ```
 
 `-PythonDirectory` is a CPython 3.12 tree with `Include\` and
-`PCBuild\amd64\` (`python.exe`, `python312.lib`). The two C++/CLI installers
+`PCBuild\amd64\` (`python.exe`, `python312.lib`). `-BuildPython` is an
+installed CPython 3.12 with `venv` and `pip`: the script makes a virtual
+environment from it and installs sip and PyQt-builder there with
+`pip --require-hashes` from `source/upstream/third-party/pyqt-build-requirements.txt`.
+`-QtDirectory` is the official Qt 6.7.1 `msvc2019_64` with the modules PyQt6
+binds, for example with aqtinstall:
+`aqt install-qt windows desktop 6.7.1 win64_msvc2019_64 -m qtactiveqt qtconnectivity qtmultimedia qtquick3d qtshadertools qtremoteobjects qtsensors qtserialport qtspeech qtpositioning qtwebchannel qtwebsockets qtpdf`.
+
+`7z.dll` and PyQt6 are built from the official sources in
+`source/upstream/third-party/` (see its README), checked against
+`SHA256SUMS.txt`: 7-Zip 24.05 with `nmake` in `CPP/7zip/Bundles/Format7zF`,
+PyQt6 6.7.1 with `sip-install --link-full-dll`, and PyQt6-sip 13.8.0 as a wheel,
+as `mob` built them for 2.5.2. PyQt-builder gets `pyqt-builder-link-full-dll.patch`,
+the linker part of `mob`'s own patch, so the modules link `python312.dll` (the
+release ships no `python3.dll`). The Designer and qmlscene plugins are not
+built; MO2 does not ship them. The two C++/CLI installers
 need the Visual Studio Build Tools components ".NET Framework 4.8 SDK",
 ".NET Framework 4.8 targeting pack" and ".NET Framework 4.7.2 targeting pack"
 (CMake's C# detection asks for 4.7.2), and archive needs "C++ ATL for latest
@@ -57,8 +76,10 @@ The script builds in RelWithDebInfo, as the official plugin builds did, with
 source, dependency, build and profile paths mapped, installs into `upstream-out\install` (the runtime layout plus the
 import libraries) and checks every binary against `source/upstream/abi/`, which
 was written from the official 2.5.2 binaries: uibase must export the same 663
-symbols, each file keeps its DLL dependencies and its plugin interface IDs,
-everything imported from uibase must exist, and no local path may remain. Only
+symbols, USVFS, `7z.dll` and each PyQt6 module their exports, each file keeps
+its DLL dependencies (the Universal CRT and Visual C++ runtime DLLs aside, which
+follow the compiler version) and its plugin interface IDs, everything imported
+from uibase must exist, and no local path may remain. Only
 then does it fill `upstream-out\stage` with the shipped files and
 `upstream-manifest.json`.
 
@@ -159,8 +180,8 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
 ```
 
 From the Complete runtime the builder takes only what has no source here (Qt,
-PyQt6, 7-Zip, lz4, libbsarch, LOOT, Explorer++, the third-party Python
-libraries the plugins bundle, and Qt's `qt_`/`qtbase_` translations). It never
+lz4, libbsarch, LOOT, Explorer++, the third-party Python libraries the plugins
+bundle, and Qt's `qt_`/`qtbase_` translations). It never
 stages the runtime's copies of the files `-UpstreamStageDirectory` lists: those
 come from the upstream stage, whose manifest must match its files and the
 committed `source/upstream`. The Python plugins, with the BAIN wizard
