@@ -839,9 +839,11 @@ private:
 
     const QString objectName = m_view->objectName();
     if (objectName == QStringLiteral("modList")) {
-      // Keep the mod name and status columns readable when the window narrows;
-      // the remaining width is distributed proportionally by resizeColumns().
-      constexpr int widths[] = {120, 150, 130, 105, 160, 90,
+      // Keep the mod name and status columns readable when the window narrows
+      // or many columns are shown (the list then scrolls sideways); the
+      // remaining width is distributed proportionally by resizeColumns(). The
+      // name's cell also holds the switch.
+      constexpr int widths[] = {180, 150, 130, 105, 160, 90,
                                 105, 120, 130, 52, 140};
       if (column == ModList::COL_PRIORITY) {
         // the "#" column only holds short numbers

@@ -271,6 +271,7 @@ private:
     case ModList::COL_GAME:
     case ModList::COL_INSTALLTIME:
     case ModList::COL_NOTES:
+    case ModList::COL_MODID:
       return 4;
     default:
       return 0;

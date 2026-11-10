@@ -277,10 +277,8 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     // the number under the arrow); icon columns stay centered
     if (column == COL_NAME || column == COL_VERSION || column == COL_NOTES ||
         column == COL_CATEGORY || column == COL_GAME || column == COL_INSTALLTIME ||
-        column == COL_PRIORITY) {
+        column == COL_PRIORITY || column == COL_MODID) {
       return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
-    } else if (column == COL_MODID) {
-      return QVariant(Qt::AlignRight | Qt::AlignVCenter);
     } else {
       return QVariant(Qt::AlignCenter | Qt::AlignVCenter);
     }

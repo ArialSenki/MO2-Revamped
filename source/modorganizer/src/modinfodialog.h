@@ -267,6 +267,9 @@ private:
   void buildFluentPages();
   void updateModCard();
 
+  // the mod's name as the mod list shows it
+  QString shownName() const;
+
   QLabel* m_modCardName       = nullptr;
   QLabel* m_modCardCaption    = nullptr;
   QToolButton* m_modCardNexus = nullptr;

@@ -494,7 +494,7 @@ void ModInfoDialog::update(bool firstTime)
   // exists
   const int oldTab = ui->tabWidget->currentIndex();
 
-  setWindowTitle(m_mod->name());
+  setWindowTitle(shownName());
   updateModCard();
 
   // rebuilding the tab widget if needed depending on what tabs are valid for
@@ -1121,7 +1121,7 @@ void ModInfoDialog::buildFluentPages()
   });
   auto* copyName = FluentPanels::iconButton(0xE8C8, tr("Copy the mod's name"), modCard);
   connect(copyName, &QToolButton::clicked, this, [this] {
-    QGuiApplication::clipboard()->setText(m_mod->name());
+    QGuiApplication::clipboard()->setText(shownName());
   });
   modButtons->addWidget(folder);
   modButtons->addWidget(m_modCardNexus);
@@ -1248,13 +1248,23 @@ void ModInfoDialog::buildFluentPages()
   ui->nextMod->setToolTip(tr("The mod below this one in the list (Page Down)"));
 }
 
+QString ModInfoDialog::shownName() const
+{
+  // as the mod list shows it: a separator without its folder's suffix
+  QString name = m_mod->name();
+  if (m_mod->isSeparator()) {
+    name.replace(QStringLiteral("_separator"), QString());
+  }
+  return name;
+}
+
 void ModInfoDialog::updateModCard()
 {
   if (m_modCardName == nullptr || !m_mod) {
     return;
   }
 
-  m_modCardName->setText(m_mod->name());
+  m_modCardName->setText(shownName());
 
   QStringList facts;
   if (m_mod->isSeparator()) {

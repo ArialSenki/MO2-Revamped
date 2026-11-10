@@ -39,6 +39,10 @@
   you drop on.
 - The Mods panel's search, grouping, filter button and lists have names for screen
   readers.
+- With many columns shown, the mod name keeps a readable width and the list scrolls
+  sideways; Nexus IDs line up with their heading.
+- A separator's information window is titled with its name, without the folder's
+  "_separator" suffix.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 
