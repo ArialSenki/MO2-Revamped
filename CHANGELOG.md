@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Installer
+
+- The installer makes sure the Microsoft Visual C++ runtime MO2 needs is installed:
+  x64, and x86 for 32-bit games such as Fallout 3, New Vegas and Oblivion. When it
+  is missing or too old, it downloads Microsoft's own installer, checks that
+  Microsoft signed it, and installs it. If that fails, MO2 is still installed and
+  the result shows Microsoft's download links.
+
 ### Other games
 
 - Baldur's Gate 3 is supported, with MO2's official game plugin and its tools. The

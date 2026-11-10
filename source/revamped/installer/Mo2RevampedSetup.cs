@@ -683,6 +683,12 @@ namespace Mo2RevampedSetup
                 uninstallWarning = InstallerText.T("Windows no pudo registrar la desinstalación: ") + ex.Message;
             }
 
+            // the Microsoft Visual C++ runtime MO2 and usvfs need (see VcRuntime);
+            // the Elden Ring edition only runs 64-bit games
+            bool vcRestartNeeded;
+            string vcWarning = VcRuntime.Ensure(!eldenRingOnly,
+                delegate(string text) { Report(worker, 100, text); }, out vcRestartNeeded);
+
             StringBuilder details = new StringBuilder();
             details.Append(InstallerText.T("Destino: ")).Append(target).Append(Environment.NewLine);
             if (request.Mode == SetupMode.Update)
@@ -701,16 +707,22 @@ namespace Mo2RevampedSetup
                 details.Append(InstallerText.T("MO2 se configuró como estándar."));
             if (!String.IsNullOrEmpty(uninstallWarning))
                 details.Append(Environment.NewLine).Append(uninstallWarning).Append(InstallerText.T(" El asistente de instalación todavía permite restaurar esta operación."));
+            if (!String.IsNullOrEmpty(vcWarning))
+                details.Append(Environment.NewLine).Append(vcWarning);
+            else if (vcRestartNeeded)
+                details.Append(Environment.NewLine).Append(InstallerText.T("Windows pide reiniciar para terminar de instalar Microsoft Visual C++."));
             return new OperationResult
             {
                 // MO2 is installed and works; only the Windows entry is missing, so
                 // the window must not offer to retry (the folder is no longer empty)
                 Success = true,
                 Message = !String.IsNullOrEmpty(uninstallWarning) ? "La instalación terminó, pero sin entrada de desinstalación." :
+                    !String.IsNullOrEmpty(vcWarning) ? "La instalación terminó, pero falta Microsoft Visual C++." :
                     request.Mode == SetupMode.Update ? "Se actualizaron los archivos del programa." :
                     request.Mode == SetupMode.Migrate ? "La instalación nueva recibió los datos seleccionados." : "La instalación nueva está lista.",
                 Details = details.ToString(),
-                LaunchPath = request.LaunchWhenDone ? Path.Combine(target, "ModOrganizer.exe") : null
+                // without the runtime MO2 would only fail with a missing DLL
+                LaunchPath = request.LaunchWhenDone && String.IsNullOrEmpty(vcWarning) ? Path.Combine(target, "ModOrganizer.exe") : null
             };
             }
             finally { payload.Dispose(); }

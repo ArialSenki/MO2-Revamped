@@ -170,7 +170,8 @@ $sourceFiles = @(
     (Join-Path $sourceDir 'Mo2RevampedSetup.cs'),
     (Join-Path $sourceDir 'InstallerText.cs'),
     (Join-Path $sourceDir 'InstallerBackend.cs'),
-    (Join-Path $sourceDir 'CompactSetupForm.cs')
+    (Join-Path $sourceDir 'CompactSetupForm.cs'),
+    (Join-Path $sourceDir 'VcRuntime.cs')
 )
 $iconPath = Join-Path $repoRoot 'source\revamped\branding\MO2-Revamped.ico'
 $manifestPath = Join-Path $sourceDir 'app.manifest'
