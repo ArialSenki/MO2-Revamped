@@ -157,6 +157,15 @@ void PluginListView::updatePluginCount()
           .arg(mediumMasterCount));
 }
 
+void PluginListView::showEvent(QShowEvent* event)
+{
+  QTreeView::showEvent(event);
+  // updateFilter() does nothing unless the text or the options changed
+  if (m_sortProxy != nullptr && ui.filter != nullptr) {
+    m_sortProxy->updateFilter(ui.filter->text());
+  }
+}
+
 void PluginListView::onFilterChanged(const QString& filter)
 {
     // Fluent: the theme draws an accent edge around a filtered list

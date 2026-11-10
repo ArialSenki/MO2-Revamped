@@ -17,8 +17,8 @@ DeveloperSettingsTab::DeveloperSettingsTab(Settings& s, SettingsDialog& d, QWidg
   auto* heading = new QLabel(QObject::tr("Developer"), page);
   heading->setObjectName(QStringLiteral("developerPageTitle"));
   heading->setProperty("wizardPageTitle", true);
-  auto* text = new QLabel(QObject::tr("Features still in testing. They may change or go away, "
-                                      "and none of them is needed to play."),
+  auto* text = new QLabel(QObject::tr("Nothing is in testing right now. Features in testing "
+                                      "appear here; none of them is needed to play."),
                           page);
   text->setObjectName(QStringLiteral("developerPageSubtitle"));
   text->setProperty("wizardPageText", true);
@@ -43,7 +43,8 @@ DeveloperSettingsTab::DeveloperSettingsTab(Settings& s, SettingsDialog& d, QWidg
   m_developerMode = addBox(
       developer, QStringLiteral("developerModeBox"), QObject::tr("Developer mode"),
       QObject::tr("Shows this page. Turned off, it is gone the next time Settings "
-                  "opens; seven taps on the version in About turn it on again."),
+                  "opens; seven taps on the version in About MO2 Revamped turn it on "
+                  "again."),
       true);
   // the section titles sit inside the cards, as on the other pages
   MOBase::CircularUi::addGroupHeading(

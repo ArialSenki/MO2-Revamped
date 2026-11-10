@@ -425,20 +425,26 @@ class IniEdit(mobase.IPluginTool):
         gameName = self.__organizer.managedGame().gameShortName().lower()
         if gameName == "oblivion":
             return ["oblivion.ini",  "oblivionprefs.ini"]
-        elif gameName == "fallout3" or gameName == "falloutnv":
+        elif gameName in ("fallout3", "falloutnv", "ttw"):
             return ["fallout.ini",  "falloutprefs.ini"]
-        elif gameName == "fallout4":
+        elif gameName in ("fallout4", "fallout4vr"):
             return ["fallout4.ini",  "fallout4prefs.ini", "fallout4custom.ini"]
         elif gameName == "skyrim":
             return ["skyrim.ini",  "skyrimprefs.ini"]
         elif gameName == "skyrimse":
             return ["skyrim.ini",  "skyrimprefs.ini"]
+        elif gameName == "skyrimvr":
+            return ["skyrimvr.ini",  "skyrimprefs.ini"]
         else:
             return []
 
     def __filteredSettings(self):
         newSettings = CaselessDict()
-        gameName = str(self.__organizer.managedGame().gameShortName())
+        # settings.json names its games in lower case ("skyrim", "falloutnv"),
+        # and Tale of Two Wastelands runs New Vegas (MO2 Revamped)
+        gameName = str(self.__organizer.managedGame().gameShortName()).lower()
+        if gameName == "ttw":
+            gameName = "falloutnv"
 
         iniFiles = self.__iniFiles()
 

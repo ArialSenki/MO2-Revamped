@@ -96,6 +96,11 @@ private:
   QLabel* m_programLabel = nullptr;
   QLabel* m_modsTitle    = nullptr;
   QTimer m_refreshTimer;
+  // the disk walks run off the UI thread; a result older than the last
+  // request is dropped
+  int m_diskScan  = 0;
+  int m_savesScan = 0;
+  void showLastPlayed(const QDateTime& newest);
 
   // the mod counts are worked out a little at a time, as asking each mod for
   // its conflicts on the UI thread stalls the window with many mods

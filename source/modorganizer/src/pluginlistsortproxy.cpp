@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pluginlistsortproxy.h"
 #include "messagedialog.h"
+#include <filterwidget.h>
 #include <QApplication>
 #include <QCheckBox>
 #include <QMenu>
@@ -37,11 +38,29 @@ PluginListSortProxy::PluginListSortProxy(QObject* parent)
 
 void PluginListSortProxy::updateFilter(const QString& filter)
 {
-  if (m_CurrentFilter != filter) {
-    m_CurrentFilter = filter;
-    m_FilterSegments.clear();
+  // the option is shared with the other lists' searches, as FilterWidget does
+  const auto options    = MOBase::FilterWidget::options();
+  const bool regexNow   = options.useRegex;
+  QRegularExpression::PatternOptions flags = QRegularExpression::DotMatchesEverythingOption;
+  if (!options.regexCaseSensitive) {
+    flags |= QRegularExpression::CaseInsensitiveOption;
+  }
+  if (options.regexExtended) {
+    flags |= QRegularExpression::ExtendedPatternSyntaxOption;
+  }
 
-    if (!m_CurrentFilter.isEmpty()) {
+  if (m_CurrentFilter != filter || m_UseRegex != regexNow ||
+      (regexNow && m_FilterRegex.patternOptions() != flags)) {
+    m_CurrentFilter = filter;
+    m_UseRegex      = regexNow;
+    m_FilterSegments.clear();
+    m_FilterRegex = QRegularExpression();
+
+    if (m_UseRegex) {
+      if (!m_CurrentFilter.isEmpty()) {
+        m_FilterRegex = QRegularExpression(m_CurrentFilter, flags);
+      }
+    } else if (!m_CurrentFilter.isEmpty()) {
       QString filterCopy = m_CurrentFilter;
       filterCopy.replace("||", ";")
           .replace(QRegularExpression(QStringLiteral("\\s+OR\\s+")), ";")
@@ -64,6 +83,15 @@ void PluginListSortProxy::updateFilter(const QString& filter)
 
 bool PluginListSortProxy::filterAcceptsRow(int row, const QModelIndex&) const
 {
+  if (m_UseRegex) {
+    // an expression still being typed (invalid) hides nothing
+    if (m_CurrentFilter.isEmpty() || !m_FilterRegex.isValid()) {
+      return true;
+    }
+    auto* plugins = qobject_cast<PluginList*>(sourceModel());
+    return plugins != nullptr && filterMatchesPlugin(plugins->getName(row));
+  }
+
   // only separators (`|`, `;`, `OR`) leave no segment: no filter, as FilterWidget
   if (m_FilterSegments.empty()) {
     return true;
@@ -138,6 +166,10 @@ bool PluginListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction act
 
 bool PluginListSortProxy::filterMatchesPlugin(const QString& plugin) const
 {
+  if (m_UseRegex) {
+    return m_CurrentFilter.isEmpty() || !m_FilterRegex.isValid() ||
+           m_FilterRegex.match(plugin).hasMatch();
+  }
   if (!m_FilterSegments.empty()) {
     // split in ORSegments that internally use AND logic
     for (const auto& ANDKeywords : m_FilterSegments) {

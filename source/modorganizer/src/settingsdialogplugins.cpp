@@ -375,6 +375,9 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
                    [&](auto* current, auto* previous) {
                      on_pluginsList_currentItemChanged(current, previous);
                    });
+  // turning a plugin on or off is not one of the changes Cancel undoes
+  ui->enabledCheckbox->setToolTip(
+      QObject::tr("Takes effect right away, even if you then cancel Settings."));
   QObject::connect(ui->enabledCheckbox, &QCheckBox::clicked, [&](bool checked) {
     on_checkboxEnabled_clicked(checked);
   });

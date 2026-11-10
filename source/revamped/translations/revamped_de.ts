@@ -6908,10 +6908,6 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Hilfe</translation>
     </message>
     <message>
-      <source>Manage instances...</source>
-      <translation>Instanzen verwalten...</translation>
-    </message>
-    <message>
       <source>Exit</source>
       <translation>Beenden</translation>
     </message>
@@ -7220,6 +7216,30 @@ Fehler: %1</translation>
     <message>
       <source>This profile has no saved plugin order backups.</source>
       <translation>Dieses Profil hat keine gespeicherten Sicherungen der Plugin-Reihenfolge.</translation>
+    </message>
+    <message>
+      <source>Remove this program from the command bar</source>
+      <translation>Dieses Programm aus der Befehlsleiste entfernen</translation>
+    </message>
+    <message>
+      <source>Add this program to the command bar</source>
+      <translation>Dieses Programm zur Befehlsleiste hinzufügen</translation>
+    </message>
+    <message>
+      <source>Remove the desktop shortcut</source>
+      <translation>Desktop-Verknüpfung entfernen</translation>
+    </message>
+    <message>
+      <source>Create a desktop shortcut</source>
+      <translation>Desktop-Verknüpfung erstellen</translation>
+    </message>
+    <message>
+      <source>Remove the Start menu shortcut</source>
+      <translation>Startmenü-Verknüpfung entfernen</translation>
+    </message>
+    <message>
+      <source>Create a Start menu shortcut</source>
+      <translation>Startmenü-Verknüpfung erstellen</translation>
     </message>
   </context>
   <context>
@@ -9902,8 +9922,8 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <translation>Entwickler</translation>
     </message>
     <message>
-      <source>Features still in testing. They may change or go away, and none of them is needed to play.</source>
-      <translation>Funktionen, die noch getestet werden. Sie können sich ändern oder wegfallen, und keine ist zum Spielen nötig.</translation>
+      <source>Nothing is in testing right now. Features in testing appear here; none of them is needed to play.</source>
+      <translation>Gerade wird nichts getestet. Hier erscheinen Funktionen in der Testphase; keine davon ist zum Spielen nötig.</translation>
     </message>
     <message>
       <source>Developer mode</source>
@@ -9934,8 +9954,8 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <translation>OK</translation>
     </message>
       <message>
-      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About turn it on again.</source>
-      <translation>Zeigt diese Seite. Ausgeschaltet ist sie beim nächsten Öffnen der Einstellungen weg; sieben Tipps auf die Version unter Über schalten ihn wieder ein.</translation>
+      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About MO2 Revamped turn it on again.</source>
+      <translation>Zeigt diese Seite. Ausgeschaltet ist sie beim nächsten Öffnen der Einstellungen weg; siebenmaliges Tippen auf die Version unter Über MO2 Revamped schaltet sie wieder ein.</translation>
     </message>
     <message>
       <source>Writing the load order</source>
@@ -10028,6 +10048,14 @@ Firefox.exe</translation>
     <message>
       <source>This game has no INI files.</source>
       <translation>Dieses Spiel hat keine INI-Dateien.</translation>
+    </message>
+    <message>
+      <source>Takes effect right away, even if you then cancel Settings.</source>
+      <translation>Wirkt sofort, auch wenn du die Einstellungen danach abbrichst.</translation>
+    </message>
+    <message>
+      <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
+      <translation>Aus MO2 gestartete Programme verwenden es ab ihrem nächsten Start, MO2 selbst ab seinem nächsten Start.</translation>
     </message>
 </context>
   <context>

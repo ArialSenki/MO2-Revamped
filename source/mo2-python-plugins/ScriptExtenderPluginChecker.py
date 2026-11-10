@@ -151,7 +151,8 @@ class NotAPluginMessage(PluginMessage):
 
 
 PluginMessage.registerMessageType((re.compile(
-    r"plugin (?P<pluginPath>.+) does not appear to be an (?:SK)|(?:F4)|(?:NV)|(?:FO)|(?:OB)SE plugin\s"),
+    # grouped: an ungrouped "|" split the whole pattern, so it never matched (MO2 Revamped)
+    r"plugin (?P<pluginPath>.+) does not appear to be an (?:SK|F4|NV|FO|OB)SE plugin\s"),
                                    NotAPluginMessage))
 
 
@@ -169,6 +170,7 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
         "Skyrim VR": GameType(LogLocation.DOCS, Path("SKSE") / "sksevr.log", None),  # No editor log defined
         # "Enderal" : GameType(LogLocation.DOCS, Path("")),
         "Fallout 4": GameType(LogLocation.DOCS, Path("F4SE") / "f4se.log", None),  # No editor log defined
+        "Fallout 4 VR": GameType(LogLocation.DOCS, Path("F4SE") / "f4sevr.log", None),  # MO2 Revamped
         "Oblivion": GameType(LogLocation.INSTALL, Path("obse.log"), Path("obse_editor.log")),
         "New Vegas": GameType(LogLocation.INSTALL, Path("nvse.log"), Path("nvse_editor.log")),
         "TTW": GameType(LogLocation.INSTALL, Path("nvse.log"), Path("nvse_editor.log")),

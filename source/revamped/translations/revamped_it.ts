@@ -7172,10 +7172,6 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Aiuto</translation>
     </message>
     <message>
-      <source>Manage instances...</source>
-      <translation>Gestisci istanze...</translation>
-    </message>
-    <message>
       <source>Exit</source>
       <translation>Esci</translation>
     </message>
@@ -7464,6 +7460,30 @@ Errore: %1</translation>
     <message>
       <source>This profile has no saved plugin order backups.</source>
       <translation>Questo profilo non ha backup salvati dell'ordine dei plugin.</translation>
+    </message>
+    <message>
+      <source>Remove this program from the command bar</source>
+      <translation>Rimuovi questo programma dalla barra dei comandi</translation>
+    </message>
+    <message>
+      <source>Add this program to the command bar</source>
+      <translation>Aggiungi questo programma alla barra dei comandi</translation>
+    </message>
+    <message>
+      <source>Remove the desktop shortcut</source>
+      <translation>Rimuovi il collegamento dal desktop</translation>
+    </message>
+    <message>
+      <source>Create a desktop shortcut</source>
+      <translation>Crea un collegamento sul desktop</translation>
+    </message>
+    <message>
+      <source>Remove the Start menu shortcut</source>
+      <translation>Rimuovi il collegamento dal menu Start</translation>
+    </message>
+    <message>
+      <source>Create a Start menu shortcut</source>
+      <translation>Crea un collegamento nel menu Start</translation>
     </message>
   </context>
   <context>
@@ -10266,8 +10286,8 @@ Esempio:
       <translation>Sviluppatore</translation>
     </message>
     <message>
-      <source>Features still in testing. They may change or go away, and none of them is needed to play.</source>
-      <translation>Funzioni ancora in prova. Possono cambiare o sparire, e nessuna serve per giocare.</translation>
+      <source>Nothing is in testing right now. Features in testing appear here; none of them is needed to play.</source>
+      <translation>Al momento non c'è nulla in prova. Qui compaiono le funzioni in prova; nessuna è necessaria per giocare.</translation>
     </message>
     <message>
       <source>Developer mode</source>
@@ -10298,8 +10318,8 @@ Esempio:
       <translation>OK</translation>
     </message>
       <message>
-      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About turn it on again.</source>
-      <translation>Mostra questa pagina. Disattivata, sparisce alla prossima apertura delle Impostazioni; sette tocchi sulla versione in Informazioni la riattivano.</translation>
+      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About MO2 Revamped turn it on again.</source>
+      <translation>Mostra questa pagina. Disattivata, sparisce alla prossima apertura delle Impostazioni; sette tocchi sulla versione in Informazioni su MO2 Revamped la riattivano.</translation>
     </message>
     <message>
       <source>Writing the load order</source>
@@ -10396,6 +10416,14 @@ Esempio:
     <message>
       <source>This game has no INI files.</source>
       <translation>Questo gioco non ha file INI.</translation>
+    </message>
+    <message>
+      <source>Takes effect right away, even if you then cancel Settings.</source>
+      <translation>Ha effetto subito, anche se poi annulli le Impostazioni.</translation>
+    </message>
+    <message>
+      <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
+      <translation>I programmi avviati da MO2 lo usano dal loro prossimo avvio; MO2 stesso, dal suo prossimo avvio.</translation>
     </message>
 </context>
   <context>

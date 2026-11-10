@@ -22,6 +22,8 @@
 #include <QComboBox>
 #include <QDir>
 #include <QDirIterator>
+#include <QFutureWatcher>
+#include <QtConcurrent/QtConcurrentRun>
 #include <QFileInfo>
 #include <QDateTime>
 #include <QLabel>
@@ -490,29 +492,47 @@ void FluentDashboard::countMods()
 
 void FluentDashboard::refreshDisk()
 {
-  int overwriteFiles = 0;
-  QDirIterator files(m_core.overwritePath(), QDir::Files | QDir::Hidden | QDir::System,
-                     QDirIterator::Subdirectories);
-  while (files.hasNext() && overwriteFiles < OverwriteCountLimit) {
-    files.next();
-    ++overwriteFiles;
-  }
-  // the list marks Overwrite as soon as it holds anything, folders included
-  const bool overwriteFolders =
-      overwriteFiles == 0 &&
-      !QDir(m_core.overwritePath())
-           .entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden)
-           .isEmpty();
+  struct Overwrite
+  {
+    int files    = 0;
+    bool folders = false;
+  };
+  // counting Overwrite's files walks the disk: off the UI thread
+  const QString path = m_core.overwritePath();
+  const int scan     = ++m_diskScan;
+  auto* watcher      = new QFutureWatcher<Overwrite>(this);
+  connect(watcher, &QFutureWatcher<Overwrite>::finished, this, [this, watcher, scan] {
+    watcher->deleteLater();
+    if (scan != m_diskScan) {
+      return;
+    }
+    const Overwrite result = watcher->result();
 
-  QString overwriteText = overwriteFolders ? tr("Empty folders") : tr("Empty");
-  if (overwriteFiles >= OverwriteCountLimit) {
-    overwriteText = tr("%1+ files").arg(OverwriteCountLimit);
-  } else if (overwriteFiles > 0) {
-    overwriteText = overwriteFiles == 1 ? tr("1 file") : tr("%1 files").arg(overwriteFiles);
-  }
-  m_overwrite->setValue(overwriteText, overwriteFiles > 0 ? QStringLiteral("caution")
+    QString overwriteText = result.folders ? tr("Empty folders") : tr("Empty");
+    if (result.files >= OverwriteCountLimit) {
+      overwriteText = tr("%1+ files").arg(OverwriteCountLimit);
+    } else if (result.files > 0) {
+      overwriteText =
+          result.files == 1 ? tr("1 file") : tr("%1 files").arg(result.files);
+    }
+    m_overwrite->setValue(overwriteText, result.files > 0 ? QStringLiteral("caution")
                                                           : QStringLiteral("neutral"));
-  m_overwriteAction->setVisible(overwriteFiles > 0 || overwriteFolders);
+    m_overwriteAction->setVisible(result.files > 0 || result.folders);
+  });
+  watcher->setFuture(QtConcurrent::run([path] {
+    Overwrite result;
+    QDirIterator files(path, QDir::Files | QDir::Hidden | QDir::System,
+                       QDirIterator::Subdirectories);
+    while (files.hasNext() && result.files < OverwriteCountLimit) {
+      files.next();
+      ++result.files;
+    }
+    // the list marks Overwrite as soon as it holds anything, folders included
+    result.folders =
+        result.files == 0 &&
+        !QDir(path).entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden).isEmpty();
+    return result;
+  }));
 
   refreshLastPlayed();
 }
@@ -525,11 +545,13 @@ void FluentDashboard::setSavesDirectory(std::function<QDir()> provider)
 
 void FluentDashboard::refreshLastPlayed()
 {
-  QDateTime newest;
+  const int scan = ++m_savesScan;
   const MOBase::IPluginGame* game = m_core.managedGame();
   if (m_savesDirectory && EldenRingSaveSettings::supports(game)) {
     // the route also holds settings and named save profiles: only the saves
-    // the game reads say when it was last saved
+    // the game reads say when it was last saved. listSaves() is the Python
+    // game plugin's, so it stays on this thread
+    QDateTime newest;
     try {
       for (const auto& save : game->listSaves(m_savesDirectory())) {
         const QDateTime modified = QFileInfo(save->getFilepath()).lastModified();
@@ -541,12 +563,36 @@ void FluentDashboard::refreshLastPlayed()
       // listSaves() can throw
       MOBase::log::error("{}", e.what());
     }
-  } else if (m_savesDirectory) {
-    // saves sit at most a couple of folders deep (per account or slot); stop
-    // early on folders that hold far more than saves
+    showLastPlayed(newest);
+    return;
+  }
+  if (!m_savesDirectory) {
+    showLastPlayed(QDateTime());
+    return;
+  }
+
+  // saves sit at most a couple of folders deep (per account or slot); stop
+  // early on folders that hold far more than saves. The walk runs off the UI
+  // thread
+  // a game without a saves folder gives an empty path, which QDir reads as
+  // the working directory (MO2's own folder)
+  const QDir savesDir = m_savesDirectory();
+  if (savesDir.path().isEmpty() || savesDir.path() == QLatin1String(".")) {
+    showLastPlayed(QDateTime());
+    return;
+  }
+  const QString path = savesDir.absolutePath();
+  auto* watcher      = new QFutureWatcher<QDateTime>(this);
+  connect(watcher, &QFutureWatcher<QDateTime>::finished, this, [this, watcher, scan] {
+    watcher->deleteLater();
+    if (scan == m_savesScan) {
+      showLastPlayed(watcher->result());
+    }
+  });
+  watcher->setFuture(QtConcurrent::run([path] {
+    QDateTime newest;
     int seen = 0;
-    QDirIterator saves(m_savesDirectory().absolutePath(), QDir::Files,
-                       QDirIterator::Subdirectories);
+    QDirIterator saves(path, QDir::Files, QDirIterator::Subdirectories);
     while (saves.hasNext() && seen++ < 2000) {
       saves.next();
       const QDateTime modified = saves.fileInfo().lastModified();
@@ -554,8 +600,12 @@ void FluentDashboard::refreshLastPlayed()
         newest = modified;
       }
     }
-  }
+    return newest;
+  }));
+}
 
+void FluentDashboard::showLastPlayed(const QDateTime& newest)
+{
   if (!newest.isValid()) {
     m_lastPlayed->hide();
     return;

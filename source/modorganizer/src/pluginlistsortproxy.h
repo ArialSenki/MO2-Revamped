@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define PLUGINLISTSORTPROXY_H
 
 #include "pluginlist.h"
+#include <QRegularExpression>
 #include <QSortFilterProxyModel>
 #include <bitset>
 
@@ -54,6 +55,9 @@ private:
   std::bitset<PluginList::COL_LASTCOLUMN + 1> m_EnabledColumns;
   QString m_CurrentFilter;
   std::vector<QStringList> m_FilterSegments;
+  // with "Use regular expressions" on, the whole search is one expression
+  bool m_UseRegex = false;
+  QRegularExpression m_FilterRegex;
 };
 
 #endif  // PLUGINLISTSORTPROXY_H

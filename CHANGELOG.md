@@ -45,6 +45,19 @@
   instead of reading the old list back.
 - The log keeps following new lines during long bursts; the Archives list, the
   Downloads names and moving many plugins at once are faster with large setups.
+- The Plugins search follows "Use regular expressions", as the other lists do.
+- The Configurator also edits Tale of Two Wastelands, Skyrim VR and Fallout 4 VR,
+  and shows each game's own settings, which it skipped before. The script
+  extender check also reads Fallout 4 VR's log.
+- The Run menu says whether each entry adds or removes the program or shortcut,
+  and a program with "&" in its name shows it as written.
+- Settings says that turning a plugin on or off takes effect at once, and when a
+  new crash dump type applies; the Developer page no longer promises features
+  in testing that aren't there.
+- The command bar keeps its own tooltips after a language change, and the
+  information plugin no longer adds a second, hidden "About MO2 Revamped".
+- The window no longer waits for Overwrite's files and the saves folder to be
+  counted: the dashboard reads them in the background.
 
 ### Interface
 

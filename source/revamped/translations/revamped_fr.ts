@@ -7064,10 +7064,6 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Aide</translation>
     </message>
     <message>
-      <source>Manage instances...</source>
-      <translation>Gérer les instances...</translation>
-    </message>
-    <message>
       <source>Exit</source>
       <translation>Quitter</translation>
     </message>
@@ -7356,6 +7352,30 @@ Erreur : %1</translation>
     <message>
       <source>This profile has no saved plugin order backups.</source>
       <translation>Ce profil n'a aucune sauvegarde de l'ordre des plugins.</translation>
+    </message>
+    <message>
+      <source>Remove this program from the command bar</source>
+      <translation>Retirer ce programme de la barre de commandes</translation>
+    </message>
+    <message>
+      <source>Add this program to the command bar</source>
+      <translation>Ajouter ce programme à la barre de commandes</translation>
+    </message>
+    <message>
+      <source>Remove the desktop shortcut</source>
+      <translation>Supprimer le raccourci du bureau</translation>
+    </message>
+    <message>
+      <source>Create a desktop shortcut</source>
+      <translation>Créer un raccourci sur le bureau</translation>
+    </message>
+    <message>
+      <source>Remove the Start menu shortcut</source>
+      <translation>Supprimer le raccourci du menu Démarrer</translation>
+    </message>
+    <message>
+      <source>Create a Start menu shortcut</source>
+      <translation>Créer un raccourci dans le menu Démarrer</translation>
     </message>
   </context>
   <context>
@@ -10158,8 +10178,8 @@ Exemple :
       <translation>Développeur</translation>
     </message>
     <message>
-      <source>Features still in testing. They may change or go away, and none of them is needed to play.</source>
-      <translation>Fonctionnalités encore en test. Elles peuvent changer ou disparaître, et aucune n&apos;est nécessaire pour jouer.</translation>
+      <source>Nothing is in testing right now. Features in testing appear here; none of them is needed to play.</source>
+      <translation>Rien n'est en test pour le moment. Les fonctions en test apparaissent ici ; aucune n'est nécessaire pour jouer.</translation>
     </message>
     <message>
       <source>Developer mode</source>
@@ -10190,8 +10210,8 @@ Exemple :
       <translation>OK</translation>
     </message>
       <message>
-      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About turn it on again.</source>
-      <translation>Affiche cette page. Désactivé, elle disparaît à la prochaine ouverture des Paramètres ; sept appuis sur la version dans À propos le réactivent.</translation>
+      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About MO2 Revamped turn it on again.</source>
+      <translation>Affiche cette page. Désactivé, elle disparaît à la prochaine ouverture des Paramètres ; sept appuis sur la version dans À propos de MO2 Revamped le réactivent.</translation>
     </message>
     <message>
       <source>Writing the load order</source>
@@ -10293,6 +10313,14 @@ Exemple :
     <message>
       <source>This game has no INI files.</source>
       <translation>Ce jeu n'a pas de fichiers INI.</translation>
+    </message>
+    <message>
+      <source>Takes effect right away, even if you then cancel Settings.</source>
+      <translation>Prend effet immédiatement, même si vous annulez ensuite les Paramètres.</translation>
+    </message>
+    <message>
+      <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
+      <translation>Les programmes lancés depuis MO2 l'utilisent dès leur prochain lancement ; MO2 lui-même, dès son prochain démarrage.</translation>
     </message>
 </context>
   <context>

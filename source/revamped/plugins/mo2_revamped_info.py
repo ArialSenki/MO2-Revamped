@@ -274,44 +274,21 @@ class Mo2RevampedInfo(mobase.IPluginTool):
 
     def _initialize_main_window(self, main_window) -> None:
         self._parent_widget = main_window
-        for object_name, tooltip, whats_this in (
-            (
-                "actionNexus",
-                _tr("Nexus Mods: open the website to browse mods for the active game."),
-                _tr("Opens Nexus Mods in your browser. The content depends on the active game and your account."),
-            ),
-            (
-                "actionNotifications",
-                _tr("MO2 notifications: review detected errors and setup recommendations."),
-                _tr("Opens MO2 notifications. The icon can be highlighted when there are problems worth reviewing."),
-            ),
-            (
-                "actionEndorseMO",
-                _tr("Support MO2 Revamped on Nexus Mods."),
-                _tr("Opens the options to endorse or not endorse MO2 Revamped on its Nexus Mods page."),
-            ),
-            (
-                "actionHelp",
-                _tr("MO2 help: guides and support links. Use \"About MO2 Revamped\" to see this edition, its components and credits."),
-                _tr("Opens the help options. \"About MO2 Revamped\" describes this edition, its features, components and licenses."),
-            ),
-        ):
-            action = main_window.findChild(QAction, object_name)
-            if action is not None:
-                action.setToolTip(tooltip)
-                action.setStatusTip(tooltip)
-                action.setWhatsThis(whats_this)
-
+        # the command bar's tooltips are the C++ ones: they follow a language
+        # change and the endorsement state, which replacing them here broke
         help_menu = main_window.findChild(QMenu, "menuHelp")
         if help_menu is None:
             return
         about_found = False
         diagnostics_found = False
+        # the C++ Help menu ("More") already has "About MO2 Revamped"; looking
+        # only in the hidden menu bar added a second one nobody could reach
+        existing_about = main_window.findChild(QAction, "mo2RevampedAboutAction")
+        if existing_about is not None:
+            self._about_action = existing_about
+            about_found = True
         for action in help_menu.actions():
-            if action.objectName() == "mo2RevampedAboutAction":
-                self._about_action = action
-                about_found = True
-            elif action.objectName() == "mo2RevampedDiagnosticsAction":
+            if action.objectName() == "mo2RevampedDiagnosticsAction":
                 self._diagnostics_action = action
                 diagnostics_found = True
         if not about_found:

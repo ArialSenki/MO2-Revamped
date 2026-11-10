@@ -6900,10 +6900,6 @@ Os snapshots de recuperação foram mantidos em: %2</translation>
       <translation>Ajuda</translation>
     </message>
     <message>
-      <source>Manage instances...</source>
-      <translation>Gerenciar instâncias...</translation>
-    </message>
-    <message>
       <source>Exit</source>
       <translation>Sair</translation>
     </message>
@@ -7212,6 +7208,30 @@ Erro: %1</translation>
     <message>
       <source>This profile has no saved plugin order backups.</source>
       <translation>Este perfil não tem backups salvos da ordem de plugins.</translation>
+    </message>
+    <message>
+      <source>Remove this program from the command bar</source>
+      <translation>Remover este programa da barra de comandos</translation>
+    </message>
+    <message>
+      <source>Add this program to the command bar</source>
+      <translation>Adicionar este programa à barra de comandos</translation>
+    </message>
+    <message>
+      <source>Remove the desktop shortcut</source>
+      <translation>Remover o atalho da área de trabalho</translation>
+    </message>
+    <message>
+      <source>Create a desktop shortcut</source>
+      <translation>Criar um atalho na área de trabalho</translation>
+    </message>
+    <message>
+      <source>Remove the Start menu shortcut</source>
+      <translation>Remover o atalho do menu Iniciar</translation>
+    </message>
+    <message>
+      <source>Create a Start menu shortcut</source>
+      <translation>Criar um atalho no menu Iniciar</translation>
     </message>
   </context>
   <context>
@@ -9882,8 +9902,8 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <translation>Desenvolvedor</translation>
     </message>
     <message>
-      <source>Features still in testing. They may change or go away, and none of them is needed to play.</source>
-      <translation>Recursos ainda em teste. Podem mudar ou ser removidos, e nenhum é necessário para jogar.</translation>
+      <source>Nothing is in testing right now. Features in testing appear here; none of them is needed to play.</source>
+      <translation>No momento, nada está em teste. As funções em teste aparecem aqui; nenhuma é necessária para jogar.</translation>
     </message>
     <message>
       <source>Developer mode</source>
@@ -9914,8 +9934,8 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <translation>OK</translation>
     </message>
       <message>
-      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About turn it on again.</source>
-      <translation>Mostra esta página. Desativado, ela some na próxima vez que as Configurações forem abertas; sete toques na versão em Sobre o ativam de novo.</translation>
+      <source>Shows this page. Turned off, it is gone the next time Settings opens; seven taps on the version in About MO2 Revamped turn it on again.</source>
+      <translation>Mostra esta página. Desativado, ela some na próxima vez que as Configurações forem abertas; sete toques na versão em Sobre o MO2 Revamped o ativam de novo.</translation>
     </message>
     <message>
       <source>Writing the load order</source>
@@ -10012,6 +10032,14 @@ Exemplos:
     <message>
       <source>This game has no INI files.</source>
       <translation>Este jogo não tem arquivos INI.</translation>
+    </message>
+    <message>
+      <source>Takes effect right away, even if you then cancel Settings.</source>
+      <translation>Tem efeito na hora, mesmo que você depois cancele as Configurações.</translation>
+    </message>
+    <message>
+      <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
+      <translation>Os programas iniciados pelo MO2 o usam a partir da próxima execução; o próprio MO2, a partir da próxima vez que abrir.</translation>
     </message>
 </context>
   <context>

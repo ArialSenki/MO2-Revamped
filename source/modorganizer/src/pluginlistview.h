@@ -67,14 +67,18 @@ protected:
 
   bool event(QEvent* event) override;
 
+  // the search follows the shared "Use regular expressions" option, which
+  // another list's search can change while this tab is hidden
+  void showEvent(QShowEvent* event) override;
+
 private:
   struct PluginListViewUi
   {
     // the plguin counter
-    QLCDNumber* counter;
+    QLCDNumber* counter = nullptr;
 
     // the filter
-    QLineEdit* filter;
+    QLineEdit* filter = nullptr;
   };
 
   OrganizerCore* m_core;

@@ -159,6 +159,10 @@ void DiagnosticsSettingsTab::setLootLogLevel()
 void DiagnosticsSettingsTab::setCrashDumpTypesBox()
 {
   ui->dumpsTypeBox->clear();
+  // MO2 reads its own dump type when it starts; games, when they are launched
+  ui->dumpsTypeBox->setToolTip(QObject::tr(
+      "Programs started from MO2 use it from their next launch; MO2 itself, "
+      "from its next start."));
 
   auto add = [&](auto&& text, auto&& type) {
     ui->dumpsTypeBox->addItem(text, static_cast<int>(type));

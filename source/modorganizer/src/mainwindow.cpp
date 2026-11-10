@@ -2151,8 +2151,10 @@ void MainWindow::updatePinnedExecutables()
     if (!exe.hide() && exe.isShownOnToolbar()) {
       hasLinks = true;
 
+      // "&" in a title would turn the next letter into a mnemonic
       QAction* exeAction =
-          new QAction(iconForExecutable(exe.binaryInfo().filePath()), exe.title());
+          new QAction(iconForExecutable(exe.binaryInfo().filePath()),
+                      QString(exe.title()).replace(QLatin1Char('&'), QStringLiteral("&&")));
 
       exeAction->setObjectName(QString("custom__") + exe.title());
       exeAction->setStatusTip(exe.binaryInfo().filePath());
@@ -3241,6 +3243,15 @@ void MainWindow::updateModPageMenu()
   reserveRoomForControls(this, ui->toolBar, ui->groupCombo);
 }
 
+// a pinned program's title: the object name keeps it as it is, the text
+// doubles any "&" so it isn't read as a mnemonic
+static QString pinnedTitle(const QAction* action)
+{
+  const QString prefix = QStringLiteral("custom__");
+  return action->objectName().startsWith(prefix) ? action->objectName().mid(prefix.size())
+                                                 : action->text();
+}
+
 void MainWindow::startExeAction()
 {
   QAction* action = qobject_cast<QAction*>(sender());
@@ -3252,7 +3263,7 @@ void MainWindow::startExeAction()
 
   const auto& list = *m_OrganizerCore.executablesList();
 
-  const auto title = action->text();
+  const auto title = pinnedTitle(action);
   auto itor        = list.find(title);
 
   if (itor == list.end()) {
@@ -4750,13 +4761,20 @@ void MainWindow::updateShortcutActionIcons()
 
   env::Shortcut shortcut(*exe);
 
-  m_LinkToolbar->setIcon(exe->isShownOnToolbar() ? removeIcon : addIcon);
-
-  m_LinkDesktop->setIcon(shortcut.exists(env::Shortcut::Desktop) ? removeIcon
-                                                                 : addIcon);
-
-  m_LinkStartMenu->setIcon(shortcut.exists(env::Shortcut::StartMenu) ? removeIcon
-                                                                     : addIcon);
+  // the icon alone told adding from removing apart; the tooltip says it
+  const bool onToolbar = exe->isShownOnToolbar();
+  const bool onDesktop = shortcut.exists(env::Shortcut::Desktop);
+  const bool inStartMenu = shortcut.exists(env::Shortcut::StartMenu);
+  m_LinkToolbar->setIcon(onToolbar ? removeIcon : addIcon);
+  m_LinkToolbar->setToolTip(onToolbar ? tr("Remove this program from the command bar")
+                                      : tr("Add this program to the command bar"));
+  m_LinkDesktop->setIcon(onDesktop ? removeIcon : addIcon);
+  m_LinkDesktop->setToolTip(onDesktop ? tr("Remove the desktop shortcut")
+                                      : tr("Create a desktop shortcut"));
+  m_LinkStartMenu->setIcon(inStartMenu ? removeIcon : addIcon);
+  m_LinkStartMenu->setToolTip(inStartMenu ? tr("Remove the Start menu shortcut")
+                                          : tr("Create a Start menu shortcut"));
+  ui->menuRun->setToolTipsVisible(true);
 }
 
 void MainWindow::on_actionSettings_triggered()
@@ -5929,7 +5947,7 @@ void MainWindow::on_displayCategoriesBtn_toggled(bool checked)
 
 void MainWindow::removeFromToolbar(QAction* action)
 {
-  const auto& title = action->text();
+  const auto title = pinnedTitle(action);
   auto& list        = *m_OrganizerCore.executablesList();
 
   auto itor = list.find(title);

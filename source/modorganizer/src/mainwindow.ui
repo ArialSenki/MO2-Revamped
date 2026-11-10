@@ -1834,7 +1834,7 @@
     <string>Manage Instan&amp;ces...</string>
    </property>
    <property name="iconText">
-    <string>Manage instances...</string>
+    <string>Manage instances…</string>
    </property>
    <property name="toolTip">
     <string>Open the instance manager window to manage a different instance</string>
