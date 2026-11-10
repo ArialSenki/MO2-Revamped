@@ -68,12 +68,38 @@ static std::wstring archiveNameToWide(const std::string& name)
 // narrow code did: path's operator/ would take a name starting with a
 // separator (files at the archive root are "\\name") or a drive as absolute,
 // and write outside the target folder
+//
+// MO2 Revamped: a name with a ".." segment or a ':' gives an empty path, which
+// can't be opened or created, so the file is skipped. Such names never come
+// from the games' own tools; they would let an archive write outside the
+// folder it is extracted to (or into an NTFS stream or another drive)
 static std::filesystem::path archiveTarget(const std::filesystem::path& directory,
                                            const std::string& name)
 {
   std::wstring relative = archiveNameToWide(name);
   const size_t start    = relative.find_first_not_of(L"\\/");
   relative.erase(0, start == std::wstring::npos ? relative.size() : start);
+  if (relative.find(L':') != std::wstring::npos) {
+    return {};
+  }
+  for (size_t begin = 0; begin <= relative.size();) {
+    size_t end = relative.find_first_of(L"\\/", begin);
+    if (end == std::wstring::npos) {
+      end = relative.size();
+    }
+    std::wstring segment = relative.substr(begin, end - begin);
+    // Windows ignores trailing dots and spaces, so ".. " is ".." too
+    while (!segment.empty() && (segment.back() == L' ' || segment.back() == L'.')) {
+      if (segment == L"..") {
+        break;
+      }
+      segment.pop_back();
+    }
+    if (segment == L"..") {
+      return {};
+    }
+    begin = end + 1;
+  }
   std::wstring result = directory.native();
   if (!result.empty() && result.back() != L'\\' && result.back() != L'/') {
     result += L'\\';
@@ -685,7 +711,15 @@ static const unsigned long CHUNK_SIZE = 128 * 1024;
 EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
 {
   EErrorCode result = ERROR_NONE;
-  if (file->m_FileSize == 0) {
+  const bool ba2    = m_Type == TYPE_FALLOUT4 || m_Type == TYPE_STARFIELD ||
+                   m_Type == TYPE_STARFIELD_LZ4_TEXTURE || m_Type == TYPE_FALLOUT4NG_7 ||
+                   m_Type == TYPE_FALLOUT4NG_8;
+  // MO2 Revamped: an uncompressed BA2 file has a packed size of 0, so testing
+  // m_FileSize alone extracted every one of them empty
+  const bool empty = ba2 ? (file->m_UncompressedFileSize == 0 &&
+                            file->m_TextureChunks.empty())
+                         : file->m_FileSize == 0;
+  if (empty) {
     // don't try to read empty file
     return result;
   }
@@ -693,13 +727,18 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
   m_File.clear();
   m_File.seekg(static_cast<std::ifstream::pos_type>(file->m_DataOffset), std::ios::beg);
 
-  if (m_Type == TYPE_FALLOUT4 || m_Type == TYPE_STARFIELD ||
-      m_Type == TYPE_STARFIELD_LZ4_TEXTURE || m_Type == TYPE_FALLOUT4NG_7 ||
-      m_Type == TYPE_FALLOUT4NG_8) {
+  // MO2 Revamped: a short read (a truncated archive) is checked after each
+  // read: it doesn't throw, and the rest of the buffer would be written out
+  // uninitialised. What throws here is a huge size (bad_alloc) or badbit
+  try {
+  if (ba2) {
     if (!file->m_TextureChunks.size()) {
       BSAULong size = file->m_UncompressedFileSize;
       std::unique_ptr<char[]> buffer(new char[size]);
       m_File.read(buffer.get(), size);
+      if (m_File.gcount() != static_cast<std::streamsize>(size)) {
+        return ERROR_INVALIDDATA;
+      }
       outFile.write(buffer.get(), size);
     } else {
       bool isDX10                              = false;
@@ -724,6 +763,9 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
         BSAULong length = file->m_TextureChunks[i].unpackedSize;
         std::unique_ptr<char[]> chunk(new char[length]);
         m_File.read(chunk.get(), length);
+        if (m_File.gcount() != static_cast<std::streamsize>(length)) {
+          return ERROR_INVALIDDATA;
+        }
         outFile.write(chunk.get(), length);
       }
     }
@@ -739,20 +781,15 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
     }
     std::unique_ptr<unsigned char[]> buffer(new unsigned char[size]);
     m_File.read(reinterpret_cast<char*>(buffer.get()), size);
+    if (m_File.gcount() != static_cast<std::streamsize>(size)) {
+      return ERROR_INVALIDDATA;
+    }
     if (result == ERROR_NONE)
       outFile.write(reinterpret_cast<char*>(buffer.get()), size);
   }
-  std::unique_ptr<char[]> inBuffer(new char[CHUNK_SIZE]);
-
-  try {
-    unsigned long sizeLeft = file->m_FileSize;
-
-    while (sizeLeft > 0) {
-      int chunkSize = (std::min)(sizeLeft, CHUNK_SIZE);
-      m_File.read(inBuffer.get(), chunkSize);
-      outFile.write(inBuffer.get(), chunkSize);
-      sizeLeft -= chunkSize;
-    }
+  // MO2 Revamped: a second copy loop followed here and wrote the file's size
+  // again from whatever came after it in the archive, so single files from
+  // uncompressed BSAs came out with junk appended
   } catch (const std::exception&) {
     result = ERROR_INVALIDDATA;
   }
@@ -810,7 +847,8 @@ boost::shared_array<unsigned char> Archive::decompress(unsigned char* inBuffer,
 EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) const
 {
   EErrorCode result = ERROR_NONE;
-  if (file->m_FileSize == 0) {
+  // MO2 Revamped: a texture whose first chunk is stored has m_FileSize 0 too
+  if (file->m_FileSize == 0 && file->m_TextureChunks.empty()) {
     // don't try to read empty file
     return result;
   }
@@ -938,7 +976,11 @@ EErrorCode Archive::extract(File::Ptr file,
   }
 
   EErrorCode result = ERROR_NONE;
-  if (compressed(file)) {
+  // MO2 Revamped: BA2 textures always go chunk by chunk through
+  // extractCompressed, which handles stored and packed chunks alike;
+  // compressed() only looks at the first chunk, so a texture with a stored
+  // first chunk and packed later ones was read raw and came out corrupt
+  if (compressed(file) || !file->m_TextureChunks.empty()) {
     result = extractCompressed(file, outputFile);
   } else {
     result = extractDirect(file, outputFile);
