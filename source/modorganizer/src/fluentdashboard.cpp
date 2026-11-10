@@ -374,6 +374,9 @@ void FluentDashboard::applyTabTexts()
   ui->displayCategoriesBtn->setAccessibleName(tr("Filter options"));
   ui->modList->setAccessibleName(tr("Mods"));
   ui->espList->setAccessibleName(tr("Plugins"));
+  ui->dataTree->setAccessibleName(tr("Files"));
+  ui->savegameList->setAccessibleName(tr("Saves"));
+  ui->downloadView->setAccessibleName(tr("Downloads"));
 }
 
 void FluentDashboard::retranslate()

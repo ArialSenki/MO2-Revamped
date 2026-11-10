@@ -54,6 +54,15 @@
   window, and long game, instance and profile names in the status bar shorten
   instead of keeping the window wide.
 - The gap above the log matches the gaps between the other cards.
+- Deleting downloads in bulk names how many and which files go, says that hidden
+  and filtered-out ones are included, and removes exactly those. Cancelling a download
+  from its menu asks first, as the Delete key does.
+- The Saves tab says when there are no saves, keeps its date column in view, waits
+  for its menu to close before refreshing, and no longer opens MO2's own folder for a
+  game without saves. Download rows are as tall as the Saves and Data rows, and Ctrl+F
+  reaches the Data search.
+- Screen readers announce Notifications and Update in the status bar as buttons, and
+  the Saves, Data and Downloads lists by name.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

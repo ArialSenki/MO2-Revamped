@@ -21,12 +21,19 @@ class ElidedLabel;
 
 class StatusBarAction : public QWidget
 {
+  // its class name gives screen readers a button (see statusbar.cpp)
+  Q_OBJECT
+
 public:
   StatusBarAction(QAction* action);
 
   void set(bool visible);
 
+  // runs the action, as a click or Enter does
+  void trigger();
+
 protected:
+  bool event(QEvent* e) override;
   void mouseReleaseEvent(QMouseEvent* e) override;
   void keyPressEvent(QKeyEvent* e) override;
   void paintEvent(QPaintEvent* e) override;

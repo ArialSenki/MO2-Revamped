@@ -282,7 +282,8 @@ private:
   {
     bool ok       = false;
     const int mod = index.data(ModList::IndexRole).toInt(&ok);
-    return ok ? mod : -1;
+    // a group heading has no mod: each heading gets its own key below -1
+    return ok ? mod : -(index.row() + 2);
   }
 
   // switch position for the mod, 0 is off and 1 is on

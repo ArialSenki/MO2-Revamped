@@ -376,7 +376,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
         remove = onRow(&DownloadListView::issueDelete);
       } else if (state == DownloadManager::STATE_DOWNLOADING) {
         addAction(menu, tr("Pause"), menuGlyph(0xE769), onRow(&DownloadListView::issuePause));
-        addAction(menu, tr("Cancel"), menuGlyph(0xE711), onRow(&DownloadListView::issueCancel));
+        addAction(menu, tr("Cancel"), menuGlyph(0xE711), onRow(&DownloadListView::issueCancelAsk));
         menu.addSeparator();
         addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), onRow(&DownloadListView::issueOpenInDownloadsFolder));
       } else if ((state == DownloadManager::STATE_PAUSED) ||
@@ -465,18 +465,7 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
       if (event->key() == Qt::Key_Delete) {
         // a finished download asks before it goes; one under way too, as
         // cancelling throws away what was downloaded so far
-        const QString fileName = m_Manager->getFileName(row);
-        const auto answer      = MOBase::TaskDialog(this, tr("Cancel download"))
-                                .main(tr("Cancel this download?"))
-                                .content(tr("What was downloaded so far is deleted."))
-                                .icon(QMessageBox::Question)
-                                .button({tr("Keep downloading"), QMessageBox::Cancel})
-                                .button({tr("Cancel download"), QMessageBox::Yes})
-                                .exec();
-        const int current = m_Manager->indexByName(fileName);
-        if (answer == QMessageBox::Yes && current >= 0) {
-          issueCancel(current);
-        }
+        issueCancelAsk(row);
         event->accept();
         return;
       } else if (event->key() == Qt::Key_Space) {
@@ -583,40 +572,88 @@ void DownloadListView::issueResume(int index)
   emit resumeDownload(index);
 }
 
+void DownloadListView::issueCancelAsk(int index)
+{
+  // the menu's Cancel and the Delete key ask the same question
+  const QString fileName = m_Manager->getFileName(index);
+  const auto answer      = MOBase::TaskDialog(this, tr("Cancel download"))
+                          .main(tr("Cancel this download?"))
+                          .content(tr("What was downloaded so far is deleted."))
+                          .icon(QMessageBox::Question)
+                          .button({tr("Keep downloading"), QMessageBox::Cancel})
+                          .button({tr("Cancel download"), QMessageBox::Yes})
+                          .exec();
+  // the list can change while the question is open
+  const int current = m_Manager->indexByName(fileName);
+  if (answer == QMessageBox::Yes && current >= 0) {
+    issueCancel(current);
+  }
+}
+
+QStringList DownloadListView::confirmBulkDelete(int mode, const QString& title)
+{
+  // the same choice DownloadManager::removeDownload() makes: every download in
+  // that state, hidden ones and rows the search hides included
+  QStringList names;
+  for (int i = 0; i < m_Manager->numTotalDownloads(); ++i) {
+    const auto state = m_Manager->getState(i);
+    if ((mode == -1 && state >= DownloadManager::STATE_READY) ||
+        (mode == -2 && state == DownloadManager::STATE_INSTALLED) ||
+        (mode == -3 && state == DownloadManager::STATE_UNINSTALLED)) {
+      names << m_Manager->getFileName(i);
+    }
+  }
+
+  if (names.isEmpty()) {
+    QMessageBox::information(this, title, tr("There are no downloads to delete."));
+    return {};
+  }
+
+  QStringList shown = names.mid(0, 10);
+  if (names.size() > shown.size()) {
+    shown << tr("...and %1 more").arg(names.size() - shown.size());
+  }
+  const QString text =
+      (names.size() == 1
+           ? tr("1 download will be moved to the Recycle Bin, even if the search "
+                "or Hide keeps it out of the list:")
+           : tr("%1 downloads will be moved to the Recycle Bin, including any the "
+                "search or Hide keeps out of the list:")
+                 .arg(names.size())) +
+      QStringLiteral("\n\n") + shown.join(QLatin1Char('\n'));
+
+  // only what was named goes, even if another download finishes meanwhile
+  if (QMessageBox::warning(this, title, text, QMessageBox::Yes | QMessageBox::No,
+                           QMessageBox::No) != QMessageBox::Yes) {
+    return {};
+  }
+  return names;
+}
+
+void DownloadListView::deleteDownloads(const QStringList& names)
+{
+  // each removal renumbers the list, so every name is looked up again
+  for (const QString& name : names) {
+    const int index = m_Manager->indexByName(name);
+    if (index >= 0 && m_Manager->getState(index) >= DownloadManager::STATE_READY) {
+      emit removeDownload(index, true);
+    }
+  }
+}
+
 void DownloadListView::issueDeleteAll()
 {
-  if (QMessageBox::warning(
-          this, tr("Delete files?"),
-          tr("This will move all finished downloads to the Recycle Bin.\n\n"
-             "Are you absolutely sure you want to proceed?"),
-          QMessageBox::Yes | QMessageBox::No,
-          QMessageBox::No) == QMessageBox::Yes) {
-    emit removeDownload(-1, true);
-  }
+  deleteDownloads(confirmBulkDelete(-1, tr("Delete finished downloads?")));
 }
 
 void DownloadListView::issueDeleteCompleted()
 {
-  if (QMessageBox::warning(
-          this, tr("Delete files?"),
-          tr("This will move all installed downloads to the Recycle Bin.\n\n"
-             "Are you absolutely sure you want to proceed?"),
-          QMessageBox::Yes | QMessageBox::No,
-          QMessageBox::No) == QMessageBox::Yes) {
-    emit removeDownload(-2, true);
-  }
+  deleteDownloads(confirmBulkDelete(-2, tr("Delete installed downloads?")));
 }
 
 void DownloadListView::issueDeleteUninstalled()
 {
-  if (QMessageBox::warning(
-          this, tr("Delete files?"),
-          tr("This will move all uninstalled downloads to the Recycle Bin.\n\n"
-             "Are you absolutely sure you want to proceed?"),
-          QMessageBox::Yes | QMessageBox::No,
-          QMessageBox::No) == QMessageBox::Yes) {
-    emit removeDownload(-3, true);
-  }
+  deleteDownloads(confirmBulkDelete(-3, tr("Delete uninstalled downloads?")));
 }
 
 void DownloadListView::issueRemoveFromViewAll()

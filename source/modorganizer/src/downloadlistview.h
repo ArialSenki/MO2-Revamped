@@ -121,6 +121,14 @@ private slots:
   void issueOpenMetaFile(int index);
   void issueOpenInDownloadsFolder(int index);
   void issueCancel(int index);
+  // asks first: cancelling throws away what was downloaded so far
+  void issueCancelAsk(int index);
+  // confirms a bulk delete, naming what goes; mode as removeDownload (-1 all
+  // finished, -2 installed, -3 uninstalled)
+  // and returns the file names confirmed (empty when declined)
+  QStringList confirmBulkDelete(int mode, const QString& title);
+  // removes those downloads, found again by name one by one
+  void deleteDownloads(const QStringList& names);
   void issuePause(int index);
   void issueResume(int index);
   void issueDeleteAll();

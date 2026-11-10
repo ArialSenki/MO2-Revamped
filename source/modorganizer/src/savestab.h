@@ -53,6 +53,17 @@ private:
   // the footer: which saves the list shows and where they live
   class QLabel* m_route = nullptr;
   QString m_routePath;
+  class QPushButton* m_openFolder = nullptr;
+
+  // shown over the list while it is empty
+  class QLabel* m_empty = nullptr;
+
+  // a refresh while the menu is open would clear the rows its actions use
+  bool m_menuOpen       = false;
+  bool m_refreshAfterMenu = false;
+
+  // whether the game keeps saves MO2 can list (some plugins give no folder)
+  bool gameHasSaves() const;
   void createFooter();
   void updateRoute(const QDir& savesDir);
   MOBase::FilterWidget m_filter;

@@ -4,6 +4,7 @@
 #include "fluentpanels.h"
 #include <QMessageBox>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include "activatemodsdialog.h"
@@ -54,8 +55,23 @@ SavesTab::SavesTab(QWidget* window, OrganizerCore& core, Ui::MainWindow* mwui)
           });
 
   connect(&m_SavesWatcherTimer, &QTimer::timeout, [&] {
+    if (m_menuOpen) {
+      m_refreshAfterMenu = true;
+      return;
+    }
     refreshSavesIfOpen();
   });
+
+  // an empty list says so instead of showing a blank card
+  m_empty = new QLabel(ui.list->viewport());
+  m_empty->setObjectName(QStringLiteral("savesEmptyLabel"));
+  m_empty->setAlignment(Qt::AlignCenter);
+  m_empty->setWordWrap(true);
+  m_empty->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+  auto* emptyLayout = new QVBoxLayout(ui.list->viewport());
+  emptyLayout->setContentsMargins(16, 16, 16, 16);
+  emptyLayout->addWidget(m_empty);
+  m_empty->hide();
 
   connect(ui.list, &QWidget::customContextMenuRequested, [&](auto pos) {
     onContextMenu(pos);
@@ -85,6 +101,7 @@ void SavesTab::createFooter()
   footer->addWidget(route, 1);
 
   auto* open = new QPushButton(menuGlyph(MenuGlyphs::Folder), tr("Open folder"), ui.tab);
+  m_openFolder = open;
   open->setObjectName(QStringLiteral("savesOpenFolder"));
   open->setToolTip(tr("Open the folder these saves are read from"));
   auto* refresh = new QPushButton(ui.tab);
@@ -286,9 +303,20 @@ void SavesTab::startMonitorSaves()
   startMonitorSaves(currentSavesDir());
 }
 
+bool SavesTab::gameHasSaves() const
+{
+  // a plugin without a saves folder gives an empty path, which QDir reads as
+  // the working directory (MO2's own folder)
+  const QString path = m_core.managedGame()->savesDirectory().path();
+  return !path.isEmpty() && path != QLatin1String(".");
+}
+
 void SavesTab::startMonitorSaves(const QDir& savesDir)
 {
   stopMonitorSaves();
+  if (!gameHasSaves()) {
+    return;
+  }
   m_SavesWatcher.addPath(savesDir.absolutePath());
   m_routeWatchFolder.clear();
   if (m_core.currentProfile()->localSavesEnabled() &&
@@ -336,6 +364,25 @@ void SavesTab::refreshSaveListNow()
   startMonitorSaves(savesDir);  // re-starts monitoring
   updateRoute(savesDir);
 
+  if (!gameHasSaves()) {
+    m_SaveGames.clear();
+    ui.list->clear();
+    // the label paints its own copy of the text: clear() would leave it
+    if (m_route != nullptr) {
+      static_cast<FluentPanels::ElidedLabel*>(m_route)->setFullText({});
+    }
+    m_routePath.clear();
+    if (m_openFolder != nullptr) {
+      m_openFolder->setEnabled(false);
+    }
+    m_empty->setText(tr("This game has no saves MO2 can show."));
+    m_empty->show();
+    return;
+  }
+  if (m_openFolder != nullptr) {
+    m_openFolder->setEnabled(true);
+  }
+
   try {
     MOBase::log::debug("reading save games from {}", savesDir.absolutePath());
     m_SaveGames = m_core.managedGame()->listSaves(savesDir);
@@ -371,9 +418,14 @@ void SavesTab::refreshSaveListNow()
     // the side panel has room for the name and the date; the file's path,
     // squeezed to "..." there, shows on the name
     ui.list->setColumnHidden(1, true);
+
+    m_empty->setText(tr("No saves in this folder yet."));
+    m_empty->setVisible(m_SaveGames.empty());
   } catch (std::exception& e) {
     // listSaves() can throw
     log::error("{}", e.what());
+    m_empty->setText(tr("The saves in this folder couldn't be read."));
+    m_empty->setVisible(ui.list->topLevelItemCount() == 0);
   }
 }
 
@@ -489,7 +541,15 @@ void SavesTab::onContextMenu(const QPoint& pos)
                    deleteSavegame();
                  });
 
+  // the watcher's refresh waits for the menu: it would clear the rows the
+  // menu's actions work on
+  m_menuOpen = true;
   menu.exec(ui.list->viewport()->mapToGlobal(pos));
+  m_menuOpen = false;
+  if (m_refreshAfterMenu) {
+    m_refreshAfterMenu = false;
+    refreshSavesIfOpen();
+  }
 }
 
 void SavesTab::fixMods(SaveGameInfo::MissingAssets const& missingAssets)

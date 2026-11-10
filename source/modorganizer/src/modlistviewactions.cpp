@@ -943,7 +943,8 @@ void ModListViewActions::sendModsToSeparator(const QModelIndexList& indexes) con
   }
 
   // in descending order, reverse the separator
-  if (m_view->sortOrder() == Qt::DescendingOrder) {
+  if (m_view->sortColumn() == ModList::COL_PRIORITY &&
+      m_view->sortOrder() == Qt::DescendingOrder) {
     std::reverse(separators.begin(), separators.end());
   }
 
@@ -970,7 +971,8 @@ void ModListViewActions::sendModsToSeparator(const QModelIndexList& indexes) con
   // start right after/before the current priority and look for the next
   // separator
   int priority = -1;
-  if (m_view->sortOrder() == Qt::AscendingOrder) {
+  if (m_view->sortColumn() != ModList::COL_PRIORITY ||
+      m_view->sortOrder() == Qt::AscendingOrder) {
     auto it = std::find_if(ibp.find(sepPriority + 1), ibp.end(), isSeparator);
     if (it != ibp.end()) {
       priority = it->first;

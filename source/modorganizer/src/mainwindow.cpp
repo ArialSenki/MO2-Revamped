@@ -553,7 +553,12 @@ public:
   {
     if (expandedHeight > sizeHint().height()) {
       m_ExpandedHeight = qMax(expandedHeight, m_ExpandedMinimum);
-      m_KeepHeight     = true;
+      // kept for the fold below; a floating log doesn't fold, so it would be
+      // left over for a later fold of the docked log
+      m_KeepHeight = !m_Dock->isFloating();
+    }
+    if (m_Dock->isFloating()) {
+      return;
     }
     if (m_Dock->isVisible()) {
       setExpanded(false);
@@ -1695,7 +1700,8 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   resizeLists(pluginListAdjusted);
 
   new ResponsiveColumnSizer(ui->dataTree, this);
-  new ResponsiveColumnSizer(ui->savegameList, this);
+  // the saves list sizes itself: the name stretches, the date fits (see
+  // SavesTab::refreshSaveListNow()); a second sizer cut the date off
   new ResponsiveColumnSizer(ui->downloadView, this);
 
   m_LinkToolbar = new QAction(FluentIcons::icon(":/MO/gui/mainwindow/shortcut-add.svg"),
@@ -1804,6 +1810,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   setFilterShortcuts(ui->modList, ui->modFilterEdit);
   setFilterShortcuts(ui->espList, ui->espFilterEdit);
   setFilterShortcuts(ui->downloadView, ui->downloadFilterEdit);
+  setFilterShortcuts(ui->dataTree, ui->dataTabFilter);
 
   m_UpdateProblemsTimer.setSingleShot(true);
   connect(&m_UpdateProblemsTimer, &QTimer::timeout, this,

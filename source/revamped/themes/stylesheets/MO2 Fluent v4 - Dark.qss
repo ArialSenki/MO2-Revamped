@@ -34,6 +34,12 @@ QStatusBar {
     background-color: transparent;
 }
 
+/* an empty saves list says so */
+QTreeWidget#savegameList QLabel#savesEmptyLabel {
+    color: #C5C5C5;
+    background-color: transparent;
+}
+
 /* the gap above the log matches the gaps between the cards */
 QMainWindow::separator {
     width: 10px;

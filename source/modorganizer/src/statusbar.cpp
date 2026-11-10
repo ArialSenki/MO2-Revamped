@@ -8,9 +8,41 @@
 #include "settings.h"
 #include "ui_mainwindow.h"
 
+#include <QAccessibleWidget>
 #include <QKeyEvent>
 #include <QPainter>
 #include <QStyle>
+
+namespace
+{
+// Notifications and Update act as buttons: screen readers announce them as
+// buttons and can press them
+class StatusBarActionAccessible : public QAccessibleWidget
+{
+public:
+  explicit StatusBarActionAccessible(QWidget* widget)
+      : QAccessibleWidget(widget, QAccessible::Button)
+  {}
+
+  QStringList actionNames() const override { return {pressAction()}; }
+
+  void doAction(const QString& name) override
+  {
+    if (name == pressAction()) {
+      static_cast<StatusBarAction*>(widget())->trigger();
+    }
+  }
+};
+
+QAccessibleInterface* statusBarActionAccessible(const QString& className, QObject* object)
+{
+  if (className == QLatin1String("StatusBarAction") && object != nullptr &&
+      object->isWidgetType()) {
+    return new StatusBarActionAccessible(static_cast<QWidget*>(object));
+  }
+  return nullptr;
+}
+}  // namespace
 
 StatusBar::StatusBar(QWidget* parent)
     : QStatusBar(parent), ui(nullptr), m_normal(new FluentPanels::ElidedLabel),
@@ -25,6 +57,11 @@ void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
 
   // the window's margin keeps it clear of the edge
   setContentsMargins(0, 0, 0, 0);
+  static const bool accessibleInstalled = [] {
+    QAccessible::installFactory(statusBarActionAccessible);
+    return true;
+  }();
+  Q_UNUSED(accessibleInstalled);
   m_notifications = new StatusBarAction(ui->actionNotifications);
   m_update        = new StatusBarAction(ui->actionUpdate);
 
@@ -102,13 +139,14 @@ void StatusBar::setAPI(const APIStats& stats, const APIUserAccount& user)
                ? tr("Nexus API: %1 left today").arg(user.limits().remainingDailyRequests)
                : tr("Nexus API: %1 left this hour")
                      .arg(user.limits().remainingHourlyRequests);
-    m_api->setToolTip(
-        tr("Queued requests: %1\nRemaining today: %2\nRemaining this hour: %3\n\n"
-           "Nexus allows a number of requests per day and per hour;\n"
-           "downloads, update checks and mod information use them.")
+    // the figures keep their existing translation; the explanation is its own
+    m_api->setToolTip(tr("Queued requests: %1\nRemaining today: %2\nRemaining this hour: %3")
                           .arg(stats.requestsQueued)
                           .arg(user.limits().remainingDailyRequests)
-                          .arg(user.limits().remainingHourlyRequests));
+                          .arg(user.limits().remainingHourlyRequests) +
+                      QStringLiteral("\n\n") +
+                      tr("Nexus allows a number of requests per day and per hour;\n"
+                         "downloads, update checks and mod information use them."));
 
     if (user.remainingRequests() > 500) {
       apiState = QStringLiteral("healthy");
@@ -226,12 +264,28 @@ void StatusBarAction::set(bool visible)
   setVisible(visible);
 }
 
+void StatusBarAction::trigger()
+{
+  if (m_action->isEnabled()) {
+    m_action->trigger();
+  }
+}
+
+bool StatusBarAction::event(QEvent* e)
+{
+  // the icon is drawn for the screen's scale: moved to another screen, it is
+  // drawn again
+  if (e->type() == QEvent::DevicePixelRatioChange && !isHidden()) {
+    set(true);
+  }
+  return QWidget::event(e);
+}
+
 // one click, like the other items of the status bar
 void StatusBarAction::mouseReleaseEvent(QMouseEvent* e)
 {
-  if (e->button() == Qt::LeftButton && rect().contains(e->pos()) &&
-      m_action->isEnabled()) {
-    m_action->trigger();
+  if (e->button() == Qt::LeftButton && rect().contains(e->pos())) {
+    trigger();
   }
 }
 
@@ -241,8 +295,8 @@ void StatusBarAction::keyPressEvent(QKeyEvent* e)
   if ((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ||
        e->key() == Qt::Key_Space) &&
       (e->modifiers() & ~Qt::KeypadModifier) == Qt::NoModifier) {
-    if (m_action->isEnabled() && !e->isAutoRepeat()) {
-      m_action->trigger();
+    if (!e->isAutoRepeat()) {
+      trigger();
     }
     e->accept();
     return;
