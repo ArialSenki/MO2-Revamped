@@ -65,8 +65,8 @@ using namespace MOBase;
 
 ModList::ModList(PluginContainer* pluginContainer, OrganizerCore* organizer)
     : QAbstractItemModel(organizer), m_Organizer(organizer), m_Profile(nullptr),
-      m_NexusInterface(nullptr), m_Modified(false), m_InNotifyChange(false),
-      m_FontMetrics(QFont()), m_PluginContainer(pluginContainer)
+      m_NexusInterface(nullptr), m_InNotifyChange(false),
+      m_PluginContainer(pluginContainer)
 {
   m_LastCheck.start();
 }
@@ -570,7 +570,6 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
     bool enabled = value.toInt() == Qt::Checked;
     if (m_Profile->modEnabled(modID) != enabled) {
       m_Profile->setModEnabled(modID, enabled);
-      m_Modified = true;
       m_LastCheck.restart();
     }
     result = true;
@@ -1480,7 +1479,6 @@ bool ModList::toggleState(const QModelIndexList& indices)
 
   m_Profile->setModsEnabled(modsToEnable, modsToDisable);
 
-  m_Modified = true;
   m_LastCheck.restart();
 
   emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));

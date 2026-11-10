@@ -622,7 +622,6 @@ private:
   // the Watcher to trigger multiple listRefreshes freezing the ui.
   static int m_DirWatcherDisabler;
 
-  std::map<QString, int> m_DownloadFails;
 
   bool m_ShowHidden;
 

@@ -148,7 +148,6 @@ private:
     EConflictType m_CurrentConflictState      = CONFLICT_NONE;
     EConflictType m_ArchiveConflictState      = CONFLICT_NONE;
     EConflictType m_ArchiveConflictLooseState = CONFLICT_NONE;
-    bool m_HasLooseOverwrite                  = false;
     bool m_HasHiddenFiles                     = false;
 
     std::set<unsigned int> m_OverwriteList;    // indices of mods overritten by this mod

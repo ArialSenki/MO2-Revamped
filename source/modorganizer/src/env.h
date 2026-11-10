@@ -85,19 +85,6 @@ struct MallocFreer
 template <class T>
 using MallocPtr = std::unique_ptr<T, MallocFreer>;
 
-// used by LocalPtr, calls LocalFree() as the deleter
-//
-template <class T>
-struct LocalFreer
-{
-  using pointer = T;
-
-  void operator()(T p) { ::LocalFree(p); }
-};
-
-template <class T>
-using LocalPtr = std::unique_ptr<T, LocalFreer<T>>;
-
 // used by the CoTaskMemPtr, calls CoTaskMemFree() as the deleter
 //
 template <class T>
@@ -219,43 +206,6 @@ QString path();
 QString appendToPath(const QString& s);
 QString prependToPath(const QString& s);
 void setPath(const QString& s);
-
-class Service
-{
-public:
-  enum class StartType
-  {
-    None = 0,
-    Disabled,
-    Enabled
-  };
-
-  enum class Status
-  {
-    None = 0,
-    Stopped,
-    Running
-  };
-
-  explicit Service(QString name);
-  Service(QString name, StartType st, Status s);
-
-  bool isValid() const;
-
-  const QString& name() const;
-  StartType startType() const;
-  Status status() const;
-
-  QString toString() const;
-
-private:
-  QString m_name;
-  StartType m_startType;
-  Status m_status;
-};
-
-QString toString(Service::StartType st);
-QString toString(Service::Status st);
 
 struct Association
 {

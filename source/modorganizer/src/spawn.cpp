@@ -350,31 +350,6 @@ QMessageBox::StandardButton confirmRestartAsAdminForSteam(QWidget* parent,
       .exec();
 }
 
-bool eventLogNotRunning(QWidget* parent, const env::Service& s,
-                        const SpawnParameters& sp)
-{
-  const auto title    = QObject::tr("Event Log not running");
-  const auto mainText = QObject::tr("The Event Log service is not running");
-  const auto content  = QObject::tr(
-      "The Windows Event Log service is not running. This can prevent USVFS from "
-       "running properly and your mods may not be recognized by the program being "
-       "launched.");
-
-  const auto r =
-      MOBase::TaskDialog(parent, title)
-          .main(mainText)
-          .content(content)
-          .details(s.toString())
-          .icon(QMessageBox::Question)
-          .remember("eventLogService", sp.binary.fileName())
-          .button({QObject::tr("Continue"), QObject::tr("Your mods might not work."),
-                   QMessageBox::Yes})
-          .button({QObject::tr("Cancel"), QMessageBox::Cancel})
-          .exec();
-
-  return (r == QMessageBox::Yes);
-}
-
 QMessageBox::StandardButton
 confirmBlacklisted(QWidget* parent, const SpawnParameters& sp, Settings& settings)
 {

@@ -355,19 +355,6 @@ private:
   int dropPriority(int row, const QModelIndex& parent) const;
 
 private:
-  struct TModInfo
-  {
-    TModInfo(unsigned int index, ModInfo::Ptr modInfo)
-        : modInfo(modInfo), nameOrder(index), priorityOrder(0), modIDOrder(0),
-          categoryOrder(0)
-    {}
-    ModInfo::Ptr modInfo;
-    unsigned int nameOrder;
-    unsigned int priorityOrder;
-    unsigned int modIDOrder;
-    unsigned int categoryOrder;
-  };
-
   struct TModInfoChange
   {
     QString name;
@@ -381,11 +368,9 @@ private:
   NexusInterface* m_NexusInterface;
   std::set<int> m_RequestIDs;
 
-  mutable bool m_Modified;
   bool m_InNotifyChange;
   bool m_DropOnMod = false;
 
-  QFontMetrics m_FontMetrics;
 
   TModInfoChange m_ChangeInfo;
 

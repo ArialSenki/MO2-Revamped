@@ -32,9 +32,6 @@ private:
 
 private:
   int m_Role;
-  int m_LogicalIndex;
-  int m_CompactSize;
-  bool m_Compact;
 };
 
 #endif  // GENERICICONDELEGATE_H

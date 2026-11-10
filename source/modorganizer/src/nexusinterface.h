@@ -613,7 +613,6 @@ private:
   {
     int m_ModID;
     QString m_ModVersion;
-    std::vector<int> m_ModIDList;
     int m_FileID;
     QNetworkReply* m_Reply;
     enum Type
@@ -638,7 +637,6 @@ private:
     QString m_URL;
     QString m_SubModule;
     QString m_GameName;
-    int m_NexusGameID;
     bool m_Reroute;
     int m_ID;
     int m_Endorse;

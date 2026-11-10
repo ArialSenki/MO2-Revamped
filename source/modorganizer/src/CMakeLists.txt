@@ -338,7 +338,6 @@ mo2_add_filter(NAME src/widgets GROUPS
 	icondelegate
 	lcdnumber
 	loglist
-	loghighlighter
 	noeditdelegate
 	qtgroupingproxy
 	texteditor

@@ -51,9 +51,6 @@ protected:
   virtual bool lessThan(const QModelIndex& left, const QModelIndex& right) const;
 
 private:
-  int m_SortIndex;
-  Qt::SortOrder m_SortOrder;
-
   std::bitset<PluginList::COL_LASTCOLUMN + 1> m_EnabledColumns;
   QString m_CurrentFilter;
   std::vector<QStringList> m_FilterSegments;

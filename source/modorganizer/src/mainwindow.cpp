@@ -1780,12 +1780,6 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   connect(ui->toolBar, SIGNAL(customContextMenuRequested(QPoint)), this,
           SLOT(toolBar_customContextMenuRequested(QPoint)));
-  connect(ui->menuToolbars, &QMenu::aboutToShow, [&] {
-    updateToolbarMenu();
-  });
-  connect(ui->menuView, &QMenu::aboutToShow, [&] {
-    updateViewMenu();
-  });
   connect(ui->actionTool->menu(), &QMenu::aboutToShow, [&] {
     updateToolMenu();
   });
@@ -1931,10 +1925,6 @@ void MainWindow::resetActionIcons()
   // sort of button, which typically happens on the toolbar) _and_ to the
   // QAction itself, which is used in the menu bar
 
-  // clearing the notification, will be set below if the stylesheet has set
-  // anything for it
-  m_originalNotificationIcon = {};
-
   // QActions created from the .ui file are children of the main window
   for (QAction* action : findChildren<QAction*>()) {
     // creating a dummy button
@@ -1964,12 +1954,6 @@ void MainWindow::resetActionIcons()
 
     // the action's icon is used by the menu bar
     action->setIcon(icon);
-
-    if (action == ui->actionNotifications) {
-      // if the stylesheet has set a notification icon, remember it here so it
-      // can be used in updateProblemsButton()
-      m_originalNotificationIcon = icon;
-    }
   }
 
   applyFluentActionIcons();
@@ -2182,7 +2166,6 @@ void MainWindow::updatePinnedExecutables()
 
 void MainWindow::updateToolbarMenu()
 {
-  ui->actionToolBarMainToggle->setChecked(ui->toolBar->isVisible());
   ui->actionStatusBarToggle->setChecked(ui->statusBar->isVisible());
 
   const QSize iconSize = ui->toolBar->iconSize();
@@ -2230,11 +2213,6 @@ QMenu* MainWindow::createPopupMenu()
   updateViewMenu();
 
   return m;
-}
-
-void MainWindow::on_actionToolBarMainToggle_triggered()
-{
-  ui->toolBar->setVisible(!ui->toolBar->isVisible());
 }
 
 void MainWindow::on_actionStatusBarToggle_triggered()
@@ -4953,7 +4931,6 @@ void MainWindow::installTranslator(const QString& name)
 void MainWindow::languageChange(const QString& newLanguage)
 {
   m_ToolMenuDirty = true;
-  m_CurrentLanguage = newLanguage;
 
   // Also remembered globally so the instance dialogs shown before an
   // instance is loaded use the same language.
@@ -5176,11 +5153,6 @@ void MainWindow::showUpdateNotice(bool onlyIfNotSkipped)
 void MainWindow::on_actionUpdate_triggered()
 {
   showUpdateNotice(false);
-}
-
-void MainWindow::on_actionExit_triggered()
-{
-  ExitModOrganizer();
 }
 
 // the listing lives under Elden Ring on Nexus; without the Elden Ring plugin the

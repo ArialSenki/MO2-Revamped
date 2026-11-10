@@ -76,7 +76,6 @@ public:
 private:
   class Range;
 
-  using DirectoryIterator = std::vector<MOShared::DirectoryEntry*>::const_iterator;
 
   OrganizerCore& m_core;
   bool m_enabled;

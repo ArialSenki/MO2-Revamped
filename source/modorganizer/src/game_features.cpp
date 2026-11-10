@@ -234,7 +234,6 @@ void GameFeatures::updateCurrentFeatures(std::type_index const& index)
                      return std::dynamic_pointer_cast<ModDataChecker>(checker);
                    });
     modDataChecker().setCheckers(std::move(checkers));
-    emit modDataCheckerUpdated(gameFeature<ModDataChecker>().get());
   }
 
   // update mod data content

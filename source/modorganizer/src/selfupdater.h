@@ -111,11 +111,6 @@ public:
   MOBase::VersionInfo getVersion() const { return m_MOVersion; }
 
   /**
-   * @return the MO2 Revamped version of this build
-   **/
-  const MOBase::VersionInfo& revampedVersion() const { return m_RevampedVersion; }
-
-  /**
    * @return the releases newer than this build found by the last check, newest
    *         first; empty when there is none
    **/

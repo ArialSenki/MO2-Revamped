@@ -69,7 +69,6 @@ public:
   bool featuresKnown() const { return !m_allFeatures.empty(); }
 
 signals:
-  void modDataCheckerUpdated(const MOBase::ModDataChecker* check);
   void modDataContentUpdated(const MOBase::ModDataContent* check);
 
 private:

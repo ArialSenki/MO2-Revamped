@@ -103,7 +103,6 @@ private:
   MOBase::IPlugin* m_Master;
   std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> m_Requirements;
   OrganizerProxy* m_Organizer;
-  std::vector<MOBase::IPlugin*> m_RequiredFor;
 
   PluginRequirements(PluginContainer* pluginContainer, MOBase::IPlugin* plugin,
                      OrganizerProxy* proxy, MOBase::IPluginProxy* pluginProxy);
@@ -488,7 +487,6 @@ private:
 
   PreviewGenerator m_PreviewGenerator;
 
-  QFile m_PluginsCheck;
 };
 
 #endif  // PLUGINCONTAINER_H

@@ -8,7 +8,6 @@
 
 using namespace MOBase;
 
-class FileListItem;
 class FileListModel;
 class TextEditor;
 

@@ -363,7 +363,6 @@ private:
   std::vector<ESPInfo> m_ESPs;
   // Reuse per-mod plugin file scans between selection changes.
   std::map<unsigned int, QStringList> m_ModPluginNameCache;
-  mutable std::map<QString, QByteArray> m_LastSaveHash;
 
   std::map<QString, int, MOBase::FileNameComparator> m_ESPsByName;
   std::vector<int> m_ESPsByPriority;
@@ -374,13 +373,11 @@ private:
       m_AdditionalInfo;  // maps esp names to boss information
 
   QString m_CurrentProfile;
-  QFontMetrics m_FontMetrics;
 
   SignalRefreshed m_Refreshed;
   SignalPluginMoved m_PluginMoved;
   SignalPluginStateChanged m_PluginStateChanged;
 
-  QTemporaryFile m_TempFile;
 
   QElapsedTimer m_LastCheck;
 

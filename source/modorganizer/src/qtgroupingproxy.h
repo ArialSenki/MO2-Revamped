@@ -129,7 +129,6 @@ protected:
    */
   int indexOfParentCreate(const QModelIndex& parent) const;
 
-  QModelIndexList m_selectedGroups;
 
   QModelIndex m_rootNode;
   int m_groupedColumn;

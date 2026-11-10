@@ -1480,8 +1480,6 @@
     <addaction name="actionChange_Game"/>
     <addaction name="actionInstallMod"/>
     <addaction name="actionNexus"/>
-    <addaction name="separator"/>
-    <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1511,7 +1509,6 @@
      <property name="title">
       <string>&amp;Toolbars</string>
      </property>
-     <addaction name="actionToolBarMainToggle"/>
      <addaction name="actionStatusBarToggle"/>
      <addaction name="separator"/>
      <addaction name="actionToolBarSmallIcons"/>
@@ -1844,28 +1841,6 @@
    </property>
    <property name="statusTip">
     <string>Open the instance manager window to manage a different instance</string>
-   </property>
-  </action>
-  <action name="actionExit">
-   <property name="text">
-    <string>E&amp;xit</string>
-   </property>
-   <property name="iconText">
-    <string>Exit</string>
-   </property>
-   <property name="toolTip">
-    <string>Exits Mod Organizer</string>
-   </property>
-   <property name="statusTip">
-    <string>Exits Mod Organizer</string>
-   </property>
-  </action>
-  <action name="actionToolBarMainToggle">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>M&amp;ain toolbar</string>
    </property>
   </action>
   <action name="actionToolBarSmallIcons">

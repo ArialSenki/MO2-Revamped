@@ -173,15 +173,9 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
         styleIndex = ui->toolbarButtonStyleCombo->count() - 1;
       }
       ui->toolbarButtonStyleCombo->setCurrentIndex(styleIndex);
-      // the command bar holds every main command since the menu bar is gone,
-      // so it always stays visible
-      ui->mainToolbarVisibleBox->setChecked(true);
-      ui->mainToolbarVisibleBox->setEnabled(false);
-      ui->mainToolbarVisibleBox->hide();
     } else {
       ui->toolbarIconSizeCombo->setEnabled(false);
       ui->toolbarButtonStyleCombo->setEnabled(false);
-      ui->mainToolbarVisibleBox->setEnabled(false);
     }
 
     if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
@@ -201,8 +195,7 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     ui->toolbarViewGroup->setEnabled(false);
   }
   // update() applies only the boxes the user changes
-  for (auto* box : {ui->mainToolbarVisibleBox, ui->statusBarVisibleBox,
-                    ui->logPanelVisibleBox}) {
+  for (auto* box : {ui->statusBarVisibleBox, ui->logPanelVisibleBox}) {
     box->setProperty("mo2InitialChecked", box->isChecked());
   }
 

@@ -83,7 +83,6 @@ public:
   ~DownloadListView();
 
   void setManager(DownloadManager* manager);
-  void setSourceModel(DownloadList* sourceModel);
 
 signals:
   void installDownload(int index);
@@ -140,7 +139,6 @@ private slots:
 
 private:
   DownloadManager* m_Manager;
-  DownloadList* m_SourceModel = 0;
 
   void resizeEvent(QResizeEvent* event);
 };

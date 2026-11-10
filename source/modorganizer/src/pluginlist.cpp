@@ -74,7 +74,7 @@ static QString TruncateString(const QString& text)
 }
 
 PluginList::PluginList(OrganizerCore& organizer)
-    : QAbstractItemModel(&organizer), m_Organizer(organizer), m_FontMetrics(QFont())
+    : QAbstractItemModel(&organizer), m_Organizer(organizer)
 {
   connect(this, SIGNAL(writePluginsList()), this, SLOT(generatePluginIndexes()));
   m_LastCheck.start();

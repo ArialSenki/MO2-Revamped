@@ -203,11 +203,6 @@ void DownloadListView::setManager(DownloadManager* manager)
   header()->hideSection(DownloadList::COL_SOURCEGAME);
 }
 
-void DownloadListView::setSourceModel(DownloadList* sourceModel)
-{
-  m_SourceModel = sourceModel;
-}
-
 void DownloadListView::onDoubleClick(const QModelIndex& index)
 {
   QModelIndex sourceIndex =

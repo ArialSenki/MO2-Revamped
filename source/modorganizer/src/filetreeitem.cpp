@@ -10,8 +10,6 @@ using namespace MOBase;
 using namespace MOShared;
 namespace fs = std::filesystem;
 
-constexpr bool AlwaysSortDirectoriesFirst = true;
-
 const QString& directoryFileType()
 {
   static const QString name = [] {
@@ -256,17 +254,9 @@ void FileTreeItem::sort(int column, Qt::SortOrder order, bool force)
       int r = 0;
 
       if (a->isDirectory() && !b->isDirectory()) {
-        if constexpr (AlwaysSortDirectoriesFirst) {
-          return true;
-        } else {
-          r = -1;
-        }
+        return true;
       } else if (!a->isDirectory() && b->isDirectory()) {
-        if constexpr (AlwaysSortDirectoriesFirst) {
-          return false;
-        } else {
-          r = 1;
-        }
+        return false;
       } else {
         r = FileTreeItem::Sorter::compare(column, a.get(), b.get());
       }

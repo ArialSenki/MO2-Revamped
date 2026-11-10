@@ -269,7 +269,6 @@ private:
   // Performs checks, sets the m_NumberOfProblems and signals checkForProblemsDone().
   void checkForProblemsImpl();
 
-
   static void setupNetworkProxy(bool activate);
   void activateProxy(bool activate);
 
@@ -343,14 +342,9 @@ private:
 
   int m_OldProfileIndex;
 
-  std::vector<QString>
-      m_ModNameList;  // the mod-list to go with the directory structure
-
   QStringList m_DefaultArchives;
 
   int m_OldExecutableIndex;
-
-  QAction* m_ContextAction;
 
   CategoryFactory& m_CategoryFactory;
 
@@ -365,10 +359,6 @@ private:
   OrganizerCore& m_OrganizerCore;
   PluginContainer& m_PluginContainer;
 
-  QString m_CurrentLanguage;
-  std::vector<QTranslator*> m_Translators;
-
-
   QByteArray m_ArchiveListHash;
 
   MOBase::DelayedFileWriter m_ArchiveListWriter;
@@ -376,10 +366,6 @@ private:
   QAction* m_LinkToolbar;
   QAction* m_LinkDesktop;
   QAction* m_LinkStartMenu;
-
-  // icon set by the stylesheet, used to remember its original appearance
-  // when painting the count
-  QIcon m_originalNotificationIcon;
 
   std::atomic<std::size_t> m_NumberOfProblems;
   std::atomic<bool> m_ProblemsCheckRequired;
@@ -407,8 +393,6 @@ private slots:
   void linkMenu();
 
   void languageChange(const QString& newLanguage);
-
-
 
   // nexus related
   void updateAvailable();
@@ -444,7 +428,6 @@ private slots:
 
   void modRenamed(const QString& oldName, const QString& newName);
   void modRemoved(const QString& fileName);
-
 
   void openInstanceFolder();
   void openInstallFolder();
@@ -502,8 +485,6 @@ private slots:  // ui slots
   void on_actionNotifications_triggered();
   void on_actionSettings_triggered();
   void on_actionUpdate_triggered();
-  void on_actionExit_triggered();
-  void on_actionToolBarMainToggle_triggered();
   void on_actionStatusBarToggle_triggered();
   void on_actionToolBarSmallIcons_triggered();
   void on_actionToolBarMediumIcons_triggered();
