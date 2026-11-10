@@ -67,6 +67,14 @@
   current lootcli, which downloads the v0.29 masterlists and moves settings that
   still name an old branch.
 
+### Archives with non-ASCII paths
+
+- BSA and BA2 archives in folders whose names have characters outside the
+  system code page (Japanese, Korean, Chinese, and so on) are read, previewed
+  and extracted, and they can be extracted into such folders. Before, they
+  usually failed to open. Names stored inside the archives are handled as
+  before.
+
 ### Fixes from later Mod Organizer 2 versions
 
 Brought in from MO2's own repositories, where they were fixed after 2.5.2:

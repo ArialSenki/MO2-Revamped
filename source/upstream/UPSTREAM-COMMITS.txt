@@ -5,6 +5,9 @@ The repository of <name> is https://github.com/ModOrganizer2/modorganizer-<name>
 except cmake_common, which is https://github.com/ModOrganizer2/cmake_common.
 Changes made for MO2 Revamped are in later commits of this repository.
 lootcli's src/ is from a later commit (MO2's port to libloot 0.29), not 2.5.2's.
+bsatk takes wide paths as in MO2's later 9c941f9ea9 ("Make BSATK wide character
+compatible"), adapted: that commit's inverted source-file test, and its path /
+joins that write root files outside the target folder, are not taken.
 
 modorganizer_super:
   archive                  a13e224c17fb0f2210305cb3dcc442f25f2fd58c

@@ -21,6 +21,7 @@ along with Bsa Preview plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include "previewbsa.h"
 #include "simplefiletreemodel.h"
 #include <QApplication>
+#include <QDir>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QLabel>
@@ -147,7 +148,9 @@ QWidget* PreviewBsa::genBsaPreview(const QString& fileName, const QSize&)
   QLabel* infoLabel = new QLabel();
   BSA::Archive arch;  // bs_archive_auto is easier to use, but is less performant when
                       // working with memory
-  BSA::EErrorCode res = arch.read(fileName.toLocal8Bit().constData(), true);
+  // MO2 Revamped: the wide path, so names outside the system code page work
+  BSA::EErrorCode res = arch.read(
+      std::filesystem::path(QDir::toNativeSeparators(fileName).toStdWString()), true);
   if ((res != BSA::ERROR_NONE) && (res != BSA::ERROR_INVALIDHASHES)) {
     log::error("invalid bsa '{}', error {}", fileName, res);
     infoLabel->setText("Unable to parse archive. Unrecognized format.");

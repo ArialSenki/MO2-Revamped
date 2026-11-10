@@ -46,6 +46,57 @@ using namespace boost::posix_time;
 namespace BSA
 {
 
+// MO2 Revamped: the archive and the folders it is read from or extracted to are
+// std::filesystem paths, so they may hold any character (MO2 issue 2361). Names
+// stored inside the archive are bytes in the system code page, as before; they
+// are turned into wide strings the way the ANSI functions did, which never fails
+// or throws, so a strange name can't stop the extraction thread
+static std::wstring archiveNameToWide(const std::string& name)
+{
+  if (name.empty()) {
+    return {};
+  }
+  const int size = ::MultiByteToWideChar(CP_ACP, 0, name.data(),
+                                         static_cast<int>(name.size()), nullptr, 0);
+  std::wstring result(static_cast<size_t>(size), L'\0');
+  ::MultiByteToWideChar(CP_ACP, 0, name.data(), static_cast<int>(name.size()),
+                        result.data(), size);
+  return result;
+}
+
+// a name from the archive below a folder on disk. Joined as text, as the
+// narrow code did: path's operator/ would take a name starting with a
+// separator (files at the archive root are "\\name") or a drive as absolute,
+// and write outside the target folder
+static std::filesystem::path archiveTarget(const std::filesystem::path& directory,
+                                           const std::string& name)
+{
+  std::wstring relative = archiveNameToWide(name);
+  const size_t start    = relative.find_first_not_of(L"\\/");
+  relative.erase(0, start == std::wstring::npos ? relative.size() : start);
+  std::wstring result = directory.native();
+  if (!result.empty() && result.back() != L'\\' && result.back() != L'/') {
+    result += L'\\';
+  }
+  return std::filesystem::path(result + relative);
+}
+
+// UTF-8 for error messages, which can't hold every path in the system code page
+static std::string pathForMessage(const std::filesystem::path& path)
+{
+  const std::wstring& wide = path.native();
+  if (wide.empty()) {
+    return {};
+  }
+  const int size = ::WideCharToMultiByte(CP_UTF8, 0, wide.data(),
+                                         static_cast<int>(wide.size()), nullptr, 0,
+                                         nullptr, nullptr);
+  std::string result(static_cast<size_t>(size), '\0');
+  ::WideCharToMultiByte(CP_UTF8, 0, wide.data(), static_cast<int>(wide.size()),
+                        result.data(), size, nullptr, nullptr);
+  return result;
+}
+
 Archive::Archive()
     : m_RootFolder(new Folder), m_ArchiveFlags(FLAG_HASDIRNAMES | FLAG_HASFILENAMES),
       m_Type(TYPE_SKYRIM)
@@ -155,7 +206,7 @@ Archive::Header Archive::readHeader(std::fstream& infile)
   return result;
 }
 
-EErrorCode Archive::read(const char* fileName, bool testHashes)
+EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
 {
   m_File.open(fileName, fstream::in | fstream::binary);
   if (!m_File.is_open()) {
@@ -167,7 +218,8 @@ EErrorCode Archive::read(const char* fileName, bool testHashes)
     try {
       header = readHeader(m_File);
     } catch (const data_invalid_exception& e) {
-      throw data_invalid_exception(makeString("%s (filename: %s)", e.what(), fileName));
+      throw data_invalid_exception(
+          makeString("%s (filename: %s)", e.what(), pathForMessage(fileName).c_str()));
     }
     m_ArchiveFlags = header.archiveFlags;
     m_Type         = header.type;
@@ -420,7 +472,7 @@ void Archive::writeHeader(std::fstream& outfile, BSAULong fileFlags,
   writeType<BSAULong>(outfile, fileFlags);
 }
 
-EErrorCode Archive::write(const char* fileName)
+EErrorCode Archive::write(const std::filesystem::path& fileName)
 {
   std::fstream outfile;
   outfile.open(fileName, fstream::out | fstream::binary);
@@ -875,11 +927,12 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
   return result;
 }
 
-EErrorCode Archive::extract(File::Ptr file, const char* outputDirectory) const
+EErrorCode Archive::extract(File::Ptr file,
+                            const std::filesystem::path& outputDirectory) const
 {
-  std::string fileName = makeString("%s/%s", outputDirectory, file->getName().c_str());
-  std::ofstream outputFile(fileName.c_str(),
-                           fstream::out | fstream::binary | fstream::trunc);
+  const std::filesystem::path fileName =
+      archiveTarget(outputDirectory, file->getName());
+  std::ofstream outputFile(fileName, fstream::out | fstream::binary | fstream::trunc);
   if (!outputFile.is_open()) {
     return ERROR_ACCESSFAILED;
   }
@@ -995,13 +1048,12 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
   }
 }
 
-inline bool fileExists(const std::string& name)
+inline bool fileExists(const std::filesystem::path& name)
 {
-  struct stat buffer;
-  return stat(name.c_str(), &buffer) != -1;
+  return ::GetFileAttributesW(name.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
 
-void Archive::extractFiles(const std::string& targetDirectory,
+void Archive::extractFiles(const std::filesystem::path& targetDirectory,
                            std::queue<FileInfo>& queue, boost::mutex& mutex,
                            boost::interprocess::interprocess_semaphore& bufferCount,
                            boost::interprocess::interprocess_semaphore& queueFree,
@@ -1025,14 +1077,13 @@ void Archive::extractFiles(const std::string& targetDirectory,
 
     DataBuffer dataBuffer = fileInfo.data;
 
-    std::string fileName = makeString("%s\\%s", targetDirectory.c_str(),
-                                      fileInfo.file->getFilePath().c_str());
+    const std::filesystem::path fileName =
+        archiveTarget(targetDirectory, fileInfo.file->getFilePath());
     if (!overwrite && fileExists(fileName)) {
       continue;
     }
 
-    std::ofstream outputFile(fileName.c_str(),
-                             fstream::out | fstream::binary | fstream::trunc);
+    std::ofstream outputFile(fileName, fstream::out | fstream::binary | fstream::trunc);
 
     if (!outputFile.is_open()) {
 #pragma message("report error!")
@@ -1139,18 +1190,24 @@ void Archive::extractFiles(const std::string& targetDirectory,
   }
 }
 
-void Archive::createFolders(const std::string& targetDirectory, Folder::Ptr folder)
+void Archive::createFolders(const std::filesystem::path& targetDirectory,
+                            Folder::Ptr folder)
 {
+  // each folder from its whole path in the archive, always below the same
+  // target: the folder tree splits names on the byte '\', which can be the
+  // second byte of a double-byte character (Shift-JIS 表 is 95 5C), and only
+  // the whole name converts back to the right folder
   for (std::vector<Folder::Ptr>::iterator iter = folder->m_SubFolders.begin();
        iter != folder->m_SubFolders.end(); ++iter) {
-    std::string subDirName = targetDirectory + "\\" + (*iter)->getName();
-    ::CreateDirectoryA(subDirName.c_str(), nullptr);
-    createFolders(subDirName, *iter);
+    const std::filesystem::path subDirName =
+        archiveTarget(targetDirectory, (*iter)->getFullPath());
+    ::CreateDirectoryW(subDirName.c_str(), nullptr);
+    createFolders(targetDirectory, *iter);
   }
 }
 
 EErrorCode Archive::extractAll(
-    const char* outputDirectory,
+    const std::filesystem::path& outputDirectory,
     const boost::function<bool(int value, std::string fileName)>& progress,
     bool overwrite)
 {
@@ -1214,8 +1271,8 @@ bool Archive::compressed(const File::Ptr& file) const
   return (file->m_FileSize > 0);
 }
 
-File::Ptr Archive::createFile(const std::string& name, const std::string& sourceName,
-                              bool compressed)
+File::Ptr Archive::createFile(const std::string& name,
+                              const std::filesystem::path& sourceName, bool compressed)
 {
   return File::Ptr(
       new File(name, sourceName, nullptr, defaultCompressed() != compressed));

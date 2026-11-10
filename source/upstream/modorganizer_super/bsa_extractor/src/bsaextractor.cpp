@@ -118,7 +118,9 @@ void BsaExtractor::modInstalledHandler(IModInterface *mod)
                        QDialogButtonBox::Yes | QDialogButtonBox::No, QDialogButtonBox::No) == QDialogButtonBox::Yes);
     foreach (QFileInfo archiveInfo, archives) {
       BSA::Archive archive;
-      BSA::EErrorCode result = archive.read(archiveInfo.absoluteFilePath().toLocal8Bit().constData(), true);
+      // MO2 Revamped: wide paths, so names outside the system code page work
+      BSA::EErrorCode result = archive.read(
+          std::filesystem::path(QDir::toNativeSeparators(archiveInfo.absoluteFilePath()).toStdWString()), true);
       if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
         reportError(tr("failed to read %1: %2").arg(archiveInfo.fileName()).arg(result));
         return;
@@ -129,7 +131,7 @@ void BsaExtractor::modInstalledHandler(IModInterface *mod)
       progress.setValue(0);
       progress.show();
 
-      archive.extractAll(mod->absolutePath().toLocal8Bit().constData(),
+      archive.extractAll(std::filesystem::path(QDir::toNativeSeparators(mod->absolutePath()).toStdWString()),
                          boost::bind(&BsaExtractor::extractProgress, this, boost::ref(progress), _1, _2),
                          false);
 

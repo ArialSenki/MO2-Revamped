@@ -5840,17 +5840,12 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
   if (!targetFolder.isEmpty()) {
     for (const auto& archivePath : archivePaths) {
       BSA::Archive archive;
-      // the archive library takes narrow paths; the short 8.3 form keeps
-      // names outside the system code page readable
-      std::wstring widePath = QDir::toNativeSeparators(archivePath).toStdWString();
-      wchar_t shortPath[MAX_PATH * 4];
-      const DWORD shortLength =
-          ::GetShortPathNameW(widePath.c_str(), shortPath, MAX_PATH * 4);
-      const QString readPath = shortLength > 0 && shortLength < MAX_PATH * 4
-                                   ? QString::fromWCharArray(shortPath, shortLength)
-                                   : QDir::toNativeSeparators(archivePath);
-      BSA::EErrorCode result =
-          archive.read(readPath.toLocal8Bit().constData(), true);
+      // the archive library takes wide paths, so names outside the system code
+      // page work; the short 8.3 form used before is missing on volumes without
+      // short names
+      BSA::EErrorCode result = archive.read(
+          std::filesystem::path(QDir::toNativeSeparators(archivePath).toStdWString()),
+          true);
       if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
         reportError(
             tr("failed to read %1: %2").arg(archivePath, QString::number(result)));
@@ -5864,7 +5859,7 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
       progress.setValue(0);
       progress.show();
       archive.extractAll(
-          QDir::toNativeSeparators(targetFolder).toLocal8Bit().constData(),
+          std::filesystem::path(QDir::toNativeSeparators(targetFolder).toStdWString()),
           boost::bind(&MainWindow::extractProgress, this, boost::ref(progress), _1,
                       _2));
       if (result == BSA::ERROR_INVALIDHASHES) {

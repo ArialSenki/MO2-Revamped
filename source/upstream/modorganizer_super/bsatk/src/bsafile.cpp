@@ -67,7 +67,7 @@ File::File(const std::string& name, Folder* folder, BSAULong fileSize,
     m_ToggleCompressed = true;
 }
 
-File::File(const std::string& name, const std::string& sourceFile, Folder* folder,
+File::File(const std::string& name, const std::filesystem::path& sourceFile, Folder* folder,
            bool toggleCompressed)
     : m_Folder(folder), m_New(true), m_Name(name), m_FileSize(0),
       m_UncompressedFileSize(0), m_DataOffset(0), m_ToggleCompressed(toggleCompressed),
@@ -100,7 +100,7 @@ EErrorCode File::writeData(fstream& sourceArchive, fstream& targetArchive) const
 
   std::unique_ptr<char[]> inBuffer(new char[CHUNK_SIZE]);
 
-  if (m_SourceFile.length() == 0) {
+  if (m_SourceFile.empty()) {
     // copy from source archive
 #pragma message("we may have to compress/decompress!")
     sourceArchive.seekg(m_DataOffset, fstream::beg);
@@ -119,7 +119,7 @@ EErrorCode File::writeData(fstream& sourceArchive, fstream& targetArchive) const
   } else {
     // copy from file on disc
     fstream sourceFile;
-    sourceFile.open(m_SourceFile.c_str());
+    sourceFile.open(m_SourceFile, fstream::in | fstream::binary);
     if (!sourceFile.is_open()) {
       return ERROR_SOURCEFILEMISSING;
     }
