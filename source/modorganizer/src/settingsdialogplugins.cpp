@@ -752,7 +752,8 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
 
 void PluginsSettingsTab::deleteBlacklistItem()
 {
-  ui->pluginBlacklist->takeItem(ui->pluginBlacklist->currentIndex().row());
+  // takeItem() hands the item over; nothing else deletes it
+  delete ui->pluginBlacklist->takeItem(ui->pluginBlacklist->currentIndex().row());
 }
 
 void PluginsSettingsTab::storeSettings(QTreeWidgetItem* pluginItem)

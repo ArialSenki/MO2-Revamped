@@ -543,7 +543,10 @@ public:
   // if 'force' is true, the registration dialog will be shown even if the user
   // said earlier not to
   //
-  void registerAsNXMHandler(bool force);
+  // returns false if the helper couldn't be started; the error is shown over
+  // 'parent'
+  //
+  bool registerAsNXMHandler(bool force, QWidget* parent = nullptr);
 
   std::vector<std::chrono::seconds> validationTimeouts() const;
 

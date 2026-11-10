@@ -10,6 +10,7 @@
 #include <report.h>
 
 #include <QCheckBox>
+#include <QDir>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -405,7 +406,8 @@ void WorkaroundsSettingsTab::browseCustomBrowser()
     return;
   }
 
-  ui->browserCommand->setText(file + " \"%1\"");
+  // quoted, or a path with spaces (C:\Program Files\...) splits at the first one
+  ui->browserCommand->setText("\"" + QDir::toNativeSeparators(file) + "\" \"%1\"");
 }
 
 void WorkaroundsSettingsTab::on_resetGeometryBtn_clicked()

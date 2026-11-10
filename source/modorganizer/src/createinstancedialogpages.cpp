@@ -62,6 +62,17 @@ using MOBase::TaskDialog;
 namespace
 {
 
+// Windows device names (CON, NUL, COM1...) can't be folders, in any case and
+// with any extension; fixDirectoryName() only catches the exact upper case
+bool isReservedDeviceName(const QString& name)
+{
+  QString stem = name.section(QLatin1Char('.'), 0, 0).trimmed().toUpper();
+  if (stem.isEmpty()) {
+    return false;
+  }
+  return !fixDirectoryName(stem);
+}
+
 // Segoe Fluent Icons code points for the choices
 constexpr char16_t HomeGlyph    = 0xE80F;
 constexpr char16_t DriveGlyph   = 0xE88E;  // USB, a folder that travels
@@ -1837,7 +1848,7 @@ bool NamePage::checkName(QString parentDir, QString name)
   if (name.isEmpty()) {
     empty = true;
   } else {
-    if (MOBase::validFileName(name)) {
+    if (MOBase::validFileName(name) && !isReservedDeviceName(name)) {
       exists = QDir(parentDir).exists(name);
     } else {
       invalid = true;
@@ -2340,8 +2351,14 @@ bool PathsPage::checkPath(QString path, PlaceholderLabel& existsLabel,
     empty = true;
   } else {
     const QDir d(path);
+    // a relative path would resolve against MO2's working directory
+    const QString clean = QDir::fromNativeSeparators(path);
+    const bool full     = (clean.size() >= 3 && clean[1] == QLatin1Char(':') &&
+                       clean[2] == QLatin1Char('/')) ||
+                      clean.startsWith(QLatin1String("//"));
 
-    if (MOBase::validFileName(d.dirName())) {
+    if (full && MOBase::validFileName(d.dirName()) &&
+        !isReservedDeviceName(d.dirName())) {
       if (m_dlg.rawCreationInfo().type == CreateInstanceDialog::Portable &&
           m_dlg.rawCreationInfo().instanceName.isEmpty()) {
         // An in-place setup of the legacy portable instance uses the existing
@@ -2431,7 +2448,18 @@ void ConfirmationPage::doActivated(bool)
     delete item;
   }
 
-  for (const auto& [caption, value, step] : makeReview()) {
+  const auto review = makeReview();
+
+  // the caption column fits the longest caption (translations are longer),
+  // up to a limit past which captions wrap
+  int captionWidth = 120;
+  for (const auto& entry : review) {
+    captionWidth = std::max(
+        captionWidth, ui->review->fontMetrics().horizontalAdvance(entry.caption) + 8);
+  }
+  captionWidth = std::min(captionWidth, 200);
+
+  for (const auto& [caption, value, step] : review) {
     auto* row = new QFrame(ui->review);
     row->setObjectName(QStringLiteral("fluentSettingRow"));
     auto* rowLayout = new QHBoxLayout(row);
@@ -2439,7 +2467,8 @@ void ConfirmationPage::doActivated(bool)
     rowLayout->setSpacing(16);
     auto* captionLabel = new QLabel(caption, row);
     captionLabel->setObjectName(QStringLiteral("wizardReviewKey"));
-    captionLabel->setFixedWidth(120);
+    captionLabel->setFixedWidth(captionWidth);
+    captionLabel->setWordWrap(true);
     captionLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     auto* valueLabel = new QLabel(value, row);
     valueLabel->setObjectName(QStringLiteral("wizardReviewValue"));

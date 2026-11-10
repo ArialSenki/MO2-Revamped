@@ -1361,6 +1361,21 @@ void applyPopupEffects()
 
 bool MOApplication::setStyleFile(const QString& styleName)
 {
+  // already applied: startup sets the default theme for the instance dialogs
+  // and then the instance's own, usually the same 6,000-line sheet, and each
+  // pass parses it again. Edits to the file still reload through the watcher
+  if (!styleName.isEmpty() && styleName == m_appliedStyleFile &&
+      !styleSheet().isEmpty()) {
+    // an editor that saves by replacing the file drops it from the watch
+    const QString watched = applicationDirPath() + "/" +
+                            MOBase::ToQString(AppConfig::stylesheetsPath()) + "/" +
+                            styleName;
+    if (QFile::exists(watched) && !m_styleWatcher.files().contains(watched)) {
+      m_styleWatcher.addPath(watched);
+    }
+    return true;
+  }
+
   // remove all files from watch
   QStringList currentWatch = m_styleWatcher.files();
   if (currentWatch.count() != 0) {

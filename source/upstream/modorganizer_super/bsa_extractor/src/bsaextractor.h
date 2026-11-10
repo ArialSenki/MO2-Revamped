@@ -22,6 +22,7 @@ public:
   virtual QString description() const override;
   virtual MOBase::VersionInfo version() const override;
   virtual QList<MOBase::PluginSetting> settings() const override;
+  virtual std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements() const override;
 
 private:
   void modInstalledHandler(MOBase::IModInterface *mod);

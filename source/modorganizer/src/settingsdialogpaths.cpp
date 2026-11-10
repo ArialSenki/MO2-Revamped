@@ -14,6 +14,8 @@
 #include <QPushButton>
 #include <QSize>
 #include <QVBoxLayout>
+#include <tuple>
+#include <vector>
 
 namespace
 {
@@ -28,6 +30,60 @@ QString stored(const QLineEdit* edit)
 {
   // a pasted " D:\MO2" would otherwise be saved as a relative path
   return QDir::fromNativeSeparators(edit->text().trimmed());
+}
+
+// folders compare the way Windows sees them: case and separators don't matter
+QString comparable(const QString& path)
+{
+  return QDir::cleanPath(QDir::fromNativeSeparators(path)).toLower();
+}
+
+bool samePath(const QString& a, const QString& b)
+{
+  return comparable(a) == comparable(b);
+}
+
+// true if 'path' is 'folder' or somewhere inside it
+bool isInside(const QString& path, const QString& folder)
+{
+  const QString p = comparable(path);
+  QString f       = comparable(folder);
+  if (p == f) {
+    return true;
+  }
+  if (!f.endsWith(QLatin1Char('/'))) {
+    f += QLatin1Char('/');
+  }
+  return p.startsWith(f);
+}
+
+// a drive or network path; anything else would resolve against MO2's working
+// directory
+bool isFullPath(const QString& path)
+{
+  const QString p = QDir::fromNativeSeparators(path);
+  return (p.size() >= 3 && p[1] == QLatin1Char(':') && p[2] == QLatin1Char('/')) ||
+         p.startsWith(QLatin1String("//"));
+}
+
+// the folder a storage field stands for once %BASE_DIR% is expanded; an empty
+// field is the default folder in the base
+QString effectivePath(const QString& value, const QString& base,
+                      const std::wstring& defaultName)
+{
+  if (value.isEmpty()) {
+    return base + "/" + QString::fromStdWString(defaultName);
+  }
+  return PathSettings::resolve(value, base);
+}
+
+// the base being saved; an empty field is the instance's own folder
+QString typedBase(const QLineEdit* edit)
+{
+  const QString base = stored(edit);
+  return base.isEmpty()
+             ? QDir::fromNativeSeparators(qApp->property("dataPath").toString())
+             : base;
 }
 }  // namespace
 
@@ -193,38 +249,139 @@ PathsSettingsTab::PathsSettingsTab(Settings& s, SettingsDialog& d)
   });
 }
 
+bool PathsSettingsTab::validate()
+{
+  const QString basePath = typedBase(ui->baseDirEdit);
+  const bool baseChanged = !samePath(basePath, settings().paths().base());
+
+  if (baseChanged && !isFullPath(basePath)) {
+    QMessageBox::warning(parentWidget(), QObject::tr("Error"),
+                         QObject::tr("\"%1\" isn't a full path. Use a folder that "
+                                     "starts with a drive letter, such as D:\\MO2.")
+                             .arg(QDir::toNativeSeparators(basePath)));
+    return false;
+  }
+
+  struct Folder
+  {
+    const QLabel* label;
+    QString path;
+    bool changed;
+  };
+
+  using Getter = QString (PathSettings::*)(bool) const;
+  std::vector<Folder> folders;
+  bool anyChanged = baseChanged;
+
+  for (const auto& [label, edit, getter, defaultName] :
+       {std::tuple<QLabel*, QLineEdit*, Getter, std::wstring>{
+            ui->label_7, ui->downloadDirEdit, &PathSettings::downloads,
+            AppConfig::downloadPath()},
+        std::tuple<QLabel*, QLineEdit*, Getter, std::wstring>{
+            ui->label_8, ui->modDirEdit, &PathSettings::mods, AppConfig::modsPath()},
+        std::tuple<QLabel*, QLineEdit*, Getter, std::wstring>{
+            ui->label_9, ui->cacheDirEdit, &PathSettings::cache, AppConfig::cachePath()},
+        std::tuple<QLabel*, QLineEdit*, Getter, std::wstring>{
+            ui->label_22, ui->profilesDirEdit, &PathSettings::profiles,
+            AppConfig::profilesPath()},
+        std::tuple<QLabel*, QLineEdit*, Getter, std::wstring>{
+            ui->label_24, ui->overwriteDirEdit, &PathSettings::overwrite,
+            AppConfig::overwritePath()}}) {
+    const QString path = effectivePath(stored(edit), basePath, defaultName);
+    // folders left as they were aren't checked, so a stored path on a drive
+    // that is offline doesn't block saving other settings
+    const bool changed = baseChanged || !samePath(path, (settings().paths().*getter)(true));
+
+    // a folder under %BASE_DIR% follows the base folder, which may be stored
+    // relative from before; that base wasn't changed here, so it isn't judged
+    const bool underUnchangedBase =
+        !baseChanged &&
+        stored(edit).trimmed().startsWith(QLatin1String("%BASE_DIR%"), Qt::CaseInsensitive);
+    if (changed && !underUnchangedBase && !isFullPath(path)) {
+      QMessageBox::warning(parentWidget(), QObject::tr("Error"),
+                           QObject::tr("\"%1\" isn't a full path. Use a folder that "
+                                       "starts with a drive letter or with %BASE_DIR%.")
+                               .arg(QDir::toNativeSeparators(path)));
+      return false;
+    }
+
+    anyChanged = anyChanged || changed;
+    folders.push_back({label, path, changed});
+  }
+
+  if (!anyChanged) {
+    return true;
+  }
+
+  // MO2 would mix their files: overwrite inside mods would show up as a mod
+  for (std::size_t i = 0; i < folders.size(); ++i) {
+    for (std::size_t j = i + 1; j < folders.size(); ++j) {
+      // a layout that was already there isn't refused for a change elsewhere
+      if (!folders[i].changed && !folders[j].changed) {
+        continue;
+      }
+      if (isInside(folders[i].path, folders[j].path) ||
+          isInside(folders[j].path, folders[i].path)) {
+        QMessageBox::warning(
+            parentWidget(), QObject::tr("Error"),
+            QObject::tr("These folders can't be the same or one inside the other:\n"
+                        "%1 %2\n%3 %4")
+                .arg(QString(folders[i].label->text()).remove(QLatin1Char('&')),
+                     QDir::toNativeSeparators(folders[i].path),
+                     QString(folders[j].label->text()).remove(QLatin1Char('&')),
+                     QDir::toNativeSeparators(folders[j].path)));
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+bool PathsSettingsTab::baseChanged()
+{
+  return !samePath(typedBase(ui->baseDirEdit), settings().paths().base());
+}
+
 void PathsSettingsTab::update()
 {
   using Setter    = void (PathSettings::*)(const QString&);
-  using Directory = std::tuple<QString, Setter, std::wstring>;
+  using Getter    = QString (PathSettings::*)(bool) const;
+  using Directory = std::tuple<QString, Setter, Getter, std::wstring>;
 
   // the base being saved: a folder typed to stay where it is, outside the new
   // base, keeps its path instead of following the base
-  QString basePath = stored(ui->baseDirEdit);
-  if (basePath.isEmpty()) {
-    basePath = qApp->property("dataPath").toString();
-  }
+  const QString basePath = typedBase(ui->baseDirEdit);
+  const bool baseMoved   = !samePath(basePath, settings().paths().base());
 
   for (const Directory& dir :
        {Directory{stored(ui->downloadDirEdit), &PathSettings::setDownloads,
-                  AppConfig::downloadPath()},
+                  &PathSettings::downloads, AppConfig::downloadPath()},
         Directory{stored(ui->cacheDirEdit), &PathSettings::setCache,
-                  AppConfig::cachePath()},
-        Directory{stored(ui->modDirEdit), &PathSettings::setMods,
+                  &PathSettings::cache, AppConfig::cachePath()},
+        Directory{stored(ui->modDirEdit), &PathSettings::setMods, &PathSettings::mods,
                   AppConfig::modsPath()},
         Directory{stored(ui->overwriteDirEdit), &PathSettings::setOverwrite,
-                  AppConfig::overwritePath()},
+                  &PathSettings::overwrite, AppConfig::overwritePath()},
         Directory{stored(ui->profilesDirEdit), &PathSettings::setProfiles,
-                  AppConfig::profilesPath()}}) {
+                  &PathSettings::profiles, AppConfig::profilesPath()}}) {
     QString path;
     Setter setter;
+    Getter getter;
     std::wstring defaultName;
-    std::tie(path, setter, defaultName) = dir;
+    std::tie(path, setter, getter, defaultName) = dir;
 
     QString realPath = path;
     realPath         = PathSettings::resolve(realPath, basePath);
 
-    if (!QDir(realPath).exists()) {
+    // only a folder that moved is created: an unchanged one on a drive that
+    // is offline right now stays as it is
+    const bool moved =
+        baseMoved ||
+        !samePath(effectivePath(path, basePath, defaultName),
+                  (settings().paths().*getter)(true));
+
+    if (moved && !realPath.isEmpty() && !QDir(realPath).exists()) {
       if (!QDir().mkpath(realPath)) {
         QMessageBox::warning(
             parentWidget(), QObject::tr("Error"),

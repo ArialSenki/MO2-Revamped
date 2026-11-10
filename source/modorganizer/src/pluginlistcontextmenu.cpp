@@ -20,25 +20,36 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
                   .siblingAtColumn(PluginList::COL_NAME)),
       m_view(view)
 {
-  if (view->selectionModel()->hasSelection()) {
-    m_selected = view->indexViewToModel(view->selectionModel()->selectedRows());
-  } else if (index.isValid()) {
-    // the clicked row, from the sorted and filtered view to the list itself
-    m_selected = {index.model() == view->model() ? view->indexViewToModel(index) : index};
+  // a click on empty space acts on no plugin, whatever was selected before
+  QModelIndexList selectedRows;
+  if (m_index.isValid()) {
+    m_plugin = m_index.data().toString();
+    if (view->selectionModel()->hasSelection()) {
+      selectedRows = view->indexViewToModel(view->selectionModel()->selectedRows());
+    } else {
+      selectedRows = {m_index};
+    }
+  }
+
+  // names, not rows: the list can be rebuilt while the menu is open
+  PluginList* list = m_core.pluginList();
+  for (const auto& idx : selectedRows) {
+    if (idx.isValid() && idx.row() < list->rowCount()) {
+      m_selected.append(list->getName(idx.row()));
+    }
   }
 
   // the default command first, the selection's commands next and the whole
   // list's last, as the mod list orders them
   ModInfo::Ptr origin;
   if (m_index.isValid()) {
-    unsigned int modInfoIndex =
-        ModInfo::getIndex(m_core.pluginList()->origin(m_index.data().toString()));
+    unsigned int modInfoIndex = ModInfo::getIndex(list->origin(m_plugin));
     // this is to avoid showing the option on game files like skyrim.esm
     if (modInfoIndex != UINT_MAX) {
       origin = ModInfo::getByIndex(modInfoIndex);
       if (!origin->isForeign() && m_selected.size() == 1) {
         QAction* infoAction = addAction(tr("Origin information..."), [=]() {
-          openOriginInformation(m_index);
+          openOriginInformation(m_plugin);
         });
         infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));
         setDefaultMenuAction(this, infoAction);
@@ -49,18 +60,18 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
 
   if (!m_selected.isEmpty()) {
     QAction* enableSelectedAction = addAction(tr("Enable selected"), [=]() {
-      m_core.pluginList()->setEnabled(m_selected, true);
+      m_core.pluginList()->setEnabled(indicesOf(m_selected), true);
     });
     enableSelectedAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
     QAction* disableSelectedAction = addAction(tr("Disable selected"), [=]() {
-      m_core.pluginList()->setEnabled(m_selected, false);
+      m_core.pluginList()->setEnabled(indicesOf(m_selected), false);
     });
     disableSelectedAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"));
     addMenu(createSendToContextMenu());
 
     bool hasLocked   = false;
     bool hasUnlocked = false;
-    for (auto& idx : m_selected) {
+    for (auto& idx : indicesOf(m_selected)) {
       if (m_core.pluginList()->isEnabled(idx.row())) {
         if (m_core.pluginList()->isESPLocked(idx.row())) {
           hasLocked = true;
@@ -92,7 +103,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
       });
       openOriginAction->setIcon(menuGlyph(MenuGlyphs::Folder));
     }
-    const QString plugin = m_index.data().toString();
+    const QString plugin = m_plugin;
     if (origin) {
       addCopyMenu(this, {{tr("Plugin name"), plugin},
                          {tr("Origin name"), origin->name()},
@@ -128,10 +139,10 @@ QMenu* PluginListContextMenu::createSendToContextMenu()
   menu->setTitle(tr("Send to"));
   menu->setIcon(menuGlyph(MenuGlyphs::Move));
   menu->addAction(tr("Top"), [=]() {
-    m_core.pluginList()->sendToPriority(m_selected, 0);
+    m_core.pluginList()->sendToPriority(indicesOf(m_selected), 0);
   });
   menu->addAction(tr("Bottom"), [=]() {
-    m_core.pluginList()->sendToPriority(m_selected, INT_MAX);
+    m_core.pluginList()->sendToPriority(indicesOf(m_selected), INT_MAX);
   });
   menu->addAction(tr("Priority..."), [=]() {
     sendPluginsToPriority(m_selected);
@@ -139,7 +150,12 @@ QMenu* PluginListContextMenu::createSendToContextMenu()
   return menu;
 }
 
-void PluginListContextMenu::sendPluginsToPriority(const QModelIndexList& indices)
+QModelIndexList PluginListContextMenu::indicesOf(const QStringList& plugins) const
+{
+  return m_core.pluginList()->indicesForNames(plugins);
+}
+
+void PluginListContextMenu::sendPluginsToPriority(const QStringList& plugins)
 {
   bool ok;
   int newPriority = QInputDialog::getInt(m_view->topLevelWidget(), tr("Set Priority"),
@@ -148,37 +164,48 @@ void PluginListContextMenu::sendPluginsToPriority(const QModelIndexList& indices
   if (!ok)
     return;
 
-  m_core.pluginList()->sendToPriority(m_selected, newPriority);
+  // looked up after the dialog, which can also outlive a refresh
+  m_core.pluginList()->sendToPriority(indicesOf(plugins), newPriority);
 }
 
-void PluginListContextMenu::setESPLock(const QModelIndexList& indices, bool locked)
+void PluginListContextMenu::setESPLock(const QStringList& plugins, bool locked)
 {
-  for (auto& idx : indices) {
+  for (auto& idx : indicesOf(plugins)) {
     if (m_core.pluginList()->isEnabled(idx.row())) {
       m_core.pluginList()->lockESPIndex(idx.row(), locked);
     }
   }
 }
 
-void PluginListContextMenu::openOriginExplorer(const QModelIndexList& indices)
+void PluginListContextMenu::openOriginExplorer(const QStringList& plugins)
 {
-  for (auto& idx : indices) {
-    QString fileName      = idx.data().toString();
+  // plugins of the same mod share one window
+  QStringList folders;
+  for (const auto& fileName : plugins) {
     unsigned int modIndex = ModInfo::getIndex(m_core.pluginList()->origin(fileName));
     if (modIndex == UINT_MAX) {
       continue;
     }
     ModInfo::Ptr modInfo = ModInfo::getByIndex(modIndex);
-    shell::Explore(modInfo->absolutePath());
+    const QString folder = modInfo->absolutePath();
+    if (!folders.contains(folder, Qt::CaseInsensitive)) {
+      folders.append(folder);
+    }
+  }
+
+  for (const auto& folder : folders) {
+    shell::Explore(folder);
   }
 }
 
-void PluginListContextMenu::openOriginInformation(const QModelIndex& index)
+void PluginListContextMenu::openOriginInformation(const QString& fileName)
 {
   try {
-    QString fileName      = index.data().toString();
     unsigned int modIndex = ModInfo::getIndex(m_core.pluginList()->origin(fileName));
-    ModInfo::Ptr modInfo  = ModInfo::getByIndex(modIndex);
+    if (modIndex == UINT_MAX) {
+      return;
+    }
+    ModInfo::Ptr modInfo = ModInfo::getByIndex(modIndex);
 
     if (modInfo->isRegular() || modInfo->isOverwrite()) {
       emit openModInformation(modIndex);

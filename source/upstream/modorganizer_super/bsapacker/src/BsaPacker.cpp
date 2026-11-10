@@ -18,6 +18,9 @@
 #include <bsapacker/ModDtoFactory.h>
 #include <QMessageBox>
 #include <iplugingame.h>
+#include <dataarchives.h>
+#include <igamefeatures.h>
+#include <pluginrequirements.h>
 
 #include <boost/di.hpp>
 namespace di = boost::di;
@@ -32,6 +35,16 @@ namespace BsaPacker
 		return true;
 	}
 
+	// a game without BSA/BA2 archives has nothing for this plugin (MO2 Revamped)
+	std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> Bsa_Packer::requirements() const
+	{
+	  return {MOBase::PluginRequirementFactory::basic(
+	      [](MOBase::IOrganizer* organizer) {
+	        return organizer->gameFeatures()->gameFeature<MOBase::DataArchives>() != nullptr;
+	      },
+	      QObject::tr("This game has no BSA or BA2 archives."))};
+	}
+	
 	QString Bsa_Packer::name() const
 	{
 		return QStringLiteral("BSA Packer");

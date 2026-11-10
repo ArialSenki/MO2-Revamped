@@ -24,6 +24,7 @@ along with Ini editor plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include "textviewer.h"
 #include <utility.h>
 #include <imoinfo.h>
+#include <pluginrequirements.h>
 
 #include <QtPlugin>
 #include <QMessageBox>
@@ -43,6 +44,18 @@ bool IniEditor::init(IOrganizer *moInfo)
 {
   m_MOInfo = moInfo;
   return true;
+}
+
+// only games with .ini files have something to edit here (MO2 Revamped)
+std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> IniEditor::requirements() const
+{
+  return {MOBase::PluginRequirementFactory::basic(
+      [](MOBase::IOrganizer* organizer) {
+        const MOBase::IPluginGame* game = organizer->managedGame();
+        return game != nullptr &&
+               !game->iniFiles().filter(".ini", Qt::CaseInsensitive).isEmpty();
+      },
+      QObject::tr("This game has no INI files."))};
 }
 
 QString IniEditor::name() const

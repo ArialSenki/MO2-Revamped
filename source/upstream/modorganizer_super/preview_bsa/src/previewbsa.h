@@ -45,6 +45,7 @@ public:
   virtual QString description() const;
   virtual MOBase::VersionInfo version() const;
   virtual QList<MOBase::PluginSetting> settings() const;
+  virtual std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements() const override;
 
 public:
   virtual std::set<QString> supportedExtensions() const;

@@ -1,10 +1,13 @@
 #include "pluginlistview.h"
 
 #include <QMimeData>
+#include <QScrollBar>
 #include <QPainter>
 #include <QStyle>
 #include <QStyledItemDelegate>
 #include <QUrl>
+
+#include <memory>
 
 #include <report.h>
 #include <widgetutility.h>
@@ -259,6 +262,34 @@ void PluginListView::setup(OrganizerCore& core, MainWindow* mw, Ui::MainWindow* 
   connect(ui.filter, &QLineEdit::textChanged, m_sortProxy,
           &PluginListSortProxy::updateFilter);
   connect(ui.filter, &QLineEdit::textChanged, this, &PluginListView::onFilterChanged);
+
+  // a forced refresh resets the model, which drops the selection: keep it by
+  // plugin name across the reset, and the scroll position with it
+  auto* plugins = core.pluginList();
+  auto keptSelection = std::make_shared<std::pair<QString, QStringList>>();
+  auto keptScroll    = std::make_shared<int>(0);
+  connect(plugins, &QAbstractItemModel::modelAboutToBeReset, this,
+          [this, plugins, keptSelection, keptScroll] {
+            keptSelection->first.clear();
+            keptSelection->second.clear();
+            const QModelIndex current = indexViewToModel(currentIndex());
+            if (current.isValid()) {
+              keptSelection->first = plugins->getName(current.row());
+            }
+            for (const auto& idx : indexViewToModel(selectionModel()->selectedRows())) {
+              keptSelection->second.append(plugins->getName(idx.row()));
+            }
+            *keptScroll = verticalScrollBar()->value();
+          });
+  connect(plugins, &QAbstractItemModel::modelReset, this,
+          [this, plugins, keptSelection, keptScroll] {
+            const auto current = plugins->indicesForNames({keptSelection->first});
+            const auto selected = plugins->indicesForNames(keptSelection->second);
+            if (!current.isEmpty() || !selected.isEmpty()) {
+              setSelected(current.isEmpty() ? QModelIndex() : current.front(), selected);
+            }
+            verticalScrollBar()->setValue(*keptScroll);
+          });
 
   // highligth mod list when selected
   connect(selectionModel(), &QItemSelectionModel::selectionChanged,

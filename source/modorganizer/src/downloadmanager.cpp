@@ -1377,16 +1377,29 @@ QString DownloadManager::getDisplayName(int index) const
 
   DownloadInfo* info = m_ActiveDownloads.at(index);
 
-  QTextDocument doc;
+  // the list asks for this on every paint and every sort comparison, and
+  // parsing the name as HTML each time made both slow with many downloads
+  static QHash<QString, QString> plainNames;
+  const auto plain = [](const QString& html) {
+    auto it = plainNames.constFind(html);
+    if (it != plainNames.constEnd()) {
+      return *it;
+    }
+    if (plainNames.size() > 8192) {
+      plainNames.clear();
+    }
+    QTextDocument doc;
+    doc.setHtml(html);
+    return *plainNames.insert(html, doc.toPlainText());
+  };
+
   if (!info->m_FileInfo->name.isEmpty()) {
-    doc.setHtml(info->m_FileInfo->name);
     return QString("%1 (%2, v%3)")
-        .arg(doc.toPlainText())
+        .arg(plain(info->m_FileInfo->name))
         .arg(getFileTypeString(info->m_FileInfo->fileCategory))
         .arg(info->m_FileInfo->version.displayString());
   } else {
-    doc.setHtml(info->m_FileName);
-    return doc.toPlainText();
+    return plain(info->m_FileName);
   }
 }
 

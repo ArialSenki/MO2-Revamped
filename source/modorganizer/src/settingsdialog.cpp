@@ -342,14 +342,23 @@ void SettingsDialog::accept()
   // is opened, so comparing them unconditionally falsely warns when the user
   // only changed a theme, language, or another unrelated setting.
   constexpr std::size_t PathsTabIndex = 3;
-  if (m_tabs.size() > PathsTabIndex && m_tabs[PathsTabIndex]) {
+  auto* paths = m_tabs.size() > PathsTabIndex
+                    ? dynamic_cast<PathsSettingsTab*>(m_tabs[PathsTabIndex].get())
+                    : nullptr;
+  if (paths != nullptr) {
+    // relative or nested folders; the page itself shows the problem
+    if (!paths->validate()) {
+      return;
+    }
+
     QString newBase = ui->baseDirEdit->text().trimmed();
     if (newBase.isEmpty()) {
       newBase = qApp->property("dataPath").toString();
     }
     // every folder that uses %BASE_DIR% depends on it, and the instance wouldn't
-    // open with one that can't be created
-    if (!QDir().mkpath(QDir::fromNativeSeparators(newBase))) {
+    // open with one that can't be created; an unchanged base isn't touched, so
+    // an offline drive doesn't block saving other settings
+    if (paths->baseChanged() && !QDir().mkpath(QDir::fromNativeSeparators(newBase))) {
       QMessageBox::warning(parentWidgetForDialogs(), tr("Base directory"),
                            tr("This folder can't be created, so the settings weren't "
                               "saved:\n%1")

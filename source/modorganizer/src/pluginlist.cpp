@@ -54,6 +54,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <ctime>
+#include <optional>
 #include <stdexcept>
 
 #include "organizercore.h"
@@ -216,13 +217,32 @@ void PluginList::refresh(const QString& profileName,
   // Plugin contents may change after a refresh, so discard cached scans.
   m_ModPluginNameCache.clear();
 
+  // a forced refresh rebuilds every row: that is a reset, not a layout change.
+  // the property keeps nested ChangeBrackets from opening a layout change inside it
+  std::optional<ChangeBracket<PluginList>> layoutChange;
+  const QVariant wasChanging = property("__aboutToChange");
+  auto finishReset           = [this, wasChanging] {
+    if (m_ResettingModel) {
+      setProperty("__aboutToChange", wasChanging.isValid() && wasChanging.toBool());
+      m_ResettingModel = false;
+      endResetModel();
+    }
+  };
+  // ends the reset if anything below throws
+  Guard resetGuard(finishReset);
   if (force) {
+    beginResetModel();
+    m_ResettingModel = true;
+    setProperty("__aboutToChange", true);
     m_ESPs.clear();
     m_ESPsByName.clear();
     m_ESPsByPriority.clear();
+  } else {
+    layoutChange.emplace(this);
   }
 
-  ChangeBracket<PluginList> layoutChange(this);
+  // errors are reported once the model is consistent again
+  QStringList errors;
 
   QStringList primaryPlugins = gamePlugin->primaryPlugins();
   QStringList enabledPlugins = gamePlugin->enabledPlugins();
@@ -297,10 +317,10 @@ void PluginList::refresh(const QString& profileName,
                           mediumPluginsAreSupported);
       m_ESPs.rbegin()->priority = -1;
     } catch (const std::exception& e) {
-      reportError(tr("failed to update esp info for file %1 (source id: %2), error: %3")
-                      .arg(filename)
-                      .arg(current->getOrigin(archive))
-                      .arg(e.what()));
+      errors.append(tr("failed to update esp info for file %1 (source id: %2), error: %3")
+                        .arg(filename)
+                        .arg(current->getOrigin(archive))
+                        .arg(e.what()));
     }
   }
 
@@ -335,7 +355,15 @@ void PluginList::refresh(const QString& profileName,
 
   readLockedOrderFrom(lockedOrderFile);
 
-  layoutChange.finish();
+  if (force) {
+    finishReset();
+  } else {
+    layoutChange->finish();
+  }
+
+  for (const auto& error : errors) {
+    reportError(error);
+  }
 
   refreshLoadOrder();
   if (!m_ESPs.empty()) {
@@ -478,6 +506,9 @@ void PluginList::setEnabled(const QModelIndexList& indices, bool enabled)
 {
   QStringList dirty;
   for (auto& idx : indices) {
+    if (!isValidRow(idx)) {
+      continue;
+    }
     if (m_ESPs[idx.row()].forceLoaded || m_ESPs[idx.row()].forceEnabled ||
         m_ESPs[idx.row()].forceDisabled)
       continue;
@@ -486,11 +517,7 @@ void PluginList::setEnabled(const QModelIndexList& indices, bool enabled)
       dirty.append(m_ESPs[idx.row()].name);
     }
   }
-  if (!dirty.isEmpty()) {
-    emit writePluginsList();
-    pluginStatesChanged(dirty, enabled ? IPluginList::PluginState::STATE_ACTIVE
-                                       : IPluginList::PluginState::STATE_INACTIVE);
-  }
+  enabledStatesChanged(dirty, enabled);
 }
 
 void PluginList::setEnabledAll(bool enabled)
@@ -504,18 +531,52 @@ void PluginList::setEnabledAll(bool enabled)
       dirty.append(info.name);
     }
   }
-  if (!dirty.isEmpty()) {
-    emit writePluginsList();
+  enabledStatesChanged(dirty, enabled);
+}
+
+bool PluginList::isValidRow(const QModelIndex& idx) const
+{
+  return idx.isValid() && idx.row() >= 0 && idx.row() < static_cast<int>(m_ESPs.size());
+}
+
+void PluginList::enabledStatesChanged(const QStringList& dirty, bool enabled)
+{
+  if (dirty.isEmpty()) {
+    return;
+  }
+
+  // what setData does after a check change, once for the whole batch
+  refreshLoadOrder();
+  emit writePluginsList();
+  try {
     pluginStatesChanged(dirty, enabled ? IPluginList::PluginState::STATE_ACTIVE
                                        : IPluginList::PluginState::STATE_INACTIVE);
+  } catch (const std::exception& e) {
+    log::error("failed to invoke state changed notification: {}", e.what());
+  } catch (...) {
+    log::error("failed to invoke state changed notification: unknown exception");
   }
+  testMasters();
+  emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+}
+
+QModelIndexList PluginList::indicesForNames(const QStringList& names) const
+{
+  QModelIndexList result;
+  for (const auto& name : names) {
+    auto iter = m_ESPsByName.find(name);
+    if (iter != m_ESPsByName.end()) {
+      result.append(index(iter->second, 0));
+    }
+  }
+  return result;
 }
 
 void PluginList::sendToPriority(const QModelIndexList& indices, int newPriority)
 {
   std::vector<int> pluginsToMove;
   for (auto& idx : indices) {
-    if (!m_ESPs[idx.row()].forceLoaded) {
+    if (isValidRow(idx) && !m_ESPs[idx.row()].forceLoaded) {
       pluginsToMove.push_back(idx.row());
     }
   }
@@ -530,18 +591,27 @@ void PluginList::shiftPluginsPriority(const QModelIndexList& indices, int offset
   // when moving them
   std::vector<int> allIndex;
   for (auto& idx : indices) {
-    allIndex.push_back(idx.row());
+    if (isValidRow(idx)) {
+      allIndex.push_back(idx.row());
+    }
   }
   std::sort(allIndex.begin(), allIndex.end(), [=](int lhs, int rhs) {
     bool cmp = m_ESPs[lhs].priority < m_ESPs[rhs].priority;
     return offset > 0 ? !cmp : cmp;
   });
 
+  // the indices are rebuilt and the view notified once for the whole batch
+  bool moved = false;
   for (auto index : allIndex) {
     int newPriority = m_ESPs[index].priority + offset;
     if (newPriority >= 0 && newPriority < rowCount()) {
-      setPluginPriority(index, newPriority);
+      setPluginPriority(index, newPriority, false, true);
+      moved = true;
     }
+  }
+  if (moved) {
+    updateIndices();
+    emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
   }
 
   refreshLoadOrder();
@@ -1307,7 +1377,8 @@ QVariant PluginList::tooltipData(const QModelIndex& modelIndex) const
 
   QString toolTip;
 
-  toolTip += "<b>" + tr("Origin") + "</b>: " + esp.originName;
+  // names, author and description come from files: escape them for rich text
+  toolTip += "<b>" + tr("Origin") + "</b>: " + esp.originName.toHtmlEscaped();
 
   if (esp.forceLoaded) {
     toolTip += "<br><b><i>" +
@@ -1321,19 +1392,21 @@ QVariant PluginList::tooltipData(const QModelIndex& modelIndex) const
   }
 
   if (!esp.author.isEmpty()) {
-    toolTip += "<br><b>" + tr("Author") + "</b>: " + TruncateString(esp.author);
+    toolTip += "<br><b>" + tr("Author") + "</b>: " + TruncateString(esp.author).toHtmlEscaped();
   }
 
   if (esp.description.size() > 0) {
     toolTip +=
-        "<br><b>" + tr("Description") + "</b>: " + TruncateString(esp.description);
+        "<br><b>" + tr("Description") + "</b>: " +
+        TruncateString(esp.description).toHtmlEscaped();
   }
 
   if (esp.masterUnset.size() > 0) {
     toolTip +=
         "<br><b>" + tr("Missing Masters") + "</b>: " + "<b>" +
         TruncateString(
-            QStringList(esp.masterUnset.begin(), esp.masterUnset.end()).join(", ")) +
+            QStringList(esp.masterUnset.begin(), esp.masterUnset.end()).join(", "))
+            .toHtmlEscaped() +
         "</b>";
   }
 
@@ -1344,14 +1417,16 @@ QVariant PluginList::tooltipData(const QModelIndex& modelIndex) const
 
   if (!enabledMasters.empty()) {
     toolTip += "<br><b>" + tr("Enabled Masters") +
-               "</b>: " + TruncateString(SetJoin(enabledMasters, ", "));
+               "</b>: " +
+               TruncateString(SetJoin(enabledMasters, ", ")).toHtmlEscaped();
   }
 
   if (!esp.archives.empty()) {
     QString archiveString =
         esp.archives.size() < 6
             ? TruncateString(
-                  QStringList(esp.archives.begin(), esp.archives.end()).join(", ")) +
+                  QStringList(esp.archives.begin(), esp.archives.end()).join(", "))
+                      .toHtmlEscaped() +
                   "<br>"
             : "";
     toolTip += "<br><b>" + tr("Loads Archives") + "</b>: " + archiveString +
@@ -1612,7 +1687,7 @@ bool PluginList::setData(const QModelIndex& modIndex, const QVariant& value, int
       pluginStatesChanged({modName}, newState);
       testMasters();
       emit dataChanged(this->index(0, 0),
-                       this->index(static_cast<int>(m_ESPs.size()), columnCount()));
+                       this->index(rowCount() - 1, columnCount() - 1));
     } catch (const std::exception& e) {
       log::error("failed to invoke state changed notification: {}", e.what());
     } catch (...) {
@@ -1657,7 +1732,8 @@ Qt::ItemFlags PluginList::flags(const QModelIndex& modelIndex) const
   return result;
 }
 
-void PluginList::setPluginPriority(int row, int& newPriority, bool isForced)
+void PluginList::setPluginPriority(int row, int& newPriority, bool isForced,
+                                   bool deferIndices)
 {
   int newPriorityTemp = newPriority;
 
@@ -1723,26 +1799,37 @@ void PluginList::setPluginPriority(int row, int& newPriority, bool isForced)
         for (int i = oldPriority + 1; i <= newPriorityTemp; ++i) {
           --m_ESPs.at(m_ESPsByPriority.at(i)).priority;
         }
-        emit dataChanged(index(oldPriority + 1, 0),
-                         index(newPriorityTemp, columnCount()));
+        // keep the priority index in step for the next move of a batch
+        for (int i = oldPriority; i < newPriorityTemp; ++i) {
+          m_ESPsByPriority.at(i) = m_ESPsByPriority.at(i + 1);
+        }
       } else {
         for (int i = newPriorityTemp; i < oldPriority; ++i) {
           ++m_ESPs.at(m_ESPsByPriority.at(i)).priority;
         }
-        emit dataChanged(index(newPriorityTemp, 0),
-                         index(oldPriority - 1, columnCount()));
+        for (int i = oldPriority; i > newPriorityTemp; --i) {
+          m_ESPsByPriority.at(i) = m_ESPsByPriority.at(i - 1);
+        }
         ++newPriority;
       }
 
-      m_ESPs.at(row).priority = newPriorityTemp;
-      emit dataChanged(index(row, 0), index(row, columnCount()));
+      m_ESPs.at(row).priority              = newPriorityTemp;
+      m_ESPsByPriority.at(newPriorityTemp) = row;
+
+      // rows don't move, only priorities change, and the shifted rows can be
+      // anywhere in the list; a batch notifies once when it ends
+      if (!deferIndices && !m_ResettingModel) {
+        emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+      }
       m_PluginMoved(m_ESPs[row].name, oldPriority, newPriorityTemp);
     }
   } catch (const std::out_of_range&) {
     reportError(tr("failed to restore load order for %1").arg(m_ESPs[row].name));
   }
 
-  updateIndices();
+  if (!deferIndices) {
+    updateIndices();
+  }
 }
 
 void PluginList::changePluginPriority(std::vector<int> rows, int newPriority)
@@ -1782,10 +1869,12 @@ void PluginList::changePluginPriority(std::vector<int> rows, int newPriority)
     }
   }
 
+  // the indices are rebuilt once for the whole batch
   for (std::vector<int>::const_iterator iter = rows.begin(); iter != rows.end();
        ++iter) {
-    setPluginPriority(*iter, newPriority);
+    setPluginPriority(*iter, newPriority, false, true);
   }
+  updateIndices();
 
   layoutChange.finish();
   refreshLoadOrder();

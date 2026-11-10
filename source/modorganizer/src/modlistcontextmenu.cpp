@@ -204,7 +204,11 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     view->actions().assignCategories();
   });
   categoriesAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/categories.svg"));
-  QAction* refreshAction = addAction(tr("Refresh"), &core, &OrganizerCore::refresh);
+  // a lambda: the action's checked state (false) would be refresh(saveChanges)
+  // and a change still waiting to be written would be read back from disk
+  QAction* refreshAction = addAction(tr("Refresh"), &core, [&core] {
+    core.refresh();
+  });
   refreshAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/refresh.svg"));
   QAction* exportAction = addAction(tr("Export to CSV..."), [=]() {
     view->actions().exportModListCSV();
@@ -877,10 +881,6 @@ void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
   addSeparator();
   addCopyAction(this, tr("Copy name"), mod->name());
 
-  m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                         m_selected.size() > 1 ? tr("Remove separators...")
-                                               : tr("Remove separator..."),
-                         this);
   // only the separators of a mixed selection: the label names separators
   QModelIndexList separators;
   for (const auto& index : m_selected) {
@@ -889,6 +889,10 @@ void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
       separators.append(index);
     }
   }
+  m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
+                         separators.size() > 1 ? tr("Remove separators...")
+                                               : tr("Remove separator..."),
+                         this);
   connect(m_remove, &QAction::triggered, this, [=]() {
     m_actions.removeMods(separators);
   });

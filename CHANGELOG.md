@@ -19,6 +19,32 @@
   file in a profile is now filled from the game's own, instead of sending the game
   to its launcher.
 - Lines about Elden Ring no longer appear in the log of other games.
+- BSA Extractor, BSA Packer and the BSA preview only load for games with BSA or BA2
+  archives, and the INI Editor for games with INI files; before, they were only
+  hidden from the menus. The FNIS check also covers Skyrim Special Edition and VR,
+  and games without plugin files no longer search every mod for missing masters.
+
+### Fixes
+
+- Plugins: the right-click menu acts on the plugins it was opened on, even if the
+  list refreshes while it is open; on empty space it offers only the actions for
+  all plugins. Enabling or disabling several plugins updates their checkboxes,
+  load order and warnings at once, and a search made only of separators shows
+  every plugin.
+- Archives: Extract works on the "Base game" group and keeps working if the list
+  refreshes while the folder is chosen; the warning icon goes to the Archives tab
+  in games without plugins.
+- Settings no longer fails to save when a folder it didn't change can't be
+  created (an offline drive, for example). It refuses relative folders and folders
+  inside one another, and says Nexus link registration worked only when it did.
+- The New instance wizard refuses names Windows reserves (CON, NUL, COM1...), and
+  its last page no longer cuts long captions.
+- Ctrl+N and Ctrl+I work again; the Nexus menu shows the game's name ("Visit
+  Skyrim Special Edition on Nexus"), and "No backups" says what is missing.
+- Refresh in the mod list menus saves a change still waiting to be written
+  instead of reading the old list back.
+- The log keeps following new lines during long bursts; the Archives list, the
+  Downloads names and moving many plugins at once are faster with large setups.
 
 ### Interface
 

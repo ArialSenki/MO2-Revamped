@@ -36,6 +36,9 @@ along with Bsa Preview plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility.h>
 
 #include <log.h>
+#include <dataarchives.h>
+#include <igamefeatures.h>
+#include <pluginrequirements.h>
 
 using namespace MOBase;
 
@@ -52,6 +55,16 @@ bool PreviewBsa::init(IOrganizer* moInfo)
   m_PreviewGenerators["ba2"] = bsaPreview;
 
   return true;
+}
+
+// a game without BSA/BA2 archives has none to preview (MO2 Revamped)
+std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> PreviewBsa::requirements() const
+{
+  return {MOBase::PluginRequirementFactory::basic(
+      [](MOBase::IOrganizer* organizer) {
+        return organizer->gameFeatures()->gameFeature<MOBase::DataArchives>() != nullptr;
+      },
+      QObject::tr("This game has no BSA or BA2 archives."))};
 }
 
 QString PreviewBsa::name() const

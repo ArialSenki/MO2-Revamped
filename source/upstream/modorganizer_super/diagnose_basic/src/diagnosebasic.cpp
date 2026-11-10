@@ -26,6 +26,8 @@
 #include <imodlist.h>
 #include <ipluginlist.h>
 #include <imodinterface.h>
+#include <gameplugins.h>
+#include <igamefeatures.h>
 
 #include <QtPlugin>
 #include <QFile>
@@ -241,6 +243,12 @@ void makeUnique(std::vector<T> &vector)
 
 bool DiagnoseBasic::missingMasters() const
 {
+  // no plugin files in this game (Cyberpunk, Baldur's Gate 3, Elden Ring...):
+  // nothing to look for, and the search walks every file of every mod (MO2 Revamped)
+  if (m_MOInfo->gameFeatures()->gameFeature<GamePlugins>() == nullptr) {
+    return false;
+  }
+
   std::set<QString> enabledPlugins;
 
   QStringList esps = m_MOInfo->findFiles("",

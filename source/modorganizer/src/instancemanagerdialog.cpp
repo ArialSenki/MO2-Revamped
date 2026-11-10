@@ -55,6 +55,17 @@ using namespace MOBase;
 
 namespace
 {
+// Windows device names (CON, NUL, COM1...) can't be folders, in any case and
+// with any extension; fixDirectoryName() only catches the exact upper case
+bool isReservedDeviceName(const QString& name)
+{
+  QString stem = name.section(QLatin1Char('.'), 0, 0).trimmed().toUpper();
+  if (stem.isEmpty()) {
+    return false;
+  }
+  return !fixDirectoryName(stem);
+}
+
 // Segoe Fluent Icons code points
 constexpr char16_t AddGlyph      = 0xE710;
 constexpr char16_t RenameGlyph   = 0xE8AC;
@@ -317,7 +328,7 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
 
     if (typed().isEmpty()) {
       error->setText("");
-    } else if (!MOBase::validFileName(typed())) {
+    } else if (!MOBase::validFileName(typed()) || isReservedDeviceName(typed())) {
       error->setText(QObject::tr("Use a name that's a valid folder name."));
     } else {
       const auto name = MOBase::sanitizeFileName(typed());

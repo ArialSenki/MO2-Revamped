@@ -10,6 +10,13 @@ public:
   PathsSettingsTab(Settings& settings, SettingsDialog& dialog);
   void update();
 
+  // checks the folders that changed: full paths, none inside another; shows
+  // the problem and returns false so Settings stays open
+  bool validate();
+
+  // true if the base folder field differs from the stored base
+  bool baseChanged();
+
 private:
   void on_browseBaseDirBtn_clicked();
   void on_browseCacheDirBtn_clicked();

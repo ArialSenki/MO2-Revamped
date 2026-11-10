@@ -230,7 +230,9 @@ LogList::LogList(QWidget* parent)
     if (verticalScrollBar()->value() >= max - slack) {
       m_atEnd = true;
     }
-    if (m_atEnd) {
+    // started once per burst: restarting it on every line would hold the
+    // scroll back for as long as lines keep coming
+    if (m_atEnd && !m_timer.isActive()) {
       m_timer.start(std::chrono::milliseconds(10));
     }
   });
@@ -247,7 +249,7 @@ void LogList::onNewEntry()
 {
   // follow new lines only while the list is at its end: someone who scrolled
   // up to read keeps their place
-  if (m_atEnd) {
+  if (m_atEnd && !m_timer.isActive()) {
     m_timer.start(std::chrono::milliseconds(10));
   }
 }

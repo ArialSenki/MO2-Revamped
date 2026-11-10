@@ -1945,7 +1945,7 @@ void NexusSettings::setCategoryMappings(bool b) const
   set(m_Settings, "Settings", "category_mappings", b);
 }
 
-void NexusSettings::registerAsNXMHandler(bool force)
+bool NexusSettings::registerAsNXMHandler(bool force, QWidget* parent)
 {
   const auto nxmPath = QCoreApplication::applicationDirPath() + "/" +
                        QString::fromStdWString(AppConfig::nxmHandlerExe());
@@ -1963,9 +1963,12 @@ void NexusSettings::registerAsNXMHandler(bool force)
 
   if (!r.success()) {
     QMessageBox::critical(
-        nullptr, QObject::tr("Failed"),
+        parent, QObject::tr("Failed"),
         QObject::tr("Failed to start the helper application: %1").arg(r.toString()));
+    return false;
   }
+
+  return true;
 }
 
 std::vector<std::chrono::seconds> NexusSettings::validationTimeouts() const

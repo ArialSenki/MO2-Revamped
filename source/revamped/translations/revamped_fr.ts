@@ -7353,6 +7353,10 @@ Erreur : %1</translation>
       <source>Filter criteria</source>
       <translation>Critères de filtre</translation>
     </message>
+    <message>
+      <source>This profile has no saved plugin order backups.</source>
+      <translation>Ce profil n'a aucune sauvegarde de l'ordre des plugins.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -10254,6 +10258,42 @@ Exemple :
       <source>Window sizes and positions will be reset to their defaults.</source>
       <translation>Les tailles et positions des fenêtres seront rétablies à leurs valeurs par défaut.</translation>
     </message>
+    <message>
+      <source>Error</source>
+      <translation>Erreur</translation>
+    </message>
+    <message>
+      <source>"%1" isn't a full path. Use a folder that starts with a drive letter, such as D:\MO2.</source>
+      <translation>"%1" n'est pas un chemin complet. Utilisez un dossier qui commence par une lettre de lecteur, comme D:\MO2.</translation>
+    </message>
+    <message>
+      <source>"%1" isn't a full path. Use a folder that starts with a drive letter or with %BASE_DIR%.</source>
+      <translation>"%1" n'est pas un chemin complet. Utilisez un dossier qui commence par une lettre de lecteur ou par %BASE_DIR%.</translation>
+    </message>
+    <message>
+      <source>These folders can't be the same or one inside the other:
+%1 %2
+%3 %4</source>
+      <translation>Ces dossiers ne peuvent pas être identiques ni l'un dans l'autre :
+%1 %2
+%3 %4</translation>
+    </message>
+    <message>
+      <source>%1 (automatic)</source>
+      <translation>%1 (automatique)</translation>
+    </message>
+    <message>
+      <source>unknown progress %1</source>
+      <translation>progression inconnue %1</translation>
+    </message>
+    <message>
+      <source>This game has no BSA or BA2 archives.</source>
+      <translation>Ce jeu n'a pas d'archives BSA ou BA2.</translation>
+    </message>
+    <message>
+      <source>This game has no INI files.</source>
+      <translation>Ce jeu n'a pas de fichiers INI.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -12455,4 +12495,11 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
       <translation>%1 ne contient aucun fichier utilisable par ce jeu</translation>
     </message>
   </context>
+<context>
+  <name>NexusConnectionUI</name>
+    <message>
+      <source>Unknown error</source>
+      <translation>Erreur inconnue</translation>
+    </message>
+</context>
 </TS>

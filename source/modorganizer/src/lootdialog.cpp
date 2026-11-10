@@ -27,7 +27,7 @@ QString progressToString(lootcli::Progress p)
 
   auto itor = map.find(p);
   if (itor == map.end()) {
-    return QString("unknown progress %1").arg(static_cast<int>(p));
+    return QObject::tr("unknown progress %1").arg(static_cast<int>(p));
   } else {
     return itor->second;
   }

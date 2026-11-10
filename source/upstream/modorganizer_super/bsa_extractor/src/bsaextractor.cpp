@@ -7,6 +7,9 @@
 #include <questionboxmemory.h>
 #include <bsaarchive.h>
 #include <report.h>
+#include <dataarchives.h>
+#include <igamefeatures.h>
+#include <pluginrequirements.h>
 
 #include <QDir>
 #include <QFileInfoList>
@@ -32,6 +35,16 @@ bool BsaExtractor::init(MOBase::IOrganizer *moInfo)
   m_Organizer = moInfo;
   moInfo->modList()->onModInstalled(std::bind(&BsaExtractor::modInstalledHandler, this, bindph::_1));
   return true;
+}
+
+// a game without BSA/BA2 archives has nothing for this plugin (MO2 Revamped)
+std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> BsaExtractor::requirements() const
+{
+  return {MOBase::PluginRequirementFactory::basic(
+      [](MOBase::IOrganizer* organizer) {
+        return organizer->gameFeatures()->gameFeature<MOBase::DataArchives>() != nullptr;
+      },
+      QObject::tr("This game has no BSA or BA2 archives."))};
 }
 
 QString BsaExtractor::name() const

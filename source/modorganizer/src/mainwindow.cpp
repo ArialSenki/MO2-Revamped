@@ -2073,6 +2073,21 @@ void MainWindow::setupToolbar()
   createHelpMenu();
   createEndorseMenu();
 
+  // Ctrl+N stays usable when the Nexus button leaves the command bar for the
+  // mod page menu: the menu bar it is left in is hidden
+  addAction(ui->actionNexus);
+  // Ctrl+I opens the Tools menu, as Ctrl+H opens Help
+  connect(ui->actionTool, &QAction::triggered, this, [this] {
+    auto* button =
+        qobject_cast<QToolButton*>(ui->toolBar->widgetForAction(ui->actionTool));
+    if (button != nullptr && button->isVisible()) {
+      button->showMenu();
+    } else if (QMenu* menu = ui->actionTool->menu()) {
+      // the button sits in the bar's overflow: open the menu under the bar
+      menu->popup(ui->toolBar->mapToGlobal(QPoint(0, ui->toolBar->height())));
+    }
+  });
+
   // find last separator, add a spacer just before it so the icons are
   // right-aligned
   m_linksSeparator = nullptr;
@@ -2164,9 +2179,6 @@ void MainWindow::updatePinnedExecutables()
   ui->menuRun->addAction(m_LinkDesktop);
   ui->menuRun->addAction(m_LinkStartMenu);
 
-  // The arrow remains useful for shortcut options even when no executable is
-  // pinned to the toolbar.
-  ui->menuRun->menuAction()->setVisible(hasLinks || getSelectedExecutable());
   updateShortcutActionIcons();
   if (m_toolbarButtonGeometryInitialized) {
     stabilizeToolbarButtonGeometry(false);
@@ -2568,7 +2580,8 @@ void MainWindow::createHelpMenu()
   ui->actionViewLog->setText(tr("Log panel"));
   ui->actionViewLog->setIcon(FluentIcons::glyph(0xE9D9));
   menu->addAction(ui->actionViewLog);
-  connect(menu, &QMenu::aboutToShow, ui->actionViewLog, [this] {
+  // whatsThisAction belongs to the menu: the next rebuild drops this connection
+  connect(menu, &QMenu::aboutToShow, whatsThisAction, [this] {
     ui->actionViewLog->setChecked(ui->logDock->isVisible());
   });
 
@@ -3040,7 +3053,12 @@ void MainWindow::updateToolMenu()
     return;
   }
 
-  // Clear the menu:
+  // Clear the menu, with the submenus of the last build: clear() only deletes
+  // the actions the menu owns
+  for (auto* submenu :
+       ui->actionTool->menu()->findChildren<QMenu*>(Qt::FindDirectChildrenOnly)) {
+    submenu->deleteLater();
+  }
   ui->actionTool->menu()->clear();
 
   std::vector<IPluginTool*> toolPlugins = m_PluginContainer.plugins<IPluginTool>();
@@ -3096,7 +3114,7 @@ void MainWindow::updateToolMenu()
   // Start registering plugins
   for (auto submenuKey : submenuMap.keys()) {
     if (submenuMap[submenuKey].length() > 1) {
-      QMenu* submenu = new QMenu(submenuKey, this);
+      QMenu* submenu = new QMenu(submenuKey, ui->actionTool->menu());
       submenu->setIcon(fluentToolIcon(submenuKey));
       for (auto info : submenuMap[submenuKey]) {
         registerPluginTool(info.second, info.first, submenu);
@@ -3112,7 +3130,9 @@ void MainWindow::updateToolMenu()
 
 void MainWindow::registerModPage(IPluginModPage* modPage)
 {
-  QAction* action = new QAction(modPage->icon(), modPage->displayName(), this);
+  // owned by the menu, which deletes it on the next clear()
+  QAction* action = new QAction(modPage->icon(), modPage->displayName(),
+                                ui->actionModPage->menu());
   connect(
       action, &QAction::triggered, this,
       [modPage]() {
@@ -3136,9 +3156,12 @@ bool MainWindow::registerNexusPage(const QString& gameName)
     return false;
 
   // Create an action
+  // the game's own name ("Skyrim Special Edition"), not the Nexus short name
+  // ("SkyrimSE") the page is looked up by
   QAction* action = new QAction(
       plugin->gameIcon(),
-      QObject::tr("Visit %1 on Nexus").arg(gameName), this);
+      QObject::tr("Visit %1 on Nexus").arg(plugin->displayGameName()),
+      ui->actionModPage->menu());
 
   // Bind the action
   connect(
@@ -3491,13 +3514,20 @@ void MainWindow::updateBSAList(const QStringList& defaultArchives,
                fileName.endsWith(".esl", Qt::CaseInsensitive);
       });
 
+  // the base names of the active plugins, worked out once: this list is built
+  // again on every mod switch, and testing each archive against every plugin
+  // with file infos and state lookups was archives x plugins of both
+  QStringList activePluginBases;
+  for (const QString& pluginName : plugins) {
+    const QFileInfo pluginInfo(pluginName);
+    if (m_OrganizerCore.pluginList()->state(pluginInfo.fileName()) ==
+        IPluginList::STATE_ACTIVE) {
+      activePluginBases.append(pluginInfo.completeBaseName());
+    }
+  }
   auto hasAssociatedPlugin = [&](const QString& bsaName) -> bool {
-    for (const QString& pluginName : plugins) {
-      QFileInfo pluginInfo(pluginName);
-      if (bsaName.startsWith(QFileInfo(pluginName).completeBaseName(),
-                             Qt::CaseInsensitive) &&
-          (m_OrganizerCore.pluginList()->state(pluginInfo.fileName()) ==
-           IPluginList::STATE_ACTIVE)) {
+    for (const QString& base : activePluginBases) {
+      if (bsaName.startsWith(base, Qt::CaseInsensitive)) {
         return true;
       }
     }
@@ -3556,6 +3586,9 @@ void MainWindow::updateBSAList(const QStringList& defaultArchives,
   }
   std::sort(items.begin(), items.end(), BySortValue);
 
+  // one group per mod, found by name as findItems did (case-insensitive)
+  // without searching the whole list for every archive
+  QHash<QString, QTreeWidgetItem*> groups;
   for (auto iter = items.begin(); iter != items.end(); ++iter) {
     int originID = iter->second->data(1, Qt::UserRole).toInt();
 
@@ -3572,12 +3605,8 @@ void MainWindow::updateBSAList(const QStringList& defaultArchives,
       modName              = modInfo->name();
     }
 
-    QList<QTreeWidgetItem*> items =
-        ui->bsaList->findItems(modName, Qt::MatchFixedString);
-    QTreeWidgetItem* subItem = nullptr;
-    if (items.length() > 0) {
-      subItem = items.at(0);
-    } else {
+    QTreeWidgetItem*& subItem = groups[modName.toCaseFolded()];
+    if (subItem == nullptr) {
       subItem = new QTreeWidgetItem(QStringList(modName));
       subItem->setFlags(subItem->flags() & ~Qt::ItemIsDragEnabled);
       ui->bsaList->addTopLevelItem(subItem);
@@ -3625,10 +3654,12 @@ void MainWindow::checkBSAList()
         warning = true;
       }
     }
-    if (warning) {
-      ui->tabWidget->setTabIcon(1, FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg"));
-    } else {
-      ui->tabWidget->setTabIcon(1, QIcon());
+    // by widget: without plugins the Plugins tab is removed and index 1 is Data
+    const int archivesTab = ui->tabWidget->indexOf(ui->bsaTab);
+    if (archivesTab >= 0) {
+      ui->tabWidget->setTabIcon(
+          archivesTab, warning ? FluentIcons::icon(":/MO/gui/mainwindow/status/warning.svg")
+                               : QIcon());
     }
   }
 }
@@ -5761,33 +5792,47 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
 {
   using namespace boost::placeholders;
 
-  QString origin;
+  // the archive paths, taken before the folder dialog: a refresh while it is
+  // open rebuilds the list and deletes the item. Each archive row keeps its
+  // origin's ID; a group's title is a display name ("Base game"), not an origin
+  QStringList archivePaths;
+  const auto addArchive = [&](const QTreeWidgetItem* archiveItem) {
+    const QVariant originID = archiveItem->data(1, Qt::UserRole);
+    if (!originID.isValid()) {
+      return;
+    }
+    const FilesOrigin& origin =
+        m_OrganizerCore.directoryStructure()->getOriginByID(originID.toInt());
+    archivePaths.append(QDir::fromNativeSeparators(ToQString(origin.getPath())) +
+                        "/" + archiveItem->text(0));
+  };
+  if (!item->parent()) {
+    for (int i = 0; i < item->childCount(); ++i) {
+      addArchive(item->child(i));
+    }
+  } else {
+    addArchive(item);
+  }
+  if (archivePaths.isEmpty()) {
+    return;
+  }
 
   QString targetFolder =
       FileDialogMemory::getExistingDirectory("extractBSA", this, tr("Extract BSA"));
-  QStringList archives = {};
   if (!targetFolder.isEmpty()) {
-    if (!item->parent()) {
-      for (int i = 0; i < item->childCount(); ++i) {
-        archives.append(item->child(i)->text(0));
-      }
-      origin = QDir::fromNativeSeparators(
-          ToQString(m_OrganizerCore.directoryStructure()
-                        ->getOriginByName(ToWString(item->text(0)))
-                        .getPath()));
-    } else {
-      origin = QDir::fromNativeSeparators(
-          ToQString(m_OrganizerCore.directoryStructure()
-                        ->getOriginByName(ToWString(item->text(1)))
-                        .getPath()));
-      archives = QStringList({item->text(0)});
-    }
-
-    for (auto archiveName : archives) {
+    for (const auto& archivePath : archivePaths) {
       BSA::Archive archive;
-      QString archivePath = QString("%1\\%2").arg(origin).arg(archiveName);
+      // the archive library takes narrow paths; the short 8.3 form keeps
+      // names outside the system code page readable
+      std::wstring widePath = QDir::toNativeSeparators(archivePath).toStdWString();
+      wchar_t shortPath[MAX_PATH * 4];
+      const DWORD shortLength =
+          ::GetShortPathNameW(widePath.c_str(), shortPath, MAX_PATH * 4);
+      const QString readPath = shortLength > 0 && shortLength < MAX_PATH * 4
+                                   ? QString::fromWCharArray(shortPath, shortLength)
+                                   : QDir::toNativeSeparators(archivePath);
       BSA::EErrorCode result =
-          archive.read(archivePath.toLocal8Bit().constData(), true);
+          archive.read(readPath.toLocal8Bit().constData(), true);
       if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
         reportError(
             tr("failed to read %1: %2").arg(archivePath, QString::number(result)));
@@ -6217,12 +6262,18 @@ QString MainWindow::queryRestore(const QString& filePath)
             ? tr("No complete plugin order backup is available. The saved "
                  "plugin list, load order, and locked order must all be present.")
             : tr("There are no backups to restore");
+    // the body says what is missing; the heading already says there are none
+    const bool modList =
+        QFileInfo(filePath).fileName().compare("modlist.txt", Qt::CaseInsensitive) == 0;
     showProfileBackupPrompt(
         this, tr("No backups"),
         incompleteLoadOrderBackupFound
             ? tr("No complete plugin-order backup is available.")
             : tr("There are no backups to restore."),
-        message, tr("OK"));
+        incompleteLoadOrderBackupFound ? message
+        : modList ? tr("This profile has no saved mod list backups.")
+                  : tr("This profile has no saved plugin order backups."),
+        tr("OK"));
     return QString();
   }
 

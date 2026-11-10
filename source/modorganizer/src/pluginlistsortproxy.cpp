@@ -50,7 +50,11 @@ void PluginListSortProxy::updateFilter(const QString& filter)
       const auto orSegments = filterCopy.split(";", Qt::SkipEmptyParts);
       m_FilterSegments.reserve(static_cast<std::size_t>(orSegments.size()));
       for (const auto& segment : orSegments) {
-        m_FilterSegments.push_back(segment.split(" ", Qt::SkipEmptyParts));
+        // a blank segment would match every plugin
+        auto keywords = segment.split(" ", Qt::SkipEmptyParts);
+        if (!keywords.isEmpty()) {
+          m_FilterSegments.push_back(std::move(keywords));
+        }
       }
     }
   }
@@ -60,7 +64,8 @@ void PluginListSortProxy::updateFilter(const QString& filter)
 
 bool PluginListSortProxy::filterAcceptsRow(int row, const QModelIndex&) const
 {
-  if (m_CurrentFilter.isEmpty()) {
+  // only separators (`|`, `;`, `OR`) leave no segment: no filter, as FilterWidget
+  if (m_FilterSegments.empty()) {
     return true;
   }
 
@@ -133,7 +138,7 @@ bool PluginListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction act
 
 bool PluginListSortProxy::filterMatchesPlugin(const QString& plugin) const
 {
-  if (!m_CurrentFilter.isEmpty()) {
+  if (!m_FilterSegments.empty()) {
     // split in ORSegments that internally use AND logic
     for (const auto& ANDKeywords : m_FilterSegments) {
       bool segmentGood = true;

@@ -93,7 +93,8 @@ VersionInfo CheckFNIS::version() const
 
 std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> CheckFNIS::requirements() const
 {
-  return { Requirements::gameDependency("Skyrim") };
+  // FNIS for Skyrim SE and VR use the same files (MO2 Revamped)
+  return { Requirements::gameDependency({"Skyrim", "Skyrim Special Edition", "Skyrim VR"}) };
 }
 
 QList<PluginSetting> CheckFNIS::settings() const

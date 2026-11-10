@@ -210,6 +210,10 @@ public:
 
 public:
   QStringList pluginNames() const;
+
+  // model indices of the given plugins, skipping names no longer in the list
+  QModelIndexList indicesForNames(const QStringList& names) const;
+
   PluginStates state(const QString& name) const;
   void setState(const QString& name, PluginStates state);
   int priority(const QString& name) const;
@@ -336,8 +340,17 @@ private:
   void writeLockedOrder(const QString& fileName) const;
 
   void readLockedOrderFrom(const QString& fileName);
-  void setPluginPriority(int row, int& newPriority, bool isForced = false);
+  // with deferIndices, the caller runs updateIndices() and notifies the view
+  // once after a batch of moves
+  void setPluginPriority(int row, int& newPriority, bool isForced = false,
+                         bool deferIndices = false);
   void changePluginPriority(std::vector<int> rows, int newPriority);
+
+  bool isValidRow(const QModelIndex& idx) const;
+
+  // refreshes the load order, masters and view after plugins were
+  // enabled or disabled
+  void enabledStatesChanged(const QStringList& dirty, bool enabled);
 
   void testMasters();
 
@@ -380,6 +393,9 @@ private:
 
 
   QElapsedTimer m_LastCheck;
+
+  // true between beginResetModel() and endResetModel() of a forced refresh
+  bool m_ResettingModel = false;
 
   QVariant displayData(const QModelIndex& modelIndex) const;
   QVariant checkstateData(const QModelIndex& modelIndex) const;

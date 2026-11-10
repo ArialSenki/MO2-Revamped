@@ -322,7 +322,7 @@ void NexusConnectionUI::onValidatorFinished(ValidationAttempt::Result r,
   } else {
     if (message.isEmpty()) {
       // shouldn't happen
-      addLog("Unknown error");
+      addLog(tr("Unknown error"));
     } else {
       addLog(message);
     }
@@ -561,7 +561,8 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
     QString descriptor = server.name();
 
     if (!descriptor.compare("CDN", Qt::CaseInsensitive)) {
-      descriptor += QStringLiteral(" (automatic)");
+      //: %1 is the server's name
+      descriptor = QObject::tr("%1 (automatic)").arg(descriptor);
     }
 
     const auto averageSpeed = server.averageSpeed();
@@ -711,7 +712,10 @@ void NexusSettingsTab::clearCache()
 
 void NexusSettingsTab::associate()
 {
-  Settings::instance().nexus().registerAsNXMHandler(true);
+  // on failure the error was already shown over Settings
+  if (!Settings::instance().nexus().registerAsNXMHandler(true, parentWidget())) {
+    return;
+  }
   MessageDialog::showMessage(QObject::tr("Registered for Nexus download links"),
                              parentWidget());
 }
