@@ -1,0 +1,45 @@
+# Files the release takes from the build of source/upstream (Build-UpstreamPlugins.ps1)
+# instead of the Mod Organizer 2.5.2 runtime, by runtime path. "native" files are
+# checked against abi/binaries.json; "dotnet" files are the NuGet libraries
+# installer_omod restores.
+native uibase.dll
+native helper.exe
+native dlls/archive.dll
+native loot/lootcli.exe
+native plugins/game_enderal.dll
+native plugins/game_enderalse.dll
+native plugins/game_fallout3.dll
+native plugins/game_fallout4.dll
+native plugins/game_fallout4vr.dll
+native plugins/game_falloutNV.dll
+native plugins/game_morrowind.dll
+native plugins/game_nehrim.dll
+native plugins/game_oblivion.dll
+native plugins/game_skyrim.dll
+native plugins/game_skyrimse.dll
+native plugins/game_skyrimvr.dll
+native plugins/game_starfield.dll
+native plugins/game_ttw.dll
+native plugins/installer_bain.dll
+native plugins/installer_bundle.dll
+native plugins/installer_fomod.dll
+native plugins/installer_fomod_csharp.dll
+native plugins/installer_manual.dll
+native plugins/installer_quick.dll
+native plugins/bsa_extractor.dll
+native plugins/bsa_packer.dll
+native plugins/preview_base.dll
+native plugins/preview_bsa.dll
+native plugins/diagnose_basic.dll
+native plugins/check_fnis.dll
+native plugins/inieditor.dll
+native plugins/inibakery.dll
+native plugins/installer_omod/installer_omod.dll
+native plugins/plugin_python/plugin_python.dll
+native plugins/plugin_python/dlls/runner.dll
+native plugins/plugin_python/libs/mobase.cp312-win_amd64.pyd
+dotnet plugins/installer_omod/OMODFramework.dll
+dotnet plugins/installer_omod/OMODFramework.Scripting.dll
+dotnet plugins/installer_omod/RtfPipe.dll
+dotnet plugins/installer_omod/ICSharpCode.SharpZipLib.dll
+dotnet plugins/installer_omod/System.Drawing.Common.dll

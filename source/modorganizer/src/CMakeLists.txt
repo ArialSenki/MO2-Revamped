@@ -19,6 +19,12 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1930)
 		target_compile_options(organizer PRIVATE
 			"$<$<CONFIG:Release>:/pathmap:${MO2_PROJECT_SOURCE_PATH}=MO2_SOURCE>")
 	endif()
+	# uibase and the other libraries' headers, from source/upstream
+	if(MO2_SUPER_PATH)
+		file(TO_CMAKE_PATH "${MO2_SUPER_PATH}" MO2_UPSTREAM_SOURCE_PATH)
+		target_compile_options(organizer PRIVATE
+			"$<$<CONFIG:Release>:/pathmap:${MO2_UPSTREAM_SOURCE_PATH}=MO2_UPSTREAM>")
+	endif()
 	# Third-party headers are compiled into organizer too. Map the shared
 	# dependency checkout before the broader user-profile mapping below.
 	if(BOOST_ROOT)

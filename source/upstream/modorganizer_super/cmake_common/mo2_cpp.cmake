@@ -116,7 +116,9 @@ function(mo2_configure_target TARGET)
 	file(GLOB_RECURSE rc_files CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.rc)
 	file(GLOB_RECURSE ui_files CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.ui)
 	file(GLOB_RECURSE ui_header_files CONFIGURE_DEPENDS ${UI_HEADERS_DIR}/*.h)
-	file(GLOB_RECURSE rule_files CONFIGURE_DEPENDS ${CMAKE_BINARY_DIR}/*.rule)
+	# MO2 Revamped: the target's own build folder, as in a build of one repository;
+	# in the build of all of them the other projects add .rule files meanwhile
+	file(GLOB_RECURSE rule_files CONFIGURE_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/*.rule)
 	file(GLOB_RECURSE misc_files CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../*.natvis)
 
 	if (${MO2_SOURCE_TREE})

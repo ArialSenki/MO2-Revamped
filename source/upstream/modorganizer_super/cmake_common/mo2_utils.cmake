@@ -248,6 +248,13 @@ endfunction()
 function(mo2_add_lupdate TARGET)
 	cmake_parse_arguments(MO2 "" "TS_FILE" "SOURCES" ${ARGN})
 
+	# MO2 Revamped: a release build leaves the committed sources as they are;
+	# the refreshed .ts goes to the build folder
+	if (MO2_LUPDATE_IN_BINARY_DIR)
+		get_filename_component(ts_name "${MO2_TS_FILE}" NAME)
+		set(MO2_TS_FILE "${CMAKE_CURRENT_BINARY_DIR}/${ts_name}")
+	endif()
+
 	set(translation_files "")
 	set(ui_files "")
 

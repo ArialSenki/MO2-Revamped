@@ -73,6 +73,16 @@
   event, and the download list's columns keep their widths instead of being squeezed
   and stretched again on every resize.
 
+### Built from source
+
+- uibase, the game, installer, preview and tool plugins, the Python plugin host,
+  archive, LOOT CLI and helper are now built from their Mod Organizer 2.5.2 sources
+  in this repository, instead of being copied from the 2.5.2 release. They load the
+  same way: each one is checked against the 2.5.2 binaries for the same exports,
+  dependencies and plugin interfaces.
+- The splash, the icon and the Python plugins come from this repository too; a
+  release could still carry the 1.0.1 splash.
+
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 
 ### Nightreign

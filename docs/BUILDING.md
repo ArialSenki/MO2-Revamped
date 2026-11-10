@@ -25,10 +25,45 @@ It maps the reviewed Light and Dark styles to `stylesheets/Light.qss` and
 ## Mod Organizer 2
 
 Use the official [MO2 build project (`mob`)](https://github.com/ModOrganizer2/mob)
-as the starting point for preparing a Windows development environment. Use
-the matching source in `source/modorganizer/` and the component versions in
-[`UPSTREAMS.md`](UPSTREAMS.md). Do not mix Qt, Python, compiler, or USVFS
-versions without rebuilding and checking the native extensions.
+to prepare the third-party dependencies (Boost, spdlog, zlib, lz4, libbsarch,
+DirectXTex, 7-Zip, libloot) and Qt 6.7.1. Do not mix Qt, Python, compiler, or
+USVFS versions without rebuilding and checking the native extensions.
+
+The Mod Organizer 2 libraries and plugins come from `source/upstream/`, not
+from `mob` or a release: uibase, cmake_common, archive, githubpp, bsatk, esptk,
+the plugins, plugin_python, lootcli and helper, at the 2.5.2 commits in
+`source/upstream/UPSTREAM-COMMITS.txt`. Build them first, into a folder outside
+the repository:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-UpstreamPlugins.ps1 `
+  -OutputDirectory C:\path\to\upstream-out `
+  -ThirdPartyDirectory C:\path\to\mo\build `
+  -QtDirectory C:\path\to\Qt\6.7.1\msvc2019_64 `
+  -PythonDirectory C:\path\to\python-3.12
+```
+
+`-PythonDirectory` is a CPython 3.12 tree with `Include\` and
+`PCBuild\amd64\` (`python.exe`, `python312.lib`). The two C++/CLI installers
+need the Visual Studio Build Tools components ".NET Framework 4.8 SDK",
+".NET Framework 4.8 targeting pack" and ".NET Framework 4.7.2 targeting pack"
+(CMake's C# detection asks for 4.7.2), and archive needs "C++ ATL for latest
+build tools". installer_omod restores its .NET libraries from nuget.org; the
+build checks they are byte for byte the ones 2.5.2 shipped.
+
+The script builds in RelWithDebInfo, as the official plugin builds did, with
+source, dependency, build and profile paths mapped, installs into `upstream-out\install` (the runtime layout plus the
+import libraries) and checks every binary against `source/upstream/abi/`, which
+was written from the official 2.5.2 binaries: uibase must export the same 663
+symbols, each file keeps its DLL dependencies and its plugin interface IDs,
+everything imported from uibase must exist, and no local path may remain. Only
+then does it fill `upstream-out\stage` with the shipped files and
+`upstream-manifest.json`.
+
+The Organizer then builds against those sources and that install tree, with
+`-DDEPENDENCIES_DIR=<repository>/source/upstream` and
+`-DMO2_INSTALL_PATH=C:/path/to/upstream-out/install` (plus the dependency roots
+as for the NXM handler below).
 
 ## USVFS
 
@@ -43,13 +78,14 @@ upstream modorganizer-nxmhandler at the commit shipped with MO2 2.5.2 (see
 [`UPSTREAMS.md`](UPSTREAMS.md)). MO2 Revamped replaces its handler list window
 with a Fluent version; the command line, the registration and the
 `nxmhandler.ini` format stay compatible. It builds like the Organizer target,
-against the `mob` dependency tree (`cmake_common`, `uibase`) and Qt 6.7.1, in
-a build directory of its own:
+against `source/upstream` (`cmake_common`, `uibase`), the install tree of
+`Build-UpstreamPlugins.ps1` and Qt 6.7.1, in a build directory of its own:
 
 ```bat
 call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 cmake -G "Visual Studio 17 2022" -A x64 -S source/nxmhandler -B C:\path\to\nxmhandler-build ^
-  -DDEPENDENCIES_DIR=C:/path/to/mo/build -DBOOST_ROOT=C:/path/to/mo/build/boost_1_85_0 ^
+  -DDEPENDENCIES_DIR=C:/path/to/repository/source/upstream ^
+  -DMO2_INSTALL_PATH=C:/path/to/upstream-out/install -DBOOST_ROOT=C:/path/to/mo/build/boost_1_85_0 ^
   -DQT_ROOT=C:/path/to/Qt/6.7.1/msvc2019_64 -DPYTHON_ROOT=C:/path/to/mo/build/python-3.12.3 ^
   -DCMAKE_INSTALL_PREFIX:PATH=C:/path/to/nxmhandler-install
 cmake --build C:\path\to\nxmhandler-build --config Release --target nxmhandler
@@ -108,12 +144,22 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
   -RuntimeDirectory C:\path\to\Complete `
   -OrganizerExecutable C:\path\to\ModOrganizer.exe `
   -NxmHandlerExecutable C:\path\to\nxmhandler-build\src\Release\nxmhandler.exe `
+  -UpstreamStageDirectory C:\path\to\upstream-out\stage `
   -ZigPath C:\path\to\zig.exe `
   -OpenSslRuntimeDirectory C:\path\to\openssl-3.5.9 `
   -PythonRuntimeDirectory C:\path\to\python-3.12.15-overlay `
   -QtSdkDirectory C:\path\to\QtSdk `
   -OutputDirectory C:\path\to\new-release-directory
 ```
+
+From the Complete runtime the builder takes only what has no source here (Qt,
+PyQt6, 7-Zip, libbsarch, LOOT, Explorer++, the Python libraries the plugins
+bundle, and the compiled translations). It never stages the runtime's copies
+of the files `-UpstreamStageDirectory` lists: those come from the upstream
+stage, whose manifest must match its files and the committed `source/upstream`.
+The Python plugins are copied from `source/mo2-python-plugins/`, and the
+splash, the icon, `resources/markdown.html` and `dlls/dlls.manifest` from
+`source/modorganizer/src/`.
 
 Revamped plugin sources are overlaid from `source/revamped/plugins/` onto the
 Complete runtime before packaging. This is the maintained release copy; older

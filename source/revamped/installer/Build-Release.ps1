@@ -6,6 +6,11 @@ param(
     # nxmhandler.exe built from source/nxmhandler (the Fluent handler window)
     [Parameter(Mandatory = $true)]
     [string]$NxmHandlerExecutable,
+    # the stage Build-UpstreamPlugins.ps1 makes from source\upstream: uibase, the
+    # plugins, plugin_python, archive, lootcli and helper replace the copies the
+    # runtime carries from Mod Organizer 2.5.2
+    [Parameter(Mandatory = $true)]
+    [string]$UpstreamStageDirectory,
     [Parameter(Mandatory = $true)]
     [string]$ZigPath,
     [Parameter(Mandatory = $true)]
@@ -25,6 +30,7 @@ $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
 $runtimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory).TrimEnd('\')
 $organizerPath = [System.IO.Path]::GetFullPath($OrganizerExecutable)
 $nxmHandlerPath = [System.IO.Path]::GetFullPath($NxmHandlerExecutable)
+$upstreamStageRoot = [System.IO.Path]::GetFullPath($UpstreamStageDirectory).TrimEnd('\')
 $openSslRuntimeRoot = [System.IO.Path]::GetFullPath($OpenSslRuntimeDirectory).TrimEnd('\')
 $pythonRuntimeRoot = [System.IO.Path]::GetFullPath($PythonRuntimeDirectory).TrimEnd('\')
 $outputRoot = [System.IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
@@ -66,6 +72,60 @@ if (-not (Test-Path -LiteralPath $nxmHandlerPath -PathType Leaf) -or
 if ((Get-Item -LiteralPath $nxmHandlerPath).VersionInfo.ProductName -notlike '*MO2 Revamped*') {
     throw "nxmhandler.exe is not the MO2 Revamped build from source\nxmhandler: $nxmHandlerPath"
 }
+# the upstream stage: every file its manifest lists, unchanged since it was
+# built, from the source\upstream this checkout has
+$upstreamManifestPath = Join-Path $upstreamStageRoot 'upstream-manifest.json'
+if (-not (Test-Path -LiteralPath $upstreamManifestPath -PathType Leaf)) {
+    throw "The upstream stage has no upstream-manifest.json; build it with Build-UpstreamPlugins.ps1: $upstreamStageRoot"
+}
+$upstreamManifest = Get-Content -LiteralPath $upstreamManifestPath -Raw | ConvertFrom-Json
+if ($upstreamManifest.sourceChanged) {
+    throw 'The upstream stage was built from uncommitted changes in source\upstream; commit them and build it again.'
+}
+
+function Get-GitOutput {
+    # git's own errors would stop the script with a bare "fatal:" line
+    param([string[]]$Arguments)
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & git -C $repoRoot @Arguments 2>$null
+        if ($LASTEXITCODE -ne 0) { return $null }
+        return $output
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+}
+
+$builtTree = Get-GitOutput @('rev-parse', "$($upstreamManifest.sourceCommit):source/upstream")
+$currentTree = Get-GitOutput @('rev-parse', 'HEAD:source/upstream')
+if (-not $currentTree) {
+    throw 'This checkout is not a git repository with source\upstream committed; the upstream stage cannot be matched to it.'
+}
+if (-not $builtTree -or $builtTree -ne $currentTree -or (Get-GitOutput @('status', '--porcelain', '--', 'source/upstream'))) {
+    throw 'The upstream stage was built from another source\upstream than this checkout has; build it again.'
+}
+# exactly the files source\upstream\shipped-files.txt names: a stage that left
+# one out would let the 2.5.2 runtime's copy through
+$upstreamFiles = @(Get-Content -LiteralPath (Join-Path $repoRoot 'source\upstream\shipped-files.txt') |
+    Where-Object { $_ -notmatch '^\s*(#|$)' } |
+    ForEach-Object { ($_.Trim() -split '\s+', 2)[1].Replace('/', '\') })
+$stagedFiles = @($upstreamManifest.files.PSObject.Properties | ForEach-Object { $_.Name.Replace('/', '\') })
+if ($upstreamFiles.Count -eq 0 -or (Compare-Object $upstreamFiles $stagedFiles)) {
+    throw 'The upstream stage does not have exactly the files source\upstream\shipped-files.txt lists; build it again.'
+}
+# the Python plugins are copied as they are on disk: only committed sources
+if (Get-GitOutput @('status', '--porcelain', '--', 'source/mo2-python-plugins')) {
+    throw 'source\mo2-python-plugins has uncommitted changes; commit them before building a release.'
+}
+foreach ($property in $upstreamManifest.files.PSObject.Properties) {
+    $file = Join-Path $upstreamStageRoot $property.Name.Replace('/', '\')
+    if (-not (Test-Path -LiteralPath $file -PathType Leaf) -or
+        (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $property.Value) {
+        throw "The upstream stage file $($property.Name) is missing or changed since it was built."
+    }
+}
+
 if (-not (Test-Path -LiteralPath $openSslRuntimeRoot -PathType Container)) {
     throw "The OpenSSL runtime directory was not found: $openSslRuntimeRoot"
 }
@@ -277,7 +337,7 @@ function Test-ExcludedRuntimeFile {
 }
 
 function Copy-RuntimeTree {
-    param([string]$SourceRoot, [string]$DestinationRoot, [switch]$SkipPlugins)
+    param([string]$SourceRoot, [string]$DestinationRoot, [switch]$SkipPlugins, [string[]]$Exclude = @())
     $sourceLength = $SourceRoot.Length
     $files = Get-ChildItem -LiteralPath $SourceRoot -File -Recurse -Force |
         Sort-Object FullName
@@ -286,6 +346,7 @@ function Copy-RuntimeTree {
         $relative = $file.FullName.Substring($sourceLength).TrimStart('\')
         if ($relative -ieq 'ModOrganizer.exe' -or $relative -ieq 'unins000.exe') { continue }
         if ($SkipPlugins -and $relative.StartsWith('plugins\', [StringComparison]::OrdinalIgnoreCase)) { continue }
+        if ($Exclude -contains $relative) { continue }
         if (Test-ExcludedRuntimeFile -RelativePath $relative) { continue }
         $destination = Join-Path $DestinationRoot $relative
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
@@ -293,14 +354,44 @@ function Copy-RuntimeTree {
     }
 }
 
+function Copy-UpstreamBinaries {
+    # uibase, the plugins, plugin_python, archive, lootcli and helper, built
+    # from source\upstream; the runtime's copies of them are never staged
+    param([string]$DestinationRoot)
+    foreach ($relative in $upstreamFiles) {
+        $destination = Join-Path $DestinationRoot $relative
+        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        Copy-Item -LiteralPath (Join-Path $upstreamStageRoot $relative) -Destination $destination -Force
+    }
+}
+
+# the organizer's own files beside ModOrganizer.exe, from source\modorganizer;
+# the runtime still has the 1.0.1 splash and icon
+$organizerFiles = [ordered]@{
+    'splash.png'              = 'source\modorganizer\src\splash.png'
+    'resources\mo_icon.png'   = 'source\modorganizer\src\resources\mo_icon.png'
+    'resources\markdown.html' = 'source\modorganizer\src\resources\markdown.html'
+    'dlls\dlls.manifest'      = 'source\modorganizer\src\dlls.manifest.qt6'
+}
+
+function Copy-OrganizerFiles {
+    param([string]$DestinationRoot)
+    foreach ($entry in $organizerFiles.GetEnumerator()) {
+        $destination = Join-Path $DestinationRoot $entry.Key
+        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        Copy-Item -LiteralPath (Join-Path $repoRoot $entry.Value) -Destination $destination -Force
+    }
+}
+
 function Copy-PythonPluginOverlay {
-    # newer than the runtime's baseline: Baldur's Gate 3 and the game checks of the Configurator
+    # the Python plugins come from source\mo2-python-plugins, not from the
+    # runtime: the runtime only adds the third-party libraries they bundle
     param([string]$DestinationRoot)
     $source = Join-Path $repoRoot 'source\mo2-python-plugins'
-    $baldursGate = Join-Path $source 'basic_games\games\baldursgate3'
-    $files = @('pyCfg.py', 'basic_games\__init__.py', 'basic_games\games\game_baldursgate3.py' |
-        ForEach-Object { Get-Item -LiteralPath (Join-Path $source $_) })
-    $files += @(Get-ChildItem -LiteralPath $baldursGate -File -Recurse -Filter '*.py')
+    $files = @(Get-ChildItem -LiteralPath $source -File -Recurse -Force | Where-Object {
+        $relative = $_.FullName.Substring($source.Length).TrimStart('\')
+        -not (Test-ExcludedRuntimeFile -RelativePath ('plugins\' + $relative))
+    })
     foreach ($file in $files) {
         $relative = $file.FullName.Substring($source.Length).TrimStart('\')
         $destination = Join-Path (Join-Path $DestinationRoot 'plugins') $relative
@@ -857,7 +948,9 @@ Test-EmbeddedResources -InstallerPath $eldenRingUninstallerStub -ExpectedResourc
 $fullStage = Join-Path $stageRoot 'complete'
 $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
-Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage
+Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage -Exclude ($upstreamFiles + @($organizerFiles.Keys))
+Copy-UpstreamBinaries -DestinationRoot $fullStage
+Copy-OrganizerFiles -DestinationRoot $fullStage
 Move-WebEngineProcessToDlls -DestinationRoot $fullStage
 Copy-PythonPluginOverlay -DestinationRoot $fullStage
 Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath -Me3CompatPath $me3CompatPath

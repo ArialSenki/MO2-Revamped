@@ -20,6 +20,12 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1930)
 		target_compile_options(nxmhandler PRIVATE
 			"$<$<CONFIG:Release>:/pathmap:${NXM_PROJECT_SOURCE_PATH}=NXM_SOURCE>")
 	endif()
+	# uibase's headers, from source/upstream
+	if(MO2_SUPER_PATH)
+		file(TO_CMAKE_PATH "${MO2_SUPER_PATH}" NXM_UPSTREAM_SOURCE_PATH)
+		target_compile_options(nxmhandler PRIVATE
+			"$<$<CONFIG:Release>:/pathmap:${NXM_UPSTREAM_SOURCE_PATH}=MO2_UPSTREAM>")
+	endif()
 	if(BOOST_ROOT)
 		get_filename_component(NXM_DEPENDENCY_BUILD_ROOT "${BOOST_ROOT}" DIRECTORY)
 		file(TO_CMAKE_PATH "${NXM_DEPENDENCY_BUILD_ROOT}" NXM_DEPENDENCY_BUILD_PATH)

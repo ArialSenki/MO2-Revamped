@@ -1,0 +1,859 @@
+{
+    "uibase.dll":  {
+                       "dependents":  [
+                                          "api-ms-win-crt-filesystem-l1-1-0.dll",
+                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                          "api-ms-win-crt-locale-l1-1-0.dll",
+                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                          "api-ms-win-crt-stdio-l1-1-0.dll",
+                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                          "api-ms-win-crt-time-l1-1-0.dll",
+                                          "kernel32.dll",
+                                          "msvcp140.dll",
+                                          "ole32.dll",
+                                          "qt6core.dll",
+                                          "qt6gui.dll",
+                                          "qt6qml.dll",
+                                          "qt6quickwidgets.dll",
+                                          "qt6widgets.dll",
+                                          "shell32.dll",
+                                          "user32.dll",
+                                          "vcruntime140.dll",
+                                          "vcruntime140_1.dll",
+                                          "version.dll"
+                                      ],
+                       "interfaces":  [
+
+                                      ]
+                   },
+    "helper.exe":  {
+                       "dependents":  [
+                                          "advapi32.dll",
+                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                          "api-ms-win-crt-locale-l1-1-0.dll",
+                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                          "api-ms-win-crt-stdio-l1-1-0.dll",
+                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                          "api-ms-win-crt-time-l1-1-0.dll",
+                                          "kernel32.dll",
+                                          "msvcp140.dll",
+                                          "qt6core.dll",
+                                          "shell32.dll",
+                                          "vcruntime140.dll",
+                                          "vcruntime140_1.dll"
+                                      ],
+                       "interfaces":  [
+
+                                      ]
+                   },
+    "dlls/archive.dll":  {
+                             "dependents":  [
+                                                "api-ms-win-crt-heap-l1-1-0.dll",
+                                                "api-ms-win-crt-locale-l1-1-0.dll",
+                                                "api-ms-win-crt-math-l1-1-0.dll",
+                                                "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                "api-ms-win-crt-string-l1-1-0.dll",
+                                                "kernel32.dll",
+                                                "msvcp140.dll",
+                                                "ole32.dll",
+                                                "oleaut32.dll",
+                                                "vcruntime140.dll",
+                                                "vcruntime140_1.dll"
+                                            ],
+                             "interfaces":  [
+
+                                            ]
+                         },
+    "loot/lootcli.exe":  {
+                             "dependents":  [
+                                                "api-ms-win-crt-convert-l1-1-0.dll",
+                                                "api-ms-win-crt-environment-l1-1-0.dll",
+                                                "api-ms-win-crt-filesystem-l1-1-0.dll",
+                                                "api-ms-win-crt-heap-l1-1-0.dll",
+                                                "api-ms-win-crt-locale-l1-1-0.dll",
+                                                "api-ms-win-crt-math-l1-1-0.dll",
+                                                "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                "api-ms-win-crt-string-l1-1-0.dll",
+                                                "api-ms-win-crt-time-l1-1-0.dll",
+                                                "kernel32.dll",
+                                                "loot.dll",
+                                                "msvcp140.dll",
+                                                "qt6core.dll",
+                                                "shell32.dll",
+                                                "vcruntime140.dll",
+                                                "vcruntime140_1.dll",
+                                                "winhttp.dll"
+                                            ],
+                             "interfaces":  [
+
+                                            ]
+                         },
+    "plugins/game_enderal.dll":  {
+                                     "dependents":  [
+                                                        "advapi32.dll",
+                                                        "api-ms-win-crt-convert-l1-1-0.dll",
+                                                        "api-ms-win-crt-heap-l1-1-0.dll",
+                                                        "api-ms-win-crt-locale-l1-1-0.dll",
+                                                        "api-ms-win-crt-math-l1-1-0.dll",
+                                                        "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                        "api-ms-win-crt-string-l1-1-0.dll",
+                                                        "dbghelp.dll",
+                                                        "kernel32.dll",
+                                                        "msvcp140.dll",
+                                                        "ole32.dll",
+                                                        "qt6core.dll",
+                                                        "qt6gui.dll",
+                                                        "qt6widgets.dll",
+                                                        "shell32.dll",
+                                                        "uibase.dll",
+                                                        "vcruntime140.dll",
+                                                        "vcruntime140_1.dll"
+                                                    ],
+                                     "interfaces":  [
+                                                        "com.tannin.ModOrganizer.Plugin/2.0",
+                                                        "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                        "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                    ]
+                                 },
+    "plugins/game_enderalse.dll":  {
+                                       "dependents":  [
+                                                          "advapi32.dll",
+                                                          "api-ms-win-crt-convert-l1-1-0.dll",
+                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                          "api-ms-win-crt-locale-l1-1-0.dll",
+                                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                                          "dbghelp.dll",
+                                                          "kernel32.dll",
+                                                          "liblz4.dll",
+                                                          "msvcp140.dll",
+                                                          "ole32.dll",
+                                                          "qt6core.dll",
+                                                          "qt6gui.dll",
+                                                          "qt6widgets.dll",
+                                                          "shell32.dll",
+                                                          "uibase.dll",
+                                                          "vcruntime140.dll",
+                                                          "vcruntime140_1.dll"
+                                                      ],
+                                       "interfaces":  [
+                                                          "com.tannin.ModOrganizer.Plugin/2.0",
+                                                          "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                          "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                      ]
+                                   },
+    "plugins/game_fallout3.dll":  {
+                                      "dependents":  [
+                                                         "advapi32.dll",
+                                                         "api-ms-win-crt-convert-l1-1-0.dll",
+                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                         "api-ms-win-crt-locale-l1-1-0.dll",
+                                                         "api-ms-win-crt-math-l1-1-0.dll",
+                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                         "dbghelp.dll",
+                                                         "kernel32.dll",
+                                                         "msvcp140.dll",
+                                                         "ole32.dll",
+                                                         "qt6core.dll",
+                                                         "qt6gui.dll",
+                                                         "qt6widgets.dll",
+                                                         "shell32.dll",
+                                                         "uibase.dll",
+                                                         "vcruntime140.dll",
+                                                         "vcruntime140_1.dll"
+                                                     ],
+                                      "interfaces":  [
+                                                         "com.tannin.ModOrganizer.Plugin/2.0",
+                                                         "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                         "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                     ]
+                                  },
+    "plugins/game_fallout4.dll":  {
+                                      "dependents":  [
+                                                         "advapi32.dll",
+                                                         "api-ms-win-crt-convert-l1-1-0.dll",
+                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                         "api-ms-win-crt-locale-l1-1-0.dll",
+                                                         "api-ms-win-crt-math-l1-1-0.dll",
+                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                         "dbghelp.dll",
+                                                         "kernel32.dll",
+                                                         "msvcp140.dll",
+                                                         "ole32.dll",
+                                                         "qt6core.dll",
+                                                         "qt6gui.dll",
+                                                         "qt6widgets.dll",
+                                                         "shell32.dll",
+                                                         "uibase.dll",
+                                                         "vcruntime140.dll",
+                                                         "vcruntime140_1.dll"
+                                                     ],
+                                      "interfaces":  [
+                                                         "com.tannin.ModOrganizer.Plugin/2.0",
+                                                         "com.tannin.ModOrganizer.PluginDiagnose/1.1",
+                                                         "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                         "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                     ]
+                                  },
+    "plugins/game_fallout4vr.dll":  {
+                                        "dependents":  [
+                                                           "advapi32.dll",
+                                                           "api-ms-win-crt-convert-l1-1-0.dll",
+                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                           "api-ms-win-crt-locale-l1-1-0.dll",
+                                                           "api-ms-win-crt-math-l1-1-0.dll",
+                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                           "api-ms-win-crt-string-l1-1-0.dll",
+                                                           "kernel32.dll",
+                                                           "msvcp140.dll",
+                                                           "ole32.dll",
+                                                           "qt6core.dll",
+                                                           "qt6gui.dll",
+                                                           "qt6widgets.dll",
+                                                           "shell32.dll",
+                                                           "uibase.dll",
+                                                           "vcruntime140.dll",
+                                                           "vcruntime140_1.dll"
+                                                       ],
+                                        "interfaces":  [
+                                                           "com.tannin.ModOrganizer.Plugin/2.0",
+                                                           "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                           "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                       ]
+                                    },
+    "plugins/game_falloutNV.dll":  {
+                                       "dependents":  [
+                                                          "advapi32.dll",
+                                                          "api-ms-win-crt-convert-l1-1-0.dll",
+                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                          "api-ms-win-crt-locale-l1-1-0.dll",
+                                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                                          "dbghelp.dll",
+                                                          "kernel32.dll",
+                                                          "msvcp140.dll",
+                                                          "ole32.dll",
+                                                          "qt6core.dll",
+                                                          "qt6gui.dll",
+                                                          "qt6widgets.dll",
+                                                          "shell32.dll",
+                                                          "uibase.dll",
+                                                          "vcruntime140.dll",
+                                                          "vcruntime140_1.dll"
+                                                      ],
+                                       "interfaces":  [
+                                                          "com.tannin.ModOrganizer.Plugin/2.0",
+                                                          "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                          "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                      ]
+                                   },
+    "plugins/game_morrowind.dll":  {
+                                       "dependents":  [
+                                                          "advapi32.dll",
+                                                          "api-ms-win-crt-convert-l1-1-0.dll",
+                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                          "api-ms-win-crt-locale-l1-1-0.dll",
+                                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                                          "kernel32.dll",
+                                                          "msvcp140.dll",
+                                                          "ole32.dll",
+                                                          "qt6core.dll",
+                                                          "qt6gui.dll",
+                                                          "qt6widgets.dll",
+                                                          "shell32.dll",
+                                                          "uibase.dll",
+                                                          "vcruntime140.dll",
+                                                          "vcruntime140_1.dll"
+                                                      ],
+                                       "interfaces":  [
+                                                          "com.tannin.ModOrganizer.Plugin/2.0",
+                                                          "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                          "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                      ]
+                                   },
+    "plugins/game_nehrim.dll":  {
+                                    "dependents":  [
+                                                       "advapi32.dll",
+                                                       "api-ms-win-crt-convert-l1-1-0.dll",
+                                                       "api-ms-win-crt-heap-l1-1-0.dll",
+                                                       "api-ms-win-crt-locale-l1-1-0.dll",
+                                                       "api-ms-win-crt-math-l1-1-0.dll",
+                                                       "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                       "api-ms-win-crt-string-l1-1-0.dll",
+                                                       "dbghelp.dll",
+                                                       "kernel32.dll",
+                                                       "msvcp140.dll",
+                                                       "ole32.dll",
+                                                       "qt6core.dll",
+                                                       "qt6gui.dll",
+                                                       "qt6widgets.dll",
+                                                       "shell32.dll",
+                                                       "uibase.dll",
+                                                       "vcruntime140.dll",
+                                                       "vcruntime140_1.dll"
+                                                   ],
+                                    "interfaces":  [
+                                                       "com.tannin.ModOrganizer.Plugin/2.0",
+                                                       "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                       "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                   ]
+                                },
+    "plugins/game_oblivion.dll":  {
+                                      "dependents":  [
+                                                         "advapi32.dll",
+                                                         "api-ms-win-crt-convert-l1-1-0.dll",
+                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                         "api-ms-win-crt-locale-l1-1-0.dll",
+                                                         "api-ms-win-crt-math-l1-1-0.dll",
+                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                         "dbghelp.dll",
+                                                         "kernel32.dll",
+                                                         "msvcp140.dll",
+                                                         "ole32.dll",
+                                                         "qt6core.dll",
+                                                         "qt6gui.dll",
+                                                         "qt6widgets.dll",
+                                                         "shell32.dll",
+                                                         "uibase.dll",
+                                                         "vcruntime140.dll",
+                                                         "vcruntime140_1.dll"
+                                                     ],
+                                      "interfaces":  [
+                                                         "com.tannin.ModOrganizer.Plugin/2.0",
+                                                         "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                         "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                     ]
+                                  },
+    "plugins/game_skyrim.dll":  {
+                                    "dependents":  [
+                                                       "advapi32.dll",
+                                                       "api-ms-win-crt-convert-l1-1-0.dll",
+                                                       "api-ms-win-crt-heap-l1-1-0.dll",
+                                                       "api-ms-win-crt-locale-l1-1-0.dll",
+                                                       "api-ms-win-crt-math-l1-1-0.dll",
+                                                       "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                       "api-ms-win-crt-string-l1-1-0.dll",
+                                                       "dbghelp.dll",
+                                                       "kernel32.dll",
+                                                       "msvcp140.dll",
+                                                       "ole32.dll",
+                                                       "qt6core.dll",
+                                                       "qt6gui.dll",
+                                                       "qt6widgets.dll",
+                                                       "shell32.dll",
+                                                       "uibase.dll",
+                                                       "vcruntime140.dll",
+                                                       "vcruntime140_1.dll",
+                                                       "version.dll"
+                                                   ],
+                                    "interfaces":  [
+                                                       "com.tannin.ModOrganizer.Plugin/2.0",
+                                                       "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                       "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                   ]
+                                },
+    "plugins/game_skyrimse.dll":  {
+                                      "dependents":  [
+                                                         "advapi32.dll",
+                                                         "api-ms-win-crt-convert-l1-1-0.dll",
+                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                         "api-ms-win-crt-locale-l1-1-0.dll",
+                                                         "api-ms-win-crt-math-l1-1-0.dll",
+                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                         "dbghelp.dll",
+                                                         "kernel32.dll",
+                                                         "liblz4.dll",
+                                                         "msvcp140.dll",
+                                                         "ole32.dll",
+                                                         "qt6core.dll",
+                                                         "qt6gui.dll",
+                                                         "qt6widgets.dll",
+                                                         "shell32.dll",
+                                                         "uibase.dll",
+                                                         "vcruntime140.dll",
+                                                         "vcruntime140_1.dll"
+                                                     ],
+                                      "interfaces":  [
+                                                         "com.tannin.ModOrganizer.Plugin/2.0",
+                                                         "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                         "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                     ]
+                                  },
+    "plugins/game_skyrimvr.dll":  {
+                                      "dependents":  [
+                                                         "advapi32.dll",
+                                                         "api-ms-win-crt-convert-l1-1-0.dll",
+                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                         "api-ms-win-crt-locale-l1-1-0.dll",
+                                                         "api-ms-win-crt-math-l1-1-0.dll",
+                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                         "dbghelp.dll",
+                                                         "kernel32.dll",
+                                                         "liblz4.dll",
+                                                         "msvcp140.dll",
+                                                         "ole32.dll",
+                                                         "qt6core.dll",
+                                                         "qt6gui.dll",
+                                                         "qt6widgets.dll",
+                                                         "shell32.dll",
+                                                         "uibase.dll",
+                                                         "vcruntime140.dll",
+                                                         "vcruntime140_1.dll"
+                                                     ],
+                                      "interfaces":  [
+                                                         "com.tannin.ModOrganizer.Plugin/2.0",
+                                                         "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                         "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                     ]
+                                  },
+    "plugins/game_starfield.dll":  {
+                                       "dependents":  [
+                                                          "advapi32.dll",
+                                                          "api-ms-win-crt-convert-l1-1-0.dll",
+                                                          "api-ms-win-crt-filesystem-l1-1-0.dll",
+                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                          "api-ms-win-crt-locale-l1-1-0.dll",
+                                                          "api-ms-win-crt-math-l1-1-0.dll",
+                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                          "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                                          "dbghelp.dll",
+                                                          "kernel32.dll",
+                                                          "liblz4.dll",
+                                                          "msvcp140.dll",
+                                                          "ole32.dll",
+                                                          "qt6core.dll",
+                                                          "qt6gui.dll",
+                                                          "qt6widgets.dll",
+                                                          "shell32.dll",
+                                                          "uibase.dll",
+                                                          "vcruntime140.dll",
+                                                          "vcruntime140_1.dll"
+                                                      ],
+                                       "interfaces":  [
+                                                          "com.tannin.ModOrganizer.Plugin/2.0",
+                                                          "com.tannin.ModOrganizer.PluginDiagnose/1.1",
+                                                          "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                          "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                      ]
+                                   },
+    "plugins/game_ttw.dll":  {
+                                 "dependents":  [
+                                                    "advapi32.dll",
+                                                    "api-ms-win-crt-convert-l1-1-0.dll",
+                                                    "api-ms-win-crt-heap-l1-1-0.dll",
+                                                    "api-ms-win-crt-locale-l1-1-0.dll",
+                                                    "api-ms-win-crt-math-l1-1-0.dll",
+                                                    "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                    "api-ms-win-crt-string-l1-1-0.dll",
+                                                    "dbghelp.dll",
+                                                    "kernel32.dll",
+                                                    "msvcp140.dll",
+                                                    "ole32.dll",
+                                                    "qt6core.dll",
+                                                    "qt6gui.dll",
+                                                    "qt6widgets.dll",
+                                                    "shell32.dll",
+                                                    "uibase.dll",
+                                                    "vcruntime140.dll",
+                                                    "vcruntime140_1.dll"
+                                                ],
+                                 "interfaces":  [
+                                                    "com.tannin.ModOrganizer.Plugin/2.0",
+                                                    "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                    "com.tannin.ModOrganizer.PluginGame/2.0"
+                                                ]
+                             },
+    "plugins/installer_bain.dll":  {
+                                       "dependents":  [
+                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                                          "kernel32.dll",
+                                                          "msvcp140.dll",
+                                                          "qt6core.dll",
+                                                          "qt6gui.dll",
+                                                          "qt6widgets.dll",
+                                                          "uibase.dll",
+                                                          "vcruntime140.dll",
+                                                          "vcruntime140_1.dll"
+                                                      ],
+                                       "interfaces":  [
+                                                          "com.tannin.ModOrganizer.Plugin/2.0",
+                                                          "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                          "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
+                                                      ]
+                                   },
+    "plugins/installer_bundle.dll":  {
+                                         "dependents":  [
+                                                            "api-ms-win-crt-heap-l1-1-0.dll",
+                                                            "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                            "api-ms-win-crt-string-l1-1-0.dll",
+                                                            "kernel32.dll",
+                                                            "msvcp140.dll",
+                                                            "qt6core.dll",
+                                                            "qt6widgets.dll",
+                                                            "uibase.dll",
+                                                            "vcruntime140.dll",
+                                                            "vcruntime140_1.dll"
+                                                        ],
+                                         "interfaces":  [
+                                                            "com.tannin.ModOrganizer.Plugin/2.0",
+                                                            "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                            "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
+                                                        ]
+                                     },
+    "plugins/installer_fomod.dll":  {
+                                        "dependents":  [
+                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                           "api-ms-win-crt-locale-l1-1-0.dll",
+                                                           "api-ms-win-crt-math-l1-1-0.dll",
+                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                           "api-ms-win-crt-string-l1-1-0.dll",
+                                                           "kernel32.dll",
+                                                           "msvcp140.dll",
+                                                           "qt6core.dll",
+                                                           "qt6gui.dll",
+                                                           "qt6widgets.dll",
+                                                           "shell32.dll",
+                                                           "uibase.dll",
+                                                           "vcruntime140.dll",
+                                                           "vcruntime140_1.dll"
+                                                       ],
+                                        "interfaces":  [
+                                                           "com.tannin.ModOrganizer.Plugin/2.0",
+                                                           "com.tannin.ModOrganizer.PluginDiagnose/1.1",
+                                                           "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                           "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
+                                                       ]
+                                    },
+    "plugins/installer_fomod_csharp.dll":  {
+                                               "dependents":  [
+                                                                  "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                  "api-ms-win-crt-math-l1-1-0.dll",
+                                                                  "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                  "api-ms-win-crt-string-l1-1-0.dll",
+                                                                  "kernel32.dll",
+                                                                  "mscoree.dll",
+                                                                  "msvcp140.dll",
+                                                                  "qt6core.dll",
+                                                                  "qt6widgets.dll",
+                                                                  "uibase.dll",
+                                                                  "vcruntime140.dll"
+                                                              ],
+                                               "interfaces":  [
+                                                                  "com.tannin.ModOrganizer.Plugin/2.0",
+                                                                  "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                                  "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
+                                                              ]
+                                           },
+    "plugins/installer_manual.dll":  {
+                                         "dependents":  [
+                                                            "api-ms-win-crt-heap-l1-1-0.dll",
+                                                            "api-ms-win-crt-locale-l1-1-0.dll",
+                                                            "api-ms-win-crt-math-l1-1-0.dll",
+                                                            "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                            "api-ms-win-crt-string-l1-1-0.dll",
+                                                            "kernel32.dll",
+                                                            "msvcp140.dll",
+                                                            "qt6core.dll",
+                                                            "qt6gui.dll",
+                                                            "qt6widgets.dll",
+                                                            "shell32.dll",
+                                                            "uibase.dll",
+                                                            "vcruntime140.dll",
+                                                            "vcruntime140_1.dll"
+                                                        ],
+                                         "interfaces":  [
+                                                            "com.tannin.ModOrganizer.Plugin/2.0",
+                                                            "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                            "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
+                                                        ]
+                                     },
+    "plugins/installer_quick.dll":  {
+                                        "dependents":  [
+                                                           "api-ms-win-crt-heap-l1-1-0.dll",
+                                                           "api-ms-win-crt-locale-l1-1-0.dll",
+                                                           "api-ms-win-crt-math-l1-1-0.dll",
+                                                           "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                           "api-ms-win-crt-string-l1-1-0.dll",
+                                                           "kernel32.dll",
+                                                           "msvcp140.dll",
+                                                           "qt6core.dll",
+                                                           "qt6gui.dll",
+                                                           "qt6widgets.dll",
+                                                           "uibase.dll",
+                                                           "vcruntime140.dll",
+                                                           "vcruntime140_1.dll"
+                                                       ],
+                                        "interfaces":  [
+                                                           "com.tannin.ModOrganizer.Plugin/2.0",
+                                                           "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                           "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
+                                                       ]
+                                    },
+    "plugins/bsa_extractor.dll":  {
+                                      "dependents":  [
+                                                         "api-ms-win-crt-filesystem-l1-1-0.dll",
+                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                         "api-ms-win-crt-locale-l1-1-0.dll",
+                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                         "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                         "kernel32.dll",
+                                                         "liblz4.dll",
+                                                         "msvcp140.dll",
+                                                         "qt6core.dll",
+                                                         "qt6widgets.dll",
+                                                         "uibase.dll",
+                                                         "vcruntime140.dll",
+                                                         "vcruntime140_1.dll"
+                                                     ],
+                                      "interfaces":  [
+                                                         "com.tannin.ModOrganizer.Plugin/2.0"
+                                                     ]
+                                  },
+    "plugins/bsa_packer.dll":  {
+                                   "dependents":  [
+                                                      "api-ms-win-crt-filesystem-l1-1-0.dll",
+                                                      "api-ms-win-crt-heap-l1-1-0.dll",
+                                                      "api-ms-win-crt-locale-l1-1-0.dll",
+                                                      "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                      "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                      "api-ms-win-crt-string-l1-1-0.dll",
+                                                      "kernel32.dll",
+                                                      "libbsarch.dll",
+                                                      "msvcp140.dll",
+                                                      "qt6concurrent.dll",
+                                                      "qt6core.dll",
+                                                      "qt6gui.dll",
+                                                      "qt6widgets.dll",
+                                                      "uibase.dll",
+                                                      "vcruntime140.dll",
+                                                      "vcruntime140_1.dll"
+                                                  ],
+                                   "interfaces":  [
+                                                      "com.tannin.ModOrganizer.Plugin/2.0",
+                                                      "com.tannin.ModOrganizer.PluginTool/1.0"
+                                                  ]
+                               },
+    "plugins/preview_base.dll":  {
+                                     "dependents":  [
+                                                        "api-ms-win-crt-heap-l1-1-0.dll",
+                                                        "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                        "api-ms-win-crt-string-l1-1-0.dll",
+                                                        "kernel32.dll",
+                                                        "msvcp140.dll",
+                                                        "qt6core.dll",
+                                                        "qt6gui.dll",
+                                                        "qt6widgets.dll",
+                                                        "uibase.dll",
+                                                        "vcruntime140.dll",
+                                                        "vcruntime140_1.dll"
+                                                    ],
+                                     "interfaces":  [
+                                                        "com.tannin.ModOrganizer.Plugin/2.0",
+                                                        "com.tannin.ModOrganizer.PluginPreview/1.0"
+                                                    ]
+                                 },
+    "plugins/preview_bsa.dll":  {
+                                    "dependents":  [
+                                                       "api-ms-win-crt-filesystem-l1-1-0.dll",
+                                                       "api-ms-win-crt-heap-l1-1-0.dll",
+                                                       "api-ms-win-crt-locale-l1-1-0.dll",
+                                                       "api-ms-win-crt-math-l1-1-0.dll",
+                                                       "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                       "api-ms-win-crt-stdio-l1-1-0.dll",
+                                                       "api-ms-win-crt-string-l1-1-0.dll",
+                                                       "kernel32.dll",
+                                                       "msvcp140.dll",
+                                                       "qt6core.dll",
+                                                       "qt6gui.dll",
+                                                       "qt6widgets.dll",
+                                                       "uibase.dll",
+                                                       "vcruntime140.dll",
+                                                       "vcruntime140_1.dll"
+                                                   ],
+                                    "interfaces":  [
+                                                       "com.tannin.ModOrganizer.Plugin/2.0",
+                                                       "com.tannin.ModOrganizer.PluginPreview/1.0"
+                                                   ]
+                                },
+    "plugins/diagnose_basic.dll":  {
+                                       "dependents":  [
+                                                          "api-ms-win-crt-heap-l1-1-0.dll",
+                                                          "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                          "api-ms-win-crt-string-l1-1-0.dll",
+                                                          "kernel32.dll",
+                                                          "msvcp140.dll",
+                                                          "qt6core.dll",
+                                                          "qt6widgets.dll",
+                                                          "uibase.dll",
+                                                          "vcruntime140.dll",
+                                                          "vcruntime140_1.dll"
+                                                      ],
+                                       "interfaces":  [
+                                                          "com.tannin.ModOrganizer.Plugin/2.0",
+                                                          "com.tannin.ModOrganizer.PluginDiagnose/1.1"
+                                                      ]
+                                   },
+    "plugins/check_fnis.dll":  {
+                                   "dependents":  [
+                                                      "api-ms-win-crt-heap-l1-1-0.dll",
+                                                      "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                      "api-ms-win-crt-string-l1-1-0.dll",
+                                                      "kernel32.dll",
+                                                      "msvcp140.dll",
+                                                      "qt6core.dll",
+                                                      "qt6widgets.dll",
+                                                      "uibase.dll",
+                                                      "vcruntime140.dll",
+                                                      "vcruntime140_1.dll"
+                                                  ],
+                                   "interfaces":  [
+                                                      "com.tannin.ModOrganizer.Plugin/2.0"
+                                                  ]
+                               },
+    "plugins/inieditor.dll":  {
+                                  "dependents":  [
+                                                     "api-ms-win-crt-heap-l1-1-0.dll",
+                                                     "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                     "api-ms-win-crt-string-l1-1-0.dll",
+                                                     "kernel32.dll",
+                                                     "qt6core.dll",
+                                                     "qt6gui.dll",
+                                                     "qt6widgets.dll",
+                                                     "shell32.dll",
+                                                     "uibase.dll",
+                                                     "vcruntime140.dll",
+                                                     "vcruntime140_1.dll"
+                                                 ],
+                                  "interfaces":  [
+                                                     "com.tannin.ModOrganizer.Plugin/2.0",
+                                                     "com.tannin.ModOrganizer.PluginTool/1.0"
+                                                 ]
+                              },
+    "plugins/inibakery.dll":  {
+                                  "dependents":  [
+                                                     "api-ms-win-crt-heap-l1-1-0.dll",
+                                                     "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                     "api-ms-win-crt-string-l1-1-0.dll",
+                                                     "kernel32.dll",
+                                                     "msvcp140.dll",
+                                                     "qt6core.dll",
+                                                     "uibase.dll",
+                                                     "vcruntime140.dll",
+                                                     "vcruntime140_1.dll"
+                                                 ],
+                                  "interfaces":  [
+                                                     "com.tannin.ModOrganizer.Plugin/2.0",
+                                                     "com.tannin.ModOrganizer.PluginFileMapper/2.0"
+                                                 ]
+                              },
+    "plugins/installer_omod/installer_omod.dll":  {
+                                                      "dependents":  [
+                                                                         "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                         "api-ms-win-crt-math-l1-1-0.dll",
+                                                                         "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                         "api-ms-win-crt-string-l1-1-0.dll",
+                                                                         "kernel32.dll",
+                                                                         "mscoree.dll",
+                                                                         "msvcp140.dll",
+                                                                         "qt6core.dll",
+                                                                         "qt6gui.dll",
+                                                                         "qt6widgets.dll",
+                                                                         "uibase.dll",
+                                                                         "vcruntime140.dll"
+                                                                     ],
+                                                      "interfaces":  [
+                                                                         "com.tannin.ModOrganizer.Plugin/2.0",
+                                                                         "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                                         "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                                         "com.tannin.ModOrganizer.PluginInstallerCustom/1.0"
+                                                                     ]
+                                                  },
+    "plugins/plugin_python/plugin_python.dll":  {
+                                                    "dependents":  [
+                                                                       "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                       "api-ms-win-crt-locale-l1-1-0.dll",
+                                                                       "api-ms-win-crt-math-l1-1-0.dll",
+                                                                       "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                       "api-ms-win-crt-string-l1-1-0.dll",
+                                                                       "kernel32.dll",
+                                                                       "msvcp140.dll",
+                                                                       "qt6core.dll",
+                                                                       "qt6widgets.dll",
+                                                                       "runner.dll",
+                                                                       "uibase.dll",
+                                                                       "vcruntime140.dll",
+                                                                       "vcruntime140_1.dll"
+                                                                   ],
+                                                    "interfaces":  [
+                                                                       "com.tannin.ModOrganizer.Plugin/2.0",
+                                                                       "com.tannin.ModOrganizer.PluginDiagnose/1.1",
+                                                                       "com.tannin.ModOrganizer.PluginProxy/1.0"
+                                                                   ]
+                                                },
+    "plugins/plugin_python/dlls/runner.dll":  {
+                                                  "dependents":  [
+                                                                     "api-ms-win-crt-environment-l1-1-0.dll",
+                                                                     "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                     "api-ms-win-crt-locale-l1-1-0.dll",
+                                                                     "api-ms-win-crt-math-l1-1-0.dll",
+                                                                     "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                     "api-ms-win-crt-string-l1-1-0.dll",
+                                                                     "kernel32.dll",
+                                                                     "msvcp140.dll",
+                                                                     "python312.dll",
+                                                                     "qt6core.dll",
+                                                                     "uibase.dll",
+                                                                     "vcruntime140.dll",
+                                                                     "vcruntime140_1.dll"
+                                                                 ],
+                                                  "interfaces":  [
+
+                                                                 ]
+                                              },
+    "plugins/plugin_python/libs/mobase.cp312-win_amd64.pyd":  {
+                                                                  "dependents":  [
+                                                                                     "api-ms-win-crt-heap-l1-1-0.dll",
+                                                                                     "api-ms-win-crt-locale-l1-1-0.dll",
+                                                                                     "api-ms-win-crt-math-l1-1-0.dll",
+                                                                                     "api-ms-win-crt-runtime-l1-1-0.dll",
+                                                                                     "api-ms-win-crt-string-l1-1-0.dll",
+                                                                                     "kernel32.dll",
+                                                                                     "msvcp140.dll",
+                                                                                     "python312.dll",
+                                                                                     "qt6core.dll",
+                                                                                     "qt6gui.dll",
+                                                                                     "qt6widgets.dll",
+                                                                                     "uibase.dll",
+                                                                                     "vcruntime140.dll",
+                                                                                     "vcruntime140_1.dll"
+                                                                                 ],
+                                                                  "interfaces":  [
+                                                                                     "com.tannin.ModOrganizer.Plugin/2.0",
+                                                                                     "com.tannin.ModOrganizer.PluginDiagnose/1.1",
+                                                                                     "com.tannin.ModOrganizer.PluginFileMapper/2.0",
+                                                                                     "com.tannin.ModOrganizer.PluginGame/2.0",
+                                                                                     "com.tannin.ModOrganizer.PluginInstaller/1.0",
+                                                                                     "com.tannin.ModOrganizer.PluginInstallerCustom/1.0",
+                                                                                     "com.tannin.ModOrganizer.PluginInstallerSimple/1.0",
+                                                                                     "com.tannin.ModOrganizer.PluginModPage/1.0",
+                                                                                     "com.tannin.ModOrganizer.PluginPreview/1.0",
+                                                                                     "com.tannin.ModOrganizer.PluginTool/1.0"
+                                                                                 ]
+                                                              }
+}

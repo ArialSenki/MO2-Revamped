@@ -15,7 +15,11 @@ mo2_required_variable(NAME CMAKE_INSTALL_PREFIX TYPE PATH)
 get_filename_component(MO2_BUILD_PATH "${CMAKE_CURRENT_LIST_DIR}/../.." REALPATH)
 get_filename_component(MO2_SUPER_PATH "${MO2_BUILD_PATH}/modorganizer_super" REALPATH)
 get_filename_component(MO2_UIBASE_PATH "${MO2_SUPER_PATH}/uibase" REALPATH)
-get_filename_component(MO2_INSTALL_PATH "${MO2_SUPER_PATH}/../../install" REALPATH)
+# MO2 Revamped: the sources live in the repository, so the install tree (the
+# runtime layout plus the import libraries) can be given from outside it
+if (NOT MO2_INSTALL_PATH)
+	get_filename_component(MO2_INSTALL_PATH "${MO2_SUPER_PATH}/../../install" REALPATH)
+endif()
 get_filename_component(MO2_INSTALL_LIBS_PATH "${MO2_INSTALL_PATH}/libs" REALPATH)
 
 list(APPEND CMAKE_PREFIX_PATH
