@@ -5913,6 +5913,10 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
       <source>Use this theme</source>
       <translation>Usar este tema</translation>
     </message>
+    <message>
+      <source>You need to select an instance before trying to download mods.</source>
+      <translation>Tienes que elegir una instancia antes de descargar mods.</translation>
+    </message>
   </context>
   <context>
     <name>MainWindow</name>

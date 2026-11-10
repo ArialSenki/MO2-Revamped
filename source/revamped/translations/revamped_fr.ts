@@ -5952,6 +5952,10 @@ Elles continueront à chercher dans l'ancien dossier sans rien trouver tant que 
       <source>Use this theme</source>
       <translation>Utiliser ce thème</translation>
     </message>
+    <message>
+      <source>You need to select an instance before trying to download mods.</source>
+      <translation>Vous devez choisir une instance avant de télécharger des mods.</translation>
+    </message>
   </context>
   <context>
     <name>MainWindow</name>

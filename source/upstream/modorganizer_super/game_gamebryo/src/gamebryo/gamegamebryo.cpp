@@ -250,8 +250,23 @@ QString GameGamebryo::myGamesPath() const
 
 /*static*/ QString GameGamebryo::getLootPath()
 {
-  return findInRegistry(HKEY_LOCAL_MACHINE, L"Software\\LOOT", L"Installed Path") +
-         "/Loot.exe";
+  // MO2 Revamped: from MO2 c2b2597
+  auto result = findInRegistry(
+      HKEY_CURRENT_USER,
+      L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{BF634210-A0D4-443F-"
+      "A657-0DCE38040374}_is1",
+      L"InstallLocation");
+
+  if (result.isEmpty())
+    result = findInRegistry(
+        HKEY_LOCAL_MACHINE,
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{BF634210-A0D4-443F-"
+        "A657-0DCE38040374}_is1",
+        L"InstallLocation");
+
+  if (result.isEmpty())
+    result = findInRegistry(HKEY_LOCAL_MACHINE, L"Software\\LOOT", L"Installed Path");
+  return result + "/Loot.exe";
 }
 
 QString GameGamebryo::localAppFolder()

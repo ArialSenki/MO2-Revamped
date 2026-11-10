@@ -59,6 +59,35 @@
 - The window no longer waits for Overwrite's files and the saves folder to be
   counted: the dashboard reads them in the background.
 
+### Fixes from later Mod Organizer 2 versions
+
+Brought in from MO2's own repositories, where they were fixed after 2.5.2:
+
+- MO2 no longer crashes when an nxm link or another command arrives before an
+  instance is chosen, or when it was started from another folder (as the nxm
+  handler does).
+- Text files in UTF-16 without a byte order mark open correctly, and a file
+  that had a byte order mark keeps it when saved.
+- Conflicts between hidden files (.mohidden) no longer count, and mods' content
+  icons from more than one game feature match their contents again.
+- Refreshing the mod list asks the game plugin for the load order once instead
+  of once per mod.
+- Skyrim SE accepts LightPlacer, PBR, Pandora and main menu folders as valid
+  mod contents, Skyrim VR LightPlacer, and New Vegas Devkit. New Vegas and Tale
+  of Two Wastelands use the right Steam app ID for the Polish, Czech and Russian
+  edition, Fallout 4 VR uses ESL plugins when its ESL support is installed, and
+  Oblivion reads saves without a screenshot.
+- Nehrim's script extender and plugins.txt pointed at "Oblvion"; LOOT is found
+  where its current installer puts it; Starfield copies its INI files only when
+  a profile has its own INI files.
+- LOOT respects "don't update the masterlist", and says so when it can't sort.
+  Quick Install leaves a correct archive alone, BSA Packer names archives with
+  dots correctly, and the BSA preview no longer leaks memory.
+- Games without their own plugin: square brackets in MO2's folder path, broken
+  Epic or EA Desktop data, and fixes for Cyberpunk 2077, Valheim, Subnautica,
+  Darkest Dungeon, No Man's Sky, Blade & Sorcery, Mount & Blade II, The Witcher 3,
+  Stardew Valley, NieR:Automata and Final Fantasy VII Remake.
+
 ### Interface
 
 - The keyboard focus ring only appears after a real press of Tab, not on a window's

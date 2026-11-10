@@ -5869,6 +5869,10 @@ Elas continuarão procurando na pasta antiga e não encontrarão nada até que o
       <source>Use this theme</source>
       <translation>Usar este tema</translation>
     </message>
+    <message>
+      <source>You need to select an instance before trying to download mods.</source>
+      <translation>Você precisa escolher uma instância antes de baixar mods.</translation>
+    </message>
   </context>
   <context>
     <name>MainWindow</name>

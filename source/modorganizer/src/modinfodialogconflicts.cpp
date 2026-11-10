@@ -15,9 +15,42 @@
 #include "utility.h"
 #include <dataarchives.h>
 #include <QIcon>
+#include <map>
 
 using namespace MOShared;
 using namespace MOBase;
+
+namespace
+{
+
+// from MO2 a823d2a (#2148): conflicts between hidden files are ignored
+bool isHiddenName(const std::wstring& name)
+{
+  return QString::fromStdWString(name).endsWith(ModInfo::s_HiddenExt,
+                                                Qt::CaseInsensitive);
+}
+
+// whether the directory or one of its parents is hidden; results are cached
+// per directory
+bool isHiddenDirectory(const DirectoryEntry* dir,
+                       std::map<const DirectoryEntry*, bool>& checkedDirs)
+{
+  if (dir == nullptr) {
+    return false;
+  }
+
+  if (auto itor = checkedDirs.find(dir); itor != checkedDirs.end()) {
+    return itor->second;
+  }
+
+  const bool hidden =
+      isHiddenName(dir->getName()) || isHiddenDirectory(dir->getParent(), checkedDirs);
+
+  checkedDirs.emplace(dir, hidden);
+  return hidden;
+}
+
+}  // namespace
 
 // if there are more than 50 selected items in the conflict tree, don't bother
 // checking whether menu items apply to them, just show all of them
@@ -716,8 +749,15 @@ bool GeneralConflictsTab::update()
 
   if (m_tab->origin() != nullptr) {
     const auto rootPath = m_tab->mod().absolutePath();
+    std::map<const DirectoryEntry*, bool> checkedDirs;
 
     for (const auto& file : m_tab->origin()->getFiles()) {
+      // from MO2 a823d2a (#2148): skip hidden file conflicts
+      if (isHiddenName(file->getName()) ||
+          isHiddenDirectory(file->getParent(), checkedDirs)) {
+        continue;
+      }
+
       // careful: these two strings are moved into createXItem() below
       QString relativeName =
           QDir::fromNativeSeparators(ToQString(file->getRelativePath()));
@@ -992,8 +1032,15 @@ void AdvancedConflictsTab::update()
 
     const auto& files = m_tab->origin()->getFiles();
     m_model->reserve(files.size());
+    std::map<const DirectoryEntry*, bool> checkedDirs;
 
     for (const auto& file : files) {
+      // from MO2 a823d2a (#2148): skip hidden file conflicts
+      if (isHiddenName(file->getName()) ||
+          isHiddenDirectory(file->getParent(), checkedDirs)) {
+        continue;
+      }
+
       // careful: these two strings are moved into createItem() below
       QString relativeName =
           QDir::fromNativeSeparators(ToQString(file->getRelativePath()));

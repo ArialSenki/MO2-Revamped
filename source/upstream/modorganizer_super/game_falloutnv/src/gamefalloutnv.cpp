@@ -245,7 +245,15 @@ GameFalloutNV::makeSaveGame(QString filePath) const
 
 QString GameFalloutNV::steamAPPId() const
 {
-  return "22380";
+  // MO2 Revamped: from MO2 8d663d5
+  if (selectedVariant() == "Steam") {
+    if (m_GamePath.endsWith("enplczru")) {
+      return "22490";
+    } else {
+      return "22380";
+    }
+  }
+  return QString();
 }
 
 QStringList GameFalloutNV::primaryPlugins() const

@@ -10,7 +10,7 @@ using namespace MOBase;
 
 TextEditor::TextEditor(QWidget* parent)
     : QPlainTextEdit(parent), m_toolbar(nullptr), m_lineNumbers(nullptr),
-      m_highlighter(nullptr), m_dirty(false), m_loading(false)
+      m_highlighter(nullptr), m_needsBOM(false), m_dirty(false), m_loading(false)
 {
   m_toolbar     = new TextEditorToolbar(*this);
   m_lineNumbers = new TextEditorLineNumbers(*this);
@@ -70,6 +70,7 @@ void TextEditor::clear()
 
   m_filename.clear();
   m_encoding.clear();
+  m_needsBOM = false;
   setPlainText("");
   dirty(false);
   document()->setModified(false);
@@ -86,6 +87,16 @@ bool TextEditor::load(const QString& filename)
   m_filename = filename;
 
   const QString s = MOBase::readFileText(filename, &m_encoding);
+
+  // from MO2 62ccbb1 (#2213): keep the byte order mark the file had when saving
+  {
+    QFile file(filename);
+    if (file.open(QIODevice::ReadOnly)) {
+      const QByteArray head = file.read(3);
+      m_needsBOM = head.startsWith("\xEF\xBB\xBF") || head.startsWith("\xFF\xFE") ||
+                   head.startsWith("\xFE\xFF");
+    }
+  }
 
   setPlainText(s);
   document()->setModified(false);
@@ -108,7 +119,7 @@ bool TextEditor::save()
   }
 
   // the encoding is empty when the file couldn't be read
-  auto codec = QStringConverter::encodingForName(m_encoding.toLocal8Bit());
+  auto codec = QStringConverter::encodingForName(m_encoding.toUtf8());
   if (!codec.has_value()) {
     MOBase::reportError(
         tr("Could not save \"%1\": the file could not be read when it was opened.")
@@ -117,7 +128,11 @@ bool TextEditor::save()
   }
 
   QFile file(m_filename);
-  QStringEncoder encoder(codec.value());
+  QStringConverter::Flags flags = QStringConverter::Flag::Default;
+  if (m_needsBOM) {
+    flags |= QStringConverter::Flag::WriteBom;
+  }
+  QStringEncoder encoder(codec.value(), flags);
 
   QString data           = toPlainText().replace("\n", "\r\n");
   const QByteArray bytes = encoder.encode(data);

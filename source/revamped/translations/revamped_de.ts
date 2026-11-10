@@ -5877,6 +5877,10 @@ Sie suchen weiter im alten Ordner und finden nichts, bis ihre Pfade geändert we
       <source>Use this theme</source>
       <translation>Dieses Design verwenden</translation>
     </message>
+    <message>
+      <source>You need to select an instance before trying to download mods.</source>
+      <translation>Wähle eine Instanz aus, bevor du Mods herunterlädst.</translation>
+    </message>
   </context>
   <context>
     <name>MainWindow</name>

@@ -38,7 +38,9 @@ protected:
                               "config",
                               "KEYWORDS",
                               "BaseObjectSwapper",
-                              "RaceMenuPresets"};
+                              "RaceMenuPresets",
+                              // MO2 Revamped: from MO2 c0318ee
+                              "Devkit"};
     return result;
   }
   virtual const FileNameSet& possibleFileExtensions() const override

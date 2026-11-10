@@ -15,6 +15,23 @@ namespace cl
 
 using namespace MOBase;
 
+// working directory MO was started in; MOApplication changes it to the
+// application directory (from MO2 f80ad04, #2379), so relative paths given to
+// `run` are resolved against this instead
+namespace
+{
+QString g_startupDirectory;
+
+QString resolveStartupPath(const QString& path)
+{
+  if (path.isEmpty() || !QFileInfo(path).isRelative() || g_startupDirectory.isEmpty()) {
+    return path;
+  }
+
+  return QDir(g_startupDirectory).absoluteFilePath(path);
+}
+}  // namespace
+
 std::string pad_right(std::string s, std::size_t n, char c = ' ')
 {
   if (s.size() < n)
@@ -56,6 +73,11 @@ CommandLine::CommandLine() : m_command(nullptr)
 
 std::optional<int> CommandLine::process(const std::wstring& line)
 {
+  if (g_startupDirectory.isEmpty()) {
+    // first call is at startup, before the working directory is changed
+    g_startupDirectory = QDir::currentPath();
+  }
+
   try {
     auto args = po::split_winmain(line);
     if (!args.empty()) {
@@ -749,7 +771,7 @@ std::optional<int> RunCommand::runPostOrganizer(OrganizerCore& core)
 
       p.setFromExecutable(*itor);
     } else {
-      p.setFromFile(nullptr, QFileInfo(program));
+      p.setFromFile(nullptr, QFileInfo(resolveStartupPath(program)));
     }
 
     if (vm().count("arguments")) {
@@ -757,7 +779,8 @@ std::optional<int> RunCommand::runPostOrganizer(OrganizerCore& core)
     }
 
     if (vm().count("cwd")) {
-      p.setCurrentDirectory(QString::fromStdString(vm()["cwd"].as<std::string>()));
+      p.setCurrentDirectory(
+          resolveStartupPath(QString::fromStdString(vm()["cwd"].as<std::string>())));
     }
 
     p.setWaitForCompletion(ProcessRunner::ForCommandLine, UILocker::PreventExit);

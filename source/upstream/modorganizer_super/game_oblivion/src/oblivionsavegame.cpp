@@ -64,9 +64,12 @@ std::unique_ptr<GamebryoSaveGame::DataFields> OblivionSaveGame::fetchDataFields(
 
   // Note that screenshot size, width, height and data are apparently the same
   // structure
-  file.skip<unsigned long>();  // Screenshot size.
-
-  fields->Screenshot = file.readImage();
+  // MO2 Revamped: from MO2 8d46470
+  unsigned long imageSize;
+  file.read(imageSize);  // Screenshot size.
+  if (imageSize > 0) {
+    fields->Screenshot = file.readImage();
+  }
 
   fields->Plugins = file.readPlugins();
 

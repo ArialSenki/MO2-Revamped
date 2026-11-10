@@ -11,14 +11,15 @@ public:
 protected:
   virtual const FileNameSet& possibleFolderNames() const override
   {
+    // MO2 Revamped: from MO2 3b399e0
     static FileNameSet result{
-        "fonts",     "interface",     "menus",         "meshes",
-        "music",     "scripts",       "shaders",       "sound",
-        "strings",   "textures",      "trees",         "video",
-        "facegen",   "materials",     "skse",          "distantlod",
-        "asi",       "Tools",         "MCM",           "distantland",
-        "mits",      "dllplugins",    "CalienteTools", "NetScriptFramework",
-        "shadersfx", "Nemesis_Engine"};
+        "fonts",     "interface",      "menus",         "meshes",
+        "music",     "scripts",        "shaders",       "sound",
+        "strings",   "textures",       "trees",         "video",
+        "facegen",   "materials",      "skse",          "distantlod",
+        "asi",       "Tools",          "MCM",           "distantland",
+        "mits",      "dllplugins",     "CalienteTools", "NetScriptFramework",
+        "shadersfx", "Nemesis_Engine", "LightPlacer"};
     return result;
   }
   virtual const FileNameSet& possibleFileExtensions() const override

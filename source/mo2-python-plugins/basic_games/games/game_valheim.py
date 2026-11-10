@@ -289,7 +289,7 @@ class ValheimWorldSaveGame(ValheimSaveGame):
 class ValheimGame(BasicGame):
     Name = "Valheim Support Plugin"
     Author = "Zash"
-    Version = "1.2.1"
+    Version = "1.2.2"
 
     GameName = "Valheim"
     GameShortName = "valheim"
@@ -317,6 +317,8 @@ class ValheimGame(BasicGame):
                         "BepInEx",
                         "doorstop_libs",
                         "unstripped_corlib",
+                        # MO2 Revamped: from MO2 d29425c
+                        ".doorstop_version",
                         "doorstop_config.ini",
                         "start_game_bepinex.sh",
                         "start_server_bepinex.sh",
@@ -348,6 +350,8 @@ class ValheimGame(BasicGame):
                         "Jotunn": "BepInEx/plugins/",
                         "*.dll": "BepInEx/plugins/",
                         "*.xml": "BepInEx/plugins/",
+                        # MO2 Revamped: from MO2 a581e28
+                        "Translations": "BepInEx/plugins/",
                         "config": "BepInEx/",
                         "*.cfg": "BepInEx/config/",
                         #
@@ -362,7 +366,8 @@ class ValheimGame(BasicGame):
                 )
             )
         )
-        self._register_feature(BasicLocalSavegames(self.savesDirectory()))
+        # MO2 Revamped: from MO2 cc5c3f2
+        self._register_feature(BasicLocalSavegames(self))
         self._overwrite_sync = OverwriteSync(organizer=self._organizer, game=self)
         self._register_event_handler()
         return True

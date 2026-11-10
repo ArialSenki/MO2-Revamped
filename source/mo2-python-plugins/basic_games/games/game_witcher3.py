@@ -21,11 +21,14 @@ class Witcher3Game(BasicGame):
 
     GameName = "The Witcher 3: Wild Hunt"
     GameShortName = "witcher3"
-    GaneNexusHame = "witcher3"
+    GameNexusName = "witcher3"  # MO2 Revamped: the same typo as MO2 7ce47dd fixed in nierautomata
     GameNexusId = 952
     GameSteamId = [499450, 292030]
     GameGogId = [1640424747, 1495134320, 1207664663, 1207664643]
     GameBinary = "bin/x64/witcher3.exe"
+    # MO2 Revamped: from MO2 f1207d6
+    # Next-gen installs may ship only the DX12 build (no bin/x64).
+    _DX12_BINARY = "bin/x64_dx12/witcher3.exe"
     GameDataPath = "Mods"
     GameSaveExtension = "sav"
     GameDocumentsDirectory = "%DOCUMENTS%/The Witcher 3"
@@ -39,6 +42,16 @@ class Witcher3Game(BasicGame):
         super().init(organizer)
         self._register_feature(BasicGameSaveGameInfo(lambda s: s.with_suffix(".png")))
         return True
+
+    # MO2 Revamped: from MO2 f1207d6
+    def binaryName(self) -> str:
+        game_dir = self.gameDirectory()
+        if not game_dir.exists(self.GameBinary) and game_dir.exists(self._DX12_BINARY):
+            return self._DX12_BINARY
+        return super().binaryName()
+
+    def looksValid(self, directory: QDir):
+        return directory.exists(self.GameBinary) or directory.exists(self._DX12_BINARY)
 
     def iniFiles(self):
         return ["user.settings", "input.settings"]

@@ -18,6 +18,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include <optional>
 #include "utility.h"
 #include "log.h"
 #include "report.h"
@@ -859,20 +860,64 @@ QString readFileText(const QString& fileName, QString* encoding)
   return decodeTextData(buffer, encoding);
 }
 
+// UTF-16 without a BOM: an even length and, as ASCII text's high bytes are
+// zero, nearly all of its NULs on one side. A UTF-8 file with a stray NUL
+// (padding left by a crash) has neither and stays UTF-8 (MO2 Revamped)
+static std::optional<QStringConverter::Encoding> utf16WithoutBom(const QByteArray& data)
+{
+  if (data.size() < 2 || data.size() % 2 != 0) {
+    return std::nullopt;
+  }
+  qsizetype evenNulls = 0;
+  qsizetype oddNulls  = 0;
+  for (qsizetype i = 0; i < data.size(); ++i) {
+    if (data[i] == '\0') {
+      ++((i % 2 == 0) ? evenNulls : oddNulls);
+    }
+  }
+  const qsizetype units = data.size() / 2;
+  if (oddNulls >= units / 4 && evenNulls <= oddNulls / 20) {
+    return QStringConverter::Encoding::Utf16LE;
+  }
+  if (evenNulls >= units / 4 && oddNulls <= evenNulls / 20) {
+    return QStringConverter::Encoding::Utf16BE;
+  }
+  return std::nullopt;
+}
+
 QString decodeTextData(const QByteArray& fileData, QString* encoding)
 {
+  // from MO2 uibase e80028c (#166), without the hadBOM parameter
   QStringConverter::Encoding codec = QStringConverter::Encoding::Utf8;
   QStringEncoder encoder(codec);
-  QStringDecoder decoder(codec);
+  QStringDecoder decoder(codec, QStringConverter::Flag::ConvertInitialBom);
   QString text = decoder.decode(fileData);
+
+  // embedded nulls probably mean it was UTF-16 - they're rare/illegal in text files
+  bool hasEmbeddedNulls = false;
+  for (const auto& character : text) {
+    if (character.isNull()) {
+      hasEmbeddedNulls = true;
+      break;
+    }
+  }
+
+  // only a layout that looks like UTF-16 makes NULs mean UTF-16
+  const auto utf16 =
+      hasEmbeddedNulls ? utf16WithoutBom(fileData) : std::optional<QStringConverter::Encoding>();
 
   // check reverse conversion. If this was unicode text there can't be data loss
   // this assumes QString doesn't normalize the data in any way so this is a bit unsafe
-  if (encoder.encode(text) != fileData) {
+  if (utf16.has_value() || encoder.encode(text) != fileData) {
     log::debug("conversion failed assuming local encoding");
     auto codecSearch = QStringConverter::encodingForData(fileData);
     if (codecSearch.has_value()) {
       codec   = codecSearch.value();
+      decoder = QStringDecoder(codec, QStringConverter::Flag::ConvertInitialBom);
+    } else if (utf16.has_value()) {
+      // encodingForData doesn't handle UTF-16 without BOM; report it too, so a
+      // save writes UTF-16 back instead of UTF-8
+      codec   = utf16.value();
       decoder = QStringDecoder(codec);
     } else {
       decoder = QStringDecoder(QStringConverter::Encoding::System);
@@ -882,6 +927,10 @@ QString decodeTextData(const QByteArray& fileData, QString* encoding)
 
   if (encoding != nullptr) {
     *encoding = QStringConverter::nameForEncoding(codec);
+  }
+
+  if (!text.isEmpty() && text.startsWith(QChar::ByteOrderMark)) {
+    text.remove(0, 1);
   }
 
   return text;

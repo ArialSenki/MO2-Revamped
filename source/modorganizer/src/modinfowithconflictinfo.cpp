@@ -4,6 +4,7 @@
 #include "shared/filesorigin.h"
 #include "utility.h"
 #include <filesystem>
+#include <map>
 
 #include "iplugingame.h"
 #include "moddatachecker.h"
@@ -13,6 +14,38 @@
 using namespace MOBase;
 using namespace MOShared;
 namespace fs = std::filesystem;
+
+namespace
+{
+
+// from MO2 a823d2a (#2148): conflicts between hidden files are ignored
+bool isHiddenName(const std::wstring& name)
+{
+  return QString::fromStdWString(name).endsWith(ModInfo::s_HiddenExt,
+                                                Qt::CaseInsensitive);
+}
+
+// whether the directory or one of its parents is hidden; results are cached
+// per directory
+bool isHiddenDirectory(const DirectoryEntry* dir,
+                       std::map<const DirectoryEntry*, bool>& checkedDirs)
+{
+  if (dir == nullptr) {
+    return false;
+  }
+
+  if (auto itor = checkedDirs.find(dir); itor != checkedDirs.end()) {
+    return itor->second;
+  }
+
+  const bool hidden =
+      isHiddenName(dir->getName()) || isHiddenDirectory(dir->getParent(), checkedDirs);
+
+  checkedDirs.emplace(dir, hidden);
+  return hidden;
+}
+
+}  // namespace
 
 ModInfoWithConflictInfo::ModInfoWithConflictInfo(OrganizerCore& core)
     : ModInfo(core), m_FileTree([this]() {
@@ -98,6 +131,7 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
 
   bool providesAnything = false;
   bool hasHiddenFiles   = false;
+  bool hasVisibleFiles  = false;
 
   std::vector<int> dataIDs;
   if (m_Core.directoryStructure()->originExists(L"data")) {
@@ -110,46 +144,25 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
     }
   }
 
-  std::wstring name          = ToWString(this->internalName());
-  const std::wstring hideExt = ToWString(ModInfo::s_HiddenExt);
+  std::wstring name = ToWString(this->internalName());
 
   if (m_Core.directoryStructure()->originExists(name)) {
     FilesOrigin& origin = m_Core.directoryStructure()->getOriginByName(name);
     std::vector<FileEntryPtr> files = origin.getFiles();
-    std::set<const DirectoryEntry*> checkedDirs;
+    std::map<const DirectoryEntry*, bool> checkedDirs;
 
     // for all files in this origin
     for (FileEntryPtr file : files) {
 
-      // skip hiidden file check if already found one
-      if (!hasHiddenFiles) {
-        const fs::path nameAsPath(file->getName());
-
-        if (nameAsPath.extension().wstring().compare(hideExt) == 0) {
-          hasHiddenFiles = true;
-        } else {
-          const DirectoryEntry* parent = file->getParent();
-
-          // iterate on all parent direEntries to check for .mohiddden
-          while (parent != nullptr) {
-            auto insertResult = checkedDirs.insert(parent);
-
-            if (insertResult.second == false) {
-              // if already present break as we can assume to have checked the parents
-              // as well
-              break;
-            } else {
-              const fs::path dirPath(parent->getName());
-              if (dirPath.extension().wstring().compare(hideExt) == 0) {
-                hasHiddenFiles = true;
-                break;
-              }
-              parent = parent->getParent();
-            }
-          }
-        }
+      // from MO2 a823d2a (#2148): hidden files, or files in a hidden folder,
+      // don't take part in conflicts
+      if (isHiddenName(file->getName()) ||
+          isHiddenDirectory(file->getParent(), checkedDirs)) {
+        hasHiddenFiles = true;
+        continue;
       }
 
+      hasVisibleFiles   = true;
       auto alternatives = file->getAlternatives();
       if ((alternatives.size() == 0) ||
           std::find(dataIDs.begin(), dataIDs.end(), alternatives.back().originID()) !=
@@ -223,7 +236,7 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
     }
 
     if (files.size() != 0) {
-      if (!providesAnything)
+      if (hasVisibleFiles && !providesAnything)
         conflicts.m_CurrentConflictState = CONFLICT_REDUNDANT;
       else if (!conflicts.m_OverwriteList.empty() &&
                !conflicts.m_OverwrittenList.empty())

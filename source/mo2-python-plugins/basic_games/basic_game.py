@@ -8,6 +8,7 @@ from typing import Callable, Generic, TypeVar
 import mobase
 from PyQt6.QtCore import QDir, QFileInfo, QStandardPaths
 from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QMessageBox  # MO2 Revamped: from MO2 9e30d7d
 
 from .basic_features.basic_save_game_info import (
     BasicGameSaveGame,
@@ -380,11 +381,23 @@ class BasicGame(mobase.IPluginGame):
         from .origin_utils import find_games as find_origin_games
         from .steam_utils import find_games as find_steam_games
 
+        # MO2 Revamped: from MO2 9e30d7d
+        errors: list[tuple[str, Exception]] = []
         BasicGame.steam_games = find_steam_games()
         BasicGame.gog_games = find_gog_games()
         BasicGame.origin_games = find_origin_games()
-        BasicGame.epic_games = find_epic_games()
-        BasicGame.eadesktop_games = find_eadesktop_games()
+        BasicGame.epic_games = find_epic_games(errors)
+        BasicGame.eadesktop_games = find_eadesktop_games(errors)
+
+        if errors:
+            QMessageBox.critical(
+                None,
+                "Errors loading game list",
+                (
+                    "The following errors occurred while loading the list of available games:\n"
+                    f"\n- {'\n\n- '.join('\n '.join(str(e) for e in messageError) for messageError in errors)}"
+                ),
+            )
 
     # File containing the plugin:
     _fromName: str
@@ -627,7 +640,8 @@ class BasicGame(mobase.IPluginGame):
                 self._mappings.steamAPPId.set_value(steamid)
         for gogid, gogpath in BasicGame.gog_games.items():
             if gogpath == path:
-                self._mappings.steamAPPId.set_value(gogid)
+                # MO2 Revamped: from MO2 c5d39b8
+                self._mappings.gogAPPId.set_value(gogid)
         for originid, originpath in BasicGame.origin_games.items():
             if originpath == path:
                 self._mappings.originManifestIds.set_value(originid)

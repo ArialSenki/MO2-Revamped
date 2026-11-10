@@ -655,6 +655,13 @@ MOApplication::MOApplication(int& argc, char** argv) : QApplication(argc, argv)
   m_defaultStyle = "windowsvista";
   updateStyle(m_defaultStyle);
   addDllsToPath();
+
+  // from MO2 f80ad04 (#2379)
+  // When MO2 is launched by nxmhandler, CWD is set to `C:\Windows\System32`.
+  // QtWebEngineProcess crashes if CWD is not set to the application directory.
+  // Relative paths given to the `run` command are resolved against the original
+  // directory, see commandline.cpp.
+  QDir::setCurrent(QCoreApplication::applicationDirPath());
 }
 
 OrganizerCore& MOApplication::core()
@@ -1018,6 +1025,18 @@ int MOApplication::run(MOMultiProcess& multiProcess)
 void MOApplication::externalMessage(const QString& message)
 {
   log::debug("received external message '{}'", message);
+
+  // from MO2 c44ee31 (#2144), f42a9f1 (#2154)
+  if (m_core == nullptr) {
+    // This can happen if MO2 is started with the --pick option and no instance has
+    // been selected yet.
+    if (isNxmLink(message)) {
+      reportError(tr("You need to select an instance before trying to download mods."));
+    } else {
+      log::warn("ignoring external message, no instance has been selected yet");
+    }
+    return;
+  }
 
   MOShortcut moshortcut(message);
 

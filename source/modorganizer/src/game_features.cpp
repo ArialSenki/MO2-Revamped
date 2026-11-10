@@ -1,6 +1,7 @@
 #include "game_features.h"
 
 #include <algorithm>
+#include <unordered_map>
 
 #include <QTimer>
 
@@ -82,8 +83,12 @@ public:
 };
 class GameFeatures::CombinedModDataContent : public ModDataContent
 {
-  // store the ModDataContent and the offset to add to the content
-  std::vector<std::pair<std::shared_ptr<ModDataContent>, int>> m_modDataContents;
+  // store the ModDataContent and the mapping from its content IDs to the index
+  // in m_allContents
+  //
+  // from MO2 b77b272 (#2278): plugins may use IDs that are not 0..n-1
+  std::vector<std::pair<std::shared_ptr<ModDataContent>, std::unordered_map<int, int>>>
+      m_modDataContents;
   std::vector<Content> m_allContents;
 
 public:
@@ -96,20 +101,22 @@ public:
 
     m_allContents.clear();
 
-    // update all contents and offsets
-    std::size_t offset = 0;
+    // update all contents
     for (auto& modDataContent : modDataContents) {
 
-      m_modDataContents.emplace_back(modDataContent, static_cast<int>(offset));
+      std::unordered_map<int, int> idMap;
 
-      // add to the list of contents
-      auto contents = modDataContent->getAllContents();
-      m_allContents.insert(m_allContents.end(),
-                           std::make_move_iterator(contents.begin()),
-                           std::make_move_iterator(contents.end()));
+      // extract contents for all ModDataContent, replacing ID with index in the list
+      // and keeping track of the ID/index with the mapping (required since
+      // getContentsFor returns ID, not index)
+      for (const auto& content : modDataContent->getAllContents()) {
+        const auto index    = static_cast<int>(m_allContents.size());
+        idMap[content.id()] = index;
+        m_allContents.emplace_back(index, content.name(), content.icon(),
+                                   content.isOnlyForFilter());
+      }
 
-      // increase offset for next mod data content
-      offset += contents.size();
+      m_modDataContents.emplace_back(modDataContent, std::move(idMap));
     }
   }
 
@@ -119,13 +126,14 @@ public:
   getContentsFor(std::shared_ptr<const MOBase::IFileTree> fileTree) const
   {
     std::vector<int> contentsFor;
-    for (auto& modDataContent : m_modDataContents) {
-      auto contentsForFrom = modDataContent.first->getContentsFor(fileTree);
-      std::transform(contentsForFrom.begin(), contentsForFrom.end(),
-                     std::back_inserter(contentsFor),
-                     [offset = modDataContent.second](auto content) {
-                       return content + offset;
-                     });
+    for (const auto& modDataContent : m_modDataContents) {
+      const auto& idMap = modDataContent.second;
+      for (auto content : modDataContent.first->getContentsFor(fileTree)) {
+        // skip IDs the plugin did not list in getAllContents()
+        if (auto it = idMap.find(content); it != idMap.end()) {
+          contentsFor.push_back(it->second);
+        }
+      }
     }
 
     return contentsFor;

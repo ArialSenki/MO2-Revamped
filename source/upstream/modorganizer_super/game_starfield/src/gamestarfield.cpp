@@ -202,6 +202,10 @@ void GameStarfield::initializeProfile(const QDir& path, ProfileSettings settings
 {
   if (settings.testFlag(IPluginGame::MODS)) {
     copyToProfile(localAppFolder() + "/Starfield", path, "plugins.txt");
+  }
+
+  // MO2 Revamped: from MO2 d7f0a9d
+  if (settings.testFlag(IPluginGame::CONFIGURATION)) {
     copyToProfile(myGamesPath(), path, "StarfieldPrefs.ini");
     copyToProfile(myGamesPath(), path, "StarfieldCustom.ini");
   }

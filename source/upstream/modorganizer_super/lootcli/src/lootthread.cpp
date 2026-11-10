@@ -734,12 +734,20 @@ int LOOTWorker::run()
       std::locale::global(gen(m_Language + ".UTF-8"));
     }
 
-    if (true) {
-      progress(Progress::CheckingMasterlistExistence);
-      if (!fs::exists(masterlistPath())) {
-        fs::create_directories(masterlistPath().parent_path());
+    // MO2 Revamped: from MO2 f747df4
+    progress(Progress::CheckingMasterlistExistence);
+    if (!fs::exists(masterlistPath())) {
+      if (!m_UpdateMasterlist) {
+        log(loot::LogLevel::error,
+            "Masterlist not found at: " + masterlistPath().string());
+        // MO2 Revamped: 1 like the other failures; FALSE is 0, which MO2 reads as
+        // a successful sort and then finds no report
+        return 1;
       }
+      fs::create_directories(masterlistPath().parent_path());
+    }
 
+    if (m_UpdateMasterlist) {
       progress(Progress::UpdatingMasterlist);
       std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
       std::wstring masterlistSource =
@@ -773,7 +781,7 @@ int LOOTWorker::run()
 
         log(loot::LogLevel::error,
             "Error downloading masterlist: " + converter.to_bytes(errorMessage));
-        return FALSE;
+        return 1;  // MO2 Revamped: see the missing masterlist above
       }
     }
 

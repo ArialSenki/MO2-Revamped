@@ -22,6 +22,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <QRegularExpression>
 #include <QVersionNumber>
 
+namespace
+{
+// from MO2 uibase 1388eb0 (#169)
+const QRegularExpression VERSION_REGEX("^(\\d+)(\\.(\\d+))?(\\.(\\d+))?(\\.(\\d+))?");
+}  // namespace
+
 namespace MOBase
 {
 
@@ -289,8 +295,7 @@ void VersionInfo::parse(const QString& versionString, VersionScheme scheme,
     temp.remove(0, 1);
   }
 
-  QRegularExpression exp("^(\\d+)(\\.(\\d+))?(\\.(\\d+))?(\\.(\\d+))?");
-  auto match = exp.match(temp);
+  auto match = VERSION_REGEX.match(temp);
   if (match.hasMatch()) {
     m_Major             = match.captured(1).toInt();
     m_Minor             = match.captured(3).toInt();
@@ -310,7 +315,7 @@ void VersionInfo::parse(const QString& versionString, VersionScheme scheme,
       m_Scheme           = SCHEME_DECIMALMARK;
       m_DecimalPositions = (int)match.captured(3).size();
     }
-    temp.remove(exp);
+    temp.remove(VERSION_REGEX);
   } else {
     m_Scheme = SCHEME_LITERAL;
   }

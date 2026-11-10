@@ -16,11 +16,14 @@ class NoMansSkyGame(BasicGame):
     GameSteamId = 275850
     GameGogId = 1446213994
     GameBinary = "Binaries/NMS.exe"
-    GameDataPath = "GAMEDATA/PCBANKS/MODS"
+    GameDataPath = "GAMEDATA/MODS"  # MO2 Revamped: from MO2 59487e7
     GameSupportURL = (
         r"https://github.com/ModOrganizer2/modorganizer-basic_games/wiki/"
         "Game:-No-Man's-Sky"
     )
+    # MO2 Revamped: from MO2 b34756c
+    GameSavesDirectory = "%USERPROFILE%/AppData/Roaming/HelloGames/NMS"
+    GameSaveExtension = "hg"
 
     def executables(self):
         return [

@@ -172,7 +172,8 @@ QWidget* PreviewBsa::genBsaPreview(const QString& fileName, const QSize&)
   layout->addWidget(infoLabel);
 
   QTreeView* view            = new QTreeView();
-  SimpleFileTreeModel* model = new SimpleFileTreeModel(m_Files);
+  // MO2 Revamped: from MO2 79cdca3
+  SimpleFileTreeModel* model = new SimpleFileTreeModel(m_Files, view);
 
   view->setModel(model);
   layout->addWidget(view);

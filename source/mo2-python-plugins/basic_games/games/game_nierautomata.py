@@ -8,7 +8,7 @@ class NierAutomataGame(BasicGame):
 
     GameName = "NieR:Automata"
     GameShortName = "nierautomata"
-    GaneNexusHame = "nierautomata"
+    GameNexusName = "nierautomata"  # MO2 Revamped: from MO2 7ce47dd
     GameSteamId = 524220
     GameBinary = "NieRAutomata.exe"
     GameDataPath = ""

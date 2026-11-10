@@ -1,4 +1,5 @@
 #include "filetreemodel.h"
+#include "modinfo.h"
 #include "organizercore.h"
 #include "fluenticons.h"
 #include "shared/directoryentry.h"
@@ -962,8 +963,12 @@ void FileTreeModel::updateFileItem(FileTreeItem& item, const MOShared::FileEntry
 
 bool FileTreeModel::shouldShowFile(const FileEntry& file) const
 {
-  if (showConflictsOnly() && (file.getAlternatives().size() == 0)) {
-    // only conflicts should be shown, but this file is not conflicted
+  // from MO2 a823d2a (#2148): conflicts between hidden files are ignored
+  if (showConflictsOnly() &&
+      ((file.getAlternatives().size() == 0) ||
+       QString::fromStdWString(file.getName())
+           .endsWith(ModInfo::s_HiddenExt, Qt::CaseInsensitive))) {
+    // only conflicts should be shown, but this file is hidden or not conflicted
     return false;
   }
 
@@ -978,6 +983,12 @@ bool FileTreeModel::shouldShowFile(const FileEntry& file) const
 bool FileTreeModel::shouldShowFolder(const DirectoryEntry& dir,
                                      const FileTreeItem* item) const
 {
+  // from MO2 a823d2a (#2148): files in a hidden folder don't count as conflicts
+  if (showConflictsOnly() && QString::fromStdWString(dir.getName())
+                                 .endsWith(ModInfo::s_HiddenExt, Qt::CaseInsensitive)) {
+    return false;
+  }
+
   bool shouldPrune = m_flags.testFlag(PruneDirectories);
 
   if (m_core.settings().archiveParsing()) {

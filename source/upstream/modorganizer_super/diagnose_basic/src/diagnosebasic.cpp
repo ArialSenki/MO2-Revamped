@@ -298,8 +298,10 @@ bool DiagnoseBasic::invalidFontConfig() const
   }
 
   // files from skyrim_interface.bsa
+  // MO2 Revamped: from MO2 13143db
   static std::vector<QString> defaultFonts = boost::assign::list_of("interface\\fonts_console.swf")
-                                               ("interface\\fonts_en.swf");
+                                                                   ("interface\\fonts_en.swf")
+                                                                   ("interface\\fonts_cclub.swf");
 
   QString configPath = m_MOInfo->resolvePath("interface/fontconfig.txt");
   if (configPath.isEmpty()) {

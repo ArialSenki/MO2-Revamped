@@ -262,7 +262,8 @@ class BlackAndWhite2Game(BasicGame):
         BasicGame.init(self, organizer)
 
         self._register_feature(BlackAndWhite2ModDataChecker())
-        self._register_feature(BasicLocalSavegames(self.savesDirectory()))
+        # MO2 Revamped: from MO2 cc5c3f2
+        self._register_feature(BasicLocalSavegames(self))
         self._register_feature(
             BasicGameSaveGameInfo(get_metadata=getMetadata, max_width=400)
         )

@@ -52,7 +52,8 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
         self._register_feature(bg3_data_checker.BG3ModDataChecker())
         self._register_feature(bg3_data_content.BG3DataContent())
         self._register_feature(BasicGameSaveGameInfo(lambda s: s.with_suffix(".webp")))
-        self._register_feature(BasicLocalSavegames(self.savesDirectory()))
+        # MO2 Revamped: from MO2 cc5c3f2
+        self._register_feature(BasicLocalSavegames(self))
         organizer.onAboutToRun(self.utils.construct_modsettings_xml)
         organizer.onFinishedRun(self._on_finished_run)
         organizer.onUserInterfaceInitialized(self.utils.on_user_interface_initialized)

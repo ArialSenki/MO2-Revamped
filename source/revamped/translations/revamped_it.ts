@@ -6052,6 +6052,10 @@ Continueranno a cercare nella vecchia cartella senza trovare nulla finché non n
       <source>Use this theme</source>
       <translation>Usa questo tema</translation>
     </message>
+    <message>
+      <source>You need to select an instance before trying to download mods.</source>
+      <translation>Devi scegliere un'istanza prima di scaricare mod.</translation>
+    </message>
   </context>
   <context>
     <name>MainWindow</name>

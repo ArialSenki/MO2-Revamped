@@ -534,7 +534,7 @@ int run(int argc, char* argv[])
   // must be after logging
   TimeThis tt("main() multiprocess");
 
-  QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  // from MO2 8016e77 (#2283): obsolete Qt::AA_EnableHighDpiScaling removed
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);
   writeStartupDiagnosticEvent("startup.qapplication.ready");

@@ -133,7 +133,9 @@ InstallerQuick::install(GuessedValue<QString>& modName,
 
   auto base = std::const_pointer_cast<IFileTree>(
       getSimpleArchiveBase(tree, dataFolderName, checker.get()));
-  if (base == nullptr) {
+  // MO2 Revamped: from MO2 6ddeb66
+  if (base == nullptr &&
+      checker->dataLooksValid(tree) == ModDataChecker::CheckReturn::FIXABLE) {
     tree = checker->fix(tree);
   } else {
     tree = base;

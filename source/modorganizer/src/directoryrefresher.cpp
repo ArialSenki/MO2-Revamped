@@ -328,7 +328,8 @@ struct ModThread
   int prio = -1;
   std::vector<std::wstring> archives;
   std::set<std::wstring> enabledArchives;
-  DirectoryStats* stats = nullptr;
+  const std::vector<std::wstring>* loadOrder = nullptr;
+  DirectoryStats* stats                      = nullptr;
   env::DirectoryWalker walker;
 
   std::condition_variable cv;
@@ -356,18 +357,10 @@ struct ModThread
     ds->addFromOrigin(walker, modName, path, prio, *stats);
 
     if (Settings::instance().archiveParsing()) {
-      QStringList loadOrder;
-      auto gamePlugins = gameFeatures->gameFeature<GamePlugins>();
-      if (gamePlugins) {
-        loadOrder = gamePlugins->getLoadOrder();
-      }
-
-      std::vector<std::wstring> lo;
-      for (auto&& s : loadOrder) {
-        lo.push_back(s.toStdWString());
-      }
-
-      ds->addFromAllBSAs(modName, path, prio, archives, enabledArchives, lo, *stats);
+      // from MO2 3ef0db4 (#2239): the load order is computed once by
+      // addMultipleModsFilesToStructure()
+      ds->addFromAllBSAs(modName, path, prio, archives, enabledArchives, *loadOrder,
+                         *stats);
     }
 
     if (progress) {
@@ -399,6 +392,19 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
 
   log::debug("refresher: using {} threads", m_threadCount);
   g_threads.setMax(m_threadCount);
+
+  // from MO2 3ef0db4 (#2239): get the load order once instead of in every thread
+  std::vector<std::wstring> loadOrder;
+  if (Settings::instance().archiveParsing()) {
+    auto gamePlugins = m_Core.gameFeatures().gameFeature<GamePlugins>();
+    if (gamePlugins) {
+      const QStringList lo = gamePlugins->getLoadOrder();
+      loadOrder.reserve(lo.size());
+      for (auto&& s : lo) {
+        loadOrder.push_back(s.toStdWString());
+      }
+    }
+  }
 
   for (std::size_t i = 0; i < entries.size(); ++i) {
     const auto& e  = entries[i];
@@ -436,7 +442,8 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
           mt.enabledArchives.insert(a.toStdWString());
         }
 
-        mt.stats = &stats[i];
+        mt.loadOrder = &loadOrder;
+        mt.stats     = &stats[i];
 
         mt.wakeup();
       }
