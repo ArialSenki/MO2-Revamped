@@ -764,8 +764,10 @@ void FileTreeModel::removeDisappearingFiles(FileTreeItem& parentItem,
         // file is still there
         seen.emplace(f->getIndex());
 
-        if (f->getOrigin() != item->originID()) {
-          // origin has changed
+        // origin has changed, or another mod now has (or no longer has) the
+        // same file without changing which one wins: the conflict mark follows
+        if (f->getOrigin() != item->originID() ||
+            f->getAlternatives().empty() == item->isConflicted()) {
           updateFileItem(*item, *f);
         }
 
@@ -1155,7 +1157,8 @@ QString FileTreeModel::makeTooltip(const FileTreeItem& item) const
       s += line(tr("Also in"), QString()) + ListStart;
 
       for (auto&& alt : list) {
-        s += "<li>" + alt + "</li>";
+        // a mod's name is text: "<" or "&" in it must not become markup
+        s += "<li>" + alt.toHtmlEscaped() + "</li>";
       }
 
       s += ListEnd;

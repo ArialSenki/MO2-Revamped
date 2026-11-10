@@ -87,7 +87,6 @@ void DownloadsTab::update()
   ui.list->style()->polish(ui.list);
   setStartupDiagnosticPhase("downloads_tab.update.resize_sections");
   auto* downloadHeader = qobject_cast<DownloadListHeader*>(ui.list->header());
-  downloadHeader->customResizeSections();
   // only until the list had its first real layout, then the user's widths stay
   if (!downloadHeader->m_readableChecked) {
     downloadHeader->ensureReadableSections();

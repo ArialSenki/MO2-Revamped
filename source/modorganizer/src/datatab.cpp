@@ -135,7 +135,8 @@ void DataTab::restoreState(Settings& s)
   ui.tree->setSortingEnabled(true);
 
   s.widgets().restoreChecked(ui.conflicts);
-  s.widgets().restoreChecked(ui.archives);
+  // never saved yet: archive files shown, as when archive parsing is turned on
+  s.widgets().restoreChecked(ui.archives, true);
 }
 
 void DataTab::activated()

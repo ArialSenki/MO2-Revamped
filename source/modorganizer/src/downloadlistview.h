@@ -60,7 +60,6 @@ public:
   explicit DownloadListHeader(Qt::Orientation orientation, QWidget* parent = nullptr)
       : QHeaderView(orientation, parent)
   {}
-  void customResizeSections();
   void ensureReadableSections();
 
   // once, for columns saved when Status and the date took more than they

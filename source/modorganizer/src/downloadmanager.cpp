@@ -580,6 +580,8 @@ void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   }
 
   newDownload->m_StartTime.start();
+  // the clock starts again on a resume or a retry: so does the progress shown
+  newDownload->m_ProgressShownAt = -1000;
   createMetaFile(newDownload);
 
   if (!newDownload->m_Output.open(mode)) {
@@ -1726,7 +1728,13 @@ void DownloadManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 
         TaskProgressManager::instance().updateProgress(info->m_TaskProgressId,
                                                        bytesReceived, bytesTotal);
-        emit update(index);
+        // the network reports progress many times a second; the row repaints
+        // when the percentage changes, and otherwise about four times a second
+        if (info->m_Progress.first != oldProgress ||
+            elapsed - info->m_ProgressShownAt >= 250) {
+          info->m_ProgressShownAt = elapsed;
+          emit update(index);
+        }
       }
     }
   } catch (const std::bad_alloc&) {

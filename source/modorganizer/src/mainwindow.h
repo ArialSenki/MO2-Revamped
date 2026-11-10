@@ -357,6 +357,8 @@ private:
   QTimer m_CheckBSATimer;
   QTimer m_SaveMetaTimer;
   QTimer m_UpdateProblemsTimer;
+  // one Data tab refresh for a burst of mods switched on or off
+  QTimer m_DataTabFollowTimer;
 
   QFuture<void> m_MetaSave;
 

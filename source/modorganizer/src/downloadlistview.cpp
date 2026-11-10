@@ -92,44 +92,6 @@ void DownloadProgressDelegate::paint(QPainter* painter,
   }
 }
 
-void DownloadListHeader::customResizeSections()
-{
-  // find the rightmost column that is not hidden
-  int rightVisible = count() - 1;
-  while (isSectionHidden(rightVisible) && rightVisible > 0)
-    rightVisible--;
-
-  // if that column is already squashed, squash others to the right side --
-  // otherwise to the left
-  if (sectionSize(rightVisible) == minimumSectionSize()) {
-    for (int idx = rightVisible; idx >= 0; idx--) {
-      if (!isSectionHidden(idx)) {
-        if (length() != width()) {
-          setStartupDiagnosticPhase(
-              "download_list_header.resize_section.right_to_left");
-          resizeSection(idx, std::max(sectionSize(idx) + width() - length(),
-                                      minimumSectionSize()));
-        } else {
-          break;
-        }
-      }
-    }
-  } else {
-    for (int idx = 0; idx <= rightVisible; idx++) {
-      if (!isSectionHidden(idx)) {
-        if (length() != width()) {
-          setStartupDiagnosticPhase(
-              "download_list_header.resize_section.left_to_right");
-          resizeSection(idx, std::max(sectionSize(idx) + width() - length(),
-                                      minimumSectionSize()));
-        } else {
-          break;
-        }
-      }
-    }
-  }
-}
-
 void DownloadListHeader::compactSections()
 {
   if (isSectionHidden(DownloadList::COL_NAME)) {
@@ -195,8 +157,9 @@ void DownloadListHeader::ensureReadableSections()
 
 void DownloadListHeader::mouseReleaseEvent(QMouseEvent* event)
 {
+  // the window's column sizer keeps the widths in step (and keeps what was
+  // dragged); squeezing them here as well made the two fight on every resize
   QHeaderView::mouseReleaseEvent(event);
-  customResizeSections();
 }
 
 DownloadListView::DownloadListView(QWidget* parent) : QTreeView(parent)
@@ -292,15 +255,16 @@ void DownloadListView::onHeaderCustomContextMenu(const QPoint& point)
     ++i;
   }
 
-  qobject_cast<DownloadListHeader*>(header())->customResizeSections();
   qobject_cast<DownloadListHeader*>(header())->ensureReadableSections();
+  // a column shown or hidden changes no size the window's column sizer
+  // watches: it lays the columns out again from this
+  emit header()->geometriesChanged();
 }
 
 void DownloadListView::resizeEvent(QResizeEvent* event)
 {
   QTreeView::resizeEvent(event);
   auto* listHeader = qobject_cast<DownloadListHeader*>(header());
-  listHeader->customResizeSections();
 
   // once, when the list first gets a usable width
   if (!listHeader->m_readableChecked && event->size().width() >= 400) {

@@ -63,6 +63,12 @@
   reaches the Data search.
 - Screen readers announce Notifications and Update in the status bar as buttons, and
   the Saves, Data and Downloads lists by name.
+- The Data tab follows mods being switched on or off, so origins and conflict marks
+  stay right without pressing Refresh, and a file stops showing as conflicted once
+  the other copy is gone. "Show archive files" keeps the state you left it in.
+- Download progress repaints its row a few times a second instead of on every network
+  event, and the download list's columns keep their widths instead of being squeezed
+  and stretched again on every resize.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

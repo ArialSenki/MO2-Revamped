@@ -1737,6 +1737,17 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   connect(&m_OrganizerCore, &OrganizerCore::directoryStructureReady, this,
           &MainWindow::onDirectoryStructureChanged);
+  // switching mods on or off updates the files in place without a new
+  // structure: the Data tab (origins, conflict marks) follows them too, once
+  // it is shown, with one refresh for a burst of switches
+  m_DataTabFollowTimer.setSingleShot(true);
+  m_DataTabFollowTimer.setInterval(0);
+  connect(&m_DataTabFollowTimer, &QTimer::timeout, this, [this] {
+    m_DataTab->updateTree();
+  });
+  connect(m_OrganizerCore.modList(), &ModList::modStatesChanged, this, [this] {
+    m_DataTabFollowTimer.start();
+  });
   connect(m_OrganizerCore.directoryRefresher(),
           SIGNAL(progress(const DirectoryRefreshProgress*)), this,
           SLOT(refresherProgress(const DirectoryRefreshProgress*)));
@@ -1859,8 +1870,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   ui->profileBox->setCurrentText(m_OrganizerCore.currentProfile()->name());
 
+  // with archive parsing on, the toggle keeps the state the Data tab restored;
+  // it is only switched on when parsing is turned on in Settings
   if (settings.archiveParsing()) {
-    ui->dataTabShowFromArchives->setCheckState(Qt::Checked);
     ui->dataTabShowFromArchives->setEnabled(true);
   } else {
     ui->dataTabShowFromArchives->setCheckState(Qt::Unchecked);

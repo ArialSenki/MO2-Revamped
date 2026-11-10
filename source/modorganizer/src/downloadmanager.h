@@ -92,6 +92,8 @@ private:
     QFile m_Output;
     QNetworkReply* m_Reply;
     QElapsedTimer m_StartTime;
+    // when the row last showed new progress (ms since m_StartTime)
+    qint64 m_ProgressShownAt = -1000;
     qint64 m_PreResumeSize;
     std::pair<int, QString> m_Progress;
     bool m_HasData;
