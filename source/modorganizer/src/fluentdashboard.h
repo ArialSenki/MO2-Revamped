@@ -14,6 +14,11 @@
 
 #include <functional>
 
+namespace FluentPanels
+{
+class ElidedLabel;
+}
+
 class OrganizerCore;
 class ModListView;
 class QBoxLayout;
@@ -77,7 +82,7 @@ private:
   FluentHeroBanner* m_banner;
   QLabel* m_logo;
   QLabel* m_title;
-  QLabel* m_lastPlayed;
+  FluentPanels::ElidedLabel* m_lastPlayed;
   std::function<QDir()> m_savesDirectory;
   FluentStatTile* m_active;
   FluentStatTile* m_conflicts;

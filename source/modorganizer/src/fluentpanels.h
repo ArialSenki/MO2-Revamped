@@ -46,6 +46,13 @@ public:
 
   void setFullText(const QString& text);
 
+  // where the text is cut (in the middle by default)
+  void setElideMode(Qt::TextElideMode mode)
+  {
+    m_mode = mode;
+    update();
+  }
+
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
@@ -54,6 +61,7 @@ protected:
 
 private:
   QString m_full;
+  Qt::TextElideMode m_mode = Qt::ElideMiddle;
 };
 
 // a Segoe Fluent glyph in a row's 24 px icon column

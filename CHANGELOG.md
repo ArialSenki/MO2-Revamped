@@ -43,6 +43,10 @@
   sideways; Nexus IDs line up with their heading.
 - A separator's information window is titled with its name, without the folder's
   "_separator" suffix.
+- The main window fits a 1920 x 1080 screen at 150 % and 175 %: it can shrink to
+  1009 x 568 instead of 1140 x 800. "Last saved" shortens with an ellipsis, and the
+  command bar's notifications and More buttons and the grouping choice keep their
+  room when the window narrows.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

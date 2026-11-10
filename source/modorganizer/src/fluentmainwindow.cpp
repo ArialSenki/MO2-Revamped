@@ -331,7 +331,6 @@ void MainWindow::setupFluentCommandBar()
   for (QAction* action : {ui->actionNotifications, m_fluentOverflowAction}) {
     action->setPriority(QAction::LowPriority);
   }
-
   applyFluentActionIcons();
 
   // the menus of the command bar (Tools, Nexus...) open with a turning chevron

@@ -1,4 +1,5 @@
 #include "fluentdashboard.h"
+#include "fluentpanels.h"
 #include <QElapsedTimer>
 
 #include "categories.h"
@@ -180,16 +181,19 @@ void FluentDashboard::setupBanner(QWidget* central)
   m_profileLabel = profileLabel;
   row->addWidget(profileLabel);
   row->addWidget(ui->profileBox);
-  ui->profileBox->setMinimumWidth(180);
+  ui->profileBox->setMinimumWidth(150);
   row->addSpacing(12);
   auto* programLabel = new QLabel(tr("Program"), m_banner);
   programLabel->setObjectName(QStringLiteral("fluentHeroLabel"));
   m_programLabel = programLabel;
   row->addWidget(programLabel);
   row->addWidget(ui->executablesListBox);
-  ui->executablesListBox->setMinimumWidth(260);
+  ui->executablesListBox->setMinimumWidth(200);
   row->addSpacing(12);
-  m_lastPlayed = new QLabel(m_banner);
+  // it can shrink with an ellipsis when the window narrows, so the banner fits
+  // a 1920 px screen at 175 %
+  m_lastPlayed = new FluentPanels::ElidedLabel(m_banner);
+  m_lastPlayed->setElideMode(Qt::ElideRight);
   m_lastPlayed->setObjectName(QStringLiteral("fluentHeroLabel"));
   row->addWidget(m_lastPlayed);
   row->addStretch(1);
@@ -297,7 +301,7 @@ void FluentDashboard::setupModsHeader()
   const int moreIndex = header->indexOf(ui->layoutWidget->findChild<QWidget*>(
       QStringLiteral("moreActionsBtn")));
   header->insertWidget(moreIndex < 0 ? index : moreIndex, ui->modFilterEdit);
-  ui->modFilterEdit->setMinimumWidth(240);
+  ui->modFilterEdit->setMinimumWidth(160);
   ui->modFilterEdit->setMaximumWidth(320);
 
   // the active count lives in the summary row now
@@ -365,6 +369,8 @@ void FluentDashboard::applyTabTexts()
   // (a placeholder or an icon), so screen readers get one here
   ui->modFilterEdit->setAccessibleName(tr("Search mods"));
   ui->groupCombo->setAccessibleName(tr("Group mods by"));
+  // a narrow window keeps the whole choice readable
+  ui->groupCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   ui->displayCategoriesBtn->setAccessibleName(tr("Filter options"));
   ui->modList->setAccessibleName(tr("Mods"));
   ui->espList->setAccessibleName(tr("Plugins"));
@@ -563,7 +569,7 @@ void FluentDashboard::refreshLastPlayed()
   } else {
     when = QLocale().toString(newest.date(), QLocale::ShortFormat);
   }
-  m_lastPlayed->setText(tr("Last saved %1").arg(when));
+  m_lastPlayed->setFullText(tr("Last saved %1").arg(when));
   m_lastPlayed->show();
 }
 

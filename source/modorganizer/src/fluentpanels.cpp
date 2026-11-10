@@ -143,6 +143,8 @@ void ElidedLabel::setFullText(const QString& text)
 {
   m_full = text;
   setToolTip(text);
+  // QLabel's own text stays empty, so screen readers get it here
+  setAccessibleName(text);
   updateGeometry();
   update();
 }
@@ -163,7 +165,7 @@ void ElidedLabel::paintEvent(QPaintEvent*)
   p.setPen(palette().color(QPalette::WindowText));
   p.setFont(font());
   p.drawText(contentsRect(), Qt::AlignLeft | Qt::AlignVCenter,
-             fontMetrics().elidedText(m_full, Qt::ElideMiddle, contentsRect().width()));
+             fontMetrics().elidedText(m_full, m_mode, contentsRect().width()));
 }
 
 QLabel* glyphLabel(char16_t glyph, QWidget* parent)

@@ -1594,8 +1594,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   if (!features.gameFeature<GamePlugins>()) {
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->espTab));
   } else {
-    // room for the plugin table's names and every tab
-    ui->tabWidget->setMinimumWidth(500);
+    // room for the plugin table's names and every tab; small enough for the
+    // window to fit a 1920 px screen at 175 %
+    ui->tabWidget->setMinimumWidth(440);
   }
   if (!features.gameFeature<DataArchives>()) {
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->bsaTab));
@@ -2016,6 +2017,20 @@ void MainWindow::setupActionMenu(QAction* a)
     tb->setPopupMode(QToolButton::InstantPopup);
 }
 
+// a narrow window must not push the command bar's right buttons (notifications,
+// More) into its hidden overflow, nor cut the grouping choice: both ask for the
+// room they take now. Called again whenever the bar's buttons change (pinned
+// programs, the Nexus action, language, icon size); never wider than the screen
+static void reserveRoomForControls(QWidget* window, QToolBar* bar, QComboBox* group)
+{
+  int barWidth = bar->sizeHint().width();
+  if (QScreen* screen = window->screen()) {
+    barWidth = std::min(barWidth, screen->availableGeometry().width() - 40);
+  }
+  bar->setMinimumWidth(barWidth);
+  group->setMinimumWidth(group->sizeHint().width());
+}
+
 void MainWindow::updatePinnedExecutables()
 {
   for (auto* a : ui->toolBar->actions()) {
@@ -2247,6 +2262,8 @@ void MainWindow::stabilizeToolbarButtonGeometry(bool recapture)
 
     button->setFixedSize(stableSize);
   }
+
+  reserveRoomForControls(this, ui->toolBar, ui->groupCombo);
 }
 
 void MainWindow::on_centralWidget_customContextMenuRequested(const QPoint& pos)
@@ -2551,6 +2568,12 @@ void MainWindow::showEvent(QShowEvent* event)
     // responsive sizing after that restore so the saved state cannot put the
     // Mod Name section back into a non-interactive resize mode.
     new ResponsiveColumnSizer(ui->modList, this);
+
+    // the command bar and the grouping choice keep their room once the
+    // theme has sized them (see reserveRoomForControls())
+    QTimer::singleShot(0, this, [this] {
+      reserveRoomForControls(this, ui->toolBar, ui->groupCombo);
+    });
 
     // Fluent v4 keeps the log folded to its one-line summary unless it was
     // left open last time
@@ -3101,6 +3124,7 @@ void MainWindow::updateModPageMenu()
     ui->toolBar->removeAction(ui->actionNexus);
   }
   ui->actionModPage->setVisible(!keepOriginalAction);
+  reserveRoomForControls(this, ui->toolBar, ui->groupCombo);
 }
 
 void MainWindow::startExeAction()
