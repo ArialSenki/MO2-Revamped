@@ -88,6 +88,27 @@ The Organizer then builds against those sources and that install tree, with
 `-DMO2_INSTALL_PATH=C:/path/to/upstream-out/install` (plus the dependency roots
 as for the NXM handler below).
 
+## Keeping up with Mod Organizer 2
+
+The sources in `source/upstream` and `source/usvfs` stay at the versions
+recorded in `source/upstream/UPSTREAM-COMMITS.txt` and `UPSTREAMS.md` until a
+fix is brought in by hand. `Check-Upstream.ps1` lists what MO2's repositories
+have published since then, and the latest releases of 7-Zip, libloot,
+pybind11, PyQt6 and PyQt6-sip:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File source/revamped/installer/Check-Upstream.ps1 `
+  -Report C:\path\to\upstream-report.md [-Since yyyy-MM-dd]
+```
+
+It reads public GitHub and PyPI data only, through the GitHub CLI's sign-in
+when there is one (more requests an hour). MO2 has since merged the Bethesda
+game plugins into `modorganizer-game_bethesda` and keeps the Python plugins in
+repositories of their own; for those the report lists the commits since the
+2.5.2 release. A fix taken from there is built and checked with
+`Build-UpstreamPlugins.ps1` like any other change: a change that alters
+uibase's exports or a plugin's interface fails its ABI checks.
+
 ## USVFS
 
 USVFS source is in `source/usvfs/`. Its upstream README and CMake files list
