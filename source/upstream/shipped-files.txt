@@ -1,4 +1,4 @@
-# Files the release takes from the build of source/upstream (Build-UpstreamPlugins.ps1)
+# Files the release takes from the builds of source/upstream and source/usvfs (Build-UpstreamPlugins.ps1)
 # instead of the Mod Organizer 2.5.2 runtime, by runtime path. "native" files are
 # checked against abi/binaries.json; "dotnet" files are the NuGet libraries
 # installer_omod restores.
@@ -38,6 +38,10 @@ native plugins/installer_omod/installer_omod.dll
 native plugins/plugin_python/plugin_python.dll
 native plugins/plugin_python/dlls/runner.dll
 native plugins/plugin_python/libs/mobase.cp312-win_amd64.pyd
+native usvfs_x64.dll
+native usvfs_x86.dll
+native usvfs_proxy_x64.exe
+native usvfs_proxy_x86.exe
 dotnet plugins/installer_omod/OMODFramework.dll
 dotnet plugins/installer_omod/OMODFramework.Scripting.dll
 dotnet plugins/installer_omod/RtfPipe.dll

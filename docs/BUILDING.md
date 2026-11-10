@@ -4,9 +4,10 @@ The repository contains a consolidated source snapshot. The application was
 compiled from the current source tree on Windows with MSVC 14.44, Qt 6.7.1,
 Python 3.12.15, and the MO2 build dependencies recorded in
 [`UPSTREAMS.md`](UPSTREAMS.md). A new external CMake build directory completed
-successfully. This does not yet prove that a fresh clone can recreate the full
-runtime: MO2 runtime DLLs, plugin binaries, Qt/Python distributions, and other
-redistributable files are supplied separately from the source tree.
+successfully. Every Mod Organizer 2 binary of a release is built from this
+repository (see below); Qt, PyQt6, Python, 7-Zip, lz4, libbsarch, LOOT,
+Explorer++ and the compiled translations are still supplied separately, from the runtime
+and the overlays.
 
 For release builds, the Organizer target maps `%USERPROFILE%` to the neutral
 `MO2_USER` prefix in MSVC Release builds with `/pathmap` and
@@ -69,7 +70,11 @@ as for the NXM handler below).
 
 USVFS source is in `source/usvfs/`. Its upstream README and CMake files list
 component build options. The source snapshot is USVFS v0.5.7.2, matching the
-included MO2 runtime.
+included MO2 runtime. `Build-UpstreamPlugins.ps1` builds it too, x64 and x86,
+with its presets and the vcpkg dependencies `vcpkg-configuration.json` pins
+(Visual Studio's own vcpkg, or `-VcpkgRoot`), and checks both DLLs against the
+114 exports of the 0.5.7.2 release. The Organizer links it with
+`-DMO2_USVFS_OVERRIDE_ROOT=C:/path/to/upstream-out/install`.
 
 ## NXM handler
 
@@ -153,7 +158,7 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
 ```
 
 From the Complete runtime the builder takes only what has no source here (Qt,
-PyQt6, 7-Zip, libbsarch, LOOT, Explorer++, the Python libraries the plugins
+PyQt6, 7-Zip, lz4, libbsarch, LOOT, Explorer++, the Python libraries the plugins
 bundle, and the compiled translations). It never stages the runtime's copies
 of the files `-UpstreamStageDirectory` lists: those come from the upstream
 stage, whose manifest must match its files and the committed `source/upstream`.

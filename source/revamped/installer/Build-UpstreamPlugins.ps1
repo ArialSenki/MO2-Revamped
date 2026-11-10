@@ -1,23 +1,29 @@
 <#
 Builds what MO2 Revamped used to ship precompiled from Mod Organizer 2.5.2
 (uibase, the plugins, plugin_python, archive, lootcli, helper) from
-source\upstream, and stages the files the release takes from it.
+source\upstream, and USVFS (x64 and x86) from source\usvfs, and stages the
+files the release takes from them.
 
-  -OutputDirectory\build    CMake build tree
-  -OutputDirectory\install  install tree: the runtime layout, import libraries
-                            and PDBs; the organizer is configured against it
-                            (MO2_INSTALL_PATH) to link uibase and the libraries
-  -OutputDirectory\stage    the shipped files and upstream-manifest.json, for
-                            Build-Release.ps1 -UpstreamStageDirectory
+  -OutputDirectory\build          CMake build tree of source\upstream
+  -OutputDirectory\usvfs-x64|x86  CMake build trees of source\usvfs (vcpkg)
+  -OutputDirectory\install        install tree: the runtime layout, import
+                                  libraries and PDBs; the organizer is
+                                  configured against it (MO2_INSTALL_PATH, and
+                                  MO2_USVFS_OVERRIDE_ROOT for USVFS)
+  -OutputDirectory\stage          the shipped files and upstream-manifest.json,
+                                  for Build-Release.ps1 -UpstreamStageDirectory
 
 Before staging, every binary is checked against source\upstream\abi, written
-once from the official 2.5.2 binaries (-WriteAbiReference): uibase exports the
-same symbols, each file keeps its DLL dependencies and its plugin interface
-IDs, everything imported from uibase exists, and no local path is left.
+once from the official 2.5.2 binaries (-WriteAbiReference): uibase and USVFS
+export the same symbols, each file keeps its DLL dependencies and its plugin
+interface IDs, everything imported from uibase exists, and no local path is
+left.
 #>
 [CmdletBinding()]
 param(
     [string]$OutputDirectory,
+    # vcpkg for USVFS's dependencies; Visual Studio's own by default
+    [string]$VcpkgRoot,
     # folder with boost_1_85_0, spdlog-v1.14.1, zlib-v1.3.1, lz4-v1.9.4,
     # libbsarch-0.0.12-release-x64, DirectXTex, 7zip-26.01 and
     # libloot-0.23.0-win64, as mob prepares them
@@ -66,12 +72,13 @@ foreach ($tool in @($vsDevCmd, $dumpbin)) {
 # commands that need the developer environment run from a .cmd file: cmd.exe
 # and Windows PowerShell disagree about nested quotes on a command line
 function Invoke-InVsShell {
-    param([string]$CommandLine)
+    param([string]$CommandLine, [string]$Arch = 'amd64', [string[]]$Setup = @())
     $script = Join-Path $outputRoot 'vs-step.cmd'
     $lines = @(
         '@echo off',
         'set NoDefaultCurrentDirectoryInExePath=',
-        "call `"$vsDevCmd`" -no_logo -arch=amd64 -host_arch=amd64 || exit /b 1",
+        "call `"$vsDevCmd`" -no_logo -arch=$Arch -host_arch=amd64 || exit /b 1"
+    ) + $Setup + @(
         # warnings on stderr would stop Windows PowerShell's native command handling
         "$CommandLine 2>&1"
     )
@@ -125,31 +132,40 @@ function Get-InterfaceIds {
 
 function Get-BinaryRecord {
     param([string]$Path)
-    return [ordered]@{
+    $record = [ordered]@{
         dependents = @(Get-Dependents $Path)
         interfaces = @(Get-InterfaceIds $Path)
     }
+    # the organizer and the hooked games call into USVFS by these names
+    if ([IO.Path]::GetFileName($Path) -match '^usvfs_x(64|86)\.dll$') {
+        $record.exports = @(Get-Exports $Path)
+    }
+    return $record
 }
 
 if ($WriteAbiReference) {
     $reference = [IO.Path]::GetFullPath($WriteAbiReference).TrimEnd('\')
     New-Item -ItemType Directory -Force -Path $abiRoot | Out-Null
-    $uibase = Join-Path $reference 'uibase.dll'
-    [IO.File]::WriteAllLines((Join-Path $abiRoot 'uibase-exports.txt'), [string[]](Get-Exports $uibase), [Text.UTF8Encoding]::new($false))
+    # read everything first, so a bad reference leaves the old files whole
+    $uibaseExports = [string[]](Get-Exports (Join-Path $reference 'uibase.dll'))
+    if (-not $uibaseExports.Count) { throw "uibase.dll in $reference exports nothing" }
     $records = [ordered]@{}
     foreach ($relative in $nativeFiles) {
         $path = Join-Path $reference $relative
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Reference binary was not found: $path" }
-        $records[$relative.Replace('\', '/')] = Get-BinaryRecord $path
+        $record = Get-BinaryRecord $path
+        if ($record.Contains('exports') -and -not $record.exports.Count) { throw "$relative in $reference exports nothing" }
+        $records[$relative.Replace('\', '/')] = $record
     }
-    $json = $records | ConvertTo-Json -Depth 4
-    [IO.File]::WriteAllText((Join-Path $abiRoot 'binaries.json'), $json + "`n", [Text.UTF8Encoding]::new($false))
     # the NuGet libraries come out of the packages unchanged
     $hashes = foreach ($relative in $dotNetFiles) {
         $path = Join-Path $reference $relative
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Reference file was not found: $path" }
         '{0}  {1}' -f (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(), $relative.Replace('\', '/')
     }
+    [IO.File]::WriteAllLines((Join-Path $abiRoot 'uibase-exports.txt'), $uibaseExports, [Text.UTF8Encoding]::new($false))
+    $json = $records | ConvertTo-Json -Depth 4
+    [IO.File]::WriteAllText((Join-Path $abiRoot 'binaries.json'), $json + "`n", [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllLines((Join-Path $abiRoot 'dotnet-sha256.txt'), [string[]]$hashes, [Text.UTF8Encoding]::new($false))
     Write-Host "ABI reference written to $abiRoot from $reference"
     return
@@ -197,6 +213,11 @@ foreach ($directory in @($buildRoot, $installRoot)) {
     New-Item -ItemType Directory -Force -Path $directory | Out-Null
 }
 if (Test-Path -LiteralPath $stageRoot) { Remove-Item -LiteralPath $stageRoot -Recurse -Force }
+# a shipped file this build no longer installs must not survive from an earlier run
+foreach ($relative in $shippedFiles) {
+    $old = Join-Path (Join-Path $installRoot 'bin') $relative
+    if (Test-Path -LiteralPath $old -PathType Leaf) { Remove-Item -LiteralPath $old -Force }
+}
 
 function ConvertTo-CMakePath { param([string]$Path) return $Path.Replace('\', '/') }
 
@@ -208,6 +229,23 @@ $defines = @(
 foreach ($entry in $roots.GetEnumerator()) {
     $defines += "-D$($entry.Key)=$(ConvertTo-CMakePath $entry.Value)"
 }
+# USVFS, both architectures, with its pinned vcpkg dependencies
+$usvfsSource = Join-Path $repoRoot 'source\usvfs'
+if (-not $VcpkgRoot) {
+    $VcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { Join-Path $vsRoot 'VC\vcpkg' }
+}
+if (-not (Test-Path -LiteralPath (Join-Path $VcpkgRoot 'scripts\buildsystems\vcpkg.cmake') -PathType Leaf)) {
+    throw "vcpkg was not found (scripts\buildsystems\vcpkg.cmake): $VcpkgRoot"
+}
+foreach ($usvfsArch in @(@{ Preset = 'x64'; Vs = 'amd64' }, @{ Preset = 'x86'; Vs = 'x86' })) {
+    $usvfsBuild = Join-Path $outputRoot "usvfs-$($usvfsArch.Preset)"
+    $setup = @("set `"VCPKG_ROOT=$VcpkgRoot`"", "cd /d `"$usvfsSource`" || exit /b 1")
+    Invoke-InVsShell -Arch $usvfsArch.Vs -Setup $setup ("cmake --preset vs2022-windows-$($usvfsArch.Preset) -B `"$usvfsBuild`" " +
+        "`"-DCMAKE_INSTALL_PREFIX=$(ConvertTo-CMakePath $installRoot)`" -DBUILD_TESTING=OFF")
+    Invoke-InVsShell -Arch $usvfsArch.Vs -Setup $setup "cmake --build `"$usvfsBuild`" --config Release -- /nodeReuse:false /v:minimal /clp:ErrorsOnly"
+    Invoke-InVsShell -Arch $usvfsArch.Vs -Setup $setup "cmake --install `"$usvfsBuild`" --config Release"
+}
+
 $configure = "cmake -S `"$upstreamSource`" -B `"$buildRoot`" -G `"Visual Studio 17 2022`" -A x64 " + (($defines | ForEach-Object { "`"$_`"" }) -join ' ')
 Invoke-InVsShell $configure
 Invoke-InVsShell "cmake --build `"$buildRoot`" --config RelWithDebInfo --parallel -- /restore /nodeReuse:false /v:minimal /clp:ErrorsOnly"
@@ -243,6 +281,14 @@ if ($problems.Count -eq 0) {
         if (Compare-Object @($expected.interfaces) @($record.interfaces)) {
             $problems.Add("$relative declares [$($record.interfaces -join ', ')] instead of [$($expected.interfaces -join ', ')]")
         }
+        if ($record.Contains('exports') -and -not @($expected.exports).Count) {
+            $problems.Add("the ABI reference has no exports for $relative; write it again with -WriteAbiReference")
+        } elseif ($expected.exports) {
+            $diff = @(Compare-Object -CaseSensitive @($expected.exports) @($record.exports))
+            if ($record.exports.Count -eq 0 -or $diff.Count) {
+                $problems.Add("$relative exports differ from 2.5.2 ($($diff.Count) differences, first: $($diff[0].InputObject))")
+            }
+        }
         if ($relative -ne 'uibase.dll') {
             $missing = @(Get-UibaseImports $path | Where-Object { -not $exportSet.Contains($_) })
             if ($missing.Count) { $problems.Add("$relative imports $($missing.Count) symbols uibase.dll lacks (first: $($missing[0]))") }
@@ -262,7 +308,7 @@ foreach ($line in Get-Content -LiteralPath (Join-Path $abiRoot 'dotnet-sha256.tx
 }
 
 # no folder of this machine in what ships
-$needles = @($env:USERPROFILE, $repoRoot, $outputRoot, $thirdParty, $qtRoot, $pythonRoot) |
+$needles = @($env:USERPROFILE, $repoRoot, $outputRoot, $thirdParty, $qtRoot, $pythonRoot, $VcpkgRoot) |
     Where-Object { $_ } | ForEach-Object {
         $p = [IO.Path]::GetFullPath($_).TrimEnd('\', '/')
         $p
@@ -298,10 +344,12 @@ foreach ($relative in $shippedFiles) {
 }
 $compiler = "MSVC $msvcVersion"
 $sourceCommit = (& git -C $repoRoot rev-parse HEAD)
-$sourceChanged = [bool](& git -C $repoRoot status --porcelain -- source/upstream)
+if ($LASTEXITCODE -ne 0 -or -not $sourceCommit) { throw "git could not read the commit of $repoRoot" }
+$sourceChanged = [bool](& git -C $repoRoot status --porcelain -- source/upstream source/usvfs)
+if ($LASTEXITCODE -ne 0) { throw "git could not read the status of $repoRoot" }
 $manifest = [ordered]@{
-    format        = 1
-    source        = 'source/upstream'
+    format        = 2
+    sources       = @('source/upstream', 'source/usvfs')
     sourceCommit  = $sourceCommit
     sourceChanged = $sourceChanged
     compiler      = "$compiler".Trim()

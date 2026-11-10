@@ -80,7 +80,7 @@ if (-not (Test-Path -LiteralPath $upstreamManifestPath -PathType Leaf)) {
 }
 $upstreamManifest = Get-Content -LiteralPath $upstreamManifestPath -Raw | ConvertFrom-Json
 if ($upstreamManifest.sourceChanged) {
-    throw 'The upstream stage was built from uncommitted changes in source\upstream; commit them and build it again.'
+    throw 'The upstream stage was built from uncommitted changes in source\upstream or source\usvfs; commit them and build it again.'
 }
 
 function Get-GitOutput {
@@ -97,13 +97,15 @@ function Get-GitOutput {
     }
 }
 
-$builtTree = Get-GitOutput @('rev-parse', "$($upstreamManifest.sourceCommit):source/upstream")
-$currentTree = Get-GitOutput @('rev-parse', 'HEAD:source/upstream')
-if (-not $currentTree) {
-    throw 'This checkout is not a git repository with source\upstream committed; the upstream stage cannot be matched to it.'
-}
-if (-not $builtTree -or $builtTree -ne $currentTree -or (Get-GitOutput @('status', '--porcelain', '--', 'source/upstream'))) {
-    throw 'The upstream stage was built from another source\upstream than this checkout has; build it again.'
+foreach ($sourceFolder in @('source/upstream', 'source/usvfs')) {
+    $builtTree = Get-GitOutput @('rev-parse', "$($upstreamManifest.sourceCommit):$sourceFolder")
+    $currentTree = Get-GitOutput @('rev-parse', "HEAD:$sourceFolder")
+    if (-not $currentTree) {
+        throw "This checkout is not a git repository with $sourceFolder committed; the upstream stage cannot be matched to it."
+    }
+    if (-not $builtTree -or $builtTree -ne $currentTree -or (Get-GitOutput @('status', '--porcelain', '--', $sourceFolder))) {
+        throw "The upstream stage was built from another $sourceFolder than this checkout has; build it again."
+    }
 }
 # exactly the files source\upstream\shipped-files.txt names: a stage that left
 # one out would let the 2.5.2 runtime's copy through

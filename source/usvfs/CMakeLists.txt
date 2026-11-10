@@ -21,6 +21,21 @@ if (MSVC)
     # /DEBUG:FULL generate debug info (PDB)
     # /OPT:REF enable references (PDB)
     add_link_options("$<$<NOT:$<CONFIG:DEBUG>>:/OPT:ICF;/DEBUG:FULL;/OPT:REF>")
+
+    # MO2 Revamped: no folder of the build machine in the binaries (__FILE__ in
+    # logs and Boost exceptions, the PDB path). The build folder holds the
+    # vcpkg packages, so it comes first; the first match wins.
+    file(TO_CMAKE_PATH "${CMAKE_BINARY_DIR}" usvfs_build_path)
+    file(TO_CMAKE_PATH "${CMAKE_CURRENT_LIST_DIR}" usvfs_source_path)
+    add_compile_options(
+        "$<$<NOT:$<CONFIG:DEBUG>>:/experimental:deterministic>"
+        "$<$<NOT:$<CONFIG:DEBUG>>:/pathmap:${usvfs_build_path}=USVFS_BUILD>"
+        "$<$<NOT:$<CONFIG:DEBUG>>:/pathmap:${usvfs_source_path}=USVFS_SOURCE>")
+    file(TO_CMAKE_PATH "$ENV{USERPROFILE}" usvfs_user_path)
+    if (usvfs_user_path)
+        add_compile_options("$<$<NOT:$<CONFIG:DEBUG>>:/pathmap:${usvfs_user_path}=MO2_USER>")
+    endif()
+    add_link_options("$<$<NOT:$<CONFIG:DEBUG>>:/PDBALTPATH:%_PDB%>")
 endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)

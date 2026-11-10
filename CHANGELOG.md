@@ -76,8 +76,10 @@
 ### Built from source
 
 - uibase, the game, installer, preview and tool plugins, the Python plugin host,
-  archive, LOOT CLI and helper are now built from their Mod Organizer 2.5.2 sources
-  in this repository, instead of being copied from the 2.5.2 release. They load the
+  archive, LOOT CLI and helper are now built from their Mod Organizer 2.5.2
+  sources in this repository, and the USVFS virtual file system from its 0.5.7.2
+  source, the version 2.5.2 shipped, instead of being copied from the 2.5.2
+  release. They load the
   same way: each one is checked against the 2.5.2 binaries for the same exports,
   dependencies and plugin interfaces.
 - The splash, the icon and the Python plugins come from this repository too; a
