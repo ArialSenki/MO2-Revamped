@@ -5,9 +5,10 @@ compiled from the current source tree on Windows with MSVC 14.44, Qt 6.7.1,
 Python 3.12.15, and the MO2 build dependencies recorded in
 [`UPSTREAMS.md`](UPSTREAMS.md). A new external CMake build directory completed
 successfully. Every Mod Organizer 2 binary of a release is built from this
-repository (see below); Qt, PyQt6, Python, 7-Zip, lz4, libbsarch, LOOT,
-Explorer++ and the compiled translations are still supplied separately, from the runtime
-and the overlays.
+repository (see below), and so are its translations and the BAIN wizard
+interpreter; Qt (with its own `qt_`/`qtbase_` translations), PyQt6, Python,
+7-Zip, lz4, libbsarch, LOOT, Explorer++ and the third-party Python libraries
+are still supplied separately, from the runtime and the overlays.
 
 For release builds, the Organizer target maps `%USERPROFILE%` to the neutral
 `MO2_USER` prefix in MSVC Release builds with `/pathmap` and
@@ -158,13 +159,18 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
 ```
 
 From the Complete runtime the builder takes only what has no source here (Qt,
-PyQt6, 7-Zip, lz4, libbsarch, LOOT, Explorer++, the Python libraries the plugins
-bundle, and the compiled translations). It never stages the runtime's copies
-of the files `-UpstreamStageDirectory` lists: those come from the upstream
-stage, whose manifest must match its files and the committed `source/upstream`.
-The Python plugins are copied from `source/mo2-python-plugins/`, and the
-splash, the icon, `resources/markdown.html` and `dlls/dlls.manifest` from
-`source/modorganizer/src/`.
+PyQt6, 7-Zip, lz4, libbsarch, LOOT, Explorer++, the third-party Python
+libraries the plugins bundle, and Qt's `qt_`/`qtbase_` translations). It never
+stages the runtime's copies of the files `-UpstreamStageDirectory` lists: those
+come from the upstream stage, whose manifest must match its files and the
+committed `source/upstream`. The Python plugins, with the BAIN wizard
+interpreter, are copied from `source/mo2-python-plugins/`; the splash,
+`resources/markdown.html` and `dlls/dlls.manifest` from
+`source/modorganizer/src/`, and `MO2-Revamped.ico` from
+`source/revamped/branding/`. The MO2 translations are compiled with `lrelease`
+from `source/upstream/translations/`, and the build stops if the runtime has an
+MO2 `.qm` file without a source there. Since they are part of
+`source/upstream`, changing them means building the upstream stage again.
 
 Revamped plugin sources are overlaid from `source/revamped/plugins/` onto the
 Complete runtime before packaging. This is the maintained release copy; older

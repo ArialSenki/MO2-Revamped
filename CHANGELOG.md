@@ -82,8 +82,11 @@
   release. They load the
   same way: each one is checked against the 2.5.2 binaries for the same exports,
   dependencies and plugin interfaces.
-- The splash, the icon and the Python plugins come from this repository too; a
-  release could still carry the 1.0.1 splash.
+- The splash, the icons and the Python plugins come from this repository too; a
+  release could still carry the 1.0.1 splash and the old `MO2-Revamped.ico`.
+- The MO2 translations are compiled from sources in this repository, and the BAIN
+  wizard interpreter is kept here with its plugin; both are the 2.5.2 versions,
+  unchanged.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

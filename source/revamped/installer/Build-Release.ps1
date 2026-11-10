@@ -172,7 +172,7 @@ $sourceFiles = @(
     (Join-Path $sourceDir 'InstallerBackend.cs'),
     (Join-Path $sourceDir 'CompactSetupForm.cs')
 )
-$iconPath = Join-Path $runtimeRoot 'MO2-Revamped.ico'
+$iconPath = Join-Path $repoRoot 'source\revamped\branding\MO2-Revamped.ico'
 $manifestPath = Join-Path $sourceDir 'app.manifest'
 foreach ($path in @($manifestPath) + $sourceFiles) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -339,7 +339,7 @@ function Test-ExcludedRuntimeFile {
 }
 
 function Copy-RuntimeTree {
-    param([string]$SourceRoot, [string]$DestinationRoot, [switch]$SkipPlugins, [string[]]$Exclude = @())
+    param([string]$SourceRoot, [string]$DestinationRoot, [switch]$SkipPlugins, [string[]]$Exclude = @(), [string[]]$ExcludePrefix = @())
     $sourceLength = $SourceRoot.Length
     $files = Get-ChildItem -LiteralPath $SourceRoot -File -Recurse -Force |
         Sort-Object FullName
@@ -349,6 +349,7 @@ function Copy-RuntimeTree {
         if ($relative -ieq 'ModOrganizer.exe' -or $relative -ieq 'unins000.exe') { continue }
         if ($SkipPlugins -and $relative.StartsWith('plugins\', [StringComparison]::OrdinalIgnoreCase)) { continue }
         if ($Exclude -contains $relative) { continue }
+        if (@($ExcludePrefix | Where-Object { $relative.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) }).Count) { continue }
         if (Test-ExcludedRuntimeFile -RelativePath $relative) { continue }
         $destination = Join-Path $DestinationRoot $relative
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
@@ -367,9 +368,10 @@ function Copy-UpstreamBinaries {
     }
 }
 
-# the organizer's own files beside ModOrganizer.exe, from source\modorganizer;
-# the runtime still has the 1.0.1 splash and icon
+# the organizer's own files beside ModOrganizer.exe, from source\modorganizer
+# and the Revamped branding; the runtime still has the 1.0.1 splash and icons
 $organizerFiles = [ordered]@{
+    'MO2-Revamped.ico'        = 'source\revamped\branding\MO2-Revamped.ico'
     'splash.png'              = 'source\modorganizer\src\splash.png'
     'resources\mo_icon.png'   = 'source\modorganizer\src\resources\mo_icon.png'
     'resources\markdown.html' = 'source\modorganizer\src\resources\markdown.html'
@@ -384,6 +386,47 @@ function Copy-OrganizerFiles {
         Copy-Item -LiteralPath (Join-Path $repoRoot $entry.Value) -Destination $destination -Force
     }
 }
+
+# the MO2 translations, compiled from source\upstream\translations (the 2.5.2
+# .qm files as .ts, which lrelease turns back into the same bytes); only Qt's
+# own qt_ and qtbase_ files still come from the runtime
+$mo2TranslationSource = Join-Path $repoRoot 'source\upstream\translations'
+$mo2Translations = @(Get-ChildItem -LiteralPath $mo2TranslationSource -Filter '*.ts' -File | Sort-Object Name)
+if ($mo2Translations.Count -eq 0) { throw "No MO2 translation sources were found in $mo2TranslationSource" }
+$mo2TranslationFiles = @($mo2Translations | ForEach-Object { 'translations\' + $_.BaseName + '.qm' })
+$lrelease = Join-Path $qtSdkRoot '6.10.3\mingw_64\bin\lrelease.exe'
+if (-not (Test-Path -LiteralPath $lrelease -PathType Leaf)) {
+    throw "Qt lrelease was not found: $lrelease"
+}
+$runtimeTranslations = Join-Path $runtimeRoot 'translations'
+if (Test-Path -LiteralPath $runtimeTranslations) {
+    foreach ($qm in Get-ChildItem -LiteralPath $runtimeTranslations -Filter '*.qm' -File) {
+        if ($qm.Name -match '^(qt|qtbase|revamped)_') { continue }
+        if ($mo2TranslationFiles -notcontains ('translations\' + $qm.Name)) {
+            throw "The runtime translation $($qm.Name) has no source in source\upstream\translations."
+        }
+    }
+}
+
+function Copy-Mo2Translations {
+    param([string]$DestinationRoot)
+    $destination = Join-Path $DestinationRoot 'translations'
+    New-Item -ItemType Directory -Force -Path $destination | Out-Null
+    foreach ($file in $mo2Translations) {
+        $qm = Join-Path $destination ($file.BaseName + '.qm')
+        & $lrelease -silent $file.FullName -qm $qm
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $qm -PathType Leaf)) {
+            throw "Compiling the MO2 translation failed: $($file.Name)"
+        }
+    }
+}
+
+# the BAIN wizard interpreter is in source\mo2-python-plugins with the plugin;
+# the runtime keeps only the antlr4 runtime and chardet it imports
+$pythonPluginPrefixes = @(
+    'plugins\installer_wizard\lib\wizard\',
+    'plugins\installer_wizard\lib\bain_wizard_interpreter-'
+)
 
 function Copy-PythonPluginOverlay {
     # the Python plugins come from source\mo2-python-plugins, not from the
@@ -481,10 +524,6 @@ function Copy-RevampedSources {
     # to organizer_<language>.qm.
     $translationSource = Join-Path $repoRoot 'source\revamped\translations'
     $translationDestination = Join-Path $DestinationRoot 'translations'
-    $lrelease = Join-Path $qtSdkRoot '6.10.3\mingw_64\bin\lrelease.exe'
-    if (-not (Test-Path -LiteralPath $lrelease -PathType Leaf)) {
-        throw "Qt lrelease was not found: $lrelease"
-    }
     New-Item -ItemType Directory -Force -Path $translationDestination | Out-Null
     $translationFiles = @(Get-ChildItem -LiteralPath $translationSource -Filter 'revamped_*.ts' -File)
     if ($translationFiles.Count -eq 0) {
@@ -950,9 +989,11 @@ Test-EmbeddedResources -InstallerPath $eldenRingUninstallerStub -ExpectedResourc
 $fullStage = Join-Path $stageRoot 'complete'
 $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
-Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage -Exclude ($upstreamFiles + @($organizerFiles.Keys))
+Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage `
+    -Exclude ($upstreamFiles + @($organizerFiles.Keys) + $mo2TranslationFiles) -ExcludePrefix $pythonPluginPrefixes
 Copy-UpstreamBinaries -DestinationRoot $fullStage
 Copy-OrganizerFiles -DestinationRoot $fullStage
+Copy-Mo2Translations -DestinationRoot $fullStage
 Move-WebEngineProcessToDlls -DestinationRoot $fullStage
 Copy-PythonPluginOverlay -DestinationRoot $fullStage
 Copy-RevampedSources -DestinationRoot $fullStage -BridgePath $bridgePath -Me3CompatPath $me3CompatPath
