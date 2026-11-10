@@ -60,7 +60,7 @@ binds, for example with aqtinstall:
 
 `7z.dll` and PyQt6 are built from the official sources in
 `source/upstream/third-party/` (see its README), checked against
-`SHA256SUMS.txt`: 7-Zip 24.05 with `nmake` in `CPP/7zip/Bundles/Format7zF`,
+`SHA256SUMS.txt`: 7-Zip 26.06 with `nmake` in `CPP/7zip/Bundles/Format7zF`,
 PyQt6 6.7.1 with `sip-install --link-full-dll`, and PyQt6-sip 13.8.0 as a wheel,
 as `mob` built them for 2.5.2. PyQt-builder gets `pyqt-builder-link-full-dll.patch`,
 the linker part of `mob`'s own patch, so the modules link `python312.dll` (the

@@ -126,9 +126,10 @@
 - The MO2 translations are compiled from sources in this repository, and the BAIN
   wizard interpreter is kept here with its plugin; both are the 2.5.2 versions,
   unchanged.
-- `7z.dll` (7-Zip 24.05) and PyQt6 6.7.1, which Mod Organizer 2 compiled itself,
-  are now compiled here from their official sources, the same versions and
-  options as 2.5.2.
+- `7z.dll` and PyQt6 6.7.1, which Mod Organizer 2 compiled itself, are now
+  compiled here from their official sources, with the same options as 2.5.2.
+- 7-Zip is updated from 24.05 to 26.06, which fixes known vulnerabilities in
+  unpacking archives, among them one in Zstandard decoding (CVE-2024-11477).
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

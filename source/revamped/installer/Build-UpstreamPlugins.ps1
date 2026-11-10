@@ -205,9 +205,10 @@ function Expand-SourceArchive {
     & (Join-Path $env:SystemRoot 'System32\tar.exe') -xf (Join-Path $thirdPartySource $Name) -C $Destination
     if ($LASTEXITCODE -ne 0) { throw "Extracting $Name failed." }
 }
-# archive compiles against these 7-Zip headers too, as it did for 2.5.2
-$sevenZipRoot = Join-Path $outputRoot '7zip-24.05'
-Expand-SourceArchive '7z2405-src.7z' $sevenZipRoot
+# archive compiles against these 7-Zip headers too: the same 7-Zip as 7z.dll
+$sevenZipVersion = '26.06'
+$sevenZipRoot = Join-Path $outputRoot "7zip-$sevenZipVersion"
+Expand-SourceArchive "7z$($sevenZipVersion -replace '\.', '')-src.7z" $sevenZipRoot
 
 $roots = [ordered]@{
     BOOST_ROOT       = Join-Path $thirdParty 'boost_1_85_0'
@@ -289,7 +290,7 @@ $quietTools = @('set VSLANG=1033', 'set PYTHONIOENCODING=latin-1')
 $installBin = Join-Path $installRoot 'bin'
 
 $format7z = Join-Path $sevenZipRoot 'CPP\7zip\Bundles\Format7zF'
-# mob's options; 24.05's makefiles also need PLATFORM to pick the x64 assembler
+# mob's options; 7-Zip's makefiles also need PLATFORM to pick the x64 assembler
 Invoke-InVsShell -Setup ($quietTools + "cd /d `"$format7z`" || exit /b 1") 'nmake /NOLOGO PLATFORM=x64 CPU=x64 NEW_COMPILER=1 MY_STATIC_LINK=1 NO_BUFFEROVERFLOWU=1'
 New-Item -ItemType Directory -Force -Path (Join-Path $installBin 'dlls') | Out-Null
 Copy-Item -LiteralPath (Join-Path $format7z 'x64\7z.dll') -Destination (Join-Path $installBin 'dlls\7z.dll') -Force
@@ -410,6 +411,11 @@ if ($problems.Count -eq 0) {
             $problems.Add("the ABI reference has no exports for $relative; write it again with -WriteAbiReference")
         } elseif ($expected.exports) {
             $diff = @(Compare-Object -CaseSensitive @($expected.exports) @($record.exports))
+            # 7z.dll is a newer 7-Zip than 2.5.2's: it may add entry points, but
+            # every one archive and 2.5.2 call must still be there
+            if ($relative -eq 'dlls\7z.dll') {
+                $diff = @($diff | Where-Object SideIndicator -eq '<=')
+            }
             if ($record.exports.Count -eq 0 -or $diff.Count) {
                 $problems.Add("$relative exports differ from 2.5.2 ($($diff.Count) differences, first: $($diff[0].InputObject))")
             }
