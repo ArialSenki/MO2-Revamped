@@ -139,6 +139,8 @@ public:
   bool fluentToolbarApplied() const;
   bool downloadColumnsCompacted() const;
   void setDownloadColumnsCompacted(bool b);
+  bool pluginColumnsRemeasured() const;
+  void setPluginColumnsRemeasured(bool b);
   void setFluentToolbarApplied(bool b);
 
   void saveDocks(const QMainWindow* w);

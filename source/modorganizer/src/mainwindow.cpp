@@ -1632,8 +1632,14 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->bsaList->setLocalMoveOnly(true);
   ui->bsaList->setHeaderLabels({tr("Name")});
 
-  const bool pluginListAdjusted =
-      settings.geometry().restoreState(ui->espList->header());
+  bool pluginListAdjusted = settings.geometry().restoreState(ui->espList->header());
+
+  // the 1.1.0 betas widened every plugin column a little at each start; a
+  // layout they saved is measured again from the contents, once
+  // (marked done when the new layout is saved, see storeSettings())
+  if (!settings.geometry().pluginColumnsRemeasured()) {
+    pluginListAdjusted = false;
+  }
 
   // data tab
   setStartupDiagnosticPhase("mainwindow.create_tabs");
@@ -2034,9 +2040,12 @@ void MainWindow::allowListResize()
   }
 
   for (int i = 1; i < header->count(); ++i) {
+    // room for the sort arrow, which the contents' width leaves out: only for
+    // a column measured from its contents, since a saved width already has it
+    // and adding it again grew the columns at every start
+    const bool measured = header->sectionResizeMode(i) == QHeaderView::ResizeToContents;
     header->setSectionResizeMode(i, QHeaderView::Interactive);
-    // room for the sort arrow, which the contents' width leaves out
-    if (nameStretches) {
+    if (measured && !header->isSectionHidden(i)) {
       header->resizeSection(i, header->sectionSize(i) + 14);
     }
   }
@@ -3809,6 +3818,7 @@ void MainWindow::storeSettings()
   s.geometry().saveMainWindowMonitor(this);
 
   s.geometry().saveState(ui->espList->header());
+  s.geometry().setPluginColumnsRemeasured(true);
   s.geometry().saveState(ui->downloadView->header());
   s.geometry().saveState(ui->savegameList->header());
 

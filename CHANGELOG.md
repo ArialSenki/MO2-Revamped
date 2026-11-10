@@ -12,6 +12,9 @@
   archives is only for Skyrim.
 - The Plugins and Archives tabs and their tools match the rest of the design, with
   the search on top and number columns that keep just the room they need.
+- The Plugins list's columns no longer grow a little at every start until the names
+  disappear. Its column widths are measured again once, including widths you set
+  yourself.
 - New Vegas starts from a profile made before its launcher ever ran. An empty prefs
   file in a profile is now filled from the game's own, instead of sending the game
   to its launcher.

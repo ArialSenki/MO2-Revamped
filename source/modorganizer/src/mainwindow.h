@@ -310,8 +310,7 @@ private:
   Ui::MainWindow* ui;
 
   bool m_WasVisible;
-  bool m_FirstPaint;
-  bool m_ToolMenuDirty;
+  bool m_FirstPaint;  bool m_ToolMenuDirty;
   QDialog* m_FilterOptionsDialog = nullptr;
 
   // the update notice while it is open, see showUpdateNotice()

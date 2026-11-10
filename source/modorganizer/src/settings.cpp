@@ -851,6 +851,16 @@ void GeometrySettings::setDownloadColumnsCompacted(bool b)
   set(m_Settings, "Geometry", "download_columns_compact_3", b);
 }
 
+bool GeometrySettings::pluginColumnsRemeasured() const
+{
+  return get<bool>(m_Settings, "Geometry", "plugin_columns_remeasured", false);
+}
+
+void GeometrySettings::setPluginColumnsRemeasured(bool b)
+{
+  set(m_Settings, "Geometry", "plugin_columns_remeasured", b);
+}
+
 bool GeometrySettings::fluentToolbarApplied() const
 {
   return get<bool>(m_Settings, "Geometry", FluentToolbarKey, false);
