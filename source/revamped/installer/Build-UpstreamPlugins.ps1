@@ -27,7 +27,7 @@ param(
     [string]$VcpkgRoot,
     # folder with boost_1_85_0, spdlog-v1.14.1, zlib-v1.3.1, lz4-v1.9.4,
     # libbsarch-0.0.12-release-x64, DirectXTex and
-    # libloot-0.23.0-win64, as mob prepares them
+    # the official libloot-0.29.7-win64 release (checked against its hash)
     [string]$ThirdPartyDirectory,
     # Qt 6.7.1 msvc2019_64 with the modules PyQt6 binds (see BUILDING.md)
     [string]$QtDirectory,
@@ -218,7 +218,7 @@ $roots = [ordered]@{
     LIBBSARCH_ROOT   = Join-Path $thirdParty 'libbsarch-0.0.12-release-x64'
     DIRECTXTEX_ROOT  = Join-Path $thirdParty 'DirectXTex'
     SEVENZ_ROOT      = $sevenZipRoot
-    LOOT_PATH        = Join-Path $thirdParty 'libloot-0.23.0-win64'
+    LOOT_PATH        = Join-Path $thirdParty 'libloot-0.29.7-win64'
     QT_ROOT          = $qtRoot
     PYTHON_ROOT      = $pythonRoot
 }
@@ -226,6 +226,13 @@ foreach ($entry in $roots.GetEnumerator()) {
     if (-not (Test-Path -LiteralPath $entry.Value -PathType Container)) {
         throw "$($entry.Key) was not found: $($entry.Value)"
     }
+}
+# libloot is shipped as LOOT publishes it: the DLL of the official 0.29.7
+# release (libloot-0.29.7-win64.7z, sha256 617025d6...c15da)
+$libloot = Join-Path $roots.LOOT_PATH 'bin\libloot.dll'
+if (-not (Test-Path -LiteralPath $libloot -PathType Leaf) -or
+    (Get-FileHash -LiteralPath $libloot -Algorithm SHA256).Hash -ne '1755AE339A9B050F618B2076EC79FB96C883F9F271FF9434A2976B066EED9A03') {
+    throw "LOOT_PATH is not the official libloot 0.29.7 release: $libloot"
 }
 foreach ($file in @('Include\Python.h', 'PCBuild\amd64\python.exe')) {
     if (-not (Test-Path -LiteralPath (Join-Path $pythonRoot $file) -PathType Leaf)) {
@@ -395,6 +402,10 @@ if ($problems.Count -eq 0) {
         # file that already used the dynamic runtime (7z.dll links it
         # statically), and no other Visual C++ runtime DLL may appear
         $expectedDeps = @($expected.dependents)
+        # libloot 0.24 and later are libloot.dll; 2.5.2's lootcli used loot.dll
+        if ($relative -eq 'loot\lootcli.exe') {
+            $expectedDeps = @($expectedDeps | ForEach-Object { if ($_ -eq 'loot.dll') { 'libloot.dll' } else { $_ } } | Sort-Object)
+        }
         $builtDeps = @($record.dependents)
         if (@($expectedDeps | Where-Object { $_ -match '^vcruntime140\.dll$' }).Count) {
             $loose = '^(api-ms-win-crt-.+|vcruntime140_1)\.dll$'

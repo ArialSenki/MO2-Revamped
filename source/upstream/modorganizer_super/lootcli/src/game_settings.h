@@ -14,7 +14,7 @@ namespace loot
 constexpr inline std::string_view NEHRIM_STEAM_REGISTRY_KEY =
     "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App "
     "1014940\\InstallLocation";
-static constexpr const char* DEFAULT_MASTERLIST_BRANCH = "v0.21";
+static constexpr const char* DEFAULT_MASTERLIST_BRANCH = "v0.29";
 
 enum struct GameId : uint8_t
 {
@@ -30,14 +30,17 @@ enum struct GameId : uint8_t
   fonv,
   fo4,
   fo4vr,
-  starfield
+  starfield,
+  openmw,
+  oblivionRemastered
 };
 
 GameType GetGameType(const GameId gameId);
 
 float GetMinimumHeaderVersion(const GameId gameId);
 
-std::string GetPluginsFolderName(GameId gamiId);
+std::filesystem::path GetDataPath(const GameId gamiId,
+                                  const std::filesystem::path& gamePath);
 
 std::string ToString(const GameId gameId);
 

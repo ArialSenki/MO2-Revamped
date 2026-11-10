@@ -10,3 +10,6 @@ target_include_directories(lootcli
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 mo2_install_target(lootcli INSTALLDIR bin/loot)
+
+# libloot beside it, as MO2's own lootcli build installs it (MO2 Revamped)
+install(FILES $<TARGET_FILE:mo2-loot> DESTINATION bin/loot)

@@ -7,11 +7,12 @@ Python 3.12.15, and the MO2 build dependencies recorded in
 successfully. Every Mod Organizer 2 binary of a release is built from this
 repository (see below), and so are its translations, the BAIN wizard
 interpreter, and the two third-party binaries MO2 compiled itself, `7z.dll`
-and PyQt6. Qt (with its own `qt_`/`qtbase_` translations), Python, lz4,
-libbsarch, LOOT, Explorer++ and the third-party Python libraries are still
-supplied separately, from the runtime and the overlays; when this was written,
-the Qt, lz4, libbsarch and LOOT files there were byte for byte the projects'
-official releases (compared by hand, not by the builder).
+and PyQt6. libloot is the official release, taken from the third-party folder
+and checked by its hash. Qt (with its own `qt_`/`qtbase_` translations),
+Python, lz4, libbsarch, Explorer++ and the third-party Python libraries are
+still supplied separately, from the runtime and the overlays; when this was
+written, the Qt, lz4 and libbsarch files there were byte for byte the
+projects' official releases (compared by hand, not by the builder).
 
 For release builds, the Organizer target maps `%USERPROFILE%` to the neutral
 `MO2_USER` prefix in MSVC Release builds with `/pathmap` and
@@ -31,7 +32,10 @@ It maps the reviewed Light and Dark styles to `stylesheets/Light.qss` and
 
 Use the official [MO2 build project (`mob`)](https://github.com/ModOrganizer2/mob)
 to prepare the third-party dependencies (Boost, spdlog, zlib, lz4, libbsarch,
-DirectXTex, libloot) and Qt 6.7.1. Do not mix Qt, Python, compiler, or
+DirectXTex) and Qt 6.7.1. libloot is the official
+[0.29.7 release](https://github.com/loot/libloot/releases/tag/0.29.7),
+extracted into that folder as `libloot-0.29.7-win64`; the build refuses any
+other `libloot.dll`. Do not mix Qt, Python, compiler, or
 USVFS versions without rebuilding and checking the native extensions.
 
 The Mod Organizer 2 libraries and plugins come from `source/upstream/`, not
@@ -201,8 +205,9 @@ powershell -ExecutionPolicy Bypass -File source/revamped/installer/Build-Release
 ```
 
 From the Complete runtime the builder takes only what has no source here (Qt,
-lz4, libbsarch, LOOT, Explorer++, the third-party Python libraries the plugins
-bundle, and Qt's `qt_`/`qtbase_` translations). It never
+lz4, libbsarch, Explorer++, the third-party Python libraries the plugins
+bundle, and Qt's `qt_`/`qtbase_` translations); 2.5.2's `loot/loot.dll` is
+left out, as libloot now comes from the upstream stage. It never
 stages the runtime's copies of the files `-UpstreamStageDirectory` lists: those
 come from the upstream stage, whose manifest must match its files and the
 committed `source/upstream`. The Python plugins, with the BAIN wizard

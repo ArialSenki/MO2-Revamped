@@ -172,7 +172,7 @@ $out.Add('| Component | Here | Latest |')
 $out.Add('| --- | --- | --- |')
 $third = @(
     @{ Name = '7-Zip'; Here = '26.06'; Repo = 'ip7z/7zip' },
-    @{ Name = 'libloot'; Here = '0.23.0'; Repo = 'loot/libloot' },
+    @{ Name = 'libloot'; Here = '0.29.7'; Repo = 'loot/libloot' },
     @{ Name = 'pybind11'; Here = '2.12.0'; Repo = 'pybind/pybind11' },
     @{ Name = 'USVFS release'; Here = '0.5.7.2'; Repo = 'ModOrganizer2/usvfs' },
     @{ Name = 'Mod Organizer 2 release'; Here = '2.5.2'; Repo = 'ModOrganizer2/modorganizer' }

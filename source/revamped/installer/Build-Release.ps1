@@ -1008,7 +1008,7 @@ $fullStage = Join-Path $stageRoot 'complete'
 $isolatedStage = Join-Path $stageRoot 'eldenring-isolated'
 New-Item -ItemType Directory -Force -Path $fullStage | Out-Null
 Copy-RuntimeTree -SourceRoot $runtimeRoot -DestinationRoot $fullStage `
-    -Exclude ($upstreamFiles + @($organizerFiles.Keys) + $mo2TranslationFiles) -ExcludePrefix $pythonPluginPrefixes
+    -Exclude ($upstreamFiles + @($organizerFiles.Keys) + $mo2TranslationFiles + @('loot\loot.dll')) -ExcludePrefix $pythonPluginPrefixes
 Copy-UpstreamBinaries -DestinationRoot $fullStage
 Copy-OrganizerFiles -DestinationRoot $fullStage
 Copy-Mo2Translations -DestinationRoot $fullStage

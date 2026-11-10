@@ -4,6 +4,7 @@ ModOrganizer2 repositories at the commits of the Mod Organizer 2.5.2 release
 The repository of <name> is https://github.com/ModOrganizer2/modorganizer-<name>,
 except cmake_common, which is https://github.com/ModOrganizer2/cmake_common.
 Changes made for MO2 Revamped are in later commits of this repository.
+lootcli's src/ is from a later commit (MO2's port to libloot 0.29), not 2.5.2's.
 
 modorganizer_super:
   archive                  a13e224c17fb0f2210305cb3dcc442f25f2fd58c
@@ -38,7 +39,7 @@ modorganizer_super:
   installer_manual         52d81792fa2f22a9fa9711b5d502263f5f4531cd
   installer_omod           9d59d545126d26bb10b36760c86029d859575f28
   installer_quick          ff7e4cb91754669a7f3c42d8aa7ae9913f8c7255
-  lootcli                  460a29d3fa4c260db192c18741ac8dd21a549ae3
+  lootcli                  465d4106951417bf409831cb79289b1413dfbca5
   plugin_python            e11d5ec00d45d971f65d13b1d48b08397a2b4ff9
   preview_base             f6c7a516d342e09da48f07d8d6203a0576ad583a
   preview_bsa              567d8ac549824cff3d9122b671b62f7471bd02a4

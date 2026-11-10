@@ -633,6 +633,10 @@ void Loot::processStdout(const std::string& lootOut)
 
     if (m.type == lootcli::MessageType::None) {
       log::error("unrecognised loot output: '{}'", line);
+      // past this line: staying on it looped forever. lootcli 1.8 no longer
+      // escapes the newlines inside libloot's messages, so a message can now
+      // span lines the parser doesn't recognise
+      start = newline + 1;
       continue;
     }
 

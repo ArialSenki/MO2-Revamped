@@ -59,6 +59,14 @@
 - The window no longer waits for Overwrite's files and the saves folder to be
   counted: the dashboard reads them in the background.
 
+### LOOT
+
+- Sorting uses LOOT's current rules again. Mod Organizer 2.5.2's LOOT reads the
+  masterlists' v0.21 branch, which LOOT stopped updating in May 2025, so it
+  sorted with rules more than a year old. LOOT is now libloot 0.29.7 with MO2's
+  current lootcli, which downloads the v0.29 masterlists and moves settings that
+  still name an old branch.
+
 ### Fixes from later Mod Organizer 2 versions
 
 Brought in from MO2's own repositories, where they were fixed after 2.5.2:

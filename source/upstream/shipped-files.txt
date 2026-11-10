@@ -2,7 +2,8 @@
 # instead of the Mod Organizer 2.5.2 runtime, by runtime path. "native" files are
 # checked against abi/binaries.json; "dotnet" files are the NuGet libraries
 # installer_omod restores; "file" files are other built files, staged with no ABI to
-# compare (PyQt6's .pyi stubs and __init__.py).
+# compare (PyQt6's .pyi stubs and __init__.py, and libloot.dll, the official
+# LOOT release, checked by its hash).
 native uibase.dll
 native helper.exe
 native dlls/archive.dll
@@ -120,3 +121,4 @@ file plugins/plugin_python/libs/PyQt6/QtWebSockets.pyi
 file plugins/plugin_python/libs/PyQt6/QtWidgets.pyi
 file plugins/plugin_python/libs/PyQt6/QtXml.pyi
 file plugins/plugin_python/libs/PyQt6/sip.pyi
+file loot/libloot.dll

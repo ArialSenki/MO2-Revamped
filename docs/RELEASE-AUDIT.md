@@ -254,7 +254,7 @@ launch checks.
 | OpenSSL | 3.5.9 | Updated from 3.3.0 by rebuilding the supported [3.5 LTS line](https://openssl-library.org/source/) from verified source and running load/TLS checks. Upstream 3.6.5 is newer, but its support window ends in November 2026; 3.5 LTS is supported through April 2030. Both root and `dlls` copies are staged from the same runtime. |
 | Qt / PyQt | 6.7.1 | Kept with its matching runtime and native extensions. Qt 6.12.0 and PyQt 6.11.0 are newer; moving requires rebuilding Qt WebEngine, PyQt, and MO2's native extensions, then reviewing the UI again. |
 | Python | 3.12.15 | Rebuilt from the official [security-only source release](https://www.python.org/downloads/release/python-31215/). Its embedded standard-library bytecode and CPython extension set are updated; `_ssl` and `_hashlib` are rebuilt against OpenSSL 3.5.9. MO2/PyQt extensions remain on the CPython 3.12 ABI. |
-| libloot / LOOT CLI | 0.23.0 / 1.6.0 | Kept with the tested MO2 2.5.2 integration. Current libloot 0.29.6 needs API, binary, and sorting validation before replacement. |
+| libloot / LOOT CLI | 0.29.7 / 1.8.0 | Updated from 0.23.0 / 1.6.0, whose `v0.21` masterlist branch LOOT stopped updating in May 2025. lootcli is MO2's current source with the Revamped fixes; libloot is the official release, checked by its hash. Sorting checked with Skyrim SE and Fallout 4. See [`UPSTREAMS.md`](UPSTREAMS.md). |
 | Boost | 1.85.0 | Build dependency only; not shipped as a runtime update. Boost 1.92.0 is available, but changing it requires another native rebuild and regression pass. |
 | Zig | 0.13.0 | Retained for the release bridge. Zig 0.17.0 compiled the current source, but its DLL exported additional MinHook/CRT symbols compared with 0.13.0. The newer compiler is deferred until the export surface is made explicit and checked. |
 | Elden Ring components | game plugin 0.5.0-alpha.75; native bridge 0.5.0-alpha.33; archive installer alpha.72; save isolation alpha.75; startup options 0.5.0.64 | Version labels are preserved as reported by the included components. Product version 1.0.1 does not imply each component has independently reached 1.0.0. |
@@ -592,7 +592,8 @@ and GitHub publication remain pending.
   6.11.0 itself adds Qt 6.11 support, and PyQt-builder 1.20.0 added Qt 6.12
   build support on October 4; the MO2 Qt/WebEngine/PyQt/native stack has not
   been rebuilt or regressed against that pair. The remaining pinned versions
-  are 7-Zip 24.05 (26.04 released October 5), libloot 0.23.0 (upstream 0.29.6),
+  are 7-Zip 24.05 (26.04 released October 5; since updated to 26.06), libloot
+  0.23.0 (upstream 0.29.6; since updated to 0.29.7),
   Boost 1.85.0 (upstream 1.92.0), and Zig 0.13.0 (stable 0.17.0 released
   October 2). Their ABI, API, archive, sorting, native-build, and bridge-export
   checks are still required before adoption. See [`UPSTREAMS.md`](UPSTREAMS.md).

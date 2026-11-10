@@ -264,9 +264,16 @@ function(mo2_find_loot)
 
     find_package(Boost COMPONENTS locale REQUIRED)
 
+    # libloot 0.24 and later name it libloot instead of loot (MO2 Revamped)
+    if (EXISTS ${LOOT_PATH}/bin/libloot.dll)
+        set(_loot_name libloot)
+    else()
+        set(_loot_name loot)
+    endif()
+
     add_library(mo2-loot IMPORTED SHARED)
-    set_target_properties(mo2-loot PROPERTIES IMPORTED_LOCATION ${LOOT_PATH}/bin/loot.dll)
-    set_target_properties(mo2-loot PROPERTIES IMPORTED_IMPLIB ${LOOT_PATH}/lib/loot.lib)
+    set_target_properties(mo2-loot PROPERTIES IMPORTED_LOCATION ${LOOT_PATH}/bin/${_loot_name}.dll)
+    set_target_properties(mo2-loot PROPERTIES IMPORTED_IMPLIB ${LOOT_PATH}/lib/${_loot_name}.lib)
     target_include_directories(mo2-loot INTERFACE ${LOOT_PATH}/include)
     target_link_libraries(mo2-loot INTERFACE ${Boost_LIBRARIES})
     add_library(mo2::loot ALIAS mo2-loot)
