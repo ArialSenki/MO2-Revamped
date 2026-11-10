@@ -73,9 +73,13 @@ public:
       option->backgroundBrush = backgroundColor;
     }
 
-    if (index.column() == ModList::COL_NAME &&
-        !ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())->isSeparator()) {
-      alignWithSwitches(option);
+    if (index.column() == ModList::COL_NAME) {
+      // a separator's cell already starts after the gutter with its arrow
+      const bool separator =
+          ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())->isSeparator();
+      alignWithSwitches(option, separator && m_view->hasCollapsibleSeparators()
+                                    ? m_view->indentation()
+                                    : 0);
     }
   }
 
@@ -111,13 +115,24 @@ public:
                ->isSeparator()) ||
           index.column() == ModList::COL_NOTES) {
 
-        // combine the color with the background and then find the "ideal" text color
-        const auto a = color.alpha() / 255.;
-        int r        = (1 - a) * bg.red() + a * color.red(),
-            g        = (1 - a) * bg.green() + a * color.green(),
-            b        = (1 - a) * bg.blue() + a * color.blue();
+        // combine the colors with the background as paintColorBand() paints
+        // them, then find the "ideal" text color
+        const auto over = [](const QColor& under, const QColor& top) {
+          const auto a = top.alpha() / 255.;
+          return QColor(int((1 - a) * under.red() + a * top.red()),
+                        int((1 - a) * under.green() + a * top.green()),
+                        int((1 - a) * under.blue() + a * top.blue()));
+        };
+        QColor shown = bg;
+        const QColor own =
+            ModInfo::getByIndex(index.data(ModList::IndexRole).toInt())->isSeparator()
+                ? index.data(Qt::BackgroundRole).value<QColor>()
+                : QColor();
+        if (own.isValid() && own != color) {
+          shown = over(shown, own);
+        }
         opt.palette.setBrush(QPalette::Text,
-                             ColorSettings::idealTextColor(QColor(r, g, b)));
+                             ColorSettings::idealTextColor(over(shown, color)));
       }
     }
 
@@ -143,6 +158,10 @@ public:
     // after the color fill: it stays inside the cell
     opt.rect.adjust(-textShift(index), 0, 0, 0);
     QStyledItemDelegate::paint(painter, opt, index);
+    if (m_view->hasSeparatorArrow(index)) {
+      m_view->paintSeparatorArrow(painter, switchSlot(opt, index), index,
+                                  opt.palette.color(QPalette::Text));
+    }
     opt.state.setFlag(QStyle::State_MouseOver, hovered);
     paintSwitch(painter, opt, index);
   }
@@ -167,6 +186,25 @@ public:
     editor->setGeometry(rect);
   }
 
+  // where a mod's switch is, in a separator's row: worked out as the switch
+  // itself is, from a cell that starts after the separator's gutter
+  QRect switchSlot(const QStyleOptionViewItem& viewOption, const QModelIndex& index) const
+  {
+    QStyleOptionViewItem option(viewOption);
+    initStyleOption(&option, index);
+    option.features.setFlag(QStyleOptionViewItem::HasCheckIndicator, true);
+    option.features.setFlag(QStyleOptionViewItem::HasDecoration, false);
+    option.checkState = Qt::Unchecked;
+
+    const QWidget* widget = option.widget;
+    QStyle* style         = widget ? widget->style() : QApplication::style();
+    const QRect track =
+        style->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &option, widget);
+    const int gutter = m_view->hasCollapsibleSeparators() ? m_view->indentation() : 0;
+    return QRect(track.left() - gutter, viewOption.rect.top(), track.width(),
+                 viewOption.rect.height());
+  }
+
   // a refresh renumbers the mods: the states painted before belong to
   // other mods now, which would animate as if toggled
   void forgetSwitchStates()
@@ -189,9 +227,9 @@ private:
   // over instead of jumping
   mutable QHash<int, bool> m_paintedStates;
 
-  // a name with an icon and no switch (Overwrite) gets the switch's width for
-  // its icon, so its text starts where the mods' names start
-  static void alignWithSwitches(QStyleOptionViewItem* option)
+  // a name with an icon and no switch (Overwrite, a separator) gets the
+  // switch's width for its icon, so its text starts where the mods' names start
+  static void alignWithSwitches(QStyleOptionViewItem* option, int gutter)
   {
     if (option->features & QStyleOptionViewItem::HasCheckIndicator) {
       return;
@@ -211,7 +249,8 @@ private:
 
     const int shift =
         style->subElementRect(QStyle::SE_ItemViewItemText, &withSwitch, widget).left() -
-        style->subElementRect(QStyle::SE_ItemViewItemText, option, widget).left();
+        style->subElementRect(QStyle::SE_ItemViewItemText, option, widget).left() -
+        gutter;
     if (shift > 0) {
       option->decorationSize.rwidth() += shift;
     }
@@ -1250,9 +1289,49 @@ int ModListView::removedIndentation(const QModelIndex& index) const
   if (!mod.isValid() || ModInfo::getByIndex(mod.toInt())->isSeparator()) {
     return 0;
   }
+  // without a separator in the list the tree keeps no gutter to take back
+  if (!rootIsDecorated() && !index.parent().isValid()) {
+    return 0;
+  }
   // the mods stay where they are without separators: only a separator keeps
   // the gutter, for its arrow
   return indentation() * (index.parent().isValid() ? 2 : 1);
+}
+
+bool ModListView::hasSeparatorArrow(const QModelIndex& index) const
+{
+  if (!index.isValid() || index.column() != ModList::COL_NAME ||
+      !hasCollapsibleSeparators() || !model()->hasChildren(index)) {
+    return false;
+  }
+  const QVariant mod = index.data(ModList::IndexRole);
+  return mod.isValid() && ModInfo::getByIndex(mod.toInt())->isSeparator();
+}
+
+QRect ModListView::separatorArrowSlot(const QModelIndex& index) const
+{
+  auto* delegate =
+      dynamic_cast<ModListStyledItemDelegate*>(itemDelegateForIndex(index));
+  if (delegate == nullptr) {
+    return {};
+  }
+  QStyleOptionViewItem option;
+  initViewItemOption(&option);
+  option.rect = visualRect(index);
+  return delegate->switchSlot(option, index);
+}
+
+void ModListView::paintSeparatorArrow(QPainter* painter, const QRect& slot,
+                                      const QModelIndex& index, const QColor& ink) const
+{
+  // chevron right, chevron down
+  const QChar glyph(isExpanded(index) ? 0xE70D : 0xE76C);
+  painter->save();
+  painter->setRenderHint(QPainter::TextAntialiasing);
+  painter->setFont(FluentIcons::font(12));
+  painter->setPen(ink);
+  painter->drawText(slot, Qt::AlignCenter, QString(glyph));
+  painter->restore();
 }
 
 void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
@@ -1267,15 +1346,25 @@ void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
                           ? color
                           : color.lighter(selected ? SelectedLighter : HoverLighter);
 
-  // one rounded shape across the row; each cell paints its slice of it
+  // a collapsed separator showing its mods' conflict color keeps its own color
+  // under it, so it still looks like the same separator
+  const QColor own =
+      outlined ? index.data(Qt::BackgroundRole).value<QColor>() : QColor();
+
+  // one square shape across the row, like the theme's hover and selection;
+  // each cell paints its slice of it
   const QRect row = colorBand(
       QRect(2 - horizontalOffset(), cell.top(), header()->length() - 4, cell.height()));
   painter->save();
   painter->setClipRect(cell, Qt::IntersectClip);
   painter->setRenderHint(QPainter::Antialiasing);
   painter->setPen(Qt::NoPen);
+  if (own.isValid() && own != color) {
+    painter->setBrush(own);
+    painter->drawRect(row);
+  }
   painter->setBrush(fill);
-  painter->drawRoundedRect(row, 5, 5);
+  painter->drawRect(row);
 
   if (outlined && (hovered || selected)) {
     QColor ink = FluentIcons::color(FluentIcons::Tone::Ink);
@@ -1283,8 +1372,8 @@ void ModListView::paintColorBand(QPainter* painter, const QRect& cell,
     const qreal width = selected ? 2.0 : 1.0;
     painter->setBrush(Qt::NoBrush);
     painter->setPen(QPen(ink, width));
-    painter->drawRoundedRect(
-        QRectF(row).adjusted(width / 2, width / 2, -width / 2, -width / 2), 5, 5);
+    painter->drawRect(
+        QRectF(row).adjusted(width / 2, width / 2, -width / 2, -width / 2));
   }
   painter->restore();
 }
@@ -1310,22 +1399,36 @@ void ModListView::drawBranches(QPainter* painter, const QRect& rect,
   if (!color.isValid()) {
     color = index.data(Qt::BackgroundRole).value<QColor>();
   }
-  if (color.isValid()) {
+  // a mod's cell reaches over its gutter (removedIndentation()) and paints the
+  // color there itself: painted here too, a translucent color would be doubled
+  if (color.isValid() && removedIndentation(index) == 0) {
     const int cursor = viewport()->mapFromGlobal(QCursor::pos()).y();
     const bool hovered =
         viewport()->underMouse() && cursor >= rect.top() && cursor <= rect.bottom();
     const bool selected = selectionModel()->isSelected(index);
     if (hovered || selected) {
-      // the view has already filled the whole gutter with the row's hover or
-      // selection: above and below the band the row stays as it was
+      // the view has filled the gutter with the row's selection, which the
+      // cells don't show under a color: the gutter gets what the cells have,
+      // the row's background and its hover
       const int row = (rect.top() + verticalOffset()) / std::max(rect.height(), 1);
       painter->fillRect(rect, alternatingRowColors() && (row & 1) != 0
                                   ? palette().alternateBase()
                                   : palette().base());
+      if (hovered) {
+        QStyleOptionViewItem cell;
+        initViewItemOption(&cell);
+        cell.rect  = rect;
+        cell.index = index;
+        cell.state = QStyle::State_Enabled | QStyle::State_MouseOver;
+        style()->drawPrimitive(QStyle::PE_PanelItemViewRow, &cell, painter, this);
+      }
     }
     paintColorBand(painter, rect, index, color, hovered, selected);
   }
-  QTreeView::drawBranches(painter, r, index);
+  // a separator's arrow is painted over its color, with its name
+  if (!hasSeparatorArrow(index)) {
+    QTreeView::drawBranches(painter, r, index);
+  }
 }
 
 void ModListView::commitData(QWidget* editor)
@@ -1867,8 +1970,78 @@ void ModListView::timerEvent(QTimerEvent* event)
   }
 }
 
+bool ModListView::edit(const QModelIndex& index, EditTrigger trigger, QEvent* event)
+{
+  // the first click of a double click on a selected row asks for a rename
+  // once the double click time is over (Qt's delayed edit, with no event): the
+  // double click already did what it does (open, expand, open the mod's info),
+  // so no rename follows it. Every other call goes through: the switches are
+  // toggled from here too
+  // (the double click may open the mod's info, whose event loop runs the timer
+  // while the double click is still being handled)
+  if (trigger == AllEditTriggers && event == nullptr &&
+      (m_inDoubleClick ||
+       (m_doubleClick.isValid() &&
+        m_doubleClick.elapsed() <= 2 * QApplication::doubleClickInterval()))) {
+    return false;
+  }
+  return QTreeView::edit(index, trigger, event);
+}
+
+bool ModListView::isOnSeparatorArrow(const QModelIndex& index, const QPoint& pos) const
+{
+  if (!hasSeparatorArrow(index)) {
+    return false;
+  }
+  // the arrow and the gutter before it, where the tree used to draw it and
+  // still opens the row
+  QRect area = separatorArrowSlot(index);
+  area.setLeft(visualRect(index).left() - indentation());
+  return area.contains(pos);
+}
+
+void ModListView::mouseDoubleClickEvent(QMouseEvent* event)
+{
+  m_doubleClick.start();
+
+  // a quick second click on a separator's arrow is one more click on it
+  const QModelIndex index = indexAt(event->pos());
+  if (event->button() == Qt::LeftButton && isOnSeparatorArrow(index, event->pos())) {
+    setExpanded(index, !isExpanded(index));
+    m_arrowClick = true;
+    event->accept();
+    return;
+  }
+  m_inDoubleClick = true;
+  QTreeView::mouseDoubleClickEvent(event);
+  m_inDoubleClick = false;
+}
+
+void ModListView::mouseMoveEvent(QMouseEvent* event)
+{
+  // a press on the arrow isn't a press on the row: it drags nothing
+  if (m_arrowClick) {
+    event->accept();
+    return;
+  }
+  QTreeView::mouseMoveEvent(event);
+}
+
 void ModListView::mousePressEvent(QMouseEvent* event)
 {
+  // the arrow is outside the area where the tree looks for it
+  m_arrowClick                 = false;
+  const QModelIndex arrowIndex = indexAt(event->pos());
+  if (event->button() == Qt::LeftButton && event->modifiers() == Qt::NoModifier &&
+      isOnSeparatorArrow(arrowIndex, event->pos())) {
+    setExpanded(arrowIndex, !isExpanded(arrowIndex));
+    m_arrowClick = true;
+    // a rename asked for by a click just before is dropped too
+    m_doubleClick.start();
+    event->accept();
+    return;
+  }
+
   // allow alt+click to select all mods inside a separator
   // when using collapsible separators
   //
@@ -1910,6 +2083,14 @@ void ModListView::mouseReleaseEvent(QMouseEvent* event)
   // the selection is not always triggered in mousePressEvent and only
   // doing it here create a small lag between the selection of the
   // separator and the children
+
+  // the arrow's click: the tree would take its release for a click on the
+  // row it pressed before, a rename when that row was selected
+  if (m_arrowClick && event->button() == Qt::LeftButton) {
+    m_arrowClick = false;
+    event->accept();
+    return;
+  }
 
   // disable edit if Alt is pressed
   auto triggers = editTriggers();

@@ -21,6 +21,14 @@
 
 - The keyboard focus ring only appears after a real press of Tab, not on a window's
   first control.
+- Separators are calmer: their color is a tint over the list, with square corners
+  like the other rows, and their names line up with the mods' names.
+- A separator's arrow sits where the mods have their switch, and a click on it opens
+  or closes the separator without selecting it.
+- A double click no longer ends in a rename, and a click on the arrow of a selected
+  separator no longer renames it either.
+- A collapsed separator keeps its color while it shows its mods' conflicts, and a
+  mod's conflict color no longer looks darker around its switch.
 
 ## 1.1.0-beta.5 (pre-release) — November 9, 2026
 

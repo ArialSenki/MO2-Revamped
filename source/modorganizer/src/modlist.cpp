@@ -373,12 +373,19 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
     }
     return QVariant();
   } else if (role == Qt::BackgroundRole || role == ScrollMarkRole) {
-    if (column == COL_NOTES && modInfo->color().isValid()) {
-      return modInfo->color();
-    } else if (modInfo->isSeparator() && modInfo->color().isValid() &&
+    // a separator is a band across the whole list: over the list its color is
+    // a tint, so it doesn't outshout the mods. The scroll bar mark stays exact
+    QColor color = modInfo->color();
+    if (role == Qt::BackgroundRole && modInfo->isSeparator() && color.isValid()) {
+      color.setAlpha(color.alpha() * 115 / 255);
+    }
+
+    if (column == COL_NOTES && color.isValid()) {
+      return color;
+    } else if (modInfo->isSeparator() && color.isValid() &&
                (role != ScrollMarkRole ||
                 Settings::instance().colors().colorSeparatorScrollbar())) {
-      return modInfo->color();
+      return color;
     } else {
       return QVariant();
     }

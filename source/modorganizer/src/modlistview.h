@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <QDragEnterEvent>
+#include <QElapsedTimer>
 #include <QLCDNumber>
 #include <QLabel>
 #include <QTreeView>
@@ -54,6 +55,15 @@ public:
   // the indentation a row loses so a mod's name doesn't move when the list has
   // collapsible separators
   int removedIndentation(const QModelIndex& index) const;
+
+  // the arrow of a separator with mods sits where the mods have their switch
+  bool hasSeparatorArrow(const QModelIndex& index) const;
+  QRect separatorArrowSlot(const QModelIndex& index) const;
+  bool isOnSeparatorArrow(const QModelIndex& index, const QPoint& pos) const;
+  void paintSeparatorArrow(QPainter* painter, const QRect& slot,
+                           const QModelIndex& index, const QColor& ink) const;
+
+  using QTreeView::edit;
 
   // how much a colored row brightens under the cursor and when selected
   // (QColor::lighter)
@@ -233,6 +243,9 @@ protected:
   void dropEvent(QDropEvent* event) override;
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
+  void mouseDoubleClickEvent(QMouseEvent* event) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
+  bool edit(const QModelIndex& index, EditTrigger trigger, QEvent* event) override;
   bool event(QEvent* event) override;
 
 protected slots:
@@ -407,6 +420,13 @@ public:  // member variables
   mutable QHash<QModelIndex, QColor> m_markerColors;
 
   bool m_inDragMoveEvent = false;
+
+  // a click on a separator's arrow is the arrow's alone, its release included
+  bool m_arrowClick = false;
+
+  // since the last double click: the click before it doesn't rename
+  QElapsedTimer m_doubleClick;
+  bool m_inDoubleClick = false;
 
   // replace the auto-expand timer from QTreeView to avoid
   // auto-collapsing
