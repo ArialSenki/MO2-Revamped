@@ -130,6 +130,7 @@ mo2_add_filter(NAME src/categories GROUPS
 mo2_add_filter(NAME src/core GROUPS
 	archivefiletree
 	installationmanager
+	winrarfallback
 	nexusinterface
 	nxmaccessmanager
 	organizercore

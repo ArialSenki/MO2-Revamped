@@ -63,6 +63,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/scoped_ptr.hpp>
 
 #include "archivefiletree.h"
+#include "winrarfallback.h"
+#include <QUuid>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -930,6 +932,92 @@ bool InstallationManager::isRunning() const
   return m_IsRunning;
 }
 
+InstallationManager::WinRARResult
+InstallationManager::tryWinRARFallback(const QString& fileName)
+{
+  // a wrong password also ends in "unsupported format"; WinRAR, which never
+  // asks for one here, would fail too
+  if (m_PasswordAsked || m_PasswordRejected) {
+    return WinRARResult::NotTried;
+  }
+  // only when the archive is there but 7-Zip couldn't read it
+  switch (m_ArchiveHandler->getLastError()) {
+  case Archive::Error::ERROR_FAILED_TO_OPEN_ARCHIVE:
+  case Archive::Error::ERROR_INVALID_ARCHIVE_FORMAT:
+  case Archive::Error::ERROR_ARCHIVE_INVALID:
+  case Archive::Error::ERROR_LIBRARY_ERROR:
+    break;
+  default:
+    return WinRARResult::NotTried;
+  }
+  if (!WinRARFallback::canHandle(fileName)) {
+    return WinRARResult::NotTried;
+  }
+  const QString winrar = WinRARFallback::findWinRAR();
+  if (winrar.isEmpty()) {
+    log::debug("WinRAR is not installed; no other way to open {}", fileName);
+    return WinRARResult::NotTried;
+  }
+
+  // the main window, also when MO2 isn't in front (a download finishing
+  // while the game runs)
+  QWidget* parent = m_ParentWidget != nullptr ? m_ParentWidget : qApp->activeWindow();
+  const auto answer = QuestionBoxMemory::query(
+      parent, "winrarFallback", tr("Open with WinRAR"),
+      tr("7-Zip, which MO2 uses for archives, can't open %1.\n\nWinRAR is "
+         "installed on this PC and may be able to. Extract the archive with WinRAR "
+         "and install it from there?")
+          .arg(QFileInfo(fileName).fileName()),
+      QDialogButtonBox::Yes | QDialogButtonBox::No, QDialogButtonBox::Yes);
+  if (answer != QDialogButtonBox::Yes) {
+    return WinRARResult::NotTried;
+  }
+
+  WinRARFallback::removeLeftovers();
+  const QString folder = QDir::temp().absoluteFilePath(
+      WinRARFallback::folderPrefix() + QUuid::createUuid().toString(QUuid::WithoutBraces));
+  QString error;
+  bool incomplete = false;
+  if (!WinRARFallback::extract(parent, winrar, fileName, folder, error, incomplete)) {
+    QDir(folder).removeRecursively();
+    if (!error.isEmpty()) {
+      log::error("WinRAR could not extract {}: {}", fileName, error);
+      reportError(tr("WinRAR could not extract the archive: %1").arg(error));
+    }
+    return WinRARResult::Stopped;
+  }
+  if (incomplete) {
+    QMessageBox::warning(parent, tr("Open with WinRAR"),
+                         tr("WinRAR extracted the archive with errors: some of its files "
+                            "may be missing from the mod."));
+  }
+
+  auto folderArchive = std::make_unique<FolderArchive>();
+  if (!folderArchive->open(folder.toStdWString(), {})) {
+    QDir(folder).removeRecursively();
+    return WinRARResult::NotTried;
+  }
+  log::info("extracted {} with WinRAR ({}) into {}", fileName, winrar, folder);
+  m_SevenZipHandler = std::move(m_ArchiveHandler);
+  m_ArchiveHandler  = std::move(folderArchive);
+  m_WinRARFolder    = folder;
+  return WinRARResult::Opened;
+}
+
+void InstallationManager::endWinRARFallback()
+{
+  if (m_SevenZipHandler) {
+    m_ArchiveHandler->close();
+    m_ArchiveHandler = std::move(m_SevenZipHandler);
+  }
+  if (!m_WinRARFolder.isEmpty()) {
+    if (!QDir(m_WinRARFolder).removeRecursively()) {
+      log::warn("could not remove the WinRAR folder {}", m_WinRARFolder);
+    }
+    m_WinRARFolder.clear();
+  }
+}
+
 void InstallationManager::postInstallCleanup()
 {
   // Clear the list of created files:
@@ -937,6 +1025,7 @@ void InstallationManager::postInstallCleanup()
 
   // Close the archive:
   m_ArchiveHandler->close();
+  endWinRARFallback();
 
   // directories we may want to remove. sorted from longest to shortest to ensure we
   // remove subdirectories first.
@@ -1080,6 +1169,7 @@ InstallationResult InstallationManager::install(const QString& fileName,
   // If there's an archive already open, close it. This happens with the bundle
   // installer when it uncompresses a split archive, then finds it has a real archive
   // to deal with.
+  endWinRARFallback();
   m_ArchiveHandler->close();
 
   // open the archive and construct the directory tree the installers work on
@@ -1130,6 +1220,18 @@ InstallationResult InstallationManager::install(const QString& fileName,
 
   if (!archiveOpen && m_PasswordCancelled) {
     return InstallationResult(IPluginInstaller::RESULT_CANCELED);
+  }
+
+  if (!archiveOpen) {
+    switch (tryWinRARFallback(fileName)) {
+    case WinRARResult::Opened:
+      archiveOpen = true;
+      break;
+    case WinRARResult::Stopped:
+      return InstallationResult(IPluginInstaller::RESULT_CANCELED);
+    case WinRARResult::NotTried:
+      break;
+    }
   }
 
   std::shared_ptr<IFileTree> filesTree =

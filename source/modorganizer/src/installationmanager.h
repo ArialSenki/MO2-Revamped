@@ -301,6 +301,18 @@ private:
 
   void postInstallCleanup();
 
+  // MO2 Revamped: when 7-Zip can't open the archive, extracts it with the
+  // user's WinRAR (if they agree) and installs from that folder
+  enum class WinRARResult
+  {
+    NotTried,
+    Opened,
+    // cancelled, or failed and already reported
+    Stopped
+  };
+  WinRARResult tryWinRARFallback(const QString& fileName);
+  void endWinRARFallback();
+
 private slots:
 
   /**
@@ -361,6 +373,9 @@ private:
 
   // Archive management.
   std::unique_ptr<Archive> m_ArchiveHandler;
+  // the 7-Zip handler while m_ArchiveHandler is a WinRAR-extracted folder
+  std::unique_ptr<Archive> m_SevenZipHandler;
+  QString m_WinRARFolder;
   QString m_CurrentFile;
   QString m_Password;
   bool m_PasswordAsked     = false;

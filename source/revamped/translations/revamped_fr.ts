@@ -5261,6 +5261,26 @@ La plupart des mods n&apos;en ont pas besoin : les extenseurs de scripts et les 
   <context>
     <name>InstallationManager</name>
     <message>
+      <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
+      <translation>WinRAR a extrait l'archive avec des erreurs : certains de ses fichiers peuvent manquer dans le mod.</translation>
+    </message>
+    <message>
+      <source>Open with WinRAR</source>
+      <translation>Ouvrir avec WinRAR</translation>
+    </message>
+    <message>
+      <source>7-Zip, which MO2 uses for archives, can't open %1.
+
+WinRAR is installed on this PC and may be able to. Extract the archive with WinRAR and install it from there?</source>
+      <translation>7-Zip, qu'utilise MO2 pour les archives, ne peut pas ouvrir %1.
+
+WinRAR est installé sur ce PC et pourrait y arriver. Extraire l'archive avec WinRAR et l'installer à partir de là ?</translation>
+    </message>
+    <message>
+      <source>WinRAR could not extract the archive: %1</source>
+      <translation>WinRAR n'a pas pu extraire l'archive : %1</translation>
+    </message>
+    <message>
       <source>This Nexus category has not yet been mapped. Do you wish to proceed without setting a category, proceed and disable automatic Nexus mappings, or stop and configure your category mappings?</source>
       <translation>Cette catégorie Nexus n'est pas encore associée. Voulez-vous continuer sans définir de catégorie, continuer en désactivant les correspondances Nexus automatiques, ou arrêter et configurer vos correspondances de catégories ?</translation>
     </message>
@@ -12534,4 +12554,35 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
       <translation>Erreur inconnue</translation>
     </message>
 </context>
+  <context>
+    <name>WinRARFallback</name>
+    <message>
+      <source>The folder to extract to could not be created.</source>
+      <translation>Le dossier d'extraction n'a pas pu être créé.</translation>
+    </message>
+    <message>
+      <source>WinRAR could not be started.</source>
+      <translation>WinRAR n'a pas pu être lancé.</translation>
+    </message>
+    <message>
+      <source>Extracting %1 with WinRAR…</source>
+      <translation>Extraction de %1 avec WinRAR…</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annuler</translation>
+    </message>
+    <message>
+      <source>WinRAR</source>
+      <translation>WinRAR</translation>
+    </message>
+    <message>
+      <source>WinRAR stopped with code %1.</source>
+      <translation>WinRAR s'est arrêté avec le code %1.</translation>
+    </message>
+    <message>
+      <source>WinRAR extracted nothing.</source>
+      <translation>WinRAR n'a rien extrait.</translation>
+    </message>
+  </context>
 </TS>

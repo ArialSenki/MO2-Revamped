@@ -12229,6 +12229,26 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
     <context>
     <name>InstallationManager</name>
     <message>
+      <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
+      <translation>WinRAR extrajo el archivo con errores: puede que falten algunos de sus archivos en el mod.</translation>
+    </message>
+    <message>
+      <source>Open with WinRAR</source>
+      <translation>Abrir con WinRAR</translation>
+    </message>
+    <message>
+      <source>7-Zip, which MO2 uses for archives, can't open %1.
+
+WinRAR is installed on this PC and may be able to. Extract the archive with WinRAR and install it from there?</source>
+      <translation>7-Zip, el que usa MO2 para los archivos comprimidos, no puede abrir %1.
+
+WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo con WinRAR e instalarlo desde ahí?</translation>
+    </message>
+    <message>
+      <source>WinRAR could not extract the archive: %1</source>
+      <translation>WinRAR no pudo extraer el archivo: %1</translation>
+    </message>
+    <message>
       <source>This archive is protected with a password.</source>
       <translation>Este archivo está protegido con contraseña.</translation>
     </message>
@@ -12636,4 +12656,35 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
       <translation>Error desconocido</translation>
     </message>
 </context>
+  <context>
+    <name>WinRARFallback</name>
+    <message>
+      <source>The folder to extract to could not be created.</source>
+      <translation>No se pudo crear la carpeta donde extraer.</translation>
+    </message>
+    <message>
+      <source>WinRAR could not be started.</source>
+      <translation>No se pudo iniciar WinRAR.</translation>
+    </message>
+    <message>
+      <source>Extracting %1 with WinRAR…</source>
+      <translation>Extrayendo %1 con WinRAR…</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>WinRAR</source>
+      <translation>WinRAR</translation>
+    </message>
+    <message>
+      <source>WinRAR stopped with code %1.</source>
+      <translation>WinRAR se detuvo con el código %1.</translation>
+    </message>
+    <message>
+      <source>WinRAR extracted nothing.</source>
+      <translation>WinRAR no extrajo nada.</translation>
+    </message>
+  </context>
 </TS>

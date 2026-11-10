@@ -5345,6 +5345,26 @@ La maggior parte delle mod non ne ha bisogno: gli script extender e i loader di 
   <context>
     <name>InstallationManager</name>
     <message>
+      <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
+      <translation>WinRAR ha estratto l'archivio con errori: alcuni dei suoi file potrebbero mancare nella mod.</translation>
+    </message>
+    <message>
+      <source>Open with WinRAR</source>
+      <translation>Apri con WinRAR</translation>
+    </message>
+    <message>
+      <source>7-Zip, which MO2 uses for archives, can't open %1.
+
+WinRAR is installed on this PC and may be able to. Extract the archive with WinRAR and install it from there?</source>
+      <translation>7-Zip, che MO2 usa per gli archivi, non riesce ad aprire %1.
+
+WinRAR è installato su questo PC e potrebbe riuscirci. Estrarre l'archivio con WinRAR e installarlo da lì?</translation>
+    </message>
+    <message>
+      <source>WinRAR could not extract the archive: %1</source>
+      <translation>WinRAR non è riuscito a estrarre l'archivio: %1</translation>
+    </message>
+    <message>
       <source>No category found</source>
       <translation>Nessuna categoria trovata</translation>
     </message>
@@ -12592,4 +12612,35 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
       <translation>Errore sconosciuto</translation>
     </message>
 </context>
+  <context>
+    <name>WinRARFallback</name>
+    <message>
+      <source>The folder to extract to could not be created.</source>
+      <translation>Impossibile creare la cartella in cui estrarre.</translation>
+    </message>
+    <message>
+      <source>WinRAR could not be started.</source>
+      <translation>Impossibile avviare WinRAR.</translation>
+    </message>
+    <message>
+      <source>Extracting %1 with WinRAR…</source>
+      <translation>Estrazione di %1 con WinRAR…</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
+      <source>WinRAR</source>
+      <translation>WinRAR</translation>
+    </message>
+    <message>
+      <source>WinRAR stopped with code %1.</source>
+      <translation>WinRAR si è fermato con il codice %1.</translation>
+    </message>
+    <message>
+      <source>WinRAR extracted nothing.</source>
+      <translation>WinRAR non ha estratto nulla.</translation>
+    </message>
+  </context>
 </TS>
