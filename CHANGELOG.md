@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Archives 7-Zip can't open
+
+- When 7-Zip, which MO2 uses, can't open a mod archive and WinRAR is installed,
+  MO2 offers to extract it with your WinRAR and installs it from there, with every
+  installer (FOMOD, BAIN and the rest) working as usual. Nothing of WinRAR comes
+  with MO2; the answer can be remembered.
+
 ### Installer
 
 - The installer makes sure the Microsoft Visual C++ runtime MO2 needs is installed:
