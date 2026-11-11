@@ -1,6 +1,8 @@
-MO2 Revamped 1.1.0 beta 6 is a **pre-release**: MO2 moves to Qt 6.12, LOOT sorts
-with its current rules again, and the other games get a long round of fixes. 1.0.2
-stays the stable release.
+MO2 Revamped 1.1.0 beta 6 is the **newest version**, still a beta: MO2 moves to
+Qt 6.12, LOOT sorts with its current rules again, and the other games get a long
+round of fixes. The last stable release,
+[1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2), is further
+down the releases list.
 
 ## Download
 
