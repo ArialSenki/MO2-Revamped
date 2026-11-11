@@ -291,6 +291,9 @@ class SelectPage(Page):
         self.options.setCurrentRow(max(current, 0))
 
         self.options.currentItemChanged.connect(self._show_option)
+        # assistive tools select an option without making it current: the
+        # current one follows the selection, which is what Next reads
+        self.options.itemSelectionChanged.connect(self._follow_selection)
         self._show_option(self.options.currentItem())
         if not self._many:
             self.options.itemDoubleClicked.connect(lambda _item: self.itemDoubleClicked.emit())
@@ -312,6 +315,11 @@ class SelectPage(Page):
         if self.options.currentItem() is None and self.options.count():
             self.options.setCurrentRow(0)
         self._show_option(self.options.currentItem())
+
+    def _follow_selection(self) -> None:
+        selected = self.options.selectedItems()
+        if selected and selected[0] is not self.options.currentItem():
+            self.options.setCurrentItem(selected[0])
 
     def _show_option(self, item: QListWidgetItem | None, _previous: Any = None) -> None:
         option: SelectOption | None = item.data(Qt.ItemDataRole.UserRole) if item else None

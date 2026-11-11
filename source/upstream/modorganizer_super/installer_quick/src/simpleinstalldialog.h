@@ -20,8 +20,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SIMPLEINSTALLDIALOG_H
 #define SIMPLEINSTALLDIALOG_H
 
-#include <QDialog>
 #include <guessedvalue.h>
+
+#include "fluentcontentdialog.h"
 
 class QComboBox;
 class QLabel;
@@ -32,7 +33,7 @@ class QPushButton;
  * files are already laid out as the game expects. MO2 Revamped draws it as a
  * Windows 11 content dialog (the theme styles it by its object names).
  **/
-class SimpleInstallDialog : public QDialog
+class SimpleInstallDialog : public RevampedFluent::ContentDialog
 {
   Q_OBJECT
 
@@ -53,8 +54,6 @@ public:
    * @return the (user-modified) mod name
    **/
   QString getName() const;
-
-  QSize sizeHint() const override;
 
 private:
   void nameChanged();

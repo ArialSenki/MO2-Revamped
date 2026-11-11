@@ -19,6 +19,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "archivetree.h"
 
+#include "fluentcontentdialog.h"
+
 #include <QDebug>
 #include <QDragMoveEvent>
 #include <QMessageBox>
@@ -430,8 +432,8 @@ void ArchiveTreeWidget::dropEvent(QDropEvent* event)
     // own child
     if (isAncestor(source, target)) {
       event->accept();
-      QMessageBox::warning(parentWidget(), tr("Cannot drop"),
-                           tr("Cannot drop '%1' into one of its subfolder.")
+      RevampedFluent::showNotice(window(), tr("Can't move it there"),
+                           tr("'%1' can't go into one of its own folders.")
                                .arg(aSource->entry()->name()));
       return;
     }
@@ -440,14 +442,14 @@ void ArchiveTreeWidget::dropEvent(QDropEvent* event)
     auto targetEntry = target->entry()->astree()->find(sourceEntry->name());
     if (targetEntry && targetEntry->fileType() != sourceEntry->fileType()) {
       event->accept();
-      QMessageBox::warning(parentWidget(), tr("Cannot drop"),
+      RevampedFluent::showNotice(window(), tr("Can't move it there"),
                            targetEntry->isFile()
-                               ? tr("A file '%1' already exists in folder '%2'.")
+                               ? tr("The folder '%2' already has a file named '%1'.")
                                      .arg(sourceEntry->name())
-                                     .arg(target->entry()->name())
-                               : tr("A folder '%1' already exists in folder '%2'.")
+                                     .arg(target->text(0))
+                               : tr("The folder '%2' already has a folder named '%1'.")
                                      .arg(sourceEntry->name())
-                                     .arg(target->entry()->name()));
+                                     .arg(target->text(0)));
       return;
     }
   }

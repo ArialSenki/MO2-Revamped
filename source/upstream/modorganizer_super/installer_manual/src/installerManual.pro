@@ -33,9 +33,6 @@ HEADERS += installermanual.h \
 
 include(../plugin_template.pri)
 
-FORMS += \
-    installdialog.ui
-
 OTHER_FILES += \
     installermanual.json\
     SConscript

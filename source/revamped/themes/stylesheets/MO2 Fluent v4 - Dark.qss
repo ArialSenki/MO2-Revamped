@@ -5693,6 +5693,12 @@ QLabel[wizardInfoBar="critical"] {
     border-radius: 4px;
     padding: 8px 12px;
 }
+QLabel[wizardInfoBar="success"] {
+    color: #9FD89F;
+    background-color: #1E3A1F;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
 
 /* the folder buttons next to the path fields */
 QDialog#CreateInstanceDialog QToolButton[wizardBrowse="true"] {

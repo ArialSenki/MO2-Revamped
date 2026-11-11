@@ -13710,16 +13710,16 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
   <context>
     <name>SimpleInstallDialog</name>
     <message>
-      <source>Quick Install</source>
+      <source>Quick install</source>
       <translation>Instalación rápida</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Instalar este mod</translation>
     </message>
     <message>
       <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
       <translation>Los archivos del paquete ya están ordenados como espera la carpeta de datos del juego, así que MO2 puede instalarlos tal cual.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Instalar este mod</translation>
     </message>
     <message>
       <source>Mod name</source>
@@ -13744,6 +13744,249 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
     <message>
       <source>Cancel</source>
       <translation>Cancelar</translation>
+    </message>
+  </context>
+  <context>
+    <name>MultiArchiveDialog</name>
+    <message>
+      <source>Bundled archives</source>
+      <translation>Archivos incluidos</translation>
+    </message>
+    <message>
+      <source>This archive holds several archives that install separately. Choose the one to install.</source>
+      <translation>Este archivo contiene varios archivos que se instalan por separado. Elige el que quieres instalar.</translation>
+    </message>
+    <message>
+      <source>Choose an archive to install</source>
+      <translation>Elige un archivo para instalar</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Instalar a mano</translation>
+    </message>
+    <message>
+      <source>Choose which of the bundle's files to install, and where</source>
+      <translation>Elige qué archivos del conjunto instalar y dónde</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallDialog</name>
+    <message>
+      <source>Manual installation</source>
+      <translation>Instalación manual</translation>
+    </message>
+    <message>
+      <source>Choose what to install</source>
+      <translation>Elige qué instalar</translation>
+    </message>
+    <message>
+      <source>Drag files and folders to arrange them, and clear the check boxes of what you don't want. What is under %1 goes into the game's data folder; to use another folder for it, select that folder and choose Use as %1.</source>
+      <translation>Arrastra archivos y carpetas para ordenarlos, y desmarca lo que no quieras. Lo que está bajo %1 va a la carpeta de datos del juego; para usar otra carpeta, selecciónala y elige Usar como %1.</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nombre del mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Escribe un nombre para el mod.</translation>
+    </message>
+    <message>
+      <source>Use as %1</source>
+      <translation>Usar como %1</translation>
+    </message>
+    <message>
+      <source>Install the selected folder's content as the game's data folder</source>
+      <translation>Instala el contenido de la carpeta seleccionada como carpeta de datos del juego</translation>
+    </message>
+    <message>
+      <source>Reset %1</source>
+      <translation>Restablecer %1</translation>
+    </message>
+    <message>
+      <source>Go back to the archive's top folder as %1</source>
+      <translation>Vuelve a usar la carpeta superior del archivo como %1</translation>
+    </message>
+    <message>
+      <source>New folder…</source>
+      <translation>Nueva carpeta…</translation>
+    </message>
+    <message>
+      <source>Create a folder inside the selected folder, or beside the selected file (Ctrl+Shift+N)</source>
+      <translation>Crea una carpeta dentro de la carpeta seleccionada, o junto al archivo seleccionado (Ctrl+Shift+N)</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Abrir</translation>
+    </message>
+    <message>
+      <source>Open the selected file</source>
+      <translation>Abre el archivo seleccionado</translation>
+    </message>
+    <message>
+      <source>Content of the archive</source>
+      <translation>Contenido del archivo</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Game data folder</source>
+      <translation>Carpeta de datos del juego</translation>
+    </message>
+    <message>
+      <source>This game's plugin can't check the content of %1, so MO2 can't tell whether the mod will work.</source>
+      <translation>El plugin de este juego no puede comprobar el contenido de %1, así que MO2 no puede saber si el mod funcionará.</translation>
+    </message>
+    <message>
+      <source>The content of %1 looks right for this game.</source>
+      <translation>El contenido de %1 parece correcto para este juego.</translation>
+    </message>
+    <message>
+      <source>The content of %1 doesn't look right for this game: the mod will probably not work.</source>
+      <translation>El contenido de %1 no parece correcto para este juego: probablemente el mod no funcione.</translation>
+    </message>
+    <message>
+      <source>New folder</source>
+      <translation>Nueva carpeta</translation>
+    </message>
+    <message>
+      <source>The folder goes inside '%1'.</source>
+      <translation>La carpeta va dentro de «%1».</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nombre</translation>
+    </message>
+    <message>
+      <source>Create</source>
+      <translation>Crear</translation>
+    </message>
+    <message>
+      <source>A folder name can't have any of these: &lt; &gt; : &quot; / \ | ? *, nor end with a dot or a space.</source>
+      <translation>Un nombre de carpeta no puede llevar ninguno de estos: &lt; &gt; : &quot; / \ | ? *, ni acabar en punto o espacio.</translation>
+    </message>
+    <message>
+      <source>There is already a file or folder named '%1' here.</source>
+      <translation>Ya hay aquí un archivo o carpeta llamado «%1».</translation>
+    </message>
+    <message>
+      <source>Install anyway?</source>
+      <translation>¿Instalar de todos modos?</translation>
+    </message>
+    <message>
+      <source>The content of %1 doesn't look right for this game, so the mod will probably not work. Fix the layout in the tree first, or install it as it is.</source>
+      <translation>El contenido de %1 no parece correcto para este juego, así que probablemente el mod no funcione. Arregla primero la estructura en el árbol, o instálalo tal cual.</translation>
+    </message>
+    <message>
+      <source>Install anyway</source>
+      <translation>Instalar de todos modos</translation>
+    </message>
+    <message>
+      <source>Go back</source>
+      <translation>Volver</translation>
+    </message>
+  </context>
+  <context>
+    <name>BainComplexInstallerDialog</name>
+    <message>
+      <source>BAIN package</source>
+      <translation>Paquete BAIN</translation>
+    </message>
+    <message>
+      <source>This archive is a BAIN package, split into numbered parts. Choose the ones you want; a later part's files replace an earlier one's. Parts starting with 00 are usually the base, and the package.txt, when there is one, describes each part.</source>
+      <translation>Este archivo es un paquete BAIN, dividido en partes numeradas. Elige las que quieras; los archivos de una parte posterior sustituyen a los de una anterior. Las partes que empiezan por 00 suelen ser la base, y el package.txt, si lo hay, describe cada parte.</translation>
+    </message>
+    <message>
+      <source>Choose the parts to install</source>
+      <translation>Elige las partes que instalar</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nombre del mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Escribe un nombre para el mod.</translation>
+    </message>
+    <message>
+      <source>Parts</source>
+      <translation>Partes</translation>
+    </message>
+    <message>
+      <source>Choose all</source>
+      <translation>Elegir todas</translation>
+    </message>
+    <message>
+      <source>Choose none</source>
+      <translation>Ninguna</translation>
+    </message>
+    <message>
+      <source>package.txt</source>
+      <translation>package.txt</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Instalar a mano</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Elige qué archivos del paquete instalar y dónde</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Choose at least one part to install.</source>
+      <translation>Elige al menos una parte para instalar.</translation>
+    </message>
+    <message>
+      <source>%1 of %2 parts chosen</source>
+      <translation>%1 de %2 partes elegidas</translation>
+    </message>
+  </context>
+  <context>
+    <name>ArchiveTreeWidget</name>
+    <message>
+      <source>Can't move it there</source>
+      <translation>No se puede mover ahí</translation>
+    </message>
+    <message>
+      <source>'%1' can't go into one of its own folders.</source>
+      <translation>«%1» no puede ir dentro de una de sus propias carpetas.</translation>
+    </message>
+    <message>
+      <source>The folder '%2' already has a file named '%1'.</source>
+      <translation>La carpeta «%2» ya tiene un archivo llamado «%1».</translation>
+    </message>
+    <message>
+      <source>The folder '%2' already has a folder named '%1'.</source>
+      <translation>La carpeta «%2» ya tiene una carpeta llamada «%1».</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedFluent</name>
+    <message>
+      <source>OK</source>
+      <translation>Aceptar</translation>
     </message>
   </context>
 </TS>

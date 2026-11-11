@@ -31,9 +31,6 @@ HEADERS += installerbain.h \
 
 include(../plugin_template.pri)
 
-FORMS += \
-    baincomplexinstallerdialog.ui
-
 OTHER_FILES += \
     installerbain.json\
     SConscript

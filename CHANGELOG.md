@@ -70,6 +70,24 @@
   stays off while the name is empty, and the guessed name always shows (Mod
   Organizer 2 left the field empty when the guess wasn't in its list).
 
+### Other installers
+
+- The manual installer, the BAIN package installer (numbered parts without a
+  wizard) and the bundle installer (an archive holding several archives) are
+  Windows 11 dialogs like the others, built the same way.
+- **Manual installation**: Use as `<data>`, Reset `<data>`, New folder and
+  Open are buttons as well as in the right-click menu, so the keyboard reaches
+  them (New folder is also Ctrl+Shift+N). Whether the layout looks right shows
+  in a colored bar instead of red and green borders. The question before
+  installing a layout that doesn't look right starts on Go back, and a new
+  folder's name is checked before it is created.
+- **BAIN package**: the package.txt shows beside the parts instead of in another
+  window, with buttons to choose all or none and a count; Install stays off
+  when no part is chosen (Mod Organizer 2 installed an empty mod).
+- **Bundled archives**: the archives are in a list; a double click installs one.
+- The BAIN wizard's questions, and these lists, follow the selection that
+  assistive tools make, not only the mouse's.
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12

@@ -20,76 +20,64 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef BAINCOMPLEXINSTALLERDIALOG_H
 #define BAINCOMPLEXINSTALLERDIALOG_H
 
+#include "fluentcontentdialog.h"
 #include "ifiletree.h"
 #include <guessedvalue.h>
 
-#include "tutorabledialog.h"
-
-namespace Ui
-{
-class BainComplexInstallerDialog;
-}
+class QComboBox;
+class QLabel;
+class QListWidget;
+class QPushButton;
 
 /**
- * @brief Dialog to choose from options offered by a (complex) bain package
+ * @brief The BAIN package installer (packages split into numbered parts, with
+ * no wizard script): the parts to install as check boxes, and the package's
+ * package.txt beside them. MO2 Revamped draws it as a Windows 11 content
+ * dialog.
  **/
-class BainComplexInstallerDialog : public MOBase::TutorableDialog
+class BainComplexInstallerDialog : public RevampedFluent::ContentDialog
 {
   Q_OBJECT
 
 public:
   /**
-   * @brief Constructor
-   *
-   * @param tree the directory tree of the archive. The caller is resonsible to verify
-   *this actually qualifies as a bain installer
-   * @param modName proposed name for the mod. The dialog allows the user to change this
-   * @param defaultOptions The default options to select. Can contains options not
-   *actually present.
-   * @param packageTXT path to the extracted package.txt file or an empty string if
-   *there is none
+   * @param subpackages the package's parts, in the archive's order
+   * @param modName the guessed name of the mod and its other guesses
+   * @param defaultOptions the parts chosen the last time this mod was installed
+   * @param packageTXT the extracted package.txt, or an empty string
    * @param parent parent widget
    **/
   explicit BainComplexInstallerDialog(
       const std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>& subpackages,
       const MOBase::GuessedValue<QString>& modName, const QStringList& defaultOptions,
       const QString& packageTXT, QWidget* parent);
-  ~BainComplexInstallerDialog();
 
   /**
-   * @return bool true if the user requested the manual dialog
+   * @return true if the user asked for the manual installation dialog
    **/
   bool manualRequested() const { return m_Manual; }
 
   /**
-   * @return QString the (user-modified) name to be used for the mod
+   * @return the (user-modified) mod name
    **/
   QString getName() const;
 
   /**
-   * @brief Remove from the given tree the option not selected by the user.
-   *
-   * @param tree The input tree.
-   *
-   * @return the list of options selected by the user.
+   * @brief replaces the tree with the merge of the chosen parts
+   * @return the names of the chosen parts
    **/
   QStringList updateTree(std::shared_ptr<MOBase::IFileTree>& tree);
 
-private slots:
-
-  void on_manualBtn_clicked();
-
-  void on_okBtn_clicked();
-
-  void on_cancelBtn_clicked();
-
-  void on_packageBtn_clicked();
-
 private:
-  Ui::BainComplexInstallerDialog* ui;
+  void updateState();
 
-  bool m_Manual;
-  QString m_PackageTXT;
+  QComboBox* m_name;
+  QLabel* m_nameProblem;
+  QListWidget* m_parts;
+  QLabel* m_count;
+  QPushButton* m_install;
+  bool m_Manual     = false;
+  bool m_nameEdited = false;
 };
 
 #endif  // BAINCOMPLEXINSTALLERDIALOG_H

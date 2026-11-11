@@ -21,99 +21,26 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QComboBox>
 #include <QCompleter>
-#include <QEvent>
-#include <QFrame>
-#include <QHBoxLayout>
-#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QVBoxLayout>
 
 using namespace MOBase;
 
-namespace
-{
-
-// Enter on a focused button presses that button, as in Windows, not the
-// dialog's default one (enterPressesItself() in MO2 Revamped's dialogs)
-class EnterPressesItself : public QObject
-{
-public:
-  using QObject::QObject;
-
-  bool eventFilter(QObject* watched, QEvent* event) override
-  {
-    if (event->type() == QEvent::KeyPress) {
-      const int key = static_cast<QKeyEvent*>(event)->key();
-      auto* button  = qobject_cast<QPushButton*>(watched);
-      if ((key == Qt::Key_Return || key == Qt::Key_Enter) && button != nullptr &&
-          button->isEnabled()) {
-        button->click();
-        return true;
-      }
-    }
-    return false;
-  }
-};
-
-QPushButton* footerButton(QWidget* parent, const QString& text, bool primary)
-{
-  auto* button = new QPushButton(text, parent);
-  button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  button->setMinimumWidth(110);
-  button->setAutoDefault(false);
-  button->setDefault(primary);
-  if (primary) {
-    button->setProperty("fluentPrimary", true);
-  }
-  button->installEventFilter(new EnterPressesItself(button));
-  return button;
-}
-
-}  // namespace
-
 SimpleInstallDialog::SimpleInstallDialog(const GuessedValue<QString>& preset,
                                          QWidget* parent)
-    : QDialog(parent)
+    : RevampedFluent::ContentDialog(
+          parent, QStringLiteral("SimpleInstallDialog"), tr("Quick install"),
+          tr("The archive's files are already arranged as the game's data folder "
+             "expects, so MO2 can install them as they are."))
 {
-  setObjectName(QStringLiteral("SimpleInstallDialog"));
-  setProperty("fluentContentDialog", true);
-  setWindowTitle(tr("Quick Install"));
-  setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+  setHeading(tr("Install this mod"));
   setMinimumWidth(460);
 
-  auto* layout = new QVBoxLayout(this);
-  layout->setContentsMargins(0, 0, 0, 0);
-  layout->setSpacing(0);
-
-  auto* content = new QWidget(this);
-  content->setObjectName(QStringLiteral("fluentDialogContent"));
-  auto* contentLayout = new QVBoxLayout(content);
-  contentLayout->setContentsMargins(24, 20, 24, 24);
-  contentLayout->setSpacing(8);
-
-  auto* title = new QLabel(tr("Install this mod"), content);
-  title->setObjectName(QStringLiteral("fluentDialogTitle"));
-  title->setWordWrap(true);
-  contentLayout->addWidget(title);
-
-  auto* text = new QLabel(tr("The archive's files are already arranged as the game's "
-                             "data folder expects, so MO2 can install them as they are."),
-                          content);
-  text->setObjectName(QStringLiteral("fluentDialogText"));
-  text->setWordWrap(true);
-  contentLayout->addWidget(text);
-  contentLayout->addSpacing(8);
-
-  auto* nameLabel = new QLabel(tr("Mod name"), content);
-  contentLayout->addWidget(nameLabel);
-
-  m_name = new QComboBox(content);
+  m_name = new QComboBox(this);
   m_name->setEditable(true);
   m_name->setInsertPolicy(QComboBox::NoInsert);
-  m_name->setAccessibleName(tr("Mod name"));
-  nameLabel->setBuddy(m_name);
+  body()->addWidget(RevampedFluent::fieldLabel(tr("Mod name"), m_name, this));
   for (const QString& variant : preset.variants()) {
     m_name->addItem(variant);
   }
@@ -128,30 +55,15 @@ SimpleInstallDialog::SimpleInstallDialog(const GuessedValue<QString>& preset,
   } else {
     m_name->setEditText(preset);
   }
-  contentLayout->addWidget(m_name);
+  body()->addWidget(m_name);
+  m_problem = RevampedFluent::problemLabel(tr("Enter a name for the mod."), this);
+  body()->addWidget(m_problem);
+  body()->addStretch(1);
 
-  // the error tone of MO2's name checks
-  m_problem = new QLabel(tr("Enter a name for the mod."), content);
-  m_problem->setObjectName(QStringLiteral("instanceNameValidation"));
-  m_problem->setWordWrap(true);
-  m_problem->setVisible(false);
-  contentLayout->addWidget(m_problem);
-  contentLayout->addStretch(1);
-  layout->addWidget(content, 1);
-
-  auto* band = new QFrame(this);
-  band->setObjectName(QStringLiteral("fluentDialogFooter"));
-  auto* buttons = new QHBoxLayout(band);
-  buttons->setContentsMargins(24, 24, 24, 24);
-  buttons->setSpacing(8);
-  m_install   = footerButton(band, tr("Install"), true);
-  auto* manual = footerButton(band, tr("Install manually"), false);
+  m_install    = addButton(tr("Install"), true);
+  auto* manual = addButton(tr("Install manually"));
   manual->setToolTip(tr("Choose which of the archive's files to install, and where"));
-  auto* cancel = footerButton(band, tr("Cancel"), false);
-  buttons->addWidget(m_install);
-  buttons->addWidget(manual);
-  buttons->addWidget(cancel);
-  layout->addWidget(band);
+  auto* cancel = addButton(tr("Cancel"));
 
   connect(m_install, &QPushButton::clicked, this, [this] {
     if (!getName().isEmpty()) {
@@ -177,15 +89,6 @@ SimpleInstallDialog::SimpleInstallDialog(const GuessedValue<QString>& preset,
     m_name->lineEdit()->selectAll();
   }
   nameChanged();
-}
-
-QSize SimpleInstallDialog::sizeHint() const
-{
-  // at least the minimum width: Qt measures the wrapped text at this width
-  // (FluentContentDialog::sizeHint in MO2 Revamped)
-  QSize size = QDialog::sizeHint();
-  size.setWidth(qMax(size.width(), minimumWidth()));
-  return size;
 }
 
 QString SimpleInstallDialog::getName() const

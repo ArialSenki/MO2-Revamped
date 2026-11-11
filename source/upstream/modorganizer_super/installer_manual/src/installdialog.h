@@ -21,106 +21,83 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define INSTALLDIALOG_H
 
 #include "archivetree.h"
-#include "tutorabledialog.h"
+#include "fluentcontentdialog.h"
+
 #include <guessedvalue.h>
 #include <ifiletree.h>
-
-#include <iplugingame.h>
 #include <moddatachecker.h>
 
-#include <QDialog>
-#include <QProgressDialog>
-#include <QTreeWidgetItem>
-#include <QUuid>
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-namespace Ui
-{
-class InstallDialog;
-}
+class QComboBox;
+class QLabel;
+class QPushButton;
 
 /**
- * a dialog presented to manually define how a mod is to be installed. It provides
- * a tree view of the file contents that can modified directly
+ * @brief The manual installation: the archive's content in a tree the user
+ * rearranges by dragging, clears the check boxes of what not to install, and
+ * picks the folder that goes into the game's data folder. MO2 Revamped draws it
+ * as a Windows 11 content dialog, with buttons for what was only in the
+ * right-click menu.
  **/
-class InstallDialog : public MOBase::TutorableDialog
+class InstallDialog : public RevampedFluent::ContentDialog
 {
   Q_OBJECT
 
 public:
   /**
-   * @brief Create a new install dialog for the given tree. The tree
-   * is "own" by the dialog, i.e., any change made by the user is immediately
-   * reflected to the given tree, except for the changes to the root.
-   *
-   * @param tree Tree structure describing the original archive structure.
-   * @param modName Name of the mod. The name can be modified through the dialog.
-   * @param modDataChecker The mod data checker to use to check.
-   * @param dataName The name of the data folder for the game.
-   * @param parent Parent widget.
+   * @param tree the archive's content
+   * @param modName the guessed name of the mod and its other guesses
+   * @param modDataChecker the game's check of a data folder's layout, or null
+   * @param dataName the name of the game's data folder ("data")
+   * @param parent parent widget
    **/
   explicit InstallDialog(std::shared_ptr<MOBase::IFileTree> tree,
                          const MOBase::GuessedValue<QString>& modName,
                          std::shared_ptr<const MOBase::ModDataChecker> modDataChecker,
-                         const QString& dataName, QWidget* parent = 0);
-  ~InstallDialog();
+                         const QString& dataName, QWidget* parent = nullptr);
 
-  /**
-   * @brief retrieve the (modified) mod name
-   *
-   * @return updated mod name
-   **/
   QString getModName() const;
 
   /**
-   * @brief Retrieve the user-modified directory structure.
-   *
-   * @return the new tree represented by this dialog, which can be a new
-   *     tree or a subtree of the original tree.
+   * @return the tree as the user left it: a new tree, or a subtree of the
+   * original one
    **/
   std::shared_ptr<MOBase::IFileTree> getModifiedTree() const;
 
 signals:
 
-  /**
-   * @brief Signal emitted when user request the file corresponding
-   *     to the given entry to be opened.
-   *
-   * @param entry Entry corresponding to the file to open.
-   */
   void openFile(const MOBase::FileTreeEntry* entry);
 
 private:
   bool testForProblem();
   void updateProblems();
+  void updateActions();
   void createDirectoryUnder(ArchiveTreeWidgetItem* treeItem);
-
-private slots:
-
-  // Automatic slots that are directly bound to the UI:
-  void on_treeContent_customContextMenuRequested(QPoint pos);
-  void on_cancelButton_clicked();
-  void on_okButton_clicked();
-
-private:
-  Ui::InstallDialog* ui;
+  void showContextMenu(QPoint pos);
+  void install();
+  ArchiveTreeWidgetItem* currentItem() const;
+  ArchiveTreeWidgetItem* folderFor(ArchiveTreeWidgetItem* item) const;
+  QString dataName() const;
 
   std::shared_ptr<const MOBase::ModDataChecker> m_Checker;
 
   // Name of the "data" directory:
   QString m_DataFolderName;
 
-  // the tree root is the initial root that will never change (should be const
-  // but cannot be since the parent tree cannot be constructed in the member
-  // initializer list)
-  //
-  // the tree root is not actually added to the tree, but is used to maintain
-  // the state of the tree and not lose entries when unsetting data root
-  //
+  // the tree root is the initial root that will never change; it is not added
+  // to the tree, but keeps the state of the tree so that no entry is lost when
+  // the data root is unset
   ArchiveTreeWidget* m_Tree;
   ArchiveTreeWidgetItem* m_TreeRoot;
-  QLabel* m_ProblemLabel;
+
+  QComboBox* m_name;
+  QLabel* m_nameProblem;
+  QLabel* m_status;
+  QPushButton* m_setData;
+  QPushButton* m_unsetData;
+  QPushButton* m_newFolder;
+  QPushButton* m_open;
+  QPushButton* m_install;
+  bool m_nameEdited = false;
 };
 
 #endif  // INSTALLDIALOG_H
