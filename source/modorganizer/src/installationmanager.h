@@ -32,11 +32,19 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 #include <archive.h>
 #include <errorcodes.h>
+#include <functional>
 #include <map>
+#include <memory>
 #include <set>
 
 #include "modinfo.h"
 #include "plugincontainer.h"
+
+namespace MOBase
+{
+class IPluginGame;
+class ScriptExtender;
+}  // namespace MOBase
 
 // contains installation result from the manager, internal class
 // for MO2 that is not forwarded to plugin
@@ -130,6 +138,11 @@ public:
    *
    */
   void setPluginContainer(const PluginContainer* pluginContainer);
+
+  // MO2 Revamped: the managed game and its script extender, for installing an
+  // archive of the extender into the game folder
+  void setGameAccess(std::function<const MOBase::IPluginGame*()> game,
+                     std::function<std::shared_ptr<const MOBase::ScriptExtender>()> extender);
 
   /**
    * @brief update the directory where downloads are stored
@@ -301,6 +314,15 @@ private:
 
   void postInstallCleanup();
 
+  // MO2 Revamped: an archive of the script extender: asks where its files go,
+  // copies the loader and DLLs into the game folder and installs the rest as
+  // a mod. nullopt when it isn't one, or goes through the installers anyway
+  std::optional<InstallationResult>
+  installScriptExtender(std::shared_ptr<MOBase::IFileTree> tree,
+                        MOBase::GuessedValue<QString>& modName, const QString& gameName,
+                        int modID, const QString& version, const QString& newestVersion,
+                        int categoryID, int fileCategoryID, const QString& repository);
+
   // MO2 Revamped: when 7-Zip can't open the archive, extracts it with the
   // user's WinRAR (if they agree) and installs from that folder
   enum class WinRARResult
@@ -363,6 +385,9 @@ private:
 private:
   // The plugin container, mostly to check if installer are enabled or not.
   const PluginContainer* m_PluginContainer;
+
+  std::function<const MOBase::IPluginGame*()> m_Game;
+  std::function<std::shared_ptr<const MOBase::ScriptExtender>()> m_ScriptExtender;
 
   bool m_IsRunning;
 

@@ -64,6 +64,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "archivefiletree.h"
 #include "winrarfallback.h"
+#include "scriptextendersetup.h"
+#include <scriptextender.h>
+#include <iplugingame.h>
 #include <QUuid>
 
 using namespace MOBase;
@@ -110,6 +113,14 @@ InstallationManager::~InstallationManager() {}
 void InstallationManager::setParentWidget(QWidget* widget)
 {
   m_ParentWidget = widget;
+}
+
+void InstallationManager::setGameAccess(
+    std::function<const IPluginGame*()> game,
+    std::function<std::shared_ptr<const ScriptExtender>()> extender)
+{
+  m_Game           = std::move(game);
+  m_ScriptExtender = std::move(extender);
 }
 
 void InstallationManager::setPluginContainer(const PluginContainer* pluginContainer)
@@ -1237,6 +1248,15 @@ InstallationResult InstallationManager::install(const QString& fileName,
   std::shared_ptr<IFileTree> filesTree =
       archiveOpen ? ArchiveFileTree::makeTree(*m_ArchiveHandler) : nullptr;
 
+  // MO2 Revamped: the script extender's loader goes next to the game's exe
+  if (filesTree != nullptr) {
+    if (auto result = installScriptExtender(filesTree, modName, gameName, modID, version,
+                                            newestVersion, categoryID, fileCategoryID,
+                                            repository)) {
+      return *result;
+    }
+  }
+
   auto installers = m_PluginContainer->plugins<IPluginInstaller>();
 
   std::sort(installers.begin(), installers.end(),
@@ -1362,6 +1382,97 @@ InstallationResult InstallationManager::install(const QString& fileName,
   }
 
   return installResult;
+}
+
+std::optional<InstallationResult> InstallationManager::installScriptExtender(
+    std::shared_ptr<IFileTree> tree, GuessedValue<QString>& modName,
+    const QString& gameName, int modID, const QString& version,
+    const QString& newestVersion, int categoryID, int fileCategoryID,
+    const QString& repository)
+{
+  const IPluginGame* game = m_Game ? m_Game() : nullptr;
+  const auto extender     = m_ScriptExtender ? m_ScriptExtender() : nullptr;
+  if (game == nullptr || extender == nullptr) {
+    return std::nullopt;
+  }
+  auto layout = ScriptExtenderSetup::detect(tree, *extender);
+  if (!layout || layout->gameFiles.empty()) {
+    return std::nullopt;
+  }
+
+  QWidget* parent = m_ParentWidget != nullptr ? m_ParentWidget : qApp->activeWindow();
+  const auto choice = ScriptExtenderSetup::ask(parent, *extender, *game, *layout);
+  switch (choice) {
+  case ScriptExtenderSetup::Choice::RegularMod:
+    log::info("{}: installed as a regular mod", m_CurrentFile);
+    return std::nullopt;
+  case ScriptExtenderSetup::Choice::Cancel:
+    return InstallationResult(IPluginInstaller::RESULT_CANCELED);
+  default:
+    break;
+  }
+
+  // its name, not the one Nexus's file naming makes of skse64_2_02_06
+  modName.update(ScriptExtenderSetup::displayName(*extender), GUESS_GOOD);
+
+  // where the plugin looks for the loader: the game folder for these games
+  const QDir gameDir = ScriptExtenderSetup::loaderDir(*extender);
+  QStringList fileNames;
+  for (const auto& entry : layout->gameFiles) {
+    fileNames.append(entry->name());
+  }
+
+  // the loader and DLLs first, into the temporary folder: the mod's files
+  // are mapped to the archive after them
+  QStringList extracted;
+  if (choice == ScriptExtenderSetup::Choice::GameFolder) {
+    extracted = extractFiles(layout->gameFiles, true);
+    if (extracted.size() != fileNames.size()) {
+      return InstallationResult(IPluginInstaller::RESULT_CANCELED);
+    }
+  }
+
+  // the mod: what the Data folder holds, or only the record of the files
+  std::shared_ptr<IFileTree> modTree;
+  if (layout->data != nullptr) {
+    layout->data->detach();
+    modTree = layout->data;
+  } else {
+    tree->removeIf([](const auto&) {
+      return true;
+    });
+    modTree = tree;
+  }
+  auto* archiveTree = dynamic_cast<ArchiveFileTree*>(modTree.get());
+  if (archiveTree == nullptr) {
+    return InstallationResult(IPluginInstaller::RESULT_FAILED);
+  }
+  archiveTree->mapToArchive(*m_ArchiveHandler);
+
+  InstallationResult result = doInstall(modName, gameName, modID, version, newestVersion,
+                                        categoryID, fileCategoryID, repository);
+  if (!result) {
+    return result;
+  }
+
+  if (choice == ScriptExtenderSetup::Choice::Myself) {
+    ScriptExtenderSetup::showManualSteps(parent, *extender, gameDir, fileNames);
+    return result;
+  }
+
+  QList<QPair<QString, QString>> files;
+  for (int i = 0; i < fileNames.size(); ++i) {
+    files.append({fileNames[i], extracted[i]});
+  }
+  const QString error = ScriptExtenderSetup::copyToGame(
+      files, gameDir, ScriptExtenderSetup::filePrefix(*extender), nullptr);
+  if (!error.isEmpty()) {
+    ScriptExtenderSetup::showManualSteps(parent, *extender, gameDir, fileNames, error);
+    return result;
+  }
+  ScriptExtenderSetup::writeRecord(QDir(m_ModsDirectory).absoluteFilePath(modName),
+                                   gameDir, fileNames);
+  return result;
 }
 
 QString InstallationManager::getErrorString(Archive::Error errorCode)

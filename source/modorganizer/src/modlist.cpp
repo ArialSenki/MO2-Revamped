@@ -27,6 +27,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modlistsortproxy.h"
 #include "organizercore.h"
 #include "pluginlist.h"
+#include "fluentdialogs.h"
+#include "scriptextendersetup.h"
+#include <scriptextender.h>
+#include <QPushButton>
+#include <QScopeGuard>
 #include "qtgroupingproxy.h"
 #include "settings.h"
 #include "shared/directoryentry.h"
@@ -896,7 +901,17 @@ MOBase::IModInterface* ModList::getMod(const QString& name) const
 
 bool ModList::removeMod(MOBase::IModInterface* mod)
 {
-  bool result = ModInfo::removeMod(ModInfo::getIndex(mod->name()));
+  // MO2 Revamped: a plugin removing it gets no question in the middle of its
+  // call; the files MO2 copied into the game folder stay, and the log says so
+  const unsigned int index = ModInfo::getIndex(mod->name());
+  const QStringList gameFiles =
+      index == UINT_MAX ? QStringList() : scriptExtenderFiles(ModInfo::getByIndex(index));
+  bool result = ModInfo::removeMod(index);
+  if (result && !gameFiles.isEmpty()) {
+    log::warn("'{}' was removed by a plugin; its script extender files stay in the "
+              "game folder: {}",
+              mod->name(), gameFiles.join(", "));
+  }
   if (result) {
     notifyModRemoved(mod->name());
   }
@@ -1174,6 +1189,48 @@ bool ModList::dropMimeData(const QMimeData* mimeData, Qt::DropAction action, int
   return false;
 }
 
+QStringList ModList::scriptExtenderFiles(const ModInfo::Ptr& modInfo) const
+{
+  if (m_Organizer == nullptr || modInfo == nullptr || !modInfo->isRegular()) {
+    return {};
+  }
+  const auto extender = m_Organizer->gameFeatures().gameFeature<ScriptExtender>();
+  if (extender == nullptr) {
+    return {};
+  }
+  return ScriptExtenderSetup::recordedFiles(modInfo->absolutePath(), *extender);
+}
+
+bool ModList::askRemoveScriptExtenderFiles(const ModInfo::Ptr& modInfo,
+                                           const QStringList& gameFiles)
+{
+  if (m_RemoveScriptExtenderFiles) {
+    return *m_RemoveScriptExtenderFiles;
+  }
+  // removed with others at once: nothing has asked yet
+  QStringList fileNames;
+  for (const QString& path : gameFiles) {
+    fileNames.append(QFileInfo(path).fileName());
+  }
+  return QMessageBox::question(
+             qApp->activeWindow(), tr("Remove"),
+             tr("MO2 copied the loader and DLLs of \"%1\" into the game folder: %2. "
+                "Send them to the Recycle Bin too?")
+                 .arg(getDisplayName(modInfo), fileNames.join(QStringLiteral(", "))),
+             QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes;
+}
+
+void ModList::removeScriptExtenderFiles(const QStringList& gameFiles)
+{
+  const QStringList failed = ScriptExtenderSetup::removeFiles(gameFiles);
+  if (!failed.isEmpty()) {
+    QMessageBox::warning(qApp->activeWindow(), tr("Remove"),
+                         tr("These files couldn't be removed from the game "
+                            "folder; close the game and remove them by hand:\n\n%1")
+                             .arg(failed.join(QLatin1Char('\n'))));
+  }
+}
+
 void ModList::removeRowForce(int row, const QModelIndex& parent)
 {
   if (static_cast<unsigned int>(row) >= ModInfo::getNumMods()) {
@@ -1185,6 +1242,14 @@ void ModList::removeRowForce(int row, const QModelIndex& parent)
   ModInfo::Ptr modInfo = ModInfo::getByIndex(row);
 
   bool wasEnabled = m_Profile->modEnabled(row);
+
+  // MO2 Revamped: the script extender files MO2 copied for it, read before
+  // the mod's meta.ini goes; asked before anything is removed, and taken out
+  // once the mod is gone and the views know it
+  QStringList gameFiles = scriptExtenderFiles(modInfo);
+  if (!gameFiles.isEmpty() && !askRemoveScriptExtenderFiles(modInfo, gameFiles)) {
+    gameFiles.clear();
+  }
 
   m_Profile->setModEnabled(row, false);
 
@@ -1215,6 +1280,10 @@ void ModList::removeRowForce(int row, const QModelIndex& parent)
   }
   if (!modInfo->isBackup()) {
     emit modUninstalled(modInfo->installationFile());
+  }
+
+  if (!gameFiles.isEmpty()) {
+    removeScriptExtenderFiles(gameFiles);
   }
 }
 
@@ -1255,6 +1324,42 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
     }
 
     success = true;
+
+    // MO2 Revamped: a script extender MO2 copied into the game folder can go
+    // with its mod
+    const QStringList gameFiles = scriptExtenderFiles(modInfo);
+    if (!gameFiles.isEmpty()) {
+      QStringList fileNames;
+      for (const QString& path : gameFiles) {
+        fileNames.append(QFileInfo(path).fileName());
+      }
+      FluentContentDialog confirm(
+          qApp->activeWindow(), QStringLiteral("RemoveScriptExtenderDialog"),
+          tr("Remove \"%1\"?").arg(getDisplayName(modInfo)),
+          tr("MO2 copied this mod's loader and DLLs into the game folder: %1.")
+              .arg(fileNames.join(QStringLiteral(", "))));
+      auto* alsoGame =
+          new QCheckBox(tr("Also send those files to the Recycle Bin"), &confirm);
+      alsoGame->setObjectName(QStringLiteral("removeScriptExtenderFiles"));
+      alsoGame->setChecked(true);
+      confirm.body()->addWidget(alsoGame);
+      auto* remove = confirm.addButton(tr("Remove"), true);
+      auto* cancel = confirm.addButton(tr("Cancel"));
+      QObject::connect(remove, &QPushButton::clicked, &confirm, &QDialog::accept);
+      QObject::connect(cancel, &QPushButton::clicked, &confirm, &QDialog::reject);
+      confirm.askFirst(cancel);
+      ScriptExtenderSetup::fitHeight(confirm, 480);
+      if (confirm.exec() != QDialog::Accepted) {
+        continue;
+      }
+      // removeRowForce() takes the files out once the mod is gone
+      m_RemoveScriptExtenderFiles = alsoGame->isChecked();
+      const auto answered = qScopeGuard([this] {
+        m_RemoveScriptExtenderFiles.reset();
+      });
+      removeRowForce(static_cast<int>(ModInfo::getIndex(name)), parent);
+      continue;
+    }
 
     QMessageBox confirmBox(
         QMessageBox::Question, tr("Confirm"),

@@ -291,6 +291,13 @@ void OrganizerCore::connectPlugins(PluginContainer* container)
   m_PluginContainer = container;
   m_Updater.setPluginContainer(m_PluginContainer);
   m_InstallationManager.setPluginContainer(m_PluginContainer);
+  m_InstallationManager.setGameAccess(
+      [this]() -> const IPluginGame* {
+        return managedGame();
+      },
+      [this]() -> std::shared_ptr<const ScriptExtender> {
+        return gameFeatures().gameFeature<ScriptExtender>();
+      });
   m_DownloadManager.setPluginContainer(m_PluginContainer);
   m_ModList.setPluginContainer(m_PluginContainer);
 

@@ -7237,6 +7237,22 @@ Erro: %1</translation>
       <source>Create a Start menu shortcut</source>
       <translation>Criar um atalho no menu Iniciar</translation>
     </message>
+    <message>
+      <source>Start the game with %1?</source>
+      <translation>Iniciar o jogo com o %1?</translation>
+    </message>
+    <message>
+      <source>%1 is installed. Mods that need it work only when the game starts through it: the Run button can start "%2" instead of "%3". You can change it later in the list next to Run.</source>
+      <translation>O %1 está instalado. Os mods que precisam dele só funcionam quando o jogo é iniciado por ele: o botão Iniciar pode abrir “%2” em vez de “%3”. Você pode mudar isso depois na lista ao lado de Iniciar.</translation>
+    </message>
+    <message>
+      <source>Use %1</source>
+      <translation>Usar o %1</translation>
+    </message>
+    <message>
+      <source>Not now</source>
+      <translation>Agora não</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -7971,6 +7987,38 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
     <message>
       <source>Non-MO2</source>
       <translation>Fora do MO2</translation>
+    </message>
+    <message>
+      <source>Remove</source>
+      <translation>Remover</translation>
+    </message>
+    <message>
+      <source>MO2 copied the loader and DLLs of "%1" into the game folder: %2. Send them to the Recycle Bin too?</source>
+      <translation>O MO2 copiou o carregador e as DLLs de “%1” para a pasta do jogo: %2. Enviá-los também para a Lixeira?</translation>
+    </message>
+    <message>
+      <source>These files couldn't be removed from the game folder; close the game and remove them by hand:
+
+%1</source>
+      <translation>Não foi possível remover estes arquivos da pasta do jogo; feche o jogo e remova-os à mão:
+
+%1</translation>
+    </message>
+    <message>
+      <source>Remove "%1"?</source>
+      <translation>Remover “%1”?</translation>
+    </message>
+    <message>
+      <source>MO2 copied this mod's loader and DLLs into the game folder: %1.</source>
+      <translation>O MO2 copiou o carregador e as DLLs deste mod para a pasta do jogo: %1.</translation>
+    </message>
+    <message>
+      <source>Also send those files to the Recycle Bin</source>
+      <translation>Enviar também esses arquivos para a Lixeira</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
     </message>
   </context>
   <context>
@@ -14238,6 +14286,97 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
     <message>
       <source>FNIS finished with a problem</source>
       <translation>O FNIS terminou com um problema</translation>
+    </message>
+  </context>
+  <context>
+    <name>ScriptExtenderSetup</name>
+    <message>
+      <source>Script Extender</source>
+      <translation>Script Extender</translation>
+    </message>
+    <message>
+      <source>Install %1 in the game folder?</source>
+      <translation>Instalar o %1 na pasta do jogo?</translation>
+    </message>
+    <message>
+      <source>%1 is the game's script extender. Mods that need it work only when the game starts through its loader, which has to be next to the game's exe with its DLLs. The rest of the archive goes in as a mod.</source>
+      <translation>O %1 é o script extender do jogo. Os mods que precisam dele só funcionam quando o jogo é iniciado pelo carregador dele, que precisa ficar ao lado do exe do jogo com as DLLs dele. O resto do arquivo compactado é instalado como um mod.</translation>
+    </message>
+    <message>
+      <source>This %1 is for version %2 of the game, and the game is version %3: it won't start the game. Its download page has a build for each game version.</source>
+      <translation>Este %1 é para a versão %2 do jogo, e o jogo está na versão %3: ele não vai iniciar o jogo. A página de download dele tem uma build para cada versão do jogo.</translation>
+    </message>
+    <message>
+      <source>&amp;Install it in the game folder</source>
+      <translation>&amp;Instalar na pasta do jogo</translation>
+    </message>
+    <message>
+      <source>MO2 copies the loader and its DLLs next to the game's exe and keeps their list in the mod, so removing the mod can send them to the Recycle Bin. The files of an older %1 there go to the Recycle Bin.</source>
+      <translation>O MO2 copia o carregador e as DLLs dele ao lado do exe do jogo e guarda a lista delas no mod, para poder enviá-las para a Lixeira quando o mod for removido. Os arquivos de um %1 anterior que estiverem lá vão para a Lixeira.</translation>
+    </message>
+    <message>
+      <source>I'll &amp;copy the files myself</source>
+      <translation>Vou &amp;copiar os arquivos eu mesmo</translation>
+    </message>
+    <message>
+      <source>MO2 installs the rest as a mod and shows which files go into the game folder.</source>
+      <translation>O MO2 instala o resto como um mod e mostra quais arquivos vão para a pasta do jogo.</translation>
+    </message>
+    <message>
+      <source>Install it as a &amp;regular mod</source>
+      <translation>Instalar como um mod &amp;comum</translation>
+    </message>
+    <message>
+      <source>The whole archive goes into a mod: for tools that put a mod's files in the game folder when it starts, such as Root Builder.</source>
+      <translation>O arquivo compactado inteiro vai para um mod: para ferramentas que colocam os arquivos de um mod na pasta do jogo ao iniciar, como o Root Builder.</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Windows doesn't let MO2 write in the game folder (%1). Start MO2 as administrator, or copy the files yourself.</source>
+      <translation>O Windows não deixa o MO2 gravar na pasta do jogo (%1). Inicie o MO2 como administrador ou copie os arquivos você mesmo.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the game folder.</source>
+      <translation>Não foi possível copiar %1 para a pasta do jogo.</translation>
+    </message>
+    <message>
+      <source>%1 is in use and can't be replaced: close the game and try again.</source>
+      <translation>%1 está em uso e não pode ser substituído: feche o jogo e tente de novo.</translation>
+    </message>
+    <message>
+      <source>The rest is installed as a mod. Copy these files from the archive into %1, next to the game's exe:
+
+%2</source>
+      <translation>O resto foi instalado como um mod. Copie estes arquivos do arquivo compactado para %1, ao lado do exe do jogo:
+
+%2</translation>
+    </message>
+    <message>
+      <source>Copy %1 into the game folder</source>
+      <translation>Copiar o %1 para a pasta do jogo</translation>
+    </message>
+    <message>
+      <source>&amp;Open the game folder</source>
+      <translation>&amp;Abrir a pasta do jogo</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>%1 is for another version of the game</source>
+      <translation>O %1 é para outra versão do jogo</translation>
+    </message>
+    <message>
+      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once. This happens after a game update: %2's download page has the build for %1.</source>
+      <translation>O jogo está na versão %1, e o %2 da pasta dele é para a %3. O jogo não vai iniciar por ele, ou fecha na hora. Isso acontece depois de uma atualização do jogo: a página de download do %2 tem a build para a %1.</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar mesmo assim</translation>
     </message>
   </context>
 </TS>

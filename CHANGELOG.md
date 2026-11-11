@@ -1,5 +1,28 @@
 # Changelog
 
+## Next pre-release (not released yet)
+
+### Script extenders
+
+- Installing the archive of the game's script extender (SKSE64, SKSE, F4SE,
+  NVSE, FOSE, OBSE, SFSE and their VR versions) asks where its files go. Its
+  loader and DLLs have to be next to the game's exe, where a mod can't put them:
+  - **Install it in the game folder** copies them there and installs the rest
+    (Data\Scripts) as a mod, which keeps the list of the copied files.
+  - **I'll copy the files myself** installs the rest as a mod and lists which
+    files go into the game folder, with a button that opens it.
+  - **Install it as a regular mod** works as before, for tools such as Root
+    Builder.
+- Updating the extender the same way sends the files of the older version (its
+  DLL for the old game version) to the Recycle Bin.
+- Removing that mod offers to send the files it copied into the game folder to
+  the Recycle Bin too.
+- The window warns when the extender is built for another version of the game,
+  and so does Run before the game starts through the extender's loader: after a
+  game update, the old extender doesn't start the game.
+- Once per instance, when the extender is installed and Run starts something
+  else, MO2 offers to start the game through the extender.
+
 ## 1.1.0-beta.7 (pre-release) — November 11, 2026
 
 ### FNIS

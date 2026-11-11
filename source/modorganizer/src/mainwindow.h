@@ -275,6 +275,12 @@ private:
   bool createBackup(const QString& filePath, const QDateTime& time, bool removeOld = true);
   bool backUpBeforeRestore(const QStringList& files);
   void offerReplacedModsRecovery();
+
+  // MO2 Revamped: once per instance, when the script extender is installed
+  // and Run starts something else: offers to start the game through it
+  void offerScriptExtenderLaunch();
+  bool m_ScriptExtenderOffered      = false;
+  bool m_ScriptExtenderOfferPending = false;
   QString queryRestore(const QString& filePath);
   void createProfileBackup(bool includeModList, bool includePluginOrder);
   void createPluginOrderBackup();

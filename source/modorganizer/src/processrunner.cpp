@@ -4,7 +4,9 @@
 #include "instancemanager.h"
 #include "iuserinterface.h"
 #include "organizercore.h"
+#include "scriptextendersetup.h"
 #include <iplugingame.h>
+#include <scriptextender.h>
 #include <log.h>
 #include <report.h>
 #include <scopeguard.h>
@@ -796,6 +798,15 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
 
   // these questions come before the plugins prepare the launch: a plugin that
   // hides saves for it gives up when the game doesn't appear in a few seconds
+
+  // MO2 Revamped: the script extender's loader with a DLL for another game
+  // version (the game updated) doesn't start the game; asked before Steam starts
+  if (const auto extender = m_core.gameFeatures().gameFeature<ScriptExtender>()) {
+    if (ScriptExtenderSetup::isLoader(m_sp.binary.absoluteFilePath(), *extender) &&
+        !ScriptExtenderSetup::confirmLaunch(parent, *extender, *game)) {
+      return Error;
+    }
+  }
 
   // start steam if needed
   if (!checkSteam(parent, m_sp, game->gameDirectory(), m_sp.steamAppID, settings)) {

@@ -72,6 +72,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentchoices.h"
 #include "fluentdashboard.h"
 #include "fluentdialogs.h"
+#include "scriptextendersetup.h"
+#include <scriptextender.h>
 #include "selectiondialog.h"
 #include "serverinfo.h"
 #include "settingsdialog.h"
@@ -2720,6 +2722,9 @@ void MainWindow::showEvent(QShowEvent* event)
     QTimer::singleShot(0, this, [this] {
       offerReplacedModsRecovery();
     });
+    QTimer::singleShot(0, this, [this] {
+      offerScriptExtenderLaunch();
+    });
 
     if (m_OrganizerCore.settings().firstStart()) {
       if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
@@ -4358,6 +4363,13 @@ void MainWindow::onDirectoryStructureChanged()
         ui->executablesListBox->setCurrentIndex(index);
       }
     }
+  }
+
+  // the script extender MO2 just copied into the game folder
+  if (m_WasVisible && !m_ScriptExtenderOffered) {
+    QTimer::singleShot(0, this, [this] {
+      offerScriptExtenderLaunch();
+    });
   }
 }
 
@@ -6013,6 +6025,71 @@ bool MainWindow::createBackup(const QString& filePath, const QDateTime& time,
     return true;
   } else {
     return false;
+  }
+}
+
+void MainWindow::offerScriptExtenderLaunch()
+{
+  if (m_ScriptExtenderOffered || m_ScriptExtenderOfferPending) {
+    return;
+  }
+  // not over another question (the first start's category setup, an install):
+  // one retry waits for it, however many refreshes come meanwhile
+  if (QApplication::activeModalWidget() != nullptr) {
+    m_ScriptExtenderOfferPending = true;
+    QTimer::singleShot(1000, this, [this] {
+      m_ScriptExtenderOfferPending = false;
+      offerScriptExtenderLaunch();
+    });
+    return;
+  }
+  const auto extender = m_OrganizerCore.gameFeatures().gameFeature<ScriptExtender>();
+  if (extender == nullptr || !extender->isInstalled()) {
+    return;
+  }
+
+  const QString file = m_OrganizerCore.settings().filename();
+  constexpr auto offeredKey = "Settings/script_extender_launch_offered";
+  if (QSettings(file, QSettings::IniFormat).value(offeredKey, false).toBool()) {
+    m_ScriptExtenderOffered = true;
+    return;
+  }
+
+  // the program in the list that starts the loader
+  QString title;
+  for (const auto& exe : *m_OrganizerCore.executablesList()) {
+    if (!exe.hide() &&
+        ScriptExtenderSetup::isLoader(exe.binaryInfo().absoluteFilePath(), *extender)) {
+      title = exe.title();
+      break;
+    }
+  }
+  const int index = title.isEmpty() ? -1 : ui->executablesListBox->findText(title);
+  if (index <= 0) {
+    return;
+  }
+
+  m_ScriptExtenderOffered = true;
+  QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+  if (ui->executablesListBox->currentIndex() == index) {
+    return;
+  }
+
+  const QString name = ScriptExtenderSetup::displayName(*extender);
+  FluentContentDialog dialog(
+      this, QStringLiteral("ScriptExtenderLaunchDialog"),
+      tr("Start the game with %1?").arg(name),
+      tr("%1 is installed. Mods that need it work only when the game starts through it: "
+         "the Run button can start \"%2\" instead of \"%3\". You can change it later in "
+         "the list next to Run.")
+          .arg(name, title, ui->executablesListBox->currentText()));
+  auto* use   = dialog.addButton(tr("Use %1").arg(name), true);
+  auto* later = dialog.addButton(tr("Not now"));
+  connect(use, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(later, &QPushButton::clicked, &dialog, &QDialog::reject);
+  ScriptExtenderSetup::fitHeight(dialog, 500);
+  if (dialog.exec() == QDialog::Accepted) {
+    ui->executablesListBox->setCurrentIndex(index);
   }
 }
 

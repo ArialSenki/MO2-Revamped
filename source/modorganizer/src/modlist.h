@@ -29,6 +29,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <imodlist.h>
 
 #include <QFile>
+#include <optional>
 #include <QListWidget>
 #include <QMetaEnum>
 #include <QNetworkAccessManager>
@@ -363,6 +364,14 @@ private:
 
 private:
   OrganizerCore* m_Organizer;
+
+  // MO2 Revamped: the files of a script extender MO2 copied into the game
+  // folder for a mod, and whether they go with it (nullopt: ask)
+  QStringList scriptExtenderFiles(const ModInfo::Ptr& modInfo) const;
+  bool askRemoveScriptExtenderFiles(const ModInfo::Ptr& modInfo,
+                                    const QStringList& gameFiles);
+  void removeScriptExtenderFiles(const QStringList& gameFiles);
+  std::optional<bool> m_RemoveScriptExtenderFiles;
   Profile* m_Profile;
 
   NexusInterface* m_NexusInterface;
