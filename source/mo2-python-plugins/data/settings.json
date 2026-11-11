@@ -663,7 +663,7 @@
         "lower":0.0,
         "upper":10.0
       },
-      "description":"Controls the master volume. 1.0 is the maximum you can set using the InGame UI."
+      "description":"Controls the master volume. 1.00 is the most the game's menus allow."
     },
     "fVal0":{
       "default":1.0,
@@ -680,7 +680,7 @@
         "lower":0.0,
         "upper":10.0
       },
-      "description":"Footstep Volume. (1.00 is the maximum you can set from the UI)"
+      "description":"Footstep volume. 1.00 is the most the game's menus allow."
     },
     "fVal1":{
       "default":1.0,
@@ -697,7 +697,7 @@
         "lower":0.0,
         "upper":10.0
       },
-      "description":"Voice Volume. (1.00 is the maximum you can set from the UI)"
+      "description":"Voice volume. 1.00 is the most the game's menus allow."
     },
     "fVal2":{
       "default":1.0,
@@ -714,7 +714,7 @@
         "lower":0.0,
         "upper":10.0
       },
-      "description":"Music Volume. (1.00 is the maximum you can set from the UI)"
+      "description":"Music volume. 1.00 is the most the game's menus allow."
     },
     "fVal3":{
       "default":1.0,
@@ -731,7 +731,7 @@
         "lower":0.0,
         "upper":10.0
       },
-      "description":"Effect Volume. (1.00 is the maximum you can set from the UI)"
+      "description":"Sound effects volume. 1.00 is the most the game's menus allow."
     },
     "fVal4":{
       "default":1.0,
@@ -872,35 +872,35 @@
       "flags":[
         "basic"
       ],
-      "description":"Load certain data files in background. Supposed to reduce stuttering while increasing load times and memory usage"
+      "description":"Loads some data files in the background. Meant to reduce stuttering, at the cost of longer loads and more memory."
     },
     "bBackgroundLoadLipFiles":{
       "default":false,
       "flags":[
         "basic"
       ],
-      "description":"Load certain data files in background. Supposed to reduce stuttering while increasing load times and memory usage"
+      "description":"Loads some data files in the background. Meant to reduce stuttering, at the cost of longer loads and more memory."
     },
     "bLoadBackgroundFaceGen":{
       "default":false,
       "flags":[
         "basic"
       ],
-      "description":"Load certain data files in background. Supposed to reduce stuttering while increasing load times and memory usage"
+      "description":"Loads some data files in the background. Meant to reduce stuttering, at the cost of longer loads and more memory."
     },
     "bLoadHelmetsInBackground":{
       "default":true,
       "flags":[
         "basic"
       ],
-      "description":"Load certain data files in background. Supposed to reduce stuttering while increasing load times and memory usage"
+      "description":"Loads some data files in the background. Meant to reduce stuttering, at the cost of longer loads and more memory."
     },
     "bSelectivePurgeUnusedOnFastTravel":{
       "default":false,
       "flags":[
         "basic"
       ],
-      "description":"Unload unused data on fast travel. Can reduce memory usage for users with little RAM."
+      "description":"Unloads unused data on fast travel. Can reduce memory use on PCs with little RAM."
     },
     "bUseBackgroundFileLoader":{
       "default":false
@@ -968,7 +968,7 @@
       "games":[
         "oblivion"
       ],
-      "description":"Enables a blur effect when HDR is disabled. Please note: This is read by the skyrim launcher but not by skyrim itself."
+      "description":"Turns on a blur effect when HDR is off. The Skyrim launcher reads it; Skyrim itself doesn't."
     }
   },
   "BlurShaderHDR":{
@@ -2146,7 +2146,7 @@
         "basic",
         "prefs"
       ],
-      "description":"If true, the user will run by default, otherwise walk slowly"
+      "description":"When on, the player runs by default; when off, walks."
     },
     "bBackgroundMouse":{
       "default":false,
@@ -2730,7 +2730,7 @@
         "prefs",
 		"both"
       ],
-      "description":"if true, draw dynamic shadows from landmass like rocks"
+      "description":"When on, terrain such as rocks casts dynamic shadows."
     },
     "bDrawShadows":{
       "default":true,
@@ -2753,7 +2753,7 @@
         "prefs",
         "basic"
       ],
-      "description":"Post-processing Anti-Aliasing. Better performance than Multi Sampling but worse quality."
+      "description":"Post-processing anti-aliasing. Faster than multisampling, but lower quality."
     },
     "bFloatPointRenderTarget":{
       "default":true,
@@ -2858,7 +2858,7 @@
         "basic",
         "prefs"
       ],
-      "description":"Anti-Alias transparent textures"
+      "description":"Anti-aliasing for transparent textures."
     },
     "bTreesReceiveShadows":{
       "default":false,
@@ -2870,7 +2870,7 @@
         "prefs",
         "both"
       ],
-      "description":"If true, trees receive shadows."
+      "description":"When on, trees receive shadows."
     },
     "bUse Shaders":{
       "default":true
@@ -3222,7 +3222,7 @@
 		"prefs",
 		"both"
       ],
-      "description":"Distance up to which higher detail trees are displayed"
+      "description":"Distance up to which the more detailed trees are shown."
     },
     "iAdapter":{
       "default":0
@@ -3250,7 +3250,7 @@
         "lower":0,
         "upper":100
       },
-      "description":"Control blurring of the shadow map. Lower values lead to sharper shadows that may look glitchy"
+      "description":"Controls the blurring of the shadow map. Lower values give sharper shadows that may look glitchy."
     },
     "iDebugTextLeftRightOffset":{
       "default":10
@@ -3280,7 +3280,7 @@
         "lower":0,
         "upper":16
       },
-      "description":"Quality of the anisotropic filtering. Higher means better quality at a small performance hit"
+      "description":"Quality of the anisotropic filtering. Higher is better quality at a small performance cost."
     },
     "iMaxDecalsPerFrame":{
       "default":10,
@@ -3306,7 +3306,7 @@
         4,
         8
       ],
-      "description":"Anti Aliasing Quality. Higher means better quality at a performance hit. It may be better to disable AA here and activate it in the driver."
+      "description":"Anti-aliasing quality. Higher is better quality at a performance cost. It may be better to turn it off here and use the graphics driver's instead."
     },
     "iNPatchNOrder":{
       "default":0
@@ -3326,7 +3326,7 @@
         "lower":0,
         "upper":1
       },
-      "description":"enable or disable an engine-specific vsync-implementation. May reduce mouse lag and increase fps. May cause visual glitches."
+      "description":"Turns the engine's own vsync on or off. Turning it off may reduce mouse lag and raise FPS, and may cause visual glitches."
     },
     "iScreenShotIndex":{
       "default":0,
@@ -3391,7 +3391,7 @@
         "prefs",
         "both"
       ],
-      "description":"Supposed to control shadow map resoluton. This is NOT used in Skyrim, not sure if other games use it",
+      "description":"Supposed to control shadow map resolution. This is NOT used in Skyrim, not sure if other games use it",
       "values":[
         512,
         1024,
@@ -3489,7 +3489,7 @@
     },
     "sD3DDevice":{
       "default":"",
-      "description":"Identifier for your video card. Only relevant to the launcher",
+      "description":"Identifier of your graphics card. Only the launcher uses it.",
 	  "flags":[
 		"prefs",
 		"readonly"
@@ -3623,7 +3623,7 @@
         "basic",
         "prefs"
       ],
-      "description":"disable to hide quest markers in the game"
+      "description":"Turn off to hide the quest markers in the game."
     },
     "bAllowDragonFlightLocationDiscovery":{
       "default":false,
@@ -3698,7 +3698,7 @@
     },
     "bBorderRegionsEnabled":{
       "default":true,
-      "description":"enables (true) or disables (false) the invisible wall around the game world"
+      "description":"Turns the invisible wall around the game world on or off."
     },
     "bCRTMemoryChecks":{
       "default":false
@@ -3735,7 +3735,7 @@
     },
     "bDisableAllGore":{
       "default":false,
-      "description":"controls some blood/violence effects"
+      "description":"Controls some blood and violence effects."
     },
     "bDisableDuplicateReferenceCheck":{
       "default":true
@@ -3823,7 +3823,7 @@
       "flags":[
         "basic"
       ],
-      "description":"If active, the game will try to predict when cells become unneeded and unloads them. This saves RAM but can cause stutters."
+      "description":"When on, the game tries to predict when cells are no longer needed and unloads them. Saves RAM, but can cause stutters."
     },
     "bPreloadIntroSequence":{
       "default":true
@@ -3941,7 +3941,7 @@
       "games":[
         "skyrim"
       ],
-      "description":"Frequency (in seconds) of Encumbrance messages"
+      "description":"How often, in seconds, the over-encumbered message appears."
     },
     "fFastTravelFadeSecs":{
       "default":0.5,
@@ -4091,7 +4091,7 @@
         "upper":536870912
       },
       "step":1048576,
-      "description":"Limit (in bytes) of data to preload. Reasonable values are between the default (25MB) and 256MB"
+      "description":"Limit, in bytes, of the data to preload. Reasonable values are between the default (25 MB) and 256 MB."
     },
     "iRenderingThread1HWThread":{
       "default":0
@@ -4131,7 +4131,7 @@
     },
     "sLocalSavePath":{
       "default":"Saves\\",
-      "description":"Directory where save games are stored. This value is ignored if you enabled profile-local save games in MO!"
+      "description":"Folder where saves are stored. Ignored when the MO2 profile has its own saves."
     },
     "sMainMenuMovieIntro":{
       "default":""
@@ -4222,14 +4222,14 @@
       "flags":[
         "basic"
       ],
-      "description":"Number of outdoor-cells to buffer in RAM. Higher value means more Memory usage, longer load times but smoother FPS."
+      "description":"Number of exterior cells kept in RAM. A higher value uses more memory and lengthens loads, but gives steadier FPS."
     },
     "uGridsToLoad":{
       "default":5,
       "flags":[
         "basic"
       ],
-      "description":"Number of grids to preload. Higher values increase graphics quality at the cost of performance and can cause instability. Has to be uneven. 5, 7 or 9 seem to be the most practical values.",
+      "description":"Number of grids to preload. Higher values improve graphics at the cost of performance and can cause instability. Must be odd; 5, 7 or 9 seem the most practical.",
       "range":{
         "lower":3,
         "upper":11
@@ -4241,7 +4241,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Number of indoor-cells to buffer in RAM. Higher value means more Memory usage, longer load times but smoother FPS."
+      "description":"Number of interior cells kept in RAM. A higher value uses more memory and lengthens loads, but gives steadier FPS."
     },
     "uMainMenuMusicAttnmB":{
       "default":1200,
@@ -4295,7 +4295,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Controls whether grass is drawn at all"
+      "description":"Whether grass is drawn at all."
     },
     "b30GrassVS":{
       "default":false,
@@ -4345,7 +4345,7 @@
         "basic",
         "prefs"
       ],
-      "description":"Controls the distance up to which grass is drawn"
+      "description":"Distance up to which grass is drawn."
     },
     "fGrassWindMagnitudeMax":{
       "default":125.0
@@ -4373,7 +4373,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Controls the size of grass patches"
+      "description":"Size of the grass patches."
     }
   },
   "Havok":{
@@ -4451,14 +4451,14 @@
         "prefs",
 		"both"
       ],
-      "description":"Controls depth of field effect on various menu screens."
+      "description":"Controls the depth of field effect on various menu screens."
     },
     "bDoRadialBlur":{
       "default":true,
       "flags":[
         "basic"
       ],
-      "description":"controls radial blur effect in certain situations (like combat)"
+      "description":"Controls the radial blur effect in some situations (like combat)."
     },
     "fRenderDepthMaxDepth":{
       "default":10000.0
@@ -4468,7 +4468,7 @@
       "flags":[
         "basic"
       ],
-      "description":"strength of radial blur effect in certain situations (like combat)"
+      "description":"Strength of the radial blur effect in some situations (like combat)."
     }
   },
   "Interface":{
@@ -4493,7 +4493,7 @@
         "basic",
         "prefs"
       ],
-      "description":"Set to false to hide the compass on the upper screen edge"
+      "description":"Turn off to hide the compass at the top of the screen."
     },
     "bShowCrosshair":{
       "default":true,
@@ -4524,7 +4524,7 @@
       "games":[
         "skyrim"
       ],
-      "description":"Uncheck to disable tutorial messages",
+      "description":"Turn off to hide the tutorial messages.",
       "flags":[
         "basic"
       ]
@@ -5221,28 +5221,28 @@
       "games":[
         "skyrim"
       ],
-      "description":"Margin between screen border and HUD elements (4:3 resolutions)"
+      "description":"Margin between the screen's edge and the HUD (4:3 resolutions)."
     },
     "fSafeZoneXWide":{
       "default":15.0,
       "games":[
         "skyrim"
       ],
-      "description":"Margin between screen border and HUD elements (wide screen resolutions)"
+      "description":"Margin between the screen's edge and the HUD (widescreen resolutions)."
     },
     "fSafeZoneY":{
       "default":15.0,
       "games":[
         "skyrim"
       ],
-      "description":"Margin between screen border and HUD elements (4:3 resolutions)"
+      "description":"Margin between the screen's edge and the HUD (4:3 resolutions)."
     },
     "fSafeZoneYWide":{
       "default":15.0,
       "games":[
         "skyrim"
       ],
-      "description":"Margin between screen border and HUD elements (wide screen resolutions)"
+      "description":"Margin between the screen's edge and the HUD (widescreen resolutions)."
     },
     "fSleepFaderTime":{
       "default":0.7,
@@ -5912,7 +5912,7 @@
       "games":[
         "skyrim"
       ],
-      "description":"Only used by launcher"
+      "description":"Only the launcher uses it."
     },
     "bShowAllResolutions":{
       "default": false,
@@ -6099,7 +6099,7 @@
     },
     "fLODFadeOutMultActors":{
       "default":6.0,
-      "description":"Level of Detail distance for actors. The maximum value in the UI is 15.0",
+      "description":"Level of detail distance for characters. The game's menus go up to 15.0.",
       "flags":[
         "prefs",
         "basic"
@@ -6107,7 +6107,7 @@
     },
     "fLODFadeOutMultItems":{
       "default":3.0,
-      "description":"Level of Detail distance for items. The maximum value in the UI is 15.0",
+      "description":"Level of detail distance for items. The game's menus go up to 15.0.",
       "flags":[
         "prefs",
         "basic"
@@ -6115,7 +6115,7 @@
     },
     "fLODFadeOutMultObjects":{
       "default":5.0,
-      "description":"Level of Detail distance for objects. The maximum value in the UI is 15.0",
+      "description":"Level of detail distance for objects. The game's menus go up to 15.0.",
       "flags":[
         "prefs",
         "basic"
@@ -6269,7 +6269,7 @@
     },
     "fHUDOpacity":{
       "default":1.0,
-      "description":"Opacity of the HUD. Reduce for a transparent hud.",
+      "description":"Opacity of the HUD. Lower it for a transparent HUD.",
       "flags":[
         "prefs",
         "basic"
@@ -6542,7 +6542,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Zoom speed on the map"
+      "description":"Zoom speed on the map."
     },
     "fMapZoomMouseSpeed":{
       "default":2.0,
@@ -6597,14 +6597,14 @@
       "games":[
         "skyrim"
       ],
-      "description":"Level of detail of objects on the map"
+      "description":"Level of detail of the objects on the map."
     },
     "uLockedTerrainLOD":{
       "default":32,
       "games":[
         "skyrim"
       ],
-      "description":"Level of detail of the terrain on the map"
+      "description":"Level of detail of the terrain on the map."
     }
   },
   "Menu":{
@@ -6721,28 +6721,28 @@
       "games":[
         "skyrim"
       ],
-      "description":"Check to enable logging of messages from scripts. This may decrease performance slightly."
+      "description":"Turn on to log messages from scripts. It may lower performance slightly."
     },
     "bEnableProfiling":{
       "default":false,
       "games":[
         "skyrim"
       ],
-      "description":"Check to collect profiling information for scripts. This may decreate performance."
+      "description":"Turn on to collect profiling information for scripts. It may lower performance."
     },
     "bEnableTrace":{
       "default":false,
       "games":[
         "skyrim"
       ],
-      "description":"Check to write trace messages from scripts to the log files. No effect if bEnableLogging isnt also enabled."
+      "description":"Turn on to write trace messages from scripts to the log files. No effect unless bEnableLogging is on too."
     },
     "bLoadDebugInformation":{
       "default":false,
       "games":[
         "skyrim"
       ],
-      "description":"Check to allow error messages from scripts to print more detailed information."
+      "description":"Turn on for more detailed error messages from scripts."
     },
     "fArchiveInitBufferMB":{
       "default":8.0,
@@ -6791,7 +6791,7 @@
       "games":[
         "skyrim"
       ],
-      "description":"Decimal form ID for a quest. All script changes for that quest are logged."
+      "description":"Decimal Form ID of a quest. All script changes for that quest are logged."
     }
   },
   "Particles":{
@@ -6809,7 +6809,7 @@
         "lower":0,
         "upper":10000
       },
-      "description":"Maximum number of particles. Notable impact on visual quality and performance"
+      "description":"Maximum number of particles. Has a clear effect on visual quality and performance."
     }
   },
   "Pathfinding":{
@@ -6827,7 +6827,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Load certain data files in background. Supposed to reduce stuttering while increasing load times and memory usage"
+      "description":"Loads some data files in the background. Meant to reduce stuttering, at the cost of longer loads and more memory."
     },
     "bCreateDebugInfo":{
       "default":false
@@ -7595,7 +7595,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Set to false to display the blood splatter effect on the Screen"
+      "description":"Turn off to hide the blood splatter effect on the screen."
     }
   },
   "SpeedTree":{
@@ -7687,7 +7687,7 @@
         "basic",
         "prefs"
       ],
-      "description":"Distance up to which trees are drawn"
+      "description":"Distance up to which trees are drawn."
     },
     "uDistantTreeBlockCacheSizePerCell":{
       "default":1
@@ -7762,7 +7762,7 @@
         "basic",
         "prefs"
       ],
-      "description":"Controls display of foliage on trees"
+      "description":"Controls the foliage on trees."
     },
     "uiMaxSkinnedTreesToRender":{
       "default":40,
@@ -7773,7 +7773,7 @@
         "basic",
         "prefs"
       ],
-      "description":"If bRenderSkinnedTrees is true, this controls how many trees can have foliage at once"
+      "description":"When bRenderSkinnedTrees is on, how many trees can have foliage at once."
     }
   },
   "VATS":{
@@ -8193,7 +8193,7 @@
       "flags":[
         "basic"
       ],
-      "description":"Controls rain/snow effect"
+      "description":"Controls the rain and snow effect."
     },
     "fAlphaReduce":{
       "default":1.0

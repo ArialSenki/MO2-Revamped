@@ -12796,4 +12796,427 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
       <translation>Ele pode estar danificado, ou em um formato que a pré-visualização não lê.</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedConfigurator</name>
+    <message>
+      <source>Configurator</source>
+      <translation>Configurador</translation>
+    </message>
+    <message>
+      <source>Edits the game's INI settings, with what each one does.</source>
+      <translation>Edita as configurações INI do jogo, com o que cada uma faz.</translation>
+    </message>
+    <message>
+      <source>Search settings</source>
+      <translation>Pesquisar configurações</translation>
+    </message>
+    <message>
+      <source>Sections</source>
+      <translation>Seções</translation>
+    </message>
+    <message>
+      <source>Show every setting</source>
+      <translation>Mostrar todas as configurações</translation>
+    </message>
+    <message>
+      <source>Restore the default value</source>
+      <translation>Restaurar o valor padrão</translation>
+    </message>
+    <message>
+      <source>The game's INI files in Documents</source>
+      <translation>Os arquivos INI do jogo em Documentos</translation>
+    </message>
+    <message>
+      <source>The INI has &quot;{value}&quot;, which isn't a valid value here; the game probably ignores it.</source>
+      <translation>O INI tem “{value}”, que não é um valor válido aqui; o jogo provavelmente o ignora.</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Salvar</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>Search results</source>
+      <translation>Resultados da pesquisa</translation>
+    </message>
+    <message>
+      <source>Choose…</source>
+      <translation>Escolher…</translation>
+    </message>
+    <message>
+      <source>1 change not saved yet</source>
+      <translation>1 alteração não salva</translation>
+    </message>
+    <message>
+      <source>Unsaved changes</source>
+      <translation>Alterações não salvas</translation>
+    </message>
+    <message>
+      <source>Save the changes before closing?</source>
+      <translation>Salvar as alterações antes de fechar?</translation>
+    </message>
+    <message>
+      <source>The managed game has no INI files to edit.</source>
+      <translation>O jogo gerenciado não tem arquivos INI para editar.</translation>
+    </message>
+    <message>
+      <source>No setting matches. &quot;Show every setting&quot; searches the advanced ones too.</source>
+      <translation>Nenhuma configuração corresponde. “Mostrar todas as configurações” pesquisa também as avançadas.</translation>
+    </message>
+    <message>
+      <source>No setting matches.</source>
+      <translation>Nenhuma configuração corresponde.</translation>
+    </message>
+    <message>
+      <source>There is nothing to configure for this game.</source>
+      <translation>Não há nada para configurar neste jogo.</translation>
+    </message>
+    <message>
+      <source>1 setting, in {files}</source>
+      <translation>1 configuração, em {files}</translation>
+    </message>
+    <message>
+      <source>{count} settings, in {files}</source>
+      <translation>{count} configurações, em {files}</translation>
+    </message>
+    <message>
+      <source>Restore the default value of {key}</source>
+      <translation>Restaurar o valor padrão de {key}</translation>
+    </message>
+    <message>
+      <source>Read-only: the game's launcher writes it.</source>
+      <translation>Somente leitura: quem grava é o launcher do jogo.</translation>
+    </message>
+    <message>
+      <source>Changed, not saved yet.</source>
+      <translation>Alterada, ainda não salva.</translation>
+    </message>
+    <message>
+      <source>The INI files of the profile &quot;{profile}&quot;</source>
+      <translation>Os arquivos INI do perfil “{profile}”</translation>
+    </message>
+    <message>
+      <source>1 setting</source>
+      <translation>1 configuração</translation>
+    </message>
+    <message>
+      <source>Not found yet: {files}. These settings can be changed here once the file exists (the game makes it on its first start).</source>
+      <translation>Ainda não existe: {files}. Estas configurações podem ser alteradas aqui quando o arquivo existir (o jogo o cria na primeira inicialização).</translation>
+    </message>
+    <message>
+      <source>{value} is outside what this setting allows ({low} to {high}).</source>
+      <translation>{value} está fora do que esta configuração permite ({low} a {high}).</translation>
+    </message>
+    <message>
+      <source>The first {shown} of {count} settings; type more to narrow it down.</source>
+      <translation>As primeiras {shown} de {count} configurações; digite mais para filtrar.</translation>
+    </message>
+    <message>
+      <source>In {file}. The Configurator doesn't know this setting.</source>
+      <translation>Em {file}. O Configurador não conhece esta configuração.</translation>
+    </message>
+    <message>
+      <source>on</source>
+      <translation>ativado</translation>
+    </message>
+    <message>
+      <source>off</source>
+      <translation>desativado</translation>
+    </message>
+    <message>
+      <source>{count} changes not saved yet</source>
+      <translation>{count} alterações não salvas</translation>
+    </message>
+    <message>
+      <source>The INI files could not be saved:
+{error}</source>
+      <translation>Não foi possível salvar os arquivos INI:
+{error}</translation>
+    </message>
+    <message>
+      <source>The INI files could not be read:
+{error}</source>
+      <translation>Não foi possível ler os arquivos INI:
+{error}</translation>
+    </message>
+    <message>
+      <source>{count} settings</source>
+      <translation>{count} configurações</translation>
+    </message>
+    <message>
+      <source>{file} is in a format MO2 doesn't write (UTF-16).</source>
+      <translation>{file} está em um formato que o MO2 não grava (UTF-16).</translation>
+    </message>
+    <message>
+      <source>Default: {value}</source>
+      <translation>Padrão: {value}</translation>
+    </message>
+    <message>
+      <source>Controls the master volume. 1.00 is the most the game's menus allow.</source>
+      <translation>Controla o volume geral. 1.00 é o máximo que os menus do jogo permitem.</translation>
+    </message>
+    <message>
+      <source>Footstep volume. 1.00 is the most the game's menus allow.</source>
+      <translation>Volume dos passos. 1.00 é o máximo que os menus do jogo permitem.</translation>
+    </message>
+    <message>
+      <source>Voice volume. 1.00 is the most the game's menus allow.</source>
+      <translation>Volume das vozes. 1.00 é o máximo que os menus do jogo permitem.</translation>
+    </message>
+    <message>
+      <source>Music volume. 1.00 is the most the game's menus allow.</source>
+      <translation>Volume da música. 1.00 é o máximo que os menus do jogo permitem.</translation>
+    </message>
+    <message>
+      <source>Sound effects volume. 1.00 is the most the game's menus allow.</source>
+      <translation>Volume dos efeitos. 1.00 é o máximo que os menus do jogo permitem.</translation>
+    </message>
+    <message>
+      <source>Loads some data files in the background. Meant to reduce stuttering, at the cost of longer loads and more memory.</source>
+      <translation>Carrega alguns arquivos de dados em segundo plano. Deve reduzir engasgos, com carregamentos mais longos e mais uso de memória.</translation>
+    </message>
+    <message>
+      <source>Unloads unused data on fast travel. Can reduce memory use on PCs with little RAM.</source>
+      <translation>Descarrega dados não usados na viagem rápida. Pode reduzir o uso de memória em PCs com pouca RAM.</translation>
+    </message>
+    <message>
+      <source>Turns on a blur effect when HDR is off. The Skyrim launcher reads it; Skyrim itself doesn't.</source>
+      <translation>Ativa um efeito de desfoque quando o HDR está desativado. O launcher do Skyrim lê isso; o próprio Skyrim não.</translation>
+    </message>
+    <message>
+      <source>When on, the player runs by default; when off, walks.</source>
+      <translation>Se ativado, o personagem corre por padrão; caso contrário, anda.</translation>
+    </message>
+    <message>
+      <source>When on, terrain such as rocks casts dynamic shadows.</source>
+      <translation>Se ativado, o terreno, como as rochas, projeta sombras dinâmicas.</translation>
+    </message>
+    <message>
+      <source>Post-processing anti-aliasing. Faster than multisampling, but lower quality.</source>
+      <translation>Antisserrilhamento por pós-processamento. Mais rápido que a multiamostragem, mas com qualidade pior.</translation>
+    </message>
+    <message>
+      <source>Anti-aliasing for transparent textures.</source>
+      <translation>Antisserrilhamento para texturas transparentes.</translation>
+    </message>
+    <message>
+      <source>When on, trees receive shadows.</source>
+      <translation>Se ativado, as árvores recebem sombras.</translation>
+    </message>
+    <message>
+      <source>Distance at which interior shadows are drawn. Higher distance will reduce shadow quality. Very little actual effect.</source>
+      <translation>Distância em que as sombras de interiores são desenhadas. Mais distância reduz a qualidade das sombras. Efeito real muito pequeno.</translation>
+    </message>
+    <message>
+      <source>Controls which objects cast shadows. Low value means more shadows.</source>
+      <translation>Controla quais objetos projetam sombras. Um valor baixo significa mais sombras.</translation>
+    </message>
+    <message>
+      <source>Range at which shadows are drawn. The higher this value the lower the quality of shadows.</source>
+      <translation>Alcance em que as sombras são desenhadas. Quanto maior o valor, pior a qualidade das sombras.</translation>
+    </message>
+    <message>
+      <source>Distance up to which the more detailed trees are shown.</source>
+      <translation>Distância até onde as árvores mais detalhadas são mostradas.</translation>
+    </message>
+    <message>
+      <source>Controls the blurring of the shadow map. Lower values give sharper shadows that may look glitchy.</source>
+      <translation>Controla o desfoque do mapa de sombras. Valores mais baixos dão sombras mais nítidas que podem parecer com falhas.</translation>
+    </message>
+    <message>
+      <source>Quality of the anisotropic filtering. Higher is better quality at a small performance cost.</source>
+      <translation>Qualidade da filtragem anisotrópica. Mais alto é melhor qualidade com um pequeno custo de desempenho.</translation>
+    </message>
+    <message>
+      <source>Anti-aliasing quality. Higher is better quality at a performance cost. It may be better to turn it off here and use the graphics driver's instead.</source>
+      <translation>Qualidade do antisserrilhamento. Mais alto é melhor qualidade com custo de desempenho. Pode ser melhor desativá-lo aqui e usar o do driver de vídeo.</translation>
+    </message>
+    <message>
+      <source>Turns the engine's own vsync on or off. Turning it off may reduce mouse lag and raise FPS, and may cause visual glitches.</source>
+      <translation>Ativa ou desativa a sincronização vertical própria do motor. Desativá-la pode reduzir o atraso do mouse e aumentar o FPS, e pode causar falhas visuais.</translation>
+    </message>
+    <message>
+      <source>Texture size of shadow maps. Higher value means nicer shadows but more VRAM usage and less FPS.</source>
+      <translation>Tamanho da textura dos mapas de sombras. Um valor maior dá sombras mais bonitas, mas usa mais VRAM e reduz o FPS.</translation>
+    </message>
+    <message>
+      <source>Supposed to control shadow map resolution. This is NOT used in Skyrim, not sure if other games use it</source>
+      <translation>Deveria controlar a resolução do mapa de sombras. O Skyrim NÃO usa isto; não se sabe se outros jogos usam.</translation>
+    </message>
+    <message>
+      <source>Controls quality of interior shadows. High values have more jagged edges. Very high values can cause crashes. 0 disables dynamic shadows but not static ones.</source>
+      <translation>Controla a qualidade das sombras de interiores. Valores altos dão bordas mais serrilhadas, e valores muito altos podem causar travamentos. 0 desativa as sombras dinâmicas, mas não as estáticas.</translation>
+    </message>
+    <message>
+      <source>Identifier of your graphics card. Only the launcher uses it.</source>
+      <translation>Identificador da sua placa de vídeo. Usado só pelo launcher.</translation>
+    </message>
+    <message>
+      <source>Turn off to hide the quest markers in the game.</source>
+      <translation>Desative para esconder os marcadores de missão no jogo.</translation>
+    </message>
+    <message>
+      <source>Turns the invisible wall around the game world on or off.</source>
+      <translation>Ativa ou desativa a parede invisível ao redor do mundo do jogo.</translation>
+    </message>
+    <message>
+      <source>Controls some blood and violence effects.</source>
+      <translation>Controla alguns efeitos de sangue e violência.</translation>
+    </message>
+    <message>
+      <source>When on, the game tries to predict when cells are no longer needed and unloads them. Saves RAM, but can cause stutters.</source>
+      <translation>Se ativado, o jogo tenta prever quando as células deixam de ser necessárias e as descarrega. Economiza RAM, mas pode causar engasgos.</translation>
+    </message>
+    <message>
+      <source>How often, in seconds, the over-encumbered message appears.</source>
+      <translation>De quantos em quantos segundos aparece a mensagem de sobrecarga.</translation>
+    </message>
+    <message>
+      <source>Limit, in bytes, of the data to preload. Reasonable values are between the default (25 MB) and 256 MB.</source>
+      <translation>Limite (em bytes) dos dados pré-carregados. Valores razoáveis vão do padrão (25 MB) até 256 MB.</translation>
+    </message>
+    <message>
+      <source>Folder where saves are stored. Ignored when the MO2 profile has its own saves.</source>
+      <translation>Pasta onde ficam os saves. É ignorada se o perfil do MO2 tiver os próprios saves.</translation>
+    </message>
+    <message>
+      <source>Number of exterior cells kept in RAM. A higher value uses more memory and lengthens loads, but gives steadier FPS.</source>
+      <translation>Número de células externas mantidas na RAM. Um valor maior usa mais memória e aumenta os carregamentos, mas dá um FPS mais estável.</translation>
+    </message>
+    <message>
+      <source>Number of grids to preload. Higher values improve graphics at the cost of performance and can cause instability. Must be odd; 5, 7 or 9 seem the most practical.</source>
+      <translation>Número de grades pré-carregadas. Valores maiores melhoram os gráficos à custa do desempenho e podem causar instabilidade. Precisa ser ímpar; 5, 7 ou 9 parecem os valores mais práticos.</translation>
+    </message>
+    <message>
+      <source>Number of interior cells kept in RAM. A higher value uses more memory and lengthens loads, but gives steadier FPS.</source>
+      <translation>Número de células internas mantidas na RAM. Um valor maior usa mais memória e aumenta os carregamentos, mas dá um FPS mais estável.</translation>
+    </message>
+    <message>
+      <source>Whether grass is drawn at all.</source>
+      <translation>Controla se a grama é desenhada.</translation>
+    </message>
+    <message>
+      <source>Distance up to which grass is drawn.</source>
+      <translation>Controla a distância até onde a grama é desenhada.</translation>
+    </message>
+    <message>
+      <source>Size of the grass patches.</source>
+      <translation>Controla o tamanho dos tufos de grama.</translation>
+    </message>
+    <message>
+      <source>Controls the depth of field effect on various menu screens.</source>
+      <translation>Controla o efeito de profundidade de campo em várias telas de menu.</translation>
+    </message>
+    <message>
+      <source>Controls the radial blur effect in some situations (like combat).</source>
+      <translation>Controla o desfoque radial em algumas situações (como no combate).</translation>
+    </message>
+    <message>
+      <source>Strength of the radial blur effect in some situations (like combat).</source>
+      <translation>Intensidade do desfoque radial em algumas situações (como no combate).</translation>
+    </message>
+    <message>
+      <source>Turn off to hide the compass at the top of the screen.</source>
+      <translation>Desative para esconder a bússola no topo da tela.</translation>
+    </message>
+    <message>
+      <source>Turn off to hide the tutorial messages.</source>
+      <translation>Desative para esconder as mensagens do tutorial.</translation>
+    </message>
+    <message>
+      <source>Margin between the screen's edge and the HUD (4:3 resolutions).</source>
+      <translation>Margem entre a borda da tela e os elementos do HUD (resoluções 4:3).</translation>
+    </message>
+    <message>
+      <source>Margin between the screen's edge and the HUD (widescreen resolutions).</source>
+      <translation>Margem entre a borda da tela e os elementos do HUD (resoluções widescreen).</translation>
+    </message>
+    <message>
+      <source>Only the launcher uses it.</source>
+      <translation>Usado só pelo launcher.</translation>
+    </message>
+    <message>
+      <source>Level of detail distance for characters. The game's menus go up to 15.0.</source>
+      <translation>Distância do nível de detalhe dos personagens. Os menus do jogo vão até 15.0.</translation>
+    </message>
+    <message>
+      <source>Level of detail distance for items. The game's menus go up to 15.0.</source>
+      <translation>Distância do nível de detalhe dos itens. Os menus do jogo vão até 15.0.</translation>
+    </message>
+    <message>
+      <source>Level of detail distance for objects. The game's menus go up to 15.0.</source>
+      <translation>Distância do nível de detalhe dos objetos. Os menus do jogo vão até 15.0.</translation>
+    </message>
+    <message>
+      <source>Opacity of the HUD. Lower it for a transparent HUD.</source>
+      <translation>Opacidade do HUD. Reduza para um HUD transparente.</translation>
+    </message>
+    <message>
+      <source>Zoom speed on the map.</source>
+      <translation>Velocidade do zoom no mapa.</translation>
+    </message>
+    <message>
+      <source>Level of detail of the objects on the map.</source>
+      <translation>Nível de detalhe dos objetos no mapa.</translation>
+    </message>
+    <message>
+      <source>Level of detail of the terrain on the map.</source>
+      <translation>Nível de detalhe do terreno no mapa.</translation>
+    </message>
+    <message>
+      <source>Turn on to log messages from scripts. It may lower performance slightly.</source>
+      <translation>Ative para registrar as mensagens dos scripts. Pode reduzir um pouco o desempenho.</translation>
+    </message>
+    <message>
+      <source>Turn on to collect profiling information for scripts. It may lower performance.</source>
+      <translation>Ative para coletar dados de perfil dos scripts. Pode reduzir o desempenho.</translation>
+    </message>
+    <message>
+      <source>Turn on to write trace messages from scripts to the log files. No effect unless bEnableLogging is on too.</source>
+      <translation>Ative para gravar as mensagens de rastreio dos scripts nos logs. Não tem efeito se bEnableLogging não estiver ativado também.</translation>
+    </message>
+    <message>
+      <source>Turn on for more detailed error messages from scripts.</source>
+      <translation>Ative para mensagens de erro dos scripts mais detalhadas.</translation>
+    </message>
+    <message>
+      <source>Decimal Form ID of a quest. All script changes for that quest are logged.</source>
+      <translation>Form ID decimal de uma missão. Todas as alterações de script dessa missão são registradas.</translation>
+    </message>
+    <message>
+      <source>Maximum number of particles. Has a clear effect on visual quality and performance.</source>
+      <translation>Número máximo de partículas. Impacto notável na qualidade visual e no desempenho.</translation>
+    </message>
+    <message>
+      <source>Turn off to hide the blood splatter effect on the screen.</source>
+      <translation>Desative para esconder o efeito de respingos de sangue na tela.</translation>
+    </message>
+    <message>
+      <source>Distance up to which trees are drawn.</source>
+      <translation>Distância até onde as árvores são desenhadas.</translation>
+    </message>
+    <message>
+      <source>Controls the foliage on trees.</source>
+      <translation>Controla a exibição da folhagem nas árvores.</translation>
+    </message>
+    <message>
+      <source>When bRenderSkinnedTrees is on, how many trees can have foliage at once.</source>
+      <translation>Se bRenderSkinnedTrees estiver ativado, quantas árvores podem ter folhagem ao mesmo tempo.</translation>
+    </message>
+    <message>
+      <source>Resolution of reflection texture. Always set equal to iWaterReflectWidth</source>
+      <translation>Resolução da textura de reflexos. Sempre igual a iWaterReflectWidth.</translation>
+    </message>
+    <message>
+      <source>Resolution of reflection texture. Always set equal to iWaterReflectHeight</source>
+      <translation>Resolução da textura de reflexos. Sempre igual a iWaterReflectHeight.</translation>
+    </message>
+    <message>
+      <source>Controls the rain and snow effect.</source>
+      <translation>Controla o efeito de chuva e neve.</translation>
+    </message>
+  </context>
 </TS>

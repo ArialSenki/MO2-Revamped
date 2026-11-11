@@ -6107,3 +6107,19 @@ QToolButton[fluentSegment="true"]:checked:hover {
 QToolButton[fluentSegment="true"]:checked:hover {
     background-color: #F5F5F5;
 }
+
+/* The Configurator's setting rows: fields and buttons as compact as in the
+   Settings window. */
+QDialog#ConfiguratorDialog QFrame#fluentSettingRow QPushButton {
+    padding: 4px 16px;
+    border-radius: 4px;
+}
+QDialog#ConfiguratorDialog QFrame#fluentSettingRow QLineEdit,
+QDialog#ConfiguratorDialog QFrame#fluentSettingRow QComboBox,
+QDialog#ConfiguratorDialog QFrame#fluentSettingRow QSpinBox,
+QDialog#ConfiguratorDialog QFrame#fluentSettingRow QDoubleSpinBox {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 4px 10px;
+    border-radius: 4px;
+}

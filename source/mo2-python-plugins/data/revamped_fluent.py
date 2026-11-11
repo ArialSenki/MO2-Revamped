@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from PyQt6.QtCore import QEvent, QObject, QRectF, Qt
-from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPalette, QPixmap
+from PyQt6.QtCore import QEvent, QObject, QRectF, QSize, Qt
+from PyQt6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -20,8 +20,11 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QListWidget,
     QPushButton,
     QSizePolicy,
+    QStyle,
+    QStyledItemDelegate,
     QVBoxLayout,
     QWidget,
 )
@@ -257,6 +260,69 @@ class ContentDialog(QDialog):
         enter_presses_itself(button)
         self._buttons.addWidget(button)
         return button
+
+
+def accent_color() -> QColor:
+    application = QApplication.instance()
+    dark = application is not None and application.palette().window().color().lightness() < 128
+    return QColor("#4CC2FF" if dark else "#005FB8")
+
+
+class NavigationDelegate(QStyledItemDelegate):
+    """The page list of MO2's Settings window: a soft fill under the hovered
+    and selected page, an accent pill beside the selected one, a glyph (the
+    item's UserRole data) and the page's name."""
+
+    ItemHeight = 36
+
+    def sizeHint(self, option, index) -> QSize:
+        return QSize(super().sizeHint(option, index).width(), self.ItemHeight + 4)
+
+    def paint(self, painter, option, index) -> None:
+        selected = bool(option.state & QStyle.StateFlag.State_Selected)
+        hovered = bool(option.state & QStyle.StateFlag.State_MouseOver)
+        text = option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText)
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        row = QRectF(option.rect).adjusted(2, 2, -2, -2)
+        alpha = 26 if selected else (15 if hovered else 0)
+        if alpha:
+            fill = QColor(text)
+            fill.setAlpha(alpha)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(fill)
+            painter.drawRoundedRect(row, 4, 4)
+        if selected:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(accent_color())
+            painter.drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5)
+        left = row.left() + 14
+        glyph = index.data(Qt.ItemDataRole.UserRole)
+        if glyph:
+            painter.setFont(glyph_font(16))
+            painter.setPen(text)
+            painter.drawText(QRectF(left, row.top(), 20, row.height()), Qt.AlignmentFlag.AlignCenter, str(glyph))
+            left += 32
+        label = QFont(option.font)
+        label.setWeight(QFont.Weight.DemiBold if selected else QFont.Weight.Normal)
+        painter.setFont(label)
+        painter.setPen(text)
+        text_rect = QRectF(left, row.top(), row.right() - 8 - left, row.height())
+        painter.drawText(text_rect, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                         QFontMetrics(label).elidedText(str(index.data() or ""), Qt.TextElideMode.ElideRight,
+                                                         int(text_rect.width())))
+        painter.restore()
+
+
+def navigation_list(parent: QWidget | None = None, width: int = 232) -> QListWidget:
+    nav = QListWidget(parent)
+    nav.setObjectName("fluentNav")
+    nav.setItemDelegate(NavigationDelegate(nav))
+    nav.setFrameShape(QFrame.Shape.NoFrame)
+    nav.setMouseTracking(True)
+    nav.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    nav.setFixedWidth(width)
+    return nav
 
 
 def note(text: str, parent: QWidget | None = None) -> QLabel:

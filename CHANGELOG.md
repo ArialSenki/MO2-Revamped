@@ -29,6 +29,22 @@
   instead of an empty preview. Before, a texture with less data than its header
   said went to the graphics card anyway, which could take MO2 down.
 
+### Configurator
+
+- The Configurator, which edits the game's INI settings, is rewritten in MO2
+  Revamped's design, laid out like MO2's Settings: the sections on the left, a
+  search across every setting, a switch for the advanced ones, and a row per
+  setting with what it does, its default and a button to restore it. The
+  descriptions are clearer and translated.
+- Saving changes only the lines of the settings that changed. Before, MO2
+  rewrote the whole INI: comments were lost, and an INI with a key written twice
+  could not be opened at all.
+- The Configurator now edits the copy of a setting the game reads: the first
+  one when a key appears twice, and Fallout4Custom.ini's when it has the
+  setting, since that file wins.
+- Unsaved changes are asked about once when the window closes, and Enter in a
+  field no longer saves.
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12
