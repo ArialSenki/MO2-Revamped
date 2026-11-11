@@ -8,3 +8,4 @@ mo2_configure_library(game_gamebryo
 	PUBLIC_DEPENDS uibase
 	PRIVATE_DEPENDS zlib lz4)
 mo2_install_target(game_gamebryo)
+target_include_directories(game_gamebryo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../revamped_fluent)

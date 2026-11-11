@@ -6222,3 +6222,12 @@ QDialog#omodSelectDialog QPlainTextEdit#omodDescription {
     background-color: transparent;
     border: none;
 }
+/* a save's details over the Saves tab: a flyout card */
+QFrame#revampedSaveCard {
+    background-color: #F9F9F9;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+}
+QFrame#revampedSaveCard QLabel {
+    background-color: transparent;
+}

@@ -3,8 +3,9 @@
 #include "ModDto.h"
 #include "NullModDto.h"
 #include "PackerDialog.h"
-#include <QInputDialog>
-#include <QMessageBox>
+#include "fluentcontentdialog.h"
+#include <QApplication>
+#include <QLineEdit>
 
 namespace BsaPacker
 {
@@ -52,19 +53,33 @@ namespace BsaPacker
 	{
 		QString archive_name_base;
 		if (needsNewName) {
-			bool ok = false;
-			const QString& name = QInputDialog::getText(nullptr,
-														QStringLiteral("BSA Packer"),
-														QObject::tr("Archive name (no file extension):"),
-														QLineEdit::Normal,
-														modName,
-														&ok).simplified();
-			if (!ok) {
+			// MO2 Revamped: a content dialog over MO2's window, in place of
+			// QInputDialog with no parent; Pack waits for a name
+			RevampedFluent::ContentDialog dialog(
+				QApplication::activeWindow(), QStringLiteral("BsaPackerNameDialog"),
+				QObject::tr("BSA Packer"));
+			dialog.setHeading(QObject::tr("Name the archive"));
+			auto* edit = new QLineEdit(modName, &dialog);
+			dialog.body()->addWidget(RevampedFluent::fieldLabel(
+				QObject::tr("Archive name (no file extension):"), edit, &dialog));
+			dialog.body()->addWidget(edit);
+			auto* pack = dialog.addButton(QObject::tr("Pack"), true);
+			auto* cancel = dialog.addButton(QObject::tr("Cancel"));
+			QObject::connect(pack, &QPushButton::clicked, &dialog, &QDialog::accept);
+			QObject::connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+			QObject::connect(edit, &QLineEdit::textChanged, pack, [pack](const QString& text) {
+				pack->setEnabled(!text.simplified().isEmpty());
+			});
+			pack->setEnabled(!modName.simplified().isEmpty());
+			edit->selectAll();
+			edit->setFocus();
+			if (dialog.exec() != QDialog::Accepted) {
 				return nullptr;
 			}
+			const QString name = edit->text().simplified();
 			// Nameless plugins are not loaded in the games I tested. Nameless archives can be loaded in
 			// some games using the SArchiveList INI setting or equivalent. It is simpler to just prevent nameless archives
-			else if (name.isEmpty()) {
+			if (name.isEmpty()) {
 				qWarning("Archive name cannot be empty. Cancelling archive creation.");
 				return nullptr;
 			}
@@ -84,7 +99,17 @@ namespace BsaPacker
 			return true;
 		}
 
-		const QString& message = QObject::tr("File \"") + absoluteFileName + QObject::tr("\" already exists. Overwrite?");
-		return QMessageBox::question(nullptr, QStringLiteral("BSA Packer"), message, QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Cancel;
+		// MO2 Revamped: a question over MO2's window that starts on Cancel
+		RevampedFluent::ContentDialog dialog(
+			QApplication::activeWindow(), QStringLiteral("BsaPackerOverwriteDialog"),
+			QObject::tr("BSA Packer"),
+			QObject::tr("\"%1\" already exists. Overwrite it?").arg(absoluteFileName));
+		dialog.setHeading(QObject::tr("Replace the archive?"));
+		auto* overwrite = dialog.addButton(QObject::tr("Overwrite"), true);
+		auto* cancel = dialog.addButton(QObject::tr("Cancel"));
+		QObject::connect(overwrite, &QPushButton::clicked, &dialog, &QDialog::accept);
+		QObject::connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+		dialog.askFirst(cancel);
+		return dialog.exec() == QDialog::Accepted;
 	}
 } // namespace BsaPacker

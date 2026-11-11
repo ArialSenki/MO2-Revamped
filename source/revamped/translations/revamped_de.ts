@@ -10061,6 +10061,82 @@ Firefox.exe</translation>
       <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
       <translation>Aus MO2 gestartete Programme verwenden es ab ihrem nächsten Start, MO2 selbst ab seinem nächsten Start.</translation>
     </message>
+    <message>
+      <source>Pack a mod's files into an archive</source>
+      <translation>Die Dateien einer Mod in ein Archiv packen</translation>
+    </message>
+    <message>
+      <source>MO2 packs the mod's loose files into an archive named after one of its plugins, so the game loads the archive with that plugin. The loose files stay unless BSA Packer's settings hide them.</source>
+      <translation>MO2 packt die losen Dateien der Mod in ein Archiv, das nach einem ihrer Plugins benannt ist, damit das Spiel es mit diesem Plugin lädt. Die losen Dateien bleiben, außer die Einstellungen von BSA Packer blenden sie aus.</translation>
+    </message>
+    <message>
+      <source>Mod</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Archive name</source>
+      <translation>Name des Archivs</translation>
+    </message>
+    <message>
+      <source>Pack</source>
+      <translation>Packen</translation>
+    </message>
+    <message>
+      <source>No mod can be packed: the list has only separators, the game's own DLC and Creation Club content, backups, or mods MO2 can't read.</source>
+      <translation>Keine Mod kann gepackt werden: Die Liste enthält nur Trenner, Inhalte des Spiels selbst (DLC und Creation Club), Sicherungen oder Mods, die MO2 nicht lesen kann.</translation>
+    </message>
+    <message>
+      <source>Another name…</source>
+      <translation>Anderer Name…</translation>
+    </message>
+    <message>
+      <source>MO2 asks for the archive's name after Pack</source>
+      <translation>MO2 fragt nach Packen nach dem Namen des Archivs</translation>
+    </message>
+    <message>
+      <source>This mod has no plugin. As BSA Packer's settings ask, it also creates an empty plugin with the archive's name, which the game needs to load the archive.</source>
+      <translation>Diese Mod hat kein Plugin. Wie in den Einstellungen von BSA Packer festgelegt, erstellt es auch ein leeres Plugin mit dem Namen des Archivs, das das Spiel zum Laden des Archivs braucht.</translation>
+    </message>
+    <message>
+      <source>This mod has no plugin, and the game loads an archive only with a plugin of the same name. Add one, or turn on %1 in Settings, Plugins, BSA Packer.</source>
+      <translation>Diese Mod hat kein Plugin, und das Spiel lädt ein Archiv nur mit einem gleichnamigen Plugin. Füge eins hinzu oder aktiviere %1 unter Einstellungen, Plugins, BSA Packer.</translation>
+    </message>
+    <message>
+      <source>Name the archive</source>
+      <translation>Archiv benennen</translation>
+    </message>
+    <message>
+      <source>Archive name (no file extension):</source>
+      <translation>Name des Archivs (ohne Dateiendung):</translation>
+    </message>
+    <message>
+      <source>Replace the archive?</source>
+      <translation>Archiv ersetzen?</translation>
+    </message>
+    <message>
+      <source>BSA Packer</source>
+      <translation>BSA Packer</translation>
+    </message>
+    <message>
+      <source>No archive was created: the mod has no files to pack, or packing was cancelled. Its files are as they were.</source>
+      <translation>Es wurde kein Archiv erstellt: Die Mod hat keine Dateien zum Packen, oder das Packen wurde abgebrochen. Ihre Dateien sind unverändert.</translation>
+    </message>
+    <message>
+      <source>Created:</source>
+      <translation>Erstellt:</translation>
+    </message>
+    <message>
+      <source>Create .override files?</source>
+      <translation>.override-Dateien erstellen?</translation>
+    </message>
+    <message>
+      <source>An .override file makes the game load an archive's files over the base game's. Create one for each archive?</source>
+      <translation>Eine .override-Datei lässt das Spiel die Dateien eines Archivs über denen des Grundspiels laden. Für jedes Archiv eine erstellen?</translation>
+    </message>
+    <message>
+      <source>"%1" already exists. Overwrite it?</source>
+      <translation>„%1“ existiert bereits. Überschreiben?</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -14110,6 +14186,82 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
     <message>
       <source>The game's plugin knows where these files go, so MO2 moves them there and installs them.</source>
       <translation>Das Plugin des Spiels weiß, wohin diese Dateien gehören, daher verschiebt MO2 sie dorthin und installiert sie.</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedSaveCard</name>
+    <message>
+      <source>and %1 more</source>
+      <translation>und %1 weitere</translation>
+    </message>
+    <message>
+      <source>Every plugin this save uses is active.</source>
+      <translation>Alle Plugins, die dieser Spielstand nutzt, sind aktiv.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GamebryoSaveGameInfoWidget</name>
+    <message>
+      <source>Level %1</source>
+      <translation>Stufe %1</translation>
+    </message>
+    <message>
+      <source>Level %1, %2</source>
+      <translation>Stufe %1, %2</translation>
+    </message>
+    <message>
+      <source>Save %1, %2</source>
+      <translation>Spielstand %1, %2</translation>
+    </message>
+    <message>
+      <source>Has script extender data</source>
+      <translation>Enthält Script-Extender-Daten</translation>
+    </message>
+    <message>
+      <source>Missing plugins (ESP, ESM)</source>
+      <translation>Fehlende Plugins (ESP, ESM)</translation>
+    </message>
+    <message>
+      <source>Missing medium plugins (ESH)</source>
+      <translation>Fehlende mittlere Plugins (ESH)</translation>
+    </message>
+    <message>
+      <source>Missing light plugins (ESL)</source>
+      <translation>Fehlende leichte Plugins (ESL)</translation>
+    </message>
+  </context>
+  <context>
+    <name>MorrowindSaveGameInfoWidget</name>
+    <message>
+      <source>Level %1</source>
+      <translation>Stufe %1</translation>
+    </message>
+    <message>
+      <source>Level %1, %2</source>
+      <translation>Stufe %1, %2</translation>
+    </message>
+    <message>
+      <source>Health %1 of %2</source>
+      <translation>Gesundheit %1 von %2</translation>
+    </message>
+    <message>
+      <source>%1, day %2</source>
+      <translation>%1, Tag %2</translation>
+    </message>
+    <message>
+      <source>Save %1, %2</source>
+      <translation>Spielstand %1, %2</translation>
+    </message>
+    <message>
+      <source>Missing plugins</source>
+      <translation>Fehlende Plugins</translation>
+    </message>
+  </context>
+  <context>
+    <name>CheckFNIS</name>
+    <message>
+      <source>FNIS finished with a problem</source>
+      <translation>FNIS wurde mit einem Problem beendet</translation>
     </message>
   </context>
 </TS>

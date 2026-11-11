@@ -1,6 +1,9 @@
 #include "BsaPackerWorker.h"
 
+#include <QApplication>
 #include <QMessageBox>
+
+#include "fluentcontentdialog.h"
 
 #include <bsapacker/ArchiveBuildDirector.h>
 #include <bsapacker/ModDtoFactory.h>
@@ -49,17 +52,29 @@ namespace BsaPacker
 			}
 		}
 
-		if (!createdArchives.isEmpty()) {
-			QMessageBox::information(nullptr, "",
-        QObject::tr("Created archive(s):") + "\n" + createdArchives.join(modDto->ArchiveExtension() +",\n") + modDto->ArchiveExtension());
-			this->m_OverrideFileService->CreateOverrideFile(modDto->NexusId(), modDto->Directory(), createdArchives);
+		// MO2 Revamped: the plugin, the hiding and the summary only follow an
+		// archive that was made; 2.5.2 hid the mod's loose files even when none was
+		if (modDto->Directory().isEmpty()) {
+			return;  // the dialog was cancelled
 		}
+		if (createdArchives.isEmpty()) {
+			RevampedFluent::showNotice(QApplication::activeWindow(), QObject::tr("BSA Packer"),
+				QObject::tr("No archive was created: the mod has no files to pack, or packing "
+				            "was cancelled. Its files are as they were."));
+			return;
+		}
+		this->m_OverrideFileService->CreateOverrideFile(modDto->NexusId(), modDto->Directory(), createdArchives);
 
 		const std::unique_ptr<IDummyPluginService> pluginService = this->m_DummyPluginServiceFactory->Create();
 		pluginService->CreatePlugin(modDto->Directory(), modDto->ArchiveName());
 
-		if (!modDto->Directory().isEmpty()) {
-			this->m_HideLooseAssetService->HideLooseAssets(modDto->Directory());
+		this->m_HideLooseAssetService->HideLooseAssets(modDto->Directory());
+
+		QStringList names;
+		for (const QString& name : createdArchives) {
+			names.append(name + modDto->ArchiveExtension());
 		}
+		RevampedFluent::showNotice(QApplication::activeWindow(), QObject::tr("BSA Packer"),
+			QObject::tr("Created:") + "\n" + names.join("\n"));
 	}
 }

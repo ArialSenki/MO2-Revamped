@@ -1,4 +1,6 @@
 #include "scalelabel.h"
+#include <QFileInfo>
+#include <QImageReader>
 #include <QResizeEvent>
 
 static bool isResourceMovie(const QString& path)
@@ -75,7 +77,30 @@ void ScaleLabel::setScalableMovie(const QString& path)
 
 void ScaleLabel::setScalableImage(const QString& path)
 {
-  QImage image(path);
+  // MO2 Revamped: each hover and focus showed the picture again, read whole
+  // from the disk each time. This label keeps the ones it read (by path, date
+  // and size, as another mod's FOMOD can use the same temporary path), read at
+  // most 2048 px wide or high, up to about 96 MB
+  const QFileInfo info(path);
+  const QString key = path + QLatin1Char('|') +
+                      QString::number(info.lastModified().toMSecsSinceEpoch()) +
+                      QLatin1Char('|') + QString::number(info.size());
+  QImage image;
+  if (const QImage* cached = m_Cache.object(key)) {
+    image = *cached;
+  } else {
+    QImageReader reader(path);
+    reader.setAutoTransform(true);
+    const QSize size = reader.size();
+    if (size.isValid() && qMax(size.width(), size.height()) > 2048) {
+      reader.setScaledSize(size.scaled(2048, 2048, Qt::KeepAspectRatio));
+    }
+    image = reader.read();
+    if (!image.isNull()) {
+      m_Cache.insert(key, new QImage(image),
+                     static_cast<qsizetype>(qMax<qint64>(1, image.sizeInBytes() / 1024)));
+    }
+  }
   if (image.isNull()) {
     qWarning(">%s< is a null image", qUtf8Printable(path));
   } else {

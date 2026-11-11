@@ -230,14 +230,14 @@ bool CheckFNIS::fnisCheck(const QString &application)
       if (m_MOInfo->waitForApplication(process, &exitCodeU)) {
         int exitCode = static_cast<int>(exitCodeU);
         if (exitCode != 0) {
-          cont = QMessageBox::question(nullptr, tr("Start %1?").arg(application),
+          cont = QMessageBox::question(nullptr, tr("Start %1?").arg(QFileInfo(application).fileName()),
                                        tr("FNIS reported a %1, do you want to run the application "
                                           "anyway?").arg(exitCode < 0 ? tr("warning")
                                                                       : tr("critical error")),
                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
         }
       } else {
-        cont = QMessageBox::question(nullptr, tr("Start %1?").arg(application),
+        cont = QMessageBox::question(nullptr, tr("Start %1?").arg(QFileInfo(application).fileName()),
                                      tr("Failed to determine FNIS exit code, do you want to run the application "
                                         "anyway?"),
                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
@@ -261,7 +261,8 @@ void CheckFNIS::fnisEndCheck(const QString &application, unsigned int code)
     bool update = true;
     int exitCode = static_cast<int>(code);
     if (exitCode != 0) {
-      update = QMessageBox::question(nullptr, tr("Start %1?").arg(application),
+      // MO2 Revamped: FNIS has already run here; 2.5.2 asked "Start …?"
+      update = QMessageBox::question(nullptr, tr("FNIS finished with a problem"),
                                      tr("FNIS reported a %1. Do you want to assume it worked?"
                                        ).arg(exitCode < 0 ? tr("warning")
                                                           : tr("critical error")),

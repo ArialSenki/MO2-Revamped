@@ -1,5 +1,22 @@
 #include "gamebryosavegameinfowidget.h"
-#include "ui_gamebryosavegameinfowidget.h"
+#include "savegamecard.h"
+
+// MO2 Revamped: built in code instead of from 2.5.2's .ui, as a card; the
+// header, and so the game plugins built on it, stay as they were
+namespace Ui
+{
+class GamebryoSaveGameInfoWidget
+{
+public:
+  RevampedFluent::SaveGameCard card;
+
+  void setupUi(QWidget* widget)
+  {
+    widget->setObjectName(QStringLiteral("GamebryoSaveGameInfoWidget"));
+    card.setup(widget);
+  }
+};
+}  // namespace Ui
 
 #include "gamebryosavegame.h"
 #include "gamebryosavegameinfo.h"
@@ -31,15 +48,6 @@ GamebryoSaveGameInfoWidget::GamebryoSaveGameInfoWidget(GamebryoSaveGameInfo cons
       m_Info(info)
 {
   ui->setupUi(this);
-  this->setWindowFlags(Qt::ToolTip | Qt::BypassGraphicsProxyWidget);
-  setWindowOpacity(style()->styleHint(QStyle::SH_ToolTipLabel_Opacity, 0, this) /
-                   qreal(255.0));
-  ui->gameFrame->setStyleSheet("background-color: transparent;");
-
-  QVBoxLayout* gameLayout = new QVBoxLayout();
-  gameLayout->setContentsMargins(0, 0, 0, 0);
-  gameLayout->setSpacing(2);
-  ui->gameFrame->setLayout(gameLayout);
 }
 
 GamebryoSaveGameInfoWidget::~GamebryoSaveGameInfoWidget()
@@ -50,150 +58,39 @@ GamebryoSaveGameInfoWidget::~GamebryoSaveGameInfoWidget()
 void GamebryoSaveGameInfoWidget::setSave(MOBase::ISaveGame const& save)
 {
   auto& gamebryoSave = dynamic_cast<GamebryoSaveGame const&>(save);
-  ui->saveNumLabel->setText(QString("%1").arg(gamebryoSave.getSaveNumber()));
-  ui->characterLabel->setText(gamebryoSave.getPCName());
-  ui->locationLabel->setText(gamebryoSave.getPCLocation());
-  ui->levelLabel->setText(QString("%1").arg(gamebryoSave.getPCLevel()));
-  // This somewhat contorted code is because on my system at least, the
-  // old way of doing this appears to give short date and long time.
-  QDateTime t = gamebryoSave.getCreationTime().toLocalTime();
-  ui->dateLabel->setText(
-      QLocale::system().toString(t.date(), QLocale::FormatType::ShortFormat) + " " +
-      QLocale::system().toString(t.time()));
-  ui->screenshotLabel->setPixmap(QPixmap::fromImage(gamebryoSave.getScreenshot()));
-  if (ui->gameFrame->layout() != nullptr) {
-    QLayoutItem* item = nullptr;
-    while ((item = ui->gameFrame->layout()->takeAt(0)) != nullptr) {
-      delete item->widget();
-      delete item;
-    }
-    ui->gameFrame->layout()->setSizeConstraint(QLayout::SetFixedSize);
-  }
+  auto& card         = ui->card;
 
-  // Resize box to new content
-  this->resize(0, 0);
+  card.setScreenshot(gamebryoSave.getScreenshot());
+  card.setTitle(gamebryoSave.getPCName());
+  const QDateTime t = gamebryoSave.getCreationTime().toLocalTime();
+  const QString location = gamebryoSave.getPCLocation();
+  card.setLines({location.isEmpty()
+                     ? tr("Level %1").arg(gamebryoSave.getPCLevel())
+                     : tr("Level %1, %2").arg(QString::number(gamebryoSave.getPCLevel()), location),
+                 tr("Save %1, %2").arg(gamebryoSave.getSaveNumber()).arg(QLocale::system().toString(t.date(), QLocale::FormatType::ShortFormat) + " " +
+      QLocale::system().toString(t.time(), QLocale::FormatType::ShortFormat))});
 
-  QLayout* layout = ui->gameFrame->layout();
+  card.clearSections();
   if (gamebryoSave.hasScriptExtenderFile()) {
-    QLabel* scriptExtender = new QLabel(tr("Has Script Extender Data"));
-    QFont headerFont       = scriptExtender->font();
-    headerFont.setBold(true);
-    layout->addWidget(scriptExtender);
+    card.addNote(tr("Has script extender data"));
   }
-  QLabel* header    = new QLabel(tr("Missing ESPs"));
-  QFont headerFont  = header->font();
-  QFont contentFont = headerFont;
-  headerFont.setItalic(true);
-  contentFont.setBold(true);
-  contentFont.setPointSize(7);
-  header->setFont(headerFont);
-  layout->addWidget(header);
-  int count                       = 0;
+  // the save's plugins that aren't active, by kind
   MOBase::IPluginList* pluginList = m_Info->m_Game->m_Organizer->pluginList();
-  for (QString const& pluginName : gamebryoSave.getPlugins()) {
-    if (pluginList->state(pluginName) == MOBase::IPluginList::STATE_ACTIVE) {
-      continue;
+  auto missing = [pluginList](const QStringList& plugins) {
+    QStringList out;
+    for (QString const& pluginName : plugins) {
+      if (pluginList->state(pluginName) != MOBase::IPluginList::STATE_ACTIVE) {
+        out.append(pluginName);
+      }
     }
-
-    ++count;
-
-    if (count > 7) {
-      break;
-    }
-
-    QLabel* pluginLabel = new QLabel(pluginName);
-    pluginLabel->setIndent(10);
-    pluginLabel->setFont(contentFont);
-    layout->addWidget(pluginLabel);
-  }
-  if (count > 7) {
-    QLabel* dotDotLabel = new QLabel("...");
-    dotDotLabel->setIndent(10);
-    dotDotLabel->setFont(contentFont);
-    layout->addWidget(dotDotLabel);
-  }
-  if (count == 0) {
-    QLabel* dotDotLabel = new QLabel(tr("None"));
-    dotDotLabel->setIndent(10);
-    dotDotLabel->setFont(contentFont);
-    layout->addWidget(dotDotLabel);
-  }
+    return out;
+  };
+  card.addMissing(tr("Missing plugins (ESP, ESM)"), missing(gamebryoSave.getPlugins()));
   if (gamebryoSave.isMediumEnabled()) {
-    QLabel* headerEsh    = new QLabel(tr("Missing ESHs"));
-    QFont headerEshFont  = headerEsh->font();
-    QFont contentEshFont = headerEshFont;
-    headerEshFont.setItalic(true);
-    contentEshFont.setBold(true);
-    contentEshFont.setPointSize(7);
-    headerEsh->setFont(headerEshFont);
-    layout->addWidget(headerEsh);
-    int countEsh = 0;
-    for (QString const& pluginName : gamebryoSave.getMediumPlugins()) {
-      if (pluginList->state(pluginName) == MOBase::IPluginList::STATE_ACTIVE) {
-        continue;
-      }
-
-      ++countEsh;
-
-      if (countEsh > 7) {
-        break;
-      }
-
-      QLabel* pluginLabel = new QLabel(pluginName);
-      pluginLabel->setIndent(10);
-      pluginLabel->setFont(contentFont);
-      layout->addWidget(pluginLabel);
-    }
-    if (countEsh > 7) {
-      QLabel* dotDotLabel = new QLabel("...");
-      dotDotLabel->setIndent(10);
-      dotDotLabel->setFont(contentFont);
-      layout->addWidget(dotDotLabel);
-    }
-    if (countEsh == 0) {
-      QLabel* dotDotLabel = new QLabel(tr("None"));
-      dotDotLabel->setIndent(10);
-      dotDotLabel->setFont(contentFont);
-      layout->addWidget(dotDotLabel);
-    }
+    card.addMissing(tr("Missing medium plugins (ESH)"), missing(gamebryoSave.getMediumPlugins()));
   }
   if (gamebryoSave.isLightEnabled()) {
-    QLabel* headerEsl    = new QLabel(tr("Missing ESLs"));
-    QFont headerEslFont  = headerEsl->font();
-    QFont contentEslFont = headerEslFont;
-    headerEslFont.setItalic(true);
-    contentEslFont.setBold(true);
-    contentEslFont.setPointSize(7);
-    headerEsl->setFont(headerEslFont);
-    layout->addWidget(headerEsl);
-    int countEsl = 0;
-    for (QString const& pluginName : gamebryoSave.getLightPlugins()) {
-      if (pluginList->state(pluginName) == MOBase::IPluginList::STATE_ACTIVE) {
-        continue;
-      }
-
-      ++countEsl;
-
-      if (countEsl > 7) {
-        break;
-      }
-
-      QLabel* pluginLabel = new QLabel(pluginName);
-      pluginLabel->setIndent(10);
-      pluginLabel->setFont(contentFont);
-      layout->addWidget(pluginLabel);
-    }
-    if (countEsl > 7) {
-      QLabel* dotDotLabel = new QLabel("...");
-      dotDotLabel->setIndent(10);
-      dotDotLabel->setFont(contentFont);
-      layout->addWidget(dotDotLabel);
-    }
-    if (countEsl == 0) {
-      QLabel* dotDotLabel = new QLabel(tr("None"));
-      dotDotLabel->setIndent(10);
-      dotDotLabel->setFont(contentFont);
-      layout->addWidget(dotDotLabel);
-    }
+    card.addMissing(tr("Missing light plugins (ESL)"), missing(gamebryoSave.getLightPlugins()));
   }
+  card.finish();
 }

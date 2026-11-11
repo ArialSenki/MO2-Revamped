@@ -10223,6 +10223,82 @@ Ejemplo:
       <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
       <translation>Los programas que se inician desde MO2 lo usan desde su siguiente inicio; MO2, desde la próxima vez que arranque.</translation>
     </message>
+    <message>
+      <source>Pack a mod's files into an archive</source>
+      <translation>Empaquetar los archivos de un mod en un archivo comprimido</translation>
+    </message>
+    <message>
+      <source>MO2 packs the mod's loose files into an archive named after one of its plugins, so the game loads the archive with that plugin. The loose files stay unless BSA Packer's settings hide them.</source>
+      <translation>MO2 empaqueta los archivos sueltos del mod en un archivo comprimido con el nombre de uno de sus plugins, para que el juego lo cargue con ese plugin. Los archivos sueltos se quedan, salvo que los ajustes de BSA Packer los oculten.</translation>
+    </message>
+    <message>
+      <source>Mod</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Archive name</source>
+      <translation>Nombre del archivo comprimido</translation>
+    </message>
+    <message>
+      <source>Pack</source>
+      <translation>Empaquetar</translation>
+    </message>
+    <message>
+      <source>No mod can be packed: the list has only separators, the game's own DLC and Creation Club content, backups, or mods MO2 can't read.</source>
+      <translation>No se puede empaquetar ningún mod: la lista solo tiene separadores, contenido del propio juego (DLC y Creation Club), copias de seguridad o mods que MO2 no puede leer.</translation>
+    </message>
+    <message>
+      <source>Another name…</source>
+      <translation>Otro nombre…</translation>
+    </message>
+    <message>
+      <source>MO2 asks for the archive's name after Pack</source>
+      <translation>MO2 pide el nombre del archivo comprimido después de Empaquetar</translation>
+    </message>
+    <message>
+      <source>This mod has no plugin. As BSA Packer's settings ask, it also creates an empty plugin with the archive's name, which the game needs to load the archive.</source>
+      <translation>Este mod no tiene plugin. Como piden los ajustes de BSA Packer, también crea un plugin vacío con el nombre del archivo comprimido, que el juego necesita para cargarlo.</translation>
+    </message>
+    <message>
+      <source>This mod has no plugin, and the game loads an archive only with a plugin of the same name. Add one, or turn on %1 in Settings, Plugins, BSA Packer.</source>
+      <translation>Este mod no tiene plugin, y el juego solo carga un archivo comprimido con un plugin del mismo nombre. Añade uno, o activa %1 en Ajustes, Plugins, BSA Packer.</translation>
+    </message>
+    <message>
+      <source>Name the archive</source>
+      <translation>Nombra el archivo comprimido</translation>
+    </message>
+    <message>
+      <source>Archive name (no file extension):</source>
+      <translation>Nombre del archivo comprimido (sin extensión):</translation>
+    </message>
+    <message>
+      <source>Replace the archive?</source>
+      <translation>¿Reemplazar el archivo comprimido?</translation>
+    </message>
+    <message>
+      <source>BSA Packer</source>
+      <translation>BSA Packer</translation>
+    </message>
+    <message>
+      <source>No archive was created: the mod has no files to pack, or packing was cancelled. Its files are as they were.</source>
+      <translation>No se ha creado ningún archivo comprimido: el mod no tiene archivos que empaquetar, o se canceló. Sus archivos siguen como estaban.</translation>
+    </message>
+    <message>
+      <source>Created:</source>
+      <translation>Creados:</translation>
+    </message>
+    <message>
+      <source>Create .override files?</source>
+      <translation>¿Crear archivos .override?</translation>
+    </message>
+    <message>
+      <source>An .override file makes the game load an archive's files over the base game's. Create one for each archive?</source>
+      <translation>Un archivo .override hace que el juego cargue los archivos de un archivo comprimido por encima de los del juego base. ¿Crear uno para cada archivo comprimido?</translation>
+    </message>
+    <message>
+      <source>"%1" already exists. Overwrite it?</source>
+      <translation>«%1» ya existe. ¿Sobrescribirlo?</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -14383,6 +14459,82 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
     <message>
       <source>The game's plugin knows where these files go, so MO2 moves them there and installs them.</source>
       <translation>El plugin del juego sabe dónde van estos archivos, así que MO2 los mueve allí y los instala.</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedSaveCard</name>
+    <message>
+      <source>and %1 more</source>
+      <translation>y %1 más</translation>
+    </message>
+    <message>
+      <source>Every plugin this save uses is active.</source>
+      <translation>Todos los plugins que usa esta partida están activos.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GamebryoSaveGameInfoWidget</name>
+    <message>
+      <source>Level %1</source>
+      <translation>Nivel %1</translation>
+    </message>
+    <message>
+      <source>Level %1, %2</source>
+      <translation>Nivel %1, %2</translation>
+    </message>
+    <message>
+      <source>Save %1, %2</source>
+      <translation>Partida %1, %2</translation>
+    </message>
+    <message>
+      <source>Has script extender data</source>
+      <translation>Tiene datos del extensor de scripts</translation>
+    </message>
+    <message>
+      <source>Missing plugins (ESP, ESM)</source>
+      <translation>Plugins que faltan (ESP, ESM)</translation>
+    </message>
+    <message>
+      <source>Missing medium plugins (ESH)</source>
+      <translation>Plugins medianos que faltan (ESH)</translation>
+    </message>
+    <message>
+      <source>Missing light plugins (ESL)</source>
+      <translation>Plugins ligeros que faltan (ESL)</translation>
+    </message>
+  </context>
+  <context>
+    <name>MorrowindSaveGameInfoWidget</name>
+    <message>
+      <source>Level %1</source>
+      <translation>Nivel %1</translation>
+    </message>
+    <message>
+      <source>Level %1, %2</source>
+      <translation>Nivel %1, %2</translation>
+    </message>
+    <message>
+      <source>Health %1 of %2</source>
+      <translation>Salud %1 de %2</translation>
+    </message>
+    <message>
+      <source>%1, day %2</source>
+      <translation>%1, día %2</translation>
+    </message>
+    <message>
+      <source>Save %1, %2</source>
+      <translation>Partida %1, %2</translation>
+    </message>
+    <message>
+      <source>Missing plugins</source>
+      <translation>Plugins que faltan</translation>
+    </message>
+  </context>
+  <context>
+    <name>CheckFNIS</name>
+    <message>
+      <source>FNIS finished with a problem</source>
+      <translation>FNIS terminó con un problema</translation>
     </message>
   </context>
 </TS>

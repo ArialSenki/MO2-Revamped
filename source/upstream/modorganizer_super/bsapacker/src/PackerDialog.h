@@ -3,21 +3,27 @@
 
 #include <bsapacker/IPackerDialog.h>
 #include <bsapacker/IModContext.h>
+#include <bsapacker/ISettingsService.h>
 
-#include <QComboBox>
-#include <QDialogButtonBox>
-#include <QLabel>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+#include "fluentcontentdialog.h"
 
+class QComboBox;
+class QLabel;
+class QListWidget;
+class QPushButton;
 
 namespace BsaPacker
 {
-	class PackerDialog : public QDialog, public IPackerDialog
+	/**
+	 * @brief Which mod to pack and the archive's name. MO2 Revamped draws it as
+	 * a Windows 11 content dialog; the dependency injection builds it with the
+	 * mod context and the settings (for the note about the dummy plugin).
+	 **/
+	class PackerDialog : public RevampedFluent::ContentDialog, public IPackerDialog
 	{
 		Q_OBJECT
 	public:
-		explicit PackerDialog(const IModContext* modContext);
+		PackerDialog(const IModContext* modContext, const ISettingsService* settingsService);
 		~PackerDialog() override = default;
 
 		// IPackerDialog interface
@@ -34,14 +40,12 @@ namespace BsaPacker
 
 	private:
 		const IModContext* m_ModContext = nullptr;
+		const ISettingsService* m_SettingsService = nullptr;
 
-		QComboBox comboModList;
-		QLabel labelChooseMod;
-		QLabel labelChooseName;
-		QListWidget listArchiveNames;
-		QVBoxLayout layoutVertical;
-		QHBoxLayout layoutHorizontal;
-		QDialogButtonBox buttonsOkCancelMod;
+		QComboBox* m_mods;
+		QListWidget* m_names;
+		QLabel* m_note;
+		QPushButton* m_pack;
 	};
 } // namespace BsaPacker
 

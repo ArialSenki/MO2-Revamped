@@ -113,6 +113,33 @@
   Find next's F3 no longer replaces Find's Ctrl+F, and Find with no file open no
   longer closes MO2.
 
+### BSA Packer
+
+- BSA Packer's window is rewritten in MO2 Revamped's design: it says what packing
+  does, chooses the first mod and archive name by itself, and lists only mods it
+  can pack. Separators, the game's own DLC and Creation Club content, backups and
+  Overwrite are left out; when nothing is left, it says why.
+- A mod without a plugin says so before packing, as the game loads an archive
+  only with a plugin of the same name.
+- When no archive is created (nothing to pack, or packing was cancelled), BSA
+  Packer says so and leaves the mod as it was. Mod Organizer 2 still made the
+  dummy plugin and the .override file, and could hide the loose files with
+  nothing to replace them. Afterwards, it lists the archives it made.
+- Its questions are translated, and the name it asks for after **Another
+  name…** is a window like the others, over MO2's, with Pack off until there is
+  a name.
+- With no plugin in the mod, the note says what BSA Packer's dummy plugin
+  setting will do, or where to turn it on.
+
+### Save details
+
+- The card over a save in the Saves tab is rebuilt for every Bethesda game:
+  the screenshot with rounded corners at the screen's scale, the character,
+  "Level 31, Whiterun" and the save's number and date, then the plugins the
+  save needs that aren't active, by kind (ESP and ESM, medium, light), seven per
+  kind and how many more. With nothing missing it says so. Morrowind's card
+  shows health and the game's day.
+
 ### Fixes from the final review
 
 - The Elden Ring-only edition ships the shared helpers the BAIN wizard needs; it
@@ -129,6 +156,10 @@
   left Next doing nothing), and says why Install is off without a name.
 - In FNIS's windows, Enter no longer starts FNIS or saves and closes.
 - The manual installer refuses folder names Windows keeps (CON, NUL…).
+- FOMOD pictures are read once per installer instead of on every hover; a
+  different picture at the same temporary path still shows as itself.
+- The FNIS check's question before starting the game names the program, and its
+  message after a failed run has a title.
 
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 

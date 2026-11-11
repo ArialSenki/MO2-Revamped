@@ -23,8 +23,10 @@ namespace BsaPacker {
 			return false;
 		}
 
-		if (MOBase::QuestionBoxMemory::query(QApplication::activeModalWidget(), "BSAPacker", "Create .override file?",
-			"Do you want to create an override file for the archive(s)?",
+		if (MOBase::QuestionBoxMemory::query(QApplication::activeModalWidget(), "BSAPacker",
+			QObject::tr("Create .override files?"),
+			QObject::tr("An .override file makes the game load an archive's files over the base "
+			            "game's. Create one for each archive?"),
 			QDialogButtonBox::No | QDialogButtonBox::Yes, QDialogButtonBox::No) & QDialogButtonBox::No) {
 			return false;
 		}

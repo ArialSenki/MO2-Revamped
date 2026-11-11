@@ -1,5 +1,22 @@
 #include "morrowindsavegameinfowidget.h"
-#include "ui_morrowindsavegameinfowidget.h"
+#include "savegamecard.h"
+
+// MO2 Revamped: built in code instead of from 2.5.2's .ui, as a card; the
+// header, and so the game plugins built on it, stay as they were
+namespace Ui
+{
+class MorrowindSaveGameInfoWidget
+{
+public:
+  RevampedFluent::SaveGameCard card;
+
+  void setupUi(QWidget* widget)
+  {
+    widget->setObjectName(QStringLiteral("MorrowindSaveGameInfoWidget"));
+    card.setup(widget);
+  }
+};
+}  // namespace Ui
 
 #include "gamemorrowind.h"
 #include "imoinfo.h"
@@ -31,15 +48,6 @@ MorrowindSaveGameInfoWidget::MorrowindSaveGameInfoWidget(
       m_Info(info)
 {
   ui->setupUi(this);
-  this->setWindowFlags(Qt::ToolTip | Qt::BypassGraphicsProxyWidget);
-  setWindowOpacity(style()->styleHint(QStyle::SH_ToolTipLabel_Opacity, 0, this) /
-                   qreal(255.0));
-  ui->gameFrame->setStyleSheet("background-color: transparent;");
-
-  QVBoxLayout* gameLayout = new QVBoxLayout();
-  gameLayout->setContentsMargins(0, 0, 0, 0);
-  gameLayout->setSpacing(2);
-  ui->gameFrame->setLayout(gameLayout);
 }
 
 MorrowindSaveGameInfoWidget::~MorrowindSaveGameInfoWidget()
@@ -50,74 +58,28 @@ MorrowindSaveGameInfoWidget::~MorrowindSaveGameInfoWidget()
 void MorrowindSaveGameInfoWidget::setSave(MOBase::ISaveGame const& save)
 {
   auto const& morrowindSave = dynamic_cast<MorrowindSaveGame const&>(save);
+  auto& card                = ui->card;
 
-  ui->saveNameLabel->setText(QString("%1 (Day %2)")
-                                 .arg(morrowindSave.getSaveName())
-                                 .arg(morrowindSave.getGameDays()));
-  ui->saveNumLabel->setText(QString("%1").arg(morrowindSave.getSaveNumber()));
-  ui->healthLabel->setText(QString("%1 / %2")
-                               .arg(round(morrowindSave.getPCCurrentHealth()))
-                               .arg(morrowindSave.getPCMaxHealth()));
-  ui->characterLabel->setText(morrowindSave.getPCName());
-  ui->locationLabel->setText(morrowindSave.getPCLocation());
-  ui->levelLabel->setText(QString("%1").arg(morrowindSave.getPCLevel()));
+  card.setScreenshot(morrowindSave.getScreenshot());
+  card.setTitle(morrowindSave.getPCName());
+  const QDateTime t = morrowindSave.getCreationTime();
+  card.setLines(
+      {morrowindSave.getPCLocation().isEmpty()
+           ? tr("Level %1").arg(morrowindSave.getPCLevel())
+           : tr("Level %1, %2").arg(QString::number(morrowindSave.getPCLevel()), morrowindSave.getPCLocation()),
+       tr("Health %1 of %2").arg(qRound(morrowindSave.getPCCurrentHealth())).arg(qRound(morrowindSave.getPCMaxHealth())),
+       tr("%1, day %2").arg(morrowindSave.getSaveName(), QString::number(qRound(morrowindSave.getGameDays()))),
+       tr("Save %1, %2").arg(morrowindSave.getSaveNumber()).arg(QLocale::system().toString(t.date(), QLocale::FormatType::ShortFormat) + " " +
+      QLocale::system().toString(t.time(), QLocale::FormatType::ShortFormat))});
 
-  // This somewhat contorted code is because on my system at least, the
-  // old way of doing this appears to give short date and long time.
-  QDateTime t = morrowindSave.getCreationTime();
-  ui->dateLabel->setText(
-      QLocale::system().toString(t.date(), QLocale::FormatType::ShortFormat) + " " +
-      QLocale::system().toString(t.time(), QLocale::FormatType::ShortFormat));
-  ui->screenshotLabel->setPixmap(QPixmap::fromImage(morrowindSave.getScreenshot()));
-  if (ui->gameFrame->layout() != nullptr) {
-    QLayoutItem* item = nullptr;
-    while ((item = ui->gameFrame->layout()->takeAt(0)) != nullptr) {
-      delete item->widget();
-      delete item;
-    }
-    ui->gameFrame->layout()->setSizeConstraint(QLayout::SetFixedSize);
-  }
-
-  // Resize box to new content
-  this->resize(0, 0);
-
-  QLayout* layout   = ui->gameFrame->layout();
-  QLabel* header    = new QLabel(tr("Missing ESPs"));
-  QFont headerFont  = header->font();
-  QFont contentFont = headerFont;
-  headerFont.setItalic(true);
-  contentFont.setBold(true);
-  contentFont.setPointSize(7);
-  header->setFont(headerFont);
-  layout->addWidget(header);
-  int count                       = 0;
+  card.clearSections();
   MOBase::IPluginList* pluginList = m_Info->m_Game->m_Organizer->pluginList();
+  QStringList missing;
   for (QString const& pluginName : morrowindSave.getPlugins()) {
-    if (pluginList->state(pluginName) == MOBase::IPluginList::STATE_ACTIVE) {
-      continue;
+    if (pluginList->state(pluginName) != MOBase::IPluginList::STATE_ACTIVE) {
+      missing.append(pluginName);
     }
-
-    ++count;
-
-    if (count > 7) {
-      break;
-    }
-
-    QLabel* pluginLabel = new QLabel(pluginName);
-    pluginLabel->setIndent(10);
-    pluginLabel->setFont(contentFont);
-    layout->addWidget(pluginLabel);
   }
-  if (count > 7) {
-    QLabel* dotDotLabel = new QLabel("...");
-    dotDotLabel->setIndent(10);
-    dotDotLabel->setFont(contentFont);
-    layout->addWidget(dotDotLabel);
-  }
-  if (count == 0) {
-    QLabel* dotDotLabel = new QLabel(tr("None"));
-    dotDotLabel->setIndent(10);
-    dotDotLabel->setFont(contentFont);
-    layout->addWidget(dotDotLabel);
-  }
+  card.addMissing(tr("Missing plugins"), missing);
+  card.finish();
 }

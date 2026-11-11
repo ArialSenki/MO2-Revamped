@@ -57,10 +57,24 @@ namespace BsaPacker
 	QStringList ModContext::GetValidMods() const
 	{
 		const MOBase::IModList* const list = m_Organizer->modList();
-		const std::function<bool(const QString&)> modStateValid = [&](const QString& mod)
-		{
-			return !mod.endsWith("_separator", Qt::CaseInsensitive) && (list->state(mod) & MOBase::IModList::STATE_VALID);
-		};
-		return QtConcurrent::blockingFiltered(list->allMods(), modStateValid);
+		// MO2 Revamped: only mods MO2 installed. The game's own DLC and Creation
+		// Club content ("foreign" mods) live in the game's folder: packing them
+		// wrote an archive there and hid the game's files. Backups and Overwrite
+		// aren't mods to pack either. Checked one after another: getMod isn't
+		// meant for other threads.
+		QStringList mods;
+		for (const QString& mod : list->allMods()) {
+			if (mod.endsWith("_separator", Qt::CaseInsensitive) ||
+				!(list->state(mod) & MOBase::IModList::STATE_VALID)) {
+				continue;
+			}
+			const MOBase::IModInterface* const info = list->getMod(mod);
+			if (info == nullptr || info->isForeign() || info->isBackup() || info->isOverwrite() ||
+				info->isSeparator()) {
+				continue;
+			}
+			mods.append(mod);
+		}
+		return mods;
 	}
 } // namespace BsaPacker

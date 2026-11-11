@@ -1,6 +1,7 @@
 #ifndef SCALELABEL_H
 #define SCALELABEL_H
 
+#include <QCache>
 #include <QImage>
 #include <QLabel>
 #include <QMovie>
@@ -24,6 +25,8 @@ private:
   void setScalableImage(const QString& path);
 
   QImage m_UnscaledImage;
+  // the pictures this label read, cost in kilobytes
+  QCache<QString, QImage> m_Cache{96 * 1024};
   QSize m_OriginalMovieSize;
   bool m_isStatic = false;
 };
