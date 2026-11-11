@@ -12797,45 +12797,6 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
     </message>
   </context>
   <context>
-    <name>SimpleInstallDialog</name>
-    <message>
-      <source>Quick install</source>
-      <translation>Instalação rápida</translation>
-    </message>
-    <message>
-      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
-      <translation>Os arquivos do pacote já estão organizados como a pasta de dados do jogo espera, então o MO2 pode instalá-los como estão.</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Instalar este mod</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Nome do mod</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Digite um nome para o mod.</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Instalar</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Instalar manualmente</translation>
-    </message>
-    <message>
-      <source>Choose which of the archive's files to install, and where</source>
-      <translation>Escolha quais arquivos do pacote instalar e onde</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Cancelar</translation>
-    </message>
-  </context>
-  <context>
     <name>MultiArchiveDialog</name>
     <message>
       <source>Bundled archives</source>
@@ -14082,6 +14043,49 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
     <message>
       <source>Choose which of the archive's files to install, and where</source>
       <translation>Escolha quais arquivos do pacote instalar e onde</translation>
+    </message>
+  </context>
+  <context>
+    <name>SimpleInstallDialog</name>
+    <message>
+      <source>Quick install</source>
+      <translation>Instalação rápida</translation>
+    </message>
+    <message>
+      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
+      <translation>Os arquivos do pacote já estão organizados como a pasta de dados do jogo espera, então o MO2 pode instalá-los como estão.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Instalar este mod</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nome do mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Digite um nome para o mod.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Instalar manualmente</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Escolha quais arquivos do pacote instalar e onde</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>The game's plugin knows where these files go, so MO2 moves them there and installs them.</source>
+      <translation>O plugin do jogo sabe para onde vão estes arquivos, então o MO2 os move para lá e os instala.</translation>
     </message>
   </context>
 </TS>

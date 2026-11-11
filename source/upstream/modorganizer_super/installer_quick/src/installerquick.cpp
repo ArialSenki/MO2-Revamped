@@ -134,14 +134,19 @@ InstallerQuick::install(GuessedValue<QString>& modName,
   auto base = std::const_pointer_cast<IFileTree>(
       getSimpleArchiveBase(tree, dataFolderName, checker.get()));
   // MO2 Revamped: from MO2 6ddeb66
+  bool rearranged = false;
   if (base == nullptr &&
       checker->dataLooksValid(tree) == ModDataChecker::CheckReturn::FIXABLE) {
-    tree = checker->fix(tree);
+    tree       = checker->fix(tree);
+    rearranged = true;
   } else {
     tree = base;
   }
   if (tree != nullptr) {
     SimpleInstallDialog dialog(modName, parentWidget());
+    if (rearranged) {
+      dialog.setRearranged();
+    }
     if (m_MOInfo->pluginSetting(name(), "silent").toBool() ||
         dialog.exec() == QDialog::Accepted) {
       modName.update(dialog.getName(), GUESS_USER);

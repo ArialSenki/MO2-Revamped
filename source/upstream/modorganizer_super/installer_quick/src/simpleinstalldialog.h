@@ -55,6 +55,12 @@ public:
    **/
   QString getName() const;
 
+  /**
+   * @brief the game's plugin moved the archive's files to where the game
+   * expects them: the dialog says so
+   **/
+  void setRearranged();
+
 private:
   void nameChanged();
 

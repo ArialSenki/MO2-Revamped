@@ -12992,45 +12992,6 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     </message>
   </context>
   <context>
-    <name>SimpleInstallDialog</name>
-    <message>
-      <source>Quick install</source>
-      <translation>Installation rapide</translation>
-    </message>
-    <message>
-      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
-      <translation>Les fichiers de l'archive sont déjà organisés comme le dossier de données du jeu l'attend : MO2 peut les installer tels quels.</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Installer ce mod</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Nom du mod</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Saisissez un nom pour le mod.</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installer</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Installer manuellement</translation>
-    </message>
-    <message>
-      <source>Choose which of the archive's files to install, and where</source>
-      <translation>Choisissez quels fichiers de l'archive installer, et où</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Annuler</translation>
-    </message>
-  </context>
-  <context>
     <name>MultiArchiveDialog</name>
     <message>
       <source>Bundled archives</source>
@@ -14277,6 +14238,49 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
     <message>
       <source>Choose which of the archive's files to install, and where</source>
       <translation>Choisissez quels fichiers de l'archive installer, et où</translation>
+    </message>
+  </context>
+  <context>
+    <name>SimpleInstallDialog</name>
+    <message>
+      <source>Quick install</source>
+      <translation>Installation rapide</translation>
+    </message>
+    <message>
+      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
+      <translation>Les fichiers de l'archive sont déjà organisés comme le dossier de données du jeu l'attend : MO2 peut les installer tels quels.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Installer ce mod</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nom du mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Saisissez un nom pour le mod.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installer</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Installer manuellement</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Choisissez quels fichiers de l'archive installer, et où</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annuler</translation>
+    </message>
+    <message>
+      <source>The game's plugin knows where these files go, so MO2 moves them there and installs them.</source>
+      <translation>Le plugin du jeu sait où vont ces fichiers : MO2 les y déplace et les installe.</translation>
     </message>
   </context>
 </TS>

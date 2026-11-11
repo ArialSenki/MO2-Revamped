@@ -91,6 +91,12 @@ SimpleInstallDialog::SimpleInstallDialog(const GuessedValue<QString>& preset,
   nameChanged();
 }
 
+void SimpleInstallDialog::setRearranged()
+{
+  setText(tr("The game's plugin knows where these files go, so MO2 moves them there "
+             "and installs them."));
+}
+
 QString SimpleInstallDialog::getName() const
 {
   return m_name->currentText().trimmed();
