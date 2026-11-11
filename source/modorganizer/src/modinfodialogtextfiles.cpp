@@ -9,8 +9,10 @@
 class FileListModel : public QAbstractItemModel
 {
 public:
+  // each reset is a pair: Qt 6.8 and later warn about an end without a begin
   void clear()
   {
+    beginResetModel();
     m_files.clear();
     endResetModel();
   }
@@ -60,6 +62,7 @@ public:
 
   void finished()
   {
+    beginResetModel();
     std::sort(m_files.begin(), m_files.end(), [](const auto& a, const auto& b) {
       return (naturalCompare(a.text, b.text) < 0);
     });

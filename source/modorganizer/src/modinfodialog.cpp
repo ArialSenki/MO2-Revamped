@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modinfodialog.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentperf.h"
 #include "fluentnavigation.h"
@@ -193,6 +194,9 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
       m_arrangingTabs(false)
 {
   FluentPerf::Timer perf("ModInfoDialog");
+  // the Nexus tab's web view and the image previews stay on this window, see
+  // keepRhiContentInside()
+  FluentDialogs::keepRhiContentInside(this);
   ui->setupUi(this);
   perf.lap("setupUi");
   LCDNumber::useFrames(this);

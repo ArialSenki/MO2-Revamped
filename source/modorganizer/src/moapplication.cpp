@@ -114,6 +114,7 @@ namespace
 {
 
 void applyNativeTitleBarTheme(QWidget* window, const QString& styleName);
+void keepNativeTitleBarTheme(QWidget* window, std::function<QString()> styleName);
 
 // MO2_REVAMPED_PERF=1 writes "[perf]" lines to the log: events that keep the
 // UI thread busy for a frame or more, how long a dialog takes from the click
@@ -991,6 +992,9 @@ int MOApplication::run(MOMultiProcess& multiProcess)
     log::debug("displaying main window");
     setStartupDiagnosticPhase("application.run.main_window.show");
     installItemViewSelectionHighlightFilter(&mainWindow);
+    keepNativeTitleBarTheme(&mainWindow, [this] {
+      return m_settings->interface().styleName().value_or(QString());
+    });
     // the backdrop is there for the first frame: the window's surfaces are
     // already transparent, and dialogs can open from its first show
     applyNativeTitleBarTheme(
@@ -1352,6 +1356,42 @@ void applyNativeTitleBarTheme(QWidget* window, const QString& styleName)
   Q_UNUSED(window);
   Q_UNUSED(styleName);
 #endif
+}
+
+// Qt can replace a window's native window while it is open (on Direct3D, for
+// one, see FluentDialogs::keepRhiContentInside()). The new native window has
+// none of the DWM attributes, so it is given the backdrop, frame and caption
+// again
+class NativeThemeKeeper : public QObject
+{
+public:
+  NativeThemeKeeper(QWidget* window, std::function<QString()> styleName)
+      : QObject(window), m_window(window), m_styleName(std::move(styleName))
+  {
+    window->installEventFilter(this);
+  }
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (watched == m_window && event->type() == QEvent::WinIdChange) {
+      // after Qt has finished setting up the new native window
+      QTimer::singleShot(0, m_window, [this] {
+        if (m_window->testAttribute(Qt::WA_WState_Created)) {
+          applyNativeTitleBarTheme(m_window, m_styleName());
+        }
+      });
+    }
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QWidget* m_window;
+  std::function<QString()> m_styleName;
+};
+
+void keepNativeTitleBarTheme(QWidget* window, std::function<QString()> styleName)
+{
+  new NativeThemeKeeper(window, std::move(styleName));
 }
 
 void applyNativeTitleBarThemeToVisibleMainWindows(const QString& styleName)

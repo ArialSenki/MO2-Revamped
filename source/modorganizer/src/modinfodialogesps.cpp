@@ -151,8 +151,10 @@ private:
 class ESPListModel : public QAbstractItemModel
 {
 public:
+  // each reset is a pair: Qt 6.8 and later warn about an end without a begin
   void clear()
   {
+    beginResetModel();
     m_esps.clear();
     endResetModel();
   }
@@ -216,6 +218,7 @@ public:
 
   void finished()
   {
+    beginResetModel();
     std::sort(m_esps.begin(), m_esps.end(), [](const auto& a, const auto& b) {
       return (naturalCompare(a.filename(), b.filename()) < 0);
     });

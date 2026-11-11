@@ -1,4 +1,5 @@
 #include "previewdialog.h"
+#include "fluentdialogs.h"
 #include "settings.h"
 #include "ui_previewdialog.h"
 #include <QFileInfo>
@@ -6,6 +7,9 @@
 PreviewDialog::PreviewDialog(const QString& fileName, QWidget* parent)
     : QDialog(parent), ui(new Ui::PreviewDialog)
 {
+  // a preview plugin's widget can be GL (the DDS preview), see
+  // keepRhiContentInside()
+  FluentDialogs::keepRhiContentInside(this);
   ui->setupUi(this);
   resize(880, 700);
   ui->nameLabel->setText(QFileInfo(fileName).fileName());

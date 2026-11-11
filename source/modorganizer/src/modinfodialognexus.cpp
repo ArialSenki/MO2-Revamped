@@ -115,6 +115,8 @@ void NexusTab::showDescription()
                                            mod().name());
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowFlag(Qt::WindowMaximizeButtonHint);
+    // the web view stays on this window, see keepRhiContentInside()
+    FluentDialogs::keepRhiContentInside(dialog);
 
     m_browser = new QWebEngineView(dialog);
     dialog->body()->addWidget(m_browser, 1);

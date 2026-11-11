@@ -837,6 +837,21 @@ void polishMessageBox(QMessageBox* box)
   matchTitleBar(box);
 }
 
+void keepRhiContentInside(QWidget* window)
+{
+  if (window == nullptr || window->testAttribute(Qt::WA_NativeWindow)) {
+    return;
+  }
+
+  // a native widget makes its parent's other widgets native too, unless this
+  // is set; for a window that would be every widget of the main window
+  const bool siblings =
+      QCoreApplication::testAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+  QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings, true);
+  window->setAttribute(Qt::WA_NativeWindow);
+  QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings, siblings);
+}
+
 }  // namespace FluentDialogs
 
 FluentContentDialog::FluentContentDialog(QWidget* parent, const QString& objectName,

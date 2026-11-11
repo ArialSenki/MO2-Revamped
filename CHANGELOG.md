@@ -11,6 +11,9 @@
 - The Python plugins' PyQt6 offers the modules for the Qt libraries MO2 ships;
   the 13 for libraries it never shipped (Bluetooth, Multimedia, PDF and others),
   which could not be imported, are gone.
+- The main window keeps its Windows 11 backdrop while LOOT sorts and after LOOT's
+  report or a Nexus description opens: Qt 6.12 had moved it onto Direct3D, which
+  turned the command bar, the status bar and the window's edges white.
 
 ### Archives 7-Zip can't open
 

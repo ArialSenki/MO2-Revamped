@@ -1,4 +1,5 @@
 #include "lootdialog.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "loot.h"
 #include "organizercore.h"
@@ -189,6 +190,8 @@ void LootDialog::reject()
 void LootDialog::createUI()
 {
   MainWindow::prepareWebEngine();
+  // the report's web view stays on this window, see keepRhiContentInside()
+  FluentDialogs::keepRhiContentInside(this);
   ui->setupUi(this);
   ui->progressBar->setMaximum(0);
 

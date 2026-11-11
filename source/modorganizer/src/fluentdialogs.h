@@ -70,6 +70,15 @@ void growForShortScroll(QDialog* dialog);
 // status glyph in its color; the title bar follows the theme. Runs once.
 void polishMessageBox(QMessageBox* box);
 
+// for a window that shows web pages, GL or Qt Quick content: keeps that
+// content from switching the window's parent to Direct3D. Since Qt 6.8 a
+// window looks for such content in its child windows too, and the main window
+// was recreated on Direct3D, which has no Mica: its transparent surfaces
+// turned white. Qt leaves out child windows that are native, so this makes
+// the window native, without making its parent's widgets native. Call it in
+// the constructor, before the content is created.
+void keepRhiContentInside(QWidget* window);
+
 }  // namespace FluentDialogs
 
 #endif  // FLUENTDIALOGS_H
