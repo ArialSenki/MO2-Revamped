@@ -504,6 +504,7 @@
                                                             "kernel32.dll",
                                                             "msvcp140.dll",
                                                             "qt6core.dll",
+                                                            "qt6gui.dll",
                                                             "qt6widgets.dll",
                                                             "uibase.dll",
                                                             "vcruntime140.dll",
@@ -549,6 +550,7 @@
                                                                   "mscoree.dll",
                                                                   "msvcp140.dll",
                                                                   "qt6core.dll",
+                                                                  "qt6gui.dll",
                                                                   "qt6widgets.dll",
                                                                   "uibase.dll",
                                                                   "vcruntime140.dll"
