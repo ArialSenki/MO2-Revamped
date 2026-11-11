@@ -6090,3 +6090,20 @@ MOBase--TextViewer QCheckBox::indicator { width: 36px; height: 18px; }
 MOBase--TextViewer QCheckBox::indicator:unchecked { image: url(./mo2-fluent-v4-light/switch-off.svg); }
 MOBase--TextViewer QCheckBox::indicator:checked { image: url(./mo2-fluent-v4-light/switch-on.svg); }
 BsaPacker--PackerDialog { min-width: 440px; min-height: 360px; }
+
+/* Segmented choices (the DDS preview's channels and backgrounds): the
+   chosen one keeps full ink, a raised fill and the accent outline. */
+QToolButton[fluentSegment="true"] {
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+QToolButton[fluentSegment="true"]:checked,
+QToolButton[fluentSegment="true"]:checked:hover {
+    color: #1A1A1A;
+    background-color: #FFFFFF;
+    border: 1px solid #005FB8;
+}
+QToolButton[fluentSegment="true"]:checked:hover {
+    background-color: #F5F5F5;
+}

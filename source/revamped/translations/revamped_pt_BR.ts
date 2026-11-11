@@ -12669,4 +12669,131 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
       <translation>FNIS/Alterar as configurações do FNIS</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedDDSPreview</name>
+    <message>
+      <source>Cubemap</source>
+      <translation>Cubemap</translation>
+    </message>
+    <message>
+      <source>2D texture</source>
+      <translation>Textura 2D</translation>
+    </message>
+    <message>
+      <source>no mipmaps</source>
+      <translation>sem mipmaps</translation>
+    </message>
+    <message>
+      <source>This DDS file can't be shown</source>
+      <translation>Não é possível mostrar este arquivo DDS</translation>
+    </message>
+    <message>
+      <source>DDS preview</source>
+      <translation>Pré-visualização de DDS</translation>
+    </message>
+    <message>
+      <source>Shows DDS textures as the graphics card draws them in the game.</source>
+      <translation>Mostra as texturas DDS como a placa de vídeo as desenha no jogo.</translation>
+    </message>
+    <message>
+      <source>Color and transparency</source>
+      <translation>Cor e transparência</translation>
+    </message>
+    <message>
+      <source>Color only, without transparency</source>
+      <translation>Só cor, sem transparência</translation>
+    </message>
+    <message>
+      <source>Red channel, in grayscale</source>
+      <translation>Canal vermelho, em tons de cinza</translation>
+    </message>
+    <message>
+      <source>Green channel, in grayscale</source>
+      <translation>Canal verde, em tons de cinza</translation>
+    </message>
+    <message>
+      <source>Blue channel, in grayscale</source>
+      <translation>Canal azul, em tons de cinza</translation>
+    </message>
+    <message>
+      <source>Transparency (alpha channel), in grayscale</source>
+      <translation>Transparência (canal alfa), em tons de cinza</translation>
+    </message>
+    <message>
+      <source>Checkerboard (shows transparency)</source>
+      <translation>Quadriculado (mostra a transparência)</translation>
+    </message>
+    <message>
+      <source>Black</source>
+      <translation>Preto</translation>
+    </message>
+    <message>
+      <source>White</source>
+      <translation>Branco</translation>
+    </message>
+    <message>
+      <source>Texture</source>
+      <translation>Textura</translation>
+    </message>
+    <message>
+      <source>Custom background color…</source>
+      <translation>Cor de fundo personalizada…</translation>
+    </message>
+    <message>
+      <source>Uncompressed</source>
+      <translation>Sem compressão</translation>
+    </message>
+    <message>
+      <source>The preview can't draw this texture's format.</source>
+      <translation>A pré-visualização não consegue desenhar o formato desta textura.</translation>
+    </message>
+    <message>
+      <source>The texture is cut short: the file has less data than its header says.</source>
+      <translation>A textura está incompleta: o arquivo tem menos dados do que o cabeçalho diz.</translation>
+    </message>
+    <message>
+      <source>Background color</source>
+      <translation>Cor de fundo</translation>
+    </message>
+    <message>
+      <source>{count} mip levels</source>
+      <translation>{count} níveis de mipmap</translation>
+    </message>
+    <message>
+      <source>Write OpenGL's errors and debug messages to MO2's log. It can slow the preview down.</source>
+      <translation>Gravar os erros e as mensagens de depuração do OpenGL no log do MO2. Pode deixar a pré-visualização mais lenta.</translation>
+    </message>
+    <message>
+      <source>Red component of the background color (0–255).</source>
+      <translation>Componente vermelho da cor de fundo (0–255).</translation>
+    </message>
+    <message>
+      <source>Green component of the background color (0–255).</source>
+      <translation>Componente verde da cor de fundo (0–255).</translation>
+    </message>
+    <message>
+      <source>Blue component of the background color (0–255).</source>
+      <translation>Componente azul da cor de fundo (0–255).</translation>
+    </message>
+    <message>
+      <source>Opacity of the background color (0–255); 0 shows only the checkerboard.</source>
+      <translation>Opacidade da cor de fundo (0–255); 0 mostra só o quadriculado.</translation>
+    </message>
+    <message>
+      <source>The channels shown: RGBA, RGB, R, G, B or A.</source>
+      <translation>Os canais mostrados: RGBA, RGB, R, G, B ou A.</translation>
+    </message>
+    <message>
+      <source>The file is not a DDS texture, or it is cut short ({size} bytes).</source>
+      <translation>O arquivo não é uma textura DDS, ou está incompleto ({size} bytes).</translation>
+    </message>
+    <message>
+      <source>The file's header gives a size no texture has ({width} × {height}, {levels} mip levels).</source>
+      <translation>O cabeçalho do arquivo indica um tamanho que nenhuma textura tem ({width} × {height}, {levels} níveis de mipmap).</translation>
+    </message>
+    <message>
+      <source>It may be damaged, or in a format the preview doesn't read.</source>
+      <translation>Ele pode estar danificado, ou em um formato que a pré-visualização não lê.</translation>
+    </message>
+  </context>
 </TS>

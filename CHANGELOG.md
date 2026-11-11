@@ -18,6 +18,17 @@
   another plugin asks something at that moment (MO2's FNIS check does): the wait
   went on until some later refresh.
 
+### DDS preview
+
+- The DDS preview has a new bar in MO2 Revamped's design: one line with the
+  texture's format, size, kind and mip levels, the channels as a row of choices
+  (RGBA, RGB, R, G, B, A) and the background behind transparent pixels
+  (checkerboard, black, white or any color), with the chosen ones marked.
+- The checkerboard follows the theme instead of staying white on the dark one.
+- A damaged, cut-short or unsupported DDS file shows what is wrong with it
+  instead of an empty preview. Before, a texture with less data than its header
+  said went to the graphics card anyway, which could take MO2 down.
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12
