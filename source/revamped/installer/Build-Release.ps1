@@ -803,7 +803,10 @@ function Copy-EldenRingPlugins {
             if ($parts[0] -ieq 'basic_games' -and $parts.Length -ge 3 -and $parts[1] -ieq 'games') {
                 $include = $parts.Length -eq 3 -and $allowedGameFiles -icontains $parts[2]
             } elseif ($parts[0] -ieq 'data') {
-                $include = $parts.Length -ge 2 -and $parts[1] -ieq 'DDS'
+                # the DDS support files, and the Fluent helpers the BAIN wizard
+                # imports
+                $include = $parts.Length -ge 2 -and ($parts[1] -ieq 'DDS' -or
+                    ($parts.Length -eq 2 -and $parts[1] -ieq 'revamped_fluent.py'))
             }
         }
         if (-not $include) { continue }
@@ -822,6 +825,7 @@ function Copy-EldenRingPlugins {
         'eldenring_mo2_native_profile_tool.py', 'eldenring_mo2_save_isolation.py',
         'eldenring_mo2_startup_tool.py', 'eldenring_mo2_archive_installer\installer.py',
         'basic_games\games\game_eldenring_mo2.py',
+        'data\revamped_fluent.py', 'installer_wizard\dialog.py',
         'basic_games\games\eldenring_mo2_bridge.dll', 'basic_games\games\eldenring_mo2_me3_compat.dll',
         'plugin_python\plugin_python.dll',
         'plugin_python\dlls\python312.dll', 'plugin_python\libs\pythoncore.zip',

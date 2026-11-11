@@ -114,7 +114,8 @@ class PatchesDialog(fluent.ContentDialog):
         self._count = fluent.note("", self)
         self.body.addWidget(self._count)
 
-        save = self.addButton(tr("Save"), True)
+        # not the default: Enter in the list mustn't save and close
+        save = self.addButton(tr("Save"), True, default=False)
         cancel = self.addButton(tr("Cancel"))
         save.clicked.connect(self.accept)
         cancel.clicked.connect(self.reject)

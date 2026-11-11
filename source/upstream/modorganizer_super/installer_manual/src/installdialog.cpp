@@ -48,7 +48,13 @@ bool validFolderName(const QString& name)
       return false;
     }
   }
-  return true;
+  // the device names Windows keeps, with or without an extension
+  static const QStringList reserved{"CON",  "PRN",  "AUX",  "NUL",  "COM1", "COM2",
+                                    "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
+                                    "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
+                                    "LPT6", "LPT7", "LPT8", "LPT9"};
+  return !reserved.contains(name.section(QLatin1Char('.'), 0, 0).trimmed(),
+                            Qt::CaseInsensitive);
 }
 
 void setTone(QLabel* label, const char* tone)
@@ -118,6 +124,9 @@ InstallDialog::InstallDialog(
   m_newFolder->setShortcut(QKeySequence(QStringLiteral("Ctrl+Shift+N")));
   m_open = RevampedFluent::contentButton(tr("Open"), this);
   m_open->setToolTip(tr("Open the selected file"));
+  // read aloud in words, not as "less than data greater than"
+  m_setData->setAccessibleName(tr("Use as the game data folder"));
+  m_unsetData->setAccessibleName(tr("Reset the game data folder"));
   for (auto* button : {m_setData, m_unsetData, m_newFolder, m_open}) {
     actions->addWidget(button);
   }
@@ -311,7 +320,7 @@ void InstallDialog::createDirectoryUnder(ArchiveTreeWidgetItem* item)
     QString text;
     if (!name.isEmpty() && !validFolderName(name)) {
       text = tr("A folder name can't have any of these: < > : \" / \\ | ? *, nor end "
-                "with a dot or a space.");
+                "with a dot or a space, nor be a name Windows keeps (CON, NUL, COM1…).");
     } else if (!name.isEmpty() && fileTree->exists(name)) {
       text = tr("There is already a file or folder named '%1' here.").arg(name);
     }

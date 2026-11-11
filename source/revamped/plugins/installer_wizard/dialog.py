@@ -623,7 +623,7 @@ def cancel_page(context: WizardTerminationContext[WizardRunnerState], parent: QW
     )
 
 
-def error_page(error: WizardError, parent: QWidget, can_go_back: bool) -> StopPage:
+def error_page(error: Exception, parent: QWidget, can_go_back: bool) -> StopPage:
     return StopPage(
         tr("The package's script has a mistake"),
         tr("MO2 can't go on with this package's wizard.txt. You can open the script, "
@@ -723,6 +723,11 @@ class WizardInstallerDialog(QDialog):
         self._name.editTextChanged.connect(lambda _text: self._update_buttons())
         name_box.addWidget(name_label)
         name_box.addWidget(self._name)
+        # why Install is off, as in the other installers
+        self._nameProblem = QLabel(tr("Enter a name for the mod."), self)
+        self._nameProblem.setObjectName("instanceNameValidation")
+        self._nameProblem.setVisible(False)
+        name_box.addWidget(self._nameProblem)
         name_box.addStretch(1)
         header.addLayout(name_box)
         root.addLayout(header)
@@ -733,7 +738,7 @@ class WizardInstallerDialog(QDialog):
         footer = QHBoxLayout()
         footer.setSpacing(8)
         self._manualBtn = fluent.content_button(tr("Install manually"))
-        self._manualBtn.setToolTip(tr("Close the wizard and choose the files yourself"))
+        self._manualBtn.setToolTip(tr("Choose which of the archive's files to install, and where"))
         self._scriptBtn = fluent.content_button(tr("Open script"), fluent.GLYPH_PAGE)
         self._scriptBtn.setToolTip(tr("Open the package's wizard.txt"))
         footer.addWidget(self._manualBtn)
@@ -846,7 +851,9 @@ class WizardInstallerDialog(QDialog):
                 new_page: Page = cached
             else:
                 new_page = self._make_page(context, cache=cached is None)
-        except WizardError as error:
+        # any error of the script's, not only the interpreter's own: 2.5.2
+        # let a division by zero or an overflow through, and Next did nothing
+        except Exception as error:  # noqa: BLE001
             new_page = error_page(error, self, True)
         self._stack.setCurrentIndex(self._stack.addWidget(new_page))
         self._show_current()
@@ -948,11 +955,16 @@ class WizardInstallerDialog(QDialog):
             self._nextBtn.setText(text)
         ready = page.canGoOn() and (not isinstance(page, CompletePage) or bool(self.name()))
         self._nextBtn.setEnabled(ready)
+        no_name = not self.name()
+        self._nameProblem.setVisible(no_name)
+        self._name.setAccessibleDescription(self._nameProblem.text() if no_name else "")
 
     def exec(self) -> int:
         try:
             page = self._make_page(self._exec_until(self._start_context))
-        except WizardError as error:
+        # any error of the script's, not only the interpreter's own: 2.5.2
+        # let a division by zero or an overflow through, and Next did nothing
+        except Exception as error:  # noqa: BLE001
             page = error_page(error, self, False)
         self._stack.addWidget(page)
         self._show_current()

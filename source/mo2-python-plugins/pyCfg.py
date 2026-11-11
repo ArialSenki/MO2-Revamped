@@ -59,7 +59,19 @@ def tr(text: str) -> str:
 # --- INI files ---------------------------------------------------------------
 
 _SECTION = re.compile(r"^\s*\[([^\]]*)\]")
-_KEY = re.compile(r"^(\s*)([^=;#\[\s][^=]*?)(\s*=\s*)(.*?)(\r?\n?)$")
+_KEY_PATTERN = re.compile(r"^(\s*)([^=;#\[\s][^=]*?)(\s*=\s*)(.*?)(\r?\n?)$")
+
+
+class _Key:
+    """_KEY_PATTERN, tried only on lines with an "=": on a long line without
+    one its lazy name backtracked for seconds."""
+
+    @staticmethod
+    def match(line: str):
+        return _KEY_PATTERN.match(line) if "=" in line else None
+
+
+_KEY = _Key
 # a value's trailing "// comment", kept when the value changes
 _TAIL = re.compile(r"(\s*//.*)$")
 
@@ -75,7 +87,8 @@ class IniFile:
         self.path = path
         self.exists = os.path.isfile(path)
         self.writable = True
-        self._encoding = "utf-8"
+        # the games' code page, unless the file is already UTF-8
+        self._encoding = "cp1252"
         self._bom = False
         self._newline = "\r\n"
         self._lines: list[str] = []
@@ -90,6 +103,9 @@ class IniFile:
                     self._bom, raw = True, raw[3:]
                 try:
                     text = raw.decode("utf-8")
+                    if not self._bom and raw.isascii():
+                        self._encoding = "cp1252"
+                        text = raw.decode("cp1252", errors="surrogateescape")
                 except UnicodeDecodeError:
                     # the system code page; surrogateescape gives back every
                     # byte as it was, also those cp1252 doesn't define
@@ -164,7 +180,14 @@ class IniFile:
 
     def save(self) -> None:
         errors = "surrogateescape" if self._encoding == "cp1252" else "strict"
-        data = "".join(self._lines).encode(self._encoding, errors=errors)
+        try:
+            data = "".join(self._lines).encode(self._encoding, errors=errors)
+        except UnicodeEncodeError as error:
+            raise OSError(
+                tr("{file} can't hold the character \u201c{char}\u201d: the game reads it in "
+                   "the Windows code page.").format(
+                    file=os.path.basename(self.path), char=error.object[error.start:error.end])
+            ) from error
         if self._bom:
             data = b"\xef\xbb\xbf" + data
         folder = os.path.dirname(self.path)
@@ -216,7 +239,11 @@ def parse_value(kind: str, text: str, key: str = ""):
             return text.lower() == "true"
         return float(text) != 0
     if kind in ("int", "uint"):
-        value = int(float(text))
+        try:
+            value = int(float(text))
+        except OverflowError:
+            # 1e999 and inf: a ValueError like any other value it can't read
+            raise ValueError(text) from None
         if kind == "uint" and value < 0:
             raise ValueError(text)
         return value
@@ -905,9 +932,11 @@ class ConfiguratorDialog(QDialog):
                 self, tr("Unsaved changes"), tr("Save the changes before closing?"),
                 QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard
                 | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Save)
-            if answer == QMessageBox.StandardButton.Cancel:
-                return
-            if answer == QMessageBox.StandardButton.Save and not self._save_changes():
+            if answer == QMessageBox.StandardButton.Cancel or (
+                    answer == QMessageBox.StandardButton.Save and not self._save_changes()):
+                # the window stays: the keyboard goes back where it was
+                if focused is not None:
+                    focused.setFocus()
                 return
         super().reject()
 

@@ -186,7 +186,9 @@ class SetupDialog(fluent.ContentDialog):
         )
         self.body.addWidget(output)
 
-        self._accept = self.addButton(tr("Save and run FNIS") if run_button else tr("Save"), True)
+        # not the default: Enter on a mod list or a switch mustn't start FNIS
+        self._accept = self.addButton(tr("Save and run FNIS") if run_button else tr("Save"), True,
+                                      default=False)
         cancel = self.addButton(tr("Cancel"))
         self._accept.clicked.connect(self._save)
         cancel.clicked.connect(self.reject)

@@ -198,6 +198,9 @@ std::optional<QVector<int>> DialogSelect(
       }
       const QPixmap pixmap = i < loaded.size() ? loaded[i] : QPixmap();
       picture->setUnscaledPixmap(pixmap);
+      // setUnscaledPixmap puts back Preferred, which kept the window from
+      // shrinking below the picture
+      picture->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
       picture->setVisible(!pixmap.isNull());
       picture->setAccessibleName(i < labels.size() ? labels[i] : QString());
     }

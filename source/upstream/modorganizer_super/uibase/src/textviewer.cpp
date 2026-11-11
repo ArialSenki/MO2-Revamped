@@ -112,7 +112,7 @@ public:
     showWhitespace->setChecked(true);
     footer->addWidget(showWhitespace);
     footer->addStretch(1);
-    findBtn = new QPushButton(QCoreApplication::translate("TextViewer", "Find..."), dialog);
+    findBtn = new QPushButton(QCoreApplication::translate("TextViewer", "Find…"), dialog);
     findBtn->setObjectName(QStringLiteral("findBtn"));
     findBtn->setToolTip(QCoreApplication::translate("TextViewer", "Find in this file (Ctrl+F)"));
     findBtn->setAutoDefault(false);
@@ -380,7 +380,9 @@ void TextViewer::addFile(const QString& fileName, bool writable)
   if (writable) {
     // the file's Save, at the right of its page
     auto* row            = new QHBoxLayout;
-    QPushButton* saveBtn = new QPushButton(tr("Save"), page);
+    QPushButton* saveBtn =
+        new QPushButton(QCoreApplication::translate("TextViewer", "Save"), page);
+    saveBtn->installEventFilter(new EnterPressesItself(saveBtn));
     saveBtn->setProperty("fluentPrimary", true);
     saveBtn->setAutoDefault(false);
     saveBtn->setMinimumWidth(110);

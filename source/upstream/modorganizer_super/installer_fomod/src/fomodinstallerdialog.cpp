@@ -44,7 +44,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAccessible>
 #include <QFocusEvent>
 #include <QTextBrowser>
+#include <QDesktopServices>
 #include <QTextDocument>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <QCompleter>
 #include <QDebug>
@@ -193,7 +195,14 @@ void FomodInstallerDialog::buildUi()
   ui->descriptionText = new QTextBrowser(ui->details);
   ui->descriptionText->setObjectName(QStringLiteral("fomodDescription"));
   ui->descriptionText->setAccessibleName(tr("Option description"));
-  ui->descriptionText->setOpenExternalLinks(true);
+  // only web links, opened in the browser: a FOMOD's description could link
+  // to a local file or a program
+  ui->descriptionText->setOpenLinks(false);
+  connect(ui->descriptionText, &QTextBrowser::anchorClicked, this, [](const QUrl& url) {
+    if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https")) {
+      QDesktopServices::openUrl(url);
+    }
+  });
   ui->descriptionText->setFrameShape(QFrame::NoFrame);
   details->addWidget(ui->descriptionText, 2);
   splitter->addWidget(ui->stepsStack);
@@ -209,19 +218,21 @@ void FomodInstallerDialog::buildUi()
   footer->addWidget(ui->manualBtn);
   ui->selectionNote = new QLabel(this);
   ui->selectionNote->setObjectName(QStringLiteral("instanceNameValidation"));
+  // group names are the FOMOD's own words
+  ui->selectionNote->setTextFormat(Qt::PlainText);
   ui->selectionNote->setWordWrap(true);
   ui->selectionNote->setVisible(false);
   footer->addWidget(ui->selectionNote, 1);
   // the note can be hidden: the buttons keep their size either way
   footer->addStretch(1);
-  ui->prevBtn = RevampedFluent::enterPressesItself(new QPushButton(tr("Back"), this));
+  ui->prevBtn = RevampedFluent::enterPressesItself(new QPushButton(QCoreApplication::translate("RevampedFomod", "Back"), this));
   ui->prevBtn->setAutoDefault(false);
   ui->prevBtn->setEnabled(false);
-  ui->nextBtn = RevampedFluent::enterPressesItself(new QPushButton(tr("Next"), this));
+  ui->nextBtn = RevampedFluent::enterPressesItself(new QPushButton(QCoreApplication::translate("RevampedFomod", "Next"), this));
   ui->nextBtn->setAutoDefault(false);
   ui->nextBtn->setDefault(true);
   ui->nextBtn->setProperty("fluentPrimary", true);
-  ui->cancelBtn = RevampedFluent::enterPressesItself(new QPushButton(tr("Cancel"), this));
+  ui->cancelBtn = RevampedFluent::enterPressesItself(new QPushButton(QCoreApplication::translate("RevampedFomod", "Cancel"), this));
   ui->cancelBtn->setAutoDefault(false);
   for (auto* button : {ui->prevBtn, ui->nextBtn, ui->cancelBtn}) {
     button->setMinimumWidth(110);
@@ -311,7 +322,7 @@ void FomodInstallerDialog::transformToSmallInstall()
   ui->stepTitle->setText(tr("Install this mod"));
   ui->stepText->setText(tr("This FOMOD has no options to choose."));
   ui->stepText->setVisible(true);
-  ui->nextBtn->setText(tr("Install"));
+  ui->nextBtn->setText(QCoreApplication::translate("RevampedFomod", "Install"));
   ui->nameCombo->setFocus();
   setMinimumSize(560, 0);
   resize(640, 0);
@@ -743,7 +754,7 @@ bool FomodInstallerDialog::displayMissingFilesDialog(
     std::vector<const FileDescriptor*> missingFiles)
 {
   RevampedFluent::ContentDialog dialog(
-      this, QStringLiteral("fomodMissingFilesDialog"), tr("Missing files or folders"),
+      this, QStringLiteral("fomodMissingFilesDialog"), QCoreApplication::translate("RevampedFomod", "Missing files or folders"),
       tr("These files or folders aren't in the archive, most likely because of a "
          "mistake in the mod's FOMOD. The mod may not work properly."));
   dialog.setMinimumWidth(520);
@@ -756,10 +767,10 @@ bool FomodInstallerDialog::displayMissingFilesDialog(
   auto* list = new QPlainTextEdit(&dialog);
   list->setReadOnly(true);
   list->setPlainText(lines.join(QLatin1Char('\n')));
-  list->setAccessibleName(tr("Missing files or folders"));
+  list->setAccessibleName(QCoreApplication::translate("RevampedFomod", "Missing files or folders"));
   dialog.body()->addWidget(list, 1);
-  auto* anyway = dialog.addButton(tr("Install anyway"), true);
-  auto* cancel = dialog.addButton(tr("Cancel"));
+  auto* anyway = dialog.addButton(QCoreApplication::translate("RevampedFomod", "Install anyway"), true);
+  auto* cancel = dialog.addButton(QCoreApplication::translate("RevampedFomod", "Cancel"));
   connect(anyway, &QPushButton::clicked, &dialog, &QDialog::accept);
   connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
   dialog.askFirst(cancel);
@@ -857,8 +868,10 @@ void FomodInstallerDialog::highlightControl(QAbstractButton* button)
       QString temp = QDir::tempPath() + "/" + m_FomodPath + "/" +
                      QDir::fromNativeSeparators(screenshotFileName);
       ui->screenshotLabel->setScalableResource(temp);
-      ui->screenshotLabel->setVisible(true);
-      ui->screenshotExpand->setVisible(true);
+      const bool shown = !ui->screenshotLabel->pixmap().isNull() ||
+                         ui->screenshotLabel->movie() != nullptr;
+      ui->screenshotLabel->setVisible(shown);
+      ui->screenshotExpand->setVisible(shown);
     } else {
       ui->screenshotLabel->setScalableResource(QString());
       ui->screenshotLabel->setVisible(false);
@@ -1621,7 +1634,13 @@ void FomodInstallerDialog::on_cancelBtn_clicked()
 
 void FomodInstallerDialog::on_websiteLabel_linkActivated(const QString& link)
 {
-  ::ShellExecuteW(nullptr, L"open", ToWString(link).c_str(), nullptr, nullptr,
+  // the package's website, if it is one: 2.5.2 handed any text to the shell,
+  // a path to a program included
+  const QUrl url = QUrl::fromUserInput(link);
+  if (url.scheme() != QLatin1String("http") && url.scheme() != QLatin1String("https")) {
+    return;
+  }
+  ::ShellExecuteW(nullptr, L"open", ToWString(url.toString()).c_str(), nullptr, nullptr,
                   SW_SHOWNORMAL);
 }
 
@@ -1813,7 +1832,7 @@ void FomodInstallerDialog::updateNextbtnText()
     m_PageVisible.push_back(false);
   }
 
-  ui->nextBtn->setText(isLast ? tr("Install") : tr("Next"));
+  ui->nextBtn->setText(isLast ? QCoreApplication::translate("RevampedFomod", "Install") : QCoreApplication::translate("RevampedFomod", "Next"));
   // Install waits for a mod name
   const bool noName = isLast && getName().isEmpty();
   ui->nextBtn->setEnabled(!noName);
@@ -1928,7 +1947,9 @@ void FomodInstallerDialog::displayCurrentPage()
           } else {
             // FIXME Should this generate an error
             qWarning("User should select at least one plugin but none are available");
-            controls[0]->setChecked(true);
+            if (!controls.isEmpty()) {
+              controls[0]->setChecked(true);
+            }
           }
         }
       }
@@ -1964,7 +1985,7 @@ void FomodInstallerDialog::on_prevBtn_clicked()
     }
     ui->stepsStack->setCurrentIndex(previousIndex);
     m_PageVisible.resize(previousIndex);
-    ui->nextBtn->setText(tr("Next"));
+    ui->nextBtn->setText(QCoreApplication::translate("RevampedFomod", "Next"));
   }
   if (ui->stepsStack->currentIndex() == 0) {
     ui->prevBtn->setEnabled(false);

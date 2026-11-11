@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -117,6 +118,9 @@ public:
       buttons->addWidget(button);
     }
     layout->addWidget(band);
+
+    // F3 finds the next match from here too, as the tooltip says
+    nextBtn->setShortcut(QKeySequence::FindNext);
 
     // the slots are named on_<object>_<signal>
     QMetaObject::connectSlotsByName(dialog);

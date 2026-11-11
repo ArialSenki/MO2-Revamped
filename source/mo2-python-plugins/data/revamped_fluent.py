@@ -227,11 +227,16 @@ class ContentDialog(QDialog):
         title_label = QLabel(title, content)
         title_label.setObjectName("fluentDialogTitle")
         title_label.setWordWrap(True)
+        # as written, like the C++ content dialog: titles carry mods' names
+        title_label.setTextFormat(Qt.TextFormat.PlainText)
         content_layout.addWidget(title_label)
         self.text = QLabel(text, content)
         self.text.setObjectName("fluentDialogText")
         self.text.setWordWrap(True)
+        self.text.setTextFormat(Qt.TextFormat.PlainText)
         self.text.setVisible(bool(text))
+        # a screen reader reads the explanation with the window's name
+        self.setAccessibleDescription(text)
         content_layout.addWidget(self.text)
         self.body = QVBoxLayout()
         self.body.setContentsMargins(0, 8, 0, 0)
@@ -247,12 +252,16 @@ class ContentDialog(QDialog):
         layout.addWidget(band)
         self._has_default = False
 
-    def addButton(self, text: str, primary: bool = False) -> QPushButton:
+    def addButton(self, text: str, primary: bool = False, default: bool | None = None) -> QPushButton:
+        """default: whether Enter anywhere presses it (the primary button's,
+        unless it starts something Enter in a field shouldn't)."""
         button = QPushButton(text, self)
         button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         button.setMinimumWidth(110)
         button.setAutoDefault(False)
-        if primary and not self._has_default:
+        if default is None:
+            default = primary
+        if default and not self._has_default:
             self._has_default = True
             button.setDefault(True)
         if primary:

@@ -113,6 +113,23 @@
   Find next's F3 no longer replaces Find's Ctrl+F, and Find with no file open no
   longer closes MO2.
 
+### Fixes from the final review
+
+- The Elden Ring-only edition ships the shared helpers the BAIN wizard needs; it
+  failed to load there.
+- A FOMOD group with no options no longer closes MO2 (also in Mod Organizer 2).
+- Links in a FOMOD's descriptions and its website open only web pages; any text
+  went to the shell before, a program's path included.
+- The FOMOD buttons read the same as the other installers' in every language
+  (Italian showed "Cancella", which means delete).
+- The Configurator writes what you type in the Windows code page the games read
+  (UTF-8 showed as "JosÃ©"), says so when a character doesn't fit instead of
+  failing silently, and opens INIs with numbers too large to read.
+- The BAIN wizard shows any script error on its error page (a division by zero
+  left Next doing nothing), and says why Install is off without a name.
+- In FNIS's windows, Enter no longer starts FNIS or saves and closes.
+- The manual installer refuses folder names Windows keeps (CON, NUL…).
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12

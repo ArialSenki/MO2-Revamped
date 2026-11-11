@@ -12821,6 +12821,672 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
     </message>
   </context>
   <context>
+    <name>SimpleInstallDialog</name>
+    <message>
+      <source>Quick install</source>
+      <translation>Schnellinstallation</translation>
+    </message>
+    <message>
+      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
+      <translation>Die Dateien des Archivs sind bereits so angeordnet, wie der Datenordner des Spiels es erwartet, daher kann MO2 sie unverändert installieren.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Diese Mod installieren</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+  </context>
+  <context>
+    <name>MultiArchiveDialog</name>
+    <message>
+      <source>Bundled archives</source>
+      <translation>Enthaltene Archive</translation>
+    </message>
+    <message>
+      <source>This archive holds several archives that install separately. Choose the one to install.</source>
+      <translation>Dieses Archiv enthält mehrere Archive, die getrennt installiert werden. Wähle das, das du installieren willst.</translation>
+    </message>
+    <message>
+      <source>Choose an archive to install</source>
+      <translation>Wähle ein Archiv zum Installieren</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Choose which of the bundle's files to install, and where</source>
+      <translation>Wähle, welche Dateien des Pakets wohin installiert werden</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+  </context>
+  <context>
+    <name>BainComplexInstallerDialog</name>
+    <message>
+      <source>BAIN package</source>
+      <translation>BAIN-Paket</translation>
+    </message>
+    <message>
+      <source>This archive is a BAIN package, split into numbered parts. Choose the ones you want; a later part's files replace an earlier one's. Parts starting with 00 are usually the base, and the package.txt, when there is one, describes each part.</source>
+      <translation>Dieses Archiv ist ein BAIN-Paket, aufgeteilt in nummerierte Teile. Wähle die, die du willst; die Dateien eines späteren Teils ersetzen die eines früheren. Teile, die mit 00 beginnen, sind meist die Basis, und die package.txt, falls vorhanden, beschreibt jeden Teil.</translation>
+    </message>
+    <message>
+      <source>Choose the parts to install</source>
+      <translation>Wähle die Teile zum Installieren</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>Parts</source>
+      <translation>Teile</translation>
+    </message>
+    <message>
+      <source>Choose all</source>
+      <translation>Alle wählen</translation>
+    </message>
+    <message>
+      <source>Choose none</source>
+      <translation>Keine wählen</translation>
+    </message>
+    <message>
+      <source>package.txt</source>
+      <translation>package.txt</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Choose at least one part to install.</source>
+      <translation>Wähle mindestens einen Teil zum Installieren.</translation>
+    </message>
+    <message>
+      <source>%1 of %2 parts chosen</source>
+      <translation>%1 von %2 Teilen gewählt</translation>
+    </message>
+  </context>
+  <context>
+    <name>ArchiveTreeWidget</name>
+    <message>
+      <source>Can't move it there</source>
+      <translation>Kann nicht dorthin verschoben werden</translation>
+    </message>
+    <message>
+      <source>'%1' can't go into one of its own folders.</source>
+      <translation>„%1“ kann nicht in einen seiner eigenen Ordner.</translation>
+    </message>
+    <message>
+      <source>The folder '%2' already has a file named '%1'.</source>
+      <translation>Der Ordner „%2“ enthält bereits eine Datei namens „%1“.</translation>
+    </message>
+    <message>
+      <source>The folder '%2' already has a folder named '%1'.</source>
+      <translation>Der Ordner „%2“ enthält bereits einen Ordner namens „%1“.</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedFluent</name>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+  </context>
+  <context>
+    <name>FomodInstallerDialog</name>
+    <message>
+      <source>FOMOD Installer</source>
+      <translation>FOMOD-Installer</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>View pictures</source>
+      <translation>Bilder ansehen</translation>
+    </message>
+    <message>
+      <source>Show the pictures of this step's options larger</source>
+      <translation>Zeigt die Bilder der Optionen dieses Schritts größer</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Beschreibung der Option</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <translation>Zurück</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>By %1</source>
+      <translation>Von %1</translation>
+    </message>
+    <message>
+      <source>Version %1</source>
+      <translation>Version %1</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Diese Mod installieren</translation>
+    </message>
+    <message>
+      <source>This FOMOD has no options to choose.</source>
+      <translation>Dieses FOMOD hat keine Optionen zur Auswahl.</translation>
+    </message>
+    <message>
+      <source>These files or folders aren't in the archive, most likely because of a mistake in the mod's FOMOD. The mod may not work properly.</source>
+      <translation>Diese Dateien oder Ordner fehlen im Archiv, wahrscheinlich wegen eines Fehlers im FOMOD der Mod. Die Mod funktioniert vielleicht nicht richtig.</translation>
+    </message>
+    <message>
+      <source>Folder '%1'</source>
+      <translation>Ordner „%1“</translation>
+    </message>
+    <message>
+      <source>File '%1'</source>
+      <translation>Datei „%1“</translation>
+    </message>
+    <message>
+      <source>&lt;a href=&quot;%1&quot;&gt;Website&lt;/a&gt;</source>
+      <translation>&lt;a href=&quot;%1&quot;&gt;Website&lt;/a&gt;</translation>
+    </message>
+    <message>
+      <source>Choose one or more.</source>
+      <translation>Wähle eine oder mehrere.</translation>
+    </message>
+    <message>
+      <source>Choose one, or none.</source>
+      <translation>Wähle eine oder keine.</translation>
+    </message>
+    <message>
+      <source>Choose one.</source>
+      <translation>Wähle eine.</translation>
+    </message>
+    <message>
+      <source>All of these are installed.</source>
+      <translation>Diese werden alle installiert.</translation>
+    </message>
+    <message>
+      <source>Choose any.</source>
+      <translation>Wähle beliebig viele.</translation>
+    </message>
+    <message>
+      <source>Choose at least one option in: %1</source>
+      <translation>Wähle mindestens eine Option in: %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>FomodScreenshotDialog</name>
+    <message>
+      <source>Pictures</source>
+      <translation>Bilder</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Previous picture</source>
+      <translation>Vorheriges Bild</translation>
+    </message>
+    <message>
+      <source>Next picture</source>
+      <translation>Nächstes Bild</translation>
+    </message>
+    <message>
+      <source>This step has no pictures.</source>
+      <translation>Dieser Schritt hat keine Bilder.</translation>
+    </message>
+    <message>
+      <source>%1 of %2</source>
+      <translation>%1 von %2</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallerFomodPredialog</name>
+    <message>
+      <source>FOMOD C# Installer</source>
+      <translation>FOMOD-C#-Installer</translation>
+    </message>
+    <message>
+      <source>This mod's installer is a C# script. MO2 runs it when you choose Install; it may ask you questions in its own windows.</source>
+      <translation>Der Installer dieser Mod ist ein C#-Skript. MO2 führt es aus, wenn du Installieren wählst; es kann dir in eigenen Fenstern Fragen stellen.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Diese Mod installieren</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Run the mod's installer script</source>
+      <translation>Führt das Installationsskript der Mod aus</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallerFomodPostDialog</name>
+    <message>
+      <source>Settings modification required</source>
+      <translation>Änderung von Einstellungen nötig</translation>
+    </message>
+    <message>
+      <source>You can apply them to the INI files of the current profile, keep them in the mod's folder under INI Tweaks, or discard them.</source>
+      <translation>Du kannst sie auf die INI-Dateien des aktuellen Profils anwenden, sie im Ordner der Mod unter INI Tweaks behalten oder verwerfen.</translation>
+    </message>
+    <message>
+      <source>The installer wants to change these settings</source>
+      <translation>Der Installer möchte diese Einstellungen ändern</translation>
+    </message>
+    <message>
+      <source>INI file</source>
+      <translation>INI-Datei</translation>
+    </message>
+    <message>
+      <source>Settings</source>
+      <translation>Einstellungen</translation>
+    </message>
+    <message>
+      <source>Save as INI Tweaks</source>
+      <translation>Als INI Tweaks speichern</translation>
+    </message>
+    <message>
+      <source>Create files under &quot;INI Tweaks&quot; in the mod folder with these settings</source>
+      <translation>Erstellt Dateien mit diesen Einstellungen unter „INI Tweaks“ im Ordner der Mod</translation>
+    </message>
+    <message>
+      <source>Apply</source>
+      <translation>Anwenden</translation>
+    </message>
+    <message>
+      <source>Apply the settings to the INI files of the current profile</source>
+      <translation>Wendet die Einstellungen auf die INI-Dateien des aktuellen Profils an</translation>
+    </message>
+    <message>
+      <source>Discard</source>
+      <translation>Verwerfen</translation>
+    </message>
+    <message>
+      <source>Discard the settings</source>
+      <translation>Verwirft die Einstellungen</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Cancel the installation</source>
+      <translation>Bricht die Installation ab</translation>
+    </message>
+  </context>
+  <context>
+    <name>NameDialog</name>
+    <message>
+      <source>OMOD Installer</source>
+      <translation>OMOD-Installer</translation>
+    </message>
+    <message>
+      <source>This mod is an OMOD. MO2 installs it with its own installer, which may ask you questions next.</source>
+      <translation>Diese Mod ist ein OMOD. MO2 installiert sie mit ihrem eigenen Installer, der dir danach Fragen stellen kann.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Diese Mod installieren</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+  </context>
+  <context>
+    <name>RtfPopup</name>
+    <message>
+      <source>Readme</source>
+      <translation>Liesmich</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+  </context>
+  <context>
+    <name>ScriptFunctionsHelper</name>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+  </context>
+  <context>
+    <name>MOBase::TextViewer</name>
+    <message>
+      <source>Save %1</source>
+      <translation>Speichert %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>FindDialog</name>
+    <message>
+      <source>Find</source>
+      <translation>Suchen</translation>
+    </message>
+    <message>
+      <source>Find what</source>
+      <translation>Suchen nach</translation>
+    </message>
+    <message>
+      <source>Search term</source>
+      <translation>Suchbegriff</translation>
+    </message>
+    <message>
+      <source>Find next</source>
+      <translation>Weitersuchen</translation>
+    </message>
+    <message>
+      <source>Find the next match after the cursor, from the top again at the end (F3)</source>
+      <translation>Sucht den nächsten Treffer nach dem Cursor, am Ende wieder von oben (F3)</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+  </context>
+  <context>
+    <name>OmodDialogSelect</name>
+    <message>
+      <source>Choose any.</source>
+      <translation>Wähle beliebig viele.</translation>
+    </message>
+    <message>
+      <source>Choose one.</source>
+      <translation>Wähle eine.</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Beschreibung der Option</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedFomod</name>
+    <message>
+      <source>Back</source>
+      <translation>Zurück</translation>
+    </message>
+    <message>
+      <source>Next</source>
+      <translation>Weiter</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Install anyway</source>
+      <translation>Trotzdem installieren</translation>
+    </message>
+    <message>
+      <source>Missing files or folders</source>
+      <translation>Fehlende Dateien oder Ordner</translation>
+    </message>
+  </context>
+  <context>
+    <name>TextViewer</name>
+    <message>
+      <source>Show spaces and tabs</source>
+      <translation>Leerzeichen und Tabs anzeigen</translation>
+    </message>
+    <message>
+      <source>Find in this file (Ctrl+F)</source>
+      <translation>Sucht in dieser Datei (Strg+F)</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Speichern</translation>
+    </message>
+    <message>
+      <source>Find…</source>
+      <translation>Suchen…</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallDialog</name>
+    <message>
+      <source>Manual installation</source>
+      <translation>Manuelle Installation</translation>
+    </message>
+    <message>
+      <source>Choose what to install</source>
+      <translation>Wähle, was installiert wird</translation>
+    </message>
+    <message>
+      <source>Drag files and folders to arrange them, and clear the check boxes of what you don't want. What is under %1 goes into the game's data folder; to use another folder for it, select that folder and choose Use as %1.</source>
+      <translation>Ziehe Dateien und Ordner, um sie anzuordnen, und entferne die Häkchen bei allem, was du nicht willst. Was unter %1 liegt, kommt in den Datenordner des Spiels; um einen anderen Ordner dafür zu verwenden, wähle ihn aus und klicke auf Als %1 verwenden.</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>Use as %1</source>
+      <translation>Als %1 verwenden</translation>
+    </message>
+    <message>
+      <source>Install the selected folder's content as the game's data folder</source>
+      <translation>Installiert den Inhalt des ausgewählten Ordners als Datenordner des Spiels</translation>
+    </message>
+    <message>
+      <source>Reset %1</source>
+      <translation>%1 zurücksetzen</translation>
+    </message>
+    <message>
+      <source>Go back to the archive's top folder as %1</source>
+      <translation>Verwendet wieder den obersten Ordner des Archivs als %1</translation>
+    </message>
+    <message>
+      <source>New folder…</source>
+      <translation>Neuer Ordner…</translation>
+    </message>
+    <message>
+      <source>Create a folder inside the selected folder, or beside the selected file (Ctrl+Shift+N)</source>
+      <translation>Erstellt einen Ordner im ausgewählten Ordner oder neben der ausgewählten Datei (Strg+Umschalt+N)</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Öffnen</translation>
+    </message>
+    <message>
+      <source>Open the selected file</source>
+      <translation>Öffnet die ausgewählte Datei</translation>
+    </message>
+    <message>
+      <source>Content of the archive</source>
+      <translation>Inhalt des Archivs</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Game data folder</source>
+      <translation>Datenordner des Spiels</translation>
+    </message>
+    <message>
+      <source>This game's plugin can't check the content of %1, so MO2 can't tell whether the mod will work.</source>
+      <translation>Das Plugin dieses Spiels kann den Inhalt von %1 nicht prüfen, daher kann MO2 nicht sagen, ob die Mod funktionieren wird.</translation>
+    </message>
+    <message>
+      <source>The content of %1 looks right for this game.</source>
+      <translation>Der Inhalt von %1 sieht für dieses Spiel richtig aus.</translation>
+    </message>
+    <message>
+      <source>The content of %1 doesn't look right for this game: the mod will probably not work.</source>
+      <translation>Der Inhalt von %1 sieht für dieses Spiel nicht richtig aus: Die Mod wird wahrscheinlich nicht funktionieren.</translation>
+    </message>
+    <message>
+      <source>New folder</source>
+      <translation>Neuer Ordner</translation>
+    </message>
+    <message>
+      <source>The folder goes inside '%1'.</source>
+      <translation>Der Ordner kommt in „%1“.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Name</translation>
+    </message>
+    <message>
+      <source>Create</source>
+      <translation>Erstellen</translation>
+    </message>
+    <message>
+      <source>There is already a file or folder named '%1' here.</source>
+      <translation>Hier gibt es bereits eine Datei oder einen Ordner namens „%1“.</translation>
+    </message>
+    <message>
+      <source>Install anyway?</source>
+      <translation>Trotzdem installieren?</translation>
+    </message>
+    <message>
+      <source>The content of %1 doesn't look right for this game, so the mod will probably not work. Fix the layout in the tree first, or install it as it is.</source>
+      <translation>Der Inhalt von %1 sieht für dieses Spiel nicht richtig aus, daher wird die Mod wahrscheinlich nicht funktionieren. Korrigiere zuerst die Anordnung im Baum oder installiere sie so, wie sie ist.</translation>
+    </message>
+    <message>
+      <source>Install anyway</source>
+      <translation>Trotzdem installieren</translation>
+    </message>
+    <message>
+      <source>Go back</source>
+      <translation>Zurück</translation>
+    </message>
+    <message>
+      <source>A folder name can't have any of these: &lt; &gt; : &quot; / \ | ? *, nor end with a dot or a space, nor be a name Windows keeps (CON, NUL, COM1…).</source>
+      <translation>Ein Ordnername darf keins dieser Zeichen enthalten: &lt; &gt; : &quot; / \ | ? *, nicht mit Punkt oder Leerzeichen enden und kein von Windows reservierter Name sein (CON, NUL, COM1…).</translation>
+    </message>
+    <message>
+      <source>Use as the game data folder</source>
+      <translation>Als Datenordner des Spiels verwenden</translation>
+    </message>
+    <message>
+      <source>Reset the game data folder</source>
+      <translation>Datenordner des Spiels zurücksetzen</translation>
+    </message>
+  </context>
+  <context>
     <name>RevampedConfigurator</name>
     <message>
       <source>Configurator</source>
@@ -13242,6 +13908,10 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
       <source>Controls the rain and snow effect.</source>
       <translation>Steuert den Regen- und Schneeeffekt.</translation>
     </message>
+    <message>
+      <source>{file} can't hold the character “{char}”: the game reads it in the Windows code page.</source>
+      <translation>{file} kann das Zeichen „{char}“ nicht enthalten: Das Spiel liest die Datei in der Windows-Codepage.</translation>
+    </message>
   </context>
   <context>
     <name>RevampedBAINWizard</name>
@@ -13346,10 +14016,6 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
       <translation>Manuell installieren</translation>
     </message>
     <message>
-      <source>Close the wizard and choose the files yourself</source>
-      <translation>Schließt den Assistenten, damit du die Dateien selbst auswählst</translation>
-    </message>
-    <message>
       <source>Open script</source>
       <translation>Skript öffnen</translation>
     </message>
@@ -13433,632 +14099,13 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
       <source>%1 (left in optional)</source>
       <translation>%1 (bleibt in optional)</translation>
     </message>
-  </context>
-  <context>
-    <name>SimpleInstallDialog</name>
-    <message>
-      <source>Quick install</source>
-      <translation>Schnellinstallation</translation>
-    </message>
-    <message>
-      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
-      <translation>Die Dateien des Archivs sind bereits so angeordnet, wie der Datenordner des Spiels es erwartet, daher kann MO2 sie unverändert installieren.</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Diese Mod installieren</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Name der Mod</translation>
-    </message>
     <message>
       <source>Enter a name for the mod.</source>
       <translation>Gib einen Namen für die Mod ein.</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installieren</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Manuell installieren</translation>
     </message>
     <message>
       <source>Choose which of the archive's files to install, and where</source>
       <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-  </context>
-  <context>
-    <name>MultiArchiveDialog</name>
-    <message>
-      <source>Bundled archives</source>
-      <translation>Enthaltene Archive</translation>
-    </message>
-    <message>
-      <source>This archive holds several archives that install separately. Choose the one to install.</source>
-      <translation>Dieses Archiv enthält mehrere Archive, die getrennt installiert werden. Wähle das, das du installieren willst.</translation>
-    </message>
-    <message>
-      <source>Choose an archive to install</source>
-      <translation>Wähle ein Archiv zum Installieren</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installieren</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Manuell installieren</translation>
-    </message>
-    <message>
-      <source>Choose which of the bundle's files to install, and where</source>
-      <translation>Wähle, welche Dateien des Pakets wohin installiert werden</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-  </context>
-  <context>
-    <name>InstallDialog</name>
-    <message>
-      <source>Manual installation</source>
-      <translation>Manuelle Installation</translation>
-    </message>
-    <message>
-      <source>Choose what to install</source>
-      <translation>Wähle, was installiert wird</translation>
-    </message>
-    <message>
-      <source>Drag files and folders to arrange them, and clear the check boxes of what you don't want. What is under %1 goes into the game's data folder; to use another folder for it, select that folder and choose Use as %1.</source>
-      <translation>Ziehe Dateien und Ordner, um sie anzuordnen, und entferne die Häkchen bei allem, was du nicht willst. Was unter %1 liegt, kommt in den Datenordner des Spiels; um einen anderen Ordner dafür zu verwenden, wähle ihn aus und klicke auf Als %1 verwenden.</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Name der Mod</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Gib einen Namen für die Mod ein.</translation>
-    </message>
-    <message>
-      <source>Use as %1</source>
-      <translation>Als %1 verwenden</translation>
-    </message>
-    <message>
-      <source>Install the selected folder's content as the game's data folder</source>
-      <translation>Installiert den Inhalt des ausgewählten Ordners als Datenordner des Spiels</translation>
-    </message>
-    <message>
-      <source>Reset %1</source>
-      <translation>%1 zurücksetzen</translation>
-    </message>
-    <message>
-      <source>Go back to the archive's top folder as %1</source>
-      <translation>Verwendet wieder den obersten Ordner des Archivs als %1</translation>
-    </message>
-    <message>
-      <source>New folder…</source>
-      <translation>Neuer Ordner…</translation>
-    </message>
-    <message>
-      <source>Create a folder inside the selected folder, or beside the selected file (Ctrl+Shift+N)</source>
-      <translation>Erstellt einen Ordner im ausgewählten Ordner oder neben der ausgewählten Datei (Strg+Umschalt+N)</translation>
-    </message>
-    <message>
-      <source>Open</source>
-      <translation>Öffnen</translation>
-    </message>
-    <message>
-      <source>Open the selected file</source>
-      <translation>Öffnet die ausgewählte Datei</translation>
-    </message>
-    <message>
-      <source>Content of the archive</source>
-      <translation>Inhalt des Archivs</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installieren</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-    <message>
-      <source>Game data folder</source>
-      <translation>Datenordner des Spiels</translation>
-    </message>
-    <message>
-      <source>This game's plugin can't check the content of %1, so MO2 can't tell whether the mod will work.</source>
-      <translation>Das Plugin dieses Spiels kann den Inhalt von %1 nicht prüfen, daher kann MO2 nicht sagen, ob die Mod funktionieren wird.</translation>
-    </message>
-    <message>
-      <source>The content of %1 looks right for this game.</source>
-      <translation>Der Inhalt von %1 sieht für dieses Spiel richtig aus.</translation>
-    </message>
-    <message>
-      <source>The content of %1 doesn't look right for this game: the mod will probably not work.</source>
-      <translation>Der Inhalt von %1 sieht für dieses Spiel nicht richtig aus: Die Mod wird wahrscheinlich nicht funktionieren.</translation>
-    </message>
-    <message>
-      <source>New folder</source>
-      <translation>Neuer Ordner</translation>
-    </message>
-    <message>
-      <source>The folder goes inside '%1'.</source>
-      <translation>Der Ordner kommt in „%1“.</translation>
-    </message>
-    <message>
-      <source>Name</source>
-      <translation>Name</translation>
-    </message>
-    <message>
-      <source>Create</source>
-      <translation>Erstellen</translation>
-    </message>
-    <message>
-      <source>A folder name can't have any of these: &lt; &gt; : &quot; / \ | ? *, nor end with a dot or a space.</source>
-      <translation>Ein Ordnername darf keins dieser Zeichen enthalten: &lt; &gt; : &quot; / \ | ? *, und nicht mit Punkt oder Leerzeichen enden.</translation>
-    </message>
-    <message>
-      <source>There is already a file or folder named '%1' here.</source>
-      <translation>Hier gibt es bereits eine Datei oder einen Ordner namens „%1“.</translation>
-    </message>
-    <message>
-      <source>Install anyway?</source>
-      <translation>Trotzdem installieren?</translation>
-    </message>
-    <message>
-      <source>The content of %1 doesn't look right for this game, so the mod will probably not work. Fix the layout in the tree first, or install it as it is.</source>
-      <translation>Der Inhalt von %1 sieht für dieses Spiel nicht richtig aus, daher wird die Mod wahrscheinlich nicht funktionieren. Korrigiere zuerst die Anordnung im Baum oder installiere sie so, wie sie ist.</translation>
-    </message>
-    <message>
-      <source>Install anyway</source>
-      <translation>Trotzdem installieren</translation>
-    </message>
-    <message>
-      <source>Go back</source>
-      <translation>Zurück</translation>
-    </message>
-  </context>
-  <context>
-    <name>BainComplexInstallerDialog</name>
-    <message>
-      <source>BAIN package</source>
-      <translation>BAIN-Paket</translation>
-    </message>
-    <message>
-      <source>This archive is a BAIN package, split into numbered parts. Choose the ones you want; a later part's files replace an earlier one's. Parts starting with 00 are usually the base, and the package.txt, when there is one, describes each part.</source>
-      <translation>Dieses Archiv ist ein BAIN-Paket, aufgeteilt in nummerierte Teile. Wähle die, die du willst; die Dateien eines späteren Teils ersetzen die eines früheren. Teile, die mit 00 beginnen, sind meist die Basis, und die package.txt, falls vorhanden, beschreibt jeden Teil.</translation>
-    </message>
-    <message>
-      <source>Choose the parts to install</source>
-      <translation>Wähle die Teile zum Installieren</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Name der Mod</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Gib einen Namen für die Mod ein.</translation>
-    </message>
-    <message>
-      <source>Parts</source>
-      <translation>Teile</translation>
-    </message>
-    <message>
-      <source>Choose all</source>
-      <translation>Alle wählen</translation>
-    </message>
-    <message>
-      <source>Choose none</source>
-      <translation>Keine wählen</translation>
-    </message>
-    <message>
-      <source>package.txt</source>
-      <translation>package.txt</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installieren</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Manuell installieren</translation>
-    </message>
-    <message>
-      <source>Choose which of the archive's files to install, and where</source>
-      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-    <message>
-      <source>Choose at least one part to install.</source>
-      <translation>Wähle mindestens einen Teil zum Installieren.</translation>
-    </message>
-    <message>
-      <source>%1 of %2 parts chosen</source>
-      <translation>%1 von %2 Teilen gewählt</translation>
-    </message>
-  </context>
-  <context>
-    <name>ArchiveTreeWidget</name>
-    <message>
-      <source>Can't move it there</source>
-      <translation>Kann nicht dorthin verschoben werden</translation>
-    </message>
-    <message>
-      <source>'%1' can't go into one of its own folders.</source>
-      <translation>„%1“ kann nicht in einen seiner eigenen Ordner.</translation>
-    </message>
-    <message>
-      <source>The folder '%2' already has a file named '%1'.</source>
-      <translation>Der Ordner „%2“ enthält bereits eine Datei namens „%1“.</translation>
-    </message>
-    <message>
-      <source>The folder '%2' already has a folder named '%1'.</source>
-      <translation>Der Ordner „%2“ enthält bereits einen Ordner namens „%1“.</translation>
-    </message>
-  </context>
-  <context>
-    <name>RevampedFluent</name>
-    <message>
-      <source>OK</source>
-      <translation>OK</translation>
-    </message>
-  </context>
-  <context>
-    <name>FomodInstallerDialog</name>
-    <message>
-      <source>FOMOD Installer</source>
-      <translation>FOMOD-Installer</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Name der Mod</translation>
-    </message>
-    <message>
-      <source>View pictures</source>
-      <translation>Bilder ansehen</translation>
-    </message>
-    <message>
-      <source>Show the pictures of this step's options larger</source>
-      <translation>Zeigt die Bilder der Optionen dieses Schritts größer</translation>
-    </message>
-    <message>
-      <source>Option description</source>
-      <translation>Beschreibung der Option</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Manuell installieren</translation>
-    </message>
-    <message>
-      <source>Choose which of the archive's files to install, and where</source>
-      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
-    </message>
-    <message>
-      <source>Back</source>
-      <translation>Zurück</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Gib einen Namen für die Mod ein.</translation>
-    </message>
-    <message>
-      <source>By %1</source>
-      <translation>Von %1</translation>
-    </message>
-    <message>
-      <source>Version %1</source>
-      <translation>Version %1</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Diese Mod installieren</translation>
-    </message>
-    <message>
-      <source>This FOMOD has no options to choose.</source>
-      <translation>Dieses FOMOD hat keine Optionen zur Auswahl.</translation>
-    </message>
-    <message>
-      <source>These files or folders aren't in the archive, most likely because of a mistake in the mod's FOMOD. The mod may not work properly.</source>
-      <translation>Diese Dateien oder Ordner fehlen im Archiv, wahrscheinlich wegen eines Fehlers im FOMOD der Mod. Die Mod funktioniert vielleicht nicht richtig.</translation>
-    </message>
-    <message>
-      <source>Folder '%1'</source>
-      <translation>Ordner „%1“</translation>
-    </message>
-    <message>
-      <source>File '%1'</source>
-      <translation>Datei „%1“</translation>
-    </message>
-    <message>
-      <source>&lt;a href=&quot;%1&quot;&gt;Website&lt;/a&gt;</source>
-      <translation>&lt;a href=&quot;%1&quot;&gt;Website&lt;/a&gt;</translation>
-    </message>
-    <message>
-      <source>Choose one or more.</source>
-      <translation>Wähle eine oder mehrere.</translation>
-    </message>
-    <message>
-      <source>Choose one, or none.</source>
-      <translation>Wähle eine oder keine.</translation>
-    </message>
-    <message>
-      <source>Choose one.</source>
-      <translation>Wähle eine.</translation>
-    </message>
-    <message>
-      <source>All of these are installed.</source>
-      <translation>Diese werden alle installiert.</translation>
-    </message>
-    <message>
-      <source>Choose any.</source>
-      <translation>Wähle beliebig viele.</translation>
-    </message>
-    <message>
-      <source>Choose at least one option in: %1</source>
-      <translation>Wähle mindestens eine Option in: %1</translation>
-    </message>
-  </context>
-  <context>
-    <name>FomodScreenshotDialog</name>
-    <message>
-      <source>Pictures</source>
-      <translation>Bilder</translation>
-    </message>
-    <message>
-      <source>Close</source>
-      <translation>Schließen</translation>
-    </message>
-    <message>
-      <source>Previous picture</source>
-      <translation>Vorheriges Bild</translation>
-    </message>
-    <message>
-      <source>Next picture</source>
-      <translation>Nächstes Bild</translation>
-    </message>
-    <message>
-      <source>This step has no pictures.</source>
-      <translation>Dieser Schritt hat keine Bilder.</translation>
-    </message>
-    <message>
-      <source>%1 of %2</source>
-      <translation>%1 von %2</translation>
-    </message>
-  </context>
-  <context>
-    <name>InstallerFomodPredialog</name>
-    <message>
-      <source>FOMOD C# Installer</source>
-      <translation>FOMOD-C#-Installer</translation>
-    </message>
-    <message>
-      <source>This mod's installer is a C# script. MO2 runs it when you choose Install; it may ask you questions in its own windows.</source>
-      <translation>Der Installer dieser Mod ist ein C#-Skript. MO2 führt es aus, wenn du Installieren wählst; es kann dir in eigenen Fenstern Fragen stellen.</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Diese Mod installieren</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Name der Mod</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Gib einen Namen für die Mod ein.</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installieren</translation>
-    </message>
-    <message>
-      <source>Run the mod's installer script</source>
-      <translation>Führt das Installationsskript der Mod aus</translation>
-    </message>
-    <message>
-      <source>Install manually</source>
-      <translation>Manuell installieren</translation>
-    </message>
-    <message>
-      <source>Choose which of the archive's files to install, and where</source>
-      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-  </context>
-  <context>
-    <name>InstallerFomodPostDialog</name>
-    <message>
-      <source>Settings modification required</source>
-      <translation>Änderung von Einstellungen nötig</translation>
-    </message>
-    <message>
-      <source>You can apply them to the INI files of the current profile, keep them in the mod's folder under INI Tweaks, or discard them.</source>
-      <translation>Du kannst sie auf die INI-Dateien des aktuellen Profils anwenden, sie im Ordner der Mod unter INI Tweaks behalten oder verwerfen.</translation>
-    </message>
-    <message>
-      <source>The installer wants to change these settings</source>
-      <translation>Der Installer möchte diese Einstellungen ändern</translation>
-    </message>
-    <message>
-      <source>INI file</source>
-      <translation>INI-Datei</translation>
-    </message>
-    <message>
-      <source>Settings</source>
-      <translation>Einstellungen</translation>
-    </message>
-    <message>
-      <source>Save as INI Tweaks</source>
-      <translation>Als INI Tweaks speichern</translation>
-    </message>
-    <message>
-      <source>Create files under &quot;INI Tweaks&quot; in the mod folder with these settings</source>
-      <translation>Erstellt Dateien mit diesen Einstellungen unter „INI Tweaks“ im Ordner der Mod</translation>
-    </message>
-    <message>
-      <source>Apply</source>
-      <translation>Anwenden</translation>
-    </message>
-    <message>
-      <source>Apply the settings to the INI files of the current profile</source>
-      <translation>Wendet die Einstellungen auf die INI-Dateien des aktuellen Profils an</translation>
-    </message>
-    <message>
-      <source>Discard</source>
-      <translation>Verwerfen</translation>
-    </message>
-    <message>
-      <source>Discard the settings</source>
-      <translation>Verwirft die Einstellungen</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-    <message>
-      <source>Cancel the installation</source>
-      <translation>Bricht die Installation ab</translation>
-    </message>
-  </context>
-  <context>
-    <name>NameDialog</name>
-    <message>
-      <source>OMOD Installer</source>
-      <translation>OMOD-Installer</translation>
-    </message>
-    <message>
-      <source>This mod is an OMOD. MO2 installs it with its own installer, which may ask you questions next.</source>
-      <translation>Diese Mod ist ein OMOD. MO2 installiert sie mit ihrem eigenen Installer, der dir danach Fragen stellen kann.</translation>
-    </message>
-    <message>
-      <source>Install this mod</source>
-      <translation>Diese Mod installieren</translation>
-    </message>
-    <message>
-      <source>Mod name</source>
-      <translation>Name der Mod</translation>
-    </message>
-    <message>
-      <source>Enter a name for the mod.</source>
-      <translation>Gib einen Namen für die Mod ein.</translation>
-    </message>
-    <message>
-      <source>Install</source>
-      <translation>Installieren</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
-    </message>
-  </context>
-  <context>
-    <name>RtfPopup</name>
-    <message>
-      <source>Readme</source>
-      <translation>Liesmich</translation>
-    </message>
-    <message>
-      <source>Close</source>
-      <translation>Schließen</translation>
-    </message>
-  </context>
-  <context>
-    <name>ScriptFunctionsHelper</name>
-    <message>
-      <source>Close</source>
-      <translation>Schließen</translation>
-    </message>
-  </context>
-  <context>
-    <name>MOBase::TextViewer</name>
-    <message>
-      <source>Save %1</source>
-      <translation>Speichert %1</translation>
-    </message>
-  </context>
-  <context>
-    <name>TextViewer</name>
-    <message>
-      <source>Show spaces and tabs</source>
-      <translation>Leerzeichen und Tabs anzeigen</translation>
-    </message>
-    <message>
-      <source>Find...</source>
-      <translation>Suchen...</translation>
-    </message>
-    <message>
-      <source>Find in this file (Ctrl+F)</source>
-      <translation>Sucht in dieser Datei (Strg+F)</translation>
-    </message>
-    <message>
-      <source>Close</source>
-      <translation>Schließen</translation>
-    </message>
-  </context>
-  <context>
-    <name>FindDialog</name>
-    <message>
-      <source>Find</source>
-      <translation>Suchen</translation>
-    </message>
-    <message>
-      <source>Find what</source>
-      <translation>Suchen nach</translation>
-    </message>
-    <message>
-      <source>Search term</source>
-      <translation>Suchbegriff</translation>
-    </message>
-    <message>
-      <source>Find next</source>
-      <translation>Weitersuchen</translation>
-    </message>
-    <message>
-      <source>Find the next match after the cursor, from the top again at the end (F3)</source>
-      <translation>Sucht den nächsten Treffer nach dem Cursor, am Ende wieder von oben (F3)</translation>
-    </message>
-    <message>
-      <source>Close</source>
-      <translation>Schließen</translation>
-    </message>
-  </context>
-  <context>
-    <name>OmodDialogSelect</name>
-    <message>
-      <source>Choose any.</source>
-      <translation>Wähle beliebig viele.</translation>
-    </message>
-    <message>
-      <source>Choose one.</source>
-      <translation>Wähle eine.</translation>
-    </message>
-    <message>
-      <source>Option description</source>
-      <translation>Beschreibung der Option</translation>
-    </message>
-    <message>
-      <source>OK</source>
-      <translation>OK</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <translation>Abbrechen</translation>
     </message>
   </context>
 </TS>
