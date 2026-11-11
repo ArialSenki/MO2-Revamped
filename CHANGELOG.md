@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0-beta.7 (pre-release) — November 11, 2026
 
 ### FNIS
 
