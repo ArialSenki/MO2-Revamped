@@ -699,7 +699,6 @@ class WizardInstallerDialog(QDialog):
         name_box = QVBoxLayout()
         name_box.setSpacing(4)
         name_label = QLabel(tr("Mod name"), self)
-        name_label.setObjectName("fluentSettingDescription")
         self._name = QComboBox(self)
         self._name.setEditable(True)
         self._name.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)

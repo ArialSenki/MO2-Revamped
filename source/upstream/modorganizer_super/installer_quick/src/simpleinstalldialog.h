@@ -23,14 +23,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDialog>
 #include <guessedvalue.h>
 
-namespace Ui
-{
-class SimpleInstallDialog;
-}
+class QComboBox;
+class QLabel;
+class QPushButton;
 
 /**
- * @brief Dialog for the installation of a simple archive
- * a simple archive is one that doesn't require any manual changes to work correctly
+ * @brief Quick Install: asks only for the mod's name, for an archive whose
+ * files are already laid out as the game expects. MO2 Revamped draws it as a
+ * Windows 11 content dialog (the theme styles it by its object names).
  **/
 class SimpleInstallDialog : public QDialog
 {
@@ -38,35 +38,32 @@ class SimpleInstallDialog : public QDialog
 
 public:
   /**
-   * @brief constructor
-   *
-   * @param preset suggested name for the mod
+   * @param preset the guessed name of the mod and its other guesses
    * @param parent parent widget
    **/
   explicit SimpleInstallDialog(const MOBase::GuessedValue<QString>& preset,
-                               QWidget* parent = 0);
-  ~SimpleInstallDialog();
+                               QWidget* parent = nullptr);
 
   /**
-   * @return true if the user requested the manual installation dialog
+   * @return true if the user asked for the manual installation dialog
    **/
   bool manualRequested() const { return m_Manual; }
+
   /**
    * @return the (user-modified) mod name
    **/
   QString getName() const;
 
-private slots:
-
-  void on_okBtn_clicked();
-
-  void on_cancelBtn_clicked();
-
-  void on_manualBtn_clicked();
+  QSize sizeHint() const override;
 
 private:
-  Ui::SimpleInstallDialog* ui;
-  bool m_Manual;
+  void nameChanged();
+
+  QComboBox* m_name;
+  QLabel* m_problem;
+  QPushButton* m_install;
+  bool m_Manual = false;
+  bool m_edited = false;
 };
 
 #endif  // SIMPLEINSTALLDIALOG_H

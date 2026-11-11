@@ -62,6 +62,14 @@
 - The script's notes and questions are shown as written, not read as Markdown or
   HTML.
 
+### Quick Install
+
+- Quick Install, for archives whose files are already laid out as the game
+  expects, is a Windows 11 dialog like MO2 Revamped's others: what it will do,
+  the mod's name, and Install, Install manually and Cancel side by side. Install
+  stays off while the name is empty, and the guessed name always shows (Mod
+  Organizer 2 left the field empty when the guess wasn't in its list).
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12

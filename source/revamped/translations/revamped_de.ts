@@ -13434,4 +13434,43 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
       <translation>%1 (bleibt in optional)</translation>
     </message>
   </context>
+  <context>
+    <name>SimpleInstallDialog</name>
+    <message>
+      <source>Quick Install</source>
+      <translation>Schnellinstallation</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Diese Mod installieren</translation>
+    </message>
+    <message>
+      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
+      <translation>Die Dateien des Archivs sind bereits so angeordnet, wie der Datenordner des Spiels es erwartet, daher kann MO2 sie unverändert installieren.</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Gib einen Namen für die Mod ein.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Wähle, welche Dateien des Archivs wohin installiert werden</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+  </context>
 </TS>

@@ -13663,4 +13663,43 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
       <translation>%1 (resta in optional)</translation>
     </message>
   </context>
+  <context>
+    <name>SimpleInstallDialog</name>
+    <message>
+      <source>Quick Install</source>
+      <translation>Installazione rapida</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Installa questa mod</translation>
+    </message>
+    <message>
+      <source>The archive's files are already arranged as the game's data folder expects, so MO2 can install them as they are.</source>
+      <translation>I file dell'archivio sono già disposti come si aspetta la cartella dei dati del gioco, quindi MO2 può installarli così come sono.</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nome della mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Inserisci un nome per la mod.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installa</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Installa manualmente</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Scegli quali file dell'archivio installare e dove</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+  </context>
 </TS>

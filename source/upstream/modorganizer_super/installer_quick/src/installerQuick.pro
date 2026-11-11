@@ -25,9 +25,6 @@ SOURCES += installerquick.cpp \
 HEADERS += installerquick.h \
 		simpleinstalldialog.h
 
-FORMS += \
-    simpleinstalldialog.ui
-
 include(../plugin_template.pri)
 
 OTHER_FILES += \
