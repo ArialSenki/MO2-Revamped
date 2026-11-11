@@ -16,6 +16,7 @@
 #include "../interop/QtDotNetConverters.h"
 #include "../newstuff/rtfPopup.h"
 #include "../oldstuff/DialogSelect.h"
+#include "fluentcontentdialog.h"
 
 ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(make_unique<MessageBoxHelper>())
 {
@@ -64,20 +65,32 @@ void ScriptFunctionsHelper::DisplayImageSlot(QWidget* parentWidget, const QStrin
   {
     QPixmap pixmap = QPixmap::fromImage(image);
     MOBase::log::debug("image size {}, pixmap size {}", image.size(), pixmap.size());
-    QDialog popup;
-    QLayout* layout = new QGridLayout(&popup);
-    popup.setLayout(layout);
+    // MO2 Revamped: a content dialog with the picture and Close
+    RevampedFluent::ContentDialog popup(parentWidget, QStringLiteral("omodImageDialog"), title);
     FixedAspectRatioImageLabel* label = new FixedAspectRatioImageLabel(&popup);
+    label->setAlignment(Qt::AlignCenter);
     label->setUnscaledPixmap(pixmap);
+    // the window can shrink below the picture's size
+    label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    label->setMinimumSize(160, 120);
+    label->setAccessibleName(title);
+    popup.body()->addWidget(label, 1);
+    auto* close = popup.addButton(tr("Close"), true);
+    // a string connect: C++/CLI finds no signal for a function pointer
+    connect(close, SIGNAL(clicked()), &popup, SLOT(accept()));
+    popup.setSizeGripEnabled(true);
 
-    QSize screenSize = parentWidget->screen()->availableSize();
-    int maxHeight = static_cast<int>(screenSize.height() * 0.8f);
-    if (pixmap.size().height() > maxHeight)
-      // This is approximate due to borders, label can sort out details.
-      popup.resize(label->widthForHeight(maxHeight), maxHeight);
+    // the picture's size, within 80% of the screen both ways, plus the
+    // dialog's title and band
+    QScreen* screen = parentWidget != nullptr ? parentWidget->screen() : popup.screen();
+    const QSize screenSize = screen->availableSize();
+    const QSize limit(static_cast<int>(screenSize.width() * 0.8f),
+                      static_cast<int>(screenSize.height() * 0.8f) - 160);
+    const QSize fitted = pixmap.size().boundedTo(limit).isValid()
+                             ? pixmap.size().scaled(pixmap.size().boundedTo(limit), Qt::KeepAspectRatio)
+                             : pixmap.size();
+    popup.resize(qMax(fitted.width() + 48, 440), fitted.height() + 160);
 
-    layout->addWidget(label);
-    popup.setWindowTitle(title);
     popup.exec();
   }
   else

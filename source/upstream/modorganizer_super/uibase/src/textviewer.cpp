@@ -22,16 +22,112 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "finddialog.h"
 #include "log.h"
 #include "report.h"
-#include "ui_textviewer.h"
 #include "utility.h"
 #include <QAction>
+#include <QCheckBox>
 #include <QFile>
 #include <QFileInfo>
+#include <QFontDatabase>
+#include <QFrame>
+#include <QKeyEvent>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QShortcutEvent>
+#include <QTabWidget>
 #include <QTextEdit>
 #include <QVBoxLayout>
+
+namespace
+{
+// Enter on a focused button presses that button, as in Windows
+class EnterPressesItself : public QObject
+{
+public:
+  using QObject::QObject;
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    auto* button = qobject_cast<QPushButton*>(watched);
+    if (event->type() == QEvent::KeyPress && button != nullptr && button->isEnabled()) {
+      const int key = static_cast<QKeyEvent*>(event)->key();
+      if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+        button->click();
+        return true;
+      }
+    }
+    return false;
+  }
+};
+}  // namespace
+
+// MO2 Revamped: built in code instead of from 2.5.2's .ui; the header, and so
+// uibase's exports, stay as they were
+namespace Ui
+{
+class TextViewer
+{
+public:
+  QLabel* title;
+  QLabel* descriptionLabel;
+  QCheckBox* showWhitespace;
+  QTabWidget* editorTabs;
+  QPushButton* findBtn;
+  QPushButton* closeBtn;
+
+  void setupUi(QDialog* dialog)
+  {
+    dialog->setObjectName(QStringLiteral("TextViewer"));
+    dialog->setWindowFlags(dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    dialog->setWindowFlag(Qt::WindowMaximizeButtonHint, true);
+    dialog->setSizeGripEnabled(true);
+    dialog->setMinimumSize(560, 400);
+    dialog->resize(820, 600);
+
+    auto* root = new QVBoxLayout(dialog);
+    root->setContentsMargins(24, 20, 24, 16);
+    root->setSpacing(8);
+    title = new QLabel(dialog);
+    title->setProperty("wizardPageTitle", true);
+    title->setTextFormat(Qt::PlainText);
+    root->addWidget(title);
+    descriptionLabel = new QLabel(dialog);
+    descriptionLabel->setObjectName(QStringLiteral("descriptionLabel"));
+    descriptionLabel->setProperty("wizardPageText", true);
+    descriptionLabel->setWordWrap(true);
+    descriptionLabel->setVisible(false);
+    root->addWidget(descriptionLabel);
+    editorTabs = new QTabWidget(dialog);
+    editorTabs->setObjectName(QStringLiteral("editorTabs"));
+    editorTabs->setDocumentMode(true);
+    root->addWidget(editorTabs, 1);
+
+    auto* footer = new QHBoxLayout;
+    footer->setSpacing(8);
+    showWhitespace = new QCheckBox(
+        QCoreApplication::translate("TextViewer", "Show spaces and tabs"), dialog);
+    showWhitespace->setObjectName(QStringLiteral("showWhitespace"));
+    // on, as in 2.5.2's .ui
+    showWhitespace->setChecked(true);
+    footer->addWidget(showWhitespace);
+    footer->addStretch(1);
+    findBtn = new QPushButton(QCoreApplication::translate("TextViewer", "Find..."), dialog);
+    findBtn->setObjectName(QStringLiteral("findBtn"));
+    findBtn->setToolTip(QCoreApplication::translate("TextViewer", "Find in this file (Ctrl+F)"));
+    findBtn->setAutoDefault(false);
+    closeBtn = new QPushButton(QCoreApplication::translate("TextViewer", "Close"), dialog);
+    closeBtn->setObjectName(QStringLiteral("closeBtn"));
+    closeBtn->setAutoDefault(false);
+    for (auto* button : {findBtn, closeBtn}) {
+      button->setMinimumWidth(110);
+      button->installEventFilter(new EnterPressesItself(button));
+      footer->addWidget(button);
+    }
+    root->addLayout(footer);
+  }
+};
+}  // namespace Ui
 
 namespace MOBase
 {
@@ -41,9 +137,14 @@ TextViewer::TextViewer(const QString& title, QWidget* parent)
 {
   ui->setupUi(this);
   setWindowTitle(title);
-  m_EditorTabs = findChild<QTabWidget*>("editorTabs");
+  ui->title->setText(title);
+  m_EditorTabs = ui->editorTabs;
   connect(ui->showWhitespace, SIGNAL(stateChanged(int)), this,
           SLOT(showWhitespaceChanged(int)));
+  connect(ui->findBtn, &QPushButton::clicked, this, [this] {
+    find();
+  });
+  connect(ui->closeBtn, &QPushButton::clicked, this, &QDialog::close);
 }
 
 TextViewer::~TextViewer()
@@ -96,7 +197,12 @@ void TextViewer::findNext()
   }
 
   QWidget* currentPage = m_EditorTabs->currentWidget();
-  QTextEdit* editor    = currentPage->findChild<QTextEdit*>("editorView");
+  // the viewer can open with no file at all
+  QTextEdit* editor =
+      currentPage != nullptr ? currentPage->findChild<QTextEdit*>("editorView") : nullptr;
+  if (editor == nullptr) {
+    return;
+  }
 
   if (editor->find(m_FindPattern)) {
     // found text
@@ -156,8 +262,8 @@ bool TextViewer::eventFilter(QObject* object, QEvent* event)
 
 void TextViewer::setDescription(const QString& description)
 {
-  QLabel* descriptionLabel = findChild<QLabel*>("descriptionLabel");
-  descriptionLabel->setText(description);
+  ui->descriptionLabel->setText(description);
+  ui->descriptionLabel->setVisible(!description.isEmpty());
 }
 
 void TextViewer::saveFile(const QTextEdit* editor)
@@ -232,6 +338,8 @@ void TextViewer::addFile(const QString& fileName, bool writable)
 
   QWidget* page           = new QWidget();
   QVBoxLayout* layout     = new QVBoxLayout(page);
+  layout->setContentsMargins(0, 8, 0, 0);
+  layout->setSpacing(8);
   QTextEdit* editor       = new QTextEdit(page);
   QTextDocument* document = new QTextDocument(page);
   if (ui->showWhitespace->isChecked()) {
@@ -262,13 +370,24 @@ void TextViewer::addFile(const QString& fileName, bool writable)
   findAction->setShortcut(QKeySequence::Find);
   editor->addAction(findAction);
   QAction* findNextAction = new QAction(QString("Find &Next"), editor);
-  findAction->setShortcut(QKeySequence::FindNext);
+  // 2.5.2 set this on findAction, replacing Ctrl+F with F3
+  findNextAction->setShortcut(QKeySequence::FindNext);
   editor->addAction(findNextAction);
 
+  editor->setAccessibleName(QFileInfo(fileName).fileName());
+  editor->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
   layout->addWidget(editor);
   if (writable) {
+    // the file's Save, at the right of its page
+    auto* row            = new QHBoxLayout;
     QPushButton* saveBtn = new QPushButton(tr("Save"), page);
-    layout->addWidget(saveBtn);
+    saveBtn->setProperty("fluentPrimary", true);
+    saveBtn->setAutoDefault(false);
+    saveBtn->setMinimumWidth(110);
+    saveBtn->setToolTip(tr("Save %1").arg(QFileInfo(fileName).fileName()));
+    row->addStretch(1);
+    row->addWidget(saveBtn);
+    layout->addLayout(row);
     connect(saveBtn, SIGNAL(clicked()), this, SLOT(saveFile()));
     connect(editor, SIGNAL(textChanged()), this, SLOT(modified()));
   }

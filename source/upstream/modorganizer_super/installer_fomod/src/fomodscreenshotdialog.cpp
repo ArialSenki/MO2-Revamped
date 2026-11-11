@@ -18,154 +18,216 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "fomodscreenshotdialog.h"
-#include "ui_fomodscreenshotdialog.h"
 
 #include "scalelabel.h"
 
-#include <QDirIterator>
-#include <QFrame>
-#include <QProxyStyle>
+#include <QFont>
+#include <QHBoxLayout>
+#include <QImageReader>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QListWidget>
+#include <QPainter>
 #include <QPushButton>
 #include <QScreen>
-#include <QTableWidget>
-#include <QWindow>
+#include <QVBoxLayout>
 
-constexpr int kScreenshotTileWidth   = 100;
-constexpr int kScreenshotTileHeight  = 80;
-constexpr int kScreenshotTileSpacing = 16;
-
-// Disables the native dotted selection border around focused elements. Unfortunately,
-// disabling it via stylesheets is broken in the latest version of Qt
-// https://stackoverflow.com/questions/9795791/removing-dotted-border-without-setting-nofocus-in-windows-pyqt
-class NoFocusProxyStyle : public QProxyStyle
+namespace
 {
-public:
-  NoFocusProxyStyle(QStyle* baseStyle = nullptr) : QProxyStyle(baseStyle) {}
 
-  void drawPrimitive(PrimitiveElement element, const QStyleOption* option,
-                     QPainter* painter, const QWidget* widget) const
-  {
-    if (element == QStyle::PE_FrameFocusRect) {
-      return;
-    }
-    QProxyStyle::drawPrimitive(element, option, painter, widget);
+// Segoe Fluent Icons, with MDL2 for Windows 10
+QFont glyphFont(int pixels)
+{
+  QFont font;
+  font.setFamilies({QStringLiteral("Segoe Fluent Icons"),
+                    QStringLiteral("Segoe MDL2 Assets")});
+  font.setPixelSize(pixels);
+  return font;
+}
+
+QPushButton* glyphButton(char16_t glyph, const QString& name, QWidget* parent)
+{
+  auto* button = new QPushButton(QString(QChar(glyph)), parent);
+  button->setObjectName(QStringLiteral("fomodViewerButton"));
+  button->setFont(glyphFont(16));
+  button->setAccessibleName(name);
+  button->setToolTip(name);
+  button->setFixedSize(44, 44);
+  button->setAutoDefault(false);
+  button->setCursor(Qt::PointingHandCursor);
+  return button;
+}
+
+// a thumbnail, read at its small size
+QIcon thumbnail(const QString& path)
+{
+  QImageReader reader(path);
+  reader.setAutoTransform(true);
+  const QSize size = reader.size();
+  if (size.isValid()) {
+    reader.setScaledSize(size.scaled(200, 150, Qt::KeepAspectRatio));
   }
-};
+  return QIcon(QPixmap::fromImage(reader.read()));
+}
+
+}  // namespace
 
 FomodScreenshotDialog::FomodScreenshotDialog(
     QWidget* parent, std::vector<std::pair<QString, QString>> carouselImages,
     int carouselIndex)
-    : QDialog(parent, Qt::FramelessWindowHint), ui(new Ui::FomodScreenshotDialog),
-      m_carouselImages(carouselImages)
+    : QDialog(parent, Qt::FramelessWindowHint), m_carouselImages(carouselImages)
 {
-  Q_INIT_RESOURCE(resources);
-
-  ui->setupUi(this);
+  setObjectName(QStringLiteral("FomodScreenshotDialog"));
+  setWindowTitle(tr("Pictures"));
   setAttribute(Qt::WA_TranslucentBackground);
+  setAttribute(Qt::WA_DeleteOnClose);
+  // the installer waits: Next mustn't change the step behind the pictures
+  setWindowModality(Qt::WindowModal);
 
-  // Manually maximize the dialog since showMaximized() clips over the taskbar
-  QScreen* screen         = this->screen();
-  QRect availableGeometry = screen->availableGeometry();
-  setFixedSize(availableGeometry.width(), availableGeometry.height());
-  move(availableGeometry.x(), availableGeometry.y());
+  // full screen on the installer's screen, like a photo viewer; MO2 leaves
+  // full-screen dialogs at their size (a fixed size was cut to 82% of it)
+  QScreen* target = parent != nullptr ? parent->screen() : screen();
+  setGeometry(target->geometry());
+  setWindowState(Qt::WindowFullScreen);
+  const QRect available = target->availableGeometry();
 
-  QTableWidget* carouselList = ui->carouselList;
-  carouselList->setStyle(new NoFocusProxyStyle);
+  auto* root = new QVBoxLayout(this);
+  root->setContentsMargins(24, 16, 24, 20);
+  root->setSpacing(12);
 
-  carouselList->setRowCount(1);
-  carouselList->setRowHeight(0, kScreenshotTileHeight);
-  carouselList->setColumnCount(0);
-  for (auto carouselImage : m_carouselImages) {
-    QFrame* container   = new QFrame(carouselList);
-    QVBoxLayout* layout = new QVBoxLayout(container);
-    layout->setContentsMargins(0, 0, 0, 0);
-    container->setLayout(layout);
+  auto* top = new QHBoxLayout;
+  m_position = new QLabel(this);
+  m_position->setObjectName(QStringLiteral("fomodViewerText"));
+  top->addWidget(m_position);
+  top->addStretch(1);
+  auto* close = glyphButton(0xE711, tr("Close"), this);
+  top->addWidget(close);
+  root->addLayout(top);
 
-    ScaleLabel* scaleLabel = new ScaleLabel(container);
-    scaleLabel->setScalableResource(carouselImage.second);
-    scaleLabel->setFixedSize(kScreenshotTileWidth, kScreenshotTileHeight);
-    scaleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    scaleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    scaleLabel->setCursor(Qt::PointingHandCursor);
-    scaleLabel->setStatic(true);
+  auto* middle = new QHBoxLayout;
+  middle->setSpacing(16);
+  m_previous = glyphButton(0xE76B, tr("Previous picture"), this);
+  m_next     = glyphButton(0xE76C, tr("Next picture"), this);
+  m_image    = new ScaleLabel(this);
+  m_image->setAlignment(Qt::AlignCenter);
+  m_image->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+  middle->addWidget(m_previous, 0, Qt::AlignVCenter);
+  middle->addWidget(m_image, 1);
+  middle->addWidget(m_next, 0, Qt::AlignVCenter);
+  root->addLayout(middle, 1);
 
-    layout->addWidget(scaleLabel);
-    layout->setAlignment(scaleLabel, Qt::AlignLeft | Qt::AlignVCenter);
+  m_title = new QLabel(this);
+  m_title->setObjectName(QStringLiteral("fomodViewerTitle"));
+  m_title->setTextFormat(Qt::PlainText);
+  m_title->setAlignment(Qt::AlignCenter);
+  m_title->setWordWrap(true);
+  root->addWidget(m_title);
 
-    int column = carouselList->columnCount();
-    carouselList->setColumnCount(column + 1);
-    carouselList->setColumnWidth(
-        column, kScreenshotTileWidth +
-                    (column + 1 == carouselImages.size() ? 0 : kScreenshotTileSpacing));
-
-    QTableWidgetItem* item = new QTableWidgetItem("");
-    carouselList->setItem(0, column, item);
-    carouselList->setCellWidget(0, column, container);
+  m_strip = new QListWidget(this);
+  m_strip->setObjectName(QStringLiteral("fomodViewerStrip"));
+  m_strip->setAccessibleName(tr("Pictures"));
+  m_strip->setViewMode(QListView::IconMode);
+  m_strip->setFlow(QListView::LeftToRight);
+  m_strip->setWrapping(false);
+  m_strip->setMovement(QListView::Static);
+  m_strip->setIconSize(QSize(100, 75));
+  m_strip->setSpacing(6);
+  m_strip->setFixedHeight(104);
+  m_strip->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_strip->setFrameShape(QFrame::NoFrame);
+  for (const auto& image : m_carouselImages) {
+    auto* item = new QListWidgetItem(thumbnail(image.second), QString(), m_strip);
+    item->setToolTip(image.first);
+    item->setData(Qt::AccessibleTextRole, image.first);
+    item->setSizeHint(QSize(112, 86));
   }
+  root->addWidget(m_strip, 0, Qt::AlignHCenter);
+  m_strip->setMaximumWidth(available.width() - 48);
+  m_strip->setMinimumWidth(
+      qMin(available.width() - 48, static_cast<int>(m_carouselImages.size()) * 124 + 8));
+  m_strip->setVisible(m_carouselImages.size() > 1);
 
-  connect(carouselList, &QTableWidget::itemSelectionChanged, this,
-          &FomodScreenshotDialog::selectedScreenshotChanged);
-  ui->carouselList->selectColumn(carouselIndex);
+  for (auto* button : {close, m_previous, m_next}) {
+    button->installEventFilter(this);
+  }
+  connect(close, &QPushButton::clicked, this, &QDialog::close);
+  connect(m_previous, &QPushButton::clicked, this, [this] {
+    showPicture(m_index - 1);
+  });
+  connect(m_next, &QPushButton::clicked, this, [this] {
+    showPicture(m_index + 1);
+  });
+  connect(m_strip, &QListWidget::currentRowChanged, this, [this](int row) {
+    showPicture(row);
+  });
+
+  showPicture(m_carouselImages.empty() ? -1 : qBound(0, carouselIndex,
+                                               static_cast<int>(m_carouselImages.size()) - 1));
+  m_strip->setFocus();
 }
 
-FomodScreenshotDialog::~FomodScreenshotDialog()
+void FomodScreenshotDialog::showPicture(int index)
 {
-  delete ui;
-}
-
-void FomodScreenshotDialog::on_closeButton_clicked()
-{
-  close();
-}
-
-void FomodScreenshotDialog::on_navigateLeft_clicked()
-{
-  int selectedColumn = getSelectedScreenshot();
-  if (selectedColumn == 0) {
+  if (m_carouselImages.empty()) {
+    m_position->clear();
+    m_title->setText(tr("This step has no pictures."));
+    m_previous->setEnabled(false);
+    m_next->setEnabled(false);
     return;
   }
-
-  ui->carouselList->selectColumn(selectedColumn - 1);
-}
-
-void FomodScreenshotDialog::on_navigateRight_clicked()
-{
-  int selectedColumn = getSelectedScreenshot();
-  if (selectedColumn == m_carouselImages.size() - 1) {
+  index = qBound(0, index, static_cast<int>(m_carouselImages.size()) - 1);
+  if (index == m_index) {
     return;
   }
-
-  ui->carouselList->selectColumn(selectedColumn + 1);
+  m_index           = index;
+  const auto& image = m_carouselImages[static_cast<std::size_t>(index)];
+  m_image->setScalableResource(image.second);
+  m_image->setAccessibleName(image.first);
+  m_title->setText(image.first);
+  m_position->setText(tr("%1 of %2").arg(index + 1).arg(m_carouselImages.size()));
+  m_previous->setEnabled(index > 0);
+  m_next->setEnabled(index + 1 < static_cast<int>(m_carouselImages.size()));
+  if (m_strip->currentRow() != index) {
+    m_strip->setCurrentRow(index);
+  }
 }
 
-void FomodScreenshotDialog::selectedScreenshotChanged()
+void FomodScreenshotDialog::paintEvent(QPaintEvent*)
 {
-  // In case the user ctrl+clicks current selection to result in an empty selection
-  if (ui->carouselList->selectedItems().isEmpty()) {
-    ui->carouselList->selectColumn(0);
-    return;
-  }
+  // the overlay is dark in both themes, as Windows' photo viewers are
+  QPainter painter(this);
+  painter.fillRect(rect(), QColor(0, 0, 0, 215));
+}
 
-  int selectedColumn = getSelectedScreenshot();
-
-  ui->imageTitleLabel->setText(m_carouselImages.at(selectedColumn).first);
-  ui->image->setScalableResource(m_carouselImages.at(selectedColumn).second);
-  ui->slideshowPosition->setText(QString("%1/%2").arg(
-      QString::number(selectedColumn + 1), QString::number(m_carouselImages.size())));
-
-  for (int column = 0; column < ui->carouselList->columnCount(); column++) {
-    QWidget* widget        = ui->carouselList->cellWidget(0, column);
-    ScaleLabel* scaleLabel = widget->findChild<ScaleLabel*>();
-    if (column == selectedColumn) {
-      scaleLabel->setStyleSheet(scaleLabel->styleSheet() +
-                                "QLabel { border:2px solid white; }");
-    } else {
-      scaleLabel->setStyleSheet(scaleLabel->styleSheet() + "QLabel { border:none; }");
+bool FomodScreenshotDialog::eventFilter(QObject* watched, QEvent* event)
+{
+  if (event->type() == QEvent::KeyPress) {
+    const int key = static_cast<QKeyEvent*>(event)->key();
+    if (key == Qt::Key_Left || key == Qt::Key_Right || key == Qt::Key_Home ||
+        key == Qt::Key_End) {
+      keyPressEvent(static_cast<QKeyEvent*>(event));
+      return true;
     }
   }
+  return QDialog::eventFilter(watched, event);
 }
 
-int FomodScreenshotDialog::getSelectedScreenshot()
+void FomodScreenshotDialog::keyPressEvent(QKeyEvent* event)
 {
-  return ui->carouselList->selectedItems().front()->column();
+  switch (event->key()) {
+  case Qt::Key_Left:
+    showPicture(m_index - 1);
+    return;
+  case Qt::Key_Right:
+    showPicture(m_index + 1);
+    return;
+  case Qt::Key_Home:
+    showPicture(0);
+    return;
+  case Qt::Key_End:
+    showPicture(static_cast<int>(m_carouselImages.size()) - 1);
+    return;
+  default:
+    QDialog::keyPressEvent(event);
+  }
 }

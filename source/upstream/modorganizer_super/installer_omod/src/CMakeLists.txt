@@ -61,3 +61,4 @@ install(
 	FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.pdb"
 	DESTINATION pdb)
 # Other PDB files get downloaded by Visual Studio during debugging when https://symbols.nuget.org/download/symbols is in the symbol server list
+target_include_directories(installer_omod PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../revamped_fluent)

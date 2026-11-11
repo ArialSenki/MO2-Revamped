@@ -6142,3 +6142,83 @@ QDialog#BainWizardDialog QScrollArea#bainPageText > QWidget > QWidget {
     background-color: transparent;
     border: none;
 }
+
+/* FOMOD installer: each step scrolls at the window's edge, its groups are cards */
+QDialog#FomodInstallerDialog QGroupBox#fomodStep {
+    background-color: transparent;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+QDialog#FomodInstallerDialog QScrollArea#fomodStepScroll,
+QDialog#FomodInstallerDialog QScrollArea#fomodStepScroll > QWidget > QWidget {
+    background-color: transparent;
+    border: none;
+}
+QDialog#FomodInstallerDialog QGroupBox#fomodGroup {
+    background-color: #FBFBFB;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    margin: 0px;
+    padding: 0px;
+}
+QDialog#FomodInstallerDialog QTextBrowser#fomodDescription {
+    background-color: transparent;
+    border: none;
+}
+/* FOMOD pictures: a dark overlay in both themes */
+QDialog#FomodScreenshotDialog QPushButton#fomodViewerButton {
+    color: #FFFFFF;
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 20);
+    border: none;
+    border-radius: 22px;
+    padding: 0px;
+    min-width: 44px;
+    min-height: 44px;
+}
+QDialog#FomodScreenshotDialog QPushButton#fomodViewerButton:hover {
+    background-color: rgba(255, 255, 255, 40);
+}
+QDialog#FomodScreenshotDialog QPushButton#fomodViewerButton:pressed {
+    background-color: rgba(255, 255, 255, 28);
+}
+QDialog#FomodScreenshotDialog QPushButton#fomodViewerButton:disabled {
+    color: rgba(255, 255, 255, 90);
+    background-color: rgba(255, 255, 255, 8);
+}
+QDialog#FomodScreenshotDialog QLabel#fomodViewerText {
+    color: rgba(255, 255, 255, 200);
+}
+QDialog#FomodScreenshotDialog QLabel#fomodViewerTitle {
+    color: #FFFFFF;
+    font-size: 12pt;
+    font-weight: 600;
+}
+QDialog#FomodScreenshotDialog QListWidget#fomodViewerStrip {
+    background-color: transparent;
+    border: none;
+}
+QDialog#FomodScreenshotDialog QListWidget#fomodViewerStrip::item {
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background-color: transparent;
+}
+QDialog#FomodScreenshotDialog QListWidget#fomodViewerStrip::item:hover {
+    background-color: rgba(255, 255, 255, 20);
+}
+QDialog#FomodScreenshotDialog QListWidget#fomodViewerStrip::item:selected {
+    border: 2px solid #FFFFFF;
+    background-color: rgba(255, 255, 255, 20);
+}
+QDialog#FomodScreenshotDialog QPushButton#fomodViewerButton:focus {
+    border: 2px solid #FFFFFF;
+}
+/* OMOD options: the list scrolls at its edge, the description fills its card */
+QDialog#omodSelectDialog QScrollArea#omodOptionsScroll,
+QDialog#omodSelectDialog QScrollArea#omodOptionsScroll > QWidget > QWidget,
+QDialog#omodSelectDialog QPlainTextEdit#omodDescription {
+    background-color: transparent;
+    border: none;
+}

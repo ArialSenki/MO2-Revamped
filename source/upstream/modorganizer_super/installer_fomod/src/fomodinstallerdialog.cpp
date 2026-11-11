@@ -18,9 +18,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "fomodinstallerdialog.h"
-#include "ui_fomodinstallerdialog.h"
 
+#include "fluentcontentdialog.h"
 #include "fomodscreenshotdialog.h"
+#include "scalelabel.h"
 #include "igamefeatures.h"
 #include "imoinfo.h"
 #include "iplugingame.h"
@@ -32,6 +33,19 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "xmlreader.h"
 
 #include <QCheckBox>
+#include <QComboBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QSplitter>
+#include <QStackedWidget>
+#include <QStyle>
+#include <QAccessible>
+#include <QFocusEvent>
+#include <QTextBrowser>
+#include <QTextDocument>
+#include <QVBoxLayout>
 #include <QCompleter>
 #include <QDebug>
 #include <QDir>
@@ -75,16 +89,208 @@ FomodInstallerDialog::FomodInstallerDialog(
     const QString& fomodPath,
     const std::function<MOBase::IPluginList::PluginStates(const QString&)>& fileCheck,
     QWidget* parent)
-    : QDialog(parent), ui(new Ui::FomodInstallerDialog), m_Installer(installer),
+    : QDialog(parent), ui(new FomodInstallerWidgets), m_Installer(installer),
       m_ModName(modName), m_ModID(-1), m_FomodPath(fomodPath), m_Manual(false),
       m_FileCheck(fileCheck), m_FileSystemItemSequence()
 {
-  ui->setupUi(this);
+  buildUi();
   setWindowFlags(windowFlags() | Qt::WindowMaximizeButtonHint);
   setWindowTitle(modName);
 
   updateNameEdit();
-  ui->nameCombo->completer()->setCaseSensitivity(Qt::CaseSensitive);
+  if (ui->nameCombo->completer() != nullptr) {
+    ui->nameCombo->completer()->setCaseSensitivity(Qt::CaseSensitive);
+  }
+}
+
+void FomodInstallerDialog::buildUi()
+{
+  // MO2 Revamped: the step's name and the package's details at the top, the
+  // step's groups as cards on the left, the hovered or focused option's picture
+  // and description on the right, and the buttons at the bottom
+  setObjectName(QStringLiteral("FomodInstallerDialog"));
+  setMinimumSize(760, 520);
+  resize(1000, 680);
+  setSizeGripEnabled(true);
+
+  auto* root = new QVBoxLayout(this);
+  root->setContentsMargins(24, 20, 24, 16);
+  root->setSpacing(12);
+
+  auto* header = new QHBoxLayout;
+  header->setSpacing(24);
+  auto* titles = new QVBoxLayout;
+  titles->setSpacing(4);
+  ui->stepTitle = new QLabel(tr("FOMOD Installer"), this);
+  ui->stepTitle->setProperty("wizardPageTitle", true);
+  ui->stepTitle->setTextFormat(Qt::PlainText);
+  ui->stepTitle->setWordWrap(true);
+  titles->addWidget(ui->stepTitle);
+  ui->stepText = new QLabel(this);
+  ui->stepText->setProperty("wizardPageText", true);
+  ui->stepText->setWordWrap(true);
+  ui->stepText->setVisible(false);
+  titles->addWidget(ui->stepText);
+  auto* info = new QHBoxLayout;
+  info->setSpacing(16);
+  ui->authorLabel  = new QLabel(this);
+  ui->versionLabel = new QLabel(this);
+  ui->websiteLabel = new QLabel(this);
+  for (auto* label : {ui->authorLabel, ui->versionLabel}) {
+    label->setObjectName(QStringLiteral("fluentSettingDescription"));
+    label->setTextFormat(Qt::PlainText);
+    label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    label->setVisible(false);
+    info->addWidget(label);
+  }
+  ui->websiteLabel->setTextFormat(Qt::RichText);
+  ui->websiteLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  ui->websiteLabel->setVisible(false);
+  info->addWidget(ui->websiteLabel);
+  info->addStretch(1);
+  titles->addLayout(info);
+  header->addLayout(titles, 1);
+
+  auto* nameBox = new QVBoxLayout;
+  nameBox->setSpacing(4);
+  ui->nameCombo = new QComboBox(this);
+  ui->nameCombo->setEditable(true);
+  ui->nameCombo->setInsertPolicy(QComboBox::NoInsert);
+  ui->nameCombo->setMinimumWidth(300);
+  nameBox->addWidget(RevampedFluent::fieldLabel(tr("Mod name"), ui->nameCombo, this));
+  nameBox->addWidget(ui->nameCombo);
+  nameBox->addStretch(1);
+  header->addLayout(nameBox);
+  root->addLayout(header);
+
+  auto* splitter = new QSplitter(Qt::Horizontal, this);
+  splitter->setChildrenCollapsible(false);
+  ui->body       = splitter;
+  ui->stepsStack = new QStackedWidget(splitter);
+  ui->stepsStack->setMinimumWidth(320);
+
+  ui->details = new QFrame(splitter);
+  ui->details->setProperty("fluentCard", true);
+  auto* details = new QVBoxLayout(ui->details);
+  details->setContentsMargins(16, 14, 16, 14);
+  details->setSpacing(10);
+  ui->screenshotLabel = new ScaleLabel(ui->details);
+  ui->screenshotLabel->setAlignment(Qt::AlignCenter);
+  ui->screenshotLabel->setMinimumHeight(140);
+  ui->screenshotLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);
+  ui->screenshotLabel->setVisible(false);
+  details->addWidget(ui->screenshotLabel, 3);
+  ui->screenshotExpand =
+      RevampedFluent::contentButton(tr("View pictures"), ui->details);
+  ui->screenshotExpand->setToolTip(tr("Show the pictures of this step's options larger"));
+  ui->screenshotExpand->setVisible(false);
+  details->addWidget(ui->screenshotExpand, 0, Qt::AlignLeft);
+  ui->optionName = new QLabel(ui->details);
+  ui->optionName->setObjectName(QStringLiteral("instanceDetailName"));
+  ui->optionName->setTextFormat(Qt::PlainText);
+  ui->optionName->setWordWrap(true);
+  details->addWidget(ui->optionName);
+  ui->descriptionText = new QTextBrowser(ui->details);
+  ui->descriptionText->setObjectName(QStringLiteral("fomodDescription"));
+  ui->descriptionText->setAccessibleName(tr("Option description"));
+  ui->descriptionText->setOpenExternalLinks(true);
+  ui->descriptionText->setFrameShape(QFrame::NoFrame);
+  details->addWidget(ui->descriptionText, 2);
+  splitter->addWidget(ui->stepsStack);
+  splitter->addWidget(ui->details);
+  splitter->setStretchFactor(0, 3);
+  splitter->setStretchFactor(1, 2);
+  root->addWidget(splitter, 1);
+
+  auto* footer = new QHBoxLayout;
+  footer->setSpacing(8);
+  ui->manualBtn = RevampedFluent::contentButton(tr("Install manually"), this);
+  ui->manualBtn->setToolTip(tr("Choose which of the archive's files to install, and where"));
+  footer->addWidget(ui->manualBtn);
+  ui->selectionNote = new QLabel(this);
+  ui->selectionNote->setObjectName(QStringLiteral("instanceNameValidation"));
+  ui->selectionNote->setWordWrap(true);
+  ui->selectionNote->setVisible(false);
+  footer->addWidget(ui->selectionNote, 1);
+  // the note can be hidden: the buttons keep their size either way
+  footer->addStretch(1);
+  ui->prevBtn = RevampedFluent::enterPressesItself(new QPushButton(tr("Back"), this));
+  ui->prevBtn->setAutoDefault(false);
+  ui->prevBtn->setEnabled(false);
+  ui->nextBtn = RevampedFluent::enterPressesItself(new QPushButton(tr("Next"), this));
+  ui->nextBtn->setAutoDefault(false);
+  ui->nextBtn->setDefault(true);
+  ui->nextBtn->setProperty("fluentPrimary", true);
+  ui->cancelBtn = RevampedFluent::enterPressesItself(new QPushButton(tr("Cancel"), this));
+  ui->cancelBtn->setAutoDefault(false);
+  for (auto* button : {ui->prevBtn, ui->nextBtn, ui->cancelBtn}) {
+    button->setMinimumWidth(110);
+    footer->addWidget(button);
+  }
+  root->addLayout(footer);
+
+  connect(ui->manualBtn, &QPushButton::clicked, this,
+          &FomodInstallerDialog::on_manualBtn_clicked);
+  connect(ui->cancelBtn, &QPushButton::clicked, this,
+          &FomodInstallerDialog::on_cancelBtn_clicked);
+  connect(ui->prevBtn, &QPushButton::clicked, this,
+          &FomodInstallerDialog::on_prevBtn_clicked);
+  connect(ui->nextBtn, &QPushButton::clicked, this,
+          &FomodInstallerDialog::on_nextBtn_clicked);
+  connect(ui->screenshotExpand, &QPushButton::clicked, this,
+          &FomodInstallerDialog::on_screenshotExpand_clicked);
+  connect(ui->websiteLabel, &QLabel::linkActivated, this,
+          &FomodInstallerDialog::on_websiteLabel_linkActivated);
+  connect(ui->nameCombo, &QComboBox::editTextChanged, this, [this] {
+    if (ui->body->isVisible() && ui->stepsStack->count() > 0) {
+      updateNextbtnText();
+    } else {
+      const bool empty = getName().isEmpty();
+      ui->nextBtn->setEnabled(!empty);
+      setSelectionNote(empty ? tr("Enter a name for the mod.") : QString());
+    }
+  });
+
+  setTabOrder(ui->nameCombo, ui->stepsStack);
+  setTabOrder(ui->stepsStack, ui->descriptionText);
+  setTabOrder(ui->descriptionText, ui->screenshotExpand);
+  setTabOrder(ui->screenshotExpand, ui->manualBtn);
+  setTabOrder(ui->manualBtn, ui->prevBtn);
+  setTabOrder(ui->prevBtn, ui->nextBtn);
+  setTabOrder(ui->nextBtn, ui->cancelBtn);
+}
+
+void FomodInstallerDialog::setSelectionNote(const QString& note)
+{
+  ui->selectionNote->setText(note);
+  ui->selectionNote->setVisible(!note.isEmpty());
+  ui->nextBtn->setToolTip(note);
+  RevampedFluent::setDescription(ui->nextBtn, note);
+}
+
+void FomodInstallerDialog::updateTabOrder()
+{
+  QList<QWidget*> chain{ui->nameCombo};
+  if (ui->stepsStack->currentWidget() != nullptr) {
+    for (auto* choice :
+         ui->stepsStack->currentWidget()->findChildren<QAbstractButton*>()) {
+      chain.append(choice);
+    }
+  }
+  chain << ui->screenshotExpand << ui->descriptionText << ui->manualBtn << ui->prevBtn
+        << ui->nextBtn << ui->cancelBtn;
+  for (int i = 0; i + 1 < chain.size(); ++i) {
+    setTabOrder(chain[i], chain[i + 1]);
+  }
+}
+
+void FomodInstallerDialog::updateInfo()
+{
+  ui->authorLabel->setText(tr("By %1").arg(m_Author));
+  ui->authorLabel->setVisible(!m_Author.isEmpty());
+  ui->versionLabel->setText(tr("Version %1").arg(m_Version));
+  ui->versionLabel->setVisible(!m_Version.isEmpty());
+  ui->websiteLabel->setVisible(!m_URL.isEmpty());
 }
 
 FomodInstallerDialog::~FomodInstallerDialog()
@@ -99,9 +305,16 @@ bool FomodInstallerDialog::hasOptions()
 
 void FomodInstallerDialog::transformToSmallInstall()
 {
-  ui->descriptionText->setVisible(false);
-  ui->screenshotLabel->setVisible(false);
-  ui->stepsStack->setVisible(false);
+  // a FOMOD with nothing to choose: its name and the buttons
+  ui->body->setVisible(false);
+  ui->prevBtn->setVisible(false);
+  ui->stepTitle->setText(tr("Install this mod"));
+  ui->stepText->setText(tr("This FOMOD has no options to choose."));
+  ui->stepText->setVisible(true);
+  ui->nextBtn->setText(tr("Install"));
+  ui->nameCombo->setFocus();
+  setMinimumSize(560, 0);
+  resize(640, 0);
   adjustSize();
 }
 
@@ -113,7 +326,14 @@ void FomodInstallerDialog::updateNameEdit()
     ui->nameCombo->addItem(*iter);
   }
 
-  ui->nameCombo->setCurrentIndex(ui->nameCombo->findText(m_ModName));
+  // the likeliest guess; typed in when it isn't one of the variants (MO2 2.5.2
+  // showed an empty name then)
+  const int index = ui->nameCombo->findText(m_ModName);
+  if (index >= 0) {
+    ui->nameCombo->setCurrentIndex(index);
+  } else {
+    ui->nameCombo->setEditText(m_ModName);
+  }
 }
 
 int FomodInstallerDialog::bomOffset(const QByteArray& buffer)
@@ -254,11 +474,13 @@ void FomodInstallerDialog::initData(IOrganizer* moInfo)
 
   // parse provided package information
   readInfoXml();
+  updateInfo();
 
   QString screenshotPath =
       QDir::tempPath() + "/" + m_FomodPath + "/fomod/screenshot.png";
   if (!QImage(screenshotPath).isNull()) {
     ui->screenshotLabel->setScalableResource(screenshotPath);
+    ui->screenshotLabel->setVisible(true);
     ui->screenshotExpand->setVisible(false);
   }
 
@@ -267,12 +489,12 @@ void FomodInstallerDialog::initData(IOrganizer* moInfo)
 
 QString FomodInstallerDialog::getName() const
 {
-  return ui->nameCombo->currentText();
+  return ui->nameCombo->currentText().trimmed();
 }
 
 QString FomodInstallerDialog::getVersion() const
 {
-  return ui->versionLabel->text();
+  return m_Version;
 }
 
 int FomodInstallerDialog::getModID() const
@@ -520,26 +742,28 @@ FomodInstallerDialog::testCondition(int, const VersionCondition* condition) cons
 bool FomodInstallerDialog::displayMissingFilesDialog(
     std::vector<const FileDescriptor*> missingFiles)
 {
-  QMessageBox dialog(parentWidget());
-
-  dialog.setIcon(QMessageBox::Icon::Warning);
-  dialog.setWindowTitle(tr("Missing files or folders"));
-  dialog.addButton(tr("Install anyway"), QMessageBox::AcceptRole);
-  dialog.addButton(tr("Cancel"), QMessageBox::RejectRole);
-
-  QString text = tr("The following files or folders  were not found in the archive. "
-                    "This is likely due to an incorrect FOMOD installer. "
-                    "This mod may not work properly.");
-  text.append("\n\n");
+  RevampedFluent::ContentDialog dialog(
+      this, QStringLiteral("fomodMissingFilesDialog"), tr("Missing files or folders"),
+      tr("These files or folders aren't in the archive, most likely because of a "
+         "mistake in the mod's FOMOD. The mod may not work properly."));
+  dialog.setMinimumWidth(520);
+  QStringList lines;
   for (auto* fileDescriptor : missingFiles) {
-    QString temp = fileDescriptor->m_IsFolder ? tr("Folder '%1'.") : tr("File '%1'.");
-    text.append("- " + temp.arg(fileDescriptor->m_Source) + "\n");
+    const QString temp = fileDescriptor->m_IsFolder ? tr("Folder '%1'") : tr("File '%1'");
+    lines.append(temp.arg(fileDescriptor->m_Source));
   }
-
-  dialog.setTextFormat(Qt::MarkdownText);
-  dialog.setText(text);
-
-  return dialog.exec() == QMessageBox::AcceptRole;
+  // as plain text: a path with * or _ was read as Markdown in 2.5.2
+  auto* list = new QPlainTextEdit(&dialog);
+  list->setReadOnly(true);
+  list->setPlainText(lines.join(QLatin1Char('\n')));
+  list->setAccessibleName(tr("Missing files or folders"));
+  dialog.body()->addWidget(list, 1);
+  auto* anyway = dialog.addButton(tr("Install anyway"), true);
+  auto* cancel = dialog.addButton(tr("Cancel"));
+  connect(anyway, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+  dialog.askFirst(cancel);
+  return dialog.exec() == QDialog::Accepted;
 }
 
 IPluginInstaller::EInstallResult
@@ -633,19 +857,26 @@ void FomodInstallerDialog::highlightControl(QAbstractButton* button)
       QString temp = QDir::tempPath() + "/" + m_FomodPath + "/" +
                      QDir::fromNativeSeparators(screenshotFileName);
       ui->screenshotLabel->setScalableResource(temp);
+      ui->screenshotLabel->setVisible(true);
       ui->screenshotExpand->setVisible(true);
     } else {
       ui->screenshotLabel->setScalableResource(QString());
+      ui->screenshotLabel->setVisible(false);
       ui->screenshotExpand->setVisible(false);
     }
   }
+  ui->optionName->setText(button->text());
   ui->descriptionText->setText(button->property("description").toString());
 }
 
 bool FomodInstallerDialog::eventFilter(QObject* object, QEvent* event)
 {
   QAbstractButton* button = qobject_cast<QAbstractButton*>(object);
-  if ((button != nullptr) && (event->type() == QEvent::HoverEnter)) {
+  // the keyboard's focus shows an option too (2.5.2 only followed the mouse)
+  const bool focused =
+      event->type() == QEvent::FocusIn &&
+      static_cast<QFocusEvent*>(event)->reason() != Qt::ActiveWindowFocusReason;
+  if ((button != nullptr) && (event->type() == QEvent::HoverEnter || focused)) {
     highlightControl(button);
   }
   return QDialog::eventFilter(object, event);
@@ -669,14 +900,15 @@ void FomodInstallerDialog::parseInfo(XmlReader& reader)
         m_ModName.update(readContent(reader), GUESS_META);
         updateNameEdit();
       } else if (reader.name().toString() == "Author") {
-        ui->authorLabel->setText(readContent(reader));
+        m_Author = readContent(reader).trimmed();
       } else if (reader.name().toString() == "Version") {
-        ui->versionLabel->setText(readContent(reader));
+        m_Version = readContent(reader).trimmed();
       } else if (reader.name().toString() == "Id") {
         m_ModID = readContent(reader).toInt();
       } else if (reader.name().toString() == "Website") {
         m_URL = readContent(reader);
-        ui->websiteLabel->setText(tr("<a href=\"%1\">Link</a>").arg(m_URL));
+        ui->websiteLabel->setText(
+            tr("<a href=\"%1\">Website</a>").arg(m_URL.toHtmlEscaped()));
         ui->websiteLabel->setToolTip(m_URL);
       }
     } break;
@@ -1016,9 +1248,16 @@ void FomodInstallerDialog::readPluginList(XmlReader& reader, QString const& grou
     }
     newControl->setProperty("conditionFlags", conditionFlags);
     newControl->installEventFilter(this);
+    {
+      QTextDocument description;
+      description.setHtml(plugin.m_Description);
+      newControl->setAccessibleDescription(description.toPlainText());
+    }
     // We need somehow to check the 'toggled' signal. how do I do that
     // void QAbstractButton::clicked ( bool checked ) [signal]
-    connect(newControl, SIGNAL(clicked()), this, SLOT(widgetButtonClicked()));
+    // toggled, not clicked: the keyboard, assistive tools and the step rules
+    // change options without a click
+    connect(newControl, SIGNAL(toggled(bool)), this, SLOT(widgetButtonClicked()));
     controls.push_back(newControl);
   }
 
@@ -1044,9 +1283,21 @@ void FomodInstallerDialog::readGroup(XmlReader& reader, QLayout* layout)
   QString name   = reader.attributes().value("name").toString();
   GroupType type = getGroupType(reader.attributes().value("type").toString());
 
-  QGroupBox* groupBox = new QGroupBox(name);
+  // a card: the theme styles QGroupBox#fomodGroup; the name is a heading in
+  // it, and the group box's own title stays empty
+  QGroupBox* groupBox = new QGroupBox;
+  groupBox->setObjectName("fomodGroup");
+  groupBox->setProperty("groupName", name);
+  groupBox->setAccessibleName(name);
 
   QVBoxLayout* groupLayout = new QVBoxLayout;
+  groupLayout->setContentsMargins(16, 12, 16, 14);
+  groupLayout->setSpacing(6);
+  QLabel* heading = new QLabel(name);
+  heading->setObjectName("fluentCardTitle");
+  heading->setTextFormat(Qt::PlainText);
+  heading->setWordWrap(true);
+  groupLayout->addWidget(heading);
 
   QString const self(reader.name().toString());
   while (reader.getNextElement(self)) {
@@ -1057,14 +1308,33 @@ void FomodInstallerDialog::readGroup(XmlReader& reader, QLayout* layout)
     }
   }
 
+  // after the options: a group of one option has become a check box
+  QString hint;
+  switch (type) {
+  case TYPE_SELECTATLEASTONE:
+    hint = tr("Choose one or more.");
+    break;
+  case TYPE_SELECTATMOSTONE:
+    hint = tr("Choose one, or none.");
+    break;
+  case TYPE_SELECTEXACTLYONE:
+    hint = tr("Choose one.");
+    break;
+  case TYPE_SELECTALL:
+    hint = tr("All of these are installed.");
+    break;
+  case TYPE_SELECTANY:
+    hint = tr("Choose any.");
+    break;
+  }
+  QLabel* hintLabel = new QLabel(hint);
+  hintLabel->setObjectName("fluentSettingDescription");
+  groupLayout->insertWidget(1, hintLabel);
+  groupBox->setAccessibleDescription(hint);
+
   groupLayout->setProperty("groupType", QVariant::fromValue(type));
   groupLayout->setObjectName("grouplayout");
   groupBox->setLayout(groupLayout);
-  if (type == TYPE_SELECTATLEASTONE) {
-    QLabel* label = new QLabel(tr("Select one or more of these options:"));
-    layout->addWidget(label);
-  }
-
   layout->addWidget(groupBox);
 }
 
@@ -1111,6 +1381,14 @@ QGroupBox* FomodInstallerDialog::readInstallStep(XmlReader& reader)
     page->setProperty("conditional", QVariant::fromValue(subcondition));
   }
 
+  page->setObjectName("fomodStep");
+  scrollArea->setObjectName("fomodStepScroll");
+  scrollArea->setFrameShape(QFrame::NoFrame);
+  scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  scrollLayout->setContentsMargins(0, 0, 12, 0);
+  scrollLayout->setSpacing(12);
+  scrollLayout->addStretch(1);
+  pageLayout->setContentsMargins(0, 0, 0, 0);
   scrolledArea->setLayout(scrollLayout);
   scrollArea->setWidget(scrolledArea);
   scrollArea->setWidgetResizable(true);
@@ -1146,6 +1424,10 @@ void FomodInstallerDialog::readStepList(XmlReader& reader)
 
   for (std::vector<QGroupBox*>::const_iterator iter = pages.begin();
        iter != pages.end(); ++iter) {
+    // the step's name shows above the window's content, not as a frame title
+    (*iter)->setProperty("stepName", (*iter)->title());
+    (*iter)->setAccessibleName((*iter)->title());
+    (*iter)->setTitle(QString());
     ui->stepsStack->addWidget(*iter);
   }
 }
@@ -1345,12 +1627,25 @@ void FomodInstallerDialog::on_websiteLabel_linkActivated(const QString& link)
 
 void FomodInstallerDialog::activateCurrentPage()
 {
+  const QString stepName =
+      ui->stepsStack->currentWidget()->property("stepName").toString();
+  ui->stepTitle->setText(stepName.isEmpty() ? tr("FOMOD Installer") : stepName);
+  QAccessibleEvent named(ui->stepTitle, QAccessible::NameChanged);
+  QAccessible::updateAccessibility(&named);
   QList<QAbstractButton*> choices =
       ui->stepsStack->currentWidget()->findChildren<QAbstractButton*>("choice");
   if (choices.count() > 0) {
     highlightControl(choices.at(0));
   }
   m_PageVisible.push_back(true);
+  updateTabOrder();
+  // the keyboard starts on the step's first option it can change
+  for (auto* choice : choices) {
+    if (choice->isEnabled()) {
+      choice->setFocus(Qt::OtherFocusReason);
+      break;
+    }
+  }
   updateNextbtnText();
 }
 
@@ -1447,6 +1742,10 @@ void FomodInstallerDialog::updateNextbtnText()
   // is a test to ensure that you have selected at least one item in a
   //'select at least one' box.
   int const page = ui->stepsStack->currentIndex();
+  // options toggle while the steps are still being built
+  if (ui->stepsStack->widget(page) == nullptr) {
+    return;
+  }
   QStringList groups_requiring_selection;
   for (QVBoxLayout const* const layout :
        ui->stepsStack->widget(page)->findChildren<QVBoxLayout*>("grouplayout")) {
@@ -1467,24 +1766,35 @@ void FomodInstallerDialog::updateNextbtnText()
         }
       }
       if (!checked) {
-        QString group = dynamic_cast<QGroupBox*>(layout->parentWidget())->title();
+        QString group = layout->parentWidget()->property("groupName").toString();
         qDebug() << "Group " << group << " needs a selection";
         groups_requiring_selection.append(group);
       }
     }
   }
 
+  // what is missing shows beside the buttons; 2.5.2 renamed Next "Disabled"
+  // and said why only in its tooltip
   if (groups_requiring_selection.size() != 0) {
-    ui->nextBtn->setText(tr("Disabled"));
+    // a disabled Next with the focus would hand it to Cancel, where Enter
+    // cancels the install: the focus goes to the step's options
+    if (ui->nextBtn->hasFocus()) {
+      for (auto* choice :
+           ui->stepsStack->widget(page)->findChildren<QAbstractButton*>("choice")) {
+        if (choice->isEnabled()) {
+          choice->setFocus(Qt::OtherFocusReason);
+          break;
+        }
+      }
+    }
     ui->nextBtn->setEnabled(false);
-    ui->nextBtn->setToolTip(tr("This button is disabled because the following group(s) "
-                               "need a selection: ") +
-                            groups_requiring_selection.join(", "));
+    setSelectionNote(tr("Choose at least one option in: %1")
+                         .arg(groups_requiring_selection.join(", ")));
     return;
   }
 
   // OK, clear up any warnings
-  ui->nextBtn->setToolTip("");
+  setSelectionNote(QString());
 
   // Display 'next' or 'install' as appropriate for the next button.
   // note this can change depending on what buttons you click here.
@@ -1503,8 +1813,13 @@ void FomodInstallerDialog::updateNextbtnText()
     m_PageVisible.push_back(false);
   }
 
-  ui->nextBtn->setEnabled(true);
   ui->nextBtn->setText(isLast ? tr("Install") : tr("Next"));
+  // Install waits for a mod name
+  const bool noName = isLast && getName().isEmpty();
+  ui->nextBtn->setEnabled(!noName);
+  if (noName) {
+    setSelectionNote(tr("Enter a name for the mod."));
+  }
 }
 
 void FomodInstallerDialog::displayCurrentPage()

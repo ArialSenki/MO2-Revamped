@@ -17,6 +17,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 // clang-format off
 
+#include <memory>
 #include "base_script.h"
 
 #include <filesystem>
@@ -114,7 +115,8 @@ namespace CSharp {
 
     if (!g.Settings.empty()) {
 
-      InstallerFomodPostDialog* dialog = new InstallerFomodPostDialog(g.ParentWidget);
+      // owned here: 2.5.2 never deleted it
+      auto dialog = std::make_unique<InstallerFomodPostDialog>(g.ParentWidget);
 
       dialog->setIniSettings(g.Settings);
 

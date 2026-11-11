@@ -39,11 +39,6 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 class QAbstractButton;
 class QXmlStreamReader;
 
-namespace Ui
-{
-class FomodInstallerDialog;
-}
-
 class ValueCondition;
 class ConditionFlag;
 class SubCondition;
@@ -201,6 +196,39 @@ private:
 };
 
 Q_DECLARE_METATYPE(FileDescriptor*)
+
+class QComboBox;
+class QLabel;
+class QPushButton;
+class QStackedWidget;
+class QTextBrowser;
+class QWidget;
+class ScaleLabel;
+
+// MO2 Revamped: the window is built in code (fomodinstallerdialog.cpp,
+// buildUi) instead of from 2.5.2's .ui; these are the widgets the install
+// steps use, under the .ui's names
+struct FomodInstallerWidgets
+{
+  QComboBox* nameCombo;
+  QLabel* stepTitle;
+  QLabel* stepText;
+  QLabel* authorLabel;
+  QLabel* versionLabel;
+  QLabel* websiteLabel;
+  QWidget* body;
+  QStackedWidget* stepsStack;
+  QWidget* details;
+  ScaleLabel* screenshotLabel;
+  QPushButton* screenshotExpand;
+  QLabel* optionName;
+  QTextBrowser* descriptionText;
+  QLabel* selectionNote;
+  QPushButton* manualBtn;
+  QPushButton* prevBtn;
+  QPushButton* nextBtn;
+  QPushButton* cancelBtn;
+};
 
 class FomodInstallerDialog : public QDialog, public IConditionTester
 {
@@ -445,7 +473,17 @@ private:
   void displayCurrentPage();
 
 private:
-  Ui::FomodInstallerDialog* ui;
+  void buildUi();
+  void updateInfo();
+  // Tab goes name, the step's options, its details, then the buttons
+  void updateTabOrder();
+  // what the step needs before going on, beside the buttons
+  void setSelectionNote(const QString& note);
+
+  FomodInstallerWidgets* ui;
+
+  QString m_Author;
+  QString m_Version;
 
   InstallerFomod* m_Installer;
   MOBase::GuessedValue<QString> m_ModName;

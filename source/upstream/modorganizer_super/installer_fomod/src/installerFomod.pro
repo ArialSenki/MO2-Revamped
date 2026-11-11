@@ -31,13 +31,6 @@ HEADERS += installerfomod.h \
     scalelabel.h \
     xmlreader.h
 
-FORMS += \
-    fomodinstallerdialog.ui \
-    fomodscreenshotdialog.ui
-
-RESOURCES += \
-    resources.qrc
-
 OTHER_FILES += \
     installerfomod.json\
     SConscript\

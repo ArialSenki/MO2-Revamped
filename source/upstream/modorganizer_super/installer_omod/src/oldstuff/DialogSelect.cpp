@@ -3,8 +3,8 @@
 #include <functional>
 
 #include <QCheckBox>
+#include <QCoreApplication>
 #include <QDialog>
-#include <QDialogButtonBox>
 #include <QDebug>
 #include <QImageReader>
 #include <QPlainTextEdit>
@@ -15,6 +15,10 @@
 #include <QVBoxLayout>
 
 #include "MIT-licencedCodeToDoStuff/checkboxwordwrap.h"
+#include "fluentcontentdialog.h"
+
+#include <QLabel>
+#include <log.h>
 
 // there is no hover signal, the only way to know is to override enterEvent()
 //
@@ -29,8 +33,15 @@ public:
   {
   }
 
-protected:  void enterEvent(QEnterEvent*) override
+protected:
+  void enterEvent(QEnterEvent*) override
   {
+    onHover();
+  }
+
+  void focusInEvent(QFocusEvent* event) override
+  {
+    T::focusInEvent(event);
     onHover();
   }
 };
@@ -101,201 +112,164 @@ std::optional<QVector<int>> DialogSelect(
   const QVector<QString>& descriptions, const QVector<QString>& pixmaps,
   bool multiSelect)
 {
-  QDialog d(parent);
-  d.setWindowTitle(title);
-
-  auto* mainLayout = new QVBoxLayout(&d);
-  d.setLayout(mainLayout);
+  // MO2 Revamped: the OMOD script's question as a Windows 11 content dialog:
+  // its options on the left (check boxes when several can be chosen), the
+  // hovered or focused option's picture and description on the right
+  RevampedFluent::ContentDialog d(parent, QStringLiteral("omodSelectDialog"), title,
+                                  multiSelect ? QCoreApplication::translate("OmodDialogSelect", "Choose any.")
+                                              : QCoreApplication::translate("OmodDialogSelect", "Choose one."));
+  d.setMinimumSize(640, 420);
+  d.resize(860, 560);
+  d.setSizeGripEnabled(true);
+  d.setWindowFlag(Qt::WindowMaximizeButtonHint, true);
 
   auto* splitter = new QSplitter(&d);
-  mainLayout->addWidget(splitter);
+  splitter->setChildrenCollapsible(false);
+  d.body()->addWidget(splitter, 1);
 
-  // button box
-  auto* buttons = new QDialogButtonBox(
-    QDialogButtonBox::Ok|QDialogButtonBox::Cancel, &d);
+  // the options scroll when there are many
+  auto* optionsScroll = new QScrollArea(splitter);
+  optionsScroll->setObjectName(QStringLiteral("omodOptionsScroll"));
+  optionsScroll->setFrameShape(QFrame::NoFrame);
+  optionsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  optionsScroll->setWidgetResizable(true);
+  auto* options = new QWidget(optionsScroll);
+  auto* optionsLayout = new QVBoxLayout(options);
+  optionsLayout->setContentsMargins(0, 0, 12, 0);
+  optionsLayout->setSpacing(6);
+  optionsScroll->setWidget(options);
 
-  /* QObject::connect: signal not found in QDialogButtonBox
-     even though this worked with my initial attempt.
-     Holt had the same issue: https://stackoverflow.com/questions/61879664/qobjectconnect-not-working-signal-not-found-with-function-syntax
-     The new syntax is much better, but as this code wants replacing, that's not a hill I'm going to die on.
-  QObject::connect(buttons, &QDialogButtonBox::accepted, [&] {
-    d.accept();
-  });
-
-  QObject::connect(buttons, &QDialogButtonBox::rejected, [&] {
-    d.reject();
-  });
-  */
-  QObject::connect(buttons, SIGNAL(accepted()), &d, SLOT(accept()));
-  QObject::connect(buttons, SIGNAL(rejected()), &d, SLOT(reject()));
-
-  mainLayout->addWidget(buttons);
-
-
-  // left panel
-  auto* left = new QWidget(splitter);
-  auto* leftLayout = new QVBoxLayout(left);
-  leftLayout->setContentsMargins(0, 0, 0, 0);
-
-  auto* stack = new QStackedWidget(left);
-  leftLayout->addWidget(stack);
-
-  // don't put descriptions of pixmaps at all if there aren't any
+  // the details: only what the script gave
   const bool hasDescriptions = !descriptions.empty();
   const bool hasPixmaps = !pixmaps.empty();
+  auto* details = new QFrame(splitter);
+  details->setProperty("fluentCard", true);
+  auto* detailsLayout = new QVBoxLayout(details);
+  detailsLayout->setContentsMargins(16, 14, 16, 14);
+  detailsLayout->setSpacing(10);
+  auto* picture = new FixedAspectRatioImageLabel(details);
+  picture->setAlignment(Qt::AlignCenter);
+  picture->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+  picture->setMinimumHeight(140);
+  picture->setVisible(hasPixmaps);
+  detailsLayout->addWidget(picture, 3);
+  auto* optionName = new QLabel(details);
+  optionName->setObjectName(QStringLiteral("instanceDetailName"));
+  optionName->setTextFormat(Qt::PlainText);
+  optionName->setWordWrap(true);
+  detailsLayout->addWidget(optionName);
+  auto* description = new QPlainTextEdit(details);
+  description->setObjectName(QStringLiteral("omodDescription"));
+  description->setReadOnly(true);
+  description->setFrameShape(QFrame::NoFrame);
+  description->setAccessibleName(QCoreApplication::translate("OmodDialogSelect", "Option description"));
+  description->setVisible(hasDescriptions);
+  detailsLayout->addWidget(description, 2);
+  if (!hasPixmaps) {
+    detailsLayout->addStretch(1);
+  }
+  splitter->addWidget(optionsScroll);
+  splitter->addWidget(details);
+  splitter->setStretchFactor(0, 2);
+  splitter->setStretchFactor(1, 3);
 
-  // for each description/item
-  for (int i=0; i < std::max(descriptions.size(), pixmaps.size()); ++i) {
-    auto* panel = new QWidget(left);
-    auto* panelLayout = new QVBoxLayout(panel);
-    //panelLayout->setContentsMargins(0, 0, 0, 0);
+  // pictures are read once, when first shown
+  QVector<QPixmap> loaded(pixmaps.size());
+  QVector<bool> tried(pixmaps.size(), false);
+  QVector<QString> labels;
 
+  auto show = [&](int i) {
+    optionName->setText(i < labels.size() ? labels[i] : QString());
+    description->setPlainText(i < descriptions.size() ? descriptions[i] : QString());
     if (hasPixmaps) {
-      auto* pixmapLabel = new FixedAspectRatioImageLabel(panel);
-
-      pixmapLabel->setFrameStyle(QFrame::StyledPanel);
-      pixmapLabel->setLineWidth(1);
-
-      // make it resizable
-      //pixmapLabel->setMinimumSize(1, 150);
-      //pixmapLabel->setScaledContents(true);
-      //pixmapLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-
-      if (i < pixmaps.size()) {
-        // this item has a pixmap
-        // Use QImageReader as (despite what the documentation says) QPixmap uses the extension, rather than the file header, to determine the format.
+      if (i < pixmaps.size() && !tried[i]) {
+        tried[i] = true;
+        // QImageReader decides the format from the content: QPixmap goes by
+        // the extension, which OMODs get wrong
         QImageReader reader(pixmaps[i]);
         reader.setDecideFormatFromContent(true);
-        QImage image = reader.read();
-        if (image.isNull()) {
-          pixmapLabel->setText(QString("failed to load '%1': %2 (code %3)").arg(pixmaps[i], reader.errorString(), QString::number(reader.error())));
+        const QImage image = reader.read();
+        if (!image.isNull()) {
+          loaded[i] = QPixmap::fromImage(image);
         } else {
-          QPixmap pixmap = QPixmap::fromImage(image);
-          pixmapLabel->setUnscaledPixmap(std::move(pixmap));
+          MOBase::log::warn("OMOD picture '{}' couldn't be read: {}", pixmaps[i],
+                            reader.errorString());
         }
       }
-
-      panelLayout->addWidget(pixmapLabel);
+      const QPixmap pixmap = i < loaded.size() ? loaded[i] : QPixmap();
+      picture->setUnscaledPixmap(pixmap);
+      picture->setVisible(!pixmap.isNull());
+      picture->setAccessibleName(i < labels.size() ? labels[i] : QString());
     }
-
-    if (hasDescriptions)
-    {
-      // description under pixmap (if any)
-      auto* description = new QPlainTextEdit(descriptions[i], panel);
-
-      // this puts the description on top if there's no pixmap
-      //description->setAlignment(Qt::AlignLeft|Qt::AlignTop);
-
-      //description->setWordWrap(true);
-
-      panelLayout->addWidget(description);
-    }
-
-    // if the pixmap is first, it'll take as much space as it can; if the
-    // description is first, the AlignTop makes it work anyways
-    panelLayout->setStretch(0, 1);
-
-    stack->addWidget(panel);
-  }
-
-
-  // right panel
-  auto* right = new QWidget(&d);
-  auto* rightOuterLayout = new QVBoxLayout(right);
-  rightOuterLayout->setContentsMargins(0, 0, 0, 0);
-
-  // title
-  auto* titleLabel = new QLabel(title, right);
-  titleLabel->setWordWrap(true);
-  rightOuterLayout->addWidget(titleLabel);
-
-  QWidget* rightInner;
-  QBoxLayout* rightInnerLayout;
-
-  // Doing this unconditionally breaks HGEC lower body choices.
-  // Somehow the fixed aspect ratio image label forces the scroll area to be resized below its preferred size.
-  // Because the word wrapped radio buttons aren't good at telling Qt their size hint is only minimal for the current width,
-  // the layout ends up with their preferred width as its minimum and won't let itself be shrunk smaller than that even though you can't see the right hand side.
-  // This means that as they're in a widget with enough space, the text isn't wrapped.
-  // The exact same behaviour happens with non-wrappable radio buttons, but it's more expected.
-  // Making the fixed aspect ratio image label play nicely with being shrunk will probably fix this.
-  // It only seems to be MEAT that actually needs a scrollbar, though, and that looks fine, so fixing this mess is left as an exercise for the reader.
-  if (items.size() >= 10)
-  {
-    QScrollArea* rightScrollArea = new QScrollArea(right);
-    rightOuterLayout->addWidget(rightScrollArea);
-    rightScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    rightScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    rightInner = new QWidget(right);
-    rightScrollArea->setWidget(rightInner);
-    rightScrollArea->setWidgetResizable(true);
-    
-    rightInnerLayout = new QVBoxLayout(rightInner);
-  }
-  else
-  {
-    rightInner = right;
-    rightInnerLayout = rightOuterLayout;
-  }
-
-  // callback when hovering
-  auto onHover = [&](int i) {
-    stack->setCurrentIndex(i);
   };
-
 
   // remember buttons to see which were checked
   QVector<QAbstractButton*> itemButtons;
-
-  // for each item
-  for (int i=0; i<items.size(); ++i) {
-    QAbstractButton* w = nullptr;
-
+  for (int i = 0; i < items.size(); ++i) {
     QString labelText = items[i];
     bool checked = false;
 
-    // THIS IS IMPORTANT WHEN REPLACING THIS WITH BETTER CODE. OMODS HAVE A PIPE AT THE START OF ANY OPTIONS SELECTED BY DEFAULT.
-    if (labelText.startsWith('|'))
-    {
+    // THIS IS IMPORTANT. OMODS HAVE A PIPE AT THE START OF ANY OPTIONS
+    // SELECTED BY DEFAULT.
+    if (labelText.startsWith('|')) {
       labelText = labelText.remove(0, 1);
       checked = true;
     }
+    labels.push_back(labelText);
 
+    QAbstractButton* w = nullptr;
+    // the hovered option shows, and so does the focused one: 2.5.2 only
+    // followed the mouse
     if (multiSelect) {
-      w = new HoverableWidget<CheckBoxWordWrap, const QString&, QWidget*>(labelText, rightInner, [=]{ onHover(i); });
+      w = new HoverableWidget<CheckBoxWordWrap, const QString&, QWidget*>(labelText, options, [&, i] { show(i); });
     } else {
-      w = new HoverableWidget<RadioButtonWordWrap, const QString&, QWidget*>(labelText, rightInner, [=]{ onHover(i); });
+      w = new HoverableWidget<RadioButtonWordWrap, const QString&, QWidget*>(labelText, options, [&, i] { show(i); });
       checked |= i == 0;
     }
-
-    rightInnerLayout->addWidget(w);
+    w->setAccessibleName(labelText);
+    optionsLayout->addWidget(w);
     itemButtons.push_back(w);
     w->setChecked(checked);
   }
-
   // push all the items to the top
-  rightInnerLayout->addStretch(1);
+  optionsLayout->addStretch(1);
 
-  splitter->addWidget(left);
-  splitter->addWidget(right);
+  auto* ok = d.addButton(QCoreApplication::translate("OmodDialogSelect", "OK"), true);
+  auto* cancel = d.addButton(QCoreApplication::translate("OmodDialogSelect", "Cancel"));
+  // string connects: C++/CLI finds no signal for a function pointer
+  QObject::connect(ok, SIGNAL(clicked()), &d, SLOT(accept()));
+  QObject::connect(cancel, SIGNAL(clicked()), &d, SLOT(reject()));
 
-  // decent initial size
-  d.resize(800, 500);
-
-  if (d.exec() != QDialog::Accepted) {
-    return std::nullopt;
+  // the first chosen option shows to begin with
+  int first = 0;
+  for (int i = 0; i < itemButtons.size(); ++i) {
+    if (itemButtons[i]->isChecked()) {
+      first = i;
+      break;
+    }
+  }
+  if (!itemButtons.isEmpty()) {
+    show(first);
+    itemButtons[first]->setFocus();
   }
 
+  const bool accepted = d.exec() == QDialog::Accepted;
 
   // go through every button, it doesn't matter whether they're checkboxes or
   // radio buttons
   QVector<int> selection;
-  for (int i=0; i<itemButtons.size(); ++i) {
+  for (int i = 0; i < itemButtons.size(); ++i) {
     if (itemButtons[i]->isChecked()) {
       selection.push_back(i);
     }
   }
+  // the buttons' hover and focus callbacks use this function's locals: the
+  // buttons go before them, not with the dialog after them
+  d.hide();
+  qDeleteAll(itemButtons);
 
+  if (!accepted) {
+    return std::nullopt;
+  }
   return selection;
 }

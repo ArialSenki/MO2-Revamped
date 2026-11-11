@@ -19,7 +19,110 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "finddialog.h"
-#include "ui_finddialog.h"
+
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QVBoxLayout>
+
+namespace
+{
+// Enter on a focused button presses that button, as in Windows, not the
+// dialog's default one
+class EnterPressesItself : public QObject
+{
+public:
+  using QObject::QObject;
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    auto* button = qobject_cast<QPushButton*>(watched);
+    if (event->type() == QEvent::KeyPress && button != nullptr && button->isEnabled()) {
+      const int key = static_cast<QKeyEvent*>(event)->key();
+      if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+        button->click();
+        return true;
+      }
+    }
+    return false;
+  }
+};
+}  // namespace
+
+// MO2 Revamped: built in code instead of from 2.5.2's .ui, as a Windows 11
+// content dialog (the themes style it by these object names); the header,
+// and so uibase's exports, stay as they were
+namespace Ui
+{
+class FindDialog
+{
+public:
+  QLineEdit* patternEdit;
+  QPushButton* nextBtn;
+  QPushButton* closeBtn;
+
+  void setupUi(QDialog* dialog)
+  {
+    dialog->setObjectName(QStringLiteral("FindDialog"));
+    dialog->setProperty("fluentContentDialog", true);
+    dialog->setWindowTitle(QCoreApplication::translate("FindDialog", "Find"));
+    dialog->setWindowFlags(dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    dialog->setMinimumWidth(420);
+
+    auto* layout = new QVBoxLayout(dialog);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    auto* content = new QWidget(dialog);
+    content->setObjectName(QStringLiteral("fluentDialogContent"));
+    auto* contentLayout = new QVBoxLayout(content);
+    contentLayout->setContentsMargins(24, 20, 24, 24);
+    contentLayout->setSpacing(8);
+    auto* title = new QLabel(QCoreApplication::translate("FindDialog", "Find"), content);
+    title->setObjectName(QStringLiteral("fluentDialogTitle"));
+    contentLayout->addWidget(title);
+    auto* label =
+        new QLabel(QCoreApplication::translate("FindDialog", "Find what"), content);
+    contentLayout->addWidget(label);
+    patternEdit = new QLineEdit(content);
+    patternEdit->setObjectName(QStringLiteral("patternEdit"));
+    patternEdit->setPlaceholderText(
+        QCoreApplication::translate("FindDialog", "Search term"));
+    patternEdit->setAccessibleName(QCoreApplication::translate("FindDialog", "Find what"));
+    patternEdit->setClearButtonEnabled(true);
+    label->setBuddy(patternEdit);
+    contentLayout->addWidget(patternEdit);
+    layout->addWidget(content, 1);
+
+    auto* band = new QFrame(dialog);
+    band->setObjectName(QStringLiteral("fluentDialogFooter"));
+    auto* buttons = new QHBoxLayout(band);
+    buttons->setContentsMargins(24, 24, 24, 24);
+    buttons->setSpacing(8);
+    nextBtn = new QPushButton(QCoreApplication::translate("FindDialog", "Find next"), band);
+    nextBtn->setObjectName(QStringLiteral("nextBtn"));
+    nextBtn->setToolTip(QCoreApplication::translate(
+        "FindDialog", "Find the next match after the cursor, from the top again at the end (F3)"));
+    nextBtn->setDefault(true);
+    nextBtn->setProperty("fluentPrimary", true);
+    closeBtn = new QPushButton(QCoreApplication::translate("FindDialog", "Close"), band);
+    closeBtn->setObjectName(QStringLiteral("closeBtn"));
+    closeBtn->setAutoDefault(false);
+    for (auto* button : {nextBtn, closeBtn}) {
+      button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+      button->setMinimumWidth(110);
+      button->installEventFilter(new EnterPressesItself(button));
+      buttons->addWidget(button);
+    }
+    layout->addWidget(band);
+
+    // the slots are named on_<object>_<signal>
+    QMetaObject::connectSlotsByName(dialog);
+  }
+};
+}  // namespace Ui
 
 namespace MOBase
 {

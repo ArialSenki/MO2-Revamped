@@ -88,6 +88,31 @@
 - The BAIN wizard's questions, and these lists, follow the selection that
   assistive tools make, not only the mouse's.
 
+### FOMOD
+
+- The FOMOD installer is rewritten in MO2 Revamped's design: the step's name
+  and the package's author, version and website at the top, each group as a
+  card with what it asks for ("Choose one.", "Choose one or more."…), and the
+  option's picture and description beside them. The keyboard's focus shows an
+  option's description too, not only the mouse; Tab goes through the options
+  first.
+- When a group needs a choice, Next stays as it is, disabled, and the reason
+  shows beside the buttons (Mod Organizer 2 renamed it "Disabled" and explained
+  only in a tooltip). Install waits for a mod name.
+- The pictures open full screen over a dark backdrop, with the previous and next
+  ones, a strip of all of them, and the arrow keys and Escape. Pictures are
+  scaled smoothly.
+- The list of files a FOMOD names but the archive lacks shows as written; paths
+  with `*` or `_` were read as Markdown.
+- FOMOD C#: the windows before and after the script are content dialogs. After
+  the script, **Save as INI Tweaks** is now the default instead of Apply, which
+  rewrites the profile's INI files.
+- OMOD: the name, readme, option and picture windows are content dialogs; the
+  option picker shows the focused option's picture and description too.
+- The INI editor's viewer and its Find dialog are rebuilt in the same design.
+  Find next's F3 no longer replaces Find's Ctrl+F, and Find with no file open no
+  longer closes MO2.
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12

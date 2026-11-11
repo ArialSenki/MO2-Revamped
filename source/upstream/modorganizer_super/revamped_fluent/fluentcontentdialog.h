@@ -99,11 +99,14 @@ public:
     m_title = new QLabel(title, content);
     m_title->setObjectName(QStringLiteral("fluentDialogTitle"));
     m_title->setWordWrap(true);
+    // as written: titles carry mod names and scripts' own words
+    m_title->setTextFormat(Qt::PlainText);
     contentLayout->addWidget(m_title);
 
     m_text = new QLabel(text, content);
     m_text->setObjectName(QStringLiteral("fluentDialogText"));
     m_text->setWordWrap(true);
+    m_text->setTextFormat(Qt::PlainText);
     m_text->setVisible(!text.isEmpty());
     contentLayout->addWidget(m_text);
     // a screen reader reads the explanation with the window's name
@@ -207,7 +210,8 @@ inline void showNotice(QWidget* parent, const QString& title, const QString& tex
 {
   ContentDialog dialog(parent, QStringLiteral("revampedInstallerNotice"), title, text);
   auto* ok = dialog.addButton(QCoreApplication::translate("RevampedFluent", "OK"), true);
-  QObject::connect(ok, &QPushButton::clicked, &dialog, &QDialog::accept);
+  // a string connect: C++/CLI code finds no signal for a function pointer
+  QObject::connect(ok, SIGNAL(clicked()), &dialog, SLOT(accept()));
   ok->setFocus();
   dialog.exec();
 }

@@ -13692,4 +13692,349 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
       <translation>OK</translation>
     </message>
   </context>
+  <context>
+    <name>FomodInstallerDialog</name>
+    <message>
+      <source>FOMOD Installer</source>
+      <translation>Instalador FOMOD</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nome do mod</translation>
+    </message>
+    <message>
+      <source>View pictures</source>
+      <translation>Ver imagens</translation>
+    </message>
+    <message>
+      <source>Show the pictures of this step's options larger</source>
+      <translation>Mostra maiores as imagens das opções desta etapa</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Descrição da opção</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Instalar manualmente</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Escolha quais arquivos do pacote instalar e onde</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <translation>Voltar</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Digite um nome para o mod.</translation>
+    </message>
+    <message>
+      <source>By %1</source>
+      <translation>Por %1</translation>
+    </message>
+    <message>
+      <source>Version %1</source>
+      <translation>Versão %1</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Instalar este mod</translation>
+    </message>
+    <message>
+      <source>This FOMOD has no options to choose.</source>
+      <translation>Este FOMOD não tem opções para escolher.</translation>
+    </message>
+    <message>
+      <source>These files or folders aren't in the archive, most likely because of a mistake in the mod's FOMOD. The mod may not work properly.</source>
+      <translation>Estes arquivos ou pastas não estão no pacote, provavelmente por um erro no FOMOD do mod. O mod pode não funcionar direito.</translation>
+    </message>
+    <message>
+      <source>Folder '%1'</source>
+      <translation>Pasta “%1”</translation>
+    </message>
+    <message>
+      <source>File '%1'</source>
+      <translation>Arquivo “%1”</translation>
+    </message>
+    <message>
+      <source>&lt;a href=&quot;%1&quot;&gt;Website&lt;/a&gt;</source>
+      <translation>&lt;a href=&quot;%1&quot;&gt;Site&lt;/a&gt;</translation>
+    </message>
+    <message>
+      <source>Choose one or more.</source>
+      <translation>Escolha uma ou mais.</translation>
+    </message>
+    <message>
+      <source>Choose one, or none.</source>
+      <translation>Escolha uma, ou nenhuma.</translation>
+    </message>
+    <message>
+      <source>Choose one.</source>
+      <translation>Escolha uma.</translation>
+    </message>
+    <message>
+      <source>All of these are installed.</source>
+      <translation>Todas estas são instaladas.</translation>
+    </message>
+    <message>
+      <source>Choose any.</source>
+      <translation>Escolha quantas quiser.</translation>
+    </message>
+    <message>
+      <source>Choose at least one option in: %1</source>
+      <translation>Escolha pelo menos uma opção em: %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>FomodScreenshotDialog</name>
+    <message>
+      <source>Pictures</source>
+      <translation>Imagens</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>Previous picture</source>
+      <translation>Imagem anterior</translation>
+    </message>
+    <message>
+      <source>Next picture</source>
+      <translation>Próxima imagem</translation>
+    </message>
+    <message>
+      <source>This step has no pictures.</source>
+      <translation>Esta etapa não tem imagens.</translation>
+    </message>
+    <message>
+      <source>%1 of %2</source>
+      <translation>%1 de %2</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallerFomodPredialog</name>
+    <message>
+      <source>FOMOD C# Installer</source>
+      <translation>Instalador FOMOD C#</translation>
+    </message>
+    <message>
+      <source>This mod's installer is a C# script. MO2 runs it when you choose Install; it may ask you questions in its own windows.</source>
+      <translation>O instalador deste mod é um script C#. O MO2 o executa quando você escolhe Instalar; ele pode fazer perguntas em janelas próprias.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Instalar este mod</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nome do mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Digite um nome para o mod.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Run the mod's installer script</source>
+      <translation>Executa o script de instalação do mod</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Instalar manualmente</translation>
+    </message>
+    <message>
+      <source>Choose which of the archive's files to install, and where</source>
+      <translation>Escolha quais arquivos do pacote instalar e onde</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallerFomodPostDialog</name>
+    <message>
+      <source>Settings modification required</source>
+      <translation>Alteração de configurações necessária</translation>
+    </message>
+    <message>
+      <source>You can apply them to the INI files of the current profile, keep them in the mod's folder under INI Tweaks, or discard them.</source>
+      <translation>Você pode aplicá-las aos arquivos INI do perfil atual, mantê-las na pasta do mod em INI Tweaks, ou descartá-las.</translation>
+    </message>
+    <message>
+      <source>The installer wants to change these settings</source>
+      <translation>O instalador quer mudar estas configurações</translation>
+    </message>
+    <message>
+      <source>INI file</source>
+      <translation>Arquivo INI</translation>
+    </message>
+    <message>
+      <source>Settings</source>
+      <translation>Configurações</translation>
+    </message>
+    <message>
+      <source>Save as INI Tweaks</source>
+      <translation>Salvar em INI Tweaks</translation>
+    </message>
+    <message>
+      <source>Create files under &quot;INI Tweaks&quot; in the mod folder with these settings</source>
+      <translation>Cria arquivos com estas configurações em “INI Tweaks” na pasta do mod</translation>
+    </message>
+    <message>
+      <source>Apply</source>
+      <translation>Aplicar</translation>
+    </message>
+    <message>
+      <source>Apply the settings to the INI files of the current profile</source>
+      <translation>Aplica as configurações aos arquivos INI do perfil atual</translation>
+    </message>
+    <message>
+      <source>Discard</source>
+      <translation>Descartar</translation>
+    </message>
+    <message>
+      <source>Discard the settings</source>
+      <translation>Descarta as configurações</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Cancel the installation</source>
+      <translation>Cancela a instalação</translation>
+    </message>
+  </context>
+  <context>
+    <name>NameDialog</name>
+    <message>
+      <source>OMOD Installer</source>
+      <translation>Instalador OMOD</translation>
+    </message>
+    <message>
+      <source>This mod is an OMOD. MO2 installs it with its own installer, which may ask you questions next.</source>
+      <translation>Este mod é um OMOD. O MO2 o instala com o próprio instalador dele, que pode fazer perguntas em seguida.</translation>
+    </message>
+    <message>
+      <source>Install this mod</source>
+      <translation>Instalar este mod</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nome do mod</translation>
+    </message>
+    <message>
+      <source>Enter a name for the mod.</source>
+      <translation>Digite um nome para o mod.</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+  </context>
+  <context>
+    <name>RtfPopup</name>
+    <message>
+      <source>Readme</source>
+      <translation>Leia-me</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+  </context>
+  <context>
+    <name>ScriptFunctionsHelper</name>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+  </context>
+  <context>
+    <name>MOBase::TextViewer</name>
+    <message>
+      <source>Save %1</source>
+      <translation>Salva %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>TextViewer</name>
+    <message>
+      <source>Show spaces and tabs</source>
+      <translation>Mostrar espaços e tabulações</translation>
+    </message>
+    <message>
+      <source>Find...</source>
+      <translation>Localizar...</translation>
+    </message>
+    <message>
+      <source>Find in this file (Ctrl+F)</source>
+      <translation>Localiza neste arquivo (Ctrl+F)</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+  </context>
+  <context>
+    <name>FindDialog</name>
+    <message>
+      <source>Find</source>
+      <translation>Localizar</translation>
+    </message>
+    <message>
+      <source>Find what</source>
+      <translation>Localizar</translation>
+    </message>
+    <message>
+      <source>Search term</source>
+      <translation>Termo de busca</translation>
+    </message>
+    <message>
+      <source>Find next</source>
+      <translation>Localizar próximo</translation>
+    </message>
+    <message>
+      <source>Find the next match after the cursor, from the top again at the end (F3)</source>
+      <translation>Localiza a próxima ocorrência após o cursor, voltando ao início no fim (F3)</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+  </context>
+  <context>
+    <name>OmodDialogSelect</name>
+    <message>
+      <source>Choose any.</source>
+      <translation>Escolha quantas quiser.</translation>
+    </message>
+    <message>
+      <source>Choose one.</source>
+      <translation>Escolha uma.</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Descrição da opção</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+  </context>
 </TS>
