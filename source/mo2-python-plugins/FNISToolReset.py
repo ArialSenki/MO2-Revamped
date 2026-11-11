@@ -1,76 +1,66 @@
-import os
-import sys
+# MO2 Revamped: resets the FNIS integration's choices, rewritten for Revamped.
+# It keeps the plugin name of Mod Organizer 2's FNIS Integration Tool Reset by
+# LostDragonist (GNU GPL version 3) and what it does: the next run of FNIS asks
+# for its setup again.
 
-from FNISTool import FNISTool
-from PyQt6.QtCore import QFileInfo, QCoreApplication
-from PyQt6.QtGui import QFileSystemModel, QIcon
-from PyQt6.QtWidgets import QMessageBox
+from __future__ import annotations
+
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QMessageBox, QWidget
 
 import mobase
 
-class FNISToolReset(mobase.IPluginTool):
-    def __init__(self):
-        super(FNISToolReset, self).__init__()
-        self.__organizer = None
-        self.__parentWidget = None
+from FNISTool import TOOL_NAME, setup, tr
 
-    def init(self, organizer):
-        self.__organizer = organizer
+
+class FNISToolReset(mobase.IPluginTool):
+
+    def __init__(self):
+        super().__init__()
+        self._organizer: mobase.IOrganizer | None = None
+        self._parent: QWidget | None = None
+
+    def init(self, organizer: mobase.IOrganizer) -> bool:
+        self._organizer = organizer
         return True
 
-    def name(self):
+    def name(self) -> str:
         return "FNIS Integration Tool Reset"
 
-    def localizedName(self):
-        return self.tr("FNIS Integration Tool Reset")
+    def localizedName(self) -> str:
+        return tr("FNIS Integration Tool Reset")
 
-    def author(self):
-        return "LostDragonist"
+    def author(self) -> str:
+        return "LostDragonist, MO2 Revamped"
 
-    def description(self):
-        return self.tr("Provides an easier way to reset the FNIS integration tool settings when needed.")
+    def description(self) -> str:
+        return tr("Changes where FNIS is and where its files and logs go.")
 
-    def version(self):
-        return mobase.VersionInfo(1, 0, 0, 0)
+    def version(self) -> mobase.VersionInfo:
+        return mobase.VersionInfo(2, 0, 0, mobase.ReleaseType.FINAL)
 
-    def master(self):
-        return "FNIS Integration Tool"
+    def master(self) -> str:
+        return TOOL_NAME
 
-    def settings(self):
+    def settings(self) -> list:
         return []
 
-    def displayName(self):
-        return self.tr("FNIS/Reset FNIS Settings")
+    def displayName(self) -> str:
+        return tr("FNIS/Change FNIS settings")
 
-    def tooltip(self):
+    def tooltip(self) -> str:
         return self.description()
 
-    def icon(self):
-        fnisPath = self.__organizer.pluginSetting(self.__mainToolName(), "fnis-path")
-        if os.path.exists(fnisPath):
-            # We can't directly grab the icon from an executable, but this seems like the simplest alternative.
-            fin = QFileInfo(fnisPath)
-            model = QFileSystemModel()
-            model.setRootPath(fin.path())
-            return model.fileIcon(model.index(fin.filePath()))
-        else:
-            # Fall back to where the user might have put an icon manually.
-            return QIcon("plugins/FNIS.ico")
+    def icon(self) -> QIcon:
+        return QIcon()
 
-    def setParentWidget(self, widget):
-        self.__parentWidget = widget
+    def setParentWidget(self, widget: QWidget) -> None:
+        self._parent = widget
 
-    def display(self):
-        result = QMessageBox.question(self.__parentWidget, self.tr("Reset settings?"), self.tr("Would you like to reset the options that pop up when you first ran \"{}\"?").format(self.__mainToolName()))
-        if result == QMessageBox.StandardButton.Yes:
-            self.__organizer.setPluginSetting(self.__mainToolName(), "initialised", False)
+    def display(self) -> None:
+        # the setup window shows the current choices; Cancel leaves them as they are
+        setup(self._organizer, self._parent, False)
 
-    def tr(self, str):
-        return QCoreApplication.translate("FNISToolReset", str)
 
-    @staticmethod
-    def __mainToolName():
-        return FNISTool().name()
-
-def createPlugin():
+def createPlugin() -> mobase.IPlugin:
     return FNISToolReset()

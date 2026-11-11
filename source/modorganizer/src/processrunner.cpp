@@ -929,19 +929,16 @@ ProcessRunner::Results ProcessRunner::postRun()
   }
 
   if (shouldRefresh(r)) {
-    QEventLoop loop;
-    const bool wait = m_waitFlags.testFlag(WaitForRefresh);
-
-    if (wait) {
-      QObject::connect(&m_core, &OrganizerCore::directoryStructureReady, &loop,
-                       &QEventLoop::quit, Qt::ConnectionType::QueuedConnection);
-    }
-
     m_core.afterRun(m_sp.binary, m_exitCode);
 
-    if (wait) {
+    // MO2 Revamped: the refresh afterRun() starts can end while afterRun() is
+    // still running, when a plugin it notifies asks something (MO2's FNIS check
+    // does). A quit queued for a loop made before afterRun() then reached it
+    // before it ran, and the wait went on until some later refresh. This waits
+    // only while a refresh is going, including one that follows it
+    if (m_waitFlags.testFlag(WaitForRefresh)) {
       log::debug("process runner: waiting until refresh finishes");
-      loop.exec();
+      m_core.waitForDirectoryRefresh();
       log::debug("process runner: refresh is done");
     }
   }

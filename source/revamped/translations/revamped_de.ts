@@ -12414,4 +12414,283 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
       <translation>WinRAR hat nichts entpackt.</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedFNIS</name>
+    <message>
+      <source>MO2 runs FNIS inside its virtual Data folder, so FNIS sees the animations of every active mod.</source>
+      <translation>MO2 führt FNIS in seinem virtuellen Data-Ordner aus, damit FNIS die Animationen aller aktiven Mods sieht.</translation>
+    </message>
+    <message>
+      <source>FNIS Integration Tool</source>
+      <translation>FNIS-Integrationswerkzeug</translation>
+    </message>
+    <message>
+      <source>Runs FNIS (GenerateFNISforUsers.exe) inside MO2 so Skyrim loads your mods' animations.</source>
+      <translation>Führt FNIS (GenerateFNISforUsers.exe) in MO2 aus, damit Skyrim die Animationen deiner Mods lädt.</translation>
+    </message>
+    <message>
+      <source>FNIS/Run FNIS</source>
+      <translation>FNIS/FNIS ausführen</translation>
+    </message>
+    <message>
+      <source>Choose GenerateFNISforUsers.exe.</source>
+      <translation>Wähle GenerateFNISforUsers.exe.</translation>
+    </message>
+    <message>
+      <source>GenerateFNISforUsers.exe is no longer at this location.</source>
+      <translation>GenerateFNISforUsers.exe ist nicht mehr an diesem Ort.</translation>
+    </message>
+    <message>
+      <source>FNIS only works inside MO2's virtual Data folder: choose a copy in a mod or in the game's Data folder.</source>
+      <translation>FNIS funktioniert nur im virtuellen Data-Ordner von MO2: Wähle eine Kopie in einer Mod oder im Data-Ordner des Spiels.</translation>
+    </message>
+    <message>
+      <source>This mod is no longer in MO2's mods folder.</source>
+      <translation>Diese Mod ist nicht mehr im Mod-Ordner von MO2.</translation>
+    </message>
+    <message>
+      <source>This is the mod FNIS is installed in. Choose another one.</source>
+      <translation>In dieser Mod ist FNIS installiert. Wähle eine andere.</translation>
+    </message>
+    <message>
+      <source>FNIS's logs need a different mod from its files.</source>
+      <translation>Die Protokolle von FNIS brauchen eine andere Mod als seine Dateien.</translation>
+    </message>
+    <message>
+      <source>Set up FNIS</source>
+      <translation>FNIS einrichten</translation>
+    </message>
+    <message>
+      <source>FNIS</source>
+      <translation>FNIS</translation>
+    </message>
+    <message>
+      <source>Browse…</source>
+      <translation>Durchsuchen…</translation>
+    </message>
+    <message>
+      <source>Find GenerateFNISforUsers.exe</source>
+      <translation>GenerateFNISforUsers.exe suchen</translation>
+    </message>
+    <message>
+      <source>Where FNIS writes</source>
+      <translation>Wohin FNIS schreibt</translation>
+    </message>
+    <message>
+      <source>Write FNIS's files to a mod of their own</source>
+      <translation>Dateien von FNIS in eine eigene Mod schreiben</translation>
+    </message>
+    <message>
+      <source>Recommended. Otherwise FNIS replaces its earlier files in whichever mod has them and puts new ones in Overwrite. MO2 turns this mod off while FNIS runs.</source>
+      <translation>Empfohlen. Sonst ersetzt FNIS seine früheren Dateien in der Mod, die sie enthält, und legt neue in Overwrite ab. MO2 deaktiviert diese Mod, während FNIS läuft.</translation>
+    </message>
+    <message>
+      <source>New mod for FNIS's files</source>
+      <translation>Neue Mod für die Dateien von FNIS</translation>
+    </message>
+    <message>
+      <source>Mod for FNIS's files</source>
+      <translation>Mod für die Dateien von FNIS</translation>
+    </message>
+    <message>
+      <source>Write FNIS's logs to a mod of their own</source>
+      <translation>Protokolle von FNIS in eine eigene Mod schreiben</translation>
+    </message>
+    <message>
+      <source>Otherwise new logs go to Overwrite.</source>
+      <translation>Sonst landen neue Protokolle in Overwrite.</translation>
+    </message>
+    <message>
+      <source>New mod for FNIS's logs</source>
+      <translation>Neue Mod für die Protokolle von FNIS</translation>
+    </message>
+    <message>
+      <source>Mod for FNIS's logs</source>
+      <translation>Mod für die Protokolle von FNIS</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Choose a mod</source>
+      <translation>Mod wählen</translation>
+    </message>
+    <message>
+      <source>New mod…</source>
+      <translation>Neue Mod…</translation>
+    </message>
+    <message>
+      <source>New mod</source>
+      <translation>Neue Mod</translation>
+    </message>
+    <message>
+      <source>Name of the new mod:</source>
+      <translation>Name der neuen Mod:</translation>
+    </message>
+    <message>
+      <source>Choose the mod for FNIS's logs.</source>
+      <translation>Wähle die Mod für die Protokolle von FNIS.</translation>
+    </message>
+    <message>
+      <source>Choose the mod for FNIS's files.</source>
+      <translation>Wähle die Mod für die Dateien von FNIS.</translation>
+    </message>
+    <message>
+      <source>These choices are saved; Tools &gt; FNIS &gt; Change FNIS settings brings this window back.</source>
+      <translation>Diese Einstellungen werden gespeichert; Werkzeuge &gt; FNIS &gt; FNIS-Einstellungen ändern öffnet dieses Fenster wieder.</translation>
+    </message>
+    <message>
+      <source>Save and run FNIS</source>
+      <translation>Speichern und FNIS ausführen</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Speichern</translation>
+    </message>
+    <message>
+      <source>A mod's name can't contain &lt; &gt; : &quot; / \ | ? *, or end in a dot or _separator.</source>
+      <translation>Der Name einer Mod darf weder &lt; &gt; : &quot; / \ | ? * enthalten noch auf einen Punkt oder _separator enden.</translation>
+    </message>
+    <message>
+      <source>This mod already has files. FNIS may replace some of them.</source>
+      <translation>Diese Mod enthält schon Dateien. FNIS kann einige davon ersetzen.</translation>
+    </message>
+    <message>
+      <source>Where GenerateFNISforUsers.exe is.</source>
+      <translation>Wo GenerateFNISforUsers.exe liegt.</translation>
+    </message>
+    <message>
+      <source>Write FNIS's files to a mod of their own.</source>
+      <translation>Dateien von FNIS in eine eigene Mod schreiben.</translation>
+    </message>
+    <message>
+      <source>The mod FNIS's files go to.</source>
+      <translation>Die Mod, in die die Dateien von FNIS gehen.</translation>
+    </message>
+    <message>
+      <source>The setup has been done. Off shows the setup window again.</source>
+      <translation>Die Einrichtung ist erledigt. Aus zeigt das Einrichtungsfenster wieder.</translation>
+    </message>
+    <message>
+      <source>Write FNIS's logs to a mod of their own.</source>
+      <translation>Protokolle von FNIS in eine eigene Mod schreiben.</translation>
+    </message>
+    <message>
+      <source>The mod FNIS's logs go to.</source>
+      <translation>Die Mod, in die die Protokolle von FNIS gehen.</translation>
+    </message>
+    <message>
+      <source>FNIS is in a mod that is off</source>
+      <translation>FNIS ist in einer deaktivierten Mod</translation>
+    </message>
+    <message>
+      <source>FNIS did not start</source>
+      <translation>FNIS ist nicht gestartet</translation>
+    </message>
+    <message>
+      <source>MO2 could not start FNIS. MO2's log has the details.</source>
+      <translation>MO2 konnte FNIS nicht starten. Details stehen im Protokoll von MO2.</translation>
+    </message>
+    <message>
+      <source>There is already a mod called &quot;{name}&quot;.</source>
+      <translation>Es gibt bereits eine Mod namens „{name}“.</translation>
+    </message>
+    <message>
+      <source>FNIS is installed in &quot;{mod}&quot;, which is turned off, so MO2 can't run it. Turn the mod on and run FNIS?</source>
+      <translation>FNIS ist in „{mod}“ installiert, die deaktiviert ist, daher kann MO2 es nicht ausführen. Die Mod aktivieren und FNIS ausführen?</translation>
+    </message>
+    <message>
+      <source>The mod could not be created:
+{error}</source>
+      <translation>Die Mod konnte nicht erstellt werden:
+{error}</translation>
+    </message>
+    <message>
+      <source>FNIS Patches Tool</source>
+      <translation>FNIS-Patch-Werkzeug</translation>
+    </message>
+    <message>
+      <source>Chooses the patches FNIS applies.</source>
+      <translation>Wählt die Patches, die FNIS anwendet.</translation>
+    </message>
+    <message>
+      <source>FNIS/Choose FNIS patches</source>
+      <translation>FNIS/FNIS-Patches wählen</translation>
+    </message>
+    <message>
+      <source>FNIS patches</source>
+      <translation>FNIS-Patches</translation>
+    </message>
+    <message>
+      <source>The patches FNIS applies when it runs. FNIS turns some of them on or off by itself, so its own list can differ from this one.</source>
+      <translation>Die Patches, die FNIS beim Ausführen anwendet. FNIS schaltet manche davon selbst ein oder aus, daher kann seine eigene Liste von dieser abweichen.</translation>
+    </message>
+    <message>
+      <source>Search patches</source>
+      <translation>Patches suchen</translation>
+    </message>
+    <message>
+      <source>Patches</source>
+      <translation>Patches</translation>
+    </message>
+    <message>
+      <source>FNIS's patch list has no patches to choose.</source>
+      <translation>Die Patch-Liste von FNIS enthält keine Patches zur Auswahl.</translation>
+    </message>
+    <message>
+      <source>FNIS is not set up</source>
+      <translation>FNIS ist nicht eingerichtet</translation>
+    </message>
+    <message>
+      <source>FNIS isn't set up yet, so MO2 can't read its patches. Set it up now?</source>
+      <translation>FNIS ist noch nicht eingerichtet, daher kann MO2 seine Patches nicht lesen. Jetzt einrichten?</translation>
+    </message>
+    <message>
+      <source>{on} of {total} patches on</source>
+      <translation>{on} von {total} Patches aktiv</translation>
+    </message>
+    <message>
+      <source>FNIS's patch list could not be read:
+{path}
+
+{error}</source>
+      <translation>Die Patch-Liste von FNIS konnte nicht gelesen werden:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The patches that are on could not be read:
+{path}
+
+{error}</source>
+      <translation>Die aktiven Patches konnten nicht gelesen werden:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The patches could not be saved:
+{path}
+
+{error}</source>
+      <translation>Die Patches konnten nicht gespeichert werden:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>FNIS Integration Tool Reset</source>
+      <translation>FNIS-Integrationswerkzeug zurücksetzen</translation>
+    </message>
+    <message>
+      <source>Changes where FNIS is and where its files and logs go.</source>
+      <translation>Ändert, wo FNIS liegt und wohin seine Dateien und Protokolle gehen.</translation>
+    </message>
+    <message>
+      <source>FNIS/Change FNIS settings</source>
+      <translation>FNIS/FNIS-Einstellungen ändern</translation>
+    </message>
+  </context>
 </TS>

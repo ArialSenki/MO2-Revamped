@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### FNIS
+
+- The FNIS tools are rewritten in MO2 Revamped's design. One window, **Set up
+  FNIS**, asks for everything at once instead of a chain of messages:
+  GenerateFNISforUsers.exe, and the mods FNIS's files and logs go to, which it
+  can create. Each choice says what is wrong with it, and the window opens again
+  from **Tools > FNIS > Change FNIS settings**. Settings from Mod Organizer 2's
+  FNIS tool carry over.
+- **Choose FNIS patches** has a search, counts the patches that are on, and keeps
+  the hidden ones as they were.
+- After FNIS runs, its output mod is on again. Mod Organizer 2's tool left it off
+  whenever MO2's FNIS check asked something at the end of the run.
+- MO2 no longer keeps waiting after a program it ran from a plugin finishes, when
+  another plugin asks something at that moment (MO2's FNIS check does): the wait
+  went on until some later refresh.
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12

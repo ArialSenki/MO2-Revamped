@@ -12585,4 +12585,283 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
       <translation>WinRAR n'a rien extrait.</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedFNIS</name>
+    <message>
+      <source>MO2 runs FNIS inside its virtual Data folder, so FNIS sees the animations of every active mod.</source>
+      <translation>MO2 exécute FNIS dans son dossier Data virtuel, pour que FNIS voie les animations de tous les mods actifs.</translation>
+    </message>
+    <message>
+      <source>FNIS Integration Tool</source>
+      <translation>Outil d’intégration de FNIS</translation>
+    </message>
+    <message>
+      <source>Runs FNIS (GenerateFNISforUsers.exe) inside MO2 so Skyrim loads your mods' animations.</source>
+      <translation>Exécute FNIS (GenerateFNISforUsers.exe) dans MO2 pour que Skyrim charge les animations de vos mods.</translation>
+    </message>
+    <message>
+      <source>FNIS/Run FNIS</source>
+      <translation>FNIS/Exécuter FNIS</translation>
+    </message>
+    <message>
+      <source>Choose GenerateFNISforUsers.exe.</source>
+      <translation>Choisissez GenerateFNISforUsers.exe.</translation>
+    </message>
+    <message>
+      <source>GenerateFNISforUsers.exe is no longer at this location.</source>
+      <translation>GenerateFNISforUsers.exe n’est plus à cet emplacement.</translation>
+    </message>
+    <message>
+      <source>FNIS only works inside MO2's virtual Data folder: choose a copy in a mod or in the game's Data folder.</source>
+      <translation>FNIS ne fonctionne que dans le dossier Data virtuel de MO2 : choisissez une copie dans un mod ou dans le dossier Data du jeu.</translation>
+    </message>
+    <message>
+      <source>This mod is no longer in MO2's mods folder.</source>
+      <translation>Ce mod n’est plus dans le dossier des mods de MO2.</translation>
+    </message>
+    <message>
+      <source>This is the mod FNIS is installed in. Choose another one.</source>
+      <translation>C’est le mod où FNIS est installé. Choisissez-en un autre.</translation>
+    </message>
+    <message>
+      <source>FNIS's logs need a different mod from its files.</source>
+      <translation>Les journaux de FNIS doivent aller dans un autre mod que ses fichiers.</translation>
+    </message>
+    <message>
+      <source>Set up FNIS</source>
+      <translation>Configurer FNIS</translation>
+    </message>
+    <message>
+      <source>FNIS</source>
+      <translation>FNIS</translation>
+    </message>
+    <message>
+      <source>Browse…</source>
+      <translation>Parcourir…</translation>
+    </message>
+    <message>
+      <source>Find GenerateFNISforUsers.exe</source>
+      <translation>Trouver GenerateFNISforUsers.exe</translation>
+    </message>
+    <message>
+      <source>Where FNIS writes</source>
+      <translation>Où FNIS écrit</translation>
+    </message>
+    <message>
+      <source>Write FNIS's files to a mod of their own</source>
+      <translation>Écrire les fichiers de FNIS dans un mod à part</translation>
+    </message>
+    <message>
+      <source>Recommended. Otherwise FNIS replaces its earlier files in whichever mod has them and puts new ones in Overwrite. MO2 turns this mod off while FNIS runs.</source>
+      <translation>Recommandé. Sinon, FNIS remplace ses anciens fichiers dans le mod qui les contient et met les nouveaux dans Overwrite. MO2 désactive ce mod pendant que FNIS s’exécute.</translation>
+    </message>
+    <message>
+      <source>New mod for FNIS's files</source>
+      <translation>Nouveau mod pour les fichiers de FNIS</translation>
+    </message>
+    <message>
+      <source>Mod for FNIS's files</source>
+      <translation>Mod pour les fichiers de FNIS</translation>
+    </message>
+    <message>
+      <source>Write FNIS's logs to a mod of their own</source>
+      <translation>Écrire les journaux de FNIS dans un mod à part</translation>
+    </message>
+    <message>
+      <source>Otherwise new logs go to Overwrite.</source>
+      <translation>Sinon, les nouveaux journaux vont dans Overwrite.</translation>
+    </message>
+    <message>
+      <source>New mod for FNIS's logs</source>
+      <translation>Nouveau mod pour les journaux de FNIS</translation>
+    </message>
+    <message>
+      <source>Mod for FNIS's logs</source>
+      <translation>Mod pour les journaux de FNIS</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annuler</translation>
+    </message>
+    <message>
+      <source>Choose a mod</source>
+      <translation>Choisir un mod</translation>
+    </message>
+    <message>
+      <source>New mod…</source>
+      <translation>Nouveau mod…</translation>
+    </message>
+    <message>
+      <source>New mod</source>
+      <translation>Nouveau mod</translation>
+    </message>
+    <message>
+      <source>Name of the new mod:</source>
+      <translation>Nom du nouveau mod :</translation>
+    </message>
+    <message>
+      <source>Choose the mod for FNIS's logs.</source>
+      <translation>Choisissez le mod pour les journaux de FNIS.</translation>
+    </message>
+    <message>
+      <source>Choose the mod for FNIS's files.</source>
+      <translation>Choisissez le mod pour les fichiers de FNIS.</translation>
+    </message>
+    <message>
+      <source>These choices are saved; Tools &gt; FNIS &gt; Change FNIS settings brings this window back.</source>
+      <translation>Ces choix sont enregistrés ; Outils &gt; FNIS &gt; Modifier les paramètres de FNIS rouvre cette fenêtre.</translation>
+    </message>
+    <message>
+      <source>Save and run FNIS</source>
+      <translation>Enregistrer et exécuter FNIS</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Enregistrer</translation>
+    </message>
+    <message>
+      <source>A mod's name can't contain &lt; &gt; : &quot; / \ | ? *, or end in a dot or _separator.</source>
+      <translation>Le nom d’un mod ne peut pas contenir &lt; &gt; : &quot; / \ | ? *, ni finir par un point ou par _separator.</translation>
+    </message>
+    <message>
+      <source>This mod already has files. FNIS may replace some of them.</source>
+      <translation>Ce mod contient déjà des fichiers. FNIS peut en remplacer certains.</translation>
+    </message>
+    <message>
+      <source>Where GenerateFNISforUsers.exe is.</source>
+      <translation>L’emplacement de GenerateFNISforUsers.exe.</translation>
+    </message>
+    <message>
+      <source>Write FNIS's files to a mod of their own.</source>
+      <translation>Écrire les fichiers de FNIS dans un mod à part.</translation>
+    </message>
+    <message>
+      <source>The mod FNIS's files go to.</source>
+      <translation>Le mod où vont les fichiers de FNIS.</translation>
+    </message>
+    <message>
+      <source>The setup has been done. Off shows the setup window again.</source>
+      <translation>La configuration est faite. Désactivé affiche de nouveau la fenêtre de configuration.</translation>
+    </message>
+    <message>
+      <source>Write FNIS's logs to a mod of their own.</source>
+      <translation>Écrire les journaux de FNIS dans un mod à part.</translation>
+    </message>
+    <message>
+      <source>The mod FNIS's logs go to.</source>
+      <translation>Le mod où vont les journaux de FNIS.</translation>
+    </message>
+    <message>
+      <source>FNIS is in a mod that is off</source>
+      <translation>FNIS est dans un mod désactivé</translation>
+    </message>
+    <message>
+      <source>FNIS did not start</source>
+      <translation>FNIS ne s’est pas lancé</translation>
+    </message>
+    <message>
+      <source>MO2 could not start FNIS. MO2's log has the details.</source>
+      <translation>MO2 n’a pas pu lancer FNIS. Le journal de MO2 donne les détails.</translation>
+    </message>
+    <message>
+      <source>There is already a mod called &quot;{name}&quot;.</source>
+      <translation>Il existe déjà un mod nommé « {name} ».</translation>
+    </message>
+    <message>
+      <source>FNIS is installed in &quot;{mod}&quot;, which is turned off, so MO2 can't run it. Turn the mod on and run FNIS?</source>
+      <translation>FNIS est installé dans « {mod} », qui est désactivé, donc MO2 ne peut pas l’exécuter. Activer le mod et exécuter FNIS ?</translation>
+    </message>
+    <message>
+      <source>The mod could not be created:
+{error}</source>
+      <translation>Le mod n’a pas pu être créé :
+{error}</translation>
+    </message>
+    <message>
+      <source>FNIS Patches Tool</source>
+      <translation>Outil des correctifs de FNIS</translation>
+    </message>
+    <message>
+      <source>Chooses the patches FNIS applies.</source>
+      <translation>Choisit les correctifs qu’applique FNIS.</translation>
+    </message>
+    <message>
+      <source>FNIS/Choose FNIS patches</source>
+      <translation>FNIS/Choisir les correctifs de FNIS</translation>
+    </message>
+    <message>
+      <source>FNIS patches</source>
+      <translation>Correctifs de FNIS</translation>
+    </message>
+    <message>
+      <source>The patches FNIS applies when it runs. FNIS turns some of them on or off by itself, so its own list can differ from this one.</source>
+      <translation>Les correctifs que FNIS applique quand il s’exécute. FNIS active ou désactive certains d’entre eux de lui-même, donc sa propre liste peut différer de celle-ci.</translation>
+    </message>
+    <message>
+      <source>Search patches</source>
+      <translation>Rechercher des correctifs</translation>
+    </message>
+    <message>
+      <source>Patches</source>
+      <translation>Correctifs</translation>
+    </message>
+    <message>
+      <source>FNIS's patch list has no patches to choose.</source>
+      <translation>La liste de correctifs de FNIS n’en contient aucun à choisir.</translation>
+    </message>
+    <message>
+      <source>FNIS is not set up</source>
+      <translation>FNIS n’est pas configuré</translation>
+    </message>
+    <message>
+      <source>FNIS isn't set up yet, so MO2 can't read its patches. Set it up now?</source>
+      <translation>FNIS n’est pas encore configuré, donc MO2 ne peut pas lire ses correctifs. Le configurer maintenant ?</translation>
+    </message>
+    <message>
+      <source>{on} of {total} patches on</source>
+      <translation>{on} correctifs actifs sur {total}</translation>
+    </message>
+    <message>
+      <source>FNIS's patch list could not be read:
+{path}
+
+{error}</source>
+      <translation>La liste de correctifs de FNIS n’a pas pu être lue :
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The patches that are on could not be read:
+{path}
+
+{error}</source>
+      <translation>Les correctifs actifs n’ont pas pu être lus :
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>The patches could not be saved:
+{path}
+
+{error}</source>
+      <translation>Les correctifs n’ont pas pu être enregistrés :
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>FNIS Integration Tool Reset</source>
+      <translation>Réinitialisation de l’outil d’intégration de FNIS</translation>
+    </message>
+    <message>
+      <source>Changes where FNIS is and where its files and logs go.</source>
+      <translation>Modifie l’emplacement de FNIS et l’endroit où vont ses fichiers et ses journaux.</translation>
+    </message>
+    <message>
+      <source>FNIS/Change FNIS settings</source>
+      <translation>FNIS/Modifier les paramètres de FNIS</translation>
+    </message>
+  </context>
 </TS>
