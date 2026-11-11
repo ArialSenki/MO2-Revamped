@@ -13243,4 +13243,195 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
       <translation>Steuert den Regen- und Schneeeffekt.</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedBAINWizard</name>
+    <message>
+      <source>Next</source>
+      <translation>Weiter</translation>
+    </message>
+    <message>
+      <source>Check this package's requirements</source>
+      <translation>Anforderungen des Pakets prüfen</translation>
+    </message>
+    <message>
+      <source>Some versions below are older than needed, missing, or can't be checked by MO2. The mod may not work; you can install it anyway.</source>
+      <translation>Einige der Versionen unten sind älter als nötig, fehlen oder können von MO2 nicht geprüft werden. Die Mod funktioniert vielleicht nicht; du kannst sie trotzdem installieren.</translation>
+    </message>
+    <message>
+      <source>Continue anyway</source>
+      <translation>Trotzdem fortfahren</translation>
+    </message>
+    <message>
+      <source>Ready to install</source>
+      <translation>Bereit zur Installation</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installieren</translation>
+    </message>
+    <message>
+      <source>The installer stopped</source>
+      <translation>Das Installationsprogramm wurde beendet</translation>
+    </message>
+    <message>
+      <source>The package's script has a mistake</source>
+      <translation>Das Skript des Pakets enthält einen Fehler</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Beschreibung der Option</translation>
+    </message>
+    <message>
+      <source>Choose any of these</source>
+      <translation>Wähle beliebig viele aus</translation>
+    </message>
+    <message>
+      <source>Choose one</source>
+      <translation>Wähle eine aus</translation>
+    </message>
+    <message>
+      <source>Requirements</source>
+      <translation>Anforderungen</translation>
+    </message>
+    <message>
+      <source>Script extender</source>
+      <translation>Script Extender</translation>
+    </message>
+    <message>
+      <source>Graphics extender</source>
+      <translation>Graphics Extender</translation>
+    </message>
+    <message>
+      <source>Wrye Bash</source>
+      <translation>Wrye Bash</translation>
+    </message>
+    <message>
+      <source>These are the parts of the package the script chose.</source>
+      <translation>Das sind die Teile des Pakets, die das Skript ausgewählt hat.</translation>
+    </message>
+    <message>
+      <source>The script chose no sub-packages, so there is nothing to install. Go back and choose other options, or install manually.</source>
+      <translation>Das Skript hat keine Unterpakete ausgewählt, es gibt also nichts zu installieren. Geh zurück und wähle andere Optionen oder installiere manuell.</translation>
+    </message>
+    <message>
+      <source>The package's script cancelled the installation and gave this reason. Go back to choose other options, or install manually.</source>
+      <translation>Das Skript des Pakets hat die Installation mit dieser Begründung abgebrochen. Geh zurück, um andere Optionen zu wählen, oder installiere manuell.</translation>
+    </message>
+    <message>
+      <source>The package's script cancelled the installation and gave this reason. You can install the mod manually.</source>
+      <translation>Das Skript des Pakets hat die Installation mit dieser Begründung abgebrochen. Du kannst die Mod manuell installieren.</translation>
+    </message>
+    <message>
+      <source>The script gave no reason.</source>
+      <translation>Das Skript hat keinen Grund angegeben.</translation>
+    </message>
+    <message>
+      <source>MO2 can't go on with this package's wizard.txt. You can open the script, go back, or install the mod manually.</source>
+      <translation>MO2 kann mit der wizard.txt dieses Pakets nicht weitermachen. Du kannst das Skript öffnen, zurückgehen oder die Mod manuell installieren.</translation>
+    </message>
+    <message>
+      <source>MO2 can't run this package's wizard.txt. You can open the script or install the mod manually.</source>
+      <translation>MO2 kann die wizard.txt dieses Pakets nicht ausführen. Du kannst das Skript öffnen oder die Mod manuell installieren.</translation>
+    </message>
+    <message>
+      <source>BAIN Wizard Installer</source>
+      <translation>BAIN-Assistent-Installer</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Name der Mod</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Close the wizard and choose the files yourself</source>
+      <translation>Schließt den Assistenten, damit du die Dateien selbst auswählst</translation>
+    </message>
+    <message>
+      <source>Open script</source>
+      <translation>Skript öffnen</translation>
+    </message>
+    <message>
+      <source>Open the package's wizard.txt</source>
+      <translation>Öffnet die wizard.txt des Pakets</translation>
+    </message>
+    <message>
+      <source>Met</source>
+      <translation>Erfüllt</translation>
+    </message>
+    <message>
+      <source>Sub-packages</source>
+      <translation>Unterpakete</translation>
+    </message>
+    <message>
+      <source>Plugins</source>
+      <translation>Plugins</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <translation>Zurück</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Picture of %1</source>
+      <translation>Bild von %1</translation>
+    </message>
+    <message>
+      <source>Needs %1. MO2 can't check this one.</source>
+      <translation>Benötigt %1. MO2 kann das nicht prüfen.</translation>
+    </message>
+    <message>
+      <source>Can't check</source>
+      <translation>Nicht prüfbar</translation>
+    </message>
+    <message>
+      <source>Not met</source>
+      <translation>Nicht erfüllt</translation>
+    </message>
+    <message>
+      <source>Notes</source>
+      <translation>Hinweise</translation>
+    </message>
+    <message>
+      <source>INI tweaks</source>
+      <translation>INI-Anpassungen</translation>
+    </message>
+    <message>
+      <source>INI file</source>
+      <translation>INI-Datei</translation>
+    </message>
+    <message>
+      <source>Needs %1. Installed: %2.</source>
+      <translation>Benötigt %1. Installiert: %2.</translation>
+    </message>
+    <message>
+      <source>Needs %1. Not installed.</source>
+      <translation>Benötigt %1. Nicht installiert.</translation>
+    </message>
+    <message>
+      <source>Older than needed</source>
+      <translation>Älter als nötig</translation>
+    </message>
+    <message>
+      <source>Missing</source>
+      <translation>Fehlt</translation>
+    </message>
+    <message>
+      <source>Installed and ready to enable</source>
+      <translation>Wird installiert und kann aktiviert werden</translation>
+    </message>
+    <message>
+      <source>Goes into the mod's optional folder; the game won't see it</source>
+      <translation>Kommt in den optional-Ordner der Mod; das Spiel sieht es nicht</translation>
+    </message>
+    <message>
+      <source>%1 (left in optional)</source>
+      <translation>%1 (bleibt in optional)</translation>
+    </message>
+  </context>
 </TS>

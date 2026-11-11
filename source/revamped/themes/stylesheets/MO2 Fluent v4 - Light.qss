@@ -6123,3 +6123,16 @@ QDialog#ConfiguratorDialog QFrame#fluentSettingRow QDoubleSpinBox {
     padding: 4px 10px;
     border-radius: 4px;
 }
+
+/* BAIN wizard: the lists and texts inside its cards fill the card */
+QDialog#BainWizardDialog QFrame[fluentCard="true"] QListWidget,
+QDialog#BainWizardDialog QFrame[fluentCard="true"] QTextBrowser,
+QDialog#BainWizardDialog QFrame[fluentCard="true"] QPlainTextEdit#bainMessage {
+    background-color: transparent;
+    border: none;
+}
+QDialog#BainWizardDialog QScrollArea#bainPageText,
+QDialog#BainWizardDialog QScrollArea#bainPageText > QWidget > QWidget {
+    background-color: transparent;
+    border: none;
+}

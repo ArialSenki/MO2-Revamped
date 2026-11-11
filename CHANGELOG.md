@@ -45,6 +45,23 @@
 - Unsaved changes are asked about once when the window closes, and Enter in a
   field no longer saves.
 
+### BAIN wizard
+
+- The BAIN wizard installer is rewritten in MO2 Revamped's design. Each question
+  shows its options beside the chosen one's picture and description; long
+  questions and option names wrap instead of being cut.
+- The requirements page shows each version the package asks for, the one MO2
+  found, and whether it is met, missing or something MO2 can't check.
+- The last page shows what will be installed: the sub-packages, which plugins
+  start enabled and which stay in the optional folder, the INI tweaks and the
+  script's notes. Install stays off while the mod name is empty.
+- A plugin the script renames is now installed enabled. Mod Organizer 2's wizard
+  put it in the optional folder.
+- Back goes through every step, also when the script asks the same question
+  again in a loop.
+- The script's notes and questions are shown as written, not read as Markdown or
+  HTML.
+
 ## 1.1.0-beta.6 (pre-release) — November 11, 2026
 
 ### Qt 6.12
