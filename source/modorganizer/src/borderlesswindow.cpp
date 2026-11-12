@@ -9,6 +9,7 @@
 #include <log.h>
 #include <scriptextender.h>
 
+#include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QPointer>
@@ -291,6 +292,23 @@ bool processAlive(DWORD pid)
 }
 
 }  // namespace
+
+std::optional<std::pair<QString, QString>>
+BorderlessWindow::forcedLibrary(const IPluginGame* game)
+{
+  const auto gameInfo = info(game);
+  if (!gameInfo || gameInfo->native) {
+    return std::nullopt;
+  }
+  const QString dll = QDir(QCoreApplication::applicationDirPath())
+                          .absoluteFilePath(QStringLiteral("borderless/mo2r_borderless.dll"));
+  if (!QFileInfo::exists(dll)) {
+    log::warn("borderless window: {} is missing; the border comes off from outside the game",
+              dll);
+    return std::nullopt;
+  }
+  return std::make_pair(gameInfo->exe, QDir::toNativeSeparators(dll));
+}
 
 bool BorderlessWindow::supported(const IPluginGame* game)
 {

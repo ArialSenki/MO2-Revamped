@@ -30,8 +30,10 @@
   Oblivion. The game starts in a window without a border that covers the
   screen, at its resolution. Skyrim Special Edition, Enderal SE and Fallout 4
   do it themselves (MO2 sets bBorderless in their Prefs INI); the older games
-  only have a framed window, so MO2 starts them windowed at the screen's size
-  and takes the border off when the game's window shows.
+  only have a framed window: a small DLL of MO2's, loaded into the game only
+  with the option on, takes the frame off as the game creates its window, so
+  no framed window shows first, and hides the window when the game stops
+  drawing to close, instead of a black screen while it shuts down.
 - It applies when the game starts, also through its script extender, not for
   its launcher or editor. Turned off, the INIs MO2 changed get their display
   settings back at the next start.

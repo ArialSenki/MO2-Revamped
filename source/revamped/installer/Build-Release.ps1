@@ -1051,6 +1051,26 @@ $dumpbin = Join-Path $vsRoot "VC\Tools\MSVC\$msvcVersion\bin\Hostx64\x64\dumpbin
 if (-not (Test-Path -LiteralPath $dumpbin -PathType Leaf)) { throw "dumpbin.exe was not found: $dumpbin" }
 & (Join-Path $PSScriptRoot 'Copy-QtRuntime.ps1') -QtDirectory $qtRuntimeRoot -Destination $fullStage -Dumpbin $dumpbin
 Move-WebEngineProcessToDlls -DestinationRoot $fullStage
+# the borderless window DLL MO2 loads into the 32-bit games (Fallout 3, New
+# Vegas, Oblivion, the original Skyrim) when the Run menu's option is on; see
+# source\revamped\borderless
+$borderlessSource = Join-Path $repoRoot 'source\revamped\borderless\mo2r_borderless.cpp'
+$borderlessBuild = Join-Path $buildRoot 'borderless'
+New-Item -ItemType Directory -Force -Path $borderlessBuild | Out-Null
+$borderlessDll = Join-Path $borderlessBuild 'mo2r_borderless.dll'
+$borderlessCmd = Join-Path $borderlessBuild 'build.cmd'
+$devCmd = Join-Path $vsRoot 'Common7\Tools\VsDevCmd.bat'
+[IO.File]::WriteAllText($borderlessCmd, (
+    "@echo off`r`ncall `"$devCmd`" -no_logo -arch=x86 -host_arch=amd64`r`n" +
+    "cl /nologo /O2 /MT /EHsc /W4 /LD /DUNICODE /D_UNICODE `"$borderlessSource`" " +
+    "/Fo`"$borderlessBuild\\`" /Fe`"$borderlessDll`" /link user32.lib dwmapi.lib gdi32.lib`r`n"),
+    [Text.Encoding]::ASCII)
+& cmd.exe /c "`"$borderlessCmd`""
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $borderlessDll -PathType Leaf)) {
+    throw 'The borderless window DLL did not build.'
+}
+New-Item -ItemType Directory -Force -Path (Join-Path $fullStage 'borderless') | Out-Null
+Copy-Item -LiteralPath $borderlessDll -Destination (Join-Path $fullStage 'borderless\mo2r_borderless.dll') -Force
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
 Copy-RevampedLicenses -DestinationRoot $fullStage
 

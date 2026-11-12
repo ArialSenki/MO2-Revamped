@@ -13,6 +13,9 @@
 #include <QFileInfo>
 #include <QString>
 
+#include <optional>
+#include <utility>
+
 class OrganizerCore;
 
 namespace MOBase
@@ -40,6 +43,12 @@ public:
   // watches for the game's window and takes its border off, again if the
   // game puts it back, until the game closes
   static void watchGameWindow(const MOBase::IPluginGame* game);
+
+  // for the games MO2 takes the frame off: MO2's DLL that does it from
+  // inside the game (the game's exe, the DLL's path); nullopt for the
+  // others, or when the DLL isn't installed
+  static std::optional<std::pair<QString, QString>>
+  forcedLibrary(const MOBase::IPluginGame* game);
 };
 
 #endif  // BORDERLESSWINDOW_H

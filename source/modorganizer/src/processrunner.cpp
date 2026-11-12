@@ -822,6 +822,15 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
     return Error;
   }
 
+  // MO2 Revamped: for the games MO2 takes the frame off, its DLL does it
+  // from inside the game, on the game's thread, as the window is created
+  if (watchWindow) {
+    if (const auto library = BorderlessWindow::forcedLibrary(game)) {
+      m_forcedLibraries.append(
+          ExecutableForcedLoadSetting(library->first, library->second).withEnabled(true));
+    }
+  }
+
   // saves profile, sets up usvfs, notifies plugins, etc.; can return false if
   // a plugin doesn't want the program to run (such as when checkFNIS fails to
   // run FNIS and the user clicks cancel)
