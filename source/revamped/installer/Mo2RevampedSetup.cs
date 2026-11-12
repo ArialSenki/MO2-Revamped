@@ -558,6 +558,7 @@ namespace Mo2RevampedSetup
                 PreviousDisplayVersion = request.Mode == SetupMode.Update ? RegisteredDisplayVersion(target) : null
             };
             string uninstallWarning = null;
+            string shortcutWarning = null;
 
             if (request.Mode == SetupMode.Update)
             {
@@ -630,7 +631,18 @@ namespace Mo2RevampedSetup
                         File.WriteAllText(settings, "[General]\r\nLanguage=" + InstallerText.Language.Replace('-', '_') + "\r\n", new UTF8Encoding(false));
                 }
 
-                CreateShortcuts(request, state);
+                List<string> failedShortcuts = CreateShortcuts(request, state);
+                if (failedShortcuts.Count > 0)
+                {
+                    // both are called "MO2 Revamped": the place tells them apart
+                    string startMenu = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+                    List<string> labels = new List<string>();
+                    foreach (string link in failedShortcuts)
+                        labels.Add(link.StartsWith(startMenu, StringComparison.OrdinalIgnoreCase)
+                            ? InstallerText.T("Acceso en menú Inicio") : InstallerText.T("Acceso en escritorio"));
+                    shortcutWarning = String.Format(InstallerText.T("No se pudo crear el acceso directo ({0}); MO2 está instalado y se abre desde {1}."),
+                        String.Join(", ", labels.ToArray()), Path.Combine(target, "ModOrganizer.exe"));
+                }
                 state.Status = "Completed";
                 SaveState(state);
                 // Restore only uses this update's copy: earlier ones just took space
@@ -705,6 +717,8 @@ namespace Mo2RevampedSetup
                 details.Append(InstallerText.T("MO2 se configuró como portable."));
             else
                 details.Append(InstallerText.T("MO2 se configuró como estándar."));
+            if (!String.IsNullOrEmpty(shortcutWarning))
+                details.Append(Environment.NewLine).Append(shortcutWarning);
             if (!String.IsNullOrEmpty(uninstallWarning))
                 details.Append(Environment.NewLine).Append(uninstallWarning).Append(InstallerText.T(" El asistente de instalación todavía permite restaurar esta operación."));
             if (!String.IsNullOrEmpty(vcWarning))
@@ -718,6 +732,7 @@ namespace Mo2RevampedSetup
                 Success = true,
                 Message = !String.IsNullOrEmpty(uninstallWarning) ? "La instalación terminó, pero sin entrada de desinstalación." :
                     !String.IsNullOrEmpty(vcWarning) ? "La instalación terminó, pero falta Microsoft Visual C++." :
+                    !String.IsNullOrEmpty(shortcutWarning) ? "La instalación terminó, pero sin acceso directo." :
                     request.Mode == SetupMode.Update ? "Se actualizaron los archivos del programa." :
                     request.Mode == SetupMode.Migrate ? "La instalación nueva recibió los datos seleccionados." : "La instalación nueva está lista.",
                 Details = details.ToString(),
@@ -2166,38 +2181,33 @@ namespace Mo2RevampedSetup
             catch { return false; }
         }
 
-        private static void CreateShortcuts(SetupRequest request, InstallState state)
+        // a shortcut that can't be made is a warning, not a failed install:
+        // MO2 is in place and runs without it (Wine's .NET, on a Steam Deck,
+        // threw on the old way of making them and the install was undone).
+        // Returns the shortcuts that couldn't be made.
+        private static List<string> CreateShortcuts(SetupRequest request, InstallState state)
         {
             string target = Path.Combine(request.TargetDirectory, "ModOrganizer.exe");
             List<string> shortcutPaths = GetShortcutPaths(request);
+            List<string> failed = new List<string>();
+            string shortcutIcon = Path.Combine(request.TargetDirectory, "MO2-Revamped.ico");
+            string iconPath = File.Exists(shortcutIcon) ? shortcutIcon : target;
             foreach (string link in shortcutPaths)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(link));
-                Type shellType = Type.GetTypeFromProgID("WScript.Shell");
-                if (shellType == null) throw new InvalidOperationException(InstallerText.T("Windows no pudo crear un acceso directo."));
-                object shell = Activator.CreateInstance(shellType);
-                object shortcut = null;
                 try
                 {
-                    shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { link });
-                    Type shortcutType = shortcut.GetType();
-                    shortcutType.InvokeMember("TargetPath", BindingFlags.SetProperty, null, shortcut, new object[] { target });
-                    shortcutType.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, shortcut, new object[] { request.TargetDirectory });
-                    shortcutType.InvokeMember("Description", BindingFlags.SetProperty, null, shortcut, new object[] { "MO2 Revamped" });
-                    string shortcutIcon = Path.Combine(request.TargetDirectory, "MO2-Revamped.ico");
-                    string iconLocation = File.Exists(shortcutIcon) ? shortcutIcon + ",0" : target + ",0";
-                    shortcutType.InvokeMember("IconLocation", BindingFlags.SetProperty, null, shortcut, new object[] { iconLocation });
-                    shortcutType.InvokeMember("Save", BindingFlags.InvokeMethod, null, shortcut, null);
+                    Directory.CreateDirectory(Path.GetDirectoryName(link));
+                    ShellLink.Create(link, target, request.TargetDirectory, "MO2 Revamped", iconPath, 0);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    if (shortcut != null && System.Runtime.InteropServices.Marshal.IsComObject(shortcut))
-                        System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);
-                    if (System.Runtime.InteropServices.Marshal.IsComObject(shell))
-                        System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);
+                    SetupDiagnostics.Error("Could not create the shortcut '" + link + "'.", ex);
+                    failed.Add(link);
                 }
             }
-            RemoveObsoleteHashedShortcuts(request, target, shortcutPaths);
+            try { RemoveObsoleteHashedShortcuts(request, target, shortcutPaths); }
+            catch (Exception ex) { SetupDiagnostics.Error("Could not tidy up older shortcuts.", ex); }
+            return failed;
         }
 
         private static void RemoveObsoleteHashedShortcuts(SetupRequest request, string targetExe, List<string> activePaths)
@@ -2260,22 +2270,7 @@ namespace Mo2RevampedSetup
 
         private static string GetShortcutTarget(string link)
         {
-            Type shellType = Type.GetTypeFromProgID("WScript.Shell");
-            if (shellType == null) return "";
-            object shell = Activator.CreateInstance(shellType);
-            object shortcut = null;
-            try
-            {
-                shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { link });
-                return Convert.ToString(shortcut.GetType().InvokeMember("TargetPath", BindingFlags.GetProperty, null, shortcut, null));
-            }
-            finally
-            {
-                if (shortcut != null && System.Runtime.InteropServices.Marshal.IsComObject(shortcut))
-                    System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);
-                if (System.Runtime.InteropServices.Marshal.IsComObject(shell))
-                    System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);
-            }
+            return ShellLink.Target(link);
         }
 
         private static void EnsureMo2Closed(string target, bool forceClose, BackgroundWorker worker)

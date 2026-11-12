@@ -23,6 +23,17 @@
 - Once per instance, when the extender is installed and Run starts something
   else, MO2 offers to start the game through the extender.
 
+### Setup
+
+- On Linux (Steam Deck, Proton, Wine), the setup stopped right after copying
+  the files with "The method or operation is not implemented" and undid the
+  installation: Wine doesn't support the way it created the Start menu and
+  desktop shortcuts. It now makes them through the shell's own shortcut object,
+  which Wine supports, and a shortcut that still can't be made is only a warning
+  at the end: MO2 stays installed.
+- Under Wine, **Open MO2 when finished** starts MO2 directly. On Windows it
+  still goes through the desktop so MO2 doesn't run as administrator.
+
 ## 1.1.0-beta.7 (pre-release) — November 11, 2026
 
 ### FNIS

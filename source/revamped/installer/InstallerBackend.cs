@@ -510,6 +510,219 @@ namespace Mo2RevampedSetup
         }
     }
 
+    // Windows shortcuts (.lnk) through the shell's own IShellLink object.
+    // WScript.Shell, which the setup used before, needs late-bound COM calls
+    // (IDispatch) that the .NET of Wine and Proton doesn't implement: on a
+    // Steam Deck the shortcut threw "The method or operation is not
+    // implemented" and the whole install was rolled back. Wine implements
+    // IShellLink itself; WScript.Shell stays as the fallback.
+    internal static class ShellLink
+    {
+        [ComImport, Guid("00021401-0000-0000-C000-000000000046")]
+        private class CShellLink { }
+
+        // the vtable order of IShellLinkW
+        [ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        private interface IShellLinkW
+        {
+            void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int size, IntPtr findData, uint flags);
+            void GetIDList(out IntPtr idList);
+            void SetIDList(IntPtr idList);
+            void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int size);
+            void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
+            void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory, int size);
+            void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
+            void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments, int size);
+            void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
+            void GetHotkey(out short hotkey);
+            void SetHotkey(short hotkey);
+            void GetShowCmd(out int showCmd);
+            void SetShowCmd(int showCmd);
+            void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int size, out int icon);
+            void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string iconPath, int icon);
+            void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string relativePath, uint reserved);
+            void Resolve(IntPtr window, uint flags);
+            void SetPath([MarshalAs(UnmanagedType.LPWStr)] string file);
+        }
+
+        private const int STGM_READ = 0;
+
+        // Wine registers the shell's shortcut object as apartment-threaded:
+        // made from the setup's worker (MTA) it would come as a proxy Wine
+        // can't marshal. Each call runs on a thread of its own in an STA,
+        // which Windows takes as well.
+        private static T OnSta<T>(Func<T> work)
+        {
+            T result = default(T);
+            Exception error = null;
+            Thread thread = new Thread(delegate()
+            {
+                try { result = work(); }
+                catch (Exception ex) { error = ex; }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.IsBackground = true;
+            thread.Start();
+            thread.Join();
+            if (error != null) throw new InvalidOperationException(error.Message, error);
+            return result;
+        }
+
+        private static bool loggedReadFailure;
+
+        public static void Create(string link, string target, string workingDirectory, string description,
+            string iconPath, int iconIndex)
+        {
+            OnSta<bool>(delegate()
+            {
+                CreateHere(link, target, workingDirectory, description, iconPath, iconIndex);
+                return true;
+            });
+        }
+
+        public static string Target(string link)
+        {
+            return OnSta<string>(delegate() { return TargetHere(link); });
+        }
+
+        private static void CreateHere(string link, string target, string workingDirectory, string description,
+            string iconPath, int iconIndex)
+        {
+            Exception shellLinkError;
+            if (TryCreateWithShellLink(link, target, workingDirectory, description, iconPath, iconIndex, out shellLinkError))
+                return;
+            SetupDiagnostics.Error("IShellLink could not create '" + link + "'; trying WScript.Shell.", shellLinkError);
+            CreateWithScriptHost(link, target, workingDirectory, description, iconPath + "," + iconIndex);
+        }
+
+        private static string TargetHere(string link)
+        {
+            object instance = null;
+            try
+            {
+                instance = new CShellLink();
+                ((System.Runtime.InteropServices.ComTypes.IPersistFile)instance).Load(link, STGM_READ);
+                StringBuilder path = new StringBuilder(32768);
+                ((IShellLinkW)instance).GetPath(path, path.Capacity, IntPtr.Zero, 0);
+                return path.ToString();
+            }
+            catch (Exception shellLinkError)
+            {
+                // once a run: uninstall reads every shortcut on the desktop
+                if (!loggedReadFailure)
+                {
+                    loggedReadFailure = true;
+                    SetupDiagnostics.Info("IShellLink could not read '" + link + "' (" + shellLinkError.Message + "); trying WScript.Shell.");
+                }
+                return TargetWithScriptHost(link);
+            }
+            finally
+            {
+                if (instance != null && Marshal.IsComObject(instance)) Marshal.FinalReleaseComObject(instance);
+            }
+        }
+
+        private static bool TryCreateWithShellLink(string link, string target, string workingDirectory, string description,
+            string iconPath, int iconIndex, out Exception error)
+        {
+            error = null;
+            object instance = null;
+            try
+            {
+                instance = new CShellLink();
+                IShellLinkW shellLink = (IShellLinkW)instance;
+                shellLink.SetPath(target);
+                shellLink.SetWorkingDirectory(workingDirectory);
+                shellLink.SetDescription(description);
+                shellLink.SetIconLocation(iconPath, iconIndex);
+                ((System.Runtime.InteropServices.ComTypes.IPersistFile)instance).Save(link, true);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex;
+                return false;
+            }
+            finally
+            {
+                if (instance != null && Marshal.IsComObject(instance)) Marshal.FinalReleaseComObject(instance);
+            }
+        }
+
+        private static void CreateWithScriptHost(string link, string target, string workingDirectory, string description,
+            string iconLocation)
+        {
+            Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+            if (shellType == null) throw new InvalidOperationException(InstallerText.T("Windows no pudo crear un acceso directo."));
+            object shell = Activator.CreateInstance(shellType);
+            object shortcut = null;
+            try
+            {
+                shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { link });
+                Type shortcutType = shortcut.GetType();
+                shortcutType.InvokeMember("TargetPath", BindingFlags.SetProperty, null, shortcut, new object[] { target });
+                shortcutType.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, shortcut, new object[] { workingDirectory });
+                shortcutType.InvokeMember("Description", BindingFlags.SetProperty, null, shortcut, new object[] { description });
+                shortcutType.InvokeMember("IconLocation", BindingFlags.SetProperty, null, shortcut, new object[] { iconLocation });
+                shortcutType.InvokeMember("Save", BindingFlags.InvokeMethod, null, shortcut, null);
+            }
+            finally
+            {
+                if (shortcut != null && Marshal.IsComObject(shortcut)) Marshal.FinalReleaseComObject(shortcut);
+                if (Marshal.IsComObject(shell)) Marshal.FinalReleaseComObject(shell);
+            }
+        }
+
+        private static string TargetWithScriptHost(string link)
+        {
+            Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+            if (shellType == null) return "";
+            object shell = Activator.CreateInstance(shellType);
+            object shortcut = null;
+            try
+            {
+                shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { link });
+                return Convert.ToString(shortcut.GetType().InvokeMember("TargetPath", BindingFlags.GetProperty, null, shortcut, null));
+            }
+            finally
+            {
+                if (shortcut != null && Marshal.IsComObject(shortcut)) Marshal.FinalReleaseComObject(shortcut);
+                if (Marshal.IsComObject(shell)) Marshal.FinalReleaseComObject(shell);
+            }
+        }
+    }
+
+    // Wine and Proton: a Windows program on Linux. They have no elevation
+    // boundary to keep MO2 out of, and their shell doesn't take the calls
+    // the setup makes to start MO2 unelevated on Windows.
+    internal static class WineHost
+    {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr GetModuleHandle(string module);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi)]
+        private static extern IntPtr GetProcAddress(IntPtr module, string name);
+
+        private static bool? running;
+
+        public static bool IsRunning
+        {
+            get
+            {
+                if (!running.HasValue)
+                {
+                    try
+                    {
+                        IntPtr ntdll = GetModuleHandle("ntdll.dll");
+                        running = ntdll != IntPtr.Zero && GetProcAddress(ntdll, "wine_get_version") != IntPtr.Zero;
+                    }
+                    catch { running = false; }
+                }
+                return running.Value;
+            }
+        }
+    }
+
     // The setup runs elevated. Starting MO2 directly would give it the
     // administrator token, which breaks drag and drop from Explorer and leaves
     // files owned by Administrators. Passing the executable to explorer.exe
@@ -583,6 +796,25 @@ namespace Mo2RevampedSetup
             Exception shellError;
             if (TryShellExecute(path, directory, out shellError)) return true;
             if (shellError != null) SetupDiagnostics.Error("The desktop shell could not start MO2 unelevated.", shellError);
+            // Wine has no administrator boundary to keep MO2 out of: it starts
+            // like any program
+            if (WineHost.IsRunning)
+            {
+                try
+                {
+                    ProcessStartInfo start = new ProcessStartInfo(path);
+                    start.WorkingDirectory = directory;
+                    start.UseShellExecute = false;
+                    Process.Start(start);
+                    SetupDiagnostics.Info("Started MO2 directly under Wine.");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not start MO2 under Wine.", ex);
+                    return false;
+                }
+            }
             // no fallback: started from this elevated setup, MO2 and every game
             // and mod it runs would run as administrator too
             return false;
