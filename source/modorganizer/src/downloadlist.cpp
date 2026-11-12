@@ -219,6 +219,18 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
     if (pendingDownload) {
       return tr("Pending download");
     } else {
+      // MO2 Revamped: an "Error" row says why it failed, and so does one paused
+      // once its retries ran out
+      QString failure;
+      const auto rowState = m_manager.getState(index.row());
+      if (rowState == DownloadManager::STATE_ERROR ||
+          rowState == DownloadManager::STATE_PAUSED) {
+        const QString lastError = m_manager.getLastError(index.row());
+        if (!lastError.isEmpty()) {
+          failure = tr("Download failed: %1").arg(lastError);
+        }
+      }
+
       QString text = m_manager.getFileName(index.row()) + "\n";
       if (m_manager.isInfoIncomplete(index.row())) {
         text += tr("Information missing, please select \"Query Info\" from the context "
@@ -227,10 +239,18 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
         const MOBase::ModRepositoryFileInfo* info = m_manager.getFileInfo(index.row());
         // the tool tip is rich text: the name is shown as written
         // one arg() call: a "%2" in the mod's name stays as written
-        return QString("%1 (ID %2) %3<br><span>%4</span>")
-            .arg(info->modName.toHtmlEscaped(),
-                 QString::number(m_manager.getModID(index.row())),
-                 info->version.canonicalString(), info->description.mid(0, 4096));
+        QString richText =
+            QString("%1 (ID %2) %3<br><span>%4</span>")
+                .arg(info->modName.toHtmlEscaped(),
+                     QString::number(m_manager.getModID(index.row())),
+                     info->version.canonicalString(), info->description.mid(0, 4096));
+        if (!failure.isEmpty()) {
+          richText += "<br><span>" + failure.toHtmlEscaped() + "</span>";
+        }
+        return richText;
+      }
+      if (!failure.isEmpty()) {
+        text += "\n" + failure;
       }
       return text;
     }

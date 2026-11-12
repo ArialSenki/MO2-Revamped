@@ -134,6 +134,11 @@ public:
 
   void updateProgress(const DirectoryRefreshProgress* p);
 
+  // MO2 Revamped: whether this mod is left out of the file structure because its
+  // name is one of the origins MO2 makes for itself (see
+  // ModInfo::isReservedModName()); says so once per name. Main thread only
+  bool isReservedModEntry(const QString& modName, const QString& modPath);
+
 public slots:
 
   /**

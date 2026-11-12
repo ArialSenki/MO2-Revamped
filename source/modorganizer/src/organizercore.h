@@ -366,6 +366,18 @@ public:
   MOBase::VersionInfo appVersion() const;
   MOBase::IPluginGame* getGame(const QString& gameName) const;
   MOBase::IModInterface* createMod(MOBase::GuessedValue<QString>& name);
+
+  // MO2 Revamped: with finishReplace off, a mod that Replace set aside stays aside
+  // until finishCreatedMod() says whether the new mod got its files
+  MOBase::IModInterface* createMod(MOBase::GuessedValue<QString>& name,
+                                   bool finishReplace);
+  void finishCreatedMod(bool filled);
+
+  // whether the last createMod() replaced an existing folder
+  bool createdModReplaced() const;
+  // whether the last createMod() made its folder itself (not Merge or Replace)
+  bool createdModIsNew() const;
+
   void modDataChanged(MOBase::IModInterface* mod);
   QVariant pluginSetting(const QString& pluginName, const QString& key) const;
   void setPluginSetting(const QString& pluginName, const QString& key,
@@ -586,6 +598,14 @@ private:
   // the current profile: they aren't rebuilt or saved until one works, while
   // programs can still be launched
   bool m_LastRefreshFailed = false;
+
+  // the last createMod() set an existing folder aside (Replace)
+  bool m_CreatedModReplaced = false;
+  bool m_CreatedModNew      = false;
+
+  // MO2 Revamped: asks for another name for a mod just installed under a name
+  // isReservedModName() refuses, and renames its folder
+  void renameReservedInstall(MOBase::GuessedValue<QString>& modName);
 
   // MO2 Revamped: plugins whose file time couldn't be set the last time the
   // load order was saved, so the user is told once per change

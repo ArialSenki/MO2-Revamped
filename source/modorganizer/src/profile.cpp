@@ -203,6 +203,23 @@ Profile::Profile(const QDir& directory, IPluginGame const* gamePlugin,
   refreshModStatus();
 }
 
+Profile::Profile(const QDir& directory, IPluginGame const* gamePlugin,
+                 GameFeatures const& gameFeatures, ReadOnly)
+    : m_Directory(directory), m_GamePlugin(gamePlugin), m_GameFeatures(gameFeatures),
+      m_ModListWriter(std::bind(&Profile::doWriteModlist, this)), m_ReadOnly(true)
+{
+  assert(gamePlugin != nullptr);
+
+  // MO2 Revamped: the Profiles dialog opened every profile with the constructor
+  // above, which repairs and migrates it (saves folders renamed, settings stored,
+  // the game plugin's set-up run) and rewrote its modlist.txt for the mods this
+  // instance has now; here nothing is written until the user changes something
+  m_Settings =
+      new QSettings(directory.absoluteFilePath("settings.ini"), QSettings::IniFormat);
+
+  refreshModStatus();
+}
+
 Profile::Profile(const Profile& reference)
     : m_Directory(reference.m_Directory),
       m_ModListWriter(std::bind(&Profile::doWriteModlist, this)),
@@ -428,7 +445,7 @@ void Profile::renameModInAllProfiles(const QString& oldName, const QString& newN
     QSettings settings(profileIter.filePath() + "/settings.ini", QSettings::IniFormat);
     settings.beginGroup("custom_overwrites");
     for (const QString& key : settings.allKeys()) {
-      if (settings.value(key).toString() == oldName) {
+      if (settings.value(key).toString().compare(oldName, Qt::CaseInsensitive) == 0) {
         settings.setValue(key, newName);
       }
     }
@@ -475,7 +492,8 @@ void Profile::renameModInList(QFile& modList, const QString& oldName,
     }
 
     outBuffer.write(QByteArray(1, spec));
-    if (modName == oldName) {
+    // MO2 Revamped: the lists match mods by name in any case, as the mod lookup
+    if (modName.compare(oldName, Qt::CaseInsensitive) == 0) {
       modName = newName;
       ++renamed;
     }
@@ -539,10 +557,15 @@ void Profile::refreshModStatus()
   //   N-1 overwrite (N = number of mods)
   //
 
-  writeModlistNow(true);  // if there are pending changes write them first
+  if (!m_ReadOnly) {
+    writeModlistNow(true);  // if there are pending changes write them first
+  }
 
   QFile file(getModlistFileName());
-  if (!file.open(QIODevice::ReadOnly)) {
+  // a profile only looked at may have no list yet: it reads as empty (a closed
+  // file is at its end), and isn't created
+  const bool noListToRead = m_ReadOnly && !file.exists();
+  if (!noListToRead && !file.open(QIODevice::ReadOnly)) {
     throw MyException(
         tr("The mod list %1 can't be read. Check that it exists and that no other "
            "program has it open.")
@@ -553,7 +576,9 @@ void Profile::refreshModStatus()
   m_ModStatus.clear();
   m_ModStatus.resize(ModInfo::getNumMods());
 
-  std::set<QString> namesRead;
+  // MO2 Revamped: folder names ignore case, as the mod lookup does; "+SkyUI" and
+  // "-skyui" are the same mod and only the first line counts
+  std::set<QString, MOBase::FileNameComparator> namesRead;
 
   bool warnAboutOverwrite = false;
 
@@ -688,6 +713,11 @@ void Profile::refreshModStatus()
   }
 
   updateIndices();
+
+  // the list of a profile that is only looked at stays as it is
+  if (m_ReadOnly) {
+    return;
+  }
 
   // User has a mod named some variation of "overwrite".  Tell them about it.
   if (warnAboutOverwrite) {
@@ -1044,7 +1074,8 @@ bool Profile::localSettingsEnabled() const
 {
   bool enabled =
       setting("", "LocalSettings", Settings::instance().profileLocalInis()).toBool();
-  if (enabled) {
+  // a profile only looked at isn't repaired; that happens when it is used
+  if (enabled && !m_ReadOnly) {
     QStringList missingFiles;
     for (QString file : m_GamePlugin->iniFiles()) {
       QString fileName = QFileInfo(file).fileName();

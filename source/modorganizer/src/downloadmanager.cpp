@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "envfs.h"
 #include "filesystemutilities.h"
 #include "iplugingame.h"
+#include "messagedialog.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "nxmurl.h"
@@ -36,6 +37,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <taskprogressmanager.h>
 #include <utility.h>
 
+#include <QApplication>
 #include <QCoreApplication>
 #include <QDesktopServices>
 #include <QDirIterator>
@@ -744,10 +746,10 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
                  "different name.")
                   .arg(newDownload->m_FileName),
               QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) {
-        if (reply->isFinished())
-          setState(newDownload, STATE_CANCELED);
-        else
-          setState(newDownload, STATE_CANCELING);
+        // MO2 Revamped: canceled right away, which aborts a running reply; as
+        // "canceling" it went on until its next progress, or forever when the
+        // server stalled. Finished below (the row, .unfinished and .meta go)
+        setState(newDownload, STATE_CANCELED);
       } else {
         startDisableDirWatcher();
         newDownload->setName(getDownloadFileName(newDownload->m_FileName, true), true);
@@ -801,7 +803,7 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   return true;
 }
 
-void DownloadManager::addNXMDownload(const QString& url)
+void DownloadManager::addNXMDownload(const QString& url, bool announce)
 {
   NXMUrl nxmInfo(url);
 
@@ -931,6 +933,14 @@ void DownloadManager::addNXMDownload(const QString& url)
 
   emit update(-1);
   emit downloadAdded();
+
+  // MO2 Revamped: shown here, once the link was accepted; shown on arrival it
+  // came before "Wrong game" or "Already queued"
+  if (announce) {
+    MessageDialog::showMessage(tr("Download started"), QApplication::activeWindow(),
+                               false);
+  }
+
   ModRepositoryFileInfo* info = new ModRepositoryFileInfo();
 
   info->nexusKey          = nxmInfo.key();
@@ -1625,6 +1635,15 @@ DownloadManager::DownloadState DownloadManager::getState(int index) const
   return m_ActiveDownloads.at(index)->m_State;
 }
 
+QString DownloadManager::getLastError(int index) const
+{
+  if ((index < 0) || (index >= m_ActiveDownloads.size())) {
+    return {};
+  }
+
+  return m_ActiveDownloads.at(index)->m_LastError;
+}
+
 bool DownloadManager::isInfoIncomplete(int index) const
 {
   if ((index < 0) || (index >= m_ActiveDownloads.size())) {
@@ -1827,6 +1846,10 @@ void DownloadManager::setState(DownloadManager::DownloadInfo* info,
     }
   }
   info->m_State = state;
+  // MO2 Revamped: the reason of the last failure stays until it downloads again
+  if (state == STATE_DOWNLOADING || state == STATE_READY) {
+    info->m_LastError.clear();
+  }
   switch (state) {
   case STATE_PAUSED: {
     // no reply once the last one has finished (a paused or failed download)
@@ -2206,11 +2229,14 @@ bool ServerByPreference(const ServerList::container& preferredServers,
 int DownloadManager::startDownloadURLs(const QStringList& urls)
 {
   ModRepositoryFileInfo info;
-  // MO2 Revamped: none when its file couldn't be opened (the download is gone)
-  if (!addDownload(urls, "", -1, -1, &info)) {
+  const int before = static_cast<int>(m_ActiveDownloads.size());
+  // MO2 Revamped: none when its file couldn't be opened, or when the user said
+  // No to downloading a file that is already there (the download is gone)
+  if (!addDownload(urls, "", -1, -1, &info) ||
+      static_cast<int>(m_ActiveDownloads.size()) <= before) {
     return -1;
   }
-  return m_ActiveDownloads.size() - 1;
+  return static_cast<int>(m_ActiveDownloads.size()) - 1;
 }
 
 int DownloadManager::startDownloadNexusFile(int modID, int fileID)
@@ -2219,7 +2245,8 @@ int DownloadManager::startDownloadNexusFile(int modID, int fileID)
   addNXMDownload(QString("nxm://%1/mods/%2/files/%3")
                      .arg(m_ManagedGame->gameShortName())
                      .arg(modID)
-                     .arg(fileID));
+                     .arg(fileID),
+                 false);
   return newID;
 }
 
@@ -2575,17 +2602,21 @@ void DownloadManager::downloadFinished(int index)
     // a resume answered with a whole web page (a captive portal's, a block
     // page) instead of the rest of the file: the partial stays, paused
     const bool webPage = isWebPageOnResume(info, reply);
+    // MO2 Revamped: one already canceled (its reply aborted) is no error either;
+    // with nothing written yet it was taken for a failed download and retried
+    const bool canceling =
+        info->m_State == STATE_CANCELING || info->m_State == STATE_CANCELED;
     // writeData() tells about its own failed write before it pauses
-    const bool tellWriteFailed = writeFailed && info->m_State != STATE_CANCELING &&
-                                 info->m_State != STATE_PAUSING;
-    const bool tellLinkRefused = linkRefused && info->m_State != STATE_CANCELING;
-    const bool tellWebPage     = webPage && !linkRefused && info->m_State != STATE_CANCELING;
+    const bool tellWriteFailed =
+        writeFailed && !canceling && info->m_State != STATE_PAUSING;
+    const bool tellLinkRefused = linkRefused && !canceling;
+    const bool tellWebPage     = webPage && !linkRefused && !canceling;
     // the Nexus text only for Nexus' servers
     const QString host     = reply->url().host();
     const bool nexusServer = host.endsWith("nexusmods.com", Qt::CaseInsensitive) ||
                              host.endsWith("nexus-cdn.com", Qt::CaseInsensitive);
     const QString fileName = info->m_FileName;
-    if ((writeFailed || linkRefused || webPage) && info->m_State != STATE_CANCELING) {
+    if ((writeFailed || linkRefused || webPage) && !canceling) {
       if (linkRefused) {
         log::warn("the server refused the download of \"{}\" (HTTP {}): {}",
                   info->m_FileName, status, withoutQuery(reply->errorString()));
@@ -2601,7 +2632,7 @@ void DownloadManager::downloadFinished(int index)
 
     bool error = false;
     QString failure;
-    if ((info->m_State != STATE_CANCELING) && (info->m_State != STATE_PAUSING)) {
+    if (!canceling && (info->m_State != STATE_PAUSING)) {
       const QString contentType =
           reply->header(QNetworkRequest::ContentTypeHeader).toString();
       bool textData = contentType.startsWith("text", Qt::CaseInsensitive);
@@ -2632,6 +2663,15 @@ void DownloadManager::downloadFinished(int index)
                       .arg(withoutQuery(reply->errorString()))
                       .arg(reply->error());
         log::warn("download \"{}\" failed: {}", info->m_FileName, failure);
+        // MO2 Revamped: kept for the row's tool tip, in words where Qt has none
+        if (status == 416) {
+          info->m_LastError = tr("the server refused to continue the download");
+        } else if (reply->error() != QNetworkReply::NoError &&
+                   reply->error() != QNetworkReply::OperationCanceledError) {
+          info->m_LastError = failure;
+        } else {
+          info->m_LastError = tr("the server sent no data");
+        }
         error = true;
         setState(info, STATE_ERROR);
       }

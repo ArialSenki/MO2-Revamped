@@ -7,6 +7,7 @@
 #include "modinfo.h"
 #include "modinfodialogfwd.h"
 
+class QWidget;
 class CategoryFactory;
 class FilterList;
 class MainWindow;
@@ -44,6 +45,23 @@ public:
                   const QModelIndex& index   = QModelIndex()) const;
   void createEmptyMod(const QModelIndex& index = QModelIndex()) const;
   void createSeparator(const QModelIndex& index = QModelIndex()) const;
+
+  // MO2 Revamped: copies the folder `source` to `target` through a hidden folder
+  // beside it, so nothing half copied ever shows as a mod: a new target gets the
+  // name only when all of it came over; into an existing target, its entries are
+  // moved in at the end, those already there staying as they are. A failed or
+  // cancelled copy leaves nothing behind. Shows a progress dialog with Cancel
+  // when it takes a while
+  //
+  enum class CopyResult
+  {
+    Copied,
+    Failed,
+    Cancelled
+  };
+  static CopyResult copyFolder(QWidget* parent, const QString& source,
+                               const QString& target, const QString& label,
+                               QString* error = nullptr);
 
   // enable/disable all non-filtered mods
   //

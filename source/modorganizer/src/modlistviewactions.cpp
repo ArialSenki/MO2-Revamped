@@ -16,6 +16,8 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QColorDialog>
+#include <QCoreApplication>
+#include <QProgressDialog>
 #include <QRadioButton>
 #include <QScopeGuard>
 #include <QStandardPaths>
@@ -51,6 +53,8 @@
 #include "shared/fileregister.h"
 #include "shared/filesorigin.h"
 #include "shared/util.h"
+
+#include <Windows.h>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -332,6 +336,10 @@ void ModListViewActions::createEmptyMod(const QModelIndex& index) const
   if (ModInfo::isSeparatorName(name)) {
     reportError(
         tr("Names ending in \"_separator\" are for separators. Choose another name."));
+    return;
+  }
+  if (ModInfo::isReservedModName(name)) {
+    reportError(ModInfo::reservedModNameMessage(name));
     return;
   }
 
@@ -915,7 +923,12 @@ void ModListViewActions::displayModInformation(ModInfo::Ptr modInfo,
     m_core.modList()->modInfoChanged(modInfo);
   }
 
-  if (m_core.currentProfile()->modEnabled(modIndex) && !modInfo->isForeign()) {
+  // MO2 Revamped: a mod named "data" would find (and turn off) the game's own
+  // origin here
+  const bool reservedName =
+      !modInfo->isOverwrite() && ModInfo::isReservedModName(modInfo->name());
+  if (m_core.currentProfile()->modEnabled(modIndex) && !modInfo->isForeign() &&
+      !reservedName) {
     if (m_core.directoryStructure()->originExists(ToWString(modInfo->name()))) {
       FilesOrigin& origin =
           m_core.directoryStructure()->getOriginByName(ToWString(modInfo->name()));
@@ -1134,9 +1147,9 @@ void ModListViewActions::removeMods(const QModelIndexList& indices) const
         const auto watcherBack = qScopeGuard([] {
           DownloadManager::endDisableDirWatcher();
         });
-        for (QString name : modNames) {
-          m_core.modList()->removeRowForce(ModInfo::getIndex(name), QModelIndex());
-        }
+        // MO2 Revamped: all at once, one Recycle Bin operation and one profile
+        // update instead of one of each per mod
+        m_core.modList()->removeModsForce(modNames);
       }
     } else if (!indices.isEmpty()) {
       m_core.modList()->removeRow(indices[0].data(ModList::IndexRole).toInt(),
@@ -1331,13 +1344,262 @@ void ModListViewActions::reinstallMod(const QModelIndex& index) const
   }
 }
 
+namespace
+{
+
+struct CopyJob
+{
+  // relative to the source, parents first
+  QStringList folders;
+  std::vector<std::pair<QString, qint64>> files;
+  qint64 totalBytes = 0;
+};
+
+// what is under `root`; links to folders are left out, as uibase's copyDir()
+// does, since they could make the copy endless
+void collectCopyJob(const QString& root, const QString& relative, CopyJob& job)
+{
+  const QDir dir(relative.isEmpty() ? root : QString(root + "/" + relative));
+  const QString prefix = relative.isEmpty() ? QString() : QString(relative + "/");
+
+  for (const QFileInfo& file :
+       dir.entryInfoList(QDir::Files | QDir::Hidden | QDir::System)) {
+    job.files.emplace_back(prefix + file.fileName(), file.size());
+    job.totalBytes += file.size();
+  }
+
+  for (const QFileInfo& folder : dir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot |
+                                                   QDir::Hidden | QDir::System)) {
+    if (folder.isSymLink() || folder.isJunction()) {
+      log::warn("not copying the link '{}'", folder.absoluteFilePath());
+      continue;
+    }
+    const QString sub = prefix + folder.fileName();
+    job.folders.append(sub);
+    collectCopyJob(root, sub, job);
+  }
+}
+
+struct CopyProgress
+{
+  QProgressDialog* dialog = nullptr;
+  qint64 done             = 0;
+  qint64 total            = 0;
+  int shown               = -1;
+
+  void show(qint64 current)
+  {
+    const int value =
+        total > 0 ? static_cast<int>(std::min<qint64>(999, current * 1000 / total)) : 0;
+    if (value != shown) {
+      shown = value;
+      dialog->setValue(value);
+    }
+  }
+};
+
+DWORD CALLBACK copyProgressRoutine(LARGE_INTEGER, LARGE_INTEGER transferred,
+                                   LARGE_INTEGER, LARGE_INTEGER, DWORD, DWORD, HANDLE,
+                                   HANDLE, LPVOID data)
+{
+  auto* progress = static_cast<CopyProgress*>(data);
+  progress->show(progress->done + transferred.QuadPart);
+  return progress->dialog->wasCanceled() ? PROGRESS_CANCEL : PROGRESS_CONTINUE;
+}
+
+// MO2 Revamped: MO2 isn't long path aware, so a path past MAX_PATH reaches
+// Win32 only with the \\?\ prefix (Qt's own file functions add it themselves)
+std::wstring longPath(const QString& native)
+{
+  std::wstring path = native.toStdWString();
+  if (path.size() < MAX_PATH - 12 || path.starts_with(L"\\\\?\\")) {
+    return path;
+  }
+  if (path.starts_with(L"\\\\")) {
+    return L"\\\\?\\UNC\\" + path.substr(2);
+  }
+  if (path.size() > 2 && path[1] == L':') {
+    return L"\\\\?\\" + path;
+  }
+  return path;
+}
+
+void setHiddenFolder(const QString& path, bool hidden)
+{
+  const std::wstring native = longPath(QDir::toNativeSeparators(path));
+  const DWORD attributes    = ::GetFileAttributesW(native.c_str());
+  if (attributes == INVALID_FILE_ATTRIBUTES) {
+    return;
+  }
+  ::SetFileAttributesW(native.c_str(), hidden ? (attributes | FILE_ATTRIBUTE_HIDDEN)
+                                              : (attributes & ~FILE_ATTRIBUTE_HIDDEN));
+}
+
+}  // namespace
+
+ModListViewActions::CopyResult
+ModListViewActions::copyFolder(QWidget* parent, const QString& source,
+                               const QString& target, const QString& label,
+                               QString* error)
+{
+  auto fail = [error](const QString& message) {
+    log::error("{}", message);
+    if (error != nullptr) {
+      *error = message;
+    }
+    return CopyResult::Failed;
+  };
+
+  const QFileInfo targetInfo(target);
+  const QDir targetParent = targetInfo.absoluteDir();
+
+  // beside the target, on the same drive, so it is renamed rather than copied
+  // again; hidden, as the mod list only reads folders that aren't, so a refresh
+  // in the meantime doesn't take it for a mod
+  QString temp;
+  for (int n = 1; temp.isEmpty() || QFileInfo::exists(temp); ++n) {
+    temp = targetParent.absoluteFilePath(
+        QStringLiteral(".%1.copying%2").arg(targetInfo.fileName()).arg(n));
+  }
+  if (!QDir().mkpath(temp)) {
+    return fail(tr("The folder %1 could not be created.")
+                    .arg(QDir::toNativeSeparators(temp)));
+  }
+  setHiddenFolder(temp, true);
+  const auto cleanup = qScopeGuard([&temp] {
+    if (!temp.isEmpty() && !QDir(temp).removeRecursively()) {
+      log::error("could not remove the unfinished copy {}", temp);
+    }
+  });
+
+  CopyJob job;
+  collectCopyJob(QDir::cleanPath(source), {}, job);
+
+  QProgressDialog dialog(label, tr("Cancel"), 0, 1000, parent);
+  dialog.setWindowTitle(tr("Copying"));
+  dialog.setWindowModality(Qt::WindowModal);
+  dialog.setMinimumDuration(500);
+  dialog.setAutoClose(false);
+  dialog.setAutoReset(false);
+  dialog.setValue(0);
+
+  for (const QString& folder : job.folders) {
+    if (!QDir().mkpath(temp + "/" + folder)) {
+      return fail(tr("The folder %1 could not be created.")
+                      .arg(QDir::toNativeSeparators(temp + "/" + folder)));
+    }
+  }
+
+  CopyProgress progress{&dialog, 0, job.totalBytes};
+  for (const auto& [file, size] : job.files) {
+    // small files don't reach the progress routine often enough for Cancel
+    if (dialog.isVisible()) {
+      QCoreApplication::processEvents();
+    }
+    if (dialog.wasCanceled()) {
+      return CopyResult::Cancelled;
+    }
+
+    const QString from = QDir::toNativeSeparators(QDir::cleanPath(source) + "/" + file);
+    const QString to   = QDir::toNativeSeparators(temp + "/" + file);
+    BOOL cancel        = FALSE;
+    if (!::CopyFileExW(longPath(from).c_str(), longPath(to).c_str(),
+                       copyProgressRoutine, &progress, &cancel,
+                       COPY_FILE_FAIL_IF_EXISTS)) {
+      const auto e = ::GetLastError();
+      if (e == ERROR_REQUEST_ABORTED || dialog.wasCanceled()) {
+        return CopyResult::Cancelled;
+      }
+      return fail(tr("%1 could not be copied: %2")
+                      .arg(from, QString::fromStdWString(formatSystemMessage(e))));
+    }
+    progress.done += size;
+    progress.show(progress.done);
+  }
+
+  if (!QFileInfo::exists(target)) {
+    // Windows may hold the new folder for a moment (an indexer, an antivirus)
+    bool renamed = QDir().rename(temp, target);
+    if (!renamed) {
+      ::Sleep(200);
+      renamed = QDir().rename(temp, target);
+    }
+    if (!renamed) {
+      return fail(tr("The copy could not be named %1.")
+                      .arg(QDir::toNativeSeparators(target)));
+    }
+    temp.clear();
+    setHiddenFolder(target, false);
+    return CopyResult::Copied;
+  }
+
+  // into a folder that is already there: what it has stays (the meta.ini of a
+  // mod just created, for one), the rest moves in file by file, so folders both
+  // have (textures, meshes) are merged rather than skipped
+  QStringList moved;
+  QStringList madeFolders;
+  auto undo = [&] {
+    // what already moved in goes back out: all of it came from this copy
+    for (auto it = moved.crbegin(); it != moved.crend(); ++it) {
+      const QString path = target + "/" + *it;
+      if (!QFile::rename(path, temp + "/" + *it)) {
+        QFile::remove(path);
+      }
+    }
+    for (auto it = madeFolders.crbegin(); it != madeFolders.crend(); ++it) {
+      QDir().rmdir(target + "/" + *it);
+    }
+  };
+
+  for (const QString& folder : job.folders) {
+    const QString destination = target + "/" + folder;
+    if (QFileInfo(destination).isDir()) {
+      continue;
+    }
+    if (!QDir().mkdir(destination)) {
+      undo();
+      return fail(tr("The folder %1 could not be created.")
+                      .arg(QDir::toNativeSeparators(destination)));
+    }
+    madeFolders.append(folder);
+  }
+
+  for (const auto& [file, size] : job.files) {
+    const QString destination = target + "/" + file;
+    if (QFileInfo::exists(destination)) {
+      continue;
+    }
+    if (!QFile::rename(temp + "/" + file, destination)) {
+      undo();
+      return fail(tr("%1 could not be moved into %2.")
+                      .arg(QDir::toNativeSeparators(temp + "/" + file),
+                           QDir::toNativeSeparators(target)));
+    }
+    moved.append(file);
+  }
+  return CopyResult::Copied;
+}
+
 void ModListViewActions::createBackup(const QModelIndex& index) const
 {
   ModInfo::Ptr modInfo = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
   QString backupDirectory =
       m_core.installationManager()->generateBackupName(modInfo->absolutePath());
-  if (!copyDir(modInfo->absolutePath(), backupDirectory, false)) {
-    QMessageBox::information(m_parent, tr("Failed"), tr("Failed to create backup."));
+
+  // MO2 Revamped: a copy that stopped half way showed as a real backup; it is
+  // made under a hidden name and named only when complete, with a progress
+  // dialog that can cancel it
+  QString error;
+  const auto result =
+      copyFolder(m_parent, modInfo->absolutePath(), backupDirectory,
+                 tr("Backing up \"%1\"...").arg(modInfo->name()), &error);
+  if (result == CopyResult::Failed) {
+    QMessageBox::information(m_parent, tr("Failed"),
+                             tr("Failed to create backup.") + QStringLiteral("\n\n") +
+                                 error);
+  }
+  if (result != CopyResult::Copied) {
+    return;
   }
   m_core.refresh();
   m_view->updateModCount();
@@ -1724,24 +1986,46 @@ void ModListViewActions::createModFromOverwrite() const
     return;
   }
 
+  if (ModInfo::isReservedModName(name)) {
+    reportError(ModInfo::reservedModNameMessage(name));
+    return;
+  }
+
   if (m_core.modList()->getMod(name) != nullptr) {
     reportError(tr("A mod with this name already exists"));
     return;
   }
 
-  const IModInterface* newMod = m_core.createMod(name);
+  // MO2 Revamped: a folder that Replace set aside waits until the files are in
+  // the new mod; before, it went to the Recycle Bin first, and a move that failed
+  // (a file in use) left neither
+  const IModInterface* newMod = m_core.createMod(name, false);
   if (newMod == nullptr) {
     return;
   }
 
   const QString modPath = newMod->absolutePath();
-  if (!moveOverwriteContentsTo(modPath)) {
-    // nothing came over: no empty mod is left behind
+  if (moveOverwriteContentsTo(modPath)) {
+    m_core.finishCreatedMod(true);
+  } else {
     QDir modDir(modPath);
     const auto entries = modDir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot |
                                           QDir::Hidden | QDir::System);
     if (entries == QStringList{QStringLiteral("meta.ini")}) {
-      modDir.removeRecursively();
+      // nothing came over: the replaced mod is put back, or no empty mod is left
+      if (m_core.createdModReplaced()) {
+        m_core.finishCreatedMod(false);
+      } else if (m_core.createdModIsNew()) {
+        modDir.removeRecursively();
+      }
+    } else if (m_core.createdModReplaced()) {
+      // part of Overwrite is in the new mod now, which stays; the replaced
+      // version can't go back in its place, so it goes to the Recycle Bin
+      reportError(tr("Only some files were moved from Overwrite into \"%1\"; the rest "
+                     "are still in Overwrite. The previous version of the mod goes "
+                     "to the Recycle Bin.")
+                      .arg(static_cast<const QString&>(name)));
+      m_core.finishCreatedMod(true);
     }
   }
 

@@ -408,6 +408,64 @@ void logSpawning(const SpawnParameters& sp, const QString& realCmd)
              (sp.stdErr == INVALID_HANDLE_VALUE ? "no" : "yes"), realCmd);
 }
 
+bool isBatchFile(const QFileInfo& target);
+QFileInfo getCmdPath();
+
+// MO2 Revamped: cmd /C removes the first and last quote of the whole line, so
+// a batch file and its arguments are wrapped in one more pair of quotes:
+// /C ""<path>" <args>". Programs added from the Data tab are stored as
+// cmd.exe with /C ""<path>""; arguments added after that went outside the
+// outer quotes and are moved inside here
+QString cmdArguments(const QString& arguments)
+{
+  const QString prefix = "/C \"\"";
+  if (!arguments.startsWith(prefix, Qt::CaseInsensitive)) {
+    return arguments;
+  }
+
+  const auto end = arguments.indexOf("\"\"", prefix.size());
+  if (end < 0) {
+    return arguments;
+  }
+
+  const QString path = arguments.mid(prefix.size(), end - prefix.size());
+  const QString rest = arguments.mid(end + 2);
+  if (rest.trimmed().isEmpty() || !isBatchFile(QFileInfo(path))) {
+    return arguments;
+  }
+
+  return prefix + path + "\"" + rest + "\"";
+}
+
+QString makeCommandLine(const SpawnParameters& sp)
+{
+  const auto bin = QDir::toNativeSeparators(sp.binary.absoluteFilePath());
+
+  // MO2 Revamped: a batch file set as the program runs through cmd, with the
+  // quoting above
+  if (isBatchFile(sp.binary)) {
+    QString commandLine =
+        "\"" + QDir::toNativeSeparators(getCmdPath().absoluteFilePath()) +
+        "\" /C \"\"" + bin + "\"";
+    if (!sp.arguments.isEmpty()) {
+      commandLine += " " + sp.arguments;
+    }
+    return commandLine + "\"";
+  }
+
+  QString arguments = sp.arguments;
+  if (sp.binary.fileName().compare("cmd.exe", Qt::CaseInsensitive) == 0) {
+    arguments = cmdArguments(arguments);
+  }
+
+  QString commandLine = "\"" + bin + "\"";
+  if (!arguments.isEmpty()) {
+    commandLine += " " + arguments;
+  }
+
+  return commandLine;
+}
+
 DWORD spawn(const SpawnParameters& sp, HANDLE& processHandle)
 {
   BOOL inheritHandles = FALSE;
@@ -428,13 +486,9 @@ DWORD spawn(const SpawnParameters& sp, HANDLE& processHandle)
     si.dwFlags |= STARTF_USESTDHANDLES;
   }
 
-  const auto bin = QDir::toNativeSeparators(sp.binary.absoluteFilePath());
   const auto cwd = QDir::toNativeSeparators(sp.currentDirectory.absolutePath());
 
-  QString commandLine = "\"" + bin + "\"";
-  if (!sp.arguments.isEmpty()) {
-    commandLine += " " + sp.arguments;
-  }
+  const QString commandLine = makeCommandLine(sp);
 
   const QString moPath = QCoreApplication::applicationDirPath();
   const auto oldPath   = env::appendToPath(QDir::toNativeSeparators(moPath));
@@ -489,9 +543,24 @@ bool restartAsAdmin(QWidget* parent)
     cwd[0] = L'\0';
   }
 
+  // MO2 Revamped: MO2 comes back with the arguments it was started with (a
+  // shortcut, -i instance, -p profile, a program to run)
+  QStringList arguments = QCoreApplication::arguments();
+  if (!arguments.isEmpty()) {
+    arguments.removeFirst();
+  }
+
+  std::wstring parameters;
+  for (const auto& a : arguments) {
+    if (!parameters.empty()) {
+      parameters += L' ';
+    }
+    parameters += helper::quoteForCommandLine(a.toStdWString());
+  }
+
   if (!helper::adminLaunch(parent, qApp->applicationDirPath().toStdWString(),
                            qApp->applicationFilePath().toStdWString(),
-                           std::wstring(cwd))) {
+                           std::wstring(cwd), parameters)) {
     log::error("admin launch failed");
     return false;
   }
@@ -886,7 +955,8 @@ FileExecutionContext getFileExecutionContext(QWidget* parent, const QFileInfo& t
   if (isBatchFile(target)) {
     // MO2 Revamped: cmd removes the first and last quote of what follows /C
     // when the path has ( ) & ^ or other special characters, so the whole is
-    // quoted once more
+    // quoted once more; arguments added later are moved inside those quotes
+    // by cmdArguments()
     return {
         getCmdPath(),
         QString("/C \"\"%1\"\"").arg(QDir::toNativeSeparators(target.absoluteFilePath())),
@@ -1025,8 +1095,44 @@ bool backdateBSAs(QWidget* parent, const std::wstring& moPath,
   return helperExec(parent, moPath, commandLine, FALSE);
 }
 
+std::wstring quoteForCommandLine(const std::wstring& argument)
+{
+  if (!argument.empty() && argument.find_first_of(L" \t\n\v\"") == std::wstring::npos) {
+    return argument;
+  }
+
+  // backslashes are literal unless they come before a quote; there, and
+  // before the closing quote, they're doubled, and a quote is escaped
+  std::wstring quoted = L"\"";
+
+  for (auto it = argument.begin();; ++it) {
+    std::size_t backslashes = 0;
+    while (it != argument.end() && *it == L'\\') {
+      ++it;
+      ++backslashes;
+    }
+
+    if (it == argument.end()) {
+      quoted.append(backslashes * 2, L'\\');
+      break;
+    }
+
+    if (*it == L'"') {
+      quoted.append(backslashes * 2 + 1, L'\\');
+    } else {
+      quoted.append(backslashes, L'\\');
+    }
+
+    quoted.push_back(*it);
+  }
+
+  quoted.push_back(L'"');
+  return quoted;
+}
+
 bool adminLaunch(QWidget* parent, const std::wstring& moPath,
-                 const std::wstring& moFile, const std::wstring& workingDir)
+                 const std::wstring& moFile, const std::wstring& workingDir,
+                 const std::wstring& parameters)
 {
   // MO2 Revamped: a folder ending in '\' (a drive's root) escaped the closing
   // quote; the backslashes before it are doubled, as CommandLineToArgvW() wants
@@ -1037,8 +1143,14 @@ bool adminLaunch(QWidget* parent, const std::wstring& moPath,
   }
   cwd.append(trailing, L'\\');
 
-  const std::wstring commandLine = std::format(
+  std::wstring commandLine = std::format(
       L"adminLaunch {} \"{}\" \"{}\"", ::GetCurrentProcessId(), moFile, cwd);
+
+  // MO2 Revamped: MO2's own command line goes as one more argument; an older
+  // helper.exe ignores it
+  if (!parameters.empty()) {
+    commandLine += L" " + quoteForCommandLine(parameters);
+  }
 
   return helperExec(parent, moPath, commandLine, true);
 }

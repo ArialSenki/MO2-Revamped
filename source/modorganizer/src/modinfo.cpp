@@ -91,6 +91,34 @@ bool ModInfo::isReservedDeviceName(const QString& name)
   return !MOBase::fixDirectoryName(stem);
 }
 
+bool ModInfo::isReservedModName(const QString& name)
+{
+  // the file structure keeps the game's folders and Overwrite as origins by these
+  // names; a mod by the same name had its files counted as theirs
+  const QString trimmed = name.trimmed();
+  if (trimmed.compare(QLatin1String("data"), Qt::CaseInsensitive) == 0 ||
+      trimmed.compare(QLatin1String("overwrite"), Qt::CaseInsensitive) == 0) {
+    return true;
+  }
+
+  const auto* game = qApp->property("managed_game").value<IPluginGame*>();
+  if (game != nullptr) {
+    for (const QString& folder : game->secondaryDataDirectories().keys()) {
+      if (trimmed.compare(folder, Qt::CaseInsensitive) == 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+QString ModInfo::reservedModNameMessage(const QString& name)
+{
+  return tr("Mod Organizer uses the name \"%1\" for the game's own files or for "
+            "Overwrite, so a mod can't have it. Choose another name.")
+      .arg(name.trimmed());
+}
+
 ModInfo::Ptr ModInfo::createFrom(const QDir& dir, OrganizerCore& core)
 {
   QMutexLocker locker(&s_Mutex);
@@ -230,6 +258,22 @@ bool ModInfo::removeMod(unsigned int index)
   // and update the indices
   updateIndices();
   return true;
+}
+
+void ModInfo::forgetMods(const QStringList& names)
+{
+  QMutexLocker locker(&s_Mutex);
+
+  std::set<QString, MOBase::FileNameComparator> gone(names.begin(), names.end());
+  const auto first = std::remove_if(s_Collection.begin(), s_Collection.end(),
+                                    [&gone](const ModInfo::Ptr& mod) {
+                                      return mod->isRegular() &&
+                                             gone.contains(mod->name());
+                                    });
+  s_Collection.erase(first, s_Collection.end());
+
+  // the name and Nexus id maps are rebuilt from the collection
+  updateIndices();
 }
 
 unsigned int ModInfo::getIndex(const QString& name)

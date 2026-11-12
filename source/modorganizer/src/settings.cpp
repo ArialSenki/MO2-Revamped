@@ -1984,11 +1984,25 @@ bool NexusSettings::registerAsNXMHandler(bool force, QWidget* parent)
 
   const auto executable = QCoreApplication::applicationFilePath();
 
-  QString mode       = force ? "forcereg" : "reg";
-  QString parameters = mode + " " + m_Parent.game().plugin()->gameShortName();
-  for (const QString& altGame : m_Parent.game().plugin()->validShortNames()) {
-    parameters += "," + altGame;
+  const auto* game = m_Parent.game().plugin();
+
+  // MO2 Revamped: links carry the game's Nexus domain (e.g. eldenringnightreign),
+  // which nxmhandler only maps to a short name for a few old games, so the
+  // Nexus name is registered too
+  QStringList names;
+  auto addName = [&names](const QString& name) {
+    if (!name.trimmed().isEmpty() && !names.contains(name.trimmed(), Qt::CaseInsensitive)) {
+      names.append(name.trimmed());
+    }
+  };
+  addName(game->gameShortName());
+  addName(game->gameNexusName());
+  for (const QString& altGame : game->validShortNames()) {
+    addName(altGame);
   }
+
+  QString mode       = force ? "forcereg" : "reg";
+  QString parameters = mode + " " + names.join(",");
   parameters += " \"" + executable + "\"";
 
   const auto r = shell::Execute(nxmPath, parameters);

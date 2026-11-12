@@ -107,6 +107,8 @@ private:
     QByteArray m_Hash;
     QStringList m_GamesToQuery;
     QString m_RemoteFileName;
+    // MO2 Revamped: why it last failed, shown on an "Error" row
+    QString m_LastError;
 
     int m_Tries;
     bool m_ReQueried;
@@ -249,7 +251,9 @@ public:
    * @todo the game name encoded into the link is currently ignored, all downloads are
    *incorrectly assumed to be for the identified game
    **/
-  void addNXMDownload(const QString& url);
+  // MO2 Revamped: announce shows "Download started" once the link is accepted
+  // (right game, not already queued or running); off for plugin requests
+  void addNXMDownload(const QString& url, bool announce = true);
 
   /**
    * @brief retrieve the total number of downloads, both finished and unfinished
@@ -337,6 +341,9 @@ public:
    * @return the download state
    **/
   DownloadState getState(int index) const;
+
+  // MO2 Revamped: why the download last failed; empty when unknown
+  QString getLastError(int index) const;
 
   /**
    * @param index index of the file to look up

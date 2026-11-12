@@ -893,9 +893,11 @@ std::optional<int> DownloadFileCommand::runPostOrganizer(OrganizerCore& core)
   }
 
   log::debug("starting direct download from command line: {}", url.toStdString());
-  MessageDialog::showMessage(QObject::tr("Download started"), qApp->activeWindow(),
-                             false);
-  core.downloadManager()->startDownloadURLs(QStringList() << url);
+  // MO2 Revamped: only once the download is really in the list
+  if (core.downloadManager()->startDownloadURLs(QStringList() << url) >= 0) {
+    MessageDialog::showMessage(QObject::tr("Download started"), qApp->activeWindow(),
+                               false);
+  }
 
   return {};
 }

@@ -31,6 +31,8 @@
 #include <winreg.h>
 #include <winver.h>
 
+#include <filesystem>
+#include <fstream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -472,15 +474,35 @@ QString GameGamebryo::parseSteamLocation(const QString& appid,
     QString steamLibraries(steamLocation + "\\" + "config" + "\\" +
                            "libraryfolders.vdf");
     if (QFile(steamLibraries).exists()) {
-      std::ifstream file(steamLibraries.toStdString());
-      auto root = tyti::vdf::read(file);
-      for (auto child : root.childs) {
-        tyti::vdf::object* library = child.second.get();
-        auto apps                  = library->childs["apps"];
-        if (apps->attribs.contains(appid.toStdString())) {
-          steamLibraryLocation = QString::fromStdString(library->attribs["path"]);
-          break;
+      // MO2 Revamped: a wide path (a user name outside the ANSI code page
+      // couldn't be opened), no library without "apps", and a damaged file
+      // can't throw out of detectGame()
+      try {
+        std::ifstream file(std::filesystem::path(steamLibraries.toStdWString()));
+        if (file) {
+          auto root = tyti::vdf::read(file);
+          for (const auto& child : root.childs) {
+            const tyti::vdf::object* library = child.second.get();
+            if (!library) {
+              continue;
+            }
+
+            const auto apps = library->childs.find("apps");
+            if (apps == library->childs.end() || !apps->second) {
+              continue;
+            }
+
+            if (apps->second->attribs.contains(appid.toStdString())) {
+              const auto p = library->attribs.find("path");
+              if (p != library->attribs.end()) {
+                steamLibraryLocation = QString::fromStdString(p->second);
+              }
+              break;
+            }
+          }
         }
+      } catch (const std::exception& e) {
+        qWarning("Couldn't read Steam's library list: %s", e.what());
       }
     }
     if (!steamLibraryLocation.isEmpty()) {

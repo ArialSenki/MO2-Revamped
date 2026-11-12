@@ -37,6 +37,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
+#include "shared/util.h"
 #include "viewmarkingscrollbar.h"
 #include "widgetutility.h"
 
@@ -533,6 +534,13 @@ bool ModList::renameMod(int index, const QString& newName)
         tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
             .arg(nameFixed),
         nullptr);
+    return false;
+  }
+
+  // MO2 Revamped: "data", a secondary data folder's name or "Overwrite" would mix
+  // its files with the game's or Overwrite's
+  if (ModInfo::isReservedModName(nameFixed)) {
+    MessageDialog::showMessage(ModInfo::reservedModNameMessage(nameFixed), nullptr);
     return false;
   }
 
@@ -1368,6 +1376,130 @@ void ModList::removeRowForce(int row, const QModelIndex& parent)
 
   if (!gameFiles.isEmpty()) {
     removeScriptExtenderFiles(gameFiles);
+  }
+}
+
+void ModList::removeModsForce(const QStringList& names)
+{
+  if (m_Profile == nullptr) {
+    return;
+  }
+
+  // MO2 Revamped: removeRowForce() for each mod ran a Recycle Bin operation, read
+  // the profile again and wrote its mod list once per mod
+  struct Entry
+  {
+    ModInfo::Ptr mod;
+    QString name;
+    bool wasEnabled;
+    QStringList gameFiles;
+  };
+  std::vector<Entry> entries;
+  QList<unsigned int> toDisable;
+  QStringList paths;
+
+  for (const QString& name : names) {
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index == UINT_MAX) {
+      continue;
+    }
+    ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
+    if (!modInfo->isRegular()) {
+      continue;
+    }
+
+    // asked before anything is removed, read before the mod's meta.ini goes
+    QStringList gameFiles = scriptExtenderFiles(modInfo);
+    if (!gameFiles.isEmpty() && !askRemoveScriptExtenderFiles(modInfo, gameFiles)) {
+      gameFiles.clear();
+    }
+
+    entries.push_back({modInfo, modInfo->name(), m_Profile->modEnabled(index), gameFiles});
+    toDisable.append(index);
+    paths.append(modInfo->absolutePath());
+  }
+
+  if (entries.empty()) {
+    return;
+  }
+
+  // changes still waiting are saved first: the list on disk is what the mods that
+  // stay are read back from
+  m_Profile->writeModlistNow(true);
+  m_Profile->setModsEnabled({}, toDisable);
+  m_Profile->cancelModlistWrite();
+
+  const auto removal =
+      MOShared::shellRemove(paths, true, QApplication::activeWindow());
+
+  QStringList removed;
+  QStringList kept;
+  for (const Entry& e : entries) {
+    if (removal.remaining.contains(e.mod->absolutePath())) {
+      kept.append(e.name);
+    } else {
+      removed.append(e.name);
+    }
+  }
+
+  {
+    // the rows aren't next to each other; the views start over once
+    beginResetModel();
+    const auto reset = qScopeGuard([this] {
+      endResetModel();
+    });
+    ModInfo::forgetMods(removed);
+    m_Profile->refreshModStatus();  // drops the removed mods from the status list
+  }
+
+  // the mods that stayed (a file in use, or the deletion was cancelled) keep the
+  // state they had: refreshModStatus() read it back from the list on disk, which
+  // wasn't written since they were turned off. The enabled ones are announced
+  // again, so their files come back into the structure
+  QList<unsigned int> enableAgain;
+  for (const Entry& e : entries) {
+    if (!e.wasEnabled || !kept.contains(e.name)) {
+      continue;
+    }
+    const unsigned int index = ModInfo::getIndex(e.name);
+    if (index != UINT_MAX && m_Profile->modEnabled(index)) {
+      enableAgain.append(index);
+    }
+  }
+  if (!enableAgain.isEmpty()) {
+    emit m_Profile->modStatusChanged(enableAgain);
+  }
+
+  // this ensures the modified list gets written back before new mods can be
+  // installed
+  m_Profile->writeModlist();
+
+  QStringList gameFiles;
+  for (const Entry& e : entries) {
+    if (kept.contains(e.name)) {
+      continue;
+    }
+    notifyModRemoved(e.name);
+    if (e.wasEnabled) {
+      emit removeOrigin(e.name);
+    }
+    if (!e.mod->isBackup()) {
+      emit modUninstalled(e.mod->installationFile());
+    }
+    gameFiles += e.gameFiles;
+  }
+  if (!gameFiles.isEmpty()) {
+    removeScriptExtenderFiles(gameFiles);
+  }
+
+  if (!kept.isEmpty()) {
+    log::error("removing mods left {} (error {})", kept.join(", "), removal.error);
+    // not when the user said no to Windows' "delete for good?"
+    if (!removal.aborted) {
+      reportError(tr("These mods couldn't be removed. Close programs using their files "
+                     "and try again.\n\n%1")
+                      .arg(kept.join(QLatin1Char('\n'))));
+    }
   }
 }
 

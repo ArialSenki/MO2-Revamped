@@ -48,6 +48,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QNetworkInterface>
 #include <QProcess>
@@ -386,10 +387,20 @@ void OrganizerCore::profileRemoved(QString const& profileName)
   m_ProfileRemoved(profileName);
 }
 
+// MO2 Revamped: a mod named like one of MO2's own origins ("data", a secondary data
+// folder, "Overwrite") is left out of the file structure; looked up by its name,
+// the game's origin (or Overwrite's) would be found and changed instead
+static bool ownsOriginName(const ModInfo::Ptr& mod)
+{
+  return mod->isOverwrite() || !ModInfo::isReservedModName(mod->internalName());
+}
+
 void OrganizerCore::removeOrigin(const QString& name)
 {
-  // a mod removed before the structure knew it (or after a refresh dropped it)
-  if (!m_DirectoryStructure->originExists(ToWString(name))) {
+  // a mod removed before the structure knew it (or after a refresh dropped it);
+  // only regular mods are removed, so a reserved name is never their own origin
+  if (ModInfo::isReservedModName(name) ||
+      !m_DirectoryStructure->originExists(ToWString(name))) {
     refreshLists();
     return;
   }
@@ -736,8 +747,38 @@ MOBase::IPluginGame* OrganizerCore::getGame(const QString& name) const
 
 MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name)
 {
+  return createMod(name, true);
+}
+
+MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name,
+                                                bool finishReplace)
+{
+  m_CreatedModReplaced = false;
+  m_CreatedModNew      = false;
+
+  // MO2 Revamped: a mod named like the game's own folders (data, a secondary data
+  // folder) or Overwrite would have its files mixed with theirs
+  if (ModInfo::isReservedModName(name)) {
+    reportError(ModInfo::reservedModNameMessage(name));
+    return nullptr;
+  }
+
   auto result = m_InstallationManager.testOverwrite(name);
   if (!result) {
+    return nullptr;
+  }
+  // with Merge the folder was there before; with Replace it is put back through
+  // finishCreatedMod(); a folder this made itself is new
+  const bool folderExisted =
+      result.merged() ||
+      QDir(QDir::fromNativeSeparators(m_Settings.paths().mods()) + "/" +
+           static_cast<const QString&>(name))
+          .exists();
+
+  // the name typed for "install as a new mod" in the question above
+  if (ModInfo::isReservedModName(name)) {
+    m_InstallationManager.removeUnfinishedNewMod();
+    reportError(ModInfo::reservedModNameMessage(name));
     return nullptr;
   }
 
@@ -757,27 +798,61 @@ MOBase::IModInterface* OrganizerCore::createMod(GuessedValue<QString>& name)
   QSettings settingsFile(targetDirectory + "/meta.ini", QSettings::IniFormat);
 
   if (!result.merged()) {
-    settingsFile.setValue("modid", 0);
-    settingsFile.setValue("version", "");
-    settingsFile.setValue("newestVersion", "");
-    settingsFile.setValue("category", 0);
+    // MO2 Revamped: Replace put the old meta.ini back so the mod keeps its Nexus
+    // id, version and categories; only what tied it to its old download goes
+    if (!result.replaced()) {
+      settingsFile.setValue("modid", 0);
+      settingsFile.setValue("version", "");
+      settingsFile.setValue("newestVersion", "");
+      settingsFile.setValue("category", 0);
+    }
     settingsFile.setValue("installationFile", "");
 
     settingsFile.remove("installedFiles");
     settingsFile.beginWriteArray("installedFiles", 0);
     settingsFile.endArray();
   }
+  settingsFile.sync();
 
   // shouldn't this use the existing mod in case of a merge? also, this does not refresh
   // the indices in the ModInfo structure
   MOBase::IModInterface* mod = ModInfo::createFrom(QDir(targetDirectory), *this).data();
   created = mod != nullptr;
+  m_CreatedModReplaced = created && result.replaced();
+  m_CreatedModNew      = created && !result.replaced() && !folderExisted;
   // a custom installer fills the mod after this: install() finishes the job when it
-  // knows how that went
-  if (created && !m_InstallationManager.isRunning()) {
+  // knows how that went; so does a caller that fills it itself (finishReplace off),
+  // through finishCreatedMod()
+  if (created && finishReplace && !m_InstallationManager.isRunning()) {
     m_InstallationManager.discardReplacedMod();
   }
   return mod;
+}
+
+void OrganizerCore::finishCreatedMod(bool filled)
+{
+  if (!m_CreatedModReplaced) {
+    return;
+  }
+  m_CreatedModReplaced = false;
+
+  // MO2 Revamped: the old version goes to the Recycle Bin only once the new one
+  // has its files; otherwise it is put back in place of the empty new folder
+  if (filled) {
+    m_InstallationManager.discardReplacedMod();
+  } else {
+    m_InstallationManager.restoreReplacedMod();
+  }
+}
+
+bool OrganizerCore::createdModReplaced() const
+{
+  return m_CreatedModReplaced;
+}
+
+bool OrganizerCore::createdModIsNew() const
+{
+  return m_CreatedModNew;
 }
 
 void OrganizerCore::modDataChanged(MOBase::IModInterface*)
@@ -846,6 +921,13 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
   m_InstallationManager.notifyInstallationStart(archivePath, reinstallation,
                                                 currentMod);
   auto result = m_InstallationManager.install(archivePath, modName, hasIniTweaks);
+
+  if (result && ModInfo::isReservedModName(modName)) {
+    // MO2 Revamped: the installers' name fields allow "data", a secondary data
+    // folder's name or "Overwrite"; the folder gets another name before the mod
+    // list reads it, or its files would count as the game's or Overwrite's
+    renameReservedInstall(modName);
+  }
 
   if (result) {
     MessageDialog::showMessage(tr("Installation successful"), qApp->activeWindow());
@@ -938,6 +1020,60 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
   }
 
   return {-1, nullptr};
+}
+
+void OrganizerCore::renameReservedInstall(GuessedValue<QString>& modName)
+{
+  const QDir mods(QDir::fromNativeSeparators(m_Settings.paths().mods()));
+  const QString current = modName;
+  QString suggested     = current + QStringLiteral(" (mod)");
+
+  for (;;) {
+    bool ok = false;
+    QString typed = QInputDialog::getText(
+        qApp->activeWindow(), tr("Choose another name"),
+        tr("The mod was installed as \"%1\", a name Mod Organizer uses for the game's "
+           "own files or for Overwrite, so its files wouldn't be used. Enter another "
+           "name for it:")
+            .arg(current),
+        QLineEdit::Normal, suggested, &ok);
+    if (!ok) {
+      // kept as it is: the mod list says why its files aren't used
+      log::warn("mod '{}' kept a reserved name", current);
+      return;
+    }
+
+    QString fixed = typed.trimmed();
+    suggested     = typed;
+    if (!fixDirectoryName(fixed) || fixed.isEmpty() ||
+        ModInfo::isReservedDeviceName(fixed)) {
+      reportError(tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
+                      .arg(typed));
+      continue;
+    }
+    if (ModInfo::isReservedModName(fixed)) {
+      reportError(ModInfo::reservedModNameMessage(fixed));
+      continue;
+    }
+    if (ModInfo::isBackupName(fixed) || ModInfo::isSeparatorName(fixed)) {
+      reportError(tr("Names ending in \"_backup\" or \"_separator\" are for backups and "
+                     "separators. Choose another name."));
+      continue;
+    }
+    if (mods.exists(fixed)) {
+      reportError(tr("A mod with this name already exists"));
+      continue;
+    }
+    if (!QDir(mods).rename(current, fixed)) {
+      reportError(tr("\"%1\" couldn't be renamed. Close programs using its files and try "
+                     "again.")
+                      .arg(current));
+      continue;
+    }
+
+    modName.update(fixed, GUESS_USER);
+    return;
+  }
 }
 
 ModInfo::Ptr OrganizerCore::installDownload(int index, int priority)
@@ -1506,6 +1642,12 @@ void OrganizerCore::updateModsInDirectoryStructure(
   std::vector<DirectoryRefresher::EntryInfo> entries;
 
   for (auto idx : modInfo.keys()) {
+    // MO2 Revamped: as in a full refresh, a mod named like the game's folders or
+    // Overwrite stays out of the structure
+    if (m_DirectoryRefresher->isReservedModEntry(modInfo[idx]->internalName(),
+                                                 modInfo[idx]->absolutePath())) {
+      continue;
+    }
     entries.push_back({modInfo[idx]->internalName(),
                        modInfo[idx]->absolutePath(),
                        modInfo[idx]->stealFiles(),
@@ -1540,6 +1682,10 @@ void OrganizerCore::updateModsInDirectoryStructure(
 
   // finally also add files from bsas to the directory structure
   for (auto idx : modInfo.keys()) {
+    if (m_DirectoryRefresher->isReservedModEntry(modInfo[idx]->internalName(),
+                                                 modInfo[idx]->absolutePath())) {
+      continue;
+    }
     m_DirectoryRefresher->addModBSAToStructure(
         m_DirectoryStructure, modInfo[idx]->internalName(),
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
@@ -1776,7 +1922,7 @@ void OrganizerCore::modPrioritiesChanged(const QModelIndexList& indices)
       const std::wstring origin = MOBase::ToWString(modInfo->internalName());
       // not there yet when it was enabled while a refresh was running: the
       // lookup would throw and skip the rest
-      if (!directoryStructure()->originExists(origin)) {
+      if (!ownsOriginName(modInfo) || !directoryStructure()->originExists(origin)) {
         continue;
       }
       // priorities in the directory structure are one higher because data is 0
@@ -1809,7 +1955,8 @@ void OrganizerCore::modStatusChanged(unsigned int index)
       updateModInDirectoryStructure(index, modInfo);
     } else {
       updateModActiveState(index, false);
-      if (m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
+      if (ownsOriginName(modInfo) &&
+          m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         FilesOrigin& origin =
             m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()));
         origin.enable(false);
@@ -1822,7 +1969,8 @@ void OrganizerCore::modStatusChanged(unsigned int index)
     for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
       ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
       int priority         = m_CurrentProfile->getModPriority(i);
-      if (m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
+      if (ownsOriginName(modInfo) &&
+          m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         // priorities in the directory structure are one higher because data is
         // 0
         m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()))
@@ -1865,7 +2013,8 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
     if (!modsToDisable.isEmpty()) {
       updateModsActiveState(modsToDisable.keys(), false);
       for (auto idx : modsToDisable.keys()) {
-        if (m_DirectoryStructure->originExists(ToWString(modsToDisable[idx]->internalName()))) {
+        if (ownsOriginName(modsToDisable[idx]) &&
+            m_DirectoryStructure->originExists(ToWString(modsToDisable[idx]->internalName()))) {
           FilesOrigin& origin = m_DirectoryStructure->getOriginByName(
               ToWString(modsToDisable[idx]->internalName()));
           origin.enable(false);
@@ -1879,7 +2028,8 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
     for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
       ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
       int priority         = m_CurrentProfile->getModPriority(i);
-      if (m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
+      if (ownsOriginName(modInfo) &&
+          m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         // priorities in the directory structure are one higher because data is
         // 0
         m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()))

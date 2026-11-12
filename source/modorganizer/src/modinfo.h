@@ -181,6 +181,12 @@ public:  // Static functions:
   static bool removeMod(unsigned int index);
 
   /**
+   * @brief MO2 Revamped: takes mods whose folders are already gone out of the
+   *     collection, updating the indices once; nothing is deleted from the disc.
+   */
+  static void forgetMods(const QStringList& names);
+
+  /**
    * @brief Retrieve the mod index by the mod name.
    *
    * @param name Name of the mod to look up.
@@ -235,6 +241,19 @@ public:  // Static functions:
    *     the exact upper-case names.
    */
   static bool isReservedDeviceName(const QString& name);
+
+  /**
+   * @brief MO2 Revamped: whether a mod folder with this name would share its name
+   *     with one of the origins MO2 makes for itself: "data" (the game's folder), a
+   *     secondary data folder of the managed game, or "Overwrite"; in any case.
+   */
+  static bool isReservedModName(const QString& name);
+
+  /**
+   * @brief MO2 Revamped: the message shown when a name is refused by
+   *     isReservedModName().
+   */
+  static QString reservedModNameMessage(const QString& name);
 
 public:  // IModInterface implementations / Re-declaration
   // Note: This section contains default-implementation for some of the virtual methods

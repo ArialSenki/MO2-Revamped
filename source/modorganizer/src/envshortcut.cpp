@@ -6,6 +6,11 @@
 #include <log.h>
 #include <utility.h>
 
+#include <QDirIterator>
+
+#include <shellapi.h>
+#include <vector>
+
 namespace env
 {
 
@@ -150,12 +155,13 @@ static QString linkArguments(const QString& path)
     return {};
   }
 
-  wchar_t buffer[2048] = {};
-  if (FAILED(link->GetArguments(buffer, static_cast<int>(std::size(buffer) - 1)))) {
+  // a shortcut's arguments can be as long as a command line
+  std::vector<wchar_t> buffer(32768, L'\0');
+  if (FAILED(link->GetArguments(buffer.data(), static_cast<int>(buffer.size() - 1)))) {
     return {};
   }
 
-  return QString::fromWCharArray(buffer);
+  return QString::fromWCharArray(buffer.data());
 }
 
 Shortcut::Shortcut() : m_iconIndex(0) {}
@@ -413,6 +419,257 @@ Shortcut instanceShortcut(const Instance& i)
       .description(QObject::tr("Open the %1 instance in Mod Organizer").arg(i.displayName()))
       .workingDirectory(qApp->applicationDirPath());
   return shortcut;
+}
+
+namespace
+{
+
+// an existing .lnk file, opened to read its target and arguments and to save new
+// arguments; everything else in it stays
+class LoadedLink
+{
+public:
+  explicit LoadedLink(const QString& path) : m_path(path)
+  {
+    void* p = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IShellLink, &p)) ||
+        !p) {
+      return;
+    }
+    m_link.reset(static_cast<IShellLink*>(p));
+
+    void* f = nullptr;
+    if (FAILED(m_link->QueryInterface(IID_IPersistFile, &f)) || !f) {
+      return;
+    }
+    m_file.reset(static_cast<IPersistFile*>(f));
+
+    m_loaded = SUCCEEDED(m_file->Load(path.toStdWString().c_str(), STGM_READ));
+  }
+
+  bool loaded() const { return m_loaded; }
+
+  QString target() const
+  {
+    wchar_t buffer[MAX_PATH + 1] = {};
+    if (FAILED(m_link->GetPath(buffer, MAX_PATH, nullptr, SLGP_RAWPATH))) {
+      return {};
+    }
+    return QString::fromWCharArray(buffer);
+  }
+
+  QString arguments() const
+  {
+    // as long as a command line can be: a shorter buffer cut them, and the cut
+    // arguments were saved back with the new profile name
+    std::vector<wchar_t> buffer(32768, L'\0');
+    if (FAILED(
+            m_link->GetArguments(buffer.data(), static_cast<int>(buffer.size() - 1)))) {
+      return {};
+    }
+    return QString::fromWCharArray(buffer.data());
+  }
+
+  bool setArguments(const QString& s)
+  {
+    return SUCCEEDED(m_link->SetArguments(s.toStdWString().c_str())) &&
+           SUCCEEDED(m_file->Save(m_path.toStdWString().c_str(), TRUE));
+  }
+
+private:
+  QString m_path;
+  COMPtr<IShellLink> m_link;
+  COMPtr<IPersistFile> m_file;
+  bool m_loaded = false;
+};
+
+// the arguments as Windows splits them for the program
+QStringList splitArguments(const QString& arguments)
+{
+  QStringList result;
+  if (arguments.trimmed().isEmpty()) {
+    return result;
+  }
+
+  // a program name first, so the arguments are split as the program sees them
+  const std::wstring line = L"x " + arguments.toStdWString();
+  int count               = 0;
+  LPWSTR* argv            = ::CommandLineToArgvW(line.c_str(), &count);
+  if (argv == nullptr) {
+    return result;
+  }
+  for (int a = 1; a < count; ++a) {
+    result.append(QString::fromWCharArray(argv[a]));
+  }
+  ::LocalFree(argv);
+  return result;
+}
+
+// back into one line, quoted the way CommandLineToArgvW() splits it again
+QString joinArguments(const QStringList& arguments)
+{
+  QStringList quoted;
+  for (const QString& arg : arguments) {
+    const bool plain = !arg.isEmpty() && !arg.contains(QLatin1Char(' ')) &&
+                       !arg.contains(QLatin1Char('\t')) && !arg.contains(QLatin1Char('"'));
+    if (plain) {
+      quoted.append(arg);
+      continue;
+    }
+
+    QString out = QStringLiteral("\"");
+    int backslashes = 0;
+    for (const QChar c : arg) {
+      if (c == QLatin1Char('\\')) {
+        ++backslashes;
+        continue;
+      }
+      if (c == QLatin1Char('"')) {
+        out += QString(backslashes * 2 + 1, QLatin1Char('\\'));
+      } else {
+        out += QString(backslashes, QLatin1Char('\\'));
+      }
+      out += c;
+      backslashes = 0;
+    }
+    out += QString(backslashes * 2, QLatin1Char('\\'));
+    out += QLatin1Char('"');
+    quoted.append(out);
+  }
+  return quoted.join(QLatin1Char(' '));
+}
+
+// where an option's value is: "-p name", "--profile name", "--profile=name" or
+// "-pname"; the index of the token holding it and where the value starts in it
+struct OptionValue
+{
+  int token  = -1;
+  int offset = 0;
+
+  bool found() const { return token >= 0; }
+};
+
+OptionValue findOption(const QStringList& args, const QString& shortName,
+                       const QString& longName)
+{
+  for (int a = 0; a < args.size(); ++a) {
+    const QString& arg = args[a];
+    if (arg == shortName || arg == longName) {
+      if (a + 1 < args.size()) {
+        return {a + 1, 0};
+      }
+      return {};
+    }
+    if (arg.startsWith(longName + QLatin1Char('='))) {
+      return {a, static_cast<int>(longName.size()) + 1};
+    }
+    if (!arg.startsWith(QStringLiteral("--")) && arg.startsWith(shortName) &&
+        arg.size() > shortName.size()) {
+      return {a, static_cast<int>(shortName.size())};
+    }
+  }
+  return {};
+}
+
+}  // namespace
+
+ProfileShortcuts renameProfileInShortcuts(const Instance& i, const QString& oldName,
+                                          const QString& newName)
+{
+  ProfileShortcuts result;
+
+  // the desktop's own links only (folders there can be large); the Start menu
+  // with its subfolders
+  std::vector<std::pair<QString, QDirIterator::IteratorFlags>> folders;
+  try {
+    folders.emplace_back(MOBase::getDesktopDirectory(), QDirIterator::NoIteratorFlags);
+  } catch (std::exception&) {
+  }
+  try {
+    folders.emplace_back(MOBase::getStartMenuDirectory(), QDirIterator::Subdirectories);
+  } catch (std::exception&) {
+  }
+
+  const QString appPath = QFileInfo(qApp->applicationFilePath()).absoluteFilePath();
+  const QString appName = QFileInfo(appPath).fileName();
+  const QString id      = i.instanceIdentifier();
+  const QString lineId  = i.commandLineIdentifier();
+  // the portable instance beside the program opens when no instance is given
+  const bool besideProgram = i.isPortable() && id.isEmpty();
+
+  for (const auto& [folder, flags] : folders) {
+    if (folder.isEmpty()) {
+      continue;
+    }
+    QDirIterator it(folder, {QStringLiteral("*.lnk")}, QDir::Files, flags);
+    while (it.hasNext()) {
+      const QString path = it.next();
+      LoadedLink link(path);
+      if (!link.loaded()) {
+        continue;
+      }
+
+      const QString target = link.target();
+      if (QFileInfo(target).fileName().compare(appName, Qt::CaseInsensitive) != 0) {
+        continue;
+      }
+
+      QStringList args         = splitArguments(link.arguments());
+      const OptionValue profile = findOption(args, QStringLiteral("-p"),
+                                             QStringLiteral("--profile"));
+      if (!profile.found() ||
+          args[profile.token].mid(profile.offset).compare(oldName, Qt::CaseInsensitive) !=
+              0) {
+        continue;
+      }
+
+      // whose it is: -i, or the instance in a moshortcut:// link
+      bool ours = false, known = false;
+      const OptionValue instance = findOption(args, QStringLiteral("-i"),
+                                              QStringLiteral("--instance"));
+      if (instance.found()) {
+        known             = true;
+        const QString val = args[instance.token].mid(instance.offset);
+        ours              = val.compare(lineId, Qt::CaseInsensitive) == 0 ||
+               (!id.isEmpty() && val.compare(id, Qt::CaseInsensitive) == 0);
+      } else {
+        for (const QString& arg : args) {
+          if (arg.startsWith(QStringLiteral("moshortcut://"), Qt::CaseInsensitive)) {
+            known = true;
+            ours  = arg.startsWith(QStringLiteral("moshortcut://%1:").arg(id),
+                                   Qt::CaseInsensitive);
+            break;
+          }
+        }
+      }
+      if (!known && besideProgram &&
+          QFileInfo(target).absoluteFilePath().compare(appPath, Qt::CaseInsensitive) ==
+              0) {
+        known = true;
+        ours  = true;
+      }
+
+      if (!known) {
+        result.unsure.append(QDir::toNativeSeparators(path));
+        continue;
+      }
+      if (!ours) {
+        continue;
+      }
+
+      args[profile.token] = args[profile.token].left(profile.offset) + newName;
+      if (link.setArguments(joinArguments(args))) {
+        log::info("shortcut '{}' now opens the profile '{}'", path, newName);
+        result.updated.append(QDir::toNativeSeparators(path));
+      } else {
+        log::error("can't update the profile in the shortcut '{}'", path);
+        result.failed.append(QDir::toNativeSeparators(path));
+      }
+    }
+  }
+
+  return result;
 }
 
 }  // namespace env

@@ -11,6 +11,7 @@
 #include "starfieldscriptextender.h"
 #include "starfieldunmanagedmods.h"
 
+#include "steamutility.h"
 #include "versioninfo.h"
 #include <executableinfo.h>
 #include <gamebryolocalsavegames.h>
@@ -96,7 +97,15 @@ void GameStarfield::detectGame()
 
 QString GameStarfield::identifyGamePath() const
 {
-  return parseSteamLocation(steamAPPId(), gameName());
+  QString result = parseSteamLocation(steamAPPId(), gameName());
+
+  // MO2 Revamped: Steam's library folders searched directly, when its list
+  // can't be read or doesn't name the game
+  if (result.isEmpty()) {
+    result = MOBase::findSteamGame("Starfield", "Data\\Starfield.esm");
+  }
+
+  return result;
 }
 
 QDir GameStarfield::dataDirectory() const

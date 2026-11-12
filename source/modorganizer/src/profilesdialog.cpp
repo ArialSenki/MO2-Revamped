@@ -24,7 +24,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bsainvalidation.h"
 #include "envmodule.h"
+#include "envshortcut.h"
 #include "eldenringsavesettings.h"
+#include "instancemanager.h"
 #include "filesystemutilities.h"
 #include "game_features.h"
 #include "iplugingame.h"
@@ -536,8 +538,11 @@ QListWidgetItem* ProfilesDialog::addItem(const QString& name)
   QDir profileDir(name);
   QListWidgetItem* newItem = new QListWidgetItem(profileDir.dirName(), m_list);
   try {
-    newItem->setData(Qt::UserRole, QVariant::fromValue(Profile::Ptr(new Profile(
-                                       profileDir, m_Game, m_GameFeatures))));
+    // MO2 Revamped: read only; opening the dialog rewrote every profile's mod list
+    // and ran the migrations meant for the profile being used
+    newItem->setData(Qt::UserRole,
+                     QVariant::fromValue(Profile::Ptr(new Profile(
+                         profileDir, m_Game, m_GameFeatures, Profile::ReadOnly{}))));
     m_FailState = false;
   } catch (const std::exception& e) {
     reportError(tr("The profile can't be read: %1").arg(e.what()));
@@ -1013,6 +1018,35 @@ void ProfilesDialog::renameProfile()
   updateItem(m_list->currentItem());
   fillDetails();
   emit profileRenamed(profile.get(), oldName, name);
+
+  // MO2 Revamped: shortcuts that start this instance with -p "<old name>" would
+  // open a profile that is gone
+  if (const auto instance = InstanceManager::singleton().currentInstance()) {
+    const auto links = env::renameProfileInShortcuts(*instance, oldName, name);
+    QStringList parts;
+    if (!links.updated.isEmpty()) {
+      parts.append(tr("These shortcuts now open \"%1\":\n%2")
+                       .arg(name, links.updated.join(QLatin1Char('\n'))));
+    }
+    if (!links.failed.isEmpty()) {
+      parts.append(tr("These shortcuts could not be changed and still open \"%1\". In "
+                      "their properties, change -p \"%1\" to -p \"%2\":\n%3")
+                       .arg(oldName, name, links.failed.join(QLatin1Char('\n'))));
+    }
+    if (!links.unsure.isEmpty()) {
+      parts.append(tr("These shortcuts open a profile named \"%1\" but don't say which "
+                      "instance, so they were left as they are. If they are for this "
+                      "instance, change -p \"%1\" to -p \"%2\" in their properties:\n%3")
+                       .arg(oldName, name, links.unsure.join(QLatin1Char('\n'))));
+    }
+    if (!parts.isEmpty()) {
+      const bool allDone = links.failed.isEmpty() && links.unsure.isEmpty();
+      showProfileNotice(this, tr("Rename profile"),
+                        allDone ? QMessageBox::Information : QMessageBox::Warning,
+                        tr("Shortcuts to this profile"),
+                        parts.join(QStringLiteral("\n\n")));
+    }
+  }
 }
 
 void ProfilesDialog::exploreProfile()

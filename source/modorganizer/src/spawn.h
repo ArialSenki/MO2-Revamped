@@ -116,9 +116,16 @@ bool backdateBSAs(QWidget* parent, const std::wstring& moPath,
  * @param moPath absolute path to the modOrganizer base directory
  * @param moFile file name of modOrganizer
  * @param workingDir current working directory
+ * @param parameters command line MO is started with again (its arguments,
+ *already quoted)
  **/
 bool adminLaunch(QWidget* parent, const std::wstring& moPath,
-                 const std::wstring& moFile, const std::wstring& workingDir);
+                 const std::wstring& moFile, const std::wstring& workingDir,
+                 const std::wstring& parameters = {});
+
+// MO2 Revamped: an argument quoted as CommandLineToArgvW() reads it back,
+// quotes and backslashes included
+std::wstring quoteForCommandLine(const std::wstring& argument);
 
 }  // namespace helper
 

@@ -126,7 +126,8 @@ static bool backdateBSAs(const QString &dataPath)
 }
 
 
-static bool adminLaunch(const QString &pid, const QString &executable, const QString &workingDir)
+static bool adminLaunch(const QString &pid, const QString &executable, const QString &workingDir,
+                        const std::wstring &parameters)
 {
   #define TIMEOUT_S 30
 
@@ -148,7 +149,7 @@ static bool adminLaunch(const QString &pid, const QString &executable, const QSt
     if (exitCode != STILL_ACTIVE) {
       if (!::ShellExecuteW(nullptr, L"runas",
               ToWString(executable).c_str(),
-              L"",
+              parameters.c_str(),
               ToWString(workingDir).c_str(),
               SW_SHOWNORMAL)) {
         qCritical("Failed to launch %s: errorcode %d", executable.toLocal8Bit(), ::GetLastError());
@@ -192,11 +193,15 @@ int mainDelegate(int argc, wchar_t **argv)
       qCritical("Invalid number of parameters");
       return -3;
     }
-    qDebug("adminLaunch %ls %ls %ls", argv[2], argv[3], argv[4]);
+    // MO2 Revamped: an optional fifth argument is MO2's command line, already
+    // quoted; older callers leave it out
+    const std::wstring parameters = (argc >= 6 ? argv[5] : L"");
+    qDebug("adminLaunch %ls %ls %ls %ls", argv[2], argv[3], argv[4], parameters.c_str());
     if (!adminLaunch(
           ToQString(argv[2]),
           ToQString(argv[3]),
-          ToQString(argv[4])
+          ToQString(argv[4]),
+          parameters
           )) {
       return -3;
     }

@@ -122,13 +122,35 @@ struct InterestingProcess
 // MO2 Revamped: programs that are not waited for at all (Steam and the
 // blacklisted ones a game starts, like Steam's overlay), so MO2 doesn't stay
 // locked once only they remain; their children still are
-bool isIgnored(const env::Process& p, const QStringList& ignored)
+struct IgnoredProcesses
 {
-  return ignored.contains(p.name(), Qt::CaseInsensitive);
+  // Steam's own programs, never waited for
+  QStringList steam;
+
+  // blacklisted programs
+  QStringList blacklisted;
+
+  // the started program's pid when it's a script extender's loader: what it
+  // starts (the game) is waited for even when blacklisted
+  DWORD loaderPid = 0;
+};
+
+bool isIgnored(const env::Process& p, const IgnoredProcesses& ignored)
+{
+  if (ignored.steam.contains(p.name(), Qt::CaseInsensitive)) {
+    return true;
+  }
+
+  if (!ignored.blacklisted.contains(p.name(), Qt::CaseInsensitive)) {
+    return false;
+  }
+
+  // the parent id stays set after the loader has exited
+  return (ignored.loaderPid == 0 || p.ppid() != ignored.loaderPid);
 }
 
 InterestingProcess findRandomProcess(const env::Process& root,
-                                     const QStringList& ignored)
+                                     const IgnoredProcesses& ignored)
 {
   for (auto&& c : root.children()) {
     if (!isIgnored(c, ignored)) {
@@ -151,7 +173,7 @@ InterestingProcess findRandomProcess(const env::Process& root,
 // they're all hidden; returns an invalid process if the list is empty
 //
 InterestingProcess findInterestingProcessInTrees(const env::Process& root,
-                                                 const QStringList& ignored)
+                                                 const IgnoredProcesses& ignored)
 {
   // Certain process names we wish to "hide" for aesthetic reason:
   static const std::vector<QString> hiddenList = {
@@ -210,7 +232,7 @@ void dump(const env::Process& root)
 
 // gets the most interesting process in the list
 //
-InterestingProcess getInterestingProcess(HANDLE job, const QStringList& ignored)
+InterestingProcess getInterestingProcess(HANDLE job, const IgnoredProcesses& ignored)
 {
   env::Process root = env::getProcessTree(job);
   if (root.children().empty()) {
@@ -302,7 +324,7 @@ std::optional<ProcessRunner::Results> timedWait(HANDLE handle, DWORD pid,
 
 ProcessRunner::Results waitForProcessesThreadImpl(HANDLE job, UILocker::Session* ls,
                                                   std::atomic<bool>& interrupt,
-                                                  const QStringList& ignored)
+                                                  const IgnoredProcesses& ignored)
 {
   using namespace std::chrono;
 
@@ -363,7 +385,7 @@ ProcessRunner::Results waitForProcessesThreadImpl(HANDLE job, UILocker::Session*
 
 void waitForProcessesThread(ProcessRunner::Results& result, HANDLE job,
                             UILocker::Session* ls, std::atomic<bool>& interrupt,
-                            QStringList ignored)
+                            IgnoredProcesses ignored)
 {
   result = waitForProcessesThreadImpl(job, ls, interrupt, ignored);
 
@@ -376,7 +398,7 @@ void waitForProcessesThread(ProcessRunner::Results& result, HANDLE job,
 // `ignored`: file names of programs not to wait for, see isIgnored()
 ProcessRunner::Results waitForProcesses(const std::vector<HANDLE>& initialProcesses,
                                         UILocker::Session* ls,
-                                        const QStringList& ignored = {})
+                                        const IgnoredProcesses& ignored = {})
 {
   if (initialProcesses.empty()) {
     // nothing to wait for
@@ -449,7 +471,7 @@ ProcessRunner::Results waitForProcesses(const std::vector<HANDLE>& initialProces
 
 ProcessRunner::Results waitForProcess(HANDLE initialProcess, LPDWORD exitCode,
                                       UILocker::Session* ls,
-                                      const QStringList& ignored = {})
+                                      const IgnoredProcesses& ignored = {})
 {
   std::vector<HANDLE> processes = {initialProcess};
 
@@ -1025,19 +1047,40 @@ ProcessRunner::Results ProcessRunner::postRun()
   // MO2 Revamped: Steam and the blacklisted programs the game starts (Steam's
   // overlay, a browser) aren't waited for; the program MO2 started always is.
   // Read here, the wait runs on another thread
-  QStringList ignored = {"Steam.exe",           "steamwebhelper.exe",
-                         "SteamService.exe",    "GameOverlayUI.exe",
-                         "GameOverlayUI64.exe", "steamerrorreporter.exe",
-                         "steamerrorreporter64.exe"};
+  IgnoredProcesses ignored;
+  ignored.steam = {"Steam.exe",           "steamwebhelper.exe",
+                   "SteamService.exe",    "GameOverlayUI.exe",
+                   "GameOverlayUI64.exe", "steamerrorreporter.exe",
+                   "steamerrorreporter64.exe"};
   for (const auto& exec : m_core.settings().executablesBlacklist().split(";")) {
     if (!exec.trimmed().isEmpty()) {
-      ignored.append(exec.trimmed());
+      ignored.blacklisted.append(exec.trimmed());
     }
   }
+
+  // MO2 Revamped: the started program and the managed game's own binary are
+  // waited for even when blacklisted; a loader (skse64_loader.exe) exits once
+  // the game is up, and ignoring the game then unlocked MO2
   const QString started = m_sp.binary.fileName();
-  ignored.removeIf([&](const QString& s) {
+  ignored.steam.removeIf([&](const QString& s) {
     return s.compare(started, Qt::CaseInsensitive) == 0;
   });
+
+  QStringList waitedFor = {started};
+  if (const auto* game = m_core.managedGame()) {
+    waitedFor.append(game->binaryName());
+  }
+  ignored.blacklisted.removeIf([&](const QString& s) {
+    return waitedFor.contains(s, Qt::CaseInsensitive);
+  });
+
+  // MO2 Revamped: what a script extender's loader starts is the game
+  if (const auto extender = m_core.gameFeatures().gameFeature<ScriptExtender>()) {
+    if (m_handle.get() != INVALID_HANDLE_VALUE &&
+        ScriptExtenderSetup::isLoader(m_sp.binary.absoluteFilePath(), *extender)) {
+      ignored.loaderPid = ::GetProcessId(m_handle.get());
+    }
+  }
 
   auto r = Error;
 

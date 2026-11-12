@@ -1927,14 +1927,42 @@ void InstanceManagerDialog::duplicateInstance()
   const QString source       = QDir::cleanPath(i->directory());
   const auto parentDirectory = QFileInfo(source).dir().absolutePath();
 
-  const bool sameBase = QDir::cleanPath(QDir::fromNativeSeparators(i->baseDirectory()))
-                            .compare(source, Qt::CaseInsensitive) == 0;
-  const QString text =
-      sameBase ? tr("The copy gets its own folder with this instance's profiles, mods, "
-                    "downloads and settings.")
-               : tr("The copy gets its own folder with this instance's profiles and "
-                    "settings. Its mod data folder is elsewhere and stays shared with "
-                    "the original.");
+  // MO2 Revamped: what is copied and what stays shared, folder by folder: only what
+  // is inside the instance folder comes along (the profiles are copied wherever
+  // they are), so mods or downloads set to a folder elsewhere stay shared even
+  // when the base folder is the instance's own
+  QString text;
+  {
+    const Settings original(i->iniPath());
+    auto inSourceFolder = [&source](const QString& path) {
+      const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(path));
+      return (clean + QStringLiteral("/"))
+          .startsWith(source + QStringLiteral("/"), Qt::CaseInsensitive);
+    };
+
+    QStringList copied{tr("Settings"), tr("Profiles")};
+    QStringList shared;
+    const std::pair<QString, QString> folders[] = {
+        {tr("Mods"), original.paths().mods()},
+        {tr("Downloads"), original.paths().downloads()},
+        {tr("Overwrite"), original.paths().overwrite()}};
+    for (const auto& [label, path] : folders) {
+      if (inSourceFolder(path)) {
+        copied.append(label);
+      } else {
+        shared.append(QStringLiteral("%1: %2").arg(label, QDir::toNativeSeparators(path)));
+      }
+    }
+
+    text = tr("The copy gets its own folder with copies of: %1.")
+               .arg(copied.join(QStringLiteral(", ")));
+    if (!shared.isEmpty()) {
+      text += QStringLiteral("\n\n") +
+              tr("These folders are outside the instance folder, so the copy uses the "
+                 "same ones as the original:\n%1")
+                  .arg(shared.join(QLatin1Char('\n')));
+    }
+  }
 
   const auto name = getInstanceName(
       this, tr("Duplicate instance"), text, tr("Name of the copy"), parentDirectory,
@@ -1972,9 +2000,10 @@ void InstanceManagerDialog::duplicateInstance()
         tr("The instance was copied, but the copy's settings file could not be "
            "updated and may still point to the original's folders:\n%1")
             .arg(QDir::toNativeSeparators(newIni)));
-  } else if (!sameBase) {
-    // with the base folder elsewhere the profiles are usually there too; the
-    // copy gets its own, or both instances would change the same mod lists
+  } else {
+    // with the base folder elsewhere the profiles are usually there too (or they
+    // were set to a folder of their own); the copy gets its own, or both
+    // instances would change the same mod lists
     const Settings original(i->iniPath());
     const QString profiles =
         QDir::cleanPath(QDir::fromNativeSeparators(original.paths().profiles()));

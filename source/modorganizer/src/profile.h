@@ -85,6 +85,14 @@ public:
   Profile(const QDir& directory, MOBase::IPluginGame const* gamePlugin,
           GameFeatures const& features);
 
+  // MO2 Revamped: opens an existing profile only to look at it (the Profiles
+  // dialog): no repairs, migrations or game plugin set-up, and its mod list is
+  // not written back. What the user changes through it is still saved
+  struct ReadOnly
+  {};
+  Profile(const QDir& directory, MOBase::IPluginGame const* gamePlugin,
+          GameFeatures const& features, ReadOnly);
+
   Profile(const Profile& reference);
 
   ~Profile();
@@ -430,6 +438,9 @@ private:
 
   mutable QByteArray m_LastModlistHash;
   MOBase::DelayedFileWriter m_ModListWriter;
+
+  // opened with ReadOnly
+  bool m_ReadOnly = false;
 };
 
 #endif  // PROFILE_H

@@ -1005,7 +1005,8 @@ void MOApplication::externalMessage(const QString& message)
       }
     }
   } else if (isNxmLink(message)) {
-    MessageDialog::showMessage(tr("Download started"), qApp->activeWindow(), false);
+    // MO2 Revamped: "Download started" comes from the download manager once the
+    // link is accepted (see DownloadManager::addNXMDownload())
     m_core->downloadRequestedNXM(message);
   } else {
     cl::CommandLine cl;

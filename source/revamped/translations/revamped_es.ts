@@ -943,6 +943,10 @@ Los cambios se guardan al elegir Aceptar.</translation>
       <source>Date downloaded</source>
       <translation>Fecha de descarga</translation>
     </message>
+    <message>
+      <source>Download failed: %1</source>
+      <translation>La descarga falló: %1</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -5836,6 +5840,20 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
       <source>%1 copy</source>
       <translation>Copia de %1</translation>
     </message>
+    <message>
+      <source>Settings</source>
+      <translation>Ajustes</translation>
+    </message>
+    <message>
+      <source>The copy gets its own folder with copies of: %1.</source>
+      <translation>La copia tiene su propia carpeta con copias de: %1.</translation>
+    </message>
+    <message>
+      <source>These folders are outside the instance folder, so the copy uses the same ones as the original:
+%1</source>
+      <translation>Estas carpetas están fuera de la carpeta de la instancia, así que la copia usa las mismas que la original:
+%1</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -8148,6 +8166,14 @@ La mayoría de los mods no tienen esps opcionales, así que es probable que veas
       <source>Mods lower in the list win file conflicts.</source>
       <translation>Los mods más abajo en la lista ganan los conflictos de archivos.</translation>
     </message>
+    <message>
+      <source>These mods couldn't be removed. Close programs using their files and try again.
+
+%1</source>
+      <translation>No se pudieron quitar estos mods. Cierra los programas que usan sus archivos y vuelve a intentarlo.
+
+%1</translation>
+    </message>
   </context>
   <context>
     <name>ModListContextMenu</name>
@@ -8753,6 +8779,50 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
       <source>Restore hidden files in "%1"?</source>
       <translation>¿Restaurar los archivos ocultos de «%1»?</translation>
     </message>
+    <message>
+      <source>A mod with this name already exists</source>
+      <translation>Ya existe un mod con este nombre</translation>
+    </message>
+    <message>
+      <source>Failed</source>
+      <translation>Error</translation>
+    </message>
+    <message>
+      <source>The folder %1 could not be created.</source>
+      <translation>No se pudo crear la carpeta %1.</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Copying</source>
+      <translation>Copiando</translation>
+    </message>
+    <message>
+      <source>%1 could not be copied: %2</source>
+      <translation>No se pudo copiar %1: %2</translation>
+    </message>
+    <message>
+      <source>The copy could not be named %1.</source>
+      <translation>No se pudo dar a la copia el nombre %1.</translation>
+    </message>
+    <message>
+      <source>%1 could not be moved into %2.</source>
+      <translation>No se pudo mover %1 a %2.</translation>
+    </message>
+    <message>
+      <source>Backing up "%1"...</source>
+      <translation>Haciendo copia de seguridad de «%1»...</translation>
+    </message>
+    <message>
+      <source>Failed to create backup.</source>
+      <translation>No se pudo crear la copia de seguridad.</translation>
+    </message>
+    <message>
+      <source>Only some files were moved from Overwrite into "%1"; the rest are still in Overwrite. The previous version of the mod goes to the Recycle Bin.</source>
+      <translation>Solo se movieron algunos archivos de Overwrite a «%1»; el resto sigue en Overwrite. La versión anterior del mod va a la Papelera de reciclaje.</translation>
+    </message>
   </context>
   <context>
     <name>NexusManualKeyDialog</name>
@@ -8834,6 +8904,34 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
     <message>
       <source>These plugins are open in another program, so their load order couldn't be set: %1. Close the program (the game, xEdit) and refresh.</source>
       <translation>Estos plugins están abiertos en otro programa, así que no se pudo fijar su orden de carga: %1. Cierra ese programa (el juego, xEdit) y actualiza.</translation>
+    </message>
+    <message>
+      <source>Choose another name</source>
+      <translation>Elige otro nombre</translation>
+    </message>
+    <message>
+      <source>The mod was installed as "%1", a name Mod Organizer uses for the game's own files or for Overwrite, so its files wouldn't be used. Enter another name for it:</source>
+      <translation>El mod se instaló como «%1», un nombre que Mod Organizer usa para los archivos del propio juego o para Overwrite, así que sus archivos no se usarían. Escribe otro nombre para él:</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow "%1" as a folder name. Choose another name.</source>
+      <translation>Windows no permite «%1» como nombre de carpeta. Elige otro nombre.</translation>
+    </message>
+    <message>
+      <source>Names ending in "_backup" or "_separator" are for backups and separators. Choose another name.</source>
+      <translation>Los nombres que terminan en «_backup» o «_separator» son para copias de seguridad y separadores. Elige otro nombre.</translation>
+    </message>
+    <message>
+      <source>A mod with this name already exists</source>
+      <translation>Ya existe un mod con este nombre</translation>
+    </message>
+    <message>
+      <source>"%1" couldn't be renamed. Close programs using its files and try again.</source>
+      <translation>No se pudo cambiar el nombre de «%1». Cierra los programas que usan sus archivos y vuelve a intentarlo.</translation>
+    </message>
+    <message>
+      <source>Error</source>
+      <translation>Error</translation>
     </message>
   </context>
   <context>
@@ -9605,6 +9703,28 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
     <message>
       <source>Archive invalidation couldn't be changed: %1</source>
       <translation>No se pudo cambiar la invalidación de archivos: %1</translation>
+    </message>
+    <message>
+      <source>These shortcuts now open "%1":
+%2</source>
+      <translation>Estos accesos directos ahora abren «%1»:
+%2</translation>
+    </message>
+    <message>
+      <source>These shortcuts could not be changed and still open "%1". In their properties, change -p "%1" to -p "%2":
+%3</source>
+      <translation>Estos accesos directos no se pudieron cambiar y siguen abriendo «%1». En sus propiedades, cambia -p "%1" por -p "%2":
+%3</translation>
+    </message>
+    <message>
+      <source>These shortcuts open a profile named "%1" but don't say which instance, so they were left as they are. If they are for this instance, change -p "%1" to -p "%2" in their properties:
+%3</source>
+      <translation>Estos accesos directos abren un perfil llamado «%1» pero no dicen qué instancia, así que se dejaron como estaban. Si son de esta instancia, cambia -p "%1" por -p "%2" en sus propiedades:
+%3</translation>
+    </message>
+    <message>
+      <source>Shortcuts to this profile</source>
+      <translation>Accesos directos a este perfil</translation>
     </message>
   </context>
   <context>
@@ -10610,6 +10730,14 @@ Ejemplo:
     <message>
       <source>The program couldn't start: %1</source>
       <translation>El programa no pudo iniciarse: %1</translation>
+    </message>
+    <message>
+      <source>Download started</source>
+      <translation>Descarga iniciada</translation>
+    </message>
+    <message>
+      <source>Failed</source>
+      <translation>Error</translation>
     </message>
 </context>
   <context>
@@ -12229,6 +12357,18 @@ Start it anyway?</source>
       <source>Copy folder...</source>
       <translation>Copiar carpeta...</translation>
     </message>
+    <message>
+      <source>"%1" holds the mods folder or this instance, so it can't be copied into a mod.</source>
+      <translation>«%1» contiene la carpeta de mods o esta instancia, así que no se puede copiar en un mod.</translation>
+    </message>
+    <message>
+      <source>Copying "%1"...</source>
+      <translation>Copiando «%1»...</translation>
+    </message>
+    <message>
+      <source>The folder could not be copied into a mod: %1</source>
+      <translation>No se pudo copiar la carpeta en un mod: %1</translation>
+    </message>
   </context>
   <context>
     <name>HandlerEditDialog</name>
@@ -13075,6 +13215,22 @@ Revisa las opciones del juego antes de jugar.</translation>
     <message>
       <source>The server refused the download link (it may have expired).</source>
       <translation>El servidor rechazó el enlace de descarga (puede haber caducado).</translation>
+    </message>
+    <message>
+      <source>Download started</source>
+      <translation>Descarga iniciada</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>the server refused to continue the download</source>
+      <translation>el servidor se negó a continuar la descarga</translation>
+    </message>
+    <message>
+      <source>the server sent no data</source>
+      <translation>el servidor no envió datos</translation>
     </message>
   </context>
   <context>
@@ -15502,6 +15658,10 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
       <source>"%1" couldn't be removed. Close programs using its files and try again.</source>
       <translation>No se pudo quitar «%1». Cierra los programas que usen sus archivos y vuelve a intentarlo.</translation>
     </message>
+    <message>
+      <source>Mod Organizer uses the name "%1" for the game's own files or for Overwrite, so a mod can't have it. Choose another name.</source>
+      <translation>Mod Organizer usa el nombre «%1» para los archivos del propio juego o para Overwrite, así que un mod no puede tenerlo. Elige otro nombre.</translation>
+    </message>
   </context>
   <context>
     <name>ModInfoOverwrite</name>
@@ -15540,6 +15700,13 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
     <message>
       <source>LOOT stopped with error code 0x%1. The log below has the details.</source>
       <translation>LOOT se detuvo con el código de error 0x%1. El registro de abajo tiene los detalles.</translation>
+    </message>
+  </context>
+  <context>
+    <name>DirectoryRefresher</name>
+    <message>
+      <source>The mod "%1" has a name Mod Organizer uses for the game's own files or for Overwrite, so its files are not used. Rename the mod to use them.</source>
+      <translation>El mod «%1» tiene un nombre que Mod Organizer usa para los archivos del propio juego o para Overwrite, así que sus archivos no se usan. Cámbiale el nombre para usarlos.</translation>
     </message>
   </context>
 </TS>

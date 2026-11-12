@@ -21,6 +21,7 @@
 #include "copyeventfilter.h"
 #include "filterlist.h"
 #include "fluentmotion.h"
+#include "instancemanager.h"
 #include "genericicondelegate.h"
 #include "log.h"
 #include "mainwindow.h"
@@ -869,6 +870,27 @@ void ModListView::onExternalFolderDropped(const QUrl& url, int priority)
 
   QFileInfo fileInfo(url.toLocalFile());
 
+  // MO2 Revamped: a folder that holds the mods folder (or this instance) would be
+  // copied into itself, endlessly
+  const QString source = QDir::cleanPath(fileInfo.absoluteFilePath());
+  auto inSource        = [&source](const QString& path) {
+    if (path.isEmpty()) {
+      return false;
+    }
+    const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(path));
+    return (clean + QStringLiteral("/"))
+        .startsWith(source + QStringLiteral("/"), Qt::CaseInsensitive);
+  };
+  const auto instance = InstanceManager::singleton().currentInstance();
+  if (inSource(m_core->modsPath()) || inSource(m_core->basePath()) ||
+      inSource(m_core->overwritePath()) ||
+      (instance && inSource(instance->directory()))) {
+    reportError(tr("\"%1\" holds the mods folder or this instance, so it can't be copied "
+                   "into a mod.")
+                    .arg(QDir::toNativeSeparators(source)));
+    return;
+  }
+
   GuessedValue<QString> name;
   name.setFilter(&fixDirectoryName);
   name.update(fileInfo.fileName(), GUESS_PRESET);
@@ -887,21 +909,51 @@ void ModListView::onExternalFolderDropped(const QUrl& url, int priority)
     }
   } while (name->isEmpty());
 
+  if (ModInfo::isReservedModName(name)) {
+    reportError(ModInfo::reservedModNameMessage(name));
+    return;
+  }
+
   if (m_core->modList()->getMod(name) != nullptr) {
     reportError(tr("A mod with this name already exists."));
     return;
   }
 
-  IModInterface* newMod = m_core->createMod(name);
+  // a folder that Replace set aside waits until the copy is complete
+  IModInterface* newMod = m_core->createMod(name, false);
   if (!newMod) {
     return;
   }
 
-  // TODO: this is currently a silent copy, which can take some time, but there is
-  // no clean method to do this in uibase
-  if (!copyDir(fileInfo.absoluteFilePath(), newMod->absolutePath(), true)) {
+  // MO2 Revamped: was a silent copy straight into the mod, which froze the window
+  // and, when it failed, left a mod with part of the files
+  const QString modPath = newMod->absolutePath();
+  QString error;
+  const auto copied = ModListViewActions::copyFolder(
+      this, source, modPath, tr("Copying \"%1\"...").arg(fileInfo.fileName()), &error);
+  if (copied != ModListViewActions::CopyResult::Copied) {
+    QDir modDir(modPath);
+    const auto entries = modDir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot |
+                                          QDir::Hidden | QDir::System);
+    if (entries == QStringList{QStringLiteral("meta.ini")}) {
+      // nothing of the copy is in it: the replaced mod is put back, or the new
+      // empty one goes
+      if (m_core->createdModReplaced()) {
+        m_core->finishCreatedMod(false);
+      } else if (m_core->createdModIsNew()) {
+        modDir.removeRecursively();
+      }
+    } else {
+      // a folder that was there before (Merge): it keeps what it had
+      m_core->finishCreatedMod(true);
+    }
+    if (copied == ModListViewActions::CopyResult::Failed) {
+      reportError(tr("The folder could not be copied into a mod: %1").arg(error));
+    }
+    m_core->refresh();
     return;
   }
+  m_core->finishCreatedMod(true);
 
   m_core->refresh();
 

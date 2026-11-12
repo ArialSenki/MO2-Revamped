@@ -124,6 +124,13 @@ public:
    */
   void removeRowForce(int row, const QModelIndex& parent);
 
+  /**
+   * @brief MO2 Revamped: removes these mods without asking, with one Recycle Bin
+   *     operation for all of them and one update of the profile at the end
+   * @param names the mods' names; mods that aren't regular are skipped
+   */
+  void removeModsForce(const QStringList& names);
+
   void notifyChange(int rowStart, int rowEnd = -1);
   static QString getColumnName(int column);
 

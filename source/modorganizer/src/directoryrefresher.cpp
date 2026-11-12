@@ -36,6 +36,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QApplication>
 #include <QDir>
+#include <QMetaObject>
+#include <QSet>
 #include <QString>
 
 #include <fstream>
@@ -180,12 +182,55 @@ void DirectoryRefresher::setMods(
   m_Mods.clear();
   for (auto mod = mods.begin(); mod != mods.end(); ++mod) {
     QString name      = std::get<0>(*mod);
+    if (isReservedModEntry(name, std::get<1>(*mod))) {
+      continue;
+    }
     ModInfo::Ptr info = ModInfo::getByIndex(ModInfo::getIndex(name));
     m_Mods.push_back(EntryInfo(name, std::get<1>(*mod), info->stealFiles(),
                                info->archives(), std::get<2>(*mod)));
   }
 
   m_EnabledArchives = managedArchives;
+}
+
+bool DirectoryRefresher::isReservedModEntry(const QString& modName,
+                                            const QString& modPath)
+{
+  if (!ModInfo::isReservedModName(modName)) {
+    return false;
+  }
+
+  // the real Overwrite is the one entry that may have its name
+  const auto overwrite = ModInfo::getOverwrite();
+  if (overwrite != nullptr &&
+      QDir::cleanPath(modPath).compare(QDir::cleanPath(overwrite->absolutePath()),
+                                       Qt::CaseInsensitive) == 0) {
+    return false;
+  }
+
+  // MO2 Revamped: a mod folder named "data", like a secondary data folder or
+  // "Overwrite", shared that origin and its files counted as the game's; it is
+  // left out of the file structure, and the user is told once per name
+  static QSet<QString> told;
+  log::warn("mod '{}' has a name Mod Organizer keeps for its own origins; its files "
+            "are not used",
+            modName);
+  if (!told.contains(modName.toLower())) {
+    told.insert(modName.toLower());
+    const QString text = tr("The mod \"%1\" has a name Mod Organizer uses for the "
+                            "game's own files or for Overwrite, so its files are not "
+                            "used. Rename the mod to use them.")
+                             .arg(modName);
+    // on the main thread once it is free: the first refresh runs before the main
+    // window listens to error(), so the message goes straight to a dialog
+    QMetaObject::invokeMethod(
+        qApp,
+        [text] {
+          reportError(text);
+        },
+        Qt::QueuedConnection);
+  }
+  return true;
 }
 
 void DirectoryRefresher::cleanStructure(DirectoryEntry* structure)

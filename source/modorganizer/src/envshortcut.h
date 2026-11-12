@@ -2,6 +2,7 @@
 #define ENV_SHORTCUT_H
 
 #include <QString>
+#include <QStringList>
 
 class Executable;
 class Instance;
@@ -111,6 +112,28 @@ QString toString(Shortcut::Locations loc);
 // instance in the Mod Organizer folder opens without arguments
 //
 Shortcut instanceShortcut(const Instance& i);
+
+// MO2 Revamped: what renameProfileInShortcuts() found, as .lnk paths
+//
+struct ProfileShortcuts
+{
+  // now open the new name
+  QStringList updated;
+
+  // this instance's, but the file couldn't be saved
+  QStringList failed;
+
+  // name the profile but no instance, so they may belong to another one; left
+  // as they are
+  QStringList unsure;
+};
+
+// MO2 Revamped: after a profile of `i` was renamed, the shortcuts on the desktop
+// and in the Start menu that start Mod Organizer with -p "<oldName>" for this
+// instance are changed to the new name
+//
+ProfileShortcuts renameProfileInShortcuts(const Instance& i, const QString& oldName,
+                                          const QString& newName);
 
 }  // namespace env
 
