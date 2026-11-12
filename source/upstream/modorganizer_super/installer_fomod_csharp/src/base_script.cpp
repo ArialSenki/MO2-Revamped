@@ -506,7 +506,10 @@ namespace CSharp {
   array<int>^ BaseScriptImpl::Select(array<SelectOption^>^ p_sopOptions, String^ p_strTitle, bool p_booSelectMany) {
     using namespace System::Collections::Generic;
 
-    QDialog* inputDialog = new QDialog();
+    // MO2 Revamped: over the installer's window, and freed when done (it
+    // was parentless and never deleted)
+    auto inputDialogOwner = std::make_unique<QDialog>(g.ParentWidget);
+    QDialog* inputDialog  = inputDialogOwner.get();
     QVBoxLayout* layout = new QVBoxLayout(inputDialog);
     inputDialog->setWindowTitle(to_qstring(p_strTitle));
     inputDialog->setLayout(layout);

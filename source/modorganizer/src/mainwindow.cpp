@@ -2735,122 +2735,19 @@ void MainWindow::showEvent(QShowEvent* event)
       m_toolbarButtonGeometryInitialized = true;
     });
 
+    // the first start's questions once the window is on screen and the
+    // splash is gone: asked from here, they opened over a window that wasn't
+    // there yet, and could end up behind it
+    QTimer::singleShot(0, this, [this] {
+      askFirstStartQuestions();
+    });
+
     QTimer::singleShot(0, this, [this] {
       offerReplacedModsRecovery();
     });
     QTimer::singleShot(0, this, [this] {
       offerScriptExtenderLaunch();
     });
-
-    if (m_OrganizerCore.settings().firstStart()) {
-      if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
-        // Let the user decline instead of always opening a browser on first start.
-        if (QMessageBox::question(
-                this, tr("Game support wiki"),
-                tr("A game support wiki is available for this game. Open it now? "
-                   "You can also open it later from the \"...\" menu."),
-                QMessageBox::Yes | QMessageBox::No,
-                QMessageBox::Yes) == QMessageBox::Yes) {
-          gameSupportTriggered();
-        }
-      }
-
-      // first start: how the categories begin
-      enum
-      {
-        ImportNexus = 101,
-        OldDefaults,
-        DoNothing
-      };
-      FluentContentDialog setup(
-          this, QStringLiteral("CategorySetupDialog"), tr("Category setup"),
-          tr("If you've already connected to Nexus, you can automatically import Nexus "
-             "categories for this game (if applicable). Otherwise, use the old Mod "
-             "Organizer default category structure, or leave the categories blank (for "
-             "manual setup)."));
-      const bool nexus = NexusInterface::instance().getAccessManager()->validated();
-      if (nexus) {
-        FluentChoices::addOption(setup, ImportNexusGlyph, tr("&Import Nexus categories"),
-                                 tr("Map this game's Nexus categories to yours "
-                                    "automatically."),
-                                 ImportNexus)
-            ->setRecommended(true);
-      }
-      FluentChoices::addOption(setup, OldDefaultsGlyph, tr("Use &old category defaults"),
-                               tr("Start with the categories Mod Organizer has always "
-                                  "come with."),
-                               OldDefaults)
-          ->setRecommended(!nexus);
-      FluentChoices::addOption(setup, ManualCategoriesGlyph, tr("Do &nothing"),
-                               tr("Start without categories and set them up yourself."),
-                               DoNothing);
-      auto* later = setup.addButton(tr("&Close"));
-      connect(later, &QPushButton::clicked, &setup, &QDialog::reject);
-      setup.resize(560, setup.sizeHint().height());
-
-      const int categoryChoice = setup.exec();
-      if (categoryChoice == ImportNexus) {
-        importCategories(false);
-      } else if (categoryChoice == DoNothing) {
-        m_CategoryFactory.reset();
-      } else if (categoryChoice == OldDefaults) {
-        m_CategoryFactory.loadCategories();
-      }
-      m_CategoryFactory.saveCategories();
-
-      m_OrganizerCore.settings().setFirstStart(false);
-    } else {
-      if (m_LastVersion < QVersionNumber(2, 5) &&
-          !GlobalSettings::hideCategoryReminder()) {
-        // an instance from before 2.5: categories now follow Nexus through
-        // mappings, which it doesn't have yet
-        enum
-        {
-          ImportNexus = 101,
-          OpenEditor,
-          DisableMappings
-        };
-        FluentContentDialog migrate(
-            this, QStringLiteral("CategoryMigrationDialog"), tr("Set up category mappings"),
-            tr("Since version 2.5, Mod Organizer gives mods their category by mapping the "
-               "Nexus categories to yours. This instance was made with an older version "
-               "and has no mappings yet."));
-        if (NexusInterface::instance().getAccessManager()->validated()) {
-          FluentChoices::addOption(migrate, ImportNexusGlyph,
-                                   tr("&Import Nexus categories"),
-                                   tr("Map this game's Nexus categories to yours "
-                                      "automatically."),
-                                   ImportNexus)
-              ->setRecommended(true);
-        }
-        FluentChoices::addOption(migrate, CategoryEditorGlyph, tr("&Open categories dialog"),
-                                 tr("Set up the mappings yourself in the category editor."),
-                                 OpenEditor);
-        FluentChoices::addOption(migrate, DisableMappingsGlyph,
-                                 tr("&Disable Nexus mappings"),
-                                 tr("Keep categories as they are. You can turn mappings "
-                                    "back on in Settings."),
-                                 DisableMappings);
-        auto* dontShow = new QCheckBox(tr("&Don't show this again"), &migrate);
-        migrate.body()->addSpacing(4);
-        migrate.body()->addWidget(dontShow);
-        auto* close = migrate.addButton(tr("&Close"));
-        connect(close, &QPushButton::clicked, &migrate, &QDialog::reject);
-        migrate.resize(560, migrate.sizeHint().height());
-
-        const int choice = migrate.exec();
-        if (choice == ImportNexus) {
-          importCategories(dontShow->isChecked());
-        } else if (choice == OpenEditor) {
-          this->ui->filtersEdit->click();
-        } else if (choice == DisableMappings) {
-          Settings::instance().nexus().setCategoryMappings(false);
-        }
-        if (dontShow->isChecked()) {
-          GlobalSettings::setHideCategoryReminder(true);
-        }
-      }
-    }
 
     m_OrganizerCore.settings().widgets().restoreIndex(ui->groupCombo);
 
@@ -6109,8 +6006,135 @@ void MainWindow::offerScriptExtenderLaunch()
   }
 }
 
+void MainWindow::askFirstStartQuestions()
+{
+  // one question at a time
+  if (QApplication::activeModalWidget() != nullptr) {
+    QTimer::singleShot(1000, this, [this] {
+      askFirstStartQuestions();
+    });
+    return;
+  }
+  if (m_OrganizerCore.settings().firstStart()) {
+    if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
+      // Let the user decline instead of always opening a browser on first start.
+      if (QMessageBox::question(
+              this, tr("Game support wiki"),
+              tr("A game support wiki is available for this game. Open it now? "
+                 "You can also open it later from the \"...\" menu."),
+              QMessageBox::Yes | QMessageBox::No,
+              QMessageBox::Yes) == QMessageBox::Yes) {
+        gameSupportTriggered();
+      }
+    }
+
+    // first start: how the categories begin
+    enum
+    {
+      ImportNexus = 101,
+      OldDefaults,
+      DoNothing
+    };
+    FluentContentDialog setup(
+        this, QStringLiteral("CategorySetupDialog"), tr("Category setup"),
+        tr("If you've already connected to Nexus, you can automatically import Nexus "
+           "categories for this game (if applicable). Otherwise, use the old Mod "
+           "Organizer default category structure, or leave the categories blank (for "
+           "manual setup)."));
+    const bool nexus = NexusInterface::instance().getAccessManager()->validated();
+    if (nexus) {
+      FluentChoices::addOption(setup, ImportNexusGlyph, tr("&Import Nexus categories"),
+                               tr("Map this game's Nexus categories to yours "
+                                  "automatically."),
+                               ImportNexus)
+          ->setRecommended(true);
+    }
+    FluentChoices::addOption(setup, OldDefaultsGlyph, tr("Use &old category defaults"),
+                             tr("Start with the categories Mod Organizer has always "
+                                "come with."),
+                             OldDefaults)
+        ->setRecommended(!nexus);
+    FluentChoices::addOption(setup, ManualCategoriesGlyph, tr("Do &nothing"),
+                             tr("Start without categories and set them up yourself."),
+                             DoNothing);
+    auto* later = setup.addButton(tr("&Close"));
+    connect(later, &QPushButton::clicked, &setup, &QDialog::reject);
+    setup.resize(560, setup.sizeHint().height());
+
+    const int categoryChoice = setup.exec();
+    if (categoryChoice == ImportNexus) {
+      importCategories(false);
+    } else if (categoryChoice == DoNothing) {
+      m_CategoryFactory.reset();
+    } else if (categoryChoice == OldDefaults) {
+      m_CategoryFactory.loadCategories();
+    }
+    m_CategoryFactory.saveCategories();
+
+    m_OrganizerCore.settings().setFirstStart(false);
+  } else {
+    if (m_LastVersion < QVersionNumber(2, 5) &&
+        !GlobalSettings::hideCategoryReminder()) {
+      // an instance from before 2.5: categories now follow Nexus through
+      // mappings, which it doesn't have yet
+      enum
+      {
+        ImportNexus = 101,
+        OpenEditor,
+        DisableMappings
+      };
+      FluentContentDialog migrate(
+          this, QStringLiteral("CategoryMigrationDialog"), tr("Set up category mappings"),
+          tr("Since version 2.5, Mod Organizer gives mods their category by mapping the "
+             "Nexus categories to yours. This instance was made with an older version "
+             "and has no mappings yet."));
+      if (NexusInterface::instance().getAccessManager()->validated()) {
+        FluentChoices::addOption(migrate, ImportNexusGlyph,
+                                 tr("&Import Nexus categories"),
+                                 tr("Map this game's Nexus categories to yours "
+                                    "automatically."),
+                                 ImportNexus)
+            ->setRecommended(true);
+      }
+      FluentChoices::addOption(migrate, CategoryEditorGlyph, tr("&Open categories dialog"),
+                               tr("Set up the mappings yourself in the category editor."),
+                               OpenEditor);
+      FluentChoices::addOption(migrate, DisableMappingsGlyph,
+                               tr("&Disable Nexus mappings"),
+                               tr("Keep categories as they are. You can turn mappings "
+                                  "back on in Settings."),
+                               DisableMappings);
+      auto* dontShow = new QCheckBox(tr("&Don't show this again"), &migrate);
+      migrate.body()->addSpacing(4);
+      migrate.body()->addWidget(dontShow);
+      auto* close = migrate.addButton(tr("&Close"));
+      connect(close, &QPushButton::clicked, &migrate, &QDialog::reject);
+      migrate.resize(560, migrate.sizeHint().height());
+
+      const int choice = migrate.exec();
+      if (choice == ImportNexus) {
+        importCategories(dontShow->isChecked());
+      } else if (choice == OpenEditor) {
+        this->ui->filtersEdit->click();
+      } else if (choice == DisableMappings) {
+        Settings::instance().nexus().setCategoryMappings(false);
+      }
+      if (dontShow->isChecked()) {
+        GlobalSettings::setHideCategoryReminder(true);
+      }
+    }
+  }
+}
+
 void MainWindow::offerReplacedModsRecovery()
 {
+  // not over another question (the first start's category setup)
+  if (QApplication::activeModalWidget() != nullptr) {
+    QTimer::singleShot(1000, this, [this] {
+      offerReplacedModsRecovery();
+    });
+    return;
+  }
   auto* installer            = m_OrganizerCore.installationManager();
   QStringList older;
   const QStringList leftovers = installer->replacedLeftovers(&older);

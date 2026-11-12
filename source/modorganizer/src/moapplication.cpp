@@ -31,6 +31,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "revampedtheme.h"
 #include "fluentchoices.h"
 #include "fluentdialogs.h"
+#include "dialogplacement.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
 #include "fluentswitch.h"
@@ -206,66 +207,6 @@ private:
   qint64 m_start;
 };
 }  // namespace Perf
-
-// Several dialogs request a generous default size or restore a saved one. On
-// 768p displays, at 150% scaling, or after moving to a smaller monitor, those
-// sizes would push the button row below the taskbar. Shrink the dialog (and its
-// minimum) to the work area and keep the whole frame on screen. With
-// fluentSize, it also trims the dialog to the Fluent opening size (see
-// FluentDialogs::maxSize()).
-void fitDialogToAvailableScreen(QDialog* dialog, bool fluentSize)
-{
-  if (dialog->windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
-    return;
-  }
-
-  QScreen* screen = QGuiApplication::screenAt(dialog->geometry().center());
-  if (screen == nullptr) {
-    screen = dialog->screen();
-  }
-  if (screen == nullptr) {
-    return;
-  }
-
-  const QRect available = screen->availableGeometry();
-
-  // The native frame is unknown before the first show; reserve room for a
-  // standard Windows title bar and borders.
-  QSize frame = dialog->frameGeometry().size() - dialog->geometry().size();
-  if (frame.width() <= 0 || frame.height() <= 0) {
-    frame = QSize(16, 39);
-  }
-
-  QSize maxSize(qMax(320, available.width() - frame.width()),
-                qMax(240, available.height() - frame.height()));
-  if (fluentSize) {
-    maxSize = maxSize.boundedTo(FluentDialogs::maxSize(available));
-  }
-
-  if (dialog->minimumWidth() > maxSize.width() ||
-      dialog->minimumHeight() > maxSize.height()) {
-    dialog->setMinimumSize(dialog->minimumSize().boundedTo(maxSize));
-  }
-
-  const QSize current = dialog->size();
-  const QSize fitted  = current.boundedTo(maxSize);
-  QPoint position     = dialog->pos();
-  if (fitted != current) {
-    dialog->resize(fitted);
-    // Keep the dialog centred where Qt placed it.
-    position += QPoint((current.width() - fitted.width()) / 2,
-                       (current.height() - fitted.height()) / 2);
-  }
-
-  const QSize outer = dialog->size() + frame;
-  position.setX(qBound(available.left(), position.x(),
-                       qMax(available.left(), available.right() - outer.width() + 1)));
-  position.setY(qBound(available.top(), position.y(),
-                       qMax(available.top(), available.bottom() - outer.height() + 1)));
-  if (position != dialog->pos()) {
-    dialog->move(position);
-  }
-}
 
 class ItemViewSelectionHighlightFilter final : public QObject
 {
@@ -963,6 +904,12 @@ int MOApplication::run(MOMultiProcess& multiProcess)
 
     auto& interfaceSettings = m_settings->interface();
     if (!interfaceSettings.themeChoicePromptCompleted()) {
+      // the splash stays on top of everything: it goes once the question is
+      // on screen (closed before, MO2 would have no window in front and the
+      // question could open behind another program)
+      QTimer::singleShot(0, this, [&splash] {
+        splash.close();
+      });
       const QString currentTheme = interfaceSettings.styleName().value_or(
           Settings::defaultInterfaceStyleName());
 
@@ -1672,13 +1619,19 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
     }
   }
 
+  // MO2 Revamped: placed once Qt has handled the show (its own centring,
+  // a message box's size), before the window reaches the screen
+  QPointer<QDialog> placing;
+  bool placingFluentSize = false;
+
   if (event->type() == QEvent::Show && !event->spontaneous()) {
     if (auto* dialog = qobject_cast<QDialog*>(receiver);
         dialog != nullptr && dialog->isWindow()) {
       // Fluent trims a dialog to its opening size once, so the user can
       // still make it larger; message boxes keep their own size
-      fitDialogToAvailableScreen(dialog, !FluentDialogs::polished(dialog) &&
-                                             qobject_cast<QMessageBox*>(dialog) == nullptr);
+      placing           = dialog;
+      placingFluentSize = !FluentDialogs::polished(dialog) &&
+                          qobject_cast<QMessageBox*>(dialog) == nullptr;
       FluentDialogs::polish(dialog);
       if (auto* box = qobject_cast<QMessageBox*>(dialog)) {
         FluentDialogs::polishMessageBox(box);
@@ -1752,7 +1705,11 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
   }
 
   try {
-    return QApplication::notify(receiver, event);
+    const bool result = QApplication::notify(receiver, event);
+    if (placing) {
+      DialogPlacement::place(placing, placingFluentSize);
+    }
+    return result;
   } catch (const std::exception& e) {
     log::error("uncaught exception in handler (object {}, eventtype {}): {}",
                receiver->objectName(), event->type(), e.what());

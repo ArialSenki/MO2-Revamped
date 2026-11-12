@@ -274,6 +274,10 @@ private:
 
   bool createBackup(const QString& filePath, const QDateTime& time, bool removeOld = true);
   bool backUpBeforeRestore(const QStringList& files);
+  // MO2 Revamped: the first start's wiki and category questions, and the
+  // category mapping reminder, after the window shows
+  void askFirstStartQuestions();
+
   void offerReplacedModsRecovery();
 
   // MO2 Revamped: once per instance, when the script extender is installed

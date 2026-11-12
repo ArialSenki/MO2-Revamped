@@ -669,10 +669,8 @@ void polish(QDialog* dialog)
 
   matchTitleBar(dialog);
 
-  // once the layouts have settled, a short scroll becomes a taller window
-  QTimer::singleShot(0, dialog, [dialog] {
-    growForShortScroll(dialog);
-  });
+  // a short scroll becomes a taller window in DialogPlacement::place(),
+  // before the dialog is centred
 }
 
 void growForShortScroll(QDialog* dialog)
@@ -694,7 +692,7 @@ void growForShortScroll(QDialog* dialog)
   if (dialog->objectName().isEmpty() || GlobalSettings::value(grownKey, false).toBool()) {
     return;
   }
-  // the screen fitDialogToAvailableScreen() used for the same dialog
+  // the screen DialogPlacement::place() used for the same dialog
   const QScreen* screen = QGuiApplication::screenAt(dialog->geometry().center());
   if (screen == nullptr) {
     screen = dialog->screen();

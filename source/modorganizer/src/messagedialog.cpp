@@ -313,6 +313,15 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
 {
   log::debug("{}", text);
 
+  // MO2 Revamped: over the dialog in front (the instance wizard, Settings),
+  // not the main window under it
+  QWidget* modal = QApplication::activeModalWidget();
+  const bool modalShown =
+      modal != nullptr && modal->isVisible() && !modal->testAttribute(Qt::WA_DontShowOnScreen);
+  if (modalShown &&
+      (reference == nullptr || qobject_cast<QMainWindow*>(reference->window()) != nullptr)) {
+    reference = modal->window();
+  }
   if (reference == nullptr) {
     for (QWidget* w : qApp->topLevelWidgets()) {
       if (qobject_cast<QMainWindow*>(w) != nullptr && w->isVisible()) {

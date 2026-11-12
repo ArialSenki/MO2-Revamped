@@ -216,9 +216,12 @@ InstallerFomod::install(GuessedValue<QString>& modName,
       std::shared_ptr<const IFileTree> fomodTree = findFomodDirectory(tree);
 
       QString fomodPath = fomodTree->parent()->path();
+      // MO2 Revamped: over MO2's window, not parentless (it could open
+      // behind MO2 and had a taskbar button of its own)
       FomodInstallerDialog dialog(
           this, modName, fomodPath,
-          std::bind(&InstallerFomod::fileState, this, std::placeholders::_1));
+          std::bind(&InstallerFomod::fileState, this, std::placeholders::_1),
+          parentWidget());
       dialog.initData(m_MOInfo);
       if (!dialog.getVersion().isEmpty()) {
         version = dialog.getVersion();

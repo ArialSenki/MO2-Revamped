@@ -102,13 +102,12 @@ void ValidationProgressDialog::stop()
 
 void ValidationProgressDialog::showEvent(QShowEvent* e)
 {
-  if (m_first) {
-    if (m_settings) {
-      m_settings->geometry().centerOnMainWindowMonitor(this);
-    }
-
-    m_first = false;
-  }
+  // MO2 Revamped: MOApplication places it over the window in front (the
+  // instance wizard during sign-in) and keeps it above that window; centred
+  // on the main window's monitor without an owner, it opened behind the
+  // wizard
+  m_first = false;
+  QDialog::showEvent(e);
 }
 
 void ValidationProgressDialog::closeEvent(QCloseEvent* e)

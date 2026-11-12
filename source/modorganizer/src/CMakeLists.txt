@@ -132,6 +132,7 @@ mo2_add_filter(NAME src/core GROUPS
 	installationmanager
 	scriptextendersetup
 	borderlesswindow
+	dialogplacement
 	winrarfallback
 	nexusinterface
 	nxmaccessmanager

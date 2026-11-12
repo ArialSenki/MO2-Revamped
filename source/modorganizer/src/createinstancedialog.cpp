@@ -340,23 +340,10 @@ void CreateInstanceDialog::showEvent(QShowEvent* e)
 {
   QDialog::showEvent(e);
 
-  // the theme is applied on the first show, and with it the real sizes; the
-  // window then sits over the one that opened it, on that one's screen
-  if (!m_shownOnce) {
-    m_shownOnce = true;
-    QTimer::singleShot(0, this, [this] {
-      if (const QWidget* owner = parentWidget() ? parentWidget()->window() : nullptr) {
-        QRect frame = frameGeometry();
-        frame.moveCenter(owner->frameGeometry().center());
-        if (const QScreen* sc = QGuiApplication::screenAt(owner->frameGeometry().center())) {
-          const QRect area = sc->availableGeometry();
-          frame.moveLeft(qBound(area.left(), frame.left(), area.right() - frame.width()));
-          frame.moveTop(qBound(area.top(), frame.top(), area.bottom() - frame.height()));
-        }
-        move(frame.topLeft());
-      }
-    });
-  }
+  // MO2 Revamped: MOApplication centres it over the window that opened it,
+  // at its themed size, before its first frame; centring it again here, a
+  // moment later, made it jump
+  m_shownOnce = true;
 }
 
 Ui::CreateInstanceDialog* CreateInstanceDialog::getUI()
