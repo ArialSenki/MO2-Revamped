@@ -1623,8 +1623,8 @@ private:
             const bool wholeFolderPossible = !standard && inspection_.value(QStringLiteral("targetWasEmpty")).toBool();
             if (!unknown.isEmpty())
                 lines << tr(wholeFolderPossible
-                    ? QStringLiteral("Esto no es de MO2 y se conserva, salvo con «Quitar todo» (la carpeta estaba vacía cuando se instaló MO2): ")
-                    : QStringLiteral("Esto no es de MO2 y se conserva siempre (la carpeta se mantiene por ello): ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
+                    ? QStringLiteral("No es de MO2 y se conserva, salvo si eliges «Quitar todo» (la carpeta estaba vacía cuando se instaló MO2): ")
+                    : QStringLiteral("No es de MO2 y siempre se conserva (por eso la carpeta se mantiene): ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
                          (unknown.size() > 12 ? QStringLiteral(", …") : QString());
             const QString external = externalFoldersText();
             if (!external.isEmpty()) lines << external;
@@ -1750,7 +1750,7 @@ private:
         }
         if (inProgramFiles(target) &&
             !contentDialog(tr(QStringLiteral("Carpeta protegida por Windows")),
-                           tr(QStringLiteral("Archivos de programa solo deja escribir a los administradores, y MO2 escribe junto a sí mismo: registros, ajustes de plugins y, en una copia portable, también los mods y perfiles. MO2 abierto sin permisos de administrador no podría guardarlos, y algunas herramientas y juegos fallarían. Te recomendamos una carpeta como C:\\MO2 Revamped.\n\n¿Instalar aquí de todos modos?")),
+                           tr(QStringLiteral("En Archivos de programa solo pueden escribir los administradores, y MO2 escribe junto a sí mismo: registros, ajustes de plugins y, en una copia portable, también los mods y perfiles. MO2 abierto sin permisos de administrador no podría guardarlos, y algunas herramientas y juegos fallarían. Te recomendamos una carpeta como C:\\MO2 Revamped.\n\n¿Instalar aquí de todos modos?")),
                            tr(QStringLiteral("Instalar aquí")), tr(QStringLiteral("Elegir otra carpeta")), false))
             return false;
         return true;
@@ -1758,6 +1758,10 @@ private:
 
     // Update, Restore and Uninstall, once inspection_ holds the folder's state
     bool validateInspection() {
+        // a half-done uninstall: only uninstalling again finishes it
+        if (mode_ != 5 && inspection_.value(QStringLiteral("retryUninstall")).toBool())
+            return showError(tr(QStringLiteral("Desinstalación sin terminar")),
+                             tr(QStringLiteral("Una desinstalación anterior de esta carpeta no terminó. Elige «Desinstalar MO2 Revamped» para completarla.")));
         if (mode_ == 2) {
             if (!inspection_.value(QStringLiteral("recognized")).toBool())
                 return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("La actualización solo se admite en una instalación identificada de MO2 Revamped. No se modificó la carpeta seleccionada.")));
@@ -1959,8 +1963,12 @@ private:
                 body += tr(QStringLiteral("\n\nSe quitarán los archivos del programa y lo que MO2 creó al usarse (registros, cachés, volcados de errores). Se conservan tus perfiles, mods, descargas, overwrite y ajustes en la carpeta; si no queda nada en ella, también se quita."));
             }
             const QStringList unknown = stringList(inspection_.value(QStringLiteral("unknownEntries")));
+            // what the user added later goes too: named, before they say yes
+            if (wholeFolder && !unknown.isEmpty())
+                body += tr(QStringLiteral("\n\nTambién se borrará esto, que no es de MO2: ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
+                        (unknown.size() > 12 ? QStringLiteral(", …") : QString());
             if (!wholeFolder && !unknown.isEmpty())
-                body += tr(QStringLiteral("\n\nSe conservan, porque no son de MO2: ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
+                body += tr(QStringLiteral("\n\nSe conservan porque no son de MO2: ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
                         (unknown.size() > 12 ? QStringLiteral(", …") : QString());
             const QString external = externalFoldersText();
             if (!external.isEmpty()) body += QStringLiteral("\n\n") + external;
@@ -2166,6 +2174,8 @@ private:
         if (message.isEmpty()) message = tr(success ? QStringLiteral("Operación completada.") : QStringLiteral("La operación no pudo completarse."));
         const QString details = result.value(QStringLiteral("details")).toString();
         logPath_ = result.value(QStringLiteral("logPath")).toString();
+        // a result with something to read keeps the window open
+        const bool warnings = result.value(QStringLiteral("warnings")).toBool();
         progressStatus_->setText(message);
         log_->appendPlainText(QString());
         log_->appendPlainText(message);
@@ -2192,9 +2202,9 @@ private:
             closeButton_->setFocus();
             if (!details.isEmpty() && !detailsButton_->isChecked()) progressStatus_->setText(message + QStringLiteral("\n") + details);
             if (!launchPath.isEmpty() && QFileInfo(launchPath).isFile()) {
-                launchMo2(launchPath, [this, launchPath](bool launched) {
+                launchMo2(launchPath, [this, launchPath, warnings](bool launched) {
                     if (launched) {
-                        if (closeWhenDone_) QTimer::singleShot(600, this, [this] { close(); });
+                        if (closeWhenDone_ && !warnings) QTimer::singleShot(600, this, [this] { close(); });
                         return;
                     }
                     actionButton_->setText(tr(QStringLiteral("Abrir MO2")));
@@ -2209,7 +2219,7 @@ private:
                         });
                     });
                 });
-            } else if (closeWhenDone_) {
+            } else if (closeWhenDone_ && !warnings) {
                 // a moment to see it worked
                 QTimer::singleShot(1500, this, [this] { close(); });
             }

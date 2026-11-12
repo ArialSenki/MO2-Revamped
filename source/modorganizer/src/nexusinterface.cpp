@@ -409,7 +409,7 @@ void NexusInterface::interpretNexusFileName(const QString& fileName, QString& mo
     // its end ("red4ext-1.31.1" is red4ext, not "red"; "cet_1_38_1" is cet),
     // the old guess only when that leaves no letter
     static const QRegularExpression extension(
-        R"re(\.(zip|rar|7z|tar|gz|xz|bz2)$)re", QRegularExpression::CaseInsensitiveOption);
+        R"re((\.tar)?\.(zip|rar|7z|tar|gz|xz|bz2)$)re", QRegularExpression::CaseInsensitiveOption);
     static const QRegularExpression trailingVersion(
         R"re([-_ .]+v?\d+(?:[-_.]\d+)*[a-z]?$)re", QRegularExpression::CaseInsensitiveOption);
     static const QRegularExpression letter(R"re([a-zA-Z])re");

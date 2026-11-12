@@ -230,8 +230,12 @@ bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game,
       setExecutable(exe, IgnoreExisting);
       added = true;
     } else if (!existing->binaryInfo().exists() && exe.binaryInfo().exists() &&
-               sameFileInRenamedMod(existing->binaryInfo().absoluteFilePath(),
-                                    exe.binaryInfo().absoluteFilePath(), modsPath)) {
+               (sameFileInRenamedMod(existing->binaryInfo().absoluteFilePath(),
+                                     exe.binaryInfo().absoluteFilePath(), modsPath) ||
+                // or the plugin's file in the game folder was renamed (F4SEVR's
+                // loader): a missing file in the folder of the plugin's own
+                existing->binaryInfo().absolutePath().compare(
+                    exe.binaryInfo().absolutePath(), Qt::CaseInsensitive) == 0)) {
       // MO2 Revamped: only the plugin's own path in a renamed mod; a path the
       // user chose that's missing for now (a drive not plugged in) stays
       // its mod was renamed: the program moved with it

@@ -684,9 +684,16 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
   std::unique_ptr<Profile> overrideProfile;
   if (!profileOverride.isEmpty() &&
       profileOverride.compare(current->name(), Qt::CaseInsensitive) != 0) {
-    overrideProfile = std::make_unique<Profile>(
-        QDir(m_core.settings().paths().profiles() + "/" + profileOverride),
-        m_core.managedGame(), m_core.gameFeatures());
+    // a profile that can't be read leaves the current one's settings; run()
+    // reports the missing profile as before
+    try {
+      overrideProfile = std::make_unique<Profile>(
+          QDir(m_core.settings().paths().profiles() + "/" + profileOverride),
+          m_core.managedGame(), m_core.gameFeatures());
+    } catch (const std::exception& e) {
+      log::warn("profile '{}' can't be read: {}", profileOverride, e.what());
+      overrideProfile.reset();
+    }
   }
 
   const Profile* profile = overrideProfile ? overrideProfile.get() : current;

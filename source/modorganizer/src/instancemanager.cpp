@@ -251,7 +251,8 @@ Instance::SetupResults Instance::setup(PluginContainer& plugins)
   // error if the variant missing and required by the plugin
   // (an edition the plugin no longer lists is asked again too)
   if (m_plugin->gameVariants().size() > 1 &&
-      (m_gameVariant.isEmpty() || !m_plugin->gameVariants().contains(m_gameVariant))) {
+      (m_gameVariant.isEmpty() ||
+       !m_plugin->gameVariants().contains(m_gameVariant, Qt::CaseInsensitive))) {
     return SetupResults::MissingVariant;
   } else {
     m_plugin->setGameVariant(m_gameVariant);

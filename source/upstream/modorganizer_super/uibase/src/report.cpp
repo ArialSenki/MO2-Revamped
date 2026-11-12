@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <QDialogButtonBox>
 #include <QLabel>
 #include <QPushButton>
+#include <QThread>
 #include <QStyle>
 #include <QTextDocument>
 #include <QVBoxLayout>
@@ -77,8 +78,11 @@ void reportError(const QString& message)
   // MO2 Revamped: a Qt dialog whenever there is a QApplication, also before
   // any window exists (an instance that is gone at startup): it gets MO2's
   // theme; Windows' own box only without Qt
-  if (QApplication::topLevelWidgets().count() != 0 ||
-      qobject_cast<QApplication*>(QCoreApplication::instance()) != nullptr) {
+  // (on the main thread only: widgets can't be made on another one)
+  const bool guiThread = QCoreApplication::instance() != nullptr &&
+                         QThread::currentThread() == QCoreApplication::instance()->thread();
+  if (guiThread && (QApplication::topLevelWidgets().count() != 0 ||
+                    qobject_cast<QApplication*>(QCoreApplication::instance()) != nullptr)) {
     if (auto* mw = topLevelWindow()) {
       QMessageBox::warning(mw, QObject::tr("Error"), message, QMessageBox::Ok);
     } else {

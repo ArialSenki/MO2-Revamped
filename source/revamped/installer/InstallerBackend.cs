@@ -339,6 +339,13 @@ namespace Mo2RevampedSetup
                         ? (isolatedEdition ? @"C:\MO2 Revamped\Isolated\Elden Ring" : @"C:\MO2 Revamped") : folder);
                 }
                 catch (Exception ex) { wrong.Add(folder + " (" + ex.Message + ")"); }
+                // the root of a drive, as the window refuses it: never an
+                // installation, and an uninstall entry pointing at a whole drive
+                if (target != null && SetupEngine.IsDriveRoot(target))
+                {
+                    wrong.Add(target + " (" + InstallerText.T("la raíz de una unidad") + ")");
+                    target = null;
+                }
                 // on a standard installation "everything" is the instances in
                 // AppData, shared with every standard installation: it is
                 // asked for by name
@@ -512,9 +519,35 @@ namespace Mo2RevampedSetup
                 catch (IOException error) { throw WorkFolderRefused(error); }
                 catch (UnauthorizedAccessException error) { throw WorkFolderRefused(error); }
             }
-            string folder = Path.Combine(Path.GetTempPath(), "MO2 Revamped Setup", name);
+            string temporaryParent = Path.Combine(Path.GetTempPath(), "MO2 Revamped Setup");
+            PruneOldWorkFolders(temporaryParent);
+            string folder = Path.Combine(temporaryParent, name);
             Directory.CreateDirectory(folder);
             return folder;
+        }
+
+        // what a killed setup, a power cut or a helper that never started
+        // left in %TEMP%: work folders older than a day. Only GUID-named ones,
+        // never through a link.
+        private static void PruneOldWorkFolders(string parent)
+        {
+            try
+            {
+                if (!Directory.Exists(parent) || (File.GetAttributes(parent) & FileAttributes.ReparsePoint) != 0) return;
+                foreach (string old in Directory.GetDirectories(parent))
+                {
+                    try
+                    {
+                        Guid ignored;
+                        if (!Guid.TryParseExact(Path.GetFileName(old), "N", out ignored)) continue;
+                        if ((File.GetAttributes(old) & FileAttributes.ReparsePoint) != 0) continue;
+                        if (DateTime.UtcNow - Directory.GetLastWriteTimeUtc(old) > TimeSpan.FromDays(1)) Directory.Delete(old, true);
+                    }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
+            }
+            catch { }
         }
 
         private static Exception WorkFolderRefused(Exception error)
@@ -705,6 +738,7 @@ namespace Mo2RevampedSetup
                     result["launchPath"] = operation == null ? "" : operation.LaunchPath ?? "";
                     result["error"] = error == null ? "" : error.GetBaseException().Message;
                     result["logPath"] = SetupDiagnostics.CurrentPath;
+                    result["warnings"] = operation != null && operation.HasWarnings;
                     if (error != null) SetupDiagnostics.Error("Operation failed; the Qt installer backend returned an exception.", error);
                     try { WriteAtomic(resultPath, NewSerializer().Serialize(result)); }
                     catch (Exception writeError) { SetupDiagnostics.Error("Could not write the Qt installer result file.", writeError); }
@@ -743,7 +777,9 @@ namespace Mo2RevampedSetup
             try { if (!String.IsNullOrWhiteSpace(target)) full = Path.GetFullPath(target); }
             catch { }
             bool exists = full.Length > 0 && Directory.Exists(full);
-            bool recognized = exists && SetupEngine.IsRevampedInstallation(full);
+            // a half-done uninstall counts too: its record lets it be repeated
+            bool retryable = exists && !SetupEngine.IsRevampedInstallation(full) && SetupEngine.HasRetryableRecord(full);
+            bool recognized = exists && (SetupEngine.IsRevampedInstallation(full) || retryable);
             InstallState state = recognized ? SetupEngine.LoadState(full) : null;
             bool hasBackupDirectory = state != null && !String.IsNullOrWhiteSpace(state.BackupDirectory);
             bool pending = state != null && !String.Equals(state.Status, "Restored", StringComparison.OrdinalIgnoreCase) &&
@@ -772,7 +808,9 @@ namespace Mo2RevampedSetup
             catch { }
             result["exists"] = exists;
             result["recognized"] = recognized;
-            bool eldenRingOnly = recognized && SetupEngine.IsEldenRingOnlyInstallation(full);
+            bool eldenRingOnly = recognized && (SetupEngine.IsEldenRingOnlyInstallation(full) ||
+                (retryable && state != null && state.Files.Exists(file => String.Equals(file.Path, "eldenring-only.portable", StringComparison.OrdinalIgnoreCase))));
+            result["retryUninstall"] = retryable;
             result["eldenRingOnly"] = eldenRingOnly;
             result["pendingRestore"] = pending;
             result["validBackup"] = validBackup;

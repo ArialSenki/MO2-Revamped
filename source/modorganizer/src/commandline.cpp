@@ -292,7 +292,8 @@ std::optional<int> CommandLine::runPostOrganizer(OrganizerCore& core)
       }
     }
   } else if (m_nxmLink) {
-    log::debug("starting download from command line: {}", *m_nxmLink);
+    log::debug("starting download from command line: {}",
+               m_nxmLink->section(QLatin1Char('?'), 0, 0));
     core.downloadRequestedNXM(*m_nxmLink);
   } else if (m_executable) {
     const QString exeName = *m_executable;
