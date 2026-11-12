@@ -12,10 +12,13 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.8](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.8)**
-— `MO2-Revamped-Setup-1.1.0-beta.8.exe` with its `SHA256SUMS.txt`. It is a beta:
-the newest version, with script extenders and a borderless window for Skyrim and
-Fallout (tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas).
+**Latest: [v1.1.0-beta.9](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.9)**
+— `MO2-Revamped-Setup-1.1.0-beta.9.exe` with its `SHA256SUMS.txt`. It is a beta:
+the newest version. Cyberpunk 2077 (Cyber Engine Tweaks, RED4ext and its plugins)
+and Baldur's Gate 3 (Script Extender, .pak mods) now work with mods, the setup
+removes everything on uninstall, and Elden Ring and Nightreign get fixes for
+closing and starting the game and for saves. Script extenders and the borderless
+window were tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas.
 
 The last stable release, [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2),
 remains available, as do [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)
@@ -23,7 +26,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.8.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.9.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
@@ -33,8 +36,29 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 Run the same setup again to **update**, **restore**, **copy data** or
 **uninstall**. Updates keep your data and back up the previous files first;
 isolated Elden Ring installations from 1.0.1 are updated the same way.
+Uninstalling removes the program folder, its shortcuts and its Nexus link
+registration; you choose whether your instances and data go too. The setup also
+has silent switches for scripted installs (`/S`, `/dir=`, `/uninstall`, ...).
 
-## What's new in 1.0.2
+## What's new in the 1.1.0 betas
+
+- **More games tested with mods:** Skyrim Special Edition, Fallout 4, Fallout 3
+  and New Vegas (script extenders, borderless window), Cyberpunk 2077 (CET,
+  RED4ext, ArchiveXL, TweakXL, without copying anything into the game folder)
+  and Baldur's Gate 3 (Script Extender, .pak load order).
+- **Script extenders** install into the game folder from their archive, and the
+  game starts through them.
+- **Borderless window** in the Run menu for the Bethesda games.
+- **Every window from Mod Organizer 2 rewritten** in MO2 Revamped's design, with
+  plain-language texts in six languages.
+- **Elden Ring and Nightreign:** a safer exit and start-up, the Steam save back
+  sooner when a mod profile hides it, and safer restores.
+- **Many fixes** from audits of downloads, the mod list, profiles, instances,
+  game detection and the setup.
+
+The full list is in the [changelog](CHANGELOG.md).
+
+## What was new in 1.0.2
 
 - **Elden Ring Nightreign.** Save isolation, named save profiles, save
   backups, the launch save guard, native DLL loading, the Native DLL Profile,
@@ -60,11 +84,17 @@ The full list is in the [changelog](CHANGELOG.md).
   folder layout or use MO2's standard layout.
 - **Native DLL Profile** — per-profile order of native DLL mods, loaded through
   the Revamped native bridge, also with Seamless Co-op and ELDEN RING Reforged.
-- **Startup Options** — launch minimized, black background, and skip the
-  intro logos (Elden Ring).
+- **Startup Options** — launch minimized, black background, skip the intro
+  logos and a faster start (Elden Ring and Nightreign).
 - **Save Isolation** — separate save routes per profile or instance, named
   save profiles, automatic backups and restore, so playthroughs never
   overwrite each other.
+- **Script extenders and borderless window** — for Skyrim, Fallout, Oblivion,
+  Enderal and Starfield's extenders, and a frameless full-screen window for the
+  older Bethesda games.
+- **Cyberpunk 2077 and Baldur's Gate 3** — CET and RED4ext load through MO2's
+  virtual file system; BG3's Script Extender loads and its .pak mods go into the
+  load order.
 - **Six languages** — English, Spanish, German, French, Italian and Brazilian
   Portuguese.
 - **Themes** — Light and Dark.

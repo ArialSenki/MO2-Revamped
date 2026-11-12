@@ -11,11 +11,38 @@ Tested by hand with the real games, on Windows 11:
 | Skyrim Special Edition, Fallout 4, Fallout 3, New Vegas | Script extenders and the borderless window (in beta 8) | Work |
 | Cyberpunk 2077 (2.5) | Cyber Engine Tweaks, RED4ext, ArchiveXL and TweakXL, installed and started from MO2 | Work: CET starts, RED4ext loads ArchiveXL and TweakXL, and nothing is copied into the game folder |
 | Baldur's Gate 3 | BG3 Script Extender and a .pak mod (Community Library) | Work: the Script Extender loads and the .pak goes into the load order |
-| Elden Ring, Nightreign | No changes of their own | As in beta 8 |
+| Elden Ring, Nightreign | The changes below come from a code audit; they start in MO2 with a test instance | Not played yet with this version |
 
 Oblivion, the original Skyrim, Morrowind and Starfield start in MO2 with a
 test instance but weren't played with mods. Tale of Two Wastelands, Enderal
 and the VR versions weren't tried.
+
+### Elden Ring and Nightreign
+
+- **Closing the game:** two of the game's threads could close it at the same
+  moment, and MO2's file layer was undone twice at once. That is the most likely
+  cause of the rare crash as the game closes. Now only the first one goes on.
+- **Starting the game:** MO2's hooks wait until the game's own start-up code has
+  run, so they no longer collide with ELDEN RING Reforged's Arxan removal. The
+  "start minimized" option can no longer freeze the game at start, and an
+  internal error in the me3 compatibility layer no longer closes the game.
+- **Saves:** with a mod profile's saves hidden, MO2 checks for the game closing
+  every half second in every case (it was every 5 seconds when MO2 wasn't
+  waiting for the game), so the Steam save is back sooner. Save isolation checks
+  again that the game is closed after you confirm each action. A restore that
+  was cut short is finished only if every file is still as it left it, and a
+  new one doesn't start until that is settled. The new instance wizard sets an
+  old `.bak` aside instead of pairing it with the new save.
+- **Seamless Co-op:** the build for one game is never loaded into the other,
+  and installing it in the wrong game says so.
+- **Native DLL Profile:** it shows DLLs added to a mod after it was installed,
+  and only those the game would load.
+- Nightreign writes its own bridge logs (`NightreignMO2Bridge.log`). To help find
+  the cause of the Damage Competition start crash, the bridge log now lists the
+  mods' DLLs as they load and unload.
+- Smaller fixes: names Windows can't use are refused in "Arrange by hand", a
+  manual Reforged merge removes the old online release, texts name the real tools
+  and buttons, and old BootBoost cache files are removed after 60 days.
 
 ### Cyberpunk 2077
 
@@ -71,20 +98,34 @@ and the VR versions weren't tried.
   Space files count as part of the game.
 - Profiles: "Last used" is when you chose the profile; a profile's missing
   game settings are restored with a clear notice; its INI files go to the
-  Recycle Bin when you turn that option off.
+  Recycle Bin when you turn that option off. Renaming a profile updates the
+  desktop and Start menu shortcuts that open it, and the Profiles window no
+  longer rewrites the other profiles. Duplicate instance says what is copied and
+  what stays shared. Starfield is also found in Steam libraries.
 - Deleting an instance never offers the game folder or your own folders.
 
 ### Downloads
 
 - A full drive, an expired link or a dropped connection pauses the download
   instead of removing it; retries continue where the download stopped. A new
-  link for a paused download resumes it.
+  link for a paused download resumes it. A failed or paused download says why
+  in its tooltip.
+- "Download started" shows only once the download is in the list; answering No
+  to "Download again?" stops it.
+- Nexus links register every name Nexus uses for the game.
 - Several fixes against downloads saved under the wrong name, cut short, or
   losing their Nexus information.
 
 ### Mod list
 
 - A mod named like "Weapons backup" is no longer turned into a backup.
+- Create backup and dropping a folder on the list copy with a progress window and
+  Cancel, and leave nothing half copied.
+- "Create mod" from Overwrite with Replace keeps the old version until the new one
+  has its files, with its Nexus ID, version and category.
+- A mod can't be named "data" or "overwrite"; one that already is gets a message
+  instead of mixing its files with the game's.
+- Removing several mods at once is one step.
 - Removing a mod asks with No as the default and says it goes to the Recycle
   Bin; every removal that says so really uses the Recycle Bin.
 - Conflicts with the game's own files are counted right, and names Windows
@@ -97,7 +138,10 @@ and the VR versions weren't tried.
 - An empty entry in the list of programs that don't get the VFS no longer
   turns the VFS off for every program.
 - MO2 no longer stays locked after the game exits when Steam keeps running.
-- Arguments with spaces given on the command line reach the program whole.
+- Arguments with spaces given on the command line reach the program whole, and
+  restarting MO2 as administrator keeps them. Batch files get quoted arguments.
+- A game started by its loader is waited for even when the loader is in the list
+  of programs that don't get the VFS.
 - Programs you removed from Edit programs no longer come back.
 - LOOT only changes the load order when it finishes; the plugin list warns past
   the game's plugin limit.
