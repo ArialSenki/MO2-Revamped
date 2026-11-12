@@ -1099,7 +1099,8 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
                            std::queue<FileInfo>& queue, boost::mutex& mutex,
                            boost::interprocess::interprocess_semaphore& bufferCount,
                            boost::interprocess::interprocess_semaphore& queueFree,
-                           int totalFiles, bool overwrite, int& filesDone)
+                           int totalFiles, bool overwrite, int& filesDone,
+                           int& failures)
 {
   for (int i = 0; i < totalFiles; ++i) {
     bufferCount.wait();
@@ -1127,10 +1128,10 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
 
     std::ofstream outputFile(fileName, fstream::out | fstream::binary | fstream::trunc);
 
+    // MO2 Revamped: counted, so extractAll() reports an incomplete extraction
     if (!outputFile.is_open()) {
-#pragma message("report error!")
+      ++failures;
       continue;
-      // return ERROR_ACCESSFAILED;
     }
 
     if (m_Type != TYPE_FALLOUT4 && m_Type != TYPE_STARFIELD &&
@@ -1149,9 +1150,12 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
             if (buffer.get() != nullptr) {
               outputFile.write(reinterpret_cast<char*>(buffer.get()), length);
               buffer.reset();
+            } else {
+              ++failures;
             }
           } catch (const std::exception&) {
 #pragma message("report error!")
+            ++failures;
             dataBuffer.first.reset();
             fileInfo.data.first.reset();
             continue;
@@ -1215,6 +1219,8 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
           if (buffer.get() != nullptr) {
             outputFile.write(reinterpret_cast<char*>(buffer.get()), length);
             buffer.reset();
+          } else {
+            ++failures;
           }
         } else {
           outputFile.write(reinterpret_cast<char*>(dataBuffer.first.get()),
@@ -1222,10 +1228,15 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
         }
       } catch (const std::exception&) {
 #pragma message("report error!")
+        ++failures;
         dataBuffer.first.reset();
         fileInfo.data.first.reset();
         continue;
       }
+    }
+    outputFile.flush();
+    if (!outputFile) {
+      ++failures;
     }
     dataBuffer.first.reset();
     fileInfo.data.first.reset();
@@ -1264,6 +1275,7 @@ EErrorCode Archive::extractAll(
   std::queue<FileInfo> buffers;
   boost::mutex queueMutex;
   int filesDone = 0;
+  int failures  = 0;
   boost::interprocess::interprocess_semaphore bufferCount(0);
   boost::interprocess::interprocess_semaphore queueFree(100);
 
@@ -1272,10 +1284,12 @@ EErrorCode Archive::extractAll(
                                          boost::ref(bufferCount), boost::ref(queueFree),
                                          fileList.begin(), fileList.end()));
 
-  boost::thread extractThread(boost::bind(
-      &Archive::extractFiles, this, outputDirectory, boost::ref(buffers),
-      boost::ref(queueMutex), boost::ref(bufferCount), boost::ref(queueFree),
-      static_cast<int>(fileList.size()), overwrite, boost::ref(filesDone)));
+  // a lambda: boost::bind takes no more than nine arguments
+  const int totalFiles = static_cast<int>(fileList.size());
+  boost::thread extractThread([&, totalFiles] {
+    extractFiles(outputDirectory, buffers, queueMutex, bufferCount, queueFree, totalFiles,
+                 overwrite, filesDone, failures);
+  });
 
   bool readerDone  = false;
   bool extractDone = false;
@@ -1303,7 +1317,8 @@ EErrorCode Archive::extractAll(
     }
   }
 
-  return ERROR_NONE;
+  // MO2 Revamped: files that couldn't be written or unpacked (a full disk)
+  return failures > 0 ? ERROR_ACCESSFAILED : ERROR_NONE;
 }
 
 bool Archive::compressed(const File::Ptr& file) const

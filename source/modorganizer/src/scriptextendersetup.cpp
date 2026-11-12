@@ -8,6 +8,7 @@
 #include <log.h>
 #include <utility.h>
 
+#include <QCryptographicHash>
 #include <QFile>
 #include <QLayout>
 #include <QFileInfo>
@@ -417,6 +418,21 @@ void ScriptExtenderSetup::showManualSteps(QWidget* parent, const ScriptExtender&
   dialog.exec();
 }
 
+// what a copied file holds: a file of the same name another version, a hand
+// copy or another instance put there later isn't this mod's
+static QString fileDigest(const QString& path)
+{
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return {};
+  }
+  QCryptographicHash hash(QCryptographicHash::Sha256);
+  if (!hash.addData(&file)) {
+    return {};
+  }
+  return QString::fromLatin1(hash.result().toHex());
+}
+
 void ScriptExtenderSetup::writeRecord(const QString& modPath, const QDir& gameDir,
                                       const QStringList& fileNames)
 {
@@ -450,6 +466,11 @@ void ScriptExtenderSetup::writeRecord(const QString& modPath, const QDir& gameDi
   meta.setValue(QStringLiteral("gameDirectory"),
                 QDir::toNativeSeparators(gameDir.absolutePath()));
   meta.setValue(QStringLiteral("gameFiles"), fileNames);
+  QStringList digests;
+  for (const QString& name : fileNames) {
+    digests.append(fileDigest(gameDir.absoluteFilePath(name)));
+  }
+  meta.setValue(QStringLiteral("gameFileDigests"), digests);
   meta.endGroup();
 }
 
@@ -464,6 +485,8 @@ QStringList ScriptExtenderSetup::recordedFiles(const QString& modPath,
   meta.beginGroup(RecordGroup);
   const QDir gameDir(meta.value(QStringLiteral("gameDirectory")).toString());
   const QStringList fileNames = meta.value(QStringLiteral("gameFiles")).toStringList();
+  const QStringList digests =
+      meta.value(QStringLiteral("gameFileDigests")).toStringList();
   meta.endGroup();
 
   QStringList result;
@@ -474,15 +497,24 @@ QStringList ScriptExtenderSetup::recordedFiles(const QString& modPath,
   }
   const QString prefix = filePrefix(extender);
   const QString loader = extender.loaderName();
-  for (const QString& name : fileNames) {
+  for (int i = 0; i < fileNames.size(); ++i) {
+    const QString& name = fileNames[i];
     // only the extender's names: a damaged record can't take others
     if (!isExtenderFile(name, prefix, loader)) {
       continue;
     }
     const QString path = gameDir.absoluteFilePath(name);
-    if (QFile::exists(path)) {
-      result.append(path);
+    if (!QFile::exists(path)) {
+      continue;
     }
+    // only the files as MO2 copied them; a record without their contents
+    // (an earlier build) offers none
+    const QString digest = i < digests.size() ? digests[i] : QString();
+    if (digest.isEmpty() || fileDigest(path) != digest) {
+      log::info("script extender: {} isn't the copy this mod made; it stays", path);
+      continue;
+    }
+    result.append(path);
   }
   return result;
 }

@@ -1,4 +1,5 @@
 #include "processrunner.h"
+#include <optional>
 #include "env.h"
 #include "envmodule.h"
 #include "instancemanager.h"
@@ -843,8 +844,32 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   // ModOrganizer.exe is spawned instead to launch it
   adjustForVirtualized(game, m_sp, settings);
 
+  // MO2 Revamped: the older games don't declare DPI awareness; with Windows'
+  // scaling above 100% Windows would stretch their full-screen window, drawn at
+  // the screen's real size, a second time. The compatibility layer the
+  // Properties > Compatibility "high DPI" setting uses is passed to the game
+  // (and the extender's loader, which hands its environment on) for this start
+  std::optional<QByteArray> compatLayer;
+  if (watchWindow) {
+    compatLayer = qgetenv("__COMPAT_LAYER");
+    QByteArray layer = *compatLayer;
+    if (!layer.contains("HighDpiAware")) {
+      layer = (layer.trimmed() + " HighDpiAware").trimmed();
+    }
+    qputenv("__COMPAT_LAYER", layer);
+  }
+
   // run the binary
   m_handle.reset(startBinary(parent, m_sp));
+
+  if (compatLayer) {
+    if (compatLayer->isEmpty()) {
+      qunsetenv("__COMPAT_LAYER");
+    } else {
+      qputenv("__COMPAT_LAYER", *compatLayer);
+    }
+  }
+
   if (m_handle.get() == INVALID_HANDLE_VALUE) {
     return Error;
   }

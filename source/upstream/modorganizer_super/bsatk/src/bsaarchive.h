@@ -230,7 +230,8 @@ private:
                     boost::mutex& mutex,
                     boost::interprocess::interprocess_semaphore& bufferCount,
                     boost::interprocess::interprocess_semaphore& queueFree,
-                    int totalFiles, bool overwrite, int& filesDone);
+                    int totalFiles, bool overwrite, int& filesDone,
+                    int& failures);
 
   void cleanFolder(Folder::Ptr folder);
 

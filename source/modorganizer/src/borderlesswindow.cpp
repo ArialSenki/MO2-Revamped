@@ -119,6 +119,35 @@ bool writeIni(const QString& file, const QString& key, const QString& value)
                                     file.toStdWString().c_str()) != FALSE;
 }
 
+// the records of the values MO2 changed, for every instance in one place:
+// instances whose profiles use the INI in Documents share that file
+QString savedStorePath()
+{
+  return QDir(GlobalSettings::directory()).filePath(QStringLiteral("MO2-Revamped-Borderless.ini"));
+}
+
+// records an earlier build kept in the instance's ModOrganizer.ini
+void moveInstanceRecords(OrganizerCore& core, QSettings& store)
+{
+  QSettings instance(core.settings().filename(), QSettings::IniFormat);
+  instance.beginGroup(SavedGroup);
+  const QStringList keys = instance.childKeys();
+  for (const QString& key : keys) {
+    if (!store.contains(key)) {
+      store.setValue(key, instance.value(key));
+    }
+  }
+  instance.endGroup();
+  if (!keys.isEmpty()) {
+    instance.remove(SavedGroup);
+  }
+}
+
+bool sameIniName(const QString& a, const QString& b)
+{
+  return QFileInfo(a).fileName().compare(QFileInfo(b).fileName(), Qt::CaseInsensitive) == 0;
+}
+
 QString savedKey(const QString& iniPath)
 {
   const QByteArray path = QDir::cleanPath(iniPath).toLower().toUtf8();
@@ -338,26 +367,42 @@ bool BorderlessWindow::prepareLaunch(OrganizerCore& core, const QFileInfo& binar
   }
 
   const QString iniPath = profile->absoluteIniFilePath(iniName(game, gameInfo->ini));
-  QSettings settings(core.settings().filename(), QSettings::IniFormat);
+  QSettings settings(savedStorePath(), QSettings::IniFormat);
   settings.beginGroup(SavedGroup);
+  moveInstanceRecords(core, settings);
   const QString key       = savedKey(iniPath);
   const QStringList saved = settings.value(key).toStringList();
 
   if (!enabled(core)) {
-    // turned off: every INI MO2 changed gets its values back (another
-    // profile's, or the global one from before profile INIs were turned on)
+    // turned off: every INI of this game MO2 changed gets its values back
+    // (another profile's, or the one in Documents from before profile INIs
+    // were turned on)
     for (const QString& other : settings.childKeys()) {
       const QStringList record = settings.value(other).toStringList();
-      if (!record.isEmpty() && QFileInfo::exists(record[0])) {
+      if (record.isEmpty() || !sameIniName(record[0], iniPath)) {
+        continue;
+      }
+      bool restored = true;
+      if (QFileInfo::exists(record[0])) {
         for (int i = 1; i < record.size(); ++i) {
           const int equals = record[i].indexOf(QLatin1Char('='));
-          if (equals > 0) {
-            writeIni(record[0], record[i].left(equals), record[i].mid(equals + 1));
+          if (equals > 0 &&
+              !writeIni(record[0], record[i].left(equals), record[i].mid(equals + 1))) {
+            restored = false;
           }
         }
-        log::info("borderless window off: {} has its display settings back", record[0]);
+        if (restored) {
+          log::info("borderless window off: {} has its display settings back", record[0]);
+        } else {
+          // kept: the next start tries again (a read-only INI, for one)
+          log::warn("borderless window off: can't write {}; its display settings stay "
+                    "as they are until it can be written",
+                    record[0]);
+        }
       }
-      settings.remove(other);
+      if (restored) {
+        settings.remove(other);
+      }
     }
     return false;
   }
@@ -392,13 +437,20 @@ bool BorderlessWindow::prepareLaunch(OrganizerCore& core, const QFileInfo& binar
   }
 
   if (saved.isEmpty()) {
-    // a copy of an INI MO2 already changed (a profile that took the global
-    // one) has the user's values in that INI's record, not in the file
+    // a copy of an INI MO2 already changed (a profile that took the one in
+    // Documents) has the user's values in that INI's record, not in the file;
+    // only a file that holds MO2's values is such a copy
     QStringList original;
+    bool holdsOurs = true;
+    for (const auto& value : values) {
+      holdsOurs = holdsOurs && readIni(iniPath, value.first) == value.second;
+    }
     for (const QString& other : settings.childKeys()) {
+      if (!holdsOurs) {
+        break;
+      }
       const QStringList record = settings.value(other).toStringList();
-      if (!record.isEmpty() &&
-          QFileInfo(record[0]).fileName().compare(ini.fileName(), Qt::CaseInsensitive) == 0) {
+      if (!record.isEmpty() && sameIniName(record[0], iniPath)) {
         original = record;
         break;
       }

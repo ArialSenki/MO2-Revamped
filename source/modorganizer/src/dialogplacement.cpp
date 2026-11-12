@@ -1,5 +1,7 @@
 #include "dialogplacement.h"
 
+#include <QSet>
+
 #include "fluentdialogs.h"
 
 #include <log.h>
@@ -96,6 +98,34 @@ QSize frameOf(const QWidget* dialog)
   return frame;
 }
 
+// whether a window is owned, through parents or owners, by the dialog: made
+// its owner, the two would own each other (Windows keeps the wrong one on
+// top, and Qt's check for blocked windows never ends)
+bool ownedBy(const QWidget* window, const QWidget* dialog)
+{
+  QList<const QWidget*> queue{window};
+  QSet<const QWidget*> seen;
+  while (!queue.isEmpty() && seen.size() < 64) {
+    const QWidget* current = queue.takeFirst();
+    if (current == nullptr || seen.contains(current)) {
+      continue;
+    }
+    if (current == dialog) {
+      return true;
+    }
+    seen.insert(current);
+    if (const QWidget* parent = current->parentWidget()) {
+      queue.append(parent->window());
+    }
+    if (const QWindow* handle = current->windowHandle()) {
+      if (const QWindow* owner = handle->transientParent()) {
+        queue.append(QWidget::find(owner->winId()));
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void DialogPlacement::reownShownDialogs()
@@ -129,7 +159,7 @@ QWidget* DialogPlacement::anchorFor(const QWidget* dialog)
   if (modal != nullptr) {
     modal = modal->window();
   }
-  if (usable(modal) && modal != dialog && !dialog->isAncestorOf(modal)) {
+  if (usable(modal) && modal != dialog && !ownedBy(modal, dialog)) {
     if (usable(parent) && sitsOn(parent, modal)) {
       return parent;
     }
@@ -145,11 +175,13 @@ QWidget* DialogPlacement::anchorFor(const QWidget* dialog)
     return parent;
   }
   QWidget* active = QApplication::activeWindow();
-  if (active != nullptr && active != dialog && usable(active->window())) {
+  if (active != nullptr && active->window() != dialog && usable(active->window()) &&
+      !ownedBy(active->window(), dialog)) {
     return active->window();
   }
   for (QWidget* window : QApplication::topLevelWidgets()) {
-    if (window != dialog && qobject_cast<QMainWindow*>(window) != nullptr && usable(window)) {
+    if (window != dialog && qobject_cast<QMainWindow*>(window) != nullptr && usable(window) &&
+        !ownedBy(window, dialog)) {
       return window;
     }
   }
