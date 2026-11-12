@@ -12,9 +12,10 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.6](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.6)**
-— `MO2-Revamped-Setup-1.1.0-beta.6.exe` with its `SHA256SUMS.txt`. It is a beta:
-the newest version, with Qt 6.12, current LOOT rules and fixes for every game.
+**Latest: [v1.1.0-beta.8](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.8)**
+— `MO2-Revamped-Setup-1.1.0-beta.8.exe` with its `SHA256SUMS.txt`. It is a pre-release:
+the newest version, with script extenders and a borderless window for Skyrim and
+Fallout (tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas).
 
 The last stable release, [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2),
 remains available, as do [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)
@@ -22,7 +23,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.6.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.8.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
