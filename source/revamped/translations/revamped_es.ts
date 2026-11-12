@@ -12475,6 +12475,54 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
       <source>Basic diagnosis plugin</source>
       <translation>Diagnóstico básico</translation>
     </message>
+    <message>
+      <source>File attributes</source>
+      <translation>Atributos de archivo</translation>
+    </message>
+    <message>
+      <source>Checking the files of the game and the active mods...</source>
+      <translation>Comprobando los archivos del juego y de los mods activos...</translation>
+    </message>
+    <message>
+      <source>Fix the file attributes?</source>
+      <translation>¿Corregir los atributos de archivo?</translation>
+    </message>
+    <message>
+      <source>Some files or folders of the game or of your active mods (%1) have Windows attributes, such as read-only, hidden, system or compressed, that can keep the game from reading them: plugins, textures and other files can go missing in the game. MO2 can clear those attributes before starting %2.</source>
+      <translation>Algunos archivos o carpetas del juego o de tus mods activos (%1) tienen atributos de Windows, como solo lectura, oculto, sistema o comprimido, que pueden impedir que el juego los lea: pueden faltar plugins, texturas y otros archivos en el juego. MO2 puede quitar esos atributos antes de iniciar %2.</translation>
+    </message>
+    <message>
+      <source>Files</source>
+      <translation>Archivos</translation>
+    </message>
+    <message>
+      <source>Fix and start</source>
+      <translation>Corregir e iniciar</translation>
+    </message>
+    <message>
+      <source>Start without fixing</source>
+      <translation>Iniciar sin corregir</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Fixing the file attributes...</source>
+      <translation>Corrigiendo los atributos de archivo...</translation>
+    </message>
+    <message>
+      <source>Some attributes couldn't be fixed</source>
+      <translation>No se han podido corregir algunos atributos</translation>
+    </message>
+    <message>
+      <source>MO2 couldn't clear the attributes of some files or folders (%1; the log lists them). Start %2 anyway?</source>
+      <translation>MO2 no ha podido quitar los atributos de algunos archivos o carpetas (%1; aparecen en el registro). ¿Iniciar %2 igualmente?</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar igualmente</translation>
+    </message>
 </context>
   <context>
     <name>Form43Checker</name>
@@ -14698,6 +14746,81 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
     <message>
       <source>Start anyway</source>
       <translation>Iniciar igualmente</translation>
+    </message>
+  </context>
+  <context>
+    <name>BsaExtractor</name>
+    <message>
+      <source>Can't extract this mod's archives</source>
+      <translation>No se pueden extraer los archivos comprimidos de este mod</translation>
+    </message>
+    <message>
+      <source>This mod's folder is the game's Data folder, so its archives can't be extracted. Remove the mod and install it again under another name.</source>
+      <translation>La carpeta de este mod es la carpeta Data del juego, así que no se pueden extraer sus archivos comprimidos. Quita el mod e instálalo de nuevo con otro nombre.</translation>
+    </message>
+    <message>
+      <source>Extract the archives?</source>
+      <translation>¿Extraer los archivos comprimidos?</translation>
+    </message>
+    <message>
+      <source>%1 comes with archives: %2.
+
+Extract their files into the mod? Loose files follow the order of the mod list, and usually win over the files of every archive, wherever their mod is in the list. If you aren't sure, choose No.</source>
+      <translation>%1 trae archivos comprimidos: %2.
+
+¿Extraer sus archivos en el mod? Los archivos sueltos siguen el orden de la lista de mods y, por lo general, se imponen a los de cualquier archivo comprimido, esté donde esté su mod en la lista. Si no estás seguro, elige No.</translation>
+    </message>
+    <message>
+      <source>Remove the archives afterwards?</source>
+      <translation>¿Quitar después los archivos comprimidos?</translation>
+    </message>
+    <message>
+      <source>Once their files are extracted, the archives only repeat them. Send the archives to the Recycle Bin when the extraction is done?</source>
+      <translation>Una vez extraídos sus archivos, los archivos comprimidos solo los repiten. ¿Enviarlos a la Papelera de reciclaje al terminar la extracción?</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be read: %2</source>
+      <translation>No se ha podido leer %1: %2</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be read (error %2).</source>
+      <translation>No se ha podido leer %1 (error %2).</translation>
+    </message>
+    <message>
+      <source>Extracting %1</source>
+      <translation>Extrayendo %1</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <translation>Detener</translation>
+    </message>
+    <message>
+      <source>Extraction stopped</source>
+      <translation>Extracción detenida</translation>
+    </message>
+    <message>
+      <source>Part of the files of %1 were extracted into the mod; the archive and the ones after it are as they were.</source>
+      <translation>Parte de los archivos de %1 se han extraído en el mod; ese archivo comprimido y los siguientes siguen como estaban.</translation>
+    </message>
+    <message>
+      <source>Not all the files of %1 could be extracted (error %2); the archive stays in the mod.</source>
+      <translation>No se han podido extraer todos los archivos de %1 (error %2); el archivo comprimido se queda en el mod.</translation>
+    </message>
+    <message>
+      <source>%1 holds files with invalid names (hashes): some of the extracted files may be broken.</source>
+      <translation>%1 contiene archivos con nombres (hashes) no válidos: algunos de los archivos extraídos pueden estar dañados.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be sent to the Recycle Bin.</source>
+      <translation>No se ha podido enviar %1 a la Papelera de reciclaje.</translation>
+    </message>
+    <message>
+      <source>BSA Extractor</source>
+      <translation>BSA Extractor</translation>
+    </message>
+    <message>
+      <source>Offers a dialog during installation of a mod to unpack all its BSAs</source>
+      <translation>Al instalar un mod, ofrece extraer todos sus archivos BSA</translation>
     </message>
   </context>
 </TS>

@@ -890,7 +890,7 @@ class WizardInstallerDialog(QDialog):
 
     def _fit_text(self) -> None:
         """The page's text takes the lines it needs, up to five; more scroll."""
-        if self._text.isHidden():
+        if self._textScroll.isHidden():
             return
         width = max(1, self._textScroll.viewport().width())
         needed = self._text.heightForWidth(width)
@@ -903,7 +903,15 @@ class WizardInstallerDialog(QDialog):
         QTimer.singleShot(0, self._fit_text)
 
     def showEvent(self, event) -> None:
+        # before the first frame: the text's height is part of the window's
+        # size, which MO2 centres it at; fitted only afterwards, the window
+        # grew after it appeared
+        layout = self.layout()
+        if layout is not None:
+            layout.activate()
+        self._fit_text()
         super().showEvent(event)
+        # and again once the layout has its final widths
         QTimer.singleShot(0, self._fit_text)
 
     def _show_current(self) -> None:

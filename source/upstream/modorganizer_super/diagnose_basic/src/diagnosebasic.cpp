@@ -31,15 +31,22 @@
 
 #include <QtPlugin>
 #include <QFile>
+#include <QFileInfo>
 #include <QDir>
 #include <QDirIterator>
 #include <QDebug>
 #include <QCoreApplication>
-#include <QMessageBox>
+#include <QScrollBar>
 #include <QDateTime>
 #include <QProgressDialog>
 #include <QLabel>
 #include <QPushButton>
+#include <QApplication>
+#include <QMainWindow>
+#include <QPlainTextEdit>
+#include <QTextDocument>
+
+#include "fluentcontentdialog.h"
 
 #include <regex>
 #include <functional>
@@ -509,20 +516,25 @@ bool DiagnoseBasic::fileAttributes(const QString &executable) const
     }
   }
 
-  // Set up a progress bar since this can take a while
-  QPushButton *progressButton = new QPushButton("Cancel");
-  progressButton->setEnabled(false);
+  // MO2 Revamped: MO2's window in front (the dialogs below open over it)
+  QWidget* parent = QApplication::activeModalWidget();
+  if (parent == nullptr) {
+    for (QWidget* window : QApplication::topLevelWidgets()) {
+      if (qobject_cast<QMainWindow*>(window) != nullptr && window->isVisible()) {
+        parent = window;
+        break;
+      }
+    }
+  }
 
-  QLabel *progressLabel = new QLabel;
-  progressLabel->setText(tr("File attribute checker\nSearching for problems..."));
-  progressLabel->setAlignment(Qt::AlignCenter);
-
-  QProgressDialog dialog;
+  // a progress window, since this can take a while
+  QProgressDialog dialog(parent);
+  dialog.setWindowTitle(tr("File attributes"));
+  dialog.setLabelText(tr("Checking the files of the game and the active mods..."));
+  // as before: nothing else starts a program meanwhile
   dialog.setWindowModality(Qt::ApplicationModal);
-  dialog.setCancelButton(progressButton);
-  dialog.setLabel(progressLabel);
-  dialog.setMinimumDuration(1);
-  dialog.show();
+  dialog.setCancelButton(nullptr);
+  dialog.setMinimumDuration(500);
   dialog.setMaximum(directoriesToSearch.length());
 
   // Find problems with the directories and files
@@ -539,42 +551,85 @@ bool DiagnoseBasic::fileAttributes(const QString &executable) const
     }
     dialog.setValue(i);
   }
+  dialog.reset();
 
   if (filesToFix.length() == 0) {
     return true;
   }
 
-  QMessageBox::StandardButton userResponse = QMessageBox::question(nullptr, tr("Invalid file attributes found"),
-          tr("One or more of your files has attributes that may prevent the game from reading the files. "
-              "This can result in missing plugins, missing textures, and other such problems.\n\n"
-              "Fix the file attributes?"),
-          QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
-  if (userResponse == QMessageBox::Cancel) {
+  // the files, as people know them (without the long-path prefix)
+  QStringList shown;
+  for (const QString& path : filesToFix) {
+    shown.append(path.startsWith("\\\\?\\") ? path.mid(4) : path);
+  }
+
+  constexpr int Skip = 101;
+  RevampedFluent::ContentDialog question(
+      parent, QStringLiteral("FileAttributesDialog"), tr("Fix the file attributes?"),
+      tr("Some files or folders of the game or of your active mods (%1) have Windows "
+         "attributes, such as read-only, hidden, system or compressed, that can keep the "
+         "game from reading them: plugins, textures and other files can go missing in the "
+         "game. MO2 can clear those attributes before starting %2.")
+          .arg(filesToFix.length())
+          .arg(QFileInfo(executable).fileName()));
+  auto* list = new QPlainTextEdit(shown.join("\n"), &question);
+  list->setReadOnly(true);
+  list->setLineWrapMode(QPlainTextEdit::NoWrap);
+  list->setAccessibleName(tr("Files"));
+  // as tall as its lines, up to eight, with room for the horizontal scroll
+  // bar long paths bring; more lines scroll
+  list->ensurePolished();
+  const int lines = std::min<int>(8, shown.length());
+  list->setFixedHeight(list->fontMetrics().lineSpacing() * lines +
+                       2 * static_cast<int>(list->document()->documentMargin()) +
+                       list->contentsMargins().top() + list->contentsMargins().bottom() +
+                       list->horizontalScrollBar()->sizeHint().height() + 4);
+  question.body()->addWidget(list);
+  auto* fix    = question.addButton(tr("Fix and start"), true);
+  auto* skip   = question.addButton(tr("Start without fixing"));
+  auto* cancel = question.addButton(tr("Cancel"));
+  QObject::connect(fix, SIGNAL(clicked()), &question, SLOT(accept()));
+  QObject::connect(skip, &QPushButton::clicked, &question, [&question] { question.done(Skip); });
+  QObject::connect(cancel, SIGNAL(clicked()), &question, SLOT(reject()));
+  question.resize(560, question.sizeHint().height());
+  const int answer = question.exec();
+  if (answer == Skip) {
+    return true;
+  }
+  if (answer != QDialog::Accepted) {
     qDebug() << "User canceled executable launch due to file attributes";
     return false;
   }
-  else if (userResponse == QMessageBox::No) {
-    return true;
-  }
-
-  // Reset progress bar
-  progressLabel->setText(tr("File attribute checker\nFixing file attributes..."));
-  dialog.setValue(0);
-  dialog.setMaximum(filesToFix.length());
 
   // Start iterating through files fixing problems
+  dialog.setLabelText(tr("Fixing the file attributes..."));
+  dialog.setValue(0);
+  dialog.setMaximum(filesToFix.length());
   bool success = true;
+  int failed   = 0;
   for (int i = 0; i < filesToFix.length(); i++) {
-    if (!fixFileAttributes(filesToFix[i]))
+    if (!fixFileAttributes(filesToFix[i])) {
       success = false;
+      ++failed;
+    }
     dialog.setValue(i);
   }
+  dialog.reset();
 
   if (!success) {
-    if (QMessageBox::question(nullptr, tr("Unable to set file attributes"),
-          tr("Mod Organizer was unable to fix the file attributes of at least one file.\n\n"
-             "Continue launching %1?").arg(executable),
-          QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) {
+    RevampedFluent::ContentDialog warning(
+        parent, QStringLiteral("FileAttributesFailedDialog"),
+        tr("Some attributes couldn't be fixed"),
+        tr("MO2 couldn't clear the attributes of some files or folders (%1; the log lists "
+           "them). Start %2 anyway?")
+            .arg(failed)
+            .arg(QFileInfo(executable).fileName()));
+    auto* start  = warning.addButton(tr("Start anyway"), true);
+    auto* stop   = warning.addButton(tr("Cancel"));
+    QObject::connect(start, SIGNAL(clicked()), &warning, SLOT(accept()));
+    QObject::connect(stop, SIGNAL(clicked()), &warning, SLOT(reject()));
+    warning.askFirst(stop);
+    if (warning.exec() != QDialog::Accepted) {
       return false;
     }
   }

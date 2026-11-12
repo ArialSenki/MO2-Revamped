@@ -14,7 +14,11 @@
 #include <QDir>
 #include <QFileInfoList>
 #include <QCoreApplication>
-#include <QMessageBox>
+#include <QApplication>
+#include <QMainWindow>
+#include <QStringList>
+
+#include "fluentcontentdialog.h"
 #include <QtPlugin>
 
 #include <functional>
@@ -83,12 +87,34 @@ QList<PluginSetting> BsaExtractor::settings() const
 
 bool BsaExtractor::extractProgress(QProgressDialog &progress, int percentage, std::string fileName)
 {
-  progress.setLabelText(fileName.c_str());
+  // stopped: bsatk asks again until its threads end, and setValue would show
+  // the dialog again
+  if (progress.wasCanceled()) {
+    return false;
+  }
+  progress.setLabelText(QString::fromStdString(fileName));
   progress.setValue(percentage);
   qApp->processEvents();
   return !progress.wasCanceled();
 }
 
+
+namespace
+{
+
+// MO2's window: the questions come after an installation, when the
+// installer's dialog has closed
+QWidget* mainWindow()
+{
+  for (QWidget* window : QApplication::topLevelWidgets()) {
+    if (qobject_cast<QMainWindow*>(window) != nullptr && window->isVisible()) {
+      return window;
+    }
+  }
+  return nullptr;
+}
+
+}  // namespace
 
 void BsaExtractor::modInstalledHandler(IModInterface *mod)
 {
@@ -98,54 +124,109 @@ void BsaExtractor::modInstalledHandler(IModInterface *mod)
     return;
   }
 
+  QWidget* parent = mainWindow();
+
+  // MO2 Revamped: the windows are MO2's content dialogs, over MO2's window
   if (QFileInfo(mod->absolutePath()) == QFileInfo(m_Organizer->managedGame()->dataDirectory().absolutePath())) {
-    QMessageBox::information(nullptr, tr("invalid mod name"),
-                             tr("BSA extraction doesn't work on mods that have the same name as a non-MO mod."
-                                "Please remove the mod then reinstall with a different name."));
+    RevampedFluent::showNotice(
+        parent, tr("Can't extract this mod's archives"),
+        tr("This mod's folder is the game's Data folder, so its archives can't be "
+           "extracted. Remove the mod and install it again under another name."));
     return;
   }
   QDir dir(mod->absolutePath());
 
   QFileInfoList archives = dir.entryInfoList(QStringList({ "*.bsa", "*.ba2" }));
-  if (archives.length() != 0 &&
-      (QuestionBoxMemory::query(nullptr, "unpackBSA", tr("Extract BSA"),
-                             tr("This mod contains at least one BSA. Do you want to unpack it?\n"
-                                "(If you don't know about BSAs, just select no)"),
-                             QDialogButtonBox::Yes | QDialogButtonBox::No, QDialogButtonBox::No) == QDialogButtonBox::Yes)) {
+  if (archives.isEmpty()) {
+    return;
+  }
+  QStringList names;
+  for (const QFileInfo& archive : archives) {
+    names.append(archive.fileName());
+  }
 
-    bool removeBSAs = (QuestionBoxMemory::query(nullptr, "removeUnpackedBSA", tr("Remove extracted archives"),
-                       tr("Do you wish to remove BSAs after extraction completed?\n"),
-                       QDialogButtonBox::Yes | QDialogButtonBox::No, QDialogButtonBox::No) == QDialogButtonBox::Yes);
-    foreach (QFileInfo archiveInfo, archives) {
-      BSA::Archive archive;
-      // MO2 Revamped: wide paths, so names outside the system code page work
-      BSA::EErrorCode result = archive.read(
+  // the same questions, and remembered answers, as Mod Organizer 2's
+  if (QuestionBoxMemory::query(
+          parent, "unpackBSA", tr("Extract the archives?"),
+          tr("%1 comes with archives: %2.\n\nExtract their files into the mod? Loose files "
+             "follow the order of the mod list, and usually win over the files of every "
+             "archive, wherever their mod is in the list. If you aren't sure, choose No.")
+              .arg(mod->name(), names.join(", ")),
+          QDialogButtonBox::Yes | QDialogButtonBox::No,
+          QDialogButtonBox::No) != QDialogButtonBox::Yes) {
+    return;
+  }
+
+  const bool removeBSAs =
+      QuestionBoxMemory::query(
+          parent, "removeUnpackedBSA", tr("Remove the archives afterwards?"),
+          tr("Once their files are extracted, the archives only repeat them. Send the "
+             "archives to the Recycle Bin when the extraction is done?"),
+          QDialogButtonBox::Yes | QDialogButtonBox::No,
+          QDialogButtonBox::No) == QDialogButtonBox::Yes;
+
+  for (const QFileInfo& archiveInfo : archives) {
+    BSA::Archive archive;
+    // MO2 Revamped: wide paths, so names outside the system code page work
+    BSA::EErrorCode result = BSA::ERROR_NONE;
+    try {
+      result = archive.read(
           std::filesystem::path(QDir::toNativeSeparators(archiveInfo.absoluteFilePath()).toStdWString()), true);
-      if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
-        reportError(tr("failed to read %1: %2").arg(archiveInfo.fileName()).arg(result));
-        return;
-      }
+    } catch (const std::exception& e) {
+      // a damaged file or one that isn't an archive at all
+      reportError(tr("%1 couldn't be read: %2").arg(archiveInfo.fileName(), e.what()));
+      return;
+    }
+    if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
+      reportError(tr("%1 couldn't be read (error %2).").arg(archiveInfo.fileName()).arg(result));
+      return;
+    }
 
-      QProgressDialog progress(nullptr);
-      progress.setMaximum(100);
-      progress.setValue(0);
-      progress.show();
+    QProgressDialog progress(parent);
+    progress.setWindowTitle(tr("Extracting %1").arg(archiveInfo.fileName()));
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
+    progress.setMaximum(100);
+    progress.setValue(0);
+    progress.setCancelButtonText(tr("Stop"));
+    progress.show();
 
-      archive.extractAll(std::filesystem::path(QDir::toNativeSeparators(mod->absolutePath()).toStdWString()),
-                         boost::bind(&BsaExtractor::extractProgress, this, boost::ref(progress), _1, _2),
-                         false);
+    const BSA::EErrorCode extracted = archive.extractAll(
+        std::filesystem::path(QDir::toNativeSeparators(mod->absolutePath()).toStdWString()),
+        boost::bind(&BsaExtractor::extractProgress, this, boost::ref(progress), _1, _2),
+        false);
+    const bool stopped = progress.wasCanceled();
+    progress.close();
+    archive.close();
 
-      if (result == BSA::ERROR_INVALIDHASHES) {
-        reportError(tr("This archive contains invalid hashes. Some files may be broken."));
-      }
+    if (stopped) {
+      // part of the files are out: the archive stays, and the rest are left
+      RevampedFluent::showNotice(
+          parent, tr("Extraction stopped"),
+          tr("Part of the files of %1 were extracted into the mod; the archive and the ones "
+             "after it are as they were.")
+              .arg(archiveInfo.fileName()));
+      return;
+    }
 
-      archive.close();
+    // files that couldn't be written (a full disk): the archive stays
+    if (extracted != BSA::ERROR_NONE) {
+      reportError(tr("Not all the files of %1 could be extracted (error %2); the archive "
+                     "stays in the mod.")
+                      .arg(archiveInfo.fileName())
+                      .arg(extracted));
+      continue;
+    }
 
-      if (removeBSAs) {
-        if (!QFile::remove(archiveInfo.absoluteFilePath())) {
-          qCritical("failed to remove archive %s", archiveInfo.absoluteFilePath().toUtf8().constData());
-        }
-      }
+    if (result == BSA::ERROR_INVALIDHASHES) {
+      reportError(tr("%1 holds files with invalid names (hashes): some of the extracted "
+                     "files may be broken.")
+                      .arg(archiveInfo.fileName()));
+    }
+
+    if (removeBSAs && !QFile::moveToTrash(archiveInfo.absoluteFilePath())) {
+      qCritical("failed to remove archive %s", archiveInfo.absoluteFilePath().toUtf8().constData());
+      reportError(tr("%1 couldn't be sent to the Recycle Bin.").arg(archiveInfo.fileName()));
     }
   }
 }

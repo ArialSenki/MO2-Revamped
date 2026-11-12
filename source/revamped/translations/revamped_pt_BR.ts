@@ -14403,4 +14403,130 @@ O WinRAR está instalado neste PC e talvez consiga. Extrair o arquivo com o WinR
       <translation>Iniciar mesmo assim</translation>
     </message>
   </context>
+  <context>
+    <name>BsaExtractor</name>
+    <message>
+      <source>Can't extract this mod's archives</source>
+      <translation>Não é possível extrair os arquivos compactados deste mod</translation>
+    </message>
+    <message>
+      <source>This mod's folder is the game's Data folder, so its archives can't be extracted. Remove the mod and install it again under another name.</source>
+      <translation>A pasta deste mod é a pasta Data do jogo, então os arquivos compactados dele não podem ser extraídos. Remova o mod e instale de novo com outro nome.</translation>
+    </message>
+    <message>
+      <source>Extract the archives?</source>
+      <translation>Extrair os arquivos compactados?</translation>
+    </message>
+    <message>
+      <source>%1 comes with archives: %2.
+
+Extract their files into the mod? Loose files follow the order of the mod list, and usually win over the files of every archive, wherever their mod is in the list. If you aren't sure, choose No.</source>
+      <translation>O %1 vem com arquivos compactados: %2.
+
+Extrair os arquivos deles no mod? Arquivos soltos seguem a ordem da lista de mods e geralmente prevalecem sobre os de qualquer arquivo compactado, esteja o mod onde estiver na lista. Se não tiver certeza, escolha Não.</translation>
+    </message>
+    <message>
+      <source>Remove the archives afterwards?</source>
+      <translation>Remover depois os arquivos compactados?</translation>
+    </message>
+    <message>
+      <source>Once their files are extracted, the archives only repeat them. Send the archives to the Recycle Bin when the extraction is done?</source>
+      <translation>Depois que os arquivos forem extraídos, os arquivos compactados só os repetem. Enviar os arquivos compactados para a Lixeira ao terminar a extração?</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be read: %2</source>
+      <translation>Não foi possível ler %1: %2</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be read (error %2).</source>
+      <translation>Não foi possível ler %1 (erro %2).</translation>
+    </message>
+    <message>
+      <source>Extracting %1</source>
+      <translation>Extraindo %1</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <translation>Parar</translation>
+    </message>
+    <message>
+      <source>Extraction stopped</source>
+      <translation>Extração interrompida</translation>
+    </message>
+    <message>
+      <source>Part of the files of %1 were extracted into the mod; the archive and the ones after it are as they were.</source>
+      <translation>Parte dos arquivos de %1 foi extraída no mod; esse arquivo compactado e os seguintes continuam como estavam.</translation>
+    </message>
+    <message>
+      <source>Not all the files of %1 could be extracted (error %2); the archive stays in the mod.</source>
+      <translation>Não foi possível extrair todos os arquivos de %1 (erro %2); o arquivo compactado fica no mod.</translation>
+    </message>
+    <message>
+      <source>%1 holds files with invalid names (hashes): some of the extracted files may be broken.</source>
+      <translation>%1 contém arquivos com nomes (hashes) inválidos: alguns dos arquivos extraídos podem estar danificados.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be sent to the Recycle Bin.</source>
+      <translation>Não foi possível enviar %1 para a Lixeira.</translation>
+    </message>
+    <message>
+      <source>BSA Extractor</source>
+      <translation>BSA Extractor</translation>
+    </message>
+    <message>
+      <source>Offers a dialog during installation of a mod to unpack all its BSAs</source>
+      <translation>Ao instalar um mod, oferece extrair todos os BSAs dele</translation>
+    </message>
+  </context>
+  <context>
+    <name>DiagnoseBasic</name>
+    <message>
+      <source>File attributes</source>
+      <translation>Atributos de arquivo</translation>
+    </message>
+    <message>
+      <source>Checking the files of the game and the active mods...</source>
+      <translation>Verificando os arquivos do jogo e dos mods ativos...</translation>
+    </message>
+    <message>
+      <source>Fix the file attributes?</source>
+      <translation>Corrigir os atributos de arquivo?</translation>
+    </message>
+    <message>
+      <source>Some files or folders of the game or of your active mods (%1) have Windows attributes, such as read-only, hidden, system or compressed, that can keep the game from reading them: plugins, textures and other files can go missing in the game. MO2 can clear those attributes before starting %2.</source>
+      <translation>Alguns arquivos ou pastas do jogo ou dos seus mods ativos (%1) têm atributos do Windows, como somente leitura, oculto, sistema ou compactado, que podem impedir o jogo de lê-los: plugins, texturas e outros arquivos podem faltar no jogo. O MO2 pode tirar esses atributos antes de iniciar %2.</translation>
+    </message>
+    <message>
+      <source>Files</source>
+      <translation>Arquivos</translation>
+    </message>
+    <message>
+      <source>Fix and start</source>
+      <translation>Corrigir e iniciar</translation>
+    </message>
+    <message>
+      <source>Start without fixing</source>
+      <translation>Iniciar sem corrigir</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Fixing the file attributes...</source>
+      <translation>Corrigindo os atributos de arquivo...</translation>
+    </message>
+    <message>
+      <source>Some attributes couldn't be fixed</source>
+      <translation>Não foi possível corrigir alguns atributos</translation>
+    </message>
+    <message>
+      <source>MO2 couldn't clear the attributes of some files or folders (%1; the log lists them). Start %2 anyway?</source>
+      <translation>O MO2 não conseguiu tirar os atributos de alguns arquivos ou pastas (%1; o log os lista). Iniciar %2 mesmo assim?</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar mesmo assim</translation>
+    </message>
+  </context>
 </TS>
