@@ -113,7 +113,8 @@ class BG3Utils:
     def modsettings_backup(self):
         return create_dir_if_needed(self.plugin_data_path / "temp" / "modsettings.lsx")
 
-    @functools.cached_property
+    # MO2 Revamped: not cached, it follows the profile
+    @property
     def modsettings_path(self):
         return create_dir_if_needed(
             Path(self._organizer.profilePath()) / "modsettings.lsx"

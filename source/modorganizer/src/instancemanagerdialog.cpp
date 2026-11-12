@@ -1541,13 +1541,24 @@ void InstanceManagerDialog::deleteInstance()
         continue;
       }
 
+      // MO2 Revamped: also its base and cache folders, and both ways: one of
+      // its folders inside a deleted one, or a deleted one inside its folder
+      // (downloads in D:\Downloads\Skyrim while it uses D:\Downloads)
       const QStringList used = {s.paths().downloads(), s.paths().mods(),
-                                s.paths().profiles(), s.paths().overwrite()};
+                                s.paths().profiles(), s.paths().overwrite(),
+                                s.paths().cache()};
+      // its base only one way: a deleted folder inside another instance's base
+      // (portable instances inside the installation's) doesn't take its files
+      const QString base = s.paths().base();
       for (const auto& path : selected) {
         const QString root = folderKey(path);
         const bool inside  = std::any_of(used.begin(), used.end(), [&](const QString& u) {
-          return !u.isEmpty() && folderKey(u).startsWith(root);
-        });
+          if (u.isEmpty()) {
+            return false;
+          }
+          const QString other = folderKey(u);
+          return other.startsWith(root) || root.startsWith(other);
+        }) || (!base.isEmpty() && folderKey(base).startsWith(root));
         if (inside) {
           usedElsewhere.append(tr("%1 (used by %2)")
                                    .arg(QDir::toNativeSeparators(path),

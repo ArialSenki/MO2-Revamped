@@ -219,7 +219,7 @@ bool Instance::readFromIni()
       m_gameDir = *v;
   }
 
-  if (m_gameVariant.isEmpty()) {
+  if (m_gameVariant.isEmpty() && !m_variantReset) {
     if (auto v = s.game().edition()) {
       m_gameVariant = *v;
     }
@@ -249,7 +249,9 @@ Instance::SetupResults Instance::setup(PluginContainer& plugins)
   }
 
   // error if the variant missing and required by the plugin
-  if (m_gameVariant.isEmpty() && m_plugin->gameVariants().size() > 1) {
+  // (an edition the plugin no longer lists is asked again too)
+  if (m_plugin->gameVariants().size() > 1 &&
+      (m_gameVariant.isEmpty() || !m_plugin->gameVariants().contains(m_gameVariant))) {
     return SetupResults::MissingVariant;
   } else {
     m_plugin->setGameVariant(m_gameVariant);
@@ -359,6 +361,14 @@ void Instance::setGame(const QString& name, const QString& dir,
 
   m_gameName = name;
   m_gameDir  = dir;
+
+  // MO2 Revamped: another folder can be another edition (the Steam copy
+  // uninstalled, the GOG one installed): it is asked again
+  if (game != nullptr && game->gameVariants().size() > 1 && !previousGameDirectory.isEmpty() &&
+      !dir.isEmpty() && !samePath(previousGameDirectory, dir)) {
+    m_gameVariant.clear();
+    m_variantReset = true;
+  }
 }
 
 void Instance::setVariant(const QString& name)
@@ -564,8 +574,26 @@ std::vector<Instance::Object> Instance::objectsForDeletion() const
   // a folder that holds the MO2 installation, or a whole drive, is never
   // offered for deletion, even when an instance's paths point at it
   const QString installation = manager.portablePath();
+  // MO2 Revamped: nor the game's folder or anything in it (mods or downloads
+  // set inside it), nor a folder that holds the user's own folders
+  const QString gameFolder = settings.game().directory().value_or(m_gameDir);
+  QStringList userFolders;
+  for (auto location : {QStandardPaths::HomeLocation, QStandardPaths::DocumentsLocation,
+                        QStandardPaths::DesktopLocation, QStandardPaths::DownloadLocation}) {
+    const QString folder = QStandardPaths::writableLocation(location);
+    if (!folder.isEmpty()) {
+      userFolders.append(folder);
+    }
+  }
   auto mustKeep = [&](const QString& dir) {
-    return isDriveOrShare(dir) || dirInRoot(dir, installation);
+    if (isDriveOrShare(dir) || dirInRoot(dir, installation)) {
+      return true;
+    }
+    if (!gameFolder.isEmpty() && (dirInRoot(dir, gameFolder) || dirInRoot(gameFolder, dir))) {
+      return true;
+    }
+    return std::any_of(userFolders.begin(), userFolders.end(),
+                       [&](const QString& folder) { return dirInRoot(dir, folder); });
   };
 
   // directories that might contain the individual files and directories
@@ -1075,6 +1103,31 @@ SetupInstanceResults selectGame(Instance& instance, PluginContainer& pc)
 {
   CreateInstanceDialog dlg(pc, nullptr);
 
+  // MO2 Revamped: an instance that names its game keeps it: its mods and
+  // profiles are for that game. The page says why it opened.
+  if (IPluginGame* game = pc.game(instance.gameName())) {
+    const QString folder = instance.gameDirectory();
+    const QString note =
+        folder.isEmpty()
+            ? QObject::tr("<h3>Where is %1?</h3>This instance doesn't say where the game "
+                          "is. Choose its folder.")
+                  .arg(game->displayGameName().toHtmlEscaped())
+            : QObject::tr("<h3>Where is %1 now?</h3>Mod Organizer can't find it in %2 "
+                          "anymore (moved, uninstalled or changed). Choose the folder where "
+                          "it is installed now.")
+                  .arg(game->displayGameName().toHtmlEscaped(),
+                       QDir::toNativeSeparators(folder).toHtmlEscaped());
+    dlg.getPage<cid::GamePage>()->lockToGame(game, note, folder);
+  } else if (!instance.gameDirectory().isEmpty()) {
+    // no game named, and no plugin knows the folder
+    dlg.getPage<cid::GamePage>()->lockToGame(
+        nullptr,
+        QObject::tr("<h3>Which game is this?</h3>Mod Organizer doesn't recognize a game in "
+                    "%1. Choose the game and its folder.")
+            .arg(QDir::toNativeSeparators(instance.gameDirectory()).toHtmlEscaped()),
+        instance.gameDirectory());
+  }
+
   // only show the game page
   dlg.setSinglePage<cid::GamePage>(instance.displayName());
 
@@ -1235,9 +1288,9 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
     // unreadable ini, there's not much that can be done, select another
     // instance
 
-    reportError(QObject::tr("Cannot open instance '%1', failed to read INI file %2.")
+    reportError(QObject::tr("Can't open %1: its settings file can't be read (%2).")
                     .arg(instance.displayName())
-                    .arg(instance.iniPath()));
+                    .arg(QDir::toNativeSeparators(instance.iniPath())));
 
     return SetupInstanceResults::SelectAnother;
   }
@@ -1250,11 +1303,10 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
     // ask the user for the game managed by this instance
 
     reportError(
-        QObject::tr(
-            "Cannot open instance '%1', the managed game was not found in the INI "
-            "file %2. Select the game managed by this instance.")
+        QObject::tr("%1's settings file doesn't say which game it manages (%2). Choose "
+                    "the game and its folder.")
             .arg(instance.displayName())
-            .arg(instance.iniPath()));
+            .arg(QDir::toNativeSeparators(instance.iniPath())));
 
     return selectGame(instance, pc);
   }
@@ -1264,8 +1316,9 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
     // ini, so this instance is unusable
 
     reportError(
-        QObject::tr("Cannot open instance '%1', the game plugin '%2' doesn't exist. It "
-                    "may have been deleted by an antivirus. Select another instance.")
+        QObject::tr("Can't open %1: support for %2 is missing from this Mod "
+                    "Organizer. Check your antivirus quarantine, or install Mod Organizer "
+                    "again. Choose another instance for now.")
             .arg(instance.displayName())
             .arg(instance.gameName()));
 
@@ -1276,15 +1329,9 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
     // the game directory doesn't exist or the plugin doesn't recognize it;
     // ask the user for the game managed by this instance
 
-    reportError(
-        QObject::tr(
-            "Cannot open instance '%1', the game directory '%2' doesn't exist or "
-            "the game plugin '%3' doesn't recognize it. Select the game managed "
-            "by this instance.")
-            .arg(instance.displayName())
-            .arg(instance.gameDirectory())
-            .arg(instance.gameName()));
-
+    // MO2 Revamped: the game page says why it opened
+    log::warn("instance {}: {} isn't in {} anymore", instance.displayName(),
+              instance.gameName(), instance.gameDirectory());
     return selectGame(instance, pc);
   }
 

@@ -1070,12 +1070,14 @@ std::unique_ptr<Instance> MOApplication::getCurrentInstance(bool forceSelect)
       m.clearOverrides();
 
       if (m.hasAnyInstances()) {
-        reportError(QObject::tr("Instance at '%1' not found. Select another instance.")
-                        .arg(currentInstance->directory()));
+        reportError(QObject::tr("The instance folder %1 isn't there anymore. Choose "
+                                "another instance.")
+                        .arg(QDir::toNativeSeparators(currentInstance->directory())));
       } else {
         reportError(
-            QObject::tr("Instance at '%1' not found. You must create a new instance")
-                .arg(currentInstance->directory()));
+            QObject::tr("The instance folder %1 isn't there anymore. Create an instance to "
+                        "continue.")
+                .arg(QDir::toNativeSeparators(currentInstance->directory())));
       }
 
       currentInstance = selectInstance();

@@ -878,11 +878,13 @@ void GamePage::doActivated(bool firstTime)
   // even when no installation has been detected.
   m_isolatedModeActive = isolatedCopy;
 
+  // with one game (an isolated copy, or an instance that keeps its game) the
+  // search and "show all" have nothing to do
   if (ui->showAllGames != nullptr) {
-    ui->showAllGames->setVisible(!isolatedCopy);
+    ui->showAllGames->setVisible(!isolatedCopy && m_lockedGame == nullptr);
   }
   if (ui->gamesFilter != nullptr) {
-    ui->gamesFilter->setVisible(!isolatedCopy);
+    ui->gamesFilter->setVisible(!isolatedCopy && m_lockedGame == nullptr);
   }
   // an isolated copy has its own texts; the others keep the page's
   const auto setText = [isolatedCopy](QLabel* label, const QString& isolatedText) {
@@ -898,6 +900,12 @@ void GamePage::doActivated(bool firstTime)
   setText(ui->gameSelectionHint,
           QObject::tr("Isolated MO2 copies currently support Elden Ring and Nightreign. Choose the game and its installed folder to continue."));
   setText(ui->gameMissingHint, QObject::tr("Choose Browse\u2026 and select its folder."));
+  if (!m_lockNote.isEmpty() && ui->gameSelectionHint != nullptr) {
+    ui->gameSelectionHint->setText(m_lockNote);
+  }
+  if (m_lockedGame != nullptr && ui->gameMissingHint != nullptr) {
+    ui->gameMissingHint->setText(QObject::tr("Choose Browse… and select its folder."));
+  }
 
   // instances that already manage each game, shown on its row
   m_instanceCounts.clear();
@@ -926,6 +934,20 @@ void GamePage::doActivated(bool firstTime)
       previous->dir = previousPath;
       previous->installed = !previousPath.isEmpty();
       m_selection = previous;
+    }
+  }
+  // the instance's game, found in another folder (a moved Steam library):
+  // chosen already, the user only confirms it
+  if (m_selection == nullptr && m_lockedGame != nullptr) {
+    // only a folder that really has the game, and not the one that is gone
+    // (a registry key can still name it)
+    Game* locked = findGame(m_lockedGame);
+    const auto key = [](const QString& path) {
+      return QDir::cleanPath(QDir::fromNativeSeparators(path)).toLower();
+    };
+    if (locked != nullptr && locked->installed && !locked->dir.isEmpty() &&
+        key(locked->dir) != key(m_lockGoneFolder) && m_lockedGame->looksValid(locked->dir)) {
+      m_selection = locked;
     }
   }
   fillList();
@@ -969,6 +991,13 @@ QString GamePage::selectedGameLocation() const
   }
 
   return QDir::toNativeSeparators(m_selection->dir);
+}
+
+void GamePage::lockToGame(IPluginGame* game, const QString& note, const QString& goneFolder)
+{
+  m_lockedGame     = game;
+  m_lockNote       = note;
+  m_lockGoneFolder = goneFolder;
 }
 
 void GamePage::select(IPluginGame* game, const QString& dir)
@@ -1140,6 +1169,10 @@ std::vector<IPluginGame*> GamePage::sortedGamePlugins() const
   for (auto* game : m_pc.plugins<IPluginGame>()) {
     // the Elden Ring edition offers the games its plugins support
     if (m_isolatedModeActive && !EldenRingSaveSettings::supports(game)) {
+      continue;
+    }
+    // an existing instance keeps its game
+    if (m_lockedGame != nullptr && game != m_lockedGame) {
       continue;
     }
 
@@ -1364,7 +1397,7 @@ void GamePage::fillList()
   clearButtons();
 
   for (auto& g : m_games) {
-    if (!showAll && !m_isolatedModeActive && !g->installed) {
+    if (!showAll && !m_isolatedModeActive && !g->installed && g->game != m_lockedGame) {
       // not installed
       continue;
     }
@@ -1437,6 +1470,21 @@ GamePage::Game* GamePage::checkInstallation(const QString& path, Game* g)
     return g;
   }
 
+  if (otherGame && m_lockedGame != nullptr) {
+    // an existing instance can't change its game: its mods and profiles are
+    // for this one
+    TaskDialog(&m_dlg)
+        .title(QObject::tr("Another game"))
+        .main(QObject::tr("This folder has another game"))
+        .content(QObject::tr("%1 has %2, but this instance manages %3. Choose the folder "
+                             "where %3 is installed.")
+                     .arg(QDir::toNativeSeparators(path), otherGame->displayGameName(),
+                          g->game->displayGameName()))
+        .button({QObject::tr("OK"), QMessageBox::Ok})
+        .exec();
+    return nullptr;
+  }
+
   if (otherGame) {
     // an alternative was found, ask the user about it
     auto* confirmedGame = confirmOtherGame(path, g->game, otherGame);
@@ -1481,15 +1529,14 @@ bool GamePage::confirmMicrosoftStore(const QString& path, IPluginGame* game)
           .main(QObject::tr("Microsoft Store game"))
           .content(
               QObject::tr(
-                  "The folder %1 seems to be a Microsoft Store game install.  Games"
-                  " installed through the Microsoft Store are not supported by Mod "
-                  "Organizer"
-                  " and will not work properly.")
-                  .arg(path))
+                  "%1 looks like a game installed from the Microsoft Store. Windows "
+                  "protects those folders, so Mod Organizer usually can't load mods "
+                  "into the game.")
+                  .arg(QDir::toNativeSeparators(path)))
           .button(
               {game ? QObject::tr("Use this folder for %1").arg(game->displayGameName())
                     : QObject::tr("Use this folder"),
-               QObject::tr("I know what I'm doing"), QMessageBox::Ignore})
+               QObject::tr("Use it anyway"), QMessageBox::Ignore})
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
 

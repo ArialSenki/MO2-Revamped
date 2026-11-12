@@ -228,6 +228,12 @@ public:
   //
   void select(MOBase::IPluginGame* game, const QString& dir = {});
 
+  // MO2 Revamped: setting up an existing instance whose game folder is gone:
+  // only its game is offered, a folder with another game is refused, and the
+  // page says why it opened
+  void lockToGame(MOBase::IPluginGame* game, const QString& note,
+                  const QString& goneFolder);
+
   // pops up a directory selection dialog and looks for a plugin to manage
   // it
   //
@@ -285,6 +291,9 @@ private:
   Game* m_selection;
   bool m_isolatedModeActive = false;
   bool m_showAllGames = false;
+  MOBase::IPluginGame* m_lockedGame = nullptr;
+  QString m_lockNote;
+  QString m_lockGoneFolder;
 
   // returns a list of all the game plugins sorted with natsort
   //

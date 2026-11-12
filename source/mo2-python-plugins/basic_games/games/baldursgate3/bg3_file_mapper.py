@@ -100,15 +100,20 @@ class BG3FileMapper(mobase.IPluginFileMapper):
 
                         import yaml
 
-                        with open(file, "r") as yaml_file:
-                            with open(converted_path, "w") as json_file:
-                                json.dump(
-                                    yaml.safe_load(yaml_file), json_file, indent=2
-                                )
+                        # MO2 Revamped: read first, so a file that isn't valid
+                        # YAML leaves no empty JSON behind
+                        with open(file, "r", encoding="utf-8") as yaml_file:
+                            data = yaml.safe_load(yaml_file)
+                        with open(converted_path, "w", encoding="utf-8") as json_file:
+                            json.dump(data, json_file, indent=2)
                         qDebug(f"Converted {file} to JSON")
                     found_jsons.add(converted_path)
                 except OSError as e:
                     qWarning(f"Error accessing file {converted_path}: {e}")
+                except Exception as e:  # noqa: BLE001
+                    # MO2 Revamped: PyYAML isn't bundled, or the file isn't valid
+                    # YAML: this file stays as it is, the other mods still map
+                    qWarning(f"Couldn't convert {file} to JSON: {e}")
             elif file.name.endswith(".json"):
                 found_jsons.add(file)
             elif not only_convert:

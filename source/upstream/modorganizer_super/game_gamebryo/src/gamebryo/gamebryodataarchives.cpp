@@ -74,7 +74,10 @@ void GamebryoDataArchives::removeArchive(MOBase::IProfile* profile,
   if (!current.contains(archiveName, Qt::CaseInsensitive)) {
     return;
   }
-  current.removeAll(archiveName);
+  // MO2 Revamped: without regard to case, as the check above
+  current.removeIf([&archiveName](const QString& archive) {
+    return archive.compare(archiveName, Qt::CaseInsensitive) == 0;
+  });
 
   writeArchiveList(profile, current);
 }

@@ -416,6 +416,13 @@ QString GameGamebryo::determineMyGamesPath(const QString& gameName)
     return *d;
   }
 
+  // MO2 Revamped: the game never started yet. Where it will make the folder,
+  // not an empty path: that is MO2's own folder, and INIs, saves and Data
+  // would be written there
+  const QString documents = getKnownFolderPath(FOLDERID_Documents, false);
+  if (!documents.isEmpty()) {
+    return pattern.arg(documents);
+  }
   return {};
 }
 

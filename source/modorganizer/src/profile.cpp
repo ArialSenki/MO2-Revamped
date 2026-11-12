@@ -36,6 +36,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <safewritefile.h>
 
 #include <QApplication>
+#include <QMetaObject>
+#include <QMutex>
+#include <QSet>
+#include "fluentdialogs.h"
+#include <QPushButton>
 #include <QBuffer>
 #include <QDirIterator>
 #include <QFile>      // for QFile
@@ -529,7 +534,9 @@ void Profile::refreshModStatus()
   QFile file(getModlistFileName());
   if (!file.open(QIODevice::ReadOnly)) {
     throw MyException(
-        tr("\"%1\" is missing or inaccessible").arg(getModlistFileName()));
+        tr("The mod list %1 can't be read. Check that it exists and that no other "
+           "program has it open.")
+            .arg(QDir::toNativeSeparators(getModlistFileName())));
   }
 
   bool modStatusModified = false;
@@ -674,9 +681,9 @@ void Profile::refreshModStatus()
 
   // User has a mod named some variation of "overwrite".  Tell them about it.
   if (warnAboutOverwrite) {
-    reportError(tr("A mod named \"overwrite\" was detected, disabled, and moved to the "
-                   "highest priority on the mod list. "
-                   "You may want to rename this mod and enable it again."));
+    reportError(tr("A mod is named \"overwrite\", a name Mod Organizer keeps for its own "
+                   "folder. It was turned off and moved to the end of the list: rename it, "
+                   "then turn it on again."));
     // also, mark the mod-list as changed
     modStatusModified = true;
   }
@@ -995,11 +1002,9 @@ bool Profile::enableLocalSaves(bool enable)
     QDialogButtonBox::StandardButton res;
     res = QuestionBoxMemory::query(
         QApplication::activeModalWidget(), "deleteSavesQuery",
-        tr("Delete profile-specific save games?"),
-        tr("Do you want to delete the profile-specific save games? (If you select "
-           "\"No\", the "
-           "save games will show up again if you re-enable profile-specific save "
-           "games)"),
+        tr("Delete this profile's own saves?"),
+        tr("Yes sends them to the Recycle Bin. With No, they stay in the profile's "
+           "folder and come back if you turn this on again."),
         QDialogButtonBox::No | QDialogButtonBox::Yes | QDialogButtonBox::Cancel,
         QDialogButtonBox::No);
     if (res == QMessageBox::Yes) {
@@ -1037,15 +1042,43 @@ bool Profile::localSettingsEnabled() const
     }
     if (!missingFiles.empty()) {
       m_GamePlugin->initializeProfile(m_Directory, IPluginGame::CONFIGURATION);
-      QMessageBox::StandardButton res =
-          QMessageBox::warning(QApplication::activeModalWidget(),
-                               tr("Missing profile-specific game INI files!"),
-                               tr("Some of your profile-specific game INI files were "
-                                  "missing.  They will now be copied "
-                                  "from the vanilla game folder.  You might want to "
-                                  "double-check your settings.\n\n"
-                                  "Missing files:\n") +
-                                   missingFiles.join("\n"));
+      // MO2 Revamped: this is a plain check plugins call at any moment, also off
+      // the main thread: the notice comes afterwards, on the main thread, once
+      // per profile and set of files
+      static QSet<QString> told;
+      static QMutex toldMutex;
+      const QString key = m_Directory.absolutePath().toLower() + QLatin1Char('|') +
+                          missingFiles.join(QLatin1Char('|')).toLower();
+      bool first = false;
+      {
+        QMutexLocker lock(&toldMutex);
+        if (!told.contains(key)) {
+          told.insert(key);
+          first = true;
+        }
+      }
+      if (first) {
+        const QString title = tr("Game settings restored");
+        const QString text =
+            tr("This profile's own copies of these game settings files were missing, so "
+               "they were copied again from the game's current settings (or left empty "
+               "where the game has none yet):\n\n%1\n\nCheck the game's options before "
+               "you play.")
+                .arg(missingFiles.join(QLatin1Char('\n')));
+        QMetaObject::invokeMethod(
+            qApp,
+            [title, text] {
+              QWidget* parent = QApplication::activeModalWidget() != nullptr
+                                    ? QApplication::activeModalWidget()
+                                    : QApplication::activeWindow();
+              FluentContentDialog notice(parent, QStringLiteral("ProfileIniRestoredDialog"),
+                                         title, text);
+              auto* ok = notice.addButton(tr("OK"), true);
+              QObject::connect(ok, &QPushButton::clicked, &notice, &QDialog::accept);
+              notice.exec();
+            },
+            Qt::QueuedConnection);
+      }
     }
   }
   return enabled;
@@ -1059,11 +1092,10 @@ bool Profile::enableLocalSettings(bool enable)
   } else {
     QDialogButtonBox::StandardButton res;
     res = QuestionBoxMemory::query(QApplication::activeModalWidget(), "deleteINIQuery",
-                                   tr("Delete profile-specific game INI files?"),
-                                   tr("Do you want to delete the profile-specific game "
-                                      "INI files? (If you select \"No\", the "
-                                      "INI files will be used again if you re-enable "
-                                      "profile-specific game INI files.)"),
+                                   tr("Delete this profile's own game settings?"),
+                                   tr("Yes sends its settings files to the Recycle Bin. "
+                                      "With No, they stay for when you turn this on "
+                                      "again."),
                                    QDialogButtonBox::No | QDialogButtonBox::Yes |
                                        QDialogButtonBox::Cancel,
                                    QDialogButtonBox::No);
@@ -1072,7 +1104,14 @@ bool Profile::enableLocalSettings(bool enable)
       for (QString file : m_GamePlugin->iniFiles()) {
         filesToDelete << m_Directory.absoluteFilePath(QFileInfo(file).fileName());
       }
-      shellDelete(filesToDelete, true);
+      // MO2 Revamped: as the saves: Windows asks first where there is no
+      // Recycle Bin, and a file that stays is reported
+      if (!MOShared::shellRemove(filesToDelete, true, QApplication::activeModalWidget())
+               .removed()) {
+        reportError(tr("The profile's game settings files could not be deleted. Close any "
+                       "program using them and try again."));
+        return false;
+      }
     } else if (res == QMessageBox::No) {
       // No action
     } else {

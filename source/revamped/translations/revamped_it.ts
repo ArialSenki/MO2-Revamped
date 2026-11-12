@@ -924,6 +924,10 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <source>Browse</source>
       <translation>Sfoglia</translation>
     </message>
+    <message>
+      <source>Set up %1</source>
+      <translation>Configura %1</translation>
+    </message>
   </context>
   <context>
     <name>DisableProxyPluginDialog</name>
@@ -7533,6 +7537,10 @@ Errore: %1</translation>
       <source>The game starts in a window without a border that covers the screen, at its resolution. Turned off, the game gets back its display settings.</source>
       <translation>Il gioco si avvia in una finestra senza bordi che copre lo schermo, alla sua risoluzione. Disattivato, il gioco ritrova le sue impostazioni dello schermo.</translation>
     </message>
+    <message>
+      <source>Documents</source>
+      <translation>Documenti</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -9680,6 +9688,26 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
       <source>Close</source>
       <translation>Chiudi</translation>
     </message>
+    <message>
+      <source>The profile can't be read: %1</source>
+      <translation>Impossibile leggere il profilo: %1</translation>
+    </message>
+    <message>
+      <source>This profile's options can't be read: %1</source>
+      <translation>Impossibile leggere le opzioni di questo profilo: %1</translation>
+    </message>
+    <message>
+      <source>The profile couldn't be created: %1</source>
+      <translation>Impossibile creare il profilo: %1</translation>
+    </message>
+    <message>
+      <source>The profile couldn't be copied: %1</source>
+      <translation>Impossibile copiare il profilo: %1</translation>
+    </message>
+    <message>
+      <source>Archive invalidation couldn't be changed: %1</source>
+      <translation>Impossibile modificare l'invalidazione degli archivi: %1</translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>
@@ -10604,6 +10632,58 @@ Esempio:
     <message>
       <source>Only one Mod Organizer can run at a time, MO2 Revamped or the original. Wait for the other one to finish opening, or close it first.</source>
       <translation>Può funzionare un solo Mod Organizer alla volta, MO2 Revamped o l'originale. Aspetta che l'altro finisca di aprirsi, oppure chiudilo prima.</translation>
+    </message>
+    <message>
+      <source>Another game</source>
+      <translation>Un altro gioco</translation>
+    </message>
+    <message>
+      <source>This folder has another game</source>
+      <translation>Questa cartella contiene un altro gioco</translation>
+    </message>
+    <message>
+      <source>%1 has %2, but this instance manages %3. Choose the folder where %3 is installed.</source>
+      <translation>%1 contiene %2, ma questa istanza gestisce %3. Scegli la cartella in cui è installato %3.</translation>
+    </message>
+    <message>
+      <source>%1 looks like a game installed from the Microsoft Store. Windows protects those folders, so Mod Organizer usually can't load mods into the game.</source>
+      <translation>%1 sembra un gioco installato dal Microsoft Store. Windows protegge quelle cartelle, quindi di solito Mod Organizer non può caricare mod nel gioco.</translation>
+    </message>
+    <message>
+      <source>Use it anyway</source>
+      <translation>Usala comunque</translation>
+    </message>
+    <message>
+      <source>&lt;h3&gt;Where is %1?&lt;/h3&gt;This instance doesn't say where the game is. Choose its folder.</source>
+      <translation>&lt;h3&gt;Dov'è %1?&lt;/h3&gt;Questa istanza non indica dove si trova il gioco. Scegli la sua cartella.</translation>
+    </message>
+    <message>
+      <source>&lt;h3&gt;Where is %1 now?&lt;/h3&gt;Mod Organizer can't find it in %2 anymore (moved, uninstalled or changed). Choose the folder where it is installed now.</source>
+      <translation>&lt;h3&gt;Dov'è %1 adesso?&lt;/h3&gt;Mod Organizer non lo trova più in %2 (spostato, disinstallato o modificato). Scegli la cartella in cui è installato adesso.</translation>
+    </message>
+    <message>
+      <source>Can't open %1: its settings file can't be read (%2).</source>
+      <translation>Impossibile aprire %1: il suo file di impostazioni non può essere letto (%2).</translation>
+    </message>
+    <message>
+      <source>%1's settings file doesn't say which game it manages (%2). Choose the game and its folder.</source>
+      <translation>Il file di impostazioni di %1 non indica quale gioco gestisce l'istanza (%2). Scegli il gioco e la sua cartella.</translation>
+    </message>
+    <message>
+      <source>Can't open %1: support for %2 is missing from this Mod Organizer. Check your antivirus quarantine, or install Mod Organizer again. Choose another instance for now.</source>
+      <translation>Impossibile aprire %1: in questo Mod Organizer manca il supporto per %2. Controlla la quarantena dell'antivirus o reinstalla Mod Organizer. Per ora scegli un'altra istanza.</translation>
+    </message>
+    <message>
+      <source>The instance folder %1 isn't there anymore. Choose another instance.</source>
+      <translation>La cartella di istanza %1 non c'è più. Scegli un'altra istanza.</translation>
+    </message>
+    <message>
+      <source>The instance folder %1 isn't there anymore. Create an instance to continue.</source>
+      <translation>La cartella di istanza %1 non c'è più. Crea un'istanza per continuare.</translation>
+    </message>
+    <message>
+      <source>&lt;h3&gt;Which game is this?&lt;/h3&gt;Mod Organizer doesn't recognize a game in %1. Choose the game and its folder.</source>
+      <translation>&lt;h3&gt;Che gioco è?&lt;/h3&gt;Mod Organizer non riconosce nessun gioco in %1. Scegli il gioco e la sua cartella.</translation>
     </message>
 </context>
   <context>
@@ -12597,6 +12677,54 @@ Usalo se hai spostato Mod Organizer o se hai disinstallato l'installazione di Mo
     <message>
       <source>The profile's saves could not be deleted. Close any program using them and try again.</source>
       <translation>Non è stato possibile eliminare i salvataggi del profilo. Chiudi i programmi che li usano e riprova.</translation>
+    </message>
+    <message>
+      <source>Game settings restored</source>
+      <translation>Impostazioni del gioco ripristinate</translation>
+    </message>
+    <message>
+      <source>This profile's own copies of these game settings files were missing, so they were copied again from the game's current settings (or left empty where the game has none yet):
+
+%1
+
+Check the game's options before you play.</source>
+      <translation>Questo profilo non aveva più le proprie copie di questi file di impostazioni del gioco, quindi sono state ricopiate dalle impostazioni attuali del gioco (o lasciate vuote dove il gioco non ne ha ancora):
+
+%1
+
+Controlla le opzioni del gioco prima di giocare.</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Delete this profile's own saves?</source>
+      <translation>Eliminare i salvataggi propri di questo profilo?</translation>
+    </message>
+    <message>
+      <source>Yes sends them to the Recycle Bin. With No, they stay in the profile's folder and come back if you turn this on again.</source>
+      <translation>«Sì» li sposta nel Cestino. Con «No» restano nella cartella del profilo e tornano se riattivi questa opzione.</translation>
+    </message>
+    <message>
+      <source>Delete this profile's own game settings?</source>
+      <translation>Eliminare le impostazioni del gioco proprie di questo profilo?</translation>
+    </message>
+    <message>
+      <source>Yes sends its settings files to the Recycle Bin. With No, they stay for when you turn this on again.</source>
+      <translation>«Sì» sposta i suoi file di impostazioni nel Cestino. Con «No» restano per quando riattiverai questa opzione.</translation>
+    </message>
+    <message>
+      <source>A mod is named "overwrite", a name Mod Organizer keeps for its own folder. It was turned off and moved to the end of the list: rename it, then turn it on again.</source>
+      <translation>Una mod si chiama «overwrite», un nome che Mod Organizer riserva alla propria cartella. È stata disattivata e spostata in fondo all'elenco: rinominala, poi riattivala.</translation>
+    </message>
+    <message>
+      <source>The mod list %1 can't be read. Check that it exists and that no other program has it open.</source>
+      <translation>Impossibile leggere l'elenco delle mod %1. Controlla che esista e che nessun altro programma lo tenga aperto.</translation>
+    </message>
+    <message>
+      <source>The profile's game settings files could not be deleted. Close any program using them and try again.</source>
+      <translation>Impossibile eliminare i file di impostazioni del gioco del profilo. Chiudi i programmi che li usano e riprova.</translation>
     </message>
   </context>
   <context>

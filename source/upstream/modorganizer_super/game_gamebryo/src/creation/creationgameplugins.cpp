@@ -137,8 +137,9 @@ QStringList CreationGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
     QByteArray line = file.readLine();
     QString pluginName;
     if ((line.size() > 0) && (line.at(0) != '#')) {
-      pluginName = QStringEncoder(QStringConverter::Encoding::System)
-                       .encode(line.trimmed().constData());
+      // MO2 Revamped: decoded from the system code page, as it was written
+      pluginName =
+          QStringDecoder(QStringConverter::Encoding::System).decode(line.trimmed());
     }
     if (!primaryPlugins.contains(pluginName, Qt::CaseInsensitive)) {
       if (pluginName.startsWith('*')) {

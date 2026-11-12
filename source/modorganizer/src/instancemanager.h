@@ -208,6 +208,8 @@ private:
   QString m_dir;
   bool m_portable;
   QString m_gameName, m_gameDir, m_gameVariant, m_baseDir;
+  // the edition was cleared by setGame(): not read back from the ini
+  bool m_variantReset = false;
   MOBase::IPluginGame* m_plugin;
   QString m_profile;
   bool m_profileSelectionMissing = false;

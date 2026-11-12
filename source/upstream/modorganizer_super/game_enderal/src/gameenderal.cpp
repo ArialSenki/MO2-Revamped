@@ -278,6 +278,9 @@ QString GameEnderal::identifyGamePath() const
     result =
         findInRegistry(HKEY_CURRENT_USER, path.toStdWString().c_str(), L"Install_Path");
   } catch (MOBase::MyException) {
+  }
+  // MO2 Revamped: a missing key is an empty result, not an exception
+  if (result.isEmpty()) {
     result = MOBase::findSteamGame("Enderal", "Data\\Enderal - Forgotten Stories.esm");
   }
   return result;

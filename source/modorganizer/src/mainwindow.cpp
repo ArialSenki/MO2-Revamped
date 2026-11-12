@@ -3248,12 +3248,16 @@ void MainWindow::on_profileBox_currentIndexChanged(int index)
     // in the list
     const QString previousName = ui->profileBox->itemText(previousIndex);
 
-    // show the dialog
-    ProfilesDialog dlg(previousName, m_OrganizerCore, this);
-    dlg.exec();
-
-    // check if the user clicked 'select' to select another profile
-    std::optional<QString> newSelection = dlg.selectedProfile();
+    // show the dialog; MO2 Revamped: without the saves folder watch, which
+    // locks the active profile's folder, as the Profiles button does
+    m_SavesTab->stopMonitorSaves();
+    std::optional<QString> newSelection;
+    {
+      ProfilesDialog dlg(previousName, m_OrganizerCore, this);
+      dlg.exec();
+      // check if the user clicked 'select' to select another profile
+      newSelection = dlg.selectedProfile();
+    }
 
     // refresh the profile box; this loops until there is at least one profile
     // available, which shouldn't really happen because the dialog won't allow
@@ -3267,6 +3271,7 @@ void MainWindow::on_profileBox_currentIndexChanged(int index)
       dlg.exec();
       newSelection = dlg.selectedProfile();
     }
+    m_SavesTab->refreshSaveList();
 
     // note that setCurrentText() is recursive, it will re-execute this function
     if (newSelection) {
@@ -4548,8 +4553,13 @@ QMenu* MainWindow::openFolderMenu()
     addFolderAction(tr("Saves"), ":/MO/gui/mainwindow/files/save.svg",
                     SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
   } else {
-    addFolderAction(tr("My Games"), ":/MO/gui/mainwindow/files/folder.svg",
-                    SLOT(openMyGamesFolder()), QStringLiteral("myGames"));
+    // MO2 Revamped: "My Games" only where the game's folder is there (the
+    // Bethesda games); Cyberpunk's or Baldur's Gate 3's is elsewhere
+    const bool inMyGames = QDir::fromNativeSeparators(game->documentsDirectory().absolutePath())
+                               .contains(QStringLiteral("/My Games/"), Qt::CaseInsensitive);
+    addFolderAction(inMyGames ? tr("My Games") : tr("Documents"),
+                    ":/MO/gui/mainwindow/files/folder.svg", SLOT(openMyGamesFolder()),
+                    QStringLiteral("myGames"));
   }
   if (!game->iniFiles().isEmpty()) {
     addFolderAction(tr("INI files"), ":/MO/gui/mainwindow/files/config.svg",

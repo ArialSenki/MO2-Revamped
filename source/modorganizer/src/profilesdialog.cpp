@@ -540,7 +540,7 @@ QListWidgetItem* ProfilesDialog::addItem(const QString& name)
                                        profileDir, m_Game, m_GameFeatures))));
     m_FailState = false;
   } catch (const std::exception& e) {
-    reportError(tr("failed to create profile: %1").arg(e.what()));
+    reportError(tr("The profile can't be read: %1").arg(e.what()));
   }
   return newItem;
 }
@@ -693,7 +693,7 @@ void ProfilesDialog::fillDetails()
     QSignalBlocker iniFiles(m_localIniFiles);
     m_localIniFiles->setChecked(profile->localSettingsEnabled());
   } catch (const std::exception& e) {
-    reportError(tr("failed to determine if invalidation is active: %1").arg(e.what()));
+    reportError(tr("This profile's options can't be read: %1").arg(e.what()));
 
     // the switches would still show the previous profile, and toggling one
     // would apply it to this one
@@ -813,7 +813,7 @@ void ProfilesDialog::addProfile()
     try {
       createProfile(name, dialog.getPreferDefaultSettings());
     } catch (const std::exception& e) {
-      reportError(tr("failed to create profile: %1").arg(e.what()));
+      reportError(tr("The profile couldn't be created: %1").arg(e.what()));
     }
   }
 }
@@ -846,7 +846,7 @@ void ProfilesDialog::copyProfile()
   try {
     createProfile(name, *profile);
   } catch (const std::exception& e) {
-    reportError(tr("failed to copy profile: %1").arg(e.what()));
+    reportError(tr("The profile couldn't be copied: %1").arg(e.what()));
   }
 }
 
@@ -1034,7 +1034,7 @@ void ProfilesDialog::onInvalidationChanged(bool checked)
       profile->deactivateInvalidation();
     }
   } catch (const std::exception& e) {
-    reportError(tr("failed to change archive invalidation state: %1").arg(e.what()));
+    reportError(tr("Archive invalidation couldn't be changed: %1").arg(e.what()));
   }
 }
 

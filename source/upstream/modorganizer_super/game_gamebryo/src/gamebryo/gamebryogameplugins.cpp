@@ -153,7 +153,7 @@ QStringList GamebryoGamePlugins::readLoadOrderList(MOBase::IPluginList* pluginLi
 
   const auto b = MOBase::forEachLineInFile(filePath, [&](QString s) {
     if (!pluginLookup.contains(s.toLower())) {
-      pluginLookup.insert(s);
+      pluginLookup.insert(s.toLower());
       pluginNames.push_back(std::move(s));
     }
   });
@@ -224,8 +224,9 @@ QStringList GamebryoGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
       QByteArray line = file.readLine();
       QString pluginName;
       if ((line.size() > 0) && (line.at(0) != '#')) {
-        QStringEncoder encoder(QStringConverter::Encoding::System);
-        pluginName = encoder.encode(line.trimmed().constData());
+        // MO2 Revamped: plugins.txt is in the system code page (writeList()):
+        // decoded, not encoded again, so names like Ñandú.esp stay as they are
+        pluginName = QStringDecoder(QStringConverter::Encoding::System).decode(line.trimmed());
       }
       if (pluginName.size() > 0) {
         pluginList->setState(pluginName, IPluginList::STATE_ACTIVE);

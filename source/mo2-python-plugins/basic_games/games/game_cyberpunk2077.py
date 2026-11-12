@@ -143,7 +143,8 @@ def time_from_seconds(s: int | float) -> str:
 def parse_cyberpunk_save_metadata(save_path: Path, save: mobase.ISaveGame):
     metadata_file = save_path / "metadata.9.json"
     try:
-        with open(metadata_file) as file:
+        # MO2 Revamped: the game writes UTF-8 (accented quest names)
+        with open(metadata_file, encoding="utf-8") as file:
             meta_data = json.load(file)["Data"]["metadata"]
             name = meta_data["name"]
             if name != (save_name := save.getName()):
@@ -160,7 +161,8 @@ def parse_cyberpunk_save_metadata(save_path: Path, save: mobase.ISaveGame):
                 "Gender": f'{meta_data["bodyGender"]} / {meta_data["brainGender"]}',
                 "Game version": meta_data["buildPatch"],
             }
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (OSError, ValueError, KeyError, TypeError):
+        # a save the game is still writing, or another version's format
         return None
 
 
@@ -170,9 +172,9 @@ class CyberpunkSaveGame(BasicGameSaveGame):
     def __init__(self, filepath: Path):
         super().__init__(filepath)
         try:  # Custom name from Named Saves
-            with open(filepath / self._name_file) as file:
-                self._name = file.readline()
-        except FileNotFoundError:
+            with open(filepath / self._name_file, encoding="utf-8") as file:
+                self._name = file.readline().strip()
+        except (OSError, ValueError):
             self._name = ""
 
     def getName(self) -> str:
@@ -381,7 +383,7 @@ class Cyberpunk2077Game(BasicGame):
         if self.name() == plugin_name:
             if setting == "reverse_archive_load_order":
                 self._modlist_files["archive"].reversed_priority = bool(new)
-            elif setting == "reverse_remod_load_order":
+            elif setting == "reverse_redmod_load_order":
                 self._modlist_files["redmod"].reversed_priority = bool(new)
 
     def iniFiles(self):

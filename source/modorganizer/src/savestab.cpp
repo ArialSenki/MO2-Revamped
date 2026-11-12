@@ -285,14 +285,22 @@ QDir SavesTab::currentSavesDir() const
     if (iniFiles.isEmpty()) {
       return m_core.managedGame()->savesDirectory();
     }
-    QString iniPath = currentProfile->absoluteIniFilePath(iniFiles[0]);
-    wchar_t path[MAX_PATH];
-    if (::GetPrivateProfileStringW(L"General", L"SLocalSavePath", L"", path, MAX_PATH,
-                                   iniPath.toStdWString().c_str())) {
-      savesDir.setPath(m_core.managedGame()->documentsDirectory().absoluteFilePath(
-          QString::fromWCharArray(path)));
-    } else {
-      savesDir = m_core.managedGame()->savesDirectory();
+    // MO2 Revamped: the Custom INI first (where guides and MO2 put it), as the
+    // game reads it last; then the others
+    std::stable_sort(iniFiles.begin(), iniFiles.end(), [](const QString& a, const QString& b) {
+      return a.contains(QStringLiteral("custom"), Qt::CaseInsensitive) &&
+             !b.contains(QStringLiteral("custom"), Qt::CaseInsensitive);
+    });
+    savesDir = m_core.managedGame()->savesDirectory();
+    for (const QString& ini : iniFiles) {
+      const QString iniPath = currentProfile->absoluteIniFilePath(ini);
+      wchar_t path[MAX_PATH];
+      if (::GetPrivateProfileStringW(L"General", L"SLocalSavePath", L"", path, MAX_PATH,
+                                     iniPath.toStdWString().c_str())) {
+        savesDir.setPath(m_core.managedGame()->documentsDirectory().absoluteFilePath(
+            QString::fromWCharArray(path)));
+        break;
+      }
     }
   }
   return savesDir;

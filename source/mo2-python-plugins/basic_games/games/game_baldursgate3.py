@@ -224,7 +224,12 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                 )
         for fdir in {self.utils.overwrite_path, self.doc_path}:
             removed: set[Path] = set()
-            for folder in sorted(list(fdir.walk(top_down=False)))[:-1]:
+            # MO2 Revamped: the deepest folders first, and never the root itself
+            for folder in sorted(
+                fdir.walk(top_down=False), key=lambda f: len(f[0].parts), reverse=True
+            ):
+                if folder[0] == fdir:
+                    continue
                 try:
                     folder[0].rmdir()
                     removed.add(folder[0])

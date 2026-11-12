@@ -442,8 +442,8 @@ void CreateInstanceDialog::setSinglePageImpl(const QString& instanceName)
 
   // don't show the "create a new instance" title for single pages, this is
   // when the instance already exists but some info is missing
-  ui->title->setText(tr("Setting up instance %1").arg(instanceName));
-  setWindowTitle(tr("Setting up an instance %1").arg(instanceName));
+  ui->title->setText(tr("Set up %1").arg(instanceName));
+  setWindowTitle(tr("Set up %1").arg(instanceName));
 }
 
 void CreateInstanceDialog::changePage(int d)

@@ -73,6 +73,9 @@ QString GameEnderalSE::identifyGamePath() const
         break;
     }
   } catch (MOBase::MyException) {
+  }
+  // MO2 Revamped: a missing key is an empty result, not an exception
+  if (result.isEmpty()) {
     result = MOBase::findSteamGame("Enderal Special Edition",
                                    "Data\\Enderal - Forgotten Stories.esm");
   }
