@@ -74,7 +74,11 @@ void reportError(const QString& message)
 {
   log::error("{}", message);
 
-  if (QApplication::topLevelWidgets().count() != 0) {
+  // MO2 Revamped: a Qt dialog whenever there is a QApplication, also before
+  // any window exists (an instance that is gone at startup): it gets MO2's
+  // theme; Windows' own box only without Qt
+  if (QApplication::topLevelWidgets().count() != 0 ||
+      qobject_cast<QApplication*>(QCoreApplication::instance()) != nullptr) {
     if (auto* mw = topLevelWindow()) {
       QMessageBox::warning(mw, QObject::tr("Error"), message, QMessageBox::Ok);
     } else {
