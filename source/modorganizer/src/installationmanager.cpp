@@ -1455,6 +1455,14 @@ std::optional<InstallationResult> InstallationManager::installScriptExtender(
     return result;
   }
 
+  // its files are in the game folder, or about to be: the mod holds only
+  // the scripts, or nothing, which the data checker would flag
+  {
+    QSettings meta(QDir(m_ModsDirectory).absoluteFilePath(modName) + "/meta.ini",
+                   QSettings::IniFormat);
+    meta.setValue("validated", true);
+  }
+
   if (choice == ScriptExtenderSetup::Choice::Myself) {
     ScriptExtenderSetup::showManualSteps(parent, *extender, gameDir, fileNames);
     return result;

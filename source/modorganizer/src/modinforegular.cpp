@@ -105,6 +105,12 @@ void ModInfoRegular::readMeta()
   m_Repository       = metaFile.value("repository", "Nexus").toString();
   m_Converted        = metaFile.value("converted", false).toBool();
   m_Validated        = metaFile.value("validated", false).toBool();
+  // MO2 Revamped: a script extender's mod holds only its scripts, or nothing
+  // (NVSE, OBSE): its loader and DLLs are in the game folder, so the data
+  // checker would flag it for no fault of its own
+  if (metaFile.childGroups().contains(QStringLiteral("scriptExtender"))) {
+    m_Validated = true;
+  }
 
   // this handles changes to how the URL works after 2.2.0
   //
