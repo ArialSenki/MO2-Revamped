@@ -188,13 +188,14 @@ DWORD WINAPI exitWatch(LPVOID)
     // this thread
     PostMessageW(window, WM_NULL, 0, 0);
     const LONG idle = static_cast<LONG>(GetTickCount()) - g_lastPump;
-    // not while the game loads after making its window: it takes no
-    // messages for seconds then, in front of a black window too
-    if (static_cast<LONG>(GetTickCount()) - g_takenOver < 20000) {
+    // not while the game starts: it takes no messages for seconds after
+    // making its window, in front of a black window, and Fallout 3 stops
+    // again for a moment when it loads its main menu (seen 24 s in)
+    if (static_cast<LONG>(GetTickCount()) - g_takenOver < 45000) {
       continue;
     }
     if (!g_cloaked) {
-      if (idle > 250 && screenBlack(window)) {
+      if (idle > 300 && screenBlack(window)) {
         cloak(window, true);
         InterlockedExchange(&g_cloaked, 1);
         log("the game stopped drawing (%ld ms without messages, black screen): window cloaked",
