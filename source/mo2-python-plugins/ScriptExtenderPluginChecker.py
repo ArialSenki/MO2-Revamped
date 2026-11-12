@@ -28,7 +28,7 @@ class PluginMessage():
         return self._pluginOrigin != PluginMessage.kUnknownOrigin
 
     def asMessage(self):
-        return self.tr("{0} ({1}) existed.").format(self._pluginPath.name, self._pluginOrigin)
+        return self.tr("{0} ({1})").format(self._pluginPath.name, self._pluginOrigin)
 
     def tr(self, str):
         return QCoreApplication.translate("PluginMessage", str)
@@ -118,11 +118,11 @@ class CouldntLoadPluginMessage(PluginMessage):
 
     def asMessage(self):
         if self.__lastError == 126:
-            message = self.tr("Couldn't load {0} ({2}). A dependency DLL could not be found (code {1}). {3}")
+            message = self.tr("{0} ({2}): a DLL it needs is missing (error {1}). {3}")
         elif self.__lastError == 193:
-            message = self.tr("Couldn't load {0} ({2}). A DLL is invalid (code {1}).")
+            message = self.tr("{0} ({2}): it, or a DLL it needs, is 32-bit where the game is 64-bit (or the other way round), or the file is damaged (error {1}).")
         else:
-            message = self.tr("Couldn't load {0} ({2}). The last error code was {1}.")
+            message = self.tr("{0} ({2}): Windows couldn't load it (error {1}).")
 
         return message.format(self._pluginPath.name, self.__lastError, self._pluginOrigin, self.__scriptExtenderDetails)
 
@@ -143,7 +143,7 @@ class NotAPluginMessage(PluginMessage):
         return not self.valid()
 
     def asMessage(self):
-        return self.tr("{0} ({1}) does not appear to be a script extender plugin.").format(self._pluginPath.name,
+        return self.tr("{0} ({1}): not a script extender plugin.").format(self._pluginPath.name,
                                                                                              self._pluginOrigin)
 
     def tr(self, str):
@@ -198,7 +198,8 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
         return "AnyOldName3"
 
     def description(self):
-        return self.tr("Checks script extender log to see if any plugins failed to load.")
+        return self.tr("Reads the script extender's log and reports the plugins (DLLs) that "
+                       "didn't load.")
 
     def version(self):
         return mobase.VersionInfo(1, 2, 0, 0)
@@ -218,18 +219,19 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
             return []
 
     def shortDescription(self, key):
-        return self.tr("Script extender log reports incompatible plugins.")
+        return self.tr("Some script extender plugins didn't load")
 
     def fullDescription(self, key):
         pluginList = self.__listBadPluginMessagess()
         pluginListString = "\n  • " + ("\n  • ".join(pluginList))
-        return self.tr("You have one or more script extender plugins which failed to load!\n\n "
-                         "If you want this notification to go away, here are some steps you can take:\n"
-                         "  • Look for updates to the mod or the specific plugin included in the mod.\n"
-                         "  • Disable the mod containing the plugin.\n"
-                         "  • Hide or delete the plugin from the mod.\n\n"
-                         "To refresh the script extender logs, you will need to run the game and/or editor again!\n\n"
-                         "The failed plugins are:{0}").format(pluginListString)
+        # MO2 Revamped: what happened and what to do, in plain words
+        return self.tr("The script extender's log from the last time the game or its editor "
+                       "ran says these plugins didn't load:{0}\n\n"
+                       "What you can do:\n"
+                       "  \u2022 Update the mod, or the plugin it comes with: a game update "
+                       "often needs new versions of them.\n"
+                       "  \u2022 Turn off the mod, or hide the plugin's file in it.\n\n"
+                       "MO2 reads the log again after the game or the editor runs.").format(pluginListString)
 
     def hasGuidedFix(self, key):
         return False

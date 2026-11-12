@@ -10494,6 +10494,14 @@ Exemple :
       <source>You can reset these choices with "Reset dialog choices" in Settings, General.</source>
       <translation>Vous pouvez réinitialiser ces réponses avec « Réinitialiser les boîtes de dialogue » dans Paramètres, Général.</translation>
     </message>
+    <message>
+      <source>Mod Organizer is already open</source>
+      <translation>Mod Organizer est déjà ouvert</translation>
+    </message>
+    <message>
+      <source>Only one Mod Organizer can run at a time, MO2 Revamped or the original. Wait for the other one to finish opening, or close it first.</source>
+      <translation>Un seul Mod Organizer peut fonctionner à la fois, MO2 Revamped ou l'original. Attendez que l'autre ait fini de s'ouvrir, ou fermez-le d'abord.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -14722,6 +14730,294 @@ Extraire leurs fichiers dans le mod ? Les fichiers isolés suivent l'ordre de la
     <message>
       <source>Start anyway</source>
       <translation>Lancer quand même</translation>
+    </message>
+  </context>
+  <context>
+    <name>Form43Checker</name>
+    <message>
+      <source>In Skyrim Special Edition, warns about plugins still saved for the original Skyrim (form 43 or older).</source>
+      <translation>Dans Skyrim Special Edition, signale les plugins encore enregistrés pour le Skyrim d'origine (form 43 ou antérieur).</translation>
+    </message>
+    <message>
+      <source>Plugins made for the original Skyrim</source>
+      <translation>Plugins faits pour le Skyrim d'origine</translation>
+    </message>
+    <message>
+      <source>These plugins were saved for the original Skyrim (form 43 or older) and not converted for Skyrim Special Edition, which uses form 44:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Parts of mods like these often don't work. Saving a plugin again in the Skyrim Special Edition Creation Kit converts it, but a plugin like this can also mean the whole mod wasn't ported: look for the mod's Special Edition version first.</source>
+      <translation>Ces plugins ont été enregistrés pour le Skyrim d'origine (form 43 ou antérieur) et non convertis pour Skyrim Special Edition, qui utilise le form 44 :&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Souvent, une partie de ces mods ne fonctionne pas. Enregistrer à nouveau un plugin dans le Creation Kit de Skyrim Special Edition le convertit, mais un tel plugin peut aussi signifier que tout le mod n'a pas été porté : cherchez d'abord la version Special Edition du mod.</translation>
+    </message>
+  </context>
+  <context>
+    <name>ScriptExtenderPluginChecker</name>
+    <message>
+      <source>Reads the script extender's log and reports the plugins (DLLs) that didn't load.</source>
+      <translation>Lit le journal du script extender et signale les plugins (DLL) qui ne se sont pas chargés.</translation>
+    </message>
+    <message>
+      <source>Some script extender plugins didn't load</source>
+      <translation>Certains plugins du script extender ne se sont pas chargés</translation>
+    </message>
+    <message>
+      <source>The script extender's log from the last time the game or its editor ran says these plugins didn't load:{0}
+
+What you can do:
+  • Update the mod, or the plugin it comes with: a game update often needs new versions of them.
+  • Turn off the mod, or hide the plugin's file in it.
+
+MO2 reads the log again after the game or the editor runs.</source>
+      <translation>D'après le journal du script extender du dernier lancement du jeu ou de son éditeur, ces plugins ne se sont pas chargés :{0}
+
+Ce que vous pouvez faire :
+  • Mettez à jour le mod, ou le plugin qu'il contient : une mise à jour du jeu demande souvent de nouvelles versions.
+  • Désactivez le mod, ou masquez le fichier du plugin qu'il contient.
+
+MO2 relit le journal après le lancement du jeu ou de l'éditeur.</translation>
+    </message>
+  </context>
+  <context>
+    <name>CouldntLoadPluginMessage</name>
+    <message>
+      <source>{0} ({2}): a DLL it needs is missing (error {1}). {3}</source>
+      <translation>{0} ({2}) : une DLL nécessaire est absente (erreur {1}). {3}</translation>
+    </message>
+    <message>
+      <source>{0} ({2}): it, or a DLL it needs, is 32-bit where the game is 64-bit (or the other way round), or the file is damaged (error {1}).</source>
+      <translation>{0} ({2}) : ce plugin, ou une DLL dont il a besoin, est en 32 bits alors que le jeu est en 64 (ou l'inverse), ou le fichier est endommagé (erreur {1}).</translation>
+    </message>
+    <message>
+      <source>{0} ({2}): Windows couldn't load it (error {1}).</source>
+      <translation>{0} ({2}) : Windows n'a pas pu le charger (erreur {1}).</translation>
+    </message>
+  </context>
+  <context>
+    <name>NotAPluginMessage</name>
+    <message>
+      <source>{0} ({1}): not a script extender plugin.</source>
+      <translation>{0} ({1}) : pas un plugin du script extender.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameEnderal</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Skyrim Special Edition section of Nexus</source>
+      <translation>Accepter les téléchargements de la section Skyrim Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameEnderalSE</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFallout3</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFallout4</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.
+Splash screen by %2.</source>
+      <translation>Ajoute la prise en charge de %1.
+Écran de démarrage par %2.</translation>
+    </message>
+    <message>
+      <source>sTestFile lines in Fallout4Custom.ini</source>
+      <translation>Lignes sTestFile dans Fallout4Custom.ini</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Fallout4Custom.ini has sTestFile lines. While they are there, the game ignores the plugin list MO2 writes, so turning plugins on or off in MO2 does nothing.&lt;/p&gt;&lt;p&gt;Remove the sTestFile lines from Fallout4Custom.ini (in the profile's folder if the profile has its own INI files, otherwise in Documents\My Games\Fallout4) and start the game again.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Fallout4Custom.ini contient des lignes sTestFile. Tant qu'elles y sont, le jeu ignore la liste de plugins écrite par MO2 : activer ou désactiver des plugins dans MO2 n'a donc aucun effet.&lt;/p&gt;&lt;p&gt;Supprimez les lignes sTestFile de Fallout4Custom.ini (dans le dossier du profil s'il a ses propres INI, sinon dans Documents\My Games\Fallout4) et relancez le jeu.&lt;/p&gt;</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFallout4VR</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.
+Splash screen by %2.</source>
+      <translation>Ajoute la prise en charge de %1.
+Écran de démarrage par %2.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFalloutNV</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Allow sorting plugins with LOOT (most New Vegas mod guides advise against it)</source>
+      <translation>Autoriser le tri des plugins avec LOOT (la plupart des guides de mods de New Vegas le déconseillent)</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameMorrowind</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.
+Splash screen by %2.</source>
+      <translation>Ajoute la prise en charge de %1.
+Écran de démarrage par %2.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameNehrim</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameOblivion</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Nehrim section of Nexus</source>
+      <translation>Accepter les téléchargements de la section Nehrim de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameSkyrim</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Skyrim Special Edition section of Nexus</source>
+      <translation>Accepter les téléchargements de la section Skyrim Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameSkyrimSE</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Enderal and Enderal Special Edition sections of Nexus</source>
+      <translation>Accepter les téléchargements des sections Enderal et Enderal Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameSkyrimVR</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Enderal and Enderal Special Edition sections of Nexus</source>
+      <translation>Accepter les téléchargements des sections Enderal et Enderal Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameStarfield</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>sTestFile lines in StarfieldCustom.ini</source>
+      <translation>Lignes sTestFile dans StarfieldCustom.ini</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;StarfieldCustom.ini has sTestFile lines. While they are there, the game ignores the plugin list MO2 writes, so turning plugins on or off in MO2 does nothing.&lt;/p&gt;&lt;p&gt;Remove the sTestFile lines from StarfieldCustom.ini (in the profile's folder if the profile has its own INI files, otherwise in Documents\My Games\Starfield) and start the game again.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;StarfieldCustom.ini contient des lignes sTestFile. Tant qu'elles y sont, le jeu ignore la liste de plugins écrite par MO2 : activer ou désactiver des plugins dans MO2 n'a donc aucun effet.&lt;/p&gt;&lt;p&gt;Supprimez les lignes sTestFile de StarfieldCustom.ini (dans le dossier du profil s'il a ses propres INI, sinon dans Documents\My Games\Starfield) et relancez le jeu.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Warn when ESP plugins are active</source>
+      <translation>Avertir quand des plugins ESP sont actifs</translation>
+    </message>
+    <message>
+      <source>Warn when sTestFile lines in StarfieldCustom.ini stop the plugin list from working</source>
+      <translation>Avertir quand des lignes sTestFile dans StarfieldCustom.ini empêchent la liste de plugins de fonctionner</translation>
+    </message>
+    <message>
+      <source>Keep the game's own plugins at the top of the load order (MO2 gives the game its own Starfield.ccc)</source>
+      <translation>Garder les plugins du jeu en tête de l'ordre de chargement (MO2 donne au jeu son propre Starfield.ccc)</translation>
+    </message>
+    <message>
+      <source>ESP plugins are active</source>
+      <translation>Des plugins ESP sont actifs</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Starfield handles ESP plugins worse than ESM ones: they can't be sorted among ESM and master-flagged plugins, and the game keeps some of their records loaded all the time, which uses memory it needs for other things.&lt;/p&gt;&lt;p&gt;If a mod has a newer version saved as ESM, use that one. Mod authors should release ESM plugins; ESL (light) plugins also work, but they have limits of their own.&lt;/p&gt;&lt;p&gt;Active ESP plugins:&lt;/p&gt;&lt;p&gt;%1&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Starfield gère moins bien les plugins ESP que les ESM : on ne peut pas les trier parmi les plugins ESM et ceux marqués comme maîtres, et le jeu garde certains de leurs enregistrements chargés en permanence, ce qui utilise de la mémoire dont il a besoin ailleurs.&lt;/p&gt;&lt;p&gt;Si un mod a une version plus récente enregistrée en ESM, utilisez-la. Les auteurs de mods devraient publier des plugins ESM ; les plugins ESL (légers) fonctionnent aussi, mais ont leurs propres limites.&lt;/p&gt;&lt;p&gt;Plugins ESP actifs :&lt;/p&gt;&lt;p&gt;%1&lt;/p&gt;</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFalloutTTW</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Prise en charge de %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
+    <message>
+      <source>Allow sorting plugins with LOOT (the Tale of Two Wastelands guides advise against it)</source>
+      <translation>Autoriser le tri des plugins avec LOOT (les guides de Tale of Two Wastelands le déconseillent)</translation>
     </message>
   </context>
 </TS>

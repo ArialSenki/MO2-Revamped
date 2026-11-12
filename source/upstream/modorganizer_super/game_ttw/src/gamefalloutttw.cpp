@@ -182,7 +182,7 @@ QString GameFalloutTTW::name() const
 
 QString GameFalloutTTW::localizedName() const
 {
-  return tr("Fallout TTW Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Tale of Two Wastelands"));
 }
 
 QString GameFalloutTTW::author() const
@@ -192,7 +192,7 @@ QString GameFalloutTTW::author() const
 
 QString GameFalloutTTW::description() const
 {
-  return tr("Adds support for the game Fallout TTW");
+  return tr("Adds support for %1.").arg(QStringLiteral("Tale of Two Wastelands"));
 }
 
 MOBase::VersionInfo GameFalloutTTW::version() const
@@ -204,8 +204,8 @@ QList<PluginSetting> GameFalloutTTW::settings() const
 {
   return QList<PluginSetting>()
          << PluginSetting("enable_loot_sorting",
-                          tr("While not recommended by the TTW modding community, "
-                             "enables LOOT sorting"),
+                          tr("Allow sorting plugins with LOOT (the Tale of Two Wastelands "
+                             "guides advise against it)"),
                           false);
 }
 

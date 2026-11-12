@@ -90,7 +90,7 @@ QString GameEnderal::name() const
 
 QString GameEnderal::localizedName() const
 {
-  return tr("Enderal Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Enderal"));
 }
 
 QString GameEnderal::author() const
@@ -100,7 +100,7 @@ QString GameEnderal::author() const
 
 QString GameEnderal::description() const
 {
-  return tr("Adds support for the game Enderal");
+  return tr("Adds support for %1.").arg(QStringLiteral("Enderal"));
 }
 
 MOBase::VersionInfo GameEnderal::version() const
@@ -112,7 +112,9 @@ QList<PluginSetting> GameEnderal::settings() const
 {
   QList<PluginSetting> results;
   results.push_back(
-      PluginSetting("sse_downloads", "allow Skyrim SE downloads", QVariant(false)));
+      PluginSetting("sse_downloads",
+                    tr("Accept downloads from the Skyrim Special Edition section of Nexus"),
+                    QVariant(false)));
   return results;
 }
 

@@ -10371,6 +10371,14 @@ Ejemplo:
       <source>You can reset these choices with "Reset dialog choices" in Settings, General.</source>
       <translation>Puedes restablecer estas respuestas con «Restablecer opciones de diálogo» en Ajustes, General.</translation>
     </message>
+    <message>
+      <source>Mod Organizer is already open</source>
+      <translation>Mod Organizer ya está abierto</translation>
+    </message>
+    <message>
+      <source>Only one Mod Organizer can run at a time, MO2 Revamped or the original. Wait for the other one to finish opening, or close it first.</source>
+      <translation>Solo puede funcionar un Mod Organizer a la vez, MO2 Revamped o el original. Espera a que el otro termine de abrirse o ciérralo primero.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -12530,12 +12538,48 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
       <source>Form 43 Plugin Checker</source>
       <translation>Comprobador de plugins Form 43</translation>
     </message>
+    <message>
+      <source>In Skyrim Special Edition, warns about plugins still saved for the original Skyrim (form 43 or older).</source>
+      <translation>En Skyrim Special Edition, avisa de los plugins guardados todavía para el Skyrim original (form 43 o anterior).</translation>
+    </message>
+    <message>
+      <source>Plugins made for the original Skyrim</source>
+      <translation>Plugins hechos para el Skyrim original</translation>
+    </message>
+    <message>
+      <source>These plugins were saved for the original Skyrim (form 43 or older) and not converted for Skyrim Special Edition, which uses form 44:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Parts of mods like these often don't work. Saving a plugin again in the Skyrim Special Edition Creation Kit converts it, but a plugin like this can also mean the whole mod wasn't ported: look for the mod's Special Edition version first.</source>
+      <translation>Estos plugins se guardaron para el Skyrim original (form 43 o anterior) y no se convirtieron para Skyrim Special Edition, que usa el form 44:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Es habitual que partes de estos mods no funcionen. Guardar el plugin otra vez en el Creation Kit de Skyrim Special Edition lo convierte, pero un plugin así también puede indicar que el mod entero no se adaptó: busca primero la versión Special Edition del mod.</translation>
+    </message>
 </context>
   <context>
     <name>ScriptExtenderPluginChecker</name>
       <message>
       <source>Script Extender Plugin Load Checker</source>
       <translation>Comprobador de carga de plugins de Script Extender</translation>
+    </message>
+    <message>
+      <source>Reads the script extender's log and reports the plugins (DLLs) that didn't load.</source>
+      <translation>Lee el registro del script extender e informa de los plugins (DLL) que no se cargaron.</translation>
+    </message>
+    <message>
+      <source>Some script extender plugins didn't load</source>
+      <translation>Algunos plugins del script extender no se cargaron</translation>
+    </message>
+    <message>
+      <source>The script extender's log from the last time the game or its editor ran says these plugins didn't load:{0}
+
+What you can do:
+  • Update the mod, or the plugin it comes with: a game update often needs new versions of them.
+  • Turn off the mod, or hide the plugin's file in it.
+
+MO2 reads the log again after the game or the editor runs.</source>
+      <translation>El registro del script extender de la última vez que se abrió el juego o su editor dice que estos plugins no se cargaron:{0}
+
+Qué puedes hacer:
+  • Actualiza el mod, o el plugin que trae: una actualización del juego suele necesitar versiones nuevas.
+  • Desactiva el mod, u oculta el archivo del plugin dentro de él.
+
+MO2 vuelve a leer el registro después de abrir el juego o el editor.</translation>
     </message>
 </context>
 <context>
@@ -14821,6 +14865,252 @@ Extract their files into the mod? Loose files follow the order of the mod list, 
     <message>
       <source>Offers a dialog during installation of a mod to unpack all its BSAs</source>
       <translation>Al instalar un mod, ofrece extraer todos sus archivos BSA</translation>
+    </message>
+  </context>
+  <context>
+    <name>CouldntLoadPluginMessage</name>
+    <message>
+      <source>{0} ({2}): a DLL it needs is missing (error {1}). {3}</source>
+      <translation>{0} ({2}): falta una DLL que necesita (error {1}). {3}</translation>
+    </message>
+    <message>
+      <source>{0} ({2}): it, or a DLL it needs, is 32-bit where the game is 64-bit (or the other way round), or the file is damaged (error {1}).</source>
+      <translation>{0} ({2}): este plugin, o una DLL que necesita, es de 32 bits y el juego de 64 (o al revés), o el archivo está dañado (error {1}).</translation>
+    </message>
+    <message>
+      <source>{0} ({2}): Windows couldn't load it (error {1}).</source>
+      <translation>{0} ({2}): Windows no pudo cargarlo (error {1}).</translation>
+    </message>
+  </context>
+  <context>
+    <name>NotAPluginMessage</name>
+    <message>
+      <source>{0} ({1}): not a script extender plugin.</source>
+      <translation>{0} ({1}): no es un plugin del script extender.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameEnderal</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Skyrim Special Edition section of Nexus</source>
+      <translation>Aceptar descargas de la sección de Skyrim Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameEnderalSE</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFallout3</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFallout4</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.
+Splash screen by %2.</source>
+      <translation>Añade compatibilidad con %1.
+Pantalla de inicio de %2.</translation>
+    </message>
+    <message>
+      <source>sTestFile lines in Fallout4Custom.ini</source>
+      <translation>Líneas sTestFile en Fallout4Custom.ini</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Fallout4Custom.ini has sTestFile lines. While they are there, the game ignores the plugin list MO2 writes, so turning plugins on or off in MO2 does nothing.&lt;/p&gt;&lt;p&gt;Remove the sTestFile lines from Fallout4Custom.ini (in the profile's folder if the profile has its own INI files, otherwise in Documents\My Games\Fallout4) and start the game again.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Fallout4Custom.ini tiene líneas sTestFile. Mientras sigan ahí, el juego ignora la lista de plugins que escribe MO2, así que activar o desactivar plugins en MO2 no hace nada.&lt;/p&gt;&lt;p&gt;Quita las líneas sTestFile de Fallout4Custom.ini (en la carpeta del perfil si el perfil tiene sus propios INI; si no, en Documents\My Games\Fallout4) y vuelve a abrir el juego.&lt;/p&gt;</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFallout4VR</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.
+Splash screen by %2.</source>
+      <translation>Añade compatibilidad con %1.
+Pantalla de inicio de %2.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFalloutNV</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Allow sorting plugins with LOOT (most New Vegas mod guides advise against it)</source>
+      <translation>Permitir ordenar plugins con LOOT (la mayoría de guías de mods de New Vegas lo desaconsejan)</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameMorrowind</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.
+Splash screen by %2.</source>
+      <translation>Añade compatibilidad con %1.
+Pantalla de inicio de %2.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameNehrim</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameOblivion</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Nehrim section of Nexus</source>
+      <translation>Aceptar descargas de la sección de Nehrim de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameSkyrim</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Skyrim Special Edition section of Nexus</source>
+      <translation>Aceptar descargas de la sección de Skyrim Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameSkyrimSE</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Enderal and Enderal Special Edition sections of Nexus</source>
+      <translation>Aceptar descargas de las secciones de Enderal y Enderal Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameSkyrimVR</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Accept downloads from the Enderal and Enderal Special Edition sections of Nexus</source>
+      <translation>Aceptar descargas de las secciones de Enderal y Enderal Special Edition de Nexus</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameStarfield</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>sTestFile lines in StarfieldCustom.ini</source>
+      <translation>Líneas sTestFile en StarfieldCustom.ini</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;StarfieldCustom.ini has sTestFile lines. While they are there, the game ignores the plugin list MO2 writes, so turning plugins on or off in MO2 does nothing.&lt;/p&gt;&lt;p&gt;Remove the sTestFile lines from StarfieldCustom.ini (in the profile's folder if the profile has its own INI files, otherwise in Documents\My Games\Starfield) and start the game again.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;StarfieldCustom.ini tiene líneas sTestFile. Mientras sigan ahí, el juego ignora la lista de plugins que escribe MO2, así que activar o desactivar plugins en MO2 no hace nada.&lt;/p&gt;&lt;p&gt;Quita las líneas sTestFile de StarfieldCustom.ini (en la carpeta del perfil si el perfil tiene sus propios INI; si no, en Documents\My Games\Starfield) y vuelve a abrir el juego.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Warn when ESP plugins are active</source>
+      <translation>Avisar cuando haya plugins ESP activos</translation>
+    </message>
+    <message>
+      <source>Warn when sTestFile lines in StarfieldCustom.ini stop the plugin list from working</source>
+      <translation>Avisar cuando las líneas sTestFile de StarfieldCustom.ini impidan que funcione la lista de plugins</translation>
+    </message>
+    <message>
+      <source>Keep the game's own plugins at the top of the load order (MO2 gives the game its own Starfield.ccc)</source>
+      <translation>Mantener los plugins del propio juego al principio del orden de carga (MO2 le da al juego su propio Starfield.ccc)</translation>
+    </message>
+    <message>
+      <source>ESP plugins are active</source>
+      <translation>Hay plugins ESP activos</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Starfield handles ESP plugins worse than ESM ones: they can't be sorted among ESM and master-flagged plugins, and the game keeps some of their records loaded all the time, which uses memory it needs for other things.&lt;/p&gt;&lt;p&gt;If a mod has a newer version saved as ESM, use that one. Mod authors should release ESM plugins; ESL (light) plugins also work, but they have limits of their own.&lt;/p&gt;&lt;p&gt;Active ESP plugins:&lt;/p&gt;&lt;p&gt;%1&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Starfield maneja los plugins ESP peor que los ESM: no se pueden ordenar entre los ESM y los marcados como maestros, y el juego mantiene cargados algunos de sus registros todo el tiempo, lo que gasta memoria que necesita para otras cosas.&lt;/p&gt;&lt;p&gt;Si un mod tiene una versión más nueva guardada como ESM, usa esa. Los autores de mods deberían publicar plugins ESM; los ESL (ligeros) también sirven, pero tienen sus propios límites.&lt;/p&gt;&lt;p&gt;Plugins ESP activos:&lt;/p&gt;&lt;p&gt;%1&lt;/p&gt;</translation>
+    </message>
+  </context>
+  <context>
+    <name>GameFalloutTTW</name>
+    <message>
+      <source>%1 support</source>
+      <translation>Compatibilidad con %1</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Añade compatibilidad con %1.</translation>
+    </message>
+    <message>
+      <source>Allow sorting plugins with LOOT (the Tale of Two Wastelands guides advise against it)</source>
+      <translation>Permitir ordenar plugins con LOOT (las guías de Tale of Two Wastelands lo desaconsejan)</translation>
     </message>
   </context>
 </TS>

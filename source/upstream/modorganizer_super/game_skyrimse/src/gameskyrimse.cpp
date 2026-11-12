@@ -177,7 +177,7 @@ QString GameSkyrimSE::name() const
 
 QString GameSkyrimSE::localizedName() const
 {
-  return tr("Skyrim Special Edition Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Skyrim Special Edition"));
 }
 
 QString GameSkyrimSE::author() const
@@ -187,7 +187,7 @@ QString GameSkyrimSE::author() const
 
 QString GameSkyrimSE::description() const
 {
-  return tr("Adds support for the game Skyrim Special Edition.");
+  return tr("Adds support for %1.").arg(QStringLiteral("Skyrim Special Edition"));
 }
 
 MOBase::VersionInfo GameSkyrimSE::version() const
@@ -197,7 +197,9 @@ MOBase::VersionInfo GameSkyrimSE::version() const
 
 QList<PluginSetting> GameSkyrimSE::settings() const
 {
-  return {PluginSetting("enderal_downloads", "allow Enderal and Enderal SE downloads",
+  return {PluginSetting("enderal_downloads",
+                        tr("Accept downloads from the Enderal and Enderal Special Edition "
+                           "sections of Nexus"),
                         QVariant(false))};
 }
 

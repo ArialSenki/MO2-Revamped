@@ -89,7 +89,7 @@ QString GameSkyrim::name() const
 
 QString GameSkyrim::localizedName() const
 {
-  return tr("Skyrim Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Skyrim"));
 }
 
 QString GameSkyrim::author() const
@@ -99,7 +99,7 @@ QString GameSkyrim::author() const
 
 QString GameSkyrim::description() const
 {
-  return tr("Adds support for the game Skyrim");
+  return tr("Adds support for %1.").arg(QStringLiteral("Skyrim"));
 }
 
 MOBase::VersionInfo GameSkyrim::version() const
@@ -111,7 +111,9 @@ QList<PluginSetting> GameSkyrim::settings() const
 {
   QList<PluginSetting> results;
   results.push_back(
-      PluginSetting("sse_downloads", "allow Skyrim SE downloads", QVariant(false)));
+      PluginSetting("sse_downloads",
+                    tr("Accept downloads from the Skyrim Special Edition section of Nexus"),
+                    QVariant(false)));
   return results;
 }
 

@@ -106,7 +106,7 @@ QString GameFallout3::name() const
 
 QString GameFallout3::localizedName() const
 {
-  return tr("Fallout 3 Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Fallout 3"));
 }
 
 QString GameFallout3::author() const
@@ -116,7 +116,7 @@ QString GameFallout3::author() const
 
 QString GameFallout3::description() const
 {
-  return tr("Adds support for the game Fallout 3.");
+  return tr("Adds support for %1.").arg(QStringLiteral("Fallout 3"));
 }
 
 MOBase::VersionInfo GameFallout3::version() const

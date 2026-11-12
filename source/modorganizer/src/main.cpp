@@ -17,6 +17,10 @@
 #include <vector>
 #include <windows.h>
 
+#include "fluentdialogs.h"
+#include <QPushButton>
+#include <psapi.h>
+
 using namespace MOBase;
 
 thread_local LPTOP_LEVEL_EXCEPTION_FILTER g_prevExceptionFilter = nullptr;
@@ -489,6 +493,80 @@ void writeStartupDiagnosticEvent(const char* event) noexcept
 
 int run(int argc, char* argv[]);
 
+// MO2 Revamped: the main window of the Mod Organizer that holds the
+// single-instance lock (this one or the original), restored and brought to
+// the front; false when none is found
+static bool bringRunningMO2ToFront()
+{
+  struct Search
+  {
+    DWORD self;
+    HWND found = nullptr;
+    // before the main window: the instance dialogs, the setup wizard
+    HWND other = nullptr;
+  } search{GetCurrentProcessId()};
+
+  EnumWindows(
+      [](HWND window, LPARAM param) -> BOOL {
+        auto* search = reinterpret_cast<Search*>(param);
+        DWORD pid    = 0;
+        GetWindowThreadProcessId(window, &pid);
+        if (pid == search->self || GetWindow(window, GW_OWNER) != nullptr ||
+            !IsWindowVisible(window) ||
+            (GetWindowLongPtrW(window, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) != 0) {
+          return TRUE;
+        }
+        HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        if (process == nullptr) {
+          return TRUE;
+        }
+        wchar_t path[MAX_PATH * 2]{};
+        DWORD size      = static_cast<DWORD>(std::size(path));
+        const bool read = QueryFullProcessImageNameW(process, 0, path, &size) != FALSE;
+        CloseHandle(process);
+        if (!read) {
+          return TRUE;
+        }
+        const std::wstring exe(path, size);
+        const auto slash = exe.find_last_of(L"\\/");
+        const std::wstring name = slash == std::wstring::npos ? exe : exe.substr(slash + 1);
+        if (_wcsicmp(name.c_str(), L"ModOrganizer.exe") != 0) {
+          return TRUE;
+        }
+        // its main window has "Mod Organizer" in the title
+        wchar_t title[512]{};
+        GetWindowTextW(window, title, static_cast<int>(std::size(title)));
+        if (wcsstr(title, L"Mod Organizer") == nullptr) {
+          if (search->other == nullptr) {
+            search->other = window;
+          }
+          return TRUE;
+        }
+        search->found = window;
+        return FALSE;
+      },
+      reinterpret_cast<LPARAM>(&search));
+
+  if (search.found == nullptr) {
+    search.found = search.other;
+  }
+  if (search.found == nullptr) {
+    return false;
+  }
+  if (IsIconic(search.found)) {
+    ShowWindow(search.found, SW_RESTORE);
+  }
+  // with a dialog open the main window is disabled: the dialog goes in front
+  HWND front = GetLastActivePopup(search.found);
+  if (front == nullptr || !IsWindowVisible(front)) {
+    front = search.found;
+  }
+  // started by the user, this process may give the front to another one
+  SetForegroundWindow(front);
+  log::debug("another Mod Organizer is running; brought its window to the front");
+  return true;
+}
+
 int main(int argc, char* argv[])
 {
   MOShared::SetThisThreadName("main");
@@ -559,11 +637,29 @@ int run(int argc, char* argv[])
       return 0;
     }
 
+    // MO2 Revamped: the MO2 that is open comes to the front, as other
+    // Windows programs do when started again; only when it can't be found
+    // (still starting, or hidden) is there a message
+    if (bringRunningMO2ToFront()) {
+      return 1;
+    }
+
     // nothing has set a theme yet this early
     app.setStyleFile(Settings::defaultInterfaceStyleName());
-    QMessageBox::information(
-        nullptr, QObject::tr("Mod Organizer"),
-        QObject::tr("An instance of Mod Organizer is already running"));
+    // nor a language: the last one chosen, as the instance dialogs do
+    QString language = GlobalSettings::language();
+    if (language.isEmpty()) {
+      language = GlobalSettings::systemLanguage();
+    }
+    InstallLanguageTranslators(language);
+    FluentContentDialog notice(
+        nullptr, QStringLiteral("AlreadyRunningDialog"),
+        QObject::tr("Mod Organizer is already open"),
+        QObject::tr("Only one Mod Organizer can run at a time, MO2 Revamped or the original. "
+                    "Wait for the other one to finish opening, or close it first."));
+    auto* ok = notice.addButton(QObject::tr("OK"), true);
+    QObject::connect(ok, &QPushButton::clicked, &notice, &QDialog::accept);
+    notice.exec();
 
     return 1;
   }

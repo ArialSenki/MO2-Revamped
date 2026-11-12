@@ -25,7 +25,8 @@ class Form43Checker(mobase.IPluginDiagnose):
 
     def description(self):
         return self.tr(
-            "Checks plugins (.ESM/.ESP files) to see if any are lower than Form 44 (Skyrim SE)."
+            "In Skyrim Special Edition, warns about plugins still saved for the original "
+            "Skyrim (form 43 or older)."
         )
 
     def version(self):
@@ -46,28 +47,20 @@ class Form43Checker(mobase.IPluginDiagnose):
             return []
 
     def shortDescription(self, key: int) -> str:
-        return self.tr("Form 43 (or lower) plugin detected")
+        return self.tr("Plugins made for the original Skyrim")
 
     def fullDescription(self, key: int) -> str:
-        pluginList = self.__listPlugins()
-        pluginList = [Path(absolutePath).name for absolutePath in pluginList]
-        pluginListString = "<br><br>•  " + ("<br>•  ".join(pluginList))
-        outputString = self.tr(
-            "You have one or more plugins that are not form 44. They are:{0}"
-        ).format(pluginListString)
-        outputString += "<br><br>"
-        outputString += self.tr(
-            "Form 43 (or lower) plugins are modules that were made for Skyrim LE (Oldrim) and have not been "
-            "properly ported to Skyrim Special Edition, which uses form 44 plugins. This usually results in "
-            "parts of the mod not working correctly."
-            "<br><br>"
-            "To be converted, these plugins simply need to be opened and saved with the SSE Creation Kit "
-            "but their presence can be an indication that a mod was not properly ported to SSE and so "
-            "can potentially have additional issues."
-            "<br><br>"
-            "Online guides can have more information on how to correctly convert mods for Skyrim SE.<br>"
-        )
-        return outputString
+        # MO2 Revamped: what it means and what to do, in plain words
+        plugins = [Path(path).name for path in self.__listPlugins()]
+        listed = "<br>".join("\u2022 " + name for name in plugins)
+        return self.tr(
+            "These plugins were saved for the original Skyrim (form 43 or older) and not "
+            "converted for Skyrim Special Edition, which uses form 44:<br><br>{0}<br><br>"
+            "Parts of mods like these often don't work. Saving a plugin again in the "
+            "Skyrim Special Edition Creation Kit converts it, but a plugin like this can "
+            "also mean the whole mod wasn't ported: look for the mod's Special Edition "
+            "version first."
+        ).format(listed)
 
     def hasGuidedFix(self, key: int) -> bool:
         return False
@@ -96,7 +89,7 @@ class Form43Checker(mobase.IPluginDiagnose):
             return "invalid"
 
     def __listInvalidFiles(self):
-        for file in self.__organizer.findFiles("", "*.es[pm]"):
+        for file in self.__organizer.findFiles("", "*.es[pml]"):
             if self.__testFile(file):
                 yield file
 

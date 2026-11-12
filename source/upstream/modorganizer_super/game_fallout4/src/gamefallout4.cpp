@@ -91,7 +91,7 @@ QString GameFallout4::name() const
 
 QString GameFallout4::localizedName() const
 {
-  return tr("Fallout 4 Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Fallout 4"));
 }
 
 QString GameFallout4::author() const
@@ -101,8 +101,9 @@ QString GameFallout4::author() const
 
 QString GameFallout4::description() const
 {
-  return tr("Adds support for the game Fallout 4.\n"
-            "Splash by %1")
+  return tr("Adds support for %1.\n"
+            "Splash screen by %2.")
+      .arg(QStringLiteral("Fallout 4"))
       .arg("nekoyoubi");
 }
 
@@ -318,18 +319,22 @@ QString GameFallout4::shortDescription(unsigned int key) const
 {
   switch (key) {
   case PROBLEM_TEST_FILE:
-    return tr("sTestFile entries are present");
+    return tr("sTestFile lines in Fallout4Custom.ini");
   }
+  return "";
 }
 
 QString GameFallout4::fullDescription(unsigned int key) const
 {
   switch (key) {
   case PROBLEM_TEST_FILE: {
-    return tr("<p>You have sTestFile settings in your "
-              "Fallout4Custom.ini. These must be removed or "
-              "the game will not read the plugins.txt file. "
-              "Management is disabled.</p>");
+    return tr("<p>Fallout4Custom.ini has sTestFile lines. While they are there, the "
+              "game ignores the plugin list MO2 writes, so turning plugins on or off "
+              "in MO2 does nothing.</p>"
+              "<p>Remove the sTestFile lines from Fallout4Custom.ini (in the profile's "
+              "folder if the profile has its own INI files, otherwise in "
+              "Documents\\My Games\\Fallout4) and start the game again.</p>");
   }
   }
+  return "";
 }

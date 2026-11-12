@@ -103,7 +103,7 @@ QString GameMorrowind::name() const
 
 QString GameMorrowind::localizedName() const
 {
-  return tr("Morrowind Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Morrowind"));
 }
 
 QString GameMorrowind::author() const
@@ -113,8 +113,9 @@ QString GameMorrowind::author() const
 
 QString GameMorrowind::description() const
 {
-  return tr("Adds support for the game Morrowind.\n"
-            "Splash by %1")
+  return tr("Adds support for %1.\n"
+            "Splash screen by %2.")
+      .arg(QStringLiteral("Morrowind"))
       .arg("AnyOldName3");
 }
 

@@ -82,7 +82,7 @@ QString GameNehrim::name() const
 
 QString GameNehrim::localizedName() const
 {
-  return tr("Nehrim Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Nehrim"));
 }
 
 QString GameNehrim::author() const
@@ -92,7 +92,7 @@ QString GameNehrim::author() const
 
 QString GameNehrim::description() const
 {
-  return tr("Adds support for the game Nehrim");
+  return tr("Adds support for %1.").arg(QStringLiteral("Nehrim"));
 }
 
 MOBase::VersionInfo GameNehrim::version() const

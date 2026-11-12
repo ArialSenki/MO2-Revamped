@@ -79,7 +79,7 @@ QString GameFallout4VR::name() const
 
 QString GameFallout4VR::localizedName() const
 {
-  return tr("Fallout 4 VR Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Fallout 4 VR"));
 }
 
 QString GameFallout4VR::author() const
@@ -89,8 +89,9 @@ QString GameFallout4VR::author() const
 
 QString GameFallout4VR::description() const
 {
-  return tr("Adds support for the game Fallout 4 VR.\n"
-            "Splash by %1")
+  return tr("Adds support for %1.\n"
+            "Splash screen by %2.")
+      .arg(QStringLiteral("Fallout 4 VR"))
       .arg("nekoyoubi");
 }
 

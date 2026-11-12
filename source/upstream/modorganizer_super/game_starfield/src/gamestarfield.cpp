@@ -140,7 +140,7 @@ QString GameStarfield::name() const
 
 QString GameStarfield::localizedName() const
 {
-  return tr("Starfield Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Starfield"));
 }
 
 QString GameStarfield::author() const
@@ -150,7 +150,7 @@ QString GameStarfield::author() const
 
 QString GameStarfield::description() const
 {
-  return tr("Adds support for the game Starfield.");
+  return tr("Adds support for %1.").arg(QStringLiteral("Starfield"));
 }
 
 MOBase::VersionInfo GameStarfield::version() const
@@ -163,14 +163,15 @@ QList<PluginSetting> GameStarfield::settings() const
   return QList<PluginSetting>()
          << PluginSetting(
                 "enable_esp_warning",
-                tr("Show a warning when ESP plugins are enabled in the load order."),
+                tr("Warn when ESP plugins are active"),
                 true)
          << PluginSetting("enable_management_warnings",
-                          tr("Show a warning when plugins.txt management is invalid."),
+                          tr("Warn when sTestFile lines in StarfieldCustom.ini stop the plugin list from "
+                             "working"),
                           true)
          << PluginSetting("enable_loadorder_fix",
-                          tr("Utilize Starfield.ccc to affix core plugin load order "
-                             "(will override existing file)."),
+                          tr("Keep the game's own plugins at the top of the load order (MO2 gives "
+                             "the game its own Starfield.ccc)"),
                           true);
 }
 
@@ -429,9 +430,9 @@ QString GameStarfield::shortDescription(unsigned int key) const
 {
   switch (key) {
   case PROBLEM_ESP:
-    return tr("You have active ESP plugins in Starfield");
+    return tr("ESP plugins are active");
   case PROBLEM_TEST_FILE:
-    return tr("sTestFile entries are present");
+    return tr("sTestFile lines in StarfieldCustom.ini");
   }
   return "";
 }
@@ -441,23 +442,23 @@ QString GameStarfield::fullDescription(unsigned int key) const
   switch (key) {
   case PROBLEM_ESP: {
     QString espInfo = SetJoin(m_Active_ESPs, ", ");
-    return tr("<p>ESP plugins are not ideal for Starfield. In addition to being unable "
-              "to sort them alongside ESM or master-flagged plugins, certain record "
-              "references are always kept loaded by the game. This consumes "
-              "unnecessary resources and limits the game's ability to load what it "
-              "needs.</p>"
-              "<p>Ideally, plugins should be saved as ESM files upon release. It can "
-              "also be released as an ESL plugin, however there are additional "
-              "concerns with the way light plugins are currently handled and should "
-              "only be used when absolutely certain about what you're doing.</p>"
-              "<p>Notably, xEdit does not currently support saving ESP files.</p>"
-              "<h4>Current ESPs:</h4><p>%1</p>")
+    return tr("<p>Starfield handles ESP plugins worse than ESM ones: they can't be "
+              "sorted among ESM and master-flagged plugins, and the game keeps some of "
+              "their records loaded all the time, which uses memory it needs for "
+              "other things.</p>"
+              "<p>If a mod has a newer version saved as ESM, use that one. Mod authors "
+              "should release ESM plugins; ESL (light) plugins also work, but they "
+              "have limits of their own.</p>"
+              "<p>Active ESP plugins:</p><p>%1</p>")
         .arg(espInfo);
   }
   case PROBLEM_TEST_FILE: {
-    return tr("<p>You have plugin managment enabled but you still have sTestFile "
-              "settings in your StarfieldCustom.ini. These must be removed or the game "
-              "will not read the plugins.txt file. Management is still disabled.</p>");
+    return tr("<p>StarfieldCustom.ini has sTestFile lines. While they are there, "
+              "the game ignores the plugin list MO2 writes, so turning plugins on or "
+              "off in MO2 does nothing.</p>"
+              "<p>Remove the sTestFile lines from StarfieldCustom.ini (in the profile's "
+              "folder if the profile has its own INI files, otherwise in "
+              "Documents\\My Games\\Starfield) and start the game again.</p>");
   }
   }
   return "";

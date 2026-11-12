@@ -178,7 +178,7 @@ QString GameFalloutNV::name() const
 
 QString GameFalloutNV::localizedName() const
 {
-  return tr("Fallout NV Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Fallout New Vegas"));
 }
 
 QString GameFalloutNV::author() const
@@ -188,7 +188,7 @@ QString GameFalloutNV::author() const
 
 QString GameFalloutNV::description() const
 {
-  return tr("Adds support for the game Fallout New Vegas");
+  return tr("Adds support for %1.").arg(QStringLiteral("Fallout New Vegas"));
 }
 
 MOBase::VersionInfo GameFalloutNV::version() const
@@ -200,8 +200,8 @@ QList<PluginSetting> GameFalloutNV::settings() const
 {
   return QList<PluginSetting>()
          << PluginSetting("enable_loot_sorting",
-                          tr("While not recommended by the FNV modding community, "
-                             "enables LOOT sorting"),
+                          tr("Allow sorting plugins with LOOT (most New Vegas mod guides "
+                             "advise against it)"),
                           false);
 }
 

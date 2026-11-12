@@ -33,6 +33,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QVersionNumber>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QApplication>
+#include <Windows.h>
 
 #include "imoinfo.h"
 #include "iplugingame.h"
@@ -576,6 +578,52 @@ namespace CSharp {
     auto qversion = version.asQVersionNumber();
     return gcnew System::Version(qversion.majorVersion(), qversion.minorVersion(), qversion.microVersion());
 
+  }
+
+  // MO2 Revamped: a script's own window opens centred over MO2's window in
+  // front (the installer's), and stays above it, instead of at Windows'
+  // default spot on the primary monitor with no owner
+  ref class CustomFormPlacement {
+  public:
+    CustomFormPlacement(IntPtr owner) : m_owner(owner) {}
+
+    void OnLoad(Object^ sender, EventArgs^) {
+      Form^ form = safe_cast<Form^>(sender);
+      HWND owner = static_cast<HWND>(m_owner.ToPointer());
+      RECT r;
+      if (!IsWindow(owner) || !GetWindowRect(owner, &r)) {
+        return;
+      }
+      // ShowDialog() gives it the active window as owner; Show() gives none
+      if (!form->Modal) {
+        SetWindowLongPtrW(static_cast<HWND>(form->Handle.ToPointer()), GWLP_HWNDPARENT,
+                          reinterpret_cast<LONG_PTR>(owner));
+      }
+      // WinForms works in physical pixels, as GetWindowRect does
+      System::Drawing::Rectangle area = Screen::FromHandle(m_owner)->WorkingArea;
+      int x = (r.left + r.right) / 2 - form->Width / 2;
+      int y = (r.top + r.bottom) / 2 - form->Height / 2;
+      x = Math::Max(area.Left, Math::Min(x, area.Right - form->Width));
+      y = Math::Max(area.Top, Math::Min(y, area.Bottom - form->Height));
+      form->StartPosition = FormStartPosition::Manual;
+      form->Location = System::Drawing::Point(x, y);
+    }
+
+  private:
+    IntPtr m_owner;
+  };
+
+  Form^ BaseScriptImpl::CreateCustomForm() {
+    Form^ form = gcnew Form;
+    QWidget* owner = QApplication::activeModalWidget() != nullptr
+                         ? QApplication::activeModalWidget()->window()
+                         : (g.ParentWidget != nullptr ? g.ParentWidget->window() : nullptr);
+    if (owner != nullptr) {
+      CustomFormPlacement^ placement =
+          gcnew CustomFormPlacement(IntPtr(reinterpret_cast<void*>(owner->winId())));
+      form->Load += gcnew EventHandler(placement, &CustomFormPlacement::OnLoad);
+    }
+    return form;
   }
 
   System::Version^ BaseScriptImpl::GetModManagerVersion() {

@@ -314,10 +314,7 @@ namespace CSharp {
     /// Creates a form that can be used in custom mod scripts.
     /// </summary>
     /// <returns>A form that can be used in custom mod scripts.</returns>
-    static Form^ CreateCustomForm() {
-      Form^ form = gcnew Form;
-      return form;
-    }
+    static Form^ CreateCustomForm();
 
     /// <summary>
     /// Gets the version of the mod manager.

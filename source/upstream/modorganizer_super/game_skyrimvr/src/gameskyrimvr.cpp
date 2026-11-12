@@ -115,7 +115,7 @@ QString GameSkyrimVR::name() const
 
 QString GameSkyrimVR::localizedName() const
 {
-  return tr("Skyrim VR Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Skyrim VR"));
 }
 
 QString GameSkyrimVR::author() const
@@ -125,7 +125,7 @@ QString GameSkyrimVR::author() const
 
 QString GameSkyrimVR::description() const
 {
-  return tr("Adds support for the game Skyrim VR.");
+  return tr("Adds support for %1.").arg(QStringLiteral("Skyrim VR"));
 }
 
 MOBase::VersionInfo GameSkyrimVR::version() const
@@ -135,7 +135,9 @@ MOBase::VersionInfo GameSkyrimVR::version() const
 
 QList<PluginSetting> GameSkyrimVR::settings() const
 {
-  return {PluginSetting("enderal_downloads", "allow Enderal and Enderal SE downloads",
+  return {PluginSetting("enderal_downloads",
+                        tr("Accept downloads from the Enderal and Enderal Special Edition "
+                           "sections of Nexus"),
                         QVariant(false))};
 }
 

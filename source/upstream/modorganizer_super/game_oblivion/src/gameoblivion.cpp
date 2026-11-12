@@ -81,7 +81,7 @@ QString GameOblivion::name() const
 
 QString GameOblivion::localizedName() const
 {
-  return tr("Oblivion Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Oblivion"));
 }
 
 QString GameOblivion::author() const
@@ -91,7 +91,7 @@ QString GameOblivion::author() const
 
 QString GameOblivion::description() const
 {
-  return tr("Adds support for the game Oblivion");
+  return tr("Adds support for %1.").arg(QStringLiteral("Oblivion"));
 }
 
 MOBase::VersionInfo GameOblivion::version() const
@@ -101,7 +101,9 @@ MOBase::VersionInfo GameOblivion::version() const
 
 QList<PluginSetting> GameOblivion::settings() const
 {
-  return {PluginSetting("nehrim_downloads", "allow Nehrim downloads", QVariant(false))};
+  return {PluginSetting("nehrim_downloads",
+                        tr("Accept downloads from the Nehrim section of Nexus"),
+                        QVariant(false))};
 }
 
 void GameOblivion::initializeProfile(const QDir& path, ProfileSettings settings) const

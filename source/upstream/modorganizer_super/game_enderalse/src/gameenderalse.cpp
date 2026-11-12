@@ -182,7 +182,7 @@ QString GameEnderalSE::name() const
 
 QString GameEnderalSE::localizedName() const
 {
-  return tr("Enderal Special Edition Support Plugin");
+  return tr("%1 support").arg(QStringLiteral("Enderal Special Edition"));
 }
 
 QString GameEnderalSE::author() const
@@ -192,7 +192,7 @@ QString GameEnderalSE::author() const
 
 QString GameEnderalSE::description() const
 {
-  return tr("Adds support for the game Enderal Special Edition.");
+  return tr("Adds support for %1.").arg(QStringLiteral("Enderal Special Edition"));
 }
 
 MOBase::VersionInfo GameEnderalSE::version() const
