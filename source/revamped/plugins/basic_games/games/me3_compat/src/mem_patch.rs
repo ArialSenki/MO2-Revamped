@@ -259,11 +259,41 @@ struct CSMemoryVtable {
 /// The detours stay installed for the whole process.
 static DETOURS: Mutex<Vec<RawDetour>> = Mutex::new(Vec::new());
 
+/// Keeps an enabled detour for good (dropping a `RawDetour` disables it).
+fn keep_detour(hook: RawDetour) {
+    // a poisoned lock still holds the detours: they must not be dropped
+    DETOURS.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push(hook);
+}
+
+/// A detour made but not enabled yet: the target is still unchanged.
+unsafe fn new_detour(target: *const (), replacement: *const ()) -> Result<RawDetour, String> {
+    unsafe { RawDetour::new(target, replacement) }.map_err(|e| e.to_string())
+}
+
 unsafe fn detour(target: *const (), replacement: *const ()) -> Result<(), String> {
-    let hook = unsafe { RawDetour::new(target, replacement) }.map_err(|e| e.to_string())?;
+    let hook = unsafe { new_detour(target, replacement) }?;
     unsafe { hook.enable() }.map_err(|e| e.to_string())?;
-    DETOURS.lock().unwrap().push(hook);
+    keep_detour(hook);
     Ok(())
+}
+
+/// The first group of the one match of `re`: an unknown game version can
+/// match elsewhere too, and a wrong match would be patched before the game's
+/// entry point.
+fn unique_capture<'h>(re: &Regex, haystack: &'h [u8], what: &str) -> Result<&'h [u8], String> {
+    let mut matches = re.captures_iter(haystack);
+    let first = matches
+        .next()
+        .ok_or_else(|| format!("{what} pattern returned no matches"))?;
+    if matches.next().is_some() {
+        return Err(format!(
+            "{what} pattern matched more than once; this game version is not recognized"
+        ));
+    }
+    first
+        .get(1)
+        .map(|group| group.as_bytes())
+        .ok_or_else(|| format!("{what} pattern has no address"))
 }
 
 pub(crate) fn game() -> PeView<'static> {
@@ -288,8 +318,7 @@ pub fn hook_system_allocator() -> Result<(), String> {
     .unwrap();
     let text = pe::section(exe, ".text").map_err(|_| ".text section is missing")?;
     let text = exe.get_section_bytes(text).map_err(|e| e.to_string())?;
-    let captures = re.captures(text).ok_or("system allocator pattern returned no matches")?;
-    let get_system_allocator = rip_target(captures.get(1).unwrap().as_bytes());
+    let get_system_allocator = rip_target(unique_capture(&re, text, "system allocator")?);
 
     extern "C" fn get_allocator_override() -> NonNull<DlAllocator> {
         NonNull::from_ref(&MIMALLOC_DLALLOC)
@@ -313,8 +342,8 @@ pub fn hook_heap_allocators() -> Result<(), String> {
                 r"(?s-u)\xe8.{4}\x90\x48\x8d\x05(.{4})\x48\x89\x03\xc6\x83.\x02\x00\x00\x00\x48\x8b\xc3\x48\x83\xc4.\x5b\xc3",
             )
             .unwrap();
-            let captures = re.captures(exe.image()).ok_or("CSMemoryImp pattern returned no matches")?;
-            unsafe { &*(rip_target(captures.get(1).unwrap().as_bytes()) as *const CSMemoryVtable) }
+            let address = unique_capture(&re, exe.image(), "CSMemoryImp")?;
+            unsafe { &*(rip_target(address) as *const CSMemoryVtable) }
         }
     };
 
@@ -328,13 +357,35 @@ pub fn hook_heap_allocators() -> Result<(), String> {
         .ok_or("CSGraphicsImp vtable not found")?;
     let graphics_fn = unsafe { *graphics.as_ref::<unsafe extern "C" fn(NonNull<()>)>() };
     extern "C" fn nothing(_: NonNull<()>) {}
-    unsafe { detour(graphics_fn as _, nothing as _) }?;
+
+    // Every detour is made before any is enabled, and all are enabled before
+    // the table changes: a detour that can't be made or enabled then leaves
+    // the game as it was, instead of mimalloc in the table with the game's
+    // own CSMemoryImp::init still live to rebuild its heaps.
+    let graphics_hook = unsafe { new_detour(graphics_fn as _, nothing as _) }?;
+    let init_hook = unsafe { new_detour(vtable.init as _, nothing as _) }?;
+    // optional, as in me3
+    let deinit_hook = unsafe { new_detour(vtable.deinit as _, nothing as _) }.ok();
+    let required = [graphics_hook, init_hook];
+    for (index, hook) in required.iter().enumerate() {
+        if let Err(error) = unsafe { hook.enable() } {
+            for enabled in &required[..index] {
+                let _ = unsafe { enabled.disable() };
+            }
+            return Err(format!("a heap detour could not be enabled: {error}"));
+        }
+    }
+    let deinit_hook = deinit_hook.filter(|hook| unsafe { hook.enable() }.is_ok());
+    if deinit_hook.is_none() {
+        log::warn!("mem_patch: CSMemoryImp::deinit left as it is");
+    }
 
     log::info!("mem_patch: {} heap allocators replaced", table.len());
     table.fill(Some(NonNull::from_ref(&MIMALLOC_DLALLOC)));
 
-    unsafe { detour(vtable.init as _, nothing as _) }?;
-    let _ = unsafe { detour(vtable.deinit as _, nothing as _) };
+    for hook in required.into_iter().chain(deinit_hook) {
+        keep_detour(hook);
+    }
     Ok(())
 }
 
@@ -342,10 +393,8 @@ fn allocator_table() -> Result<&'static mut [Option<NonNull<DlAllocator>>], Stri
     let exe = game();
     let first_re =
         Regex::new(r"(?s-u)\x48\x89\x05(.{4})\x4c\x8b\xc0\xba\x08\x00\x00\x00\x8d\x4a\x08").unwrap();
-    let first = first_re
-        .captures(exe.image())
-        .ok_or("first allocator pattern returned no matches")?;
-    let first_ptr = rip_target(first.get(1).unwrap().as_bytes()) as *mut Option<NonNull<DlAllocator>>;
+    let first_ptr = rip_target(unique_capture(&first_re, exe.image(), "first allocator")?)
+        as *mut Option<NonNull<DlAllocator>>;
 
     let last_re = Regex::new(
         r"(?s-u)\x48\x89\x3d(.{4})\xc7\x44\x24\x20\xff\xff\xff\xff\x45\x33\xc9\x4c\x8b\xc7\x48\x8d\x15.{4}",
@@ -413,6 +462,6 @@ pub fn after_steam_init(after: fn()) -> Result<(), String> {
     let hook = unsafe { RawDetour::new(init, steam_init_override as *const ()) }.map_err(|e| e.to_string())?;
     let _ = TRAMPOLINE.set(hook.trampoline() as *const () as usize);
     unsafe { hook.enable() }.map_err(|e| e.to_string())?;
-    DETOURS.lock().unwrap().push(hook);
+    keep_detour(hook);
     Ok(())
 }

@@ -1,7 +1,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <psapi.h>
 #include <tlhelp32.h>
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -22,6 +24,12 @@ unsigned int g_seen_count = 0;
 SRWLOCK g_log_lock = SRWLOCK_INIT;
 // set once ExitProcess is called (see exit_process_hook)
 volatile LONG g_game_closing = 0;
+// the thread whose ExitProcess call won, once one has
+volatile LONG g_exit_thread = 0;
+
+// the real Sleep once the faster-exit hook is in (see sleep_hook)
+using SleepFunction = void(WINAPI*)(DWORD);
+SleepFunction g_original_sleep = nullptr;
 
 struct NativeInitializerRequest {
   std::wstring module_path;
@@ -176,14 +184,48 @@ void log_line(const char* message, const wchar_t* detail = nullptr) {
   ReleaseSRWLockExclusive(&g_log_lock);
 }
 
+// The game's executable path, of any length (empty if Windows can't give it).
+std::wstring game_executable_path() {
+  try {
+    std::wstring path(MAX_PATH, L'\0');
+    for (;;) {
+      const DWORD length =
+          GetModuleFileNameW(nullptr, path.data(), static_cast<DWORD>(path.size()));
+      if (length == 0) {
+        return {};
+      }
+      if (length < path.size()) {
+        path.resize(length);
+        return path;
+      }
+      if (path.size() >= 32768) {
+        return {};
+      }
+      path.resize(path.size() * 2);
+    }
+  } catch (...) {
+    return {};
+  }
+}
+
+// cached: 0 unknown, 1 Elden Ring, 2 Nightreign
+volatile LONG g_nightreign_process = 0;
+
 bool is_nightreign_process() {
-  wchar_t executable[MAX_PATH] = {};
-  const DWORD executable_length = GetModuleFileNameW(nullptr, executable, MAX_PATH);
-  if (executable_length == 0 || executable_length >= MAX_PATH) {
+  const LONG known = InterlockedCompareExchange(&g_nightreign_process, 0, 0);
+  if (known != 0) {
+    return known == 2;
+  }
+  const std::wstring executable = game_executable_path();
+  if (executable.empty()) {
     return false;
   }
-  const wchar_t* name = std::wcsrchr(executable, L'\\');
-  return _wcsicmp(name != nullptr ? name + 1 : executable, L"nightreign.exe") == 0;
+  const size_t separator = executable.find_last_of(L"\\/");
+  const wchar_t* name =
+      executable.c_str() + (separator == std::wstring::npos ? 0 : separator + 1);
+  const bool nightreign = _wcsicmp(name, L"nightreign.exe") == 0;
+  InterlockedExchange(&g_nightreign_process, nightreign ? 2 : 1);
+  return nightreign;
 }
 
 bool is_readable_page(const MEMORY_BASIC_INFORMATION& info) {
@@ -434,11 +476,14 @@ struct ExistingWindowMinimizeContext {
 
 BOOL CALLBACK minimize_existing_game_window(HWND window, LPARAM parameter) {
   if (!is_process_top_level_window(window) || !IsWindowVisible(window) ||
-      g_original_show_window == nullptr) {
+      g_original_show_window_async == nullptr) {
     return TRUE;
   }
 
-  g_original_show_window(window, SW_SHOWMINNOACTIVE);
+  // posted, never sent: this runs in DllMain under the loader lock, and the
+  // window's own thread may be waiting for that lock (a sent message would
+  // wait for it in turn)
+  g_original_show_window_async(window, SW_SHOWMINNOACTIVE);
   InterlockedExchange(&g_focus_guard_show_seen, 1);
   auto* context = reinterpret_cast<ExistingWindowMinimizeContext*>(parameter);
   ++context->minimized;
@@ -454,7 +499,7 @@ void minimize_existing_game_windows() {
   }
 
   if (context.minimized > 0) {
-    log_line("Startup minimization: minimized an existing game window without activating it.");
+    log_line("Startup minimization: asked an existing game window to minimize without activating it.");
   }
 }
 
@@ -764,8 +809,33 @@ volatile LONG g_quiet_end_logged = 0;
 using TerminateFunction = void(__cdecl*)();
 TerminateFunction g_original_terminate = nullptr;
 
+// While a thread is inside ExitProcess, another thread must not end the
+// process too: usvfs hooks TerminateProcess and would undo its VFS a second
+// time, concurrently with the ExitProcess thread (a heap corruption). Such a
+// thread is stopped here instead; ExitProcess ends it with the others. The
+// exit thread itself, or a close seen only from the hidden window, still ends
+// the process at once. The wait is bounded: a stopped thread may hold a lock
+// the exit still needs (the loader's, taken after usvfs's own exit work), and
+// a process still alive after it is ended as before, rather than left hung.
+void park_if_another_thread_is_exiting() {
+  if (InterlockedCompareExchange(&g_game_closing, 0, 0) == 0) {
+    return;
+  }
+  const LONG exit_thread = InterlockedCompareExchange(&g_exit_thread, 0, 0);
+  if (exit_thread != static_cast<LONG>(GetCurrentThreadId())) {
+    constexpr DWORD kExitWaitMs = 10000;
+    if (g_original_sleep != nullptr) {
+      g_original_sleep(kExitWaitMs);
+    } else {
+      Sleep(kExitWaitMs);
+    }
+    log_exit_request("Exit: the game was still closing 10 seconds later; another thread ends it.");
+  }
+}
+
 void __cdecl terminate_hook() {
   if (game_is_closing()) {
+    park_if_another_thread_is_exiting();
     if (InterlockedExchange(&g_quiet_end_logged, 1) == 0) {
       log_exit_request("Clean exit: a DLL called std::terminate while the game was closing; the process ended here instead of a crash report.");
     }
@@ -779,6 +849,7 @@ UnhandledExceptionFilterFunction g_original_unhandled_exception_filter = nullptr
 
 LONG WINAPI unhandled_exception_filter_hook(EXCEPTION_POINTERS* info) {
   if (info != nullptr && info->ExceptionRecord != nullptr && game_is_closing()) {
+    park_if_another_thread_is_exiting();
     if (InterlockedExchange(&g_quiet_end_logged, 1) == 0) {
       const auto address = reinterpret_cast<uintptr_t>(info->ExceptionRecord->ExceptionAddress);
       // no loader calls here: another thread may hold the loader lock
@@ -805,16 +876,33 @@ LONG WINAPI unhandled_exception_filter_hook(EXCEPTION_POINTERS* info) {
 }
 
 void WINAPI exit_process_hook(UINT code) {
-  // two of the game's threads can call it a moment apart: the first one counts
+  // Two of the game's threads can call it a moment apart. Only the first goes
+  // on: usvfs's own ExitProcess hook, next in line, undoes its VFS without a
+  // lock, and two threads in it at once corrupt the heap. The second waits
+  // here; the first one's ExitProcess ends it with every other thread.
   if (InterlockedExchange(&g_game_closing, 1) == 0) {
+    InterlockedExchange(&g_exit_thread, static_cast<LONG>(GetCurrentThreadId()));
     g_exit_code = code;
     log_exit_request("Timing: the game called ExitProcess.");
+    g_original_exit_process(code);
   }
+  // the exit thread calling it again (a DLL's detach code): Windows ends a
+  // repeated ExitProcess at once, and nothing is left to wait for
+  if (InterlockedCompareExchange(&g_exit_thread, 0, 0) ==
+      static_cast<LONG>(GetCurrentThreadId())) {
+    g_original_exit_process(code);
+  }
+  // bounded like the other waits: this thread may hold the loader lock (a
+  // DllMain that calls ExitProcess), which the first thread's exit needs
+  park_if_another_thread_is_exiting();
   g_original_exit_process(code);
 }
 
 BOOL WINAPI terminate_process_hook(HANDLE process, UINT code) {
   if (process == GetCurrentProcess() || GetProcessId(process) == GetCurrentProcessId()) {
+    // the same race as in exit_process_hook, through usvfs's
+    // NtTerminateProcess hook: not while another thread is in ExitProcess
+    park_if_another_thread_is_exiting();
     log_exit_request("Timing: the game called TerminateProcess on itself.");
   }
   return g_original_terminate_process(process, code);
@@ -826,12 +914,12 @@ BOOL WINAPI terminate_process_hook(HANDLE process, UINT code) {
 // becomes a wait the bridge can end: when a thread starts waiting for the
 // sleeping one to finish, the sleeper wakes and finds it has to stop, as it
 // would have 16.7 seconds later. Nothing else changes.
-using SleepFunction = void(WINAPI*)(DWORD);
 using WaitForSingleObjectFunction = DWORD(WINAPI*)(HANDLE, DWORD);
-SleepFunction g_original_sleep = nullptr;
 WaitForSingleObjectFunction g_original_wait_for_single_object = nullptr;
 HANDLE g_long_sleep_wake = nullptr;
 volatile LONG g_long_sleeper_thread = 0;
+// with its creation time: Windows reuses the id of a thread that has ended
+volatile LONG64 g_long_sleeper_created = 0;
 volatile LONG g_long_sleep_woken = 0;
 constexpr DWORD kGameLongSleep = 16666;
 
@@ -850,10 +938,24 @@ bool called_from_game_long_sleep(const unsigned char* return_address) {
   return std::memcmp(call, expected, sizeof(expected)) == 0;
 }
 
+LONG64 thread_creation_time(HANDLE thread) {
+  FILETIME creation{}, exit{}, kernel{}, user{};
+  if (!GetThreadTimes(thread, &creation, &exit, &kernel, &user)) {
+    return 0;
+  }
+  return static_cast<LONG64>((static_cast<ULONGLONG>(creation.dwHighDateTime) << 32) |
+                             creation.dwLowDateTime);
+}
+
 void WINAPI sleep_hook(DWORD milliseconds) {
   if (milliseconds == kGameLongSleep && g_long_sleep_wake != nullptr &&
       called_from_game_long_sleep(
           static_cast<const unsigned char*>(__builtin_return_address(0)))) {
+    const DWORD last_error = GetLastError();
+    const LONG64 created = thread_creation_time(GetCurrentThread());
+    SetLastError(last_error);
+    // the time first: the wait hook reads the id, then the time
+    InterlockedExchange64(&g_long_sleeper_created, created);
     InterlockedExchange(&g_long_sleeper_thread, static_cast<LONG>(GetCurrentThreadId()));
     g_original_wait_for_single_object(g_long_sleep_wake, milliseconds);
     return;
@@ -867,8 +969,11 @@ DWORD WINAPI wait_for_single_object_hook(HANDLE handle, DWORD milliseconds) {
     // GetThreadId fails on handles that are not threads: keep the caller's
     // last error as it was
     const DWORD last_error = GetLastError();
+    // the same thread, not a later one that got its id
     const bool waits_for_sleeper =
-        sleeper != 0 && GetThreadId(handle) == static_cast<DWORD>(sleeper);
+        sleeper != 0 && GetThreadId(handle) == static_cast<DWORD>(sleeper) &&
+        thread_creation_time(handle) ==
+            InterlockedCompareExchange64(&g_long_sleeper_created, 0, 0);
     if (waits_for_sleeper) {
       SetEvent(g_long_sleep_wake);
       if (InterlockedExchange(&g_long_sleep_woken, 1) == 0) {
@@ -1415,7 +1520,9 @@ void open_log() {
     return;
   }
 
-  const wchar_t filename[] = L"EldenRingMO2Bridge.log";
+  // each game its own log, so a Nightreign start doesn't replace Elden Ring's
+  const wchar_t* filename =
+      is_nightreign_process() ? L"NightreignMO2Bridge.log" : L"EldenRingMO2Bridge.log";
   for (unsigned int i = 0; filename[i] != L'\0'; ++i) {
     path[length + i] = filename[i];
     path[length + i + 1] = L'\0';
@@ -1800,12 +1907,18 @@ void index_sound_folder(const std::wstring& root, const std::wstring& relative,
 }
 
 size_t index_sound_files() {
-  auto* files = new std::unordered_map<std::wstring, std::wstring>();
-  for (const std::wstring& folder : wwise_sound_folders()) {
-    index_sound_folder(folder, L"sd", *files);
+  // out of memory here leaves the game's own sounds rather than ending it
+  try {
+    auto* files = new std::unordered_map<std::wstring, std::wstring>();
+    for (const std::wstring& folder : wwise_sound_folders()) {
+      index_sound_folder(folder, L"sd", *files);
+    }
+    g_wwise_sound_files = files;
+    return files->size();
+  } catch (...) {
+    log_line("Wwise: the mods' sound files could not be listed (out of memory); none is used.");
+    return 0;
   }
-  g_wwise_sound_files = files;
-  return files->size();
 }
 
 bool wwise_loose_path(const std::wstring& relative, std::wstring* absolute) {
@@ -1878,27 +1991,45 @@ std::wstring find_wwise_override(const wchar_t* request) {
   return {};
 }
 
-uintptr_t wwise_open_file(WwiseOpenFileByName original, uintptr_t p1,
-                          const wchar_t* path, uint64_t open_mode, uintptr_t p4,
-                          uintptr_t p5, uintptr_t p6) {
-  if (path == nullptr ||
-      (open_mode != kAkOpenRead && open_mode != kAkOpenReadEbl)) {
-    return original(p1, path, open_mode, p4, p5, p6);
+// Releases an SRW lock when it goes out of scope, also when an exception
+// leaves the scope.
+struct ScopedSrwLock {
+  SRWLOCK* lock;
+  bool exclusive;
+  ScopedSrwLock(SRWLOCK* lock_to_hold, bool hold_exclusive)
+      : lock(lock_to_hold), exclusive(hold_exclusive) {
+    if (exclusive) {
+      AcquireSRWLockExclusive(lock);
+    } else {
+      AcquireSRWLockShared(lock);
+    }
   }
-
-  const std::wstring request = path;
-  const wchar_t* loose = nullptr;
-  bool known = false;
-  // A run's mods don't change and a sound can open many times: look on disk once.
-  AcquireSRWLockShared(&g_wwise_overrides_lock);
-  auto cached = g_wwise_overrides.find(request);
-  if (cached != g_wwise_overrides.end()) {
-    known = true;
-    loose = cached->second.empty() ? nullptr : cached->second.c_str();
+  ~ScopedSrwLock() {
+    if (exclusive) {
+      ReleaseSRWLockExclusive(lock);
+    } else {
+      ReleaseSRWLockShared(lock);
+    }
   }
-  ReleaseSRWLockShared(&g_wwise_overrides_lock);
+  ScopedSrwLock(const ScopedSrwLock&) = delete;
+  ScopedSrwLock& operator=(const ScopedSrwLock&) = delete;
+};
 
-  if (!known) {
+// The mod's file for a sound the game asks for, or null for the game's own.
+// Never throws: the hook runs in the game's audio code, where an exception
+// (std::bad_alloc from the strings here) would end the game.
+const wchar_t* lookup_wwise_override(const wchar_t* path) noexcept {
+  try {
+    const std::wstring request = path;
+    // A run's mods don't change and a sound can open many times: look on disk once.
+    {
+      ScopedSrwLock shared(&g_wwise_overrides_lock, false);
+      auto cached = g_wwise_overrides.find(request);
+      if (cached != g_wwise_overrides.end()) {
+        return cached->second.empty() ? nullptr : cached->second.c_str();
+      }
+    }
+
     const size_t request_length = request.size();
     const bool is_stream =
         request_length > 4 &&
@@ -1908,18 +2039,33 @@ uintptr_t wwise_open_file(WwiseOpenFileByName original, uintptr_t p1,
       log_line("Wwise file request:", path);
     }
     std::wstring found = find_wwise_override(path);
-    AcquireSRWLockExclusive(&g_wwise_overrides_lock);
-    // the map keeps its strings in place, so this pointer stays good
-    auto inserted = g_wwise_overrides.emplace(request, std::move(found));
-    loose = inserted.first->second.empty() ? nullptr
-                                           : inserted.first->second.c_str();
-    ReleaseSRWLockExclusive(&g_wwise_overrides_lock);
+    const wchar_t* loose = nullptr;
+    {
+      ScopedSrwLock exclusive(&g_wwise_overrides_lock, true);
+      // the map keeps its strings in place, so this pointer stays good
+      auto inserted = g_wwise_overrides.emplace(request, std::move(found));
+      loose = inserted.first->second.empty() ? nullptr
+                                             : inserted.first->second.c_str();
+    }
     if (loose != nullptr &&
         InterlockedIncrement(&g_logged_wwise_overrides) <= 256) {
       log_line("MO2 Wwise loose override:", loose);
     }
+    return loose;
+  } catch (...) {
+    return nullptr;
+  }
+}
+
+uintptr_t wwise_open_file(WwiseOpenFileByName original, uintptr_t p1,
+                          const wchar_t* path, uint64_t open_mode, uintptr_t p4,
+                          uintptr_t p5, uintptr_t p6) {
+  if (path == nullptr ||
+      (open_mode != kAkOpenRead && open_mode != kAkOpenReadEbl)) {
+    return original(p1, path, open_mode, p4, p5, p6);
   }
 
+  const wchar_t* loose = lookup_wwise_override(path);
   if (loose == nullptr) {
     return original(p1, path, open_mode, p4, p5, p6);
   }
@@ -1947,7 +2093,16 @@ uintptr_t wwise_open_file(WwiseOpenFileByName original, uintptr_t p1,
   unsigned char flags[0x40] = {};
   uintptr_t flags_to_use = p4;
   if (p4 != 0) {
-    memcpy(flags, reinterpret_cast<const void*>(p4), 0x20);
+    // AkFileSystemFlags is 0x28 bytes from Wwise 2019 on; the older 0x20 if
+    // only that much can be read
+    const void* game_flags = reinterpret_cast<const void*>(p4);
+    const size_t flags_size = is_readable_address(game_flags, 0x28)   ? 0x28
+                              : is_readable_address(game_flags, 0x20) ? 0x20
+                                                                      : 0;
+    if (flags_size == 0) {
+      return original(p1, path, open_mode, p4, p5, p6);
+    }
+    memcpy(flags, game_flags, flags_size);
     flags[kAkFlagsLanguageSpecific] = 0;
     memcpy(flags + 4, &kAkCodecPlainPath, sizeof(kAkCodecPlainPath));
     flags_to_use = reinterpret_cast<uintptr_t>(flags);
@@ -2306,38 +2461,53 @@ void run_mod_engine_extension(NativeInitializerRequest* request, FARPROC symbol)
            request->module_path.c_str());
 }
 
-DWORD WINAPI run_native_initializer(void* context) {
-  auto* request = static_cast<NativeInitializerRequest*>(context);
-  if (request == nullptr || request->module == nullptr) {
-    return 0;
-  }
+// 250 ms apart: 10 minutes
+constexpr unsigned int kNativeInitializerMaximumAttempts = 2400;
+
+void call_native_initializer(NativeInitializerRequest* request) {
   const FARPROC symbol = GetProcAddress(
       request->module, request->function_name.c_str());
   if (symbol == nullptr) {
     log_line("Revamped native initializer export was not found:",
              request->module_path.c_str());
-    return 0;
+    return;
   }
   if (request->function_name == kModEngineExtensionInit) {
     run_mod_engine_extension(request, symbol);
-    return 0;
+    return;
   }
 
   const auto initializer = reinterpret_cast<NativeInitializerFunction>(symbol);
   log_line("Calling Revamped native initializer:", request->module_path.c_str());
-  unsigned int attempts = 0;
-  for (;;) {
+  for (unsigned int attempts = 1;; ++attempts) {
     if (initializer()) {
       log_line("Revamped native initializer reported ready:",
                request->module_path.c_str());
-      return 0;
+      return;
     }
-    if (++attempts % 20 == 0) {
+    if (attempts >= kNativeInitializerMaximumAttempts) {
+      log_line("Revamped native initializer gave up: not ready after 10 minutes:",
+               request->module_path.c_str());
+      return;
+    }
+    if (attempts % 20 == 0) {
       log_line("Revamped native initializer is still waiting for readiness:",
                request->module_path.c_str());
     }
     Sleep(250);
   }
+}
+
+// The thread holds a reference to the module (taken in inspect_loaded_mods),
+// so it stays loaded while its initializer runs; given back at the end.
+DWORD WINAPI run_native_initializer(void* context) {
+  auto* request = static_cast<NativeInitializerRequest*>(context);
+  if (request == nullptr || request->module == nullptr) {
+    return 0;
+  }
+  call_native_initializer(request);
+  FreeLibrary(request->module);
+  return 0;
 }
 
 void inspect_loaded_mods() {
@@ -2365,24 +2535,45 @@ void inspect_loaded_mods() {
         continue;
       }
 
+      // the snapshot holds no reference: a DLL unloaded since would make
+      // GetProcAddress fault, so one is taken while the module is used
+      HMODULE held = nullptr;
+      if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                              reinterpret_cast<LPCWSTR>(entry.hModule), &held) ||
+          held != entry.hModule) {
+        if (held != nullptr) {
+          FreeLibrary(held);
+        }
+        log_line("MO2-managed DLL was unloaded before it could be inspected:",
+                 entry.szExePath);
+        continue;
+      }
+
       log_line("Found MO2-managed DLL:", entry.szExePath);
       if (request != nullptr) {
         request->module = entry.hModule;
         if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
+          // the reference goes to the initializer thread
           HANDLE thread = CreateThread(
               nullptr, 0, run_native_initializer, request, 0, nullptr);
           if (thread != nullptr) {
             CloseHandle(thread);
           } else {
             InterlockedExchange(&request->started, 0);
+            FreeLibrary(held);
             log_line("Could not start Revamped native initializer thread:",
                      entry.szExePath);
           }
+        } else {
+          FreeLibrary(held);
         }
         continue;
       }
 
-      if (GetProcAddress(entry.hModule, "modengine_ext_init") == nullptr) {
+      const bool has_extension_export =
+          GetProcAddress(entry.hModule, "modengine_ext_init") != nullptr;
+      FreeLibrary(held);
+      if (!has_extension_export) {
         log_line("No Mod Engine 2 initializer export:", entry.szModule);
         continue;
       }
@@ -2474,11 +2665,8 @@ bool apply_skip_intro_logos(bool final_attempt) {
       if (region_end > section_end) {
         region_end = section_end;
       }
-      const DWORD readable = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
-                             PAGE_EXECUTE | PAGE_EXECUTE_READ |
-                             PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;
-      if (info.State == MEM_COMMIT && (info.Protect & readable) != 0 &&
-          (info.Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0) {
+      // execute-only pages fault when read: is_readable_page leaves them out
+      if (is_readable_page(info)) {
         scanned_bytes += static_cast<size_t>(region_end - region);
         unsigned char* scan_start = region;
         if (scan_start < section_start + jump_offset) {
@@ -2504,12 +2692,14 @@ bool apply_skip_intro_logos(bool final_attempt) {
   }
 
   MEMORY_BASIC_INFORMATION jump_info = {};
+  // readable code, both bytes in one region
   const bool jump_readable =
       jump != nullptr && VirtualQuery(jump, &jump_info, sizeof(jump_info)) != 0 &&
-      jump_info.State == MEM_COMMIT &&
-      (jump_info.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ |
-                            PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) != 0 &&
-      (jump_info.Protect & PAGE_GUARD) == 0;
+      is_readable_page(jump_info) &&
+      (jump_info.Protect & (PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                            PAGE_EXECUTE_WRITECOPY)) != 0 &&
+      jump + 2 <= static_cast<unsigned char*>(jump_info.BaseAddress) +
+                      jump_info.RegionSize;
   if (matches == 0 && !final_attempt) {
     return false;
   }
@@ -2532,8 +2722,10 @@ bool apply_skip_intro_logos(bool final_attempt) {
     log_line("Intro logo skip unavailable: game code could not be made writable.");
     return true;
   }
-  jump[0] = 0x90;
-  jump[1] = 0x90;
+  // only the displacement: "jz +0" goes on to the next instruction whether it
+  // jumps or not, and one byte is written at once wherever it lies (two bytes
+  // across a cache line could be seen half written by a running thread)
+  *reinterpret_cast<volatile unsigned char*>(jump + 1) = 0x00;
   VirtualProtect(jump, 2, previous_protection, &previous_protection);
   FlushInstructionCache(GetCurrentProcess(), jump, 2);
   log_line("Intro logo screens skipped.");
@@ -2824,11 +3016,16 @@ void apply_save_extension_setting() {
     if (section_size > image_size - section.VirtualAddress) {
       section_size = image_size - section.VirtualAddress;
     }
-    unsigned char* data = image_base + section.VirtualAddress;
-    for (size_t offset = 0; offset + kPatternSize <= section_size; offset += 2) {
-      if (memcmp(data + offset, kSaveExtension, kPatternSize) == 0) {
-        found = data + offset;
-        ++matches;
+    // only committed, readable pages: a fault here would be under the
+    // loader lock, before MO2's message could explain anything
+    for (const auto& range :
+         readable_ranges(image_base + section.VirtualAddress, section_size)) {
+      unsigned char* data = const_cast<unsigned char*>(range.first);
+      for (size_t offset = 0; offset + kPatternSize <= range.second; offset += 2) {
+        if (memcmp(data + offset, kSaveExtension, kPatternSize) == 0) {
+          found = data + offset;
+          ++matches;
+        }
       }
     }
   }
@@ -2855,7 +3052,136 @@ void apply_save_extension_setting() {
   log_line("Saves use the extension MO2 asked for:", literal);
 }
 
+// Whether [address, address + 8) lies in a writable data section of the image.
+bool is_in_writable_section(uintptr_t address, uintptr_t base, size_t image_size,
+                            const IMAGE_SECTION_HEADER* sections,
+                            unsigned int section_count) {
+  if (address < base || address - base > image_size - sizeof(uint64_t)) {
+    return false;
+  }
+  const size_t rva = address - base;
+  for (unsigned int index = 0; index < section_count; ++index) {
+    const IMAGE_SECTION_HEADER& section = sections[index];
+    if ((section.Characteristics & IMAGE_SCN_MEM_WRITE) == 0 ||
+        (section.Characteristics & IMAGE_SCN_MEM_EXECUTE) != 0) {
+      continue;
+    }
+    const size_t size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
+                                                      : section.SizeOfRawData;
+    if (rva >= section.VirtualAddress && rva - section.VirtualAddress + sizeof(uint64_t) <= size) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// The game's __security_cookie. First from the PE load config directory;
+// Elden Ring's executable has none (1.17 to 1.17.2, checked), so then the way
+// dearxan finds it: the address that the function prologues' stack check
+// (mov rax,[rip+cookie] ; xor rax,rsp) reads, seen many times. Null when
+// neither finds it.
+const volatile uint64_t* find_game_security_cookie(const char** source) {
+  const auto* image = reinterpret_cast<const unsigned char*>(GetModuleHandleW(nullptr));
+  if (image == nullptr) {
+    return nullptr;
+  }
+  const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
+  if (dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0) {
+    return nullptr;
+  }
+  const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS64*>(image + dos->e_lfanew);
+  if (nt->Signature != IMAGE_NT_SIGNATURE ||
+      nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    return nullptr;
+  }
+  const uintptr_t base = reinterpret_cast<uintptr_t>(image);
+  const size_t image_size = nt->OptionalHeader.SizeOfImage;
+  const IMAGE_SECTION_HEADER* sections = IMAGE_FIRST_SECTION(nt);
+  const unsigned int section_count = nt->FileHeader.NumberOfSections;
+
+  // not the load config's cookie: the loader gives that one its random value
+  // as it maps the game, so it says nothing about the game's own start-up
+
+  // mov rax,[rip+disp32] ; xor rax,rsp: one address read by this many
+  // prologues is the cookie (Elden Ring has about ten thousand)
+  constexpr unsigned int kMinimumReferences = 64;
+  try {
+    std::unordered_map<uintptr_t, unsigned int> references;
+    for (unsigned int index = 0; index < section_count; ++index) {
+      const IMAGE_SECTION_HEADER& section = sections[index];
+      if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
+          section.VirtualAddress >= image_size) {
+        continue;
+      }
+      size_t size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
+                                                  : section.SizeOfRawData;
+      size = (std::min)(size, image_size - section.VirtualAddress);
+      for (const auto& range :
+           readable_ranges(image + section.VirtualAddress, size)) {
+        const unsigned char* code = range.first;
+        for (size_t offset = 7; offset + 3 <= range.second; ++offset) {
+          if (code[offset] != 0x48 || code[offset + 1] != 0x33 || code[offset + 2] != 0xC4 ||
+              code[offset - 7] != 0x48 || code[offset - 6] != 0x8B || code[offset - 5] != 0x05) {
+            continue;
+          }
+          int32_t displacement = 0;
+          std::memcpy(&displacement, code + offset - 4, sizeof(displacement));
+          const uintptr_t cookie = reinterpret_cast<uintptr_t>(code + offset) +
+                                   static_cast<intptr_t>(displacement);
+          if (++references[cookie] >= kMinimumReferences) {
+            if (!is_in_writable_section(cookie, base, image_size, sections, section_count)) {
+              return nullptr;
+            }
+            *source = "stack checks";
+            return reinterpret_cast<const volatile uint64_t*>(cookie);
+          }
+        }
+      }
+    }
+  } catch (...) {
+  }
+  return nullptr;
+}
+
+// With ELDEN RING Reforged, me3's dearxan rewrites Arxan's code on the main
+// thread at the entry point, without suspending other threads. Reading or
+// hooking the game's code meanwhile can find a half-rewritten call site, or
+// have dearxan write over a fresh detour. The game's security cookie leaves
+// its default value once the entry stub is done and the CRT has started,
+// which is what dearxan itself waits for: the bridge waits for it too, up to
+// about 10 seconds. It also keeps MinHook from freezing the loading thread in
+// the middle of another DLL's DllMain.
+void wait_for_game_code_ready() {
+  constexpr uint64_t kDefaultSecurityCookie = 0x00002B992DDFA232ULL;
+  constexpr ULONGLONG kTimeoutMs = 10000;
+  const ULONGLONG started = GetTickCount64();
+  const char* source = "";
+  const volatile uint64_t* cookie = find_game_security_cookie(&source);
+  if (cookie == nullptr) {
+    log_line("Game start: the security cookie could not be found; not waiting for it.");
+    return;
+  }
+  for (;;) {
+    if (is_readable_address(const_cast<const uint64_t*>(cookie), sizeof(uint64_t)) &&
+        *cookie != kDefaultSecurityCookie) {
+      char message[160] = {};
+      std::snprintf(message, sizeof(message),
+                    "Game start: the game's code is ready (security cookie, found by %s, set after %llu ms).",
+                    source, static_cast<unsigned long long>(GetTickCount64() - started));
+      log_line(message);
+      return;
+    }
+    if (GetTickCount64() - started >= kTimeoutMs) {
+      log_line("Game start: the security cookie was not set within 10 seconds; going on anyway.");
+      return;
+    }
+    Sleep(5);
+  }
+}
+
 DWORD WINAPI bridge_worker(void*) {
+  // before anything reads or patches the game's code
+  wait_for_game_code_ready();
   install_exit_timing_hooks();
   HANDLE window_watch = CreateThread(nullptr, 0, watch_game_window, nullptr, 0, nullptr);
   if (window_watch != nullptr) {
@@ -2863,11 +3189,9 @@ DWORD WINAPI bridge_worker(void*) {
   }
   schedule_skip_intro_logos();
   read_native_initializer_requests();
-  wchar_t executable_path[MAX_PATH] = {};
-  const DWORD executable_path_length =
-      GetModuleFileNameW(nullptr, executable_path, MAX_PATH);
-  if (executable_path_length > 0 && executable_path_length < MAX_PATH) {
-    log_line("MO2 bridge executable:", executable_path);
+  const std::wstring executable_path = game_executable_path();
+  if (!executable_path.empty()) {
+    log_line("MO2 bridge executable:", executable_path.c_str());
   } else {
     log_line("MO2 bridge could not read the game executable path.");
   }
@@ -2905,15 +3229,191 @@ DWORD WINAPI bridge_worker(void*) {
   return 0;
 }
 
+// Diagnostic for the Nightreign start crash in a mod DLL already unloaded
+// (damage_competition_nightreign.dll): every DLL from outside Windows is
+// logged when it loads and unloads, with who unloaded it. Logging only.
+// The callback runs under the loader lock: no allocation, no loader calls,
+// only the stack, VirtualQuery and the log.
+struct LoaderUnicodeString {
+  USHORT Length;
+  USHORT MaximumLength;
+  PWSTR Buffer;
+};
+
+struct LoaderDllNotificationData {
+  ULONG Flags;
+  const LoaderUnicodeString* FullDllName;
+  const LoaderUnicodeString* BaseDllName;
+  void* DllBase;
+  ULONG SizeOfImage;
+};
+
+constexpr ULONG kLoaderDllLoaded = 1;
+constexpr ULONG kLoaderDllUnloaded = 2;
+
+using LoaderDllNotificationFunction = VOID(CALLBACK*)(
+    ULONG reason, const LoaderDllNotificationData* data, PVOID context);
+using LdrRegisterDllNotificationFunction = LONG(NTAPI*)(
+    ULONG flags, LoaderDllNotificationFunction function, PVOID context, PVOID* cookie);
+using LdrUnregisterDllNotificationFunction = LONG(NTAPI*)(PVOID cookie);
+
+PVOID g_dll_notification_cookie = nullptr;
+LdrUnregisterDllNotificationFunction g_unregister_dll_notification = nullptr;
+wchar_t g_windows_directory[MAX_PATH] = {};
+size_t g_windows_directory_length = 0;
+uintptr_t g_ntdll_base = 0;
+
+// A wide-character text built on the stack.
+struct StackText {
+  wchar_t text[2048];
+  size_t length = 0;
+  StackText() { text[0] = L'\0'; }
+  void add(const wchar_t* value, size_t count) {
+    for (size_t index = 0; index < count && value[index] != L'\0' &&
+                           length + 1 < sizeof(text) / sizeof(text[0]);
+         ++index) {
+      text[length++] = value[index];
+    }
+    text[length] = L'\0';
+  }
+  void add(const wchar_t* value) { add(value, static_cast<size_t>(-1)); }
+  void add_hex(uintptr_t value) {
+    wchar_t digits[19] = {L'0', L'x'};
+    size_t count = 0;
+    wchar_t reversed[16];
+    do {
+      const unsigned int digit = static_cast<unsigned int>(value & 0xF);
+      reversed[count++] = static_cast<wchar_t>(digit < 10 ? L'0' + digit : L'A' + digit - 10);
+      value >>= 4;
+    } while (value != 0 && count < 16);
+    for (size_t index = 0; index < count; ++index) {
+      digits[2 + index] = reversed[count - 1 - index];
+    }
+    digits[2 + count] = L'\0';
+    add(digits);
+  }
+};
+
+bool is_windows_dll(const LoaderUnicodeString* name) {
+  if (name == nullptr || name->Buffer == nullptr || g_windows_directory_length == 0) {
+    return false;
+  }
+  const size_t length = name->Length / sizeof(wchar_t);
+  return length > g_windows_directory_length &&
+         (name->Buffer[g_windows_directory_length] == L'\\' ||
+          name->Buffer[g_windows_directory_length] == L'/') &&
+         CompareStringOrdinal(name->Buffer, static_cast<int>(g_windows_directory_length),
+                              g_windows_directory,
+                              static_cast<int>(g_windows_directory_length),
+                              TRUE) == CSTR_EQUAL;
+}
+
+// "module.dll+0x1234" for a code address, from the mapped image's own file
+// name; VirtualQuery and the mapped file's name take no loader lock.
+void add_code_location(StackText& out, uintptr_t address) {
+  MEMORY_BASIC_INFORMATION info = {};
+  if (VirtualQuery(reinterpret_cast<const void*>(address), &info, sizeof(info)) == 0 ||
+      info.Type != MEM_IMAGE || info.AllocationBase == nullptr) {
+    out.add_hex(address);
+    return;
+  }
+  wchar_t mapped[MAX_PATH] = {};
+  const DWORD length =
+      K32GetMappedFileNameW(GetCurrentProcess(), info.AllocationBase, mapped, MAX_PATH);
+  if (length == 0) {
+    out.add(L"?");
+  } else {
+    const wchar_t* name = mapped;
+    for (DWORD index = 0; index < length; ++index) {
+      if (mapped[index] == L'\\') {
+        name = mapped + index + 1;
+      }
+    }
+    out.add(name);
+  }
+  out.add(L"+");
+  out.add_hex(address - reinterpret_cast<uintptr_t>(info.AllocationBase));
+}
+
+VOID CALLBACK dll_notification(ULONG reason, const LoaderDllNotificationData* data,
+                               PVOID) {
+  if (data == nullptr || data->FullDllName == nullptr || is_windows_dll(data->FullDllName)) {
+    return;
+  }
+  const DWORD last_error = GetLastError();
+  StackText text;
+  text.add(data->FullDllName->Buffer, data->FullDllName->Length / sizeof(wchar_t));
+  if (reason == kLoaderDllLoaded) {
+    text.add(L" at ");
+    text.add_hex(reinterpret_cast<uintptr_t>(data->DllBase));
+    log_line("DLL loaded:", text.text);
+  } else if (reason == kLoaderDllUnloaded) {
+    // who unloaded it: the frames past the loader's own (ntdll)
+    void* frames[24] = {};
+    const USHORT count = RtlCaptureStackBackTrace(1, 24, frames, nullptr);
+    text.add(L"; unloaded by:");
+    unsigned int shown = 0;
+    for (USHORT index = 0; index < count && shown < 8; ++index) {
+      const uintptr_t frame = reinterpret_cast<uintptr_t>(frames[index]);
+      MEMORY_BASIC_INFORMATION info = {};
+      if (VirtualQuery(frames[index], &info, sizeof(info)) != 0 &&
+          (reinterpret_cast<uintptr_t>(info.AllocationBase) == g_ntdll_base ||
+           info.AllocationBase == g_module)) {
+        continue;
+      }
+      text.add(L" ");
+      add_code_location(text, frame);
+      ++shown;
+    }
+    if (shown == 0) {
+      text.add(L" (only the loader)");
+    }
+    log_line("DLL unloaded:", text.text);
+  }
+  SetLastError(last_error);
+}
+
+void register_dll_notifications() {
+  HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+  if (ntdll == nullptr) {
+    return;
+  }
+  g_ntdll_base = reinterpret_cast<uintptr_t>(ntdll);
+  const UINT length = GetWindowsDirectoryW(g_windows_directory, MAX_PATH);
+  if (length == 0 || length >= MAX_PATH) {
+    g_windows_directory[0] = L'\0';
+    g_windows_directory_length = 0;
+  } else {
+    g_windows_directory_length = length;
+    while (g_windows_directory_length > 0 &&
+           (g_windows_directory[g_windows_directory_length - 1] == L'\\' ||
+            g_windows_directory[g_windows_directory_length - 1] == L'/')) {
+      g_windows_directory[--g_windows_directory_length] = L'\0';
+    }
+  }
+  const auto register_function = reinterpret_cast<LdrRegisterDllNotificationFunction>(
+      reinterpret_cast<void*>(GetProcAddress(ntdll, "LdrRegisterDllNotification")));
+  g_unregister_dll_notification = reinterpret_cast<LdrUnregisterDllNotificationFunction>(
+      reinterpret_cast<void*>(GetProcAddress(ntdll, "LdrUnregisterDllNotification")));
+  if (register_function == nullptr ||
+      register_function(0, dll_notification, nullptr, &g_dll_notification_cookie) < 0) {
+    g_dll_notification_cookie = nullptr;
+    log_line("DLL load log unavailable: the loader notification could not be registered.");
+    return;
+  }
+  log_line("DLL load log on: DLLs from outside Windows are logged as they load and unload.");
+}
+
 }  // namespace
 
-BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
   if (reason == DLL_PROCESS_ATTACH) {
     g_module = instance;
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.64.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.65.");
+    register_dll_notifications();
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
@@ -2925,6 +3425,13 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
       CloseHandle(thread);
     }
   } else if (reason == DLL_PROCESS_DETACH) {
+    // unloaded by FreeLibrary (not at process exit): the loader must not call
+    // back into code that is about to go
+    if (reserved == nullptr && g_dll_notification_cookie != nullptr &&
+        g_unregister_dll_notification != nullptr) {
+      g_unregister_dll_notification(g_dll_notification_cookie);
+      g_dll_notification_cookie = nullptr;
+    }
     // the other threads are gone and one may have held the log's lock:
     // write without it, or the game would hang on its way out
     if (TryAcquireSRWLockExclusive(&g_log_lock)) {

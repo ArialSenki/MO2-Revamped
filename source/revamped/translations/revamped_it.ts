@@ -2015,6 +2015,18 @@ Reinstalla la mod per cambiarlo.</translation>
       <source>Manual... lets you add them.</source>
       <translation>Con Manual... puoi aggiungerli.</translation>
     </message>
+    <message>
+      <source>These names can't be used for a file or folder: {0}. A name can't be empty, "." or "..", contain &lt; &gt; : " / \ | ? *, end with a dot or a space, or be a name Windows keeps for itself (CON, NUL, COM1...). Rename them.</source>
+      <translation>Questi nomi non si possono usare per un file o una cartella: {0}. Un nome non può essere vuoto, essere «.» o «..», contenere &lt; &gt; : " / \ | ? *, finire con un punto o uno spazio, né essere un nome che Windows riserva a sé (CON, NUL, COM1...). Rinominali.</translation>
+    </message>
+    <message>
+      <source>This Seamless Co-op is made for the other game: it has {0}, and this game needs {1}. MO2 does not load {0} here; install the build made for this game.</source>
+      <translation>Questo Seamless Co-op è fatto per l'altro gioco: contiene {0}, e questo gioco ha bisogno di {1}. MO2 non carica {0} qui; installa la versione fatta per questo gioco.</translation>
+    </message>
+    <message>
+      <source>These names can't be used for a file or folder: {0}. A name can't be empty, "." or "..", contain &lt; &gt; : " / \ | ? *, end with a dot or a space, or be a name Windows reserves (CON, NUL, COM1...). Rename them.</source>
+      <translation>Questi nomi non si possono usare per un file o una cartella: {0}. Un nome non può essere vuoto, essere «.» o «..», contenere &lt; &gt; : " / \ | ? *, finire con un punto o uno spazio, né essere un nome che Windows riserva a sé (CON, NUL, COM1...). Rinominali.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingGame</name>
@@ -4531,6 +4543,148 @@ I launcher che non funzionano nella cartella virtuale di MO2 si avviano al di fu
     <message>
       <source>Convergence (.cnv)</source>
       <translation>Convergence (.cnv)</translation>
+    </message>
+    <message>
+      <source>Elden Ring Save</source>
+      <translation>Salvataggio di Elden Ring</translation>
+    </message>
+    <message>
+      <source>Nightreign Save</source>
+      <translation>Salvataggio di Nightreign</translation>
+    </message>
+    <message>
+      <source>Close the game and its launcher, then open Tools &gt; Save isolation and close it again: MO2 applies the save route then.</source>
+      <translation>Chiudi il gioco e il suo launcher, poi apri Strumenti &gt; Isolamento salvataggi e richiudilo: MO2 applicherà allora il percorso dei salvataggi.</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;The save route this profile uses has no Elden Ring saves yet, while the Steam save folder has some. The game will start without your existing characters, and a new character is saved only to this route.&lt;/p&gt;&lt;p&gt;To play an existing character here, open Tools &amp;gt; Save isolation and use Transfer a save, or create or import a named save profile. To use the Steam saves directly, choose the global route there.&lt;/p&gt;&lt;p&gt;Route: {folder}&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Il percorso dei salvataggi di questo profilo non ha ancora salvataggi di Elden Ring, mentre la cartella di Steam sì. Il gioco partirà senza i tuoi personaggi, e un nuovo personaggio verrà salvato solo in questo percorso.&lt;/p&gt;&lt;p&gt;Per giocare qui un personaggio esistente, apri Strumenti &amp;gt; Isolamento salvataggi e usa Trasferisci un salvataggio, oppure crea o importa un profilo di salvataggio con nome. Per usare direttamente i salvataggi di Steam, scegli lì il percorso globale.&lt;/p&gt;&lt;p&gt;Percorso: {folder}&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>The record of the interrupted restore is not valid.</source>
+      <translation>Il registro del ripristino interrotto non è valido.</translation>
+    </message>
+    <message>
+      <source>Finish the interrupted restore?</source>
+      <translation>Completare il ripristino interrotto?</translation>
+    </message>
+    <message>
+      <source>Finish the restore</source>
+      <translation>Completa il ripristino</translation>
+    </message>
+    <message>
+      <source>Not now</source>
+      <translation>Non ora</translation>
+    </message>
+    <message>
+      <source>Restore not finished</source>
+      <translation>Ripristino non completato</translation>
+    </message>
+    <message>
+      <source>This shares the same save folder with Steam and all MO2 instances that use the global path. Modded play can alter the vanilla character.
+
+Choose Use global save to store this route for the current profile. Closing this prompt or keeping the current mode leaves the saved route unchanged.</source>
+      <translation>Questo condivide la stessa cartella dei salvataggi con Steam e con tutte le istanze MO2 che usano il percorso globale. Giocare con le mod può alterare il personaggio vanilla.
+
+Scegli Usa salvataggio globale per memorizzare questo percorso per il profilo attuale. Chiudere questo avviso o mantenere la modalità attuale lascia invariato il percorso salvato.</translation>
+    </message>
+    <message>
+      <source>MO2 closed while it was restoring a backup into this route, so the route may hold some restored files and some old ones.
+
+Route:
+{route}
+
+The saves it was replacing are kept in:
+{path}</source>
+      <translation>MO2 si è chiuso mentre ripristinava un backup in questo percorso, quindi il percorso può contenere alcuni file ripristinati e altri vecchi.
+
+Percorso:
+{route}
+
+I salvataggi che stava sostituendo sono conservati in:
+{path}</translation>
+    </message>
+    <message>
+      <source>The interrupted restore is finished. The saves it replaced are in:
+{path}</source>
+      <translation>Il ripristino interrotto è completato. I salvataggi sostituiti sono in:
+{path}</translation>
+    </message>
+    <message>
+      <source>The route's saves changed after the restore stopped, so MO2 left them as they are; nothing was deleted. The saves the restore was replacing are kept in:
+{path}</source>
+      <translation>I salvataggi del percorso sono cambiati dopo l'interruzione del ripristino, quindi MO2 li ha lasciati così; non è stato eliminato nulla. I salvataggi che il ripristino stava sostituendo sono conservati in:
+{path}</translation>
+    </message>
+    <message>
+      <source>{label} — ELDEN RING Reforged (online)</source>
+      <translation>{label} — ELDEN RING Reforged (online)</translation>
+    </message>
+    <message>
+      <source>MO2 — {profile} / {save_profile}</source>
+      <translation>MO2 — {profile} / {save_profile}</translation>
+    </message>
+    <message>
+      <source>The interrupted restore could not be finished. The saves it was replacing are kept in:
+{path}
+
+{error}</source>
+      <translation>Impossibile completare il ripristino interrotto. I salvataggi che stava sostituendo sono conservati in:
+{path}
+
+{error}</translation>
+    </message>
+    <message>
+      <source>{label} (online) — {file}</source>
+      <translation>{label} (online) — {file}</translation>
+    </message>
+    <message>
+      <source>Restore rolled back in part</source>
+      <translation>Ripristino annullato in parte</translation>
+    </message>
+    <message>
+      <source>A restore into this route failed, and MO2 could not put every file back as it was, so the route may hold some restored files and some old ones. Check its saves before playing.
+
+Route:
+{route}
+
+The saves the restore was replacing are kept in:
+{path}</source>
+      <translation>Un ripristino in questo percorso non è riuscito e MO2 non ha potuto rimettere tutti i file com'erano, quindi il percorso può contenere alcuni file ripristinati e altri vecchi. Controlla i suoi salvataggi prima di giocare.
+
+Percorso:
+{route}
+
+I salvataggi che il ripristino stava sostituendo sono conservati in:
+{path}</translation>
+    </message>
+    <message>
+      <source>MO2 closed while it was restoring a backup into this route, so the route may hold some restored files and some old ones. MO2 finishes it only if every file is still as the restore left it.
+
+Route:
+{route}
+
+The saves it was replacing are kept in:
+{path}</source>
+      <translation>MO2 si è chiuso mentre ripristinava un backup in questo percorso, quindi il percorso può contenere alcuni file ripristinati e altri vecchi. MO2 lo completa solo se ogni file è ancora come l'ha lasciato il ripristino.
+
+Percorso:
+{route}
+
+I salvataggi che stava sostituendo sono conservati in:
+{path}</translation>
+    </message>
+    <message>
+      <source>MO2 could not confirm that the route's saves are still as the restore left them, so it left them as they are; nothing was deleted. The saves the restore was replacing are kept in:
+{path}</source>
+      <translation>MO2 non ha potuto confermare che i salvataggi del percorso siano ancora come li ha lasciati il ripristino, quindi li ha lasciati così; non è stato eliminato nulla. I salvataggi che il ripristino stava sostituendo sono conservati in:
+{path}</translation>
+    </message>
+    <message>
+      <source>An earlier restore into this route is not settled yet, so MO2 does not start another one. Reopen this window to deal with it first. The saves it was replacing are kept in:
+{path}</source>
+      <translation>Un ripristino precedente in questo percorso non è ancora risolto, quindi MO2 non ne avvia un altro. Riapri questa finestra per risolverlo prima. I salvataggi che stava sostituendo sono conservati in:
+{path}</translation>
     </message>
 </context>
   <context>

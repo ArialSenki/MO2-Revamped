@@ -199,7 +199,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return _tr("Per-profile Elden Ring startup, cleanup, and performance options.")
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 64)
+        return mobase.VersionInfo(0, 5, 0, 65)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -820,6 +820,10 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             profile_path.mkdir(parents=True, exist_ok=True)
             with temporary_path.open("w", encoding="utf-8", newline="\n") as stream:
                 config.write(stream)
+                # on disk before it takes the old file's place: a power cut
+                # must not leave an empty file (it also holds the DLL order)
+                stream.flush()
+                os.fsync(stream.fileno())
             os.replace(temporary_path, config_path)
         except OSError as error:
             # a half-written copy is not left in the profile folder
@@ -840,8 +844,17 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             _tr("The options were saved for profile '{profile}'.").format(profile=profile.name()),
         )
 
+    def _bridge_log_name(self) -> str:
+        """The bridge names its log after the game it runs in."""
+        try:
+            game = self.__organizer.managedGame() if self.__organizer else None
+            short_name = game.gameShortName().casefold() if game is not None else ""
+        except Exception:
+            short_name = ""
+        return "NightreignMO2Bridge" if short_name == "nightreign" else "EldenRingMO2Bridge"
+
     def _open_latest_bridge_log(self) -> None:
-        log_path = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.log"
+        log_path = Path(tempfile.gettempdir()) / f"{self._bridge_log_name()}.log"
         if not log_path.is_file():
             QMessageBox.information(
                 self.__parent_widget,
@@ -859,7 +872,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
             )
 
     def _open_previous_bridge_log(self) -> None:
-        log_path = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.previous.log"
+        log_path = Path(tempfile.gettempdir()) / f"{self._bridge_log_name()}.previous.log"
         if not log_path.is_file():
             QMessageBox.information(
                 self.__parent_widget,

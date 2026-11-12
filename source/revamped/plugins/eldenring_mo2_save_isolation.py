@@ -169,6 +169,76 @@ def _running_process_names() -> set[str] | None:
         return None
 
 
+def _running_processes() -> list[tuple[int, str]] | None:
+    """(process id, lowercased executable name) of every running process, or
+    None when the list can't be read (as in the game plugin)."""
+    try:
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        snapshot_fn = kernel32.CreateToolhelp32Snapshot
+        snapshot_fn.argtypes = (wintypes.DWORD, wintypes.DWORD)
+        snapshot_fn.restype = wintypes.HANDLE
+        first = kernel32.Process32FirstW
+        first.argtypes = (wintypes.HANDLE, ctypes.POINTER(_ProcessEntry32W))
+        first.restype = wintypes.BOOL
+        following = kernel32.Process32NextW
+        following.argtypes = (wintypes.HANDLE, ctypes.POINTER(_ProcessEntry32W))
+        following.restype = wintypes.BOOL
+        close = kernel32.CloseHandle
+        close.argtypes = (wintypes.HANDLE,)
+        snapshot = snapshot_fn(0x00000002, 0)  # TH32CS_SNAPPROCESS
+        if not snapshot or snapshot == wintypes.HANDLE(-1).value:
+            return None
+        try:
+            entry = _ProcessEntry32W()
+            entry.dwSize = ctypes.sizeof(_ProcessEntry32W)
+            processes: list[tuple[int, str]] = []
+            ok = first(snapshot, ctypes.byref(entry))
+            while ok:
+                processes.append((entry.th32ProcessID, entry.szExeFile.casefold()))
+                ok = following(snapshot, ctypes.byref(entry))
+            # the walk ends with ERROR_NO_MORE_FILES; anything else cut it short
+            if ctypes.get_last_error() != 18:
+                return None
+            return processes or None
+        finally:
+            close(snapshot)
+    except (OSError, AttributeError, ValueError):
+        return None
+
+
+def _process_image_path(pid: int) -> str | None:
+    """The full path of a running process's executable, or None when Windows
+    doesn't give it."""
+    try:
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        open_process = kernel32.OpenProcess
+        open_process.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        open_process.restype = wintypes.HANDLE
+        query = kernel32.QueryFullProcessImageNameW
+        query.argtypes = (
+            wintypes.HANDLE,
+            wintypes.DWORD,
+            wintypes.LPWSTR,
+            ctypes.POINTER(wintypes.DWORD),
+        )
+        query.restype = wintypes.BOOL
+        close = kernel32.CloseHandle
+        close.argtypes = (wintypes.HANDLE,)
+        handle = open_process(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not handle:
+            return None
+        try:
+            size = wintypes.DWORD(32768)
+            buffer = ctypes.create_unicode_buffer(size.value)
+            if not query(handle, 0, buffer, ctypes.byref(size)):
+                return None
+            return buffer.value or None
+        finally:
+            close(handle)
+    except (OSError, AttributeError, ValueError):
+        return None
+
+
 def _make_circular_icon(parent, object_name: str, icon_path: str, size: int = 26,
                         fallback: str = "•") -> QLabel:
     icon = QLabel(parent)
@@ -329,6 +399,9 @@ _GAME_LAUNCHERS = frozenset(
         "reforgedlauncher.exe",
     }
 )
+# Easy Anti-Cheat's launcher: every EAC game has one of this name, so only
+# the one inside the managed game's folder counts as this game's
+_ANTI_CHEAT_LAUNCHER = "start_protected_game.exe"
 _AUTO_SWAP_LAUNCHERS = frozenset(
     {
         "reforgedlauncher.exe",
@@ -348,6 +421,8 @@ _GAMES = {
         "global_backups": "Elden Ring Global Save Backups",
         "scope": "",
         "button": "elden ring",
+        # the programs that start this game (the game plugin's GameLaunchers)
+        "launchers": frozenset({"eldenring.exe", _ANTI_CHEAT_LAUNCHER, "reforgedlauncher.exe"}),
     },
     "nightreign": {
         "process": "nightreign.exe",
@@ -357,6 +432,7 @@ _GAMES = {
         "global_backups": "Nightreign Global Save Backups",
         "scope": "|nightreign",
         "button": "nightreign",
+        "launchers": frozenset({"nightreign.exe", _ANTI_CHEAT_LAUNCHER}),
     },
 }
 
@@ -452,7 +528,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             application.focusWindowChanged.connect(self._on_focus_window_changed)
             # Handle any dialogs already visible when the plugin finishes loading.
             QTimer.singleShot(0, self._refresh_mo2_dialogs)
-        qInfo("Elden Ring MO2: save isolation alpha.84 initialized.")
+        qInfo("Elden Ring MO2: save isolation alpha.85 initialized.")
 
     def _request_mo2_restart(self) -> None:
         main_window = self.__parent_widget
@@ -509,7 +585,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 84)
+        return mobase.VersionInfo(0, 5, 0, 85)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -919,6 +995,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         chosen = QFileDialog.getExistingDirectory(parent, _tr("Export all my saves"))
         if not chosen:
             return
+        # the game may have been started while the folder was being chosen
+        blocked = self._transfer_blocked_reason()
+        if blocked:
+            self._show_notice(parent, _tr("Close Elden Ring first"), blocked, "warning")
+            return
         suffixes = self._known_save_suffixes() + (".bak",)
         sources = self._create_instance_save_sources(suffixes, include_online=True)
         # what a restore found in the way of the Steam saves and kept for the
@@ -1013,7 +1094,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if online.is_dir():
                     for save_path in self._list_transferable_saves(online, suffixes):
                         sources.append(
-                            (f"{label} (online) — {save_path.name}", save_path,
+                            (_tr("{label} (online) — {file}").format(label=label, file=save_path.name), save_path,
                              save_path.relative_to(online).as_posix())
                         )
             for save_path in self._list_transferable_saves(root, suffixes):
@@ -1057,7 +1138,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     profile_directory, self.ProfileIsolated
                 ):
                     add_save_files(
-                        f"MO2 — {display_profile} / {profile_name}",
+                        _tr("MO2 — {profile} / {save_profile}").format(
+                            profile=display_profile, save_profile=profile_name
+                        ),
                         profile_directory / self.SaveProfilesDirectoryName / profile_id,
                     )
 
@@ -1352,6 +1435,14 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         are copied to replaced_root/<now> (also across drives), and only then
         each copy takes its place, so a route is never left without its save
         if MO2 dies halfway. If anything fails, the route goes back as it was.
+        The copies take their places one file at a time: if MO2 dies during
+        that step the route can hold some restored files and some old ones.
+        A marker in replaced_root/<now> (RestoreMarkerName) records the step,
+        with the size and hash of every file it puts in place, until it is
+        over, and the restore window offers to finish it
+        (_offer_to_finish_restores); every original is already in that folder.
+        A rollback that can't put everything back marks it as rolled back:
+        the window then only points to that folder.
         Returns the folder holding the replaced files, or None when nothing
         was replaced."""
         backup_files = [file for file in backup.rglob("*") if file.is_file()]
@@ -1382,6 +1473,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         saved: list[tuple[Path, Path]] = []  # (original place, copy in replaced)
         placed: list[Path] = []  # destinations that already hold a backup copy
         removed: list[tuple[Path, Path]] = []  # originals the backup has no file for
+        marker: Path | None = None
         try:
             for file in backup_files:
                 destination = route_root / file.relative_to(backup)
@@ -1406,6 +1498,19 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                         shutil.copy2(current, target)
                         saved.append((current, target))
 
+            # from here the route changes file by file: the marker says what
+            # the step does, so an MO2 that dies halfway can finish it later
+            destination_keys = {os.path.normcase(str(destination)) for _temporary, destination in staged}
+            marker = self._write_restore_marker(
+                replaced,
+                route_root,
+                staged,
+                [
+                    (original, target)
+                    for original, target in saved
+                    if os.path.normcase(str(original)) not in destination_keys
+                ],
+            )
             for temporary, destination in staged:
                 os.replace(temporary, destination)
                 placed.append(destination)
@@ -1418,6 +1523,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 if os.path.normcase(str(original)) not in placed_keys:
                     original.unlink()
                     removed.append((original, target))
+            # the step is over: the route holds the backup, all of it
+            self._remove_restore_marker(marker, replaced if not saved else None)
         except OSError as error:
             rollback_problems = []
             for temporary, _destination in staged:
@@ -1443,7 +1550,25 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     shutil.copy2(target, original)
                 except OSError as copy_error:
                     rollback_problems.append(str(copy_error))
+            if marker is not None and not rollback_problems:
+                # the route is as it was: the marker goes first, so a folder
+                # the rmtree below can't fully remove never offers to finish
+                try:
+                    marker.unlink(missing_ok=True)
+                except OSError as marker_error:
+                    rollback_problems.append(str(marker_error))
             if rollback_problems:
+                # the marker now says the restore was rolled back: the
+                # restore window only points to the kept originals, it never
+                # offers to finish a restore that was given up
+                if marker is not None:
+                    try:
+                        self._mark_restore_rolled_back(marker)
+                    except (OSError, UnicodeError, ValueError, TypeError) as marker_error:
+                        qInfo(
+                            "Elden Ring MO2 Save Isolation: could not mark the restore "
+                            f"marker '{marker}' as rolled back: {marker_error}"
+                        )
                 raise OSError(
                     _tr("{error}\n\nThe route could not be put back as it was. The "
                         "saves that were set aside are in:\n{path}").format(
@@ -1454,6 +1579,387 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             shutil.rmtree(replaced, ignore_errors=True)
             raise
         return replaced if saved else None
+
+    # in replaced/<stamp> while a restore puts its files in place
+    RestoreMarkerName = ".restore-unfinished.json"
+
+    def _write_restore_marker(
+        self,
+        replaced: Path,
+        route_root: Path,
+        staged: list[tuple[Path, Path]],
+        removals: list[tuple[Path, Path]],
+    ) -> Path:
+        replaced.mkdir(parents=True, exist_ok=True)
+        marker = replaced / self.RestoreMarkerName
+        record = {
+            "version": self.RestoreMarkerVersion,
+            "state": "unfinished",
+            "route": str(route_root),
+            # (temporary copy, destination), both inside the route, with what
+            # the copy holds: a step counts as done only when its destination
+            # holds that
+            "steps": [
+                {
+                    "temporary": temporary.relative_to(route_root).as_posix(),
+                    "destination": destination.relative_to(route_root).as_posix(),
+                    **self._file_fingerprint(temporary),
+                }
+                for temporary, destination in staged
+            ],
+            # originals the backup has no file for (an old .bak), with their
+            # copy in this folder
+            "remove": [
+                [original.relative_to(route_root).as_posix(), target.relative_to(replaced).as_posix()]
+                for original, target in removals
+            ],
+        }
+        self._write_marker_record(marker, record)
+        return marker
+
+    RestoreMarkerVersion = 2
+
+    @staticmethod
+    def _write_marker_record(marker: Path, record: dict) -> None:
+        temporary_marker = marker.with_name(f"{marker.name}.tmp")
+        with temporary_marker.open("w", encoding="utf-8") as stream:
+            json.dump(record, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary_marker, marker)
+
+    def _mark_restore_rolled_back(self, marker: Path) -> None:
+        record = json.loads(marker.read_text(encoding="utf-8"))
+        record["state"] = "rolled_back"
+        self._write_marker_record(marker, record)
+
+    @staticmethod
+    def _file_fingerprint(path: Path) -> dict:
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(chunk)
+        info = path.stat()
+        return {"size": info.st_size, "mtime_ns": info.st_mtime_ns, "sha256": digest.hexdigest()}
+
+    @classmethod
+    def _matches_fingerprint(cls, path: Path, step: dict) -> bool:
+        """Whether path holds the file a marker step recorded (size and hash;
+        the modification time is not compared, a copy may not keep it). A
+        file that can't be read counts as different."""
+        try:
+            if not path.is_file() or path.stat().st_size != int(step["size"]):
+                return False
+            return cls._file_fingerprint(path)["sha256"] == str(step["sha256"])
+        except (OSError, KeyError, TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def _remove_restore_marker(marker: Path | None, empty_folder: Path | None) -> None:
+        if marker is None:
+            return
+        try:
+            marker.unlink(missing_ok=True)
+            if empty_folder is not None:
+                # nothing was replaced: only the marker had made the folder
+                empty_folder.rmdir()
+        except OSError as error:
+            qInfo(f"Elden Ring MO2 Save Isolation: could not clear the restore marker '{marker}': {error}")
+
+    def _interrupted_restores(self, replaced_root: Path) -> list[Path]:
+        try:
+            return sorted(
+                folder / self.RestoreMarkerName
+                for folder in replaced_root.iterdir()
+                if folder.is_dir() and (folder / self.RestoreMarkerName).is_file()
+            )
+        except OSError:
+            return []
+
+    @staticmethod
+    def _inside(root: Path, relative: str) -> Path | None:
+        """root/relative, or None when relative is not a plain path inside root."""
+        parts = Path(relative).parts
+        if not parts or Path(relative).is_absolute() or any(part in {"", ".", ".."} for part in parts) or ":" in parts[0]:
+            return None
+        return root.joinpath(*parts)
+
+    @classmethod
+    def _contents_match(cls, first: Path, second: Path) -> bool:
+        # a file that can't be read counts as different: nothing is touched
+        try:
+            return cls._same_file_contents(first, second)
+        except OSError:
+            return False
+
+    def _marker_steps(self, record: dict, route_root: Path) -> list[tuple[Path, Path, dict]]:
+        """(temporary copy, destination, recorded step) of a marker, both paths
+        inside route_root. A marker of an older format has no recorded
+        contents: its steps come with an empty record, which never matches."""
+        steps = []
+        if "steps" in record:
+            entries = [
+                (step.get("temporary"), step.get("destination"), step)
+                for step in record["steps"]
+                if isinstance(step, dict)
+            ]
+            if len(entries) != len(record["steps"]):
+                raise ValueError(_tr("The record of the interrupted restore is not valid."))
+        else:
+            entries = [(names[0], names[1], {}) for names in record.get("staged", [])]
+        for temporary_name, destination_name, step in entries:
+            temporary = self._inside(route_root, str(temporary_name))
+            destination = self._inside(route_root, str(destination_name))
+            if temporary is None or destination is None:
+                raise ValueError(_tr("The record of the interrupted restore is not valid."))
+            steps.append((temporary, destination, step))
+        return steps
+
+    @staticmethod
+    def _marker_rolled_back(record: dict) -> bool:
+        return record.get("state") == "rolled_back"
+
+    def _finish_interrupted_restore(self, marker: Path, route_root: Path) -> bool:
+        """Finishes a restore an MO2 that died left halfway, as it would have
+        gone on, in route_root (the route the restore window shows: the
+        instance folder may have moved since the marker was written). A step
+        counts as done only when its destination holds the file the marker
+        recorded; a step still to do needs its copy as recorded and, in its
+        destination, the original the restore found. Anything else (a save
+        the game wrote since, a rollback, a newer restore) leaves everything
+        as it is, and nothing is removed. Returns whether it was finished;
+        when not, the originals stay in the marker's folder."""
+        replaced = marker.parent
+        record = json.loads(marker.read_text(encoding="utf-8"))
+        if self._marker_rolled_back(record) or record.get("version") != self.RestoreMarkerVersion:
+            # a rolled-back restore is never finished, and a marker without
+            # recorded contents can't be confirmed
+            return False
+        pending: list[tuple[Path, Path]] = []
+        leftover_copies: list[Path] = []
+        for temporary, destination, step in self._marker_steps(record, route_root):
+            if self._matches_fingerprint(destination, step):
+                # in place; a copy still beside it only repeats it
+                if temporary.is_file() and self._matches_fingerprint(temporary, step):
+                    leftover_copies.append(temporary)
+                elif os.path.lexists(temporary):
+                    return False
+                continue
+            if not self._matches_fingerprint(temporary, step):
+                # neither placed nor still waiting as recorded
+                return False
+            if os.path.lexists(destination):
+                # still the original the restore found, or the game wrote it
+                # since: then it is newer progress, and nothing is finished
+                original = self._inside(replaced, destination.relative_to(route_root).as_posix())
+                if original is None or not original.is_file() or not self._contents_match(destination, original):
+                    return False
+            pending.append((temporary, destination))
+        removals: list[Path] = []
+        for original_name, kept_name in record.get("remove", []):
+            original = self._inside(route_root, str(original_name))
+            kept = self._inside(replaced, str(kept_name))
+            if original is None or kept is None:
+                raise ValueError(_tr("The record of the interrupted restore is not valid."))
+            if not os.path.lexists(original):
+                continue
+            if not kept.is_file() or not self._contents_match(original, kept):
+                return False
+            removals.append(original)
+        # every step is confirmed: only now does anything change
+        for temporary, destination in pending:
+            os.replace(temporary, destination)
+        for temporary in leftover_copies:
+            temporary.unlink(missing_ok=True)
+        for original in removals:
+            original.unlink()
+        marker.unlink()
+        return True
+
+    def _leave_interrupted_restore(self, marker: Path, route_root: Path) -> None:
+        """Drops the copies an unfinished restore left beside the route's
+        files (the backup still has them) and its marker; the route stays as
+        it is, and the originals stay in the marker's folder."""
+        record = json.loads(marker.read_text(encoding="utf-8"))
+        for temporary, _destination, _step in self._marker_steps(record, route_root):
+            if temporary.name.endswith(".restoring"):
+                temporary.unlink(missing_ok=True)
+        marker.unlink()
+
+    def _retire_rolled_back_marker(self, marker: Path) -> None:
+        """A rolled-back restore whose folder the user has opened: its marker
+        is renamed, so it is neither offered again nor blocks new restores;
+        the record and the originals stay in the folder."""
+        retired = marker.with_name(".restore-rolled-back.json")
+        os.replace(marker, retired)
+
+    def _sweep_stray_restore_copies(self, route_root: Path, referenced: set[str]) -> None:
+        """Copies a restore left beside the route's files when MO2 died before
+        any took its place (no marker names them): the backup still has them."""
+        prefix = "." + _game()["stem"].casefold() + "."
+        now = datetime.now().timestamp()
+        try:
+            folders = [route_root] + [entry for entry in route_root.iterdir() if entry.is_dir()]
+        except OSError:
+            return
+        for folder in folders:
+            try:
+                files = [entry for entry in folder.iterdir() if entry.is_file()]
+            except OSError:
+                continue
+            for file in files:
+                name = file.name.casefold()
+                if not (name.startswith(prefix) and name.endswith(".restoring")):
+                    continue
+                if os.path.normcase(str(file)) in referenced:
+                    continue
+                try:
+                    info = file.stat()
+                    # made when the copy was (the copy keeps the backup's
+                    # modification time): a restore running in another MO2
+                    # window right now keeps its copies
+                    created = getattr(info, "st_birthtime", info.st_ctime)
+                    if now - created < 600:
+                        continue
+                    file.unlink()
+                    qInfo(f"Elden Ring MO2 Save Isolation: removed the leftover restore copy '{file}'.")
+                except OSError as error:
+                    qInfo(f"Elden Ring MO2 Save Isolation: could not remove '{file}': {error}")
+
+    def _marker_route(self, record: dict, candidates: list[Path]) -> Path:
+        """The route a marker belongs to, among the routes the restore window
+        shows that share its "replaced" folder (a route and its Reforged
+        online saves inside it): the one at the recorded path, else (the
+        instance folder moved) the one of the same kind."""
+        recorded = Path(str(record.get("route", "")))
+        recorded_key = self._normalized_path(recorded)
+        for candidate in candidates:
+            if self._normalized_path(candidate) == recorded_key:
+                return candidate
+        online = recorded.name.casefold() == self._ReforgedOnlineSavesFolder.casefold()
+        for candidate in candidates:
+            if (candidate.name.casefold() == self._ReforgedOnlineSavesFolder.casefold()) == online:
+                return candidate
+        return candidates[0]
+
+    def _collect_restore_markers(
+        self, routes: list[tuple[Path, Path]]
+    ) -> list[tuple[Path, list[Path]]]:
+        """(marker, the routes sharing its "replaced" folder), each marker once:
+        a route and its Reforged online entry share that folder."""
+        found: dict[str, tuple[Path, list[Path]]] = {}
+        for route_root, replaced_root in routes:
+            for marker in self._interrupted_restores(replaced_root):
+                key = os.path.normcase(os.path.normpath(os.path.abspath(str(marker))))
+                entry = found.setdefault(key, (marker, []))
+                entry[1].append(route_root)
+        return list(found.values())
+
+    def _offer_to_finish_restores(self, parent, routes: list[tuple[Path, Path]]) -> None:
+        """A restore that MO2 didn't finish (it closed or crashed while the
+        files took their places) is found here and finished on request. One a
+        failed rollback left only points to the folder with the originals.
+        routes: (route folder, its backups' "replaced" folder)."""
+        markers: list[tuple[Path, Path, dict]] = []  # (marker, route, record)
+        referenced: set[str] = set()
+        for marker, candidates in self._collect_restore_markers(routes):
+            try:
+                record = json.loads(marker.read_text(encoding="utf-8"))
+                if not isinstance(record, dict):
+                    raise ValueError("not a record")
+                route_root = self._marker_route(record, candidates)
+                markers.append((marker, route_root, record))
+                for temporary, _destination, _step in self._marker_steps(record, route_root):
+                    referenced.add(os.path.normcase(str(temporary)))
+            except (OSError, UnicodeError, ValueError, KeyError, TypeError, AttributeError, IndexError) as error:
+                # its copies are left alone
+                referenced.add("*")
+                qInfo(f"Elden Ring MO2 Save Isolation: could not read the restore marker '{marker}': {error}")
+        if "*" not in referenced:
+            for route_root, _replaced_root in routes:
+                self._sweep_stray_restore_copies(route_root, referenced)
+        for marker, route_root, record in markers:
+            route = str(route_root)
+            if self._marker_rolled_back(record):
+                # given up: never finished, only the kept originals are shown
+                if self._ask_confirmation(
+                    parent,
+                    _tr("Restore rolled back in part"),
+                    _tr("A restore into this route failed, and MO2 could not put every "
+                        "file back as it was, so the route may hold some restored files "
+                        "and some old ones. Check its saves before playing.\n\n"
+                        "Route:\n{route}\n\nThe saves the restore was replacing are kept "
+                        "in:\n{path}").format(route=route, path=marker.parent),
+                    _tr("Open the folder"),
+                    _tr("Not now"),
+                    "warning",
+                ):
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(str(marker.parent)))
+                    try:
+                        self._retire_rolled_back_marker(marker)
+                    except OSError as error:
+                        qInfo(
+                            "Elden Ring MO2 Save Isolation: could not retire the restore "
+                            f"marker '{marker}': {error}"
+                        )
+                continue
+            if not self._ask_confirmation(
+                parent,
+                _tr("Finish the interrupted restore?"),
+                _tr("MO2 closed while it was restoring a backup into this route, so the "
+                    "route may hold some restored files and some old ones. MO2 finishes "
+                    "it only if every file is still as the restore left it.\n\n"
+                    "Route:\n{route}\n\nThe saves it was replacing are kept in:\n{path}").format(
+                    route=route, path=marker.parent
+                ),
+                _tr("Finish the restore"),
+                _tr("Not now"),
+                "warning",
+            ):
+                continue
+            busy_reason = self._transfer_blocked_reason()
+            if busy_reason:
+                self._show_notice(parent, _tr("Restore not finished"), busy_reason, "warning")
+                return
+            try:
+                finished = self._finish_interrupted_restore(marker, route_root)
+                if not finished:
+                    self._leave_interrupted_restore(marker, route_root)
+            except (OSError, UnicodeError, ValueError, KeyError, TypeError, AttributeError, IndexError) as error:
+                self._show_notice(
+                    parent,
+                    _tr("Restore not finished"),
+                    _tr("The interrupted restore could not be finished. The saves it was "
+                        "replacing are kept in:\n{path}\n\n{error}").format(path=marker.parent, error=error),
+                    "warning",
+                )
+                continue
+            self._refresh_save_checks()
+            if finished:
+                qInfo(f"Elden Ring MO2 Save Isolation: finished the interrupted restore into '{route}'.")
+                self._show_notice(
+                    parent,
+                    _tr("Backup restored"),
+                    _tr("The interrupted restore is finished. The saves it replaced are in:\n{path}").format(
+                        path=marker.parent
+                    ),
+                    "success",
+                )
+            else:
+                qInfo(
+                    f"Elden Ring MO2 Save Isolation: left the interrupted restore into '{route}' "
+                    "as it was: its files could not be confirmed as the restore left them."
+                )
+                self._show_notice(
+                    parent,
+                    _tr("Restore not finished"),
+                    _tr("MO2 could not confirm that the route's saves are still as the "
+                        "restore left them, so it left them as they are; nothing was "
+                        "deleted. The saves the restore was replacing are kept in:\n{path}").format(
+                        path=marker.parent
+                    ),
+                    "warning",
+                )
 
     def _display_restore_dialog(
         self, profile_directory: Path, parent=None, route: Path | None = None, backup: Path | None = None
@@ -1497,7 +2003,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             online_backups = route_path.parent / f"{route_path.name} Backups" / "online"
             if not is_global and online_backups.is_dir():
                 route_combo.addItem(
-                    f"{label} — ELDEN RING Reforged (online)",
+                    _tr("{label} — ELDEN RING Reforged (online)").format(label=label),
                     (
                         f"{route_id}:online",
                         str(route_path / self._ReforgedOnlineSavesFolder),
@@ -1585,6 +2091,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return
             route_id, route_root, root = selected_route()
             backup = Path(item.data(Qt.ItemDataRole.UserRole))
+            # an earlier restore into this route that is not settled: a new
+            # one would put its files over the ones that restore recorded
+            unsettled = self._interrupted_restores(root.parent / "replaced")
+            if unsettled:
+                self._show_notice(
+                    dialog,
+                    _tr("Backup not restored"),
+                    _tr("An earlier restore into this route is not settled yet, so MO2 "
+                        "does not start another one. Reopen this window to deal with it "
+                        "first. The saves it was replacing are kept in:\n{path}").format(
+                        path=unsettled[0].parent
+                    ),
+                    "warning",
+                )
+                return
             if not self._ask_confirmation(
                 dialog,
                 _tr("Restore this backup?"),
@@ -1596,6 +2117,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "warning",
                 default_accept=False,
             ):
+                return
+            # the game may have been started while the question was open
+            busy_reason = self._transfer_blocked_reason()
+            if busy_reason:
+                self._show_notice(dialog, _tr("Backup not restored"), busy_reason, "warning")
                 return
             try:
                 replaced = self._restore_backup(backup, route_root, root.parent / "replaced")
@@ -1631,6 +2157,21 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         )
         close_button.clicked.connect(dialog.accept)
         refresh()
+
+        def finish_interrupted_restores() -> None:
+            # a timer callback: nothing may escape into Qt
+            try:
+                restore_routes = []
+                for index in range(route_combo.count()):
+                    _route_id, route_path, backup_root = route_combo.itemData(index)
+                    restore_routes.append((Path(route_path), Path(backup_root).parent / "replaced"))
+                self._offer_to_finish_restores(dialog, restore_routes)
+                refresh()
+            except Exception as error:
+                qInfo(f"Elden Ring MO2 Save Isolation: could not check for interrupted restores: {error!r}")
+
+        # once the window shows: a restore MO2 didn't finish is offered first
+        QTimer.singleShot(0, finish_interrupted_restores)
         dialog.exec()
 
     def _display_transfer_dialog(
@@ -1934,6 +2475,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             )
             if not accepted:
                 return
+            # the game may have been started while the question was open
+            busy_reason = self._transfer_blocked_reason()
+            if busy_reason:
+                self._show_notice(dialog, _tr("Save not copied"), busy_reason, "warning")
+                return
 
             temporary_path = None
             backup_path = None
@@ -2165,7 +2711,11 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _default_save_profile_name(self, dialog) -> str:
         # named after the game the new instance is for
         key = self._create_dialog_game_key(dialog) or EldenRingMo2SaveIsolation._game_key
-        return "Nightreign Save" if key == "nightreign" else "Elden Ring Save"
+        # stored as the save profile's name: in the language MO2 shows now.
+        # Not through _tr, which follows the wizard's game, not this key.
+        if key == "nightreign":
+            return QCoreApplication.translate(_TR_CONTEXT, "Nightreign Save")
+        return QCoreApplication.translate(_TR_CONTEXT, "Elden Ring Save")
 
     def _active_instance_is_elden_ring(self) -> bool:
         # Elden Ring or Nightreign; the table follows the managed game
@@ -2924,7 +3474,80 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     temporary_path.unlink(missing_ok=True)
                 except OSError:
                     pass
+        # the game's own fallback copy comes along, as with a transfer: a first
+        # save that gets corrupted can then still be recovered from it
+        self._copy_queued_save_bak(source_path, destination_path, destination_root)
         return "copied"
+
+    def _copy_queued_save_bak(
+        self, source_path: Path, destination_path: Path, destination_root: Path | None = None
+    ) -> None:
+        """Copies <save>.bak beside the copied save, never over a file; a
+        problem leaves the save copied without it. The destination had no save
+        (the copy was just made): a .bak already there is an old one of
+        another character, and it is moved aside first, to the route's
+        "<route> Backups/replaced/<now>" folder, as a restore keeps the saves
+        it replaces. Without destination_root it stays and nothing is copied."""
+        source_bak = source_path.with_name(source_path.name + ".bak")
+        destination_bak = destination_path.with_name(destination_path.name + ".bak")
+        try:
+            if not source_bak.is_file() or self._is_reparse_point(source_bak):
+                return
+            if os.path.lexists(destination_bak):
+                if (
+                    destination_root is None
+                    or self._is_reparse_point(destination_bak)
+                    or not destination_bak.is_file()
+                    or self._contents_match(source_bak, destination_bak)
+                ):
+                    return
+                relative = destination_bak.relative_to(destination_root)
+                replaced_root = destination_root.parent / f"{destination_root.name} Backups" / "replaced"
+                stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                replaced = replaced_root / stamp
+                suffix = 2
+                while replaced.exists():
+                    replaced = replaced_root / f"{stamp}-{suffix}"
+                    suffix += 1
+                kept = replaced.joinpath(*relative.parts)
+                kept.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(destination_bak), str(kept))
+                qInfo(
+                    f"Elden Ring MO2 Save Isolation: moved the old '{destination_bak}' "
+                    f"aside to '{kept}' before copying the starting save's .bak."
+                )
+        except (OSError, ValueError) as error:
+            qInfo(
+                "Elden Ring MO2 Save Isolation: the starting save was copied, but "
+                f"its .bak was not: {error}"
+            )
+            return
+        temporary_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                prefix=f".{destination_bak.name}.",
+                suffix=".copying",
+                dir=destination_bak.parent,
+                delete=False,
+            ) as temporary_file:
+                temporary_path = Path(temporary_file.name)
+            shutil.copy2(source_bak, temporary_path)
+            # no overwrite, as for the save itself
+            if os.name == "nt":
+                os.rename(temporary_path, destination_bak)
+            else:
+                os.link(temporary_path, destination_bak)
+        except OSError as error:
+            qInfo(
+                "Elden Ring MO2 Save Isolation: the starting save was copied, but "
+                f"its .bak was not: {error}"
+            )
+        finally:
+            if temporary_path is not None:
+                try:
+                    temporary_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     def _discard_pending_mode(self, profile_directory: Path) -> None:
         # the user chose a route by hand: a waiting wizard choice must not undo it
@@ -5007,6 +5630,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "warning",
             ):
                 return
+            # the game may have been started while the question was open
+            if save_profiles_busy():
+                return
             try:
                 kept = self._delete_named_save_profile(
                     self._profile_directory(profile), mode, profile_id
@@ -5093,7 +5719,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                     _tr("This shares the same save folder with Steam and all MO2 "
                     "instances that use the global path. Modded play can alter "
                     "the vanilla character.\n\n"
-                    "Choose Use global Steam save to store this route for the "
+                    "Choose Use global save to store this route for the "
                     "current profile. Closing this prompt or keeping the current "
                     "mode leaves the saved route unchanged."),
                     _tr("Use global save"),
@@ -5200,24 +5826,58 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if reload_on_close["needed"]:
             QTimer.singleShot(0, self._apply_saved_route)
 
+    def _game_or_launcher_running(self) -> bool:
+        """Whether the managed game or one of its own launchers runs: not the
+        other game, and Easy Anti-Cheat's launcher only from this game's
+        folder (as the game plugin's _open_launcher counts it). True too when
+        that can't be told."""
+        processes = _running_processes()
+        if processes is None:
+            return True
+        game = _game()
+        game_directory = None
+        for pid, name in processes:
+            if name == game["process"]:
+                return True
+            if name not in game["launchers"]:
+                continue
+            if name == _ANTI_CHEAT_LAUNCHER:
+                image = _process_image_path(pid)
+                if image is None:
+                    return True
+                if game_directory is None:
+                    try:
+                        # both sides resolved: a game folder reached through a
+                        # junction or a short name still matches its launcher
+                        game_directory = os.path.normcase(
+                            os.path.realpath(self.__organizer.managedGame().gameDirectory().absolutePath())
+                        ).rstrip(os.sep)
+                    except Exception:  # no game folder known: count it
+                        return True
+                try:
+                    image_path = os.path.normcase(os.path.realpath(image))
+                except (OSError, ValueError):
+                    return True
+                if not image_path.startswith(game_directory + os.sep):
+                    continue
+            return True
+        return False
+
     def _apply_saved_route(self) -> None:
         """Reloads the current profile in MO2, as switching to another profile
         and back does, so a route to or from the global Steam save applies
         without a restart. An MO2 without that reload offers the restart."""
         main_window = self.__parent_widget
-        running = _running_process_names()
         # while the game or a launcher runs, or Steam saves are still set
         # aside, a route change could put one route's saves in another's
         # place: it waits, and this window applies it once closed again
         # (a process list that can't be read counts as busy, as for copies)
-        busy = running is None or (
-            _game()["process"] in running or bool(running & _GAME_LAUNCHERS)
-        )
+        busy = self._game_or_launcher_running()
         if busy or EldenRingMo2SaveDiagnose._pending_sessions():
             self._show_notice(
                 main_window,
                 _tr("Route saved"),
-                _tr("Close the game and its launcher, then open Elden Ring Saves "
+                _tr("Close the game and its launcher, then open Tools > Save isolation "
                 "and close it again: MO2 applies the save route then."),
                 "info",
             )
@@ -5475,7 +6135,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
             "your existing characters, and a new character is saved only to this "
             "route.</p>"
             "<p>To play an existing character here, open Tools &gt; Save isolation "
-            "and use Transfer one save, or create or import a named save "
+            "and use Transfer a save, or create or import a named save "
             "profile. To use the Steam saves directly, choose the global route "
             "there.</p>"
             "<p>Route: {folder}</p>"

@@ -148,7 +148,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
     def _report_ready(self, _main_window) -> None:
         # the installer loads in every instance; only say so in its own games
         if self.isActive():
-            qInfo("Elden Ring MO2: archive layout installer alpha.76 initialized.")
+            qInfo("Elden Ring MO2: archive layout installer alpha.77 initialized.")
 
     def name(self) -> str:
         return "Elden Ring Archive Layout Installer"
@@ -165,7 +165,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 76)
+        return mobase.VersionInfo(0, 5, 0, 77)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -276,7 +276,9 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                                     "reinstall the mod."
                                 ).format(missing),
                             )
-                    elif not self._pending_reforged_layout["keep"]:
+                    elif not self._pending_reforged_layout["keep"] and not self._pending_reforged_layout.get(
+                        "arranged_online", False
+                    ):
                         # merged over the online version with the switch off: its
                         # release would keep the program list on its launcher
                         online = Path(new_mod.absolutePath()) / "_ReforgedOnline"
@@ -533,6 +535,45 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         }
     )
 
+    _seamless_dll_names = frozenset({"ersc.dll", "nrsc.dll"})
+
+    # what Windows refuses in a file or folder name
+    _forbidden_name_characters = frozenset('<>:"/\\|?*')
+    _reserved_names = frozenset(
+        {"con", "prn", "aux", "nul"}
+        | {f"com{index}" for index in range(1, 10)}
+        | {f"lpt{index}" for index in range(1, 10)}
+    )
+
+    @classmethod
+    def _valid_entry_name(cls, name: str) -> bool:
+        """Whether a name typed in "Arrange by hand" can be a file or folder:
+        ".." would move it one folder up, and Windows refuses the rest
+        partway through the install."""
+        return not (
+            name in {"", ".", ".."}
+            or name != name.rstrip(". ")
+            or any(character in cls._forbidden_name_characters or ord(character) < 32 for character in name)
+            or name.split(".", 1)[0].rstrip(" ").casefold() in cls._reserved_names
+        )
+
+    def _seamless_dlls_in(self, filetree: mobase.IFileTree, depth: int = 0) -> set[str]:
+        """The Seamless Co-op DLLs (either game's) in a SeamlessCoop folder."""
+        found: set[str] = set()
+        if depth > self._archive_wrapper_depth_limit:
+            return found
+        for entry in filetree:
+            if not entry.isDir():
+                continue
+            if entry.name().casefold() == "seamlesscoop":
+                found |= {
+                    child.name().casefold()
+                    for child in entry
+                    if not child.isDir() and child.name().casefold() in self._seamless_dll_names
+                }
+            found |= self._seamless_dlls_in(entry, depth + 1)
+        return found
+
     def _game_files_in(self, filetree: mobase.IFileTree, depth: int = 0) -> set[str]:
         found: set[str] = set()
         if depth > self._archive_wrapper_depth_limit:
@@ -711,6 +752,19 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             # kept as arranged: the layout check takes it as it is, like a mod
             # installed as it comes
             self._pending_choice = (True, False, False, True)
+            if reforged:
+                # Manual is off while the online switch is on: this install is
+                # the offline one. Merged over an online install, the old
+                # release in _ReforgedOnline would keep the program list on its
+                # launcher; the cleanup below the window's own path removes it,
+                # unless the user arranged a folder of that name by hand
+                self._pending_reforged_layout = {
+                    "keep": False,
+                    "layout": None,
+                    "arranged_online": any(
+                        entry.name().casefold() == "_reforgedonline" for entry in arranged
+                    ),
+                }
             organizer.setPluginSetting(self._game_plugin_name, self._game_override_key, True)
             qInfo(f"Elden Ring MO2: {window_name} arranged by hand.")
             return arranged
@@ -1137,6 +1191,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 return
             files = chosen_files()
             targets = [path.casefold() for path, _source in files]
+            # every name that is installed: the ticked files and their folders
+            invalid_names = sorted(
+                {
+                    item.text(0)
+                    for item, _path in walk()
+                    if item.checkState(0) != Qt.CheckState.Unchecked
+                    and not self._valid_entry_name(item.text(0))
+                }
+            )
             target_counts = Counter(targets)
             repeated = sorted(path for path, count in target_counts.items() if count > 1)
             summary = self._classify_layout_paths([path for path, _source in files], True)
@@ -1166,6 +1229,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 lines.append(
                     self.tr("Only one copy of a DLL can load: {0}.").format(", ".join(twice))
                 )
+            if invalid_names:
+                lines.append(
+                    self.tr(
+                        "These names can't be used for a file or folder: {0}. A name "
+                        "can't be empty, \".\" or \"..\", contain < > : \" / \\ | ? *, "
+                        "end with a dot or a space, or be a name "
+                        "Windows reserves (CON, NUL, COM1...). Rename them."
+                    ).format(", ".join(f"\"{name}\"" for name in invalid_names[:5]))
+                )
             notice.setText("\n\n".join(lines))
             notice.setVisible(bool(lines))
             total = len(files)
@@ -1175,6 +1247,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             install_button.setEnabled(
                 total > 0
                 and not repeated
+                and not invalid_names
                 and not any(path.split("/", 1)[0] == left_out_folder.casefold() for path in targets)
             )
 
@@ -1783,6 +1856,18 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                     "This is an Elden Ring mod: this instance manages Nightreign.",
                 )
             )
+        if package == "seamless":
+            # each game runs only its own build: MO2 never loads the other one
+            own_seamless = "nrsc.dll" if self._nightreign_active() else "ersc.dll"
+            other_seamless = sorted(self._seamless_dlls_in(archive_tree) - {own_seamless})
+            if other_seamless and own_seamless not in self._seamless_dlls_in(archive_tree):
+                notice_lines.append(
+                    self.tr(
+                        "This Seamless Co-op is made for the other game: it has {0}, "
+                        "and this game needs {1}. MO2 does not load {0} here; "
+                        "install the build made for this game."
+                    ).format(", ".join(other_seamless), own_seamless)
+                )
         # game files a mod rarely means to replace
         executables = sorted(self._game_files_in(archive_tree) - {"regulation.bin"})
         if executables:

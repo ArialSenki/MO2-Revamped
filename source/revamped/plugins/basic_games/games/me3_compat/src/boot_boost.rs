@@ -21,7 +21,8 @@ use std::{
     path::{Path, PathBuf},
     ptr::NonNull,
     slice,
-    sync::OnceLock,
+    sync::{Mutex, OnceLock},
+    time::{Duration, SystemTime},
 };
 
 use me3_mod_host_assets::{
@@ -80,6 +81,74 @@ fn device_manager() -> Option<NonNull<DlDeviceManager>> {
 const CACHE_EXTENSION: &str = "bhd.zz2";
 const CACHE_HEADER: usize = 4 + 8;
 
+/// Cached copies not used for this long, and not in this run, are deleted:
+/// each game update leaves a new set behind.
+const CACHE_MAX_AGE: Duration = Duration::from_secs(60 * 24 * 60 * 60);
+/// When the old copies are looked for: the game mounts its archives in its
+/// first seconds, so by then this run's copies are known.
+const PRUNE_DELAY: Duration = Duration::from_secs(3 * 60);
+/// The cached copies this run read or wrote.
+static USED: Mutex<Vec<PathBuf>> = Mutex::new(Vec::new());
+
+fn mark_used(path: &Path) {
+    if let Ok(mut used) = USED.lock() {
+        used.push(path.to_path_buf());
+    }
+}
+
+/// A copy read again counts as new, so one a game still uses never ages out.
+fn touch(path: &Path) {
+    let _ = std::fs::File::options()
+        .write(true)
+        .open(path)
+        .and_then(|file| file.set_modified(SystemTime::now()));
+}
+
+/// Deletes the copies older than CACHE_MAX_AGE that this run did not use.
+fn prune_cache(folder: &Path) {
+    let Ok(entries) = std::fs::read_dir(folder) else {
+        return;
+    };
+    let now = SystemTime::now();
+    let used = USED.lock().map(|used| used.clone()).unwrap_or_default();
+    let mut removed = 0usize;
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
+        if !name.ends_with(&format!(".{CACHE_EXTENSION}")) {
+            continue;
+        }
+        let path = entry.path();
+        if used.iter().any(|kept| kept == &path) {
+            continue;
+        }
+        let old = entry
+            .metadata()
+            .and_then(|metadata| metadata.modified())
+            .ok()
+            .and_then(|modified| now.duration_since(modified).ok())
+            .is_some_and(|age| age > CACHE_MAX_AGE);
+        if old && std::fs::remove_file(&path).is_ok() {
+            removed += 1;
+        }
+    }
+    if removed > 0 {
+        log::info!("BootBoost: deleted {removed} cached header(s) unused for 60 days");
+    }
+}
+
+fn schedule_cache_prune(folder: PathBuf) {
+    let started = std::thread::Builder::new()
+        .name("bootboost-cache-prune".into())
+        .spawn(move || {
+            std::thread::sleep(PRUNE_DELAY);
+            // nothing here may end the game
+            let _ = std::panic::catch_unwind(|| prune_cache(&folder));
+        });
+    if let Err(error) = started {
+        log::warn!("BootBoost: old cached headers are kept: {error}");
+    }
+}
+
 /// Where the decrypted headers are kept, beside MO2 Revamped's other data.
 fn cache_folder() -> Option<PathBuf> {
     let base = std::env::var_os("LOCALAPPDATA")?;
@@ -104,6 +173,7 @@ pub fn install(main_allocator: Option<*const ()>) -> Result<(), String> {
         let _ = MAIN_ALLOCATOR.set(allocator as usize);
     }
     let cache = cache_folder().ok_or("no cache folder")?;
+    schedule_cache_prune(cache.clone());
     let _ = CACHE.set(cache);
     let mount = ebl::mount_ebl(game()).ok_or("MountEbl not found")?;
     unsafe {
@@ -329,6 +399,8 @@ fn load_cached(
         }
         unsafe { holder.assign_bhd_contents(buffer.as_mut_ptr().cast()) };
         keep(manager, &mounts);
+        mark_used(&cached_path);
+        touch(&cached_path);
         return Ok(());
     }
 
@@ -352,7 +424,10 @@ fn load_cached(
         .and_then(|mut out| out.write_all(&file).and_then(|_| out.sync_all()))
         .and_then(|_| std::fs::rename(&temporary, &cached_path));
     match written {
-        Ok(()) => log::info!("BootBoost: cached {}", PathBuf::from(&disk_path).display()),
+        Ok(()) => {
+            mark_used(&cached_path);
+            log::info!("BootBoost: cached {}", PathBuf::from(&disk_path).display())
+        }
         Err(error) => {
             let _ = std::fs::remove_file(&temporary);
             log::warn!("BootBoost: {} not cached: {error}", PathBuf::from(&disk_path).display());

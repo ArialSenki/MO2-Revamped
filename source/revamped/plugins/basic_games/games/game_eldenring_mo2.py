@@ -2117,11 +2117,13 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
     Author = "ArialSenki"
-    Version = "0.5.0-alpha.96"
-    NativeBridgeVersion = "0.5.0-alpha.64"
+    Version = "0.5.0-alpha.97"
+    NativeBridgeVersion = "0.5.0-alpha.65"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
+    # the bridge names its log after the game it runs in
+    BridgeLogName = "EldenRingMO2Bridge"
     GameNexusName = "eldenring"
     GameSteamId = 1245620
     GameBinary = "Game/eldenring.exe"
@@ -2163,6 +2165,8 @@ class EldenRingMo2Game(BasicGame):
     DisplayName = "Elden Ring"
     # Seamless Co-op's DLL, run from its MO2 mod with the game
     SeamlessDll = "ersc.dll"
+    # both games' Seamless Co-op DLLs: the other game's is never loaded
+    SeamlessDlls = frozenset({"ersc.dll", "nrsc.dll"})
     # Programs that start eldenring.exe themselves (Reforged's launcher) get
     # the same save guard as the game, and the guard waits for the game they
     # start instead of for the launcher.
@@ -2213,8 +2217,9 @@ class EldenRingMo2Game(BasicGame):
     EarlyExitRecheck = 3000  # milliseconds to see that it did not start again
     # while a launch waits for the game to appear: a game that crashes at
     # start lives about two seconds, and once seen its close restores the
-    # saves without the launcher grace
-    LaunchWatchInterval = 1000
+    # saves without the launcher grace. The Steam saves are hidden for the
+    # whole wait, so it polls as fast as the swap watch (Steam Cloud, below)
+    LaunchWatchInterval = 500
     # Steam Cloud looks at its save a second or two after the game closes: saves
     # of a launch outside the VFS have to be back by then
     SwapWatchInterval = 500
@@ -2250,6 +2255,9 @@ class EldenRingMo2Game(BasicGame):
         # set when recovery waits for the game, a launcher or another MO2
         # window rather than failing
         self._recovery_waiting = False
+        # set when that wait is for the game or a launcher of it: the Steam
+        # saves are hidden meanwhile, so the retry polls fast (Steam Cloud)
+        self._recovery_waiting_for_game = False
         self._recovered_sessions = 0
         self._recovery_retry_pending = False
         # folders with newer saves that a restore had to move aside
@@ -3109,6 +3117,7 @@ class EldenRingMo2Game(BasicGame):
 
     def _recover_stale_global_save_quarantines(self) -> bool:
         self._recovery_waiting = False
+        self._recovery_waiting_for_game = False
         # whether this call put any session back (a launch may have done it
         # before a queued retry runs)
         self._recovered_sessions = 0
@@ -3130,16 +3139,24 @@ class EldenRingMo2Game(BasicGame):
             return False
         sessions += self._orphaned_sessions() + self._stale_foreign_sessions()
         if not sessions:
+            self._log_when_changed(self.RecoveryWaitLogKey, [])
             return True
 
         # a launcher still open (from an instance MO2 just switched away
         # from) may be about to start the game against the hidden saves
         if self._elden_ring_process_state() is not False or self._launcher_running():
             self._recovery_waiting = True
-            qCritical(
-                "Elden Ring MO2: prior global saves need recovery, but Elden Ring "
-                "or one of its launchers is running, or its process state cannot "
-                "be confirmed."
+            self._recovery_waiting_for_game = True
+            # the retry runs every half second while it waits: the line is
+            # written once, when the wait starts
+            self._log_when_changed(
+                self.RecoveryWaitLogKey,
+                [(
+                    qCritical,
+                    "Elden Ring MO2: prior global saves need recovery, but Elden Ring "
+                    "or one of its launchers is running, or its process state cannot "
+                    "be confirmed.",
+                )],
             )
             return False
 
@@ -3147,10 +3164,14 @@ class EldenRingMo2Game(BasicGame):
         for session_directory in sessions:
             if not self._claim_save_quarantine(session_directory):
                 self._recovery_waiting = True
-                qCritical(
-                    "Elden Ring MO2: another MO2 window (this installation or "
-                    "another one) still holds the hidden Steam saves in "
-                    f"'{session_directory}'; it restores them when its game closes."
+                self._log_when_changed(
+                    self.RecoveryWaitLogKey,
+                    [(
+                        qCritical,
+                        "Elden Ring MO2: another MO2 window (this installation or "
+                        "another one) still holds the hidden Steam saves in "
+                        f"'{session_directory}'; it restores them when its game closes.",
+                    )],
                 )
                 return False
             self._recovering_earlier_session = True
@@ -3172,7 +3193,11 @@ class EldenRingMo2Game(BasicGame):
                 return False
             finally:
                 self._recovering_earlier_session = False
+        self._log_when_changed(self.RecoveryWaitLogKey, [])
         return True
+
+    # the waits of save recovery are logged once each (_log_when_changed)
+    RecoveryWaitLogKey = "save-recovery-wait"
 
     def _launcher_running(self, processes: list[tuple[int, str]] | None = None) -> bool:
         return self._open_launcher(processes) is not None
@@ -3196,12 +3221,18 @@ class EldenRingMo2Game(BasicGame):
                 if image is not None:
                     if game_directory is None:
                         try:
+                            # both sides resolved: a game folder reached through
+                            # a junction or a short name still matches
                             game_directory = os.path.normcase(
-                                os.path.abspath(self.gameDirectory().absolutePath())
-                            )
+                                os.path.realpath(self.gameDirectory().absolutePath())
+                            ).rstrip(os.sep)
                         except Exception:  # no game folder yet: count it
                             return name
-                    if not os.path.normcase(image).startswith(game_directory + os.sep):
+                    try:
+                        image_path = os.path.normcase(os.path.realpath(image))
+                    except (OSError, ValueError):
+                        return name
+                    if not image_path.startswith(game_directory + os.sep):
                         continue
             return name
         return None
@@ -3591,10 +3622,28 @@ class EldenRingMo2Game(BasicGame):
         if self._recovery_retry_pending:
             return
         self._recovery_retry_pending = True
-        QTimer.singleShot(self.GameWatchInterval, self._retry_recovery)
+        # Steam Cloud looks at the save folder a second or two after the game
+        # closes: while this install's recovery waits for the game itself the
+        # saves must be back by then. Another MO2 window that holds the
+        # session restores it from its own fast watch.
+        interval = (
+            self.SwapWatchInterval
+            if self._recovery_waiting_for_game
+            else self.GameWatchInterval
+        )
+        QTimer.singleShot(interval, self._retry_recovery)
 
     def _retry_recovery(self) -> None:
         self._recovery_retry_pending = False
+        # while it waits for the game or a launcher to close, the sessions are
+        # scanned again only once they have: the process check comes first
+        if (
+            self._recovery_waiting
+            and self._recovery_waiting_for_game
+            and (self._elden_ring_process_state() is not False or self._launcher_running())
+        ):
+            self._retry_recovery_later()
+            return
         if self._recover_stale_global_save_quarantines():
             if self._recovered_sessions:
                 qInfo(
@@ -3941,6 +3990,7 @@ class EldenRingMo2Game(BasicGame):
         allowed = False
         quarantine_before = self._active_save_quarantine
         EldenRingMo2Game._executable_reads = {}
+        EldenRingMo2Game._mod_root_reads = {}
         try:
             allowed = self._check_profile_launch(app_path, working_directory, args)
             return allowed
@@ -3958,6 +4008,7 @@ class EldenRingMo2Game(BasicGame):
             return False
         finally:
             EldenRingMo2Game._executable_reads = None
+            EldenRingMo2Game._mod_root_reads = None
             if not allowed and self._mod_turned_on_for_launch:
                 try:
                     self._organizer.modList().setActive(self._mod_turned_on_for_launch, False)
@@ -4359,7 +4410,7 @@ class EldenRingMo2Game(BasicGame):
         if clear_overwrite_after_game:
             self._arm_overwrite_cleanup()
             self._overwrite_cleanup_config = profile_config
-        self._preserve_previous_bridge_log(bridge_log_history)
+        self._preserve_previous_bridge_log(self.BridgeLogName, bridge_log_history)
         return True
 
     def _run_swap_launch(self, app_path: str, working_directory, args: str) -> bool:
@@ -4455,15 +4506,17 @@ class EldenRingMo2Game(BasicGame):
         return True, revamped_native_profile
 
     @staticmethod
-    def _preserve_previous_bridge_log(previous_sessions: int = 1) -> None:
+    def _preserve_previous_bridge_log(
+        log_name: str = "EldenRingMO2Bridge", previous_sessions: int = 1
+    ) -> None:
         log_directory = Path(tempfile.gettempdir())
-        current_log = log_directory / "EldenRingMO2Bridge.log"
+        current_log = log_directory / f"{log_name}.log"
         if previous_sessions not in (1, 3, 5):
             previous_sessions = 1
 
         def previous_log_path(index: int) -> Path:
             suffix = "previous.log" if index == 1 else f"previous-{index}.log"
-            return log_directory / f"EldenRingMO2Bridge.{suffix}"
+            return log_directory / f"{log_name}.{suffix}"
 
         temporary_paths: list[Path] = []
         try:
@@ -4547,7 +4600,7 @@ class EldenRingMo2Game(BasicGame):
 
     def _warn_if_saves_were_protected(self) -> bool:
         """The bridge closes Reforged when it can't give it its own save."""
-        log = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.log"
+        log = Path(tempfile.gettempdir()) / f"{self.BridgeLogName}.log"
         try:
             if log.stat().st_mtime < self._last_launch_time:
                 return False
@@ -4578,7 +4631,7 @@ class EldenRingMo2Game(BasicGame):
         game files then stay out with nothing but a line in its log."""
         if self._loose_files_warning_shown:
             return
-        log = Path(tempfile.gettempdir()) / "EldenRingMO2Bridge.log"
+        log = Path(tempfile.gettempdir()) / f"{self.BridgeLogName}.log"
         try:
             # the bridge rewrites it when it loads: an older one is another run's
             if log.stat().st_mtime < self._last_launch_time:
@@ -4693,9 +4746,12 @@ class EldenRingMo2Game(BasicGame):
         processes = _running_processes()
         state = self._elden_ring_process_state(processes)
         seen = seen or state is True
+        # with the Steam saves hidden, they have to be back before Steam
+        # Cloud's exit sync, whatever started the game (MO2 reports a direct
+        # run finished early when its lock is off or unlocked)
         interval = (
             self.SwapWatchInterval
-            if via_launcher and session_directory is not None
+            if session_directory is not None
             else self.GameWatchInterval
         )
         # seconds in a row the process list could not be read
@@ -5205,6 +5261,13 @@ class EldenRingMo2Game(BasicGame):
                 ):
                     qInfo(f"Elden Ring MO2: skipped '{route}' from the native profile: never forced.")
                     continue
+                if self._is_other_game_seamless(relative_path.name):
+                    qWarning(
+                        f"Elden Ring MO2: skipped '{route}' of '{mapped_mod}' from the "
+                        f"native profile: it is the other game's Seamless Co-op, not "
+                        f"{self.SeamlessDll}."
+                    )
+                    continue
                 route_key = (mapped_mod.casefold(), route.casefold())
                 if route_key in seen_routes:
                     raise ValueError(
@@ -5506,17 +5569,32 @@ class EldenRingMo2Game(BasicGame):
             if mod_list.state(name) & mobase.ModState.ACTIVE
         ]
 
+        # each mod folder is resolved once (once per launch while one is
+        # prepared), not once per library and mod: resolve() opens a handle
+        # on Windows, and this runs for every forced-load request
+        mod_root_priority: dict[str, int] = {}
+        for index, mod_name in enumerate(active_mods):
+            mod = mod_list.getMod(mod_name)
+            if mod is None:
+                continue
+            root = self._resolved_mod_root(mod.absolutePath())
+            if root is not None:
+                # the first (lowest) priority owns a folder, as before
+                mod_root_priority.setdefault(os.path.normcase(str(root)), index)
+        owner_cache: dict[str, int] = {}
+
         def library_priority(library: Path) -> int:
-            for index, mod_name in enumerate(active_mods):
-                mod = mod_list.getMod(mod_name)
-                if mod is None:
-                    continue
-                try:
-                    library.relative_to(Path(mod.absolutePath()).resolve())
-                    return index
-                except (OSError, ValueError):
-                    continue
-            return len(active_mods)
+            key = os.path.normcase(str(library))
+            if key not in owner_cache:
+                owner_cache[key] = next(
+                    (
+                        mod_root_priority[os.path.normcase(str(parent))]
+                        for parent in Path(library).parents
+                        if os.path.normcase(str(parent)) in mod_root_priority
+                    ),
+                    len(active_mods),
+                )
+            return owner_cache[key]
 
         retained: list[Path] = []
         for library in libraries:
@@ -5730,14 +5808,8 @@ class EldenRingMo2Game(BasicGame):
                     f"Elden Ring MO2: the profile's settings path is {len(str(path))} "
                     "characters long; the bridge reads at most 259, so it ignores this "
                     "profile's startup options (minimized start, black background, "
-                    "CPU 0, priority)"
-                    # Nightreign has no intro-logo patch
-                    + (
-                        ""
-                        if self.GameProcess == "nightreign.exe"
-                        else " and skips the intro logos whatever the profile says"
-                    )
-                    + ". A shorter instance or profile path fixes it."
+                    "CPU 0, priority) and skips the intro logos whatever the "
+                    "profile says. A shorter instance or profile path fixes it."
                 )
         else:
             os.environ.pop(config_key, None)
@@ -6255,8 +6327,8 @@ class EldenRingMo2Game(BasicGame):
                 "Elden Ring MO2: no active mods or bridge-dependent profile "
                 "options; no native or asset bridge needed."
             )
-            # BootBoost still speeds up a start without mods (Nightreign has
-            # no intro-logo option to keep the bridge in)
+            # BootBoost still speeds up a start without mods (with the intro
+            # logos left on, nothing here needs the bridge, in either game)
             compat = self._me3_compat_load([])
             if compat is not None:
                 notes.append(f"Elden Ring MO2: queued the me3 compatibility DLL {self.Me3Compat}.")
@@ -6311,6 +6383,19 @@ class EldenRingMo2Game(BasicGame):
                 for item in root_layout_libraries
                 if not queued_elsewhere(item[0], Path(item[2]))
             ]
+        # the other game's Seamless Co-op, wherever a mod put it, never loads
+        for library in [item for item in libraries if self._is_other_game_seamless(Path(item).name)]:
+            notes.append(
+                f"Elden Ring MO2: not loading '{library}': it is the other game's "
+                f"Seamless Co-op, not {self.SeamlessDll}."
+            )
+            libraries.remove(library)
+        for item in [item for item in root_layout_libraries if self._is_other_game_seamless(Path(item[2]).name)]:
+            notes.append(
+                f"Elden Ring MO2: not loading '{item[1]}' from '{item[0]}': it is the "
+                f"other game's Seamless Co-op, not {self.SeamlessDll}."
+            )
+            root_layout_libraries.remove(item)
         if not native_loading:
             notes.append("Elden Ring MO2: native DLL loading is disabled in plugin settings.")
         if not libraries and not root_layout_libraries and active_mods:
@@ -6433,6 +6518,23 @@ class EldenRingMo2Game(BasicGame):
     # the checks of one launch share their read of the game's executable (it
     # is large); None outside a launch, so its bytes aren't kept in memory
     _executable_reads: dict | None = None
+    # the mod folders one launch has resolved (see _resolved_mod_root); None
+    # outside a launch, so a moved or relinked mod is seen at the next one
+    _mod_root_reads: dict | None = None
+
+    @staticmethod
+    def _resolved_mod_root(path: str) -> Path | None:
+        """A mod folder with its links resolved; None when it can't be."""
+        reads = EldenRingMo2Game._mod_root_reads
+        if reads is not None and path in reads:
+            return reads[path]
+        try:
+            root = Path(path).resolve()
+        except (OSError, RuntimeError):
+            root = None
+        if reads is not None:
+            reads[path] = root
+        return root
 
     @staticmethod
     def _read_game_executable(executable: Path) -> bytes:
@@ -6820,6 +6922,14 @@ class EldenRingMo2Game(BasicGame):
             return []
         return [{"library": seamless, "initializer": "modengine_ext_init"}]
 
+    @classmethod
+    def _is_other_game_seamless(cls, name: str) -> bool:
+        """Whether this DLL is the other game's Seamless Co-op (ersc.dll in
+        Nightreign, nrsc.dll in Elden Ring): its code would run against the
+        wrong game."""
+        folded = name.casefold()
+        return folded in cls.SeamlessDlls and folded != cls.SeamlessDll.casefold()
+
     @staticmethod
     def _is_game_runtime_dll(name: str) -> bool:
         # libraries the game itself imports: a copy in a mod is never
@@ -7109,6 +7219,7 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     Name = "Elden Ring Nightreign MO2 Support"
     GameName = "ELDEN RING NIGHTREIGN"
     GameShortName = "nightreign"
+    BridgeLogName = "NightreignMO2Bridge"
     GameNexusName = "eldenringnightreign"
     # Nexus download links name it this way
     GameValidShortNames = ["eldenringnightreign"]

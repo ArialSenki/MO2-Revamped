@@ -888,9 +888,21 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         if not self._has_elden_ring_tools():
             return candidates
         temp_dir = Path(tempfile.gettempdir())
+        # the bridge names its log after the game it runs in
+        log_name = (
+            "NightreignMO2Bridge"
+            if self._managed_game_key() == "nightreign"
+            else "EldenRingMO2Bridge"
+        )
+        compat_name = (
+            "NightreignMO2Me3Compat"
+            if self._managed_game_key() == "nightreign"
+            else "EldenRingMO2Me3Compat"
+        )
         for archive_name, filename in (
-            ("bridge/current.log", "EldenRingMO2Bridge.log"),
-            ("bridge/previous.log", "EldenRingMO2Bridge.previous.log"),
+            ("bridge/current.log", f"{log_name}.log"),
+            ("bridge/previous.log", f"{log_name}.previous.log"),
+            ("bridge/me3_compat.log", f"{compat_name}.log"),
         ):
             path = temp_dir / filename
             if path.is_file():

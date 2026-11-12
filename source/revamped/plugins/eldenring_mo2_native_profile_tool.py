@@ -10,7 +10,7 @@ import struct
 import tempfile
 
 import mobase
-from PyQt6.QtCore import QCoreApplication, QEvent, QProcess, QRectF, Qt
+from PyQt6.QtCore import QCoreApplication, QEvent, QProcess, QRectF, Qt, qInfo
 from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -199,6 +199,11 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
     }
     SeamlessDlls = {"ersc.dll", "nrsc.dll"}
 
+    @staticmethod
+    def _own_seamless_dll() -> str:
+        # each game runs only its own Seamless Co-op build
+        return "nrsc.dll" if _game_name == "Nightreign" else "ersc.dll"
+
     def __init__(self):
         super().__init__()
         self.__organizer = None
@@ -226,7 +231,7 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         )
 
     def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo(0, 5, 0, 80)
+        return mobase.VersionInfo(0, 5, 0, 81)
 
     def requirements(self):
         return [mobase.PluginRequirementFactory.gameDependency({"ELDEN RING", "ELDEN RING NIGHTREIGN"})]
@@ -705,7 +710,14 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
 
     def _read_profile_entries(self, config_path: Path) -> list[dict]:
         config = configparser.ConfigParser(interpolation=None)
-        config.read(config_path, encoding="utf-8-sig")
+        # only a missing file means "no profile yet": one that can't be opened
+        # (locked by an antivirus, no permission) raises, and the window says
+        # so instead of opening empty
+        try:
+            with config_path.open("r", encoding="utf-8-sig") as stream:
+                config.read_file(stream)
+        except FileNotFoundError:
+            return []
         if not config.has_section(self.NativeSection):
             return []
 
@@ -830,6 +842,12 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
                 name = Path(route).name
                 if self._never_forced(name):
                     continue
+                if name.casefold() in self.SeamlessDlls and name.casefold() != self._own_seamless_dll():
+                    qInfo(
+                        f"Elden Ring MO2: the DLL profile leaves out '{route}' of "
+                        f"'{mod_name}': it is the other game's Seamless Co-op."
+                    )
+                    continue
                 physical_path = self._safe_mod_file(mod_root, route)
                 if physical_path is None:
                     continue
@@ -879,34 +897,48 @@ class EldenRingMo2NativeProfileTool(mobase.IPluginTool):
         except (OSError, TypeError, ValueError, json.JSONDecodeError):
             routes = []
 
+        # only this game's Seamless Co-op: the game plugin never loads the
+        # other game's build
+        own_seamless = self._own_seamless_dll()
         seamless = [
             f"SeamlessCoop/{name}"
             for name in sorted(self.SeamlessDlls)
-            if (mod_root / "SeamlessCoop" / name).is_file()
+            if name == own_seamless and (mod_root / "SeamlessCoop" / name).is_file()
         ]
-        if routes:
-            return routes + [route for route in seamless if route not in routes]
-
+        # the installer's index is written once, at install: a DLL copied into
+        # the mod later is found by the scan below, as the game plugin's own
+        # scan of MO2's file list finds it, and the two lists are merged. Only
+        # what a launch loads is listed: DLLs at the mod's root and directly
+        # inside a managed folder (the game plugin's _active_native_dlls
+        # lists each folder with findFiles, which doesn't recurse), and this
+        # game's own Seamless Co-op DLL
+        managed = self.ManagedDllDirectories - {"seamlesscoop"}
         for entry in mod_root.iterdir():
             if entry.is_file() and entry.suffix.casefold() == ".dll":
                 routes.append(entry.relative_to(mod_root).as_posix())
-        for directory_name in sorted(self.ManagedDllDirectories - {"seamlesscoop"}):
-            directory = mod_root / directory_name
-            if not directory.is_dir() or directory.is_symlink():
+            elif entry.is_dir() and not entry.is_symlink() and entry.name.casefold() in managed:
+                for child in entry.iterdir():
+                    if child.is_file() and child.suffix.casefold() == ".dll":
+                        routes.append(child.relative_to(mod_root).as_posix())
+        own_seamless_route = f"seamlesscoop/{own_seamless}"
+
+        def loaded_by_launch(route: str) -> bool:
+            parts = [part for part in route.replace("\\", "/").strip("/").split("/") if part]
+            if len(parts) == 1:
+                return True
+            if len(parts) == 2 and parts[0].casefold() in managed:
+                return True
+            return "/".join(parts).casefold() == own_seamless_route
+
+        merged: list[str] = []
+        known: set[str] = set()
+        for route in routes + seamless:
+            key = route.replace("\\", "/").strip("/").casefold()
+            if key in known or not loaded_by_launch(route):
                 continue
-            for current, directories, files in os.walk(directory, followlinks=False):
-                current_path = Path(current)
-                directories[:] = [
-                    name
-                    for name in directories
-                    if not (current_path / name).is_symlink()
-                ]
-                for filename in files:
-                    if Path(filename).suffix.casefold() == ".dll":
-                        routes.append(
-                            (current_path / filename).relative_to(mod_root).as_posix()
-                        )
-        return routes + seamless
+            known.add(key)
+            merged.append(route)
+        return merged
 
     def _normalize_native_route(self, route: str) -> str | None:
         normalized = route.replace("\\", "/").strip("/")

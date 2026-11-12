@@ -54,9 +54,10 @@ impl log::Log for FileLog {
 
 static LOG: FileLog = FileLog(Mutex::new(None));
 
-fn open_log() {
-    // beside the MO2 bridge's log
-    let path = std::env::temp_dir().join("EldenRingMO2Me3Compat.log");
+fn open_log(nightreign: bool) {
+    // beside the MO2 bridge's log; each game its own, as the bridge's
+    let name = if nightreign { "NightreignMO2Me3Compat.log" } else { "EldenRingMO2Me3Compat.log" };
+    let path = std::env::temp_dir().join(name);
     if let Ok(file) = File::create(path) {
         if let Ok(mut slot) = LOG.0.lock() {
             *slot = Some(file);
@@ -109,6 +110,16 @@ fn keep_regulation_out_of_saves() {
     }
 }
 
+/// Runs `work` and keeps a panic inside it: these run from dearxan's
+/// callbacks, called through an `extern "C"` thunk from the game's entry
+/// point, where a panic would abort the game with no report. The panic hook
+/// has already logged the message.
+fn without_panics(what: &str, work: impl FnOnce()) {
+    if std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)).is_err() {
+        log::error!("{what} panicked; the game goes on without it");
+    }
+}
+
 fn install_boot_boost(main_allocator: Option<*const ()>) {
     // MO2 sets "0" when the profile turned it off
     if std::env::var("ELDENRING_MO2_BOOT_BOOST").is_ok_and(|value| value == "0") {
@@ -127,17 +138,17 @@ const DLL_PROCESS_ATTACH: u32 = 1;
 pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mut c_void) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
         LOADED.get_or_init(Instant::now);
-        open_log();
+        let nightreign = std::env::current_exe()
+            .ok()
+            .and_then(|exe| exe.file_name().map(|name| name.to_ascii_lowercase()))
+            .is_some_and(|name| name == "nightreign.exe");
+        open_log(nightreign);
         // a panic's message in the log, before it is caught or ends the game
         std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
         log::info!("MO2 me3 compatibility 0.5.1 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
         // me3's asset code reads the launched game from me3's launcher, as a
         // JSON string; under MO2 there is none, so it is set here from the
         // executable's name
-        let nightreign = std::env::current_exe()
-            .ok()
-            .and_then(|exe| exe.file_name().map(|name| name.to_ascii_lowercase()))
-            .is_some_and(|name| name == "nightreign.exe");
         if std::env::var_os("ME3_GAME_LAUNCHED").is_none() {
             let game = if nightreign { "\"nightreign\"" } else { "\"eldenring\"" };
             // still in DllMain, before any thread of this DLL runs
@@ -150,12 +161,14 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
             // once the game's code is readable, before its main
             log::info!("ELDEN RING Reforged is not active: BootBoost only");
             unsafe {
-                dearxan::disabler::schedule_after_arxan(|_, _| install_boot_boost(None));
+                dearxan::disabler::schedule_after_arxan(|_, _| {
+                    without_panics("BootBoost", || install_boot_boost(None))
+                });
             }
             return 1;
         }
         unsafe {
-            dearxan::disabler::neuter_arxan(|result| {
+            dearxan::disabler::neuter_arxan(|result| without_panics("the Reforged setup", || {
                 let mut before_entry = false;
                 match result {
                     Ok(status) => {
@@ -173,7 +186,10 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
                 // free the game's own blocks
                 let mut allocator_hooked = false;
                 if before_entry {
-                    match mem_patch::hook_system_allocator() {
+                    // a panic here is an error like any other: no mimalloc
+                    let hooked = std::panic::catch_unwind(mem_patch::hook_system_allocator)
+                        .unwrap_or_else(|_| Err("panicked".into()));
+                    match hooked {
                         Ok(()) => {
                             allocator_hooked = true;
                             log::info!("mem_patch: system allocator hooked");
@@ -192,14 +208,15 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
                     log::warn!("mem_patch skipped: the game has already started");
                 }
                 // mimalloc is the game's allocator only when the hook took
-                install_boot_boost(allocator_hooked.then(mem_patch::main_allocator));
+                let main_allocator = allocator_hooked.then(mem_patch::main_allocator);
+                without_panics("BootBoost", || install_boot_boost(main_allocator));
                 // the game's code is decrypted now: scanning it for the
                 // singletons is safe; a thread that cannot start must not
                 // panic inside the game
                 if let Err(error) = std::thread::Builder::new().spawn(keep_regulation_out_of_saves) {
                     log::error!("the regulation fix could not start: {error}");
                 }
-            });
+            }));
         }
     }
     1
