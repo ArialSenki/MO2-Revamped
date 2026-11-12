@@ -1013,6 +1013,19 @@ function Test-EmbeddedResources {
     }
 }
 
+# a .cmd build script; its warnings on stderr (vcvars64's "vswhere.exe" not
+# found, say) would stop PowerShell with its output redirected, so they're
+# passed on as text, and the exit code ($LASTEXITCODE) decides
+function Invoke-CmdScript([string]$Path) {
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & cmd.exe /c "`"$Path`"" 2>&1 | ForEach-Object { "$_" }
+    } finally {
+        $ErrorActionPreference = $previousPreference
+    }
+}
+
 $bridgePath = Join-Path $buildRoot 'eldenring_mo2_bridge.dll'
 Build-QtInstallerRuntime
 $bridgeBuildScript = Join-Path $repoRoot 'source\revamped\plugins\basic_games\games\build_bridge.ps1'
@@ -1023,9 +1036,7 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $bridgePath -PathType L
 # ELDEN RING Reforged's Arxan and regulation fixes (Rust, see me3_compat\build.cmd)
 $me3CompatSource = Join-Path $repoRoot 'source\revamped\plugins\basic_games\games\me3_compat'
 $me3CompatPath = Join-Path $buildRoot 'eldenring_mo2_me3_compat.dll'
-# stderr joined inside cmd: vcvars64's warnings ("vswhere.exe" not found)
-# would stop PowerShell with its output redirected; the exit code decides
-& cmd.exe /c "`"$(Join-Path $me3CompatSource 'build.cmd')`" 2>&1"
+Invoke-CmdScript (Join-Path $me3CompatSource 'build.cmd')
 $me3CompatBuilt = Join-Path $me3CompatSource 'eldenring_mo2_me3_compat.dll'
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $me3CompatBuilt -PathType Leaf)) {
     throw 'Building the Elden Ring me3 compatibility DLL failed.'
@@ -1076,7 +1087,7 @@ $devCmd = Join-Path $vsRoot 'Common7\Tools\VsDevCmd.bat'
     "cl /nologo /O2 /MT /EHsc /W4 /LD /DUNICODE /D_UNICODE `"$borderlessSource`" " +
     "/Fo`"$borderlessBuild\\`" /Fe`"$borderlessDll`" /link user32.lib dwmapi.lib gdi32.lib`r`n"),
     [Text.Encoding]::ASCII)
-& cmd.exe /c "`"$borderlessCmd`""
+Invoke-CmdScript $borderlessCmd
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $borderlessDll -PathType Leaf)) {
     throw 'The borderless window DLL did not build.'
 }
