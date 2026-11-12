@@ -27,6 +27,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "nxmurl.h"
 #include "organizercore.h"
+#include "plugincontainer.h"
 #include "selectiondialog.h"
 #include "shared/util.h"
 #include "utility.h"
@@ -42,8 +43,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QHttp2Configuration>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QRegularExpression>
 #include <QTextDocument>
 #include <QTimer>
+#include <QUrlQuery>
 
 #include <boost/bind/bind.hpp>
 #include <regex>
@@ -54,6 +57,61 @@ using namespace MOBase;
 // modid/fileid with downloads
 
 static const char UNFINISHED[] = ".unfinished";
+
+// MO2 Revamped: download links carry a short-lived key in their query
+// (?md5=...&expires=..., ?key=...); it stays out of the log and the messages.
+// Also used on errorString(), which quotes the url
+static QString withoutQuery(QString text)
+{
+  static const QRegularExpression query(R"(\?[^\s"']*)");
+  return text.replace(query, QString());
+}
+
+static int httpStatus(QNetworkReply* reply)
+{
+  return reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+}
+
+// Nexus' CDN answers an expired or foreign link with one of these
+static bool isLinkRefused(int status)
+{
+  return status == 401 || status == 403 || status == 410;
+}
+
+// MO2 Revamped: the file name of a Content-Disposition value: filename*=UTF-8''...
+// (RFC 6266) first, then filename="..." up to its closing quote, or unquoted
+static QString fileNameFromDisposition(const QString& disposition)
+{
+  static const QRegularExpression extended(R"re(filename\*\s*=\s*([^']*)'[^']*'([^;\s]+))re",
+                                           QRegularExpression::CaseInsensitiveOption);
+  static const QRegularExpression quoted(R"re(filename\s*=\s*"([^"]*)")re",
+                                         QRegularExpression::CaseInsensitiveOption);
+  static const QRegularExpression bare(R"re(filename\s*=\s*([^;"\s][^;]*))re",
+                                       QRegularExpression::CaseInsensitiveOption);
+
+  auto match = extended.match(disposition);
+  if (match.hasMatch()) {
+    const QByteArray raw = QByteArray::fromPercentEncoding(match.captured(2).toLatin1());
+    const QString name   = match.captured(1).compare("UTF-8", Qt::CaseInsensitive) == 0
+                               ? QString::fromUtf8(raw)
+                               : QString::fromLatin1(raw);
+    if (!name.isEmpty()) {
+      return name;
+    }
+  }
+
+  match = quoted.match(disposition);
+  if (match.hasMatch() && !match.captured(1).isEmpty()) {
+    return match.captured(1);
+  }
+
+  match = bare.match(disposition);
+  if (match.hasMatch()) {
+    return match.captured(1).trimmed();
+  }
+
+  return QString();
+}
 
 unsigned int DownloadManager::DownloadInfo::s_NextDownloadID = 1U;
 int DownloadManager::m_DirWatcherDisabler                    = 0;
@@ -186,13 +244,15 @@ void DownloadManager::endDisableDirWatcher()
 
 void DownloadManager::DownloadInfo::setName(QString newName, bool renameFile)
 {
-  QString oldMetaFileName = QString("%1.meta").arg(m_FileName);
-  m_FileName              = QFileInfo(newName).fileName();
-  if ((m_State == DownloadManager::STATE_STARTED) ||
-      (m_State == DownloadManager::STATE_DOWNLOADING) ||
-      (m_State == DownloadManager::STATE_PAUSED)) {
+  // MO2 Revamped: the .meta is next to the file as it is named now (X.unfinished.meta
+  // while it downloads, also when it is renamed on finishing), not the new name
+  const QString oldMetaPath =
+      m_Output.fileName().isEmpty() ? QString() : m_Output.fileName() + ".meta";
+  m_FileName = QFileInfo(newName).fileName();
+  // MO2 Revamped: every state before the download is complete (pausing, as
+  // during the "Download again?" question, too): the file is still .unfinished
+  if (m_State < DownloadManager::STATE_FETCHINGMODINFO) {
     newName.append(UNFINISHED);
-    oldMetaFileName = QString("%1%2.meta").arg(m_FileName).arg(UNFINISHED);
   }
   if (renameFile) {
     if ((newName != m_Output.fileName()) && !m_Output.rename(newName)) {
@@ -202,8 +262,9 @@ void DownloadManager::DownloadInfo::setName(QString newName, bool renameFile)
       return;
     }
 
-    QFile metaFile(QFileInfo(newName).path() + "/" + oldMetaFileName);
-    if (metaFile.exists())
+    QFile metaFile(oldMetaPath);
+    if (!oldMetaPath.isEmpty() && metaFile.exists() &&
+        oldMetaPath.compare(newName + ".meta", Qt::CaseInsensitive) != 0)
       metaFile.rename(newName.mid(0).append(".meta"));
   }
   if (!m_Output.isOpen()) {
@@ -465,19 +526,23 @@ bool DownloadManager::addDownload(const QStringList& URLs, QString gameName, int
   // the ability to make HEAD requests to such URLs. We can use the
   // response-content-disposition GET parameter, setting the Content-Disposition header,
   // to predetermine intended file name without a subrequest.
-  if (fileName.contains("response-content-disposition=")) {
-    std::regex exp("filename=\"(.+)\"");
-    std::cmatch result;
-    if (std::regex_search(fileName.toStdString().c_str(), result, exp)) {
-      fileName = MOBase::sanitizeFileName(QString::fromUtf8(result.str(1).c_str()));
+  // MO2 Revamped: the parameter is read from the query itself, the same way as
+  // the header (see fileNameFromDisposition())
+  const QUrlQuery urlQuery(QUrl(URLs.first()));
+  if (urlQuery.hasQueryItem("response-content-disposition")) {
+    const QString dispoName = fileNameFromDisposition(
+        urlQuery.queryItemValue("response-content-disposition", QUrl::FullyDecoded));
+    if (!dispoName.isEmpty()) {
+      fileName = MOBase::sanitizeFileName(dispoName);
       if (fileName.isEmpty()) {
         fileName = "unknown";
       }
     }
   }
 
-  QUrl preferredUrl = QUrl::fromEncoded(URLs.first().toLocal8Bit());
-  log::debug("selected download url: {}", preferredUrl.toString());
+  // MO2 Revamped: UTF-8, as the link is; the local code page broke non-ASCII names
+  QUrl preferredUrl = QUrl::fromEncoded(URLs.first().toUtf8());
+  log::debug("selected download url: {}", withoutQuery(preferredUrl.toString()));
   QHttp2Configuration h2Conf;
   h2Conf.setSessionReceiveWindowSize(
       16777215);  // 16 MiB, based on Chrome and Firefox values
@@ -530,13 +595,18 @@ bool DownloadManager::addDownload(QNetworkReply* reply, const QStringList& URLs,
     baseName.truncate(queryIndex);
   }
 
+  // MO2 Revamped: a name in use by another download in progress gets a new one
+  // right away (it would empty that one's .unfinished file); a finished file of
+  // that name is asked about in startDownload()
   startDisableDirWatcher();
-  newDownload->setName(getDownloadFileName(baseName), false);
+  newDownload->setName(
+      getDownloadFileName(baseName,
+                          isDownloadNameTaken(MOBase::sanitizeFileName(baseName), true)),
+      false);
   endDisableDirWatcher();
 
-  startDownload(reply, newDownload, false);
   //  emit update(-1);
-  return true;
+  return startDownload(reply, newDownload, false);
 }
 
 void DownloadManager::removePending(QString gameName, int modID, int fileID)
@@ -563,7 +633,35 @@ void DownloadManager::removePending(QString gameName, int modID, int fileID)
   emit update(-1);
 }
 
-void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownload,
+bool DownloadManager::isPending(QString gameName, int modID, int fileID) const
+{
+  // the game as removePending() finds it: the Nexus name or the short one
+  QString gameShortName = gameName;
+  QStringList games(m_ManagedGame->validShortNames());
+  games += m_ManagedGame->gameShortName();
+  for (auto game : games) {
+    MOBase::IPluginGame* gamePlugin = m_OrganizerCore->getGame(game);
+    if (gamePlugin != nullptr &&
+        gamePlugin->gameNexusName().compare(gameName, Qt::CaseInsensitive) == 0) {
+      gameShortName = gamePlugin->gameShortName();
+      break;
+    }
+  }
+  for (const auto& pending : m_PendingDownloads) {
+    if (gameShortName.compare(std::get<0>(pending), Qt::CaseInsensitive) == 0 &&
+        (std::get<1>(pending) == modID) && (std::get<2>(pending) == fileID)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void DownloadManager::removePendingDownload(const std::tuple<QString, int, int>& pending)
+{
+  removePending(std::get<0>(pending), std::get<1>(pending), std::get<2>(pending));
+}
+
+bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownload,
                                     bool resume)
 {
   reply->setReadBufferSize(
@@ -585,10 +683,33 @@ void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   createMetaFile(newDownload);
 
   if (!newDownload->m_Output.open(mode)) {
-    reportError(tr("failed to download %1: could not open output file: %2")
-                    .arg(reply->url().toString())
-                    .arg(newDownload->m_Output.fileName()));
-    return;
+    // MO2 Revamped: the reply stops and the download goes (or, resumed, pauses
+    // again) instead of running on with nowhere to write
+    const QString error = tr("failed to download %1: could not open output file: %2")
+                              .arg(withoutQuery(reply->url().toString()))
+                              .arg(QDir::toNativeSeparators(
+                                  newDownload->m_Output.fileName()));
+    if (resume) {
+      setState(newDownload, STATE_PAUSED);
+      if (newDownload->m_Reply == reply) {
+        newDownload->m_Reply = nullptr;
+      }
+      reply->deleteLater();
+      emit update(indexByInfo(newDownload));
+    } else {
+      reply->abort();
+      reply->deleteLater();
+      // the .meta written above is this download's only while no file has the name
+      if (!newDownload->m_Output.exists()) {
+        QFile::remove(newDownload->m_Output.fileName() + ".meta");
+      }
+      removePending(newDownload->m_FileInfo->gameName, newDownload->m_FileInfo->modID,
+                    newDownload->m_FileInfo->fileID);
+      TaskProgressManager::instance().forgetMe(newDownload->m_TaskProgressId);
+      delete newDownload;
+    }
+    reportError(error);
+    return false;
   }
 
   connect(newDownload->m_Reply, SIGNAL(downloadProgress(qint64, qint64)), this,
@@ -610,6 +731,9 @@ void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
     emit update(-1);
     emit downloadAdded();
 
+    // the question below and the events run here can finish and remove it
+    const unsigned int downloadID = newDownload->m_DownloadID;
+
     if (QFile::exists(m_OutputDirectory + "/" + newDownload->m_FileName)) {
       setState(newDownload, STATE_PAUSING);
       QCoreApplication::processEvents();
@@ -628,27 +752,53 @@ void DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
         startDisableDirWatcher();
         newDownload->setName(getDownloadFileName(newDownload->m_FileName, true), true);
         endDisableDirWatcher();
-        if (newDownload->m_State == STATE_PAUSED)
+        if (newDownload->m_State == STATE_PAUSED) {
+          // MO2 Revamped: paused during the question, its reply was aborted (and
+          // finished() not connected yet): kept, resumeDownloadInt() took it for
+          // a finished download and the cut-off bytes became the archive
+          if (newDownload->m_Reply == reply) {
+            newDownload->m_Reply = nullptr;
+          }
+          reply->deleteLater();
           resumeDownload(indexByInfo(newDownload));
-        else
+        } else if (!newDownload->m_Output.isOpen() &&
+                   !newDownload->m_Output.open(QIODevice::WriteOnly |
+                                               QIODevice::Append)) {
+          // MO2 Revamped: renaming closed the file, as in metaDataChanged()
+          reportError(tr("failed to re-open %1").arg(newDownload->m_FileName));
+          setState(newDownload, STATE_CANCELING);
+        } else {
           setState(newDownload, STATE_DOWNLOADING);
+        }
       }
-    } else
-      connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(replyFinished()));
+    }
+
+    // MO2 Revamped: in both branches; without it a download that was asked
+    // about never finished, and one the user said No to stayed listed with its
+    // .unfinished file
+    connect(reply, SIGNAL(finished()), this, SLOT(replyFinished()));
 
     QCoreApplication::processEvents();
 
-    if (newDownload->m_State != STATE_DOWNLOADING &&
+    newDownload = downloadInfoByID(downloadID);
+    if (newDownload == nullptr) {
+      return true;
+    }
+
+    // a reply that finished before finished() was connected (during the question
+    // or the events above) is finished here; one finished since has no reply left
+    if (newDownload->m_Reply == reply && reply->isFinished() &&
         newDownload->m_State != STATE_READY &&
-        newDownload->m_State != STATE_FETCHINGMODINFO && reply->isFinished()) {
+        newDownload->m_State != STATE_FETCHINGMODINFO) {
       int index = indexByInfo(newDownload);
       if (index >= 0) {
         downloadFinished(index);
       }
-      return;
+      return true;
     }
   } else
     connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(replyFinished()));
+  return true;
 }
 
 void DownloadManager::addNXMDownload(const QString& url)
@@ -677,25 +827,38 @@ void DownloadManager::addNXMDownload(const QString& url)
       break;
     }
   }
-  log::debug("add nxm download: {}", url);
+  log::debug("add nxm download: {}", withoutQuery(url));
   if (foundGame == nullptr) {
     log::debug("download requested for wrong game (game: {}, url: {})",
                m_ManagedGame->gameShortName(), nxmInfo.game());
+    // MO2 Revamped: the games by the names people know them by; the link's
+    // game from its plugin when there is one
+    QString linkGame = nxmInfo.game();
+    for (MOBase::IPluginGame* game :
+         m_OrganizerCore->pluginContainer().plugins<MOBase::IPluginGame>()) {
+      if (game != nullptr &&
+          (nxmInfo.game().compare(game->gameShortName(), Qt::CaseInsensitive) == 0 ||
+           nxmInfo.game().compare(game->gameNexusName(), Qt::CaseInsensitive) == 0)) {
+        linkGame = game->displayGameName();
+        break;
+      }
+    }
     QMessageBox::information(
         m_ParentWidget, tr("Wrong game"),
-        tr("The download link is for a mod for \"%1\" but this instance of MO2 "
-           "has been set up for \"%2\".")
-            .arg(nxmInfo.game())
-            .arg(m_ManagedGame->gameShortName()),
+        tr("This link is for a %1 mod, but this instance manages %2. Open it from an "
+           "instance for %1.")
+            .arg(linkGame)
+            .arg(m_ManagedGame->displayGameName()),
         QMessageBox::Ok);
     return;
   }
 
   for (auto tuple : m_PendingDownloads) {
+    // MO2 Revamped: the game counts too (a comma operator dropped it)
     if (std::get<0>(tuple).compare(foundGame->gameShortName(), Qt::CaseInsensitive) ==
-            0,
+            0 &&
         std::get<1>(tuple) == nxmInfo.modId() &&
-            std::get<2>(tuple) == nxmInfo.fileId()) {
+        std::get<2>(tuple) == nxmInfo.fileId()) {
       const auto infoStr =
           tr("There is already a download queued for this file.\n\nMod %1\nFile %2")
               .arg(nxmInfo.modId())
@@ -713,8 +876,9 @@ void DownloadManager::addNXMDownload(const QString& url)
   for (DownloadInfo* download : m_ActiveDownloads) {
     if (download->m_FileInfo->modID == nxmInfo.modId() &&
         download->m_FileInfo->fileID == nxmInfo.fileId()) {
-      if (download->m_State == STATE_DOWNLOADING || download->m_State == STATE_PAUSED ||
-          download->m_State == STATE_STARTED) {
+      // MO2 Revamped: a paused one goes on: the new link's download urls resume
+      // it (see nxmDownloadURLsAvailable()), as its old ones may have expired
+      if (download->m_State == STATE_DOWNLOADING || download->m_State == STATE_STARTED) {
         QString debugStr(
             "download requested is already started (mod %1: %2, file %3: %4)");
         QString infoStr(tr("There is already a download started for this file.\n\nMod "
@@ -1043,24 +1207,16 @@ void DownloadManager::resumeDownloadInt(int index)
     if (info->m_State == STATE_ERROR) {
       info->m_CurrentUrl = (info->m_CurrentUrl + 1) % info->m_Urls.count();
     }
-    log::debug("request resume from url {}", info->currentURL());
-    QNetworkRequest request(QUrl::fromEncoded(info->currentURL().toLocal8Bit()));
+    log::debug("request resume from url {}", withoutQuery(info->currentURL()));
+    QNetworkRequest request(QUrl::fromEncoded(info->currentURL().toUtf8()));
     request.setHeader(QNetworkRequest::UserAgentHeader,
                       m_NexusInterface->getAccessManager()->userAgent());
-    if (info->m_State != STATE_ERROR) {
-      info->m_ResumePos      = info->m_Output.size();
-      QByteArray rangeHeader = "bytes=" + QByteArray::number(info->m_ResumePos) + "-";
-      request.setRawHeader("Range", rangeHeader);
-    } else {
-      // after an error the download starts over without a range, and the file
-      // is opened to append: what was there must go, or the archive would hold
-      // the partial bytes followed by the whole file
-      info->m_ResumePos = 0;
-      if (!QFile::resize(info->m_Output.fileName(), 0)) {
-        log::warn("failed to empty {} before downloading it again",
-                  info->m_Output.fileName());
-      }
-    }
+    // MO2 Revamped: an automatic retry after an error goes on from what is there
+    // too; an error page never reaches the file (see acceptReplyData()), and a
+    // server that ignores the range (200) or refuses it (416) starts it over
+    info->m_ResumePos      = info->m_Output.size();
+    QByteArray rangeHeader = "bytes=" + QByteArray::number(info->m_ResumePos) + "-";
+    request.setRawHeader("Range", rangeHeader);
     info->m_DownloadLast     = 0;
     info->m_DownloadTimeLast = 0;
     info->m_DownloadAcc      = accumulator_set<qint64, stats<tag::rolling_mean>>(
@@ -1180,6 +1336,8 @@ void DownloadManager::queryInfoMd5(int index)
     return;
   }
 
+  // MO2 Revamped: a new search, not the games left over from the last one
+  info->m_GamesToQuery.clear();
   info->m_GamesToQuery << m_ManagedGame->gameShortName();
   info->m_GamesToQuery << m_ManagedGame->validShortNames();
 
@@ -1195,6 +1353,7 @@ void DownloadManager::queryInfoMd5(int index)
     return;
   }
 
+  const unsigned int downloadID = info->m_DownloadID;
   QCryptographicHash hash(QCryptographicHash::Md5);
   const qint64 progressStep = 10 * 1024 * 1024;
   QProgressDialog progress(tr("Reading '%1' to find it on Nexus").arg(info->m_FileName),
@@ -1219,6 +1378,14 @@ void DownloadManager::queryInfoMd5(int index)
 
   progress.close();
   downloadFile.close();
+
+  // MO2 Revamped: the window-modal progress runs events: a refresh of the
+  // downloads folder can have freed the download meanwhile
+  info = downloadInfoByID(downloadID);
+  if (info == nullptr) {
+    log::debug("the download was removed while it was being read");
+    return;
+  }
 
   info->m_Hash      = hash.result();
   info->m_ReQueried = true;
@@ -1537,11 +1704,17 @@ void DownloadManager::markInstalled(int index)
 
 void DownloadManager::markInstalled(QString fileName)
 {
-  int index = indexByName(fileName);
+  // MO2 Revamped: called with the archive's full path (the install); an archive
+  // installed from outside the downloads folder marks none of them
+  int index = indexByArchivePath(fileName);
   if (index >= 0) {
     markInstalled(index);
   } else {
-    DownloadInfo* info = getDownloadInfo(fileName);
+    const QString filePath =
+        QFileInfo(fileName).isAbsolute()
+            ? fileName
+            : QDir::fromNativeSeparators(m_OutputDirectory) + "/" + fileName;
+    DownloadInfo* info = getDownloadInfo(filePath);
     if (info != nullptr) {
       // Avoid triggering refreshes from DirWatcher
       ScopedDisableDirWatcher scopedDirWatcher(this);
@@ -1577,11 +1750,13 @@ void DownloadManager::markUninstalled(int index)
 
 void DownloadManager::markUninstalled(QString fileName)
 {
-  int index = indexByName(fileName);
+  int index = indexByArchivePath(fileName);
   if (index >= 0) {
     markUninstalled(index);
   } else {
-    QString filePath   = QDir::fromNativeSeparators(m_OutputDirectory) + "/" + fileName;
+    QString filePath   = QFileInfo(fileName).isAbsolute()
+                             ? fileName
+                             : QDir::fromNativeSeparators(m_OutputDirectory) + "/" + fileName;
     DownloadInfo* info = getDownloadInfo(filePath);
     if (info != nullptr) {
 
@@ -1597,28 +1772,44 @@ void DownloadManager::markUninstalled(QString fileName)
 
 QString DownloadManager::getDownloadFileName(const QString& baseName, bool rename) const
 {
-  QString fullPath = m_OutputDirectory + "/" + MOBase::sanitizeFileName(baseName);
-  if (QFile::exists(fullPath) && rename) {
+  const QString name = MOBase::sanitizeFileName(baseName);
+  QString fullPath   = m_OutputDirectory + "/" + name;
+  if (rename && isDownloadNameTaken(name, false)) {
     int i = 1;
-    while (QFile::exists(
-        QString("%1/%2_%3").arg(m_OutputDirectory).arg(i).arg(baseName))) {
+    while (isDownloadNameTaken(QString("%1_%2").arg(i).arg(name), false)) {
       ++i;
     }
 
-    fullPath = QString("%1/%2_%3").arg(m_OutputDirectory).arg(i).arg(baseName);
+    fullPath = QString("%1/%2_%3").arg(m_OutputDirectory).arg(i).arg(name);
   }
   return fullPath;
+}
+
+bool DownloadManager::isDownloadNameTaken(const QString& fileName,
+                                          bool inProgressOnly) const
+{
+  const QString path = m_OutputDirectory + "/" + fileName;
+  if ((!inProgressOnly && QFile::exists(path)) || QFile::exists(path + UNFINISHED)) {
+    return true;
+  }
+
+  for (const DownloadInfo* info : m_ActiveDownloads) {
+    if (info->m_FileName.compare(fileName, Qt::CaseInsensitive) == 0 &&
+        (!inProgressOnly || info->m_State < STATE_READY)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 QString DownloadManager::getFileNameFromNetworkReply(QNetworkReply* reply)
 {
   if (reply->hasRawHeader("Content-Disposition")) {
-    std::regex exp("filename=\"(.+)\"");
-
-    std::cmatch result;
-    if (std::regex_search(reply->rawHeader("Content-Disposition").constData(), result,
-                          exp)) {
-      return MOBase::sanitizeFileName(QString::fromUtf8(result.str(1).c_str()));
+    const QString name = fileNameFromDisposition(
+        QString::fromUtf8(reply->rawHeader("Content-Disposition")));
+    if (!name.isEmpty()) {
+      return MOBase::sanitizeFileName(name);
     }
   }
 
@@ -1846,7 +2037,7 @@ void DownloadManager::nxmFilesAvailable(QString, int, QVariant userData,
   // this may muck up the file name comparison
   QString alternativeLocalName = info->m_FileName;
 
-  QRegularExpression expression("^\\d_(.*)$");
+  QRegularExpression expression("^\\d+_(.*)$");
   auto match = expression.match(alternativeLocalName);
   if (match.hasMatch()) {
     alternativeLocalName = match.captured(1);
@@ -1882,7 +2073,7 @@ void DownloadManager::nxmFilesAvailable(QString, int, QVariant userData,
   if (info->m_ReQueried) {
     if (found) {
       emit showMessage(tr("Information updated"));
-    } else if (result.count() == 0) {
+    } else if (files.count() == 0) {
       emit showMessage(tr("No matching file found on Nexus! Maybe this file is no "
                           "longer available or it was renamed?"));
     } else {
@@ -1899,7 +2090,13 @@ void DownloadManager::nxmFilesAvailable(QString, int, QVariant userData,
             fileInfo["category_id"].toInt() != NexusInterface::FileStatus::ARCHIVED)
           selection.addChoice(fileInfo["file_name"].toString(), "", file);
       }
-      if (selection.exec() == QDialog::Accepted) {
+      const bool accepted = selection.exec() == QDialog::Accepted;
+      // MO2 Revamped: the dialog runs events: the download may be gone
+      info = downloadInfoByID(userData.toInt());
+      if (info == nullptr) {
+        return;
+      }
+      if (accepted) {
         QVariantMap fileInfo   = selection.getChoiceData().toMap();
         info->m_FileInfo->name = fileInfo["name"].toString();
         info->m_FileInfo->version.parse(fileInfo["version"].toString());
@@ -1933,6 +2130,13 @@ void DownloadManager::nxmFileInfoAvailable(QString gameName, int modID, int file
 
   ModRepositoryFileInfo* info =
       qobject_cast<ModRepositoryFileInfo*>(qvariant_cast<QObject*>(userData));
+
+  // MO2 Revamped: its pending row was removed meanwhile: the download doesn't start
+  if (!isPending(gameName, modID, fileID)) {
+    log::debug("the pending download of mod {}, file {} was removed", modID, fileID);
+    delete info;
+    return;
+  }
 
   QVariantMap result = resultData.toMap();
   info->name         = result["name"].toString();
@@ -2002,7 +2206,10 @@ bool ServerByPreference(const ServerList::container& preferredServers,
 int DownloadManager::startDownloadURLs(const QStringList& urls)
 {
   ModRepositoryFileInfo info;
-  addDownload(urls, "", -1, -1, &info);
+  // MO2 Revamped: none when its file couldn't be opened (the download is gone)
+  if (!addDownload(urls, "", -1, -1, &info)) {
+    return -1;
+  }
   return m_ActiveDownloads.size() - 1;
 }
 
@@ -2080,6 +2287,14 @@ void DownloadManager::nxmDownloadURLsAvailable(QString gameName, int modID, int 
 
   ModRepositoryFileInfo* info =
       qobject_cast<ModRepositoryFileInfo*>(qvariant_cast<QObject*>(userData));
+
+  // MO2 Revamped: its pending row was removed meanwhile: the download doesn't start
+  if (!isPending(gameName, modID, fileID)) {
+    log::debug("the pending download of mod {}, file {} was removed", modID, fileID);
+    delete info;
+    return;
+  }
+
   QVariantList resultList = resultData.toList();
   if (resultList.length() == 0) {
     removePending(gameName, modID, fileID);
@@ -2099,6 +2314,43 @@ void DownloadManager::nxmDownloadURLsAvailable(QString gameName, int modID, int 
   foreach (const QVariant& server, resultList) {
     URLs.append(server.toMap()["URI"].toString());
   }
+
+  // MO2 Revamped: the same file, paused in the list (its link may have expired):
+  // it resumes from these urls instead of starting again
+  for (DownloadInfo* download : m_ActiveDownloads) {
+    if (download->m_FileInfo->modID != modID || download->m_FileInfo->fileID != fileID ||
+        (download->m_FileInfo->gameName.compare(info->gameName, Qt::CaseInsensitive) !=
+             0 &&
+         download->m_FileInfo->gameName.compare(gameName, Qt::CaseInsensitive) != 0) ||
+        download->m_State >= STATE_FETCHINGMODINFO ||
+        download->m_State == STATE_CANCELING || download->m_State == STATE_CANCELED) {
+      continue;
+    }
+
+    removePending(gameName, modID, fileID);
+    if (download->isPausedState()) {
+      log::debug("resuming the paused download of mod {}, file {} with the new link",
+                 modID, fileID);
+      download->m_Urls       = URLs;
+      download->m_CurrentUrl = 0;
+      download->m_FileInfo->userData["downloadMap"] = resultList;
+      download->m_FileInfo->nexusKey                = info->nexusKey;
+      download->m_FileInfo->nexusExpires            = info->nexusExpires;
+      download->m_FileInfo->nexusDownloadUser       = info->nexusDownloadUser;
+      // an error state would move on to the next url (see resumeDownloadInt())
+      if (download->m_State == STATE_ERROR) {
+        download->m_State = STATE_PAUSED;
+      }
+      resumeDownload(indexByInfo(download));
+    } else {
+      // resumed by hand meanwhile, or still pausing
+      emit showMessage(tr("This file is already in the list (paused or downloading). "
+                          "Resume it there."));
+    }
+    delete info;
+    return;
+  }
+
   addDownload(URLs, gameName, modID, fileID, info);
 }
 
@@ -2122,7 +2374,8 @@ void DownloadManager::nxmFileInfoFromMd5Available(QString gameName, QVariant use
   // This can come back with multiple results with the same file was uploaded multiple
   // times (for whatever reason)
   auto resultlist = resultData.toList();
-  int chosenIdx   = resultlist.count() > 1 ? -1 : 0;
+  // MO2 Revamped: no result at all goes the old way below too (by name)
+  int chosenIdx = resultlist.count() == 1 ? 0 : -1;
 
   // Look for the exact file name
   if (chosenIdx < 0) {
@@ -2222,6 +2475,7 @@ void DownloadManager::nxmRequestFailed(QString gameName, int modID, int fileID,
   }
 
   DownloadInfo* userDataInfo = downloadInfoByID(userData.toInt());
+  const bool linkRequest     = (userDataInfo == nullptr);
 
   int index = 0;
 
@@ -2258,7 +2512,21 @@ void DownloadManager::nxmRequestFailed(QString gameName, int modID, int fileID,
   }
 
   removePending(gameName, modID, fileID);
-  emit showMessage(tr("Failed to request file info from nexus: %1").arg(errorString));
+  // MO2 Revamped: a refused link is said as such (a request for an nxm link,
+  // which has no download yet; 401 is the API key's, not the link's); the rest
+  // as before, without the link's key
+  if (linkRequest && (errorCode == 403 || errorCode == 410)) {
+    log::warn("Nexus refused the request ({}): {}", errorCode, withoutQuery(errorString));
+    emit showMessage(tr("Nexus refused the download link (it may have expired). Click "
+                        "the download on Nexus again."));
+  } else if (linkRequest &&
+             errorCode == QNetworkReply::ContentOperationNotPermittedError) {
+    // the link of another account, or a Premium one: NexusInterface says which
+    emit showMessage(errorString);
+  } else {
+    emit showMessage(
+        tr("Failed to request file info from nexus: %1").arg(withoutQuery(errorString)));
+  }
 }
 
 void DownloadManager::replyFinished()
@@ -2283,36 +2551,87 @@ void DownloadManager::downloadFinished(int index)
   if (info != nullptr && info->m_Reply != nullptr) {
     QNetworkReply* reply          = info->m_Reply;
     const unsigned int downloadID = info->m_DownloadID;
-    QByteArray data;
-    if (reply->isOpen() && info->m_HasData) {
-      data = reply->readAll();
-      info->m_Output.write(data);
+    const int status              = httpStatus(reply);
+    // MO2 Revamped: the last bytes go through the same checks as the rest (see
+    // writeData()); a failed write pauses the download, as does a refused link
+    bool writeFailed    = false;
+    const bool wasOpen  = info->m_Output.isOpen();
+    if (reply->isOpen() && info->m_HasData && wasOpen) {
+      const QByteArray data = reply->readAll();
+      if (acceptReplyData(info, reply) && info->m_Output.write(data) < data.size()) {
+        writeFailed = true;
+      }
     }
     info->m_Output.close();
+    if (wasOpen && info->m_Output.error() == QFileDevice::WriteError) {
+      // the last buffered bytes are written on closing
+      writeFailed = true;
+    }
     TaskProgressManager::instance().forgetMe(info->m_TaskProgressId);
 
+    // MO2 Revamped: an expired or foreign link: what was downloaded stays, paused,
+    // to resume from a new link (see nxmDownloadURLsAvailable())
+    const bool linkRefused = isLinkRefused(status);
+    // a resume answered with a whole web page (a captive portal's, a block
+    // page) instead of the rest of the file: the partial stays, paused
+    const bool webPage = isWebPageOnResume(info, reply);
+    // writeData() tells about its own failed write before it pauses
+    const bool tellWriteFailed = writeFailed && info->m_State != STATE_CANCELING &&
+                                 info->m_State != STATE_PAUSING;
+    const bool tellLinkRefused = linkRefused && info->m_State != STATE_CANCELING;
+    const bool tellWebPage     = webPage && !linkRefused && info->m_State != STATE_CANCELING;
+    // the Nexus text only for Nexus' servers
+    const QString host     = reply->url().host();
+    const bool nexusServer = host.endsWith("nexusmods.com", Qt::CaseInsensitive) ||
+                             host.endsWith("nexus-cdn.com", Qt::CaseInsensitive);
+    const QString fileName = info->m_FileName;
+    if ((writeFailed || linkRefused || webPage) && info->m_State != STATE_CANCELING) {
+      if (linkRefused) {
+        log::warn("the server refused the download of \"{}\" (HTTP {}): {}",
+                  info->m_FileName, status, withoutQuery(reply->errorString()));
+      } else if (webPage) {
+        log::warn("download \"{}\": a resume was answered with a {} page",
+                  info->m_FileName,
+                  reply->header(QNetworkRequest::ContentTypeHeader).toString());
+      } else {
+        log::error("Unable to write download \"{}\" to drive", info->m_FileName);
+      }
+      setState(info, STATE_PAUSING);
+    }
+
     bool error = false;
+    QString failure;
     if ((info->m_State != STATE_CANCELING) && (info->m_State != STATE_PAUSING)) {
-      bool textData = reply->header(QNetworkRequest::ContentTypeHeader)
-                          .toString()
-                          .startsWith("text", Qt::CaseInsensitive);
-      if (textData)
-        emit showMessage(
-            tr("Warning: Content type is: %1")
-                .arg(reply->header(QNetworkRequest::ContentTypeHeader).toString()));
-      if ((info->m_Output.size() == 0) ||
+      const QString contentType =
+          reply->header(QNetworkRequest::ContentTypeHeader).toString();
+      bool textData = contentType.startsWith("text", Qt::CaseInsensitive);
+      if (textData) {
+        // MO2 Revamped: the details are for the log
+        log::warn("download \"{}\": content type is {}", info->m_FileName, contentType);
+        emit showMessage(tr("Nexus sent a web page instead of the file."));
+      }
+      if ((info->m_Output.size() == 0) || (status == 416) ||
           ((reply->error() != QNetworkReply::NoError) &&
            (reply->error() != QNetworkReply::OperationCanceledError))) {
-        if (reply->error() == QNetworkReply::UnknownContentError)
-          emit showMessage(
-              tr("Download header content length: %1 downloaded file size: %2")
-                  .arg(reply->header(QNetworkRequest::ContentLengthHeader).toLongLong())
-                  .arg(info->m_Output.size()));
-        if (info->m_Tries == 0) {
-          emit showMessage(tr("Download failed: %1 (%2)")
-                               .arg(reply->errorString())
-                               .arg(reply->error()));
+        if (reply->error() == QNetworkReply::UnknownContentError) {
+          log::warn("download header content length: {} downloaded file size: {}",
+                    reply->header(QNetworkRequest::ContentLengthHeader).toLongLong(),
+                    info->m_Output.size());
         }
+        if (status == 416) {
+          // MO2 Revamped: the server refused the range of a resume: the retry
+          // starts over
+          log::warn("the server refused to resume \"{}\"; it starts over",
+                    info->m_FileName);
+          if (!QFile::resize(info->m_Output.fileName(), 0)) {
+            log::warn("failed to empty {} before downloading it again",
+                      info->m_Output.fileName());
+          }
+        }
+        failure = QString("%1 (%2)")
+                      .arg(withoutQuery(reply->errorString()))
+                      .arg(reply->error());
+        log::warn("download \"{}\" failed: {}", info->m_FileName, failure);
         error = true;
         setState(info, STATE_ERROR);
       }
@@ -2330,7 +2649,14 @@ void DownloadManager::downloadFinished(int index)
     // set once info is deleted below: nothing may read it after that
     bool removed = false;
 
-    if (info->m_State == STATE_CANCELED || (info->m_Tries == 0 && error)) {
+    // MO2 Revamped: out of automatic retries, a download pauses with what it has
+    // (it was deleted, maybe gigabytes of it, after a short network drop)
+    const bool outOfRetries = error && info->m_Tries == 0;
+    if (outOfRetries) {
+      setState(info, STATE_PAUSED);
+    }
+
+    if (info->m_State == STATE_CANCELED) {
       emit aboutToUpdate();
       info->m_Output.remove();
       // startDownload() writes one for every download
@@ -2343,10 +2669,6 @@ void DownloadManager::downloadFinished(int index)
       if (at >= 0) {
         m_ActiveDownloads.erase(m_ActiveDownloads.begin() + at);
       }
-      if (error)
-        emit showMessage(
-            tr("We were unable to download the file due to errors after four retries. "
-               "There may be an issue with the Nexus servers."));
       emit update(-1);
     } else if (info->isPausedState() || info->m_State == STATE_PAUSING) {
       info->m_Output.close();
@@ -2415,7 +2737,45 @@ void DownloadManager::downloadFinished(int index)
 
     if (info != nullptr && (info->m_Tries > 0) && error) {
       --info->m_Tries;
-      resumeDownloadInt(indexByInfo(info));
+      // MO2 Revamped: after a pause (2, 10, then 30 seconds), not right away: a
+      // short network drop used up the retries in a second. It waits in the
+      // error state; one resumed or removed meanwhile is left alone
+      static const int retryDelays[] = {2, 10, 30};
+      const int retry = qBound(0, AUTOMATIC_RETRIES - 1 - info->m_Tries, 2);
+      log::debug("retrying \"{}\" in {} seconds", info->m_FileName, retryDelays[retry]);
+      QTimer::singleShot(retryDelays[retry] * 1000, this, [this, downloadID] {
+        DownloadInfo* waiting = downloadInfoByID(downloadID);
+        if (waiting != nullptr && waiting->m_State == STATE_ERROR &&
+            waiting->m_Reply == nullptr) {
+          resumeDownloadInt(indexByInfo(waiting));
+        }
+      });
+    }
+
+    // MO2 Revamped: told once the list is consistent
+    if (outOfRetries) {
+      emit showMessage(tr("The download stopped after %1 retries: %2. It was paused; "
+                          "resume it, or click the download on Nexus again if the link "
+                          "expired.")
+                           .arg(AUTOMATIC_RETRIES)
+                           .arg(failure));
+    }
+    if (tellLinkRefused) {
+      if (nexusServer) {
+        emit showMessage(tr("Nexus refused the download link (it may have expired). "
+                            "Click the download on Nexus again."));
+      } else {
+        emit showMessage(tr("The server refused the download link (it may have "
+                            "expired)."));
+      }
+    }
+    if (tellWebPage) {
+      emit showMessage(tr("Nexus sent a web page instead of the file."));
+    }
+    if (tellWriteFailed) {
+      reportError(tr("Not enough space on the drive, or the file can't be written. The "
+                     "download was paused; free some space and resume it.") +
+                  "\n\n" + fileName);
     }
   } else {
     log::warn("no download or reply at index {}", index);
@@ -2427,7 +2787,8 @@ void DownloadManager::downloadError(QNetworkReply::NetworkError error)
   if (error != QNetworkReply::OperationCanceledError) {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
     log::warn("{} ({})",
-              reply != nullptr ? reply->errorString() : "Download error occured",
+              reply != nullptr ? withoutQuery(reply->errorString())
+                               : QString("Download error occured"),
               error);
   }
 }
@@ -2468,21 +2829,96 @@ void DownloadManager::managedGameChanged(MOBase::IPluginGame const* managedGame)
 
 void DownloadManager::writeData(DownloadInfo* info)
 {
-  if (info != nullptr) {
-    qint64 ret = info->m_Output.write(info->m_Reply->readAll());
-    if (ret < info->m_Reply->size()) {
-      QString fileName =
-          info->m_FileName;  // m_FileName may be destroyed after setState
-      setState(info, DownloadState::STATE_CANCELED);
+  if (info != nullptr && info->m_Reply != nullptr) {
+    QNetworkReply* reply  = info->m_Reply;
+    const QByteArray data = reply->readAll();
+    // MO2 Revamped: an error page (an expired link's) isn't the file's
+    if (!acceptReplyData(info, reply) || !info->m_Output.isOpen()) {
+      return;
+    }
+    const qint64 ret = info->m_Output.write(data);
+    if (ret < data.size()) {
+      // MO2 Revamped: paused, not cancelled: cancelling deleted the download
+      // (and its file) while this still read it; what was written stays, to
+      // resume from once there is room
+      const QString fileName = info->m_FileName;
 
-      log::error("Unable to write download \"{}\" to drive (return {})",
-                 info->m_FileName, ret);
+      log::error("Unable to write download \"{}\" to drive (return {})", fileName,
+                 ret);
 
-      reportError(tr("Unable to write download to drive (return %1).\n"
-                     "Check the drive's available storage.\n\n"
-                     "Canceling download \"%2\"...")
-                      .arg(ret)
-                      .arg(fileName));
+      if (info->m_State == STATE_CANCELING) {
+        // it goes anyway
+        return;
+      }
+
+      setState(info, STATE_PAUSING);
+      // finished() pauses it (see downloadFinished())
+      reply->abort();
+
+      reportError(tr("Not enough space on the drive, or the file can't be written. The "
+                     "download was paused; free some space and resume it.") +
+                  "\n\n" + fileName);
     }
   }
+}
+
+bool DownloadManager::acceptReplyData(DownloadInfo* info, QNetworkReply* reply)
+{
+  const int status = httpStatus(reply);
+  // 0: not HTTP
+  if (status == 0 || status == 206) {
+    return true;
+  }
+  if (status != 200 || isWebPageOnResume(info, reply)) {
+    return false;
+  }
+
+  if (info->m_ResumePos > 0) {
+    // the server ignored the range of a resume and sends the whole file: it
+    // replaces what was there instead of following it
+    log::warn("the server sent all of \"{}\" instead of resuming at {} bytes; it "
+              "starts over",
+              info->m_FileName, info->m_ResumePos);
+    info->m_ResumePos = 0;
+    const bool emptied = info->m_Output.isOpen()
+                             ? (info->m_Output.resize(0) && info->m_Output.seek(0))
+                             : QFile::resize(info->m_Output.fileName(), 0);
+    if (!emptied) {
+      log::warn("failed to empty {} before downloading it again",
+                info->m_Output.fileName());
+    }
+  }
+  return true;
+}
+
+bool DownloadManager::isWebPageOnResume(const DownloadInfo* info, QNetworkReply* reply)
+{
+  return info->m_ResumePos > 0 && httpStatus(reply) == 200 &&
+         reply->header(QNetworkRequest::ContentTypeHeader)
+             .toString()
+             .startsWith("text", Qt::CaseInsensitive);
+}
+
+int DownloadManager::indexByArchivePath(const QString& path) const
+{
+  const QFileInfo file(path);
+  if (!file.isAbsolute()) {
+    return indexByName(path);
+  }
+
+  const QString folder = QDir::fromNativeSeparators(m_OutputDirectory);
+  if (QDir::fromNativeSeparators(file.absolutePath()).compare(folder, Qt::CaseInsensitive) !=
+      0) {
+    return -1;
+  }
+
+  const QString fullPath = QDir::fromNativeSeparators(file.absoluteFilePath());
+  for (int i = 0; i < m_ActiveDownloads.size(); ++i) {
+    if (QDir::fromNativeSeparators(QFileInfo(m_ActiveDownloads[i]->m_Output.fileName())
+                                       .absoluteFilePath())
+            .compare(fullPath, Qt::CaseInsensitive) == 0) {
+      return i;
+    }
+  }
+  return indexByName(file.fileName());
 }

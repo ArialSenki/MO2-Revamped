@@ -160,7 +160,8 @@ public:  // Static functions:
    *
    * @param name The name to look up.
    *
-   * @return a reference counting pointer to the mod info.
+   * @return a reference counting pointer to the mod info, null if there is no mod
+   *     with that name.
    *
    * @note Since the pointer is reference counter, the pointer remains valid even if the
    *     collection is refreshed in a different thread.
@@ -227,6 +228,13 @@ public:  // Static functions:
    * @return whether the given name is used for backups.
    */
   static bool isBackupName(const QString& name);
+
+  /**
+   * @brief MO2 Revamped: whether Windows refuses this as a folder name (CON, nul.txt,
+   *     Com1...), in any case and with any extension; fixDirectoryName() only catches
+   *     the exact upper-case names.
+   */
+  static bool isReservedDeviceName(const QString& name);
 
 public:  // IModInterface implementations / Re-declaration
   // Note: This section contains default-implementation for some of the virtual methods

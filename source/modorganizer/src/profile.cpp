@@ -485,9 +485,19 @@ void Profile::renameModInList(QFile& modList, const QString& oldName,
   modList.close();
 
   if (renamed) {
-    modList.open(QIODevice::WriteOnly);
-    modList.write(outBuffer.buffer());
-    modList.close();
+    // MO2 Revamped: through a temporary file, as doWriteModlist() does; opening
+    // it for writing emptied the list first, and a failed write left it so
+    try {
+      SafeWriteFile file(modList.fileName());
+      if (file->write(outBuffer.buffer()) != outBuffer.buffer().size()) {
+        reportError(tr("failed to write mod list: %1").arg(modList.fileName()));
+        return;
+      }
+      file.commit();
+    } catch (const std::exception& e) {
+      reportError(tr("failed to write mod list: %1").arg(e.what()));
+      return;
+    }
   }
 
   if (renamed)

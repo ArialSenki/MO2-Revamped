@@ -84,6 +84,14 @@ FileExecutionContext getFileExecutionContext(QWidget* parent, const QFileInfo& t
 
 FileExecutionTypes getFileExecutionType(const QFileInfo& target);
 
+// MO2 Revamped: an argument quoted as CommandLineToArgvW() reads it, when it
+// has spaces; one that already has quotes (the caller quoted it, or it's a
+// whole command line) is left as it is
+QString quoteArgument(const QString& argument);
+
+// the arguments joined by spaces, each one through quoteArgument()
+QString joinArguments(const QStringList& arguments);
+
 }  // namespace spawn
 
 // convenience functions to work with the external helper program, which is used

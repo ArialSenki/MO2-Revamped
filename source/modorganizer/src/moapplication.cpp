@@ -976,7 +976,8 @@ int MOApplication::run(MOMultiProcess& multiProcess)
 
 void MOApplication::externalMessage(const QString& message)
 {
-  log::debug("received external message '{}'", message);
+  // MO2 Revamped: an nxm link's key stays out of the log
+  log::debug("received external message '{}'", message.section(QLatin1Char('?'), 0, 0));
 
   // from MO2 c44ee31 (#2144), f42a9f1 (#2154)
   if (m_core == nullptr) {

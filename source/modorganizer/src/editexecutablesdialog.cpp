@@ -234,6 +234,10 @@ EditExecutablesDialog::EditExecutablesDialog(OrganizerCore& oc, int sel,
 
   for (auto&& m : m_organizerCore.modList()->allMods()) {
     auto mod = ModInfo::getByName(m);
+    // MO2 Revamped: a name the mod list has but no mod (one just removed)
+    if (mod == nullptr) {
+      continue;
+    }
     if (!mod->hasAnyOfTheseFlags({ModInfo::FLAG_FOREIGN, ModInfo::FLAG_BACKUP,
                                   ModInfo::FLAG_OVERWRITE, ModInfo::FLAG_SEPARATOR})) {
       ui->mods->addItem(m);
@@ -463,6 +467,90 @@ bool EditExecutablesDialog::commitChanges()
     }
   }
 
+  // MO2 Revamped: the other profiles of the instance keep their mod for new
+  // files and forced libraries under a renamed program's new title, and lose
+  // those of a removed one
+  {
+    struct Moved
+    {
+      QString to;
+      QVariant overwrite;
+      QVariant librariesEnabled;
+      QList<QVariantMap> libraries;
+    };
+
+    const QDir profilesDir(m_organizerCore.settings().paths().profiles());
+    const QString currentName = profile->name();
+
+    for (const auto& name : profilesDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+      if (m_renamedTitles.empty()) {
+        break;
+      }
+      if (name.compare(currentName, Qt::CaseInsensitive) == 0) {
+        continue;
+      }
+
+      Profile other(QDir(profilesDir.absoluteFilePath(name)),
+                    m_organizerCore.managedGame(), m_organizerCore.gameFeatures());
+
+      // read everything first: two titles can trade places
+      std::vector<Moved> moved;
+      for (const auto& [from, to] : m_renamedTitles) {
+        if (from == to) {
+          continue;
+        }
+
+        Moved m{to, other.setting("custom_overwrites", from),
+                other.setting("forced_libraries", from + "/enabled"),
+                other.settingsByArray("forced_libraries/" + from)};
+
+        other.removeSetting("custom_overwrites", from);
+        other.removeForcedLibraries(from);
+        moved.push_back(std::move(m));
+      }
+
+      for (const auto& m : moved) {
+        if (m.to.isEmpty()) {
+          continue;
+        }
+
+        if (m.overwrite.isValid()) {
+          other.storeSetting("custom_overwrites", m.to, m.overwrite);
+        }
+        if (m.librariesEnabled.isValid()) {
+          other.setForcedLibrariesEnabled(m.to, m.librariesEnabled.toBool());
+        }
+        if (!m.libraries.isEmpty()) {
+          other.storeSettingsByArray("forced_libraries/" + m.to, m.libraries);
+        }
+      }
+    }
+
+    m_renamedTitles.clear();
+  }
+
+  // MO2 Revamped: the game plugin's programs the user removed or renamed aren't
+  // added back by the next refresh or start; one in the list again is forgotten
+  if (const auto* game = m_organizerCore.managedGame()) {
+    QStringList removed = m_organizerCore.settings().removedPluginExecutables();
+
+    for (const auto& pe : m_executablesList.getPluginExecutables(game)) {
+      const bool wasThere =
+          m_originalExecutables.find(pe.title()) != m_originalExecutables.end();
+      const bool isThere = newExecutables.find(pe.title()) != newExecutables.end();
+
+      if (isThere) {
+        removed.removeIf([&](const QString& s) {
+          return s.compare(pe.title(), Qt::CaseInsensitive) == 0;
+        });
+      } else if (wasThere && !removed.contains(pe.title(), Qt::CaseInsensitive)) {
+        removed.append(pe.title());
+      }
+    }
+
+    m_organizerCore.settings().setRemovedPluginExecutables(removed);
+  }
+
   // set the new executables list; saved now, for plugins reading the instance's
   // list and in case Mod Organizer doesn't get to close normally
   m_organizerCore.setExecutablesList(newExecutables);
@@ -474,6 +562,23 @@ bool EditExecutablesDialog::commitChanges()
   setDirty(false);
 
   return true;
+}
+
+void EditExecutablesDialog::trackRename(const QString& from, const QString& to)
+{
+  // a title already renamed once follows on from its original one
+  for (auto& [original, current] : m_renamedTitles) {
+    if (!current.isEmpty() && current == from) {
+      current = to;
+      return;
+    }
+  }
+
+  // only the titles the profiles have settings for
+  if (m_renamedTitles.count(from) == 0 &&
+      m_originalExecutables.find(from, true) != m_originalExecutables.end()) {
+    m_renamedTitles[from] = to;
+  }
 }
 
 void EditExecutablesDialog::setDirty(bool b)
@@ -703,6 +808,7 @@ void EditExecutablesDialog::save()
     // is being changed
     m_customOverwrites.rename(e->title(), newTitle);
     m_forcedLibraries.rename(e->title(), newTitle);
+    trackRename(e->title(), newTitle);
 
     // save the new title
     e->title(newTitle);
@@ -838,6 +944,7 @@ void EditExecutablesDialog::on_remove_clicked()
 
   m_customOverwrites.remove(exe->title());
   m_forcedLibraries.remove(exe->title());
+  trackRename(exe->title(), {});
 
   // removing from main list, must be done last because it invalidates the
   // exe pointer

@@ -156,6 +156,12 @@ UsvfsConnector::UsvfsConnector()
 
   usvfsClearExecutableBlacklist();
   for (auto exec : s.executablesBlacklist().split(";")) {
+    // MO2 Revamped: an empty entry becomes "\" in usvfs and matches every
+    // program, so every program would run without the VFS
+    exec = exec.trimmed();
+    if (exec.isEmpty()) {
+      continue;
+    }
     std::wstring buf = exec.toStdWString();
     usvfsBlacklistExecutable(buf.data());
   }
@@ -264,6 +270,11 @@ void UsvfsConnector::updateParams(MOBase::log::Levels logLevel,
 
   usvfsClearExecutableBlacklist();
   for (auto exec : executableBlacklist.split(";")) {
+    // MO2 Revamped: skip empty entries, see the constructor
+    exec = exec.trimmed();
+    if (exec.isEmpty()) {
+      continue;
+    }
     std::wstring buf = exec.toStdWString();
     usvfsBlacklistExecutable(buf.data());
   }

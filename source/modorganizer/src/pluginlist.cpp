@@ -270,7 +270,7 @@ void PluginList::refresh(const QString& profileName,
         filename.endsWith(".esl", Qt::CaseInsensitive)) {
       availablePlugins.insert(std::make_pair(filename, current));
     } else if (filename.endsWith(".bsa", Qt::CaseInsensitive) ||
-               filename.endsWith("ba2", Qt::CaseInsensitive)) {
+               filename.endsWith(".ba2", Qt::CaseInsensitive)) {
       archiveCandidates.append(filename);
     }
   }
@@ -284,7 +284,7 @@ void PluginList::refresh(const QString& profileName,
                        primaryPlugins.contains(filename, Qt::CaseInsensitive);
     bool forceEnabled  = enabledPlugins.contains(filename, Qt::CaseInsensitive);
     bool forceDisabled = loadOrderMechanismNone && !forceLoaded && !forceEnabled;
-    if (!lightPluginsAreSupported && filename.endsWith(".esl")) {
+    if (!lightPluginsAreSupported && filename.endsWith(".esl", Qt::CaseInsensitive)) {
       forceDisabled = true;
     }
 
@@ -782,7 +782,8 @@ void PluginList::saveTo(const QString& lockedOrderFileName) const
   writeLockedOrder(lockedOrderFileName);
 }
 
-bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure)
+bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure,
+                               QStringList* locked)
 {
   const auto* gamePlugin = m_Organizer.managedGame();
   if (gamePlugin == nullptr) {
@@ -796,6 +797,9 @@ bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure)
   }
 
   log::debug("setting file times on esps");
+
+  // MO2 Revamped: a locked file no longer stops the others from being dated
+  bool allDated = true;
 
   for (ESPInfo& esp : m_ESPs) {
     std::wstring espName         = ToWString(esp.name);
@@ -816,7 +820,13 @@ bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure)
       if (file == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_SHARING_VIOLATION) {
           // file is locked, probably the game is running
-          return false;
+          log::warn("can't set the file time of '{}', it's open in another program",
+                    fileName);
+          allDated = false;
+          if (locked) {
+            locked->append(esp.name);
+          }
+          continue;
         } else {
           throw windows_error(
               QObject::tr("failed to access %1").arg(fileName).toUtf8().constData());
@@ -832,17 +842,21 @@ bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure)
       newWriteTime.dwHighDateTime = (DWORD)(temp >> 32);
       esp.time                    = newWriteTime;
       fileEntry->setFileTime(newWriteTime);
-      if (!::SetFileTime(file, nullptr, nullptr, &newWriteTime)) {
+      const BOOL timeSet = ::SetFileTime(file, nullptr, nullptr, &newWriteTime);
+      const auto timeError = ::GetLastError();
+      // MO2 Revamped: closed before the throw too, the handle leaked
+      CloseHandle(file);
+
+      if (!timeSet) {
+        ::SetLastError(timeError);
         throw windows_error(QObject::tr("failed to set file time %1")
                                 .arg(fileName)
                                 .toUtf8()
                                 .constData());
       }
-
-      CloseHandle(file);
     }
   }
-  return true;
+  return allDated;
 }
 
 QString PluginList::getIndexPriority(int index) const
@@ -1191,8 +1205,16 @@ void PluginList::generatePluginIndexes()
   std::vector<int> coreLightPlugins;
   std::vector<int> coreMediumPlugins;
 
+  // MO2 Revamped: the first index regular plugins can't have; FE holds the
+  // light plugins and FD the medium ones where the game has them, and FF is
+  // the game's own
+  const int regularLimit = mediumPluginsSupported ? 0xFD
+                           : lightPluginsSupported ? 0xFE
+                                                   : 0xFF;
+
   for (int l = 0; l < m_ESPs.size(); ++l) {
     int i = m_ESPsByPriority.at(l);
+    m_ESPs[i].overIndexLimit = false;
     if (!m_ESPs[i].enabled) {
       m_ESPs[i].index = QString();
       ++numSkipped;
@@ -1215,9 +1237,10 @@ void PluginList::generatePluginIndexes()
                             .toUpper();
       ++numESLs;
     } else {
-      m_ESPs[i].index = QString("%1")
-                            .arg(l - numESHs - numESLs - numSkipped, 2, 16, QChar('0'))
-                            .toUpper();
+      const int regularIndex = l - numESHs - numESLs - numSkipped;
+      m_ESPs[i].index =
+          QString("%1").arg(regularIndex, 2, 16, QChar('0')).toUpper();
+      m_ESPs[i].overIndexLimit = regularIndex >= regularLimit;
     }
   }
   emit esplist_changed();
@@ -1473,13 +1496,23 @@ QVariant PluginList::tooltipData(const QModelIndex& modelIndex) const
                                "typically used to load a paired archive file.");
   }
 
+  if (esp.overIndexLimit) {
+    toolTip += "<br><br><b>" +
+               tr("This plugin is past the game's limit of regular plugins, so the "
+                  "game won't load it. Turn off some plugins, or use light (ESL) "
+                  "versions where a mod has them.") +
+               "</b>";
+  }
+
   if (esp.forceDisabled) {
     auto feature = m_Organizer.gameFeatures().gameFeature<GamePlugins>();
-    if (feature && esp.hasLightExtension && feature->lightPluginsAreSupported()) {
+    // MO2 Revamped: the condition was inverted
+    if (esp.hasLightExtension && !(feature && feature->lightPluginsAreSupported())) {
       toolTip += "<br><br>" + tr("Light plugins (ESL) are not supported by this game.");
     } else {
-      toolTip += "<br><br>" + tr("This game does not currently permit custom plugin "
-                                 "loading. There may be manual workarounds.");
+      toolTip += "<br><br>" +
+                 tr("This game doesn't let MO2 choose which plugins load, so this one can't be "
+                    "turned on.");
     }
   }
 
@@ -1619,6 +1652,10 @@ QVariant PluginList::iconData(const QModelIndex& modelIndex) const
 bool PluginList::isProblematic(const ESPInfo& esp, const AdditionalInfo* info) const
 {
   if (esp.masterUnset.size() > 0) {
+    return true;
+  }
+
+  if (esp.overIndexLimit) {
     return true;
   }
 

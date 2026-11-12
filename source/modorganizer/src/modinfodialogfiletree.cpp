@@ -6,6 +6,7 @@
 #include "modinfodialog.h"
 #include "mo2foldericonprovider.h"
 #include "organizercore.h"
+#include "shared/util.h"
 #include "ui_modinfodialog.h"
 #include <log.h>
 #include <report.h>
@@ -384,12 +385,16 @@ void FileTreeTab::onDelete()
     return;
   }
 
-  if (!shellDelete(topmostPaths(paths), true, parentWidget())) {
-    const auto e = GetLastError();
-    if (e != ERROR_CANCELLED) {
-      log::error("failed to delete files, {}", formatSystemMessage(e));
-      reportError(
-          tr("Failed to delete the selected files: %1").arg(formatSystemMessage(e)));
+  // MO2 Revamped: shellDelete() deleted for good where there is no Recycle Bin
+  // and said yes when a file in use was skipped
+  const auto removal =
+      MOShared::shellRemove(topmostPaths(paths), true, parentWidget());
+  if (!removal.removed()) {
+    log::error("failed to delete {} (error {})", removal.remaining.join(", "),
+               removal.error);
+    if (!removal.aborted) {
+      reportError(tr("Some of the selected files couldn't be removed. Close programs "
+                     "using them and try again."));
     }
   }
 

@@ -122,9 +122,18 @@ public:
    * @brief adds the plugin's executables that are not in the list yet, as on
    *        startup; a plugin can offer new ones while MO2 runs (a launcher
    *        that came with a mod just installed)
+   * @param skippedTitles titles the user removed or renamed, never added back
+   * @param modsPath the mods folder: a missing path is only moved to the
+   *        plugin's new one when both are the same file in a renamed mod
    * @return whether any executable was added
    **/
-  bool addMissingFromPlugin(MOBase::IPluginGame const* game);
+  bool addMissingFromPlugin(MOBase::IPluginGame const* game,
+                            const QStringList& skippedTitles, const QString& modsPath);
+
+  /**
+   * returns the executables provided by the game plugin
+   **/
+  std::vector<Executable> getPluginExecutables(MOBase::IPluginGame const* game) const;
 
   /**
    * @brief writes the current list to the settings
@@ -158,10 +167,11 @@ public:
   Executable& getByBinary(const QFileInfo& info);
 
   /**
-   * @brief returns an iterator for the given executable by title, or end()
+   * @brief returns an iterator for the given executable by title, or end();
+   *        titles are compared ignoring case unless `caseSensitive` is true
    */
-  iterator find(const QString& title, bool caseSensitive = true);
-  const_iterator find(const QString& title, bool caseSensitive = true) const;
+  iterator find(const QString& title, bool caseSensitive = false);
+  const_iterator find(const QString& title, bool caseSensitive = false) const;
 
   /**
    * @brief determine if an executable exists
@@ -217,11 +227,6 @@ private:
    * @param executable
    */
   void setExecutable(const Executable& exe, SetFlags flags);
-
-  /**
-   * returns the executables provided by the game plugin
-   **/
-  std::vector<Executable> getPluginExecutables(MOBase::IPluginGame const* game) const;
 
   /**
    * called when MO is still using the old custom executables from 2.2.0

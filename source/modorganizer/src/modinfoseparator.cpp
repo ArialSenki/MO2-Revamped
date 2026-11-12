@@ -21,7 +21,7 @@ int ModInfoSeparator::getHighlight() const
 
 QString ModInfoSeparator::getDescription() const
 {
-  return tr("This is a Separator");
+  return tr("A separator");
 }
 
 QString ModInfoSeparator::name() const

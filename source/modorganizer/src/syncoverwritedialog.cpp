@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
+#include "shared/util.h"
 #include "ui_syncoverwritedialog.h"
 
 #include <log.h>
@@ -175,7 +176,10 @@ void SyncOverwriteDialog::applyTo(QTreeWidgetItem* item, const QString& path,
             if (hadCopy) {
               move(oldCopy, destination);
             }
-          } else if (hadCopy && !shellDelete(QStringList{oldCopy}, true, this)) {
+          } else if (hadCopy &&
+                     // MO2 Revamped: shellDelete() deleted for good where there is
+                     // no Recycle Bin and said yes when the file was skipped
+                     !shellRemove(QStringList{oldCopy}, true, this).removed()) {
             reportError(tr("failed to remove %1").arg(oldCopy));
           }
         }

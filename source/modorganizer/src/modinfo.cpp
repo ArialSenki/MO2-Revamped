@@ -35,6 +35,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shared/appconfig.h"
 #include "shared/util.h"
+#include <filesystemutilities.h>
 #include <iplugingame.h>
 #include <log.h>
 #include <report.h>
@@ -74,8 +75,20 @@ bool ModInfo::isSeparatorName(const QString& name)
 bool ModInfo::isBackupName(const QString& name)
 {
   static QRegularExpression backupExp(
-      QRegularExpression::anchoredPattern(".*backup[0-9]*"));
+      // MO2 Revamped: backups are made as "<name>_backup" (installationmanager);
+      // ".*backup[0-9]*" also caught mods like "Weapons backup" and hid them
+      QRegularExpression::anchoredPattern(".*_backup[0-9]*"));
   return backupExp.match(name).hasMatch();
+}
+
+bool ModInfo::isReservedDeviceName(const QString& name)
+{
+  // same check as the instance dialogs: the part before the first dot, upper case
+  QString stem = name.section(QLatin1Char('.'), 0, 0).trimmed().toUpper();
+  if (stem.isEmpty()) {
+    return false;
+  }
+  return !MOBase::fixDirectoryName(stem);
 }
 
 ModInfo::Ptr ModInfo::createFrom(const QDir& dir, OrganizerCore& core)
@@ -162,7 +175,13 @@ ModInfo::Ptr ModInfo::getByName(const QString& name)
 {
   QMutexLocker locker(&s_Mutex);
 
-  return s_Collection[ModInfo::getIndex(name)];
+  // MO2 Revamped: a missing name gave UINT_MAX and indexed past the end
+  const unsigned int index = ModInfo::getIndex(name);
+  if (index >= s_Collection.size()) {
+    return nullptr;
+  }
+
+  return s_Collection[index];
 }
 
 bool ModInfo::removeMod(unsigned int index)
@@ -180,11 +199,15 @@ bool ModInfo::removeMod(unsigned int index)
     // Windows reports success when a file in use is skipped, and uibase's
     // shellDelete() deletes for good where there is no Recycle Bin; a mod half
     // gone would come back at the next refresh with part of its files
-    if (!MOShared::shellRemove({modInfo->absolutePath()}, true,
-                               QApplication::activeWindow())
-             .removed()) {
-      reportError(
-          tr("remove: failed to delete mod '%1' directory").arg(modInfo->name()));
+    const auto removal =
+        MOShared::shellRemove({modInfo->absolutePath()}, true, QApplication::activeWindow());
+    if (!removal.removed()) {
+      // not when the user said no to Windows' "delete for good?"
+      if (!removal.aborted) {
+        reportError(
+            tr("\"%1\" couldn't be removed. Close programs using its files and try again.")
+                .arg(modInfo->name()));
+      }
       return false;
     }
   }

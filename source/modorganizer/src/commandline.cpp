@@ -7,6 +7,7 @@
 #include "organizercore.h"
 #include "shared/appconfig.h"
 #include "shared/util.h"
+#include "spawn.h"
 #include <log.h>
 #include <report.h>
 
@@ -302,14 +303,20 @@ std::optional<int> CommandLine::runPostOrganizer(OrganizerCore& core)
       //
       // make sure MO doesn't exit even if locking is disabled, ForceWait and
       // PreventExit will do that
+      // MO2 Revamped: each of these is one argument already split by Windows,
+      // so one with spaces ("C:\My Mods\a.esp") is quoted again
+      QStringList arguments;
+      for (const QString& argument : m_untouched) {
+        arguments.append(spawn::quoteArgument(argument));
+      }
       core.processRunner()
-          .setFromFileOrExecutable(exeName, m_untouched)
+          .setFromFileOrExecutable(exeName, arguments)
           .setWaitForCompletion(ProcessRunner::ForCommandLine, UILocker::PreventExit)
           .run();
 
       return 0;
     } catch (const std::exception& e) {
-      reportError(QObject::tr("failed to start application: %1").arg(e.what()));
+      reportError(QObject::tr("The program couldn't start: %1").arg(e.what()));
       return 1;
     }
   } else if (m_command) {

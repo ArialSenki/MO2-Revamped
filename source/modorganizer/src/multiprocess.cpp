@@ -60,8 +60,16 @@ void MOMultiProcess::sendMessage(const QString& message)
   }
 
   if (!connected) {
-    reportError(
-        tr("failed to connect to running process: %1").arg(socket.errorString()));
+    // MO2 Revamped: a link said plainly; the socket's error is for the log
+    if (message.startsWith("nxm://", Qt::CaseInsensitive)) {
+      MOBase::log::error("failed to connect to running process: {}",
+                         socket.errorString());
+      reportError(tr("Mod Organizer is running but didn't answer; the link wasn't "
+                     "added. Try again in a moment."));
+    } else {
+      reportError(
+          tr("failed to connect to running process: %1").arg(socket.errorString()));
+    }
     return;
   }
 

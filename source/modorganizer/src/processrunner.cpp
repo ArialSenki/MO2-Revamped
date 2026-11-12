@@ -1,10 +1,12 @@
 #include "processrunner.h"
+#include <memory>
 #include <optional>
 #include "env.h"
 #include "envmodule.h"
 #include "instancemanager.h"
 #include "iuserinterface.h"
 #include "organizercore.h"
+#include "profile.h"
 #include "scriptextendersetup.h"
 #include "borderlesswindow.h"
 #include <iplugingame.h>
@@ -117,15 +119,26 @@ struct InterestingProcess
   env::HandlePtr handle;
 };
 
-InterestingProcess findRandomProcess(const env::Process& root)
+// MO2 Revamped: programs that are not waited for at all (Steam and the
+// blacklisted ones a game starts, like Steam's overlay), so MO2 doesn't stay
+// locked once only they remain; their children still are
+bool isIgnored(const env::Process& p, const QStringList& ignored)
+{
+  return ignored.contains(p.name(), Qt::CaseInsensitive);
+}
+
+InterestingProcess findRandomProcess(const env::Process& root,
+                                     const QStringList& ignored)
 {
   for (auto&& c : root.children()) {
-    env::HandlePtr h = c.openHandleForWait();
-    if (h) {
-      return {c, Interest::Weak, std::move(h)};
+    if (!isIgnored(c, ignored)) {
+      env::HandlePtr h = c.openHandleForWait();
+      if (h) {
+        return {c, Interest::Weak, std::move(h)};
+      }
     }
 
-    auto r = findRandomProcess(c);
+    auto r = findRandomProcess(c, ignored);
     if (r.handle) {
       return r;
     }
@@ -137,7 +150,8 @@ InterestingProcess findRandomProcess(const env::Process& root)
 // returns a process that's in the hidden list, or the top-level process if
 // they're all hidden; returns an invalid process if the list is empty
 //
-InterestingProcess findInterestingProcessInTrees(const env::Process& root)
+InterestingProcess findInterestingProcessInTrees(const env::Process& root,
+                                                 const QStringList& ignored)
 {
   // Certain process names we wish to "hide" for aesthetic reason:
   static const std::vector<QString> hiddenList = {
@@ -158,21 +172,21 @@ InterestingProcess findInterestingProcessInTrees(const env::Process& root)
   };
 
   for (auto&& p : root.children()) {
-    if (!isHidden(p)) {
+    if (!isHidden(p) && !isIgnored(p, ignored)) {
       env::HandlePtr h = p.openHandleForWait();
       if (h) {
         return {p, Interest::Strong, std::move(h)};
       }
     }
 
-    auto r = findInterestingProcessInTrees(p);
+    auto r = findInterestingProcessInTrees(p, ignored);
     if (r.interest == Interest::Strong) {
       return r;
     }
   }
 
   // everything is hidden, just pick the first one that can be used
-  return findRandomProcess(root);
+  return findRandomProcess(root, ignored);
 }
 
 void dump(const env::Process& p, int indent)
@@ -196,7 +210,7 @@ void dump(const env::Process& root)
 
 // gets the most interesting process in the list
 //
-InterestingProcess getInterestingProcess(HANDLE job)
+InterestingProcess getInterestingProcess(HANDLE job, const QStringList& ignored)
 {
   env::Process root = env::getProcessTree(job);
   if (root.children().empty()) {
@@ -206,7 +220,7 @@ InterestingProcess getInterestingProcess(HANDLE job)
 
   dump(root);
 
-  auto interest = findInterestingProcessInTrees(root);
+  auto interest = findInterestingProcessInTrees(root, ignored);
   if (!interest.handle) {
     // this can happen if none of the processes can be opened
     log::debug("no interesting process to wait for");
@@ -287,7 +301,8 @@ std::optional<ProcessRunner::Results> timedWait(HANDLE handle, DWORD pid,
 }
 
 ProcessRunner::Results waitForProcessesThreadImpl(HANDLE job, UILocker::Session* ls,
-                                                  std::atomic<bool>& interrupt)
+                                                  std::atomic<bool>& interrupt,
+                                                  const QStringList& ignored)
 {
   using namespace std::chrono;
 
@@ -300,7 +315,7 @@ ProcessRunner::Results waitForProcessesThreadImpl(HANDLE job, UILocker::Session*
   auto wait = defaultWait;
 
   while (!interrupt) {
-    auto ip = getInterestingProcess(job);
+    auto ip = getInterestingProcess(job, ignored);
     if (!ip.handle) {
       // nothing to wait on
       return ProcessRunner::Completed;
@@ -347,9 +362,10 @@ ProcessRunner::Results waitForProcessesThreadImpl(HANDLE job, UILocker::Session*
 }
 
 void waitForProcessesThread(ProcessRunner::Results& result, HANDLE job,
-                            UILocker::Session* ls, std::atomic<bool>& interrupt)
+                            UILocker::Session* ls, std::atomic<bool>& interrupt,
+                            QStringList ignored)
 {
-  result = waitForProcessesThreadImpl(job, ls, interrupt);
+  result = waitForProcessesThreadImpl(job, ls, interrupt, ignored);
 
   // the session can be null when running shortcuts with locking disabled
   if (ls) {
@@ -357,8 +373,10 @@ void waitForProcessesThread(ProcessRunner::Results& result, HANDLE job,
   }
 }
 
+// `ignored`: file names of programs not to wait for, see isIgnored()
 ProcessRunner::Results waitForProcesses(const std::vector<HANDLE>& initialProcesses,
-                                        UILocker::Session* ls)
+                                        UILocker::Session* ls,
+                                        const QStringList& ignored = {})
 {
   if (initialProcesses.empty()) {
     // nothing to wait for
@@ -409,7 +427,7 @@ ProcessRunner::Results waitForProcesses(const std::vector<HANDLE>& initialProces
   std::atomic<bool> interrupt(false);
 
   auto* t = QThread::create(waitForProcessesThread, std::ref(results), monitor, ls,
-                            std::ref(interrupt));
+                            std::ref(interrupt), ignored);
 
   QEventLoop events;
   QObject::connect(t, &QThread::finished, [&] {
@@ -430,11 +448,12 @@ ProcessRunner::Results waitForProcesses(const std::vector<HANDLE>& initialProces
 }
 
 ProcessRunner::Results waitForProcess(HANDLE initialProcess, LPDWORD exitCode,
-                                      UILocker::Session* ls)
+                                      UILocker::Session* ls,
+                                      const QStringList& ignored = {})
 {
   std::vector<HANDLE> processes = {initialProcess};
 
-  const auto r = waitForProcesses(processes, ls);
+  const auto r = waitForProcesses(processes, ls, ignored);
 
   // as long as it's not running anymore, try to get the exit code
   if (exitCode && r != ProcessRunner::Running) {
@@ -547,8 +566,18 @@ ProcessRunner& ProcessRunner::setFromFile(QWidget* parent, const QFileInfo& targ
   return *this;
 }
 
-ProcessRunner::ForcedLibraries ProcessRunner::forcedLibrariesFor(const QString& title)
+ProcessRunner::ForcedLibraries ProcessRunner::forcedLibrariesFor(const QString& title,
+                                                                 const Profile* fixedProfile)
 {
+  if (fixedProfile) {
+    if (!fixedProfile->forcedLibrariesEnabled(title)) {
+      return {};
+    }
+
+    m_core.waitForDirectoryRefresh();
+    return fixedProfile->determineForcedLibraries(title);
+  }
+
   const auto* profile = m_core.currentProfile();
   if (!profile || !profile->forcedLibrariesEnabled(title)) {
     return {};
@@ -627,9 +656,11 @@ ProcessRunner& ProcessRunner::setFromShortcut(const MOShortcut& shortcut)
   if (exe != exes->end()) {
     setFromExecutable(*exe);
   } else {
-    MOBase::reportError(QObject::tr("Executable '%1' does not exist in instance '%2'.")
-                            .arg(shortcut.executableName())
-                            .arg(currentInstance->displayName()));
+    MOBase::reportError(
+        QObject::tr("The program '%1' is no longer in instance '%2'. It may have been "
+                    "renamed or removed in Edit programs; create the shortcut again.")
+            .arg(shortcut.executableName())
+            .arg(currentInstance->displayName()));
 
     throw std::exception();
   }
@@ -642,12 +673,28 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
     const QString& profileOverride, const QString& forcedCustomOverwrite,
     bool ignoreCustomOverwrite)
 {
-  const auto* profile = m_core.currentProfile();
-  if (!profile) {
+  const auto* current = m_core.currentProfile();
+  if (!current) {
     throw MyException(QObject::tr("No profile set"));
   }
 
+  // MO2 Revamped: with a profile override, the mappings come from that profile
+  // (see OrganizerCore::fileMapping()), so the program's mod for new files and
+  // its forced libraries come from it too
+  std::unique_ptr<Profile> overrideProfile;
+  if (!profileOverride.isEmpty() &&
+      profileOverride.compare(current->name(), Qt::CaseInsensitive) != 0) {
+    overrideProfile = std::make_unique<Profile>(
+        QDir(m_core.settings().paths().profiles() + "/" + profileOverride),
+        m_core.managedGame(), m_core.gameFeatures());
+  }
+
+  const Profile* profile = overrideProfile ? overrideProfile.get() : current;
+
   setBinary(QFileInfo(executable));
+  // joined as they come: plugins pass whole command lines as one item
+  // ("deploy -reportProgress ..."); the command line's own arguments are
+  // quoted by its caller
   setArguments(args.join(" "));
   setCurrentDirectory(cwd);
   setProfileName(profileOverride);
@@ -671,7 +718,7 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
 
       setSteamID(exe.steamAppID());
       setCustomOverwrite(profile->setting("custom_overwrites", exe.title()).toString());
-      setForcedLibraries(forcedLibrariesFor(exe.title()));
+      setForcedLibraries(forcedLibrariesFor(exe.title(), overrideProfile.get()));
     } catch (const std::runtime_error&) {
       // nop
     }
@@ -683,7 +730,7 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
 
       setSteamID(exe.steamAppID());
       setCustomOverwrite(profile->setting("custom_overwrites", exe.title()).toString());
-      setForcedLibraries(forcedLibrariesFor(exe.title()));
+      setForcedLibraries(forcedLibrariesFor(exe.title(), overrideProfile.get()));
 
       if (args.isEmpty()) {
         setArguments(exe.arguments());
@@ -819,8 +866,15 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   }
 
   // warn if the executable is on the blacklist
+  const QString blacklistBefore = settings.executablesBlacklist();
   if (!checkBlacklist(parent, m_sp, settings)) {
     return Error;
+  }
+
+  // MO2 Revamped: "Change the blacklist" only wrote the setting; usvfs kept the
+  // old list for this start
+  if (settings.executablesBlacklist() != blacklistBefore) {
+    m_core.setLogLevel(settings.diagnostics().logLevel());
   }
 
   // MO2 Revamped: for the games MO2 takes the frame off, its DLL does it
@@ -961,6 +1015,23 @@ ProcessRunner::Results ProcessRunner::postRun()
     }
   }
 
+  // MO2 Revamped: Steam and the blacklisted programs the game starts (Steam's
+  // overlay, a browser) aren't waited for; the program MO2 started always is.
+  // Read here, the wait runs on another thread
+  QStringList ignored = {"Steam.exe",           "steamwebhelper.exe",
+                         "SteamService.exe",    "GameOverlayUI.exe",
+                         "GameOverlayUI64.exe", "steamerrorreporter.exe",
+                         "steamerrorreporter64.exe"};
+  for (const auto& exec : m_core.settings().executablesBlacklist().split(";")) {
+    if (!exec.trimmed().isEmpty()) {
+      ignored.append(exec.trimmed());
+    }
+  }
+  const QString started = m_sp.binary.fileName();
+  ignored.removeIf([&](const QString& s) {
+    return s.compare(started, Qt::CaseInsensitive) == 0;
+  });
+
   auto r = Error;
 
   if (mustWait && m_lockReason == UILocker::PreventExit && !lockEnabled) {
@@ -974,10 +1045,10 @@ ProcessRunner::Results ProcessRunner::postRun()
     //
     // MO will be running in the background with no visual feedback, but that's
     // how it is
-    r = waitForProcess(m_handle.get(), &m_exitCode, nullptr);
+    r = waitForProcess(m_handle.get(), &m_exitCode, nullptr, ignored);
   } else {
     withLock([&](auto& ls) {
-      r = waitForProcess(m_handle.get(), &m_exitCode, &ls);
+      r = waitForProcess(m_handle.get(), &m_exitCode, &ls, ignored);
     });
   }
 

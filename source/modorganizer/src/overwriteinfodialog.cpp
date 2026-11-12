@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "mo2foldericonprovider.h"
 #include "organizercore.h"
 #include "report.h"
+#include "shared/util.h"
 #include "ui_overwriteinfodialog.h"
 #include "utility.h"
 #include <QDirIterator>
@@ -431,11 +432,15 @@ void OverwriteInfoDialog::emptyOverwrite()
     return;
   }
 
-  if (!shellDelete(entries, true, this)) {
-    const auto e = GetLastError();
-    if (e != ERROR_CANCELLED) {
-      log::error("failed to empty Overwrite, {}", formatSystemMessage(e));
-      reportError(tr("Overwrite could not be cleared: %1").arg(formatSystemMessage(e)));
+  // MO2 Revamped: shellDelete() deleted for good where there is no Recycle Bin
+  // and said yes when a file in use was skipped
+  const auto removal = MOShared::shellRemove(entries, true, this);
+  if (!removal.removed()) {
+    log::error("failed to empty Overwrite, left {} (error {})",
+               removal.remaining.join(", "), removal.error);
+    if (!removal.aborted) {
+      reportError(tr("Some files in Overwrite couldn't be removed. Close programs "
+                     "using them and try again."));
     }
   }
   updateSummary();
@@ -504,12 +509,15 @@ void OverwriteInfoDialog::deleteFiles(const QModelIndexList& indexes)
     paths.append(m_FileSystemModel->filePath(index));
   }
 
-  if (!shellDelete(topmostPaths(paths), true, this)) {
-    const auto e = GetLastError();
-    if (e != ERROR_CANCELLED) {
-      log::error("failed to delete files, {}", formatSystemMessage(e));
-      reportError(
-          tr("Failed to delete the selected files: %1").arg(formatSystemMessage(e)));
+  // MO2 Revamped: shellDelete() deleted for good where there is no Recycle Bin
+  // and said yes when a file in use was skipped
+  const auto removal = MOShared::shellRemove(topmostPaths(paths), true, this);
+  if (!removal.removed()) {
+    log::error("failed to delete {} (error {})", removal.remaining.join(", "),
+               removal.error);
+    if (!removal.aborted) {
+      reportError(tr("Some of the selected files couldn't be removed. Close programs "
+                     "using them and try again."));
     }
   }
 }

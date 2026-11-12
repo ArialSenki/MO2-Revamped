@@ -2,6 +2,7 @@
 #define MODORGANIZER_LOOT_H
 
 #include "envmodule.h"
+#include <QSet>
 #include <QWidget>
 #include <log.h>
 #include <lootcli/lootcli.h>
@@ -112,6 +113,11 @@ private:
   std::string m_outputBuffer;
   std::vector<QString> m_errors, m_warnings;
   Report m_report;
+
+  // MO2 Revamped: the enabled plugins (lower case), read on the GUI thread
+  // before lootcli starts; the report is built on the LOOT thread, which
+  // mustn't use the plugin list
+  QSet<QString> m_enabledPlugins;
 
   bool spawnLootcli(QWidget* parent, bool didUpdateMasterList,
                     env::HandlePtr stdoutHandle);

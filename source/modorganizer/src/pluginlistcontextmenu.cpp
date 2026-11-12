@@ -71,13 +71,13 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
 
     bool hasLocked   = false;
     bool hasUnlocked = false;
+    // MO2 Revamped: a locked plugin turned off since can still be unlocked;
+    // only locking needs it on (it has no load order otherwise)
     for (auto& idx : indicesOf(m_selected)) {
-      if (m_core.pluginList()->isEnabled(idx.row())) {
-        if (m_core.pluginList()->isESPLocked(idx.row())) {
-          hasLocked = true;
-        } else {
-          hasUnlocked = true;
-        }
+      if (m_core.pluginList()->isESPLocked(idx.row())) {
+        hasLocked = true;
+      } else if (m_core.pluginList()->isEnabled(idx.row())) {
+        hasUnlocked = true;
       }
     }
 
@@ -171,7 +171,7 @@ void PluginListContextMenu::sendPluginsToPriority(const QStringList& plugins)
 void PluginListContextMenu::setESPLock(const QStringList& plugins, bool locked)
 {
   for (auto& idx : indicesOf(plugins)) {
-    if (m_core.pluginList()->isEnabled(idx.row())) {
+    if (!locked || m_core.pluginList()->isEnabled(idx.row())) {
       m_core.pluginList()->lockESPIndex(idx.row(), locked);
     }
   }

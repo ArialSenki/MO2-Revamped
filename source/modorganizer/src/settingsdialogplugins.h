@@ -59,6 +59,13 @@ private:
   PluginContainer* m_pluginContainer;
 
   MOBase::FilterWidget m_filter;
+
+  // MO2 Revamped: plugins turned on or off in this dialog, in order; applied
+  // by update() (OK), forgotten on Cancel
+  std::vector<std::pair<MOBase::IPlugin*, bool>> m_pendingEnabled;
+
+  // whether the plugin is enabled, with the changes made in this dialog
+  bool isEnabledHere(MOBase::IPlugin* plugin) const;
 };
 
 #endif  // SETTINGSDIALOGPLUGINS_H

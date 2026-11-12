@@ -47,6 +47,15 @@ const QString NexusSSO("wss://sso.nexusmods.com");
 const QString
     NexusSSOPage("https://www.nexusmods.com/sso?id=%1&application=modorganizer2");
 
+// MO2 Revamped: an SSL error on Nexus' own servers almost always means
+// something in between answered instead of them
+static QString sslInterceptedMessage()
+{
+  return QObject::tr("The secure connection to Nexus was intercepted (a firewall, "
+                     "antivirus or internet provider block). Try again later or use "
+                     "a VPN.");
+}
+
 ValidationProgressDialog::ValidationProgressDialog(Settings* s, NexusKeyValidator& v)
     : m_settings(s), m_validator(v), m_updateTimer(nullptr), m_first(true)
 {
@@ -292,7 +301,7 @@ void NexusSSOLogin::onMessage(const QString& s)
   if (!root["success"].toBool()) {
     close();
 
-    setState(Error, QString("There was a problem with SSO initialization: %1")
+    setState(Error, QObject::tr("Nexus sign-in couldn't start: %1")
                         .arg(root["error"].toString()));
 
     return;
@@ -345,9 +354,13 @@ void NexusSSOLogin::onError(QAbstractSocket::SocketError e)
 void NexusSSOLogin::onSslErrors(const QList<QSslError>& errors)
 {
   if (m_active) {
+    // MO2 Revamped: the connection isn't trusted: it closes, and the user is
+    // told once (it stayed open, the state set again for each error)
     for (const auto& e : errors) {
-      setState(Error, e.errorString());
+      log::error("nexus: sso ssl error: {}", e.errorString());
     }
+    close();
+    setState(Error, sslInterceptedMessage());
   }
 }
 
@@ -561,7 +574,7 @@ void ValidationAttempt::onSslErrors(const QList<QSslError>& errors)
     log::error("  . {}", e.errorString());
   }
 
-  setFailure(HardError, QObject::tr("SSL error"));
+  setFailure(HardError, sslInterceptedMessage());
 }
 
 void ValidationAttempt::onTimeout()

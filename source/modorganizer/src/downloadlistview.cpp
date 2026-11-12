@@ -284,11 +284,23 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
 
   // the destructive command of the selected download, added last
   std::function<void()> remove;
+  // MO2 Revamped: a pending row (an nxm link still asking Nexus) can be taken off
+  std::function<void()> removePending;
 
   try {
-    if (index.row() >= 0) {
-      const int row =
-          qobject_cast<QSortFilterProxyModel*>(model())->mapToSource(index).row();
+    const int sourceRow =
+        index.row() >= 0
+            ? qobject_cast<QSortFilterProxyModel*>(model())->mapToSource(index).row()
+            : -1;
+    if (sourceRow >= m_Manager->numTotalDownloads()) {
+      // found again by its ids: the rows can change while the menu is open
+      const auto pending =
+          m_Manager->getPendingDownload(sourceRow - m_Manager->numTotalDownloads());
+      removePending = [this, pending] {
+        m_Manager->removePendingDownload(pending);
+      };
+    } else if (index.row() >= 0) {
+      const int row = sourceRow;
       DownloadManager::DownloadState state = m_Manager->getState(row);
 
       hidden = m_Manager->isHidden(row);
@@ -397,6 +409,9 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
   if (remove) {
     menu.addSeparator();
     addAction(menu, tr("Delete..."), svg(":/MO/gui/contextmenu/remove.svg"), remove);
+  } else if (removePending) {
+    menu.addSeparator();
+    addAction(menu, tr("Remove"), svg(":/MO/gui/contextmenu/remove.svg"), removePending);
   }
 
   menu.exec(viewport()->mapToGlobal(point));
@@ -408,7 +423,16 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
     const int row = qobject_cast<QSortFilterProxyModel*>(model())
                         ->mapToSource(currentIndex())
                         .row();
-    // a pending row (an nxm link still resolving) has no state yet
+    // a pending row (an nxm link still resolving) has no state yet; Delete
+    // takes it off the list (MO2 Revamped)
+    if (row >= m_Manager->numTotalDownloads() &&
+        row < m_Manager->numTotalDownloads() + m_Manager->numPendingDownloads() &&
+        event->key() == Qt::Key_Delete) {
+      m_Manager->removePendingDownload(
+          m_Manager->getPendingDownload(row - m_Manager->numTotalDownloads()));
+      event->accept();
+      return;
+    }
     if (row < 0 || row >= m_Manager->numTotalDownloads()) {
       QTreeView::keyPressEvent(event);
       return;

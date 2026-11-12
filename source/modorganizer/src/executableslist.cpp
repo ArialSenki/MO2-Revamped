@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "iplugingame.h"
 #include "settings.h"
+#include "spawn.h"
 #include "utility.h"
 #include <log.h>
 
@@ -99,7 +100,14 @@ void ExecutablesList::load(const MOBase::IPluginGame* game, const Settings& s)
                       .flags(flags));
   }
 
-  addFromPlugin(game, IgnoreExisting);
+  // MO2 Revamped: the plugin's executables the user removed or renamed in Edit
+  // programs aren't added back
+  const QStringList removed = s.removedPluginExecutables();
+  for (const auto& exe : getPluginExecutables(game)) {
+    if (!removed.contains(exe.title(), Qt::CaseInsensitive)) {
+      setExecutable(exe, IgnoreExisting);
+    }
+  }
 
   if (needsUpgrade)
     upgradeFromCustom(game);
@@ -175,19 +183,57 @@ void ExecutablesList::resetFromPlugin(MOBase::IPluginGame const* game)
   }
 }
 
-bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game)
+// MO2 Revamped: whether `before` and `after` are the same file inside a mod
+// that was renamed: mods\<old name>\x\y.exe and mods\<new name>\x\y.exe
+static bool sameFileInRenamedMod(const QString& before, const QString& after,
+                                 const QString& modsPath)
+{
+  if (modsPath.isEmpty()) {
+    return false;
+  }
+
+  const QDir mods(modsPath);
+  const QString a = QDir::fromNativeSeparators(mods.relativeFilePath(before));
+  const QString b = QDir::fromNativeSeparators(mods.relativeFilePath(after));
+
+  if (a.startsWith("..") || b.startsWith("..") || QDir::isAbsolutePath(a) ||
+      QDir::isAbsolutePath(b)) {
+    return false;
+  }
+
+  const auto aSlash = a.indexOf('/');
+  const auto bSlash = b.indexOf('/');
+  if (aSlash <= 0 || bSlash <= 0) {
+    return false;
+  }
+
+  return a.mid(aSlash).compare(b.mid(bSlash), Qt::CaseInsensitive) == 0;
+}
+
+bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game,
+                                           const QStringList& skippedTitles,
+                                           const QString& modsPath)
 {
   Q_ASSERT(game != nullptr);
 
   bool added = false;
 
   for (const auto& exe : getPluginExecutables(game)) {
+    // MO2 Revamped: one the user removed or renamed stays that way
+    if (skippedTitles.contains(exe.title(), Qt::CaseInsensitive)) {
+      continue;
+    }
+
     auto existing = find(exe.title());
     if (existing == end()) {
       log::debug("adding new plugin executable '{}'", exe.title());
       setExecutable(exe, IgnoreExisting);
       added = true;
-    } else if (!existing->binaryInfo().exists() && exe.binaryInfo().exists()) {
+    } else if (!existing->binaryInfo().exists() && exe.binaryInfo().exists() &&
+               sameFileInRenamedMod(existing->binaryInfo().absoluteFilePath(),
+                                    exe.binaryInfo().absoluteFilePath(), modsPath)) {
+      // MO2 Revamped: only the plugin's own path in a renamed mod; a path the
+      // user chose that's missing for now (a drive not plugged in) stays
       // its mod was renamed: the program moved with it
       log::debug("updating the path of plugin executable '{}'", exe.title());
       existing->binaryInfo(exe.binaryInfo());
@@ -235,9 +281,10 @@ Executable& ExecutablesList::getByBinary(const QFileInfo& info)
   throw std::runtime_error("invalid info");
 }
 
-ExecutablesList::iterator ExecutablesList::find(const QString& title, bool ci)
+ExecutablesList::iterator ExecutablesList::find(const QString& title,
+                                                bool caseSensitive)
 {
-  const auto cif = ci ? Qt::CaseInsensitive : Qt::CaseSensitive;
+  const auto cif = caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
 
   return std::find_if(begin(), end(), [&](auto&& e) {
     return (e.title().compare(title, cif) == 0);
@@ -245,9 +292,9 @@ ExecutablesList::iterator ExecutablesList::find(const QString& title, bool ci)
 }
 
 ExecutablesList::const_iterator ExecutablesList::find(const QString& title,
-                                                      bool ci) const
+                                                      bool caseSensitive) const
 {
-  const auto cif = ci ? Qt::CaseInsensitive : Qt::CaseSensitive;
+  const auto cif = caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
 
   return std::find_if(begin(), end(), [&](auto&& e) {
     return (e.title().compare(title, cif) == 0);
@@ -400,7 +447,9 @@ Executable::Executable(QString title) : m_title(title) {}
 
 Executable::Executable(const MOBase::ExecutableInfo& info, Flags flags)
     : m_title(info.title()), m_binaryInfo(info.binary()),
-      m_arguments(info.arguments().join(" ")), m_steamAppID(info.steamAppID()),
+      // plugins give whole option strings ("-HmdEnable 1") as one item
+      m_arguments(info.arguments().join(" ")),
+      m_steamAppID(info.steamAppID()),
       m_workingDirectory(info.workingDirectory().path()), m_flags(flags)
 {}
 

@@ -107,6 +107,10 @@ QStringList HandlerStorage::resolveHandler(const std::list<HandlerInfo> &handler
   }
   // look for an explictly registered handler
   for (const HandlerInfo &info : handlers) {
+    // MO2 Revamped: one whose program is missing is skipped, not removed
+    if (!QFile::exists(info.executable)) {
+      continue;
+    }
     for (auto handler : info.games) {
         if (game.compare(handler, Qt::CaseInsensitive) == 0 ||
             gameKey.compare(handler, Qt::CaseInsensitive) == 0) {
@@ -120,7 +124,8 @@ QStringList HandlerStorage::resolveHandler(const std::list<HandlerInfo> &handler
   // if no registered handler, look for the first "other" entry
   if (results.length() == 0) {
     for (const HandlerInfo &info : handlers) {
-      if (info.games.contains("other", Qt::CaseInsensitive)) {
+      if (QFile::exists(info.executable) &&
+          info.games.contains("other", Qt::CaseInsensitive)) {
         results << info.executable;
         results << info.arguments;
         return results;
@@ -220,9 +225,10 @@ void HandlerStorage::loadStore()
     }
     info.executable = settings.value("executable").toString();
     info.arguments = settings.value("arguments").toString();
-    if (QFile::exists(info.executable)) {
-      m_Handlers.push_back(info);
-    }
+    // MO2 Revamped: kept when its program isn't there (a drive not connected
+    // yet, a moved install): dropped, the next save lost it for good. Links
+    // skip it (see resolveHandler())
+    m_Handlers.push_back(info);
   }
   settings.endArray();
 

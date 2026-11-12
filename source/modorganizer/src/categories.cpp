@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <log.h>
 #include <report.h>
+#include <safewritefile.h>
 #include <utility.h>
 
 #include <QCoreApplication>
@@ -38,6 +39,19 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 using namespace MOBase;
 
 CategoryFactory* CategoryFactory::s_Instance = nullptr;
+
+namespace
+{
+// MO2 Revamped: categories.dat and nexuscatmap.dat are one entry per line with
+// '|' between the fields, so a name can't hold either
+QString cleanCategoryName(QString name)
+{
+  name.remove(QLatin1Char('|'));
+  name.replace(QLatin1Char('\r'), QLatin1Char(' '));
+  name.replace(QLatin1Char('\n'), QLatin1Char(' '));
+  return name;
+}
+}  // namespace
 
 QString CategoryFactory::categoriesFilePath()
 {
@@ -248,45 +262,49 @@ void CategoryFactory::cleanup()
 
 void CategoryFactory::saveCategories()
 {
-  QFile categoryFile(categoriesFilePath());
-
-  if (!categoryFile.open(QIODevice::WriteOnly)) {
+  // MO2 Revamped: through a temporary file, so a failed write doesn't leave the
+  // file empty or cut; names lose any '|' or line break that would split a line
+  try {
+    SafeWriteFile categoryFile(categoriesFilePath());
+    for (const auto& category : m_Categories) {
+      if (category.ID() == 0) {
+        continue;
+      }
+      QByteArray line;
+      line.append(QByteArray::number(category.ID()))
+          .append("|")
+          .append(cleanCategoryName(category.name()).toUtf8())
+          .append("|")
+          .append(QByteArray::number(category.parentID()))
+          .append("\n");
+      if (categoryFile->write(line) != line.size()) {
+        reportError(tr("Failed to save custom categories"));
+        return;
+      }
+    }
+    categoryFile.commit();
+  } catch (const std::exception&) {
     reportError(tr("Failed to save custom categories"));
     return;
   }
 
-  categoryFile.resize(0);
-  for (const auto& category : m_Categories) {
-    if (category.ID() == 0) {
-      continue;
+  try {
+    SafeWriteFile nexusMapFile(nexusMappingFilePath());
+    for (const auto& nexMap : m_NexusMap) {
+      QByteArray line;
+      line.append(QByteArray::number(nexMap.second.categoryID())).append("|");
+      line.append(cleanCategoryName(nexMap.second.name()).toUtf8()).append("|");
+      line.append(QByteArray::number(nexMap.second.ID())).append("\n");
+      if (nexusMapFile->write(line) != line.size()) {
+        reportError(tr("Failed to save nexus category mappings"));
+        return;
+      }
     }
-    QByteArray line;
-    line.append(QByteArray::number(category.ID()))
-        .append("|")
-        .append(category.name().toUtf8())
-        .append("|")
-        .append(QByteArray::number(category.parentID()))
-        .append("\n");
-    categoryFile.write(line);
-  }
-  categoryFile.close();
-
-  QFile nexusMapFile(nexusMappingFilePath());
-
-  if (!nexusMapFile.open(QIODevice::WriteOnly)) {
+    nexusMapFile.commit();
+  } catch (const std::exception&) {
     reportError(tr("Failed to save nexus category mappings"));
     return;
   }
-
-  nexusMapFile.resize(0);
-  for (const auto& nexMap : m_NexusMap) {
-    QByteArray line;
-    line.append(QByteArray::number(nexMap.second.categoryID())).append("|");
-    line.append(nexMap.second.name().toUtf8()).append("|");
-    line.append(QByteArray::number(nexMap.second.ID())).append("\n");
-    nexusMapFile.write(line);
-  }
-  nexusMapFile.close();
 
   emit categoriesSaved();
 }
@@ -308,8 +326,8 @@ int CategoryFactory::addCategory(const QString& name,
 void CategoryFactory::addCategory(int id, const QString& name, int parentID)
 {
   int index = static_cast<int>(m_Categories.size());
-  m_Categories.push_back(
-      Category(index, id, name, parentID, std::vector<NexusCategory>()));
+  m_Categories.push_back(Category(index, id, cleanCategoryName(name), parentID,
+                                  std::vector<NexusCategory>()));
   m_IDMap[id] = index;
 }
 
@@ -322,7 +340,8 @@ void CategoryFactory::addCategory(int id, const QString& name,
     m_NexusMap.at(nexusCat.ID()).setCategoryID(id);
   }
   int index = static_cast<int>(m_Categories.size());
-  m_Categories.push_back(Category(index, id, name, parentID, nexusCats));
+  m_Categories.push_back(
+      Category(index, id, cleanCategoryName(name), parentID, nexusCats));
   m_IDMap[id] = index;
 }
 

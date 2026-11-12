@@ -149,8 +149,7 @@ QString ModList::getFlagText(ModInfo::EFlag flag, ModInfo::Ptr modInfo) const
     return output.join("");
   }
   case ModInfo::FLAG_ALTERNATE_GAME:
-    return tr("This mod is for a different<br> game, "
-              "make sure it's compatible or it could cause crashes.");
+    return tr("This mod is for another game. Check that it works with this one.");
   case ModInfo::FLAG_TRACKED:
     return tr("Mod is being tracked on the website");
   case ModInfo::FLAG_HIDDEN_FILES:
@@ -181,7 +180,7 @@ QString ModList::getConflictFlagText(ModInfo::EConflictFlag flag,
   case ModInfo::FLAG_ARCHIVE_CONFLICT_OVERWRITTEN:
     return tr("Overwritten by another archive file");
   case ModInfo::FLAG_ARCHIVE_CONFLICT_MIXED:
-    return tr("Archive files overwrites & overwritten");
+    return tr("Its archives win some conflicts and lose others");
   default:
     return "";
   }
@@ -457,8 +456,8 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
                  modInfo->getNexusFileStatus() ==
                      NexusInterface::FileStatus::ARCHIVED_HIDDEN) {
         text +=
-            "<br>" + tr("This file has been marked as \"Deleted\"! You may want to "
-                        "check for an update or remove the nexus ID from this mod!");
+            "<br>" + tr("Its author removed or archived this file on Nexus. Look for "
+                        "a newer file, or clear the Nexus ID.");
       }
       if (modInfo->nexusId() > 0) {
         if (!modInfo->canBeUpdated()) {
@@ -528,6 +527,15 @@ bool ModList::renameMod(int index, const QString& newName)
     return false;
   }
 
+  // MO2 Revamped: Windows can't make folders named CON, nul.txt, Com1...
+  if (ModInfo::isReservedDeviceName(nameFixed)) {
+    MessageDialog::showMessage(
+        tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
+            .arg(nameFixed),
+        nullptr);
+    return false;
+  }
+
   if (ModList::allMods().contains(nameFixed, Qt::CaseInsensitive) &&
       nameFixed.toLower() != ModInfo::getByIndex(index)->name().toLower()) {
     MessageDialog::showMessage(tr("Name is already in use by another mod"), nullptr);
@@ -535,12 +543,32 @@ bool ModList::renameMod(int index, const QString& newName)
   }
 
   ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
-  QString oldName      = modInfo->name();
+
+  // MO2 Revamped: the folder name decides what a mod is; a regular mod named
+  // like a backup or a separator would come back as one at the next refresh
+  if (!modInfo->isBackup() && !modInfo->isSeparator()) {
+    if (ModInfo::isBackupName(nameFixed)) {
+      MessageDialog::showMessage(
+          tr("Names ending in \"_backup\" are for backups. Choose another name."),
+          nullptr);
+      return false;
+    }
+    if (ModInfo::isSeparatorName(nameFixed)) {
+      MessageDialog::showMessage(
+          tr("Names ending in \"_separator\" are for separators. Choose another name."),
+          nullptr);
+      return false;
+    }
+  }
+
+  QString oldName = modInfo->name();
   if (nameFixed != oldName) {
     // before we rename, ensure there is no scheduled asynchronous to rewrite
     m_Profile->cancelModlistWrite();
 
-    if (modInfo->setName(nameFixed)) {
+    // MO2 Revamped: a failed rename is no longer reported as done
+    const bool renamed = modInfo->setName(nameFixed);
+    if (renamed) {
       // Notice there is a good chance that setName() updated the modinfo indexes
       // the modRenamed() call will refresh the indexes in the current profile
       // and update the modlists in all profiles
@@ -549,6 +577,17 @@ bool ModList::renameMod(int index, const QString& newName)
 
     // invalidate the currently displayed state of this list
     notifyChange(-1);
+
+    if (!renamed) {
+      // the write cancelled above
+      m_Profile->writeModlist();
+      MessageDialog::showMessage(
+          tr("\"%1\" couldn't be renamed. Close programs using its files and try "
+             "again.")
+              .arg(getDisplayName(modInfo)),
+          nullptr);
+      return false;
+    }
   }
   return true;
 }
@@ -903,19 +942,61 @@ bool ModList::removeMod(MOBase::IModInterface* mod)
 {
   // MO2 Revamped: a plugin removing it gets no question in the middle of its
   // call; the files MO2 copied into the game folder stay, and the log says so
-  const unsigned int index = ModInfo::getIndex(mod->name());
-  const QStringList gameFiles =
-      index == UINT_MAX ? QStringList() : scriptExtenderFiles(ModInfo::getByIndex(index));
-  bool result = ModInfo::removeMod(index);
-  if (result && !gameFiles.isEmpty()) {
+  //
+  // MO2 Revamped: the same steps as removeRowForce(); erasing it alone shifted
+  // the profile's indices onto the mods after it. The name is kept first, as
+  // `mod` may go with the collection entry.
+  const QString name       = mod->name();
+  const unsigned int index = ModInfo::getIndex(name);
+  if (index == UINT_MAX) {
+    return false;
+  }
+  const int row        = static_cast<int>(index);
+  ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
+  const QStringList gameFiles = scriptExtenderFiles(modInfo);
+
+  bool wasEnabled = false;
+  if (m_Profile != nullptr) {
+    wasEnabled = m_Profile->modEnabled(row);
+    m_Profile->setModEnabled(row, false);
+    m_Profile->cancelModlistWrite();
+  }
+
+  beginRemoveRows(QModelIndex(), row, row);
+  const bool result = ModInfo::removeMod(index);
+  if (m_Profile != nullptr) {
+    m_Profile->refreshModStatus();  // removes the mod from the status list
+  }
+  endRemoveRows();
+
+  if (!result) {
+    beginResetModel();
+    endResetModel();
+    if (m_Profile != nullptr) {
+      m_Profile->setModEnabled(row, wasEnabled);
+      m_Profile->writeModlist();
+    }
+    return false;
+  }
+
+  if (m_Profile != nullptr) {
+    m_Profile->writeModlist();
+  }
+
+  if (!gameFiles.isEmpty()) {
     log::warn("'{}' was removed by a plugin; its script extender files stay in the "
               "game folder: {}",
-              mod->name(), gameFiles.join(", "));
+              name, gameFiles.join(", "));
   }
-  if (result) {
-    notifyModRemoved(mod->name());
+  notifyModRemoved(name);
+
+  if (wasEnabled) {
+    emit removeOrigin(name);
   }
-  return result;
+  if (!modInfo->isBackup()) {
+    emit modUninstalled(modInfo->installationFile());
+  }
+  return true;
 }
 
 MOBase::IModInterface* ModList::renameMod(MOBase::IModInterface* mod,
@@ -924,14 +1005,17 @@ MOBase::IModInterface* ModList::renameMod(MOBase::IModInterface* mod,
   unsigned int index = ModInfo::getIndex(mod->name());
   if (index == UINT_MAX) {
     if (auto* p = dynamic_cast<ModInfo*>(mod)) {
-      p->setName(name);
-      return p;
+      // MO2 Revamped: a failed rename returns null, as below
+      return p->setName(name) ? p : nullptr;
     } else {
       return nullptr;
     }
   } else {
+    // MO2 Revamped: setName() renames the same ModInfo in place, so it is
+    // returned as is; looking up `name` missed when fixDirectoryName() changed it
+    ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
     if (renameMod(index, name)) {
-      return ModInfo::getByName(name).get();
+      return modInfo.get();
     } else {
       return nullptr;
     }
@@ -1361,10 +1445,13 @@ bool ModList::removeRows(int row, int count, const QModelIndex& parent)
       continue;
     }
 
+    // MO2 Revamped: No is the default, so Enter doesn't remove the mod
     QMessageBox confirmBox(
         QMessageBox::Question, tr("Confirm"),
-        tr("Are you sure you want to remove \"%1\"?").arg(getDisplayName(modInfo)),
+        tr("Remove \"%1\"? Its folder goes to the Recycle Bin.")
+            .arg(getDisplayName(modInfo)),
         QMessageBox::Yes | QMessageBox::No);
+    confirmBox.setDefaultButton(QMessageBox::No);
 
     if (confirmBox.exec() == QMessageBox::Yes) {
       // removeRowForce() disables it, and enables it again if it can't go
@@ -1475,13 +1562,11 @@ QString ModList::getColumnToolTip(int column) const
 {
   switch (column) {
   case COL_NAME:
-    return tr("Name of your mods");
+    return tr("Mod name");
   case COL_VERSION:
     return tr("Version of the mod (if available)");
   case COL_PRIORITY:
-    return tr("Installation priority of your mod. The higher, the more \"important\" "
-              "it is and thus "
-              "overwrites files from mods with lower priority.");
+    return tr("Mods lower in the list win file conflicts.");
   case COL_CATEGORY:
     return tr("Primary category of the mod.");
   case COL_GAME:

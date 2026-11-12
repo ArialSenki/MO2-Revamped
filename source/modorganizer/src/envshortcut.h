@@ -79,6 +79,10 @@ public:
 
 private:
   QString m_name;
+  // MO2 Revamped: "<title> (<instance>)", used where another instance's
+  // shortcut already has the plain name; and what marks this instance's links
+  QString m_otherName;
+  QString m_ours;
   QString m_target;
   QString m_arguments;
   QString m_description;

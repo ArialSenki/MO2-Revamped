@@ -167,10 +167,8 @@ QString makeContent(const SpawnParameters& sp, DWORD code)
         "installation folder in your antivirus, reinstall Mod Organizer and try "
         "again.");
   } else if (code == ERROR_ACCESS_DENIED) {
-    return QObject::tr(
-        "This error typically happens because an antivirus is preventing Mod "
-        "Organizer from starting programs. Add an exclusion for Mod Organizer's "
-        "installation folder in your antivirus and try again.");
+    return QObject::tr("Windows refused to start this program. An antivirus or the "
+                       "file's permissions can cause this; the details show which.");
   } else if (code == ERROR_FILE_NOT_FOUND) {
     return QObject::tr("The file '%1' does not exist.")
         .arg(QDir::toNativeSeparators(sp.binary.absoluteFilePath()));
@@ -292,8 +290,8 @@ bool confirmRestartAsAdmin(QWidget* parent, const SpawnParameters& sp)
           .details(details)
           .icon(QMessageBox::Question)
           .button({QObject::tr("Restart Mod Organizer as administrator"),
-                   QObject::tr(
-                       "You must allow \"helper.exe\" to make changes to the system."),
+                   QObject::tr("Windows will ask for permission to restart MO2 as "
+                               "administrator."),
                    QMessageBox::Yes})
           .button({QObject::tr("Cancel"), QMessageBox::Cancel})
           .exec();
@@ -307,8 +305,8 @@ confirmStartSteam(QWidget* parent, const SpawnParameters& sp, const QString& det
   const auto title    = QObject::tr("Launch Steam");
   const auto mainText = QObject::tr("This program requires Steam");
   const auto content  = QObject::tr(
-      "Mod Organizer has detected that this program likely requires Steam to be "
-       "running to function properly.");
+      "Steam isn't running. This game is a Steam copy; the game and some tools "
+       "need Steam open to start.");
 
   return MOBase::TaskDialog(parent, title)
       .main(mainText)
@@ -341,7 +339,8 @@ QMessageBox::StandardButton confirmRestartAsAdminForSteam(QWidget* parent,
       .icon(QMessageBox::Question)
       .button(
           {QObject::tr("Restart Mod Organizer as administrator"),
-           QObject::tr("You must allow \"helper.exe\" to make changes to the system."),
+           QObject::tr("Windows will ask for permission to restart MO2 as "
+                       "administrator."),
            QMessageBox::Yes})
       .button({QObject::tr("Continue"), QObject::tr("The program might fail to run."),
                QMessageBox::No})
@@ -448,19 +447,29 @@ DWORD spawn(const SpawnParameters& sp, HANDLE& processHandle)
   const auto wcommandLine = commandLine.toStdWString();
   const auto wcwd         = cwd.toStdWString();
 
-  const DWORD flags = CREATE_BREAKAWAY_FROM_JOB;
+  auto create = [&](DWORD flags) {
+    if (sp.hooked) {
+      return ::usvfsCreateProcessHooked(
+          nullptr, const_cast<wchar_t*>(wcommandLine.c_str()), nullptr, nullptr,
+          inheritHandles, flags, nullptr, wcwd.c_str(), &si, &pi);
+    } else {
+      return ::CreateProcess(nullptr, const_cast<wchar_t*>(wcommandLine.c_str()),
+                             nullptr, nullptr, inheritHandles, flags, nullptr,
+                             wcwd.c_str(), &si, &pi);
+    }
+  };
 
-  if (sp.hooked) {
-    success = ::usvfsCreateProcessHooked(
-        nullptr, const_cast<wchar_t*>(wcommandLine.c_str()), nullptr, nullptr,
-        inheritHandles, flags, nullptr, wcwd.c_str(), &si, &pi);
-  } else {
-    success = ::CreateProcess(nullptr, const_cast<wchar_t*>(wcommandLine.c_str()),
-                              nullptr, nullptr, inheritHandles, flags, nullptr,
-                              wcwd.c_str(), &si, &pi);
+  success = create(CREATE_BREAKAWAY_FROM_JOB);
+  auto e  = GetLastError();
+
+  // MO2 Revamped: when MO2 runs inside a job that doesn't allow breaking away
+  // (some launchers and shells start it in one), Windows refuses the flag
+  if (!success && e == ERROR_ACCESS_DENIED) {
+    log::debug("breaking away from MO2's job was refused, starting the program "
+               "inside it");
+    success = create(0);
+    e       = GetLastError();
   }
-
-  const auto e = GetLastError();
   env::setPath(oldPath);
 
   if (!success) {
@@ -517,8 +526,9 @@ SteamStatus getSteamStatus()
   const auto ps = env::Environment().runningProcesses();
 
   for (const auto& p : ps) {
-    if ((p.name().compare("Steam.exe", Qt::CaseInsensitive) == 0) ||
-        (p.name().compare("SteamService.exe", Qt::CaseInsensitive) == 0)) {
+    // MO2 Revamped: only Steam.exe; SteamService.exe runs as SYSTEM (so it's
+    // never accessible) and runs by itself without Steam
+    if (p.name().compare("Steam.exe", Qt::CaseInsensitive) == 0) {
       ss.running    = true;
       ss.accessible = p.canAccess();
 
@@ -539,8 +549,9 @@ QString makeSteamArguments(const QString& username, const QString& password)
   if (username != "") {
     args += "-login " + username;
 
+    // MO2 Revamped: quoted, a password can have spaces
     if (password != "") {
-      args += " " + password;
+      args += " " + quoteArgument(password);
     }
   }
 
@@ -596,7 +607,7 @@ bool startSteam(QWidget* parent)
 
   QMessageBox::information(
       parent, QObject::tr("Waiting"),
-      QObject::tr("Please press OK once you're logged into steam."));
+      QObject::tr("Click OK once Steam has finished signing in."));
 
   return true;
 }
@@ -873,9 +884,12 @@ FileExecutionContext getFileExecutionContext(QWidget* parent, const QFileInfo& t
   }
 
   if (isBatchFile(target)) {
+    // MO2 Revamped: cmd removes the first and last quote of what follows /C
+    // when the path has ( ) & ^ or other special characters, so the whole is
+    // quoted once more
     return {
         getCmdPath(),
-        QString("/C \"%1\"").arg(QDir::toNativeSeparators(target.absoluteFilePath())),
+        QString("/C \"\"%1\"\"").arg(QDir::toNativeSeparators(target.absoluteFilePath())),
         FileExecutionTypes::Executable};
   }
 
@@ -897,6 +911,36 @@ FileExecutionContext getFileExecutionContext(QWidget* parent, const QFileInfo& t
   }
 
   return {{}, {}, FileExecutionTypes::Other};
+}
+
+QString quoteArgument(const QString& argument)
+{
+  // empty ones are left out of the command line, as before
+  if (argument.isEmpty() || argument.contains('"')) {
+    return argument;
+  }
+
+  if (!argument.contains(' ') && !argument.contains('\t')) {
+    return argument;
+  }
+
+  // backslashes before the closing quote would escape it, they're doubled
+  int backslashes = 0;
+  for (auto i = argument.size() - 1; i >= 0 && argument[i] == '\\'; --i) {
+    ++backslashes;
+  }
+
+  return "\"" + argument + QString(backslashes, '\\') + "\"";
+}
+
+QString joinArguments(const QStringList& arguments)
+{
+  QStringList quoted;
+  for (const auto& a : arguments) {
+    quoted.append(quoteArgument(a));
+  }
+
+  return quoted.join(" ");
 }
 
 }  // namespace spawn
@@ -984,8 +1028,17 @@ bool backdateBSAs(QWidget* parent, const std::wstring& moPath,
 bool adminLaunch(QWidget* parent, const std::wstring& moPath,
                  const std::wstring& moFile, const std::wstring& workingDir)
 {
+  // MO2 Revamped: a folder ending in '\' (a drive's root) escaped the closing
+  // quote; the backslashes before it are doubled, as CommandLineToArgvW() wants
+  std::wstring cwd = workingDir;
+  std::size_t trailing = 0;
+  while (trailing < cwd.size() && cwd[cwd.size() - 1 - trailing] == L'\\') {
+    ++trailing;
+  }
+  cwd.append(trailing, L'\\');
+
   const std::wstring commandLine = std::format(
-      L"adminLaunch {} \"{}\" \"{}\"", ::GetCurrentProcessId(), moFile, workingDir);
+      L"adminLaunch {} \"{}\" \"{}\"", ::GetCurrentProcessId(), moFile, cwd);
 
   return helperExec(parent, moPath, commandLine, true);
 }

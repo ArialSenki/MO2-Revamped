@@ -185,8 +185,11 @@ public:
 
 public:
   static APILimits defaultAPILimits();
-  static APILimits parseLimits(const QNetworkReply* reply);
-  static APILimits parseLimits(const QList<QNetworkReply::RawHeaderPair>& headers);
+  // MO2 Revamped: a header that isn't there keeps the value of base
+  static APILimits parseLimits(const QNetworkReply* reply,
+                               const APILimits& base = defaultAPILimits());
+  static APILimits parseLimits(const QList<QNetworkReply::RawHeaderPair>& headers,
+                               const APILimits& base = defaultAPILimits());
 
   NexusInterface(Settings* s);
   ~NexusInterface();
@@ -359,8 +362,9 @@ public:
   int requestDownloadURL(QString gameName, int modID, int fileID, QObject* receiver,
                          QVariant userData, const QString& subModule)
   {
+    // MO2 Revamped: strict (see findGamePlugin())
     return requestDownloadURL(gameName, modID, fileID, receiver, userData, subModule,
-                              getGame(gameName));
+                              findGamePlugin(gameName));
   }
 
   /**
@@ -489,8 +493,9 @@ public:
   int requestInfoFromMd5(QString gameName, QByteArray& hash, QObject* receiver,
                          QVariant userData, const QString& subModule)
   {
+    // MO2 Revamped: strict (see findGamePlugin())
     return requestInfoFromMd5(gameName, hash, receiver, userData, subModule,
-                              getGame(gameName));
+                              findGamePlugin(gameName));
   }
 
   /**
@@ -668,7 +673,15 @@ private:
 private:
   void nextRequest();
   void requestFinished(std::list<NXMRequestInfo>::iterator iter);
+  // the plugin of gameName, or the managed game when no plugin has that name
   MOBase::IPluginGame* getGame(QString gameName) const;
+  // MO2 Revamped: the plugin of gameName, nullptr when no plugin has it (an
+  // empty name is the managed game)
+  MOBase::IPluginGame* findGamePlugin(QString gameName) const;
+  // MO2 Revamped: a request for a game no plugin has fails: the receiver's
+  // nxmRequestFailed() gets the returned id with "No game plugin for <name>."
+  int failNoGamePlugin(const QString& gameName, int modID, int fileID,
+                       QObject* receiver, QVariant userData, const QString& subModule);
   QString getOldModsURL(QString gameName) const;
 
 private:

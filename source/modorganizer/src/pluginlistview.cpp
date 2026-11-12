@@ -188,14 +188,16 @@ void PluginListView::onSortButtonClicked()
 
   if (offline) {
     r = QMessageBox::question(topLevelWidget(), tr("Sorting plugins"),
-                              tr("Are you sure you want to sort your plugins list?") +
+                              tr("Sort the plugins with LOOT? The current order will "
+                                 "be replaced.") +
                                   "\r\n\r\n" +
                                   tr("Note: You are currently in offline mode and LOOT "
                                      "will not update the master list."),
                               QMessageBox::Yes | QMessageBox::No);
   } else {
     r = QMessageBox::question(topLevelWidget(), tr("Sorting plugins"),
-                              tr("Are you sure you want to sort your plugins list?"),
+                              tr("Sort the plugins with LOOT? The current order will "
+                                 "be replaced."),
                               QMessageBox::Yes | QMessageBox::No);
   }
 

@@ -17,6 +17,7 @@
 #include <QPushButton>
 #include <QColorDialog>
 #include <QRadioButton>
+#include <QScopeGuard>
 #include <QStandardPaths>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -49,6 +50,7 @@
 #include "shared/directoryentry.h"
 #include "shared/fileregister.h"
 #include "shared/filesorigin.h"
+#include "shared/util.h"
 
 using namespace MOBase;
 using namespace MOShared;
@@ -316,6 +318,23 @@ void ModListViewActions::createEmptyMod(const QModelIndex& index) const
     }
   }
 
+  // MO2 Revamped: names Windows can't create, and names that would make it a
+  // backup or a separator
+  if (ModInfo::isReservedDeviceName(name)) {
+    reportError(tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
+                    .arg(static_cast<const QString&>(name)));
+    return;
+  }
+  if (ModInfo::isBackupName(name)) {
+    reportError(tr("Names ending in \"_backup\" are for backups. Choose another name."));
+    return;
+  }
+  if (ModInfo::isSeparatorName(name)) {
+    reportError(
+        tr("Names ending in \"_separator\" are for separators. Choose another name."));
+    return;
+  }
+
   if (m_core.modList()->getMod(name) != nullptr) {
     reportError(tr("A mod with this name already exists"));
     return;
@@ -355,8 +374,21 @@ void ModListViewActions::createSeparator(const QModelIndex& index) const
       return;
     }
   }
-  if (m_core.modList()->getMod(name) != nullptr) {
-    reportError(tr("A separator with this name already exists"));
+  if (ModInfo::isReservedDeviceName(name)) {
+    reportError(tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
+                    .arg(static_cast<const QString&>(name)));
+    return;
+  }
+
+  // MO2 Revamped: the folder is "<name>_separator"; checking the bare name
+  // stopped it when a mod had that name and missed a real duplicate separator
+  const QString internalName = static_cast<const QString&>(name) + "_separator";
+  if (auto* existing = m_core.modList()->getMod(internalName)) {
+    if (existing->isSeparator()) {
+      reportError(tr("There is already a separator with this name."));
+    } else {
+      reportError(tr("A mod with this name already exists"));
+    }
     return;
   }
 
@@ -386,9 +418,6 @@ void ModListViewActions::createSeparator(const QModelIndex& index) const
     break;
   }
   name->append("_separator");
-  if (m_core.modList()->getMod(name) != nullptr) {
-    return;
-  }
 
   int newPriority = -1;
   if (index.isValid() && m_view->sortColumn() == ModList::COL_PRIORITY) {
@@ -483,7 +512,7 @@ void ModListViewActions::checkModsForUpdates() const
   bool updatesAvailable = false;
   for (auto mod : m_core.modList()->allMods()) {
     ModInfo::Ptr modInfo = ModInfo::getByName(mod);
-    if (modInfo->updateAvailable()) {
+    if (modInfo != nullptr && modInfo->updateAvailable()) {
       updatesAvailable = true;
       break;
     }
@@ -509,7 +538,7 @@ void ModListViewActions::assignCategories() const
   }
   for (auto mod : m_core.modList()->allMods()) {
     ModInfo::Ptr modInfo = ModInfo::getByName(mod);
-    if (modInfo->isSeparator())
+    if (modInfo == nullptr || modInfo->isSeparator())
       continue;
     int nexusCategory = modInfo->getNexusCategory();
     if (!nexusCategory) {
@@ -1093,16 +1122,21 @@ void ModListViewActions::removeMods(const QModelIndexList& indices) const
       }
       if (QMessageBox::question(
               m_parent, tr("Confirm"),
-              tr("Remove the following mods?<br><ul>%1</ul>").arg(mods),
+              tr("Remove the following mods? Their folders go to the Recycle "
+                 "Bin.<br><ul>%1</ul>")
+                  .arg(mods),
               // Enter keeps the mods, as in the other deletions
               QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
         // use mod names instead of indexes because those become invalid during the
         // removal
         DownloadManager::startDisableDirWatcher();
+        // MO2 Revamped: the watcher comes back even when a removal throws
+        const auto watcherBack = qScopeGuard([] {
+          DownloadManager::endDisableDirWatcher();
+        });
         for (QString name : modNames) {
           m_core.modList()->removeRowForce(ModInfo::getIndex(name), QModelIndex());
         }
-        DownloadManager::endDisableDirWatcher();
       }
     } else if (!indices.isEmpty()) {
       m_core.modList()->removeRow(indices[0].data(ModList::IndexRole).toInt(),
@@ -1286,12 +1320,14 @@ void ModListViewActions::reinstallMod(const QModelIndex& index) const
       m_core.installMod(fullInstallationFile, -1, true, modInfo, modInfo->name());
     } else {
       QMessageBox::information(m_parent, tr("Failed"),
-                               tr("Installation file no longer exists"));
+                               tr("The download this mod was installed from is no "
+                                  "longer in the downloads folder."));
     }
   } else {
     QMessageBox::information(
         m_parent, tr("Failed"),
-        tr("Mods installed with old versions of MO2 can't be reinstalled in this way."));
+        tr("MO2 doesn't know which download this mod came from, so it can't "
+           "reinstall it."));
   }
 }
 
@@ -1363,9 +1399,13 @@ void ModListViewActions::restoreHiddenFiles(const QModelIndexList& indices) cons
             result = FileRenamer::RESULT_CANCEL;
             break;
           }
-          emit originModified((m_core.directoryStructure()->getOriginByName(
-                                   ToWString(modInfo->internalName())))
-                                  .getID());
+          // MO2 Revamped: a disabled mod has no origin, and getOriginByName()
+          // throws for it
+          const std::wstring originName = ToWString(modInfo->internalName());
+          if (m_core.directoryStructure()->originExists(originName)) {
+            emit originModified(
+                m_core.directoryStructure()->getOriginByName(originName).getID());
+          }
         }
       }
     }
@@ -1375,16 +1415,20 @@ void ModListViewActions::restoreHiddenFiles(const QModelIndexList& indices) cons
         ModInfo::getByIndex(indices[0].data(ModList::IndexRole).toInt());
     const QString modDir = modInfo->absolutePath();
 
+    const QString displayName = indices[0].data(Qt::DisplayRole).toString();
     if (QMessageBox::question(
-            m_parent, tr("Are you sure?"),
-            tr("About to restore all hidden files in:\n") + modInfo->name(),
+            m_parent, tr("Restore hidden files"),
+            tr("Restore hidden files in \"%1\"?").arg(displayName),
             QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok) {
 
       result = restoreHiddenFilesRecursive(renamer, modDir);
 
-      emit originModified((m_core.directoryStructure()->getOriginByName(
-                               ToWString(modInfo->internalName())))
-                              .getID());
+      // MO2 Revamped: a disabled mod has no origin, and getOriginByName() throws
+      const std::wstring originName = ToWString(modInfo->internalName());
+      if (m_core.directoryStructure()->originExists(originName)) {
+        emit originModified(
+            m_core.directoryStructure()->getOriginByName(originName).getID());
+      }
     }
   }
 
@@ -1619,7 +1663,10 @@ void ModListViewActions::restoreBackup(const QModelIndex& index) const
                                  "back. It is safe in the mods folder as \"%2\".")
                                   .arg(regName, aside));
       } else if (!aside.isEmpty() &&
-                 !shellDelete(QStringList(modDir.absoluteFilePath(aside)), true)) {
+                 // MO2 Revamped: shellDelete() deleted for good where there is no
+                 // Recycle Bin and said yes when a file in use was skipped
+                 !shellRemove({modDir.absoluteFilePath(aside)}, true, m_parent)
+                      .removed()) {
         reportError(tr("The backup was restored, but the old \"%1\" could not be removed. "
                        "It is in the mods folder as \"%2\".")
                         .arg(regName, aside));
@@ -1668,6 +1715,13 @@ void ModListViewActions::createModFromOverwrite() const
     if (!ok) {
       return;
     }
+  }
+
+  // MO2 Revamped: Windows can't make folders named CON, nul.txt, Com1...
+  if (ModInfo::isReservedDeviceName(name)) {
+    reportError(tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
+                    .arg(static_cast<const QString&>(name)));
+    return;
   }
 
   if (m_core.modList()->getMod(name) != nullptr) {
@@ -1753,13 +1807,19 @@ void ModListViewActions::clearOverwrite() const
            overwriteDir.entryList(QDir::AllDirs | QDir::Files | QDir::Hidden |
                                   QDir::System | QDir::NoDotAndDotDot))
         delList.push_back(overwriteDir.absoluteFilePath(f));
-      if (shellDelete(delList, true)) {
+      // MO2 Revamped: shellDelete() deleted for good where there is no Recycle
+      // Bin and said yes when a file in use was skipped
+      const auto removal = shellRemove(delList, true, m_parent);
+      if (removal.removed()) {
         emit overwriteCleared();
         m_core.refresh();
       } else {
-        const auto e = GetLastError();
-        log::error("Delete operation failed: {}", formatSystemMessage(e));
-        reportError(tr("Overwrite could not be cleared: %1").arg(formatSystemMessage(e)));
+        log::error("clearing Overwrite left {} (error {})",
+                   removal.remaining.join(", "), removal.error);
+        if (!removal.aborted) {
+          reportError(tr("Some files in Overwrite couldn't be removed. Close programs "
+                         "using them and try again."));
+        }
         m_core.refresh();
       }
     }

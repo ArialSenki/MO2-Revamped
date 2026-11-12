@@ -189,6 +189,8 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
           return tr("Fetching Info");
         case DownloadManager::STATE_FETCHINGMODINFO_MD5:
           return tr("Fetching Info");
+        // MO2 Revamped: a download from outside Nexus, done, on its way to ready
+        case DownloadManager::STATE_NOFETCH:
         case DownloadManager::STATE_READY:
           return tr("Downloaded");
         case DownloadManager::STATE_INSTALLED:

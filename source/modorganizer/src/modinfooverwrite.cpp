@@ -58,8 +58,8 @@ int ModInfoOverwrite::getHighlight() const
 
 QString ModInfoOverwrite::getDescription() const
 {
-  return tr("This pseudo mod contains files from the virtual data tree that got "
-            "modified (i.e. by the construction kit)");
+  return tr("Files that games and tools created or changed while running from MO2. "
+            "Move them into a mod to keep them.");
 }
 
 QStringList ModInfoOverwrite::archives(bool checkOnDisk)

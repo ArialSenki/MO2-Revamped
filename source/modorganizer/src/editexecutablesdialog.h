@@ -27,6 +27,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractButton>
 #include <QListWidgetItem>
 #include <QTimer>
+#include <map>
 #include <optional>
 
 namespace Ui
@@ -198,6 +199,14 @@ private:
 
   // forced libraries set in the dialog
   ForcedLibraries m_forcedLibraries;
+
+  // MO2 Revamped: the titles of m_originalExecutables renamed (to the current
+  // title) or removed (to an empty one) since, so the other profiles' settings
+  // follow them
+  std::map<QString, QString> m_renamedTitles;
+
+  // records a rename (`to` empty: a removal) in m_renamedTitles
+  void trackRename(const QString& from, const QString& to);
 
   // remembers the last executable title that made sense, reverts to this when
   // the widget loses focus if it's empty

@@ -586,6 +586,11 @@ private:
   // the current profile: they aren't rebuilt or saved until one works, while
   // programs can still be launched
   bool m_LastRefreshFailed = false;
+
+  // MO2 Revamped: plugins whose file time couldn't be set the last time the
+  // load order was saved, so the user is told once per change
+  QStringList m_UndatedPlugins;
+
   bool m_ArchivesInit;
 
   MOBase::DelayedFileWriter m_PluginListsWriter;

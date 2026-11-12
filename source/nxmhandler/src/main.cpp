@@ -325,7 +325,11 @@ int main(int argc, char *argv[])
     }
 
     // Log the arguments
-    qDebug(qUtf8Printable( "\"" + args.join("\" \"") + "\""));
+    // MO2 Revamped: without a link's query, which holds its short-lived key
+    // (?key=...&expires=...); and as an argument, a "%" in a path isn't a format
+    static const QRegularExpression linkQuery(R"(\?[^\s"]*)");
+    qDebug("%s", qUtf8Printable(QString("\"" + args.join("\" \"") + "\"")
+                                    .replace(linkQuery, QString())));
 
     // No other logs, close the log
     NxmHandler::LoggerDeinit();
@@ -396,6 +400,7 @@ int main(int argc, char *argv[])
   } catch (std::exception &e) {
     QMessageBox::critical(nullptr, QApplication::applicationName(),
                           QCoreApplication::translate("NxmHandler", "Uncaught exception:\n%1").arg(e.what()));
-    throw;
+    // MO2 Revamped: told already; rethrown, Windows reported a crash on top
+    return 1;
   }
 }

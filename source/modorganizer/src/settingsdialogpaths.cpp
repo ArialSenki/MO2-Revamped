@@ -385,8 +385,8 @@ void PathsSettingsTab::update()
       if (!QDir().mkpath(realPath)) {
         QMessageBox::warning(
             parentWidget(), QObject::tr("Error"),
-            QObject::tr("Failed to create \"%1\", you may not have the "
-                        "necessary permissions. Path remains unchanged.")
+            QObject::tr("The folder \"%1\" couldn't be created (check the drive and "
+                        "your permissions). This path wasn't changed.")
                 .arg(realPath));
 
         continue;

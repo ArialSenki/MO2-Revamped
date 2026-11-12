@@ -808,6 +808,12 @@ public:
   std::vector<std::map<QString, QVariant>> executables() const;
   void setExecutables(const std::vector<std::map<QString, QVariant>>& v);
 
+  // MO2 Revamped: titles of the game plugin's executables the user removed or
+  // renamed in Edit programs, so a refresh doesn't add them back
+  //
+  QStringList removedPluginExecutables() const;
+  void setRemovedPluginExecutables(const QStringList& titles);
+
   // whether to backup existing mods on install
   //
   bool keepBackupOnInstall() const;

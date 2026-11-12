@@ -181,12 +181,15 @@ public:
    *data directory
    * @return true on success or if there was nothing to save, false if the load order
    *can't be saved, i.e. because files are locked
+   * @param locked if not null, receives the plugins that were open in another
+   *program, so they couldn't be dated (the others still are)
    * @todo since this works on actual files the load order can't be configured
    *per-profile. Files of the same name in different mods can also have different load
    *orders which makes this very intransparent
    * @note also stores to disk the list of locked esps
    **/
-  bool saveLoadOrder(MOShared::DirectoryEntry& directoryStructure);
+  bool saveLoadOrder(MOShared::DirectoryEntry& directoryStructure,
+                     QStringList* locked = nullptr);
 
   int timeElapsedSinceLastChecked() const;
 
@@ -307,6 +310,8 @@ private:
     bool forceDisabled;
     int priority;
     QString index;
+    // MO2 Revamped: its index is past the game's limit of regular plugins
+    bool overIndexLimit = false;
     int loadOrder;
     FILETIME time;
     QString originName;

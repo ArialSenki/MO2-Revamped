@@ -4271,7 +4271,10 @@ void MainWindow::onDirectoryStructureChanged()
   // of on the next start, and saved so plugins reading the instance's
   // executables see it too
   if (const auto* game = m_OrganizerCore.managedGame()) {
-    if (m_OrganizerCore.executablesList()->addMissingFromPlugin(game)) {
+    // MO2 Revamped: not the ones the user removed or renamed in Edit programs
+    if (m_OrganizerCore.executablesList()->addMissingFromPlugin(
+            game, m_OrganizerCore.settings().removedPluginExecutables(),
+            m_OrganizerCore.settings().paths().mods())) {
       const QString selected = ui->executablesListBox->currentText();
       m_OrganizerCore.executablesList()->store(m_OrganizerCore.settings());
       m_OrganizerCore.settings().sync();
@@ -4899,6 +4902,10 @@ void MainWindow::categoriesSaved()
 {
   for (auto modName : m_OrganizerCore.modList()->allMods()) {
     auto mod = ModInfo::getByName(modName);
+    // MO2 Revamped: a name the mod list has but no mod (one just removed)
+    if (mod == nullptr) {
+      continue;
+    }
     // setCategory() changes the mod's set
     const std::set<int> categories = mod->getCategories();
     for (int category : categories) {

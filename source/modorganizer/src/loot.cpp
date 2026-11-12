@@ -12,6 +12,14 @@ using namespace json;
 static QString LootReportPath  = QDir::temp().absoluteFilePath("lootreport.json");
 static const DWORD PipeTimeout = 500;
 
+// MO2 Revamped: lootcli writes the sorted order here and MO2 puts it in place
+// of loadorder.txt once LOOT succeeded; written in place, a failure or a
+// cancel left a cut file or one the plugin list didn't match
+static QString sortedLoadOrderPath(OrganizerCore& core)
+{
+  return core.profilePath() + "/loadorder.loot.txt";
+}
+
 class AsyncPipe
 {
 public:
@@ -220,7 +228,7 @@ QString Loot::Report::toMarkdown() const
   QString s;
 
   if (!okay) {
-    s += "## " + tr("Loot failed to run") + "\n";
+    s += "## " + tr("LOOT couldn't sort the plugins") + "\n";
 
     if (errors.empty() && warnings.empty()) {
       s += tr("No errors were reported. The log below might have more information.\n");
@@ -441,6 +449,19 @@ bool Loot::start(QWidget* parent, bool didUpdateMasterList)
   // vfs
   m_core.prepareVFS();
 
+  // MO2 Revamped: read here, on the GUI thread, for reportPlugin()
+  m_enabledPlugins.clear();
+  if (auto* list = m_core.pluginList()) {
+    for (int i = 0; i < list->rowCount(); ++i) {
+      if (list->isEnabled(i)) {
+        m_enabledPlugins.insert(list->getName(i).toLower());
+      }
+    }
+  }
+
+  // a sorted list left by a run that didn't finish
+  QFile::remove(sortedLoadOrderPath(m_core));
+
   // spawning
   if (!spawnLootcli(parent, didUpdateMasterList, std::move(stdoutHandle))) {
     return false;
@@ -470,6 +491,9 @@ bool Loot::spawnLootcli(QWidget* parent, bool didUpdateMasterList,
 
              << "--pluginListPath"
              << QString("\"%1/loadorder.txt\"").arg(m_core.profilePath())
+
+             << "--pluginListOutputPath"
+             << QString("\"%1\"").arg(sortedLoadOrderPath(m_core))
 
              << "--logLevel"
              << QString::fromStdString(lootcli::logLevelToString(logLevel))
@@ -604,7 +628,8 @@ bool Loot::waitForCompletion()
 
   if (exitCode != 0UL) {
     emit log(log::Levels::Error,
-             tr("Loot failed. Exit code was: 0x%1").arg(exitCode, 0, 16));
+             tr("LOOT stopped with error code 0x%1. The log below has the details.")
+                 .arg(exitCode, 0, 16));
     return false;
   }
 
@@ -760,7 +785,7 @@ Loot::Plugin Loot::reportPlugin(const QJsonObject& plugin) const
 
   // ignore disabled plugins; lootcli doesn't know if a plugin is enabled or not
   // and will report information on any plugin that's in the filesystem
-  if (!m_core.pluginList()->isEnabled(p.name)) {
+  if (!m_enabledPlugins.contains(p.name.toLower())) {
     return {};
   }
 
@@ -907,12 +932,32 @@ bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList)
     LootDialog dialog(parent, core, loot);
 
     if (!loot.start(parent, didUpdateMasterList)) {
+      QFile::remove(sortedLoadOrderPath(core));
       return false;
     }
 
     dialog.exec();
 
-    return dialog.result();
+    // MO2 Revamped: the sorted order replaces loadorder.txt only when LOOT
+    // succeeded; otherwise loadorder.txt was never touched
+    const QString sorted = sortedLoadOrderPath(core);
+    bool ok              = dialog.result();
+
+    if (ok && QFile::exists(sorted)) {
+      const QString target = core.profilePath() + "/loadorder.txt";
+      if (!::MoveFileExW(QDir::toNativeSeparators(sorted).toStdWString().c_str(),
+                         QDir::toNativeSeparators(target).toStdWString().c_str(),
+                         MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        const auto e = ::GetLastError();
+        log::error("can't replace '{}' with LOOT's sorted list, {}", target,
+                   formatSystemMessage(e));
+        ok = false;
+      }
+    }
+
+    QFile::remove(sorted);
+
+    return ok;
   } catch (const UsvfsConnectorException& e) {
     log::debug("{}", e.what());
     return false;

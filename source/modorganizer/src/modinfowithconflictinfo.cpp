@@ -188,7 +188,9 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
           FilesOrigin& altOrigin =
               m_Core.directoryStructure()->getOriginByID(file->getOrigin());
           unsigned int altIndex = ModInfo::getIndex(ToQString(altOrigin.getName()));
-          if (!file->isFromArchive()) {
+          if (altIndex == UINT_MAX) {
+            // MO2 Revamped: not a mod (the game folder), nothing to list
+          } else if (!file->isFromArchive()) {
             if (!archiveData.isValid())
               conflicts.m_OverwrittenList.insert(altIndex);
             else
@@ -202,13 +204,19 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
 
         // Sort out the alternatives
         for (const auto& altInfo : alternatives) {
-          if (!(std::find(dataIDs.begin(), dataIDs.end(),
-                          alternatives.back().originID()) != dataIDs.end()) &&
+          // MO2 Revamped: each alternative is tested, not the last one again
+          // (always outside the game folder here), so the game's own files are
+          // skipped; an origin that isn't a mod has no index to list
+          if (!(std::find(dataIDs.begin(), dataIDs.end(), altInfo.originID()) !=
+                dataIDs.end()) &&
               (altInfo.originID() != origin.getID())) {
             FilesOrigin& altOrigin =
                 m_Core.directoryStructure()->getOriginByID(altInfo.originID());
             QString altOriginName = ToQString(altOrigin.getName());
             unsigned int altIndex = ModInfo::getIndex(altOriginName);
+            if (altIndex == UINT_MAX) {
+              continue;
+            }
             if (!altInfo.isFromArchive()) {
               if (!archiveData.isValid()) {
                 if (origin.getPriority() > altOrigin.getPriority()) {

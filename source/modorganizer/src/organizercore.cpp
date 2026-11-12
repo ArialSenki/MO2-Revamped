@@ -361,7 +361,8 @@ bool OrganizerCore::nexusApi(bool retry)
 
 void OrganizerCore::downloadRequestedNXM(const QString& url)
 {
-  log::debug("download requested: {}", url);
+  // MO2 Revamped: without the link's key and expiry
+  log::debug("download requested: {}", url.section(QLatin1Char('?'), 0, 0));
   if (nexusApi()) {
     m_PendingDownloads.append(url);
   } else {
@@ -2074,7 +2075,22 @@ void OrganizerCore::savePluginList()
         }
 
         m_PluginList.saveTo(m_CurrentProfile->getLockedOrderFileName());
-        m_PluginList.saveLoadOrder(*m_DirectoryStructure);
+
+        // MO2 Revamped: the plugins whose file time (their load order, for the
+        // games using it) couldn't be set are named, once per change
+        QStringList locked;
+        m_PluginList.saveLoadOrder(*m_DirectoryStructure, &locked);
+        if (locked != m_UndatedPlugins) {
+          m_UndatedPlugins = locked;
+          if (!locked.isEmpty()) {
+            MessageDialog::showMessage(
+                tr("These plugins are open in another program, so their load order "
+                   "couldn't be set: %1. Close the program (the game, xEdit) and "
+                   "refresh.")
+                    .arg(locked.join(", ")),
+                qApp->activeWindow());
+          }
+        }
       },
       RefreshCallbackGroup::CORE, RefreshCallbackMode::RUN_NOW_IF_POSSIBLE);
 }
@@ -2210,15 +2226,18 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
                            "Choose another one in Edit programs.")
                             .arg(customOverwrite));
     }
-    throw MyException(
-        tr("The designated write target \"%1\" is not enabled.").arg(customOverwrite));
+    throw MyException(tr("The mod \"%1\", set in Edit programs to receive new files, "
+                         "is disabled in this profile. Turn it on or choose another "
+                         "mod.")
+                          .arg(customOverwrite));
   }
 
-  if (m_CurrentProfile->localSavesEnabled()) {
+  // MO2 Revamped: the saves of the profile the program runs with, which can be
+  // another one than the current profile (a profile override)
+  if (profile.localSavesEnabled()) {
     auto localSaves = gameFeatures().gameFeature<LocalSavegames>();
     if (localSaves != nullptr) {
-      MappingType saveMap =
-          localSaves->mappings(currentProfile()->absolutePath() + "/saves");
+      MappingType saveMap = localSaves->mappings(profile.absolutePath() + "/saves");
       result.reserve(result.size() + saveMap.size());
       result.insert(result.end(), saveMap.begin(), saveMap.end());
     } else {

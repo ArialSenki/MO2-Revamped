@@ -34,10 +34,21 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QNetworkCookieJar>
 #include <QRegularExpression>
 
+#include <memory>
 #include <regex>
+#include <vector>
 
 using namespace MOBase;
 using namespace MOShared;
+
+// MO2 Revamped: a download link's query carries its key (?key=...&expires=...);
+// it stays out of the log and the messages. Also used on errorString(), which
+// quotes the url
+static QString withoutQuery(QString text)
+{
+  static const QRegularExpression query(R"(\?[^\s"']*)");
+  return text.replace(query, QString());
+}
 
 void throttledWarning(const APIUserAccount& user)
 {
@@ -117,21 +128,25 @@ void NexusBridge::nxmFilesAvailable(QString gameName, int modID, QVariant userDa
     m_RequestIDs.erase(iter);
 
     QList<ModRepositoryFileInfo*> fileInfoList;
+    // MO2 Revamped: the infos live until the signal has been handled; the list
+    // held the address of one loop-local object, gone (and reused) each turn
+    std::vector<std::unique_ptr<ModRepositoryFileInfo>> fileInfos;
 
     QVariantMap resultInfo = resultData.toMap();
     QList resultList       = resultInfo["files"].toList();
 
     for (const QVariant& file : resultList) {
-      ModRepositoryFileInfo temp;
+      auto temp            = std::make_unique<ModRepositoryFileInfo>();
       QVariantMap fileInfo = file.toMap();
-      temp.uri             = fileInfo["file_name"].toString();
-      temp.name            = fileInfo["name"].toString();
-      temp.description     = BBCode::convertToHTML(fileInfo["description"].toString());
-      temp.version         = VersionInfo(fileInfo["version"].toString());
-      temp.categoryID      = fileInfo["category_id"].toInt();
-      temp.fileID          = fileInfo["file_id"].toInt();
-      temp.fileSize        = fileInfo["size"].toInt();
-      fileInfoList.append(&temp);
+      temp->uri            = fileInfo["file_name"].toString();
+      temp->name           = fileInfo["name"].toString();
+      temp->description    = BBCode::convertToHTML(fileInfo["description"].toString());
+      temp->version        = VersionInfo(fileInfo["version"].toString());
+      temp->categoryID     = fileInfo["category_id"].toInt();
+      temp->fileID         = fileInfo["file_id"].toInt();
+      temp->fileSize       = fileInfo["size"].toInt();
+      fileInfoList.append(temp.get());
+      fileInfos.push_back(std::move(temp));
     }
 
     emit filesAvailable(gameName, modID, userData, fileInfoList);
@@ -239,15 +254,19 @@ APILimits NexusInterface::defaultAPILimits()
   return limits;
 }
 
-APILimits NexusInterface::parseLimits(const QNetworkReply* reply)
+APILimits NexusInterface::parseLimits(const QNetworkReply* reply, const APILimits& base)
 {
-  return parseLimits(reply->rawHeaderPairs());
+  return parseLimits(reply->rawHeaderPairs(), base);
 }
 
 APILimits
-NexusInterface::parseLimits(const QList<QNetworkReply::RawHeaderPair>& headers)
+NexusInterface::parseLimits(const QList<QNetworkReply::RawHeaderPair>& headers,
+                            const APILimits& base)
 {
-  APILimits limits;
+  // MO2 Revamped: only the values whose header came are replaced; an answer
+  // without them (a proxy's, an error's) set them all to 0, which reads as
+  // the limit used up and dropped the queue
+  APILimits limits = base;
 
   for (const auto& pair : headers) {
     const auto name = QString(pair.first).toLower();
@@ -486,6 +505,10 @@ int NexusInterface::requestDescription(QString gameName, int modID, QObject* rec
                                        QVariant userData, const QString& subModule,
                                        MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, modID, 0, receiver, userData, subModule);
+  }
+
   NXMRequestInfo requestInfo(modID, NXMRequestInfo::TYPE_DESCRIPTION, userData,
                              subModule, game);
   m_RequestQueue.enqueue(requestInfo);
@@ -508,6 +531,13 @@ int NexusInterface::requestModInfo(QString gameName, int modID, QObject* receive
                                    QVariant userData, const QString& subModule,
                                    MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    // MO2 Revamped: checked for every mod of a game with no plugin: only
+    // logged, as requestUpdates() does, not one message per mod
+    log::warn("no game plugin for '{}'; mod {} isn't looked up on Nexus", gameName, modID);
+    return -1;
+  }
+
   if (m_User.shouldThrottle()) {
     throttledWarning(m_User);
     return -1;
@@ -536,6 +566,10 @@ int NexusInterface::requestUpdateInfo(QString gameName,
                                       const QString& subModule,
                                       const MOBase::IPluginGame* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, 0, 0, receiver, userData, subModule);
+  }
+
   if (m_User.shouldThrottle()) {
     throttledWarning(m_User);
     return -1;
@@ -594,6 +628,10 @@ int NexusInterface::requestFiles(QString gameName, int modID, QObject* receiver,
                                  QVariant userData, const QString& subModule,
                                  MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, modID, 0, receiver, userData, subModule);
+  }
+
   NXMRequestInfo requestInfo(modID, NXMRequestInfo::TYPE_FILES, userData, subModule,
                              game);
   m_RequestQueue.enqueue(requestInfo);
@@ -614,10 +652,10 @@ int NexusInterface::requestFileInfo(QString gameName, int modID, int fileID,
                                     QObject* receiver, QVariant userData,
                                     const QString& subModule)
 {
-  IPluginGame* gamePlugin = getGame(gameName);
+  // MO2 Revamped: strict, the answer goes into a download's .meta
+  IPluginGame* gamePlugin = findGamePlugin(gameName);
   if (gamePlugin == nullptr) {
-    log::error("requestFileInfo can't find plugin for {}", gameName);
-    return -1;
+    return failNoGamePlugin(gameName, modID, fileID, receiver, userData, subModule);
   }
 
   NXMRequestInfo requestInfo(modID, fileID, NXMRequestInfo::TYPE_FILEINFO, userData,
@@ -643,6 +681,10 @@ int NexusInterface::requestDownloadURL(QString gameName, int modID, int fileID,
                                        const QString& subModule,
                                        MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, modID, fileID, receiver, userData, subModule);
+  }
+
   NXMRequestInfo requestInfo(modID, fileID, NXMRequestInfo::TYPE_DOWNLOADURL, userData,
                              subModule, game);
   m_RequestQueue.enqueue(requestInfo);
@@ -687,6 +729,10 @@ int NexusInterface::requestToggleEndorsement(QString gameName, int modID,
                                              const QString& subModule,
                                              MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, modID, 0, receiver, userData, subModule);
+  }
+
   if (m_User.shouldThrottle()) {
     throttledWarning(m_User);
     return -1;
@@ -733,6 +779,10 @@ int NexusInterface::requestToggleTracking(QString gameName, int modID, bool trac
                                           const QString& subModule,
                                           MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, modID, 0, receiver, userData, subModule);
+  }
+
   if (m_User.shouldThrottle()) {
     throttledWarning(m_User);
     return -1;
@@ -760,6 +810,10 @@ int NexusInterface::requestGameInfo(QString gameName, QObject* receiver,
                                     QVariant userData, const QString& subModule,
                                     MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, 0, 0, receiver, userData, subModule);
+  }
+
   if (m_User.shouldThrottle()) {
     throttledWarning(m_User);
     return -1;
@@ -786,6 +840,10 @@ int NexusInterface::requestInfoFromMd5(QString gameName, QByteArray& hash,
                                        const QString& subModule,
                                        MOBase::IPluginGame const* game)
 {
+  if (game == nullptr) {
+    return failNoGamePlugin(gameName, 0, 0, receiver, userData, subModule);
+  }
+
   NXMRequestInfo requestInfo(hash, NXMRequestInfo::TYPE_FILEINFO_MD5, userData,
                              subModule, game);
   requestInfo.m_Hash = hash;
@@ -809,16 +867,52 @@ int NexusInterface::requestInfoFromMd5(QString gameName, QByteArray& hash,
 
 IPluginGame* NexusInterface::getGame(QString gameName) const
 {
-  auto gamePlugins        = m_PluginContainer->plugins<IPluginGame>();
-  IPluginGame* gamePlugin = qApp->property("managed_game").value<IPluginGame*>();
-  for (auto plugin : gamePlugins) {
-    if (plugin != nullptr &&
-        plugin->gameShortName().compare(gameName, Qt::CaseInsensitive) == 0) {
-      gamePlugin = plugin;
-      break;
-    }
+  // mod-level requests: a name no plugin has is taken for the managed game, as
+  // the mod list does for a meta file's game name
+  IPluginGame* gamePlugin = findGamePlugin(gameName);
+  if (gamePlugin == nullptr) {
+    gamePlugin = qApp->property("managed_game").value<IPluginGame*>();
   }
   return gamePlugin;
+}
+
+IPluginGame* NexusInterface::findGamePlugin(QString gameName) const
+{
+  // MO2 Revamped: no plugin, no game: the requests that write what Nexus says
+  // into a download's .meta (FileInfo, InfoFromMd5, DownloadURL) fail naming it
+  // (see failNoGamePlugin()) rather than ask about another game's mod. No name
+  // at all still means the managed game
+  if (gameName.isEmpty()) {
+    return qApp->property("managed_game").value<IPluginGame*>();
+  }
+  for (auto plugin : m_PluginContainer->plugins<IPluginGame>()) {
+    if (plugin != nullptr &&
+        plugin->gameShortName().compare(gameName, Qt::CaseInsensitive) == 0) {
+      return plugin;
+    }
+  }
+  return nullptr;
+}
+
+int NexusInterface::failNoGamePlugin(const QString& gameName, int modID, int fileID,
+                                     QObject* receiver, QVariant userData,
+                                     const QString& subModule)
+{
+  const QString message = tr("No game plugin for %1.").arg(gameName);
+  log::error("{}", message);
+
+  // an id like any request's; the receiver is told on the next turn of the
+  // event loop, once it has the id (as for the premium-only links)
+  NXMRequestInfo info(NXMRequestInfo::TYPE_GAMEINFO, userData, subModule);
+  connect(
+      this, SIGNAL(nxmRequestFailed(QString, int, int, QVariant, int, int, QString)),
+      receiver, SLOT(nxmRequestFailed(QString, int, int, QVariant, int, int, QString)),
+      Qt::UniqueConnection);
+  const int id = info.m_ID;
+  QTimer::singleShot(0, this, [this, gameName, modID, fileID, userData, id, message] {
+    emit nxmRequestFailed(gameName, modID, fileID, userData, id, 0, message);
+  });
+  return id;
 }
 
 void NexusInterface::cleanup()
@@ -855,12 +949,17 @@ void NexusInterface::nextRequest()
   if (m_User.exhausted()) {
     const auto dropped = m_RequestQueue;
     m_RequestQueue.clear();
-    // the hourly limit refills at five past the next hour; counted on the
-    // date and time, so 23:xx doesn't come out as a negative wait
+    // the hourly limit refills at five past the hour: this hour's until then
+    // (MO2 Revamped: it said the next hour's, an hour off in the first
+    // minutes), the next one's after; counted on the date and time, so 23:xx
+    // doesn't come out as a negative wait
     const QDateTime now = QDateTime::currentDateTime();
-    QDateTime target    = now.addSecs(3600);
-    target.setTime(QTime(target.time().hour(), 5, 0));
-    const qint64 wait   = qMax<qint64>(0, now.secsTo(target));
+    QDateTime target    = now;
+    target.setTime(QTime(now.time().hour(), 5, 0));
+    if (target <= now) {
+      target = target.addSecs(3600);
+    }
+    const qint64 wait = qMax<qint64>(0, now.secsTo(target));
     QString warning = tr("You've exceeded the Nexus API rate limit and requests are "
                          "now being throttled. "
                          "Your next batch of requests will be available in "
@@ -953,10 +1052,8 @@ void NexusInterface::nextRequest()
                   .arg(fileInfo->nexusExpires);
       } else {
         const QString message =
-            tr("Aborting download: Either you clicked on a premium-only "
-               "link and your account is not premium, "
-               "or the download link was generated by a different account "
-               "than the one stored in Mod Organizer.");
+            tr("This link was made for another Nexus account, or it needs Premium. "
+               "Sign in with the account that clicked it.");
         log::warn("{}", message);
 
         // the request is out of the queue: its pending download goes, and the
@@ -1061,14 +1158,14 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
   auto error = reply->error();
   if (error != QNetworkReply::NoError) {
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    QString errorMsg = reply->errorString();
+    QString errorMsg = withoutQuery(reply->errorString());
 
     if (iter->m_AllowedErrors.contains(error) &&
         iter->m_AllowedErrors[error].contains(statusCode)) {
       // These errors are allows to silently happen.  They should be handled in
       // nxmRequestFailed below.
     } else if (statusCode == 429) {
-      m_User.limits(parseLimits(reply));
+      m_User.limits(parseLimits(reply, m_User.limits()));
 
       if (!m_User.exhausted()) {
         log::warn("You appear to be making requests to the Nexus API too quickly and "
@@ -1183,7 +1280,7 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
         } break;
         }
 
-        m_User.limits(parseLimits(reply));
+        m_User.limits(parseLimits(reply, m_User.limits()));
         emit requestsChanged(getAPIStats(), m_User);
       } else {
         emit nxmRequestFailed(iter->m_GameName, iter->m_ModID, iter->m_FileID,
@@ -1219,8 +1316,8 @@ void NexusInterface::requestError(QNetworkReply::NetworkError)
     return;
   }
 
-  log::error("request ({}) error: {} ({})", reply->url().toString(),
-             reply->errorString(), reply->error());
+  log::error("request ({}) error: {} ({})", withoutQuery(reply->url().toString()),
+             withoutQuery(reply->errorString()), reply->error());
 }
 
 void NexusInterface::requestTimeout()

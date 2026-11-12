@@ -485,23 +485,23 @@ Use this if you moved Mod Organizer or if you uninstalled the Mod Organizer inst
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="354"/>
+        <location filename="main.cpp" line="358"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="354"/>
-        <location filename="main.cpp" line="379"/>
+        <location filename="main.cpp" line="358"/>
+        <location filename="main.cpp" line="383"/>
         <source>Invalid number of parameters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="379"/>
+        <location filename="main.cpp" line="383"/>
         <source>Invalid Arguments</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="398"/>
+        <location filename="main.cpp" line="402"/>
         <source>Uncaught exception:
 %1</source>
         <translation type="unfinished"></translation>

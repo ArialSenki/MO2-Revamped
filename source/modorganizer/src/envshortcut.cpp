@@ -128,6 +128,36 @@ private:
   }
 };
 
+// MO2 Revamped: the arguments of an existing .lnk file, empty if it can't be
+// read
+static QString linkArguments(const QString& path)
+{
+  void* p = nullptr;
+  if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                              IID_IShellLink, &p)) ||
+      !p) {
+    return {};
+  }
+  COMPtr<IShellLink> link(static_cast<IShellLink*>(p));
+
+  void* f = nullptr;
+  if (FAILED(link->QueryInterface(IID_IPersistFile, &f)) || !f) {
+    return {};
+  }
+  COMPtr<IPersistFile> file(static_cast<IPersistFile*>(f));
+
+  if (FAILED(file->Load(path.toStdWString().c_str(), STGM_READ))) {
+    return {};
+  }
+
+  wchar_t buffer[2048] = {};
+  if (FAILED(link->GetArguments(buffer, static_cast<int>(std::size(buffer) - 1)))) {
+    return {};
+  }
+
+  return QString::fromWCharArray(buffer);
+}
+
 Shortcut::Shortcut() : m_iconIndex(0) {}
 
 Shortcut::Shortcut(const Executable& exe) : Shortcut()
@@ -140,6 +170,15 @@ Shortcut::Shortcut(const Executable& exe) : Shortcut()
   m_arguments = QString("\"moshortcut://%1:%2\"")
                     .arg(i.instanceIdentifier())
                     .arg(exe.title());
+
+  // MO2 Revamped: a program with the same title in another instance already
+  // has "<title>.lnk"; this one is "<title> (<instance>)" so neither replaces
+  // the other
+  // (chosen in each location by shortcutPath(): the Desktop and the Start
+  // menu can differ)
+  m_ours      = QString("moshortcut://%1:").arg(i.instanceIdentifier());
+  m_otherName = MOBase::sanitizeFileName(
+      QString("%1 (%2)").arg(exe.title()).arg(i.displayName()));
 
   m_description = QString("Run %1 with ModOrganizer").arg(exe.title());
 
@@ -288,7 +327,26 @@ QString Shortcut::shortcutPath(Locations loc) const
     return {};
   }
 
-  return dir + QDir::separator() + file;
+  const QString plain = dir + QDir::separator() + file;
+  if (m_otherName.isEmpty() || m_ours.isEmpty()) {
+    return plain;
+  }
+
+  // this instance's link under the other name stays where it is
+  const QString other = dir + QDir::separator() + m_otherName + ".lnk";
+  if (QFileInfo::exists(other) &&
+      linkArguments(other).contains(m_ours, Qt::CaseInsensitive)) {
+    return other;
+  }
+  // the plain name taken by another instance's link
+  if (QFileInfo::exists(plain)) {
+    const auto args = linkArguments(plain);
+    if (args.contains("moshortcut://", Qt::CaseInsensitive) &&
+        !args.contains(m_ours, Qt::CaseInsensitive)) {
+      return other;
+    }
+  }
+  return plain;
 }
 
 QString Shortcut::shortcutDirectory(Locations loc) const

@@ -369,15 +369,20 @@ void SettingsDialog::accept()
     QString newModPath = ui->modDirEdit->text().trimmed();
     newModPath = PathSettings::resolve(newModPath, newBase);
 
-    if ((QDir::fromNativeSeparators(newModPath) !=
-         QDir::fromNativeSeparators(Settings::instance().paths().mods(true))) &&
+    // MO2 Revamped: Windows paths ignore case, and a trailing slash is the
+    // same folder
+    const auto normalized = [](const QString& path) {
+      return QDir::cleanPath(QDir::fromNativeSeparators(path));
+    };
+
+    if ((normalized(newModPath)
+             .compare(normalized(Settings::instance().paths().mods(true)),
+                      Qt::CaseInsensitive) != 0) &&
         (QMessageBox::question(
              parentWidgetForDialogs(), tr("Confirm"),
-             tr("Changing the mod directory affects all your profiles! "
-                "Mods not present (or named differently) in the new location "
-                "will be disabled in all profiles. "
-                "There is no way to undo this unless you backed up your "
-                "profiles manually. Proceed?"),
+             tr("Every profile uses the mods folder. Mods missing from the new "
+                "folder, or named differently there, will be turned off in all "
+                "profiles, and this can't be undone. Change it?"),
              QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)) {
       return;
     }

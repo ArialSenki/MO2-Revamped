@@ -404,7 +404,7 @@ void PluginsSettingsTab::updateListItems()
       auto* plugin = this->plugin(item);
 
       bool inactive = !m_pluginContainer->implementInterface<IPluginGame>(plugin) &&
-                      !m_pluginContainer->isEnabled(plugin);
+                      !isEnabledHere(plugin);
 
       auto font = item->font(0);
       font.setItalic(inactive);
@@ -524,8 +524,44 @@ IPlugin* PluginsSettingsTab::plugin(QTreeWidgetItem* pluginItem) const
   return static_cast<IPlugin*>(qvariant_cast<void*>(pluginItem->data(0, PluginRole)));
 }
 
+bool PluginsSettingsTab::isEnabledHere(IPlugin* plugin) const
+{
+  for (auto it = m_pendingEnabled.rbegin(); it != m_pendingEnabled.rend(); ++it) {
+    if (it->first == plugin) {
+      return it->second;
+    }
+  }
+
+  return m_pluginContainer->isEnabled(plugin);
+}
+
 void PluginsSettingsTab::update()
 {
+  // MO2 Revamped: the plugins turned on or off, now that OK was clicked
+  bool restart = false;
+  for (const auto& [plugin, enabled] : m_pendingEnabled) {
+    // a proxy turned on or off needs a restart, also one already turned off
+    // with another plugin it needs (checked before skipping it)
+    if (m_pluginContainer->implementInterface<IPluginProxy>(plugin) &&
+        m_pluginContainer->isEnabled(plugin) != enabled) {
+      restart = true;
+    }
+    if (m_pluginContainer->isEnabled(plugin) == enabled) {
+      if (m_pluginContainer->implementInterface<IPluginProxy>(plugin) && !enabled) {
+        restart = true;
+      }
+      continue;
+    }
+
+    // turning one off turns off the plugins that need it too
+    m_pluginContainer->setEnabled(plugin, enabled, !enabled);
+  }
+  m_pendingEnabled.clear();
+
+  if (restart) {
+    dialog().setExitNeeded(Exit::Restart);
+  }
+
   // transfer plugin settings to in-memory structure, the plugins under another
   // plugin too
   const std::function<void(QTreeWidgetItem*)> transfer = [&](QTreeWidgetItem* parent) {
@@ -566,9 +602,11 @@ void PluginsSettingsTab::on_checkboxEnabled_clicked(bool checked)
   IPlugin* plugin          = this->plugin(item);
   const auto& requirements = m_pluginContainer->requirements(plugin);
 
+  // MO2 Revamped: the change is kept until OK (see update()), Cancel drops it
+
   // User wants to enable:
   if (checked) {
-    m_pluginContainer->setEnabled(plugin, true, false);
+    m_pendingEnabled.emplace_back(plugin, true);
   } else {
     // Custom check for proxy + current game:
     if (m_pluginContainer->implementInterface<IPluginProxy>(plugin)) {
@@ -577,8 +615,8 @@ void PluginsSettingsTab::on_checkboxEnabled_clicked(bool checked)
       auto* game = m_pluginContainer->managedGame();
       if (m_pluginContainer->requirements(game).proxy() == plugin) {
         QMessageBox::warning(parentWidget(), QObject::tr("Cannot disable plugin"),
-                             QObject::tr("The '%1' plugin is used by the current game "
-                                         "plugin and cannot disabled.")
+                             QObject::tr("The '%1' plugin is needed by the current "
+                                         "game plugin, so it can't be turned off.")
                                  .arg(plugin->localizedName()),
                              QMessageBox::Ok);
         ui->enabledCheckbox->setChecked(true);
@@ -616,12 +654,12 @@ void PluginsSettingsTab::on_checkboxEnabled_clicked(bool checked)
         return;
       }
     }
-    m_pluginContainer->setEnabled(plugin, false, true);
-  }
 
-  // Proxy was disabled / enabled, need restart:
-  if (m_pluginContainer->implementInterface<IPluginProxy>(plugin)) {
-    dialog().setExitNeeded(Exit::Restart);
+    // the plugins that need it go off with it, as setEnabled() does
+    m_pendingEnabled.emplace_back(plugin, false);
+    for (auto* p : requiredFor) {
+      m_pendingEnabled.emplace_back(p, false);
+    }
   }
 
   updateListItems();
@@ -664,7 +702,7 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
       !m_pluginContainer->implementInterface<IPluginGame>(plugin) &&
       plugin->master().isEmpty());
 
-  bool enabled       = m_pluginContainer->isEnabled(plugin);
+  bool enabled       = isEnabledHere(plugin);
   auto& requirements = m_pluginContainer->requirements(plugin);
   auto problems      = requirements.problems();
 

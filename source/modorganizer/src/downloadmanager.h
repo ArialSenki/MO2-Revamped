@@ -274,6 +274,10 @@ public:
    */
   std::tuple<QString, int, int> getPendingDownload(int index);
 
+  // MO2 Revamped: takes a pending download off the list; the Nexus answers
+  // still on their way for it are dropped
+  void removePendingDownload(const std::tuple<QString, int, int>& pending);
+
   /**
    * @brief retrieve the full path to the download specified by index
    *
@@ -550,7 +554,9 @@ public:
   QString getDownloadFileName(const QString& baseName, bool rename = false) const;
 
 private:
-  void startDownload(QNetworkReply* reply, DownloadInfo* newDownload, bool resume);
+  // MO2 Revamped: false when its file couldn't be opened (a new download is
+  // gone then, a resumed one paused)
+  bool startDownload(QNetworkReply* reply, DownloadInfo* newDownload, bool resume);
   void resumeDownloadInt(int index);
 
   /**
@@ -586,10 +592,28 @@ private:
   DownloadInfo* downloadInfoByID(unsigned int id);
 
   void removePending(QString gameName, int modID, int fileID);
+  bool isPending(QString gameName, int modID, int fileID) const;
+
+  // MO2 Revamped: a name is taken by a finished file (unless inProgressOnly),
+  // by a download's .unfinished file, or by a download still in the list
+  bool isDownloadNameTaken(const QString& fileName, bool inProgressOnly) const;
 
   static QString getFileTypeString(int fileType);
 
   void writeData(DownloadInfo* info);
+
+  // MO2 Revamped: whether the reply's bytes belong in the file (its HTTP status
+  // is 200 or 206); a server that ignored the Range of a resume empties it first
+  bool acceptReplyData(DownloadInfo* info, QNetworkReply* reply);
+
+  // MO2 Revamped: a resume answered 200 with a text/* page (a captive portal,
+  // a block page): not the file; the partial stays and the download pauses
+  static bool isWebPageOnResume(const DownloadInfo* info, QNetworkReply* reply);
+
+  // MO2 Revamped: the listed download of an archive path: by its full path
+  // when it is in the downloads folder (by name after that), none outside it;
+  // a bare name is looked up by name
+  int indexByArchivePath(const QString& path) const;
 
 private:
   static const int AUTOMATIC_RETRIES = 3;

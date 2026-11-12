@@ -10,6 +10,7 @@ class OrganizerCore;
 class IUserInterface;
 class Executable;
 class MOShortcut;
+class Profile;
 
 // handles spawning a process and waiting for it, including setting up the lock
 // widget if required
@@ -163,8 +164,10 @@ private:
   bool shouldRefresh(Results r) const;
 
   // the current profile's forced libraries for the program `title`, once a
-  // directory refresh in progress has finished; runs events while it waits
-  ForcedLibraries forcedLibrariesFor(const QString& title);
+  // directory refresh in progress has finished; runs events while it waits.
+  // With `fixedProfile`, that profile's instead (a profile override)
+  ForcedLibraries forcedLibrariesFor(const QString& title,
+                                     const Profile* fixedProfile = nullptr);
 
   // runs the command in m_shellOpen; returns empty if it can be waited for
   //

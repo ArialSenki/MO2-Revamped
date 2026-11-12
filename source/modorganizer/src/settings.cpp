@@ -292,6 +292,11 @@ QString Settings::executablesBlacklist() const
 bool Settings::isExecutableBlacklisted(const QString& s) const
 {
   for (auto exec : executablesBlacklist().split(";")) {
+    // MO2 Revamped: an empty blacklist is saved as "", don't match on it
+    exec = exec.trimmed();
+    if (exec.isEmpty()) {
+      continue;
+    }
     if (exec.compare(s, Qt::CaseInsensitive) == 0) {
       return true;
     }
@@ -370,7 +375,19 @@ void Settings::setExecutables(const std::vector<std::map<QString, QVariant>>& v)
     return;
   }
 
-  if (current.size() > v.size()) {
+  // MO2 Revamped: a key the new entries don't have (the legacy "custom" one)
+  // would stay behind, and upgradeFromCustom() would run on every start
+  bool staleKeys = false;
+  for (std::size_t i = 0; i < current.size() && i < v.size() && !staleKeys; ++i) {
+    for (auto&& p : current[i]) {
+      if (v[i].find(p.first) == v[i].end()) {
+        staleKeys = true;
+        break;
+      }
+    }
+  }
+
+  if (current.size() > v.size() || staleKeys) {
     // Qt can't remove array elements, the section must be cleared
     removeSection(m_Settings, "customExecutables");
   }
@@ -383,6 +400,21 @@ void Settings::setExecutables(const std::vector<std::map<QString, QVariant>>& v)
     for (auto&& p : map) {
       swa.set(p.first, p.second);
     }
+  }
+}
+
+QStringList Settings::removedPluginExecutables() const
+{
+  return get<QStringList>(m_Settings, "Settings", "removed_plugin_executables",
+                          QStringList());
+}
+
+void Settings::setRemovedPluginExecutables(const QStringList& titles)
+{
+  if (titles.isEmpty()) {
+    remove(m_Settings, "Settings", "removed_plugin_executables");
+  } else {
+    set(m_Settings, "Settings", "removed_plugin_executables", titles);
   }
 }
 

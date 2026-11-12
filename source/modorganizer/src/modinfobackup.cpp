@@ -9,7 +9,7 @@ std::vector<ModInfo::EFlag> ModInfoBackup::getFlags() const
 
 QString ModInfoBackup::getDescription() const
 {
-  return tr("This is the backup of a mod");
+  return tr("A backup of a mod");
 }
 
 ModInfoBackup::ModInfoBackup(const QDir& path, OrganizerCore& core)

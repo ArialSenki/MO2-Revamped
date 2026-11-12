@@ -1050,6 +1050,10 @@ Tem certeza de que deseja continuar?</translation>
       <source>Archives you download with Nexus or add with Install appear here. Turn on Show hidden downloads to see the ones you hid.</source>
       <translation>Aqui aparecem os arquivos baixados pelo Nexus ou adicionados com Instalar. Ative Mostrar downloads ocultos para ver os que você ocultou.</translation>
     </message>
+    <message>
+      <source>Remove</source>
+      <translation>Remover</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -8036,6 +8040,46 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <source>Cancel</source>
       <translation>Cancelar</translation>
     </message>
+    <message>
+      <source>Windows doesn't allow "%1" as a folder name. Choose another name.</source>
+      <translation>O Windows não permite "%1" como nome de pasta. Escolha outro nome.</translation>
+    </message>
+    <message>
+      <source>Names ending in "_backup" are for backups. Choose another name.</source>
+      <translation>Nomes que terminam em "_backup" são para backups. Escolha outro nome.</translation>
+    </message>
+    <message>
+      <source>Names ending in "_separator" are for separators. Choose another name.</source>
+      <translation>Nomes que terminam em "_separator" são para separadores. Escolha outro nome.</translation>
+    </message>
+    <message>
+      <source>Remove "%1"? Its folder goes to the Recycle Bin.</source>
+      <translation>Remover "%1"? A pasta dele vai para a Lixeira.</translation>
+    </message>
+    <message>
+      <source>"%1" couldn't be renamed. Close programs using its files and try again.</source>
+      <translation>Não foi possível renomear "%1". Feche os programas que usam os arquivos dele e tente de novo.</translation>
+    </message>
+    <message>
+      <source>This mod is for another game. Check that it works with this one.</source>
+      <translation>Este mod é de outro jogo. Verifique se funciona com este.</translation>
+    </message>
+    <message>
+      <source>Its archives win some conflicts and lose others</source>
+      <translation>Os arquivos compactados dele ganham alguns conflitos e perdem outros</translation>
+    </message>
+    <message>
+      <source>Its author removed or archived this file on Nexus. Look for a newer file, or clear the Nexus ID.</source>
+      <translation>O autor removeu ou arquivou este arquivo no Nexus. Procure um arquivo mais novo ou apague o ID do Nexus.</translation>
+    </message>
+    <message>
+      <source>Mod name</source>
+      <translation>Nome do mod</translation>
+    </message>
+    <message>
+      <source>Mods lower in the list win file conflicts.</source>
+      <translation>Mods mais abaixo na lista ganham os conflitos de arquivos.</translation>
+    </message>
   </context>
   <context>
     <name>ModListContextMenu</name>
@@ -8565,6 +8609,46 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <source>You are not currently authenticated with Nexus. Please do so under Settings &gt; Nexus.</source>
       <translation>Você não está conectado ao Nexus. Conecte-se em Configurações &gt; Nexus.</translation>
     </message>
+    <message>
+      <source>Windows doesn't allow "%1" as a folder name. Choose another name.</source>
+      <translation>O Windows não permite "%1" como nome de pasta. Escolha outro nome.</translation>
+    </message>
+    <message>
+      <source>Names ending in "_backup" are for backups. Choose another name.</source>
+      <translation>Nomes que terminam em "_backup" são para backups. Escolha outro nome.</translation>
+    </message>
+    <message>
+      <source>Names ending in "_separator" are for separators. Choose another name.</source>
+      <translation>Nomes que terminam em "_separator" são para separadores. Escolha outro nome.</translation>
+    </message>
+    <message>
+      <source>Some files in Overwrite couldn't be removed. Close programs using them and try again.</source>
+      <translation>Alguns arquivos em Overwrite não puderam ser removidos. Feche os programas que os usam e tente de novo.</translation>
+    </message>
+    <message>
+      <source>There is already a separator with this name.</source>
+      <translation>Já existe um separador com este nome.</translation>
+    </message>
+    <message>
+      <source>Remove the following mods? Their folders go to the Recycle Bin.&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</source>
+      <translation>Remover estes mods? As pastas deles vão para a Lixeira.&lt;br&gt;&lt;ul&gt;%1&lt;/ul&gt;</translation>
+    </message>
+    <message>
+      <source>The download this mod was installed from is no longer in the downloads folder.</source>
+      <translation>O download de onde este mod foi instalado não está mais na pasta de downloads.</translation>
+    </message>
+    <message>
+      <source>MO2 doesn't know which download this mod came from, so it can't reinstall it.</source>
+      <translation>O MO2 não sabe de qual download este mod veio, então não pode reinstalá-lo.</translation>
+    </message>
+    <message>
+      <source>Restore hidden files</source>
+      <translation>Restaurar arquivos ocultos</translation>
+    </message>
+    <message>
+      <source>Restore hidden files in "%1"?</source>
+      <translation>Restaurar os arquivos ocultos de "%1"?</translation>
+    </message>
   </context>
   <context>
     <name>NexusManualKeyDialog</name>
@@ -8638,6 +8722,14 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
     <message>
       <source>The mod &quot;%1&quot; assigned to this program no longer exists. Choose another one in Edit programs.</source>
       <translation>O mod &quot;%1&quot; atribuído a este programa não existe mais. Escolha outro em Editar programas.</translation>
+    </message>
+    <message>
+      <source>The mod "%1", set in Edit programs to receive new files, is disabled in this profile. Turn it on or choose another mod.</source>
+      <translation>O mod "%1", escolhido em Editar programas para receber os arquivos novos, está desativado neste perfil. Ative-o ou escolha outro mod.</translation>
+    </message>
+    <message>
+      <source>These plugins are open in another program, so their load order couldn't be set: %1. Close the program (the game, xEdit) and refresh.</source>
+      <translation>Estes plugins estão abertos em outro programa, então a ordem de carregamento deles não pôde ser definida: %1. Feche o programa (o jogo, o xEdit) e atualize.</translation>
     </message>
   </context>
   <context>
@@ -8824,6 +8916,14 @@ Para manter alguns arquivos, mova-os para um mod antes.</translation>
     <message>
       <source>Search files</source>
       <translation>Pesquisar arquivos</translation>
+    </message>
+    <message>
+      <source>Some files in Overwrite couldn't be removed. Close programs using them and try again.</source>
+      <translation>Alguns arquivos em Overwrite não puderam ser removidos. Feche os programas que os usam e tente de novo.</translation>
+    </message>
+    <message>
+      <source>Some of the selected files couldn't be removed. Close programs using them and try again.</source>
+      <translation>Alguns dos arquivos selecionados não puderam ser removidos. Feche os programas que os usam e tente de novo.</translation>
     </message>
   </context>
   <context>
@@ -10293,6 +10393,46 @@ Exemplos:
       <source>Mod Organizer can't write the plugin list into %1, so the plugins turned on in Mod Organizer won't load. Check that the file isn't read-only or open in another program.</source>
       <translation>O Mod Organizer não consegue escrever a lista de plugins em %1, então os plugins ativados no Mod Organizer não vão carregar. Verifique se o arquivo não é somente leitura nem está aberto em outro programa.</translation>
     </message>
+    <message>
+      <source>The secure connection to Nexus was intercepted (a firewall, antivirus or internet provider block). Try again later or use a VPN.</source>
+      <translation>A conexão segura com o Nexus foi interceptada (um firewall, um antivírus ou um bloqueio do provedor de internet). Tente de novo mais tarde ou use uma VPN.</translation>
+    </message>
+    <message>
+      <source>Nexus sign-in couldn't start: %1</source>
+      <translation>Não foi possível iniciar o login do Nexus: %1</translation>
+    </message>
+    <message>
+      <source>Windows refused to start this program. An antivirus or the file's permissions can cause this; the details show which.</source>
+      <translation>O Windows se recusou a iniciar este programa. Um antivírus ou as permissões do arquivo podem causar isso; os detalhes mostram qual.</translation>
+    </message>
+    <message>
+      <source>Windows will ask for permission to restart MO2 as administrator.</source>
+      <translation>O Windows vai pedir permissão para reiniciar o MO2 como administrador.</translation>
+    </message>
+    <message>
+      <source>Steam isn't running. This game is a Steam copy; the game and some tools need Steam open to start.</source>
+      <translation>O Steam não está aberto. Este jogo é uma cópia do Steam; o jogo e algumas ferramentas precisam do Steam aberto para iniciar.</translation>
+    </message>
+    <message>
+      <source>Click OK once Steam has finished signing in.</source>
+      <translation>Clique em OK quando o Steam terminar de entrar.</translation>
+    </message>
+    <message>
+      <source>The program '%1' is no longer in instance '%2'. It may have been renamed or removed in Edit programs; create the shortcut again.</source>
+      <translation>O programa "%1" não está mais na instância "%2". Ele pode ter sido renomeado ou removido em Editar programas; crie o atalho de novo.</translation>
+    </message>
+    <message>
+      <source>The folder "%1" couldn't be created (check the drive and your permissions). This path wasn't changed.</source>
+      <translation>Não foi possível criar a pasta "%1" (verifique a unidade e suas permissões). Este caminho não foi alterado.</translation>
+    </message>
+    <message>
+      <source>The '%1' plugin is needed by the current game plugin, so it can't be turned off.</source>
+      <translation>O plugin de jogo atual precisa do plugin "%1", então ele não pode ser desativado.</translation>
+    </message>
+    <message>
+      <source>The program couldn't start: %1</source>
+      <translation>O programa não pôde iniciar: %1</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -11314,6 +11454,10 @@ Escolha quanto detalhe o MO2 grava em ModOrganizer.log. Info é o recomendado no
       <source>Run occasional repair actions for MO2 windows.</source>
       <translation>Execute reparos ocasionais nas janelas do MO2.</translation>
     </message>
+    <message>
+      <source>Every profile uses the mods folder. Mods missing from the new folder, or named differently there, will be turned off in all profiles, and this can't be undone. Change it?</source>
+      <translation>Todos os perfis usam a pasta de mods. Mods que faltarem na nova pasta, ou que tiverem outro nome lá, serão desativados em todos os perfis, e isso não pode ser desfeito. Mudar?</translation>
+    </message>
   </context>
   <context>
     <name>StatusBar</name>
@@ -11697,6 +11841,10 @@ Iniciar mesmo assim?</translation>
       <source>Enter name</source>
       <translation>Digite o nome</translation>
     </message>
+    <message>
+      <source>Previews this file in MO2</source>
+      <translation>Mostra uma prévia deste arquivo no MO2</translation>
+    </message>
   </context>
   <context>
     <name>FileTreeTab</name>
@@ -11759,6 +11907,10 @@ Iniciar mesmo assim?</translation>
     <message>
       <source>%1 file</source>
       <translation>Arquivo %1</translation>
+    </message>
+    <message>
+      <source>Some of the selected files couldn't be removed. Close programs using them and try again.</source>
+      <translation>Alguns dos arquivos selecionados não puderam ser removidos. Feche os programas que os usam e tente de novo.</translation>
     </message>
   </context>
   <context>
@@ -11831,6 +11983,10 @@ Iniciar mesmo assim?</translation>
     <message>
       <source>Restore plugin order backup...</source>
       <translation>Restaurar backup da ordem de plugins...</translation>
+    </message>
+    <message>
+      <source>Sort the plugins with LOOT? The current order will be replaced.</source>
+      <translation>Ordenar os plugins com o LOOT? A ordem atual será substituída.</translation>
     </message>
   </context>
   <context>
@@ -12505,6 +12661,38 @@ Confira as opções do jogo antes de jogar.</translation>
       <source>unknown</source>
       <translation>desconhecido</translation>
     </message>
+    <message>
+      <source>Not enough space on the drive, or the file can't be written. The download was paused; free some space and resume it.</source>
+      <translation>Não há espaço suficiente na unidade, ou o arquivo não pode ser gravado. O download foi pausado: libere espaço e retome-o.</translation>
+    </message>
+    <message>
+      <source>Nexus refused the download link (it may have expired). Click the download on Nexus again.</source>
+      <translation>O Nexus recusou o link de download (ele pode ter expirado). Clique no download no Nexus de novo.</translation>
+    </message>
+    <message>
+      <source>This file is already in the list (paused or downloading). Resume it there.</source>
+      <translation>Este arquivo já está na lista (pausado ou baixando). Retome-o lá.</translation>
+    </message>
+    <message>
+      <source>This link is for a %1 mod, but this instance manages %2. Open it from an instance for %1.</source>
+      <translation>Este link é de um mod de %1, mas esta instância gerencia %2. Abra-o a partir de uma instância de %1.</translation>
+    </message>
+    <message>
+      <source>The download failed after %1 retries and was removed: %2. Click the download on Nexus again.</source>
+      <translation>O download falhou depois de %1 tentativas e foi removido: %2. Clique no download no Nexus de novo.</translation>
+    </message>
+    <message>
+      <source>Nexus sent a web page instead of the file.</source>
+      <translation>O Nexus enviou uma página da web em vez do arquivo.</translation>
+    </message>
+    <message>
+      <source>The download stopped after %1 retries: %2. It was paused; resume it, or click the download on Nexus again if the link expired.</source>
+      <translation>O download parou depois de %1 novas tentativas: %2. Ele foi pausado; retome-o, ou clique no download no Nexus de novo se o link expirou.</translation>
+    </message>
+    <message>
+      <source>The server refused the download link (it may have expired).</source>
+      <translation>O servidor recusou o link de download (ele pode ter expirado).</translation>
+    </message>
   </context>
   <context>
     <name>TextEditor</name>
@@ -12547,6 +12735,14 @@ Confira as opções do jogo antes de jogar.</translation>
     <message>
       <source>You must authorize MO2 in Settings &gt; Nexus to use the Nexus API.</source>
       <translation>Você precisa autorizar o MO2 em Configurações &gt; Nexus para usar a API do Nexus.</translation>
+    </message>
+    <message>
+      <source>No game plugin for %1.</source>
+      <translation>Não há plugin de jogo para %1.</translation>
+    </message>
+    <message>
+      <source>This link was made for another Nexus account, or it needs Premium. Sign in with the account that clicked it.</source>
+      <translation>Este link foi criado para outra conta do Nexus, ou precisa de Premium. Entre com a conta que clicou nele.</translation>
     </message>
   </context>
   <context>
@@ -15002,6 +15198,63 @@ Start the game again; if a mod stays out, reinstall it.</source>
 {0}
 
 Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModInfo</name>
+    <message>
+      <source>"%1" couldn't be removed. Close programs using its files and try again.</source>
+      <translation>Não foi possível remover "%1". Feche os programas que usam os arquivos dele e tente de novo.</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModInfoOverwrite</name>
+    <message>
+      <source>Files that games and tools created or changed while running from MO2. Move them into a mod to keep them.</source>
+      <translation>Arquivos que jogos e ferramentas criaram ou alteraram ao rodar pelo MO2. Mova-os para um mod para mantê-los.</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModInfoBackup</name>
+    <message>
+      <source>A backup of a mod</source>
+      <translation>Um backup de um mod</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModInfoSeparator</name>
+    <message>
+      <source>A separator</source>
+      <translation>Um separador</translation>
+    </message>
+  </context>
+  <context>
+    <name>MOMultiProcess</name>
+    <message>
+      <source>Mod Organizer is running but didn't answer; the link wasn't added. Try again in a moment.</source>
+      <translation>O Mod Organizer está aberto mas não respondeu; o link não foi adicionado. Tente de novo daqui a pouco.</translation>
+    </message>
+  </context>
+  <context>
+    <name>Loot</name>
+    <message>
+      <source>LOOT couldn't sort the plugins</source>
+      <translation>O LOOT não conseguiu ordenar os plugins</translation>
+    </message>
+    <message>
+      <source>LOOT stopped with error code 0x%1. The log below has the details.</source>
+      <translation>O LOOT parou com o código de erro 0x%1. O log abaixo tem os detalhes.</translation>
+    </message>
+  </context>
+  <context>
+    <name>PluginList</name>
+    <message>
+      <source>This game doesn't let MO2 choose which plugins load, so this one can't be turned on.</source>
+      <translation>Este jogo não deixa o MO2 escolher quais plugins carregam, então este não pode ser ativado.</translation>
+    </message>
+    <message>
+      <source>This plugin is past the game's limit of regular plugins, so the game won't load it. Turn off some plugins, or use light (ESL) versions where a mod has them.</source>
+      <translation>Este plugin passa do limite de plugins normais do jogo, então o jogo não vai carregá-lo. Desative alguns plugins ou use versões leves (ESL) quando um mod tiver.</translation>
     </message>
   </context>
 </TS>

@@ -869,7 +869,7 @@ void FileTree::addOpenMenus(QMenu& menu, const MOShared::FileEntry& file)
       .callback([&] {
         preview();
       })
-      .hint(tr("Previews this file within Mod Organizer"))
+      .hint(tr("Previews this file in MO2"))
       .disabledHint(tr("This file is in an archive or has no preview handler "
                        "associated with it"))
       .enabled(canPreviewFile(m_plugins, file));
