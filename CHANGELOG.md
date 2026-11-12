@@ -1,5 +1,109 @@
 # Changelog
 
+## 1.1.0-beta.9 (pre-release) — November 12, 2026
+
+### Which games were tested
+
+Tested by hand with the real games, on Windows 11:
+
+| Game | What was tested | Result |
+|---|---|---|
+| Skyrim Special Edition, Fallout 4, Fallout 3, New Vegas | Script extenders and the borderless window (in beta 8) | Work |
+| Cyberpunk 2077 (2.5) | Cyber Engine Tweaks, RED4ext, ArchiveXL and TweakXL, installed and started from MO2 | Work: CET starts, RED4ext loads ArchiveXL and TweakXL, and nothing is copied into the game folder |
+| Baldur's Gate 3 | BG3 Script Extender and a .pak mod (Community Library) | Work: the Script Extender loads and the .pak goes into the load order |
+| Elden Ring, Nightreign | No changes of their own | As in beta 8 |
+
+Oblivion, the original Skyrim, Morrowind and Starfield start in MO2 with a
+test instance but weren't played with mods. Tale of Two Wastelands, Enderal
+and the VR versions weren't tried.
+
+### Cyberpunk 2077
+
+- Cyber Engine Tweaks and RED4ext's plugins (ArchiveXL, TweakXL and the
+  others) now work: MO2 loads CET's `version.dll` and RED4ext's `winmm.dll`
+  as the game starts. Before, Windows' own `version.dll` was used and RED4ext
+  started too late to load its plugins. Their files are no longer moved to a
+  `root` folder, which only the Root Builder plugin used; mods installed with
+  that folder need to be installed again.
+- Saves with accented or non-Latin names show correctly, the folder for saves
+  follows a Saved Games folder you moved, and the REDmod load order setting
+  applies without restarting MO2.
+
+### Baldur's Gate 3
+
+- Mods whose paks couldn't be read in time are named in a message instead of
+  silently left out of the load order; a pak that can't be read no longer
+  holds up the others. The load order follows the current profile, and a mod
+  with YAML settings no longer breaks every other mod's mapping.
+
+### Setup
+
+- Uninstalling removes the install folder. Before, the folder stayed after an
+  uninstall because the setup's own window kept it in use.
+- Uninstalling removes only what is MO2's: its files and what it writes while
+  running. Files of your own in that folder, and instance data in folders you
+  chose, stay and are listed. With your instances in AppData, they are kept
+  unless you choose to remove them, and they can't be removed while another
+  installation uses them.
+- Shortcuts, the Start menu folder and the Nexus link registration that point
+  to the removed folder are removed too, and nothing that belongs to another
+  installation or program.
+- If a file is in use, the uninstall stops with the program still in place and
+  can be run again.
+- New options: close the setup when finished, open Nexus links with this MO2,
+  close MO2 when updating. A summary before starting, Open log and Open folder
+  buttons when something fails, warnings for Program Files and for older
+  versions, and silent switches for scripted installs (see the README).
+- Each installation has its own name in Windows' Installed apps.
+
+### Games and instances
+
+- An instance whose game folder moved or was uninstalled asks for that game's
+  new folder, and can no longer be switched to another game by mistake. The
+  edition (Steam, GOG, Epic) is asked again when the folder changes.
+- A game that was never started no longer makes MO2 write INI files, saves and
+  a Data folder into its own folder.
+- Plugins with names like `Ñandú.esp` no longer turn themselves off (all
+  Bethesda games).
+- Found in more places: Fallout 4 from GOG and from a Steam library MO2
+  didn't know, Enderal from Steam; Nehrim is no longer mistaken for Oblivion.
+  Fallout 4 VR's script extender is recognised, and Starfield's Shattered
+  Space files count as part of the game.
+- Profiles: "Last used" is when you chose the profile; a profile's missing
+  game settings are restored with a clear notice; its INI files go to the
+  Recycle Bin when you turn that option off.
+- Deleting an instance never offers the game folder or your own folders.
+
+### Downloads
+
+- A full drive, an expired link or a dropped connection pauses the download
+  instead of removing it; retries continue where the download stopped. A new
+  link for a paused download resumes it.
+- Several fixes against downloads saved under the wrong name, cut short, or
+  losing their Nexus information.
+
+### Mod list
+
+- A mod named like "Weapons backup" is no longer turned into a backup.
+- Removing a mod asks with No as the default and says it goes to the Recycle
+  Bin; every removal that says so really uses the Recycle Bin.
+- Conflicts with the game's own files are counted right, and names Windows
+  can't use for a folder are refused.
+- Installing suggests the mod's whole name: "red4ext-1.31.1" is red4ext, not
+  "red".
+
+### Running programs and plugins
+
+- An empty entry in the list of programs that don't get the VFS no longer
+  turns the VFS off for every program.
+- MO2 no longer stays locked after the game exits when Steam keeps running.
+- Arguments with spaces given on the command line reach the program whole.
+- Programs you removed from Edit programs no longer come back.
+- LOOT only changes the load order when it finishes; the plugin list warns past
+  the game's plugin limit.
+- Settings > Plugins: Cancel undoes turning plugins on or off.
+- Messages from Mod Organizer 2 in these areas are rewritten and translated.
+
 ## 1.1.0-beta.8 (pre-release) — November 12, 2026
 
 ### Which games were tested
