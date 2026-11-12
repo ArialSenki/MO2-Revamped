@@ -7301,6 +7301,14 @@ Error: %1</translation>
       <source>Not now</source>
       <translation>Ahora no</translation>
     </message>
+    <message>
+      <source>&amp;Borderless window</source>
+      <translation>Ventana sin &amp;bordes</translation>
+    </message>
+    <message>
+      <source>The game starts in a window without a border that covers the screen, at its resolution. Turned off, the game gets back its display settings.</source>
+      <translation>El juego se inicia en una ventana sin bordes que cubre la pantalla, a su resolución. Al desactivarlo, el juego recupera su configuración de pantalla.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>

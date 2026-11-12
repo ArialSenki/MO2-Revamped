@@ -73,6 +73,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentdashboard.h"
 #include "fluentdialogs.h"
 #include "scriptextendersetup.h"
+#include "borderlesswindow.h"
 #include <scriptextender.h>
 #include "selectiondialog.h"
 #include "serverinfo.h"
@@ -2177,6 +2178,21 @@ void MainWindow::updatePinnedExecutables()
   }
 
   if (hasLinks) {
+    ui->menuRun->addSeparator();
+  }
+
+  // MO2 Revamped: the games that can start in a borderless window
+  if (BorderlessWindow::supported(m_OrganizerCore.managedGame())) {
+    auto* borderless = new QAction(tr("&Borderless window"), ui->menuRun);
+    borderless->setCheckable(true);
+    borderless->setChecked(BorderlessWindow::enabled(m_OrganizerCore));
+    borderless->setToolTip(
+        tr("The game starts in a window without a border that covers the screen, at "
+           "its resolution. Turned off, the game gets back its display settings."));
+    connect(borderless, &QAction::toggled, this, [this](bool checked) {
+      BorderlessWindow::setEnabled(m_OrganizerCore, checked);
+    });
+    ui->menuRun->addAction(borderless);
     ui->menuRun->addSeparator();
   }
   ui->menuRun->addAction(m_LinkToolbar);

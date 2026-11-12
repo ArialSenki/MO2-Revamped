@@ -5,6 +5,7 @@
 #include "iuserinterface.h"
 #include "organizercore.h"
 #include "scriptextendersetup.h"
+#include "borderlesswindow.h"
 #include <iplugingame.h>
 #include <scriptextender.h>
 #include <log.h>
@@ -808,6 +809,9 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
     }
   }
 
+  // MO2 Revamped: the display settings of the Run menu's borderless window
+  const bool watchWindow = BorderlessWindow::prepareLaunch(m_core, m_sp.binary);
+
   // start steam if needed
   if (!checkSteam(parent, m_sp, game->gameDirectory(), m_sp.steamAppID, settings)) {
     return Error;
@@ -834,6 +838,10 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   m_handle.reset(startBinary(parent, m_sp));
   if (m_handle.get() == INVALID_HANDLE_VALUE) {
     return Error;
+  }
+
+  if (watchWindow) {
+    BorderlessWindow::watchGameWindow(game);
   }
 
   return {};

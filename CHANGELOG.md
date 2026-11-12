@@ -23,6 +23,19 @@
 - Once per instance, when the extender is installed and Run starts something
   else, MO2 offers to start the game through the extender.
 
+### Borderless window
+
+- The Run button's menu has **Borderless window**, per instance, for Skyrim,
+  Skyrim Special Edition, Enderal, Fallout 3, New Vegas, TTW, Fallout 4 and
+  Oblivion. The game starts in a window without a border that covers the
+  screen, at its resolution. Skyrim Special Edition, Enderal SE and Fallout 4
+  do it themselves (MO2 sets bBorderless in their Prefs INI); the older games
+  only have a framed window, so MO2 starts them windowed at the screen's size
+  and takes the border off when the game's window shows.
+- It applies when the game starts, also through its script extender, not for
+  its launcher or editor. Turned off, the INIs MO2 changed get their display
+  settings back at the next start.
+
 ### Setup
 
 - On Linux (Steam Deck, Proton, Wine), the setup stopped right after copying
