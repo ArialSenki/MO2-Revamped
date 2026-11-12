@@ -231,6 +231,26 @@ Strip stripBorder(HWND window)
   return Strip::Done;
 }
 
+// the window shown by the game, as Windows tells it: the frame comes off
+// before the game draws its first frame, instead of a framed window first
+std::wstring watchedExe;
+HWINEVENTHOOK showHook = nullptr;
+
+void CALLBACK onWindowShown(HWINEVENTHOOK, DWORD, HWND window, LONG object, LONG child,
+                            DWORD, DWORD)
+{
+  if (window == nullptr || object != OBJID_WINDOW || child != CHILDID_SELF ||
+      GetAncestor(window, GA_ROOT) != window || watchedExe.empty()) {
+    return;
+  }
+  Found found;
+  found.exe = watchedExe;
+  findWindow(window, reinterpret_cast<LPARAM>(&found));
+  if (found.window == window && stripBorder(window) == Strip::Done) {
+    log::info("borderless window: took the border off the game's window as it showed");
+  }
+}
+
 bool processAlive(DWORD pid)
 {
   HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
@@ -312,6 +332,11 @@ bool BorderlessWindow::prepareLaunch(OrganizerCore& core, const QFileInfo& binar
   };
   if (gameInfo->native) {
     values.append({QStringLiteral("bBorderless"), QStringLiteral("1")});
+  } else {
+    // the framed window opens where it ends up, so taking the frame off
+    // doesn't move it
+    values.append({QStringLiteral("iLocation X"), QString::number(screen.left())});
+    values.append({QStringLiteral("iLocation Y"), QString::number(screen.top())});
   }
 
   if (!ini.permissions().testFlag(QFileDevice::WriteUser)) {
@@ -341,6 +366,25 @@ bool BorderlessWindow::prepareLaunch(OrganizerCore& core, const QFileInfo& binar
       original[0] = iniPath;
     }
     settings.setValue(key, original);
+  } else {
+    // a record from an earlier version: the keys it doesn't have still hold
+    // the user's values
+    QStringList record = saved;
+    bool added         = false;
+    for (const auto& value : values) {
+      const QString prefix = value.first + QLatin1Char('=');
+      bool there           = false;
+      for (const QString& entry : record) {
+        there = there || entry.startsWith(prefix);
+      }
+      if (!there) {
+        record.append(prefix + readIni(iniPath, value.first));
+        added = true;
+      }
+    }
+    if (added) {
+      settings.setValue(key, record);
+    }
   }
   for (const auto& value : values) {
     if (!writeIni(iniPath, value.first, value.second)) {
@@ -378,6 +422,19 @@ void BorderlessWindow::watchGameWindow(const IPluginGame* game)
   auto* timer = new QTimer(qApp);
   running     = timer;
   timer->setInterval(500);
+
+  watchedExe = state->exe;
+  if (showHook == nullptr) {
+    showHook = SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, nullptr, &onWindowShown,
+                               0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+  }
+  QObject::connect(timer, &QObject::destroyed, [] {
+    if (showHook != nullptr) {
+      UnhookWinEvent(showHook);
+      showHook = nullptr;
+    }
+    watchedExe.clear();
+  });
   QObject::connect(timer, &QTimer::timeout, timer, [timer, state] {
     if (state->process != 0 && !processAlive(state->process)) {
       timer->deleteLater();
