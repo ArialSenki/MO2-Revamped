@@ -920,7 +920,10 @@ bool helperExec(QWidget* parent, const std::wstring& moDirectory,
 
     execInfo.cbSize       = sizeof(SHELLEXECUTEINFOW);
     execInfo.fMask        = flags;
-    execInfo.hwnd         = 0;
+    // MO2 Revamped: the UAC prompt belongs to MO2's window (with none, it
+    // only flashed in the taskbar)
+    execInfo.hwnd = parent != nullptr ? reinterpret_cast<HWND>(parent->window()->winId())
+                                      : nullptr;
     execInfo.lpVerb       = L"runas";
     execInfo.lpFile       = fileName.c_str();
     execInfo.lpParameters = commandLine.c_str();

@@ -841,19 +841,9 @@ void InstanceManagerDialog::showEvent(QShowEvent* e)
     resize(width(), needed);
   }
 
-  // a window that grew stays on its screen; checked once it is shown, when
-  // its frame and its place are final
-  QTimer::singleShot(0, this, [this] {
-    const QScreen* sc = QGuiApplication::screenAt(frameGeometry().center());
-    if (sc == nullptr) {
-      return;
-    }
-    const QRect area  = sc->availableGeometry();
-    const QRect frame = frameGeometry();
-    if (frame.bottom() > area.bottom()) {
-      move(pos().x(), qMax(area.top(), pos().y() - (frame.bottom() - area.bottom())));
-    }
-  });
+  // MO2 Revamped: DialogPlacement keeps the grown window inside its
+  // screen before its first frame; moving it here, a moment later, made it
+  // jump
 
   QDialog::showEvent(e);
 }

@@ -213,11 +213,24 @@ static bool shellOp(const QStringList& sourceNames, const QStringList& destinati
 
   SHFILEOPSTRUCTW op;
   memset(&op, 0, sizeof(SHFILEOPSTRUCTW));
-  if (dialog != nullptr) {
-    op.hwnd = (HWND)dialog->winId();
-  } else {
-    op.hwnd = nullptr;
+  // MO2 Revamped: Windows' progress and "file in use" windows belong to
+  // the window in front: the given widget's window, else the dialog on top,
+  // else the main window (with none they opened on the primary monitor and
+  // went behind MO2 on a click)
+  QWidget* owner = dialog != nullptr ? dialog->window() : nullptr;
+  if (owner == nullptr && QApplication::activeModalWidget() != nullptr &&
+      QApplication::activeModalWidget()->isVisible()) {
+    owner = QApplication::activeModalWidget()->window();
   }
+  if (owner == nullptr) {
+    for (QWidget* window : QApplication::topLevelWidgets()) {
+      if (window->inherits("QMainWindow") && window->isVisible()) {
+        owner = window;
+        break;
+      }
+    }
+  }
+  op.hwnd = owner != nullptr ? reinterpret_cast<HWND>(owner->winId()) : nullptr;
   op.wFunc = operation;
   op.pFrom = &fromBuffer[0];
   op.pTo   = &toBuffer[0];

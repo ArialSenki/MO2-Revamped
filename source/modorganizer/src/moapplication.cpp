@@ -1619,6 +1619,22 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
     }
   }
 
+  // MO2 Revamped: a dialog that closes, or the main window coming back from
+  // minimized, leaves dialogs without a visible owner: they get one again
+  if ((event->type() == QEvent::Hide && qobject_cast<QDialog*>(receiver) != nullptr &&
+       static_cast<QWidget*>(receiver)->isWindow()) ||
+      (event->type() == QEvent::WindowStateChange &&
+       qobject_cast<QMainWindow*>(receiver) != nullptr)) {
+    static bool queued = false;
+    if (!queued) {
+      queued = true;
+      QTimer::singleShot(0, this, [] {
+        queued = false;
+        DialogPlacement::reownShownDialogs();
+      });
+    }
+  }
+
   // MO2 Revamped: placed once Qt has handled the show (its own centring,
   // a message box's size), before the window reaches the screen
   QPointer<QDialog> placing;

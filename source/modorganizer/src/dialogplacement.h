@@ -30,6 +30,11 @@ QWidget* anchorFor(const QWidget* dialog);
 // before the dialog's first frame: owner, size and place
 void place(QDialog* dialog, bool fluentSize);
 
+// the dialogs on screen whose owner went away (a modal that closed, a
+// main window that was minimized when they opened) get the window in front
+// as their owner, and come above it
+void reownShownDialogs();
+
 }  // namespace DialogPlacement
 
 #endif  // DIALOGPLACEMENT_H

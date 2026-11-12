@@ -59,6 +59,15 @@ bool sitsOn(const QWidget* window, const QWidget* modal)
 
 QScreen* screenFor(const QWidget* anchor)
 {
+  // nothing of MO2's on screen yet (startup): where the splash is
+  if (anchor == nullptr) {
+    for (QWidget* window : QApplication::topLevelWidgets()) {
+      if (window->windowType() == Qt::SplashScreen && window->isVisible() &&
+          window->screen() != nullptr) {
+        return window->screen();
+      }
+    }
+  }
   if (anchor != nullptr) {
     if (QScreen* screen = QGuiApplication::screenAt(anchor->frameGeometry().center())) {
       return screen;
@@ -88,6 +97,27 @@ QSize frameOf(const QWidget* dialog)
 }
 
 }  // namespace
+
+void DialogPlacement::reownShownDialogs()
+{
+  for (QWidget* window : QApplication::topLevelWidgets()) {
+    auto* dialog = qobject_cast<QDialog*>(window);
+    if (dialog == nullptr || !dialog->isVisible() ||
+        dialog->testAttribute(Qt::WA_DontShowOnScreen) || dialog->windowHandle() == nullptr) {
+      continue;
+    }
+    const QWindow* owner = dialog->windowHandle()->transientParent();
+    if (owner != nullptr && owner->isVisible() &&
+        owner->visibility() != QWindow::Minimized) {
+      continue;
+    }
+    if (QWidget* anchor = anchorFor(dialog)) {
+      anchor->winId();
+      dialog->windowHandle()->setTransientParent(anchor->windowHandle());
+      dialog->raise();
+    }
+  }
+}
 
 QWidget* DialogPlacement::anchorFor(const QWidget* dialog)
 {
@@ -128,7 +158,9 @@ QWidget* DialogPlacement::anchorFor(const QWidget* dialog)
 
 void DialogPlacement::place(QDialog* dialog, bool fluentSize)
 {
-  if (dialog == nullptr || !dialog->isWindow()) {
+  // a native file dialog's hidden Qt widget: Windows places the real one
+  if (dialog == nullptr || !dialog->isWindow() ||
+      dialog->testAttribute(Qt::WA_DontShowOnScreen)) {
     return;
   }
 
@@ -150,6 +182,13 @@ void DialogPlacement::place(QDialog* dialog, bool fluentSize)
 
   // the place only on the first show: a dialog shown again (the filter
   // options, a progress dialog, a tool window) stays where the user left it
+  // ...unless its window went to another monitor in the meantime
+  if (dialog->property("mo2rPlaced").toBool() && anchor != nullptr) {
+    const QScreen* own = QGuiApplication::screenAt(dialog->frameGeometry().center());
+    if (own != nullptr && own != screenFor(anchor)) {
+      dialog->setProperty("mo2rPlaced", false);
+    }
+  }
   if (dialog->property("mo2rPlaced").toBool() || dialog->property("mo2rOwnPosition").toBool() ||
       (dialog->windowState() &
        (Qt::WindowMaximized | Qt::WindowFullScreen | Qt::WindowMinimized))) {
@@ -197,20 +236,28 @@ void DialogPlacement::place(QDialog* dialog, bool fluentSize)
     dialog->resize(fitted);
   }
 
-  // a window that scrolls only a little opens a little taller: done here,
-  // before it's centred, instead of growing after its first frame
-  FluentDialogs::growForShortScroll(dialog);
 
   // centred over the anchor's frame, or on the screen, inside the work area
-  const QSize outer   = dialog->size() + frame;
   const QPoint middle = anchor != nullptr ? anchor->frameGeometry().center()
                                           : available.center();
-  QPoint position(middle.x() - outer.width() / 2, middle.y() - outer.height() / 2);
-  position.setX(qBound(available.left(), position.x(),
-                       qMax(available.left(), available.right() - outer.width() + 1)));
-  position.setY(qBound(available.top(), position.y(),
-                       qMax(available.top(), available.bottom() - outer.height() + 1)));
-  dialog->move(position);
+  const auto centre   = [&] {
+    const QSize outer = dialog->size() + frame;
+    QPoint position(middle.x() - outer.width() / 2, middle.y() - outer.height() / 2);
+    position.setX(qBound(available.left(), position.x(),
+                         qMax(available.left(), available.right() - outer.width() + 1)));
+    position.setY(qBound(available.top(), position.y(),
+                         qMax(available.top(), available.bottom() - outer.height() + 1)));
+    dialog->move(position);
+  };
+  centre();
+  // a window that scrolls only a little opens a little taller: on its
+  // final screen, then centred again, instead of growing after its first
+  // frame
+  const QSize before = dialog->size();
+  FluentDialogs::growForShortScroll(dialog);
+  if (dialog->size() != before) {
+    centre();
+  }
 
   // Windows doesn't let a program in the background take the front (a
   // question after a game run, an nxm link from the browser): its taskbar
