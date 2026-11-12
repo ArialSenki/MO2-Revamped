@@ -2275,9 +2275,13 @@ namespace Mo2RevampedSetup
             string target = Path.GetFullPath(state.TargetDirectory);
             string runningExecutable = RunningUninstaller();
             bool runningUninstallerInTarget = uninstallMode && IsPathWithinDirectory(runningExecutable, target);
-            if (runningUninstallerInTarget && File.Exists(runningExecutable))
+            // the running uninstaller's own file goes (or comes back from the
+            // backup) only after the loop, and only when nothing was left behind:
+            // otherwise the Windows entry would point to an uninstaller that is gone
+            string restoreRunningUninstaller = null;
+            bool scheduleRunningUninstaller = runningUninstallerInTarget && File.Exists(runningExecutable);
+            if (scheduleRunningUninstaller)
             {
-                string restoreRunningUninstaller = null;
                 if (!removeTargetFolderAfterSelfCleanup && !String.IsNullOrWhiteSpace(state.BackupDirectory))
                 {
                     foreach (InstallFileState file in state.Files)
@@ -2294,10 +2298,6 @@ namespace Mo2RevampedSetup
                         catch { }
                     }
                 }
-                if (ScheduleRunningUninstaller(runningExecutable, restoreRunningUninstaller, target, state.CreatedDirectory))
-                    deferredCleanup = true;
-                else
-                    notes.Add(UninstallerFileName + InstallerText.T(" (Windows no pudo programar su retirada)"));
             }
             int index = 0;
             // an uninstall takes what makes the folder an installation (its
@@ -2423,6 +2423,13 @@ namespace Mo2RevampedSetup
             }
             if (keptIdentity)
                 notes.Add(InstallerText.T("se conservaron ModOrganizer.exe, unins000.exe y las marcas de la instalación para poder repetir la desinstalación"));
+            if (scheduleRunningUninstaller && !removalFailed && !keptIdentity)
+            {
+                if (ScheduleRunningUninstaller(runningExecutable, restoreRunningUninstaller, target, state.CreatedDirectory))
+                    deferredCleanup = true;
+                else
+                    notes.Add(UninstallerFileName + InstallerText.T(" (Windows no pudo programar su retirada)"));
+            }
 
             foreach (string shortcut in state.ShortcutPaths ?? new List<string>())
             {
