@@ -1,4 +1,5 @@
 #include "organizercore.h"
+#include <QDateTime>
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
@@ -638,6 +639,10 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
   auto oldProfile = std::move(m_CurrentProfile);
 
   m_CurrentProfile = std::move(newProfile);
+  // MO2 Revamped: when it was last chosen, for the Profiles window (the mod
+  // list's date changes whenever any profile's list is written)
+  m_CurrentProfile->storeSetting(QString(), QStringLiteral("LastUsed"),
+                                 QDateTime::currentDateTime());
 
   m_ModList.setProfile(m_CurrentProfile.get());
 

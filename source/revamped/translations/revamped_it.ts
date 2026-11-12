@@ -5460,6 +5460,26 @@ WinRAR è installato su questo PC e potrebbe riuscirci. Estrarre l'archivio con 
       <source>Wrong password, or the archive is damaged.</source>
       <translation>Password errata, oppure l&apos;archivio è danneggiato.</translation>
     </message>
+    <message>
+      <source>Older script extender files removed</source>
+      <translation>File vecchi dello script extender rimossi</translation>
+    </message>
+    <message>
+      <source>These files of the version that was in the game folder went to the Recycle Bin:
+
+%1
+
+If the game needs that version (another edition or game version), restore them from the Recycle Bin.</source>
+      <translation>Questi file della versione che era nella cartella del gioco sono stati spostati nel Cestino:
+
+%1
+
+Se il gioco ha bisogno di quella versione (un'altra edizione o versione del gioco), ripristinali dal Cestino.</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
   </context>
   <context>
     <name>InstanceManagerDialog</name>
@@ -10685,6 +10705,18 @@ Esempio:
       <source>&lt;h3&gt;Which game is this?&lt;/h3&gt;Mod Organizer doesn't recognize a game in %1. Choose the game and its folder.</source>
       <translation>&lt;h3&gt;Che gioco è?&lt;/h3&gt;Mod Organizer non riconosce nessun gioco in %1. Scegli il gioco e la sua cartella.</translation>
     </message>
+    <message>
+      <source>Some plugins have names with characters Morrowind can't read, so the game won't load them. mo_interface.log lists them: rename them.</source>
+      <translation>Alcuni plugin hanno nomi con caratteri che Morrowind non sa leggere, quindi il gioco non li caricherà. mo_interface.log li elenca: rinominali.</translation>
+    </message>
+    <message>
+      <source>Mod Organizer can't write the plugin list into %1, so the plugins turned on in Mod Organizer won't load. Windows protects that folder: move the game out of Program Files, or turn on the profile's own game INI files in Profiles.</source>
+      <translation>Mod Organizer non riesce a scrivere l'elenco dei plugin in %1, quindi i plugin attivati in Mod Organizer non verranno caricati. Windows protegge quella cartella: sposta il gioco fuori da Programmi o attiva i file INI del gioco specifici del profilo in Profili.</translation>
+    </message>
+    <message>
+      <source>Mod Organizer can't write the plugin list into %1, so the plugins turned on in Mod Organizer won't load. Check that the file isn't read-only or open in another program.</source>
+      <translation>Mod Organizer non riesce a scrivere l'elenco dei plugin in %1, quindi i plugin attivati in Mod Organizer non verranno caricati. Controlla che il file non sia di sola lettura o aperto in un altro programma.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -15204,6 +15236,25 @@ Schermata iniziale di %2.</translation>
     <message>
       <source>Allow sorting plugins with LOOT (the Tale of Two Wastelands guides advise against it)</source>
       <translation>Consenti di ordinare i plugin con LOOT (le guide di Tale of Two Wastelands lo sconsigliano)</translation>
+    </message>
+  </context>
+  <context>
+    <name>BG3Utils</name>
+    <message>
+      <source>Some mods aren't in the load order</source>
+      <translation>Alcune mod non sono nell'ordine di caricamento</translation>
+    </message>
+    <message>
+      <source>These mods couldn't be read in time, so the game won't load them this time:
+
+{0}
+
+Start the game again; if a mod stays out, reinstall it.</source>
+      <translation>Queste mod non sono state lette in tempo, quindi il gioco non le caricherà questa volta:
+
+{0}
+
+Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     </message>
   </context>
 </TS>

@@ -668,8 +668,12 @@ void ProfilesDialog::fillDetails()
   const auto [enabled, total] = enabledMods(*profile);
   m_modsRow.value->setFullText(tr("%1 of %2 mods enabled").arg(enabled).arg(total));
   m_folderRow.value->setFullText(QDir::toNativeSeparators(profile->absolutePath()));
-  m_changedRow.value->setFullText(
-      whenText(QFileInfo(profile->getModlistFileName()).lastModified()));
+  // MO2 Revamped: the date it was last chosen; profiles from before that was
+  // kept show their mod list's date
+  const QDateTime lastUsed =
+      profile->setting(QString(), QStringLiteral("LastUsed")).toDateTime();
+  m_changedRow.value->setFullText(whenText(
+      lastUsed.isValid() ? lastUsed : QFileInfo(profile->getModlistFileName()).lastModified()));
   m_savesRow.value->setFullText(tr("Chosen in Tools > Save isolation"));
 
   m_localSaves->setEnabled(true);

@@ -59,6 +59,8 @@ public:  // IPlugin interface
   virtual MappingType mappings() const override;
 
 protected:
+  // MO2 Revamped: also the GOG release and the Steam library
+  QString identifyGamePath() const override;
   std::shared_ptr<const GamebryoSaveGame> makeSaveGame(QString filePath) const override;
   QString savegameExtension() const override;
   QString savegameSEExtension() const override;

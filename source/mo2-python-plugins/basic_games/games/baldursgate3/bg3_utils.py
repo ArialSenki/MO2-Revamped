@@ -1,4 +1,5 @@
 import functools
+import threading
 import shutil
 import typing
 from pathlib import Path
@@ -15,7 +16,7 @@ from PyQt6.QtCore import (
     qInfo,
     qWarning,
 )
-from PyQt6.QtWidgets import QApplication, QMainWindow, QProgressDialog
+from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog
 
 import mobase
 
@@ -211,13 +212,26 @@ class BG3Utils:
         if threadpool is None:
             return False
         metadata: dict[str, str] = {}
+        failed: list[str] = []
+        lock = threading.Lock()
 
+        # MO2 Revamped: a pak that can't be read is counted as done (and
+        # named afterwards) instead of keeping the wait going until it times out
         def retrieve_mod_metadata_in_new_thread(mod: mobase.IModInterface):
-            return lambda: metadata.update(
-                self._pak_parser.get_metadata_for_files_in_mod(
-                    mod, force_reparse_metadata
-                )
-            )
+            def run():
+                try:
+                    result = self._pak_parser.get_metadata_for_files_in_mod(
+                        mod, force_reparse_metadata
+                    )
+                    with lock:
+                        metadata.update(result)
+                except Exception as e:  # noqa: BLE001
+                    qWarning(f"couldn't read the paks of {mod.name()}: {e}")
+                    with lock:
+                        failed.append(mod.name())
+                        metadata[mod.name()] = ""
+
+            return run
 
         for mod in active_mods:
             if progress.wasCanceled():
@@ -226,29 +240,55 @@ class BG3Utils:
             threadpool.start(QRunnable.create(retrieve_mod_metadata_in_new_thread(mod)))
         count = 0
         num_active_mods = len(active_mods)
-        total_intervals_to_wait = (num_active_mods * 2) + 20
-        while len(metadata.keys()) < num_active_mods:
-            progress.setValue(len(metadata.keys()))
+        # big paks take a while on their first parse: up to 3 s each, 30 s at
+        # least (the progress window can still be cancelled)
+        total_intervals_to_wait = (num_active_mods * 30) + 300
+        def done_count() -> int:
+            with lock:
+                return len(metadata)
+
+        while done_count() < num_active_mods:
+            progress.setValue(done_count())
             QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 100)
             count += 1
             if count == total_intervals_to_wait or progress.wasCanceled():
-                remaining_mods = {mod.name() for mod in active_mods} - metadata.keys()
+                with lock:
+                    remaining_mods = {mod.name() for mod in active_mods} - set(metadata)
                 qWarning(f"processing did not finish in time for: {remaining_mods}")
                 progress.close()
                 break
             QThread.msleep(100)
+        canceled = progress.wasCanceled()
         progress.setValue(num_active_mods)
         QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 100)
         progress.close()
+        # what the threads finished so far; any still running don't change it
+        with lock:
+            finished = dict(metadata)
+            failed_now = list(failed)
+        left_out = sorted(
+            set(failed_now) | ({mod.name() for mod in active_mods} - set(finished))
+        )
+        if left_out and not canceled:
+            QMessageBox.warning(
+                self.main_window,
+                QApplication.translate("BG3Utils", "Some mods aren't in the load order"),
+                QApplication.translate(
+                    "BG3Utils",
+                    "These mods couldn't be read in time, so the game won't load them "
+                    "this time:\n\n{0}\n\nStart the game again; if a mod stays out, "
+                    "reinstall it.",
+                ).format("\n".join(left_out)),
+            )
         qInfo(f"writing mod load order to {self.modsettings_path}")
         self.modsettings_path.parent.mkdir(parents=True, exist_ok=True)
         self.modsettings_path.write_text(
             (
                 self._mod_settings_xml_start
                 + "".join(
-                    metadata[mod.name()]
+                    finished[mod.name()]
                     for mod in active_mods
-                    if mod.name() in metadata
+                    if mod.name() in finished
                 )
                 + self._mod_settings_xml_end
             ),

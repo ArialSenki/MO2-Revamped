@@ -1472,14 +1472,29 @@ std::optional<InstallationResult> InstallationManager::installScriptExtender(
   for (int i = 0; i < fileNames.size(); ++i) {
     files.append({fileNames[i], extracted[i]});
   }
+  QStringList retired;
   const QString error = ScriptExtenderSetup::copyToGame(
-      files, gameDir, ScriptExtenderSetup::filePrefix(*extender), nullptr);
+      files, gameDir, ScriptExtenderSetup::filePrefix(*extender), &retired);
   if (!error.isEmpty()) {
     ScriptExtenderSetup::showManualSteps(parent, *extender, gameDir, fileNames, error);
     return result;
   }
   ScriptExtenderSetup::writeRecord(QDir(m_ModsDirectory).absoluteFilePath(modName),
                                    gameDir, fileNames);
+  // MO2 Revamped: what went from the game folder, so a build for another
+  // edition of the game replacing the one that worked can be undone
+  if (!retired.isEmpty()) {
+    FluentContentDialog notice(
+        parent, QStringLiteral("ScriptExtenderRetiredDialog"),
+        tr("Older script extender files removed"),
+        tr("These files of the version that was in the game folder went to the Recycle "
+           "Bin:\n\n%1\n\nIf the game needs that version (another edition or game "
+           "version), restore them from the Recycle Bin.")
+            .arg(retired.join(QLatin1Char('\n'))));
+    auto* ok = notice.addButton(tr("OK"), true);
+    connect(ok, &QPushButton::clicked, &notice, &QDialog::accept);
+    notice.exec();
+  }
   return result;
 }
 

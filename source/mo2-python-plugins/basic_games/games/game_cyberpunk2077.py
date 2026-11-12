@@ -134,6 +134,30 @@ def clear_empty_folder(filetree: mobase.IFileTree | None):
         filetree = parent
 
 
+def _saved_games_folder() -> str:
+    """MO2 Revamped: Windows' Saved Games folder, also when the user moved it."""
+    try:
+        import ctypes
+        import uuid
+        from ctypes import wintypes
+
+        folder_id = uuid.UUID("{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}")
+        guid = (ctypes.c_byte * 16).from_buffer_copy(folder_id.bytes_le)
+        path = ctypes.c_wchar_p()
+        shell32 = ctypes.windll.shell32
+        shell32.SHGetKnownFolderPath.argtypes = [
+            ctypes.c_void_p, wintypes.DWORD, wintypes.HANDLE, ctypes.POINTER(ctypes.c_wchar_p)
+        ]
+        if shell32.SHGetKnownFolderPath(ctypes.byref(guid), 0, None, ctypes.byref(path)) == 0:
+            result = path.value
+            ctypes.windll.ole32.CoTaskMemFree(path)
+            if result:
+                return result.replace("\\", "/")
+    except Exception:  # noqa: BLE001
+        pass
+    return "%USERPROFILE%/Saved Games"
+
+
 def time_from_seconds(s: int | float) -> str:
     m, s = divmod(int(s), 60)
     h, m = divmod(int(m), 60)
@@ -299,7 +323,7 @@ class Cyberpunk2077Game(BasicGame):
     GameLauncher = "REDprelauncher.exe"
     GameDataPath = "%GAME_PATH%"
     GameDocumentsDirectory = "%USERPROFILE%/AppData/Local/CD Projekt Red/Cyberpunk 2077"
-    GameSavesDirectory = "%USERPROFILE%/Saved Games/CD Projekt Red/Cyberpunk 2077"
+    GameSavesDirectory = _saved_games_folder() + "/CD Projekt Red/Cyberpunk 2077"
     GameSaveExtension = "dat"
     GameSteamId = 1091500
     GameGogId = 1423049311

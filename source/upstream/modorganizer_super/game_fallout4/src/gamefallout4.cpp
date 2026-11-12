@@ -9,6 +9,7 @@
 #include "fallout4unmanagedmods.h"
 
 #include "versioninfo.h"
+#include "steamutility.h"
 #include <creationgameplugins.h>
 #include <executableinfo.h>
 #include <gamebryolocalsavegames.h>
@@ -313,6 +314,21 @@ bool GameFallout4::testFilePresent() const
   if (!testFilePlugins().isEmpty())
     return true;
   return false;
+}
+
+QString GameFallout4::identifyGamePath() const
+{
+  // Bethesda's key (Steam writes it), then GOG's Game of the Year edition
+  QString result = GameGamebryo::identifyGamePath();
+  if (result.isEmpty()) {
+    result = findInRegistry(HKEY_LOCAL_MACHINE,
+                            L"Software\\GOG.com\\Games\\1998527297", L"path");
+  }
+  // a Steam library without the key (Windows reinstalled, library moved)
+  if (result.isEmpty()) {
+    result = MOBase::findSteamGame("Fallout 4", "Data\\Fallout4.esm");
+  }
+  return result;
 }
 
 QString GameFallout4::shortDescription(unsigned int key) const

@@ -10297,6 +10297,18 @@ Firefox.exe</translation>
       <source>&lt;h3&gt;Which game is this?&lt;/h3&gt;Mod Organizer doesn't recognize a game in %1. Choose the game and its folder.</source>
       <translation>&lt;h3&gt;Welches Spiel ist das?&lt;/h3&gt;Mod Organizer erkennt in %1 kein Spiel. Wähle das Spiel und seinen Ordner.</translation>
     </message>
+    <message>
+      <source>Some plugins have names with characters Morrowind can't read, so the game won't load them. mo_interface.log lists them: rename them.</source>
+      <translation>Einige Plugins haben Namen mit Zeichen, die Morrowind nicht lesen kann, daher lädt das Spiel sie nicht. mo_interface.log listet sie auf: Benenne sie um.</translation>
+    </message>
+    <message>
+      <source>Mod Organizer can't write the plugin list into %1, so the plugins turned on in Mod Organizer won't load. Windows protects that folder: move the game out of Program Files, or turn on the profile's own game INI files in Profiles.</source>
+      <translation>Mod Organizer kann die Plugin-Liste nicht in %1 schreiben, daher werden die in Mod Organizer eingeschalteten Plugins nicht geladen. Windows schützt diesen Ordner: Verschiebe das Spiel aus „Programme“ heraus oder schalte unter „Profile“ die eigenen INI-Dateien des Profils ein.</translation>
+    </message>
+    <message>
+      <source>Mod Organizer can't write the plugin list into %1, so the plugins turned on in Mod Organizer won't load. Check that the file isn't read-only or open in another program.</source>
+      <translation>Mod Organizer kann die Plugin-Liste nicht in %1 schreiben, daher werden die in Mod Organizer eingeschalteten Plugins nicht geladen. Prüfe, ob die Datei schreibgeschützt oder in einem anderen Programm geöffnet ist.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -12353,6 +12365,26 @@ WinRAR ist auf diesem PC installiert und kann es vielleicht. Das Archiv mit WinR
     <message>
       <source>Wrong password, or the archive is damaged.</source>
       <translation>Falsches Passwort, oder das Archiv ist beschädigt.</translation>
+    </message>
+    <message>
+      <source>Older script extender files removed</source>
+      <translation>Ältere Dateien des Script Extenders entfernt</translation>
+    </message>
+    <message>
+      <source>These files of the version that was in the game folder went to the Recycle Bin:
+
+%1
+
+If the game needs that version (another edition or game version), restore them from the Recycle Bin.</source>
+      <translation>Diese Dateien der Version, die im Spielordner war, wurden in den Papierkorb verschoben:
+
+%1
+
+Wenn das Spiel diese Version braucht (eine andere Edition oder Spielversion), stelle sie aus dem Papierkorb wieder her.</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
     </message>
   </context>
 <context>
@@ -14975,6 +15007,25 @@ Startbild von %2.</translation>
     <message>
       <source>Allow sorting plugins with LOOT (the Tale of Two Wastelands guides advise against it)</source>
       <translation>Sortieren der Plugins mit LOOT erlauben (die Anleitungen zu Tale of Two Wastelands raten davon ab)</translation>
+    </message>
+  </context>
+  <context>
+    <name>BG3Utils</name>
+    <message>
+      <source>Some mods aren't in the load order</source>
+      <translation>Einige Mods sind nicht in der Ladereihenfolge</translation>
+    </message>
+    <message>
+      <source>These mods couldn't be read in time, so the game won't load them this time:
+
+{0}
+
+Start the game again; if a mod stays out, reinstall it.</source>
+      <translation>Diese Mods konnten nicht rechtzeitig gelesen werden, daher lädt das Spiel sie diesmal nicht:
+
+{0}
+
+Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</translation>
     </message>
   </context>
 </TS>

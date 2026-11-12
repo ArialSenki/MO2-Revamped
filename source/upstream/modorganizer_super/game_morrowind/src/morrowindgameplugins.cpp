@@ -10,6 +10,7 @@
 
 #include <QDateTime>
 #include <QDir>
+#include <QSet>
 #include <QString>
 #include <QStringEncoder>
 #include <QStringList>
@@ -90,6 +91,7 @@ void MorrowindGamePlugins::writeList(const IPluginList* pluginList,
   ::WritePrivateProfileSectionW(L"Game Files", NULL, filePath.toStdWString().c_str());
 
   bool invalidFileNames = false;
+  bool writeFailed      = false;
   int writtenCount      = 0;
 
   QStringList plugins = pluginList->pluginNames();
@@ -110,6 +112,7 @@ void MorrowindGamePlugins::writeList(const IPluginList* pluginList,
                 (key + QString::number(writtenCount)).toStdWString().c_str(),
                 pluginName.toStdWString().c_str(), filePath.toStdWString().c_str())) {
           qWarning("failed to set game files in \"%s\"", qUtf8Printable(filePath));
+          writeFailed = true;
         }
       }
       ++writtenCount;
@@ -117,15 +120,38 @@ void MorrowindGamePlugins::writeList(const IPluginList* pluginList,
   }
 
   if (invalidFileNames) {
-    reportError(QObject::tr("Some of your plugins have invalid names! These "
-                            "plugins can not be loaded by the game. Please see "
-                            "mo_interface.log for a list of affected plugins "
-                            "and rename them."));
+    reportError(QObject::tr("Some plugins have names with characters Morrowind can't "
+                            "read, so the game won't load them. mo_interface.log lists "
+                            "them: rename them."));
+  }
+
+  // MO2 Revamped: Morrowind reads its plugin list from Morrowind.ini; where
+  // it can't be written (the game in Program Files) the game loads none of
+  // MO2's choices: said once
+  // once per file; the advice only for the game's own folder (a profile's
+  // copy that can't be written is read-only, or another program holds it)
+  static QSet<QString> toldWriteFailed;
+  const QString fileKey = QDir::cleanPath(filePath).toLower();
+  if (writeFailed && !toldWriteFailed.contains(fileKey)) {
+    toldWriteFailed.insert(fileKey);
+    const QString gameFolder =
+        QDir::cleanPath(organizer()->managedGame()->gameDirectory().absolutePath()).toLower();
+    if (fileKey.startsWith(gameFolder + QLatin1Char('/'))) {
+      reportError(QObject::tr("Mod Organizer can't write the plugin list into %1, so the "
+                              "plugins turned on in Mod Organizer won't load. Windows "
+                              "protects that folder: move the game out of Program Files, "
+                              "or turn on the profile's own game INI files in Profiles.")
+                      .arg(QDir::toNativeSeparators(filePath)));
+    } else {
+      reportError(QObject::tr("Mod Organizer can't write the plugin list into %1, so the "
+                              "plugins turned on in Mod Organizer won't load. Check that "
+                              "the file isn't read-only or open in another program.")
+                      .arg(QDir::toNativeSeparators(filePath)));
+    }
   }
 
   if (writtenCount == 0) {
-    qWarning("plugin list would be empty, this is almost certainly wrong. Not "
-             "saving.");
+    qWarning("the plugin list in %s is empty", qUtf8Printable(filePath));
   }
 }
 

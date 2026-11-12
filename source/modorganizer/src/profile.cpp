@@ -840,7 +840,10 @@ Profile* Profile::createPtrFrom(const QString& name, const Profile& reference,
   if (failedCopies != nullptr) {
     *failedCopies = failed;
   }
-  return new Profile(QDir(profileDirectory), gamePlugin, reference.m_GameFeatures);
+  auto* profile = new Profile(QDir(profileDirectory), gamePlugin, reference.m_GameFeatures);
+  // MO2 Revamped: a copy hasn't been chosen yet
+  profile->removeSetting(QString(), QStringLiteral("LastUsed"));
+  return profile;
 }
 
 namespace

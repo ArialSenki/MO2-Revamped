@@ -193,8 +193,13 @@ QStringList GameNehrim::validShortNames() const
 QString GameNehrim::identifyGamePath() const
 {
   QString path = "Software\\Bethesda Softworks\\Oblivion";
-  return findInRegistry(HKEY_LOCAL_MACHINE, path.toStdWString().c_str(),
-                        L"Installed Path");
+  const QString result = findInRegistry(HKEY_LOCAL_MACHINE, path.toStdWString().c_str(),
+                                        L"Installed Path");
+  // MO2 Revamped: the key is Oblivion's too: only a folder that has Nehrim
+  if (result.isEmpty() || !QFileInfo::exists(QDir(result).filePath(binaryName()))) {
+    return {};
+  }
+  return result;
 }
 
 QString GameNehrim::binaryName() const
