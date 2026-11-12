@@ -15,6 +15,9 @@
 #include <QSettings>
 #include <QTimer>
 
+#include <atomic>
+#include <thread>
+
 #include <Windows.h>
 
 #include <iterator>
@@ -231,13 +234,17 @@ Strip stripBorder(HWND window)
   return Strip::Done;
 }
 
-// the window shown by the game, as Windows tells it: the frame comes off
-// before the game draws its first frame, instead of a framed window first
-std::wstring watchedExe;
-HWINEVENTHOOK showHook = nullptr;
+// The watcher runs on a thread of its own with its own message loop: the
+// window events Windows sends (shown, moved, resized) reach it at once.
+// Through MO2's interface thread they came seconds late while it waits for
+// the game, and the framed window showed first.
+thread_local std::wstring watchedExe;
+thread_local DWORD watchedProcess = 0;
+thread_local HWINEVENTHOOK moveHook = nullptr;
 
-void CALLBACK onWindowShown(HWINEVENTHOOK, DWORD, HWND window, LONG object, LONG child,
-                            DWORD, DWORD)
+void watchMoves(DWORD process);
+
+void handleWindow(HWND window, LONG object, LONG child)
 {
   if (window == nullptr || object != OBJID_WINDOW || child != CHILDID_SELF ||
       GetAncestor(window, GA_ROOT) != window || watchedExe.empty()) {
@@ -246,8 +253,29 @@ void CALLBACK onWindowShown(HWINEVENTHOOK, DWORD, HWND window, LONG object, LONG
   Found found;
   found.exe = watchedExe;
   findWindow(window, reinterpret_cast<LPARAM>(&found));
-  if (found.window == window && stripBorder(window) == Strip::Done) {
-    log::info("borderless window: took the border off the game's window as it showed");
+  if (found.window != window) {
+    return;
+  }
+  watchMoves(found.process);
+  if (stripBorder(window) == Strip::Done) {
+    log::debug("borderless window: took the frame off the game's window");
+  }
+}
+
+void CALLBACK onWindowEvent(HWINEVENTHOOK, DWORD, HWND window, LONG object, LONG child, DWORD,
+                            DWORD)
+{
+  handleWindow(window, object, child);
+}
+
+// New Vegas shows a small framed window first, then sizes it for the game
+// and puts the frame back: each move or resize of that process's windows
+void watchMoves(DWORD process)
+{
+  if (moveHook == nullptr && process != 0) {
+    watchedProcess = process;
+    moveHook = SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, nullptr,
+                               &onWindowEvent, process, 0, WINEVENT_OUTOFCONTEXT);
   }
 }
 
@@ -404,68 +432,67 @@ void BorderlessWindow::watchGameWindow(const IPluginGame* game)
     return;
   }
 
-  // a few minutes for the window to show (a loader, a slow first start),
-  // then checks while the game runs
-  struct State
-  {
-    std::wstring exe;
-    int waited = 0;
-    DWORD process = 0;
-  };
-  auto state  = std::make_shared<State>();
-  state->exe  = gameInfo->exe.toStdWString();
   // one watcher: a second launch while the first waits uses it
-  static QPointer<QTimer> running;
-  if (running) {
+  static std::atomic<bool> running{false};
+  if (running.exchange(true)) {
     return;
   }
-  auto* timer = new QTimer(qApp);
-  running     = timer;
-  timer->setInterval(500);
 
-  watchedExe = state->exe;
-  if (showHook == nullptr) {
-    showHook = SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, nullptr, &onWindowShown,
-                               0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
-  }
-  QObject::connect(timer, &QObject::destroyed, [] {
+  const std::wstring exe = gameInfo->exe.toStdWString();
+  std::thread([exe] {
+    watchedExe = exe;
+    HWINEVENTHOOK showHook =
+        SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, nullptr, &onWindowEvent, 0, 0,
+                        WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+    // the window can be there before the hook: a look every half second too,
+    // which also notices the frame coming back without a move
+    const UINT_PTR tick = SetTimer(nullptr, 0, 500, nullptr);
+    const ULONGLONG start = GetTickCount64();
+    bool reported         = false;
+
+    MSG message;
+    while (GetMessageW(&message, nullptr, 0, 0) > 0) {
+      if (message.message == WM_TIMER && message.wParam == tick) {
+        if (watchedProcess != 0) {
+          if (!processAlive(watchedProcess)) {
+            break;
+          }
+        } else if (GetTickCount64() - start > 180000) {
+          log::warn("borderless window: the game's window didn't show");
+          break;
+        }
+        Found found;
+        found.exe = watchedExe;
+        EnumWindows(&findWindow, reinterpret_cast<LPARAM>(&found));
+        if (found.window != nullptr) {
+          watchMoves(found.process);
+          const Strip result = stripBorder(found.window);
+          if (result == Strip::Refused) {
+            log::warn("borderless window: Windows doesn't let MO2 change the game's window "
+                      "(is the game set to run as administrator?)");
+            break;
+          }
+          if (!reported && GetWindowLongPtrW(found.window, GWL_STYLE) & WS_POPUP) {
+            reported = true;
+            log::info("borderless window: the game's window has no border");
+          }
+        }
+        continue;
+      }
+      TranslateMessage(&message);
+      DispatchMessageW(&message);
+    }
+
+    KillTimer(nullptr, tick);
     if (showHook != nullptr) {
       UnhookWinEvent(showHook);
-      showHook = nullptr;
+    }
+    if (moveHook != nullptr) {
+      UnhookWinEvent(moveHook);
+      moveHook = nullptr;
     }
     watchedExe.clear();
-  });
-  QObject::connect(timer, &QTimer::timeout, timer, [timer, state] {
-    if (state->process != 0 && !processAlive(state->process)) {
-      timer->deleteLater();
-      return;
-    }
-    Found found;
-    found.exe = state->exe;
-    EnumWindows(&findWindow, reinterpret_cast<LPARAM>(&found));
-    if (found.window == nullptr) {
-      if (state->process == 0 && ++state->waited > 360) {
-        log::warn("borderless window: the game's window didn't show");
-        timer->deleteLater();
-      }
-      return;
-    }
-    if (state->process == 0) {
-      state->process = found.process;
-      timer->setInterval(2000);
-    }
-    switch (stripBorder(found.window)) {
-    case Strip::Done:
-      log::info("borderless window: took the border off the game's window");
-      break;
-    case Strip::Refused:
-      log::warn("borderless window: Windows doesn't let MO2 change the game's window (is "
-                "the game set to run as administrator?)");
-      timer->deleteLater();
-      break;
-    case Strip::Nothing:
-      break;
-    }
-  });
-  timer->start();
+    watchedProcess = 0;
+    running        = false;
+  }).detach();
 }
