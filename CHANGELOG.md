@@ -1,6 +1,38 @@
 # Changelog
 
-## Next pre-release (not released yet)
+## 1.1.0-beta.8 (pre-release) — November 12, 2026
+
+### Which games were tested
+
+What's new in this beta (script extenders, borderless window) was tested by
+hand with the real games, on Windows 11:
+
+| Game | Script extender | Borderless window |
+|---|---|---|
+| Skyrim Special Edition | SKSE64: works | works |
+| Fallout 4 | F4SE: works | works |
+| Fallout 3 | FOSE: works | works |
+| New Vegas | xNVSE: works | works; at exit the screen still goes black for about a third of a second |
+
+Elden Ring and Nightreign don't use either and work as in beta 7.
+
+Not tested yet:
+
+- **Cyberpunk 2077** and **Baldur's Gate 3**: not tried with this beta.
+- **Oblivion, Skyrim (the original), Enderal, Tale of Two Wastelands,
+  Starfield and the VR versions**: their script extenders and the borderless
+  window should work the same way, but nobody has tried them with the real
+  games.
+- **Windows display scaling above 100%** with the borderless window in the
+  older games (new in this beta, see below).
+- **The setup on Linux, Steam Deck, Proton or Wine**: the fix below comes
+  from a user's report and was checked on Windows only.
+
+Known issue: in Fallout 3, New Vegas, Oblivion and Skyrim, the borderless
+window is hidden when the game stops answering on a black screen, which is
+what they do while they close. If a game does that while playing (a long
+load after a fade to black, say), the desktop can show until it answers
+again.
 
 ### Script extenders
 
@@ -16,7 +48,8 @@
 - Updating the extender the same way sends the files of the older version (its
   DLL for the old game version) to the Recycle Bin.
 - Removing that mod offers to send the files it copied into the game folder to
-  the Recycle Bin too.
+  the Recycle Bin too, but only those still as it copied them: a newer version
+  copied there by hand or from another instance stays.
 - The window warns when the extender is built for another version of the game,
   and so does Run before the game starts through the extender's loader: after a
   game update, the old extender doesn't start the game.
@@ -37,6 +70,8 @@
 - It applies when the game starts, also through its script extender, not for
   its launcher or editor. Turned off, the INIs MO2 changed get their display
   settings back at the next start.
+- The older games start with Windows' high-DPI compatibility setting, so
+  display scaling above 100% doesn't stretch their window a second time.
 
 ### Setup
 
@@ -48,6 +83,34 @@
   at the end: MO2 stays installed.
 - Under Wine, **Open MO2 when finished** starts MO2 directly. On Windows it
   still goes through the desktop so MO2 doesn't run as administrator.
+
+### Windows and dialogs
+
+- Every dialog opens centred over the window in front of it, on that
+  window's monitor, and stays above it: before, some opened behind the main
+  window or the instance wizard (the Nexus category import when creating an
+  instance, for one), on another monitor, or moved after appearing. A dialog
+  that opens while MO2 is in the background flashes its taskbar button.
+- Windows' own windows that MO2 opens (moving files to the Recycle Bin,
+  administrator prompts) open over MO2 too.
+- Starting MO2 while it is already open brings the open one to the front,
+  restored and with its dialog on top, instead of a message. Only while the
+  other one is still starting is there a notice.
+- The remaining windows from Mod Organizer 2 are rewritten in MO2 Revamped's
+  design: the "remember my choice" questions and the task dialogs plugins
+  use, BSA Extractor's questions and progress, and the file attribute check
+  before a program starts. C# FOMOD scripts' own windows open centred over
+  MO2.
+- Plain-language texts for the Form 43 and script extender plugin checks,
+  the games' settings (Settings > Plugins) and the sTestFile and Starfield
+  ESP notices, translated into Spanish, German, French, Italian and
+  Portuguese.
+
+### Other fixes
+
+- BSA Extractor keeps the archive when some of its files couldn't be
+  extracted (a full disk): before, it could send it to the Recycle Bin.
+- Script extender mods are no longer flagged as having no valid game data.
 
 ## 1.1.0-beta.7 (pre-release) — November 11, 2026
 

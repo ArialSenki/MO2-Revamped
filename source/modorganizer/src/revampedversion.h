@@ -5,7 +5,7 @@
 // "v". ModOrganizer.exe keeps the version of the MO2 it is based on (2.5.2) in its
 // file version, so the update check compares GitHub releases with this instead.
 // Build-Release.ps1 refuses to package a build whose version differs from it.
-#define MO2R_VERSION_STRING "1.1.0-beta.7"
+#define MO2R_VERSION_STRING "1.1.0-beta.8"
 
 // the MO2 Revamped listing on Nexus, under Elden Ring: the update notice links
 // to it and the endorsement goes to it
