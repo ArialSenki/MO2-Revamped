@@ -2080,34 +2080,6 @@ QDialog#EldenRingCreateSaveProfileDialog QLabel#saveProfileStatus {
     color: #E1B66E;
 }
 
-QDialog#TaskDialog QWidget#topPanel {
-    background-color: #2E2E2E;
-    border: 1px solid #464646;
-    border-radius: 8px;
-}
-
-QDialog#TaskDialog QLabel#main {
-    color: #FFFFFF;
-    font-size: 14pt;
-    font-weight: 600;
-}
-
-QDialog#TaskDialog QLabel#content {
-    color: #C5C5C5;
-}
-
-QDialog#TaskDialog QWidget#rememberPanel {
-    background-color: #313131;
-    border: 1px solid #464646;
-    border-radius: 8px;
-    padding: 3px;
-}
-
-QDialog#TaskDialog QWidget#detailsPanel {
-    background-color: #2B2B2B;
-    border-top: 1px solid #464646;
-}
-
 QDialog#TransferSavesDialog QLabel#transferSavePageTitle {
     color: #FFFFFF;
     font-size: 16pt;
@@ -2550,9 +2522,6 @@ QDialog#EditExecutablesDialog QLabel#steamAppIdLabel {
     font-weight: 600;
 }
 
-
-
-
 QDialog#profileBackupDialog QLabel#backupContentsHeading {
     color: #FFFFFF;
 }
@@ -2575,12 +2544,6 @@ QDialog#profileBackupDialog QLabel#backupContentsHeading {
     color: #FFFFFF;
     font-weight: 600;
 }
-
-
-
-
-
-
 
 QDialog#ModInfoDialog QFrame#modInfoEmptyStateCard {
     background-color: #2E2E2E;
@@ -2689,9 +2652,6 @@ QDialog#CreateInstanceDialog QWidget#widget_19 {
     padding: 0px;
 }
 
-
-
-
 QDialog#EditExecutablesDialog QFrame#headerCard { background-color: transparent; border: none; }
 
 QDialog#EditExecutablesDialog QLabel#dialogHeading {
@@ -2787,9 +2747,6 @@ QDialog#EldenRingNativeProfileDialog QLabel#nativeTableEmptyState {
 
 QDialog#NativeProfileExportDialog QFrame#nativeExportHeader { background-color: transparent; border: none; }
 
-
-
-
 QDialog#NativeProfileExportDialog QLabel#nativeExportTitle {
     color: #FFFFFF;
     font-size: 11pt;
@@ -2852,13 +2809,6 @@ QDialog#EldenRingSaveTransferDialog QLabel#saveTransferSubtitle {
     font-size: 9pt;
 }
 
-
-
-
-
-
-
-
 QDialog#EditExecutablesDialog QLabel#executableHeaderIcon,
 QDialog#EditExecutablesDialog QLabel#executableProgramIcon,
 QDialog#EditExecutablesDialog QLabel#executableOptionsIcon,
@@ -2897,7 +2847,6 @@ QDialog#ForcedLoadDialog QGroupBox#rulesGroup {
     margin-top: 0;
     padding-top: 0;
 }
-
 
 QDialog#SettingsDialog QWidget#generalTab QLabel#generalPageIcon,
 QDialog#CategoriesDialog QLabel#categoriesHeaderIcon,
@@ -5915,31 +5864,7 @@ QToolButton#startButton[runState="idle"]::menu-button:disabled {
     border-left-color: #353535;
 }
 /* uibase's question dialogs: their choices as the wizard's, the icon on the card */
-QDialog#TaskDialog QWidget#contentPanel,
-QDialog#TaskDialog QWidget#rememberPanel,
-QDialog#TaskDialog QWidget#iconPanel,
-QDialog#TaskDialog QWidget#widget_3,
-QDialog#TaskDialog QWidget#mainPanel,
-QDialog#TaskDialog QWidget#commandButtonsPanel,
-QDialog#TaskDialog QWidget#commandButtons {
-    background-color: transparent;
-    border: none;
-}
-QDialog#TaskDialog QCommandLinkButton {
-    color: #FFFFFF;
-    background-color: transparent;
-    border: none;
-    border-top: 1px solid #353535;
-    border-radius: 0px;
-    padding: 12px 20px 12px 16px;
-    text-align: left;
-}
-QDialog#TaskDialog QCommandLinkButton:hover {
-    background-color: #323232;
-}
-QDialog#TaskDialog QCommandLinkButton:pressed {
-    background-color: #292B2F;
-}
+
 QDialog#SelectionDialog QCommandLinkButton,
 QDialog#SelectionDialog QCommandLinkButton:default {
     color: #FFFFFF;

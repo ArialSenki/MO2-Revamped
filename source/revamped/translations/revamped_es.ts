@@ -10355,6 +10355,22 @@ Ejemplo:
       <source>"%1" already exists. Overwrite it?</source>
       <translation>«%1» ya existe. ¿Sobrescribirlo?</translation>
     </message>
+    <message>
+      <source>Remember my choice</source>
+      <translation>Recordar la respuesta</translation>
+    </message>
+    <message>
+      <source>Always ask</source>
+      <translation>Preguntar siempre</translation>
+    </message>
+    <message>
+      <source>Remember my choice for %1</source>
+      <translation>Recordar la respuesta para %1</translation>
+    </message>
+    <message>
+      <source>You can reset these choices with "Reset dialog choices" in Settings, General.</source>
+      <translation>Puedes restablecer estas respuestas con «Restablecer opciones de diálogo» en Ajustes, General.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -11390,7 +11406,7 @@ Elige cuánto detalle escribe MO2 en ModOrganizer.log. Info es lo recomendado pa
     </message>
     <message>
       <source>Reset dialog choices</source>
-      <translation>Restablecer Opciones de Diálogo</translation>
+      <translation>Restablecer opciones de diálogo</translation>
     </message>
     <message>
       <source>Configure mod categories</source>

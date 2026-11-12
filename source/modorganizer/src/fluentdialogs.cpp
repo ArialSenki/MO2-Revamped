@@ -8,6 +8,7 @@
 
 #include <QAbstractItemView>
 #include <QCommandLinkButton>
+#include <functional>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFrame>
@@ -216,159 +217,6 @@ void pressesOriginal(QAbstractButton* copy, QAbstractButton* original)
 {
   copy->setEnabled(original->isEnabled());
   QObject::connect(copy, &QAbstractButton::clicked, original, &QAbstractButton::click);
-}
-
-// Windows 11 dialogs ask in words, as polishMessageBox() does for message boxes
-bool isQuestionIcon(const QDialog* dialog, const QPixmap& pixmap)
-{
-  const QIcon question =
-      dialog->style()->standardIcon(QStyle::SP_MessageBoxQuestion, nullptr, dialog);
-  return question.pixmap(pixmap.size()).toImage() == pixmap.toImage();
-}
-
-// uibase's TaskDialog: the main text is the title, choices with a description
-// are option cards, those without one are the band's buttons
-void shapeTaskDialog(QDialog* dialog)
-{
-  auto* main      = dialog->findChild<QLabel*>(QStringLiteral("main"));
-  auto* top       = dialog->findChild<QWidget*>(QStringLiteral("topPanel"));
-  auto* contents  = dialog->findChild<QWidget*>(QStringLiteral("contentPanel"));
-  auto* contentLb = dialog->findChild<QLabel*>(QStringLiteral("content"));
-  auto* commands  = dialog->findChild<QWidget*>(QStringLiteral("commandButtons"));
-  auto* remember  = dialog->findChild<QWidget*>(QStringLiteral("rememberPanel"));
-  auto* standard  = dialog->findChild<QWidget*>(QStringLiteral("standardButtonsPanel"));
-  auto* box       = dialog->findChild<QDialogButtonBox*>(QStringLiteral("standardButtons"));
-  auto* details   = dialog->findChild<QWidget*>(QStringLiteral("detailsPanel"));
-  auto* expander  = dialog->findChild<QWidget*>(QStringLiteral("detailsExpander"));
-  auto* iconPanel = dialog->findChild<QWidget*>(QStringLiteral("iconPanel"));
-  auto* iconLabel = dialog->findChild<QLabel*>(QStringLiteral("icon"));
-  if (main == nullptr || top == nullptr || contents == nullptr || contentLb == nullptr ||
-      commands == nullptr || remember == nullptr || standard == nullptr || box == nullptr ||
-      details == nullptr || expander == nullptr || iconPanel == nullptr ||
-      iconLabel == nullptr) {
-    return;
-  }
-
-  QPixmap icon;
-  if (!iconPanel->isHidden() && !iconLabel->pixmap().isNull() &&
-      !isQuestionIcon(dialog, iconLabel->pixmap())) {
-    const QPixmap original = iconLabel->pixmap();
-    icon = original.scaled(QSize(28, 28) * original.devicePixelRatio(), Qt::KeepAspectRatio,
-                           Qt::SmoothTransformation);
-    icon.setDevicePixelRatio(original.devicePixelRatio());
-  }
-  const int width         = top->minimumWidth();
-  const bool hasCommands  = !commands->parentWidget()->isHidden();
-  const bool showRemember = !remember->isHidden();
-  const bool hasDetails   = expander->isEnabled();
-
-  const ContentShape shape = toContentShape(dialog, main->text(), icon, std::max(440, width));
-
-  // the widgets the dialog still uses, without the frame around them
-  if (auto* spacer = contents->findChild<QWidget*>(QStringLiteral("buttonsSpacer"))) {
-    spacer->hide();
-  }
-  const bool hasText = !contentLb->text().isEmpty() || contents->layout()->count() > 2;
-  contents->setParent(dialog);
-  contents->layout()->setContentsMargins(0, 0, 0, 0);
-  contentLb->setObjectName(QStringLiteral("fluentDialogText"));
-  shape.body->addWidget(contents);
-  contents->setVisible(hasText);
-
-  if (hasCommands) {
-    QPushButton* first = nullptr;
-    bool hasCards      = false;
-    auto* cards        = new QVBoxLayout;
-    cards->setContentsMargins(0, 8, 0, 0);
-    cards->setSpacing(0);
-    for (QCommandLinkButton* original : commands->findChildren<QCommandLinkButton*>()) {
-      if (!original->description().isEmpty()) {
-        auto* card =
-            new FluentOptionCard(0, original->text(), original->description(), dialog);
-        pressesOriginal(card, original);
-        cards->addWidget(card);
-        hasCards = true;
-      } else {
-        auto* button = new QPushButton(original->text(), shape.footer->parentWidget());
-        button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        button->setMinimumWidth(110);
-        button->setAutoDefault(false);
-        enterPressesItself(button);
-        pressesOriginal(button, original);
-        shape.footer->addWidget(button);
-        if (first == nullptr) {
-          first = button;
-        }
-      }
-    }
-    shape.body->addLayout(cards);
-    if (first != nullptr && !hasCards) {
-      first->setDefault(true);
-      first->setProperty("fluentPrimary", true);
-    }
-    if (first == nullptr) {
-      shape.footer->parentWidget()->hide();
-    }
-  } else {
-    box->setParent(shape.footer->parentWidget());
-    shape.footer->addWidget(box);
-    box->show();
-    equalButtons(box);
-  }
-  top->setMinimumWidth(0);
-  top->hide();
-  standard->hide();
-
-  if (showRemember) {
-    remember->setParent(dialog);
-    shape.body->addWidget(remember);
-    remember->show();
-  } else {
-    remember->hide();
-  }
-  if (hasDetails) {
-    details->setParent(dialog);
-    if (auto* line = details->findChild<QWidget*>(QStringLiteral("line"))) {
-      line->hide();
-    }
-    shape.body->addWidget(details);
-    details->show();
-  } else {
-    details->hide();
-  }
-}
-
-// uibase's question with "remember my choice"
-void shapeQuestionMemory(QDialog* dialog)
-{
-  auto* frame   = dialog->findChild<QWidget*>(QStringLiteral("frame"));
-  auto* message = dialog->findChild<QLabel*>(QStringLiteral("messageLabel"));
-  auto* box     = dialog->findChild<QDialogButtonBox*>(QStringLiteral("buttonBox"));
-  if (frame == nullptr || message == nullptr || box == nullptr) {
-    return;
-  }
-  auto* remember    = dialog->findChild<QWidget*>(QStringLiteral("rememberCheckBox"));
-  auto* rememberFor = dialog->findChild<QWidget*>(QStringLiteral("rememberForCheckBox"));
-
-  const ContentShape shape = toContentShape(dialog, dialog->windowTitle());
-  message->setParent(dialog);
-  message->setObjectName(QStringLiteral("fluentDialogText"));
-  message->setWordWrap(true);
-  shape.body->addWidget(message);
-  message->show();
-  shape.body->addSpacing(8);
-  for (QWidget* check : {remember, rememberFor}) {
-    if (check != nullptr) {
-      check->setParent(dialog);
-      shape.body->addWidget(check);
-      check->show();
-    }
-  }
-  frame->hide();
-  box->setParent(shape.footer->parentWidget());
-  shape.footer->addWidget(box);
-  box->show();
-  equalButtons(box);
 }
 
 // QInputDialog: the caption and the field under a title
@@ -594,11 +442,54 @@ void polish(QDialog* dialog)
   dialog->setProperty("fluentPolished", true);
 
   // the small dialogs Qt and uibase build themselves take the content dialog's shape
-  if (dialog->objectName() == QLatin1String("TaskDialog")) {
-    shapeTaskDialog(dialog);
-  } else if (dialog->objectName() == QLatin1String("QuestionBoxMemory")) {
-    shapeQuestionMemory(dialog);
-  } else if (dialog->objectName() == QLatin1String("SelectionDialog")) {
+  // uibase's TaskDialog marks its choices with a description: option cards
+  FluentOptionCard* firstCard = nullptr;
+  for (QCommandLinkButton* original : dialog->findChildren<QCommandLinkButton*>()) {
+    if (!original->property("revampedOptionCard").toBool()) {
+      continue;
+    }
+    auto* layout = original->parentWidget() != nullptr
+                       ? qobject_cast<QBoxLayout*>(original->parentWidget()->layout())
+                       : nullptr;
+    QBoxLayout* owner = nullptr;
+    int at            = -1;
+    // the card goes where the command link is, in whichever layout holds it
+    const std::function<bool(QLayout*)> find = [&](QLayout* l) {
+      for (int i = 0; l != nullptr && i < l->count(); ++i) {
+        QLayoutItem* item = l->itemAt(i);
+        if (item->widget() == original) {
+          owner = qobject_cast<QBoxLayout*>(l);
+          at    = i;
+          return true;
+        }
+        if (item->layout() != nullptr && find(item->layout())) {
+          return true;
+        }
+      }
+      return false;
+    };
+    find(layout);
+    if (owner == nullptr || at < 0) {
+      continue;
+    }
+    auto* card = new FluentOptionCard(0, original->text(), original->description(),
+                                      original->parentWidget());
+    pressesOriginal(card, original);
+    owner->insertWidget(at, card);
+    QWidget::setTabOrder(original, card);
+    original->hide();
+    if (firstCard == nullptr) {
+      firstCard = card;
+    }
+  }
+  if (firstCard != nullptr) {
+    auto* band = dialog->findChild<QWidget*>(QStringLiteral("fluentDialogFooter"));
+    if (band == nullptr || band->isHidden()) {
+      firstCard->setFocus();
+    }
+  }
+
+  if (dialog->objectName() == QLatin1String("SelectionDialog")) {
     shapeSelectionDialog(dialog);
   } else if (auto* input = qobject_cast<QInputDialog*>(dialog)) {
     shapeInputDialog(input);

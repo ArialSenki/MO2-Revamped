@@ -73,6 +73,88 @@ inline QPushButton* contentButton(const QString& text, QWidget* parent)
   return enterPressesItself(button);
 }
 
+// the parts of a content dialog: its title, its text, where its own content
+// goes, and the band of buttons
+struct ContentParts
+{
+  QLabel* title        = nullptr;
+  QLabel* text         = nullptr;
+  QVBoxLayout* body    = nullptr;
+  QHBoxLayout* buttons = nullptr;
+};
+
+// the content dialog's structure, built in any dialog: ContentDialog's own,
+// and uibase's dialogs, which derive from QDialog themselves
+inline ContentParts buildContent(QDialog* dialog, const QString& title, const QString& text)
+{
+  ContentParts parts;
+  dialog->setProperty("fluentContentDialog", true);
+  dialog->setWindowTitle(title);
+  dialog->setWindowFlags(dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
+  dialog->setMinimumWidth(440);
+
+  auto* layout = new QVBoxLayout(dialog);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  auto* content = new QWidget(dialog);
+  content->setObjectName(QStringLiteral("fluentDialogContent"));
+  auto* contentLayout = new QVBoxLayout(content);
+  contentLayout->setContentsMargins(24, 20, 24, 24);
+  contentLayout->setSpacing(8);
+
+  parts.title = new QLabel(title, content);
+  parts.title->setObjectName(QStringLiteral("fluentDialogTitle"));
+  parts.title->setWordWrap(true);
+  // as written: titles carry mod names and scripts' own words
+  parts.title->setTextFormat(Qt::PlainText);
+  contentLayout->addWidget(parts.title);
+
+  parts.text = new QLabel(text, content);
+  parts.text->setObjectName(QStringLiteral("fluentDialogText"));
+  parts.text->setWordWrap(true);
+  parts.text->setTextFormat(Qt::PlainText);
+  parts.text->setVisible(!text.isEmpty());
+  contentLayout->addWidget(parts.text);
+  // a screen reader reads the explanation with the window's name
+  dialog->setAccessibleDescription(text);
+
+  parts.body = new QVBoxLayout;
+  parts.body->setContentsMargins(0, 8, 0, 0);
+  parts.body->setSpacing(8);
+  contentLayout->addLayout(parts.body, 1);
+  layout->addWidget(content, 1);
+
+  auto* band = new QFrame(dialog);
+  band->setObjectName(QStringLiteral("fluentDialogFooter"));
+  parts.buttons = new QHBoxLayout(band);
+  parts.buttons->setContentsMargins(24, 24, 24, 24);
+  parts.buttons->setSpacing(8);
+  layout->addWidget(band);
+  return parts;
+}
+
+// a button of the band, all of the same width; a primary button gets the
+// accent, and the first primary one is the default
+inline QPushButton* bandButton(QDialog* dialog, QHBoxLayout* band, const QString& text,
+                               bool primary, bool& hasDefault)
+{
+  auto* button = new QPushButton(text, dialog);
+  button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  button->setMinimumWidth(110);
+  button->setAutoDefault(false);
+  enterPressesItself(button);
+  if (primary && !hasDefault) {
+    hasDefault = true;
+    button->setDefault(true);
+  }
+  if (primary) {
+    button->setProperty("fluentPrimary", true);
+  }
+  band->addWidget(button);
+  return button;
+}
+
 class ContentDialog : public QDialog
 {
 public:
@@ -81,49 +163,11 @@ public:
       : QDialog(parent)
   {
     setObjectName(objectName);
-    setProperty("fluentContentDialog", true);
-    setWindowTitle(title);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-    setMinimumWidth(440);
-
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-
-    auto* content = new QWidget(this);
-    content->setObjectName(QStringLiteral("fluentDialogContent"));
-    auto* contentLayout = new QVBoxLayout(content);
-    contentLayout->setContentsMargins(24, 20, 24, 24);
-    contentLayout->setSpacing(8);
-
-    m_title = new QLabel(title, content);
-    m_title->setObjectName(QStringLiteral("fluentDialogTitle"));
-    m_title->setWordWrap(true);
-    // as written: titles carry mod names and scripts' own words
-    m_title->setTextFormat(Qt::PlainText);
-    contentLayout->addWidget(m_title);
-
-    m_text = new QLabel(text, content);
-    m_text->setObjectName(QStringLiteral("fluentDialogText"));
-    m_text->setWordWrap(true);
-    m_text->setTextFormat(Qt::PlainText);
-    m_text->setVisible(!text.isEmpty());
-    contentLayout->addWidget(m_text);
-    // a screen reader reads the explanation with the window's name
-    setAccessibleDescription(text);
-
-    m_body = new QVBoxLayout;
-    m_body->setContentsMargins(0, 8, 0, 0);
-    m_body->setSpacing(8);
-    contentLayout->addLayout(m_body, 1);
-    layout->addWidget(content, 1);
-
-    auto* band = new QFrame(this);
-    band->setObjectName(QStringLiteral("fluentDialogFooter"));
-    m_buttons = new QHBoxLayout(band);
-    m_buttons->setContentsMargins(24, 24, 24, 24);
-    m_buttons->setSpacing(8);
-    layout->addWidget(band);
+    const ContentParts parts = buildContent(this, title, text);
+    m_title   = parts.title;
+    m_text    = parts.text;
+    m_body    = parts.body;
+    m_buttons = parts.buttons;
   }
 
   // where the dialog's own content goes, below the text
@@ -143,20 +187,7 @@ public:
   // added is the default
   QPushButton* addButton(const QString& text, bool primary = false)
   {
-    auto* button = new QPushButton(text, this);
-    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    button->setMinimumWidth(110);
-    button->setAutoDefault(false);
-    enterPressesItself(button);
-    if (primary && !m_hasDefault) {
-      m_hasDefault = true;
-      button->setDefault(true);
-    }
-    if (primary) {
-      button->setProperty("fluentPrimary", true);
-    }
-    m_buttons->addWidget(button);
-    return button;
+    return bandButton(this, m_buttons, text, primary, m_hasDefault);
   }
 
   // for a question: Enter does nothing, the accent stays on the action, and

@@ -8,6 +8,8 @@ mo2_configure_uibase(uibase
 	PUBLIC_DEPENDS Qt::Widgets Qt::Network Qt::QuickWidgets
 	PRIVATE_DEPENDS boost boost::thread Qt::Qml Qt::Quick spdlog)
 target_compile_definitions(uibase PRIVATE -DUIBASE_EXPORT)
+# MO2 Revamped: the content dialog its own dialogs are built as
+target_include_directories(uibase PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../revamped_fluent)
 mo2_install_target(uibase)
 
 mo2_add_filter(NAME src/interfaces GROUPS

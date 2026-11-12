@@ -22,11 +22,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "expanderwidget.h"
 #include "log.h"
 #include "questionboxmemory.h"
-#include "ui_taskdialog.h"
+#include "fluentcontentdialog.h"
 #include "utility.h"
 #include <QComboBox>
+#include <QCommandLinkButton>
+#include <QDialogButtonBox>
+#include <QLabel>
+#include <QPushButton>
+#include <QStyle>
+#include <QTextDocument>
+#include <QVBoxLayout>
+#include <cmath>
 #include <QRadioButton>
 #include <Windows.h>
+
+namespace Ui
+{
+class TaskDialog
+{};
+}  // namespace Ui
 
 namespace MOBase
 {
@@ -80,12 +94,27 @@ TaskDialogButton::TaskDialogButton(QString t, QMessageBox::StandardButton b)
     : TaskDialogButton(std::move(t), {}, b)
 {}
 
+// MO2 Revamped: TaskDialog is built in code as a Windows 11 content dialog
+// instead of the .ui of Mod Organizer 2: the main text is the title, the
+// content its text, choices with a description are option cards (MO2 draws
+// them from the command links marked "revampedOptionCard"), the others and
+// OK are the band's buttons, and the details open under a Details button.
+// The class keeps its members and functions, so its size and exports stay
+// as they were; Ui::TaskDialog is now empty.
+
 TaskDialog::TaskDialog(QWidget* parent, QString title)
-    : m_dialog(new QDialog(parent)), ui(new Ui::TaskDialog), m_title(std::move(title)),
+    : m_dialog(new QDialog(parent)), m_title(std::move(title)),
       m_icon(QMessageBox::NoIcon), m_result(QMessageBox::Cancel), m_width(-1),
       m_rememberCheck(nullptr), m_rememberCombo(nullptr)
 {
-  ui->setupUi(m_dialog.get());
+  m_dialog->setObjectName(QStringLiteral("RevampedTaskDialog"));
+  // what addContent() adds waits here until the dialog is built
+  auto* extra = new QWidget(m_dialog.get());
+  extra->setObjectName(QStringLiteral("taskExtraContent"));
+  auto* extraLayout = new QVBoxLayout(extra);
+  extraLayout->setContentsMargins(0, 0, 0, 0);
+  extraLayout->setSpacing(8);
+  extra->hide();
 }
 
 TaskDialog::~TaskDialog() = default;
@@ -135,10 +164,9 @@ TaskDialog& TaskDialog::remember(const QString& action, const QString& file)
 
 void TaskDialog::addContent(QWidget* w)
 {
-  auto* ly = static_cast<QVBoxLayout*>(ui->contentPanel->layout());
-
-  // add before spacer
-  ly->insertWidget(ly->count() - 1, w);
+  if (auto* extra = m_dialog->findChild<QWidget*>(QStringLiteral("taskExtraContent"))) {
+    extra->layout()->addWidget(w);
+  }
 }
 
 void TaskDialog::setWidth(int w)
@@ -159,20 +187,8 @@ QMessageBox::StandardButton TaskDialog::exec()
   setButtons();
   setDetails();
 
-  if (m_width >= 0) {
-    ui->topPanel->setMinimumWidth(m_width);
-  } else {
-    ui->topPanel->setMinimumWidth(400);
-  }
-
+  m_dialog->setMinimumWidth(std::max(440, m_width));
   m_dialog->adjustSize();
-
-  if (!m_dialog->parent()) {
-    // no parent, make sure it's shown on top
-    m_dialog->show();
-    m_dialog->activateWindow();
-    m_dialog->raise();
-  }
 
   if (m_dialog->exec() != QDialog::Accepted) {
     return QMessageBox::Cancel;
@@ -230,133 +246,231 @@ void TaskDialog::rememberChoice()
   }
 }
 
-void TaskDialog::setButtons()
+namespace
 {
-  if (m_buttons.empty()) {
-    setStandardButtons();
-  } else {
-    setCommandButtons();
-  }
 
-  m_expander.reset(new ExpanderWidget(ui->detailsExpander, ui->detailsWidget));
+// the parts setDialog() built: found again by the steps after it
+QVBoxLayout* taskBody(QDialog* dialog)
+{
+  auto* content = dialog->findChild<QWidget*>(QStringLiteral("fluentDialogContent"));
+  if (content == nullptr || content->layout() == nullptr) {
+    return nullptr;
+  }
+  // the content's layout: title, text, then the body
+  auto* layout = static_cast<QVBoxLayout*>(content->layout());
+  for (int i = 0; i < layout->count(); ++i) {
+    if (auto* body = qobject_cast<QVBoxLayout*>(layout->itemAt(i)->layout())) {
+      return body;
+    }
+  }
+  return nullptr;
 }
 
-void TaskDialog::setStandardButtons()
+QHBoxLayout* taskBand(QDialog* dialog)
 {
-  ui->standardButtonsPanel->show();
-  ui->commandButtonsPanel->hide();
-
-  for (auto* b : ui->standardButtons->buttons()) {
-    ui->standardButtons->removeButton(b);
-  }
-
-  ui->standardButtons->addButton(QDialogButtonBox::Ok);
-
-  QObject::connect(ui->standardButtons, &QDialogButtonBox::clicked, [&](auto* b) {
-    m_result = static_cast<QMessageBox::StandardButton>(
-        ui->standardButtons->standardButton(b));
-
-    m_dialog->accept();
-  });
+  auto* band = dialog->findChild<QFrame*>(QStringLiteral("fluentDialogFooter"));
+  return band != nullptr ? qobject_cast<QHBoxLayout*>(band->layout()) : nullptr;
 }
 
-void TaskDialog::setCommandButtons()
-{
-  ui->standardButtonsPanel->hide();
-  ui->commandButtonsPanel->show();
-
-  deleteChildWidgets(ui->commandButtons);
-
-  for (auto&& b : m_buttons) {
-    auto* cb = new QCommandLinkButton(b.text, b.description);
-
-    QObject::connect(cb, &QAbstractButton::clicked, [&] {
-      m_result = b.button;
-      m_dialog->accept();
-    });
-
-    ui->commandButtons->layout()->addWidget(cb);
-  }
-}
-
-void TaskDialog::setDetails()
-{
-  if (m_details.isEmpty()) {
-    ui->detailsExpander->setEnabled(false);
-    return;
-  }
-
-  ui->details->setPlainText(m_details);
-
-  setVisibleLines(ui->details, 10);
-  setFontPercent(ui->details, 0.9);
-
-  const QColor bg = detailsColor();
-
-  ui->detailsPanel->setStyleSheet(QString("background-color: rgb(%1, %2, %3)")
-                                      .arg(bg.redF() * 255)
-                                      .arg(bg.greenF() * 255)
-                                      .arg(bg.blueF() * 255));
-}
+}  // namespace
 
 void TaskDialog::setDialog()
 {
-  m_dialog->setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
-  m_dialog->layout()->setSizeConstraint(QLayout::SetFixedSize);
-
+  // built once: exec() may run again on the same dialog
+  if (m_dialog->property("fluentContentDialog").toBool()) {
+    return;
+  }
+  RevampedFluent::buildContent(m_dialog.get(), m_title, m_content);
   m_dialog->setWindowTitle(m_title);
 }
 
 void TaskDialog::setWidgets()
 {
-  ui->main->setText(m_main);
-  setFontPercent(ui->main, 1.5);
+  // the main text is the dialog's title; without one, the window's title.
+  // Both may hold rich text, as in Mod Organizer 2 (callers bold a folder)
+  auto* title = m_dialog->findChild<QLabel*>(QStringLiteral("fluentDialogTitle"));
+  if (title != nullptr) {
+    title->setTextFormat(Qt::AutoText);
+    title->setText(m_main.isEmpty() ? m_title : m_main);
+  }
+  if (auto* text = m_dialog->findChild<QLabel*>(QStringLiteral("fluentDialogText"))) {
+    text->setTextFormat(Qt::AutoText);
+    text->setText(m_content);
+    text->setVisible(!m_content.isEmpty());
+  }
 
-  ui->content->setText(m_content);
-  ui->content->setVisible(!m_content.isEmpty());
+  // an error, a warning or a notice shows its sign by the title; a question
+  // asks in words, as Windows 11 dialogs do
+  if (title != nullptr && m_icon != QMessageBox::NoIcon && m_icon != QMessageBox::Question &&
+      m_dialog->findChild<QLabel*>(QStringLiteral("taskIcon")) == nullptr) {
+    auto* layout = qobject_cast<QVBoxLayout*>(title->parentWidget()->layout());
+    const QPixmap sign = standardIcon(m_icon);
+    if (layout != nullptr && !sign.isNull()) {
+      const int at = layout->indexOf(title);
+      auto* row    = new QHBoxLayout;
+      row->setSpacing(12);
+      auto* icon = new QLabel(title->parentWidget());
+      icon->setObjectName(QStringLiteral("taskIcon"));
+      const qreal ratio = m_dialog->devicePixelRatioF();
+      QPixmap scaled    = sign.scaled(QSize(28, 28) * ratio, Qt::KeepAspectRatio,
+                                      Qt::SmoothTransformation);
+      scaled.setDevicePixelRatio(ratio);
+      icon->setPixmap(scaled);
+      icon->setAlignment(Qt::AlignTop);
+      layout->removeWidget(title);
+      row->addWidget(icon, 0, Qt::AlignTop);
+      row->addWidget(title, 1);
+      layout->insertLayout(at, row);
+    }
+  }
+  m_dialog->setAccessibleDescription(m_content);
 
-  auto icon = standardIcon(m_icon);
-
-  if (icon.isNull()) {
-    ui->iconPanel->hide();
-  } else {
-    ui->iconPanel->show();
-    ui->icon->setPixmap(std::move(icon));
+  QVBoxLayout* body = taskBody(m_dialog.get());
+  auto* extra = m_dialog->findChild<QWidget*>(QStringLiteral("taskExtraContent"));
+  if (body != nullptr && extra != nullptr && extra->layout()->count() > 0 &&
+      body->indexOf(extra) < 0) {
+    body->addWidget(extra);
+    extra->show();
   }
 }
 
 void TaskDialog::setChoices()
 {
   if (m_rememberAction.isEmpty() && m_rememberFile.isEmpty()) {
-    ui->rememberPanel->hide();
+    return;
+  }
+  QVBoxLayout* body = taskBody(m_dialog.get());
+  if (body == nullptr || m_rememberCheck != nullptr || m_rememberCombo != nullptr) {
     return;
   }
 
-  ui->rememberPanel->show();
-  deleteChildWidgets(ui->rememberPanel);
-
-  const auto tooltip = QObject::tr(
-      "You can reset these choices by clicking \"Reset Dialog Choices\" in the "
-      "General tab of the Settings");
+  const QString tooltip = QCoreApplication::translate(
+      "QObject", "You can reset these choices with \"Reset dialog choices\" in Settings, "
+                 "General.");
 
   if (!m_rememberAction.isEmpty() && !m_rememberFile.isEmpty()) {
     // both
-    m_rememberCombo = new QComboBox;
+    m_rememberCombo = new QComboBox(m_dialog.get());
     m_rememberCombo->setToolTip(tooltip);
-
     m_rememberCombo->addItem(QObject::tr("Always ask"));
     m_rememberCombo->addItem(QObject::tr("Remember my choice"));
-    m_rememberCombo->addItem(
-        QObject::tr("Remember my choice for %1").arg(m_rememberFile));
-
-    ui->rememberPanel->layout()->setAlignment(Qt::AlignLeft);
-    ui->rememberPanel->layout()->addWidget(m_rememberCombo);
-  } else if (!m_rememberAction.isEmpty() || !m_rememberFile.isEmpty()) {
+    m_rememberCombo->addItem(QObject::tr("Remember my choice for %1").arg(m_rememberFile));
+    m_rememberCombo->setAccessibleName(QObject::tr("Remember my choice"));
+    body->addWidget(m_rememberCombo, 0, Qt::AlignLeft);
+  } else {
     // either
-    m_rememberCheck = new QCheckBox(QObject::tr("Remember my choice"));
+    m_rememberCheck = new QCheckBox(QObject::tr("Remember my choice"), m_dialog.get());
     m_rememberCheck->setToolTip(tooltip);
-    ui->rememberPanel->layout()->addWidget(m_rememberCheck);
+    body->addWidget(m_rememberCheck);
   }
+}
+
+void TaskDialog::setButtons()
+{
+  // built once: exec() may run again on the same dialog
+  if (m_dialog->property("taskButtonsBuilt").toBool()) {
+    return;
+  }
+  m_dialog->setProperty("taskButtonsBuilt", true);
+  if (m_buttons.empty()) {
+    setStandardButtons();
+  } else {
+    setCommandButtons();
+  }
+}
+
+void TaskDialog::setStandardButtons()
+{
+  QHBoxLayout* band = taskBand(m_dialog.get());
+  if (band == nullptr || band->count() > 0) {
+    return;
+  }
+  // Qt's own word for OK
+  QDialogButtonBox names;
+  QPushButton* named = names.addButton(QDialogButtonBox::Ok);
+  bool hasDefault    = false;
+  auto* ok = RevampedFluent::bandButton(m_dialog.get(), band,
+                                        named != nullptr ? named->text() : QStringLiteral("OK"),
+                                        true, hasDefault);
+  QObject::connect(ok, &QPushButton::clicked, m_dialog.get(), [this] {
+    m_result = QMessageBox::Ok;
+    m_dialog->accept();
+  });
+  ok->setFocus();
+}
+
+void TaskDialog::setCommandButtons()
+{
+  QVBoxLayout* body  = taskBody(m_dialog.get());
+  QHBoxLayout* band  = taskBand(m_dialog.get());
+  if (body == nullptr || band == nullptr || band->count() > 0) {
+    return;
+  }
+
+  bool hasCards     = false;
+  bool hasDefault   = false;
+  QPushButton* first = nullptr;
+  for (auto&& b : m_buttons) {
+    QAbstractButton* control = nullptr;
+    if (!b.description.isEmpty()) {
+      // an option card: a command link MO2 draws as one
+      auto* card = new QCommandLinkButton(b.text, b.description, m_dialog.get());
+      card->setProperty("revampedOptionCard", true);
+      body->addWidget(card);
+      control  = card;
+      hasCards = true;
+    } else {
+      auto* button =
+          RevampedFluent::bandButton(m_dialog.get(), band, b.text, false, hasDefault);
+      if (first == nullptr) {
+        first = button;
+      }
+      control = button;
+    }
+    const auto result = b.button;
+    QObject::connect(control, &QAbstractButton::clicked, m_dialog.get(), [this, result] {
+      m_result = result;
+      m_dialog->accept();
+    });
+  }
+  // with no cards, the first choice is the one Enter takes
+  if (first != nullptr && !hasCards) {
+    first->setDefault(true);
+    first->setProperty("fluentPrimary", true);
+  }
+  // only cards: no band
+  if (first == nullptr) {
+    band->parentWidget()->hide();
+  }
+}
+
+void TaskDialog::setDetails()
+{
+  QVBoxLayout* body = taskBody(m_dialog.get());
+  if (m_details.isEmpty() || body == nullptr ||
+      m_dialog->findChild<QPlainTextEdit*>(QStringLiteral("taskDetails")) != nullptr) {
+    return;
+  }
+
+  auto* toggle = RevampedFluent::contentButton(QObject::tr("Details"), m_dialog.get());
+  toggle->setObjectName(QStringLiteral("taskDetailsToggle"));
+  toggle->setCheckable(true);
+  toggle->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  auto* details = new QPlainTextEdit(m_details, m_dialog.get());
+  details->setObjectName(QStringLiteral("taskDetails"));
+  details->setReadOnly(true);
+  details->setAccessibleName(QObject::tr("Details"));
+  details->setLineWrapMode(QPlainTextEdit::NoWrap);
+  setFontPercent(details, 0.9);
+  setVisibleLines(details, 10);
+  details->hide();
+  body->addWidget(toggle, 0, Qt::AlignLeft);
+  body->addWidget(details);
+
+  QObject::connect(toggle, &QPushButton::toggled, m_dialog.get(), [this, details](bool on) {
+    details->setVisible(on);
+    m_dialog->adjustSize();
+  });
 }
 
 QColor TaskDialog::detailsColor() const
@@ -394,14 +508,7 @@ QPixmap TaskDialog::standardIcon(QMessageBox::Icon icon) const
     return {};
   }
 
-  QWindow* window = m_dialog->windowHandle();
-  if (!window) {
-    if (const QWidget* nativeParent = m_dialog->nativeParentWidget())
-      window = nativeParent->windowHandle();
-  }
-
   const int iconSize = s->pixelMetric(QStyle::PM_MessageBoxIconSize, 0, m_dialog.get());
-
   return i.pixmap(QSize(iconSize, iconSize));
 }
 
@@ -410,7 +517,7 @@ void TaskDialog::setVisibleLines(QPlainTextEdit* w, int lines)
   QTextDocument* d = w->document();
   QFontMetrics fm(d->defaultFont());
 
-  const QMargins margins = ui->details->contentsMargins();
+  const QMargins margins = w->contentsMargins();
 
   double height = 0;
 
@@ -418,7 +525,7 @@ void TaskDialog::setVisibleLines(QPlainTextEdit* w, int lines)
   height += fm.lineSpacing() * lines;
 
   // top and bottom margins for document and frame
-  height += (d->documentMargin() + ui->details->frameWidth()) * 2;
+  height += (d->documentMargin() + w->frameWidth()) * 2;
 
   // widget margins
   height += margins.top() + margins.bottom();

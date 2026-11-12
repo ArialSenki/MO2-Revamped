@@ -20,15 +20,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "questionboxmemory.h"
 #include "log.h"
-#include "ui_questionboxmemory.h"
+
+#include "fluentcontentdialog.h"
 
 #include <QApplication>
-#include <QIcon>
+#include <QCheckBox>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QPushButton>
 #include <QSettings>
-#include <QStyle>
+
+// MO2 Revamped: the question is built in code as a Windows 11 content
+// dialog (title, text, the "remember" boxes, a band of buttons) instead of
+// the .ui of Mod Organizer 2. The class keeps its members, so its size and
+// exports stay as they were; Ui::QuestionBoxMemory is now empty.
+namespace Ui
+{
+class QuestionBoxMemory
+{};
+}  // namespace Ui
 
 namespace MOBase
 {
@@ -38,38 +48,97 @@ static QuestionBoxMemory::GetButton g_get;
 static QuestionBoxMemory::SetWindowButton g_setWindow;
 static QuestionBoxMemory::SetFileButton g_setFile;
 
+namespace
+{
+
+// the order Windows puts a dialog's buttons in: the actions first
+const QDialogButtonBox::StandardButton ButtonOrder[] = {
+    QDialogButtonBox::Yes,     QDialogButtonBox::YesToAll,
+    QDialogButtonBox::Ok,      QDialogButtonBox::Save,
+    QDialogButtonBox::SaveAll, QDialogButtonBox::Open,
+    QDialogButtonBox::Retry,   QDialogButtonBox::Ignore,
+    QDialogButtonBox::Apply,   QDialogButtonBox::Reset,
+    QDialogButtonBox::RestoreDefaults, QDialogButtonBox::Help,
+    QDialogButtonBox::No,      QDialogButtonBox::NoToAll,
+    QDialogButtonBox::Abort,   QDialogButtonBox::Discard,
+    QDialogButtonBox::Close,   QDialogButtonBox::Cancel};
+
+bool isAction(QDialogButtonBox::StandardButton button)
+{
+  switch (button) {
+  case QDialogButtonBox::Yes:
+  case QDialogButtonBox::YesToAll:
+  case QDialogButtonBox::Ok:
+  case QDialogButtonBox::Save:
+  case QDialogButtonBox::SaveAll:
+  case QDialogButtonBox::Open:
+  case QDialogButtonBox::Retry:
+    return true;
+  default:
+    return false;
+  }
+}
+
+}  // namespace
+
 QuestionBoxMemory::QuestionBoxMemory(QWidget* parent, const QString& title,
                                      const QString& text, QString const* filename,
                                      const QDialogButtonBox::StandardButtons buttons,
                                      QDialogButtonBox::StandardButton defaultButton)
-    : QDialog(parent), ui(new Ui::QuestionBoxMemory), m_Button(QDialogButtonBox::Cancel)
+    : QDialog(parent), m_Button(QDialogButtonBox::Cancel)
 {
-  ui->setupUi(this);
+  setObjectName(QStringLiteral("RevampedQuestionMemory"));
+  const RevampedFluent::ContentParts parts = RevampedFluent::buildContent(this, title, text);
+  // as in Mod Organizer 2, the question may be rich text
+  parts.text->setTextFormat(Qt::AutoText);
 
-  setWindowFlag(Qt::WindowType::WindowContextHelpButtonHint, false);
-  setWindowTitle(title);
-
-  QIcon icon = QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion);
-  ui->iconLabel->setPixmap(icon.pixmap(128));
-  ui->messageLabel->setText(text);
-
-  if (filename == nullptr) {
-    // delete the 2nd check box
-    QCheckBox* box = ui->rememberForCheckBox;
-    box->parentWidget()->layout()->removeWidget(box);
-    delete box;
-  } else {
-    ui->rememberForCheckBox->setText(ui->rememberForCheckBox->text().arg(*filename));
+  // "remember" reads as in TaskDialog, and keeps Mod Organizer 2's
+  // translations of those words
+  const QString tooltip = QCoreApplication::translate(
+      "QObject", "You can reset these choices with \"Reset dialog choices\" in Settings, "
+                 "General.");
+  auto* remember = new QCheckBox(
+      QCoreApplication::translate("QObject", "Remember my choice"), this);
+  remember->setObjectName(QStringLiteral("rememberCheckBox"));
+  remember->setToolTip(tooltip);
+  parts.body->addWidget(remember);
+  if (filename != nullptr) {
+    auto* rememberFor = new QCheckBox(
+        QCoreApplication::translate("QObject", "Remember my choice for %1")
+            .arg(*filename),
+        this);
+    rememberFor->setObjectName(QStringLiteral("rememberForCheckBox"));
+    rememberFor->setToolTip(tooltip);
+    parts.body->addWidget(rememberFor);
   }
 
-  ui->buttonBox->setStandardButtons(buttons);
-
-  if (defaultButton != QDialogButtonBox::NoButton) {
-    ui->buttonBox->button(defaultButton)->setDefault(true);
+  // Qt's own words for each button, in Windows' order; the accent on the
+  // default button, or on the first action
+  QDialogButtonBox names;
+  bool hasDefault = false;
+  QDialogButtonBox::StandardButton primary = defaultButton;
+  if (primary == QDialogButtonBox::NoButton || !(buttons & primary)) {
+    primary = QDialogButtonBox::NoButton;
+    for (const auto button : ButtonOrder) {
+      if ((buttons & button) && isAction(button)) {
+        primary = button;
+        break;
+      }
+    }
   }
-
-  connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton*)), this,
-          SLOT(buttonClicked(QAbstractButton*)));
+  for (const auto button : ButtonOrder) {
+    if (!(buttons & button)) {
+      continue;
+    }
+    QPushButton* named = names.addButton(button);
+    QPushButton* added = RevampedFluent::bandButton(
+        this, parts.buttons, named != nullptr ? named->text() : buttonToString(button),
+        button == primary, hasDefault);
+    connect(added, &QPushButton::clicked, this, [this, button] {
+      m_Button = button;
+      accept();
+    });
+  }
 }
 
 QuestionBoxMemory::~QuestionBoxMemory() = default;
@@ -84,9 +153,9 @@ void QuestionBoxMemory::setCallbacks(GetButton get, SetWindowButton setWindow,
   g_setFile   = setFile;
 }
 
-void QuestionBoxMemory::buttonClicked(QAbstractButton* button)
+void QuestionBoxMemory::buttonClicked(QAbstractButton*)
 {
-  m_Button = ui->buttonBox->standardButton(button);
+  // the buttons set m_Button themselves (kept for the class's exports)
 }
 
 QDialogButtonBox::StandardButton
@@ -129,11 +198,14 @@ QuestionBoxMemory::queryImpl(QWidget* parent, const QString& windowName,
   dialog.exec();
 
   if (dialog.m_Button != QDialogButtonBox::Cancel) {
-    if (dialog.ui->rememberCheckBox->isChecked()) {
+    const auto* remember = dialog.findChild<QCheckBox*>(QStringLiteral("rememberCheckBox"));
+    if (remember != nullptr && remember->isChecked()) {
       setWindowMemory(windowName, dialog.m_Button);
     }
 
-    if (fileName != nullptr && dialog.ui->rememberForCheckBox->isChecked()) {
+    const auto* rememberFor =
+        dialog.findChild<QCheckBox*>(QStringLiteral("rememberForCheckBox"));
+    if (fileName != nullptr && rememberFor != nullptr && rememberFor->isChecked()) {
       setFileMemory(windowName, *fileName, dialog.m_Button);
     }
   }

@@ -10193,6 +10193,22 @@ Firefox.exe</translation>
       <source>"%1" already exists. Overwrite it?</source>
       <translation>„%1“ existiert bereits. Überschreiben?</translation>
     </message>
+    <message>
+      <source>Remember my choice</source>
+      <translation>Antwort merken</translation>
+    </message>
+    <message>
+      <source>Always ask</source>
+      <translation>Immer fragen</translation>
+    </message>
+    <message>
+      <source>Remember my choice for %1</source>
+      <translation>Antwort für %1 merken</translation>
+    </message>
+    <message>
+      <source>You can reset these choices with "Reset dialog choices" in Settings, General.</source>
+      <translation>Diese Antworten kannst du in den Einstellungen unter Allgemein mit „Dialogoptionen zurücksetzen“ wieder löschen.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

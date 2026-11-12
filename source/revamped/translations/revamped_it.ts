@@ -10581,6 +10581,22 @@ Esempio:
       <source>"%1" already exists. Overwrite it?</source>
       <translation>«%1» esiste già. Sovrascriverlo?</translation>
     </message>
+    <message>
+      <source>Remember my choice</source>
+      <translation>Ricorda la risposta</translation>
+    </message>
+    <message>
+      <source>Always ask</source>
+      <translation>Chiedi sempre</translation>
+    </message>
+    <message>
+      <source>Remember my choice for %1</source>
+      <translation>Ricorda la risposta per %1</translation>
+    </message>
+    <message>
+      <source>You can reset these choices with "Reset dialog choices" in Settings, General.</source>
+      <translation>Puoi reimpostare queste risposte con «Resetta Scelte Dialogo» in Impostazioni, Generale.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

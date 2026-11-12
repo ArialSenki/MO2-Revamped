@@ -10478,6 +10478,22 @@ Exemple :
       <source>"%1" already exists. Overwrite it?</source>
       <translation>« %1 » existe déjà. L'écraser ?</translation>
     </message>
+    <message>
+      <source>Remember my choice</source>
+      <translation>Mémoriser la réponse</translation>
+    </message>
+    <message>
+      <source>Always ask</source>
+      <translation>Toujours demander</translation>
+    </message>
+    <message>
+      <source>Remember my choice for %1</source>
+      <translation>Mémoriser la réponse pour %1</translation>
+    </message>
+    <message>
+      <source>You can reset these choices with "Reset dialog choices" in Settings, General.</source>
+      <translation>Vous pouvez réinitialiser ces réponses avec « Réinitialiser les boîtes de dialogue » dans Paramètres, Général.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -11473,7 +11489,7 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
     </message>
     <message>
       <source>Reset dialog choices</source>
-      <translation>Réinitialiser les boites de dialogue</translation>
+      <translation>Réinitialiser les boîtes de dialogue</translation>
     </message>
     <message>
       <source>Configure mod categories</source>
