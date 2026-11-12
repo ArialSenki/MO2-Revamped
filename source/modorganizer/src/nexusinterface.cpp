@@ -405,7 +405,21 @@ void NexusInterface::interpretNexusFileName(const QString& fileName, QString& mo
       modID = complexMatch.captured(3).toInt();
     }
   } else if (simpleMatch.hasMatch()) {
-    modName = simpleMatch.captured(0);
+    // MO2 Revamped: the whole name without its extension and the version at
+    // its end ("red4ext-1.31.1" is red4ext, not "red"; "cet_1_38_1" is cet),
+    // the old guess only when that leaves no letter
+    static const QRegularExpression extension(
+        R"re(\.(zip|rar|7z|tar|gz|xz|bz2)$)re", QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression trailingVersion(
+        R"re([-_ .]+v?\d+(?:[-_.]\d+)*[a-z]?$)re", QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression letter(R"re([a-zA-Z])re");
+    QString cleaned = fileName;
+    cleaned.remove(extension);
+    cleaned.remove(trailingVersion);
+    while (!cleaned.isEmpty() && QStringLiteral("-_. ").contains(cleaned.back())) {
+      cleaned.chop(1);
+    }
+    modName = cleaned.contains(letter) ? cleaned.trimmed() : simpleMatch.captured(0);
   } else {
     modName.clear();
   }

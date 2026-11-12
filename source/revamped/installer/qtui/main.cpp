@@ -1,6 +1,7 @@
 #include <QAbstractButton>
 #include <QApplication>
 #include <QAction>
+#include <QButtonGroup>
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QDir>
@@ -31,6 +32,7 @@
 #include <QProgressBar>
 #include <QPropertyAnimation>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QScrollArea>
 #include <QScreen>
 #include <QSettings>
@@ -221,6 +223,19 @@ QIcon glyphIcon(const QString &kind, const QColor &ink, int size = 18) {
         icon.addPixmap(pixmap);
     }
     return icon;
+}
+
+// The folder this window and everything it starts work in: Windows' own,
+// which no task installs to or removes. The host's folder was used before,
+// and for an uninstaller inside the installation that kept the installation
+// folder from being deleted.
+QString systemDirectory() {
+#ifdef Q_OS_WIN
+    wchar_t path[MAX_PATH];
+    const UINT length = GetSystemDirectoryW(path, MAX_PATH);
+    if (length > 0 && length < MAX_PATH) return QString::fromWCharArray(path, int(length));
+#endif
+    return QDir::rootPath();
 }
 
 QString languageName(const QString &code) {
@@ -579,9 +594,21 @@ private:
         return fallback;
     }
 
+    // every run of the engine, in a folder no task touches (see systemDirectory)
+    void startHost(QProcess *process, const QStringList &arguments) const {
+        process->setWorkingDirectory(systemDirectory());
+        process->start(host_, arguments);
+    }
+
+    void openWithShell(const QString &path) const {
+        // the desktop shell opens it with the user's normal token (see the
+        // engine's --open-path), not this elevated window
+        QProcess::startDetached(host_, {QStringLiteral("--open-path"), QDir::toNativeSeparators(path)}, systemDirectory());
+    }
+
     QJsonObject runHost(const QStringList &arguments, const QString &output, int timeout = 8000) const {
         QProcess process;
-        process.start(host_, arguments);
+        startHost(&process, arguments);
         QJsonObject result;
         if (process.waitForStarted(3000) && process.waitForFinished(timeout)) {
             QFile file(output);
@@ -637,7 +664,7 @@ private:
             process->kill();
             finish(false, false);
         });
-        process->start(host_, arguments);
+        startHost(process, arguments);
     }
 
     void applyTranslations(const QJsonObject &loaded) {
@@ -854,7 +881,8 @@ private:
             // opened by the desktop shell through the engine, so the browser
             // does not run as administrator like this window
             QProcess::startDetached(host_, {QStringLiteral("--open-url"),
-                                            QStringLiteral("https://github.com/ArialSenki/MO2-Revamped/releases")});
+                                            QStringLiteral("https://github.com/ArialSenki/MO2-Revamped/releases")},
+                                    systemDirectory());
         });
         footerLayout->addWidget(closeButton_ = new QPushButton(tr(QStringLiteral("Cerrar"))));
         footerLayout->addWidget(actionButton_ = new QPushButton(tr(QStringLiteral("Instalar"))));
@@ -981,6 +1009,7 @@ private:
         if (sourceInstall_) savedPaths_[mode_][QStringLiteral("sourceInstall")] = sourceInstall_->text();
         if (sourceData_) savedPaths_[mode_][QStringLiteral("sourceData")] = sourceData_->text();
         for (auto it = checks_.begin(); it != checks_.end(); ++it) savedChecks_[mode_][it.key()] = it.value()->isChecked();
+        if (removeAllRadio_) savedChecks_[mode_][QStringLiteral("removeAll")] = removeAllRadio_->isChecked();
     }
 
     QStringList installCandidates() {
@@ -1030,7 +1059,7 @@ private:
             if (error == QProcess::FailedToStart) done();
         });
         QTimer::singleShot(10000, process, [process] { process->kill(); });
-        process->start(host_, {QStringLiteral("--installations"), output});
+        startHost(process, {QStringLiteral("--installations"), output});
     }
 
     void prefetchNext() {
@@ -1055,7 +1084,7 @@ private:
             if (error == QProcess::FailedToStart) done();
         });
         QTimer::singleShot(8000, process, [process] { process->kill(); });
-        process->start(host_, {QStringLiteral("--inspect"), candidate, output, language_});
+        startHost(process, {QStringLiteral("--inspect"), candidate, output, language_});
     }
 
     // the first installation the current task can use, once the background
@@ -1184,9 +1213,32 @@ private:
         return grid;
     }
 
+    // what a new installation (or an update) does once it is in place
+    void addAfterInstallChecks(QVBoxLayout *layout, QGridLayout *grid, int row, bool forceClose) {
+        addCheck(grid, QStringLiteral("startMenu"), QStringLiteral("Acceso en menú Inicio"), true, row, 0);
+        addCheck(grid, QStringLiteral("desktop"), QStringLiteral("Acceso en escritorio"), false, row, 1);
+        addCheck(grid, QStringLiteral("launch"), QStringLiteral("Abrir MO2 al terminar"), true, row, 2);
+        // off until the engine says nothing else (alive) opens the links
+        QCheckBox *nxm = addCheck(grid, QStringLiteral("nxm"), QStringLiteral("Abrir los enlaces de Nexus (nxm://) con este MO2"), false, row + 1, 0, 2);
+        connect(nxm, &QCheckBox::clicked, this, [this] { nxmTouched_ = true; });
+        addCheck(grid, QStringLiteral("closeWhenDone"), QStringLiteral("Cerrar el instalador al terminar"), false, row + 1, 2);
+        if (forceClose)
+            addCheck(grid, QStringLiteral("forceClose"), mode_ == 3 ? QStringLiteral("Forzar el cierre del MO2 de origen si sigue abierto")
+                                                                    : QStringLiteral("Forzar el cierre de MO2 en esta carpeta si sigue abierto"),
+                     false, row + 2, 0, 3);
+        grid->setColumnStretch(3, 1);
+        nxmNote_ = noteLabel(QString());
+        nxmNote_->hide();
+        layout->addWidget(nxmNote_);
+    }
+
     void buildPage(bool animate) {
         target_ = sourceInstall_ = sourceData_ = nullptr;
         appDataCheck_ = nullptr;
+        keepDataRadio_ = removeAllRadio_ = nullptr;
+        uninstallNote_ = keptNote_ = nxmNote_ = dataGroupLabel_ = nullptr;
+        dataChoice_ = failureActions_ = nullptr;
+        nxmTouched_ = false;
         checks_.clear();
         inspection_ = QJsonObject();
         auto *page = new QWidget;
@@ -1225,10 +1277,7 @@ private:
             if (mode_ == 1 && !isolated_) optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Esta edición solo incluye Elden Ring y Nightreign, usa una única instancia portable y guarda sus datos junto a la carpeta de instalación. La instalación estándar con varias instancias está desactivada temporalmente mientras se amplía su soporte."))));
             if (mode_ == 2) optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Los archivos reemplazados se guardan en una copia previa. Perfiles, mods, descargas y plugins adicionales se mantienen. Los accesos existentes se conservan; las casillas añaden los que falten."))));
             QGridLayout *grid = newGrid(optionsLayout);
-            addCheck(grid, QStringLiteral("startMenu"), QStringLiteral("Acceso en menú Inicio"), true, 0, 0);
-            addCheck(grid, QStringLiteral("desktop"), QStringLiteral("Acceso en escritorio"), false, 0, 1);
-            addCheck(grid, QStringLiteral("launch"), QStringLiteral("Abrir MO2 al terminar"), true, 0, 2);
-            grid->setColumnStretch(3, 1);
+            addAfterInstallChecks(optionsLayout, grid, 0, mode_ == 2);
         } else if (mode_ == 3) {
             optionsLayout->addWidget(groupLabel(tr(QStringLiteral("Datos que se copiarán"))));
             QGridLayout *data = newGrid(optionsLayout);
@@ -1242,22 +1291,52 @@ private:
             optionsLayout->addSpacing(4);
             optionsLayout->addWidget(groupLabel(tr(QStringLiteral("Tras la instalación"))));
             QGridLayout *after = newGrid(optionsLayout);
-            addCheck(after, QStringLiteral("startMenu"), QStringLiteral("Acceso en menú Inicio"), true, 0, 0);
-            addCheck(after, QStringLiteral("desktop"), QStringLiteral("Acceso en escritorio"), false, 0, 1);
-            addCheck(after, QStringLiteral("launch"), QStringLiteral("Abrir MO2 al terminar"), true, 0, 2);
-            after->setColumnStretch(3, 1);
+            addAfterInstallChecks(optionsLayout, after, 0, true);
         } else if (mode_ == 4) {
             optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Recupera la versión anterior guardada al actualizar. Mantiene perfiles, mods, descargas y cualquier archivo que haya cambiado después."))));
-        } else {
-            optionsLayout->addWidget(noteLabel(tr(QStringLiteral("Por defecto solo se quitan los archivos del programa y se conservan tus datos: perfiles, mods, descargas y overwrite. Las opciones de borrado eliminan también esos datos y no se pueden deshacer."))));
             QGridLayout *grid = newGrid(optionsLayout);
-            grid->setVerticalSpacing(10);
             addCheck(grid, QStringLiteral("forceClose"), QStringLiteral("Forzar el cierre de MO2 en esta carpeta si sigue abierto"), false, 0, 0);
-            QCheckBox *removeAll = addCheck(grid, QStringLiteral("removeAll"), QStringLiteral("Borrar todos los datos y la carpeta seleccionada"), false, 1, 0);
-            removeAll->setProperty("danger", true);
-            appDataCheck_ = addCheck(grid, QStringLiteral("removeAppData"), QStringLiteral("Borrar también los datos globales de MO2 Revamped (AppData\\Local)"), false, 2, 0);
+            addCheck(grid, QStringLiteral("closeWhenDone"), QStringLiteral("Cerrar el instalador al terminar"), false, 1, 0);
+            grid->setColumnStretch(1, 1);
+        } else {
+            // what goes depends on the kind of installation, which the
+            // engine's inspection tells (applyInspection fills this in)
+            uninstallNote_ = noteLabel(tr(QStringLiteral("Comprobando la instalación…")));
+            optionsLayout->addWidget(uninstallNote_);
+            optionsLayout->addWidget(dataGroupLabel_ = groupLabel(tr(QStringLiteral("Tus datos"))));
+            auto *choice = new QWidget;
+            auto *choiceLayout = new QVBoxLayout(choice);
+            choiceLayout->setContentsMargins(0, 2, 0, 0);
+            choiceLayout->setSpacing(9);
+            auto *group = new QButtonGroup(choice);
+            keepDataRadio_ = new QRadioButton(tr(QStringLiteral("Conservar mis mods y datos")));
+            removeAllRadio_ = new QRadioButton(tr(QStringLiteral("Quitar todo, también mis mods, datos y la carpeta")));
+            removeAllRadio_->setProperty("danger", true);
+            for (QRadioButton *radio : {keepDataRadio_, removeAllRadio_}) {
+                radio->setCursor(Qt::PointingHandCursor);
+                group->addButton(radio);
+                choiceLayout->addWidget(radio);
+            }
+            const auto saved = savedChecks_.value(mode_);
+            (saved.value(QStringLiteral("removeAll"), false) ? removeAllRadio_ : keepDataRadio_)->setChecked(true);
+            optionsLayout->addWidget(dataChoice_ = choice);
+            QGridLayout *data = newGrid(optionsLayout);
+            appDataCheck_ = addCheck(data, QStringLiteral("removeAppData"), QStringLiteral("Quitar también mis instancias, mods, descargas y ajustes"), false, 0, 0);
             appDataCheck_->setProperty("danger", true);
-            appDataCheck_->setEnabled(false);
+            data->setColumnStretch(1, 1);
+            keptNote_ = noteLabel(QString());
+            optionsLayout->addWidget(keptNote_);
+            optionsLayout->addSpacing(4);
+            optionsLayout->addWidget(groupLabel(tr(QStringLiteral("Al desinstalar"))));
+            QGridLayout *grid = newGrid(optionsLayout);
+            addCheck(grid, QStringLiteral("forceClose"), QStringLiteral("Forzar el cierre de MO2 en esta carpeta si sigue abierto"), false, 0, 0);
+            addCheck(grid, QStringLiteral("closeWhenDone"), QStringLiteral("Cerrar el instalador al terminar"), false, 1, 0);
+            grid->setColumnStretch(1, 1);
+            // nothing to choose until the folder's kind is known
+            dataGroupLabel_->hide();
+            dataChoice_->hide();
+            appDataCheck_->hide();
+            keptNote_->hide();
         }
         pageLayout->addWidget(optionsCard_);
 
@@ -1290,6 +1369,29 @@ private:
         log_->setPlaceholderText(tr(QStringLiteral("El proceso y los avisos aparecerán aquí.")));
         log_->hide();
         progressLayout->addWidget(log_);
+        // after a failure: the detailed log and the folder the task worked on
+        failureActions_ = new QWidget;
+        auto *actions = new QHBoxLayout(failureActions_);
+        actions->setContentsMargins(0, 4, 0, 0);
+        actions->setSpacing(8);
+        auto *openLog = new QPushButton(tr(QStringLiteral("Abrir el registro")));
+        auto *openFolder = new QPushButton(tr(QStringLiteral("Abrir la carpeta")));
+        for (QPushButton *button : {openLog, openFolder}) {
+            button->setObjectName(QStringLiteral("secondaryButton"));
+            button->setCursor(Qt::PointingHandCursor);
+            actions->addWidget(button);
+        }
+        actions->addStretch();
+        connect(openLog, &QPushButton::clicked, this, [this] {
+            if (QFileInfo(logPath_).isFile()) openWithShell(logPath_);
+            else openWithShell(logFolder());
+        });
+        connect(openFolder, &QPushButton::clicked, this, [this] {
+            const QString folder = QDir::cleanPath(target_ ? target_->text().trimmed() : QString());
+            openWithShell(!folder.isEmpty() && QDir(folder).exists() ? folder : logFolder());
+        });
+        failureActions_->hide();
+        progressLayout->addWidget(failureActions_);
         connect(detailsButton_, &QToolButton::toggled, this, [this](bool on) {
             log_->setVisible(on);
             detailsButton_->setText(tr(on ? QStringLiteral("Ocultar detalles") : QStringLiteral("Ver detalles")));
@@ -1358,6 +1460,13 @@ private:
             "QCheckBox::indicator:checked { background:%11; border-color:%11; }"
             "QCheckBox[danger='true']::indicator:checked { background:%15; border-color:%15; }"
             "QCheckBox::indicator:disabled { background:%2; border-color:%3; }"
+            "QRadioButton { spacing:9px; min-height:22px; }"
+            "QRadioButton:disabled { color:%5; }"
+            "QRadioButton::indicator { width:18px; height:18px; border:1px solid %18; border-radius:10px; background:%10; }"
+            "QRadioButton::indicator:hover { border-color:%11; }"
+            "QRadioButton::indicator:checked { width:10px; height:10px; border:5px solid %11; border-radius:10px; background:%17; }"
+            "QRadioButton[danger='true']::indicator:checked { border-color:%15; background:white; }"
+            "QRadioButton::indicator:disabled { background:%2; border-color:%3; }"
             "QProgressBar { background:%3; border:none; border-radius:2px; max-height:4px; }"
             "QProgressBar::chunk { border-radius:2px; background:%11; }"
             "QScrollBar:vertical { background:transparent; width:10px; margin:2px 0; }"
@@ -1425,23 +1534,102 @@ private:
             inspection_ = result;
             applyInspection();
         });
-        inspectProcess_->start(host_, {QStringLiteral("--inspect"), inspected, output, language_});
+        startHost(inspectProcess_, {QStringLiteral("--inspect"), inspected, output, language_});
+    }
+
+    QString inspectionKind() const { return inspection_.value(QStringLiteral("kind")).toString(); }
+
+    static QStringList stringList(const QJsonValue &value) {
+        QStringList list;
+        for (const QJsonValue &item : value.toArray())
+            if (!item.toString().isEmpty()) list << QDir::toNativeSeparators(item.toString());
+        return list;
+    }
+
+    // the custom folders outside what an uninstall removes, one per line
+    QString externalFoldersText() const {
+        const QStringList external = stringList(inspection_.value(QStringLiteral("externalFolders")));
+        if (external.isEmpty()) return QString();
+        QStringList shown = external.mid(0, 6);
+        if (external.size() > shown.size()) shown << QStringLiteral("…");
+        return tr(QStringLiteral("Estas carpetas de tus instancias están fuera y nunca se tocan:")) + QStringLiteral("\n") + shown.join(QStringLiteral("\n"));
+    }
+
+    void applyNxmDefault() {
+        QCheckBox *nxm = checks_.value(QStringLiteral("nxm"), nullptr);
+        if (!nxm) return;
+        const QString handler = QDir::toNativeSeparators(inspection_.value(QStringLiteral("nxmHandler")).toString());
+        const bool foreign = inspection_.value(QStringLiteral("nxmHandlerLive")).toBool() &&
+                             !inspection_.value(QStringLiteral("nxmHandlerHere")).toBool() && !handler.isEmpty();
+        // a link handler that works (another MO2, Vortex) stays unless the
+        // user, seeing which one, asks for this one; the engine checks again
+        if (!nxmTouched_ && !savedChecks_.value(mode_).contains(QStringLiteral("nxm"))) nxm->setChecked(!foreign);
+        if (nxmNote_) {
+            nxmNote_->setText(tr(QStringLiteral("Ahora abre los enlaces de Nexus: ")) + handler);
+            nxmNote_->setVisible(foreign);
+        }
     }
 
     void applyInspection() {
-        if (mode_ != 5) return;
-        if (QCheckBox *removeAll = checks_.value(QStringLiteral("removeAll"), nullptr)) {
-            removeAll->setText(tr(inspection_.value(QStringLiteral("hasBackupDirectory")).toBool()
-                ? QStringLiteral("Borrar todos los datos y la carpeta seleccionada, incluida la copia previa")
-                : QStringLiteral("Borrar todos los datos y la carpeta seleccionada")));
+        if (mode_ != 5) {
+            if (mode_ != 4 && !inspection_.isEmpty()) applyNxmDefault();
+            return;
         }
+        if (!uninstallNote_) return;
+        const QString kind = inspectionKind();
+        const bool recognized = inspection_.value(QStringLiteral("recognized")).toBool();
+        const bool standard = kind == QStringLiteral("standard");
+        const bool known = recognized && !kind.isEmpty();
+        const QString target = target_ ? QDir::toNativeSeparators(QDir::cleanPath(target_->text().trimmed())) : QString();
+        if (inspection_.isEmpty()) uninstallNote_->setText(tr(QStringLiteral("Comprobando la instalación…")));
+        else if (!known) uninstallNote_->setText(tr(QStringLiteral("Esta carpeta no contiene una instalación reconocida de MO2 Revamped.")));
+        else if (standard) {
+            QString text = tr(QStringLiteral("Instalación estándar: se quitan MO2 Revamped y lo que MO2 creó en su carpeta ({0}); la carpeta también se quita si no queda nada más en ella. Tus instancias, mods, descargas y ajustes están en {1} y se conservan."));
+            text.replace(QStringLiteral("{0}"), target);
+            text.replace(QStringLiteral("{1}"), QDir::toNativeSeparators(inspection_.value(QStringLiteral("globalDataPath")).toString()));
+            uninstallNote_->setText(text);
+        } else {
+            uninstallNote_->setText(tr(kind == QStringLiteral("isolated")
+                ? QStringLiteral("Instalación aislada de Elden Ring y Nightreign: sus perfiles, mods, descargas y partidas compartidas están dentro de su carpeta. Se quitan siempre el programa y lo que MO2 crea al usarse (registros, cachés, volcados).")
+                : QStringLiteral("Instalación portable: sus perfiles, mods, descargas y ajustes están dentro de su carpeta. Se quitan siempre el programa y lo que MO2 crea al usarse (registros, cachés, volcados).")));
+        }
+        if (dataGroupLabel_) dataGroupLabel_->setVisible(known);
+        if (dataChoice_) dataChoice_->setVisible(known && !standard);
+        if (removeAllRadio_)
+            removeAllRadio_->setText(tr(inspection_.value(QStringLiteral("hasBackupDirectory")).toBool()
+                ? QStringLiteral("Quitar todo, también mis mods, datos, la carpeta y la copia previa")
+                : QStringLiteral("Quitar todo, también mis mods, datos y la carpeta")));
+        // the instances in AppData are shared by every standard installation
+        // and belong to the account the setup runs as: removing them is only
+        // offered when this is the last one and that account is the user's
+        const QStringList others = stringList(inspection_.value(QStringLiteral("otherStandardInstalls")));
+        const bool otherAccount = inspection_.value(QStringLiteral("globalDataOtherAccount")).toBool();
+        const bool dataRemovable = standard && others.isEmpty() && !otherAccount;
         if (appDataCheck_) {
-            const bool available = inspection_.value(QStringLiteral("globalData")).toBool();
-            if (!available) appDataCheck_->setChecked(false);
-            appDataCheck_->setEnabled(available && !busy_ && !waiting_ && !hasCompleted_);
-            appDataCheck_->setText(tr(available
-                ? QStringLiteral("Borrar también los datos globales de MO2 Revamped (AppData\\Local)")
-                : QStringLiteral("Solo disponible para instalaciones no portables de MO2 Revamped")));
+            appDataCheck_->setVisible(known && standard);
+            if (!dataRemovable) appDataCheck_->setChecked(false);
+            appDataCheck_->setEnabled(dataRemovable && !busy_ && !waiting_ && !hasCompleted_);
+        }
+        if (keptNote_) {
+            QStringList lines;
+            if (standard && !others.isEmpty())
+                lines << tr(QStringLiteral("Tus instancias no se pueden quitar desde aquí: las comparten estas otras instalaciones estándar, que seguirían usándolas: ")) + others.join(QStringLiteral(", "));
+            if (standard && otherAccount)
+                lines << tr(QStringLiteral("Tus instancias no se pueden quitar desde aquí: el instalador se ejecuta con otra cuenta y solo vería las de esa cuenta."));
+            const QStringList inside = stringList(inspection_.value(QStringLiteral("instanceFoldersInside")));
+            if (standard && !inside.isEmpty())
+                lines << tr(QStringLiteral("Dentro de la carpeta hay instancias que se conservan, salvo que marques la casilla de arriba: ")) + inside.join(QStringLiteral(", "));
+            const QStringList unknown = stringList(inspection_.value(QStringLiteral("unknownEntries")));
+            const bool wholeFolderPossible = !standard && inspection_.value(QStringLiteral("targetWasEmpty")).toBool();
+            if (!unknown.isEmpty())
+                lines << tr(wholeFolderPossible
+                    ? QStringLiteral("Esto no es de MO2 y se conserva, salvo con «Quitar todo» (la carpeta estaba vacía cuando se instaló MO2): ")
+                    : QStringLiteral("Esto no es de MO2 y se conserva siempre (la carpeta se mantiene por ello): ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
+                         (unknown.size() > 12 ? QStringLiteral(", …") : QString());
+            const QString external = externalFoldersText();
+            if (!external.isEmpty()) lines << external;
+            keptNote_->setText(lines.join(QStringLiteral("\n\n")));
+            keptNote_->setVisible(known && !lines.isEmpty());
         }
     }
 
@@ -1456,14 +1644,26 @@ private:
         return within(left, right) || within(right, left);
     }
 
-    // profiles, mods or settings left by an uninstall that kept the data
-    static bool hasKeptData(const QString &folder) {
-        const QDir dir(folder);
-        if (QFileInfo(dir.filePath(QStringLiteral("ModOrganizer.exe"))).exists()) return false;
-        if (QFileInfo(dir.filePath(QStringLiteral("ModOrganizer.ini"))).isFile()) return true;
-        for (const QString &name : {QStringLiteral("profiles"), QStringLiteral("mods"), QStringLiteral("downloads"), QStringLiteral("overwrite")})
-            if (!QDir(dir.filePath(name)).isEmpty(QDir::AllEntries | QDir::NoDotAndDotDot)) return true;
+    static bool isWithin(const QString &path, const QString &folder) {
+        if (path.isEmpty() || folder.isEmpty()) return false;
+        const QString a = QDir::cleanPath(QFileInfo(path).absoluteFilePath());
+        const QString b = QDir::cleanPath(QFileInfo(folder).absoluteFilePath());
+        const QString prefix = b.endsWith(QLatin1Char('/')) ? b : b + QLatin1Char('/');
+        return a.compare(b, Qt::CaseInsensitive) == 0 || a.startsWith(prefix, Qt::CaseInsensitive);
+    }
+
+    // Program Files only lets administrators write, and MO2 writes beside
+    // itself (logs, plugin settings, a portable copy's mods)
+    static bool inProgramFiles(const QString &target) {
+        for (const char *name : {"ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"}) {
+            const QString folder = qEnvironmentVariable(name);
+            if (isWithin(target, folder)) return true;
+        }
         return false;
+    }
+
+    static QString logFolder() {
+        return QDir::toNativeSeparators(QDir::temp().filePath(QStringLiteral("MO2 Revamped/Installer Logs")));
     }
 
     // Checks the page before a task. The engine checks (Copy data's source
@@ -1499,11 +1699,13 @@ private:
                     return done(showError(tr(QStringLiteral("Datos de origen no válidos")), tr(QStringLiteral("Selecciona una carpeta de datos válida y marca al menos una categoría que exista."))));
                 if (pathsOverlap(target, source) || pathsOverlap(target, data))
                     return done(showError(tr(QStringLiteral("Carpetas solapadas")), tr(QStringLiteral("El origen y el destino deben ser carpetas separadas."))));
-                done(validateNewTarget(target));
+                inspectThen(target, [this, target, done] { done(validateNewTarget(target)); });
             });
             return;
         }
-        if (mode_ == 0 || mode_ == 1) return done(validateNewTarget(target));
+        // a new installation too: whether the folder holds kept data and who
+        // opens Nexus links now are the engine's answers, fresh
+        if (mode_ == 0 || mode_ == 1) return inspectThen(target, [this, target, done] { done(validateNewTarget(target)); });
         // Update, Restore and Uninstall need what the engine knows of the folder
         const QString output = tempFile(QStringLiteral("inspect-%1.json"));
         setWaiting(true, tr(QStringLiteral("Comprobando la instalación…")));
@@ -1516,6 +1718,19 @@ private:
         });
     }
 
+    // the engine's inspection of the folder, then `next`; the page waits meanwhile
+    void inspectThen(const QString &target, std::function<void()> next) {
+        const QString output = tempFile(QStringLiteral("inspect-%1.json"));
+        setWaiting(true, tr(QStringLiteral("Comprobando la instalación…")));
+        runHostAsync({QStringLiteral("--inspect"), target, output, language_}, output, 7000,
+                     [this, next](bool, const QJsonObject &result) {
+            setWaiting(false);
+            inspection_ = result;
+            applyInspection();
+            next();
+        });
+    }
+
     // the folder a new installation (or Copy data) goes to
     bool validateNewTarget(const QString &target) {
         if (QFileInfo(target).exists() && !QFileInfo(target).isDir())
@@ -1525,13 +1740,19 @@ private:
                 return showError(tr(QStringLiteral("La carpeta ya contiene MO2")), tr(QStringLiteral("Esta carpeta ya contiene MO2. Elige «Actualizar MO2 Revamped» si está marcada como Revamped o crea otra carpeta.")));
             if (!QDir(target).entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System).isEmpty()) {
                 // the data an uninstall kept: MO2 is installed back next to it
-                if (mode_ == 0 && hasKeptData(target)) {
+                // (the engine's own test, which the installation repeats)
+                if (mode_ == 0 && inspection_.value(QStringLiteral("keptData")).toBool()) {
                     reinstall_ = true;
                     return true;
                 }
                 return showError(tr(QStringLiteral("El destino no está vacío")), tr(QStringLiteral("El destino contiene archivos. Elige una carpeta vacía para evitar sobrescribirlos.")));
             }
         }
+        if (inProgramFiles(target) &&
+            !contentDialog(tr(QStringLiteral("Carpeta protegida por Windows")),
+                           tr(QStringLiteral("Archivos de programa solo deja escribir a los administradores, y MO2 escribe junto a sí mismo: registros, ajustes de plugins y, en una copia portable, también los mods y perfiles. MO2 abierto sin permisos de administrador no podría guardarlos, y algunas herramientas y juegos fallarían. Te recomendamos una carpeta como C:\\MO2 Revamped.\n\n¿Instalar aquí de todos modos?")),
+                           tr(QStringLiteral("Instalar aquí")), tr(QStringLiteral("Elegir otra carpeta")), false))
+            return false;
         return true;
     }
 
@@ -1540,8 +1761,13 @@ private:
         if (mode_ == 2) {
             if (!inspection_.value(QStringLiteral("recognized")).toBool())
                 return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("La actualización solo se admite en una instalación identificada de MO2 Revamped. No se modificó la carpeta seleccionada.")));
-            if (!inspection_.value(QStringLiteral("compatibleVersion")).toBool())
-                return showError(tr(QStringLiteral("Versión no compatible")), tr(QStringLiteral("La actualización directa admite MO2 Revamped basado en MO2 2.5.0 a 2.5.2. Usa «Copiar datos» para pasar tus datos a una instalación nueva.")));
+            if (inspection_.value(QStringLiteral("downgrade")).toBool()) {
+                QString body = tr(QStringLiteral("Esta carpeta tiene MO2 Revamped {0} y este instalador trae la versión {1}, que es anterior. Si continúas, se instalará la versión anterior encima; tus datos se conservan y «Restaurar copia anterior» puede devolverte a la {0}.\n\n¿Instalar la versión anterior?"));
+                body.replace(QStringLiteral("{0}"), inspection_.value(QStringLiteral("installedVersion")).toString());
+                body.replace(QStringLiteral("{1}"), inspection_.value(QStringLiteral("setupVersion")).toString());
+                if (!contentDialog(tr(QStringLiteral("Versión anterior")), body, tr(QStringLiteral("Instalar la versión anterior")), tr(QStringLiteral("No")), false))
+                    return false;
+            }
         } else if (!inspection_.value(QStringLiteral("recognized")).toBool()) {
             return showError(tr(QStringLiteral("Instalación no reconocida")), tr(QStringLiteral("Selecciona una carpeta que contenga una instalación identificada de MO2 Revamped. Las instalaciones originales de MO2 no se modifican.")));
         } else if (mode_ == 4 && (!inspection_.value(QStringLiteral("pendingRestore")).toBool() || !inspection_.value(QStringLiteral("validBackup")).toBool())) {
@@ -1627,6 +1853,50 @@ private:
         return selected.isEmpty() ? tr(QStringLiteral("ninguna")) : selected.join(QStringLiteral(", "));
     }
 
+    bool isChecked(const QString &key) const { return checks_.contains(key) && checks_.value(key)->isChecked(); }
+
+    // what a new installation, an update or Copy data will do, as a list
+    // under the folder; empty for the other tasks
+    QString installSummary() const {
+        if (mode_ > 3) return QString();
+        const QDir kept(QDir::cleanPath(target_->text().trimmed()));
+        QString edition;
+        if (mode_ == 1 || (mode_ == 2 && inspectionKind() == QStringLiteral("isolated")) ||
+            (reinstall_ && QFileInfo(kept.filePath(QStringLiteral("eldenring-only.portable"))).isFile()))
+            edition = tr(QStringLiteral("aislada para Elden Ring y Nightreign, con sus datos dentro de su carpeta"));
+        else if (mode_ == 3 || (mode_ == 2 && inspectionKind() == QStringLiteral("portable")) ||
+                 (reinstall_ && (QFileInfo(kept.filePath(QStringLiteral("portable.txt"))).isFile() || QFileInfo(kept.filePath(QStringLiteral("ModOrganizer.ini"))).isFile())))
+            edition = tr(QStringLiteral("portable, con sus datos dentro de su carpeta"));
+        else
+            edition = tr(QStringLiteral("estándar, con tus instancias en AppData\\Local\\MO2 Revamped"));
+        QStringList shortcuts;
+        if (isChecked(QStringLiteral("startMenu"))) shortcuts << tr(QStringLiteral("menú Inicio"));
+        if (isChecked(QStringLiteral("desktop"))) shortcuts << tr(QStringLiteral("escritorio"));
+        QStringList after;
+        if (isChecked(QStringLiteral("launch"))) after << tr(QStringLiteral("abrir MO2"));
+        if (isChecked(QStringLiteral("closeWhenDone"))) after << tr(QStringLiteral("cerrar el instalador"));
+        QStringList lines;
+        lines << tr(QStringLiteral("• Edición: ")) + edition;
+        if (mode_ == 2) {
+            const QString installed = inspection_.value(QStringLiteral("installedVersion")).toString();
+            const QString setup = inspection_.value(QStringLiteral("setupVersion")).toString();
+            if (inspection_.value(QStringLiteral("sameVersion")).toBool())
+                lines << tr(QStringLiteral("• Versión: ")) + setup + tr(QStringLiteral(" (la misma: se reinstalan sus archivos, como una reparación)"));
+            else if (!installed.isEmpty() && !setup.isEmpty())
+                lines << tr(QStringLiteral("• Versión: ")) + installed + QStringLiteral(" → ") + setup;
+        }
+        lines << tr(QStringLiteral("• Accesos directos: ")) + (shortcuts.isEmpty() ? tr(QStringLiteral("ninguno nuevo")) : shortcuts.join(QStringLiteral(", ")));
+        lines << tr(QStringLiteral("• Enlaces de Nexus (nxm://): ")) + (isChecked(QStringLiteral("nxm")) ? tr(QStringLiteral("se abrirán con este MO2")) : tr(QStringLiteral("no cambian")));
+        if (!after.isEmpty()) lines << tr(QStringLiteral("• Al terminar: ")) + after.join(QStringLiteral(", "));
+        if (isChecked(QStringLiteral("forceClose"))) lines << tr(QStringLiteral("• Si MO2 sigue abierto, se cerrará; podrías perder cambios sin guardar."));
+        return QStringLiteral("\n\n") + lines.join(QStringLiteral("\n"));
+    }
+
+    QString otherAccountNote() const {
+        const QString warning = inspection_.value(QStringLiteral("otherAccountWarning")).toString();
+        return warning.isEmpty() ? QString() : QStringLiteral("\n\n") + warning;
+    }
+
     bool confirm() {
         const QString target = QDir::toNativeSeparators(target_->text().trimmed());
         QString title;
@@ -1635,22 +1905,25 @@ private:
         if (mode_ == 0 && reinstall_) {
             title = tr(QStringLiteral("Reinstalar sobre los datos conservados"));
             body = tr(QStringLiteral("Esta carpeta tiene los datos de una instalación anterior (perfiles, mods, ajustes). MO2 Revamped se instalará de nuevo junto a ellos, sin modificarlos:")) +
-                   QStringLiteral("\n\n") + target + tr(QStringLiteral("\n\n¿Continuar?"));
+                   QStringLiteral("\n\n") + target + installSummary() + otherAccountNote() + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 0) {
             title = tr(QStringLiteral("Instalación nueva"));
-            body = tr(QStringLiteral("MO2 Revamped se instalará en:")) + QStringLiteral("\n\n") + target + tr(QStringLiteral("\n\n¿Continuar?"));
+            body = tr(QStringLiteral("MO2 Revamped se instalará en:")) + QStringLiteral("\n\n") + target + installSummary() + otherAccountNote() + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 1) {
             title = tr(QStringLiteral("Instalación portable solo para Elden Ring y Nightreign"));
             body = tr(QStringLiteral("La edición portable aislada de MO2 se instalará en:")) + QStringLiteral("\n\n") + target +
-                   tr(QStringLiteral("\n\nSolo incluirá soporte para Elden Ring y Nightreign y no leerá ni modificará las instancias globales de otras copias de MO2. ¿Continuar?"));
+                   tr(QStringLiteral("\n\nSolo incluirá soporte para Elden Ring y Nightreign y no leerá ni modificará las instancias globales de otras copias de MO2.")) +
+                   installSummary() + otherAccountNote() + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 2) {
             title = tr(isolated_ ? QStringLiteral("Actualizar instalación aislada") : QStringLiteral("Actualizar MO2 Revamped"));
             body = tr(QStringLiteral("Se actualizarán los archivos del programa en:")) + QStringLiteral("\n\n") + target +
-                   tr(QStringLiteral("\n\nLos archivos previos se guardarán para poder restaurarlos. ¿Continuar?"));
+                   tr(QStringLiteral("\n\nLos archivos previos se guardarán para poder restaurarlos.")) +
+                   installSummary() + otherAccountNote() + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 3) {
             title = tr(QStringLiteral("Copiar datos"));
             body = tr(QStringLiteral("Se creará una instalación portable en:")) + QStringLiteral("\n\n") + target +
-                   tr(QStringLiteral("\n\nEl origen se conservará. Categorías seleccionadas: ")) + selectedCategories() + tr(QStringLiteral(". ¿Continuar?"));
+                   tr(QStringLiteral("\n\nEl origen se conservará. Categorías seleccionadas: ")) + selectedCategories() + QStringLiteral(".") +
+                   installSummary() + otherAccountNote() + tr(QStringLiteral("\n\n¿Continuar?"));
         } else if (mode_ == 4) {
             title = tr(QStringLiteral("Restaurar copia anterior"));
             body = tr(QStringLiteral("Se recuperarán los archivos originales guardados para:")) + QStringLiteral("\n\n") + target +
@@ -1658,21 +1931,43 @@ private:
         } else {
             title = tr(isolated_ ? QStringLiteral("Desinstalar instalación aislada") : QStringLiteral("Desinstalar MO2 Revamped"));
             body = tr(QStringLiteral("Se desinstalará esta instalación de MO2 Revamped:")) + QStringLiteral("\n\n") + target;
-            if (checks_.value(QStringLiteral("removeAll"))->isChecked()) {
+            const bool standard = inspectionKind() == QStringLiteral("standard");
+            const bool removeData = standard && isChecked(QStringLiteral("removeAppData"));
+            bool wholeFolder = false;
+            if (standard) {
+                if (removeData) {
+                    destructive = true;
+                    body += tr(QStringLiteral("\n\nSe quitarán el programa y lo que MO2 creó en su carpeta, y también las instancias portables y aisladas que MO2 creó dentro de ella."));
+                    QString dataWarning = tr(QStringLiteral("\n\nSe borrará por completo la carpeta global de MO2 Revamped:\n{0}\nIncluye todas las instancias globales y sus perfiles, mods, descargas y ajustes, y también las partidas de Elden Ring y Nightreign que guardan: las de cada perfil, las compartidas y sus copias de seguridad. Se comparte entre instalaciones no portables de Revamped. Las partidas de Steam no se tocan."));
+                    dataWarning.replace(QStringLiteral("{0}"), QDir::toNativeSeparators(inspection_.value(QStringLiteral("globalDataPath")).toString()));
+                    body += dataWarning;
+                } else {
+                    QString kept = tr(QStringLiteral("\n\nSe quitarán el programa y lo que MO2 creó en su carpeta (registros, cachés, ajustes de plugins); la carpeta se quita si no queda nada más en ella. Se conservan tus instancias, mods, descargas y ajustes de:\n{0}"));
+                    kept.replace(QStringLiteral("{0}"), QDir::toNativeSeparators(inspection_.value(QStringLiteral("globalDataPath")).toString()));
+                    body += kept;
+                    const QStringList inside = stringList(inspection_.value(QStringLiteral("instanceFoldersInside")));
+                    if (!inside.isEmpty())
+                        body += tr(QStringLiteral("\n\nTambién se conservan estas carpetas de instancias dentro de la carpeta de instalación: ")) + inside.join(QStringLiteral(", "));
+                }
+            } else if (removeAllRadio_ && removeAllRadio_->isChecked()) {
                 destructive = true;
-                body += tr(QStringLiteral("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes, guardados compartidos, copias de seguridad de guardados y archivos añadidos. También se quitará la carpeta seleccionada y las contenedoras que queden vacías, hasta llegar a una carpeta con contenido o protegida por Windows. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer."));
+                wholeFolder = inspection_.value(QStringLiteral("targetWasEmpty")).toBool();
+                body += tr(wholeFolder
+                    ? QStringLiteral("\n\nSe borrará todo lo que haya dentro de la carpeta seleccionada, incluidos perfiles, mods, descargas, ajustes, guardados compartidos, copias de seguridad de guardados y archivos añadidos, y después la carpeta y las que creó la instalación si quedan vacías. Los datos fuera de esta ruta no se tocarán. Esta acción no se puede deshacer.")
+                    : QStringLiteral("\n\nSe borrarán el programa y los datos de MO2 de la carpeta: perfiles, mods, descargas, overwrite, ajustes, guardados compartidos y sus copias. La carpeta no estaba vacía cuando se instaló MO2 (o su registro es antiguo), así que lo que no es de MO2 se conserva. Esta acción no se puede deshacer."));
             } else {
-                body += tr(QStringLiteral("\n\nSe quitarán las carpetas de componentes reconocidas y se conservarán los datos de usuario, como perfiles, mods, descargas, overwrite y ajustes. Los demás archivos fuera de esas carpetas también se mantienen. ")) +
-                        tr(QStringLiteral("Los datos de usuario se mantendrán en su ubicación actual."));
+                body += tr(QStringLiteral("\n\nSe quitarán los archivos del programa y lo que MO2 creó al usarse (registros, cachés, volcados de errores). Se conservan tus perfiles, mods, descargas, overwrite y ajustes en la carpeta; si no queda nada en ella, también se quita."));
             }
-            if (checks_.value(QStringLiteral("removeAppData"))->isChecked()) {
-                destructive = true;
-                QString dataWarning = tr(QStringLiteral("\n\nSe borrará por completo la carpeta global de MO2 Revamped:\n{0}\nIncluye todas las instancias globales y sus perfiles, mods, descargas y ajustes, y también las partidas de Elden Ring y Nightreign que guardan: las de cada perfil, las compartidas y sus copias de seguridad. Se comparte entre instalaciones no portables de Revamped. Las partidas de Steam no se tocan."));
-                dataWarning.replace(QStringLiteral("{0}"), QDir::toNativeSeparators(inspection_.value(QStringLiteral("globalDataPath")).toString()));
-                body += dataWarning;
-            }
-            if (checks_.value(QStringLiteral("forceClose"))->isChecked())
+            const QStringList unknown = stringList(inspection_.value(QStringLiteral("unknownEntries")));
+            if (!wholeFolder && !unknown.isEmpty())
+                body += tr(QStringLiteral("\n\nSe conservan, porque no son de MO2: ")) + unknown.mid(0, 12).join(QStringLiteral(", ")) +
+                        (unknown.size() > 12 ? QStringLiteral(", …") : QString());
+            const QString external = externalFoldersText();
+            if (!external.isEmpty()) body += QStringLiteral("\n\n") + external;
+            body += tr(QStringLiteral("\n\nTambién se quitan los accesos directos que abrían este MO2 (escritorio, menú Inicio y barra de tareas) y la asociación de enlaces nxm:// si apuntaba a esta carpeta."));
+            if (isChecked(QStringLiteral("forceClose")))
                 body += tr(QStringLiteral("\n\nSi MO2 sigue abierto, se intentará cerrarlo y se forzará el cierre de esta instalación si no responde; podrías perder cambios sin guardar."));
+            body += otherAccountNote();
             body += tr(QStringLiteral("\n\n¿Continuar?"));
         }
         return contentDialog(title, body, tr(QStringLiteral("Sí")), tr(QStringLiteral("No")), destructive);
@@ -1725,9 +2020,23 @@ private:
         request.insert(QStringLiteral("StartMenuShortcut"), checked(QStringLiteral("startMenu")));
         request.insert(QStringLiteral("DesktopShortcut"), checked(QStringLiteral("desktop")));
         request.insert(QStringLiteral("LaunchWhenDone"), checked(QStringLiteral("launch")));
+        request.insert(QStringLiteral("RegisterNxmHandler"), checked(QStringLiteral("nxm")));
+        // the handler the note named: the engine replaces that one, no other
+        if (checked(QStringLiteral("nxm")) && inspection_.value(QStringLiteral("nxmHandlerLive")).toBool())
+            request.insert(QStringLiteral("NxmHandlerToReplace"), inspection_.value(QStringLiteral("nxmHandler")).toString());
         request.insert(QStringLiteral("ForceCloseMo2"), checked(QStringLiteral("forceClose")));
-        request.insert(QStringLiteral("RemoveAllRemainingContents"), checked(QStringLiteral("removeAll")));
-        request.insert(QStringLiteral("RemoveRevampedAppData"), checked(QStringLiteral("removeAppData")));
+        // a standard installation's data is in AppData (the engine also
+        // takes the instance folders MO2 created inside the installation);
+        // a portable or isolated copy's data is in its folder
+        bool removeAll = false, removeAppData = false;
+        if (mode_ == 5) {
+            if (inspectionKind() == QStringLiteral("standard")) removeAppData = checked(QStringLiteral("removeAppData"));
+            else removeAll = removeAllRadio_ && removeAllRadio_->isChecked();
+        }
+        request.insert(QStringLiteral("RemoveAllRemainingContents"), removeAll);
+        request.insert(QStringLiteral("RemoveRevampedAppData"), removeAppData);
+        closeWhenDone_ = checked(QStringLiteral("closeWhenDone"));
+        logPath_.clear();
         QFile requestFile(requestPath_);
         if (!requestFile.open(QIODevice::WriteOnly)) { showError(tr(QStringLiteral("Estado")), requestFile.errorString()); return; }
         requestFile.write(QJsonDocument(request).toJson(QJsonDocument::Compact));
@@ -1737,6 +2046,7 @@ private:
         setInputsEnabled(false);
         progressCard_->show();
         fadeIn(progressCard_, 220);
+        if (failureActions_) failureActions_->hide();
         log_->clear();
         progressAnimation_->stop();
         progress_->setValue(0);
@@ -1755,7 +2065,7 @@ private:
         connect(backend_, &QProcess::finished, this, [this](int exitCode, QProcess::ExitStatus exitStatus) {
             completeOperation(exitCode, exitStatus == QProcess::NormalExit);
         });
-        backend_->start(host_, {QStringLiteral("--backend"), requestPath_, eventsPath_, resultPath_, language_});
+        startHost(backend_, {QStringLiteral("--backend"), requestPath_, eventsPath_, resultPath_, language_});
         if (!backend_->waitForStarted(5000)) {
             const QString startError = backend_->errorString();
             if (eventTimer_) eventTimer_->stop();
@@ -1855,6 +2165,7 @@ private:
         if (message.isEmpty()) message = result.value(QStringLiteral("error")).toString();
         if (message.isEmpty()) message = tr(success ? QStringLiteral("Operación completada.") : QStringLiteral("La operación no pudo completarse."));
         const QString details = result.value(QStringLiteral("details")).toString();
+        logPath_ = result.value(QStringLiteral("logPath")).toString();
         progressStatus_->setText(message);
         log_->appendPlainText(QString());
         log_->appendPlainText(message);
@@ -1882,7 +2193,10 @@ private:
             if (!details.isEmpty() && !detailsButton_->isChecked()) progressStatus_->setText(message + QStringLiteral("\n") + details);
             if (!launchPath.isEmpty() && QFileInfo(launchPath).isFile()) {
                 launchMo2(launchPath, [this, launchPath](bool launched) {
-                    if (launched) return;
+                    if (launched) {
+                        if (closeWhenDone_) QTimer::singleShot(600, this, [this] { close(); });
+                        return;
+                    }
                     actionButton_->setText(tr(QStringLiteral("Abrir MO2")));
                     actionButton_->setObjectName(QStringLiteral("secondaryButton"));
                     repolish(actionButton_);
@@ -1895,6 +2209,9 @@ private:
                         });
                     });
                 });
+            } else if (closeWhenDone_) {
+                // a moment to see it worked
+                QTimer::singleShot(1500, this, [this] { close(); });
             }
         } else {
             // Keep the window usable so the user can fix the cause and retry.
@@ -1902,6 +2219,8 @@ private:
             setStatus(message, QStringLiteral("error"));
             actionButton_->setText(tr(QStringLiteral("Reintentar")));
             detailsButton_->setChecked(true);
+            if (!logPath_.isEmpty()) log_->appendPlainText(tr(QStringLiteral("Registro detallado: {0}")).replace(QStringLiteral("{0}"), QDir::toNativeSeparators(logPath_)));
+            if (failureActions_) failureActions_->show();
         }
     }
 
@@ -1953,6 +2272,17 @@ private:
     QLineEdit *sourceInstall_ = nullptr;
     QLineEdit *sourceData_ = nullptr;
     QCheckBox *appDataCheck_ = nullptr;
+    QRadioButton *keepDataRadio_ = nullptr;
+    QRadioButton *removeAllRadio_ = nullptr;
+    QLabel *uninstallNote_ = nullptr;
+    QLabel *keptNote_ = nullptr;
+    QLabel *nxmNote_ = nullptr;
+    QLabel *dataGroupLabel_ = nullptr;
+    QWidget *dataChoice_ = nullptr;
+    QWidget *failureActions_ = nullptr;
+    bool nxmTouched_ = false;
+    bool closeWhenDone_ = false;
+    QString logPath_;
     QProgressBar *progress_ = nullptr;
     QPropertyAnimation *progressAnimation_ = nullptr;
     QPlainTextEdit *log_ = nullptr;
@@ -2000,8 +2330,9 @@ int main(int argc, char *argv[]) {
                                       : QStringLiteral("The setup engine could not be found."));
         return 2;
     }
-    // what this program starts must not hold its folder, which goes when it closes
-    if (!host.isEmpty()) QDir::setCurrent(QFileInfo(host).absolutePath());
+    // what this program starts must hold neither its own folder, which goes
+    // when it closes, nor the installation an uninstall removes
+    QDir::setCurrent(systemDirectory());
     SetupWindow window(host, language, fixedMode, fixedTarget, isolated, theme);
     window.show();
     if (!snapshot.isEmpty()) {

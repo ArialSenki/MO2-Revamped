@@ -175,7 +175,6 @@ $sourceFiles = @(
     (Join-Path $sourceDir 'Mo2RevampedSetup.cs'),
     (Join-Path $sourceDir 'InstallerText.cs'),
     (Join-Path $sourceDir 'InstallerBackend.cs'),
-    (Join-Path $sourceDir 'CompactSetupForm.cs'),
     (Join-Path $sourceDir 'VcRuntime.cs')
 )
 $iconPath = Join-Path $repoRoot 'source\revamped\branding\MO2-Revamped.ico'
@@ -184,6 +183,16 @@ foreach ($path in @($manifestPath) + $sourceFiles) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Installer source file was not found: $path"
     }
+}
+# the setup reads its own version from AssemblyInformationalVersion (the
+# log, the downgrade warning, the version an update compares with)
+$assemblyInfoText = Get-Content -LiteralPath (Join-Path $sourceDir 'AssemblyInfo.cs') -Raw
+if ($assemblyInfoText -notmatch ('AssemblyInformationalVersion\("' + [regex]::Escape($version) + '"\)')) {
+    throw "source\revamped\installer\AssemblyInfo.cs does not name $version in AssemblyInformationalVersion; update it."
+}
+$numericVersion = ($version -split '-')[0] + '.0'
+if ((Get-Content -LiteralPath $manifestPath -Raw) -notmatch ('assemblyIdentity\s+version="' + [regex]::Escape($numericVersion) + '"')) {
+    throw "source\revamped\installer\app.manifest does not name $numericVersion; update its assemblyIdentity version."
 }
 
 function Invoke-Compiler {

@@ -46,6 +46,12 @@ namespace Mo2RevampedSetup
         // version shown in Windows before it, so a restore can undo just that.
         public List<string> CreatedShortcutPaths { get; set; }
         public string PreviousDisplayVersion { get; set; }
+        // the highest folder the first installation created (empty when the
+        // folder already existed): an uninstall removes empty folders up to
+        // it, never above. Kept across updates.
+        public string CreatedDirectory { get; set; }
+        // whether the folder was empty (or new) when MO2 was first installed
+        public bool TargetWasEmpty { get; set; }
     }
 
     public sealed class InstallFileState
@@ -64,6 +70,9 @@ namespace Mo2RevampedSetup
         public bool RemovedByUpdate { get; set; }
     }
 
+    // filled from the window's JSON request (JavaScriptSerializer) or the
+    // silent switches; some fields only ever come from the JSON
+#pragma warning disable 0649
     internal sealed class SetupRequest
     {
         public SetupMode Mode;
@@ -85,55 +94,32 @@ namespace Mo2RevampedSetup
         public bool RemoveRevampedAppData;
         // a new installation into a folder that kept its data after an uninstall
         public bool ReinstallOverKeptData;
+        // HKCU\Software\Classes\nxm opens Nexus links with this nxmhandler.exe
+        public bool RegisterNxmHandler;
+        // the live handler of another program the user saw and chose to
+        // replace; any other live handler is left as it is
+        public string NxmHandlerToReplace;
     }
+#pragma warning restore 0649
 
     internal static class Program
     {
         [STAThread]
         private static void Main(string[] args)
         {
+            // what this process and its helpers start must never hold the
+            // folder being removed (a double-clicked unins000.exe starts in
+            // it): Windows can't delete a folder that is a current directory
+            InstallerBackend.LeaveStartDirectory();
             if (InstallerBackend.TryHandleCommandLine(args)) return;
             SetupDiagnostics.Initialize(args);
+            if (InstallerBackend.TryRunSilent(args)) return;
             try
             {
                 if (InstallerBackend.TryLaunchQtInstaller(args)) return;
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += delegate(object sender, System.Threading.ThreadExceptionEventArgs eventArgs)
-                {
-                    SetupDiagnostics.Error("Unhandled exception on the installer UI thread.", eventArgs.Exception);
-                    MessageBox.Show(
-                        String.Format(
-                            InstallerText.T("El asistente se cerrará por un error inesperado.\n\n{0}{1}"),
-                            eventArgs.Exception.GetBaseException().Message,
-                            String.IsNullOrEmpty(SetupDiagnostics.CurrentPath) ? "" : "\n\n" +
-                                String.Format(InstallerText.T("Registro detallado: {0}"), SetupDiagnostics.CurrentPath)),
-                        InstallerText.T("MO2 Revamped - Error"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    Application.Exit();
-                };
-                AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs eventArgs)
-                {
-                    Exception exception = eventArgs.ExceptionObject as Exception;
-                    SetupDiagnostics.Error("Unhandled exception in the installer process.", exception);
-                };
-                bool uninstallRequest = args != null && args.Length >= 2 &&
-                    (String.Equals(args[0], "--uninstall", StringComparison.OrdinalIgnoreCase) ||
-                     String.Equals(args[0], "--restore", StringComparison.OrdinalIgnoreCase));
-#if UNINSTALLER_STUB
-                string target = uninstallRequest ? args[1] : Path.GetDirectoryName(Application.ExecutablePath);
-                Application.Run(new CompactSetupForm(SetupMode.Uninstall, target, true));
-#elif ELDENRING_ONLY_INSTALLER
-                if (uninstallRequest)
-                    Application.Run(new CompactSetupForm(SetupMode.Uninstall, args[1], true));
-                else
-                    Application.Run(new CompactSetupForm(SetupMode.EldenRingPortable, null, false));
-#else
-                Application.Run(new CompactSetupForm(uninstallRequest ? SetupMode.Uninstall : (SetupMode?)null,
-                    uninstallRequest ? args[1] : null, uninstallRequest));
-#endif
+                // every release embeds the Qt window (Build-Release.ps1 stops
+                // without it); a file without it is damaged or incomplete
+                throw new InvalidOperationException(InstallerText.T("Falta la ventana del instalador dentro de este archivo. Descarga de nuevo el instalador de MO2 Revamped."));
             }
             catch (Exception ex)
             {
@@ -165,6 +151,28 @@ namespace Mo2RevampedSetup
         private static readonly object Sync = new object();
         private static string CurrentLog;
         private static string LastProgressStage = "";
+        private static string setupVersion;
+
+        // the release this setup belongs to (AssemblyInformationalVersion,
+        // which Build-Release.ps1 checks against its own version)
+        public static string SetupVersion
+        {
+            get
+            {
+                if (setupVersion == null)
+                {
+                    string version = "";
+                    try
+                    {
+                        object[] attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        if (attributes.Length > 0) version = ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion ?? "";
+                    }
+                    catch { }
+                    setupVersion = version;
+                }
+                return setupVersion;
+            }
+        }
 
         public static string CurrentPath
         {
@@ -188,7 +196,7 @@ namespace Mo2RevampedSetup
                 lock (Sync) CurrentLog = Path.Combine(root, "setup-" + suffix + ".log");
 
                 Info("Installer session started.");
-                Info("Product: MO2 Revamped setup 1.1.0-beta.8; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
+                Info("Product: MO2 Revamped setup " + SetupVersion + "; assembly " + (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0)) +
                     "; OS: " + Environment.OSVersion.VersionString +
                     "; .NET: " + Environment.Version +
                     "; 64-bit process: " + Environment.Is64BitProcess + ".");
@@ -224,6 +232,8 @@ namespace Mo2RevampedSetup
                 "; Start menu shortcut=" + request.StartMenuShortcut +
                 "; desktop shortcut=" + request.DesktopShortcut +
                 "; launch when done=" + request.LaunchWhenDone +
+                "; register nxm links=" + request.RegisterNxmHandler +
+                "; reinstall over kept data=" + request.ReinstallOverKeptData +
                 "; force close MO2=" + request.ForceCloseMo2 +
                 "; remove all contents=" + request.RemoveAllRemainingContents +
                 "; remove MO2 Revamped AppData=" + request.RemoveRevampedAppData + ".");
@@ -310,12 +320,12 @@ namespace Mo2RevampedSetup
         {
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             if (String.IsNullOrWhiteSpace(localAppData))
-                throw new InvalidOperationException("No se pudo determinar la carpeta AppData local.");
+                throw new InvalidOperationException(InstallerText.T("No se pudo determinar la carpeta AppData local."));
 
             string normalizedLocalAppData = NormalizeCleanupDirectory(localAppData);
             string dataDirectory = NormalizeCleanupDirectory(Path.Combine(normalizedLocalAppData, "MO2 Revamped"));
             if (!PathsEqual(Path.GetDirectoryName(dataDirectory), normalizedLocalAppData))
-                throw new InvalidOperationException("La carpeta de datos de MO2 Revamped no está dentro de AppData local.");
+                throw new InvalidOperationException(InstallerText.T("La carpeta de datos de MO2 Revamped no está dentro de AppData local."));
 
             return dataDirectory;
         }
@@ -368,7 +378,31 @@ namespace Mo2RevampedSetup
             return serializer;
         }
 
+        // one setup at a time per folder: a second window (or a silent run)
+        // working on the same installation would mix two operations
         public static OperationResult Execute(SetupRequest request, BackgroundWorker worker)
+        {
+            if (request == null || String.IsNullOrWhiteSpace(request.TargetDirectory))
+                throw new InvalidOperationException(InstallerText.T("Indica una carpeta válida."));
+            string name = "MO2RevampedSetup-" + TargetKey(Path.GetFullPath(request.TargetDirectory));
+            System.Threading.Mutex gate = null;
+            try
+            {
+                bool created;
+                try { gate = new System.Threading.Mutex(false, "Global\\" + name, out created); }
+                catch (UnauthorizedAccessException) { gate = new System.Threading.Mutex(false, "Local\\" + name, out created); }
+                bool owned;
+                try { owned = gate.WaitOne(0); }
+                catch (System.Threading.AbandonedMutexException) { owned = true; }
+                if (!owned)
+                    throw new InvalidOperationException(InstallerText.T("Otro instalador de MO2 Revamped ya está trabajando en esta carpeta. Espera a que termine y vuelve a intentarlo."));
+                try { return ExecuteCore(request, worker); }
+                finally { gate.ReleaseMutex(); }
+            }
+            finally { if (gate != null) gate.Dispose(); }
+        }
+
+        private static OperationResult ExecuteCore(SetupRequest request, BackgroundWorker worker)
         {
 #if ELDENRING_ONLY_INSTALLER
             if (request.Mode != SetupMode.EldenRingPortable && request.Mode != SetupMode.Update &&
@@ -383,9 +417,17 @@ namespace Mo2RevampedSetup
             if (request.Mode == SetupMode.Restore || request.Mode == SetupMode.Uninstall)
                 return ReverseInstall(request, worker);
             if (IsMo2Running(request.TargetDirectory))
-                throw new InvalidOperationException(InstallerText.T("Cierra Mod Organizer 2 antes de continuar."));
+            {
+                if (!request.ForceCloseMo2)
+                    throw new InvalidOperationException(InstallerText.T("Cierra Mod Organizer 2 antes de continuar o marca «Forzar el cierre de MO2 en esta carpeta si sigue abierto»."));
+                EnsureMo2Closed(request.TargetDirectory, true, worker);
+            }
             if (request.Mode == SetupMode.Migrate && IsMo2Running(request.SourceInstallDirectory))
-                throw new InvalidOperationException(InstallerText.T("Cierra también la instalación de MO2 de origen antes de copiar sus datos."));
+            {
+                if (!request.ForceCloseMo2)
+                    throw new InvalidOperationException(InstallerText.T("Cierra también la instalación de MO2 de origen antes de copiar sus datos o marca «Forzar el cierre del MO2 de origen si sigue abierto»."));
+                EnsureMo2Closed(request.SourceInstallDirectory, true, worker);
+            }
 
             string target = Path.GetFullPath(request.TargetDirectory);
             bool eldenRingOnly = request.Mode == SetupMode.EldenRingPortable ||
@@ -393,7 +435,67 @@ namespace Mo2RevampedSetup
                  File.Exists(Path.Combine(target, "eldenring-only.portable")));
             PayloadManifest manifest = ReadManifest(eldenRingOnly);
             ValidateManifest(manifest);
+            // the highest folder this run creates: a new installation that
+            // fails takes it away again, instead of leaving an empty folder
+            string createdRoot = null;
+            for (string missing = target; !String.IsNullOrEmpty(missing) && !Directory.Exists(missing); missing = Path.GetDirectoryName(missing))
+                createdRoot = missing;
+            bool targetWasEmpty = createdRoot != null || Directory.GetFileSystemEntries(target).Length == 0;
             Directory.CreateDirectory(target);
+            bool newInstallation = request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable || request.Mode == SetupMode.Migrate;
+            try
+            {
+                return InstallInto(request, worker, target, eldenRingOnly, manifest, createdRoot, targetWasEmpty);
+            }
+            catch
+            {
+                if (newInstallation) CleanUpFailedNewInstallation(target, createdRoot);
+                throw;
+            }
+        }
+
+        // a new installation that stopped: what it wrote was rolled back, so
+        // its "Failed" record and the folders it created (left empty) go too
+        private static void CleanUpFailedNewInstallation(string target, string createdRoot)
+        {
+            try
+            {
+                InstallState state = LoadState(target);
+                bool failed = state != null && (String.Equals(state.Status, "Failed", StringComparison.OrdinalIgnoreCase) ||
+                                                String.Equals(state.Status, "Preparing", StringComparison.OrdinalIgnoreCase));
+                // a rollback that left a file behind keeps the record, so
+                // Uninstall can still find and remove it
+                bool leftovers = false;
+                if (failed)
+                    foreach (InstallFileState file in state.Files)
+                    {
+                        if (file.ExistedBefore || file.IsUserData) continue;
+                        try { if (File.Exists(SafeCombine(target, file.Path))) { leftovers = true; break; } }
+                        catch { leftovers = true; break; }
+                    }
+                if (failed && !leftovers)
+                {
+                    DeleteState(target);
+                    CleanupInstallerDataRoot();
+                }
+            }
+            catch (Exception ex) { SetupDiagnostics.Error("Could not remove the record of the failed installation of '" + target + "'.", ex); }
+            if (String.IsNullOrEmpty(createdRoot)) return;
+            try
+            {
+                for (string directory = target; !String.IsNullOrEmpty(directory); directory = Path.GetDirectoryName(directory))
+                {
+                    if (!Directory.Exists(directory) || Directory.GetFileSystemEntries(directory).Length != 0) break;
+                    Directory.Delete(directory, false);
+                    if (PathsEqual(directory, createdRoot)) break;
+                }
+            }
+            catch (Exception ex) { SetupDiagnostics.Error("Could not remove the folder the failed installation created at '" + target + "'.", ex); }
+        }
+
+        private static OperationResult InstallInto(SetupRequest request, BackgroundWorker worker, string target, bool eldenRingOnly, PayloadManifest manifest,
+            string createdRoot, bool targetWasEmpty)
+        {
             if (request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable || request.Mode == SetupMode.Migrate)
             {
                 if (Directory.GetFileSystemEntries(target).Length > 0 &&
@@ -555,7 +657,13 @@ namespace Mo2RevampedSetup
                 Files = states,
                 ShortcutPaths = shortcutPaths,
                 CreatedShortcutPaths = request.Mode == SetupMode.Update ? shortcutsCreatedByThisOperation : null,
-                PreviousDisplayVersion = request.Mode == SetupMode.Update ? RegisteredDisplayVersion(target) : null
+                PreviousDisplayVersion = request.Mode == SetupMode.Update ? RegisteredDisplayVersion(target) : null,
+                // an update keeps what the first installation found; a record
+                // from before these fields knows nothing, so nothing above the
+                // folder itself is ever removed for it
+                CreatedDirectory = request.Mode == SetupMode.Update ? (earlierState == null ? null : earlierState.CreatedDirectory) : createdRoot,
+                TargetWasEmpty = request.Mode == SetupMode.Update ? (earlierState != null && earlierState.TargetWasEmpty) :
+                    targetWasEmpty && !request.ReinstallOverKeptData
             };
             string uninstallWarning = null;
             string shortcutWarning = null;
@@ -688,11 +796,41 @@ namespace Mo2RevampedSetup
                 throw new InvalidOperationException(installError.Message + Environment.NewLine + InstallerText.T("Los archivos tocados se revirtieron a su estado previo."), installError);
             }
 
-            try { RegisterUninstallEntry(target, manifest.Version, manifest.TotalBytes); }
+            try { RegisterUninstallEntry(target, manifest.Version, manifest.TotalBytes, eldenRingOnly); }
             catch (Exception ex)
             {
                 SetupDiagnostics.Error("Windows could not register the uninstaller entry for '" + target + "'.", ex);
                 uninstallWarning = InstallerText.T("Windows no pudo registrar la desinstalación: ") + ex.Message;
+            }
+
+            // Nexus "Mod manager download" links, as nxmhandler.exe registers
+            // itself; a failure leaves MO2 working (it registers again when
+            // it is asked to)
+            string nxmWarning = null;
+            // a working handler of another program (another MO2, Vortex) is
+            // only replaced when the user saw that one and still chose this
+            string currentHandler = RegisteredNxmHandler();
+            bool otherLiveHandler = false;
+            try
+            {
+                otherLiveHandler = currentHandler.Length > 0 && File.Exists(currentHandler) &&
+                    !IsPathWithinDirectory(currentHandler, target);
+            }
+            catch { }
+            if (request.RegisterNxmHandler && otherLiveHandler && !PathsEqual(currentHandler, request.NxmHandlerToReplace))
+            {
+                SetupDiagnostics.Info("nxm:// links stay with '" + currentHandler + "': the request did not name it as the one to replace.");
+                nxmWarning = InstallerText.T("Los enlaces de Nexus (nxm://) siguen abriéndose con ") + currentHandler +
+                    InstallerText.T("; no se cambió porque no se eligió reemplazarlo.");
+            }
+            else if (request.RegisterNxmHandler)
+            {
+                try { RegisterNxmHandler(target); }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not register nxmhandler.exe for nxm:// links.", ex);
+                    nxmWarning = InstallerText.T("No se pudieron asociar los enlaces de Nexus (nxm://) a este MO2: ") + ex.Message;
+                }
             }
 
             // the Microsoft Visual C++ runtime MO2 and usvfs need (see VcRuntime);
@@ -725,6 +863,11 @@ namespace Mo2RevampedSetup
                 details.Append(Environment.NewLine).Append(vcWarning);
             else if (vcRestartNeeded)
                 details.Append(Environment.NewLine).Append(InstallerText.T("Windows pide reiniciar para terminar de instalar Microsoft Visual C++."));
+            if (!String.IsNullOrEmpty(nxmWarning))
+                details.Append(Environment.NewLine).Append(nxmWarning);
+            string otherAccount = OtherAccountWarning();
+            if (!String.IsNullOrEmpty(otherAccount))
+                details.Append(Environment.NewLine).Append(otherAccount);
             return new OperationResult
             {
                 // MO2 is installed and works; only the Windows entry is missing, so
@@ -909,9 +1052,16 @@ namespace Mo2RevampedSetup
                 if (!hasBackup) throw new InvalidOperationException(InstallerText.T("La copia de seguridad no contiene archivos originales recuperables."));
             }
             bool removeAllContents = !restoreMode && request.RemoveAllRemainingContents;
-            bool forceCloseMo2 = !restoreMode && request.ForceCloseMo2;
+            bool forceCloseMo2 = request.ForceCloseMo2;
+            // decided now: once the program's files are gone the folder is
+            // no longer recognised
+            bool standardInstall = !restoreMode && UsesRevampedGlobalData(target);
             EnsureInstallationFree(target, forceCloseMo2, worker);
-            if (!restoreMode) EnsureRevampedGlobalDataNotInUse(request);
+            if (!restoreMode) EnsureRevampedGlobalDataNotInUse(request, target);
+            // what instances keep inside this folder: never touched unless
+            // the user asked for that data to go
+            List<string> protectedPaths = restoreMode ? new List<string>()
+                : ProtectedInstancePaths(target, !removeAllContents && !request.RemoveRevampedAppData, !request.RemoveRevampedAppData);
 
             bool deferredCleanup;
             InstallState filesState = state;
@@ -937,20 +1087,25 @@ namespace Mo2RevampedSetup
                 state.Status = "Restoring";
                 SaveState(state);
             }
+            // "everything" is the whole folder only when the setup found it
+            // empty: in a folder that held other things before (or a record
+            // too old to say), only MO2's program and data go
+            bool wholeFolder = removeAllContents && state.TargetWasEmpty;
             List<string> notes = RestoreFiles(filesState, true, !removeAllContents,
-                removeAllContents, !restoreMode, worker, out deferredCleanup);
-            if (!restoreMode && !removeAllContents)
+                wholeFolder, !restoreMode, worker, out deferredCleanup);
+            if (!restoreMode && !wholeFolder)
                 notes.AddRange(RemoveLegacyUninstallerFiles(target));
-            if (!restoreMode && removeAllContents)
+            if (wholeFolder)
             {
-                List<string> cleanupNotes = RemoveAllRemainingContents(target);
-                notes.AddRange(cleanupNotes);
-                if (notes.Count == 0) RemoveEmptyInstallDirectoryAndParent(target);
+                notes.AddRange(RemoveAllRemainingContents(target, protectedPaths));
             }
             else if (!restoreMode)
             {
-                RemoveEmptyDirectories(target);
+                if (removeAllContents) notes.AddRange(RemoveInstanceData(target, protectedPaths));
+                notes.AddRange(RemoveRuntimeLeftovers(target, protectedPaths));
+                RemoveEmptyDirectories(target, protectedPaths);
             }
+            List<string> linkNotes = restoreMode ? new List<string>() : RemoveDeadLinks(target);
             bool keptUninstallEntry = false;
             // A kept file leaves a folder without MO2, which no setup can uninstall
             // again: Windows shouldn't keep offering an uninstaller that is gone.
@@ -1003,7 +1158,15 @@ namespace Mo2RevampedSetup
             {
                 Report(worker, 95, InstallerText.T("Eliminando los datos globales de MO2 Revamped…"));
                 notes.AddRange(RemoveRevampedGlobalData());
+                // "my instances" of a standard installation include the
+                // portable and isolated ones MO2 created inside its folder
+                if (notes.Count == 0 && standardInstall) notes.AddRange(RemoveInstanceRootsInside(target));
             }
+            // the folder itself once nothing is left in it, and the empty
+            // folders the first installation created above it; a running
+            // uninstaller inside it leaves that to the helper that waits for it
+            if (!restoreMode && notes.Count == 0 && !deferredCleanup)
+                RemoveEmptyInstallFolder(target, state.CreatedDirectory);
 
             if (notes.Count > 0)
             {
@@ -1026,19 +1189,26 @@ namespace Mo2RevampedSetup
             }
             else
             {
-                message = notes.Count == 0 ? "Mod Organizer 2 se desinstaló." : "La desinstalación terminó con archivos conservados o pendientes.";
+                message = notes.Count == 0 ? "MO2 Revamped se desinstaló." : "La desinstalación terminó con archivos conservados o pendientes.";
                 details = notes.Count == 0
-                    ? removeAllContents
+                    ? removeAllContents && !wholeFolder
+                        ? InstallerText.T("Se eliminaron MO2 y sus datos: perfiles, mods, descargas, overwrite y ajustes. La carpeta no estaba vacía cuando se instaló MO2 (o el registro es antiguo), así que lo que no es de MO2 se conservó.")
+                    : removeAllContents
                         ? InstallerText.T("Se eliminaron MO2, sus perfiles, mods, descargas, ajustes y el resto del contenido de la carpeta.") +
                           (!String.IsNullOrWhiteSpace(state.BackupDirectory) ? InstallerText.T(" También se eliminó la copia de la versión anterior.") : "") +
-                          InstallerText.T(" Las carpetas contenedoras vacías se borrarán hasta la primera con contenido o protegida.")
-                        : InstallerText.T("Se retiraron los archivos de MO2 Revamped, se restauró la instalación previa cuando correspondía y se conservaron los datos personales.")
+                          InstallerText.T(" Las carpetas que creó la instalación se quitan si quedan vacías.")
+                        : standardInstall
+                            ? InstallerText.T("Se retiraron los archivos de MO2 Revamped y lo que MO2 creó en su carpeta. Tus instancias, mods, descargas y ajustes de AppData\\Local\\MO2 Revamped se conservaron.")
+                            : InstallerText.T("Se retiraron los archivos de MO2 Revamped, se restauró la instalación previa cuando correspondía y se conservaron los datos personales.")
                     : pendingDetails;
+                if (notes.Count == 0) details += KeptEntriesDetails(target, deferredCleanup);
             }
             if (!restoreMode && notes.Count == 0 && request.RemoveRevampedAppData)
                 details += Environment.NewLine + String.Format(
                     InstallerText.T("Se completó la limpieza de datos globales de MO2 Revamped en:\n{0}"),
                     RevampedAppDataDirectory());
+            if (linkNotes.Count > 0)
+                details += Environment.NewLine + InstallerText.T("No se pudieron quitar estos accesos o asociaciones: ") + String.Join(", ", linkNotes.ToArray());
             if (deferredCleanup) details += Environment.NewLine + InstallerText.T("El desinstalador abierto se retirará al cerrar esta ventana; si Windows mantiene un bloqueo, se completará al reiniciar.");
             return new OperationResult { Success = notes.Count == 0, Message = message, Details = details, LaunchPath = null };
         }
@@ -1067,7 +1237,9 @@ namespace Mo2RevampedSetup
                 Version = update.PreviousDisplayVersion ?? "",
                 InstalledAt = DateTime.Now.ToString("o"),
                 Files = files,
-                ShortcutPaths = shortcuts
+                ShortcutPaths = shortcuts,
+                CreatedDirectory = update.CreatedDirectory,
+                TargetWasEmpty = update.TargetWasEmpty
             };
         }
 
@@ -1078,28 +1250,29 @@ namespace Mo2RevampedSetup
             if (!Directory.Exists(target) || !File.Exists(executable))
                 throw new InvalidOperationException(InstallerText.T("Selecciona la carpeta de una instalación que contenga ModOrganizer.exe."));
             ValidateSafeUninstallTarget(target);
+            bool standardInstall = UsesRevampedGlobalData(target);
             EnsureInstallationFree(target, request.ForceCloseMo2, worker);
-            EnsureRevampedGlobalDataNotInUse(request);
+            EnsureRevampedGlobalDataNotInUse(request, target);
+            // without a record nobody knows what the folder held before MO2:
+            // only MO2's known program files and, when asked, its known data
+            // go; whatever else is there stays
+            List<string> protectedPaths = ProtectedInstancePaths(target,
+                !request.RemoveAllRemainingContents && !request.RemoveRevampedAppData, !request.RemoveRevampedAppData);
 
-            List<string> notes;
-            if (request.RemoveAllRemainingContents)
-            {
-                Report(worker, 10, InstallerText.T("Eliminando el contenido completo de la instalación…"));
-                notes = RemoveAllRemainingContents(target);
-                if (notes.Count == 0) RemoveEmptyInstallDirectoryAndParent(target);
-            }
-            else
-            {
-                Report(worker, 10, InstallerText.T("Quitando los archivos del programa y conservando los datos…"));
-                notes = RemoveUnregisteredProgramFiles(target, worker);
-                if (notes.Count == 0) RemoveEmptyDirectories(target);
-            }
-
+            Report(worker, 10, InstallerText.T("Quitando los archivos del programa y conservando los datos…"));
+            List<string> notes = RemoveUnregisteredProgramFiles(target, worker, protectedPaths);
             if (notes.Count == 0)
             {
-                List<string> shortcutNotes = RemoveShortcutsToMo2(target);
-                notes.AddRange(shortcutNotes);
+                if (request.RemoveAllRemainingContents)
+                {
+                    Report(worker, 60, InstallerText.T("Eliminando los datos de MO2 de la carpeta…"));
+                    notes.AddRange(RemoveInstanceData(target, protectedPaths));
+                }
+                notes.AddRange(RemoveRuntimeLeftovers(target, protectedPaths));
+                RemoveEmptyDirectories(target, protectedPaths);
             }
+
+            List<string> linkNotes = RemoveDeadLinks(target);
             bool programGone = !File.Exists(executable);
             if (notes.Count == 0 || programGone)
             {
@@ -1111,38 +1284,44 @@ namespace Mo2RevampedSetup
             {
                 Report(worker, 95, InstallerText.T("Eliminando los datos globales de MO2 Revamped…"));
                 notes.AddRange(RemoveRevampedGlobalData());
+                if (notes.Count == 0 && standardInstall) notes.AddRange(RemoveInstanceRootsInside(target));
             }
 
-            string runningExecutable = Path.GetFullPath(Application.ExecutablePath);
+            string runningExecutable = RunningUninstaller();
             bool deferredCleanup = false;
             if (notes.Count == 0 && IsPathWithinDirectory(runningExecutable, target) && File.Exists(runningExecutable))
             {
-                if (ScheduleRunningUninstaller(runningExecutable, null, target)) deferredCleanup = true;
+                if (ScheduleRunningUninstaller(runningExecutable, null, target, null)) deferredCleanup = true;
                 else notes.Add(Path.GetFileName(runningExecutable) + InstallerText.T(" (Windows no pudo programar su retirada)"));
             }
+            // without a record, only the folder itself, never its parents
+            if (notes.Count == 0 && !deferredCleanup) RemoveEmptyInstallFolder(target, null);
 
             string message = notes.Count == 0
-                ? "Mod Organizer 2 se desinstaló."
+                ? "MO2 Revamped se desinstaló."
                 : "La desinstalación terminó con elementos pendientes.";
             string details = notes.Count == 0
                 ? request.RemoveAllRemainingContents
-                    ? InstallerText.T("Se eliminó todo el contenido de la carpeta elegida. Las carpetas contenedoras se borran solo si quedan vacías y no están protegidas.")
+                    ? InstallerText.T("Se eliminaron MO2 y sus datos: perfiles, mods, descargas, overwrite y ajustes. La carpeta no estaba vacía cuando se instaló MO2 (o el registro es antiguo), así que lo que no es de MO2 se conservó.")
                     : InstallerText.T("Se quitaron los componentes conocidos del programa. Los datos de usuario y los archivos que no se reconocieron se conservaron.")
                 : InstallerText.T("No se completaron estos elementos: ") + String.Join(", ", notes.ToArray()) +
                   (programGone ? "" : Environment.NewLine) + (programGone ? "" : InstallerText.T("Vuelve a ejecutar la desinstalación sobre la misma carpeta para terminar la limpieza."));
+            if (notes.Count == 0) details += KeptEntriesDetails(target, deferredCleanup);
             if (notes.Count == 0 && request.RemoveRevampedAppData)
                 details += Environment.NewLine + String.Format(
                     InstallerText.T("Se completó la limpieza de datos globales de MO2 Revamped en:\n{0}"),
                     RevampedAppDataDirectory());
+            if (linkNotes.Count > 0)
+                details += Environment.NewLine + InstallerText.T("No se pudieron quitar estos accesos o asociaciones: ") + String.Join(", ", linkNotes.ToArray());
             if (deferredCleanup)
                 details += Environment.NewLine + InstallerText.T("El desinstalador se retirará al cerrar esta ventana y eliminará las carpetas que queden vacías.");
             return new OperationResult { Success = notes.Count == 0, Message = message, Details = details, LaunchPath = null };
         }
 
-        private static List<string> RemoveUnregisteredProgramFiles(string target, BackgroundWorker worker)
+        private static List<string> RemoveUnregisteredProgramFiles(string target, BackgroundWorker worker, List<string> protectedPaths)
         {
             List<string> notes = new List<string>();
-            string runningExecutable = Path.GetFullPath(Application.ExecutablePath);
+            string runningExecutable = RunningUninstaller();
             string[] entries;
             try { entries = Directory.GetFileSystemEntries(target); }
             catch (Exception ex)
@@ -1161,6 +1340,9 @@ namespace Mo2RevampedSetup
                     string name = Path.GetFileName(full);
                     FileAttributes attributes = File.GetAttributes(full);
                     bool isDirectory = (attributes & FileAttributes.Directory) != 0;
+                    // an instance keeps something here (its mods folder set
+                    // to a program folder, say): left alone
+                    if (TouchesProtected(full, protectedPaths)) continue;
                     if (isDirectory)
                     {
                         if (!Mo2ProgramDirectories.Contains(name)) continue;
@@ -1175,7 +1357,7 @@ namespace Mo2RevampedSetup
                             // and with no package list at hand the folder is kept
                             HashSet<string> known = KnownPayloadPaths();
                             if (known == null) continue;
-                            foreach (string file in Directory.GetFiles(full, "*", SearchOption.AllDirectories))
+                            foreach (string file in FilesBelowWithoutLinks(full))
                             {
                                 string relative = file.Substring(target.Length).TrimStart('\\', '/');
                                 if (!known.Contains(relative.Replace('\\', '/')) || PathsEqual(file, runningExecutable)) continue;
@@ -1259,7 +1441,7 @@ namespace Mo2RevampedSetup
         private static List<string> RemoveLegacyUninstallerFiles(string target)
         {
             List<string> notes = new List<string>();
-            string runningExecutable = Path.GetFullPath(Application.ExecutablePath);
+            string runningExecutable = RunningUninstaller();
             string[] legacyNames = new string[] { "MO2ForkUninstaller.exe" };
             foreach (string name in legacyNames)
             {
@@ -1281,16 +1463,36 @@ namespace Mo2RevampedSetup
             return notes;
         }
 
-        private static List<string> RemoveShortcutsToMo2(string target)
+        // what points Windows at programs of this folder that are gone now:
+        // shortcuts (the setup's, MO2's "Mod Organizer - <instance>" and
+        // "Run program" ones, pinned ones), the nxm:// association and the
+        // link handler's list. A failure is returned, never thrown.
+        private static List<string> RemoveDeadLinks(string target)
         {
             List<string> notes = new List<string>();
-            string expected = Path.Combine(Path.GetFullPath(target), "ModOrganizer.exe");
-            string[] roots = new string[]
+            try { notes.AddRange(RemoveDeadShortcuts(target)); }
+            catch (Exception ex) { SetupDiagnostics.Error("Could not look for shortcuts to '" + target + "'.", ex); }
+            try { notes.AddRange(RemoveDeadNxmRegistration(target)); }
+            catch (Exception ex) { SetupDiagnostics.Error("Could not check the nxm:// association for '" + target + "'.", ex); }
+            return notes;
+        }
+
+        private static List<string> RemoveDeadShortcuts(string target)
+        {
+            List<string> notes = new List<string>();
+            List<string> roots = new List<string>();
+            roots.Add(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
+            roots.Add(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu));
+            string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            if (!String.IsNullOrEmpty(roaming))
+                roots.Add(Path.Combine(roaming, "Microsoft", "Internet Explorer", "Quick Launch", "User Pinned", "TaskBar"));
+            // the shared desktop and Start menu only change with elevation
+            if (IsElevatedProcess())
             {
-                Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
-                Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)
-            };
+                roots.Add(Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory));
+                roots.Add(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu));
+            }
+            int removed = 0;
             foreach (string root in roots)
             {
                 if (String.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) continue;
@@ -1309,13 +1511,25 @@ namespace Mo2RevampedSetup
                     catch { continue; }
                     foreach (string link in links)
                     {
+                        string linkTarget;
+                        try { linkTarget = GetShortcutTarget(link); }
+                        catch { continue; }
+                        // a shortcut into a folder kept with its data (a
+                        // portable copy's mods, say) still works: only those
+                        // whose program is gone are dead
+                        if (String.IsNullOrEmpty(linkTarget) || !IsPathWithinDirectory(linkTarget, target) ||
+                            File.Exists(linkTarget) || Directory.Exists(linkTarget)) continue;
                         try
                         {
-                            if (PathsEqual(GetShortcutTarget(link), expected)) File.Delete(link);
+                            FileAttributes attributes = File.GetAttributes(link);
+                            if ((attributes & FileAttributes.ReadOnly) != 0) File.SetAttributes(link, attributes & ~FileAttributes.ReadOnly);
+                            File.Delete(link);
+                            removed++;
+                            SetupDiagnostics.Info("Removed the shortcut '" + link + "' to '" + linkTarget + "'.");
                         }
                         catch (Exception ex)
                         {
-                            SetupDiagnostics.Error("Could not inspect or remove MO2 shortcut '" + link + "'.", ex);
+                            SetupDiagnostics.Error("Could not remove the shortcut '" + link + "'.", ex);
                             notes.Add(InstallerText.T("acceso directo ") + Path.GetFileName(link) + " (" + ex.Message + ")");
                         }
                     }
@@ -1329,7 +1543,638 @@ namespace Mo2RevampedSetup
                     }
                 }
             }
+            // the setup's Start menu folder, once it holds nothing
+            foreach (Environment.SpecialFolder menu in new Environment.SpecialFolder[] { Environment.SpecialFolder.StartMenu, Environment.SpecialFolder.CommonStartMenu })
+            {
+                try
+                {
+                    string root = Environment.GetFolderPath(menu);
+                    if (String.IsNullOrEmpty(root)) continue;
+                    string folder = Path.Combine(root, "Programs", "MO2 Revamped");
+                    if (Directory.Exists(folder) && (File.GetAttributes(folder) & FileAttributes.ReparsePoint) == 0 &&
+                        Directory.GetFileSystemEntries(folder).Length == 0)
+                        Directory.Delete(folder, false);
+                }
+                catch (Exception ex) { SetupDiagnostics.Error("Could not remove the empty MO2 Revamped Start menu folder.", ex); }
+            }
+            if (removed > 0) SetupDiagnostics.Info("Removed " + removed + " shortcut(s) to programs of '" + target + "'.");
             return notes;
+        }
+
+        internal static bool IsElevatedProcess()
+        {
+            try { return new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator); }
+            catch { return false; }
+        }
+
+        private const string NxmClassKey = "Software\\Classes\\nxm";
+
+        // the program HKCU\Software\Classes\nxm sends Nexus links to, or ""
+        internal static string RegisteredNxmHandler()
+        {
+            try
+            {
+                using (RegistryKey command = Registry.CurrentUser.OpenSubKey(NxmClassKey + "\\shell\\open\\command", false))
+                    return command == null ? "" : CommandExecutable(Convert.ToString(command.GetValue("")));
+            }
+            catch { return ""; }
+        }
+
+        // the same keys nxmhandler.exe writes (HandlerStorage::registerProxy)
+        private static void RegisterNxmHandler(string target)
+        {
+            string handler = Path.Combine(Path.GetFullPath(target), "nxmhandler.exe");
+            if (!File.Exists(handler))
+                throw new FileNotFoundException(InstallerText.T("Falta nxmhandler.exe en la instalación."), handler);
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(NxmClassKey))
+            {
+                if (key == null) throw new InvalidOperationException(InstallerText.T("Windows no dejó escribir la asociación de enlaces nxm://."));
+                key.SetValue("", "URL:NXM Protocol", RegistryValueKind.String);
+                key.SetValue("URL Protocol", "", RegistryValueKind.String);
+                using (RegistryKey command = key.CreateSubKey("shell\\open\\command"))
+                {
+                    if (command == null) throw new InvalidOperationException(InstallerText.T("Windows no dejó escribir la asociación de enlaces nxm://."));
+                    command.SetValue("", "\"" + handler + "\" \"%1\"", RegistryValueKind.String);
+                }
+            }
+            SetupDiagnostics.Info("nxm:// links now open with '" + handler + "'.");
+        }
+
+        // the association and the handler list's entries that point into this
+        // folder at a program that is gone; one that points elsewhere (another
+        // MO2, Vortex) stays as it is
+        private static List<string> RemoveDeadNxmRegistration(string target)
+        {
+            List<string> notes = new List<string>();
+            string handler = RegisteredNxmHandler();
+            if (!String.IsNullOrEmpty(handler) && IsPathWithinDirectory(handler, target) && !File.Exists(handler))
+            {
+                try
+                {
+                    Registry.CurrentUser.DeleteSubKeyTree(NxmClassKey, false);
+                    SetupDiagnostics.Info("Removed the nxm:// association to '" + handler + "'.");
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not remove the nxm:// association to '" + handler + "'.", ex);
+                    notes.Add(InstallerText.T("asociación nxm:// (") + ex.Message + ")");
+                }
+            }
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!String.IsNullOrEmpty(localAppData))
+            {
+                string list = Path.Combine(localAppData, "ModOrganizer", "nxmhandler.ini");
+                try { RemoveDeadNxmHandlerEntries(list, target); }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not update the link handler list '" + list + "'.", ex);
+                    notes.Add("nxmhandler.ini (" + ex.Message + ")");
+                }
+            }
+            return notes;
+        }
+
+        // nxmhandler.ini, as Qt's QSettings writes it: [handlers], size=N and
+        // N\games, N\executable, N\arguments. The entries that stay keep their
+        // text; only their numbers and the size change.
+        private static void RemoveDeadNxmHandlerEntries(string iniPath, string target)
+        {
+            if (!File.Exists(iniPath)) return;
+            string text = File.ReadAllText(iniPath, Encoding.UTF8);
+            string newline = text.Contains("\r\n") ? "\r\n" : "\n";
+            string[] lines = text.Replace("\r\n", "\n").Split('\n');
+            int start = -1, end = lines.Length;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string trimmed = lines[i].Trim();
+                if (!trimmed.StartsWith("[", StringComparison.Ordinal) || !trimmed.EndsWith("]", StringComparison.Ordinal)) continue;
+                if (start >= 0) { end = i; break; }
+                if (String.Equals(trimmed, "[handlers]", StringComparison.OrdinalIgnoreCase)) start = i;
+            }
+            if (start < 0) return;
+            SortedDictionary<int, List<KeyValuePair<string, string>>> entries = new SortedDictionary<int, List<KeyValuePair<string, string>>>();
+            List<string> other = new List<string>();
+            for (int i = start + 1; i < end; i++)
+            {
+                string line = lines[i];
+                int equals = line.IndexOf('=');
+                int slash = line.IndexOf('\\');
+                int index;
+                if (equals > 0 && slash > 0 && slash < equals && Int32.TryParse(line.Substring(0, slash).Trim(), out index))
+                {
+                    List<KeyValuePair<string, string>> fields;
+                    if (!entries.TryGetValue(index, out fields)) { fields = new List<KeyValuePair<string, string>>(); entries.Add(index, fields); }
+                    fields.Add(new KeyValuePair<string, string>(line.Substring(slash + 1, equals - slash - 1), line.Substring(equals + 1)));
+                    continue;
+                }
+                if (equals > 0 && String.Equals(line.Substring(0, equals).Trim(), "size", StringComparison.OrdinalIgnoreCase)) continue;
+                other.Add(line);
+            }
+            List<List<KeyValuePair<string, string>>> kept = new List<List<KeyValuePair<string, string>>>();
+            int dropped = 0;
+            foreach (KeyValuePair<int, List<KeyValuePair<string, string>>> entry in entries)
+            {
+                string executable = null;
+                foreach (KeyValuePair<string, string> field in entry.Value)
+                    if (String.Equals(field.Key.Trim(), "executable", StringComparison.OrdinalIgnoreCase)) executable = DecodeQtIniValue(field.Value);
+                if (!String.IsNullOrEmpty(executable) && IsPathWithinDirectory(executable, target) && !File.Exists(executable))
+                {
+                    dropped++;
+                    continue;
+                }
+                kept.Add(entry.Value);
+            }
+            if (dropped == 0) return;
+            List<string> output = new List<string>();
+            for (int i = 0; i <= start; i++) output.Add(lines[i]);
+            output.Add("size=" + kept.Count);
+            for (int i = 0; i < kept.Count; i++)
+                foreach (KeyValuePair<string, string> field in kept[i])
+                    output.Add((i + 1) + "\\" + field.Key + "=" + field.Value);
+            // blank lines and anything unknown keep their place at the end
+            output.AddRange(other);
+            for (int i = end; i < lines.Length; i++) output.Add(lines[i]);
+            string temporary = iniPath + ".mo2setup.tmp";
+            File.WriteAllText(temporary, String.Join(newline, output.ToArray()), new UTF8Encoding(false));
+            ReplaceFile(temporary, iniPath);
+            SetupDiagnostics.Info("Removed " + dropped + " entr" + (dropped == 1 ? "y" : "ies") + " for '" + target + "' from '" + iniPath + "'.");
+        }
+
+        // a value as QSettings writes it in an INI file: maybe quoted, with
+        // \\, \" and \xHHHH escapes
+        private static string DecodeQtIniValue(string raw)
+        {
+            string value = (raw ?? "").Trim();
+            if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"') value = value.Substring(1, value.Length - 2);
+            StringBuilder result = new StringBuilder(value.Length);
+            for (int i = 0; i < value.Length; i++)
+            {
+                char character = value[i];
+                if (character != '\\' || i + 1 >= value.Length) { result.Append(character); continue; }
+                char next = value[++i];
+                if (next == 'x')
+                {
+                    int code = 0, digits = 0;
+                    while (digits < 4 && i + 1 < value.Length && Uri.IsHexDigit(value[i + 1]))
+                    {
+                        code = code * 16 + Convert.ToInt32(value[++i].ToString(), 16);
+                        digits++;
+                    }
+                    result.Append((char)code);
+                }
+                else if (next == 't') result.Append('\t');
+                else if (next == 'n') result.Append('\n');
+                else if (next == 'r') result.Append('\r');
+                else result.Append(next);
+            }
+            return result.ToString();
+        }
+
+        // the executable a command line starts ("C:\x\y.exe" "%1" or C:\x\y.exe %1)
+        private static string CommandExecutable(string command)
+        {
+            if (String.IsNullOrWhiteSpace(command)) return "";
+            string trimmed = command.Trim();
+            if (trimmed.StartsWith("\"", StringComparison.Ordinal))
+            {
+                int endQuote = trimmed.IndexOf('"', 1);
+                return endQuote <= 1 ? "" : trimmed.Substring(1, endQuote - 1);
+            }
+            int firstSpace = trimmed.IndexOf(' ');
+            return firstSpace < 0 ? trimmed : trimmed.Substring(0, firstSpace);
+        }
+
+        // instance folders MO2 keeps inside its own folder: those of a
+        // portable copy, and the portable and isolated instances MO2 Revamped
+        // creates beside a standard installation
+        private static readonly string[] InstanceDataDirectories = new string[]
+        {
+            "profiles", "mods", "downloads", "overwrite", "cache",
+            "PortableInstances", "IsolatedInstances", "GlobalInstances",
+            "Elden Ring Shared Saves", "Elden Ring Shared Saves Backups", "Elden Ring Global Save Backups",
+            "Nightreign Shared Saves", "Nightreign Shared Saves Backups", "Nightreign Global Save Backups"
+        };
+
+        // the folders of InstanceDataDirectories in this folder that hold anything
+        internal static List<string> InstanceFoldersInside(string target)
+        {
+            List<string> found = new List<string>();
+            if (String.IsNullOrWhiteSpace(target)) return found;
+            foreach (string name in InstanceDataDirectories)
+            {
+                try
+                {
+                    string path = Path.Combine(target, name);
+                    if (Directory.Exists(path) && HasEntries(path)) found.Add(name);
+                }
+                catch { }
+            }
+            return found;
+        }
+
+        // what an instance keeps inside this folder: its base folder, mods,
+        // downloads, profiles, overwrite and cache as every ModOrganizer.ini
+        // places them (the folder's own, its portable, isolated and global
+        // instances, and the standard instances in AppData), and the instance
+        // folders themselves. An uninstall never removes these unless the user
+        // asked for that data to go (insideInstances: the instances inside the
+        // folder; globalInstances: those in AppData).
+        internal static List<string> ProtectedInstancePaths(string target, bool insideInstances, bool globalInstances)
+        {
+            List<string> found = new List<string>();
+            string root;
+            try { root = Path.GetFullPath(target).TrimEnd(Path.DirectorySeparatorChar); }
+            catch { return found; }
+            List<string> instances = new List<string>();
+            if (insideInstances)
+            {
+                instances.Add(root);
+                foreach (string parent in new string[] { "PortableInstances", "IsolatedInstances", "GlobalInstances" })
+                {
+                    try
+                    {
+                        string folder = Path.Combine(root, parent);
+                        if (!Directory.Exists(folder) || (File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0) continue;
+                        foreach (string instance in Directory.GetDirectories(folder))
+                        {
+                            instances.Add(instance);
+                            found.Add(instance);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            if (globalInstances)
+            {
+                try
+                {
+                    string global = Path.Combine(RevampedAppDataDirectory(), "Instances");
+                    if (Directory.Exists(global)) instances.AddRange(Directory.GetDirectories(global));
+                }
+                catch { }
+            }
+            foreach (string instance in instances)
+            {
+                if (!File.Exists(Path.Combine(instance, "ModOrganizer.ini"))) continue;
+                List<string> paths = new List<string>();
+                try { paths.Add(ResolveBaseDirectory(instance)); }
+                catch { }
+                foreach (string[] setting in new string[][] {
+                    new string[] { "mod_directory", "mods" }, new string[] { "download_directory", "downloads" },
+                    new string[] { "profiles_directory", "profiles" }, new string[] { "overwrite_directory", "overwrite" } })
+                {
+                    try { paths.Add(ResolveConfiguredDirectory(instance, setting[0], setting[1])); }
+                    catch { }
+                }
+                // the web cache only when it was moved on purpose: in its
+                // default place it is a leftover the uninstall clears
+                try
+                {
+                    if (!String.IsNullOrEmpty(ReadIniSetting(Path.Combine(instance, "ModOrganizer.ini"), "cache_directory")))
+                        paths.Add(ResolveConfiguredDirectory(instance, "cache_directory", "webcache"));
+                }
+                catch { }
+                foreach (string path in paths)
+                {
+                    if (String.IsNullOrEmpty(path)) continue;
+                    // the folder itself as a portable instance's base is not a
+                    // reason to keep all of it: its data folders are listed one by one
+                    if (PathsEqual(path, root)) continue;
+                    if (IsPathWithinDirectory(path, root) && !found.Exists(known => PathsEqual(known, path))) found.Add(path);
+                }
+            }
+            return found;
+        }
+
+        // true when the entry is a protected folder, holds one, or lies inside one
+        private static bool TouchesProtected(string entry, List<string> protectedPaths)
+        {
+            if (protectedPaths == null) return false;
+            foreach (string path in protectedPaths)
+                if (PathsEqual(entry, path) || IsPathWithinDirectory(path, entry) || IsPathWithinDirectory(entry, path)) return true;
+            return false;
+        }
+
+        // every file below a folder, never through a junction or link
+        private static List<string> FilesBelowWithoutLinks(string directory)
+        {
+            List<string> files = new List<string>();
+            Stack<string> pending = new Stack<string>();
+            pending.Push(directory);
+            while (pending.Count > 0)
+            {
+                DirectoryInfo current = new DirectoryInfo(pending.Pop());
+                try
+                {
+                    if ((current.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                    foreach (FileInfo file in current.GetFiles())
+                        if ((file.Attributes & FileAttributes.ReparsePoint) == 0) files.Add(file.FullName);
+                    foreach (DirectoryInfo child in current.GetDirectories())
+                        if ((child.Attributes & FileAttributes.ReparsePoint) == 0) pending.Push(child.FullName);
+                }
+                catch { }
+            }
+            return files;
+        }
+
+        // the data MO2 keeps beside a portable or isolated copy, by name
+        private static readonly string[] InstanceDataFiles = new string[]
+        {
+            "ModOrganizer.ini", "categories.dat", "nexuscatmap.dat", "MO2-Revamped-Global.ini", "EldenRingOnly.ini",
+            "eldenring_mo2_launch_methods.json", "portable.txt", "eldenring-only.portable"
+        };
+
+        // "Remove everything" in a folder that wasn't empty before MO2 (or
+        // without a record that says so): MO2's own data folders and files by
+        // name, nothing else
+        private static List<string> RemoveInstanceData(string target, List<string> protectedPaths)
+        {
+            List<string> notes = new List<string>();
+            string root = Path.GetFullPath(target);
+            string runningExecutable = RunningUninstaller();
+            foreach (string name in InstanceDataDirectories)
+            {
+                string directory = Path.Combine(root, name);
+                try
+                {
+                    if (!Directory.Exists(directory) || TouchesProtected(directory, protectedPaths)) continue;
+                    if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) { Directory.Delete(directory, false); continue; }
+                    DeleteDirectoryContents(directory, runningExecutable, notes, protectedPaths);
+                    if (Directory.Exists(directory) && Directory.GetFileSystemEntries(directory).Length == 0) Directory.Delete(directory, false);
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not remove the data folder '" + directory + "'.", ex);
+                    notes.Add(name + " (" + ex.Message + ")");
+                }
+            }
+            foreach (string name in InstanceDataFiles)
+            {
+                string file = Path.Combine(root, name);
+                try
+                {
+                    if (!File.Exists(file)) continue;
+                    FileAttributes attributes = File.GetAttributes(file);
+                    if ((attributes & FileAttributes.ReadOnly) != 0) File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not remove the data file '" + file + "'.", ex);
+                    notes.Add(name + " (" + ex.Message + ")");
+                }
+            }
+            return notes;
+        }
+
+        // the portable and isolated instances MO2 Revamped created inside a
+        // standard installation, once the user chose to remove the instances
+        private static List<string> RemoveInstanceRootsInside(string target)
+        {
+            List<string> notes = new List<string>();
+            string runningExecutable = RunningUninstaller();
+            foreach (string name in new string[] { "PortableInstances", "IsolatedInstances", "GlobalInstances" })
+            {
+                string directory = Path.Combine(Path.GetFullPath(target), name);
+                try
+                {
+                    if (!Directory.Exists(directory)) continue;
+                    if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) { Directory.Delete(directory, false); continue; }
+                    DeleteDirectoryContents(directory, runningExecutable, notes);
+                    if (Directory.Exists(directory) && Directory.GetFileSystemEntries(directory).Length == 0) Directory.Delete(directory, false);
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not remove the instance folder '" + directory + "'.", ex);
+                    notes.Add(name + " (" + ex.Message + ")");
+                }
+            }
+            return notes;
+        }
+
+        // what an uninstall leaves in the folder: everything that is not
+        // MO2's, kept and named, and whether the folder itself went
+        private static string KeptEntriesDetails(string target, bool deferredCleanup)
+        {
+            try
+            {
+                if (!Directory.Exists(target))
+                    return Environment.NewLine + InstallerText.T("La carpeta de instalación se quitó.");
+                string runningExecutable = RunningUninstaller();
+                List<string> left = new List<string>();
+                foreach (string entry in Directory.GetFileSystemEntries(target))
+                    if (!PathsEqual(entry, runningExecutable)) left.Add(Path.GetFileName(entry));
+                if (left.Count == 0)
+                    return deferredCleanup ? "" : Environment.NewLine + InstallerText.T("La carpeta de instalación se quitó.");
+                List<string> shown = left.Take(12).ToList();
+                if (left.Count > shown.Count) shown.Add("…");
+                return Environment.NewLine + InstallerText.T("La carpeta se conservó porque contiene cosas que no son de MO2 o datos que decidiste mantener: ") +
+                    String.Join(", ", shown.ToArray());
+            }
+            catch { return ""; }
+        }
+
+        // the top-level entries of an installation that are neither MO2's
+        // program, its record's files, what it writes while it runs nor its
+        // data: an uninstall always keeps them
+        internal static List<string> UnknownEntries(string target)
+        {
+            List<string> unknown = new List<string>();
+            try
+            {
+                string root = Path.GetFullPath(target);
+                if (!Directory.Exists(root)) return unknown;
+                HashSet<string> known = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string name in Mo2ProgramDirectories) known.Add(name);
+                foreach (string name in RuntimeLeftoverDirectories) known.Add(name);
+                foreach (string name in InstanceDataDirectories) known.Add(name);
+                foreach (string name in InstanceDataFiles) known.Add(name);
+                foreach (string name in new string[] { "nxmhandler.ini", "nxmhandler.log", "MO2-Revamped.ini", "setup-language.txt" }) known.Add(name);
+                InstallState state = LoadState(root);
+                if (state != null && state.Files != null)
+                    foreach (InstallFileState file in state.Files)
+                        if (!String.IsNullOrEmpty(file.Path)) known.Add(file.Path.Replace('/', '\\').Split('\\')[0]);
+                HashSet<string> payload = KnownPayloadPaths();
+                if (payload != null)
+                    foreach (string path in payload) known.Add(path.Split('/')[0]);
+                foreach (string entry in Directory.GetFileSystemEntries(root))
+                {
+                    string name = Path.GetFileName(entry);
+                    string extension = Path.GetExtension(name);
+                    if (known.Contains(name) || IsKnownMo2ProgramFile(name) ||
+                        String.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
+                        String.Equals(extension, ".dmp", StringComparison.OrdinalIgnoreCase)) continue;
+                    unknown.Add(name);
+                }
+            }
+            catch { }
+            return unknown;
+        }
+
+        // what MO2 writes beside itself while it runs and isn't data: logs,
+        // caches, crash dumps, the link handler's settings and Python's
+        private static readonly string[] RuntimeLeftoverDirectories = new string[]
+        {
+            "logs", "webcache", "crashDumps", "crashes", "diagnostics"
+        };
+        private static readonly string[] RuntimeLeftoverFiles = new string[]
+        {
+            "nxmhandler.ini", "nxmhandler.log", "plugins\\plugin_python\\data\\settings.json"
+        };
+
+        private static List<string> RemoveRuntimeLeftovers(string target, List<string> protectedPaths)
+        {
+            List<string> notes = new List<string>();
+            string root = Path.GetFullPath(target);
+            string runningExecutable = RunningUninstaller();
+            foreach (string name in RuntimeLeftoverDirectories)
+            {
+                try
+                {
+                    string directory = Path.Combine(root, name);
+                    if (!Directory.Exists(directory) || TouchesProtected(directory, protectedPaths)) continue;
+                    if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) { Directory.Delete(directory, false); continue; }
+                    DeleteDirectoryContents(directory, runningExecutable, notes, protectedPaths);
+                    if (Directory.Exists(directory) && Directory.GetFileSystemEntries(directory).Length == 0) Directory.Delete(directory, false);
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not remove the leftover folder '" + name + "'.", ex);
+                    notes.Add(name + " (" + ex.Message + ")");
+                }
+            }
+            List<string> files = new List<string>(RuntimeLeftoverFiles);
+            // the crash dumps and logs MO2 leaves at the top
+            try
+            {
+                foreach (string file in Directory.GetFiles(root))
+                {
+                    string extension = Path.GetExtension(file);
+                    if (String.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
+                        String.Equals(extension, ".dmp", StringComparison.OrdinalIgnoreCase))
+                        files.Add(Path.GetFileName(file));
+                }
+            }
+            catch { }
+            foreach (string relative in files)
+            {
+                try
+                {
+                    string path = SafeCombine(root, relative);
+                    if (!File.Exists(path) || TouchesProtected(path, protectedPaths)) continue;
+                    FileAttributes attributes = File.GetAttributes(path);
+                    if ((attributes & FileAttributes.ReadOnly) != 0) File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+                    File.Delete(path);
+                    RemoveEmptyParents(Path.GetDirectoryName(path), root);
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not remove the leftover file '" + relative + "'.", ex);
+                    notes.Add(relative + " (" + ex.Message + ")");
+                }
+            }
+            return notes;
+        }
+
+        // the installation folder once it is empty, and the empty folders
+        // above it up to the one the first installation created (stopAt;
+        // none without a record that says so). An antivirus scan or an
+        // Explorer window can hold it a moment, so it is tried for a few seconds.
+        private static void RemoveEmptyInstallFolder(string target, string stopAt)
+        {
+            for (int attempt = 0; attempt < 12; attempt++)
+            {
+                RemoveEmptyInstallDirectoryAndParent(target, stopAt);
+                try
+                {
+                    if (!Directory.Exists(target) || Directory.GetFileSystemEntries(target).Length != 0) return;
+                }
+                catch { return; }
+                System.Threading.Thread.Sleep(250);
+            }
+            SetupDiagnostics.Info("The empty installation folder '" + target + "' could not be removed; another program still holds it.");
+        }
+
+        // a silent uninstall run from a copy: the unins000.exe inside the
+        // installation that started it, still running until the copy ends
+        private static string heldUninstaller;
+        private static int heldUninstallerProcessId;
+
+        internal static void HoldUninstaller(string path, int processId)
+        {
+            heldUninstaller = path;
+            heldUninstallerProcessId = processId;
+        }
+
+        // the uninstaller whose file can't be deleted yet: this process, or
+        // the one that started it
+        private static string RunningUninstaller()
+        {
+            return Path.GetFullPath(String.IsNullOrEmpty(heldUninstaller) ? Application.ExecutablePath : heldUninstaller);
+        }
+
+        private static int RunningUninstallerProcessId()
+        {
+            return String.IsNullOrEmpty(heldUninstaller) ? Process.GetCurrentProcess().Id : heldUninstallerProcessId;
+        }
+
+        // folders the instances' ModOrganizer.ini files place outside the
+        // folders an uninstall removes: never touched, so the window can say so
+        internal static List<string> ExternalDataFolders(string target, bool includeGlobalData)
+        {
+            List<string> roots = new List<string>();
+            List<string> instances = new List<string>();
+            try
+            {
+                if (!String.IsNullOrWhiteSpace(target) && Directory.Exists(target))
+                {
+                    string root = Path.GetFullPath(target);
+                    roots.Add(root);
+                    instances.Add(root);
+                    foreach (string parent in new string[] { "PortableInstances", "IsolatedInstances", "GlobalInstances" })
+                    {
+                        string folder = Path.Combine(root, parent);
+                        if (Directory.Exists(folder)) instances.AddRange(Directory.GetDirectories(folder));
+                    }
+                }
+                if (includeGlobalData)
+                {
+                    string data = RevampedAppDataDirectory();
+                    roots.Add(data);
+                    string global = Path.Combine(data, "Instances");
+                    if (Directory.Exists(global)) instances.AddRange(Directory.GetDirectories(global));
+                }
+            }
+            catch { }
+            List<string> outside = new List<string>();
+            foreach (string instance in instances)
+            {
+                if (!File.Exists(Path.Combine(instance, "ModOrganizer.ini"))) continue;
+                foreach (string[] setting in new string[][] {
+                    new string[] { "mod_directory", "mods" }, new string[] { "download_directory", "downloads" },
+                    new string[] { "profiles_directory", "profiles" }, new string[] { "overwrite_directory", "overwrite" } })
+                {
+                    try
+                    {
+                        string path = ResolveConfiguredDirectory(instance, setting[0], setting[1]);
+                        if (String.IsNullOrEmpty(path) || !Directory.Exists(path)) continue;
+                        bool inside = roots.Exists(root => PathsEqual(path, root) || IsPathWithinDirectory(path, root));
+                        if (!inside && !outside.Exists(known => PathsEqual(known, path))) outside.Add(path);
+                    }
+                    catch { }
+                }
+            }
+            return outside;
+        }
+
+        // the user signed in to this session when the setup runs as another
+        // account (an administrator's credentials at the elevation prompt)
+        internal static string OtherAccountWarning()
+        {
+            string sessionUser = SessionUserName();
+            if (String.IsNullOrEmpty(sessionUser) || !RunsAsAnotherAccount()) return null;
+            return String.Format(InstallerText.T("El instalador se ejecuta con la cuenta {0}, no con la tuya ({1}): los accesos directos, la asociación de enlaces nxm:// y el registro del instalador van a esa cuenta. Para tenerlos en la tuya, inicia sesión con una cuenta de administrador y ejecuta el instalador desde ella."),
+                Environment.UserName, sessionUser);
         }
 
         private static List<string> RestoreFiles(InstallState state, bool report, bool preserveUserData,
@@ -1338,7 +2183,7 @@ namespace Mo2RevampedSetup
             List<string> notes = new List<string>();
             deferredCleanup = false;
             string target = Path.GetFullPath(state.TargetDirectory);
-            string runningExecutable = Path.GetFullPath(Application.ExecutablePath);
+            string runningExecutable = RunningUninstaller();
             bool runningUninstallerInTarget = uninstallMode && IsPathWithinDirectory(runningExecutable, target);
             if (runningUninstallerInTarget && File.Exists(runningExecutable))
             {
@@ -1359,7 +2204,7 @@ namespace Mo2RevampedSetup
                         catch { }
                     }
                 }
-                if (ScheduleRunningUninstaller(runningExecutable, restoreRunningUninstaller, target))
+                if (ScheduleRunningUninstaller(runningExecutable, restoreRunningUninstaller, target, state.CreatedDirectory))
                     deferredCleanup = true;
                 else
                     notes.Add(UninstallerFileName + InstallerText.T(" (Windows no pudo programar su retirada)"));
@@ -1436,9 +2281,9 @@ namespace Mo2RevampedSetup
                             notes.Add(file.Path + InstallerText.T(" (la copia no coincide con el original)"));
                             continue;
                         }
-                        if (PathsEqual(Application.ExecutablePath, destination))
+                        if (PathsEqual(RunningUninstaller(), destination))
                         {
-                            if (ScheduleRunningUninstaller(destination, backup, null))
+                            if (ScheduleRunningUninstaller(destination, backup, null, null))
                             {
                                 deferredCleanup = true;
                                 continue;
@@ -1450,9 +2295,9 @@ namespace Mo2RevampedSetup
                     }
                     else
                     {
-                        if (PathsEqual(Application.ExecutablePath, destination))
+                        if (PathsEqual(RunningUninstaller(), destination))
                         {
-                            if (ScheduleRunningUninstaller(destination, null, target))
+                            if (ScheduleRunningUninstaller(destination, null, target, state.CreatedDirectory))
                             {
                                 deferredCleanup = true;
                                 continue;
@@ -1500,6 +2345,18 @@ namespace Mo2RevampedSetup
             }
         }
 
+        // a folder an uninstall left with its data, which a new installation
+        // goes back into (the same test the installation itself makes)
+        internal static bool HasKeptData(string target)
+        {
+            try
+            {
+                return !String.IsNullOrWhiteSpace(target) && Directory.Exists(target) &&
+                    !File.Exists(Path.Combine(target, "ModOrganizer.exe")) && HasPortableUserData(target);
+            }
+            catch { return false; }
+        }
+
         private static bool HasPortableUserData(string target)
         {
             string[] files = new string[] { "ModOrganizer.ini", "categories.dat", "nexuscatmap.dat" };
@@ -1507,10 +2364,10 @@ namespace Mo2RevampedSetup
                 if (File.Exists(Path.Combine(target, name))) return true;
             // the Elden Ring / Nightreign plugins keep shared saves and save
             // backups here: they can be a save's only copy
-            string[] directories = new string[] { "profiles", "mods", "downloads", "overwrite", "cache",
-                "Elden Ring Shared Saves", "Elden Ring Global Save Backups",
-                "Nightreign Shared Saves", "Nightreign Global Save Backups" };
-            foreach (string name in directories)
+            // with the instance folders a standard installation's uninstall
+            // keeps (see InstanceDataDirectories): the same folder can be
+            // installed to again
+            foreach (string name in InstanceDataDirectories)
             {
                 string path = Path.Combine(target, name);
                 if (Directory.Exists(path) && Directory.GetFileSystemEntries(path).Length > 0) return true;
@@ -1533,7 +2390,7 @@ namespace Mo2RevampedSetup
         [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool MoveFileEx(string existingName, string newName, int flags);
 
-        private static bool ScheduleRunningUninstaller(string destination, string backup, string emptyDirectory)
+        private static bool ScheduleRunningUninstaller(string destination, string backup, string emptyDirectory, string stopAt)
         {
             const int MoveFileReplaceExisting = 0x1;
             const int MoveFileDelayUntilReboot = 0x4;
@@ -1548,7 +2405,7 @@ namespace Mo2RevampedSetup
                 // the helper deletes the file once this process exits and queues
                 // the reboot deletion only if that fails: queued here, it would
                 // also delete the uninstaller of a reinstall made before rebooting
-                if (StartPostExitCleanup(destination, restoreCopy, emptyDirectory))
+                if (StartPostExitCleanup(destination, restoreCopy, emptyDirectory, stopAt))
                     return true;
             }
             catch
@@ -1556,7 +2413,7 @@ namespace Mo2RevampedSetup
             }
             if (restoreCopy != null) InstallerBackend.RemoveWorkFolder(Path.GetDirectoryName(restoreCopy));
             if (String.IsNullOrEmpty(backup))
-                return ScheduleDeleteOnReboot(destination, emptyDirectory, MoveFileDelayUntilReboot);
+                return ScheduleDeleteOnReboot(destination, emptyDirectory, stopAt, MoveFileDelayUntilReboot);
             string pending = destination + ".restore-pending";
             try
             {
@@ -1569,33 +2426,40 @@ namespace Mo2RevampedSetup
             return false;
         }
 
-        private static bool ScheduleDeleteOnReboot(string executable, string emptyDirectory, int delayUntilReboot)
+        private static bool ScheduleDeleteOnReboot(string executable, string emptyDirectory, string stopAt, int delayUntilReboot)
         {
             bool executableScheduled = MoveFileEx(executable, null, delayUntilReboot);
             if (String.IsNullOrEmpty(emptyDirectory)) return executableScheduled;
 
             bool directoriesScheduled = true;
-            foreach (string directory in GetSafeDirectoryCleanupCandidates(emptyDirectory))
+            // queued after what they hold, so they are empty when Windows
+            // gets to them at the next start
+            string queued = executable;
+            foreach (string directory in GetSafeDirectoryCleanupCandidates(emptyDirectory, stopAt))
             {
                 try
                 {
                     // Never queue non-empty parents: they may contain unrelated user files.
-                    if (!Directory.Exists(directory) || Directory.GetFileSystemEntries(directory).Length != 0) break;
+                    if (!Directory.Exists(directory)) break;
+                    string pendingEntry = queued;
+                    if (Directory.GetFileSystemEntries(directory).Any(entry => !PathsEqual(entry, pendingEntry))) break;
                     directoriesScheduled = MoveFileEx(directory, null, delayUntilReboot) && directoriesScheduled;
+                    queued = directory;
                 }
                 catch { break; }
             }
             return executableScheduled && directoriesScheduled;
         }
 
-        private static bool StartPostExitCleanup(string executable, string restoreCopy, string emptyDirectory)
+        private static bool StartPostExitCleanup(string executable, string restoreCopy, string emptyDirectory, string stopAt)
         {
             string powershell = Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe");
             if (!File.Exists(powershell)) return false;
 #if INSTALLER_TEST
             string script = String.Empty;
 #else
-            int ownerProcessId = Process.GetCurrentProcess().Id;
+            // the uninstaller whose file it deletes: this one, or the unins000.exe waiting for its copy
+            int ownerProcessId = RunningUninstallerProcessId();
             string script = "$ownerPid = " + ownerProcessId.ToString() + "; try { $owner = [System.Diagnostics.Process]::GetProcessById($ownerPid); $owner.WaitForExit(); $owner.Dispose() } catch {}; ";
 #endif
             script += "$exe = '" + EscapePowerShellLiteral(executable) + "'; ";
@@ -1603,19 +2467,25 @@ namespace Mo2RevampedSetup
                 script += "$src = '" + EscapePowerShellLiteral(restoreCopy) + "'; $copied = $false; for ($attempt = 0; $attempt -lt 30 -and -not $copied; $attempt++) { try { [System.IO.File]::Copy($src, $exe, $true); $copied = $true } catch { Start-Sleep -Milliseconds 500 } }; if (-not $copied) { exit 2 }; try { [System.IO.File]::Delete($src) } catch {}; " +
                     "$work = [System.IO.Path]::GetDirectoryName($src); try { [System.IO.Directory]::Delete($work, $false); [System.IO.Directory]::Delete([System.IO.Path]::GetDirectoryName($work), $false) } catch {}; ";
             else
-                script += "for ($attempt = 0; $attempt -lt 30 -and [System.IO.File]::Exists($exe); $attempt++) { try { [System.IO.File]::SetAttributes($exe, [System.IO.FileAttributes]::Normal); [System.IO.File]::Delete($exe) } catch {}; if ([System.IO.File]::Exists($exe)) { Start-Sleep -Milliseconds 500 } }; " +
-                    "if ([System.IO.File]::Exists($exe)) { try { Add-Type -Namespace Mo2Revamped -Name Reboot -MemberDefinition '[System.Runtime.InteropServices.DllImport(\"kernel32.dll\", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] public static extern bool MoveFileEx(string existingName, string newName, int flags);'; [void][Mo2Revamped.Reboot]::MoveFileEx($exe, [NullString]::Value, 4) } catch {}; exit 2 }; ";
+                // the reboot queue only gets the file once deleting it failed,
+                // and the folder after it (it must be empty by then)
+                script += "$reboot = $false; for ($attempt = 0; $attempt -lt 30 -and [System.IO.File]::Exists($exe); $attempt++) { try { [System.IO.File]::SetAttributes($exe, [System.IO.FileAttributes]::Normal); [System.IO.File]::Delete($exe) } catch {}; if ([System.IO.File]::Exists($exe)) { Start-Sleep -Milliseconds 500 } }; " +
+                    "if ([System.IO.File]::Exists($exe)) { try { Add-Type -Namespace Mo2Revamped -Name Reboot -MemberDefinition '[System.Runtime.InteropServices.DllImport(\"kernel32.dll\", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] public static extern bool MoveFileEx(string existingName, string newName, int flags);'; [void][Mo2Revamped.Reboot]::MoveFileEx($exe, [NullString]::Value, 4); $reboot = $true } catch { exit 2 } }; ";
             if (!String.IsNullOrEmpty(emptyDirectory))
             {
-                foreach (string directory in GetSafeDirectoryCleanupCandidates(emptyDirectory))
+                foreach (string directory in GetSafeDirectoryCleanupCandidates(emptyDirectory, stopAt))
                 {
                     string escapedDirectory = EscapePowerShellLiteral(directory);
+                    // a folder that still holds anything but the queued file
+                    // stops here: its parents hold it
                     script += "$dir = '" + escapedDirectory + "'; try { " +
                         "if (-not [System.IO.Directory]::Exists($dir)) { exit 0 }; " +
                         "$attributes = [System.IO.File]::GetAttributes($dir); " +
                         "if (($attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { exit 0 }; " +
-                        "if ([System.IO.Directory]::GetFileSystemEntries($dir).Length -ne 0) { exit 0 }; " +
-                        "[System.IO.Directory]::Delete($dir, $false) } catch { exit 0 }; ";
+                        "if ($reboot) { $left = @([System.IO.Directory]::GetFileSystemEntries($dir) | Where-Object { $_ -ne $exe }); if ($left.Count -ne 0) { exit 0 }; [void][Mo2Revamped.Reboot]::MoveFileEx($dir, [NullString]::Value, 4); $exe = $dir } " +
+                        "else { if ([System.IO.Directory]::GetFileSystemEntries($dir).Length -ne 0) { exit 0 }; " +
+                        "for ($attempt = 0; $attempt -lt 20 -and [System.IO.Directory]::Exists($dir); $attempt++) { try { [System.IO.Directory]::Delete($dir, $false) } catch { Start-Sleep -Milliseconds 500 } }; " +
+                        "if ([System.IO.Directory]::Exists($dir)) { exit 0 } } } catch { exit 0 }; ";
                 }
             }
             string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
@@ -1623,6 +2493,8 @@ namespace Mo2RevampedSetup
             {
                 FileName = powershell,
                 Arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand " + encoded,
+                // never the folder it is about to delete
+                WorkingDirectory = Environment.SystemDirectory,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
@@ -2108,11 +2980,13 @@ namespace Mo2RevampedSetup
                     RmProcessInfo[] processes = new RmProcessInfo[needed];
                     count = needed;
                     int self = Process.GetCurrentProcess().Id;
+                    // a silent copy's unins000.exe waits inside the folder for it
+                    int held = RunningUninstallerProcessId();
                     if (RmGetList(session, out needed, ref count, processes, ref reasons) == 0)
                         for (int i = 0; i < count; i++)
                         {
                             // the uninstaller itself runs from the installation
-                            if (processes[i].Process.dwProcessId == self) continue;
+                            if (processes[i].Process.dwProcessId == self || processes[i].Process.dwProcessId == held) continue;
                             string name = processes[i].strAppName;
                             if (!String.IsNullOrEmpty(name) && !names.Contains(name)) names.Add(name);
                         }
@@ -2276,25 +3150,33 @@ namespace Mo2RevampedSetup
         private static void EnsureMo2Closed(string target, bool forceClose, BackgroundWorker worker)
         {
             string expected = Path.GetFullPath(Path.Combine(target, "ModOrganizer.exe"));
+            List<Process> matches = FindMo2Processes(expected);
             // a game started from this MO2 holds its files (usvfs) and, while it
-            // runs, the Steam saves MO2 set aside: it is never closed by setup
+            // runs, the Steam saves MO2 set aside: it is never closed by setup.
+            // One started elsewhere (Steam, another MO2) doesn't matter here.
             if (File.Exists(expected))
             {
                 foreach (string game in new string[] { "eldenring", "nightreign" })
                 {
                     Process[] running = Process.GetProcessesByName(game);
-                    bool found = running.Length > 0;
-                    foreach (Process process in running) process.Dispose();
-                    if (found)
-                        throw new InvalidOperationException(InstallerText.T("Elden Ring o Nightreign siguen abiertos. Ciérralos antes de continuar; al cerrar el juego, MO2 devuelve los guardados de Steam a su sitio."));
+                    bool fromHere = false;
+                    foreach (Process process in running)
+                    {
+                        if (!fromHere) fromHere = GameRunsFromInstallation(process, target, matches.Count > 0);
+                        process.Dispose();
+                    }
+                    if (fromHere)
+                    {
+                        foreach (Process process in matches) process.Dispose();
+                        throw new InvalidOperationException(InstallerText.T("Elden Ring o Nightreign siguen abiertos desde este MO2. Ciérralos antes de continuar; al cerrar el juego, MO2 devuelve los guardados de Steam a su sitio."));
+                    }
                 }
             }
-            List<Process> matches = FindMo2Processes(expected);
             if (matches.Count == 0) return;
             if (!forceClose)
             {
                 foreach (Process process in matches) process.Dispose();
-                throw new InvalidOperationException(InstallerText.T("MO2 sigue abierto en esta carpeta. Cierra MO2 o marca la opción para forzar su cierre."));
+                throw new InvalidOperationException(InstallerText.T("MO2 sigue abierto en esta carpeta. Ciérralo o marca «Forzar el cierre de MO2 en esta carpeta si sigue abierto»."));
             }
 
             Report(worker, 1, InstallerText.T("Cerrando MO2 de esta instalación…"));
@@ -2329,9 +3211,41 @@ namespace Mo2RevampedSetup
             }
         }
 
-        private static void EnsureRevampedGlobalDataNotInUse(SetupRequest request)
+        // the game runs through this installation when it loaded one of its
+        // files (usvfs_x64.dll, the Elden Ring bridge). When Windows won't
+        // list its modules (anti-cheat), it counts as this installation's
+        // while MO2 of this folder is open, which is what starts it
+        private static bool GameRunsFromInstallation(Process game, string target, bool mo2OfTargetRunning)
+        {
+            try
+            {
+                foreach (ProcessModule module in game.Modules)
+                {
+                    string file;
+                    try { file = module.FileName; }
+                    catch { continue; }
+                    if (IsPathWithinDirectory(file, target)) return true;
+                }
+                return false;
+            }
+            catch
+            {
+                // Windows won't say (anti-cheat): the game counts as this
+                // installation's, as it always did, so its saves are never
+                // swapped under it
+                return true;
+            }
+        }
+
+        private static void EnsureRevampedGlobalDataNotInUse(SetupRequest request, string target)
         {
             if (request == null || !request.RemoveRevampedAppData) return;
+            // every standard installation shares that folder: with another
+            // one still installed, its instances would go too
+            List<string> others = OtherStandardInstallations(target);
+            if (others.Count > 0)
+                throw new InvalidOperationException(InstallerText.T("Otras instalaciones estándar de MO2 Revamped usan las mismas instancias de AppData\\Local\\MO2 Revamped, así que no se borró nada: ") +
+                    String.Join(", ", others.ToArray()) + InstallerText.T(". Desinstálalas antes o desmarca esa opción."));
             // elevated with another administrator's account, AppData\Local is
             // that account's, not the one of the person at the screen
             if (RunsAsAnotherAccount())
@@ -2359,7 +3273,17 @@ namespace Mo2RevampedSetup
         // true when the user signed in to this session is not the account
         // this process runs as (an administrator's credentials typed at the
         // elevation prompt); unknown counts as the same account
-        private static bool RunsAsAnotherAccount()
+        internal static string SessionUserName()
+        {
+            try
+            {
+                const int WtsUserName = 5;
+                return SessionText(WtsUserName) ?? "";
+            }
+            catch { return ""; }
+        }
+
+        internal static bool RunsAsAnotherAccount()
         {
             try
             {
@@ -2424,12 +3348,12 @@ namespace Mo2RevampedSetup
             return false;
         }
 
-        private static List<string> RemoveAllRemainingContents(string target)
+        private static List<string> RemoveAllRemainingContents(string target, List<string> protectedPaths)
         {
             List<string> notes = new List<string>();
             string root = Path.GetFullPath(target).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string runningExecutable = Path.GetFullPath(Application.ExecutablePath);
-            DeleteDirectoryContents(root, runningExecutable, notes);
+            string runningExecutable = RunningUninstaller();
+            DeleteDirectoryContents(root, runningExecutable, notes, protectedPaths);
             return notes;
         }
 
@@ -2473,7 +3397,7 @@ namespace Mo2RevampedSetup
                 }
 
                 SetupDiagnostics.Info("Removing MO2 Revamped global data from '" + dataDirectory + "'.");
-                DeleteDirectoryContents(dataDirectory, Path.GetFullPath(Application.ExecutablePath), notes);
+                DeleteDirectoryContents(dataDirectory, RunningUninstaller(), notes);
                 if (notes.Count == 0 && Directory.Exists(dataDirectory))
                 {
                     if (Directory.GetFileSystemEntries(dataDirectory).Length == 0)
@@ -2492,6 +3416,12 @@ namespace Mo2RevampedSetup
         }
 
         private static void DeleteDirectoryContents(string directory, string runningExecutable, List<string> notes)
+        {
+            DeleteDirectoryContents(directory, runningExecutable, notes, null);
+        }
+
+        // protectedPaths: instance folders that stay, with everything in them
+        private static void DeleteDirectoryContents(string directory, string runningExecutable, List<string> notes, List<string> protectedPaths)
         {
             string[] entries;
             try { entries = Directory.GetFileSystemEntries(directory); }
@@ -2515,9 +3445,11 @@ namespace Mo2RevampedSetup
                         attributes &= ~FileAttributes.ReadOnly;
                     }
                     if (PathsEqual(full, runningExecutable)) continue;
+                    if (protectedPaths != null && protectedPaths.Exists(kept => PathsEqual(full, kept) || IsPathWithinDirectory(full, kept))) continue;
+                    if (isReparsePoint && TouchesProtected(full, protectedPaths)) continue;
                     if (isDirectory && !isReparsePoint)
                     {
-                        DeleteDirectoryContents(full, runningExecutable, notes);
+                        DeleteDirectoryContents(full, runningExecutable, notes, protectedPaths);
                         if (Directory.Exists(full) && Directory.GetFileSystemEntries(full).Length == 0)
                             Directory.Delete(full, false);
                     }
@@ -2532,7 +3464,7 @@ namespace Mo2RevampedSetup
             }
         }
 
-        private static void RemoveEmptyDirectories(string target)
+        private static void RemoveEmptyDirectories(string target, List<string> protectedPaths)
         {
             // only inside the program folders: an empty folder elsewhere may be
             // the user's own (an empty profile, mod or downloads folder)
@@ -2543,6 +3475,8 @@ namespace Mo2RevampedSetup
                 try
                 {
                     if (!Directory.Exists(directory) || (File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) continue;
+                    // an instance's folder set inside a program folder stays as it is
+                    if (TouchesProtected(directory, protectedPaths)) continue;
                     RemovePythonCachesBelow(directory);
                     RemoveEmptyDirectoriesBelow(directory);
                     if (Directory.GetFileSystemEntries(directory).Length == 0) Directory.Delete(directory, false);
@@ -2572,7 +3506,7 @@ namespace Mo2RevampedSetup
             }
         }
 
-        private static bool IsPathWithinDirectory(string path, string directory)
+        internal static bool IsPathWithinDirectory(string path, string directory)
         {
             try
             {
@@ -2623,7 +3557,83 @@ namespace Mo2RevampedSetup
                 try { boundaries.Add(NormalizeCleanupDirectory(specialPath)); }
                 catch { }
             }
+            // the folders .NET's list leaves out: Downloads, Saved Games,
+            // OneDrive, the media folders, the public ones
+            foreach (Guid known in KnownFolderIds)
+            {
+                IntPtr pointer = IntPtr.Zero;
+                try
+                {
+                    if (SHGetKnownFolderPath(known, 0x00008000 /* KF_FLAG_DONT_VERIFY */, IntPtr.Zero, out pointer) != 0 || pointer == IntPtr.Zero) continue;
+                    string path = Marshal.PtrToStringUni(pointer);
+                    if (!String.IsNullOrWhiteSpace(path)) boundaries.Add(NormalizeCleanupDirectory(path));
+                }
+                catch { }
+                finally { if (pointer != IntPtr.Zero) Marshal.FreeCoTaskMem(pointer); }
+            }
+            foreach (string library in SteamLibraryFolders())
+            {
+                try { boundaries.Add(NormalizeCleanupDirectory(library)); }
+                catch { }
+            }
             return boundaries;
+        }
+
+        [DllImport("shell32.dll")]
+        private static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, uint flags, IntPtr token, out IntPtr path);
+
+        private static readonly Guid[] KnownFolderIds = new Guid[]
+        {
+            new Guid("374DE290-123F-4565-9164-39C4925E467B"), // Downloads
+            new Guid("4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4"), // Saved Games
+            new Guid("A52BBA46-E9E1-435F-B3D9-28DAA648C0F6"), // OneDrive
+            new Guid("33E28130-4E1E-4676-835A-98395C3BC3BB"), // Pictures
+            new Guid("4BD8D571-6D19-48D3-BE97-422220080E43"), // Music
+            new Guid("18989B1D-99B5-455B-841C-AB7C74E4DDFC"), // Videos
+            new Guid("FDD39AD0-238F-46AF-ADB4-6C85480369C7"), // Documents
+            new Guid("B4BFCC3A-DB2C-424C-B029-7FE99A87C641"), // Desktop
+            new Guid("5E6C858F-0E22-4760-9AFE-EA3317B67173"), // the user's profile
+            new Guid("DFDF76A2-C82A-4D63-906A-5644AC457385"), // Public
+            new Guid("3D644C9B-1FB8-4F30-9B45-F670235F79C0"), // Public Downloads
+            new Guid("ED4824AF-DCE4-45A8-81E2-FC7965083634"), // Public Documents
+            new Guid("C4AA340D-F20F-4863-AFEF-F87EF2E6BA25"), // Public Desktop
+            new Guid("905E63B6-C1BF-494E-B29C-65B732D3D21A"), // Program Files
+            new Guid("7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E"), // Program Files (x86)
+            new Guid("62AB5D82-FDC1-4DC3-A9DD-070D1D495D97"), // ProgramData
+            new Guid("F38BF404-1D43-42F2-9305-67DE0B28FC23"), // Windows
+            new Guid("0762D272-C50A-4BB0-A382-697DCD729B80")  // Users
+        };
+
+        // Steam's own folder and every library it lists, with their
+        // steamapps\common: nothing an uninstall removes empty folders up to
+        private static List<string> SteamLibraryFolders()
+        {
+            List<string> folders = new List<string>();
+            try
+            {
+                string steam = null;
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\Valve\\Steam", false))
+                    if (key != null) steam = Convert.ToString(key.GetValue("SteamPath"));
+                if (String.IsNullOrWhiteSpace(steam)) return folders;
+                steam = Path.GetFullPath(steam.Replace('/', '\\'));
+                List<string> libraries = new List<string> { steam };
+                string list = Path.Combine(steam, "steamapps", "libraryfolders.vdf");
+                if (File.Exists(list))
+                    foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                                 File.ReadAllText(list), "\"path\"\\s+\"([^\"]+)\""))
+                    {
+                        try { libraries.Add(Path.GetFullPath(match.Groups[1].Value.Replace("\\\\", "\\"))); }
+                        catch { }
+                    }
+                foreach (string library in libraries)
+                {
+                    folders.Add(library);
+                    folders.Add(Path.Combine(library, "steamapps"));
+                    folders.Add(Path.Combine(library, "steamapps", "common"));
+                }
+            }
+            catch { }
+            return folders;
         }
 
         private static bool IsProtectedCleanupBoundary(string directory, HashSet<string> boundaries)
@@ -2657,7 +3667,7 @@ namespace Mo2RevampedSetup
             }
         }
 
-        private static List<string> GetSafeDirectoryCleanupCandidates(string directory)
+        private static List<string> GetSafeDirectoryCleanupCandidates(string directory, string stopAt)
         {
             List<string> candidates = new List<string>();
             if (String.IsNullOrWhiteSpace(directory)) return candidates;
@@ -2677,6 +3687,9 @@ namespace Mo2RevampedSetup
                 catch { break; }
 
                 candidates.Add(current);
+                // above the folder only what the first installation created
+                // (stopAt and the folders between): never a folder the user had
+                if (String.IsNullOrEmpty(stopAt) || PathsEqual(current, stopAt) || !IsPathWithinDirectory(current, stopAt)) break;
                 DirectoryInfo parent = Directory.GetParent(current);
                 if (parent == null) break;
                 string next;
@@ -2689,9 +3702,9 @@ namespace Mo2RevampedSetup
             return candidates;
         }
 
-        private static void RemoveEmptyInstallDirectoryAndParent(string target)
+        private static void RemoveEmptyInstallDirectoryAndParent(string target, string stopAt)
         {
-            foreach (string directory in GetSafeDirectoryCleanupCandidates(target))
+            foreach (string directory in GetSafeDirectoryCleanupCandidates(target, stopAt))
             {
                 try
                 {
@@ -2864,25 +3877,45 @@ namespace Mo2RevampedSetup
 #endif
         }
 
-        private static void RegisterUninstallEntry(string target, string packageVersion, long installedBytes)
+        private const string ProjectPage = "https://github.com/ArialSenki/MO2-Revamped";
+
+        private static void RegisterUninstallEntry(string target, string packageVersion, long installedBytes, bool eldenRingOnly)
         {
             string normalizedTarget = Path.GetFullPath(target).TrimEnd('\\');
+            string displayName = ChooseDisplayName(normalizedTarget, eldenRingOnly);
             using (RegistryKey root = RegistryKey.OpenBaseKey(UninstallHive, RegistryView.Registry64))
             using (RegistryKey key = root.CreateSubKey(UninstallSubKey(normalizedTarget)))
             {
                 if (key == null) throw new InvalidOperationException(InstallerText.T("Windows no pudo registrar la opción de desinstalación."));
                 string executable = Path.Combine(normalizedTarget, "ModOrganizer.exe");
                 string uninstaller = Path.Combine(normalizedTarget, UninstallerFileName);
-                key.SetValue("DisplayName", "MO2 Revamped", RegistryValueKind.String);
+                string uninstall = "\"" + uninstaller + "\" --uninstall \"" + normalizedTarget + "\"";
+                key.SetValue("DisplayName", displayName, RegistryValueKind.String);
                 key.SetValue("DisplayVersion", packageVersion, RegistryValueKind.String);
                 key.SetValue("Publisher", "ArialSenki", RegistryValueKind.String);
                 key.SetValue("InstallLocation", normalizedTarget, RegistryValueKind.String);
                 key.SetValue("DisplayIcon", executable + ",0", RegistryValueKind.String);
-                key.SetValue("UninstallString", "\"" + uninstaller + "\" --uninstall \"" + normalizedTarget + "\"", RegistryValueKind.String);
+                key.SetValue("UninstallString", uninstall, RegistryValueKind.String);
+                // the default choice: the program goes, the mods and data stay
+                key.SetValue("QuietUninstallString", uninstall + " /S", RegistryValueKind.String);
+                key.SetValue("URLInfoAbout", ProjectPage, RegistryValueKind.String);
+                key.SetValue("HelpLink", ProjectPage + "/issues", RegistryValueKind.String);
+                key.SetValue("URLUpdateInfo", ProjectPage + "/releases", RegistryValueKind.String);
+                int major, minor;
+                if (TryReadMajorMinor(packageVersion, out major, out minor))
+                {
+                    key.SetValue("VersionMajor", major, RegistryValueKind.DWord);
+                    key.SetValue("VersionMinor", minor, RegistryValueKind.DWord);
+                }
+                // the uninstaller carries no program files to repair with: a
+                // repair is the setup's Update with the same version
                 key.SetValue("NoModify", 1, RegistryValueKind.DWord);
                 key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
                 key.SetValue("EstimatedSize", (int)Math.Min(Int32.MaxValue, installedBytes / 1024), RegistryValueKind.DWord);
-                key.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"), RegistryValueKind.String);
+                // the date of the first installation, kept by updates
+                string installDate = Convert.ToString(key.GetValue("InstallDate"));
+                if (String.IsNullOrWhiteSpace(installDate))
+                    key.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"), RegistryValueKind.String);
             }
             try
             {
@@ -2894,6 +3927,95 @@ namespace Mo2RevampedSetup
                 }
             }
             catch { }
+        }
+
+        // "MO2 Revamped" for the first installation, and a name that tells
+        // the others apart in Installed apps; an entry keeps the name it has
+        private static string ChooseDisplayName(string normalizedTarget, bool eldenRingOnly)
+        {
+            string preferred = eldenRingOnly ? "MO2 Revamped – Elden Ring isolated" : "MO2 Revamped";
+            List<string> takenByOthers = new List<string>();
+            try
+            {
+                using (RegistryKey root = RegistryKey.OpenBaseKey(UninstallHive, RegistryView.Registry64))
+                using (RegistryKey uninstall = root.OpenSubKey(UninstallKeyRoot.TrimEnd('\\'), false))
+                {
+                    if (uninstall != null)
+                        foreach (string name in uninstall.GetSubKeyNames())
+                        {
+                            if (!name.StartsWith("MO2Revamped-", StringComparison.OrdinalIgnoreCase)) continue;
+                            using (RegistryKey entry = uninstall.OpenSubKey(name, false))
+                            {
+                                if (entry == null) continue;
+                                string location = Convert.ToString(entry.GetValue("InstallLocation"));
+                                string displayName = Convert.ToString(entry.GetValue("DisplayName"));
+                                if (PathsEqual(location, normalizedTarget))
+                                {
+                                    // the bare old name of a second installation is renamed below
+                                    if (!String.IsNullOrWhiteSpace(displayName) && displayName.StartsWith("MO2 Revamped", StringComparison.Ordinal) &&
+                                        !String.Equals(displayName, "MO2 Revamped", StringComparison.Ordinal))
+                                        return displayName;
+                                    continue;
+                                }
+                                if (!String.IsNullOrWhiteSpace(displayName)) takenByOthers.Add(displayName);
+                            }
+                        }
+                }
+            }
+            catch { }
+            if (!takenByOthers.Contains(preferred)) return preferred;
+            return preferred + " (" + normalizedTarget + ")";
+        }
+
+        private static bool TryReadMajorMinor(string version, out int major, out int minor)
+        {
+            major = minor = 0;
+            if (String.IsNullOrWhiteSpace(version)) return false;
+            string[] parts = version.Split('-')[0].Split('.');
+            return parts.Length >= 2 && Int32.TryParse(parts[0], out major) && Int32.TryParse(parts[1], out minor);
+        }
+
+        // -1, 0 or 1 for two release names such as 1.1.0-beta.8 and 1.1.0:
+        // numbers first, then a release beats its pre-releases, which compare
+        // part by part (beta.10 after beta.9)
+        internal static int CompareReleaseVersions(string left, string right)
+        {
+            string[] a = (left ?? "").Trim().TrimStart('v', 'V').Split(new char[] { '-' }, 2);
+            string[] b = (right ?? "").Trim().TrimStart('v', 'V').Split(new char[] { '-' }, 2);
+            int result = CompareDotted(a[0], b[0], true);
+            if (result != 0) return result;
+            bool aPre = a.Length > 1 && a[1].Length > 0, bPre = b.Length > 1 && b[1].Length > 0;
+            if (aPre != bPre) return aPre ? -1 : 1;
+            return aPre ? CompareDotted(a[1], b[1], false) : 0;
+        }
+
+        private static int CompareDotted(string left, string right, bool padNumbers)
+        {
+            string[] a = left.Split('.'), b = right.Split('.');
+            int count = Math.Max(a.Length, b.Length);
+            for (int i = 0; i < count; i++)
+            {
+                string x = i < a.Length ? a[i] : (padNumbers ? "0" : null);
+                string y = i < b.Length ? b[i] : (padNumbers ? "0" : null);
+                if (x == null) return -1;
+                if (y == null) return 1;
+                long nx, ny;
+                bool xNumber = Int64.TryParse(x, out nx), yNumber = Int64.TryParse(y, out ny);
+                int part = xNumber && yNumber ? nx.CompareTo(ny)
+                    : xNumber != yNumber ? (xNumber ? -1 : 1)
+                    : String.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+                if (part != 0) return part < 0 ? -1 : 1;
+            }
+            return 0;
+        }
+
+        // the version of MO2 Revamped in this folder: its record's, or the
+        // one Windows lists
+        internal static string InstalledReleaseVersion(string target)
+        {
+            InstallState state = LoadState(target);
+            if (state != null && !String.IsNullOrWhiteSpace(state.Version)) return state.Version;
+            return RegisteredDisplayVersion(target) ?? "";
         }
 
         private static string RegisteredDisplayVersion(string target)
@@ -2922,6 +4044,16 @@ namespace Mo2RevampedSetup
                 if (key == null || !PathsEqual(Convert.ToString(key.GetValue("InstallLocation")), normalizedTarget)) return;
                 key.SetValue("DisplayVersion", version, RegistryValueKind.String);
             }
+        }
+
+        // the other standard installations Windows lists: they share the
+        // instances in AppData\Local\MO2 Revamped with this one
+        internal static List<string> OtherStandardInstallations(string target)
+        {
+            List<string> others = new List<string>();
+            foreach (string location in RegisteredInstallLocations())
+                if (!PathsEqual(location, target) && UsesRevampedGlobalData(location)) others.Add(location);
+            return others;
         }
 
         internal static List<string> RegisteredInstallLocations()
