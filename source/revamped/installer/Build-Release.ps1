@@ -274,7 +274,16 @@ function Build-QtInstallerRuntime {
         $qtExecutable = Join-Path $buildPath 'MO2RevampedSetupQt.exe'
         if (-not (Test-Path -LiteralPath $qtExecutable -PathType Leaf)) { throw "The Qt installer executable was not created: $qtExecutable" }
         New-Item -ItemType Directory -Force -Path $deployPath | Out-Null
-        & $windeployqt --release --no-translations --compiler-runtime --dir $deployPath $qtExecutable
+        # its warnings go to stderr (no dxcompiler.dll on this machine, say):
+        # with output redirected, PowerShell would stop on them; the exit
+        # code and the file check below decide
+        $previousPreference = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            & $windeployqt --release --no-translations --compiler-runtime --dir $deployPath $qtExecutable 2>&1 | ForEach-Object { "$_" }
+        } finally {
+            $ErrorActionPreference = $previousPreference
+        }
         if ($LASTEXITCODE -ne 0) { throw 'Deploying the Qt installer runtime failed.' }
         Copy-Item -LiteralPath $qtExecutable -Destination (Join-Path $deployPath 'MO2RevampedSetupQt.exe') -Force
 
