@@ -22,7 +22,12 @@ from ..basic_game import BasicGame
 
 
 class CyberpunkModDataChecker(BasicModDataChecker):
-    def __init__(self):
+    # MO2 Revamped: the files for the game folder go to root/ only for Root
+    # Builder, which MO2 Revamped doesn't include; without it they stay where
+    # the VFS serves them and the plugin force-loads the two loaders
+    # (see Cyberpunk2077Game.executableForcedLoads)
+    def __init__(self, use_root_builder=lambda: True):
+        self._use_root_builder = use_root_builder
         super().__init__(
             GlobPatterns(
                 move={
@@ -63,7 +68,9 @@ class CyberpunkModDataChecker(BasicModDataChecker):
             return self.FIXABLE
         status = mobase.ModDataChecker.INVALID
         # Check extra fixes
-        if any(filetree.exists(p) for p in self._extra_files_to_move):
+        if self._use_root_builder() and any(
+            filetree.exists(p) for p in self._extra_files_to_move
+        ):
             return mobase.ModDataChecker.FIXABLE
         rp = self._regex_patterns
         for entry in filetree:
@@ -85,13 +92,16 @@ class CyberpunkModDataChecker(BasicModDataChecker):
         )
 
     def fix(self, filetree: mobase.IFileTree) -> mobase.IFileTree:
-        for source, target in self._extra_files_to_move.items():
-            if file := filetree.find(source):
-                parent = file.parent()
-                filetree.move(file, target)
-                clear_empty_folder(parent)
+        use_root = self._use_root_builder()
+        if use_root:
+            for source, target in self._extra_files_to_move.items():
+                if file := filetree.find(source):
+                    parent = file.parent()
+                    filetree.move(file, target)
+                    clear_empty_folder(parent)
         if filetree := super().fix(filetree):
-            filetree = self._fix_cet_framework(filetree)
+            if use_root:
+                filetree = self._fix_cet_framework(filetree)
             # REDmod
             for entry in list(filetree):
                 if not self._regex_patterns.valid.match(
@@ -348,7 +358,11 @@ class Cyberpunk2077Game(BasicGame):
                 parse_cyberpunk_save_metadata,
             )
         )
-        self._register_feature(CyberpunkModDataChecker())
+        self._register_feature(
+            CyberpunkModDataChecker(
+                lambda: self._organizer.isPluginEnabled("Root Builder")
+            )
+        )
 
         self._modlist_files = ModListFileManager[Literal["archive", "redmod"]](
             organizer,
@@ -485,6 +499,30 @@ class Cyberpunk2077Game(BasicGame):
 
     def _set_setting(self, key: str, value: mobase.MoVariant):
         self._organizer.setPluginSetting(self.name(), key, value)
+
+    # MO2 Revamped: Cyberpunk2077.exe imports version.dll (CET's loader) as it
+    # starts, before the VFS is there, so Windows' own is taken; RED4ext's
+    # winmm.dll would come only once the game first uses it, after the moment
+    # RED4ext loads its plugins. Both are loaded by the VFS as the game starts.
+    _forced_loaders = ("bin/x64/winmm.dll", "bin/x64/version.dll")
+
+    def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
+        try:
+            efls = super().executableForcedLoads()
+        except AttributeError:
+            efls = []
+        if self._organizer.isPluginEnabled("Root Builder"):
+            return efls
+        tree = self._organizer.virtualFileTree()
+        process = Path(self.binaryName()).name
+        for relative in self._forced_loaders:
+            if tree.find(relative) is not None:
+                efls.append(
+                    mobase.ExecutableForcedLoadSetting(
+                        process, self.gameDirectory().absoluteFilePath(relative)
+                    ).withEnabled(True)
+                )
+        return efls
 
     def executables(self) -> list[mobase.ExecutableInfo]:
         game_name = self.gameName()
