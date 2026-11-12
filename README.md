@@ -13,7 +13,7 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 ## Download
 
 **Latest: [v1.1.0-beta.8](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.8)**
-— `MO2-Revamped-Setup-1.1.0-beta.8.exe` with its `SHA256SUMS.txt`. It is a pre-release:
+— `MO2-Revamped-Setup-1.1.0-beta.8.exe` with its `SHA256SUMS.txt`. It is a beta:
 the newest version, with script extenders and a borderless window for Skyrim and
 Fallout (tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas).
 

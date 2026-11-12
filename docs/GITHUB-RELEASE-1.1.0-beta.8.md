@@ -1,4 +1,4 @@
-MO2 Revamped 1.1.0 beta 8 is the **newest version**, a pre-release. It installs
+MO2 Revamped 1.1.0 beta 8 is the **newest version**, still a beta. It installs
 the script extenders of Skyrim and Fallout, adds a borderless window option for
 those games, and rewrites the last windows left from Mod Organizer 2. It also
 carries everything of beta 7, which wasn't published on its own. The last stable
