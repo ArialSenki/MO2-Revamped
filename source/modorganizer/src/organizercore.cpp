@@ -1,4 +1,5 @@
 #include "organizercore.h"
+#include "collectionmanifest.h"
 #include <QDateTime>
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
@@ -360,8 +361,36 @@ bool OrganizerCore::nexusApi(bool retry)
   }
 }
 
+void OrganizerCore::setCollectionHandler(std::function<void(const QString&)> handler)
+{
+  m_CollectionHandler = std::move(handler);
+  if (m_CollectionHandler) {
+    const QStringList pending = m_PendingCollections;
+    m_PendingCollections.clear();
+    for (const QString& url : pending) {
+      m_CollectionHandler(url);
+    }
+  }
+}
+
+void OrganizerCore::requestCollection(const QString& url)
+{
+  log::debug("collection requested: {}", url.section(QLatin1Char('?'), 0, 0));
+  if (m_CollectionHandler) {
+    m_CollectionHandler(url);
+  } else {
+    m_PendingCollections.append(url);
+  }
+}
+
 void OrganizerCore::downloadRequestedNXM(const QString& url)
 {
+  // MO2 Revamped: a collection opens its window; it isn't a file to download
+  if (Collections::isCollectionNxmLink(url)) {
+    requestCollection(url);
+    return;
+  }
+
   // MO2 Revamped: without the link's key and expiry
   log::debug("download requested: {}", url.section(QLatin1Char('?'), 0, 0));
   if (nexusApi()) {

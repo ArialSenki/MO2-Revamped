@@ -30,8 +30,10 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMetaType>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 
 #include <functional>
+#include <set>
 #include <vector>
 
 #include "installerfomod.h"
@@ -202,6 +204,7 @@ class QLabel;
 class QPushButton;
 class QStackedWidget;
 class QTextBrowser;
+class QVBoxLayout;
 class QWidget;
 class ScaleLabel;
 
@@ -228,6 +231,8 @@ struct FomodInstallerWidgets
   QPushButton* prevBtn;
   QPushButton* nextBtn;
   QPushButton* cancelBtn;
+  // MO2 Revamped: which of a collection's choices didn't match
+  QLabel* presetNote;
 };
 
 class FomodInstallerDialog : public QDialog, public IConditionTester
@@ -280,6 +285,25 @@ public:
   bool hasOptions();
 
   void transformToSmallInstall();
+
+  /**
+   * MO2 Revamped: a collection's choices for this FOMOD, in the "choices"
+   * format Vortex writes to collection.json.
+   *
+   * @return false when the text isn't a FOMOD preset
+   **/
+  bool setPreset(const QString& json);
+
+  /**
+   * MO2 Revamped: walks the visible steps as the user would, selecting the
+   * preset's options; call after initData and setPreset.
+   *
+   * @return true when every step and group matched and each group's selection
+   *     is valid, so the install can go on without the window; otherwise the
+   *     window stays on the first step that needs the user, with a note at the
+   *     top saying what didn't match
+   **/
+  bool applyPreset();
 
 protected:
   virtual bool eventFilter(QObject* object, QEvent* event);
@@ -437,6 +461,8 @@ private:
   bool testVisible(int pageIndex) const;
   bool nextPage();
   void activateCurrentPage();
+  // what Next does short of installing; false when Next would install
+  bool advancePage();
 
   void moveTree(std::shared_ptr<MOBase::IFileTree> target,
                 std::shared_ptr<MOBase::IFileTree> source,
@@ -479,6 +505,37 @@ private:
   void updateTabOrder();
   // what the step needs before going on, beside the buttons
   void setSelectionNote(const QString& note);
+
+  // MO2 Revamped: a collection's choices (setPreset, applyPreset)
+  struct PresetChoice
+  {
+    QString name;
+    int idx;
+  };
+  struct PresetGroup
+  {
+    QString name;
+    std::vector<PresetChoice> choices;
+  };
+  struct PresetStep
+  {
+    QString name;
+    std::vector<PresetGroup> groups;
+    bool used = false;
+  };
+
+  // the preset's choices for the current step, once per step; true when they
+  // all matched and every group's selection is valid
+  bool applyPresetToCurrentPage();
+  // selects exactly the group's listed options; true when that worked
+  bool applyPresetGroup(QVBoxLayout* layout, const PresetGroup& group);
+  bool groupSelectionValid(QVBoxLayout* layout) const;
+  void addPresetProblem(const QString& problem);
+
+  bool m_HasPreset = false;
+  std::vector<PresetStep> m_Preset;
+  std::set<int> m_PresetPages;
+  QStringList m_PresetProblems;
 
   FomodInstallerWidgets* ui;
 

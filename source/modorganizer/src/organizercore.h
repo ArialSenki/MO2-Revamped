@@ -404,6 +404,11 @@ public:
   ModList* modList();
   void refresh(bool saveChanges = true);
 
+  // MO2 Revamped: Nexus collection links (nxm://<game>/collections/...) go to
+  // the handler the main window sets; links that come before it wait for it
+  void setCollectionHandler(std::function<void(const QString&)> handler);
+  void requestCollection(const QString& url);
+
   boost::signals2::connection onAboutToRun(
       const std::function<bool(const QString&, const QDir&, const QString&)>& func);
   boost::signals2::connection
@@ -598,6 +603,9 @@ private:
   // the current profile: they aren't rebuilt or saved until one works, while
   // programs can still be launched
   bool m_LastRefreshFailed = false;
+
+  std::function<void(const QString&)> m_CollectionHandler;
+  QStringList m_PendingCollections;
 
   // the last createMod() set an existing folder aside (Replace)
   bool m_CreatedModReplaced = false;

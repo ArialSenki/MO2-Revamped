@@ -27,6 +27,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility.h>
 #include <versioninfo.h>
 
+#include <QJsonObject>
 #include <QNetworkDiskCache>
 #include <QNetworkReply>
 #include <QQueue>
@@ -505,6 +506,16 @@ public:
                          QVariant userData, const QString& subModule,
                          MOBase::IPluginGame const* game);
 
+  // MO2 Revamped: a query to the GraphQL API (v2), through the same queue,
+  // key and limits as the other requests; the answer comes in
+  // nxmApiV2Available() with the returned id, a failure in nxmRequestFailed()
+  int requestGraphQL(const QString& query, const QJsonObject& variables,
+                     QVariant userData, const QString& subModule);
+
+  // MO2 Revamped: a GET of a path of the API ("/v2/collections/.../download_link"),
+  // answered as requestGraphQL() is
+  int requestApiPath(const QString& path, QVariant userData, const QString& subModule);
+
   /**
    * @param directory the directory to store cache files
    **/
@@ -593,6 +604,8 @@ signals:
                           int requestID);
   void nxmGameInfoAvailable(QString gameName, QVariant userData, QVariant resultData,
                             int requestID);
+  // the answer to requestGraphQL() or requestApiPath()
+  void nxmApiV2Available(QVariant userData, QVariant resultData, int requestID);
   void nxmRequestFailed(QString gameName, int modID, int fileID, QVariant userData,
                         int requestID, int errorCode, const QString& errorString);
   // a queued request dropped at the rate limit: apart from nxmRequestFailed,
@@ -635,6 +648,8 @@ private:
       TYPE_TRACKEDMODS,
       TYPE_FILEINFO_MD5,
       TYPE_GAMEINFO,
+      TYPE_GRAPHQL,
+      TYPE_APIPATH,
     } m_Type;
     UpdatePeriod m_UpdatePeriod;
     QVariant m_UserData;
@@ -647,6 +662,9 @@ private:
     int m_Endorse;
     int m_Track;
     QByteArray m_Hash;
+    // the body of a GraphQL request, the path of an API path request
+    QByteArray m_Body;
+    QString m_Path;
     QMap<QNetworkReply::NetworkError, QList<int>> m_AllowedErrors;
     bool m_IgnoreGenericErrorHandler;
 

@@ -440,6 +440,14 @@ QString InstallationManager::generateBackupName(const QString& directoryName) co
   return backupName;
 }
 
+void InstallationManager::setApprovedReplacements(const QStringList& folders)
+{
+  m_ApprovedReplacements.clear();
+  for (const QString& f : folders) {
+    m_ApprovedReplacements.insert(f.toLower());
+  }
+}
+
 InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& modName)
 {
   // a Replace nobody finished: its folder stays for the question at the next start,
@@ -475,17 +483,34 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
     Settings& settings(Settings::instance());
 
     const bool backup = settings.keepBackupOnInstall();
-    QueryOverwriteDialog overwriteDialog(m_ParentWidget,
-                                         backup ? QueryOverwriteDialog::BACKUP_YES
-                                                : QueryOverwriteDialog::BACKUP_NO);
-    overwriteDialog.setModName(QFileInfo(targetDirectory).fileName());
 
-    if (overwriteDialog.exec()) {
-      settings.setKeepBackupOnInstall(overwriteDialog.backup());
+    // MO2 Revamped: a collection asks once for all its mods (see
+    // setApprovedReplacements()); Replace then goes on without the dialog, for
+    // those folders only
+    bool accepted                       = false;
+    QueryOverwriteDialog::Action action = QueryOverwriteDialog::ACT_NONE;
+    bool chosenBackup                   = false;
+    if (m_ApprovedReplacements.contains(QFileInfo(targetDirectory).fileName().toLower())) {
+      accepted = true;
+      action   = QueryOverwriteDialog::ACT_REPLACE;
+    } else {
+      QueryOverwriteDialog overwriteDialog(m_ParentWidget,
+                                           backup ? QueryOverwriteDialog::BACKUP_YES
+                                                  : QueryOverwriteDialog::BACKUP_NO);
+      overwriteDialog.setModName(QFileInfo(targetDirectory).fileName());
+      accepted = overwriteDialog.exec();
+      if (accepted) {
+        action       = overwriteDialog.action();
+        chosenBackup = overwriteDialog.backup();
+        settings.setKeepBackupOnInstall(chosenBackup);
+      }
+    }
+
+    if (accepted) {
 
       // a new mod beside the installed one changes nothing there
-      const bool keepBackup = overwriteDialog.backup() &&
-                              overwriteDialog.action() != QueryOverwriteDialog::ACT_RENAME;
+      const bool keepBackup = chosenBackup &&
+                              action != QueryOverwriteDialog::ACT_RENAME;
       if (keepBackup) {
         QString backupDirectory = generateBackupName(targetDirectory);
         if (!copyDir(targetDirectory, backupDirectory, false)) {
@@ -494,11 +519,11 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
         }
       }
 
-      result.m_merged   = overwriteDialog.action() == QueryOverwriteDialog::ACT_MERGE;
-      result.m_replaced = overwriteDialog.action() == QueryOverwriteDialog::ACT_REPLACE;
+      result.m_merged   = action == QueryOverwriteDialog::ACT_MERGE;
+      result.m_replaced = action == QueryOverwriteDialog::ACT_REPLACE;
       result.m_backup   = keepBackup;
 
-      if (overwriteDialog.action() == QueryOverwriteDialog::ACT_RENAME) {
+      if (action == QueryOverwriteDialog::ACT_RENAME) {
         // a free name to start from: "<name> (2)", "<name> (3)"...
         const QDir mods(m_ModsDirectory);
         QString suggested = modName;
@@ -521,7 +546,7 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
           }
           targetDirectory = QDir::fromNativeSeparators(m_ModsDirectory) + "/" + modName;
         }
-      } else if (overwriteDialog.action() == QueryOverwriteDialog::ACT_REPLACE) {
+      } else if (action == QueryOverwriteDialog::ACT_REPLACE) {
         // save original settings like categories. Because it makes sense
         QString metaFilename = targetDirectory + "/meta.ini";
         QFile settingsFile(metaFilename);
@@ -564,9 +589,9 @@ InstallationResult InstallationManager::testOverwrite(GuessedValue<QString>& mod
           log::error("failed to restore original settings: {}", metaFilename);
         }
         return result;
-      } else if (overwriteDialog.action() == QueryOverwriteDialog::ACT_MERGE) {
+      } else if (action == QueryOverwriteDialog::ACT_MERGE) {
         return result;
-      } else /* if (overwriteDialog.action() == QueryOverwriteDialog::ACT_NONE) */
+      } else /* if (action == QueryOverwriteDialog::ACT_NONE) */
       {
         return {IPluginInstaller::RESULT_CANCELED};
       }

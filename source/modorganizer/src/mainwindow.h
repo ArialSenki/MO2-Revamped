@@ -99,6 +99,7 @@ class QProgressDialog;
 class QTranslator;
 class QTreeWidgetItem;
 class QUrl;
+class CollectionDialog;
 class QWidget;
 
 #ifndef Q_MOC_RUN
@@ -252,6 +253,12 @@ private:
   void updateModPageMenu();
   void updateViewMenu();
 
+  // MO2 Revamped: Nexus collections; a link (nxm:// or the website's) opens
+  // the collection's window, one at a time
+  void openCollection(const QString& link);
+  void askForCollection();
+  bool selectProfileByName(const QString& name);
+
   QMenu* createPopupMenu() override;
   void activateSelectedProfile();
 
@@ -325,6 +332,7 @@ private:
 
   // the update notice while it is open, see showUpdateNotice()
   QPointer<QDialog> m_UpdateNotice;
+  QPointer<CollectionDialog> m_CollectionDialog;
   // a notice waits for its turn, see showUpdateNotice()
   bool m_UpdateNoticeWaiting = false;
   // the Update command as it is without an update, to put back

@@ -127,6 +127,12 @@ mo2_add_filter(NAME src/categories GROUPS
 	categoryimportdialog
 )
 
+mo2_add_filter(NAME src/collections GROUPS
+	collectiondialog
+	collectionmanifest
+	collectionsession
+)
+
 mo2_add_filter(NAME src/core GROUPS
 	archivefiletree
 	installationmanager

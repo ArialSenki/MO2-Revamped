@@ -9,6 +9,7 @@
 #include <report.h>
 #include <utility.h>
 
+#include <QCoreApplication>
 #include <QImageReader>
 #include <QStringList>
 #include <QtPlugin>
@@ -210,6 +211,15 @@ IPluginInstaller::EInstallResult
 InstallerFomod::install(GuessedValue<QString>& modName,
                         std::shared_ptr<IFileTree>& tree, QString& version, int& modID)
 {
+  // MO2 Revamped: a collection's choices for this FOMOD, set by the organizer
+  // for this one install; taken off qApp first so it can't reach a later one
+  QString preset;
+  if (qApp != nullptr && qApp->property("mo2r.fomodPreset").isValid()) {
+    preset = qApp->property("mo2r.fomodPreset").toString();
+    qApp->setProperty("mo2r.fomodPresetResult", QStringLiteral("none"));
+    qApp->setProperty("mo2r.fomodPreset", QVariant());
+  }
+
   auto installerFiles = buildFomodTree(tree);
   if (manager()->extractFiles(installerFiles).size() == installerFiles.size()) {
     try {
@@ -237,7 +247,17 @@ InstallerFomod::install(GuessedValue<QString>& modName,
         dialog.transformToSmallInstall();
       }
 
-      auto result = dialog.exec();
+      // all of it matched: the install goes on without the window; otherwise
+      // the window opens with the preset applied as far as it went
+      bool presetApplied = false;
+      if (!preset.isEmpty() && dialog.setPreset(preset)) {
+        presetApplied = dialog.applyPreset();
+        qApp->setProperty("mo2r.fomodPresetResult",
+                          presetApplied ? QStringLiteral("applied")
+                                        : QStringLiteral("partial"));
+      }
+
+      const int result = presetApplied ? int(QDialog::Accepted) : dialog.exec();
       if (result == QDialog::Accepted) {
         modName.update(dialog.getName(), GUESS_USER);
         return dialog.updateTree(tree);

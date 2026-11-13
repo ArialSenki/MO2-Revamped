@@ -28,6 +28,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "nxmurl.h"
 #include "organizercore.h"
+#include "collectionmanifest.h"
 #include "plugincontainer.h"
 #include "selectiondialog.h"
 #include "shared/util.h"
@@ -805,6 +806,12 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
 
 void DownloadManager::addNXMDownload(const QString& url, bool announce)
 {
+  // MO2 Revamped: a collection link opens the collection window
+  if (Collections::isCollectionNxmLink(url)) {
+    m_OrganizerCore->requestCollection(url);
+    return;
+  }
+
   NXMUrl nxmInfo(url);
 
   QStringList validGames;

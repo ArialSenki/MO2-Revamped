@@ -879,6 +879,46 @@ int NexusInterface::requestInfoFromMd5(QString gameName, QByteArray& hash,
   return requestInfo.m_ID;
 }
 
+int NexusInterface::requestGraphQL(const QString& query, const QJsonObject& variables,
+                                   QVariant userData, const QString& subModule)
+{
+  if (m_User.shouldThrottle()) {
+    throttledWarning(m_User);
+    return -1;
+  }
+
+  NXMRequestInfo requestInfo(NXMRequestInfo::TYPE_GRAPHQL, userData, subModule);
+  QJsonObject body;
+  body.insert("query", query);
+  body.insert("variables", variables);
+  requestInfo.m_Body = QJsonDocument(body).toJson(QJsonDocument::Compact);
+  m_RequestQueue.enqueue(requestInfo);
+
+  nextRequest();
+  return requestInfo.m_ID;
+}
+
+int NexusInterface::requestApiPath(const QString& path, QVariant userData,
+                                   const QString& subModule)
+{
+  // only the API's own paths: the key goes with the request
+  if (!path.startsWith('/') || path.startsWith(QStringLiteral("//"))) {
+    return -1;
+  }
+
+  if (m_User.shouldThrottle()) {
+    throttledWarning(m_User);
+    return -1;
+  }
+
+  NXMRequestInfo requestInfo(NXMRequestInfo::TYPE_APIPATH, userData, subModule);
+  requestInfo.m_Path = path;
+  m_RequestQueue.enqueue(requestInfo);
+
+  nextRequest();
+  return requestInfo.m_ID;
+}
+
 IPluginGame* NexusInterface::getGame(QString gameName) const
 {
   // mod-level requests: a name no plugin has is taken for the managed game, as
@@ -1117,7 +1157,13 @@ void NexusInterface::nextRequest()
     } break;
     case NXMRequestInfo::TYPE_GAMEINFO: {
       url = QStringLiteral("%1/games/%2").arg(info.m_URL).arg(info.m_GameName);
-    }
+    } break;
+    case NXMRequestInfo::TYPE_GRAPHQL: {
+      url = QStringLiteral("https://api.nexusmods.com/v2/graphql");
+    } break;
+    case NXMRequestInfo::TYPE_APIPATH: {
+      url = QStringLiteral("https://api.nexusmods.com") + info.m_Path;
+    } break;
     }
   } else {
     url = info.m_URL;
@@ -1136,7 +1182,9 @@ void NexusInterface::nextRequest()
   request.setRawHeader("Application-Version",
                        QApplication::applicationVersion().toUtf8());
 
-  if (postData.object().isEmpty()) {
+  if (info.m_Type == NXMRequestInfo::TYPE_GRAPHQL) {
+    info.m_Reply = m_AccessManager->post(request, info.m_Body);
+  } else if (postData.object().isEmpty()) {
     if (!requestIsDelete) {
       info.m_Reply = m_AccessManager->get(request);
     } else {
@@ -1291,6 +1339,10 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
         case NXMRequestInfo::TYPE_GAMEINFO: {
           emit nxmGameInfoAvailable(iter->m_GameName, iter->m_UserData, result,
                                     iter->m_ID);
+        } break;
+        case NXMRequestInfo::TYPE_GRAPHQL:
+        case NXMRequestInfo::TYPE_APIPATH: {
+          emit nxmApiV2Available(iter->m_UserData, result, iter->m_ID);
         } break;
         }
 

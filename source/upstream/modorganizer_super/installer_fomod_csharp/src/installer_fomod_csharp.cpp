@@ -22,6 +22,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "installer_fomod_predialog.h"
 #include "xml_info_reader.h"
 
+#include <QCoreApplication>
+
 using namespace MOBase;
 
 bool InstallerFomodCSharp::init(IOrganizer* moInfo)
@@ -111,6 +113,13 @@ InstallerFomodCSharp::install(MOBase::GuessedValue<QString>& modName,
   auto scriptFile = findScriptFile(tree);
   if (scriptFile == nullptr) {
     return EInstallResult::RESULT_NOTATTEMPTED;
+  }
+
+  // MO2 Revamped: a collection's FOMOD choices don't apply to a C# script
+  // FOMOD; the preset is cleared so it can't reach a later install
+  if (qApp != nullptr && qApp->property("mo2r.fomodPreset").isValid()) {
+    qApp->setProperty("mo2r.fomodPresetResult", QStringLiteral("none"));
+    qApp->setProperty("mo2r.fomodPreset", QVariant());
   }
 
   // Check if there is a info.xml:

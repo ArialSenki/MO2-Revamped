@@ -31,6 +31,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProgressDialog>
 #include <Windows.h>
 #include <archive.h>
+#include <QSet>
 #include <errorcodes.h>
 #include <functional>
 #include <map>
@@ -177,6 +178,11 @@ public:
    * @return true if an installation is currently in progress
    **/
   bool isRunning() const;
+
+  // MO2 Revamped: the folders (names in the mods folder, any case) that are
+  // replaced without asking; a collection asks once for all its mods. Every
+  // other folder that exists is asked about as usual
+  void setApprovedReplacements(const QStringList& folders);
 
   /**
    * @brief retrieve a string describing the specified error code
@@ -413,6 +419,7 @@ private:
 
   bool m_ReplacedRestored = false;
   QString m_NewModFolder;
+  QSet<QString> m_ApprovedReplacements;
   bool m_NewModRemoved = false;
   QString m_ReplacedFolder;
   QString m_ReplacedTarget;

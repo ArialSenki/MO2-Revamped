@@ -7453,6 +7453,22 @@ Fehler: %1</translation>
       <source>Documents</source>
       <translation>Dokumente</translation>
     </message>
+    <message>
+      <source>Download a Nexus collection…</source>
+      <translation>Nexus-Sammlung herunterladen…</translation>
+    </message>
+    <message>
+      <source>Nexus collection</source>
+      <translation>Nexus-Sammlung</translation>
+    </message>
+    <message>
+      <source>This isn't the address of a Nexus collection.</source>
+      <translation>Das ist keine Adresse einer Nexus-Sammlung.</translation>
+    </message>
+    <message>
+      <source>Another collection is being installed. Pause it and close its window first.</source>
+      <translation>Eine andere Sammlung wird gerade installiert. Pausiere sie zuerst und schließe ihr Fenster.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -13856,6 +13872,19 @@ Prüfe die Optionen des Spiels, bevor du spielst.</translation>
       <source>Choose at least one option in: %1</source>
       <translation>Wähle mindestens eine Option in: %1</translation>
     </message>
+    <message>
+      <source>%1 (step not found)</source>
+      <translation>%1 (Schritt nicht gefunden)</translation>
+    </message>
+    <message>
+      <source>%1: %2</source>
+      <comment>installer step: option group</comment>
+      <translation>%1: %2</translation>
+    </message>
+    <message>
+      <source>The collection's choices didn't all match. Check these and finish by hand: %1</source>
+      <translation>Nicht alle Auswahlen der Sammlung haben gepasst. Prüfe diese und schließe von Hand ab: %1</translation>
+    </message>
   </context>
   <context>
     <name>FomodScreenshotDialog</name>
@@ -15600,6 +15629,581 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>The mod "%1" has a name Mod Organizer uses for the game's own files or for Overwrite, so its files are not used. Rename the mod to use them.</source>
       <translation>Die Mod „%1“ hat einen Namen, den Mod Organizer für die eigenen Dateien des Spiels oder für Overwrite verwendet, deshalb werden ihre Dateien nicht benutzt. Benenne die Mod um, um sie zu verwenden.</translation>
+    </message>
+  </context>
+  <context>
+    <name>CollectionDialog</name>
+    <message>
+      <source>Download a Nexus collection</source>
+      <translation>Nexus-Sammlung herunterladen</translation>
+    </message>
+    <message>
+      <source>Paste the address of the collection's page on Nexus Mods. Its latest revision is installed.</source>
+      <translation>Füge die Adresse der Sammlungsseite auf Nexus Mods ein. Installiert wird ihre neueste Revision.</translation>
+    </message>
+    <message>
+      <source>Collection address</source>
+      <translation>Adresse der Sammlung</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Öffnen</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>This isn't the address of a collection.</source>
+      <translation>Das ist keine Adresse einer Sammlung.</translation>
+    </message>
+    <message>
+      <source>Nexus collection</source>
+      <translation>Nexus-Sammlung</translation>
+    </message>
+    <message>
+      <source>Open next on Nexus</source>
+      <translation>Nächste auf Nexus öffnen</translation>
+    </message>
+    <message>
+      <source>Opens the next file's page on Nexus. Press "Slow download" there and the file comes to Mod Organizer.</source>
+      <translation>Öffnet die Seite der nächsten Datei auf Nexus. Klicke dort auf „Slow download“, dann kommt die Datei zu Mod Organizer.</translation>
+    </message>
+    <message>
+      <source>Start</source>
+      <translation>Starten</translation>
+    </message>
+    <message>
+      <source>All files from Nexus have arrived.</source>
+      <translation>Alle Dateien von Nexus sind angekommen.</translation>
+    </message>
+    <message>
+      <source>Instructions</source>
+      <translation>Anleitung</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mods</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Name</translation>
+    </message>
+    <message>
+      <source>Version</source>
+      <translation>Version</translation>
+    </message>
+    <message>
+      <source>Size</source>
+      <translation>Größe</translation>
+    </message>
+    <message>
+      <source>Source</source>
+      <translation>Quelle</translation>
+    </message>
+    <message>
+      <source>Required</source>
+      <translation>Erforderlich</translation>
+    </message>
+    <message>
+      <source>Status</source>
+      <translation>Status</translation>
+    </message>
+    <message>
+      <source>Choose file…</source>
+      <translation>Datei wählen…</translation>
+    </message>
+    <message>
+      <source>Mark as done</source>
+      <translation>Als erledigt markieren</translation>
+    </message>
+    <message>
+      <source>Profile name</source>
+      <translation>Profilname</translation>
+    </message>
+    <message>
+      <source>Install into a new profile</source>
+      <translation>In ein neues Profil installieren</translation>
+    </message>
+    <message>
+      <source>Off: the mods go into the current profile.</source>
+      <translation>Aus: Die Mods kommen ins aktuelle Profil.</translation>
+    </message>
+    <message>
+      <source>Separator</source>
+      <translation>Trenner</translation>
+    </message>
+    <message>
+      <source>The collection's mods go under a separator with this name.</source>
+      <translation>Die Mods der Sammlung kommen unter einen Trenner mit diesem Namen.</translation>
+    </message>
+    <message>
+      <source>Open the next page automatically</source>
+      <translation>Nächste Seite automatisch öffnen</translation>
+    </message>
+    <message>
+      <source>When a file from Nexus arrives, the next file's page opens.</source>
+      <translation>Sobald eine Datei von Nexus ankommt, öffnet sich die Seite der nächsten.</translation>
+    </message>
+    <message>
+      <source>Summary</source>
+      <translation>Zusammenfassung</translation>
+    </message>
+    <message>
+      <source>Sort plugins with LOOT</source>
+      <translation>Plugins mit LOOT sortieren</translation>
+    </message>
+    <message>
+      <source>The collection doesn't set a plugin order.</source>
+      <translation>Die Sammlung legt keine Plugin-Reihenfolge fest.</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>von %1</translation>
+    </message>
+    <message>
+      <source>revision %1</source>
+      <translation>Revision %1</translation>
+    </message>
+    <message>
+      <source>Nexus collection: %1</source>
+      <translation>Nexus-Sammlung: %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s)</source>
+      <translation>
+        <numerusform>%n Mod</numerusform>
+        <numerusform>%n Mods</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>%1 in total</source>
+      <translation>%1 insgesamt</translation>
+    </message>
+    <message>
+      <source>%1 installed</source>
+      <translation>%1 installiert</translation>
+    </message>
+    <message>
+      <source>%1 left</source>
+      <translation>noch %1</translation>
+    </message>
+    <message>
+      <source>Installed as "%1"</source>
+      <translation>Installiert als „%1“</translation>
+    </message>
+    <message>
+      <source>Optional</source>
+      <translation>Optional</translation>
+    </message>
+    <message>
+      <source>Install by hand: another game's file</source>
+      <translation>Von Hand installieren: Datei eines anderen Spiels</translation>
+    </message>
+    <message>
+      <source>Pending</source>
+      <translation>Ausstehend</translation>
+    </message>
+    <message>
+      <source>Waiting for your click</source>
+      <translation>Wartet auf deinen Klick</translation>
+    </message>
+    <message>
+      <source>Downloading %1%</source>
+      <translation>Wird heruntergeladen: %1 %</translation>
+    </message>
+    <message>
+      <source>Downloading</source>
+      <translation>Wird heruntergeladen</translation>
+    </message>
+    <message>
+      <source>Downloaded</source>
+      <translation>Heruntergeladen</translation>
+    </message>
+    <message>
+      <source>Installed</source>
+      <translation>Installiert</translation>
+    </message>
+    <message>
+      <source>Skipped</source>
+      <translation>Übersprungen</translation>
+    </message>
+    <message>
+      <source>Failed</source>
+      <translation>Fehlgeschlagen</translation>
+    </message>
+    <message>
+      <source>Failed: %1</source>
+      <comment>status with the reason</comment>
+      <translation>Fehlgeschlagen: %1</translation>
+    </message>
+    <message>
+      <source>Nexus</source>
+      <translation>Nexus</translation>
+    </message>
+    <message>
+      <source>Bundled</source>
+      <translation>Mitgeliefert</translation>
+    </message>
+    <message>
+      <source>External</source>
+      <translation>Extern</translation>
+    </message>
+    <message>
+      <source>This file is for another game on Nexus (%1), so Mod Organizer can't download it here. Get it from its page, then choose it here, or install it yourself and mark it as done.</source>
+      <translation>Diese Datei gehört auf Nexus zu einem anderen Spiel (%1), daher kann Mod Organizer sie hier nicht herunterladen. Hol sie dir von ihrer Seite und wähle sie dann hier aus, oder installiere sie selbst und markiere sie als erledigt.</translation>
+    </message>
+    <message>
+      <source>This mod doesn't come from Nexus. Get its file, then choose it here, or install it yourself and mark it as done.</source>
+      <translation>Diese Mod stammt nicht von Nexus. Hol dir ihre Datei und wähle sie dann hier aus, oder installiere sie selbst und markiere sie als erledigt.</translation>
+    </message>
+    <message>
+      <source>Pause</source>
+      <translation>Pausieren</translation>
+    </message>
+    <message>
+      <source>Continue</source>
+      <translation>Fortsetzen</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Premium: up to three files download at a time.</source>
+      <translation>Premium: Bis zu drei Dateien werden gleichzeitig heruntergeladen.</translation>
+    </message>
+    <message>
+      <source>Free account: press "Open next on Nexus", then "Slow download" on the page. Each file is installed when it arrives.</source>
+      <translation>Kostenloses Konto: Klicke auf „Nächste auf Nexus öffnen“, dann auf der Seite auf „Slow download“. Jede Datei wird installiert, sobald sie ankommt.</translation>
+    </message>
+    <message>
+      <source>Paused. Downloads already started go on in the Downloads tab.</source>
+      <translation>Pausiert. Bereits gestartete Downloads laufen im Reiter Downloads weiter.</translation>
+    </message>
+    <message>
+      <source>The files are downloaded and installed in order.</source>
+      <translation>Die Dateien werden der Reihe nach heruntergeladen und installiert.</translation>
+    </message>
+    <message>
+      <source>Nexus asks free accounts to click once for each file on its website. Mod Organizer opens each page for you.</source>
+      <translation>Nexus verlangt von kostenlosen Konten auf seiner Website einen Klick pro Datei. Mod Organizer öffnet jede Seite für dich.</translation>
+    </message>
+    <message>
+      <source>The collection is installed.</source>
+      <translation>Die Sammlung ist installiert.</translation>
+    </message>
+    <message>
+      <source>The collection's archive couldn't be read, so this is a reduced install: the mod list from Nexus, without installer choices, mod order or bundled mods.</source>
+      <translation>Das Archiv der Sammlung konnte nicht gelesen werden, daher ist dies eine eingeschränkte Installation: die Modliste von Nexus, ohne Installer-Auswahlen, Mod-Reihenfolge und mitgelieferte Mods.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) of this collection come with patches, which Mod Organizer doesn't apply yet. They are listed in the summary.</source>
+      <translation>
+        <numerusform>%n Mod dieser Sammlung bringt Patches mit, die Mod Organizer noch nicht anwendet. Sie steht in der Zusammenfassung.</numerusform>
+        <numerusform>%n Mods dieser Sammlung bringen Patches mit, die Mod Organizer noch nicht anwendet. Sie stehen in der Zusammenfassung.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Open on Nexus</source>
+      <translation>Auf Nexus öffnen</translation>
+    </message>
+    <message>
+      <source>Try again</source>
+      <translation>Erneut versuchen</translation>
+    </message>
+    <message>
+      <source>Skip</source>
+      <translation>Überspringen</translation>
+    </message>
+    <message>
+      <source>Choose the mod's file</source>
+      <translation>Datei der Mod wählen</translation>
+    </message>
+    <message>
+      <source>Archives (*.7z *.zip *.rar *.fomod *.001);;All files (*)</source>
+      <translation>Archive (*.7z *.zip *.rar *.fomod *.001);;Alle Dateien (*)</translation>
+    </message>
+  </context>
+  <context>
+    <name>CollectionSession</name>
+    <message>
+      <source>Not selected</source>
+      <translation>Nicht ausgewählt</translation>
+    </message>
+    <message>
+      <source>This isn't the address of a collection.</source>
+      <translation>Das ist keine Adresse einer Sammlung.</translation>
+    </message>
+    <message>
+      <source>Waiting for the Nexus sign-in. If Mod Organizer isn't signed in, sign in under Settings &gt; Nexus.</source>
+      <translation>Warte auf die Nexus-Anmeldung. Falls Mod Organizer nicht angemeldet ist, melde dich unter Einstellungen &gt; Nexus an.</translation>
+    </message>
+    <message>
+      <source>This collection is for %1, but this instance manages %2. Open it from an instance for %1.</source>
+      <translation>Diese Sammlung ist für %1, aber diese Instanz verwaltet %2. Öffne sie aus einer Instanz für %1.</translation>
+    </message>
+    <message>
+      <source>Asking Nexus about the collection…</source>
+      <translation>Nexus wird zur Sammlung befragt…</translation>
+    </message>
+    <message>
+      <source>Nexus can't be reached right now: the request limit was reached. Try again later.</source>
+      <translation>Nexus ist gerade nicht erreichbar: Das Anfragelimit ist erreicht. Versuche es später erneut.</translation>
+    </message>
+    <message>
+      <source>Reading the collection's mod list…</source>
+      <translation>Modliste der Sammlung wird gelesen…</translation>
+    </message>
+    <message>
+      <source>Nexus refused the request (%1). Sign in to Nexus in Settings, then open the collection again.</source>
+      <translation>Nexus hat die Anfrage abgelehnt (%1). Melde dich in den Einstellungen bei Nexus an und öffne die Sammlung dann erneut.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't answer: %1</source>
+      <translation>Nexus hat nicht geantwortet: %1</translation>
+    </message>
+    <message>
+      <source>This collection wasn't found on Nexus.</source>
+      <translation>Diese Sammlung wurde auf Nexus nicht gefunden.</translation>
+    </message>
+    <message>
+      <source>This collection wasn't found on Nexus: %1</source>
+      <translation>Diese Sammlung wurde auf Nexus nicht gefunden: %1</translation>
+    </message>
+    <message>
+      <source>This collection has no published revision.</source>
+      <translation>Diese Sammlung hat keine veröffentlichte Revision.</translation>
+    </message>
+    <message>
+      <source>Revision %1 of this collection wasn't found on Nexus.</source>
+      <translation>Revision %1 dieser Sammlung wurde auf Nexus nicht gefunden.</translation>
+    </message>
+    <message>
+      <source>Revision %1 of this collection wasn't found on Nexus: %2</source>
+      <translation>Revision %1 dieser Sammlung wurde auf Nexus nicht gefunden: %2</translation>
+    </message>
+    <message>
+      <source>Nexus gave no link to download the collection.</source>
+      <translation>Nexus hat keinen Link zum Herunterladen der Sammlung geliefert.</translation>
+    </message>
+    <message>
+      <source>Asking Nexus for the collection's archive…</source>
+      <translation>Archiv der Sammlung wird bei Nexus angefragt…</translation>
+    </message>
+    <message>
+      <source>Nexus gave an invalid link to download the collection.</source>
+      <translation>Nexus hat einen ungültigen Link zum Herunterladen der Sammlung geliefert.</translation>
+    </message>
+    <message>
+      <source>The folder %1 couldn't be created.</source>
+      <translation>Der Ordner %1 konnte nicht erstellt werden.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be written.</source>
+      <translation>%1 konnte nicht geschrieben werden.</translation>
+    </message>
+    <message>
+      <source>Downloading the collection…</source>
+      <translation>Sammlung wird heruntergeladen…</translation>
+    </message>
+    <message>
+      <source>Downloading the collection… %1%</source>
+      <translation>Sammlung wird heruntergeladen… %1 %</translation>
+    </message>
+    <message>
+      <source>The collection couldn't be downloaded: %1</source>
+      <translation>Die Sammlung konnte nicht heruntergeladen werden: %1</translation>
+    </message>
+    <message>
+      <source>Reading the collection…</source>
+      <translation>Sammlung wird gelesen…</translation>
+    </message>
+    <message>
+      <source>the archive library couldn't be loaded</source>
+      <translation>die Archivbibliothek konnte nicht geladen werden</translation>
+    </message>
+    <message>
+      <source>the archive couldn't be opened</source>
+      <translation>das Archiv konnte nicht geöffnet werden</translation>
+    </message>
+    <message>
+      <source>it has no collection.json</source>
+      <translation>es enthält keine collection.json</translation>
+    </message>
+    <message>
+      <source>no temporary folder</source>
+      <translation>kein temporärer Ordner</translation>
+    </message>
+    <message>
+      <source>collection.json couldn't be extracted</source>
+      <translation>collection.json konnte nicht entpackt werden</translation>
+    </message>
+    <message>
+      <source>collection.json couldn't be read</source>
+      <translation>collection.json konnte nicht gelesen werden</translation>
+    </message>
+    <message>
+      <source>collection.json is not valid: %1</source>
+      <translation>collection.json ist ungültig: %1</translation>
+    </message>
+    <message>
+      <source>The collection couldn't be read: %1.</source>
+      <translation>Die Sammlung konnte nicht gelesen werden: %1.</translation>
+    </message>
+    <message>
+      <source>The download failed: %1</source>
+      <translation>Der Download ist fehlgeschlagen: %1</translation>
+    </message>
+    <message>
+      <source>The download didn't start.</source>
+      <translation>Der Download wurde nicht gestartet.</translation>
+    </message>
+    <message>
+      <source>Marked as done</source>
+      <translation>Als erledigt markiert</translation>
+    </message>
+    <message>
+      <source>Skipped</source>
+      <translation>Übersprungen</translation>
+    </message>
+    <message>
+      <source>Profile</source>
+      <translation>Profil</translation>
+    </message>
+    <message>
+      <source>"%1" can't be used as a profile name.</source>
+      <translation>„%1“ kann nicht als Profilname verwendet werden.</translation>
+    </message>
+    <message>
+      <source>A profile named "%1" already exists. Install the collection into it?</source>
+      <translation>Ein Profil namens „%1“ existiert bereits. Die Sammlung darin installieren?</translation>
+    </message>
+    <message>
+      <source>The profile couldn't be created: %1</source>
+      <translation>Das Profil konnte nicht erstellt werden: %1</translation>
+    </message>
+    <message>
+      <source>This collection is being installed into the profile "%1". Switch to it?</source>
+      <translation>Diese Sammlung wird in das Profil „%1“ installiert. Dorthin wechseln?</translation>
+    </message>
+    <message>
+      <source>The profile "%1" couldn't be selected.</source>
+      <translation>Das Profil „%1“ konnte nicht ausgewählt werden.</translation>
+    </message>
+    <message>
+      <source>Mods already installed</source>
+      <translation>Bereits installierte Mods</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) of this collection are already installed under the same name. What should happen to them?</source>
+      <translation>
+        <numerusform>%n Mod dieser Sammlung ist bereits unter demselben Namen installiert. Was soll damit geschehen?</numerusform>
+        <numerusform>%n Mods dieser Sammlung sind bereits unter demselben Namen installiert. Was soll damit geschehen?</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Replace them</source>
+      <translation>Ersetzen</translation>
+    </message>
+    <message>
+      <source>Keep the installed ones</source>
+      <translation>Die installierten behalten</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>Kept the installed mod</source>
+      <translation>Installierte Mod behalten</translation>
+    </message>
+    <message>
+      <source>Collection</source>
+      <translation>Sammlung</translation>
+    </message>
+    <message>
+      <source>Another installation is in progress. Try again when it has finished.</source>
+      <translation>Eine andere Installation läuft gerade. Versuche es erneut, wenn sie abgeschlossen ist.</translation>
+    </message>
+    <message>
+      <source>Not installed: %1</source>
+      <translation>Nicht installiert: %1</translation>
+    </message>
+    <message>
+      <source>Not installed: the installation was cancelled or failed.</source>
+      <translation>Nicht installiert: Die Installation wurde abgebrochen oder ist fehlgeschlagen.</translation>
+    </message>
+    <message>
+      <source>Another profile was selected. The collection is paused; press Continue to resume it in "%1".</source>
+      <translation>Ein anderes Profil wurde ausgewählt. Die Sammlung ist pausiert; klicke auf Fortsetzen, um sie in „%1“ fortzusetzen.</translation>
+    </message>
+    <message>
+      <source>The downloaded file is missing.</source>
+      <translation>Die heruntergeladene Datei fehlt.</translation>
+    </message>
+    <message>
+      <source>The mod's files are missing from the collection's archive.</source>
+      <translation>Die Dateien der Mod fehlen im Archiv der Sammlung.</translation>
+    </message>
+    <message>
+      <source>The collection's archive couldn't be opened.</source>
+      <translation>Das Archiv der Sammlung konnte nicht geöffnet werden.</translation>
+    </message>
+    <message>
+      <source>The mod's files in the collection's archive have unsafe names.</source>
+      <translation>Die Dateien der Mod im Archiv der Sammlung haben unsichere Namen.</translation>
+    </message>
+    <message>
+      <source>Not installed: the mod couldn't be created.</source>
+      <translation>Nicht installiert: Die Mod konnte nicht erstellt werden.</translation>
+    </message>
+    <message>
+      <source>The mod's files couldn't be extracted.</source>
+      <translation>Die Dateien der Mod konnten nicht entpackt werden.</translation>
+    </message>
+    <message>
+      <source>The mod's files couldn't be extracted: %1</source>
+      <translation>Die Dateien der Mod konnten nicht entpackt werden: %1</translation>
+    </message>
+    <message>
+      <source>Ordering the mods…</source>
+      <translation>Mods werden sortiert…</translation>
+    </message>
+    <message>
+      <source>Installed: %1</source>
+      <comment>summary count</comment>
+      <translation>Installiert: %1</translation>
+    </message>
+    <message>
+      <source>Skipped: %1</source>
+      <comment>summary count</comment>
+      <translation>Übersprungen: %1</translation>
+    </message>
+    <message>
+      <source>Failed: %1</source>
+      <comment>summary count</comment>
+      <translation>Fehlgeschlagen: %1</translation>
+    </message>
+    <message>
+      <source>Not installed:</source>
+      <translation>Nicht installiert:</translation>
+    </message>
+    <message>
+      <source>Installer options chosen by hand:</source>
+      <translation>Von Hand gewählte Installer-Optionen:</translation>
+    </message>
+    <message>
+      <source>Patches not applied (not supported yet):</source>
+      <translation>Nicht angewendete Patches (noch nicht unterstützt):</translation>
+    </message>
+    <message>
+      <source>Mod order rules dropped to break a loop:</source>
+      <translation>Verworfene Regeln zur Mod-Reihenfolge, um eine Schleife aufzulösen:</translation>
+    </message>
+    <message>
+      <source>Plugin order rules dropped to break a loop:</source>
+      <translation>Verworfene Regeln zur Plugin-Reihenfolge, um eine Schleife aufzulösen:</translation>
     </message>
   </context>
 </TS>

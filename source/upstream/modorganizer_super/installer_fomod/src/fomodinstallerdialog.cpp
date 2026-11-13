@@ -53,6 +53,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDir>
 #include <QFile>
 #include <QImage>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QRadioButton>
 #include <QScrollArea>
 #include <QStringEncoder>
@@ -118,6 +121,15 @@ void FomodInstallerDialog::buildUi()
   auto* root = new QVBoxLayout(this);
   root->setContentsMargins(24, 20, 24, 16);
   root->setSpacing(12);
+
+  // MO2 Revamped: which of a collection's choices didn't match (applyPreset)
+  ui->presetNote = new QLabel(this);
+  ui->presetNote->setProperty("wizardInfoBar", QStringLiteral("caution"));
+  // step and group names are the FOMOD's own words
+  ui->presetNote->setTextFormat(Qt::PlainText);
+  ui->presetNote->setWordWrap(true);
+  ui->presetNote->setVisible(false);
+  root->addWidget(ui->presetNote);
 
   auto* header = new QHBoxLayout;
   header->setSpacing(24);
@@ -1957,19 +1969,288 @@ void FomodInstallerDialog::displayCurrentPage()
   }
 }
 
-void FomodInstallerDialog::on_nextBtn_clicked()
+bool FomodInstallerDialog::advancePage()
 {
   if (ui->stepsStack->currentIndex() == ui->stepsStack->count() - 1) {
+    return false;
+  }
+  if (!nextPage()) {
+    return false;
+  }
+  ui->prevBtn->setEnabled(true);
+  displayCurrentPage();
+  activateCurrentPage();
+  return true;
+}
+
+void FomodInstallerDialog::on_nextBtn_clicked()
+{
+  if (!advancePage()) {
     this->accept();
   } else {
-    if (nextPage()) {
-      ui->prevBtn->setEnabled(true);
-      displayCurrentPage();
-      activateCurrentPage();
-    } else {
-      this->accept();
+    // a step the preset walk didn't reach gets the collection's choices too
+    applyPresetToCurrentPage();
+  }
+}
+
+bool FomodInstallerDialog::setPreset(const QString& json)
+{
+  QJsonParseError error;
+  const QJsonDocument document = QJsonDocument::fromJson(json.toUtf8(), &error);
+  if (!document.isObject()) {
+    log::warn("FOMOD preset isn't a JSON object: {}", error.errorString());
+    return false;
+  }
+  const QJsonObject root = document.object();
+  if (root.contains("type") && root.value("type").toString() != "fomod") {
+    log::warn("FOMOD preset of type '{}' ignored", root.value("type").toString());
+    return false;
+  }
+  if (!root.value("options").isArray()) {
+    log::warn("FOMOD preset without options ignored");
+    return false;
+  }
+
+  m_Preset.clear();
+  for (const QJsonValue& stepValue : root.value("options").toArray()) {
+    const QJsonObject stepObject = stepValue.toObject();
+    PresetStep step;
+    step.name = stepObject.value("name").toString().trimmed();
+    for (const QJsonValue& groupValue : stepObject.value("groups").toArray()) {
+      const QJsonObject groupObject = groupValue.toObject();
+      PresetGroup group;
+      group.name = groupObject.value("name").toString().trimmed();
+      for (const QJsonValue& choiceValue : groupObject.value("choices").toArray()) {
+        const QJsonObject choiceObject = choiceValue.toObject();
+        group.choices.push_back({choiceObject.value("name").toString().trimmed(),
+                                 choiceObject.value("idx").toInt(-1)});
+      }
+      step.groups.push_back(group);
+    }
+    m_Preset.push_back(step);
+  }
+  m_HasPreset = true;
+  m_PresetPages.clear();
+  m_PresetProblems.clear();
+  return true;
+}
+
+bool FomodInstallerDialog::applyPreset()
+{
+  if (!m_HasPreset) {
+    return false;
+  }
+
+  // the steps the user would see, in order, through the dialog's own Next:
+  // the choices set the flags that decide which step comes next
+  bool matched    = true;
+  bool reachedEnd = true;
+  if (!ui->body->isHidden()) {
+    while (true) {
+      // Next is off when a group still needs a selection
+      if (!applyPresetToCurrentPage() || !ui->nextBtn->isEnabled()) {
+        matched    = false;
+        reachedEnd = false;
+        break;
+      }
+      if (!advancePage()) {
+        break;
+      }
     }
   }
+
+  if (reachedEnd) {
+    for (const PresetStep& step : m_Preset) {
+      if (!step.used) {
+        addPresetProblem(tr("%1 (step not found)").arg(step.name));
+        matched = false;
+      }
+    }
+  }
+
+  return matched && !getName().isEmpty();
+}
+
+bool FomodInstallerDialog::applyPresetToCurrentPage()
+{
+  const int page = ui->stepsStack->currentIndex();
+  if (!m_HasPreset || page < 0 || !m_PresetPages.insert(page).second) {
+    return true;
+  }
+  QWidget* const widget  = ui->stepsStack->widget(page);
+  const QString stepName = widget->property("stepName").toString().trimmed();
+
+  // two steps of one name take the preset's entries for it in order
+  PresetStep* step = nullptr;
+  for (PresetStep& candidate : m_Preset) {
+    if (!candidate.used && candidate.name == stepName) {
+      step = &candidate;
+      break;
+    }
+  }
+
+  const QList<QVBoxLayout*> layouts =
+      widget->findChildren<QVBoxLayout*>("grouplayout");
+  auto groupName = [](QVBoxLayout* layout) {
+    return layout->parentWidget()->property("groupName").toString().trimmed();
+  };
+  std::vector<bool> named(layouts.size(), false);
+  bool matched = true;
+
+  if (step != nullptr) {
+    step->used = true;
+    for (const PresetGroup& group : step->groups) {
+      int found = -1;
+      for (int i = 0; i < layouts.size(); ++i) {
+        if (!named[i] && groupName(layouts[i]) == group.name) {
+          found = i;
+          break;
+        }
+      }
+      if (found < 0 || !applyPresetGroup(layouts[found], group)) {
+        addPresetProblem(tr("%1: %2", "installer step: option group").arg(stepName, group.name));
+        matched = false;
+      }
+      if (found >= 0) {
+        named[found] = true;
+      }
+    }
+  }
+
+  // the groups the preset doesn't name keep their defaults, which must be valid
+  for (int i = 0; i < layouts.size(); ++i) {
+    if (!named[i] && !groupSelectionValid(layouts[i])) {
+      addPresetProblem(tr("%1: %2", "installer step: option group").arg(stepName, groupName(layouts[i])));
+      matched = false;
+    }
+  }
+  return matched;
+}
+
+namespace
+{
+// a group's options in the order shown, and its None button if it has one
+QList<QAbstractButton*> groupControls(QVBoxLayout* layout, QAbstractButton** none)
+{
+  QList<QAbstractButton*> controls;
+  for (int i = 0; i != layout->count(); ++i) {
+    if (QLayoutItem* const item = layout->itemAt(i)) {
+      if (auto* const button = qobject_cast<QAbstractButton*>(item->widget())) {
+        if (button->objectName() == "choice") {
+          controls.push_back(button);
+        } else if (button->objectName() == "none" && none != nullptr) {
+          *none = button;
+        }
+      }
+    }
+  }
+  return controls;
+}
+}  // namespace
+
+bool FomodInstallerDialog::applyPresetGroup(QVBoxLayout* layout,
+                                            const PresetGroup& group)
+{
+  QAbstractButton* none                  = nullptr;
+  const QList<QAbstractButton*> controls = groupControls(layout, &none);
+  const GroupType type = layout->property("groupType").value<GroupType>();
+
+  // by name; by index when the name is missing or two options share it
+  bool resolved = true;
+  std::set<QAbstractButton*> wanted;
+  for (const PresetChoice& choice : group.choices) {
+    QList<int> byName;
+    if (!choice.name.isEmpty()) {
+      for (int i = 0; i < controls.size(); ++i) {
+        if (controls[i]->text().trimmed() == choice.name) {
+          byName.push_back(i);
+        }
+      }
+    }
+    int pick = -1;
+    if (byName.size() == 1) {
+      pick = byName[0];
+    } else if ((choice.name.isEmpty() || byName.size() > 1) && choice.idx >= 0 &&
+               choice.idx < controls.size() &&
+               (byName.isEmpty() || byName.contains(choice.idx))) {
+      pick = choice.idx;
+    }
+    if (pick < 0) {
+      resolved = false;
+    } else {
+      wanted.insert(controls[pick]);
+    }
+  }
+
+  // through the buttons themselves: their toggled signal updates Next as a
+  // click does, and the flags are read from what is checked; an option the
+  // step locked (required, not usable) stays as it is
+  if (type == TYPE_SELECTEXACTLYONE || type == TYPE_SELECTATMOSTONE) {
+    if (wanted.size() == 1) {
+      QAbstractButton* const target = *wanted.begin();
+      if (target->isEnabled()) {
+        target->setChecked(true);
+      }
+    } else if (wanted.empty() && none != nullptr) {
+      bool locked = false;
+      for (QAbstractButton* control : controls) {
+        locked = locked || (control->isChecked() && !control->isEnabled());
+      }
+      if (!locked) {
+        none->setChecked(true);
+      }
+    }
+  } else {
+    for (QAbstractButton* control : controls) {
+      const bool want = wanted.count(control) > 0;
+      if (control->isChecked() != want && control->isEnabled()) {
+        control->setChecked(want);
+      }
+    }
+  }
+
+  for (QAbstractButton* control : controls) {
+    if (control->isChecked() != (wanted.count(control) > 0)) {
+      resolved = false;
+    }
+  }
+  return resolved && groupSelectionValid(layout);
+}
+
+bool FomodInstallerDialog::groupSelectionValid(QVBoxLayout* layout) const
+{
+  const QList<QAbstractButton*> controls = groupControls(layout, nullptr);
+  int checked                            = 0;
+  for (QAbstractButton* control : controls) {
+    if (control->isChecked()) {
+      ++checked;
+    }
+  }
+  switch (layout->property("groupType").value<GroupType>()) {
+  case TYPE_SELECTEXACTLYONE:
+    return checked == 1;
+  case TYPE_SELECTATMOSTONE:
+    return checked <= 1;
+  case TYPE_SELECTATLEASTONE:
+    return checked >= 1;
+  case TYPE_SELECTALL:
+    return checked == controls.size();
+  case TYPE_SELECTANY:
+    return true;
+  }
+  return true;
+}
+
+void FomodInstallerDialog::addPresetProblem(const QString& problem)
+{
+  if (!m_PresetProblems.contains(problem)) {
+    m_PresetProblems.append(problem);
+  }
+  ui->presetNote->setText(
+      tr("The collection's choices didn't all match. Check these and finish by "
+         "hand: %1")
+          .arg(m_PresetProblems.join(QStringLiteral("; "))));
+  ui->presetNote->setVisible(true);
 }
 
 void FomodInstallerDialog::on_prevBtn_clicked()

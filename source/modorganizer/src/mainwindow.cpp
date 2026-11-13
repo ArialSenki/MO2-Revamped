@@ -56,6 +56,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modlistviewactions.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
+#include "collectiondialog.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
 #include "pluginlist.h"
@@ -1782,6 +1783,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   connect(&NexusInterface::instance(), SIGNAL(needLogin()), &m_OrganizerCore,
           SLOT(nexusApi()));
 
+  // MO2 Revamped: collection links open the collection's window
+  m_OrganizerCore.setCollectionHandler([this](const QString& url) {
+    QTimer::singleShot(0, this, [this, url] {
+      openCollection(url);
+    });
+  });
+
   connect(NexusInterface::instance().getAccessManager(),
           &NXMAccessManager::credentialsReceived, this, &MainWindow::updateWindowTitle);
   connect(&NexusInterface::instance(), &NexusInterface::requestsChanged, ui->statusBar,
@@ -1974,6 +1982,7 @@ void MainWindow::resetActionIcons()
 MainWindow::~MainWindow()
 {
   try {
+    m_OrganizerCore.setCollectionHandler({});
     cleanup();
 
     m_OrganizerCore.setUserInterface(nullptr);
@@ -3149,9 +3158,18 @@ void MainWindow::updateModPageMenu()
       registeredSources << gameName;
   }
 
-  // No mod page plugin and the menu was visible
-  bool keepOriginalAction =
-      modPagePlugins.size() == 0 && registeredSources.length() <= 1;
+  // MO2 Revamped: Nexus collections, from a pasted address
+  ui->actionModPage->menu()->addSeparator();
+  QAction* collection = new QAction(FluentIcons::glyph(0xE896),
+                                    tr("Download a Nexus collection…"),
+                                    ui->actionModPage->menu());
+  connect(collection, &QAction::triggered, this, &MainWindow::askForCollection,
+          Qt::QueuedConnection);
+  ui->actionModPage->menu()->addAction(collection);
+
+  // the menu always has the collection entry, so the single Nexus button is
+  // only for games without one
+  bool keepOriginalAction = false;
   if (keepOriginalAction) {
     ui->toolBar->insertAction(ui->actionAdd_Profile, ui->actionNexus);
   } else {
@@ -4913,6 +4931,89 @@ void MainWindow::categoriesSaved()
         mod->setCategory(category, false);
     }
   }
+}
+
+void MainWindow::askForCollection()
+{
+  if (auto link = CollectionDialog::askLink(this)) {
+    openCollection(link->game.isEmpty()
+                       ? link->slug
+                       : QStringLiteral("https://www.nexusmods.com/games/%1/collections/%2%3")
+                             .arg(link->game)
+                             .arg(link->slug)
+                             .arg(link->revision > 0
+                                      ? QStringLiteral("/revisions/%1").arg(link->revision)
+                                      : QString()));
+  }
+}
+
+void MainWindow::openCollection(const QString& text)
+{
+  const auto link = Collections::parseCollectionLink(text);
+  if (!link) {
+    QMessageBox::warning(this, tr("Nexus collection"),
+                         tr("This isn't the address of a Nexus collection."));
+    return;
+  }
+
+  if (m_CollectionDialog) {
+    const auto& open = m_CollectionDialog->link();
+    if (open.slug.compare(link->slug, Qt::CaseInsensitive) == 0 &&
+        (link->revision < 0 || open.revision < 0 || open.revision == link->revision)) {
+      m_CollectionDialog->showNormal();
+      m_CollectionDialog->raise();
+      m_CollectionDialog->activateWindow();
+      return;
+    }
+    if (m_CollectionDialog->isRunning()) {
+      QMessageBox::information(this, tr("Nexus collection"),
+                               tr("Another collection is being installed. Pause it and "
+                                  "close its window first."));
+      m_CollectionDialog->raise();
+      m_CollectionDialog->activateWindow();
+      return;
+    }
+    m_CollectionDialog->close();
+  }
+
+  auto* dlg = new CollectionDialog(m_OrganizerCore, *link, this);
+  dlg->setSwitchProfile([this](const QString& name) {
+    return selectProfileByName(name);
+  });
+  dlg->setRunLoot([this] {
+    QMetaObject::invokeMethod(ui->espList, "onSortButtonClicked");
+  });
+  m_CollectionDialog = dlg;
+  dlg->show();
+  dlg->raise();
+  dlg->activateWindow();
+}
+
+bool MainWindow::selectProfileByName(const QString& name)
+{
+  const Profile* current = m_OrganizerCore.currentProfile();
+  if (current != nullptr && current->name().compare(name, Qt::CaseInsensitive) == 0) {
+    return true;
+  }
+
+  // the list as the profiles folder has it; a profile's name is its folder's,
+  // which Windows matches without case. Never another profile
+  refreshProfiles(false);
+  QComboBox* box = ui->profileBox;
+  const int index = box->findText(name, Qt::MatchFixedString);
+  if (index <= 0) {
+    // index 0 is "Manage profiles...": the box goes back to the current one
+    QSignalBlocker block(box);
+    if (current != nullptr) {
+      box->setCurrentIndex(box->findText(current->name(), Qt::MatchFixedString));
+    }
+    return false;
+  }
+
+  box->setCurrentIndex(index);
+  current = m_OrganizerCore.currentProfile();
+  return current != nullptr &&
+         current->name().compare(box->itemText(index), Qt::CaseInsensitive) == 0;
 }
 
 void MainWindow::on_actionNexus_triggered()
