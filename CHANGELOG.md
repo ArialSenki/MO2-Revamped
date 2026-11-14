@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0-beta.11 (pre-release) — November 14, 2026
+
+- The Tools menu no longer opens empty in games whose tools all belong to other
+  games (Cyberpunk 2077, Baldur's Gate 3): it says so, and it now also has
+  Download a Nexus collection.
+
 ## 1.1.0-beta.10 (pre-release) — November 14, 2026
 
 ### Nexus collections

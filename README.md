@@ -12,8 +12,8 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.10](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.10)**
-— `MO2-Revamped-Setup-1.1.0-beta.10.exe` with its `SHA256SUMS.txt`. It is a beta:
+**Latest: [v1.1.0-beta.11](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.11)**
+— `MO2-Revamped-Setup-1.1.0-beta.11.exe` with its `SHA256SUMS.txt`. It is a beta:
 the newest version. It downloads and installs Nexus collections (modlists), into
 a new instance or profile, with their FOMOD choices, order and categories. Cyberpunk 2077 (Cyber Engine Tweaks, RED4ext and its plugins)
 and Baldur's Gate 3 (Script Extender, .pak mods) now work with mods, the setup
@@ -27,7 +27,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.10.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.11.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
