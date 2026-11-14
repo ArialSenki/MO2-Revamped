@@ -486,6 +486,145 @@ void CreateInstanceDialog::changePage(int d)
   }
 }
 
+// MO2 Revamped: the instance's folders and its ini, for the wizard and for
+// CreateInstanceDialog::createInstance(); throws Failed, the folders it made
+// are removed unless the caller commits them
+static void writeInstanceFiles(const CreateInstanceDialog::CreationInfo& ci,
+                               std::vector<std::unique_ptr<DirectoryCreator>>& dirs,
+                               const std::function<void(QString)>& log)
+{
+  auto createDir = [&](QString path) {
+    return DirectoryCreator::create(path, log);
+  };
+
+  dirs.push_back(createDir(ci.paths.base));
+  dirs.push_back(createDir(PathSettings::resolve(ci.paths.downloads, ci.paths.base)));
+  dirs.push_back(createDir(PathSettings::resolve(ci.paths.mods, ci.paths.base)));
+  dirs.push_back(createDir(PathSettings::resolve(ci.paths.profiles, ci.paths.base)));
+  dirs.push_back(createDir(PathSettings::resolve(ci.paths.overwrite, ci.paths.base)));
+
+  // creating ini
+  Settings s(ci.iniPath);
+  s.game().setName(ci.game->gameName());
+  s.game().setDirectory(ci.gameLocation);
+
+  // Instance settings are independent, but a newly created instance should
+  // start with the active MO2 appearance. Use the fork's light theme when
+  // there is no loaded instance to inherit from yet.
+  const auto* activeSettings = Settings::maybeInstance();
+  const auto activeStyle = activeSettings
+                               ? activeSettings->interface().styleName()
+                               : std::optional<QString>{};
+  s.interface().setStyleName(
+      activeStyle.value_or(Settings::defaultInterfaceStyleName()));
+
+  if (!ci.gameVariant.isEmpty()) {
+    s.game().setEdition(ci.gameVariant);
+  }
+
+  if (ci.paths.base != ci.dataPath) {
+    s.paths().setBase(ci.paths.base);
+  }
+
+  if (ci.paths.downloads != cid::makeDefaultPath(AppConfig::downloadPath())) {
+    s.paths().setDownloads(ci.paths.downloads);
+  }
+
+  if (ci.paths.mods != cid::makeDefaultPath(AppConfig::modsPath())) {
+    s.paths().setMods(ci.paths.mods);
+  }
+
+  if (ci.paths.profiles != cid::makeDefaultPath(AppConfig::profilesPath())) {
+    s.paths().setProfiles(ci.paths.profiles);
+  }
+
+  if (ci.paths.overwrite != cid::makeDefaultPath(AppConfig::overwritePath())) {
+    s.paths().setOverwrite(ci.paths.overwrite);
+  }
+
+  s.setProfileLocalInis(ci.profileSettings.localInis);
+  s.setProfileLocalSaves(ci.profileSettings.localSaves);
+  s.setProfileArchiveInvalidation(ci.profileSettings.archiveInvalidation);
+
+  if (EldenRingSaveSettings::supports(ci.game)) {
+    s.setEldenRingDefaultSaveMode(ci.profileSettings.eldenRingSaveMode);
+  }
+
+  log(CreateInstanceDialog::tr("Writing %1...").arg(ci.iniPath));
+
+  // writing ini
+  const auto r = s.sync();
+
+  if (r != QSettings::NoError) {
+    switch (r) {
+    case QSettings::AccessError:
+      log(QString::fromStdWString(formatSystemMessage(ERROR_ACCESS_DENIED)));
+      break;
+
+    case QSettings::FormatError:
+      log(CreateInstanceDialog::tr("Format error."));
+      break;
+
+    default:
+      log(CreateInstanceDialog::tr("Error %1.").arg(static_cast<int>(r)));
+      break;
+    }
+
+    throw Failed();
+  }
+}
+
+bool CreateInstanceDialog::createInstance(const CreationInfo& ci,
+                                          const std::function<void(QString)>& log)
+{
+  // global and portable instances; an isolated copy takes the wizard
+  if (ci.type == Isolated) {
+    return false;
+  }
+
+  try {
+    std::vector<std::unique_ptr<DirectoryCreator>> dirs;
+    dirs.push_back(DirectoryCreator::create(ci.dataPath, log));
+    writeInstanceFiles(ci, dirs, log);
+    for (auto& d : dirs) {
+      d->commit();
+    }
+    return true;
+  } catch (Failed&) {
+    // the folders made are gone
+    return false;
+  }
+}
+
+CreateInstanceDialog::CreationInfo
+CreateInstanceDialog::globalCreationInfo(const QString& instanceName,
+                                         MOBase::IPluginGame* game,
+                                         const QString& gameLocation,
+                                         const QString& gameVariant,
+                                         const ProfileSettings& profileSettings)
+{
+  CreationInfo ci;
+  ci.type            = Global;
+  ci.game            = game;
+  ci.gameLocation    = gameLocation;
+  ci.gameVariant     = gameVariant;
+  ci.instanceName    = instanceName;
+  ci.profileSettings = profileSettings;
+  ci.dataPath =
+      QDir::toNativeSeparators(InstanceManager::singleton().instancePath(instanceName));
+  ci.iniPath =
+      ci.dataPath + "/" + QString::fromStdWString(AppConfig::iniFileName());
+
+  // the wizard's defaults: everything in the instance's folder
+  ci.paths.base      = ci.dataPath;
+  ci.paths.ini       = ci.iniPath;
+  ci.paths.downloads = QDir::toNativeSeparators(cid::makeDefaultPath(AppConfig::downloadPath()));
+  ci.paths.mods      = QDir::toNativeSeparators(cid::makeDefaultPath(AppConfig::modsPath()));
+  ci.paths.profiles  = QDir::toNativeSeparators(cid::makeDefaultPath(AppConfig::profilesPath()));
+  ci.paths.overwrite = QDir::toNativeSeparators(cid::makeDefaultPath(AppConfig::overwritePath()));
+  return ci;
+}
+
 void CreateInstanceDialog::finish()
 {
   ui->creationLog->clear();
@@ -572,81 +711,7 @@ void CreateInstanceDialog::finish()
       }
       logCreation(tr("MO2 application files copied."));
     }
-    dirs.push_back(createDir(ci.paths.base));
-    dirs.push_back(createDir(PathSettings::resolve(ci.paths.downloads, ci.paths.base)));
-    dirs.push_back(createDir(PathSettings::resolve(ci.paths.mods, ci.paths.base)));
-    dirs.push_back(createDir(PathSettings::resolve(ci.paths.profiles, ci.paths.base)));
-    dirs.push_back(createDir(PathSettings::resolve(ci.paths.overwrite, ci.paths.base)));
-
-    // creating ini
-    Settings s(ci.iniPath);
-    s.game().setName(ci.game->gameName());
-    s.game().setDirectory(ci.gameLocation);
-
-    // Instance settings are independent, but a newly created instance should
-    // start with the active MO2 appearance. Use the fork's light theme when
-    // there is no loaded instance to inherit from yet.
-    const auto* activeSettings = Settings::maybeInstance();
-    const auto activeStyle = activeSettings
-                                 ? activeSettings->interface().styleName()
-                                 : std::optional<QString>{};
-    s.interface().setStyleName(
-        activeStyle.value_or(Settings::defaultInterfaceStyleName()));
-
-    if (!ci.gameVariant.isEmpty()) {
-      s.game().setEdition(ci.gameVariant);
-    }
-
-    if (ci.paths.base != ci.dataPath) {
-      s.paths().setBase(ci.paths.base);
-    }
-
-    if (ci.paths.downloads != cid::makeDefaultPath(AppConfig::downloadPath())) {
-      s.paths().setDownloads(ci.paths.downloads);
-    }
-
-    if (ci.paths.mods != cid::makeDefaultPath(AppConfig::modsPath())) {
-      s.paths().setMods(ci.paths.mods);
-    }
-
-    if (ci.paths.profiles != cid::makeDefaultPath(AppConfig::profilesPath())) {
-      s.paths().setProfiles(ci.paths.profiles);
-    }
-
-    if (ci.paths.overwrite != cid::makeDefaultPath(AppConfig::overwritePath())) {
-      s.paths().setOverwrite(ci.paths.overwrite);
-    }
-
-    s.setProfileLocalInis(ci.profileSettings.localInis);
-    s.setProfileLocalSaves(ci.profileSettings.localSaves);
-    s.setProfileArchiveInvalidation(ci.profileSettings.archiveInvalidation);
-
-    if (EldenRingSaveSettings::supports(ci.game)) {
-      s.setEldenRingDefaultSaveMode(ci.profileSettings.eldenRingSaveMode);
-    }
-
-    logCreation(tr("Writing %1...").arg(ci.iniPath));
-
-    // writing ini
-    const auto r = s.sync();
-
-    if (r != QSettings::NoError) {
-      switch (r) {
-      case QSettings::AccessError:
-        logCreation(formatSystemMessage(ERROR_ACCESS_DENIED));
-        break;
-
-      case QSettings::FormatError:
-        logCreation(tr("Format error."));
-        break;
-
-      default:
-        logCreation(tr("Error %1.").arg(static_cast<int>(r)));
-        break;
-      }
-
-      throw Failed();
-    }
+    writeInstanceFiles(ci, dirs, logger);
 
     // committing all the directories so they don't get deleted
     for (auto& d : dirs) {

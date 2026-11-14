@@ -51,8 +51,9 @@ constexpr int GlyphSize  = 16;   // the info glyph
 constexpr int GlyphGap   = 12;   // between the glyph and the text
 constexpr int MaxText    = 360;  // the text wraps beyond this width
 constexpr int MinCard    = 240;
-constexpr int EdgeMargin = 20;   // from the bottom of the window it is shown over
-constexpr int StackGap   = 8;    // between notices shown at the same time
+constexpr int EdgeMargin = 12;   // from the bottom of the window it is shown over
+constexpr int StackGap   = 2;    // between notices shown at the same time
+constexpr int MaxShown   = 4;    // over one window; a fifth closes the oldest
 constexpr int Radius     = 8;
 
 constexpr char16_t InfoGlyph = 0xE946;
@@ -193,7 +194,8 @@ void MessageDialog::place()
     if (other == this) {
       break;
     }
-    if (other->isVisible() && other->parentWidget() == parentWidget()) {
+    // one that is fading out leaves its place to the others
+    if (other->isVisible() && !other->m_closing && other->parentWidget() == parentWidget()) {
       stack += other->height() - 2 * Shadow + StackGap;
     }
   }
@@ -303,9 +305,21 @@ void MessageDialog::dismiss()
   }
   m_closing = true;
   m_timer->stop();
+  // the ones above it move down into its place
+  restack(parentWidget());
   FluentMotion::fadeOut(this, [this] {
     close();
   });
+}
+
+void MessageDialog::restack(QWidget* parent)
+{
+  for (const auto& other : liveNotices()) {
+    if (other != nullptr && other->isVisible() && !other->m_closing &&
+        other->parentWidget() == parent) {
+      other->place();
+    }
+  }
 }
 
 void MessageDialog::showMessage(const QString& text, QWidget* reference,
@@ -332,6 +346,19 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   }
 
   auto* notice = new MessageDialog(text, reference);
+
+  // a few at a time over one window: the oldest goes for the new one
+  QList<MessageDialog*> shown;
+  for (const auto& other : liveNotices()) {
+    if (other != nullptr && other->isVisible() && !other->m_closing &&
+        other->parentWidget() == notice->parentWidget()) {
+      shown.push_back(other);
+    }
+  }
+  for (int i = 0; i + MaxShown - 1 < shown.size(); ++i) {
+    shown[i]->dismiss();
+  }
+
   liveNotices().push_back(notice);
   notice->ensurePolished();  // the theme's colors and font
   notice->place();

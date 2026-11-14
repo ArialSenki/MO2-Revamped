@@ -255,7 +255,7 @@ private:
 
   // MO2 Revamped: Nexus collections; a link (nxm:// or the website's) opens
   // the collection's window, one at a time
-  void openCollection(const QString& link);
+  void openCollection(const QString& link, bool autoStart = false);
   void askForCollection();
   bool selectProfileByName(const QString& name);
 

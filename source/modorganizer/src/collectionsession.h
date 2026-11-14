@@ -18,6 +18,7 @@
 #include <QTimer>
 #include <boost/signals2/connection.hpp>
 #include <functional>
+#include <optional>
 #include <map>
 #include <vector>
 
@@ -48,6 +49,14 @@ public:
     Installed,
     Skipped,
     Failed
+  };
+
+  // where the collection goes
+  enum class Target
+  {
+    NewInstance,  // an instance of its own; MO2 restarts in it
+    NewProfile,   // a new profile in this instance
+    CurrentProfile
   };
 
   struct Entry
@@ -105,8 +114,27 @@ public:
   bool started() const { return m_started; }
 
   // options
-  bool newProfile() const { return m_newProfile; }
-  void setNewProfile(bool b);
+  Target target() const { return m_target; }
+  void setTarget(Target t);
+  // whether this instance may make another one and switch to it
+  bool canMakeInstance() const;
+  QString instanceName() const { return m_instanceName; }
+  void setInstanceName(const QString& name);
+  // why the name can't be used, empty when it can
+  QString instanceNameProblem(const QString& name) const;
+  // the window was opened by the restart into a new instance: Start goes on
+  // by itself once the collection is read
+  void setAutoStart(bool b) { m_autoStart = b; }
+  // a link from the browser for one of the files waited for: its download
+  // gives no notice of its own
+  bool claims(const QString& nxmUrl) const;
+
+  // the last place chosen, for the next collection
+  static Target lastTarget();
+
+  // the note a new instance finds at its start, see startInNewInstance();
+  // empty when there is none. It is removed as it is read
+  static QString takePendingCollection();
   QString profileName() const { return m_profileName; }
   void setProfileName(const QString& name);
   QString separatorName() const { return m_separatorName; }
@@ -173,7 +201,9 @@ private:
   std::vector<Entry> m_entries;
 
   bool m_started       = false;
-  bool m_newProfile    = true;
+  Target m_target      = Target::NewInstance;
+  QString m_instanceName;
+  bool m_autoStart     = false;
   QString m_profileName;
   QString m_separatorName;
   bool m_autoOpen      = true;
@@ -222,6 +252,7 @@ private:
 
   void loadState();
   void saveState() const;
+  QJsonObject stateObject() const;
 
   void scheduleScan();
   void scanDownloads();
@@ -230,6 +261,7 @@ private:
   bool installEntry(int row);
   bool installBundle(int row);
   bool prepareProfile();
+  void startInNewInstance();
   bool askAboutExisting();
   void finalize();
   void applyModOrder();

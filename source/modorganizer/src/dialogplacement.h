@@ -17,6 +17,8 @@
 //   after its first frame.
 //
 // A dialog that keeps its own place sets the property "mo2rOwnPosition".
+// A window of its own, with no owner and its own taskbar button, sets
+// "mo2rOwnWindow": it is left alone.
 
 class QDialog;
 class QWidget;

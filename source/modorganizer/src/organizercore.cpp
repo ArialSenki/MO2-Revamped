@@ -396,8 +396,14 @@ void OrganizerCore::downloadRequestedNXM(const QString& url)
   if (nexusApi()) {
     m_PendingDownloads.append(url);
   } else {
-    m_DownloadManager.addNXMDownload(url);
+    const bool claimed = m_CollectionClaims && m_CollectionClaims(url);
+    m_DownloadManager.addNXMDownload(url, !claimed);
   }
+}
+
+void OrganizerCore::setCollectionClaims(std::function<bool(const QString&)> claims)
+{
+  m_CollectionClaims = std::move(claims);
 }
 
 void OrganizerCore::profileCreated(MOBase::IProfile* profile)

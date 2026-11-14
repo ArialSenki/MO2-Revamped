@@ -8,11 +8,14 @@
 #include "collectionmanifest.h"
 #include "collectionsession.h"
 
+#include <QElapsedTimer>
 #include <QDialog>
+#include <QPointer>
 #include <functional>
 #include <optional>
 
 class OrganizerCore;
+class QButtonGroup;
 class QCheckBox;
 class QLabel;
 class QLineEdit;
@@ -29,7 +32,7 @@ class CollectionDialog : public QDialog
 
 public:
   CollectionDialog(OrganizerCore& core, const Collections::CollectionLink& link,
-                   QWidget* parent = nullptr);
+                   QWidget* anchor = nullptr);
   ~CollectionDialog() override;
 
   // asks for a collection's link (the clipboard's, when it holds one)
@@ -41,8 +44,15 @@ public:
   const Collections::CollectionLink& link() const { return m_session->link(); }
   bool isRunning() const;
 
+  // a file link the browser sent for this collection: no notice for it
+  bool claims(const QString& nxmUrl) const;
+  void setAutoStart(bool b);
+
 protected:
   void closeEvent(QCloseEvent* e) override;
+  bool eventFilter(QObject* watched, QEvent* event) override;
+  void moveEvent(QMoveEvent* e) override;
+  void resizeEvent(QResizeEvent* e) override;
 
 private:
   OrganizerCore& m_core;
@@ -65,7 +75,11 @@ private:
   QPushButton* m_externalDone;
   QLabel* m_notes;
   QFrame* m_optionsCard;
-  QCheckBox* m_newProfile;
+  QPointer<QWidget> m_anchor;
+  QButtonGroup* m_targets;
+  QFrame* m_instanceRow;
+  QLineEdit* m_instanceName;
+  QLabel* m_instanceProblem;
   QLineEdit* m_profileName;
   QLineEdit* m_separator;
   QCheckBox* m_autoOpen;
@@ -79,6 +93,10 @@ private:
   QPushButton* m_cancel;
 
   void setupUi();
+  void placeWindow();
+  QElapsedTimer m_placedAt;
+  bool m_userPlaced = false;
+  bool m_placing    = false;
   QFrame* createHeader();
   QFrame* createInstructions();
   QFrame* createMods();

@@ -15940,16 +15940,8 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
       <translation>Segna come fatta</translation>
     </message>
     <message>
-      <source>Profile name</source>
-      <translation>Nome del profilo</translation>
-    </message>
-    <message>
       <source>Install into a new profile</source>
       <translation>Installa in un nuovo profilo</translation>
-    </message>
-    <message>
-      <source>Off: the mods go into the current profile.</source>
-      <translation>Disattivato: le mod vanno nel profilo attuale.</translation>
     </message>
     <message>
       <source>Separator</source>
@@ -15978,10 +15970,6 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>The collection doesn't set a plugin order.</source>
       <translation>La collezione non stabilisce un ordine dei plugin.</translation>
-    </message>
-    <message>
-      <source>by %1</source>
-      <translation>di %1</translation>
     </message>
     <message>
       <source>revision %1</source>
@@ -16145,6 +16133,26 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>Archives (*.7z *.zip *.rar *.fomod *.001);;All files (*)</source>
       <translation>Archivi (*.7z *.zip *.rar *.fomod *.001);;Tutti i file (*)</translation>
+    </message>
+    <message>
+      <source>Install into a new instance</source>
+      <translation>Installa in una nuova istanza</translation>
+    </message>
+    <message>
+      <source>Its own instance, apart from your other mods. Mod Organizer restarts in it.</source>
+      <translation>Un'istanza a sé, separata dalle tue altre mod. Mod Organizer si riavvia in essa.</translation>
+    </message>
+    <message>
+      <source>A new profile in this instance. Its mods are shared with your other profiles.</source>
+      <translation>Un nuovo profilo in questa istanza. Le sue mod sono condivise con gli altri tuoi profili.</translation>
+    </message>
+    <message>
+      <source>Install into the current profile</source>
+      <translation>Installa nel profilo attuale</translation>
+    </message>
+    <message>
+      <source>The mods are added to the profile you are using now.</source>
+      <translation>Le mod vengono aggiunte al profilo che stai usando ora.</translation>
     </message>
   </context>
   <context>
@@ -16426,6 +16434,46 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>Plugin order rules dropped to break a loop:</source>
       <translation>Regole di ordine dei plugin scartate per spezzare un ciclo:</translation>
+    </message>
+    <message>
+      <source>Enter a name for the instance.</source>
+      <translation>Inserisci un nome per l'istanza.</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow this name for a folder.</source>
+      <translation>Windows non consente questo nome per una cartella.</translation>
+    </message>
+    <message>
+      <source>An instance with this name already exists.</source>
+      <translation>Esiste già un'istanza con questo nome.</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nuova istanza</translation>
+    </message>
+    <message>
+      <source>The instance couldn't be created: no game plugin.</source>
+      <translation>Impossibile creare l'istanza: nessun plugin del gioco.</translation>
+    </message>
+    <message>
+      <source>The instance couldn't be created.</source>
+      <translation>Impossibile creare l'istanza.</translation>
+    </message>
+    <message>
+      <source>The instance "%1" was created. Mod Organizer now restarts in it, and the collection goes on there.</source>
+      <translation>L'istanza «%1» è stata creata. Ora Mod Organizer si riavvia in essa e la collezione prosegue lì.</translation>
+    </message>
+    <message>
+      <source>The instance "%1" was created. Mod Organizer now restarts in it; open the collection there again.</source>
+      <translation>L'istanza «%1» è stata creata. Ora Mod Organizer si riavvia in essa; riapri lì la collezione.</translation>
+    </message>
+    <message>
+      <source>The collection goes on when you open the instance "%1" from Manage instances.</source>
+      <translation>La collezione prosegue quando apri l'istanza «%1» da Gestisci istanze.</translation>
+    </message>
+    <message>
+      <source>Mod Organizer can't close right now. The collection goes on when you open the instance "%1".</source>
+      <translation>Mod Organizer non può chiudersi ora. La collezione prosegue quando apri l'istanza «%1».</translation>
     </message>
   </context>
 </TS>

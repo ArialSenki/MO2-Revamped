@@ -1789,6 +1789,17 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       openCollection(url);
     });
   });
+  // the file links a collection waits for start without a notice each
+  m_OrganizerCore.setCollectionClaims([this](const QString& url) {
+    return m_CollectionDialog && m_CollectionDialog->claims(url);
+  });
+  // an instance made for a collection opens it at its first start, and goes on
+  QTimer::singleShot(0, this, [this] {
+    const QString pending = CollectionSession::takePendingCollection();
+    if (!pending.isEmpty()) {
+      openCollection(pending, true);
+    }
+  });
 
   connect(NexusInterface::instance().getAccessManager(),
           &NXMAccessManager::credentialsReceived, this, &MainWindow::updateWindowTitle);
@@ -1983,6 +1994,9 @@ MainWindow::~MainWindow()
 {
   try {
     m_OrganizerCore.setCollectionHandler({});
+    m_OrganizerCore.setCollectionClaims({});
+    // a window of its own, not a child of this one
+    delete m_CollectionDialog.data();
     cleanup();
 
     m_OrganizerCore.setUserInterface(nullptr);
@@ -4947,7 +4961,7 @@ void MainWindow::askForCollection()
   }
 }
 
-void MainWindow::openCollection(const QString& text)
+void MainWindow::openCollection(const QString& text, bool autoStart)
 {
   const auto link = Collections::parseCollectionLink(text);
   if (!link) {
@@ -4977,6 +4991,7 @@ void MainWindow::openCollection(const QString& text)
   }
 
   auto* dlg = new CollectionDialog(m_OrganizerCore, *link, this);
+  dlg->setAutoStart(autoStart);
   dlg->setSwitchProfile([this](const QString& name) {
     return selectProfileByName(name);
   });

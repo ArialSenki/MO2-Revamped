@@ -1,5 +1,10 @@
 #include "collectionsession.h"
 
+#include "createinstancedialog.h"
+#include "instancemanager.h"
+#include "shared/appconfig.h"
+#include "shared/util.h"
+
 #include "downloadmanager.h"
 #include "fluentdialogs.h"
 #include "installationmanager.h"
@@ -57,6 +62,38 @@ constexpr int PremiumParallel = 3;
 
 // a queued Premium download that hasn't shown up after this long failed
 constexpr qint64 QueueTimeoutMs = 120000;
+
+const char* TargetSetting = "Collections/installTarget";
+
+QString targetToString(CollectionSession::Target t)
+{
+  switch (t) {
+  case CollectionSession::Target::NewInstance:
+    return QStringLiteral("instance");
+  case CollectionSession::Target::NewProfile:
+    return QStringLiteral("profile");
+  case CollectionSession::Target::CurrentProfile:
+    break;
+  }
+  return QStringLiteral("current");
+}
+
+std::optional<CollectionSession::Target> targetFromString(const QString& s)
+{
+  if (s == "instance") {
+    return CollectionSession::Target::NewInstance;
+  } else if (s == "profile") {
+    return CollectionSession::Target::NewProfile;
+  } else if (s == "current") {
+    return CollectionSession::Target::CurrentProfile;
+  }
+  return {};
+}
+
+QString pendingPath()
+{
+  return QDir(Settings::instance().paths().base()).filePath("collections/pending.json");
+}
 
 const char* PresetProperty       = "mo2r.fomodPreset";
 const char* PresetResultProperty = "mo2r.fomodPresetResult";
@@ -160,6 +197,11 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
                                      QObject* parent)
     : QObject(parent), m_core(core), m_link(link), m_revision(link.revision)
 {
+  m_target = lastTarget();
+  if (m_target == Target::NewInstance && !canMakeInstance()) {
+    m_target = Target::NewProfile;
+  }
+
   m_scanTimer.setSingleShot(true);
   m_scanTimer.setInterval(250);
   connect(&m_scanTimer, &QTimer::timeout, this, &CollectionSession::scanDownloads);
@@ -325,13 +367,94 @@ QString CollectionSession::nexusPage(const Entry& e) const
 // ---------------------------------------------------------------------------
 // options
 
-void CollectionSession::setNewProfile(bool b)
+void CollectionSession::setTarget(Target t)
 {
-  if (m_profileMade) {
+  if (m_profileMade || (t == Target::NewInstance && !canMakeInstance())) {
     return;
   }
-  m_newProfile = b;
+  m_target = t;
+  GlobalSettings::setValue(TargetSetting, targetToString(t));
   saveState();
+}
+
+CollectionSession::Target CollectionSession::lastTarget()
+{
+  return targetFromString(GlobalSettings::value(TargetSetting).toString())
+      .value_or(Target::NewInstance);
+}
+
+bool CollectionSession::canMakeInstance() const
+{
+  return InstanceManager::singleton().allowedToChangeInstance();
+}
+
+void CollectionSession::setInstanceName(const QString& name)
+{
+  m_instanceName = name;
+}
+
+QString CollectionSession::instanceNameProblem(const QString& name) const
+{
+  const QString trimmed = name.trimmed();
+  if (trimmed.isEmpty()) {
+    return tr("Enter a name for the instance.");
+  }
+  QString fixed = trimmed;
+  if (!fixDirectoryName(fixed) || fixed != trimmed) {
+    return tr("Windows doesn't allow this name for a folder.");
+  }
+
+  // a folder with that name, in any case
+  const auto& instances = InstanceManager::singleton();
+  if (QFileInfo::exists(instances.instancePath(trimmed))) {
+    return tr("An instance with this name already exists.");
+  }
+  for (const QString& path : instances.globalInstancePaths()) {
+    if (QFileInfo(path).fileName().compare(trimmed, Qt::CaseInsensitive) == 0) {
+      return tr("An instance with this name already exists.");
+    }
+  }
+  return {};
+}
+
+bool CollectionSession::claims(const QString& nxmUrl) const
+{
+  static const QRegularExpression exp(
+      QStringLiteral("^nxm://[^/]+/mods/(\\d+)/files/(\\d+)"),
+      QRegularExpression::CaseInsensitiveOption);
+  const auto m = exp.match(nxmUrl.trimmed());
+  if (!m.hasMatch() || m_entries.empty() ||
+      (m_stage != Stage::Running && m_stage != Stage::Paused)) {
+    return false;
+  }
+  const int modId  = m.captured(1).toInt();
+  const int fileId = m.captured(2).toInt();
+  for (const auto& e : m_entries) {
+    const auto& mod = modOf(e);
+    if (e.selected && !e.byHand && mod.type == SourceType::Nexus &&
+        mod.modId == modId && mod.fileId == fileId &&
+        (e.status == Status::Pending || e.status == Status::WaitingForClick ||
+         e.status == Status::Downloading)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+QString CollectionSession::takePendingCollection()
+{
+  QFile f(pendingPath());
+  if (!f.open(QIODevice::ReadOnly)) {
+    return {};
+  }
+  const QString link =
+      QJsonDocument::fromJson(f.readAll()).object().value("link").toString();
+  f.close();
+  // once: a collection that fails to open doesn't come back at every start
+  if (!QFile::remove(f.fileName())) {
+    log::warn("the pending collection note couldn't be removed: {}", f.fileName());
+  }
+  return isCollectionNxmLink(link) ? link : QString();
 }
 
 void CollectionSession::setProfileName(const QString& name)
@@ -915,6 +1038,10 @@ void CollectionSession::buildEntries()
     m_profileName = displayName();
     fixDirectoryName(m_profileName);
   }
+  if (m_instanceName.isEmpty()) {
+    m_instanceName = displayName();
+    fixDirectoryName(m_instanceName);
+  }
   if (m_separatorName.isEmpty()) {
     m_separatorName = displayName();
     fixDirectoryName(m_separatorName);
@@ -925,6 +1052,14 @@ void CollectionSession::buildEntries()
            : m_started                        ? Stage::Paused
                                               : Stage::Ready);
   scanDownloads();
+
+  // opened by the restart into the instance made for it
+  if (m_autoStart) {
+    m_autoStart = false;
+    if (m_stage == Stage::Ready || m_stage == Stage::Paused) {
+      QTimer::singleShot(0, this, &CollectionSession::start);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -946,7 +1081,14 @@ void CollectionSession::loadState()
   }
   m_saved         = o;
   m_started       = o.value("started").toBool();
-  m_newProfile    = o.value("newProfile").toBool(true);
+  // older state files had only "new profile" or not
+  m_target = targetFromString(o.value("target").toString())
+                 .value_or(o.value("newProfile").toBool(true) ? Target::NewProfile
+                                                              : Target::CurrentProfile);
+  if (m_target == Target::NewInstance && !canMakeInstance()) {
+    m_target = Target::NewProfile;
+  }
+  m_instanceName  = o.value("instance").toString();
   m_profileName   = o.value("profile").toString();
   m_profileMade   = o.value("profileMade").toBool();
   m_separatorName = o.value("separator").toString();
@@ -963,6 +1105,22 @@ void CollectionSession::saveState() const
     return;
   }
 
+  const QString path = statePath(m_link.slug, m_revision);
+  if (path.isEmpty()) {
+    return;
+  }
+  QDir().mkpath(QFileInfo(path).absolutePath());
+  QSaveFile f(path);
+  if (f.open(QIODevice::WriteOnly)) {
+    f.write(QJsonDocument(stateObject()).toJson(QJsonDocument::Indented));
+    if (!f.commit()) {
+      log::warn("collection state couldn't be saved to {}", path);
+    }
+  }
+}
+
+QJsonObject CollectionSession::stateObject() const
+{
   QJsonObject o;
   o.insert("slug", m_link.slug);
   o.insert("revision", m_revision);
@@ -972,7 +1130,8 @@ void CollectionSession::saveState() const
   o.insert("archive", m_archivePath);
   o.insert("started", m_started);
   o.insert("finished", m_stage == Stage::Done);
-  o.insert("newProfile", m_newProfile);
+  o.insert("target", targetToString(m_target));
+  o.insert("instance", m_instanceName);
   o.insert("profile", m_profileName);
   o.insert("profileMade", m_profileMade);
   o.insert("separator", m_separatorName);
@@ -994,19 +1153,7 @@ void CollectionSession::saveState() const
     entries.append(j);
   }
   o.insert("entries", entries);
-
-  const QString path = statePath(m_link.slug, m_revision);
-  if (path.isEmpty()) {
-    return;
-  }
-  QDir().mkpath(QFileInfo(path).absolutePath());
-  QSaveFile f(path);
-  if (f.open(QIODevice::WriteOnly)) {
-    f.write(QJsonDocument(o).toJson(QJsonDocument::Indented));
-    if (!f.commit()) {
-      log::warn("collection state couldn't be saved to {}", path);
-    }
-  }
+  return o;
 }
 
 // ---------------------------------------------------------------------------
@@ -1299,7 +1446,7 @@ bool CollectionSession::prepareProfile()
 {
   const Profile* current = m_core.currentProfile();
 
-  if (!m_newProfile) {
+  if (m_target == Target::CurrentProfile) {
     if (!m_profileMade) {
       m_profileName = current != nullptr ? current->name() : QString();
       m_profileMade = true;
@@ -1460,6 +1607,132 @@ bool CollectionSession::askAboutExisting()
   return true;
 }
 
+void CollectionSession::startInNewInstance()
+{
+  const QString problem = instanceNameProblem(m_instanceName);
+  if (!problem.isEmpty()) {
+    QMessageBox::warning(qApp->activeWindow(), tr("New instance"), problem);
+    return;
+  }
+  const QString name = m_instanceName.trimmed();
+
+  // the same game, folder and edition as this instance
+  const IPluginGame* managed = m_core.managedGame();
+  IPluginGame* game = managed != nullptr ? m_core.getGame(managed->gameShortName()) : nullptr;
+  if (game == nullptr) {
+    QMessageBox::warning(qApp->activeWindow(), tr("New instance"),
+                         tr("The instance couldn't be created: no game plugin."));
+    return;
+  }
+  const Settings& settings = m_core.settings();
+  CreateInstanceDialog::ProfileSettings profiles;
+  profiles.localInis           = settings.profileLocalInis();
+  profiles.localSaves          = settings.profileLocalSaves();
+  profiles.archiveInvalidation = settings.profileArchiveInvalidation();
+  profiles.eldenRingSaveMode   = settings.eldenRingDefaultSaveMode();
+
+  const auto ci = CreateInstanceDialog::globalCreationInfo(
+      name, game, QDir::toNativeSeparators(game->gameDirectory().absolutePath()),
+      settings.game().edition().value_or(QString()), profiles);
+
+  QStringList lines;
+  if (!CreateInstanceDialog::createInstance(ci, [&lines](QString line) {
+        lines.append(line);
+      })) {
+    QMessageBox::warning(qApp->activeWindow(), tr("New instance"),
+                         tr("The instance couldn't be created.") + "\n\n" +
+                             lines.join('\n'));
+    return;
+  }
+  log::info("collection {}: instance '{}' created", m_link.slug, name);
+
+  // the collection's state in the new instance, as chosen here (its mods into
+  // the instance's own profile), and the note that opens it at its start
+  QJsonObject state = stateObject();
+  state.insert("started", false);
+  state.insert("finished", false);
+  state.insert("target", targetToString(Target::CurrentProfile));
+  state.insert("profile", QString());
+  state.insert("profileMade", false);
+  state.insert("instance", QString());
+  state.insert("approvedReplacements", QJsonObject());
+  state.insert("archive", QString());
+  QJsonArray entries;
+  for (const auto& v : state.value("entries").toArray()) {
+    QJsonObject e = v.toObject();
+    // its downloads folder is its own: everything starts again from Nexus
+    const QString status = e.value("status").toString();
+    e.insert("status", status == "skipped" ? status : QStringLiteral("pending"));
+    e.insert("archive", QString());
+    e.insert("reason", status == "skipped" ? e.value("reason") : QJsonValue(QString()));
+    e.insert("kept", false);
+    e.insert("preset", QString());
+    entries.append(e);
+  }
+  state.insert("entries", entries);
+
+  // the collection's archive, so it isn't fetched again there (small; the
+  // mods' files are downloaded in the new instance)
+  if (!m_archivePath.isEmpty() && QFile::exists(m_archivePath)) {
+    const QDir archives(QDir(ci.dataPath).filePath(
+        QString::fromStdWString(AppConfig::downloadPath()) + "/collections"));
+    archives.mkpath(".");
+    if (!QFile::copy(m_archivePath,
+                     archives.filePath(QFileInfo(m_archivePath).fileName()))) {
+      log::warn("collection {}: the archive couldn't be copied to the new instance",
+                m_link.slug);
+    }
+  }
+
+  const QDir target(QDir(ci.dataPath).filePath("collections"));
+  target.mkpath(".");
+  const QString link = QStringLiteral("nxm://%1/collections/%2/revisions/%3")
+                           .arg(m_domain, m_link.slug)
+                           .arg(m_revision);
+  QJsonObject pending;
+  pending.insert("link", link);
+  QSaveFile stateFile(target.filePath(QStringLiteral("%1-%2.json")
+                                          .arg(m_link.slug)
+                                          .arg(m_revision)));
+  QSaveFile pendingFile(target.filePath("pending.json"));
+  bool written = stateFile.open(QIODevice::WriteOnly) &&
+                 stateFile.write(QJsonDocument(state).toJson()) > 0 &&
+                 stateFile.commit();
+  written = written && pendingFile.open(QIODevice::WriteOnly) &&
+            pendingFile.write(QJsonDocument(pending).toJson()) > 0 &&
+            pendingFile.commit();
+  if (!written) {
+    log::warn("collection {}: the note for the new instance couldn't be written",
+              m_link.slug);
+  }
+
+  // switched to as the instance manager does: Mod Organizer restarts in it
+  const QString text =
+      written ? tr("The instance \"%1\" was created. Mod Organizer now restarts in it, "
+                   "and the collection goes on there.")
+                    .arg(name)
+              : tr("The instance \"%1\" was created. Mod Organizer now restarts in it; "
+                   "open the collection there again.")
+                    .arg(name);
+  if (QMessageBox::information(qApp->activeWindow(), tr("New instance"), text,
+                               QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Ok) {
+    QMessageBox::information(qApp->activeWindow(), tr("New instance"),
+                             tr("The collection goes on when you open the instance "
+                                "\"%1\" from Manage instances.")
+                                 .arg(name));
+    return;
+  }
+  if (ExitModOrganizer(Exit::Restart)) {
+    // only once closing is certain, as the instance manager does
+    InstanceManager::singleton().setCurrentInstance(Instance(ci.dataPath, false));
+  } else {
+    QMessageBox::information(qApp->activeWindow(), tr("New instance"),
+                             tr("Mod Organizer can't close right now. The collection "
+                                "goes on when you open the instance \"%1\".")
+                                 .arg(name));
+  }
+}
+
 void CollectionSession::start()
 {
   if (m_stage != Stage::Ready && m_stage != Stage::Paused && m_stage != Stage::Done) {
@@ -1469,6 +1742,12 @@ void CollectionSession::start()
     QMessageBox::information(qApp->activeWindow(), tr("Collection"),
                              tr("Another installation is in progress. Try again when "
                                 "it has finished."));
+    return;
+  }
+
+  // an instance of its own: made here, the collection goes on there
+  if (m_target == Target::NewInstance && !m_profileMade) {
+    startInNewInstance();
     return;
   }
 

@@ -93,6 +93,19 @@ public:
     ProfileSettings profileSettings;
   };
 
+  // MO2 Revamped: creates an instance without the wizard, as its last page
+  // does (folders, ini); false when it couldn't, with the reasons in log.
+  // Global and portable instances only
+  static bool createInstance(const CreationInfo& ci,
+                             const std::function<void(QString)>& log);
+
+  // a global instance with the wizard's default paths
+  static CreationInfo globalCreationInfo(const QString& instanceName,
+                                         MOBase::IPluginGame* game,
+                                         const QString& gameLocation,
+                                         const QString& gameVariant,
+                                         const ProfileSettings& profileSettings);
+
   CreateInstanceDialog(const PluginContainer& pc, Settings* s,
                        QWidget* parent = nullptr);
 

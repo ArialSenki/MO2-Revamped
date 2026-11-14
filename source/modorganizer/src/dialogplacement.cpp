@@ -132,7 +132,7 @@ void DialogPlacement::reownShownDialogs()
 {
   for (QWidget* window : QApplication::topLevelWidgets()) {
     auto* dialog = qobject_cast<QDialog*>(window);
-    if (dialog == nullptr || !dialog->isVisible() ||
+    if (dialog == nullptr || !dialog->isVisible() || dialog->property("mo2rOwnWindow").toBool() ||
         dialog->testAttribute(Qt::WA_DontShowOnScreen) || dialog->windowHandle() == nullptr) {
       continue;
     }
@@ -193,6 +193,12 @@ void DialogPlacement::place(QDialog* dialog, bool fluentSize)
   // a native file dialog's hidden Qt widget: Windows places the real one
   if (dialog == nullptr || !dialog->isWindow() ||
       dialog->testAttribute(Qt::WA_DontShowOnScreen)) {
+    return;
+  }
+
+  // a window of its own (the Nexus collection window): no owner, so it keeps
+  // its taskbar button, and the place it gives itself
+  if (dialog->property("mo2rOwnWindow").toBool()) {
     return;
   }
 

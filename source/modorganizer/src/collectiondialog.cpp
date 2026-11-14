@@ -5,11 +5,18 @@
 #include "fluentpanels.h"
 #include "organizercore.h"
 #include "profile.h"
+#include "settings.h"
 
 #include "revampedtheme.h"
 #include <utility.h>
 
+#include <QResizeEvent>
+#include <QMoveEvent>
 #include <QApplication>
+#include <QButtonGroup>
+#include <QGuiApplication>
+#include <QRadioButton>
+#include <QScreen>
 #include <QCheckBox>
 #include <QClipboard>
 #include <QCloseEvent>
@@ -40,6 +47,8 @@ namespace
 constexpr char16_t ProfileGlyph   = 0xE77B;  // Contact
 constexpr char16_t SeparatorGlyph = 0xE8FD;  // BulletedList
 constexpr char16_t NextGlyph      = 0xE8A7;  // OpenInNewWindow
+constexpr char16_t InstanceGlyph  = 0xE8B7;  // Folder
+constexpr char16_t CurrentGlyph   = 0xE73E;  // CheckMark
 
 enum Column
 {
@@ -57,11 +66,27 @@ constexpr int RowRole = Qt::UserRole + 1;
 }  // namespace
 
 CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& link,
-                                   QWidget* parent)
-    : QDialog(parent), m_core(core), m_session(new CollectionSession(core, link, this))
+                                   QWidget* anchor)
+    // a window of its own, with its own taskbar button: no parent, so Windows
+    // doesn't keep it over the main window, which stays usable
+    : QDialog(nullptr, Qt::Window | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
+                           Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint),
+      m_core(core), m_session(new CollectionSession(core, link, this)), m_anchor(anchor)
 {
   setAttribute(Qt::WA_DeleteOnClose);
+  // DialogPlacement leaves it alone: no owner, its own place and size
+  setProperty("mo2rOwnWindow", true);
+  setProperty("mo2rOwnPosition", true);
   setupUi();
+  placeWindow();
+
+  // MO2 may still be starting (a collection link on its command line): the main
+  // window is then shown and maximized after this; the window follows it for a
+  // few seconds, unless the user has moved or resized it by then
+  if (m_anchor != nullptr) {
+    m_anchor->installEventFilter(this);
+    m_placedAt.start();
+  }
 
   connect(m_session, &CollectionSession::changed, this, &CollectionDialog::onChanged);
   connect(m_session, &CollectionSession::entryChanged, this,
@@ -77,6 +102,100 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
 }
 
 CollectionDialog::~CollectionDialog() = default;
+
+void CollectionDialog::placeWindow()
+{
+  QWidget* anchor = m_anchor;
+  QScreen* screen = anchor != nullptr ? anchor->screen() : QGuiApplication::primaryScreen();
+  if (screen == nullptr) {
+    return;
+  }
+  const QRect available = screen->availableGeometry();
+
+  // never smaller than this, never larger than the work area
+  const QSize least = QSize(900, 600).boundedTo(available.size());
+  setMinimumSize(least);
+
+  // where the user left it, when that is on the main window's monitor
+  if (Settings::instance().geometry().restoreGeometry(this) &&
+      QGuiApplication::screenAt(geometry().center()) == screen &&
+      available.contains(geometry().center())) {
+    resize(size().boundedTo(available.size()));
+    return;
+  }
+
+  // else large from the start, centred over the main window; over the work area
+  // when the main window fills it or isn't shown yet (its size is then not its
+  // final one)
+  const bool overWindow = anchor != nullptr && anchor->isVisible() &&
+                          !anchor->isMaximized() && !anchor->isFullScreen();
+  const QRect base      = overWindow ? anchor->frameGeometry() : available;
+  // wide enough for the table, tall enough for its rows under the options
+  QSize wanted(base.width() * 7 / 10, base.height() * 85 / 100);
+  wanted       = wanted.expandedTo(least).boundedTo(available.size() - QSize(16, 40));
+  resize(wanted);
+  const QPoint middle = base.center();
+  QPoint pos(middle.x() - wanted.width() / 2, middle.y() - wanted.height() / 2);
+  pos.setX(qBound(available.left(), pos.x(),
+                  qMax(available.left(), available.right() - wanted.width() - 16)));
+  pos.setY(qBound(available.top(), pos.y(),
+                  qMax(available.top(), available.bottom() - wanted.height() - 40)));
+  move(pos);
+}
+
+bool CollectionDialog::eventFilter(QObject* watched, QEvent* event)
+{
+  if (watched == m_anchor.data() && m_placedAt.isValid() &&
+      (event->type() == QEvent::Show || event->type() == QEvent::WindowStateChange ||
+       event->type() == QEvent::Resize)) {
+    if (m_placedAt.elapsed() > 5000 || m_userPlaced) {
+      m_anchor->removeEventFilter(this);
+      m_placedAt.invalidate();
+    } else {
+      // after the main window has applied its new state
+      QTimer::singleShot(0, this, [this] {
+        if (!m_userPlaced) {
+          m_placing = true;
+          placeWindow();
+          m_placing = false;
+        }
+        // a window of its own: the main window, shown after it, would cover it
+        if (isVisible() && !isMinimized()) {
+          raise();
+          activateWindow();
+        }
+      });
+    }
+  }
+  return QDialog::eventFilter(watched, event);
+}
+
+void CollectionDialog::moveEvent(QMoveEvent* e)
+{
+  QDialog::moveEvent(e);
+  // a move the window manager made because the user dragged it
+  if (!m_placing && isVisible() && e->spontaneous()) {
+    m_userPlaced = true;
+  }
+}
+
+void CollectionDialog::resizeEvent(QResizeEvent* e)
+{
+  QDialog::resizeEvent(e);
+  if (!m_placing && isVisible() && e->spontaneous()) {
+    m_userPlaced = true;
+  }
+}
+
+bool CollectionDialog::claims(const QString& nxmUrl) const
+{
+  return m_session->claims(nxmUrl);
+}
+
+void CollectionDialog::setAutoStart(bool b)
+{
+  m_session->setAutoStart(b);
+}
 
 void CollectionDialog::setSwitchProfile(std::function<bool(const QString&)> f)
 {
@@ -149,12 +268,13 @@ void CollectionDialog::setupUi()
 {
   setObjectName(QStringLiteral("CollectionDialog"));
   setWindowTitle(tr("Nexus collection"));
-  setMinimumSize(820, 560);
-  resize(1040, 760);
 
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(16, 16, 16, 12);
   layout->setSpacing(8);
+  // the content changes inside the window: text, rows, notices and the
+  // summary never resize or move it
+  layout->setSizeConstraint(QLayout::SetNoConstraint);
 
   layout->addWidget(createHeader());
   layout->addWidget(createInstructions());
@@ -167,6 +287,7 @@ void CollectionDialog::setupUi()
   m_status = new QLabel(this);
   m_status->setObjectName(QStringLiteral("instanceDetailCaption"));
   m_status->setWordWrap(true);
+  m_status->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   footer->addWidget(m_status, 1);
 
   m_next = new QPushButton(FluentIcons::glyph(NextGlyph), tr("Open next on Nexus"), this);
@@ -256,7 +377,7 @@ QFrame* CollectionDialog::createInstructions()
       shell::Open(url);
     }
   });
-  m_instructions->setMaximumHeight(130);
+  m_instructions->setMaximumHeight(100);
   layout->addWidget(m_instructions);
 
   m_instructionsCard->hide();
@@ -368,15 +489,47 @@ QFrame* CollectionDialog::createOptions()
   rows->setContentsMargins(0, 4, 0, 4);
   rows->setSpacing(0);
 
-  m_newProfile  = new QCheckBox(m_optionsCard);
-  m_newProfile->setObjectName(QStringLiteral("collectionNewProfile"));
+  m_targets = new QButtonGroup(m_optionsCard);
+  auto addTarget = [this](CollectionSession::Target target, char16_t glyph,
+                          const QString& title, const QString& description,
+                          QLineEdit* field) {
+    auto* radio = new QRadioButton(m_optionsCard);
+    radio->setAccessibleName(title);
+    radio->setAccessibleDescription(description);
+    m_targets->addButton(radio, static_cast<int>(target));
+    QList<QWidget*> widgets;
+    if (field != nullptr) {
+      field->setMinimumWidth(260);
+      field->setAccessibleName(title);
+      widgets.append(field);
+    }
+    widgets.append(radio);
+    return FluentPanels::addEditRow(m_optionsCard, glyph, title, description, widgets);
+  };
+
+  m_instanceName = new QLineEdit(m_optionsCard);
+  m_instanceName->setObjectName(QStringLiteral("collectionInstanceName"));
+  m_instanceRow = addTarget(CollectionSession::Target::NewInstance, InstanceGlyph,
+                            tr("Install into a new instance"),
+                            tr("Its own instance, apart from your other mods. Mod "
+                               "Organizer restarts in it."),
+                            m_instanceName);
+  m_instanceProblem = new QLabel(m_optionsCard);
+  m_instanceProblem->setObjectName(QStringLiteral("instanceNameValidation"));
+  m_instanceProblem->setContentsMargins(58, 0, 18, 6);
+  m_instanceProblem->hide();
+  rows->addWidget(m_instanceProblem);
+
   m_profileName = new QLineEdit(m_optionsCard);
   m_profileName->setObjectName(QStringLiteral("collectionProfileName"));
-  m_profileName->setMinimumWidth(260);
-  m_profileName->setAccessibleName(tr("Profile name"));
-  FluentPanels::addSwitchRow(m_optionsCard, ProfileGlyph, tr("Install into a new profile"),
-                             tr("Off: the mods go into the current profile."),
-                             m_newProfile, m_profileName);
+  addTarget(CollectionSession::Target::NewProfile, ProfileGlyph,
+            tr("Install into a new profile"),
+            tr("A new profile in this instance. Its mods are shared with your other "
+               "profiles."),
+            m_profileName);
+  addTarget(CollectionSession::Target::CurrentProfile, CurrentGlyph,
+            tr("Install into the current profile"),
+            tr("The mods are added to the profile you are using now."), nullptr);
 
   m_separator = new QLineEdit(m_optionsCard);
   m_separator->setObjectName(QStringLiteral("collectionSeparator"));
@@ -391,8 +544,12 @@ QFrame* CollectionDialog::createOptions()
       m_optionsCard, NextGlyph, tr("Open the next page automatically"),
       tr("When a file from Nexus arrives, the next file's page opens."), m_autoOpen);
 
-  connect(m_newProfile, &QCheckBox::toggled, this, [this](bool on) {
-    m_session->setNewProfile(on);
+  connect(m_targets, &QButtonGroup::idClicked, this, [this](int id) {
+    m_session->setTarget(static_cast<CollectionSession::Target>(id));
+    updateButtons();
+  });
+  connect(m_instanceName, &QLineEdit::textChanged, this, [this](const QString& text) {
+    m_session->setInstanceName(text.trimmed());
     updateButtons();
   });
   connect(m_profileName, &QLineEdit::editingFinished, this, [this] {
@@ -454,7 +611,7 @@ void CollectionDialog::onChanged()
   m_name->setText(m_session->displayName());
   QStringList caption;
   if (!m_session->author().isEmpty()) {
-    caption.append(tr("by %1").arg(m_session->author()));
+    caption.append(m_session->author());
   }
   if (m_session->revision() > 0) {
     caption.append(tr("revision %1").arg(m_session->revision()));
@@ -501,8 +658,13 @@ void CollectionDialog::onChanged()
     m_count->setText(count);
 
     // the profile and separator fields as the session has them
-    QSignalBlocker b1(m_newProfile), b2(m_autoOpen);
-    m_newProfile->setChecked(m_session->newProfile());
+    QSignalBlocker b1(m_targets), b2(m_autoOpen), b3(m_instanceName);
+    if (auto* b = m_targets->button(static_cast<int>(m_session->target()))) {
+      b->setChecked(true);
+    }
+    if (!m_instanceName->hasFocus()) {
+      m_instanceName->setText(m_session->instanceName());
+    }
     if (!m_profileName->hasFocus()) {
       m_profileName->setText(m_session->profileName());
     }
@@ -512,7 +674,10 @@ void CollectionDialog::onChanged()
     m_autoOpen->setChecked(m_session->autoOpenNext());
   }
 
-  m_optionsCard->setVisible(haveRows && stage != Stage::Done);
+  // only before it starts: they can't change once it runs, and the mod list
+  // needs the room while it downloads
+  m_optionsCard->setVisible(stage == Stage::Loading || stage == Stage::Ready);
+  m_optionsCard->setEnabled(haveRows);
   m_summaryCard->setVisible(stage == Stage::Done);
   if (stage == Stage::Done) {
     m_summary->setPlainText(m_session->summary());
@@ -724,8 +889,23 @@ void CollectionDialog::updateButtons()
   // the row follows its switch
   m_autoOpen->setVisible(!premium);
 
-  m_newProfile->setEnabled(!locked);
-  m_profileName->setEnabled(!locked && m_session->newProfile());
+  // the place is chosen once
+  const auto target = m_session->target();
+  for (auto* b : m_targets->buttons()) {
+    b->setEnabled(!locked);
+  }
+  m_instanceRow->setVisible(m_session->canMakeInstance());
+  m_instanceName->setEnabled(!locked && target == CollectionSession::Target::NewInstance);
+  m_profileName->setEnabled(!locked && target == CollectionSession::Target::NewProfile);
+  QString problem;
+  if (!locked && target == CollectionSession::Target::NewInstance) {
+    problem = m_session->instanceNameProblem(m_instanceName->text());
+  }
+  m_instanceProblem->setText(problem);
+  m_instanceProblem->setVisible(!problem.isEmpty());
+  if (!problem.isEmpty()) {
+    m_start->setEnabled(false);
+  }
 
   if (stage != Stage::Error) {
     m_status->setPalette(QPalette());
@@ -843,6 +1023,7 @@ void CollectionDialog::chooseFile(int row)
 
 void CollectionDialog::closeEvent(QCloseEvent* e)
 {
+  Settings::instance().geometry().saveGeometry(this);
   if (m_session->stage() == Stage::Running) {
     // nothing is lost: it continues from the same place next time
     m_session->pause();

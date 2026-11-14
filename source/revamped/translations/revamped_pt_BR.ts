@@ -15694,16 +15694,8 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
       <translation>Marcar como concluído</translation>
     </message>
     <message>
-      <source>Profile name</source>
-      <translation>Nome do perfil</translation>
-    </message>
-    <message>
       <source>Install into a new profile</source>
       <translation>Instalar em um novo perfil</translation>
-    </message>
-    <message>
-      <source>Off: the mods go into the current profile.</source>
-      <translation>Desativado: os mods vão para o perfil atual.</translation>
     </message>
     <message>
       <source>Separator</source>
@@ -15732,10 +15724,6 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
     <message>
       <source>The collection doesn't set a plugin order.</source>
       <translation>A coleção não define uma ordem de plugins.</translation>
-    </message>
-    <message>
-      <source>by %1</source>
-      <translation>por %1</translation>
     </message>
     <message>
       <source>revision %1</source>
@@ -15899,6 +15887,26 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
     <message>
       <source>Archives (*.7z *.zip *.rar *.fomod *.001);;All files (*)</source>
       <translation>Pacotes (*.7z *.zip *.rar *.fomod *.001);;Todos os arquivos (*)</translation>
+    </message>
+    <message>
+      <source>Install into a new instance</source>
+      <translation>Instalar em uma nova instância</translation>
+    </message>
+    <message>
+      <source>Its own instance, apart from your other mods. Mod Organizer restarts in it.</source>
+      <translation>Uma instância própria, separada dos seus outros mods. O Mod Organizer reinicia nela.</translation>
+    </message>
+    <message>
+      <source>A new profile in this instance. Its mods are shared with your other profiles.</source>
+      <translation>Um novo perfil nesta instância. Os mods dele são compartilhados com seus outros perfis.</translation>
+    </message>
+    <message>
+      <source>Install into the current profile</source>
+      <translation>Instalar no perfil atual</translation>
+    </message>
+    <message>
+      <source>The mods are added to the profile you are using now.</source>
+      <translation>Os mods são adicionados ao perfil que você está usando agora.</translation>
     </message>
   </context>
   <context>
@@ -16180,6 +16188,46 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
     <message>
       <source>Plugin order rules dropped to break a loop:</source>
       <translation>Regras de ordem de plugins descartadas para quebrar um ciclo:</translation>
+    </message>
+    <message>
+      <source>Enter a name for the instance.</source>
+      <translation>Digite um nome para a instância.</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow this name for a folder.</source>
+      <translation>O Windows não permite este nome para uma pasta.</translation>
+    </message>
+    <message>
+      <source>An instance with this name already exists.</source>
+      <translation>Já existe uma instância com este nome.</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nova instância</translation>
+    </message>
+    <message>
+      <source>The instance couldn't be created: no game plugin.</source>
+      <translation>Não foi possível criar a instância: nenhum plugin do jogo.</translation>
+    </message>
+    <message>
+      <source>The instance couldn't be created.</source>
+      <translation>Não foi possível criar a instância.</translation>
+    </message>
+    <message>
+      <source>The instance "%1" was created. Mod Organizer now restarts in it, and the collection goes on there.</source>
+      <translation>A instância "%1" foi criada. O Mod Organizer reinicia nela agora, e a coleção continua lá.</translation>
+    </message>
+    <message>
+      <source>The instance "%1" was created. Mod Organizer now restarts in it; open the collection there again.</source>
+      <translation>A instância "%1" foi criada. O Mod Organizer reinicia nela agora; abra a coleção lá novamente.</translation>
+    </message>
+    <message>
+      <source>The collection goes on when you open the instance "%1" from Manage instances.</source>
+      <translation>A coleção continua quando você abrir a instância "%1" em Gerenciar instâncias.</translation>
+    </message>
+    <message>
+      <source>Mod Organizer can't close right now. The collection goes on when you open the instance "%1".</source>
+      <translation>O Mod Organizer não pode fechar agora. A coleção continua quando você abrir a instância "%1".</translation>
     </message>
   </context>
 </TS>

@@ -408,6 +408,9 @@ public:
   // the handler the main window sets; links that come before it wait for it
   void setCollectionHandler(std::function<void(const QString&)> handler);
   void requestCollection(const QString& url);
+  // a file link a collection waits for: its download gives no notice, the
+  // collection's window shows it
+  void setCollectionClaims(std::function<bool(const QString&)> claims);
 
   boost::signals2::connection onAboutToRun(
       const std::function<bool(const QString&, const QDir&, const QString&)>& func);
@@ -606,6 +609,7 @@ private:
 
   std::function<void(const QString&)> m_CollectionHandler;
   QStringList m_PendingCollections;
+  std::function<bool(const QString&)> m_CollectionClaims;
 
   // the last createMod() set an existing folder aside (Replace)
   bool m_CreatedModReplaced = false;

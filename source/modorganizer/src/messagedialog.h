@@ -88,6 +88,8 @@ private:
   QRect cardRect() const;
   void place();
   void dismiss();
+  // the notices still shown over parent, placed again from the bottom
+  static void restack(QWidget* parent);
 };
 
 #endif  // MESSAGEDIALOG_H
