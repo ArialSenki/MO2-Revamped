@@ -16154,6 +16154,22 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
       <source>The mods are added to the profile you are using now.</source>
       <translation>Le mod vengono aggiunte al profilo che stai usando ora.</translation>
     </message>
+    <message>
+      <source>Download automatically (Premium)</source>
+      <translation>Scarica automaticamente (Premium)</translation>
+    </message>
+    <message>
+      <source>After Start, every file downloads and installs with no more clicks.</source>
+      <translation>Dopo Avvia, ogni file viene scaricato e installato senza altri clic.</translation>
+    </message>
+    <message>
+      <source>Page by page on Nexus</source>
+      <translation>Pagina per pagina su Nexus</translation>
+    </message>
+    <message>
+      <source>Each file's page opens on Nexus, and you start its download there.</source>
+      <translation>La pagina di ogni file si apre su Nexus e lì avvii il suo download.</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>

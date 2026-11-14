@@ -49,6 +49,7 @@ constexpr char16_t SeparatorGlyph = 0xE8FD;  // BulletedList
 constexpr char16_t NextGlyph      = 0xE8A7;  // OpenInNewWindow
 constexpr char16_t InstanceGlyph  = 0xE8B7;  // Folder
 constexpr char16_t CurrentGlyph   = 0xE73E;  // CheckMark
+constexpr char16_t DownloadGlyph  = 0xE896;  // Download
 
 enum Column
 {
@@ -538,6 +539,27 @@ QFrame* CollectionDialog::createOptions()
                               "name."),
                            {m_separator});
 
+  // Premium: everything after Start, or page by page
+  m_modes = new QButtonGroup(m_optionsCard);
+  auto addMode = [this](int id, char16_t glyph, const QString& title,
+                        const QString& description) {
+    auto* radio = new QRadioButton(m_optionsCard);
+    radio->setAccessibleName(title);
+    radio->setAccessibleDescription(description);
+    m_modes->addButton(radio, id);
+    return FluentPanels::addEditRow(m_optionsCard, glyph, title, description, {radio});
+  };
+  m_autoModeRow = addMode(1, DownloadGlyph, tr("Download automatically (Premium)"),
+                          tr("After Start, every file downloads and installs with no "
+                             "more clicks."));
+  m_pageModeRow = addMode(0, NextGlyph, tr("Page by page on Nexus"),
+                          tr("Each file's page opens on Nexus, and you start its "
+                             "download there."));
+  connect(m_modes, &QButtonGroup::idClicked, this, [this](int id) {
+    m_session->setAutoDownload(id == 1);
+    updateButtons();
+  });
+
   m_autoOpen = new QCheckBox(m_optionsCard);
   m_autoOpen->setObjectName(QStringLiteral("collectionAutoOpen"));
   m_autoOpenRow = FluentPanels::addSwitchRow(
@@ -658,7 +680,10 @@ void CollectionDialog::onChanged()
     m_count->setText(count);
 
     // the profile and separator fields as the session has them
-    QSignalBlocker b1(m_targets), b2(m_autoOpen), b3(m_instanceName);
+    QSignalBlocker b1(m_targets), b2(m_autoOpen), b3(m_instanceName), b4(m_modes);
+    if (auto* b = m_modes->button(m_session->autoDownloadChosen() ? 1 : 0)) {
+      b->setChecked(true);
+    }
     if (auto* b = m_targets->button(static_cast<int>(m_session->target()))) {
       b->setChecked(true);
     }
@@ -860,6 +885,8 @@ void CollectionDialog::updateButtons()
 {
   const Stage stage    = m_session->stage();
   const bool premium   = m_session->isPremium();
+  // what the buttons and texts follow: no clicks, or page by page
+  const bool automatic = m_session->downloadsAutomatically();
   const bool loaded    = stage != Stage::Loading && stage != Stage::Error;
   const bool locked    = m_session->started();
 
@@ -884,10 +911,12 @@ void CollectionDialog::updateButtons()
   m_cancel->setText(stage == Stage::Done || stage == Stage::Error ? tr("Close")
                                                                   : tr("Cancel"));
 
-  m_next->setVisible(loaded && !premium && stage != Stage::Done);
+  m_next->setVisible(loaded && !automatic && stage != Stage::Done);
   m_next->setEnabled(stage == Stage::Running);
-  // the row follows its switch
-  m_autoOpen->setVisible(!premium);
+  // the mode choice only for Premium; the switch only page by page
+  m_autoModeRow->setVisible(premium);
+  m_pageModeRow->setVisible(premium);
+  m_autoOpen->setVisible(!automatic);
 
   // the place is chosen once
   const auto target = m_session->target();
@@ -911,14 +940,14 @@ void CollectionDialog::updateButtons()
     m_status->setPalette(QPalette());
     if (stage == Stage::Running) {
       m_status->setText(
-          premium ? tr("Premium: up to three files download at a time.")
+          automatic ? tr("Premium: up to three files download at a time.")
                   : tr("Free account: press \"Open next on Nexus\", then \"Slow download\" "
                        "on the page. Each file is installed when it arrives."));
     } else if (stage == Stage::Paused) {
       m_status->setText(tr("Paused. Downloads already started go on in the Downloads "
                            "tab."));
     } else if (stage == Stage::Ready) {
-      m_status->setText(premium ? tr("The files are downloaded and installed in order.")
+      m_status->setText(automatic ? tr("The files are downloaded and installed in order.")
                                 : tr("Nexus asks free accounts to click once for each "
                                      "file on its website. Mod Organizer opens each "
                                      "page for you."));

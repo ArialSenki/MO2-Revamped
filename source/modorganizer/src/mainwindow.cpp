@@ -1795,10 +1795,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   });
   // an instance made for a collection opens it at its first start, and goes on
   QTimer::singleShot(0, this, [this] {
-    const QString pending = CollectionSession::takePendingCollection();
-    if (!pending.isEmpty()) {
-      openCollection(pending, true);
-    }
+    openPendingCollection();
   });
 
   connect(NexusInterface::instance().getAccessManager(),
@@ -4947,6 +4944,29 @@ void MainWindow::categoriesSaved()
   }
 }
 
+void MainWindow::openPendingCollection(int idleChecks)
+{
+  // after the new instance's own first start: the theme question, the
+  // categories and game wiki questions, and whatever dialog is open. Checked
+  // twice in a row, a second apart, so a question that follows another one
+  // isn't overtaken
+  const auto& settings = m_OrganizerCore.settings();
+  const bool busy = QApplication::activeModalWidget() != nullptr || !isVisible() ||
+                    isMinimized() || settings.firstStart() ||
+                    !settings.interface().themeChoicePromptCompleted();
+  if (busy || idleChecks < 2) {
+    QTimer::singleShot(1000, this, [this, busy, idleChecks] {
+      openPendingCollection(busy ? 0 : idleChecks + 1);
+    });
+    return;
+  }
+
+  const QString pending = CollectionSession::takePendingCollection();
+  if (!pending.isEmpty()) {
+    openCollection(pending, true);
+  }
+}
+
 void MainWindow::askForCollection()
 {
   if (auto link = CollectionDialog::askLink(this)) {
@@ -5000,8 +5020,11 @@ void MainWindow::openCollection(const QString& text, bool autoStart)
   });
   m_CollectionDialog = dlg;
   dlg->show();
-  dlg->raise();
-  dlg->activateWindow();
+  // never over a dialog the user is answering
+  if (QApplication::activeModalWidget() == nullptr) {
+    dlg->raise();
+    dlg->activateWindow();
+  }
 }
 
 bool MainWindow::selectProfileByName(const QString& name)

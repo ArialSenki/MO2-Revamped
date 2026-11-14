@@ -77,6 +77,9 @@ private:
   QFrame* m_optionsCard;
   QPointer<QWidget> m_anchor;
   QButtonGroup* m_targets;
+  QButtonGroup* m_modes;
+  QFrame* m_autoModeRow;
+  QFrame* m_pageModeRow;
   QFrame* m_instanceRow;
   QLineEdit* m_instanceName;
   QLabel* m_instanceProblem;

@@ -16193,6 +16193,22 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
       <source>The mods are added to the profile you are using now.</source>
       <translation>Los mods se añaden al perfil que usas ahora.</translation>
     </message>
+    <message>
+      <source>Download automatically (Premium)</source>
+      <translation>Descargar automáticamente (Premium)</translation>
+    </message>
+    <message>
+      <source>After Start, every file downloads and installs with no more clicks.</source>
+      <translation>Tras Iniciar, cada archivo se descarga e instala sin más clics.</translation>
+    </message>
+    <message>
+      <source>Page by page on Nexus</source>
+      <translation>Página a página en Nexus</translation>
+    </message>
+    <message>
+      <source>Each file's page opens on Nexus, and you start its download there.</source>
+      <translation>La página de cada archivo se abre en Nexus y allí inicias su descarga.</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>

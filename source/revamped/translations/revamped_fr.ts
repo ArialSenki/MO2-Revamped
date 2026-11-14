@@ -16096,6 +16096,22 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <source>The mods are added to the profile you are using now.</source>
       <translation>Les mods sont ajoutés au profil que vous utilisez actuellement.</translation>
     </message>
+    <message>
+      <source>Download automatically (Premium)</source>
+      <translation>Télécharger automatiquement (Premium)</translation>
+    </message>
+    <message>
+      <source>After Start, every file downloads and installs with no more clicks.</source>
+      <translation>Après Démarrer, chaque fichier est téléchargé et installé sans autre clic.</translation>
+    </message>
+    <message>
+      <source>Page by page on Nexus</source>
+      <translation>Page par page sur Nexus</translation>
+    </message>
+    <message>
+      <source>Each file's page opens on Nexus, and you start its download there.</source>
+      <translation>La page de chaque fichier s'ouvre sur Nexus, et vous y lancez son téléchargement.</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>

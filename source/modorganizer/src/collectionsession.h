@@ -139,6 +139,14 @@ public:
   void setProfileName(const QString& name);
   QString separatorName() const { return m_separatorName; }
   void setSeparatorName(const QString& name);
+  // Premium: everything downloads after Start (the default), or page by page
+  // as a free account does
+  bool autoDownloadChosen() const { return m_autoDownload; }
+  void setAutoDownload(bool b);
+  // whether downloads are queued without clicks: chosen, and the account is
+  // Premium or not known yet (the sign-in after a restart)
+  bool downloadsAutomatically() const;
+  static bool lastAutoDownload();
   bool autoOpenNext() const { return m_autoOpen; }
   void setAutoOpenNext(bool b);
   void setSelected(int row, bool selected);
@@ -204,6 +212,7 @@ private:
   Target m_target      = Target::NewInstance;
   QString m_instanceName;
   bool m_autoStart     = false;
+  bool m_autoDownload  = true;
   QString m_profileName;
   QString m_separatorName;
   bool m_autoOpen      = true;

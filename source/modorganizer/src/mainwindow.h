@@ -257,6 +257,8 @@ private:
   // the collection's window, one at a time
   void openCollection(const QString& link, bool autoStart = false);
   void askForCollection();
+  // the collection a new instance was made for, once its first start is done
+  void openPendingCollection(int idleChecks = 0);
   bool selectProfileByName(const QString& name);
 
   QMenu* createPopupMenu() override;

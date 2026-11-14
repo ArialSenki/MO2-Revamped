@@ -63,7 +63,8 @@ constexpr int PremiumParallel = 3;
 // a queued Premium download that hasn't shown up after this long failed
 constexpr qint64 QueueTimeoutMs = 120000;
 
-const char* TargetSetting = "Collections/installTarget";
+const char* TargetSetting       = "Collections/installTarget";
+const char* AutoDownloadSetting = "Collections/autoDownload";
 
 QString targetToString(CollectionSession::Target t)
 {
@@ -197,7 +198,8 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
                                      QObject* parent)
     : QObject(parent), m_core(core), m_link(link), m_revision(link.revision)
 {
-  m_target = lastTarget();
+  m_target       = lastTarget();
+  m_autoDownload = lastAutoDownload();
   if (m_target == Target::NewInstance && !canMakeInstance()) {
     m_target = Target::NewProfile;
   }
@@ -381,6 +383,29 @@ CollectionSession::Target CollectionSession::lastTarget()
 {
   return targetFromString(GlobalSettings::value(TargetSetting).toString())
       .value_or(Target::NewInstance);
+}
+
+void CollectionSession::setAutoDownload(bool b)
+{
+  m_autoDownload = b;
+  GlobalSettings::setValue(AutoDownloadSetting, b);
+  saveState();
+  emit changed();
+  scheduleScan();
+}
+
+bool CollectionSession::lastAutoDownload()
+{
+  return GlobalSettings::value(AutoDownloadSetting, true).toBool();
+}
+
+bool CollectionSession::downloadsAutomatically() const
+{
+  if (!m_autoDownload) {
+    return false;
+  }
+  const auto account = NexusInterface::instance().getAPIUserAccount();
+  return !account.isValid() || account.type() == APIUserAccountTypes::Premium;
 }
 
 bool CollectionSession::canMakeInstance() const
@@ -1093,6 +1118,7 @@ void CollectionSession::loadState()
   m_profileMade   = o.value("profileMade").toBool();
   m_separatorName = o.value("separator").toString();
   m_autoOpen      = o.value("autoOpen").toBool(true);
+  m_autoDownload  = o.value("autoDownload").toBool(m_autoDownload);
   // a blanket "replace" from an older state file isn't taken: the folders are
   // asked about again
   m_approved = o.value("approvedReplacements").toObject();
@@ -1136,6 +1162,7 @@ QJsonObject CollectionSession::stateObject() const
   o.insert("profileMade", m_profileMade);
   o.insert("separator", m_separatorName);
   o.insert("autoOpen", m_autoOpen);
+  o.insert("autoDownload", m_autoDownload);
   o.insert("approvedReplacements", m_approved);
 
   QJsonArray entries;
@@ -1286,7 +1313,7 @@ void CollectionSession::scanDownloads()
   }
 
   // the next page opens once the last one's file came
-  if (arrived && !isPremium() && m_autoOpen) {
+  if (arrived && !downloadsAutomatically() && m_autoOpen) {
     bool waiting = false;
     for (const auto& e : m_entries) {
       waiting = waiting || e.status == Status::WaitingForClick;
@@ -1302,7 +1329,8 @@ void CollectionSession::scanDownloads()
 
 void CollectionSession::pumpDownloads()
 {
-  if (m_stage != Stage::Running || !isPremium() || m_pumping) {
+  // only a Premium account queues: one not known yet waits for the sign-in
+  if (m_stage != Stage::Running || !isPremium() || !m_autoDownload || m_pumping) {
     return;
   }
   m_pumping         = true;
@@ -1367,7 +1395,7 @@ void CollectionSession::openPage(int row)
     }
     shell::Open(QUrl(nexusPage(e)));
     // a free account's click on the page brings the file; Premium queues it
-    if (e.status == Status::Pending && !e.byHand && !isPremium()) {
+    if (e.status == Status::Pending && !e.byHand && !downloadsAutomatically()) {
       setStatus(row, Status::WaitingForClick);
       saveState();
       emit changed();
@@ -1779,8 +1807,9 @@ void CollectionSession::start()
 
   scanDownloads();
 
-  // a free account starts with the first page
-  if (!isPremium() && m_autoOpen) {
+  // page by page starts with the first page; automatic downloads start in the
+  // scan above, or with the next scan once the sign-in is known
+  if (!downloadsAutomatically() && m_autoOpen) {
     bool waiting = false;
     for (const auto& e : m_entries) {
       waiting = waiting || e.status == Status::WaitingForClick;
