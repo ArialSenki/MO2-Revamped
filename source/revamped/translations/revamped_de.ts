@@ -7469,6 +7469,10 @@ Fehler: %1</translation>
       <source>Another collection is being installed. Pause it and close its window first.</source>
       <translation>Eine andere Sammlung wird gerade installiert. Pausiere sie zuerst und schließe ihr Fenster.</translation>
     </message>
+    <message>
+      <source>No tools for this game</source>
+      <translation>Keine Werkzeuge für dieses Spiel</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>

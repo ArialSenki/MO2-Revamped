@@ -3065,6 +3065,20 @@ void MainWindow::updateToolMenu()
     }
   }
 
+  // MO2 Revamped: a game whose tools all belong to other games (Cyberpunk,
+  // BG3) left the menu empty, as if it were broken
+  QMenu* toolMenu = ui->actionTool->menu();
+  if (toolMenu->isEmpty()) {
+    QAction* none = toolMenu->addAction(tr("No tools for this game"));
+    none->setEnabled(false);
+  }
+  toolMenu->addSeparator();
+  QAction* collection = new QAction(FluentIcons::glyph(0xE896),
+                                    tr("Download a Nexus collection…"), toolMenu);
+  connect(collection, &QAction::triggered, this, &MainWindow::askForCollection,
+          Qt::QueuedConnection);
+  toolMenu->addAction(collection);
+
   m_ToolMenuDirty = false;
 }
 
