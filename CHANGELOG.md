@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.1.0-beta.12 (pre-release) — November 14, 2026
+
+### Nexus collections, complete
+
+- Binary patches from the collection are applied after a mod installs, only to
+  the file they were made for (checked by its checksum and size).
+- Exact copies of the author's install: files outside the collection's list are
+  hidden (it can be undone) and differences are listed.
+- File overrides and INI tweaks from the collection. INI tweaks go only into the
+  game's own INI files, in the profile's own copies; MO2 asks before changing
+  the game's INI files in Documents.
+- Update a collection to a new revision: only what changed is downloaded; mods
+  it no longer has go to the Recycle Bin after asking.
+- Browse collections: Nexus or Tools > Browse collections lists the game's
+  collections, with search and sorting.
+- Safety fixes from an audit: patches can't write outside their memory or use
+  it all, curator text can't load files from your PC or the network, nothing is
+  applied to your own mods after a Merge, and the Nexus button opens Nexus in
+  one click again.
+
 ## 1.1.0-beta.11 (pre-release) — November 14, 2026
 
 - The Tools menu no longer opens empty in games whose tools all belong to other
