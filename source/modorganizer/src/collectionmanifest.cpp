@@ -255,6 +255,24 @@ std::optional<CollectionManifest> CollectionManifest::parse(const QByteArray& js
     mod.category         = m.value("details").toObject().value("category").toString().trimmed();
     mod.choices          = m.value("choices");
     mod.hasPatches       = hasContent(m.value("patches"));
+    const QJsonObject patches = m.value("patches").toObject();
+    for (auto it = patches.begin(); it != patches.end(); ++it) {
+      if (!it.key().isEmpty()) {
+        mod.patches.emplace_back(it.key(), it.value().toString());
+      }
+    }
+    for (const auto& v : m.value("hashes").toArray()) {
+      const QJsonObject o = v.toObject();
+      const QString path  = o.value("path").toString();
+      if (!path.isEmpty()) {
+        mod.hashes.push_back({path, o.value("md5").toString().toLower()});
+      }
+    }
+    for (const auto& v : m.value("fileOverrides").toArray()) {
+      if (!v.toString().isEmpty()) {
+        mod.fileOverrides.append(v.toString());
+      }
+    }
     mod.hasHashes        = hasContent(m.value("hashes"));
     mod.hasFileOverrides = hasContent(m.value("fileOverrides"));
 

@@ -40,6 +40,8 @@
 #include <QNetworkReply>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QCryptographicHash>
+#include <QDirIterator>
 #include <QSaveFile>
 #include <QSettings>
 #include <QScopeGuard>
@@ -63,6 +65,9 @@ constexpr int PremiumParallel = 3;
 
 // a queued Premium download that hasn't shown up after this long failed
 constexpr qint64 QueueTimeoutMs = 120000;
+
+// a collection's archive holds collection.json and its bundled mods
+constexpr qint64 MaxArchiveSize = qint64(2) << 30;
 
 const char* TargetSetting       = "Collections/installTarget";
 const char* AutoDownloadSetting = "Collections/autoDownload";
@@ -185,7 +190,10 @@ const char* FilesQuery = R"(query ($slug: String!, $revision: Int) {
   collectionRevision(slug: $slug, revision: $revision, viewAdultContent: true) {
     revisionNumber
     downloadLink
-    collection { name user { name } game { domainName } }
+    collection {
+      name user { name } game { domainName }
+      latestPublishedRevision { revisionNumber }
+    }
     modFiles {
       optional
       fileId
@@ -217,6 +225,22 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
   auto& nexus = NexusInterface::instance();
   connect(&nexus, &NexusInterface::nxmApiV2Available, this,
           &CollectionSession::onApiResult);
+  // once the account is known: page by page needs its first page opened
+  connect(nexus.getAccessManager(), &NXMAccessManager::credentialsReceived, this,
+          [this](const APIUserAccount&) {
+            QTimer::singleShot(0, this, [this] {
+              emit changed();
+              if (m_stage != Stage::Running || downloadsAutomatically() || !m_autoOpen) {
+                return;
+              }
+              for (const auto& e : m_entries) {
+                if (e.status == Status::WaitingForClick) {
+                  return;
+                }
+              }
+              openNext();
+            });
+          });
   connect(&nexus, &NexusInterface::nxmRequestFailed, this,
           &CollectionSession::onApiFailed);
 
@@ -740,6 +764,8 @@ void CollectionSession::onApiResult(QVariant, QVariant result, int id)
       return;
     }
     m_downloadLink = r.value("downloadLink").toString();
+    m_latestRevision =
+        c.value("latestPublishedRevision").toMap().value("revisionNumber").toInt();
 
     m_files.clear();
     for (const QVariant& v : r.value("modFiles").toList()) {
@@ -847,8 +873,17 @@ void CollectionSession::downloadArchive(const QString& link)
   m_archiveReply = am->get(request);
 
   connect(m_archiveReply, &QNetworkReply::readyRead, this, [this] {
-    if (m_archiveReply) {
-      m_archiveFile.write(m_archiveReply->readAll());
+    if (!m_archiveReply) {
+      return;
+    }
+    const QByteArray data = m_archiveReply->readAll();
+    if (m_archiveFile.write(data) != data.size()) {
+      m_archiveProblem = tr("%1 couldn't be written.")
+                             .arg(QDir::toNativeSeparators(m_archivePath));
+      m_archiveReply->abort();
+    } else if (m_archiveFile.size() > MaxArchiveSize) {
+      m_archiveProblem = tr("The collection's archive is too large.");
+      m_archiveReply->abort();
     }
   });
   connect(m_archiveReply, &QNetworkReply::downloadProgress, this,
@@ -871,8 +906,27 @@ void CollectionSession::archiveDownloaded()
   reply->deleteLater();
   m_archiveReply = nullptr;
 
-  m_archiveFile.write(reply->readAll());
+  const QByteArray rest = reply->readAll();
+  if (m_archiveProblem.isEmpty() && m_archiveFile.write(rest) != rest.size()) {
+    m_archiveProblem =
+        tr("%1 couldn't be written.").arg(QDir::toNativeSeparators(m_archivePath));
+  }
+  const qint64 written = m_archiveFile.size();
   m_archiveFile.close();
+
+  // a full disk, a cut connection: never kept as if whole
+  const QVariant length = reply->header(QNetworkRequest::ContentLengthHeader);
+  if (m_archiveProblem.isEmpty() && reply->error() == QNetworkReply::NoError &&
+      length.isValid() && length.toLongLong() != written) {
+    m_archiveProblem = tr("The collection's download was incomplete.");
+  }
+  if (!m_archiveProblem.isEmpty()) {
+    m_archiveFile.remove();
+    const QString problem = m_archiveProblem;
+    m_archiveProblem.clear();
+    fail(problem);
+    return;
+  }
 
   if (reply->error() != QNetworkReply::NoError) {
     m_archiveFile.remove();
@@ -1066,6 +1120,10 @@ void CollectionSession::buildEntries()
       e.selected     = o.value("selected").toBool(true) || !m_manifest.mods[mod].optional;
       e.presetResult = o.value("preset").toString();
       e.keptExisting = o.value("kept").toBool();
+      e.fingerprint  = o.value("fingerprint").toString();
+      for (const auto& n : o.value("notes").toArray()) {
+        e.notes.append(n.toString());
+      }
       if (e.status == Status::Downloaded && !QFile::exists(e.archive)) {
         e.status = Status::Pending;
         e.archive.clear();
@@ -1094,6 +1152,11 @@ void CollectionSession::buildEntries()
   }
 
   m_loadingText.clear();
+  // a new revision of a collection installed before: what changed
+  if (m_saved.isEmpty() && m_updateFrom > 0) {
+    prepareUpdate();
+  }
+
   setStage(m_saved.value("finished").toBool() ? Stage::Done
            : m_started                        ? Stage::Paused
                                               : Stage::Ready);
@@ -1141,6 +1204,11 @@ void CollectionSession::loadState()
   m_autoOpen      = o.value("autoOpen").toBool(true);
   m_autoDownload  = o.value("autoDownload").toBool(m_autoDownload);
   m_placeFixed    = o.value("placeFixed").toBool();
+  m_profileCreatedHere = o.value("profileCreatedHere").toBool();
+  m_toRemove.clear();
+  for (const auto& v : o.value("toRemove").toArray()) {
+    m_toRemove.append(v.toString());
+  }
   m_categorySeparators =
       o.value("categorySeparators").toBool(m_categorySeparators);
   m_categorySeparatorNames = o.value("categorySeparatorNames").toObject();
@@ -1189,6 +1257,8 @@ QJsonObject CollectionSession::stateObject() const
   o.insert("autoOpen", m_autoOpen);
   o.insert("autoDownload", m_autoDownload);
   o.insert("placeFixed", m_placeFixed);
+  o.insert("profileCreatedHere", m_profileCreatedHere);
+  o.insert("toRemove", QJsonArray::fromStringList(m_toRemove));
   o.insert("categorySeparators", m_categorySeparators);
   o.insert("categorySeparatorNames", m_categorySeparatorNames);
   o.insert("approvedReplacements", m_approved);
@@ -1205,6 +1275,9 @@ QJsonObject CollectionSession::stateObject() const
     j.insert("selected", e.selected);
     j.insert("preset", e.presetResult);
     j.insert("kept", e.keptExisting);
+    j.insert("fingerprint", e.fingerprint);
+    j.insert("modId", m_manifest.mods[e.mod].modId);
+    j.insert("notes", QJsonArray::fromStringList(e.notes));
     entries.append(j);
   }
   o.insert("entries", entries);
@@ -1533,6 +1606,7 @@ bool CollectionSession::prepareProfile()
     } else {
       try {
         Profile profile(name, m_core.managedGame(), m_core.gameFeatures(), false);
+        m_profileCreatedHere = true;
         m_core.profileCreated(&profile);
       } catch (const std::exception& e) {
         QMessageBox::warning(qApp->activeWindow(), tr("Profile"),
@@ -1712,6 +1786,8 @@ void CollectionSession::startInNewInstance()
   state.insert("profileMade", false);
   // the place is the new instance's own profile
   state.insert("placeFixed", true);
+  // its Default profile is made by the new instance, for the collection
+  state.insert("profileCreatedHere", true);
   state.insert("instance", QString());
   state.insert("approvedReplacements", QJsonObject());
   state.insert("archive", QString());
@@ -1810,6 +1886,11 @@ void CollectionSession::start()
   }
 
   if (!prepareProfile() || !askAboutExisting()) {
+    return;
+  }
+
+  // an update: the earlier revision's mods that aren't in this one
+  if (!m_toRemove.isEmpty() && !removeDropped()) {
     return;
   }
 
@@ -1962,7 +2043,16 @@ bool CollectionSession::installEntry(int row)
   QPointer<CollectionSession> self(this);
   ModInfo::Ptr installed;
   QString error;
+  QSet<QString> existingBefore;
+  QStringList approvedBefore;
   try {
+    // which folders were there, and which the user said may be replaced
+    existingBefore.clear();
+    for (const QString& folder :
+         QDir(m_core.settings().paths().mods()).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+      existingBefore.insert(folder.toLower());
+    }
+    approvedBefore = approvedNow();
     installed = m_core.installArchive(e.archive, -1, false, nullptr, e.modName);
   } catch (const std::exception& ex) {
     error = QString::fromUtf8(ex.what());
@@ -1986,6 +2076,19 @@ bool CollectionSession::installEntry(int row)
   e.modName      = installed->name();
   e.presetResult = choices.isEmpty() ? QString() : (preset.isEmpty() ? "none" : preset);
   m_core.modList()->setActive(e.modName, true);
+  // into a folder that was there: only one the user said may be replaced gets
+  // the collection's patches and file list (a Merge keeps the user's files)
+  const QString folder = e.modName.toLower();
+  if (existingBefore.contains(folder) &&
+      !approvedBefore.contains(folder, Qt::CaseInsensitive)) {
+    if (!modOf(e).patches.empty() || !modOf(e).hashes.empty()) {
+      e.notes = {tr("Patches and the exact file list weren't applied: the mod went into "
+                    "an existing mod's folder.")};
+    }
+  } else {
+    postInstall(row);
+  }
+  e.fingerprint = folderFingerprint(e.modName);
   setStatus(row, Status::Installed);
   return true;
 }
@@ -1995,27 +2098,6 @@ namespace
 
 // a path inside a bundle, relative to the mod's folder: no root, no drive, no
 // "..", no empty parts, nothing Windows would read as something else
-bool isSafeRelativePath(const QString& relative)
-{
-  if (relative.isEmpty()) {
-    return false;
-  }
-  static const QString forbidden = QStringLiteral("<>:\"|?*");
-  for (const QString& part : relative.split('/')) {
-    if (part.isEmpty() || part == "." || part == ".." || part.endsWith('.') ||
-        part.endsWith(' ')) {
-      return false;
-    }
-    for (const QChar c : part) {
-      if (c.unicode() < 32 || forbidden.contains(c)) {
-        return false;
-      }
-    }
-  }
-  const std::filesystem::path p(relative.toStdWString());
-  return !p.has_root_name() && !p.has_root_directory() && p.is_relative();
-}
-
 // whether target, once resolved, is inside base
 bool staysInside(const std::filesystem::path& base, const std::filesystem::path& target)
 {
@@ -2161,6 +2243,514 @@ bool CollectionSession::installBundle(int row)
   return true;
 }
 
+// ---------------------------------------------------------------------------
+// phase 2: patches, exact file lists, file overrides, INI tweaks, updates
+
+bool CollectionSession::extractArchiveFiles(
+    const std::function<bool(const QString& path)>& wanted, const QString& dir,
+    std::vector<std::pair<QString, QString>>* found) const
+{
+  // path in the archive (forward slashes) to the extracted file
+  if (m_archivePath.isEmpty()) {
+    return false;
+  }
+  std::unique_ptr<Archive> archive = CreateArchive();
+  if (!archive->isValid() || !archive->open(m_archivePath.toStdWString(), {})) {
+    return false;
+  }
+  int n = 0;
+  for (FileData* f : archive->getFileList()) {
+    QString path = QString::fromStdWString(f->getArchiveFilePath());
+    path.replace('\\', '/');
+    if (f->isDirectory() || !wanted(path) || !isSafeRelativePath(path)) {
+      continue;
+    }
+    // flat in the folder: numbered, so no path from the archive is used
+    const QString name = QStringLiteral("%1.bin").arg(n++);
+    f->addOutputFilePath(name.toStdWString());
+    found->emplace_back(path, QDir(dir).filePath(name));
+  }
+  bool ok = true;
+  if (n > 0) {
+    ok = archive->extract(QDir::toNativeSeparators(dir).toStdWString(), {}, {}, {});
+  }
+  archive->close();
+  return ok;
+}
+
+void CollectionSession::postInstall(int row)
+{
+  Entry& e        = m_entries[row];
+  const auto& mod = modOf(e);
+  const unsigned int index = ModInfo::getIndex(e.modName);
+  if (index == UINT_MAX || (mod.patches.empty() && mod.hashes.empty())) {
+    return;
+  }
+  e.notes.clear();
+  const QDir dir(ModInfo::getByIndex(index)->absolutePath());
+
+  // binary patches, from patches/<mod>/<file>.diff in the collection's archive
+  if (!mod.patches.empty()) {
+    QTemporaryDir temp;
+    std::vector<std::pair<QString, QString>> diffs;
+    if (temp.isValid()) {
+      extractArchiveFiles(
+          [](const QString& path) {
+            return path.startsWith(QStringLiteral("patches/"), Qt::CaseInsensitive) &&
+                   path.endsWith(QStringLiteral(".diff"), Qt::CaseInsensitive);
+          },
+          temp.path(), &diffs);
+    }
+
+    int applied = 0;
+    for (const auto& [file, crcText] : mod.patches) {
+      const QString relative = QString(file).replace('\\', '/');
+      if (!isSafeRelativePath(relative)) {
+        e.notes.append(tr("Patch not applied to %1: unsafe file name.").arg(file));
+        continue;
+      }
+      // as Vortex: a patch needs the CRC of the file it was made for
+      const auto expected = parseCrc(crcText);
+      if (!expected) {
+        e.notes.append(tr("Patch not applied to %1: the collection gives no valid "
+                          "checksum for it.")
+                           .arg(file));
+        continue;
+      }
+      // and comes from this mod's own folder of the archive only
+      const QString suffix = "/" + normalizedPath(relative) + ".diff";
+      QString diffFile;
+      for (const auto& [path, extracted] : diffs) {
+        const QString n = normalizedPath(path);
+        if (!n.endsWith(suffix)) {
+          continue;
+        }
+        const QString folder = n.mid(8, n.size() - 8 - suffix.size());
+        if (folder == normalizedPath(mod.name) || folder == normalizedPath(e.modName)) {
+          diffFile = extracted;
+          break;
+        }
+      }
+      if (diffFile.isEmpty()) {
+        e.notes.append(
+            tr("Patch not applied to %1: it is missing from the collection's archive.")
+                .arg(file));
+        continue;
+      }
+
+      QFile original(dir.filePath(relative));
+      QFile diff(diffFile);
+      if (!original.open(QIODevice::ReadOnly) || !diff.open(QIODevice::ReadOnly)) {
+        e.notes.append(tr("Patch not applied to %1: the file is missing.").arg(file));
+        continue;
+      }
+      // read whole: not for a file past the patcher's limit
+      if (original.size() > MaxPatchedSize || !patchSizeAllowed(diff.size(), original.size())) {
+        e.notes.append(tr("Patch not applied to %1: the patch or the file is too large.")
+                           .arg(file));
+        continue;
+      }
+      const QByteArray before = original.readAll();
+      original.close();
+      if (*expected != crc32(before)) {
+        e.notes.append(tr("Patch not applied to %1: the file isn't the one the patch "
+                          "was made for.")
+                           .arg(file));
+        continue;
+      }
+      QByteArray after;
+      QString why;
+      if (!bspatch(before, diff.readAll(), after, &why)) {
+        e.notes.append(tr("Patch not applied to %1: %2").arg(file, why));
+        continue;
+      }
+      // replaced at once, or the original stays
+      QSaveFile out(dir.filePath(relative));
+      if (!out.open(QIODevice::WriteOnly) || out.write(after) != after.size() ||
+          !out.commit()) {
+        e.notes.append(tr("Patch not applied to %1: the file couldn't be written.")
+                           .arg(file));
+        continue;
+      }
+      ++applied;
+    }
+    if (applied > 0) {
+      e.notes.append(tr("%n file(s) patched.", "", applied));
+    }
+  }
+
+  // a replicate install: only the files the collection lists
+  if (!mod.hashes.empty()) {
+    QStringList present;
+    QDirIterator it(dir.path(), QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+      const QString relative = dir.relativeFilePath(it.next());
+      if (relative.compare(QStringLiteral("meta.ini"), Qt::CaseInsensitive) != 0 &&
+          !relative.endsWith(QStringLiteral(".mohidden"), Qt::CaseInsensitive)) {
+        present.append(relative);
+      }
+    }
+    const auto md5Of = [&dir](const QString& relative) {
+      QFile f(dir.filePath(relative));
+      if (!f.open(QIODevice::ReadOnly)) {
+        return QString();
+      }
+      QCryptographicHash hash(QCryptographicHash::Md5);
+      hash.addData(&f);
+      return QString::fromLatin1(hash.result().toHex());
+    };
+    const auto result = compareFileList(mod.hashes, present, md5Of);
+
+    if (result.missing.size() * 2 > static_cast<qsizetype>(mod.hashes.size())) {
+      // the mod's files aren't laid out as the collection's list says: nothing
+      // is hidden on a guess
+      e.notes.append(tr("The collection's exact file list wasn't applied: most of its "
+                        "files aren't where it expects them."));
+    } else {
+      int hidden = 0;
+      for (const QString& extra : result.extra) {
+        const QString path = dir.filePath(extra);
+        if (!QFile::exists(path + ".mohidden") && QFile::rename(path, path + ".mohidden")) {
+          ++hidden;
+        }
+      }
+      if (hidden > 0) {
+        e.notes.append(
+            tr("%n file(s) not in the collection's list were hidden.", "", hidden));
+      }
+      if (!result.missing.isEmpty()) {
+        e.notes.append(tr("Files the collection lists that are missing: %1")
+                           .arg(result.missing.mid(0, 10).join(", ")));
+      }
+    }
+    if (!result.mismatched.isEmpty()) {
+      e.notes.append(tr("Files that differ from the collection's: %1")
+                         .arg(result.mismatched.mid(0, 10).join(", ")));
+    }
+  }
+}
+
+void CollectionSession::applyFileOverrides()
+{
+  m_overrideNotes.clear();
+  ModList* list = m_core.modList();
+
+  // only the mods this collection installed: the user's own are left alone
+  std::vector<int> ours;
+  for (int row = 0; row < static_cast<int>(m_entries.size()); ++row) {
+    const Entry& e = m_entries[row];
+    if (e.status == Status::Installed && !e.keptExisting && e.reason.isEmpty() &&
+        ModInfo::getIndex(e.modName) != UINT_MAX) {
+      ours.push_back(row);
+    }
+  }
+
+  for (int winner : ours) {
+    const Entry& w = m_entries[winner];
+    if (modOf(w).fileOverrides.isEmpty()) {
+      continue;
+    }
+    const QDir winnerDir(ModInfo::getByIndex(ModInfo::getIndex(w.modName))->absolutePath());
+    const int winnerPriority = list->priority(w.modName);
+    int hidden               = 0;
+    for (const QString& file : modOf(w).fileOverrides) {
+      const QString relative = QString(file).replace('\\', '/');
+      if (!isSafeRelativePath(relative) || !QFile::exists(winnerDir.filePath(relative))) {
+        continue;
+      }
+      // the copies that would win over it by the order
+      for (int other : ours) {
+        const Entry& o = m_entries[other];
+        if (other == winner || list->priority(o.modName) <= winnerPriority) {
+          continue;
+        }
+        const QString path =
+            QDir(ModInfo::getByIndex(ModInfo::getIndex(o.modName))->absolutePath())
+                .filePath(relative);
+        if (QFile::exists(path) && !QFile::exists(path + ".mohidden") &&
+            QFile::rename(path, path + ".mohidden")) {
+          ++hidden;
+        }
+      }
+    }
+    if (hidden > 0) {
+      m_overrideNotes.append(tr("%1: %n file(s) in mods after it hidden, so its own "
+                                "win.",
+                                "", hidden)
+                                 .arg(w.modName));
+    }
+  }
+}
+
+void CollectionSession::applyIniTweaks()
+{
+  m_iniNotes.clear();
+  Profile* profile = m_core.currentProfile();
+  if (profile == nullptr) {
+    return;
+  }
+
+  // "INI Tweaks/<name> [<target ini>].ini" in the collection's archive
+  QTemporaryDir temp;
+  std::vector<std::pair<QString, QString>> tweaks;
+  if (!temp.isValid() ||
+      !extractArchiveFiles(
+          [](const QString& path) {
+            return path.startsWith(QStringLiteral("ini tweaks/"), Qt::CaseInsensitive) &&
+                   !iniTweakTarget(QFileInfo(path).fileName()).isEmpty();
+          },
+          temp.path(), &tweaks) ||
+      tweaks.empty()) {
+    return;
+  }
+
+  // a profile made for the collection keeps its own INI files; one of the
+  // user's own isn't changed that way without asking
+  if (!profile->localSettingsEnabled()) {
+    if (m_profileCreatedHere ||
+        QMessageBox::question(qApp->activeWindow(), tr("INI tweaks"),
+                              tr("The collection changes game settings. Give the profile "
+                                 "\"%1\" its own copy of the game's INI files for "
+                                 "them?")
+                                  .arg(profile->name())) == QMessageBox::Yes) {
+      profile->enableLocalSettings(true);
+    }
+  }
+  const IPluginGame* game = m_core.managedGame();
+  const QStringList gameInis = game != nullptr ? game->iniFiles() : QStringList();
+  const QString profileDir = QDir::cleanPath(profile->absolutePath());
+
+  bool asked      = false;
+  bool documentsOk = false;
+  for (const auto& [path, extracted] : tweaks) {
+    const QString name   = QFileInfo(path).fileName();
+    const QString target = iniTweakTarget(name);
+    if (iniTweakOptional(name)) {
+      m_iniNotes.append(tr("Optional INI tweak not applied: %1").arg(name));
+      continue;
+    }
+    // only the game's own settings files, as Vortex
+    if (!gameInis.contains(target, Qt::CaseInsensitive)) {
+      m_iniNotes.append(
+          tr("INI tweak not applied, %1 isn't one of the game's INI files: %2")
+              .arg(target, name));
+      continue;
+    }
+    const QString file = QDir::cleanPath(profile->absoluteIniFilePath(target));
+    if (!file.startsWith(profileDir + "/", Qt::CaseInsensitive)) {
+      // the game's own INI files in Documents: only when the user says so
+      if (!asked) {
+        asked       = true;
+        documentsOk = QMessageBox::question(
+                          qApp->activeWindow(), tr("INI tweaks"),
+                          tr("The collection changes settings in the game's own INI "
+                             "files in Documents: %1. Change them?")
+                              .arg(gameInis.join(", "))) == QMessageBox::Yes;
+      }
+      if (!documentsOk) {
+        m_iniNotes.append(tr("INI tweak not applied: %1").arg(name));
+        continue;
+      }
+    }
+
+    QFile in(extracted);
+    QFile current(file);
+    if (!in.open(QIODevice::ReadOnly)) {
+      continue;
+    }
+    QString text;
+    IniEncoding encoding;
+    if (current.open(QIODevice::ReadOnly)) {
+      text = decodeIni(current.readAll(), &encoding);
+      current.close();
+    }
+    const QString merged = mergeIni(text, decodeIni(in.readAll(), nullptr));
+    QDir().mkpath(QFileInfo(file).absolutePath());
+    QSaveFile out(file);
+    const QByteArray bytes = encodeIni(merged, encoding);
+    if (out.open(QIODevice::WriteOnly) && out.write(bytes) == bytes.size() &&
+        out.commit()) {
+      m_iniNotes.append(tr("INI tweak applied to %1: %2").arg(target, name));
+    } else {
+      m_iniNotes.append(tr("INI tweak not applied: %1").arg(name));
+    }
+  }
+}
+
+void CollectionSession::setUpdateFrom(int revision)
+{
+  m_updateFrom = revision;
+}
+
+QString CollectionSession::revisionLink(int revision) const
+{
+  return QStringLiteral("nxm://%1/collections/%2/revisions/%3")
+      .arg(m_domain, m_link.slug)
+      .arg(revision);
+}
+
+void CollectionSession::prepareUpdate()
+{
+  QFile f(statePath(m_link.slug, m_updateFrom));
+  if (!f.open(QIODevice::ReadOnly)) {
+    return;
+  }
+  const QJsonObject old = QJsonDocument::fromJson(f.readAll()).object();
+  if (old.isEmpty()) {
+    return;
+  }
+
+  // the place and the choices made for the earlier revision
+  m_target = targetFromString(old.value("target").toString()).value_or(Target::NewProfile);
+  m_profileName   = old.value("profile").toString();
+  m_profileMade   = old.value("profileMade").toBool() || old.value("started").toBool();
+  m_placeFixed    = true;
+  m_separatorName = old.value("separator").toString(m_separatorName);
+  m_autoOpen      = old.value("autoOpen").toBool(m_autoOpen);
+  m_autoDownload  = old.value("autoDownload").toBool(m_autoDownload);
+  m_categorySeparators     = old.value("categorySeparators").toBool(m_categorySeparators);
+  m_categorySeparatorNames = old.value("categorySeparatorNames").toObject();
+  m_approved               = old.value("approvedReplacements").toObject();
+
+  // what each earlier file was, and what became of it
+  struct Old
+  {
+    QString status, modName, reason, fingerprint;
+    bool kept = false;
+  };
+  std::vector<RevisionFile> before;
+  std::vector<Old> olds;
+  for (const auto& v : old.value("entries").toArray()) {
+    const QJsonObject o = v.toObject();
+    before.push_back({o.value("modId").toInt(), o.value("fileId").toInt()});
+    olds.push_back({o.value("status").toString(), o.value("modName").toString(),
+                    o.value("reason").toString(), o.value("fingerprint").toString(),
+                    o.value("kept").toBool()});
+  }
+  std::vector<RevisionFile> after;
+  for (const auto& e : m_entries) {
+    after.push_back({modOf(e).modId, modOf(e).fileId});
+  }
+  const RevisionDiff diff = diffRevisions(before, after);
+  const auto installedByUs = [](const Old& o) {
+    return o.status == "installed" && !o.kept && o.reason.isEmpty();
+  };
+
+  for (const auto& [b, a] : diff.same) {
+    Entry& e = m_entries[a];
+    if (olds[b].status == "installed") {
+      e.status       = Status::Installed;
+      e.modName      = olds[b].modName;
+      e.keptExisting = olds[b].kept;
+      e.reason       = olds[b].reason;
+    } else if (olds[b].status == "skipped") {
+      e.status = Status::Skipped;
+      e.reason = olds[b].reason;
+    }
+  }
+  for (const auto& [b, a] : diff.changed) {
+    // the new file goes into the same mod: replaced without asking, as updated
+    if (installedByUs(olds[b]) && !olds[b].modName.isEmpty()) {
+      m_entries[a].modName = olds[b].modName;
+      m_approved.insert(olds[b].modName.toLower(), folderFingerprint(olds[b].modName));
+    }
+  }
+  m_toRemove.clear();
+  m_keptNotes.clear();
+  for (int b : diff.removed) {
+    if (!installedByUs(olds[b]) || olds[b].modName.isEmpty()) {
+      continue;
+    }
+    // still the folder the collection installed: else it is the user's now
+    if (!olds[b].fingerprint.isEmpty() &&
+        olds[b].fingerprint == folderFingerprint(olds[b].modName)) {
+      m_toRemove.append(olds[b].modName);
+    } else if (ModInfo::getIndex(olds[b].modName) != UINT_MAX) {
+      m_keptNotes.append(olds[b].modName);
+    }
+  }
+
+  m_updateNote = tr("Update from revision %1: %2 unchanged, %3 updated, %4 new, %5 "
+                    "no longer in it.")
+                     .arg(m_updateFrom)
+                     .arg(diff.same.size())
+                     .arg(diff.changed.size())
+                     .arg(diff.added.size())
+                     .arg(diff.removed.size());
+  m_saved = old;
+  m_saved.insert("finished", false);
+  log::info("collection {}: {}", m_link.slug, m_updateNote);
+}
+
+bool CollectionSession::removeDropped()
+{
+  QStringList present;
+  for (const QString& name : m_toRemove) {
+    if (ModInfo::getIndex(name) != UINT_MAX) {
+      present.append(name);
+    }
+  }
+  m_toRemove.clear();
+  if (present.isEmpty()) {
+    return true;
+  }
+
+  // the mods folder is the instance's: other profiles may use them
+  QStringList elsewhere;
+  const QDir profiles(m_core.settings().paths().profiles());
+  const Profile* current = m_core.currentProfile();
+  for (const QString& p : profiles.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    if (current != nullptr && p.compare(current->name(), Qt::CaseInsensitive) == 0) {
+      continue;
+    }
+    QFile list(profiles.filePath(p + "/modlist.txt"));
+    if (!list.open(QIODevice::ReadOnly)) {
+      continue;
+    }
+    const QStringList lines = QString::fromUtf8(list.readAll()).split('\n');
+    for (const QString& name : present) {
+      if (lines.contains("+" + name, Qt::CaseInsensitive) ||
+          lines.contains("+" + name + "\r", Qt::CaseInsensitive)) {
+        elsewhere.append(p);
+        break;
+      }
+    }
+  }
+  QString text =
+      tr("%n mod(s) are no longer in this revision. Move them to the Recycle Bin?", "",
+         static_cast<int>(present.size())) +
+      "\n\n" + present.join('\n');
+  if (!elsewhere.isEmpty()) {
+    text += "\n\n" + tr("Other profiles use some of them: %1").arg(elsewhere.join(", "));
+  }
+  const auto answer = QMessageBox::question(
+      qApp->activeWindow(), tr("Update the collection"), text,
+      QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+  if (answer == QMessageBox::Cancel) {
+    m_toRemove = present;
+    return false;
+  }
+  if (answer == QMessageBox::Yes) {
+    // the Recycle Bin, never deleted for good
+    m_core.modList()->removeModsForce(present);
+    m_removedNotes = present;
+    m_core.refresh();
+  } else {
+    m_keptNotes += present;
+  }
+  saveState();
+  return true;
+}
+
+void CollectionSession::finalizeFailed(const QString& why)
+{
+  log::error("collection {}: ordering failed: {}", m_link.slug, why);
+  m_finalizing  = false;
+  m_loadingText = tr("Ordering the mods failed: %1").arg(why);
+  setStage(Stage::Paused);
+  saveState();
+}
+
 void CollectionSession::finalize()
 {
   if (m_finalizing) {
@@ -2169,8 +2759,14 @@ void CollectionSession::finalize()
   m_finalizing = true;
   setLoading(tr("Ordering the mods…"));
 
-  applyModOrder();
-  m_core.refresh();
+  try {
+    applyModOrder();
+    applyFileOverrides();
+    m_core.refresh();
+  } catch (const std::exception& ex) {
+    finalizeFailed(QString::fromUtf8(ex.what()));
+    return;
+  }
 
   QPointer<CollectionSession> self(this);
   m_core.onNextRefresh(
@@ -2178,7 +2774,13 @@ void CollectionSession::finalize()
         if (!self) {
           return;
         }
-        self->applyPlugins();
+        try {
+          self->applyPlugins();
+          self->applyIniTweaks();
+        } catch (const std::exception& ex) {
+          self->finalizeFailed(QString::fromUtf8(ex.what()));
+          return;
+        }
         self->m_finalizing = false;
         self->m_loadingText.clear();
         self->setStage(Stage::Done);
@@ -2230,6 +2832,9 @@ int CollectionSession::categoryFor(const Entry& e) const
     nexus.emplace_back(e.category, e.categoryId);
   }
   const int id = factory.addCategory(name, nexus, 0);
+  if (id > 0 && !m_createdCategories.contains(name)) {
+    m_createdCategories.append(name);
+  }
   return id > 0 ? id : 0;
 }
 
@@ -2357,6 +2962,15 @@ void CollectionSession::applyModOrder()
     }
   }
   list->setActive(names, true);
+
+  // the user's own mods in the collection's order: said in the summary
+  m_movedOwn.clear();
+  for (int mod : sorted.order) {
+    const Entry& e = m_entries[rowOfMod[mod]];
+    if (e.keptExisting || !e.reason.isEmpty()) {
+      m_movedOwn.append(e.modName);
+    }
+  }
 }
 
 void CollectionSession::applyPlugins()
@@ -2411,8 +3025,8 @@ QString CollectionSession::summary() const
         e.presetResult != "applied" && !e.keptExisting) {
       byHand.append(e.modName);
     }
-    if (e.status == Status::Installed && modOf(e).hasPatches) {
-      patched.append(e.modName);
+    for (const QString& note : e.notes) {
+      patched.append(QStringLiteral("%1: %2").arg(e.modName, note));
     }
   }
 
@@ -2427,7 +3041,17 @@ QString CollectionSession::summary() const
   };
   section(tr("Not installed:"), failed);
   section(tr("Installer options chosen by hand:"), byHand);
-  section(tr("Patches not applied (not supported yet):"), patched);
+  if (!m_updateNote.isEmpty()) {
+    lines.append(QString());
+    lines.append(m_updateNote);
+  }
+  section(tr("Patches and exact file lists:"), patched);
+  section(tr("Files that win over the other mods' copies:"), m_overrideNotes);
+  section(tr("Categories added to your category list:"), m_createdCategories);
+  section(tr("Your own mods, moved and enabled in the collection's order:"), m_movedOwn);
+  section(tr("INI tweaks:"), m_iniNotes);
+  section(tr("Moved to the Recycle Bin, no longer in the collection:"), m_removedNotes);
+  section(tr("Still installed, no longer in the collection:"), m_keptNotes);
   section(tr("Mod order rules dropped to break a loop:"), m_modCycles);
   if (m_notGrouped) {
     lines.append(QString());

@@ -128,7 +128,9 @@ mo2_add_filter(NAME src/categories GROUPS
 )
 
 mo2_add_filter(NAME src/collections GROUPS
+	collectionbrowser
 	collectiondialog
+	collectionfiles
 	collectionmanifest
 	collectionsession
 )

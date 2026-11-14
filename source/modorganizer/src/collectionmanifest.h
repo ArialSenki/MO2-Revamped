@@ -6,6 +6,8 @@
 // collection links, and the stable orders built from the collection's rules.
 // Qt Core only, so it can be tested on its own.
 
+#include "collectionfiles.h"
+
 #include <QByteArray>
 #include <QJsonValue>
 #include <QString>
@@ -94,6 +96,12 @@ struct CollectionMod
 
   // the installer choices, as collection.json has them (null when none)
   QJsonValue choices;
+  // binary patches: file path in the mod to the CRC-32 of the file they fit
+  std::vector<std::pair<QString, QString>> patches;
+  // the exact files of a "replicate" install
+  std::vector<FileHash> hashes;
+  // files of this mod that win over the other mods' copies
+  QStringList fileOverrides;
   bool hasPatches       = false;
   bool hasHashes        = false;
   bool hasFileOverrides = false;

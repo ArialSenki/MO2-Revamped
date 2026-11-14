@@ -41,6 +41,9 @@ public:
 
   void setSwitchProfile(std::function<bool(const QString&)> f);
   void setRunLoot(std::function<void()> f);
+  // the main window opens a newer revision, from this one's state
+  void setOpenUpdate(std::function<void(const QString& link, int fromRevision)> f);
+  void setUpdateFrom(int revision);
 
   const Collections::CollectionLink& link() const { return m_session->link(); }
   bool isRunning() const;
@@ -59,6 +62,8 @@ private:
   OrganizerCore& m_core;
   CollectionSession* m_session;
   std::function<void()> m_runLoot;
+  std::function<void(const QString&, int)> m_openUpdate;
+  QPushButton* m_update = nullptr;
   bool m_built = false;
 
   QLabel* m_name;

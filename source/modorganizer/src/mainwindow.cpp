@@ -56,6 +56,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "modlistviewactions.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
+#include "collectionbrowser.h"
 #include "collectiondialog.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
@@ -3078,6 +3079,11 @@ void MainWindow::updateToolMenu()
   connect(collection, &QAction::triggered, this, &MainWindow::askForCollection,
           Qt::QueuedConnection);
   toolMenu->addAction(collection);
+  QAction* browse = new QAction(FluentIcons::glyph(0xE721), tr("Browse collections…"),
+                                toolMenu);
+  connect(browse, &QAction::triggered, this, &MainWindow::browseCollections,
+          Qt::QueuedConnection);
+  toolMenu->addAction(browse);
 
   m_ToolMenuDirty = false;
 }
@@ -3191,10 +3197,16 @@ void MainWindow::updateModPageMenu()
   connect(collection, &QAction::triggered, this, &MainWindow::askForCollection,
           Qt::QueuedConnection);
   ui->actionModPage->menu()->addAction(collection);
+  QAction* browse = new QAction(FluentIcons::glyph(0xE721), tr("Browse collections…"),
+                                ui->actionModPage->menu());
+  connect(browse, &QAction::triggered, this, &MainWindow::browseCollections,
+          Qt::QueuedConnection);
+  ui->actionModPage->menu()->addAction(browse);
 
-  // the menu always has the collection entry, so the single Nexus button is
-  // only for games without one
-  bool keepOriginalAction = false;
+  // with no mod page plugin and one source, the Nexus button opens Nexus in
+  // one click, as in MO2; the collection entries are then in Tools
+  bool keepOriginalAction =
+      modPagePlugins.size() == 0 && registeredSources.length() <= 1;
   if (keepOriginalAction) {
     ui->toolBar->insertAction(ui->actionAdd_Profile, ui->actionNexus);
   } else {
@@ -4981,6 +4993,23 @@ void MainWindow::openPendingCollection(int idleChecks)
   }
 }
 
+void MainWindow::browseCollections()
+{
+  const IPluginGame* game = m_OrganizerCore.managedGame();
+  if (game == nullptr || game->gameNexusName().isEmpty()) {
+    QMessageBox::information(this, tr("Nexus collections"),
+                             tr("This game has no collections on Nexus Mods."));
+    return;
+  }
+  auto* browser = new CollectionBrowser(
+      game->gameNexusName(), game->displayGameName(),
+      [this](const QString& url) {
+        openCollection(url);
+      },
+      this);
+  browser->show();
+}
+
 void MainWindow::askForCollection()
 {
   if (auto link = CollectionDialog::askLink(this)) {
@@ -4995,7 +5024,7 @@ void MainWindow::askForCollection()
   }
 }
 
-void MainWindow::openCollection(const QString& text, bool autoStart)
+void MainWindow::openCollection(const QString& text, bool autoStart, int updateFrom)
 {
   const auto link = Collections::parseCollectionLink(text);
   if (!link) {
@@ -5026,6 +5055,14 @@ void MainWindow::openCollection(const QString& text, bool autoStart)
 
   auto* dlg = new CollectionDialog(m_OrganizerCore, *link, this);
   dlg->setAutoStart(autoStart);
+  if (updateFrom > 0) {
+    dlg->setUpdateFrom(updateFrom);
+  }
+  dlg->setOpenUpdate([this](const QString& link, int from) {
+    QTimer::singleShot(0, this, [this, link, from] {
+      openCollection(link, false, from);
+    });
+  });
   dlg->setSwitchProfile([this](const QString& name) {
     return selectProfileByName(name);
   });

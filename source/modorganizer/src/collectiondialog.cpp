@@ -34,6 +34,7 @@
 #include <QPushButton>
 #include <QScrollBar>
 #include <QTextBrowser>
+#include <QTextDocument>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QUrl>
@@ -66,6 +67,35 @@ enum Column
 };
 
 constexpr int RowRole = Qt::UserRole + 1;
+
+}  // namespace
+
+namespace
+{
+
+// the curator's Markdown loads nothing: an image of a file:// or UNC path
+// would make Windows sign in to that server with the user's account
+class SafeTextBrowser : public QTextBrowser
+{
+public:
+  using QTextBrowser::QTextBrowser;
+
+  QVariant loadResource(int type, const QUrl& url) override
+  {
+    const QString scheme = url.scheme().toLower();
+    if (scheme == QLatin1String("data") || scheme == QLatin1String("qrc")) {
+      return QTextBrowser::loadResource(type, url);
+    }
+    return {};
+  }
+};
+
+// text from the collection, shown as it is: a tooltip with markup would load
+// its images the same way
+QString plainTip(const QString& text)
+{
+  return text.isEmpty() ? QString() : Qt::convertFromPlainText(text, Qt::WhiteSpaceNormal);
+}
 
 }  // namespace
 
@@ -221,6 +251,16 @@ void CollectionDialog::setSwitchProfile(std::function<bool(const QString&)> f)
   m_session->setSwitchProfile(std::move(f));
 }
 
+void CollectionDialog::setOpenUpdate(std::function<void(const QString&, int)> f)
+{
+  m_openUpdate = std::move(f);
+}
+
+void CollectionDialog::setUpdateFrom(int revision)
+{
+  m_session->setUpdateFrom(revision);
+}
+
 void CollectionDialog::setRunLoot(std::function<void()> f)
 {
   m_runLoot = std::move(f);
@@ -342,6 +382,23 @@ void CollectionDialog::setupUi()
   m_cancel->setObjectName(QStringLiteral("collectionCancel"));
   m_cancel->setAutoDefault(false);
   m_cancel->setMinimumWidth(102);
+  // a newer revision of a collection installed before
+  m_update = new QPushButton(this);
+  m_update->setObjectName(QStringLiteral("collectionUpdate"));
+  m_update->setAutoDefault(false);
+  m_update->hide();
+  footer->addWidget(m_update);
+  connect(m_update, &QPushButton::clicked, this, [this] {
+    const int latest = m_session->latestRevision();
+    if (!m_openUpdate || latest <= m_session->revision()) {
+      return;
+    }
+    const auto open   = m_openUpdate;
+    const QString link = m_session->revisionLink(latest);
+    const int from    = m_session->revision();
+    close();
+    open(link, from);
+  });
   footer->addWidget(m_next);
   footer->addWidget(m_start);
   footer->addWidget(m_cancel);
@@ -403,7 +460,7 @@ QFrame* CollectionDialog::createInstructions()
   title->setObjectName(QStringLiteral("fluentCardTitle"));
   layout->addWidget(title);
 
-  m_instructions = new QTextBrowser(m_instructionsCard);
+  m_instructions = new SafeTextBrowser(m_instructionsCard);
   m_instructions->setObjectName(QStringLiteral("collectionInstructions"));
   m_instructions->setFrameShape(QFrame::NoFrame);
   // the curator's links open in the browser, web addresses only
@@ -768,7 +825,7 @@ void CollectionDialog::updateRow(QTreeWidgetItem* item, int row)
   if (!mod.instructions.isEmpty()) {
     tip.append(mod.instructions);
   }
-  item->setToolTip(ColName, tip.join(QStringLiteral("\n")));
+  item->setToolTip(ColName, plainTip(tip.join(QStringLiteral("\n"))));
   item->setText(ColVersion, e.fileVersion);
   item->setText(ColSize, e.size > 0 ? localizedByteSize(e.size) : QString());
   item->setTextAlignment(ColSize, Qt::AlignRight | Qt::AlignVCenter);
@@ -787,7 +844,7 @@ void CollectionDialog::updateRow(QTreeWidgetItem* item, int row)
   }
 
   item->setText(ColStatus, statusText(e));
-  item->setToolTip(ColStatus, e.reason);
+  item->setToolTip(ColStatus, plainTip(e.reason));
 
   QColor color;
   switch (e.status) {
@@ -1006,22 +1063,27 @@ void CollectionDialog::updateButtons()
     }
   }
 
-  // binary patches are for later
+  // an update when Nexus has a newer revision and this one was installed
+  {
+    const int latest = m_session->latestRevision();
+    const bool offer = m_openUpdate && latest > m_session->revision() &&
+                       m_session->started() &&
+                       (stage == Stage::Ready || stage == Stage::Paused ||
+                        stage == Stage::Done);
+    m_update->setText(tr("Update to revision %1").arg(latest));
+    m_update->setVisible(offer);
+  }
+
+  // what the window says above the table
   if (!m_session->entries().empty()) {
-    int patched = 0;
-    for (const auto& e : m_session->entries()) {
-      patched += m_session->modOf(e).hasPatches;
-    }
     QStringList notes;
+    if (!m_session->updateNote().isEmpty() && stage != Stage::Done) {
+      notes.append(m_session->updateNote());
+    }
     if (m_session->isReduced()) {
       notes.append(tr("The collection's archive couldn't be read, so this is a reduced "
                       "install: the mod list from Nexus, without installer choices, mod "
                       "order or bundled mods."));
-    }
-    if (patched > 0) {
-      notes.append(tr("%n mod(s) of this collection come with patches, which Mod "
-                      "Organizer doesn't apply yet. They are listed in the summary.",
-                      "", patched));
     }
     m_notes->setText(notes.join(QStringLiteral("\n")));
     m_notes->setVisible(!notes.isEmpty() && (stage != Stage::Done || m_session->isReduced()));

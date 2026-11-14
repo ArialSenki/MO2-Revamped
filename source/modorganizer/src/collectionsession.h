@@ -71,6 +71,10 @@ public:
     bool selected = true;
     QString presetResult;  // applied, partial or none, for FOMOD choices
     bool keptExisting = false;
+    // patches and exact file lists: what was done, what wasn't and why
+    QStringList notes;
+    // the folder as installed, so an update knows it is still this one
+    QString fingerprint;
 
     // a Nexus file of another game than the instance's: never queued, the
     // user installs it by hand
@@ -178,6 +182,13 @@ public:
   // the archive couldn't be read: no installer choices, order or bundled mods
   bool isReduced() const { return m_reduced; }
 
+  // the latest published revision Nexus has, -1 when not known
+  int latestRevision() const { return m_latestRevision; }
+  // this window updates from an earlier revision's state
+  void setUpdateFrom(int revision);
+  QString revisionLink(int revision) const;
+  QString updateNote() const { return m_updateNote; }
+
   static QString statePath(const QString& slug, int revision);
 
 signals:
@@ -223,6 +234,18 @@ private:
   QString m_instanceName;
   bool m_autoStart     = false;
   bool m_placeFixed    = false;
+  int m_latestRevision = -1;
+  int m_updateFrom     = -1;
+  QString m_updateNote;
+  QStringList m_toRemove;      // earlier revision's mods no longer in this one
+  QStringList m_removedNotes;  // moved to the Recycle Bin
+  QStringList m_keptNotes;     // left installed
+  QStringList m_overrideNotes;
+  QStringList m_iniNotes;
+  mutable QStringList m_createdCategories;  // categoryFor() is const
+  QStringList m_movedOwn;
+  QString m_archiveProblem;
+  bool m_profileCreatedHere = false;
   bool m_autoDownload  = true;
   bool m_categorySeparators = true;
   // the category separators made for this collection: category to name
@@ -289,6 +312,15 @@ private:
   bool askAboutExisting();
   void finalize();
   void applyModOrder();
+  void postInstall(int row);
+  void applyFileOverrides();
+  void applyIniTweaks();
+  void finalizeFailed(const QString& why);
+  void prepareUpdate();
+  bool removeDropped();
+  bool extractArchiveFiles(const std::function<bool(const QString& path)>& wanted,
+                           const QString& dir,
+                           std::vector<std::pair<QString, QString>>* found) const;
   // the MO2 category for an entry, 0 for none; made when it doesn't exist
   int categoryFor(const Entry& e) const;
   QString categoryName(const Entry& e) const;

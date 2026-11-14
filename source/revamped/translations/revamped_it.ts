@@ -7805,6 +7805,18 @@ Errore: %1</translation>
       <source>No tools for this game</source>
       <translation>Nessuno strumento per questo gioco</translation>
     </message>
+    <message>
+      <source>Browse collections…</source>
+      <translation>Sfoglia le collezioni…</translation>
+    </message>
+    <message>
+      <source>Nexus collections</source>
+      <translation>Collezioni di Nexus</translation>
+    </message>
+    <message>
+      <source>This game has no collections on Nexus Mods.</source>
+      <translation>Questo gioco non ha collezioni su Nexus Mods.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -16103,13 +16115,6 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
       <source>The collection's archive couldn't be read, so this is a reduced install: the mod list from Nexus, without installer choices, mod order or bundled mods.</source>
       <translation>Non è stato possibile leggere l'archivio della collezione, quindi questa è un'installazione ridotta: l'elenco delle mod da Nexus, senza le scelte dei programmi di installazione, l'ordine delle mod o le mod incluse.</translation>
     </message>
-    <message numerus="yes">
-      <source>%n mod(s) of this collection come with patches, which Mod Organizer doesn't apply yet. They are listed in the summary.</source>
-      <translation>
-        <numerusform>%n mod di questa collezione include patch, che Mod Organizer non applica ancora. È elencata nel riepilogo.</numerusform>
-        <numerusform>%n mod di questa collezione includono patch, che Mod Organizer non applica ancora. Sono elencate nel riepilogo.</numerusform>
-      </translation>
-    </message>
     <message>
       <source>Open on Nexus</source>
       <translation>Apri su Nexus</translation>
@@ -16189,6 +16194,10 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>Installing into the profile "%1".</source>
       <translation>Installazione nel profilo «%1».</translation>
+    </message>
+    <message>
+      <source>Update to revision %1</source>
+      <translation>Aggiorna alla revisione %1</translation>
     </message>
   </context>
   <context>
@@ -16460,10 +16469,6 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
       <translation>Opzioni del programma di installazione scelte a mano:</translation>
     </message>
     <message>
-      <source>Patches not applied (not supported yet):</source>
-      <translation>Patch non applicate (non ancora supportate):</translation>
-    </message>
-    <message>
       <source>Mod order rules dropped to break a loop:</source>
       <translation>Regole di ordine delle mod scartate per spezzare un ciclo:</translation>
     </message>
@@ -16518,6 +16523,249 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>Other</source>
       <translation>Altro</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: unsafe file name.</source>
+      <translation>Patch non applicata a %1: nome di file non sicuro.</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: it is missing from the collection's archive.</source>
+      <translation>Patch non applicata a %1: manca nell'archivio della collezione.</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: the file is missing.</source>
+      <translation>Patch non applicata a %1: il file manca.</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: the file isn't the one the patch was made for.</source>
+      <translation>Patch non applicata a %1: il file non è quello per cui è stata creata la patch.</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: %2</source>
+      <translation>Patch non applicata a %1: %2</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: the file couldn't be written.</source>
+      <translation>Patch non applicata a %1: impossibile scrivere il file.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) patched.</source>
+      <translation>
+        <numerusform>%n file corretto con la patch.</numerusform>
+        <numerusform>%n file corretti con la patch.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The collection's exact file list wasn't applied: most of its files aren't where it expects them.</source>
+      <translation>L'elenco esatto dei file della collezione non è stato applicato: la maggior parte non è dove se lo aspetta.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) not in the collection's list were hidden.</source>
+      <translation>
+        <numerusform>%n file non presente nell'elenco della collezione è stato nascosto.</numerusform>
+        <numerusform>%n file non presenti nell'elenco della collezione sono stati nascosti.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Files the collection lists that are missing: %1</source>
+      <translation>File elencati dalla collezione che mancano: %1</translation>
+    </message>
+    <message>
+      <source>Files that differ from the collection's: %1</source>
+      <translation>File diversi da quelli della collezione: %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%1: %n file(s) in mods after it hidden, so its own win.</source>
+      <translation>
+        <numerusform>%1: %n file nascosto nelle mod successive, perché vinca il suo.</numerusform>
+        <numerusform>%1: %n file nascosti nelle mod successive, perché vincano i suoi.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Optional INI tweak not applied: %1</source>
+      <translation>Modifica INI facoltativa non applicata: %1</translation>
+    </message>
+    <message>
+      <source>INI tweaks</source>
+      <translation>Modifiche INI</translation>
+    </message>
+    <message>
+      <source>INI tweak not applied: %1</source>
+      <translation>Modifica INI non applicata: %1</translation>
+    </message>
+    <message>
+      <source>INI tweak applied to %1: %2</source>
+      <translation>Modifica INI applicata a %1: %2</translation>
+    </message>
+    <message>
+      <source>Update from revision %1: %2 unchanged, %3 updated, %4 new, %5 no longer in it.</source>
+      <translation>Aggiornamento dalla revisione %1: %2 invariate, %3 aggiornate, %4 nuove, %5 non più presenti.</translation>
+    </message>
+    <message>
+      <source>Update the collection</source>
+      <translation>Aggiorna la collezione</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) are no longer in this revision. Move them to the Recycle Bin?</source>
+      <translation>
+        <numerusform>%n mod non è più in questa revisione. Spostarla nel Cestino?</numerusform>
+        <numerusform>%n mod non sono più in questa revisione. Spostarle nel Cestino?</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Patches and exact file lists:</source>
+      <translation>Patch ed elenchi esatti dei file:</translation>
+    </message>
+    <message>
+      <source>Files that win over the other mods' copies:</source>
+      <translation>File che vincono sulle copie delle altre mod:</translation>
+    </message>
+    <message>
+      <source>INI tweaks:</source>
+      <translation>Modifiche INI:</translation>
+    </message>
+    <message>
+      <source>Moved to the Recycle Bin, no longer in the collection:</source>
+      <translation>Spostate nel Cestino, non più nella collezione:</translation>
+    </message>
+    <message>
+      <source>Still installed, no longer in the collection:</source>
+      <translation>Ancora installate, non più nella collezione:</translation>
+    </message>
+    <message>
+      <source>Categories added to your category list:</source>
+      <translation>Categorie aggiunte al tuo elenco di categorie:</translation>
+    </message>
+    <message>
+      <source>INI tweak not applied, %1 isn't one of the game's INI files: %2</source>
+      <translation>Modifica INI non applicata, %1 non è uno dei file INI del gioco: %2</translation>
+    </message>
+    <message>
+      <source>Ordering the mods failed: %1</source>
+      <translation>Ordinamento delle mod non riuscito: %1</translation>
+    </message>
+    <message>
+      <source>Other profiles use some of them: %1</source>
+      <translation>Altri profili ne usano alcune: %1</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: the collection gives no valid checksum for it.</source>
+      <translation>Patch non applicata a %1: la collezione non fornisce un checksum valido.</translation>
+    </message>
+    <message>
+      <source>Patch not applied to %1: the patch or the file is too large.</source>
+      <translation>Patch non applicata a %1: la patch o il file è troppo grande.</translation>
+    </message>
+    <message>
+      <source>Patches and the exact file list weren't applied: the mod went into an existing mod's folder.</source>
+      <translation>Patch ed elenco esatto dei file non applicati: la mod è finita nella cartella di una mod esistente.</translation>
+    </message>
+    <message>
+      <source>The collection changes game settings. Give the profile "%1" its own copy of the game's INI files for them?</source>
+      <translation>La collezione cambia impostazioni del gioco. Dare al profilo «%1» una propria copia dei file INI del gioco?</translation>
+    </message>
+    <message>
+      <source>The collection changes settings in the game's own INI files in Documents: %1. Change them?</source>
+      <translation>La collezione cambia impostazioni nei file INI del gioco in Documenti: %1. Cambiarli?</translation>
+    </message>
+    <message>
+      <source>The collection's archive is too large.</source>
+      <translation>L'archivio della collezione è troppo grande.</translation>
+    </message>
+    <message>
+      <source>The collection's download was incomplete.</source>
+      <translation>Il download della collezione è incompleto.</translation>
+    </message>
+    <message>
+      <source>Your own mods, moved and enabled in the collection's order:</source>
+      <translation>Le tue mod, spostate e attivate nell'ordine della collezione:</translation>
+    </message>
+  </context>
+  <context>
+    <name>CollectionBrowser</name>
+    <message>
+      <source>Nexus collections for %1</source>
+      <translation>Collezioni di Nexus per %1</translation>
+    </message>
+    <message>
+      <source>Search collections</source>
+      <translation>Cerca collezioni</translation>
+    </message>
+    <message>
+      <source>Most endorsed</source>
+      <translation>Più apprezzate</translation>
+    </message>
+    <message>
+      <source>Most downloaded</source>
+      <translation>Più scaricate</translation>
+    </message>
+    <message>
+      <source>Recently updated</source>
+      <translation>Aggiornate di recente</translation>
+    </message>
+    <message>
+      <source>Search</source>
+      <translation>Cerca</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Author</source>
+      <translation>Autore</translation>
+    </message>
+    <message>
+      <source>Mods</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Size</source>
+      <translation>Dimensione</translation>
+    </message>
+    <message>
+      <source>Game version</source>
+      <translation>Versione del gioco</translation>
+    </message>
+    <message>
+      <source>Updated</source>
+      <translation>Aggiornata</translation>
+    </message>
+    <message>
+      <source>Load more</source>
+      <translation>Carica altre</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Apri</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Chiudi</translation>
+    </message>
+    <message>
+      <source>Nexus can't be reached right now: the request limit was reached. Try again later.</source>
+      <translation>Al momento Nexus non è raggiungibile: è stato raggiunto il limite di richieste. Riprova più tardi.</translation>
+    </message>
+    <message>
+      <source>Searching…</source>
+      <translation>Ricerca in corso…</translation>
+    </message>
+    <message>
+      <source>No collections found.</source>
+      <translation>Nessuna collezione trovata.</translation>
+    </message>
+    <message>
+      <source>%1 of %2 collections</source>
+      <translation>%1 di %2 collezioni</translation>
+    </message>
+    <message>
+      <source>%1 endorsements, %2 downloads</source>
+      <translation>%1 apprezzamenti, %2 download</translation>
+    </message>
+    <message>
+      <source>Nexus didn't answer: %1</source>
+      <translation>Nexus non ha risposto: %1</translation>
     </message>
   </context>
 </TS>
