@@ -1945,8 +1945,11 @@ bool CollectionSession::installEntry(int row)
   im->setApprovedReplacements(approvedNow());
   qApp->setProperty(PresetResultProperty, QVariant());
   qApp->setProperty(PresetProperty, choices.isEmpty() ? QVariant() : QVariant(choices));
+  // installers that only ask for the mod's name take the collection's
+  qApp->setProperty("mo2r.collectionInstall", true);
   const auto reset = qScopeGuard([im] {
     im->setApprovedReplacements({});
+    qApp->setProperty("mo2r.collectionInstall", QVariant());
     qApp->setProperty(PresetProperty, QVariant());
     qApp->setProperty(PresetResultProperty, QVariant());
   });

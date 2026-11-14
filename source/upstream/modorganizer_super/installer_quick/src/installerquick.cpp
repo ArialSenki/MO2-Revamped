@@ -4,6 +4,7 @@
 #include "iplugingame.h"
 #include "log.h"
 
+#include <QCoreApplication>
 #include <QDialog>
 #include <QtPlugin>
 
@@ -147,7 +148,12 @@ InstallerQuick::install(GuessedValue<QString>& modName,
     if (rearranged) {
       dialog.setRearranged();
     }
-    if (m_MOInfo->pluginSetting(name(), "silent").toBool() ||
+    // MO2 Revamped: a collection installing its mods names them itself; the
+    // question came up for every mod of the list
+    const bool collection =
+        QCoreApplication::instance() != nullptr &&
+        QCoreApplication::instance()->property("mo2r.collectionInstall").toBool();
+    if (collection || m_MOInfo->pluginSetting(name(), "silent").toBool() ||
         dialog.exec() == QDialog::Accepted) {
       modName.update(dialog.getName(), GUESS_USER);
 
