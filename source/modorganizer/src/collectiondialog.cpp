@@ -10,6 +10,7 @@
 #include "revampedtheme.h"
 #include <utility.h>
 
+#include <QScrollArea>
 #include <QResizeEvent>
 #include <QMoveEvent>
 #include <QApplication>
@@ -89,6 +90,17 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
     m_placedAt.start();
   }
 
+  // once MO2 has finished opening its own windows, this one comes to the front
+  // (unless a dialog of MO2 is waiting for an answer)
+  for (int delay : {700, 2000}) {
+    QTimer::singleShot(delay, this, [this] {
+      if (isVisible() && !isMinimized() && QApplication::activeModalWidget() == nullptr) {
+        raise();
+        activateWindow();
+      }
+    });
+  }
+
   connect(m_session, &CollectionSession::changed, this, &CollectionDialog::onChanged);
   connect(m_session, &CollectionSession::entryChanged, this,
           &CollectionDialog::onEntryChanged);
@@ -114,13 +126,14 @@ void CollectionDialog::placeWindow()
   const QRect available = screen->availableGeometry();
 
   // never smaller than this, never larger than the work area
-  const QSize least = QSize(900, 600).boundedTo(available.size());
+  const QSize least = QSize(960, 720).boundedTo(available.size());
   setMinimumSize(least);
 
   // where the user left it, when that is on the main window's monitor
   if (Settings::instance().geometry().restoreGeometry(this) &&
       QGuiApplication::screenAt(geometry().center()) == screen &&
-      available.contains(geometry().center())) {
+      available.contains(geometry().center()) && width() >= least.width() &&
+      height() >= least.height()) {
     resize(size().boundedTo(available.size()));
     return;
   }
@@ -128,14 +141,17 @@ void CollectionDialog::placeWindow()
   // else large from the start, centred over the main window; over the work area
   // when the main window fills it or isn't shown yet (its size is then not its
   // final one)
+  // sized by the screen, not by the main window, which may be small or not
+  // shown yet; centred over the main window when it is shown
   const bool overWindow = anchor != nullptr && anchor->isVisible() &&
-                          !anchor->isMaximized() && !anchor->isFullScreen();
-  const QRect base      = overWindow ? anchor->frameGeometry() : available;
+                          !anchor->isMinimized() &&
+                          available.contains(anchor->frameGeometry().center());
+  const QRect base      = available;
   // wide enough for the table, tall enough for its rows under the options
   QSize wanted(base.width() * 7 / 10, base.height() * 85 / 100);
   wanted       = wanted.expandedTo(least).boundedTo(available.size() - QSize(16, 40));
   resize(wanted);
-  const QPoint middle = base.center();
+  const QPoint middle = overWindow ? anchor->frameGeometry().center() : base.center();
   QPoint pos(middle.x() - wanted.width() / 2, middle.y() - wanted.height() / 2);
   pos.setX(qBound(available.left(), pos.x(),
                   qMax(available.left(), available.right() - wanted.width() - 16)));
@@ -270,18 +286,37 @@ void CollectionDialog::setupUi()
   setObjectName(QStringLiteral("CollectionDialog"));
   setWindowTitle(tr("Nexus collection"));
 
-  auto* layout = new QVBoxLayout(this);
-  layout->setContentsMargins(16, 16, 16, 12);
-  layout->setSpacing(8);
+  auto* outer = new QVBoxLayout(this);
+  outer->setContentsMargins(16, 16, 16, 12);
+  outer->setSpacing(8);
   // the content changes inside the window: text, rows, notices and the
   // summary never resize or move it
-  layout->setSizeConstraint(QLayout::SetNoConstraint);
+  outer->setSizeConstraint(QLayout::SetNoConstraint);
+
+  // the cards keep their height: in a window too short for them they scroll
+  // instead of being squeezed on top of each other
+  auto* scroll = new QScrollArea(this);
+  scroll->setObjectName(QStringLiteral("collectionScroll"));
+  scroll->setWidgetResizable(true);
+  scroll->setFrameShape(QFrame::NoFrame);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  auto* content = new QWidget(scroll);
+  content->setObjectName(QStringLiteral("collectionContent"));
+  content->setAutoFillBackground(false);
+  auto* layout = new QVBoxLayout(content);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(8);
 
   layout->addWidget(createHeader());
   layout->addWidget(createInstructions());
   layout->addWidget(createMods(), 1);
   layout->addWidget(createOptions());
   layout->addWidget(createSummary());
+  m_modsCard->setMinimumHeight(260);
+  m_optionsCard->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+  scroll->setWidget(content);
+  outer->addWidget(scroll, 1);
+  layout = outer;
 
   auto* footer = new QHBoxLayout;
   footer->setSpacing(8);
