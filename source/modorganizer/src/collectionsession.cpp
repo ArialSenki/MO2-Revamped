@@ -820,7 +820,17 @@ void CollectionSession::readManifest()
 
 QString CollectionSession::uniqueModName(int row) const
 {
-  QString base = modOf(m_entries[row]).name.trimmed();
+  // the mod's name on Nexus when it comes from there: the collection keeps the
+  // name its author's copy had, often with an older version in it ("CET 1.37.1
+  // - Scripting fixes" for 1.38.1)
+  const CollectionMod& mod = modOf(m_entries[row]);
+  QString base             = mod.name.trimmed();
+  if (mod.type == SourceType::Nexus) {
+    const auto file = m_files.find(mod.fileId);
+    if (file != m_files.end() && !file->second.modName.trimmed().isEmpty()) {
+      base = file->second.modName.trimmed();
+    }
+  }
   fixDirectoryName(base);
   if (base.isEmpty()) {
     base = QStringLiteral("Mod %1").arg(row + 1);

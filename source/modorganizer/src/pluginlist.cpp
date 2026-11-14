@@ -135,8 +135,11 @@ void PluginList::highlightPlugins(const std::vector<unsigned int>& modIndices,
 
   for (auto& modIndex : modIndices) {
     ModInfo::Ptr selectedMod = ModInfo::getByIndex(modIndex);
+    // MO2 Revamped: a mod enabled before the refresh that adds it (a collection
+    // installs and enables mods in a row) has no origin yet; the lookup threw
     if (!selectedMod.isNull() && profile->modEnabled(modIndex) &&
-        directoryEntry != nullptr) {
+        directoryEntry != nullptr &&
+        directoryEntry->originExists(selectedMod->internalName().toStdWString())) {
       auto pluginNames = m_ModPluginNameCache.find(modIndex);
       if (pluginNames == m_ModPluginNameCache.end()) {
         QDir dir(selectedMod->absolutePath());
