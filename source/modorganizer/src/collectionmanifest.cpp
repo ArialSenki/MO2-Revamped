@@ -252,6 +252,7 @@ std::optional<CollectionManifest> CollectionManifest::parse(const QByteArray& js
     mod.fileSize           = toInt64(s.value("fileSize"));
 
     mod.instructions     = m.value("instructions").toString();
+    mod.category         = m.value("details").toObject().value("category").toString().trimmed();
     mod.choices          = m.value("choices");
     mod.hasPatches       = hasContent(m.value("patches"));
     mod.hasHashes        = hasContent(m.value("hashes"));
@@ -508,6 +509,12 @@ SortResult stableTopologicalSort(const std::vector<int>& nodes,
     }
   }
 
+  for (int a = 0; a < static_cast<int>(nodes.size()); ++a) {
+    for (int b : next[a]) {
+      result.kept.emplace_back(nodes[a], nodes[b]);
+    }
+  }
+
   // Kahn's algorithm, always taking the earliest node that is free
   std::set<int> ready;
   for (int i = 0; i < static_cast<int>(nodes.size()); ++i) {
@@ -561,6 +568,50 @@ SortResult sortModsByRules(const CollectionManifest& manifest,
   edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
 
   return stableTopologicalSort(mods, edges);
+}
+
+GroupResult groupByCategory(const SortResult& sorted,
+                            const std::function<QString(int)>& category)
+{
+  GroupResult result;
+
+  // the groups in the order their first mod comes; names compare without case
+  std::vector<std::pair<QString, std::vector<int>>> groups;
+  for (int node : sorted.order) {
+    const QString name = category(node);
+    auto it = std::find_if(groups.begin(), groups.end(), [&name](const auto& g) {
+      return g.first.compare(name, Qt::CaseInsensitive) == 0;
+    });
+    if (it == groups.end()) {
+      groups.push_back({name, {node}});
+    } else {
+      it->second.push_back(node);
+    }
+  }
+
+  std::vector<int> order;
+  for (const auto& g : groups) {
+    order.insert(order.end(), g.second.begin(), g.second.end());
+  }
+
+  // every rule the sort kept still holds, or nothing is grouped
+  std::map<int, int> position;
+  for (int i = 0; i < static_cast<int>(order.size()); ++i) {
+    position[order[i]] = i;
+  }
+  for (const auto& [a, b] : sorted.kept) {
+    auto ia = position.find(a);
+    auto ib = position.find(b);
+    if (ia != position.end() && ib != position.end() && ia->second > ib->second) {
+      result.order = sorted.order;
+      return result;
+    }
+  }
+
+  result.grouped = true;
+  result.groups  = std::move(groups);
+  result.order   = std::move(order);
+  return result;
 }
 
 QStringList sortPluginsByRules(const QStringList& plugins,

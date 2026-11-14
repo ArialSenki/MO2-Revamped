@@ -9,6 +9,7 @@
 #include "fluentdialogs.h"
 #include "installationmanager.h"
 #include "modinfo.h"
+#include "categories.h"
 #include "modlist.h"
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
@@ -65,6 +66,7 @@ constexpr qint64 QueueTimeoutMs = 120000;
 
 const char* TargetSetting       = "Collections/installTarget";
 const char* AutoDownloadSetting = "Collections/autoDownload";
+const char* CategorySeparatorsSetting = "Collections/categorySeparators";
 
 QString targetToString(CollectionSession::Target t)
 {
@@ -187,7 +189,7 @@ const char* FilesQuery = R"(query ($slug: String!, $revision: Int) {
     modFiles {
       optional
       fileId
-      file { modId name version sizeInBytes uri mod { name } }
+      file { modId name version sizeInBytes uri mod { name modCategory { categoryId name } } }
     }
   }
 })";
@@ -200,6 +202,7 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
 {
   m_target       = lastTarget();
   m_autoDownload = lastAutoDownload();
+  m_categorySeparators = lastCategorySeparators();
   if (m_target == Target::NewInstance && !canMakeInstance()) {
     m_target = Target::NewProfile;
   }
@@ -392,6 +395,18 @@ void CollectionSession::setAutoDownload(bool b)
   saveState();
   emit changed();
   scheduleScan();
+}
+
+void CollectionSession::setCategorySeparators(bool b)
+{
+  m_categorySeparators = b;
+  GlobalSettings::setValue(CategorySeparatorsSetting, b);
+  saveState();
+}
+
+bool CollectionSession::lastCategorySeparators()
+{
+  return GlobalSettings::value(CategorySeparatorsSetting, true).toBool();
 }
 
 bool CollectionSession::lastAutoDownload()
@@ -737,6 +752,10 @@ void CollectionSession::onApiResult(QVariant, QVariant result, int id)
       f.uri      = file.value("uri").toString();
       f.size     = toInt64(file.value("sizeInBytes"));
       f.modName  = file.value("mod").toMap().value("name").toString();
+      const QVariantMap category =
+          file.value("mod").toMap().value("modCategory").toMap();
+      f.categoryId = category.value("categoryId").toInt();
+      f.category   = category.value("name").toString();
       f.optional = mf.value("optional").toBool();
       m_files[mf.value("fileId").toInt()] = f;
     }
@@ -1024,6 +1043,8 @@ void CollectionSession::buildEntries()
         if (e.fileVersion.isEmpty()) {
           e.fileVersion = it->second.version;
         }
+        e.categoryId = it->second.categoryId;
+        e.category   = it->second.category;
       }
     }
     m_entries.push_back(e);
@@ -1119,6 +1140,9 @@ void CollectionSession::loadState()
   m_separatorName = o.value("separator").toString();
   m_autoOpen      = o.value("autoOpen").toBool(true);
   m_autoDownload  = o.value("autoDownload").toBool(m_autoDownload);
+  m_categorySeparators =
+      o.value("categorySeparators").toBool(m_categorySeparators);
+  m_categorySeparatorNames = o.value("categorySeparatorNames").toObject();
   // a blanket "replace" from an older state file isn't taken: the folders are
   // asked about again
   m_approved = o.value("approvedReplacements").toObject();
@@ -1163,6 +1187,8 @@ QJsonObject CollectionSession::stateObject() const
   o.insert("separator", m_separatorName);
   o.insert("autoOpen", m_autoOpen);
   o.insert("autoDownload", m_autoDownload);
+  o.insert("categorySeparators", m_categorySeparators);
+  o.insert("categorySeparatorNames", m_categorySeparatorNames);
   o.insert("approvedReplacements", m_approved);
 
   QJsonArray entries;
@@ -2156,6 +2182,81 @@ void CollectionSession::finalize()
       OrganizerCore::RefreshCallbackMode::RUN_NOW_IF_POSSIBLE);
 }
 
+QString CollectionSession::categoryName(const Entry& e) const
+{
+  // the curator's category, else the Nexus mod's
+  const QString curator = modOf(e).category;
+  return !curator.isEmpty() ? curator : e.category.trimmed();
+}
+
+int CollectionSession::categoryFor(const Entry& e) const
+{
+  auto& factory      = CategoryFactory::instance();
+  const QString name = categoryName(e);
+
+  // the Nexus category, through the mapping MO2 keeps (categories.dat); only
+  // when it is the category the collection names
+  const bool nexusSame =
+      e.categoryId > 0 &&
+      (modOf(e).category.isEmpty() ||
+       modOf(e).category.compare(e.category, Qt::CaseInsensitive) == 0);
+  if (nexusSame) {
+    const unsigned int index = factory.resolveNexusID(e.categoryId);
+    if (index > 0 && index < factory.numCategories()) {
+      return factory.getCategoryID(index);
+    }
+  }
+  if (name.isEmpty()) {
+    return 0;
+  }
+
+  // one of the user's categories with that name
+  for (unsigned int i = 1; i < factory.numCategories(); ++i) {
+    if (factory.getCategoryName(i).compare(name, Qt::CaseInsensitive) == 0) {
+      return factory.getCategoryID(i);
+    }
+  }
+
+  // a new one, tied to its Nexus category when there is one
+  std::vector<CategoryFactory::NexusCategory> nexus;
+  if (nexusSame) {
+    nexus.emplace_back(e.category, e.categoryId);
+  }
+  const int id = factory.addCategory(name, nexus, 0);
+  return id > 0 ? id : 0;
+}
+
+QString CollectionSession::categorySeparator(const QString& category)
+{
+  ModList* list = m_core.modList();
+
+  // the one made for this collection before
+  const QString known = m_categorySeparatorNames.value(category.toLower()).toString();
+  if (!known.isEmpty() && list->getMod(known + "_separator") != nullptr) {
+    return known;
+  }
+
+  // its name, or with the collection's in front when the user has one already
+  QString name = category;
+  fixDirectoryName(name);
+  if (name.isEmpty() || list->getMod(name + "_separator") != nullptr ||
+      list->getMod(name) != nullptr) {
+    QString prefixed = QStringLiteral("%1 - %2").arg(m_separatorName.trimmed(), category);
+    fixDirectoryName(prefixed);
+    name = prefixed;
+    for (int n = 2; list->getMod(name + "_separator") != nullptr; ++n) {
+      name = QStringLiteral("%1 (%2)").arg(prefixed).arg(n);
+    }
+  }
+
+  GuessedValue<QString> internal(name + "_separator", GUESS_USER);
+  if (m_core.createMod(internal) == nullptr) {
+    return {};
+  }
+  m_categorySeparatorNames.insert(category.toLower(), name);
+  return name;
+}
+
 void CollectionSession::applyModOrder()
 {
   std::vector<int> mods;
@@ -2176,6 +2277,60 @@ void CollectionSession::applyModOrder()
                                                      m_entries[rowOfMod[b]].modName));
   }
 
+  // each mod installed here gets its category; the user's own mods (kept as
+  // they were, or marked as done) keep theirs. Not part of the order
+  std::map<int, QString> groupOf;
+  for (int mod : sorted.order) {
+    const Entry& e   = m_entries[rowOfMod[mod]];
+    const int index  = static_cast<int>(ModInfo::getIndex(e.modName));
+    ModInfo::Ptr info = ModInfo::getByIndex(index);
+    int category      = 0;
+    if (!e.keptExisting && e.reason.isEmpty() && info != nullptr) {
+      category = categoryFor(e);
+      if (category > 0) {
+        info->setCategory(category, true);
+        info->setPrimaryCategory(category);
+        info->saveMeta();
+      }
+    } else if (info != nullptr) {
+      category = info->primaryCategory();
+    }
+    const QString name =
+        category > 0 ? CategoryFactory::instance().getCategoryNameByID(category) : QString();
+    groupOf[mod] = name;
+  }
+
+  // grouped under a separator per category, only when every rule still holds
+  m_notGrouped = false;
+  GroupResult grouped;
+  grouped.order = sorted.order;
+  if (m_categorySeparators) {
+    grouped = groupByCategory(sorted, [&groupOf](int mod) {
+      return groupOf[mod];
+    });
+    // the rules cross categories: the flat order, and the summary says why
+    m_notGrouped = !grouped.grouped;
+    // one category only: its separator would say nothing more
+    if (grouped.grouped && grouped.groups.size() < 2) {
+      grouped.grouped = false;
+    }
+    if (!grouped.grouped) {
+      grouped.order = sorted.order;
+    }
+  }
+
+  // the separators first, then one refresh, so their indexes exist
+  std::vector<std::pair<QString, std::vector<int>>> sections;
+  if (grouped.grouped) {
+    for (const auto& [category, members] : grouped.groups) {
+      const QString title = category.isEmpty() ? tr("Other") : category;
+      sections.push_back({categorySeparator(title), members});
+    }
+    m_core.refresh();
+  } else {
+    sections.push_back({QString(), grouped.order});
+  }
+
   ModList* list     = m_core.modList();
   QString separator = m_separatorName.trimmed();
   if (fixDirectoryName(separator) && !separator.isEmpty() &&
@@ -2184,10 +2339,15 @@ void CollectionSession::applyModOrder()
   }
 
   QStringList names;
-  for (int mod : sorted.order) {
-    const QString& name = m_entries[rowOfMod[mod]].modName;
-    list->setPriority(name, INT_MAX);
-    names.append(name);
+  for (const auto& [section, members] : sections) {
+    if (!section.isEmpty() && list->getMod(section + "_separator") != nullptr) {
+      list->setPriority(section + "_separator", INT_MAX);
+    }
+    for (int mod : members) {
+      const QString& name = m_entries[rowOfMod[mod]].modName;
+      list->setPriority(name, INT_MAX);
+      names.append(name);
+    }
   }
   list->setActive(names, true);
 }
@@ -2262,6 +2422,11 @@ QString CollectionSession::summary() const
   section(tr("Installer options chosen by hand:"), byHand);
   section(tr("Patches not applied (not supported yet):"), patched);
   section(tr("Mod order rules dropped to break a loop:"), m_modCycles);
+  if (m_notGrouped) {
+    lines.append(QString());
+    lines.append(tr("Mod order rules cross categories, so the mods aren't grouped "
+                    "under category separators; their categories are set."));
+  }
   section(tr("Plugin order rules dropped to break a loop:"), m_pluginCycles);
 
   return lines.join('\n');

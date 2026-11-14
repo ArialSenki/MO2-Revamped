@@ -89,6 +89,9 @@ struct CollectionMod
   // the instructions the curator wrote for this mod
   QString instructions;
 
+  // the category the curator's Vortex had for it (details.category), a name
+  QString category;
+
   // the installer choices, as collection.json has them (null when none)
   QJsonValue choices;
   bool hasPatches       = false;
@@ -157,6 +160,8 @@ struct SortResult
 {
   std::vector<int> order;
   std::vector<std::pair<int, int>> broken;
+  // the edges the order keeps: all of them but the broken ones
+  std::vector<std::pair<int, int>> kept;
 };
 
 SortResult stableTopologicalSort(const std::vector<int>& nodes,
@@ -166,6 +171,20 @@ SortResult stableTopologicalSort(const std::vector<int>& nodes,
 // before/after mod rules among them
 SortResult sortModsByRules(const CollectionManifest& manifest,
                            const std::vector<int>& mods);
+
+// the sorted mods grouped by category: each group where its first mod is, its
+// mods in their order. grouped is false, and order the one given, when the
+// grouping would break one of the kept edges. category() gives a node's
+// group, empty for none (those make a group of their own, named empty)
+struct GroupResult
+{
+  bool grouped = false;
+  std::vector<std::pair<QString, std::vector<int>>> groups;
+  std::vector<int> order;
+};
+
+GroupResult groupByCategory(const SortResult& sorted,
+                            const std::function<QString(int)>& category);
 
 // the plugins given, in their current order, sorted by the rules' "after"
 // lists; names compare without case. cycles gets "a > b" for each rule that

@@ -595,6 +595,17 @@ QFrame* CollectionDialog::createOptions()
     updateButtons();
   });
 
+  m_byCategory = new QCheckBox(m_optionsCard);
+  m_byCategory->setObjectName(QStringLiteral("collectionByCategory"));
+  FluentPanels::addSwitchRow(
+      m_optionsCard, SeparatorGlyph, tr("Separators by category"),
+      tr("The mods go under a separator for each category, when the collection's "
+         "order allows it."),
+      m_byCategory);
+  connect(m_byCategory, &QCheckBox::toggled, this, [this](bool on) {
+    m_session->setCategorySeparators(on);
+  });
+
   m_autoOpen = new QCheckBox(m_optionsCard);
   m_autoOpen->setObjectName(QStringLiteral("collectionAutoOpen"));
   m_autoOpenRow = FluentPanels::addSwitchRow(
@@ -715,7 +726,9 @@ void CollectionDialog::onChanged()
     m_count->setText(count);
 
     // the profile and separator fields as the session has them
-    QSignalBlocker b1(m_targets), b2(m_autoOpen), b3(m_instanceName), b4(m_modes);
+    QSignalBlocker b1(m_targets), b2(m_autoOpen), b3(m_instanceName), b4(m_modes),
+        b5(m_byCategory);
+    m_byCategory->setChecked(m_session->categorySeparators());
     if (auto* b = m_modes->button(m_session->autoDownloadChosen() ? 1 : 0)) {
       b->setChecked(true);
     }

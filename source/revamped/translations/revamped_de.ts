@@ -15948,6 +15948,14 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
       <source>Each file's page opens on Nexus, and you start its download there.</source>
       <translation>Die Seite jeder Datei öffnet sich auf Nexus, und dort startest du ihren Download.</translation>
     </message>
+    <message>
+      <source>Separators by category</source>
+      <translation>Trenner nach Kategorie</translation>
+    </message>
+    <message>
+      <source>The mods go under a separator for each category, when the collection's order allows it.</source>
+      <translation>Die Mods kommen unter einen Trenner pro Kategorie, wenn die Reihenfolge der Sammlung es zulässt.</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>
@@ -16268,6 +16276,14 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>Mod Organizer can't close right now. The collection goes on when you open the instance "%1".</source>
       <translation>Mod Organizer kann sich gerade nicht schließen. Die Sammlung geht weiter, wenn du die Instanz „%1“ öffnest.</translation>
+    </message>
+    <message>
+      <source>Mod order rules cross categories, so the mods aren't grouped under category separators; their categories are set.</source>
+      <translation>Die Reihenfolgeregeln der Mods gehen über Kategorien hinweg, daher werden die Mods nicht unter Kategorie-Trennern gruppiert; ihre Kategorien werden gesetzt.</translation>
+    </message>
+    <message>
+      <source>Other</source>
+      <translation>Sonstiges</translation>
     </message>
   </context>
 </TS>

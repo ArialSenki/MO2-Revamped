@@ -78,6 +78,7 @@ private:
   QPointer<QWidget> m_anchor;
   QButtonGroup* m_targets;
   QButtonGroup* m_modes;
+  QCheckBox* m_byCategory;
   QFrame* m_autoModeRow;
   QFrame* m_pageModeRow;
   QFrame* m_instanceRow;

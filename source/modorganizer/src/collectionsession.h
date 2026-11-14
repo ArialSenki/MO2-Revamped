@@ -66,6 +66,8 @@ public:
     QString reason;     // why it failed, or a note
     QString archive;    // the downloaded file (or the one the user chose)
     QString modName;    // the mod in MO2
+    int categoryId = 0;  // the Nexus mod's category
+    QString category;
     bool selected = true;
     QString presetResult;  // applied, partial or none, for FOMOD choices
     bool keptExisting = false;
@@ -141,6 +143,10 @@ public:
   void setSeparatorName(const QString& name);
   // Premium: everything downloads after Start (the default), or page by page
   // as a free account does
+  // the mods go under a separator per category, when the order allows it
+  bool categorySeparators() const { return m_categorySeparators; }
+  void setCategorySeparators(bool b);
+  static bool lastCategorySeparators();
   bool autoDownloadChosen() const { return m_autoDownload; }
   void setAutoDownload(bool b);
   // whether downloads are queued without clicks: chosen, and the account is
@@ -199,6 +205,8 @@ private:
     QString uri;
     qint64 size   = 0;
     bool optional = false;
+    int categoryId = 0;
+    QString category;
   };
   std::map<int, NexusFile> m_files;  // by file id
 
@@ -213,6 +221,10 @@ private:
   QString m_instanceName;
   bool m_autoStart     = false;
   bool m_autoDownload  = true;
+  bool m_categorySeparators = true;
+  // the category separators made for this collection: category to name
+  QJsonObject m_categorySeparatorNames;
+  bool m_notGrouped = false;  // the rules crossed categories
   QString m_profileName;
   QString m_separatorName;
   bool m_autoOpen      = true;
@@ -274,6 +286,11 @@ private:
   bool askAboutExisting();
   void finalize();
   void applyModOrder();
+  // the MO2 category for an entry, 0 for none; made when it doesn't exist
+  int categoryFor(const Entry& e) const;
+  QString categoryName(const Entry& e) const;
+  // a separator for a category, made the way MO2 makes them
+  QString categorySeparator(const QString& category);
   void applyPlugins();
 
   void setStatus(int row, Status s, const QString& reason = {});
