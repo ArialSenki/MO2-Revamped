@@ -15882,10 +15882,6 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <translation>Marquer comme terminé</translation>
     </message>
     <message>
-      <source>Install into a new profile</source>
-      <translation>Installer dans un nouveau profil</translation>
-    </message>
-    <message>
       <source>Separator</source>
       <translation>Séparateur</translation>
     </message>
@@ -15896,10 +15892,6 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     <message>
       <source>Open the next page automatically</source>
       <translation>Ouvrir la page suivante automatiquement</translation>
-    </message>
-    <message>
-      <source>When a file from Nexus arrives, the next file's page opens.</source>
-      <translation>Quand un fichier de Nexus arrive, la page du fichier suivant s'ouvre.</translation>
     </message>
     <message>
       <source>Summary</source>
@@ -16077,10 +16069,6 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <translation>Archives (*.7z *.zip *.rar *.fomod *.001);;Tous les fichiers (*)</translation>
     </message>
     <message>
-      <source>Install into a new instance</source>
-      <translation>Installer dans une nouvelle instance</translation>
-    </message>
-    <message>
       <source>Its own instance, apart from your other mods. Mod Organizer restarts in it.</source>
       <translation>Une instance à part, séparée de vos autres mods. Mod Organizer redémarre dans celle-ci.</translation>
     </message>
@@ -16089,16 +16077,8 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <translation>Un nouveau profil dans cette instance. Ses mods sont partagés avec vos autres profils.</translation>
     </message>
     <message>
-      <source>Install into the current profile</source>
-      <translation>Installer dans le profil actuel</translation>
-    </message>
-    <message>
       <source>The mods are added to the profile you are using now.</source>
       <translation>Les mods sont ajoutés au profil que vous utilisez actuellement.</translation>
-    </message>
-    <message>
-      <source>Download automatically (Premium)</source>
-      <translation>Télécharger automatiquement (Premium)</translation>
     </message>
     <message>
       <source>After Start, every file downloads and installs with no more clicks.</source>
@@ -16119,6 +16099,34 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     <message>
       <source>The mods go under a separator for each category, when the collection's order allows it.</source>
       <translation>Les mods sont placés sous un séparateur par catégorie, lorsque l'ordre de la collection le permet.</translation>
+    </message>
+    <message>
+      <source>Install into</source>
+      <translation>Installer dans</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nouvelle instance</translation>
+    </message>
+    <message>
+      <source>New profile</source>
+      <translation>Nouveau profil</translation>
+    </message>
+    <message>
+      <source>Current profile</source>
+      <translation>Profil actuel</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <translation>Téléchargements</translation>
+    </message>
+    <message>
+      <source>Automatic (Premium)</source>
+      <translation>Automatique (Premium)</translation>
+    </message>
+    <message>
+      <source>Installing into the profile "%1".</source>
+      <translation>Installation dans le profil « %1 ».</translation>
     </message>
   </context>
   <context>

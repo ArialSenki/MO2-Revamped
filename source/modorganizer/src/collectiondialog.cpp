@@ -15,6 +15,8 @@
 #include <QMoveEvent>
 #include <QApplication>
 #include <QButtonGroup>
+#include <QComboBox>
+#include <QStandardItemModel>
 #include <QGuiApplication>
 #include <QRadioButton>
 #include <QScreen>
@@ -522,109 +524,79 @@ QFrame* CollectionDialog::createOptions()
   m_optionsCard->setObjectName(QStringLiteral("collectionOptionsCard"));
   m_optionsCard->setProperty("fluentCard", true);
   auto* rows = new QVBoxLayout(m_optionsCard);
-  rows->setContentsMargins(0, 4, 0, 4);
+  rows->setContentsMargins(0, 2, 0, 2);
   rows->setSpacing(0);
 
-  m_targets = new QButtonGroup(m_optionsCard);
-  auto addTarget = [this](CollectionSession::Target target, char16_t glyph,
-                          const QString& title, const QString& description,
-                          QLineEdit* field) {
-    auto* radio = new QRadioButton(m_optionsCard);
-    radio->setAccessibleName(title);
-    radio->setAccessibleDescription(description);
-    m_targets->addButton(radio, static_cast<int>(target));
-    QList<QWidget*> widgets;
-    if (field != nullptr) {
-      field->setMinimumWidth(260);
-      field->setAccessibleName(title);
-      widgets.append(field);
-    }
-    widgets.append(radio);
-    return FluentPanels::addEditRow(m_optionsCard, glyph, title, description, widgets);
+  auto description = [](QFrame* row) {
+    return row->findChild<QLabel*>(QStringLiteral("fluentSettingDescription"));
   };
 
-  m_instanceName = new QLineEdit(m_optionsCard);
-  m_instanceName->setObjectName(QStringLiteral("collectionInstanceName"));
-  m_instanceRow = addTarget(CollectionSession::Target::NewInstance, InstanceGlyph,
-                            tr("Install into a new instance"),
-                            tr("Its own instance, apart from your other mods. Mod "
-                               "Organizer restarts in it."),
-                            m_instanceName);
-  m_instanceProblem = new QLabel(m_optionsCard);
-  m_instanceProblem->setObjectName(QStringLiteral("instanceNameValidation"));
-  m_instanceProblem->setContentsMargins(58, 0, 18, 6);
-  m_instanceProblem->hide();
-  rows->addWidget(m_instanceProblem);
+  // where: a choice, its name beside it, and a line that follows the choice
+  m_targetCombo = new QComboBox(m_optionsCard);
+  m_targetCombo->setObjectName(QStringLiteral("collectionTarget"));
+  m_targetCombo->addItem(tr("New instance"),
+                         static_cast<int>(CollectionSession::Target::NewInstance));
+  m_targetCombo->addItem(tr("New profile"),
+                         static_cast<int>(CollectionSession::Target::NewProfile));
+  m_targetCombo->addItem(tr("Current profile"),
+                         static_cast<int>(CollectionSession::Target::CurrentProfile));
+  m_targetName = new QLineEdit(m_optionsCard);
+  m_targetName->setObjectName(QStringLiteral("collectionTargetName"));
+  auto* targetRow = FluentPanels::addEditRow(m_optionsCard, InstanceGlyph,
+                                             tr("Install into"), QStringLiteral(" "),
+                                             {m_targetCombo, m_targetName});
+  m_targetText = description(targetRow);
+  m_targetCombo->setMinimumWidth(170);
+  m_targetName->setMinimumWidth(220);
 
-  m_profileName = new QLineEdit(m_optionsCard);
-  m_profileName->setObjectName(QStringLiteral("collectionProfileName"));
-  addTarget(CollectionSession::Target::NewProfile, ProfileGlyph,
-            tr("Install into a new profile"),
-            tr("A new profile in this instance. Its mods are shared with your other "
-               "profiles."),
-            m_profileName);
-  addTarget(CollectionSession::Target::CurrentProfile, CurrentGlyph,
-            tr("Install into the current profile"),
-            tr("The mods are added to the profile you are using now."), nullptr);
-
+  // the separator, and whether categories get their own
   m_separator = new QLineEdit(m_optionsCard);
   m_separator->setObjectName(QStringLiteral("collectionSeparator"));
+  m_byCategory = new QCheckBox(tr("Separators by category"), m_optionsCard);
+  m_byCategory->setObjectName(QStringLiteral("collectionByCategory"));
+  m_byCategory->setToolTip(tr("The mods go under a separator for each category, when "
+                              "the collection's order allows it."));
   FluentPanels::addEditRow(m_optionsCard, SeparatorGlyph, tr("Separator"),
                            tr("The collection's mods go under a separator with this "
                               "name."),
-                           {m_separator});
+                           {m_separator, m_byCategory});
+  m_separator->setMinimumWidth(220);
 
-  // Premium: everything after Start, or page by page
-  m_modes = new QButtonGroup(m_optionsCard);
-  auto addMode = [this](int id, char16_t glyph, const QString& title,
-                        const QString& description) {
-    auto* radio = new QRadioButton(m_optionsCard);
-    radio->setAccessibleName(title);
-    radio->setAccessibleDescription(description);
-    m_modes->addButton(radio, id);
-    return FluentPanels::addEditRow(m_optionsCard, glyph, title, description, {radio});
-  };
-  m_autoModeRow = addMode(1, DownloadGlyph, tr("Download automatically (Premium)"),
-                          tr("After Start, every file downloads and installs with no "
-                             "more clicks."));
-  m_pageModeRow = addMode(0, NextGlyph, tr("Page by page on Nexus"),
-                          tr("Each file's page opens on Nexus, and you start its "
-                             "download there."));
-  connect(m_modes, &QButtonGroup::idClicked, this, [this](int id) {
-    m_session->setAutoDownload(id == 1);
-    updateButtons();
-  });
-
-  m_byCategory = new QCheckBox(m_optionsCard);
-  m_byCategory->setObjectName(QStringLiteral("collectionByCategory"));
-  FluentPanels::addSwitchRow(
-      m_optionsCard, SeparatorGlyph, tr("Separators by category"),
-      tr("The mods go under a separator for each category, when the collection's "
-         "order allows it."),
-      m_byCategory);
-  connect(m_byCategory, &QCheckBox::toggled, this, [this](bool on) {
-    m_session->setCategorySeparators(on);
-  });
-
-  m_autoOpen = new QCheckBox(m_optionsCard);
+  // how the files come: for Premium a choice, page by page the next page
+  m_modeCombo = new QComboBox(m_optionsCard);
+  m_modeCombo->setObjectName(QStringLiteral("collectionDownloadMode"));
+  m_modeCombo->addItem(tr("Automatic (Premium)"), 1);
+  m_modeCombo->addItem(tr("Page by page on Nexus"), 0);
+  m_autoOpen = new QCheckBox(tr("Open the next page automatically"), m_optionsCard);
   m_autoOpen->setObjectName(QStringLiteral("collectionAutoOpen"));
-  m_autoOpenRow = FluentPanels::addSwitchRow(
-      m_optionsCard, NextGlyph, tr("Open the next page automatically"),
-      tr("When a file from Nexus arrives, the next file's page opens."), m_autoOpen);
+  auto* downloadRow = FluentPanels::addEditRow(m_optionsCard, DownloadGlyph,
+                                               tr("Downloads"), QStringLiteral(" "),
+                                               {m_modeCombo, m_autoOpen});
+  m_downloadText = description(downloadRow);
+  m_modeCombo->setMinimumWidth(220);
 
-  connect(m_targets, &QButtonGroup::idClicked, this, [this](int id) {
-    m_session->setTarget(static_cast<CollectionSession::Target>(id));
-    updateButtons();
+  connect(m_targetCombo, &QComboBox::activated, this, [this] {
+    m_session->setTarget(
+        static_cast<CollectionSession::Target>(m_targetCombo->currentData().toInt()));
+    onChanged();
   });
-  connect(m_instanceName, &QLineEdit::textChanged, this, [this](const QString& text) {
-    m_session->setInstanceName(text.trimmed());
+  connect(m_targetName, &QLineEdit::textEdited, this, [this](const QString& text) {
+    if (m_session->target() == CollectionSession::Target::NewInstance) {
+      m_session->setInstanceName(text.trimmed());
+    } else {
+      m_session->setProfileName(text.trimmed());
+    }
     updateButtons();
-  });
-  connect(m_profileName, &QLineEdit::editingFinished, this, [this] {
-    m_session->setProfileName(m_profileName->text().trimmed());
   });
   connect(m_separator, &QLineEdit::editingFinished, this, [this] {
     m_session->setSeparatorName(m_separator->text().trimmed());
+  });
+  connect(m_byCategory, &QCheckBox::toggled, this, [this](bool on) {
+    m_session->setCategorySeparators(on);
+  });
+  connect(m_modeCombo, &QComboBox::activated, this, [this] {
+    m_session->setAutoDownload(m_modeCombo->currentData().toInt() == 1);
+    updateButtons();
   });
   connect(m_autoOpen, &QCheckBox::toggled, this, [this](bool on) {
     m_session->setAutoOpenNext(on);
@@ -726,20 +698,16 @@ void CollectionDialog::onChanged()
     m_count->setText(count);
 
     // the profile and separator fields as the session has them
-    QSignalBlocker b1(m_targets), b2(m_autoOpen), b3(m_instanceName), b4(m_modes),
+    QSignalBlocker b1(m_targetCombo), b2(m_autoOpen), b3(m_targetName), b4(m_modeCombo),
         b5(m_byCategory);
     m_byCategory->setChecked(m_session->categorySeparators());
-    if (auto* b = m_modes->button(m_session->autoDownloadChosen() ? 1 : 0)) {
-      b->setChecked(true);
-    }
-    if (auto* b = m_targets->button(static_cast<int>(m_session->target()))) {
-      b->setChecked(true);
-    }
-    if (!m_instanceName->hasFocus()) {
-      m_instanceName->setText(m_session->instanceName());
-    }
-    if (!m_profileName->hasFocus()) {
-      m_profileName->setText(m_session->profileName());
+    m_modeCombo->setCurrentIndex(m_modeCombo->findData(m_session->autoDownloadChosen() ? 1 : 0));
+    m_targetCombo->setCurrentIndex(
+        m_targetCombo->findData(static_cast<int>(m_session->target())));
+    if (!m_targetName->hasFocus()) {
+      m_targetName->setText(m_session->target() == CollectionSession::Target::NewInstance
+                                ? m_session->instanceName()
+                                : m_session->profileName());
     }
     if (!m_separator->hasFocus()) {
       m_separator->setText(m_session->separatorName());
@@ -747,9 +715,10 @@ void CollectionDialog::onChanged()
     m_autoOpen->setChecked(m_session->autoOpenNext());
   }
 
-  // only before it starts: they can't change once it runs, and the mod list
-  // needs the room while it downloads
-  m_optionsCard->setVisible(stage == Stage::Loading || stage == Stage::Ready);
+  // while it doesn't run: what still applies can change when it is paused; the
+  // mod list has the room while it downloads
+  m_optionsCard->setVisible(stage == Stage::Loading || stage == Stage::Ready ||
+                            stage == Stage::Paused);
   m_optionsCard->setEnabled(haveRows);
   m_summaryCard->setVisible(stage == Stage::Done);
   if (stage == Stage::Done) {
@@ -936,7 +905,7 @@ void CollectionDialog::updateButtons()
   // what the buttons and texts follow: no clicks, or page by page
   const bool automatic = m_session->downloadsAutomatically();
   const bool loaded    = stage != Stage::Loading && stage != Stage::Error;
-  const bool locked    = m_session->started();
+  const bool locked    = m_session->placeFixed();
 
   m_start->setVisible(loaded);
   switch (stage) {
@@ -961,25 +930,56 @@ void CollectionDialog::updateButtons()
 
   m_next->setVisible(loaded && !automatic && stage != Stage::Done);
   m_next->setEnabled(stage == Stage::Running);
-  // the mode choice only for Premium; the switch only page by page
-  m_autoModeRow->setVisible(premium);
-  m_pageModeRow->setVisible(premium);
+  // downloads: the mode choice only for Premium; the switch only page by page
+  m_modeCombo->setVisible(premium);
   m_autoOpen->setVisible(!automatic);
+  m_downloadText->setText(
+      automatic ? tr("After Start, every file downloads and installs with no more clicks.")
+      : premium ? tr("Each file's page opens on Nexus, and you start its download there.")
+                : tr("Nexus asks free accounts to click once for each file on its "
+                     "website. Mod Organizer opens each page for you."));
 
-  // the place is chosen once
+  // the place is chosen once: then only said
   const auto target = m_session->target();
-  for (auto* b : m_targets->buttons()) {
-    b->setEnabled(!locked);
+  {
+    auto* model = qobject_cast<QStandardItemModel*>(m_targetCombo->model());
+    const int instanceIndex =
+        m_targetCombo->findData(static_cast<int>(CollectionSession::Target::NewInstance));
+    if (model != nullptr && instanceIndex >= 0) {
+      if (auto* item = model->item(instanceIndex)) {
+        item->setEnabled(m_session->canMakeInstance());
+      }
+    }
   }
-  m_instanceRow->setVisible(m_session->canMakeInstance());
-  m_instanceName->setEnabled(!locked && target == CollectionSession::Target::NewInstance);
-  m_profileName->setEnabled(!locked && target == CollectionSession::Target::NewProfile);
+  m_targetCombo->setVisible(!locked);
+  m_targetName->setVisible(!locked && target != CollectionSession::Target::CurrentProfile);
   QString problem;
-  if (!locked && target == CollectionSession::Target::NewInstance) {
-    problem = m_session->instanceNameProblem(m_instanceName->text());
+  QString targetLine;
+  if (locked) {
+    QString profile = m_session->profileName();
+    if (profile.isEmpty() && m_core.currentProfile() != nullptr) {
+      profile = m_core.currentProfile()->name();
+    }
+    targetLine = tr("Installing into the profile \"%1\".").arg(profile);
+  } else if (target == CollectionSession::Target::NewInstance) {
+    problem    = m_session->instanceNameProblem(m_targetName->text());
+    targetLine = !problem.isEmpty() ? problem
+                                    : tr("Its own instance, apart from your other mods. "
+                                         "Mod Organizer restarts in it.");
+  } else if (target == CollectionSession::Target::NewProfile) {
+    targetLine = tr("A new profile in this instance. Its mods are shared with your other "
+                    "profiles.");
+  } else {
+    targetLine = tr("The mods are added to the profile you are using now.");
   }
-  m_instanceProblem->setText(problem);
-  m_instanceProblem->setVisible(!problem.isEmpty());
+  m_targetText->setText(targetLine);
+  {
+    QPalette p = m_targetText->palette();
+    p.setColor(QPalette::WindowText, problem.isEmpty()
+                                         ? QPalette().color(QPalette::WindowText)
+                                         : RevampedTheme::criticalText());
+    m_targetText->setPalette(problem.isEmpty() ? QPalette() : p);
+  }
   if (!problem.isEmpty()) {
     m_start->setEnabled(false);
   }

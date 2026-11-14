@@ -374,7 +374,7 @@ QString CollectionSession::nexusPage(const Entry& e) const
 
 void CollectionSession::setTarget(Target t)
 {
-  if (m_profileMade || (t == Target::NewInstance && !canMakeInstance())) {
+  if (placeFixed() || (t == Target::NewInstance && !canMakeInstance())) {
     return;
   }
   m_target = t;
@@ -1140,6 +1140,7 @@ void CollectionSession::loadState()
   m_separatorName = o.value("separator").toString();
   m_autoOpen      = o.value("autoOpen").toBool(true);
   m_autoDownload  = o.value("autoDownload").toBool(m_autoDownload);
+  m_placeFixed    = o.value("placeFixed").toBool();
   m_categorySeparators =
       o.value("categorySeparators").toBool(m_categorySeparators);
   m_categorySeparatorNames = o.value("categorySeparatorNames").toObject();
@@ -1187,6 +1188,7 @@ QJsonObject CollectionSession::stateObject() const
   o.insert("separator", m_separatorName);
   o.insert("autoOpen", m_autoOpen);
   o.insert("autoDownload", m_autoDownload);
+  o.insert("placeFixed", m_placeFixed);
   o.insert("categorySeparators", m_categorySeparators);
   o.insert("categorySeparatorNames", m_categorySeparatorNames);
   o.insert("approvedReplacements", m_approved);
@@ -1708,6 +1710,8 @@ void CollectionSession::startInNewInstance()
   state.insert("target", targetToString(Target::CurrentProfile));
   state.insert("profile", QString());
   state.insert("profileMade", false);
+  // the place is the new instance's own profile
+  state.insert("placeFixed", true);
   state.insert("instance", QString());
   state.insert("approvedReplacements", QJsonObject());
   state.insert("archive", QString());

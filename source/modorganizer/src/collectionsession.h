@@ -114,6 +114,8 @@ public:
   qint64 remainingSize() const;
   int count(Status s) const;
   bool started() const { return m_started; }
+  // where it installs can no longer change: started, or in the instance made for it
+  bool placeFixed() const { return m_started || m_profileMade || m_placeFixed; }
 
   // options
   Target target() const { return m_target; }
@@ -220,6 +222,7 @@ private:
   Target m_target      = Target::NewInstance;
   QString m_instanceName;
   bool m_autoStart     = false;
+  bool m_placeFixed    = false;
   bool m_autoDownload  = true;
   bool m_categorySeparators = true;
   // the category separators made for this collection: category to name

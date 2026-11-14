@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.1.0-beta.10 (pre-release) — November 14, 2026
+
+### Nexus collections
+
+MO2 Revamped can now download and install Nexus collections (modlists), built
+from scratch for MO2.
+
+- Open a collection with "Download with mod manager" on its Nexus page, or paste
+  its address in Nexus > Download a Nexus collection.
+- Install it into a new instance (the default, apart from your other mods, as
+  Wabbajack and Nolvus lists are), a new profile or the current profile.
+- Premium: everything downloads and installs after Start, with no more clicks.
+  Free accounts: MO2 opens each file's page on Nexus and you press "Slow
+  download" there, as Nexus requires; the next page opens on its own.
+- The mods install with the collection's FOMOD choices, in its order, under a
+  separator, with their categories and a separator per category when the order
+  allows it; Bethesda games get the plugin order. A summary lists what needs a
+  look.
+- Progress is saved: close MO2 and continue later.
+- Tested with Night City FPV Collection (10 mods) and Welcome to Night City
+  (364 mods) on Cyberpunk 2077 2.5: CET, RED4ext and its plugins loaded, and the
+  game folder stayed unchanged. Not yet supported: binary patches, exact copies
+  of the author's install and INI tweaks.
+
+### Other changes
+
+- Notices stack tighter, at most four, and stay above the taskbar.
+
 ## 1.1.0-beta.9 (pre-release) — November 12, 2026
 
 ### Which games were tested
