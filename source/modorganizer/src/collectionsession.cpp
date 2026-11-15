@@ -41,6 +41,8 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QCryptographicHash>
+#include <QEventLoop>
+#include <QThread>
 #include <QDirIterator>
 #include <QSaveFile>
 #include <QSettings>
@@ -219,6 +221,12 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
     m_target = Target::NewProfile;
   }
 
+  m_saveTimer.setSingleShot(true);
+  m_saveTimer.setInterval(3000);
+  connect(&m_saveTimer, &QTimer::timeout, this, [this] {
+    flushState();
+  });
+
   m_scanTimer.setSingleShot(true);
   m_scanTimer.setInterval(250);
   connect(&m_scanTimer, &QTimer::timeout, this, &CollectionSession::scanDownloads);
@@ -249,7 +257,7 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
           &CollectionSession::onApiFailed);
 
   DownloadManager* dm = m_core.downloadManager();
-  connect(dm, &DownloadManager::update, this, &CollectionSession::scheduleScan);
+  connect(dm, &DownloadManager::update, this, &CollectionSession::onDownloadUpdate);
   connect(dm, &DownloadManager::stateChanged, this, &CollectionSession::scheduleScan);
   connect(dm, &DownloadManager::downloadAdded, this, &CollectionSession::scheduleScan);
   m_connections.push_back(dm->onDownloadComplete([this](int) {
@@ -281,6 +289,7 @@ CollectionSession::~CollectionSession()
   if (m_started) {
     saveState();
   }
+  flushState();
 }
 
 void CollectionSession::setSwitchProfile(std::function<bool(const QString&)> f)
@@ -1049,7 +1058,7 @@ void CollectionSession::readManifest()
   buildEntries();
 }
 
-QString CollectionSession::uniqueModName(int row) const
+QString CollectionSession::uniqueModName(int row, const QSet<QString>& taken) const
 {
   // the mod's name on Nexus when it comes from there: the collection keeps the
   // name its author's copy had, often with an older version in it ("CET 1.37.1
@@ -1067,17 +1076,9 @@ QString CollectionSession::uniqueModName(int row) const
     base = QStringLiteral("Mod %1").arg(row + 1);
   }
 
-  auto taken = [&](const QString& name) {
-    for (int i = 0; i < row; ++i) {
-      if (m_entries[i].modName.compare(name, Qt::CaseInsensitive) == 0) {
-        return true;
-      }
-    }
-    return false;
-  };
-
+  // the names of the rows before this one, without case
   QString name = base;
-  for (int n = 2; taken(name); ++n) {
+  for (int n = 2; taken.contains(name.toCaseFolded()); ++n) {
     name = QStringLiteral("%1 (%2)").arg(base).arg(n);
   }
   return name;
@@ -1116,11 +1117,18 @@ void CollectionSession::buildEntries()
 
   // what was done before
   const QJsonArray saved = m_saved.value("entries").toArray();
+  QHash<int, int> rowOfMod;
+  rowOfMod.reserve(static_cast<qsizetype>(m_entries.size()));
+  for (int row = static_cast<int>(m_entries.size()) - 1; row >= 0; --row) {
+    rowOfMod.insert(m_entries[row].mod, row);  // the first row of a mod wins
+  }
   for (const auto& v : saved) {
     const QJsonObject o = v.toObject();
     const int mod       = o.value("mod").toInt(-1);
-    for (auto& e : m_entries) {
-      if (e.mod != mod || m_manifest.mods[mod].fileId != o.value("fileId").toInt()) {
+    const auto found    = rowOfMod.constFind(mod);
+    if (found != rowOfMod.constEnd()) {
+      Entry& e = m_entries[found.value()];
+      if (m_manifest.mods[mod].fileId != o.value("fileId").toInt()) {
         continue;
       }
       e.status       = statusFromString(o.value("status").toString());
@@ -1138,14 +1146,24 @@ void CollectionSession::buildEntries()
         e.status = Status::Pending;
         e.archive.clear();
       }
-      break;
     }
   }
 
+  m_rowByFileId.clear();
+  for (int row = 0; row < static_cast<int>(m_entries.size()); ++row) {
+    const int fileId = m_manifest.mods[m_entries[row].mod].fileId;
+    if (fileId > 0 && !m_rowByFileId.contains(fileId)) {
+      m_rowByFileId.insert(fileId, row);
+    }
+  }
+
+  QSet<QString> taken;
+  taken.reserve(static_cast<qsizetype>(m_entries.size()));
   for (int row = 0; row < static_cast<int>(m_entries.size()); ++row) {
     if (m_entries[row].modName.isEmpty()) {
-      m_entries[row].modName = uniqueModName(row);
+      m_entries[row].modName = uniqueModName(row, taken);
     }
+    taken.insert(m_entries[row].modName.toCaseFolded());
   }
 
   if (m_profileName.isEmpty()) {
@@ -1171,6 +1189,11 @@ void CollectionSession::buildEntries()
            : m_started                        ? Stage::Paused
                                               : Stage::Ready);
   scanDownloads();
+
+  // the state file read is no longer needed, only that there was one
+  if (!m_saved.isEmpty()) {
+    m_saved = QJsonObject{{QStringLiteral("loaded"), true}};
+  }
 
   // opened by the restart into the instance made for it
   if (m_autoStart) {
@@ -1229,6 +1252,26 @@ void CollectionSession::loadState()
 
 void CollectionSession::saveState() const
 {
+  // written soon, once for many changes; at once on pause, at the end and
+  // when the window closes (flushState())
+  m_stateDirty = true;
+  if (!m_saveTimer.isActive()) {
+    m_saveTimer.start();
+  }
+}
+
+void CollectionSession::flushState() const
+{
+  m_saveTimer.stop();
+  if (!m_stateDirty) {
+    return;
+  }
+  m_stateDirty = false;
+  writeState();
+}
+
+void CollectionSession::writeState() const
+{
   // nothing to keep before the collection was read and started
   if (!m_haveManifest || (!m_started && m_saved.isEmpty())) {
     return;
@@ -1241,7 +1284,7 @@ void CollectionSession::saveState() const
   QDir().mkpath(QFileInfo(path).absolutePath());
   QSaveFile f(path);
   if (f.open(QIODevice::WriteOnly)) {
-    f.write(QJsonDocument(stateObject()).toJson(QJsonDocument::Indented));
+    f.write(QJsonDocument(stateObject()).toJson(QJsonDocument::Compact));
     if (!f.commit()) {
       log::warn("collection state couldn't be saved to {}", path);
     }
@@ -1312,6 +1355,37 @@ void CollectionSession::setStatus(int row, Status s, const QString& reason)
   emit entryChanged(row);
 }
 
+void CollectionSession::onDownloadUpdate(int index)
+{
+  // a running download's progress: only its row; anything else is a scan
+  DownloadManager* dm = m_core.downloadManager();
+  if (index < 0 || index >= dm->numTotalDownloads()) {
+    scheduleScan();
+    return;
+  }
+  const auto state = dm->getState(index);
+  const ModRepositoryFileInfo* info = dm->getFileInfo(index);
+  if (info == nullptr || (state != DownloadManager::STATE_STARTED &&
+                          state != DownloadManager::STATE_DOWNLOADING)) {
+    scheduleScan();
+    return;
+  }
+  const auto row = m_rowByFileId.constFind(info->fileID);
+  if (row == m_rowByFileId.constEnd()) {
+    return;  // not one of the collection's
+  }
+  Entry& e = m_entries[row.value()];
+  if (e.status != Status::Downloading || modOf(e).modId != info->modID) {
+    scheduleScan();
+    return;
+  }
+  const int progress = dm->getProgress(index).first;
+  if (e.progress != progress) {
+    e.progress = progress;
+    emit entryChanged(row.value());
+  }
+}
+
 void CollectionSession::scheduleScan()
 {
   if (m_haveManifest && !m_entries.empty() && !m_scanTimer.isActive()) {
@@ -1341,6 +1415,26 @@ void CollectionSession::scanDownloads()
   bool arrived        = false;
   bool changedAny     = false;
 
+  // the downloads by file id and by name and size, and the links being
+  // fetched: once per scan, so a scan is linear in files and downloads
+  QHash<int, std::vector<int>> byFileId;
+  QHash<QString, std::vector<int>> byNameSize;
+  byFileId.reserve(total);
+  for (int i = 0; i < total; ++i) {
+    if (const ModRepositoryFileInfo* info = dm->getFileInfo(i)) {
+      byFileId[info->fileID].push_back(i);
+    }
+    byNameSize[QStringLiteral("%1|%2")
+                   .arg(dm->getFileName(i).toCaseFolded())
+                   .arg(dm->getFileSize(i))]
+        .push_back(i);
+  }
+  QSet<quint64> pendingFiles;
+  for (int i = 0; i < dm->numPendingDownloads(); ++i) {
+    const auto p = dm->getPendingDownload(i);
+    pendingFiles.insert((quint64(quint32(std::get<1>(p))) << 32) | quint32(std::get<2>(p)));
+  }
+
   for (int row = 0; row < static_cast<int>(m_entries.size()); ++row) {
     Entry& e        = m_entries[row];
     const auto& mod = modOf(e);
@@ -1351,7 +1445,28 @@ void CollectionSession::scanDownloads()
     }
 
     int complete = -1, running = -1, stalled = -1;
-    for (int i = 0; i < total && complete < 0; ++i) {
+    // the candidates, in the downloads' order as a full pass would see them
+    std::vector<int> candidates;
+    if (mod.fileId > 0) {
+      const auto it = byFileId.constFind(mod.fileId);
+      if (it != byFileId.constEnd()) {
+        candidates = it.value();
+      }
+    }
+    if (!e.fileName.isEmpty() && e.size > 0) {
+      const auto it = byNameSize.constFind(
+          QStringLiteral("%1|%2").arg(e.fileName.toCaseFolded()).arg(e.size));
+      if (it != byNameSize.constEnd()) {
+        candidates.insert(candidates.end(), it.value().begin(), it.value().end());
+        std::sort(candidates.begin(), candidates.end());
+        candidates.erase(std::unique(candidates.begin(), candidates.end()),
+                         candidates.end());
+      }
+    }
+    for (int i : candidates) {
+      if (complete >= 0) {
+        break;
+      }
       const ModRepositoryFileInfo* info = dm->getFileInfo(i);
       const bool byId = info != nullptr && mod.fileId > 0 && info->fileID == mod.fileId &&
                         (mod.modId <= 0 || info->modID == mod.modId);
@@ -1376,11 +1491,8 @@ void CollectionSession::scanDownloads()
       }
     }
 
-    bool pending = false;
-    for (int i = 0; i < dm->numPendingDownloads() && !pending; ++i) {
-      const auto p = dm->getPendingDownload(i);
-      pending      = std::get<1>(p) == mod.modId && std::get<2>(p) == mod.fileId;
-    }
+    const bool pending = pendingFiles.contains(
+        (quint64(quint32(mod.modId)) << 32) | quint32(mod.fileId));
 
     const Status before = e.status;
     if (stalled < 0) {
@@ -1430,6 +1542,22 @@ void CollectionSession::scanDownloads()
 
   if (m_stage != Stage::Running) {
     return;
+  }
+
+  // the 5 s check runs while files download, wait for a click or wait to be
+  // installed; download signals start a scan otherwise
+  bool watching = false;
+  for (const auto& e : m_entries) {
+    if (e.status == Status::Downloading || e.status == Status::WaitingForClick ||
+        e.status == Status::Downloaded) {
+      watching = true;
+      break;
+    }
+  }
+  if (watching && !m_watchdog.isActive()) {
+    m_watchdog.start();
+  } else if (!watching && m_watchdog.isActive()) {
+    m_watchdog.stop();
   }
 
   // the next page opens once the last one's file came
@@ -1744,6 +1872,7 @@ void CollectionSession::pause()
   if (m_stage == Stage::Running) {
     setStage(Stage::Paused);
     saveState();
+    flushState();
   }
 }
 
@@ -2225,12 +2354,16 @@ bool CollectionSession::installEntry(int row)
   QSet<QString> existingBefore;
   QStringList approvedBefore;
   try {
-    // which folders were there, and which the user said may be replaced
-    existingBefore.clear();
-    for (const QString& folder :
-         QDir(m_core.settings().paths().mods()).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-      existingBefore.insert(folder.toLower());
+    // which folders were there (read once, then kept as installs add to it),
+    // and which the user said may be replaced
+    if (!m_modFoldersRead) {
+      for (const QString& folder : QDir(m_core.settings().paths().mods())
+                                       .entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        m_modFolders.insert(folder.toLower());
+      }
+      m_modFoldersRead = true;
     }
+    existingBefore = m_modFolders;
     approvedBefore = approvedNow();
     installed = m_core.installArchive(e.archive, -1, false, nullptr, e.modName);
   } catch (const std::exception& ex) {
@@ -2267,6 +2400,7 @@ bool CollectionSession::installEntry(int row)
   } else {
     postInstall(row);
   }
+  m_modFolders.insert(folder);
   e.fingerprint = folderFingerprint(e.modName);
   setStatus(row, Status::Installed);
   return true;
@@ -2569,14 +2703,44 @@ void CollectionSession::postInstall(int row)
         present.append(relative);
       }
     }
-    const auto md5Of = [&dir](const QString& relative) {
-      QFile f(dir.filePath(relative));
-      if (!f.open(QIODevice::ReadOnly)) {
-        return QString();
+    // the MD5s the list asks for, on a worker thread: big files take long, and
+    // the window keeps painting meanwhile
+    QHash<QString, QString> presentByKey;
+    for (const QString& p : present) {
+      presentByKey.insert(normalizedPath(p), p);
+    }
+    QStringList toHash;
+    for (const auto& h : mod.hashes) {
+      const auto it = presentByKey.constFind(normalizedPath(h.path));
+      if (!h.md5.isEmpty() && it != presentByKey.constEnd()) {
+        toHash.append(it.value());
       }
-      QCryptographicHash hash(QCryptographicHash::Md5);
-      hash.addData(&f);
-      return QString::fromLatin1(hash.result().toHex());
+    }
+    toHash.removeDuplicates();
+    auto sums = std::make_shared<QHash<QString, QString>>();
+    if (!toHash.isEmpty()) {
+      const QString root = dir.path();
+      QEventLoop wait;
+      std::unique_ptr<QThread> worker(QThread::create([root, toHash, sums] {
+        const QDir d(root);
+        for (const QString& relative : toHash) {
+          QFile f(d.filePath(relative));
+          QString sum;
+          if (f.open(QIODevice::ReadOnly)) {
+            QCryptographicHash hash(QCryptographicHash::Md5);
+            hash.addData(&f);
+            sum = QString::fromLatin1(hash.result().toHex());
+          }
+          sums->insert(relative, sum);
+        }
+      }));
+      connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
+      worker->start();
+      wait.exec(QEventLoop::ExcludeUserInputEvents);
+      worker->wait();
+    }
+    const auto md5Of = [&sums](const QString& relative) {
+      return sums->value(relative);
     };
     const auto result = compareFileList(mod.hashes, present, md5Of);
 
@@ -2624,13 +2788,21 @@ void CollectionSession::applyFileOverrides()
     }
   }
 
+  // their priorities and folders, once
+  std::vector<std::pair<int, QDir>> placeOf(m_entries.size());
+  for (int row : ours) {
+    const Entry& e = m_entries[row];
+    placeOf[row]   = {list->priority(e.modName),
+                      QDir(ModInfo::getByIndex(ModInfo::getIndex(e.modName))->absolutePath())};
+  }
+
   for (int winner : ours) {
     const Entry& w = m_entries[winner];
     if (modOf(w).fileOverrides.isEmpty()) {
       continue;
     }
-    const QDir winnerDir(ModInfo::getByIndex(ModInfo::getIndex(w.modName))->absolutePath());
-    const int winnerPriority = list->priority(w.modName);
+    const QDir& winnerDir    = placeOf[winner].second;
+    const int winnerPriority = placeOf[winner].first;
     int hidden               = 0;
     for (const QString& file : modOf(w).fileOverrides) {
       const QString relative = QString(file).replace('\\', '/');
@@ -2640,12 +2812,11 @@ void CollectionSession::applyFileOverrides()
       // the copies that would win over it by the order
       for (int other : ours) {
         const Entry& o = m_entries[other];
-        if (other == winner || list->priority(o.modName) <= winnerPriority) {
+        Q_UNUSED(o);
+        if (other == winner || placeOf[other].first <= winnerPriority) {
           continue;
         }
-        const QString path =
-            QDir(ModInfo::getByIndex(ModInfo::getIndex(o.modName))->absolutePath())
-                .filePath(relative);
+        const QString path = placeOf[other].second.filePath(relative);
         if (QFile::exists(path) && !QFile::exists(path + ".mohidden") &&
             QFile::rename(path, path + ".mohidden")) {
           ++hidden;
@@ -2938,14 +3109,50 @@ void CollectionSession::finalize()
   m_finalizing = true;
   setLoading(tr("Ordering the mods…"));
 
+  // the mods that share files, for the grouping: their folders are read on a
+  // worker thread, and the ordering goes on when it is done
+  if (m_categorySeparators && !m_conflictsReady) {
+    std::vector<std::pair<int, QString>> folders;
+    for (const auto& e : m_entries) {
+      if (e.status != Status::Installed || e.modName.isEmpty()) {
+        continue;
+      }
+      const unsigned int index = ModInfo::getIndex(e.modName);
+      if (index != UINT_MAX) {
+        folders.emplace_back(e.mod, ModInfo::getByIndex(index)->absolutePath());
+      }
+    }
+    auto pairs = std::make_shared<std::vector<std::pair<int, int>>>();
+    QThread* worker = QThread::create([folders, pairs] {
+      *pairs = sharedFilePairs(folders);
+    });
+    QPointer<CollectionSession> self(this);
+    connect(worker, &QThread::finished, this, [self, worker, pairs] {
+      worker->deleteLater();
+      if (!self) {
+        return;
+      }
+      self->m_conflictPairs  = std::move(*pairs);
+      self->m_conflictsReady = true;
+      self->m_finalizing     = false;
+      self->finalize();
+    });
+    worker->start();
+    return;
+  }
+  m_conflictsReady = false;
+
   try {
     applyModOrder();
     applyFileOverrides();
     m_core.refresh();
   } catch (const std::exception& ex) {
+    m_conflictPairs.clear();
     finalizeFailed(QString::fromUtf8(ex.what()));
     return;
   }
+  m_conflictPairs.clear();
+  m_conflictPairs.shrink_to_fit();
 
   QPointer<CollectionSession> self(this);
   m_core.onNextRefresh(
@@ -2975,12 +3182,79 @@ void CollectionSession::finalize()
         self->m_loadingText.clear();
         self->setStage(Stage::Done);
         self->saveState();
+        self->flushState();
+        // the file lists and patches of installed mods are no longer needed
+        for (const auto& e : self->m_entries) {
+          if (e.status == Status::Installed) {
+            auto& mod = self->m_manifest.mods[e.mod];
+            std::vector<FileHash>().swap(mod.hashes);
+            std::vector<std::pair<QString, QString>>().swap(mod.patches);
+          }
+        }
         // once, at the end
         QApplication::beep();
         emit self->finished();
       },
       OrganizerCore::RefreshCallbackGroup::EXTERNAL,
       OrganizerCore::RefreshCallbackMode::RUN_NOW_IF_POSSIBLE);
+}
+
+std::vector<std::pair<int, int>>
+CollectionSession::sharedFilePairs(const std::vector<std::pair<int, QString>>& folders)
+{
+  // one index over every file: its path (without case) by a 64-bit hash, to
+  // the first mod that has it; the paths two or more mods have keep all of
+  // them. No set of strings per mod
+  QHash<quint64, int> first;
+  QHash<quint64, std::vector<int>> shared;
+  for (const auto& [mod, path] : folders) {
+    const QDir dir(path);
+    QDirIterator walk(path, QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
+    QSet<quint64> own;  // a mod's own repeats count once
+    while (walk.hasNext()) {
+      const QString relative = dir.relativeFilePath(walk.next()).toLower();
+      if (relative == QLatin1String("meta.ini") ||
+          relative.endsWith(QLatin1String(".mohidden"))) {
+        continue;
+      }
+      const quint64 key = static_cast<quint64>(qHash(relative, 0x9E3779B97F4A7C15ull));
+      if (own.contains(key)) {
+        continue;
+      }
+      own.insert(key);
+      const auto it = first.constFind(key);
+      if (it == first.constEnd()) {
+        first.insert(key, mod);
+      } else {
+        auto& owners = shared[key];
+        if (owners.empty()) {
+          owners.push_back(it.value());
+        }
+        owners.push_back(mod);
+      }
+    }
+  }
+
+  QSet<quint64> seen;
+  std::vector<std::pair<int, int>> pairs;
+  for (auto it = shared.cbegin(); it != shared.cend(); ++it) {
+    const auto& owners = it.value();
+    for (size_t a = 0; a < owners.size(); ++a) {
+      for (size_t b = a + 1; b < owners.size(); ++b) {
+        const int x = std::min(owners[a], owners[b]);
+        const int y = std::max(owners[a], owners[b]);
+        if (x == y) {
+          continue;
+        }
+        const quint64 key = (quint64(quint32(x)) << 32) | quint32(y);
+        if (!seen.contains(key)) {
+          seen.insert(key);
+          pairs.emplace_back(x, y);
+        }
+      }
+    }
+  }
+  return pairs;
 }
 
 QString CollectionSession::categoryName(const Entry& e) const
@@ -3061,7 +3335,34 @@ QString CollectionSession::categorySeparator(const QString& category)
   return name;
 }
 
-bool CollectionSession::separatorEmptyEverywhere(const QString& internalName) const
+std::vector<QStringList> CollectionSession::otherProfileModLists() const
+{
+  // every other profile's modlist.txt, names only, highest priority first
+  std::vector<QStringList> result;
+  const Profile* current = m_core.currentProfile();
+  const QDir profiles(m_core.settings().paths().profiles());
+  for (const QString& p : profiles.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    if (current != nullptr && p.compare(current->name(), Qt::CaseInsensitive) == 0) {
+      continue;
+    }
+    QFile file(profiles.filePath(p + "/modlist.txt"));
+    if (!file.open(QIODevice::ReadOnly)) {
+      continue;
+    }
+    QStringList lines;
+    for (QString line : QString::fromUtf8(file.readAll()).split('\n')) {
+      line = line.trimmed();
+      if (!line.isEmpty() && !line.startsWith('#')) {
+        lines.append(line.mid(1));
+      }
+    }
+    result.push_back(std::move(lines));
+  }
+  return result;
+}
+
+bool CollectionSession::separatorEmptyEverywhere(
+    const QString& internalName, const std::vector<QStringList>& otherProfiles) const
 {
   // in this profile: no mod between it and the next separator by priority
   const Profile* current = m_core.currentProfile();
@@ -3094,25 +3395,14 @@ bool CollectionSession::separatorEmptyEverywhere(const QString& internalName) co
 
   // in every other profile's modlist.txt (highest priority first): no mod
   // line between it and the separator above it
-  const QDir profiles(m_core.settings().paths().profiles());
-  for (const QString& p : profiles.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-    if (p.compare(current->name(), Qt::CaseInsensitive) == 0) {
-      continue;
-    }
-    QFile file(profiles.filePath(p + "/modlist.txt"));
-    if (!file.open(QIODevice::ReadOnly)) {
-      continue;
-    }
-    QStringList lines;
-    for (QString line : QString::fromUtf8(file.readAll()).split('\n')) {
-      line = line.trimmed();
-      if (!line.isEmpty() && !line.startsWith('#')) {
-        lines.append(line.mid(1));
+  for (const QStringList& lines : otherProfiles) {
+    int at = -1;
+    for (int k = 0; k < lines.size(); ++k) {
+      if (lines[k].compare(internalName, Qt::CaseInsensitive) == 0) {
+        at = k;
+        break;
       }
     }
-    const int at = lines.indexOf(QRegularExpression(
-        "^" + QRegularExpression::escape(internalName) + "$",
-        QRegularExpression::CaseInsensitiveOption));
     if (at < 0) {
       continue;
     }
@@ -3175,40 +3465,6 @@ void CollectionSession::applyModOrder()
   GroupResult grouped;
   grouped.order = sorted.order;
   if (m_categorySeparators) {
-    std::map<int, QSet<QString>> files;
-    auto filesOf = [&](int mod) -> const QSet<QString>& {
-      auto it = files.find(mod);
-      if (it != files.end()) {
-        return it->second;
-      }
-      QSet<QString> set;
-      const unsigned int index = ModInfo::getIndex(m_entries[rowOfMod[mod]].modName);
-      if (index != UINT_MAX) {
-        const QDir dir(ModInfo::getByIndex(index)->absolutePath());
-        QDirIterator walk(dir.path(), QDir::Files | QDir::Hidden,
-                          QDirIterator::Subdirectories);
-        while (walk.hasNext()) {
-          const QString relative = dir.relativeFilePath(walk.next()).toLower();
-          if (relative != QLatin1String("meta.ini") &&
-              !relative.endsWith(QLatin1String(".mohidden"))) {
-            set.insert(relative);
-          }
-        }
-      }
-      return files.emplace(mod, std::move(set)).first->second;
-    };
-    const auto conflicts = [&](int a, int b) {
-      const QSet<QString>& fa = filesOf(a);
-      const QSet<QString>& fb = filesOf(b);
-      const QSet<QString>& fewer = fa.size() < fb.size() ? fa : fb;
-      const QSet<QString>& more = fa.size() < fb.size() ? fb : fa;
-      for (const QString& f : fewer) {
-        if (more.contains(f)) {
-          return true;
-        }
-      }
-      return false;
-    };
     // inside a category the collection's own order: phases, then mods[]
     const auto position = [&rowOfMod](int mod) {
       return rowOfMod[mod];
@@ -3218,7 +3474,7 @@ void CollectionSession::applyModOrder()
         [&groupOf](int mod) {
           return groupOf[mod];
         },
-        conflicts, position);
+        {}, position, &m_conflictPairs);
     // one section only: its separator would say nothing more
     const size_t sectionCount = grouped.groups.size() + (grouped.overflow.empty() ? 0 : 1);
     if (sectionCount < 2) {
@@ -3252,6 +3508,8 @@ void CollectionSession::applyModOrder()
   // sits under them in any profile, as the mods folder is shared
   if (m_categorySeparators && !usedSeparators.isEmpty()) {
     QStringList unused;
+    std::vector<QStringList> otherLists;
+    bool otherListsRead = false;
     for (auto it = m_categorySeparatorNames.begin(); it != m_categorySeparatorNames.end();) {
       const QString name = it.value().toString();
       if (usedSeparators.contains(name.toLower())) {
@@ -3262,7 +3520,11 @@ void CollectionSession::applyModOrder()
         it = m_categorySeparatorNames.erase(it);  // gone already
         continue;
       }
-      if (separatorEmptyEverywhere(name + "_separator")) {
+      if (otherLists.empty() && !otherListsRead) {
+        otherLists     = otherProfileModLists();
+        otherListsRead = true;
+      }
+      if (separatorEmptyEverywhere(name + "_separator", otherLists)) {
         unused.append(name + "_separator");
         it = m_categorySeparatorNames.erase(it);
       } else {
@@ -3275,23 +3537,38 @@ void CollectionSession::applyModOrder()
     }
   }
 
+  // the final order, each moved to the end in turn: the collection's
+  // separator, then each section's separator and mods
   ModList* list     = m_core.modList();
   QString separator = m_separatorName.trimmed();
+  std::vector<unsigned int> moving;
+  auto add = [&moving](const QString& name) {
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index != UINT_MAX) {
+      moving.push_back(index);
+    }
+  };
   if (fixDirectoryName(separator) && !separator.isEmpty() &&
       list->getMod(separator + "_separator") != nullptr) {
-    list->setPriority(separator + "_separator", INT_MAX);
+    add(separator + "_separator");
   }
 
   QStringList names;
   for (const auto& [section, members] : sections) {
     if (!section.isEmpty() && list->getMod(section + "_separator") != nullptr) {
-      list->setPriority(section + "_separator", INT_MAX);
+      add(section + "_separator");
     }
     for (int mod : members) {
       const QString& name = m_entries[rowOfMod[mod]].modName;
-      list->setPriority(name, INT_MAX);
+      add(name);
       names.append(name);
     }
+  }
+  if (Profile* profile = m_core.currentProfile(); profile != nullptr && !moving.empty()) {
+    // one change for the view, not one per mod
+    emit list->layoutAboutToBeChanged();
+    profile->moveModsToEnd(moving);
+    emit list->layoutChanged();
   }
   list->setActive(names, true);
   // in the profile's modlist.txt now, not only when the list is next written

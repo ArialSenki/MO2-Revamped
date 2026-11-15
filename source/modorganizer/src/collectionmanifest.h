@@ -13,12 +13,15 @@
 #include <QString>
 #include <QStringList>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
 namespace Collections
 {
+
+struct ModFinder;
 
 // a collection on Nexus; revision -1 is the latest published one
 struct CollectionLink
@@ -160,6 +163,14 @@ struct CollectionManifest
 
   // the mod a rule's reference names, -1 when none does
   int findMod(const ModReference& ref) const;
+
+private:
+  // findMod()'s maps, made on first use and again when mods[] changes size
+  const ModFinder& finder() const;
+  mutable std::shared_ptr<const ModFinder> m_finder;
+  mutable size_t m_finderSize = 0;
+
+public:
 };
 
 // a stable topological sort: nodes keep their order unless an edge (a, b),
@@ -200,7 +211,11 @@ struct GroupResult
 GroupResult groupByCategory(const SortResult& sorted,
                             const std::function<QString(int)>& category,
                             const std::function<bool(int, int)>& conflicts = {},
-                            const std::function<int(int)>& position = {});
+                            const std::function<int(int)>& position = {},
+                            const std::vector<std::pair<int, int>>* conflictPairs = nullptr);
+
+// past this many mods the grouping analysis is skipped: the flat sorted order
+constexpr int MaxGroupedMods = 12000;
 
 // the plugins given, in their current order, sorted by the rules' "after"
 // lists; names compare without case. cycles gets "a > b" for each rule that

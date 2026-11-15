@@ -834,6 +834,50 @@ int Profile::getModPriority(unsigned int index) const
   return m_ModStatus[index].m_Priority;
 }
 
+void Profile::moveModsToEnd(const std::vector<unsigned int>& indexes)
+{
+  // the regular mods in their order; overwrite and backups keep theirs
+  std::vector<unsigned int> order;
+  order.reserve(m_NumRegularMods);
+  for (const auto& [priority, index] : m_ModIndexByPriority) {
+    if (priority >= 0 && priority < static_cast<int>(m_NumRegularMods) &&
+        !ModInfo::getByIndex(index)->hasAutomaticPriority()) {
+      order.push_back(index);
+    }
+  }
+
+  std::vector<char> moving(m_ModStatus.size(), 0);
+  std::vector<unsigned int> tail;
+  tail.reserve(indexes.size());
+  for (unsigned int index : indexes) {
+    if (index >= m_ModStatus.size() || ModInfo::getByIndex(index)->hasAutomaticPriority()) {
+      continue;  // as setModPriority() refuses them
+    }
+    if (moving[index]) {
+      // moved again: to the end again
+      tail.erase(std::remove(tail.begin(), tail.end(), index), tail.end());
+    }
+    moving[index] = 1;
+    tail.push_back(index);
+  }
+  if (tail.empty()) {
+    return;
+  }
+
+  int priority = 0;
+  for (unsigned int index : order) {
+    if (!moving[index]) {
+      m_ModStatus.at(index).m_Priority = priority++;
+    }
+  }
+  for (unsigned int index : tail) {
+    m_ModStatus.at(index).m_Priority = priority++;
+  }
+
+  updateIndices();
+  m_ModListWriter.write();
+}
+
 bool Profile::setModPriority(unsigned int index, int& newPriority)
 {
   if (ModInfo::getByIndex(index)->hasAutomaticPriority()) {
