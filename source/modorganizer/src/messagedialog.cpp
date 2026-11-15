@@ -334,6 +334,11 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
     log::info("notice not shown while a collection installs: {}", text);
     return;
   }
+  // the same while a Wabbajack list downloads or installs
+  if (qApp->property("mo2r.wabbajackQuiet").toBool()) {
+    log::info("notice not shown while a Wabbajack list runs: {}", text);
+    return;
+  }
 
   // MO2 Revamped: over the dialog in front (the instance wizard, Settings),
   // not the main window under it

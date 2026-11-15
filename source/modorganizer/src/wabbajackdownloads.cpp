@@ -250,6 +250,11 @@ struct DownloadQueue::Job
   std::size_t part = 0;  // the part being downloaded
   int partRetries  = 0;
   QByteArray partData;
+
+  // its hashing off the window's thread stops with the job (a pause, then
+  // Download again, doesn't leave the old one reading the same file)
+  std::shared_ptr<std::atomic_bool> cancel = std::make_shared<std::atomic_bool>(false);
+  ~Job() { cancel->store(true); }
 };
 
 // ---- the queue ------------------------------------------------------------
@@ -347,7 +352,7 @@ QString DownloadQueue::partPath(int i) const
 
 bool DownloadQueue::setFolder(const QString& folder)
 {
-  if (m_running || isChecking()) {
+  if (m_running || isChecking() || m_adopting || !m_adoptQueue.empty()) {
     return false;
   }
   const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(folder.trimmed()));
@@ -465,9 +470,12 @@ void DownloadQueue::scanFolder()
       }
     } else {
       e.status = Status::Missing;
-      // what a stopped download left
+      // what a stopped download left (a Wabbajack-server one is made at its
+      // full size: its parts say what is there, when it goes on)
       const QFileInfo part(partPath(i));
-      e.received = part.isFile() ? qMin(part.size(), a.size) : 0;
+      e.received = part.isFile() && a.source != Source::WabbajackCdn
+                       ? qMin(part.size(), a.size)
+                       : 0;
     }
   }
   emit changed();
@@ -552,6 +560,7 @@ void DownloadQueue::hashJobs(std::vector<std::pair<int, QString>> jobs, bool the
   // the queue waits for this before it goes, so the pointer stays valid
   DownloadQueue* queue = this;
   watcher->setFuture(QtConcurrent::run([jobs = std::move(jobs), cancel, queue, total] {
+    const LowPriority low(LowPriority::Mode::Background);
     qint64 done = 0;
     for (const auto& [row, path] : jobs) {
       if (cancel->load()) {
@@ -761,7 +770,9 @@ void DownloadQueue::pause()
         e.status == Status::Verifying) {
       e.status = Status::Missing;
       const QFileInfo part(partPath(int(n)));
-      e.received = part.isFile() ? qMin(part.size(), m_list->archives[n].size) : 0;
+      e.received = part.isFile() && m_list->archives[n].source != Source::WabbajackCdn
+                       ? qMin(part.size(), m_list->archives[n].size)
+                       : 0;
       emit entryChanged(int(n));
     }
   }
@@ -808,13 +819,13 @@ void DownloadQueue::pumpQueue()
     }
   }
 
-  // what runs: downloads, hashes, and the definitions of Wabbajack's files;
-  // Nexus link requests wait in Nexus's own queue and don't count
+  // what runs: downloads, hashes, the definitions of Wabbajack's files and
+  // the Nexus links asked for (each becomes a download): a list of thousands
+  // of Nexus files asks for a few links at a time, not all of them at once
   int running = 0;
   for (std::size_t n = 0; n < m_entries.size(); ++n) {
     const Status s = m_entries[n].status;
-    if (s == Status::Downloading || s == Status::Verifying ||
-        (s == Status::Requesting && m_jobs.count(int(n)) > 0)) {
+    if (s == Status::Downloading || s == Status::Verifying || s == Status::Requesting) {
       ++running;
     }
   }
@@ -831,6 +842,7 @@ void DownloadQueue::pumpQueue()
     case Source::Nexus:
       setStatus(i, Status::Requesting);
       requestNexusLink(i, {});
+      ++running;
       break;
     case Source::Http:
       downloadUrl(i, QUrl(a.url));
@@ -867,6 +879,7 @@ void DownloadQueue::pumpQueue()
     emit message(tr("Every archive MO2 Revamped can download is here."));
   }
   emit changed();
+  emit runFinished();
 }
 
 // ---- Nexus ----------------------------------------------------------------
@@ -1152,6 +1165,15 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
       j->offset                          = 0;
       j->speedFrom                       = 0;
       m_entries[std::size_t(i)].received = 0;
+    } else if (code == 206) {
+      // the rest from where the part file ends, or nothing of it
+      static const QRegularExpression range(QStringLiteral("^bytes\\s+(\\d+)-"));
+      const auto m = range.match(QString::fromLatin1(reply->rawHeader("Content-Range")));
+      if (!m.hasMatch() || m.captured(1).toLongLong() != j->offset) {
+        QFile::remove(j->file.fileName());
+        m_entries[std::size_t(i)].received = 0;
+        failDownload(i, tr("The server sent another part of the file than the one asked for."));
+      }
     }
   });
 
@@ -1161,7 +1183,13 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
       return;
     }
     const QByteArray chunk = reply->readAll();
-    Entry& e               = m_entries[std::size_t(i)];
+    // an error's page (a 403 of an expired link, a 503) isn't the file: it
+    // stays out of the part file, which resumes from what it has
+    const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (code != 200 && code != 206) {
+      return;
+    }
+    Entry& e = m_entries[std::size_t(i)];
     const qint64 size      = m_list->archives[std::size_t(i)].size;
     if (size > 0 && e.received + chunk.size() > size) {
       // more than the file the list names: not it
@@ -1361,7 +1389,7 @@ void DownloadQueue::startCdnParts(int i, quint64 id)
     ranges.push_back({p.offset, p.size, p.hash});
   }
   const QString path = j->file.fileName();
-  auto cancel        = m_cancelWork;
+  auto cancel        = j->cancel;
   auto* watcher      = new QFutureWatcher<std::vector<bool>>(this);
   connect(watcher, &QFutureWatcherBase::finished, this, [this, i, id, watcher, begin] {
     watcher->deleteLater();
@@ -1381,6 +1409,7 @@ void DownloadQueue::startCdnParts(int i, quint64 id)
     begin();
   });
   watcher->setFuture(QtConcurrent::run([path, ranges, cancel] {
+    const LowPriority low(LowPriority::Mode::Background);
     std::vector<bool> good(ranges.size(), false);
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) {
@@ -1504,7 +1533,7 @@ void DownloadQueue::verifyDownload(int i)
   setStatus(i, Status::Verifying);
 
   const QString part = j.file.fileName();
-  auto cancel        = m_cancelWork;
+  auto cancel        = j.cancel;
   auto* watcher      = new QFutureWatcher<std::optional<uint64_t>>(this);
   connect(watcher, &QFutureWatcherBase::finished, this, [this, i, id, watcher, part] {
     watcher->deleteLater();
@@ -1527,6 +1556,7 @@ void DownloadQueue::verifyDownload(int i)
     finishDownload(i);
   });
   watcher->setFuture(QtConcurrent::run([part, cancel]() -> std::optional<uint64_t> {
+    const LowPriority low(LowPriority::Mode::Background);
     try {
       return hashFile(part, cancel.get());
     } catch (...) {
@@ -1777,7 +1807,11 @@ void DownloadQueue::nextAdoption()
     bool taken  = false;  // the right file, but its entry was filled meanwhile
     for (int i : job.rows) {
       if (m_list->archives[std::size_t(i)].hash == *hash) {
-        if (canAdopt(i) && !isChecking()) {
+        if (isChecking()) {
+          // a hash check began meanwhile: the file is taken at a later tick
+          m_seen.remove(job.path);
+          taken = true;
+        } else if (canAdopt(i)) {
           matched = i;
         } else {
           taken = true;
@@ -1818,13 +1852,15 @@ void DownloadQueue::nextAdoption()
   });
   const QString source = job.path;
   watcher->setFuture(QtConcurrent::run([source, copy, cancel]() -> std::optional<uint64_t> {
+    const LowPriority low(LowPriority::Mode::Background);
     try {
-      if (!QFile::copy(source, copy) || cancel->load()) {
+      const auto hash = copyFile(source, copy, cancel.get());
+      if (!hash) {
         QFile::remove(copy);
-        return std::nullopt;
       }
-      return hashFile(copy, cancel.get());
+      return hash;
     } catch (...) {
+      QFile::remove(copy);
       return std::nullopt;
     }
   }));

@@ -1,5 +1,10 @@
 #include "wabbajacklist.h"
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+
 #include <archive.h>
 #include <iplugingame.h>
 #include <log.h>
@@ -186,6 +191,63 @@ QString hashToBase64(uint64_t hash)
 {
   return QString::fromLatin1(
       QByteArray(reinterpret_cast<const char*>(&hash), 8).toBase64());
+}
+
+LowPriority::LowPriority(Mode mode) : m_mode(mode)
+{
+  if (mode == Mode::Background) {
+    // fails when the thread already is in background mode: nothing to undo then
+    m_set = ::SetThreadPriority(::GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN) != 0;
+  } else {
+    m_previous = ::GetThreadPriority(::GetCurrentThread());
+    m_set      = m_previous != THREAD_PRIORITY_ERROR_RETURN &&
+            ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL) != 0;
+  }
+}
+
+LowPriority::~LowPriority()
+{
+  // the pool thread goes back as it came, for the next work it gets
+  if (!m_set) {
+    return;
+  }
+  if (m_mode == Mode::Background) {
+    ::SetThreadPriority(::GetCurrentThread(), THREAD_MODE_BACKGROUND_END);
+  } else {
+    ::SetThreadPriority(::GetCurrentThread(), m_previous);
+  }
+}
+
+std::optional<uint64_t> copyFile(const QString& source, const QString& target,
+                                 const std::atomic_bool* cancel)
+{
+  QFile in(source);
+  QFile out(target);
+  if (!in.open(QIODevice::ReadOnly) || !out.open(QIODevice::WriteOnly)) {
+    return std::nullopt;
+  }
+  XxHash64 h;
+  QByteArray buffer(4 * 1024 * 1024, Qt::Uninitialized);
+  for (;;) {
+    if (cancel != nullptr && cancel->load()) {
+      return std::nullopt;
+    }
+    const qint64 n = in.read(buffer.data(), buffer.size());
+    if (n < 0) {
+      return std::nullopt;
+    }
+    if (n == 0) {
+      break;
+    }
+    if (out.write(buffer.constData(), n) != n) {
+      return std::nullopt;
+    }
+    h.update(buffer.constData(), std::size_t(n));
+  }
+  if (!out.flush()) {
+    return std::nullopt;
+  }
+  return h.digest();
 }
 
 std::optional<uint64_t> hashFile(const QString& path, const std::atomic_bool* cancel,

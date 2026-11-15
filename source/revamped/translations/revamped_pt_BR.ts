@@ -17369,6 +17369,10 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
       <source>%1 can't be read.</source>
       <translation>Não é possível ler %1.</translation>
     </message>
+    <message>
+      <source>The server sent another part of the file than the one asked for.</source>
+      <translation>O servidor enviou outra parte do arquivo, diferente da pedida.</translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack::Installer</name>

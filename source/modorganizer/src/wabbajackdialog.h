@@ -125,6 +125,10 @@ private:
   // asks for the instance's name and folder, then installs
   void startInstall();
   void onInstalled();
+  void onRunFinished();
+  // an instance made by an install into this folder that didn't finish
+  static bool sameInstall(const QString& instanceFolder, const QString& installFolder);
+  void setQuiet(bool quiet);
   // the new instance, with the list's own settings; false with a message
   bool makeInstance(const Wabbajack::InstallResult& result, QString* dataPath);
   QString sourceText(const Wabbajack::Archive& a) const;

@@ -169,6 +169,9 @@ signals:
   void entryChanged(int i);
   // a line for the window's footer
   void message(const QString& text);
+  // a run that ended by itself (not paused): everything it could get is here
+  // or failed
+  void runFinished();
 
 private:
   struct Job;

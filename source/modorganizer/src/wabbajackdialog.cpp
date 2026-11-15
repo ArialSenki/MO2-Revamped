@@ -159,6 +159,31 @@ WabbajackDialog::~WabbajackDialog()
   // the reading only holds its own copies: it is told to stop, not waited for
   // (the queue, a child, stops its downloads and its hashing as it goes)
   m_readCancel->store(true);
+  // MO2 ending another way than through its question (Windows shutting
+  // down): the install stops, not left writing while MO2 goes
+  if (isInstalling()) {
+    m_installCancel->store(true);
+    m_installer->waitForFinished();
+  }
+  setQuiet(false);
+}
+
+void WabbajackDialog::setQuiet(bool quiet)
+{
+  // MO2's own notices (a failed Nexus request, say), each with the system's
+  // sound, stay in the log while a list downloads or installs: the window
+  // shows how it goes, and the user may be playing meanwhile
+  qApp->setProperty("mo2r.wabbajackQuiet", quiet ? QVariant(true) : QVariant());
+}
+
+void WabbajackDialog::onRunFinished()
+{
+  // once, at the end of the downloads: a flashing taskbar button when the
+  // window is behind, and one sound
+  if (!isActiveWindow()) {
+    QApplication::alert(this);
+  }
+  QApplication::beep();
 }
 
 bool WabbajackDialog::isRunning() const
@@ -670,13 +695,27 @@ void WabbajackDialog::onRead()
   connect(m_queue, &DownloadQueue::entryChanged, this, [this](int i) {
     updateRow(i);
   });
-  connect(m_queue, &DownloadQueue::changed, this, [this] {
+  // the rows and the buttons follow at most four times a second: a list of
+  // thousands of archives changes often while it downloads
+  auto* refresh = new QTimer(this);
+  refresh->setSingleShot(true);
+  refresh->setInterval(250);
+  connect(refresh, &QTimer::timeout, this, [this] {
+    if (m_queue == nullptr) {
+      return;
+    }
     for (int i = 0; i < m_queue->count(); ++i) {
       updateRow(i);
     }
     updateState();
   });
+  connect(m_queue, &DownloadQueue::changed, this, [refresh] {
+    if (!refresh->isActive()) {
+      refresh->start();
+    }
+  });
   connect(m_queue, &DownloadQueue::message, m_status, &QLabel::setText);
+  connect(m_queue, &DownloadQueue::runFinished, this, &WabbajackDialog::onRunFinished);
 
   fillTree();
   m_queue->setFolder(QDir::fromNativeSeparators(m_folder->text().trimmed()));
@@ -1065,6 +1104,7 @@ void WabbajackDialog::updateState()
   m_retry->setVisible(!running && m_queue->countOf(DownloadQueue::Status::Failed) > 0);
 
   const bool installing = isInstalling();
+  setQuiet(isRunning());
   const QString problem = installProblem();
   m_install->setText(installing ? tr("Stop installing") : tr("Install"));
   m_install->setEnabled(installing ? !m_installCancel->load()
@@ -1179,17 +1219,21 @@ void WabbajackDialog::startInstall()
     if (!fixDirectoryName(fixed) || fixed != n) {
       return tr("Windows doesn't allow this name for a folder.");
     }
+    const QString f = QDir::cleanPath(QDir::fromNativeSeparators(folder->text().trimmed()));
     const auto& instances = InstanceManager::singleton();
-    if (QFileInfo::exists(instances.instancePath(n))) {
-      return tr("An instance with this name already exists.");
-    }
-    for (const QString& p : instances.globalInstancePaths()) {
-      if (QFileInfo(p).fileName().compare(n, Qt::CaseInsensitive) == 0) {
+    // the instance of an install that didn't finish (some files failed) is
+    // the one installing again goes on with
+    if (!sameInstall(instances.instancePath(n), f)) {
+      if (QFileInfo::exists(instances.instancePath(n))) {
         return tr("An instance with this name already exists.");
+      }
+      for (const QString& p : instances.globalInstancePaths()) {
+        if (QFileInfo(p).fileName().compare(n, Qt::CaseInsensitive) == 0) {
+          return tr("An instance with this name already exists.");
+        }
       }
     }
 
-    const QString f = QDir::cleanPath(QDir::fromNativeSeparators(folder->text().trimmed()));
     if (f.isEmpty() || !QDir::isAbsolutePath(f)) {
       return tr("Choose the folder to install into.");
     }
@@ -1287,6 +1331,7 @@ void WabbajackDialog::startInstall()
   auto cancel             = m_installCancel;
   QPointer<QLabel> status = m_status;
   m_installer->setFuture(QtConcurrent::run([plan, cancel, status] {
+    const Wabbajack::LowPriority low(Wabbajack::LowPriority::Mode::BelowNormal);
     return Wabbajack::install(plan, *cancel, [status, cancel](const QString& text, int permille) {
       QMetaObject::invokeMethod(
           status.data(),
@@ -1301,6 +1346,20 @@ void WabbajackDialog::startInstall()
     });
   }));
   updateState();
+}
+
+bool WabbajackDialog::sameInstall(const QString& instanceFolder, const QString& installFolder)
+{
+  const QString ini = QDir(instanceFolder).filePath("ModOrganizer.ini");
+  if (installFolder.isEmpty() || !QFileInfo(ini).isFile() ||
+      Wabbajack::isFinishedInstall(installFolder) ||
+      !QFileInfo::exists(installStateFolder(installFolder))) {
+    return false;
+  }
+  const QSettings s(ini, QSettings::IniFormat);
+  const QString base = QDir::cleanPath(
+      QDir::fromNativeSeparators(s.value("Settings/base_directory").toString()));
+  return !base.isEmpty() && base.compare(QDir::cleanPath(installFolder), Qt::CaseInsensitive) == 0;
 }
 
 bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QString* dataPath)
@@ -1354,9 +1413,13 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
   ci.paths.downloads = QDir::toNativeSeparators(m_queue->folder());
 
   QStringList lines;
-  if (!CreateInstanceDialog::createInstance(ci, [&lines](QString line) {
-        lines.append(line);
-      })) {
+  if (sameInstall(QFileInfo(ci.iniPath).absolutePath(), m_installFolder)) {
+    // installed again into the folder of an install that didn't finish: its
+    // instance stays, with what the list's ini says written again below
+    log::info("wabbajack: instance '{}' kept for {}", m_instanceName, m_installFolder);
+  } else if (!CreateInstanceDialog::createInstance(ci, [&lines](QString line) {
+               lines.append(line);
+             })) {
     QMessageBox::warning(this, tr("New instance"),
                          tr("The instance couldn't be created.") + "\n\n" + lines.join('\n'));
     return false;
@@ -1450,6 +1513,9 @@ void WabbajackDialog::onInstalled()
   }
   if (!r.ok) {
     m_status->setText(tr("The install failed: %1").arg(r.error));
+    if (!isActiveWindow()) {
+      QApplication::alert(this);
+    }
     QMessageBox::warning(this, tr("Install the list"),
                          tr("The install failed: %1").arg(r.error));
     return;
@@ -1462,6 +1528,11 @@ void WabbajackDialog::onInstalled()
   }
   m_status->setText(tr("Installed into %1.").arg(QDir::toNativeSeparators(m_installFolder)));
 
+  // the box brings its own sound; behind other windows the taskbar button
+  // flashes too
+  if (!isActiveWindow()) {
+    QApplication::alert(this);
+  }
   QMessageBox box(r.failed > 0 ? QMessageBox::Warning : QMessageBox::Information,
                   tr("Install the list"),
                   tr("\"%1\" is installed in the instance \"%2\".")

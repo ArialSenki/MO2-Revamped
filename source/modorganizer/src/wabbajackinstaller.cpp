@@ -19,6 +19,9 @@
 #include <QRegularExpression>
 #include <QSet>
 
+#include <omp.h>
+
+#include <algorithm>
 #include <cstring>
 #include <map>
 #include <memory>
@@ -148,6 +151,9 @@ bool applyOctoDiff(const QString& basisPath, QFile& delta, const QString& outPat
   }
   QByteArray buffer;
   // never more than the file the list names: a damaged patch can't fill the disk
+  if (expected <= 0) {
+    expected = Collections::MaxPatchedSize;
+  }
   qint64 written = 0;
   while (!delta.atEnd()) {
     char command;
@@ -158,7 +164,7 @@ bool applyOctoDiff(const QString& basisPath, QFile& delta, const QString& outPat
       qint64 start = 0, length = 0;
       if (!readValue(delta, &start) || !readValue(delta, &length) || start < 0 ||
           length < 0 || start > basis.size() || length > basis.size() - start ||
-          (expected > 0 && length > expected - written) || !basis.seek(start)) {
+          length > expected - written || !basis.seek(start)) {
         *error = tr("the patch doesn't fit the file it patches");
         return false;
       }
@@ -173,8 +179,7 @@ bool applyOctoDiff(const QString& basisPath, QFile& delta, const QString& outPat
       }
     } else if (uchar(command) == 0x80) {
       qint64 length = 0;
-      if (!readValue(delta, &length) || length < 0 ||
-          (expected > 0 && length > expected - written)) {
+      if (!readValue(delta, &length) || length < 0 || length > expected - written) {
         *error = tr("the patch is damaged");
         return false;
       }
@@ -214,6 +219,10 @@ bool applyPatch(const QString& basisPath, const QString& patchPath, const QStrin
   if (head.startsWith("BSDIFF40")) {
     // old lists: the collections' bspatch, whole files in memory
     QFile basis(basisPath);
+    if (delta.size() > Collections::MaxPatchedSize) {
+      *error = tr("the patch is damaged");
+      return false;
+    }
     if (!basis.open(QIODevice::ReadOnly) || basis.size() > Collections::MaxPatchedSize) {
       *error = tr("the file to patch can't be read");
       return false;
@@ -331,6 +340,14 @@ bool transformTexture(const QString& source, const QString& target, const QJsonO
   if (IsCompressed(format)) {
     // BC7's full search takes minutes a texture: its quick mode, as lists' tools use
     const TEX_COMPRESS_FLAGS quick = TEX_COMPRESS_BC7_QUICK;
+    // its threads run at normal priority whatever the install's is: half the
+    // processor at most, the rest for what the user does meanwhile (a game)
+    struct Threads
+    {
+      int before = omp_get_max_threads();
+      Threads() { omp_set_num_threads(std::max(1, before / 2)); }
+      ~Threads() { omp_set_num_threads(before); }
+    } threads;
     hr = Compress(mipped.GetImages(), mipped.GetImageCount(), mipped.GetMetadata(), format,
                   quick | TEX_COMPRESS_PARALLEL, TEX_THRESHOLD_DEFAULT, done);
     if (FAILED(hr)) {
@@ -364,8 +381,16 @@ bool setIniValue(QString& text, const QString& section, const QString& key, cons
   const QStringList lines = text.split(u'\n');
   QStringList out;
   bool inSection = false, changed = false;
+  bool first = true;
   for (QString line : lines) {
-    const QString trimmed = line.trimmed();
+    QString trimmed = line.trimmed();
+    if (first) {
+      // read as Latin-1, a UTF-8 BOM is these three characters
+      first = false;
+      if (trimmed.startsWith(QStringLiteral("\u00EF\u00BB\u00BF"))) {
+        trimmed = trimmed.mid(3);
+      }
+    }
     if (trimmed.startsWith(u'[')) {
       // "[Display] ; a note" is the section too
       const int end = trimmed.indexOf(u']');
@@ -1057,6 +1082,25 @@ void Installer::buildBsas()
       continue;
     }
 
+    // libbsarch compresses all the files of an archive or none: all only when
+    // the list compresses every one. Sounds the author kept uncompressed (the
+    // games don't play them compressed) stay so, the archive a little larger
+    const bool archiveCompressed =
+        type.startsWith(u"BSAState") ? (quint32(state.value("ArchiveFlags").toDouble()) & 0x4) != 0
+                                     : true;
+    bool allCompressed = archiveCompressed;
+    for (const QJsonValue& v : extra.value("FileStates").toArray()) {
+      const QJsonObject f = v.toObject();
+      const bool compressed =
+          type.startsWith(u"BSAState")
+              ? archiveCompressed != f.value("FlipCompression").toBool(false)
+              : f.value("Compressed").toBool(true);
+      if (!compressed) {
+        allCompressed = false;
+        break;
+      }
+    }
+
     DdsInfo dds;
     BsaEntries entryList;
     bsa_entry_list_t entries = entryList.list;
@@ -1089,12 +1133,16 @@ void Installer::buildBsas()
     bsa_result_message_t r = bsa_create_archive(
         archive, QDir::toNativeSeparators(target).toStdWString().c_str(), archiveType, entries);
     if (r.code == BSA_RESULT_NONE && type.startsWith(u"BSAState")) {
-      const quint32 archiveFlags = quint32(state.value("ArchiveFlags").toDouble());
+      quint32 archiveFlags = quint32(state.value("ArchiveFlags").toDouble());
+      if (!allCompressed) {
+        archiveFlags &= ~quint32(0x4);  // its files stored as they are
+      }
       bsa_archive_flags_set(archive, archiveFlags);
       bsa_file_flags_set(archive, quint32(state.value("FileFlags").toDouble()));
-      bsa_compress_set(archive, (archiveFlags & 0x4) != 0);
+      bsa_compress_set(archive, allCompressed);
     } else if (r.code == BSA_RESULT_NONE) {
-      bsa_compress_set(archive, true);
+      // textures (DX10) always compressed, as Wabbajack's own
+      bsa_compress_set(archive, textures || allCompressed);
     }
     for (const auto& [rootDir, source] : files) {
       if (r.code != BSA_RESULT_NONE) {
@@ -1189,7 +1237,8 @@ InstallResult Installer::run()
   // the temporary files, and the files gathered for the BSAs
   QDir(m_stage).removeRecursively();
   QDir(m_inline).removeRecursively();
-  if (!cancelled()) {
+  // with files that failed, the BSAs' gathered files stay for the next try
+  if (!cancelled() && m_result.failed == 0) {
     const QString gathered = installPath(m_plan.installFolder, QStringLiteral("TEMP_BSA_FILES"));
     if (!gathered.isEmpty()) {
       QDir(gathered).removeRecursively();
@@ -1200,13 +1249,15 @@ InstallResult Installer::run()
   m_result.plugins.sort(Qt::CaseInsensitive);
   m_result.cancelled = cancelled();
   m_result.ok        = !m_result.cancelled && m_result.error.isEmpty();
-  if (m_result.ok) {
+  if (m_result.ok && m_result.failed == 0) {
     // a finished install: its folder isn't one to go on in
     QSaveFile finished(QDir(m_state).filePath("finished"));
     if (finished.open(QIODevice::WriteOnly)) {
       finished.write(m_list->name.toUtf8());
       finished.commit();
     }
+  }
+  if (m_result.ok) {
     m_done = m_total;
   }
   report(tr("Done."), true);
@@ -1243,9 +1294,18 @@ QString installPath(const QString& installFolder, const QString& relative)
       return {};
     }
   }
-  const QString base = QDir::cleanPath(installFolder);
-  const QString full = QDir::cleanPath(base + u'/' + r);
-  if (!full.startsWith(base + u'/', Qt::CaseInsensitive)) {
+  QString base = QDir::cleanPath(installFolder);
+  if (!base.endsWith(u'/')) {
+    base += u'/';
+  }
+  const QString full = QDir::cleanPath(base + r);
+  if (!full.startsWith(base, Qt::CaseInsensitive)) {
+    return {};
+  }
+  // "./.mo2r-install/..." is the install's own folder too
+  const QString inside = full.mid(base.size());
+  if (inside.section(u'/', 0, 0).compare(QString::fromLatin1(StateName), Qt::CaseInsensitive) ==
+      0) {
     return {};
   }
   return full;

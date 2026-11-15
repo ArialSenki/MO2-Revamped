@@ -63,6 +63,36 @@ std::optional<uint64_t> hashFile(const QString& path,
                                  const std::atomic_bool* cancel = nullptr,
                                  const std::function<void(qint64)>& progress = {});
 
+// a pool thread's work that yields to what the user does meanwhile (a game,
+// most often): Background lowers the thread's CPU, disk and memory priority
+// (hashing and copying while a list downloads); BelowNormal only its CPU
+// priority, so an install stays quick when nothing else runs
+class LowPriority
+{
+public:
+  enum class Mode
+  {
+    Background,
+    BelowNormal
+  };
+
+  explicit LowPriority(Mode mode);
+  ~LowPriority();
+  LowPriority(const LowPriority&)            = delete;
+  LowPriority& operator=(const LowPriority&) = delete;
+
+private:
+  Mode m_mode;
+  bool m_set     = false;
+  int m_previous = 0;
+};
+
+// a file copied in pieces and hashed on the way; nullopt when it can't be
+// read or written (a full disk) or when cancel is set. What it wrote stays:
+// the caller removes it
+std::optional<uint64_t> copyFile(const QString& source, const QString& target,
+                                 const std::atomic_bool* cancel = nullptr);
+
 // ---- the list -------------------------------------------------------------
 
 // a path to a .wabbajack file that exists (from the command line, say)
